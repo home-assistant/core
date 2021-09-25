@@ -49,6 +49,7 @@ FLOWS = [
     "cloudflare",
     "co2signal",
     "coinbase",
+    "comfoconnect",
     "control4",
     "coolmaster",
     "coronavirus",

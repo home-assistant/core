@@ -1,0 +1,28 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connection details",
+        "description": "Provide the IP of your ComfoConnect Lan C bridge. ",
+        "data": {
+          "host": "Host",
+          "name": "Name",
+          "token": "Token",
+          "pin": "Pin",
+          "user_agent": "User Agent"
+        }
+      },
+      "sensor_selection": {
+        "title": "Select sensors to observe",
+        "data": {
+          "sensors": "Sensors"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  }
+}

@@ -12,15 +12,18 @@ from pycomfoconnect import (
     SENSOR_FAN_SPEED_MODE,
 )
 
+from homeassistant import config_entries, core
 from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util.percentage import (
     int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
 
-from . import DOMAIN, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, ComfoConnectBridge
+from . import SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, ComfoConnectBridge
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,11 +37,14 @@ CMD_MAPPING = {
 SPEED_RANGE = (1, 3)  # away is not included in speeds and instead mapped to off
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the ComfoConnect fan platform."""
+async def async_setup_entry(
+    hass: core.HomeAssistant,
+    config_entry: config_entries.ConfigEntry,
+    async_add_entities,
+):
+    """Set up the ComfoConnect fan entity."""
     ccb = hass.data[DOMAIN]
-
-    add_entities([ComfoConnectFan(ccb.name, ccb)], True)
+    async_add_entities([ComfoConnectFan(ccb.name, ccb)], update_before_add=True)
 
 
 class ComfoConnectFan(FanEntity):
@@ -135,3 +141,8 @@ class ComfoConnectFan(FanEntity):
 
         # Update current mode
         self.schedule_update_ha_state()
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return information about the device."""
+        return {"identifiers": {(DOMAIN, self._ccb.unique_id)}}

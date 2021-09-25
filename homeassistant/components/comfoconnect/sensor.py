@@ -26,6 +26,7 @@ from pycomfoconnect import (
 )
 import voluptuous as vol
 
+from homeassistant import config_entries, core
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -45,6 +46,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 
 from . import DOMAIN, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, ComfoConnectBridge
 
@@ -240,12 +242,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the ComfoConnect fan platform."""
+async def async_setup_entry(
+    hass: core.HomeAssistant,
+    config_entry: config_entries.ConfigEntry,
+    async_add_entities,
+):
+    """Set up the ComfoConnect sensors."""
     ccb = hass.data[DOMAIN]
 
     sensors = []
-    for resource in config[CONF_RESOURCES]:
+    for resource in config_entry.data[CONF_RESOURCES]:
         sensors.append(
             ComfoConnectSensor(
                 name=f"{ccb.name} {SENSOR_TYPES[resource][ATTR_LABEL]}",
@@ -253,8 +259,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 sensor_type=resource,
             )
         )
-
-    add_entities(sensors, True)
+    async_add_entities(sensors, update_before_add=True)
 
 
 class ComfoConnectSensor(SensorEntity):
@@ -333,3 +338,13 @@ class ComfoConnectSensor(SensorEntity):
     def device_class(self):
         """Return the device_class."""
         return SENSOR_TYPES[self._sensor_type][ATTR_DEVICE_CLASS]
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return information about the device."""
+        return {
+            "identifiers": {(DOMAIN, self._ccb.unique_id)},
+            "manufacturer": "Zehnder",
+            "model": "ComfoAir Q",
+            "name": self._ccb.name,
+        }

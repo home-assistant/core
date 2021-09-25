@@ -4,6 +4,8 @@ import logging
 from pycomfoconnect import Bridge, ComfoConnect
 import voluptuous as vol
 
+from homeassistant import config_entries, core
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -11,22 +13,22 @@ from homeassistant.const import (
     CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 
+from .const import (
+    CONF_USER_AGENT,
+    DEFAULT_NAME,
+    DEFAULT_PIN,
+    DEFAULT_TOKEN,
+    DEFAULT_USER_AGENT,
+    DOMAIN,
+    PLATFORM,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "comfoconnect"
-
 SIGNAL_COMFOCONNECT_UPDATE_RECEIVED = "comfoconnect_update_received_{}"
-
-CONF_USER_AGENT = "user_agent"
-
-DEFAULT_NAME = "ComfoAirQ"
-DEFAULT_PIN = 0
-DEFAULT_TOKEN = "00000000000000000000000000000001"
-DEFAULT_USER_AGENT = "Home Assistant"
 
 DEVICE = None
 
@@ -48,18 +50,37 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
-    """Set up the ComfoConnect bridge."""
+async def async_setup(hass, config):
+    """Set up the ComfoConnect integration."""
+    if DOMAIN in config:
+        # import configuration using config flow
+        sensors = None
+        for sensor in config["sensor"]:
+            if sensor.get("platform") == DOMAIN:
+                sensors = sensor.get("resources")
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT, "import_sensors": sensors},
+                data=config[DOMAIN],
+            )
+        )
 
-    conf = config[DOMAIN]
-    host = conf[CONF_HOST]
-    name = conf[CONF_NAME]
-    token = conf[CONF_TOKEN]
-    user_agent = conf[CONF_USER_AGENT]
-    pin = conf[CONF_PIN]
+    return True
+
+
+async def async_setup_entry(
+    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
+) -> bool:
+    """Set up platform from a ConfigEntry."""
+    host = entry.data[CONF_HOST]
+    name = entry.data[CONF_NAME]
+    token = entry.data[CONF_TOKEN]
+    user_agent = entry.data[CONF_USER_AGENT]
+    pin = entry.data[CONF_PIN]
 
     # Run discovery on the configured ip
-    bridges = Bridge.discover(host)
+    bridges = await hass.async_add_executor_job(Bridge.discover, host)
     if not bridges:
         _LOGGER.error("Could not connect to ComfoConnect bridge on %s", host)
         return False
@@ -71,18 +92,26 @@ def setup(hass, config):
     hass.data[DOMAIN] = ccb
 
     # Start connection with bridge
-    ccb.connect()
+    await ccb.connect()
 
     # Schedule disconnect on shutdown
-    def _shutdown(_event):
-        ccb.disconnect()
+    async def _shutdown(_event):
+        await ccb.disconnect()
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
-    # Load platforms
-    discovery.load_platform(hass, "fan", DOMAIN, {}, config)
-
+    for platform in PLATFORM:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, platform)
+        )
     return True
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    ccb = hass.data.get(DOMAIN)
+    await ccb.disconnect()
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORM)
 
 
 class ComfoConnectBridge:
@@ -103,15 +132,15 @@ class ComfoConnectBridge:
         )
         self.comfoconnect.callback_sensor = self.sensor_callback
 
-    def connect(self):
+    async def connect(self):
         """Connect with the bridge."""
         _LOGGER.debug("Connecting with bridge")
-        self.comfoconnect.connect(True)
+        await self.hass.async_add_executor_job(self.comfoconnect.connect, True)
 
-    def disconnect(self):
+    async def disconnect(self):
         """Disconnect from the bridge."""
         _LOGGER.debug("Disconnecting from bridge")
-        self.comfoconnect.disconnect()
+        await self.hass.async_add_executor_job(self.comfoconnect.disconnect)
 
     def sensor_callback(self, var, value):
         """Notify listeners that we have received an update."""
