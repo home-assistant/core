@@ -99,7 +99,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except SmartDeviceException:
                 errors["base"] = "cannot_connect"
-            return self._async_create_entry_from_device(device)
+            else:
+                return self._async_create_entry_from_device(device)
 
         return self.async_show_form(
             step_id="user",
