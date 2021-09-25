@@ -31,6 +31,7 @@ from .common import (
     async_enable_traffic,
     async_test_rejoin,
     find_entity_id,
+    find_entity_ids,
     send_attribute_report,
     send_attributes_report,
 )
@@ -375,13 +376,37 @@ async def test_electrical_measurement_init(
 
 
 @pytest.mark.parametrize(
-    "cluster_id, unsupported_attributes",
+    "cluster_id, unsupported_attributes, entity_ids, missing_entity_ids",
     (
         (
             smartenergy.Metering.cluster_id,
             {
                 "instantaneous_demand",
             },
+            {
+                "smartenergy_metering_summation_delivered",
+            },
+            {
+                "smartenergy_metering",
+            },
+        ),
+        (
+            smartenergy.Metering.cluster_id,
+            {"instantaneous_demand", "current_summ_delivered"},
+            {},
+            {
+                "smartenergy_metering_summation_delivered",
+                "smartenergy_metering",
+            },
+        ),
+        (
+            smartenergy.Metering.cluster_id,
+            {},
+            {
+                "smartenergy_metering_summation_delivered",
+                "smartenergy_metering",
+            },
+            {},
         ),
     ),
 )
@@ -391,8 +416,14 @@ async def test_unsupported_attributes_sensor(
     zha_device_joined_restored,
     cluster_id,
     unsupported_attributes,
+    entity_ids,
+    missing_entity_ids,
 ):
     """Test zha sensor platform."""
+
+    entity_prefix = "sensor.fakemanufacturer_fakemodel_e769900a_{}"
+    entity_ids = {entity_prefix.format(e) for e in entity_ids}
+    missing_entity_ids = {entity_prefix.format(e) for e in missing_entity_ids}
 
     zigpy_device = zigpy_device_mock(
         {
@@ -413,5 +444,6 @@ async def test_unsupported_attributes_sensor(
 
     await async_enable_traffic(hass, [zha_device], enabled=False)
     await hass.async_block_till_done()
-    entity_id = await find_entity_id(DOMAIN, zha_device, hass)
-    assert entity_id is None
+    present_entity_ids = set(await find_entity_ids(DOMAIN, zha_device, hass))
+    assert present_entity_ids == entity_ids
+    assert missing_entity_ids not in present_entity_ids
