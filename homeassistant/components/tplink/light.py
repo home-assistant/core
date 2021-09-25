@@ -49,16 +49,6 @@ async def async_setup_entry(
     async_add_entities([TPLinkSmartBulb(device, coordinator)])
 
 
-def brightness_to_percentage(byt):
-    """Convert brightness from absolute 0..255 to percentage."""
-    return round((byt * 100.0) / 255.0)
-
-
-def brightness_from_percentage(percent):
-    """Convert percentage to absolute value 0..255."""
-    return round((percent * 255.0) / 100.0)
-
-
 class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     """Representation of a TPLink Smart Bulb."""
 
@@ -80,7 +70,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         transition = kwargs.get(ATTR_TRANSITION)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         if brightness is not None:
-            brightness = int(brightness_to_percentage(brightness))
+            brightness = round((brightness * 100.0) / 255.0)
 
         # Handle turning to temp mode
         if ATTR_COLOR_TEMP in kwargs:
@@ -127,7 +117,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     @property
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
-        return brightness_from_percentage(self.device.brightness)
+        return round((self.device.brightness * 255.0) / 100.0)
 
     @property
     def hs_color(self) -> tuple[int, int] | None:
