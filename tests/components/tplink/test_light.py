@@ -372,7 +372,7 @@ async def update_entity(hass: HomeAssistant, entity_id: str) -> None:
 
 
 async def test_unknown_light(
-    hass: HomeAssistant, unknown_light_mock_data: LightMockData
+    hass: HomeAssistant, unknown_light_mock_data: LightMockData, mock_discovery: Mock
 ) -> None:
     """Test function."""
     await async_setup_component(hass, HA_DOMAIN, {})
@@ -397,7 +397,7 @@ async def test_unknown_light(
 
 
 async def test_update_failure(
-    hass: HomeAssistant, light_mock_data: LightMockData, caplog
+    hass: HomeAssistant, light_mock_data: LightMockData, mock_discovery: Mock, caplog
 ):
     """Test that update failures are logged."""
 
