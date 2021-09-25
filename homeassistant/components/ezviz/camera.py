@@ -18,9 +18,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_DIRECTION,
@@ -40,7 +38,6 @@ from .const import (
     DIR_RIGHT,
     DIR_UP,
     DOMAIN,
-    MANUFACTURER,
     SERVICE_ALARM_SOUND,
     SERVICE_ALARM_TRIGER,
     SERVICE_DETECTION_SENSITIVITY,
@@ -48,6 +45,7 @@ from .const import (
     SERVICE_WAKE_DEVICE,
 )
 from .coordinator import EzvizDataUpdateCoordinator
+from .entity import EzvizEntity
 
 CAMERA_SCHEMA = vol.Schema(
     {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
@@ -230,7 +228,7 @@ async def async_setup_entry(
     )
 
 
-class EzvizCamera(CoordinatorEntity, Camera):
+class EzvizCamera(EzvizEntity, Camera):
     """An implementation of a Ezviz security camera."""
 
     coordinator: EzvizDataUpdateCoordinator
@@ -247,24 +245,21 @@ class EzvizCamera(CoordinatorEntity, Camera):
         ffmpeg_arguments: str | None,
     ) -> None:
         """Initialize a Ezviz security camera."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, idx)
         Camera.__init__(self)
         self._username = camera_username
         self._password = camera_password
         self._rtsp_stream = camera_rtsp_stream
-        self._idx = idx
-        self._ffmpeg = hass.data[DATA_FFMPEG]
         self._local_rtsp_port = local_rtsp_port
         self._ffmpeg_arguments = ffmpeg_arguments
-
-        self._serial = self.coordinator.data[self._idx]["serial"]
-        self._name = self.coordinator.data[self._idx]["name"]
-        self._local_ip = self.coordinator.data[self._idx]["local_ip"]
+        self._ffmpeg = hass.data[DATA_FFMPEG]
+        self._attr_unique_id = self._serial
+        self._attr_name = self.data["name"]
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.coordinator.data[self._idx]["status"] != 2
+        return self.data["status"] != 2
 
     @property
     def supported_features(self) -> int:
@@ -274,34 +269,19 @@ class EzvizCamera(CoordinatorEntity, Camera):
         return 0
 
     @property
-    def name(self) -> str:
-        """Return the name of this device."""
-        return self._name
-
-    @property
-    def model(self) -> str:
-        """Return the model of this device."""
-        return self.coordinator.data[self._idx]["device_sub_category"]
-
-    @property
-    def brand(self) -> str:
-        """Return the manufacturer of this device."""
-        return MANUFACTURER
-
-    @property
     def is_on(self) -> bool:
         """Return true if on."""
-        return bool(self.coordinator.data[self._idx]["status"])
+        return bool(self.data["status"])
 
     @property
     def is_recording(self) -> bool:
         """Return true if the device is recording."""
-        return self.coordinator.data[self._idx]["alarm_notify"]
+        return self.data["alarm_notify"]
 
     @property
     def motion_detection_enabled(self) -> bool:
         """Camera Motion Detection Status."""
-        return self.coordinator.data[self._idx]["alarm_notify"]
+        return self.data["alarm_notify"]
 
     def enable_motion_detection(self) -> None:
         """Enable motion detection in camera."""
@@ -319,11 +299,6 @@ class EzvizCamera(CoordinatorEntity, Camera):
         except InvalidHost as err:
             raise InvalidHost("Error disabling motion detection") from err
 
-    @property
-    def unique_id(self) -> str:
-        """Return the name of this camera."""
-        return self._serial
-
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -334,20 +309,9 @@ class EzvizCamera(CoordinatorEntity, Camera):
             self.hass, self._rtsp_stream, width=width, height=height
         )
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device_info of the device."""
-        return {
-            "identifiers": {(DOMAIN, self._serial)},
-            "name": self.coordinator.data[self._idx]["name"],
-            "model": self.coordinator.data[self._idx]["device_sub_category"],
-            "manufacturer": MANUFACTURER,
-            "sw_version": self.coordinator.data[self._idx]["version"],
-        }
-
     async def stream_source(self) -> str | None:
         """Return the stream source."""
-        local_ip = self.coordinator.data[self._idx]["local_ip"]
+        local_ip = self.data["local_ip"]
         if self._local_rtsp_port:
             rtsp_stream_source = (
                 f"rtsp://{self._username}:{self._password}@"

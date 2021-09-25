@@ -1,7 +1,6 @@
 """Support for Ezviz Switch sensors."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from pyezviz.constants import DeviceSwitchType
@@ -10,14 +9,11 @@ from pyezviz.exceptions import HTTPError, PyEzvizError
 from homeassistant.components.switch import DEVICE_CLASS_SWITCH, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DATA_COORDINATOR, DOMAIN, MANUFACTURER
+from .const import DATA_COORDINATOR, DOMAIN
 from .coordinator import EzvizDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
+from .entity import EzvizEntity
 
 
 async def async_setup_entry(
@@ -41,37 +37,27 @@ async def async_setup_entry(
     async_add_entities(switch_entities)
 
 
-class EzvizSwitch(CoordinatorEntity, SwitchEntity):
+class EzvizSwitch(EzvizEntity, SwitchEntity):
     """Representation of a Ezviz sensor."""
 
     coordinator: EzvizDataUpdateCoordinator
+    ATTR_DEVICE_CLASS = DEVICE_CLASS_SWITCH
 
     def __init__(
         self, coordinator: EzvizDataUpdateCoordinator, idx: int, switch: str
     ) -> None:
         """Initialize the switch."""
-        super().__init__(coordinator)
-        self._idx = idx
-        self._camera_name = self.coordinator.data[self._idx]["name"]
+        super().__init__(coordinator, idx)
         self._name = switch
-        self._sensor_name = f"{self._camera_name}.{DeviceSwitchType(self._name).name}"
-        self._serial = self.coordinator.data[self._idx]["serial"]
-        self._device_class = DEVICE_CLASS_SWITCH
-
-    @property
-    def name(self) -> str:
-        """Return the name of the Ezviz switch."""
-        return f"{DeviceSwitchType(self._name).name}"
+        self._attr_name = f"{self._camera_name} {DeviceSwitchType(switch).name.title()}"
+        self._attr_unique_id = (
+            f"{self._serial}_{self._camera_name}.{DeviceSwitchType(switch).name}"
+        )
 
     @property
     def is_on(self) -> bool:
         """Return the state of the switch."""
-        return self.coordinator.data[self._idx]["switches"][self._name]
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of this switch."""
-        return f"{self._serial}_{self._sensor_name}"
+        return self.data["switches"][self._name]
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Change a device switch on the camera."""
@@ -98,19 +84,3 @@ class EzvizSwitch(CoordinatorEntity, SwitchEntity):
 
         if update_ok:
             await self.coordinator.async_request_refresh()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device_info of the device."""
-        return {
-            "identifiers": {(DOMAIN, self._serial)},
-            "name": self.coordinator.data[self._idx]["name"],
-            "model": self.coordinator.data[self._idx]["device_sub_category"],
-            "manufacturer": MANUFACTURER,
-            "sw_version": self.coordinator.data[self._idx]["version"],
-        }
-
-    @property
-    def device_class(self) -> str:
-        """Device class for the sensor."""
-        return self._device_class

@@ -1,21 +1,39 @@
 """Support for Ezviz sensors."""
 from __future__ import annotations
 
-import logging
-
-from pyezviz.constants import SensorType
-
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.binary_sensor import DEVICE_CLASS_MOTION
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DATA_COORDINATOR, DOMAIN, MANUFACTURER
+from .const import DATA_COORDINATOR, DOMAIN
 from .coordinator import EzvizDataUpdateCoordinator
+from .entity import EzvizEntity
 
-_LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 1
+
+SENSOR_TYPES: dict[str, SensorEntityDescription] = {
+    "sw_version": SensorEntityDescription(key="sw_version"),
+    "battery_level": SensorEntityDescription(
+        key="battery_level",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=DEVICE_CLASS_BATTERY,
+    ),
+    "alarm_sound_mod": SensorEntityDescription(key="alarm_sound_mod"),
+    "detection_sensibility": SensorEntityDescription(key="detection_sensibility"),
+    "last_alarm_time": SensorEntityDescription(key="last_alarm_time"),
+    "Seconds_Last_Trigger": SensorEntityDescription(key="Seconds_Last_Trigger"),
+    "last_alarm_pic": SensorEntityDescription(key="last_alarm_pic"),
+    "supported_channels": SensorEntityDescription(key="supported_channels"),
+    "local_ip": SensorEntityDescription(key="local_ip"),
+    "wan_ip": SensorEntityDescription(key="wan_ip"),
+    "PIR_Status": SensorEntityDescription(
+        key="PIR_Status",
+        device_class=DEVICE_CLASS_MOTION,
+    ),
+}
 
 
 async def async_setup_entry(
@@ -28,66 +46,33 @@ async def async_setup_entry(
     sensors = []
 
     for idx, camera in enumerate(coordinator.data):
-        for name in camera:
+        for sensor in camera:
             # Only add sensor with value.
-            if camera.get(name) is None:
+            if camera.get(sensor) is None:
                 continue
 
-            if name in SensorType.__members__:
-                sensor_type_name = getattr(SensorType, name).value
-                sensors.append(EzvizSensor(coordinator, idx, name, sensor_type_name))
+            if sensor in SENSOR_TYPES:
+                sensors.append(EzvizSensor(coordinator, idx, sensor))
 
     async_add_entities(sensors)
-#to do : entity description
 
-class EzvizSensor(CoordinatorEntity, SensorEntity):
+
+class EzvizSensor(EzvizEntity, SensorEntity):
     """Representation of a Ezviz sensor."""
 
     coordinator: EzvizDataUpdateCoordinator
 
     def __init__(
-        self,
-        coordinator: EzvizDataUpdateCoordinator,
-        idx: int,
-        name: str,
-        sensor_type_name: str,
+        self, coordinator: EzvizDataUpdateCoordinator, idx: int, sensor: str
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-        self._idx = idx
-        self._camera_name = self.coordinator.data[self._idx]["name"]
-        self._name = name
-        self._sensor_name = f"{self._camera_name}.{self._name}"
-        self.sensor_type_name = sensor_type_name
-        self._serial = self.coordinator.data[self._idx]["serial"]
-
-    @property
-    def name(self) -> str:
-        """Return the name of the Ezviz sensor."""
-        return self._name
+        super().__init__(coordinator, idx)
+        self._sensor_name = sensor
+        self._attr_name = f"{self._camera_name} {sensor.title()}"
+        self._attr_unique_id = f"{self._serial}_{self._camera_name}.{sensor}"
+        self.entity_description = SENSOR_TYPES[sensor]
 
     @property
     def native_value(self) -> int | str:
         """Return the state of the sensor."""
-        return self.coordinator.data[self._idx][self._name]
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of this sensor."""
-        return f"{self._serial}_{self._sensor_name}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device_info of the device."""
-        return {
-            "identifiers": {(DOMAIN, self._serial)},
-            "name": self.coordinator.data[self._idx]["name"],
-            "model": self.coordinator.data[self._idx]["device_sub_category"],
-            "manufacturer": MANUFACTURER,
-            "sw_version": self.coordinator.data[self._idx]["version"],
-        }
-
-    @property
-    def device_class(self) -> str:
-        """Device class for the sensor."""
-        return self.sensor_type_name
+        return self.data[self._sensor_name]
