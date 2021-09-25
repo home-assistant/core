@@ -16,7 +16,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NotionEntity
@@ -135,7 +135,8 @@ async def async_setup_entry(
             for description in BINARY_SENSOR_DESCRIPTIONS
             if description.key == task["task_type"]
             and (sensor := coordinator.data["sensors"][task["sensor_id"]])
-        ]
+        ],
+        True,
     )
 
 
@@ -144,9 +145,8 @@ class NotionBinarySensor(NotionEntity, BinarySensorEntity):
 
     entity_description: NotionBinarySensorDescription
 
-    @callback
-    def _async_update_from_latest_data(self) -> None:
-        """Fetch new state data for the sensor."""
+    async def async_update(self) -> None:
+        """Update the state."""
         task = self.coordinator.data["tasks"][self._task_id]
 
         if "value" in task["status"]:

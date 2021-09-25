@@ -6,7 +6,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NotionEntity
@@ -43,16 +43,16 @@ async def async_setup_entry(
             for description in SENSOR_DESCRIPTIONS
             if description.key == task["task_type"]
             and (sensor := coordinator.data["sensors"][task["sensor_id"]])
-        ]
+        ],
+        True,
     )
 
 
 class NotionSensor(NotionEntity, SensorEntity):
     """Define a Notion sensor."""
 
-    @callback
-    def _async_update_from_latest_data(self) -> None:
-        """Fetch new state data for the sensor."""
+    async def async_update(self) -> None:
+        """Update the state."""
         task = self.coordinator.data["tasks"][self._task_id]
 
         if task["task_type"] == SENSOR_TEMPERATURE:
