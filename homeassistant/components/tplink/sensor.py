@@ -1,7 +1,7 @@
 """Support for TPLink HS100/HS110/HS200 smart switch energy sensors."""
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import Final
 
 from kasa import SmartDevice
 
@@ -11,7 +11,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.components.tplink import TPLinkDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_VOLTAGE,
@@ -28,7 +27,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .common import CoordinatedTPLinkEntity
 from .const import (
     ATTR_CURRENT_A,
     ATTR_CURRENT_POWER_W,
@@ -37,6 +35,8 @@ from .const import (
     CONF_EMETER_PARAMS,
     DOMAIN,
 )
+from .coordinator import TPLinkDataUpdateCoordinator
+from .entity import CoordinatedTPLinkEntity
 
 ENERGY_SENSORS: Final[list[SensorEntityDescription]] = [
     SensorEntityDescription(
@@ -116,11 +116,6 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
         Overridden to include the description.
         """
         return f"{self.device.alias} {self.entity_description.name}"
-
-    @property
-    def data(self) -> dict[str, Any]:
-        """Return data from DataUpdateCoordinator."""
-        return self.coordinator.data
 
     @property
     def native_value(self) -> float | None:

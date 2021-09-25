@@ -18,7 +18,6 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     LightEntity,
 )
-from homeassistant.components.tplink import TPLinkDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -28,8 +27,9 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
 )
 
-from .common import CoordinatedTPLinkEntity
 from .const import DOMAIN
+from .coordinator import TPLinkDataUpdateCoordinator
+from .entity import CoordinatedTPLinkEntity
 
 PARALLEL_UPDATES = 0
 

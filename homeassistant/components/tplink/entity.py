@@ -7,16 +7,17 @@ from kasa import SmartDevice
 
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .coordinator import TPLinkDataUpdateCoordinator
 
 
 class CoordinatedTPLinkEntity(CoordinatorEntity):
     """Common base class for all coordinated tplink entities."""
 
-    def __init__(self, device: SmartDevice, coordinator: DataUpdateCoordinator) -> None:
+    def __init__(
+        self, device: SmartDevice, coordinator: TPLinkDataUpdateCoordinator
+    ) -> None:
         """Initialize the switch."""
         super().__init__(coordinator)
         self.device = device
@@ -39,7 +40,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
-        data = {
+        return {
             "name": self.device.alias,
             "model": self.device.model,
             "manufacturer": "TP-Link",
@@ -47,10 +48,6 @@ class CoordinatedTPLinkEntity(CoordinatorEntity):
             "connections": {(dr.CONNECTION_NETWORK_MAC, self.device.mac)},
             "sw_version": self.device.hw_info["sw_ver"],
         }
-        if self.device.is_strip_socket:
-            data["via_device"] = self.device.parent.device_id
-
-        return data
 
     @property
     def is_on(self) -> bool | None:
