@@ -72,6 +72,7 @@ BATTERY_SIZES = {
 
 CHANNEL_ST_HUMIDITY_CLUSTER = f"channel_0x{SMARTTHINGS_HUMIDITY_CLUSTER:04x}"
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
+MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, DOMAIN)
 
 
 async def async_setup_entry(
@@ -262,7 +263,7 @@ class Illuminance(Sensor):
         return round(pow(10, ((value - 1) / 10000)), 1)
 
 
-@STRICT_MATCH(channel_names=CHANNEL_SMARTENERGY_METERING)
+@MULTI_MATCH(channel_names=CHANNEL_SMARTENERGY_METERING)
 class SmartEnergyMetering(Sensor):
     """Metering sensor."""
 
