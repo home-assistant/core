@@ -24,7 +24,13 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DOMAIN, ELECTRICITY_SENSORS, MANUFACTURER, MIN_TIME_BETWEEN_UPDATES
+from .const import (
+    DOMAIN,
+    ELECTRICITY_SENSORS,
+    GAS_SENSORS,
+    MANUFACTURER,
+    MIN_TIME_BETWEEN_UPDATES,
+)
 
 PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
@@ -79,27 +85,31 @@ async def async_setup_entry(
     else:
         entities = []
         for meter in meters:
-            if meter.measurement_type == "ELECTRICITY":
-                # Get coordinator for meter, set config entry and fetch initial data
-                # so we have data when entities are added
-                coordinator = get_coordinator_for_meter(
-                    hass, meter, discovergy_instance
-                )
-                coordinator.config_entry = entry
-                await coordinator.async_config_entry_first_refresh()
+            # Get coordinator for meter, set config entry and fetch initial data
+            # so we have data when entities are added
+            coordinator = get_coordinator_for_meter(hass, meter, discovergy_instance)
+            coordinator.config_entry = entry
+            await coordinator.async_config_entry_first_refresh()
 
-                for description in ELECTRICITY_SENSORS:
+            SENSORS = None
+            if meter.measurement_type == "ELECTRICITY":
+                SENSORS = ELECTRICITY_SENSORS
+            elif meter.measurement_type == "GAS":
+                SENSORS = GAS_SENSORS
+
+            if SENSORS is not None:
+                for description in SENSORS:
                     # check if this meter has this data, then add this sensor
                     if description.key in coordinator.data.values:
                         entities.append(
-                            DiscovergyElectricitySensor(description, meter, coordinator)
+                            DiscovergySensor(description, meter, coordinator)
                         )
 
         async_add_entities(entities, False)
 
 
-class DiscovergyElectricitySensor(CoordinatorEntity, SensorEntity):
-    """Represents a discovergy electricity smart meter sensor."""
+class DiscovergySensor(CoordinatorEntity, SensorEntity):
+    """Represents a discovergy smart meter sensor."""
 
     def __init__(
         self,

@@ -5,12 +5,13 @@ from datetime import timedelta
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_GAS,
     DEVICE_CLASS_POWER,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntityDescription,
 )
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT, VOLUME_CUBIC_METERS
 
 DOMAIN = "discovergy"
 MANUFACTURER = "Discovergy"
@@ -21,6 +22,16 @@ CONF_CONSUMER_KEY = "consumer_key"
 CONF_CONSUMER_SECRET = "consumer_secret"
 CONF_ACCESS_TOKEN = "access_token"
 CONF_ACCESS_TOKEN_SECRET = "access_token_secret"
+
+GAS_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="volume",
+        name="Consumption",
+        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        device_class=DEVICE_CLASS_GAS,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+    ),
+)
 
 ELECTRICITY_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
