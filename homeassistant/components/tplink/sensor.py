@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any, Final
 
-from pyHS100 import SmartPlug
+from kasa import SmartDevice
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
@@ -11,13 +11,10 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.components.tplink import SmartPlugDataUpdateCoordinator
+from homeassistant.components.tplink import TPLinkDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_VOLTAGE,
-    CONF_ALIAS,
-    CONF_DEVICE_ID,
-    CONF_MAC,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
@@ -28,18 +25,13 @@ from homeassistant.const import (
     POWER_WATT,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from .common import CoordinatedTPLinkEntity
 from .const import (
     CONF_EMETER_PARAMS,
-    CONF_MODEL,
-    CONF_SW_VERSION,
+    CONF_LIGHT,
     CONF_SWITCH,
     COORDINATORS,
     DOMAIN as TPLINK_DOMAIN,
@@ -96,37 +88,43 @@ async def async_setup_entry(
 ) -> None:
     """Set up switches."""
     entities: list[SmartPlugSensor] = []
-    coordinators: list[SmartPlugDataUpdateCoordinator] = hass.data[TPLINK_DOMAIN][
+    coordinators: dict[str, TPLinkDataUpdateCoordinator] = hass.data[TPLINK_DOMAIN][
         COORDINATORS
     ]
-    switches: list[SmartPlug] = hass.data[TPLINK_DOMAIN][CONF_SWITCH]
-    for switch in switches:
-        coordinator: SmartPlugDataUpdateCoordinator = coordinators[
-            switch.context or switch.mac
-        ]
-        if not switch.has_emeter and coordinator.data.get(CONF_EMETER_PARAMS) is None:
+    switches: list[SmartDevice] = hass.data[TPLINK_DOMAIN][CONF_SWITCH]
+    lights: list[SmartDevice] = hass.data[TPLINK_DOMAIN][CONF_LIGHT]
+    for device in switches + lights:
+        coordinator: TPLinkDataUpdateCoordinator = coordinators[device.device_id]
+        if not device.has_emeter:
             continue
         for description in ENERGY_SENSORS:
             if coordinator.data[CONF_EMETER_PARAMS].get(description.key) is not None:
-                entities.append(SmartPlugSensor(switch, coordinator, description))
+                entities.append(SmartPlugSensor(device, coordinator, description))
 
     async_add_entities(entities)
 
 
-class SmartPlugSensor(CoordinatorEntity, SensorEntity):
+class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
     """Representation of a TPLink Smart Plug energy sensor."""
 
     def __init__(
         self,
-        smartplug: SmartPlug,
+        device: SmartDevice,
         coordinator: DataUpdateCoordinator,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the switch."""
-        super().__init__(coordinator)
-        self.smartplug = smartplug
+        super().__init__(device, coordinator)
+        self.device = device
         self.entity_description = description
-        self._attr_name = f"{coordinator.data[CONF_ALIAS]} {description.name}"
+
+    @property
+    def name(self) -> str | None:
+        """Return the name of the Smart Plug.
+
+        Overridden to include the description.
+        """
+        return f"{self.device.alias} {self.entity_description.name}"
 
     @property
     def data(self) -> dict[str, Any]:
@@ -141,15 +139,4 @@ class SmartPlugSensor(CoordinatorEntity, SensorEntity):
     @property
     def unique_id(self) -> str | None:
         """Return a unique ID."""
-        return f"{self.data[CONF_DEVICE_ID]}_{self.entity_description.key}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return information about the device."""
-        return {
-            "name": self.data[CONF_ALIAS],
-            "model": self.data[CONF_MODEL],
-            "manufacturer": "TP-Link",
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self.data[CONF_MAC])},
-            "sw_version": self.data[CONF_SW_VERSION],
-        }
+        return f"{self.device.device_id}_{self.entity_description.key}"

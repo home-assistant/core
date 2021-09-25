@@ -2,30 +2,21 @@
 from __future__ import annotations
 
 from asyncio import sleep
+import logging
 from typing import Any
 
-from pyHS100 import SmartPlug
+from kasa import SmartDevice
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.components.tplink import SmartPlugDataUpdateCoordinator
+from homeassistant.components.tplink import TPLinkDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ALIAS, CONF_DEVICE_ID, CONF_MAC, CONF_STATE
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
 
-from .const import (
-    CONF_MODEL,
-    CONF_SW_VERSION,
-    CONF_SWITCH,
-    COORDINATORS,
-    DOMAIN as TPLINK_DOMAIN,
-)
+from .common import CoordinatedTPLinkEntity
+from .const import CONF_SWITCH, COORDINATORS, DOMAIN as TPLINK_DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -35,70 +26,41 @@ async def async_setup_entry(
 ) -> None:
     """Set up switches."""
     entities: list[SmartPlugSwitch] = []
-    coordinators: list[SmartPlugDataUpdateCoordinator] = hass.data[TPLINK_DOMAIN][
+    coordinators: dict[str, TPLinkDataUpdateCoordinator] = hass.data[TPLINK_DOMAIN][
         COORDINATORS
     ]
-    switches: list[SmartPlug] = hass.data[TPLINK_DOMAIN][CONF_SWITCH]
+    switches: list[SmartDevice] = hass.data[TPLINK_DOMAIN][CONF_SWITCH]
     for switch in switches:
-        coordinator = coordinators[switch.context or switch.mac]
+        coordinator = coordinators[switch.device_id]
         entities.append(SmartPlugSwitch(switch, coordinator))
+        if switch.is_strip:
+            _LOGGER.debug("Initializing strip with %s sockets", len(switch.children))
+            for child in switch.children:
+                entities.append(SmartPlugSwitch(child, coordinator))
 
     async_add_entities(entities)
 
 
-class SmartPlugSwitch(CoordinatorEntity, SwitchEntity):
+class SmartPlugSwitch(CoordinatedTPLinkEntity, SwitchEntity):
     """Representation of a TPLink Smart Plug switch."""
-
-    def __init__(
-        self, smartplug: SmartPlug, coordinator: DataUpdateCoordinator
-    ) -> None:
-        """Initialize the switch."""
-        super().__init__(coordinator)
-        self.smartplug = smartplug
-
-    @property
-    def data(self) -> dict[str, Any]:
-        """Return data from DataUpdateCoordinator."""
-        return self.coordinator.data
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        return self.data[CONF_DEVICE_ID]
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the Smart Plug."""
-        return self.data[CONF_ALIAS]
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return information about the device."""
-        return {
-            "name": self.data[CONF_ALIAS],
-            "model": self.data[CONF_MODEL],
-            "manufacturer": "TP-Link",
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self.data[CONF_MAC])},
-            "sw_version": self.data[CONF_SW_VERSION],
-        }
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if switch is on."""
-        return self.data[CONF_STATE]
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.hass.async_add_executor_job(self.smartplug.turn_on)
-        # Workaround for delayed device state update on HS210: #55190
-        if "HS210" in self.device_info["model"]:
-            await sleep(0.5)
-        await self.coordinator.async_refresh()
+        await self.device.turn_on()
+        await self._async_device_workarounds()
+        await self._async_refresh_with_children()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.hass.async_add_executor_job(self.smartplug.turn_off)
+        await self.device.turn_off()
+        await self._async_device_workarounds()
+        await self._async_refresh_with_children()
+
+    async def _async_device_workarounds(self) -> None:
         # Workaround for delayed device state update on HS210: #55190
-        if "HS210" in self.device_info["model"]:
+        if "HS210" in self.device.model:
             await sleep(0.5)
+
+    async def _async_refresh_with_children(self) -> None:
+        self.coordinator.update_children = False
         await self.coordinator.async_refresh()
