@@ -64,12 +64,10 @@ class TractiveBinarySensor(TractiveEntity, BinarySensorEntity):
         )
 
 
-SENSOR_TYPES = (
-    BinarySensorEntityDescription(
-        key=ATTR_BATTERY_CHARGING,
-        name="Battery Charging",
-        device_class=DEVICE_CLASS_BATTERY_CHARGING,
-    ),
+SENSOR_TYPE = BinarySensorEntityDescription(
+    key=ATTR_BATTERY_CHARGING,
+    name="Battery Charging",
+    device_class=DEVICE_CLASS_BATTERY_CHARGING,
 )
 
 
@@ -81,16 +79,17 @@ async def async_setup_entry(hass, entry, async_add_entities):
     entities = []
 
     for item in trackables:
-        for description in SENSOR_TYPES:
-            if item.tracker_details["model_number"] == "TRNJA4":
-                entities.append(
-                    TractiveBinarySensor(
-                        client.user_id,
-                        item.trackable,
-                        item.tracker_details,
-                        f"{item.trackable['_id']}_{description.key}",
-                        description,
-                    )
-                )
+        # Currently, we only know one model that supports the battery charging sensor.
+        if item.tracker_details["model_number"] != "TRNJA4":
+            continue
+        entities.append(
+            TractiveBinarySensor(
+                client.user_id,
+                item.trackable,
+                item.tracker_details,
+                f"{item.trackable['_id']}_{SENSOR_TYPE.key}",
+                SENSOR_TYPE,
+            )
+        )
 
     async_add_entities(entities)
