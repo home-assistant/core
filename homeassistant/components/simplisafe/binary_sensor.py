@@ -16,7 +16,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SimpliSafe, SimpliSafeBaseSensor
@@ -71,7 +71,7 @@ async def async_setup_entry(
             if sensor.type in SUPPORTED_BATTERY_SENSOR_TYPES:
                 sensors.append(BatteryBinarySensor(simplisafe, system, sensor))
 
-    async_add_entities(sensors)
+    async_add_entities(sensors, True)
 
 
 class TriggeredBinarySensor(SimpliSafeBaseSensor, BinarySensorEntity):
@@ -89,9 +89,8 @@ class TriggeredBinarySensor(SimpliSafeBaseSensor, BinarySensorEntity):
 
         self._attr_device_class = device_class
 
-    @callback
-    def async_update_from_rest_api(self) -> None:
-        """Update the entity with the provided REST API data."""
+    async def async_update(self) -> None:
+        """Update the state."""
         self._attr_is_on = self._sensor.triggered
 
 
@@ -111,7 +110,6 @@ class BatteryBinarySensor(SimpliSafeBaseSensor, BinarySensorEntity):
 
         self._attr_unique_id = f"{super().unique_id}-battery"
 
-    @callback
-    def async_update_from_rest_api(self) -> None:
-        """Update the entity with the provided REST API data."""
+    async def async_update(self) -> None:
+        """Update the state."""
         self._attr_is_on = self._sensor.low_battery

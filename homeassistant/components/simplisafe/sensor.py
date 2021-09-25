@@ -4,7 +4,7 @@ from simplipy.entity import EntityTypes
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_FAHRENHEIT
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SimpliSafeBaseSensor
@@ -27,7 +27,7 @@ async def async_setup_entry(
             if sensor.type == EntityTypes.temperature:
                 sensors.append(SimplisafeFreezeSensor(simplisafe, system, sensor))
 
-    async_add_entities(sensors)
+    async_add_entities(sensors, True)
 
 
 class SimplisafeFreezeSensor(SimpliSafeBaseSensor, SensorEntity):
@@ -37,7 +37,6 @@ class SimplisafeFreezeSensor(SimpliSafeBaseSensor, SensorEntity):
     _attr_native_unit_of_measurement = TEMP_FAHRENHEIT
     _attr_state_class = STATE_CLASS_MEASUREMENT
 
-    @callback
-    def async_update_from_rest_api(self) -> None:
-        """Update the entity with the provided REST API data."""
+    async def async_update(self) -> None:
+        """Update the state."""
         self._attr_native_value = self._sensor.temperature

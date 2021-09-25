@@ -458,19 +458,8 @@ class SimpliSafeEntity(CoordinatorEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        """Update the entity with new REST API data."""
-        self.async_update_from_rest_api()
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        await super().async_added_to_hass()
-        self.async_update_from_rest_api()
-
-    @callback
-    def async_update_from_rest_api(self) -> None:
-        """Update the entity with the provided REST API data."""
-        raise NotImplementedError()
+        """Respond to a DataUpdateCoordinator update."""
+        self.async_schedule_update_ha_state(force_refresh=True)
 
 
 class SimpliSafeBaseSensor(SimpliSafeEntity):

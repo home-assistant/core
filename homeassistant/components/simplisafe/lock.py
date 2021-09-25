@@ -9,7 +9,7 @@ from simplipy.system.v3 import SystemV3
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SimpliSafe, SimpliSafeEntity
@@ -34,7 +34,7 @@ async def async_setup_entry(
         for lock in system.locks.values():
             locks.append(SimpliSafeLock(simplisafe, system, lock))
 
-    async_add_entities(locks)
+    async_add_entities(locks, True)
 
 
 class SimpliSafeLock(SimpliSafeEntity, LockEntity):
@@ -54,8 +54,7 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
             LOGGER.error('Error while locking "%s": %s', self._lock.name, err)
             return
 
-        self._attr_is_locked = True
-        self.async_write_ha_state()
+        self.async_schedule_update_ha_state(force_refresh=True)
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
@@ -65,18 +64,15 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
             LOGGER.error('Error while unlocking "%s": %s', self._lock.name, err)
             return
 
-        self._attr_is_locked = False
-        self.async_write_ha_state()
+        self.async_schedule_update_ha_state(force_refresh=True)
 
-    @callback
-    def async_update_from_rest_api(self) -> None:
-        """Update the entity with the provided REST API data."""
+    async def async_update(self) -> None:
+        """Update the state."""
         self._attr_extra_state_attributes.update(
             {
                 ATTR_LOCK_LOW_BATTERY: self._lock.lock_low_battery,
                 ATTR_PIN_PAD_LOW_BATTERY: self._lock.pin_pad_low_battery,
             }
         )
-
         self._attr_is_jammed = self._lock.state == LockStates.jammed
         self._attr_is_locked = self._lock.state == LockStates.locked

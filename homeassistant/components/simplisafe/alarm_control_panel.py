@@ -120,8 +120,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
             LOGGER.error('Error while disarming "%s": %s', self._system.system_id, err)
             return
 
-        self._attr_state = STATE_ALARM_DISARMED
-        self.async_write_ha_state()
+        self.async_schedule_update_ha_state(force_refresh=True)
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
@@ -136,8 +135,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
             )
             return
 
-        self._attr_state = STATE_ALARM_ARMED_HOME
-        self.async_write_ha_state()
+        self.async_schedule_update_ha_state(force_refresh=True)
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
@@ -152,12 +150,10 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
             )
             return
 
-        self._attr_state = STATE_ALARM_ARMING
-        self.async_write_ha_state()
+        self.async_schedule_update_ha_state(force_refresh=True)
 
-    @callback
-    def async_update_from_rest_api(self) -> None:
-        """Update the entity with the provided REST API data."""
+    async def async_update(self) -> None:
+        """Update the state."""
         if isinstance(self._system, SystemV3):
             self._attr_extra_state_attributes.update(
                 {
