@@ -301,12 +301,14 @@ async def test_flow_start_only_alive(
     await hass.async_block_till_done()
     mock_flow_init.assert_not_called()
 
-    # ssdp:update advertisement should not start a flow
+    # ssdp:update advertisement should start a flow
     mock_flow_init.reset_mock()
     mock_ssdp_advertisement["nts"] = "ssdp:update"
     await ssdp_listener._on_update(mock_ssdp_advertisement)
     await hass.async_block_till_done()
-    mock_flow_init.assert_not_called()
+    mock_flow_init.assert_awaited_once_with(
+        "mock-domain", context={"source": config_entries.SOURCE_SSDP}, data=ANY
+    )
 
 
 @patch(  # XXX TODO: Isn't this duplicate with mock_get_source_ip?
