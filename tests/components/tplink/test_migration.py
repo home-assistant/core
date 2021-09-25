@@ -2,7 +2,7 @@
 from datetime import timedelta
 
 from homeassistant import setup
-from homeassistant.components.tplink import DOMAIN
+from homeassistant.components.tplink import CONF_DISCOVERY, CONF_SWITCH, DOMAIN
 from homeassistant.components.tplink.migration import CLEANUP_DELAY
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -216,3 +216,25 @@ async def test_migration_device_online_end_to_end_ignores_other_devices(
                 break
 
         assert legacy_entry is not None
+
+
+async def test_migrate_from_yaml(hass: HomeAssistant):
+    """Test migrate from yaml."""
+    config = {
+        DOMAIN: {
+            CONF_DISCOVERY: False,
+            CONF_SWITCH: [{CONF_HOST: IP_ADDRESS}],
+        }
+    }
+    with _patch_discovery(), _patch_single_discovery():
+        await setup.async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    migrated_entry = None
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.unique_id == MAC_ADDRESS:
+            migrated_entry = entry
+            break
+
+    assert migrated_entry is not None
+    assert migrated_entry.data[CONF_HOST] == IP_ADDRESS
