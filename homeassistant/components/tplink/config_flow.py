@@ -147,7 +147,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         host = None
         if device := discovered_devices.get(mac):
             host = device.host
-        await self.async_set_unique_id(dr.format_mac(mac), raise_on_progress=True)
+        await self.async_set_unique_id(dr.format_mac(mac), raise_on_progress=False)
         self._abort_if_unique_id_configured()
         return self.async_create_entry(
             title=name,
