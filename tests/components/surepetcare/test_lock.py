@@ -25,6 +25,8 @@ async def test_locks(hass, surepetcare) -> None:
     state_entity_ids = hass.states.async_entity_ids()
 
     for entity_id, unique_id in EXPECTED_ENTITY_IDS.items():
+        surepetcare.reset_mock()
+
         assert entity_id in state_entity_ids
         state = hass.states.get(entity_id)
         assert state
@@ -37,6 +39,13 @@ async def test_locks(hass, surepetcare) -> None:
         )
         state = hass.states.get(entity_id)
         assert state.state == "unlocked"
+        surepetcare.unlock.assert_not_called()
+
+        await hass.services.async_call(
+            "lock", "lock", {"entity_id": entity_id}, blocking=True
+        )
+        state = hass.states.get(entity_id)
+        assert state.state == "locked"
 
         await hass.services.async_call(
             "lock", "lock", {"entity_id": entity_id}, blocking=True
@@ -49,3 +58,4 @@ async def test_locks(hass, surepetcare) -> None:
         )
         state = hass.states.get(entity_id)
         assert state.state == "unlocked"
+        surepetcare.unlock.assert_called()
