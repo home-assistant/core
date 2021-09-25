@@ -94,7 +94,7 @@ async def async_setup_entry(
 def _setup_entities(hass, entry: ConfigEntry, device_ids: list[str]) -> list[Entity]:
     """Set up Tuya Switch device."""
     device_manager = hass.data[DOMAIN][entry.entry_id][TUYA_DEVICE_MANAGER]
-    entities = []
+    entities:list[Entity] = []
     for device_id in device_ids:
         device = device_manager.device_map[device_id]
         if device is None:
