@@ -59,4 +59,4 @@ class SmartPlugSwitch(CoordinatedTPLinkEntity, SwitchEntity):
 
     async def _async_refresh_with_children(self) -> None:
         self.coordinator.update_children = False
-        await self.coordinator.async_refresh()
+        await self.coordinator.async_request_refresh()
