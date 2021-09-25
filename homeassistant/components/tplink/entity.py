@@ -7,16 +7,17 @@ from kasa import SmartDevice
 
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .coordinator import TPLinkDataUpdateCoordinator
 
 
 class CoordinatedTPLinkEntity(CoordinatorEntity):
     """Common base class for all coordinated tplink entities."""
 
-    def __init__(self, device: SmartDevice, coordinator: DataUpdateCoordinator) -> None:
+    def __init__(
+        self, device: SmartDevice, coordinator: TPLinkDataUpdateCoordinator
+    ) -> None:
         """Initialize the switch."""
         super().__init__(coordinator)
         self.device = device
