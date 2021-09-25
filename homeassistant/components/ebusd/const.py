@@ -255,5 +255,12 @@ SENSOR_TYPES = {
             0,
             None,
         ],
+        "ValvePosition": [
+            "PositionValveSet",
+            PERCENTAGE,
+            "mdi:valve",
+            0,
+            None,
+        ],
     },
 }
