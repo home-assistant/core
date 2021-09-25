@@ -42,13 +42,9 @@ class SmartPlugSwitch(CoordinatedTPLinkEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.device.turn_on()
-        await self._async_refresh_without_children()
+        await self.coordinator.async_request_refresh_without_children()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.device.turn_off()
-        await self._async_refresh_without_children()
-
-    async def _async_refresh_without_children(self) -> None:
-        self.coordinator.update_children = False
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_request_refresh_without_children()

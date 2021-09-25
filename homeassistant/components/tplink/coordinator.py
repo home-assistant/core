@@ -48,6 +48,14 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator):
             ),
         )
 
+    async def async_request_refresh_without_children(self) -> None:
+        """Request a refresh without the children."""
+        # If the children do get updated this is ok as this is an
+        # optimization to reduce the number of requests on the device
+        # when we do not need it.
+        self.update_children = False
+        await self.async_request_refresh()
+
     @callback
     def async_data_from_device(self) -> dict:
         """Build the coordinator data from the device."""
