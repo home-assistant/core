@@ -144,8 +144,8 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     @property
     def hs_color(self) -> tuple[int, int] | None:
         """Return the color."""
-        h, s, _ = self.device.hsv
-        return h, s
+        hue, saturation, _ = self.device.hsv
+        return hue, saturation
 
     @property
     def supported_features(self) -> int:
@@ -174,8 +174,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         if self.device.is_color:
             if self.device.color_temp:
                 return COLOR_MODE_COLOR_TEMP
-            else:
-                return COLOR_MODE_HS
+            return COLOR_MODE_HS
         elif self.device.is_variable_color_temp:
             return COLOR_MODE_COLOR_TEMP
 

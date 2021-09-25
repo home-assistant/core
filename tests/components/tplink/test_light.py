@@ -2,16 +2,13 @@
 from datetime import timedelta
 import logging
 from typing import Callable, NamedTuple
-from unittest.mock import Mock, PropertyMock, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 from kasa import SmartDeviceException
 import pytest
 
 from homeassistant.components import tplink
-from homeassistant.components.homeassistant import (
-    DOMAIN as HA_DOMAIN,
-    SERVICE_UPDATE_ENTITY,
-)
+from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -28,6 +25,8 @@ from homeassistant.const import (
     CONF_HOST,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -35,17 +34,35 @@ from homeassistant.util.dt import utcnow
 
 from tests.common import async_fire_time_changed
 
+MOCK_ENERGY_DATA = {
+    "smartlife.iot.common.emeter": {
+        "get_daystat": {
+            "day_list": [
+                {"day": 23, "energy_wh": 2, "month": 9, "year": 2021},
+                {"day": 24, "energy_wh": 66, "month": 9, "year": 2021},
+            ],
+            "err_code": 0,
+        },
+        "get_monthstat": {
+            "err_code": 0,
+            "month_list": [{"energy_wh": 68, "month": 9, "year": 2021}],
+        },
+        "get_realtime": {"err_code": 0, "power_mw": 10800},
+    }
+}
+
 
 class LightMockData(NamedTuple):
     """Mock light data."""
 
+    query_mock: AsyncMock
     sys_info: dict
     light_state: dict
     set_light_state: Callable[[dict], None]
     set_light_state_mock: Mock
     get_light_state_mock: Mock
     current_consumption_mock: Mock
-    get_sysinfo_mock: Mock
+    sys_info_mock: Mock
     get_emeter_daily_mock: Mock
     get_emeter_monthly_mock: Mock
 
@@ -53,21 +70,35 @@ class LightMockData(NamedTuple):
 class SmartSwitchMockData(NamedTuple):
     """Mock smart switch data."""
 
+    query_mock: AsyncMock
     sys_info: dict
-    state_mock: Mock
+    is_on_mock: Mock
     brightness_mock: Mock
-    get_sysinfo_mock: Mock
+    sys_info_mock: Mock
 
 
 @pytest.fixture(name="unknown_light_mock_data")
 def unknown_light_mock_data_fixture() -> None:
     """Create light mock data."""
+    light_state = {
+        "on_off": True,
+        "dft_on_state": {
+            "brightness": 12,
+            "color_temp": 3200,
+            "hue": 110,
+            "saturation": 90,
+        },
+        "brightness": 13,
+        "color_temp": 3300,
+        "hue": 110,
+        "saturation": 90,
+    }
     sys_info = {
         "sw_ver": "1.2.3",
+        "type": "smartbulb",
         "hw_ver": "2.3.4",
         "mac": "aa:bb:cc:dd:ee:ff",
         "mic_mac": "00:11:22:33:44",
-        "type": "light",
         "hwId": "1234",
         "fwId": "4567",
         "oemId": "891011",
@@ -80,19 +111,7 @@ def unknown_light_mock_data_fixture() -> None:
         "is_variable_color_temp": True,
         "model": "Foo",
         "alias": "light1",
-    }
-    light_state = {
-        "on_off": True,
-        "dft_on_state": {
-            "brightness": 12,
-            "color_temp": 3200,
-            "hue": 110,
-            "saturation": 90,
-        },
-        "brightness": 13,
-        "color_temp": 3300,
-        "hue": 110,
-        "saturation": 90,
+        "light_state": light_state,
     }
 
     def set_light_state(state) -> None:
@@ -105,23 +124,23 @@ def unknown_light_mock_data_fixture() -> None:
         return light_state
 
     set_light_state_patch = patch(
-        "homeassistant.components.tplink.common.SmartBulb.set_light_state",
+        "kasa.smartbulb.SmartBulb.set_light_state",
         side_effect=set_light_state,
     )
     get_light_state_patch = patch(
-        "homeassistant.components.tplink.common.SmartBulb.get_light_state",
+        "kasa.smartbulb.SmartBulb.get_light_state",
         return_value=light_state,
     )
     current_consumption_patch = patch(
-        "homeassistant.components.tplink.common.SmartDevice.current_consumption",
+        "kasa.smartdevice.SmartDevice.current_consumption",
         return_value=3.23,
     )
-    get_sysinfo_patch = patch(
-        "homeassistant.components.tplink.common.SmartDevice.get_sysinfo",
-        return_value=sys_info,
+    sys_info_patch = patch(
+        "kasa.smartdevice.SmartDevice.sys_info",
+        sys_info,
     )
     get_emeter_daily_patch = patch(
-        "homeassistant.components.tplink.common.SmartDevice.get_emeter_daily",
+        "kasa.smartdevice.SmartDevice.get_emeter_daily",
         return_value={
             1: 1.01,
             2: 1.02,
@@ -138,7 +157,7 @@ def unknown_light_mock_data_fixture() -> None:
         },
     )
     get_emeter_monthly_patch = patch(
-        "homeassistant.components.tplink.common.SmartDevice.get_emeter_monthly",
+        "kasa.smartdevice.SmartDevice.get_emeter_monthly",
         return_value={
             1: 2.01,
             2: 2.02,
@@ -154,16 +173,20 @@ def unknown_light_mock_data_fixture() -> None:
             12: 2.12,
         },
     )
-
-    with set_light_state_patch as set_light_state_mock, get_light_state_patch as get_light_state_mock, current_consumption_patch as current_consumption_mock, get_sysinfo_patch as get_sysinfo_mock, get_emeter_daily_patch as get_emeter_daily_mock, get_emeter_monthly_patch as get_emeter_monthly_mock:
+    query_patch = patch(
+        "kasa.smartdevice.TPLinkSmartHomeProtocol.query",
+        return_value={"system": {"get_sysinfo": sys_info}, **MOCK_ENERGY_DATA},
+    )
+    with query_patch as query_mock, set_light_state_patch as set_light_state_mock, get_light_state_patch as get_light_state_mock, current_consumption_patch as current_consumption_mock, sys_info_patch as sys_info_mock, get_emeter_daily_patch as get_emeter_daily_mock, get_emeter_monthly_patch as get_emeter_monthly_mock:
         yield LightMockData(
+            query_mock=query_mock,
             sys_info=sys_info,
             light_state=light_state,
             set_light_state=set_light_state,
             set_light_state_mock=set_light_state_mock,
             get_light_state_mock=get_light_state_mock,
             current_consumption_mock=current_consumption_mock,
-            get_sysinfo_mock=get_sysinfo_mock,
+            sys_info_mock=sys_info_mock,
             get_emeter_daily_mock=get_emeter_daily_mock,
             get_emeter_monthly_mock=get_emeter_monthly_mock,
         )
@@ -172,12 +195,25 @@ def unknown_light_mock_data_fixture() -> None:
 @pytest.fixture(name="light_mock_data")
 def light_mock_data_fixture() -> None:
     """Create light mock data."""
+    light_state = {
+        "on_off": True,
+        "dft_on_state": {
+            "brightness": 12,
+            "color_temp": 3200,
+            "hue": 110,
+            "saturation": 90,
+        },
+        "brightness": 13,
+        "color_temp": 3300,
+        "hue": 110,
+        "saturation": 90,
+    }
     sys_info = {
         "sw_ver": "1.2.3",
         "hw_ver": "2.3.4",
         "mac": "aa:bb:cc:dd:ee:ff",
         "mic_mac": "00:11:22:33:44",
-        "type": "light",
+        "type": "smartbulb",
         "hwId": "1234",
         "fwId": "4567",
         "oemId": "891011",
@@ -190,20 +226,7 @@ def light_mock_data_fixture() -> None:
         "is_variable_color_temp": True,
         "model": "LB120",
         "alias": "light1",
-    }
-
-    light_state = {
-        "on_off": True,
-        "dft_on_state": {
-            "brightness": 12,
-            "color_temp": 3200,
-            "hue": 110,
-            "saturation": 90,
-        },
-        "brightness": 13,
-        "color_temp": 3300,
-        "hue": 110,
-        "saturation": 90,
+        "light_state": light_state,
     }
 
     def set_light_state(state) -> None:
@@ -216,23 +239,23 @@ def light_mock_data_fixture() -> None:
         return light_state
 
     set_light_state_patch = patch(
-        "homeassistant.components.tplink.common.SmartBulb.set_light_state",
+        "kasa.smartbulb.SmartBulb.set_light_state",
         side_effect=set_light_state,
     )
     get_light_state_patch = patch(
-        "homeassistant.components.tplink.common.SmartBulb.get_light_state",
+        "kasa.smartbulb.SmartBulb.get_light_state",
         return_value=light_state,
     )
     current_consumption_patch = patch(
-        "homeassistant.components.tplink.common.SmartDevice.current_consumption",
+        "kasa.smartdevice.SmartDevice.current_consumption",
         return_value=3.23,
     )
-    get_sysinfo_patch = patch(
-        "homeassistant.components.tplink.common.SmartDevice.get_sysinfo",
-        return_value=sys_info,
+    sys_info_patch = patch(
+        "kasa.smartdevice.SmartDevice.sys_info",
+        sys_info,
     )
     get_emeter_daily_patch = patch(
-        "homeassistant.components.tplink.common.SmartDevice.get_emeter_daily",
+        "kasa.smartdevice.SmartDevice.get_emeter_daily",
         return_value={
             1: 1.01,
             2: 1.02,
@@ -249,7 +272,7 @@ def light_mock_data_fixture() -> None:
         },
     )
     get_emeter_monthly_patch = patch(
-        "homeassistant.components.tplink.common.SmartDevice.get_emeter_monthly",
+        "kasa.smartdevice.SmartDevice.get_emeter_monthly",
         return_value={
             1: 2.01,
             2: 2.02,
@@ -265,16 +288,20 @@ def light_mock_data_fixture() -> None:
             12: 2.12,
         },
     )
-
-    with set_light_state_patch as set_light_state_mock, get_light_state_patch as get_light_state_mock, current_consumption_patch as current_consumption_mock, get_sysinfo_patch as get_sysinfo_mock, get_emeter_daily_patch as get_emeter_daily_mock, get_emeter_monthly_patch as get_emeter_monthly_mock:
+    query_patch = patch(
+        "kasa.smartdevice.TPLinkSmartHomeProtocol.query",
+        return_value={"system": {"get_sysinfo": sys_info}, **MOCK_ENERGY_DATA},
+    )
+    with query_patch as query_mock, set_light_state_patch as set_light_state_mock, get_light_state_patch as get_light_state_mock, current_consumption_patch as current_consumption_mock, sys_info_patch as sys_info_mock, get_emeter_daily_patch as get_emeter_daily_mock, get_emeter_monthly_patch as get_emeter_monthly_mock:
         yield LightMockData(
+            query_mock=query_mock,
             sys_info=sys_info,
             light_state=light_state,
             set_light_state=set_light_state,
             set_light_state_mock=set_light_state_mock,
             get_light_state_mock=get_light_state_mock,
             current_consumption_mock=current_consumption_mock,
-            get_sysinfo_mock=get_sysinfo_mock,
+            sys_info_mock=sys_info_mock,
             get_emeter_daily_mock=get_emeter_daily_mock,
             get_emeter_monthly_mock=get_emeter_monthly_mock,
         )
@@ -288,11 +315,12 @@ def dimmer_switch_mock_data_fixture() -> None:
         "hw_ver": "2.3.4",
         "mac": "aa:bb:cc:dd:ee:ff",
         "mic_mac": "00:11:22:33:44",
-        "type": "switch",
+        "type": "smartplug",
         "hwId": "1234",
         "fwId": "4567",
         "oemId": "891011",
         "dev_name": "dimmer1",
+        "led_off": 1,
         "rssi": 11,
         "latitude": "0",
         "longitude": "0",
@@ -306,7 +334,7 @@ def dimmer_switch_mock_data_fixture() -> None:
         "brightness": 13,
     }
 
-    def state(*args, **kwargs):
+    def is_on(*args, **kwargs):
         nonlocal sys_info
         if len(args) == 0:
             return sys_info["relay_state"]
@@ -325,37 +353,38 @@ def dimmer_switch_mock_data_fixture() -> None:
             sys_info["relay_state"] = 1
             sys_info["brightness"] = args[0]
 
-    get_sysinfo_patch = patch(
-        "homeassistant.components.tplink.common.SmartDevice.get_sysinfo",
-        return_value=sys_info,
+    sys_info_patch = patch(
+        "kasa.smartdevice.SmartDevice.sys_info",
+        sys_info,
     )
-    state_patch = patch(
-        "homeassistant.components.tplink.common.SmartPlug.state",
+    is_on_patch = patch(
+        "kasa.smartdimmer.SmartDimmer.is_on",
         new_callable=PropertyMock,
-        side_effect=state,
+        side_effect=is_on,
     )
     brightness_patch = patch(
-        "homeassistant.components.tplink.common.SmartPlug.brightness",
+        "kasa.smartdimmer.SmartDimmer.brightness",
         new_callable=PropertyMock,
         side_effect=brightness,
     )
-    with brightness_patch as brightness_mock, state_patch as state_mock, get_sysinfo_patch as get_sysinfo_mock:
+    query_patch = patch(
+        "kasa.smartdevice.TPLinkSmartHomeProtocol.query",
+        return_value={"system": {"get_sysinfo": sys_info}, **MOCK_ENERGY_DATA},
+    )
+    with query_patch as query_mock, brightness_patch as brightness_mock, is_on_patch as is_on_mock, sys_info_patch as sys_info_mock:
         yield SmartSwitchMockData(
+            query=query_mock,
             sys_info=sys_info,
             brightness_mock=brightness_mock,
-            state_mock=state_mock,
-            get_sysinfo_mock=get_sysinfo_mock,
+            is_on_mock=is_on_mock,
+            sys_info_mock=sys_info_mock,
         )
 
 
 async def update_entity(hass: HomeAssistant, entity_id: str) -> None:
     """Run an update action for an entity."""
-    await hass.services.async_call(
-        HA_DOMAIN,
-        SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
+    future = utcnow() + timedelta(seconds=30)
+    async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
 
 
@@ -598,21 +627,21 @@ async def test_get_light_state_retry(
 ) -> None:
     """Test function."""
     # Setup test for retries for sysinfo.
-    get_sysinfo_call_count = 0
+    sys_info_call_count = 0
 
-    def get_sysinfo_side_effect():
-        nonlocal get_sysinfo_call_count
-        get_sysinfo_call_count += 1
+    def sys_info_side_effect():
+        nonlocal sys_info_call_count
+        sys_info_call_count += 1
 
         # Need to fail on the 2nd call because the first call is used to
         # determine if the device is online during the light platform's
         # setup hook.
-        if get_sysinfo_call_count == 2:
+        if sys_info_call_count == 2:
             raise SmartDeviceException()
 
         return light_mock_data.sys_info
 
-    light_mock_data.get_sysinfo_mock.side_effect = get_sysinfo_side_effect
+    light_mock_data.sys_info_mock.side_effect = sys_info_side_effect
 
     # Setup test for retries of setting state information.
     set_state_call_count = 0
@@ -653,11 +682,11 @@ async def test_get_light_state_retry(
     await hass.async_block_till_done()
     await update_entity(hass, "light.light1")
 
-    assert light_mock_data.get_sysinfo_mock.call_count > 1
+    assert light_mock_data.sys_info_mock.call_count > 1
     assert light_mock_data.get_light_state_mock.call_count > 1
     assert light_mock_data.set_light_state_mock.call_count > 1
 
-    assert light_mock_data.get_sysinfo_mock.call_count < 40
+    assert light_mock_data.sys_info_mock.call_count < 40
     assert light_mock_data.get_light_state_mock.call_count < 40
     assert light_mock_data.set_light_state_mock.call_count < 10
 
@@ -667,7 +696,6 @@ async def test_update_failure(
 ):
     """Test that update failures are logged."""
 
-    await async_setup_component(hass, HA_DOMAIN, {})
     await hass.async_block_till_done()
 
     await async_setup_component(
@@ -681,16 +709,19 @@ async def test_update_failure(
         },
     )
     await hass.async_block_till_done()
+    assert hass.states.get("light.light1").state == STATE_ON
+
     caplog.clear()
     caplog.set_level(logging.WARNING)
-    await hass.helpers.entity_component.async_update_entity("light.light1")
+    await update_entity(hass, "light.light1")
     assert caplog.text == ""
+    assert hass.states.get("light.light1").state == STATE_ON
 
-    with patch("homeassistant.components.tplink.light.MAX_ATTEMPTS", 0):
-        caplog.clear()
-        caplog.set_level(logging.WARNING)
-        await hass.helpers.entity_component.async_update_entity("light.light1")
-        assert "Could not read state for 123.123.123.123|light1" in caplog.text
+    light_mock_data.query_mock.side_effect = SmartDeviceException
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+    await update_entity(hass, "light.light1")
+    assert hass.states.get("light.light1").state == STATE_UNAVAILABLE
 
 
 async def test_async_setup_entry_unavailable(
@@ -701,10 +732,9 @@ async def test_async_setup_entry_unavailable(
     caplog.set_level(logging.WARNING)
 
     with patch(
-        "homeassistant.components.tplink.common.SmartDevice.get_sysinfo",
+        "kasa.smartdevice.SmartDevice.sys_info",
         side_effect=SmartDeviceException,
     ):
-        await async_setup_component(hass, HA_DOMAIN, {})
         await hass.async_block_till_done()
 
         await async_setup_component(
