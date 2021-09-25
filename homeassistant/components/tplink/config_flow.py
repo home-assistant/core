@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_NAME
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import DiscoveryInfoType
@@ -63,18 +64,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
         assert self._discovered_device is not None
         if user_input is not None:
-            return self.async_create_entry(
-                title=f"{self._discovered_device.alias} {self._discovered_device.model}",
-                data={
-                    CONF_HOST: self._discovered_ip,
-                },
-            )
+            return self._async_create_entry_from_device(self._discovered_device)
 
         self._set_confirm_only()
         placeholders = {
             "name": self._discovered_device.alias,
             "model": self._discovered_device.model,
-            "host": self._discovered_ip,
+            "host": self._discovered_device.host,
         }
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
@@ -93,14 +89,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except SmartDeviceException:
                 errors["base"] = "cannot_connect"
-            else:
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=f"{device.alias} {device.model}",
-                    data={
-                        CONF_HOST: user_input[CONF_HOST],
-                    },
-                )
+            return self._async_create_entry_from_device(device)
 
         user_input = user_input or {}
         return self.async_show_form(
@@ -114,17 +103,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_pick_device(self, user_input=None) -> FlowResult:
         """Handle the step to pick discovered device."""
         if user_input is not None:
-            device_id: str = user_input[CONF_DEVICE]
-            mac = device_id.split(" ")[-1]
-            device: SmartDevice = self._discovered_devices[mac]
+            mac = user_input[CONF_DEVICE].split(" ")[-1]
             await self.async_set_unique_id(mac, raise_on_progress=False)
-            self._abort_if_unique_id_configured()
-            return self.async_create_entry(
-                title=f"{device.alias} {device.model}",
-                data={
-                    CONF_HOST: device.host,
-                },
-            )
+            return self._async_create_entry_from_device(self._discovered_devices[mac])
 
         configured_devices = {
             entry.unique_id
@@ -166,6 +147,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @callback
+    def _async_create_entry_from_device(self, device: SmartDevice) -> FlowResult:
+        """Create a config entry from a smart device."""
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(
+            title=f"{device.alias} {device.model}",
+            data={
+                CONF_HOST: device.host,
+            },
+        )
+
     async def async_step_import(self, user_input=None) -> FlowResult:
         """Handle import step."""
         host = user_input[CONF_HOST]
@@ -174,13 +166,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except SmartDeviceException:
             _LOGGER.error("Failed to import %s: cannot connect", host)
             return self.async_abort(reason="cannot_connect")
-        self._abort_if_unique_id_configured()
-        return self.async_create_entry(
-            title=f"{device.alias} {device.model}",
-            data={
-                CONF_HOST: device.host,
-            },
-        )
+        return self._async_create_entry_from_device(device)
 
     async def _async_try_connect(self, host, raise_on_progress=True) -> SmartDevice:
         """Try to connect."""
