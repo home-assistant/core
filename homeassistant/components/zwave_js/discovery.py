@@ -291,7 +291,7 @@ DISCOVERY_SCHEMAS = [
             type={"number"},
         ),
         data_template=DynamicCurrentTempClimateDataTemplate(
-            {
+            lookup_table={
                 # Internal Sensor
                 "A": ZwaveValueID(
                     THERMOSTAT_CURRENT_TEMP_PROPERTY,
@@ -321,7 +321,7 @@ DISCOVERY_SCHEMAS = [
                     endpoint=4,
                 ),
             },
-            ZwaveValueID(2, CommandClass.CONFIGURATION, endpoint=0),
+            dependent_value=ZwaveValueID(2, CommandClass.CONFIGURATION, endpoint=0),
         ),
     ),
     # Heatit Z-TRM2fx
@@ -338,7 +338,7 @@ DISCOVERY_SCHEMAS = [
             type={"number"},
         ),
         data_template=DynamicCurrentTempClimateDataTemplate(
-            {
+            lookup_table={
                 # External Sensor
                 "A2": ZwaveValueID(
                     THERMOSTAT_CURRENT_TEMP_PROPERTY,
@@ -357,7 +357,24 @@ DISCOVERY_SCHEMAS = [
                     endpoint=3,
                 ),
             },
-            ZwaveValueID(2, CommandClass.CONFIGURATION, endpoint=0),
+            dependent_value=ZwaveValueID(2, CommandClass.CONFIGURATION, endpoint=0),
+        ),
+    ),
+    # FortrezZ SSA1/SSA2
+    ZWaveDiscoverySchema(
+        platform="select",
+        hint="multilevel_switch",
+        manufacturer_id={132},
+        product_id={264, 267},
+        product_type={785, 787},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        data_template=BaseDiscoverySchemaDataTemplate(
+            {
+                0: "Off",
+                33: "Strobe Lights Only",
+                66: "Siren Only",
+                99: "Strobe Lights and Siren",
+            },
         ),
     ),
     # ====== START OF CONFIG PARAMETER SPECIFIC MAPPING SCHEMAS =======

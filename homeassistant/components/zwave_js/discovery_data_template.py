@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from zwave_js_server.const import CommandClass
@@ -92,8 +92,11 @@ class ZwaveValueID:
     property_key: str | int | None = None
 
 
+@dataclass
 class BaseDiscoverySchemaDataTemplate:
     """Base class for discovery schema data templates."""
+
+    static_data: Any | None = None
 
     def resolve_data(self, value: ZwaveValue) -> Any:
         """
@@ -102,7 +105,6 @@ class BaseDiscoverySchemaDataTemplate:
         Can optionally be implemented by subclasses if input data needs to be
         transformed once discovered Value is available.
         """
-        # pylint: disable=no-self-use
         return {}
 
     def values_to_watch(self, resolved_data: Any) -> Iterable[ZwaveValue]:
@@ -141,11 +143,13 @@ class BaseDiscoverySchemaDataTemplate:
 class DynamicCurrentTempClimateDataTemplate(BaseDiscoverySchemaDataTemplate):
     """Data template class for Z-Wave JS Climate entities with dynamic current temps."""
 
-    lookup_table: dict[str | int, ZwaveValueID]
-    dependent_value: ZwaveValueID
+    lookup_table: dict[str | int, ZwaveValueID] = field(default_factory=dict)
+    dependent_value: ZwaveValueID | None = None
 
     def resolve_data(self, value: ZwaveValue) -> dict[str, Any]:
         """Resolve helper class data for a discovered value."""
+        if not self.lookup_table or not self.dependent_value:
+            raise ValueError("Invalid discovery data template")
         data: dict[str, Any] = {
             "lookup_table": {},
             "dependent_value": self._get_value_from_id(
