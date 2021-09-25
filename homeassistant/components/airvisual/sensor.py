@@ -30,7 +30,7 @@ from homeassistant.const import (
     PERCENTAGE,
     TEMP_CELSIUS,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -245,9 +245,8 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
         """Return if entity is available."""
         return super().available and self.coordinator.data["current"]["pollution"]
 
-    @callback
-    def update_from_latest_data(self) -> None:
-        """Update the entity from the latest data."""
+    async def async_update(self) -> None:
+        """Update the state."""
         try:
             data = self.coordinator.data["current"]["pollution"]
         except KeyError:
@@ -328,9 +327,8 @@ class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
             ),
         }
 
-    @callback
-    def update_from_latest_data(self) -> None:
-        """Update the entity from the latest data."""
+    async def async_update(self) -> None:
+        """Update the state."""
         if self.entity_description.key == SENSOR_KIND_AQI:
             if self.coordinator.data["settings"]["is_aqi_usa"]:
                 self._attr_native_value = self.coordinator.data["measurements"][
