@@ -1,7 +1,6 @@
 """Support for TPLink HS100/HS110/HS200 smart switch."""
 from __future__ import annotations
 
-from asyncio import sleep
 import logging
 from typing import Any
 
@@ -43,20 +42,9 @@ class SmartPlugSwitch(CoordinatedTPLinkEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.device.turn_on()
-        await self._async_device_workarounds()
-        await self._async_refresh_with_children()
+        await self.coordinator.async_request_refresh_without_children()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.device.turn_off()
-        await self._async_device_workarounds()
-        await self._async_refresh_with_children()
-
-    async def _async_device_workarounds(self) -> None:
-        # Workaround for delayed device state update on HS210: #55190
-        if "HS210" in self.device.model:
-            await sleep(0.5)
-
-    async def _async_refresh_with_children(self) -> None:
-        self.coordinator.update_children = False
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_request_refresh_without_children()
