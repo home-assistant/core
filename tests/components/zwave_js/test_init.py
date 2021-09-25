@@ -161,7 +161,7 @@ async def test_new_entity_on_value_added(hass, multisensor_6, client, integratio
 async def test_on_node_added_ready(hass, multisensor_6_state, client, integration):
     """Test we handle a ready node added event."""
     dev_reg = dr.async_get(hass)
-    node = Node(client, multisensor_6_state)
+    node = Node(client, deepcopy(multisensor_6_state))
     event = {"node": node}
     air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
 
@@ -661,7 +661,7 @@ async def test_suggested_area(hass, client, eaton_rf9640_dimmer):
 async def test_node_removed(hass, multisensor_6_state, client, integration):
     """Test that device gets removed when node gets removed."""
     dev_reg = dr.async_get(hass)
-    node = Node(client, multisensor_6_state)
+    node = Node(client, deepcopy(multisensor_6_state))
     device_id = f"{client.driver.controller.home_id}-{node.node_id}"
     event = {"node": node}
 
@@ -681,7 +681,7 @@ async def test_node_removed(hass, multisensor_6_state, client, integration):
 async def test_replace_same_node(hass, multisensor_6_state, client, integration):
     """Test when a node is replaced with itself that the device remains."""
     dev_reg = dr.async_get(hass)
-    node = Node(client, multisensor_6_state)
+    node = Node(client, deepcopy(multisensor_6_state))
     device_id = f"{client.driver.controller.home_id}-{node.node_id}"
     event = {"node": node}
 
@@ -709,6 +709,8 @@ async def test_replace_different_node(
     hass, multisensor_6_state, hank_binary_switch_state, client, integration
 ):
     """Test when a node is replaced with a different node."""
+    hank_binary_switch_state = deepcopy(hank_binary_switch_state)
+    multisensor_6_state = deepcopy(multisensor_6_state)
     hank_binary_switch_state["nodeId"] = multisensor_6_state["nodeId"]
     dev_reg = dr.async_get(hass)
     old_node = Node(client, multisensor_6_state)
