@@ -26,7 +26,7 @@ from homeassistant.util.color import (
 
 from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
-from .entity import CoordinatedTPLinkEntity
+from .entity import CoordinatedTPLinkEntity, async_refresh_after
 
 PARALLEL_UPDATES = 0
 
@@ -51,14 +51,9 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
 
     coordinator: TPLinkDataUpdateCoordinator
 
+    @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        await self._async_turn_on(**kwargs)
-        await self.coordinator.async_request_refresh()
-
-    async def _async_turn_on(self, **kwargs: Any) -> None:
-        _LOGGER.debug("Turning on %s", kwargs)
-
         transition = kwargs.get(ATTR_TRANSITION)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         if brightness is not None:
@@ -86,10 +81,10 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         else:
             await self.device.turn_on(transition=transition)
 
+    @async_refresh_after
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self.device.turn_off(transition=kwargs.get(ATTR_TRANSITION))
-        await self.coordinator.async_request_refresh()
 
     @property
     def min_mireds(self) -> int:
