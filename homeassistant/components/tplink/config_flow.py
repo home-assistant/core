@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from kasa import SmartDevice, SmartDeviceException
 from kasa.discover import Discover
@@ -38,7 +39,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(dr.format_mac(discovery_info[MAC_ADDRESS]))
         return await self._async_handle_discovery()
 
-    async def async_step_discovery(self, discovery_info) -> FlowResult:
+    async def async_step_discovery(
+        self, discovery_info: DiscoveryInfoType
+    ) -> FlowResult:
         """Handle discovery."""
         self.context[CONF_HOST] = self._discovered_ip = discovery_info[CONF_HOST]
         await self.async_set_unique_id(dr.format_mac(discovery_info[CONF_MAC]))
@@ -46,6 +49,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_handle_discovery(self) -> FlowResult:
         """Handle any discovery."""
+        assert self._discovered_ip is not None
         self._abort_if_unique_id_configured(updates={CONF_HOST: self._discovered_ip})
         self._async_abort_entries_match({CONF_HOST: self._discovered_ip})
         for progress in self._async_in_progress():
@@ -60,7 +64,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
         return await self.async_step_discovery_confirm()
 
-    async def async_step_discovery_confirm(self, user_input=None) -> FlowResult:
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Confirm discovery."""
         assert self._discovered_device is not None
         if user_input is not None:
@@ -77,11 +83,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="discovery_confirm", description_placeholders=placeholders
         )
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
+        host = ""
         if user_input is not None:
-            if not user_input.get(CONF_HOST):
+            host = user_input.get(CONF_HOST, "")
+            if not host:
                 return await self.async_step_pick_device()
             try:
                 device = await self._async_try_connect(
@@ -91,16 +101,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             return self._async_create_entry_from_device(device)
 
-        user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Optional(CONF_HOST, default=user_input.get(CONF_HOST, "")): str}
-            ),
+            data_schema=vol.Schema({vol.Optional(CONF_HOST, default=host): str}),
             errors=errors,
         )
 
-    async def async_step_pick_device(self, user_input=None) -> FlowResult:
+    async def async_step_pick_device(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the step to pick discovered device."""
         if user_input is not None:
             mac = user_input[CONF_DEVICE].split(" ")[-1]
@@ -129,7 +138,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
         )
 
-    async def async_step_migration(self, migration_input=None) -> FlowResult:
+    async def async_step_migration(self, migration_input: dict[str, Any]) -> FlowResult:
         """Handle migration from legacy config entry to per device config entry."""
         mac = migration_input[CONF_MAC]
         name = migration_input[CONF_NAME]
@@ -158,7 +167,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_import(self, user_input=None) -> FlowResult:
+    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Handle import step."""
         host = user_input[CONF_HOST]
         try:
@@ -168,7 +177,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
         return self._async_create_entry_from_device(device)
 
-    async def _async_try_connect(self, host, raise_on_progress=True) -> SmartDevice:
+    async def _async_try_connect(
+        self, host: str, raise_on_progress: bool = True
+    ) -> SmartDevice:
         """Try to connect."""
         self._async_abort_entries_match({CONF_HOST: host})
         device: SmartDevice = await Discover.discover_single(host)

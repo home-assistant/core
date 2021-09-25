@@ -21,7 +21,6 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
     color_temperature_mired_to_kelvin as mired_to_kelvin,
@@ -52,8 +51,10 @@ async def async_setup_entry(
 class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     """Representation of a TPLink Smart Bulb."""
 
+    coordinator: TPLinkDataUpdateCoordinator
+
     def __init__(
-        self, smartbulb: SmartBulb, coordinator: DataUpdateCoordinator
+        self, smartbulb: SmartBulb, coordinator: TPLinkDataUpdateCoordinator
     ) -> None:
         """Initialize the bulb."""
         super().__init__(smartbulb, coordinator)

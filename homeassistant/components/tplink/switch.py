@@ -39,6 +39,8 @@ async def async_setup_entry(
 class SmartPlugSwitch(CoordinatedTPLinkEntity, SwitchEntity):
     """Representation of a TPLink Smart Plug switch."""
 
+    coordinator: TPLinkDataUpdateCoordinator
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.device.turn_on()
