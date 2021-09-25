@@ -58,7 +58,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up ReCollect Waste sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id]
-    async_add_entities([ReCollectWasteSensor(coordinator, entry)])
+    async_add_entities([ReCollectWasteSensor(coordinator, entry)], True)
 
 
 class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
@@ -80,16 +80,9 @@ class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Respond to a DataUpdateCoordinator update."""
-        self.update_from_latest_data()
-        self.async_write_ha_state()
+        self.async_schedule_update_ha_state(force_refresh=True)
 
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        self.update_from_latest_data()
-
-    @callback
-    def update_from_latest_data(self) -> None:
+    async def async_update(self) -> None:
         """Update the state."""
         pickup_event = self.coordinator.data[0]
         next_pickup_event = self.coordinator.data[1]
