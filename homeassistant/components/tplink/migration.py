@@ -18,8 +18,9 @@ from .const import (
     CONF_STRIP,
     CONF_SWITCH,
     DOMAIN,
-    MAC_ADDRESS_LEN,
 )
+
+MAC_ADDRESS_LEN = 17
 
 
 async def async_cleanup_legacy_entry(
