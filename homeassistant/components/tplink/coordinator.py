@@ -7,7 +7,7 @@ import logging
 from kasa import SmartDevice, SmartDeviceException
 
 from homeassistant.const import ATTR_VOLTAGE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -40,15 +40,9 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=update_interval,
         )
 
-    async def _async_update_data(self) -> dict:
-        """Fetch all device and sensor data from api."""
-        try:
-            await self.device.update(update_children=self.update_children)
-        except SmartDeviceException as ex:
-            raise UpdateFailed(ex) from ex
-        else:
-            self.update_children = True
-
+    @callback
+    def async_data_from_device(self) -> dict:
+        """Build the coordinator data from the device."""
         self.name = self.device.alias
 
         # Check if the device has emeter
@@ -72,3 +66,13 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator):
                 ATTR_TODAY_ENERGY_KWH: consumption_today,
             }
         }
+
+    async def _async_update_data(self) -> dict:
+        """Fetch all device and sensor data from api."""
+        try:
+            await self.device.update(update_children=self.update_children)
+        except SmartDeviceException as ex:
+            raise UpdateFailed(ex) from ex
+        else:
+            self.update_children = True
+        return self.async_data_from_device()
