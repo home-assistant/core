@@ -82,14 +82,15 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     for item in trackables:
         for description in SENSOR_TYPES:
-            entities.append(
-                TractiveBinarySensor(
-                    client.user_id,
-                    item.trackable,
-                    item.tracker_details,
-                    f"{item.trackable['_id']}_{description.key}",
-                    description,
+            if item.tracker_details["model_number"] == "TRNJA4":
+                entities.append(
+                    TractiveBinarySensor(
+                        client.user_id,
+                        item.trackable,
+                        item.tracker_details,
+                        f"{item.trackable['_id']}_{description.key}",
+                        description,
+                    )
                 )
-            )
 
     async_add_entities(entities)
