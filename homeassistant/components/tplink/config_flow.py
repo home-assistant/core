@@ -15,6 +15,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import CONF_LEGACY_ENTRY_ID, DISCOVERED_DEVICES, DOMAIN
+from .utils import async_entry_is_legacy
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -128,7 +129,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         configured_devices = {
             entry.unique_id
             for entry in self._async_current_entries()
-            if entry.unique_id
+            if not async_entry_is_legacy(entry)
         }
         self._discovered_devices = {
             dr.format_mac(device.mac): device

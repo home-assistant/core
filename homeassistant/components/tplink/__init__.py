@@ -32,6 +32,7 @@ from .migration import (
     async_migrate_legacy_entries,
     async_migrate_yaml_entries,
 )
+from .utils import async_entry_is_legacy
 
 TPLINK_HOST_SCHEMA = vol.Schema({vol.Required(CONF_HOST): cv.string})
 
@@ -87,7 +88,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     legacy_entry = None
     config_entries_by_mac = {}
     for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.unique_id is None or entry.unique_id == DOMAIN:
+        if async_entry_is_legacy(entry):
             legacy_entry = entry
         else:
             config_entries_by_mac[entry.unique_id] = entry
@@ -112,7 +113,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up TPLink from a config entry."""
-    if not entry.unique_id or entry.unique_id == DOMAIN:
+    if async_entry_is_legacy(entry):
         return True
 
     if legacy_entry_id := entry.data.get(CONF_LEGACY_ENTRY_ID):
