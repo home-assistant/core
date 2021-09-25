@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import datetime
-import logging
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -25,8 +24,6 @@ from homeassistant.util import dt
 from . import ECBaseEntity, convert
 from .const import DEFAULT_NAME, DOMAIN, EC_ICON_TO_HA_CONDITION_MAP
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a weather entity from a config_entry."""
@@ -43,7 +40,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-def format_condition(ec_icon: str) -> str | None:
+def format_condition(ec_icon):
     """Return condition."""
     try:
         icon_number = int(ec_icon)

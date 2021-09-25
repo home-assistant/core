@@ -77,7 +77,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 else:
                     _LOGGER.exception("Error response from EC")
                     errors["base"] = "error_response"
-            except vol.error.MultipleInvalid:
+            except vol.MultipleInvalid:
                 errors["base"] = "config_error"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
