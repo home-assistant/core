@@ -641,7 +641,7 @@ numato-gpio==0.10.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.21.1
+numpy==1.21.2
 
 # homeassistant.components.google
 oauth2client==4.0.0
