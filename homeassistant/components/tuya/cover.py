@@ -4,9 +4,9 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.components.cover import DEVICE_CLASS_CURTAIN
-from homeassistant.components.cover import DOMAIN as DEVICE_DOMAIN
 from homeassistant.components.cover import (
+    DEVICE_CLASS_CURTAIN,
+    DOMAIN as DEVICE_DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
@@ -14,9 +14,9 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity import Entity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 
 from .base import TuyaHaEntity
 from .const import (
@@ -51,11 +51,12 @@ async def async_setup_entry(
 
     async def async_discover_device(dev_ids):
         """Discover and add a discovered tuya cover."""
-        _LOGGER.debug(f"cover add-> {dev_ids}")
+        _LOGGER.debug("cover add-> %s", dev_ids)
         if not dev_ids:
             return
-        entities = await hass.async_add_executor_job(_setup_entities, hass, entry, dev_ids)
-        hass.data[DOMAIN][entry.entry_id][TUYA_HA_DEVICES].extend(entities)
+        entities = await hass.async_add_executor_job(
+            _setup_entities, hass, entry, dev_ids
+        )
         async_add_entities(entities)
 
     async_dispatcher_connect(
@@ -70,10 +71,12 @@ async def async_setup_entry(
     await async_discover_device(device_ids)
 
 
-def _setup_entities(hass: HomeAssistant, entry: ConfigEntry, device_ids: list) -> list[Entity]:
+def _setup_entities(
+    hass: HomeAssistant, entry: ConfigEntry, device_ids: list
+) -> list[Entity]:
     """Set up Tuya Cover."""
     device_manager = hass.data[DOMAIN][entry.entry_id][TUYA_DEVICE_MANAGER]
-    entities = []
+    entities: list[Entity] = []
     for device_id in device_ids:
         device = device_manager.device_map[device_id]
         if device is None:
@@ -99,10 +102,10 @@ class TuyaHaCover(TuyaHaEntity, CoverEntity):
         position = self.tuya_device.status.get(DPCODE_PERCENT_STATE, 0)
         if DPCODE_SITUATION_SET not in self.tuya_device.status:
             return 1 + int(0.98 * (100 - position))
-        elif self.tuya_device.status.get(DPCODE_SITUATION_SET) == "fully_open":
+        if self.tuya_device.status.get(DPCODE_SITUATION_SET) == "fully_open":
             return 1 + 0.98 * position
-        else:
-            return 1 + int(0.98 * (100 - position))
+        
+        return 1 + int(0.98 * (100 - position))
 
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
@@ -118,7 +121,7 @@ class TuyaHaCover(TuyaHaEntity, CoverEntity):
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        _LOGGER.debug(f"cover--> {kwargs}")
+        _LOGGER.debug("cover--> %s", kwargs)
         self._send_command(
             [{"code": DPCODE_PERCENT_CONTROL, "value": kwargs[ATTR_POSITION]}]
         )
