@@ -20,8 +20,4 @@ async def surepetcare():
         client.resources = {}
         client.call = _mock_call
         client.get_token.return_value = "token"
-        client.get_token.lock = {}
-        client.get_token.lock_in = {}
-        client.get_token.lock_out = {}
-        client.get_token.unlock = {}
         yield client
