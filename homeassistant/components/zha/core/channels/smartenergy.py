@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import enum
+from functools import partialmethod
 
 from zigpy.zcl.clusters import smartenergy
 
@@ -127,12 +128,19 @@ class Metering(ZigbeeChannel):
 
         NO_ALARMS = 0
 
+    class FormatSelector(enum.IntEnum):
+        """Format specified selector."""
+
+        DEMAND = 0
+        SUMMATION = 1
+
     def __init__(
         self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
     ) -> None:
         """Initialize Metering."""
         super().__init__(cluster, ch_pool)
         self._format_spec = None
+        self._summa_format = None
 
     @property
     def divisor(self) -> int:
@@ -166,7 +174,7 @@ class Metering(ZigbeeChannel):
     @callback
     def attribute_updated(self, attrid: int, value: int) -> None:
         """Handle attribute update from Metering cluster."""
-        if None in (self.multiplier, self.divisor, self._format_spec):
+        if None in (self._summa_format, self._format_spec):
             return
         super().attribute_updated(attrid, value)
 
@@ -182,19 +190,33 @@ class Metering(ZigbeeChannel):
         fmting = self.cluster.get(
             "demand_formatting", 0xF9
         )  # 1 digit to the right, 15 digits to the left
+        self._format_spec = self.get_formatting(fmting)
 
-        r_digits = int(fmting & 0x07)  # digits to the right of decimal point
-        l_digits = (fmting >> 3) & 0x0F  # digits to the left of decimal point
+        fmting = self.cluster.get(
+            "demand_formatting", 0xF9
+        )  # 1 digit to the right, 15 digits to the left
+        self._summa_format = self.get_formatting(fmting)
+
+    @staticmethod
+    def get_formatting(formatting: int) -> str:
+        """Return a formatting string, given the formatting value.
+
+        Bits 0 to 2: Number of Digits to the right of the Decimal Point.
+        Bits 3 to 6: Number of Digits to the left of the Decimal Point.
+        Bit 7: If set, suppress leading zeros.
+        """
+        r_digits = int(formatting & 0x07)  # digits to the right of decimal point
+        l_digits = (formatting >> 3) & 0x0F  # digits to the left of decimal point
         if l_digits == 0:
             l_digits = 15
         width = r_digits + l_digits + (1 if r_digits > 0 else 0)
 
-        if fmting & 0x80:
-            self._format_spec = "{:" + str(width) + "." + str(r_digits) + "f}"
-        else:
-            self._format_spec = "{:0" + str(width) + "." + str(r_digits) + "f}"
+        if formatting & 0x80:
+            return "{:" + str(width) + "." + str(r_digits) + "f}"
 
-    def formatter_function(self, value: int) -> int | float:
+        return "{:0" + str(width) + "." + str(r_digits) + "f}"
+
+    def _formatter_function(self, selector: FormatSelector, value: int) -> int | float:
         """Return formatted value for display."""
         value = value * self.multiplier / self.divisor
         if self.unit_of_measurement == POWER_WATT:
@@ -203,7 +225,12 @@ class Metering(ZigbeeChannel):
             if value_watt < 100:
                 return round(value_watt, 1)
             return round(value_watt)
+        if selector == self.FormatSelector.SUMMATION:
+            return self._summa_format.format(value).lstrip()
         return self._format_spec.format(value).lstrip()
+
+    formatter_function = partialmethod(_formatter_function, FormatSelector.DEMAND)
+    summa_formatter = partialmethod(_formatter_function, FormatSelector.SUMMATION)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Prepayment.cluster_id)
