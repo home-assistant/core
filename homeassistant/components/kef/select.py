@@ -94,3 +94,4 @@ class MediaSelect(SelectEntity):
     async def async_update(self, **kwargs):
         """Update the select entity with the latest DSP settings."""
         self._attr_current_option = self._speaker._dsp[self._dsp_attr]
+        self.async_write_ha_state()

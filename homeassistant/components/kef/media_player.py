@@ -345,15 +345,16 @@ class KefMediaPlayer(MediaPlayerEntity):
             sub_db=await self._speaker.get_sub_db(),
             **mode._asdict(),
         )
+        await self.update_selects()
 
     async def update_selects(self):
         """Update the underlying `select` entities related to DSP settings."""
         try:
-            selects = self.hass.data[DOMAIN][self.host][SELECT_DOMAIN]
-            for select in selects:
+            selects = self.hass.data[DOMAIN][self._speaker.host][SELECT_DOMAIN]
+            for select in selects.values():
                 await select.async_update()
-        except KeyError:
-            pass
+        except KeyError as e:
+            _LOGGER.warning(str(e))
 
     async def async_added_to_hass(self):
         """Subscribe to DSP updates."""
