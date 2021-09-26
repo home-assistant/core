@@ -41,7 +41,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 ERROR_LOG_FILENAME = "home-assistant.log"
-FAULT_LOG_FILENAME = "home-assistant.faults"
+FAULT_LOG_FILENAME = "home-assistant.log.fault"
 
 # hass.data key for logging information.
 DATA_LOGGING = "logging"
