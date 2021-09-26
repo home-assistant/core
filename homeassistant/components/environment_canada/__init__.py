@@ -61,34 +61,32 @@ async def async_setup_entry(hass, config_entry):
     station = config_entry.data.get(CONF_STATION)
     lang = config_entry.data.get(CONF_LANGUAGE)
 
+    coordinators = {}
+
     weather_data = ECWeather(
         station_id=station,
         coordinates=(lat, lon),
         language=lang.lower(),
     )
-    weather_coord = ECDataUpdateCoordinator(
+    coordinators["weather_coordinator"] = ECDataUpdateCoordinator(
         hass, weather_data, "weather", DEFAULT_WEATHER_UPDATE_INTERVAL
     )
-    await weather_coord.async_config_entry_first_refresh()
+    await coordinators["weather_coordinator"].async_config_entry_first_refresh()
 
     radar_data = MyECRadar(coordinates=(lat, lon))
-    radar_coord = ECDataUpdateCoordinator(
+    coordinators["radar_coordinator"] = ECDataUpdateCoordinator(
         hass, radar_data, "radar", DEFAULT_RADAR_UPDATE_INTERVAL
     )
-    await radar_coord.async_config_entry_first_refresh()
+    await coordinators["radar_coordinator"].async_config_entry_first_refresh()
 
     aqhi_data = ECAirQuality(coordinates=(lat, lon))
-    aqhi_coord = ECDataUpdateCoordinator(
+    coordinators["aqhi_coordinator"] = ECDataUpdateCoordinator(
         hass, aqhi_data, "AQHI", DEFAULT_WEATHER_UPDATE_INTERVAL
     )
-    await aqhi_coord.async_config_entry_first_refresh()
+    await coordinators["aqhi_coordinator"].async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = {
-        "weather_coordinator": weather_coord,
-        "radar_coordinator": radar_coord,
-        "aqhi_coordinator": aqhi_coord,
-    }
+    hass.data[DOMAIN][config_entry.entry_id] = coordinators
 
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
