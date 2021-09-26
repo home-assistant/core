@@ -75,38 +75,47 @@ GENERAL_AND_FEED_IN_SITE_ID = "01FG2MCD8KTRZR9MNNW84VP50S"
 GENERAL_AND_CONTROLLED_FEED_IN_SITE_ID = "01FG2MCD8KTRZR9MNNW847S50S"
 
 GENERAL_CHANNEL = [
-    generate_actual_interval(
-        ChannelType.GENERAL, parser.parse("2021-09-21T08:00:00+10:00")
-    ),
     generate_current_interval(
         ChannelType.GENERAL, parser.parse("2021-09-21T08:30:00+10:00")
     ),
     generate_forecast_interval(
         ChannelType.GENERAL, parser.parse("2021-09-21T09:00:00+10:00")
     ),
+    generate_forecast_interval(
+        ChannelType.GENERAL, parser.parse("2021-09-21T09:30:00+10:00")
+    ),
+    generate_forecast_interval(
+        ChannelType.GENERAL, parser.parse("2021-09-21T10:00:00+10:00")
+    ),
 ]
 
 CONTROLLED_LOAD_CHANNEL = [
-    generate_actual_interval(
-        ChannelType.CONTROLLED_LOAD, parser.parse("2021-09-21T08:00:00+10:00")
-    ),
     generate_current_interval(
         ChannelType.CONTROLLED_LOAD, parser.parse("2021-09-21T08:30:00+10:00")
     ),
     generate_forecast_interval(
         ChannelType.CONTROLLED_LOAD, parser.parse("2021-09-21T09:00:00+10:00")
     ),
+    generate_forecast_interval(
+        ChannelType.CONTROLLED_LOAD, parser.parse("2021-09-21T09:30:00+10:00")
+    ),
+    generate_forecast_interval(
+        ChannelType.CONTROLLED_LOAD, parser.parse("2021-09-21T10:00:00+10:00")
+    ),
 ]
 
 
 FEED_IN_CHANNEL = [
-    generate_actual_interval(
-        ChannelType.FEED_IN, parser.parse("2021-09-21T08:00:00+10:00")
-    ),
     generate_current_interval(
         ChannelType.FEED_IN, parser.parse("2021-09-21T08:30:00+10:00")
     ),
     generate_forecast_interval(
         ChannelType.FEED_IN, parser.parse("2021-09-21T09:00:00+10:00")
+    ),
+    generate_forecast_interval(
+        ChannelType.FEED_IN, parser.parse("2021-09-21T09:30:00+10:00")
+    ),
+    generate_forecast_interval(
+        ChannelType.FEED_IN, parser.parse("2021-09-21T10:00:00+10:00")
     ),
 ]

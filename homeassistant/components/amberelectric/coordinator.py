@@ -59,7 +59,7 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(minutes=1),
         )
         self._api = api
-        self._site_id = site_id
+        self.site_id = site_id
 
     def update(self) -> dict[str, dict[str, Any]]:
         """Update callback."""
@@ -70,7 +70,7 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
                 "grid": {},
             }
 
-            data = self._api.get_current_price(self._site_id, next=48)
+            data = self._api.get_current_price(self.site_id, next=48)
 
             current = [interval for interval in data if is_current(interval)]
             forecasts = [interval for interval in data if is_forecast(interval)]
