@@ -39,23 +39,37 @@ async def test_locks(hass, surepetcare) -> None:
         )
         state = hass.states.get(entity_id)
         assert state.state == "unlocked"
-        surepetcare.unlock.assert_not_called()
+        # already unlocked
+        assert surepetcare.unlock.call_count == 0
 
         await hass.services.async_call(
             "lock", "lock", {"entity_id": entity_id}, blocking=True
         )
         state = hass.states.get(entity_id)
         assert state.state == "locked"
+        if "locked_in" in entity_id:
+            assert surepetcare.lock_in.call_count == 1
+        elif "locked_out" in entity_id:
+            assert surepetcare.lock_out.call_count == 1
+        elif "locked_all" in entity_id:
+            assert surepetcare.lock.call_count == 1
 
+        # lock again should not trigger another request
         await hass.services.async_call(
             "lock", "lock", {"entity_id": entity_id}, blocking=True
         )
         state = hass.states.get(entity_id)
         assert state.state == "locked"
+        if "locked_in" in entity_id:
+            assert surepetcare.lock_in.call_count == 1
+        elif "locked_out" in entity_id:
+            assert surepetcare.lock_out.call_count == 1
+        elif "locked_all" in entity_id:
+            assert surepetcare.lock.call_count == 1
 
         await hass.services.async_call(
             "lock", "unlock", {"entity_id": entity_id}, blocking=True
         )
         state = hass.states.get(entity_id)
         assert state.state == "unlocked"
-        surepetcare.unlock.assert_called()
+        assert surepetcare.unlock.call_count == 1
