@@ -37,6 +37,8 @@ from .common import (
 )
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
+ENTITY_ID_PREFIX = "sensor.fakemanufacturer_fakemodel_e769900a_{}"
+
 
 async def async_test_humidity(hass, cluster, entity_id):
     """Test humidity sensor."""
@@ -421,9 +423,8 @@ async def test_unsupported_attributes_sensor(
 ):
     """Test zha sensor platform."""
 
-    entity_prefix = "sensor.fakemanufacturer_fakemodel_e769900a_{}"
-    entity_ids = {entity_prefix.format(e) for e in entity_ids}
-    missing_entity_ids = {entity_prefix.format(e) for e in missing_entity_ids}
+    entity_ids = {ENTITY_ID_PREFIX.format(e) for e in entity_ids}
+    missing_entity_ids = {ENTITY_ID_PREFIX.format(e) for e in missing_entity_ids}
 
     zigpy_device = zigpy_device_mock(
         {
