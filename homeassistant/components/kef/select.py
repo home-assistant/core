@@ -1,13 +1,9 @@
-# examples:
-# homeassistant/components/sisyphus/media_player.py
-# homeassistant/components/plex/media_player.py
-# homeassistant/components/renault/select.py
-# homeassistant/components/panasonic_viera/__init__.py
-
-"""Demo platform that offers a fake select entity."""
+"""Select platform that sets up DSP options for KEF Speakers."""
 from __future__ import annotations
 
 import logging
+
+from aiokef.aiokef import DSP_OPTION_MAPPING
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectEntity
@@ -23,12 +19,27 @@ from .media_player import KefMediaPlayer
 _LOGGER = logging.getLogger(__name__)
 
 
-def str2bool(option, inverse: bool = False):
+def str_to_option(option):
     """Parse the option."""
-    mapping = {"off": False, "on": True}
-    if inverse:
-        mapping = {v: k for k, v in mapping.items()}
-    return mapping.get(option, option)
+    if option == "off":
+        return False
+    if option == "on":
+        return True
+    try:
+        return float(option)
+    except ValueError:
+        return option
+
+
+def option_to_str(option):
+    """Parse the option."""
+    if option is False:
+        return "off"
+    if option is True:
+        return "on"
+    if isinstance(option, (int, float)):
+        return str(option)
+    return option
 
 
 async def async_setup_platform(
@@ -60,15 +71,21 @@ async def async_setup_platform(
         ["Wall Mode", "wall_mode", ["on", "off"]],
         ["Phase Correction", "phase_correction", ["on", "off"]],
         ["High Pass", "high_pass", ["on", "off"]],
+        ["Desk dB", "desk_db", DSP_OPTION_MAPPING["desk_db"]],
+        ["Wall dB", "wall_db", DSP_OPTION_MAPPING["wall_db"]],
+        ["Treble dB", "treble_db", DSP_OPTION_MAPPING["treble_db"]],
+        ["High Hz", "high_hz", DSP_OPTION_MAPPING["high_hz"]],
+        ["Low Hz", "low_hz", DSP_OPTION_MAPPING["low_hz"]],
+        ["Sub dB", "sub_db", DSP_OPTION_MAPPING["sub_db"]],
     ):
-        current_option = str2bool(speaker._dsp[dsp_attr], inverse=True)
+        current_option = option_to_str(speaker._dsp[dsp_attr])
         _LOGGER.debug(f"{name}: {speaker._dsp}, {current_option}")
         select = MediaSelect(
             unique_id=f"{speaker._unique_id}_{dsp_attr}",
             name=f"{speaker.name} {name}",
             icon="mdi:equalizer",
             current_option=current_option,
-            options=options,
+            options=list(map(str, options)),
             speaker=speaker,
             dsp_attr=dsp_attr,
         )
@@ -108,13 +125,23 @@ class MediaSelect(SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Update the current selected option."""
         self._attr_current_option = option
-        if option != "Unknown":
-            await self._speaker.set_mode(**{self._dsp_attr: str2bool(option)})
+        option = str_to_option(option)
+        if self._dsp_attr in (
+            "desk_mode",
+            "wall_mode",
+            "phase_correction",
+            "high_pass",
+            "sub_polarity",
+            "bass_extension",
+        ):
+            if option != "Unknown":
+                await self._speaker.set_mode(**{self._dsp_attr: option})
+        else:
+            set = getattr(self._speaker, f"set_{self._dsp_attr}")
+            await set(option)
         self.async_write_ha_state()
 
     async def async_update(self, **kwargs):
         """Update the select entity with the latest DSP settings."""
-        self._attr_current_option = str2bool(
-            self._speaker._dsp[self._dsp_attr], inverse=True
-        )
+        self._attr_current_option = option_to_str(self._speaker._dsp[self._dsp_attr])
         self.async_write_ha_state()
