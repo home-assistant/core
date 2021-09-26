@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-        hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ):
     """Add kostal plenticore Sensors."""
     plenticore = hass.data[DOMAIN][entry.entry_id]
@@ -43,7 +43,7 @@ async def async_setup_entry(
     )
     for module_id, data_id, name, sensor_data, is_on in SWITCH_SETTINGS_DATA:
         if module_id not in available_settings_data or data_id not in (
-                setting.id for setting in available_settings_data[module_id]
+            setting.id for setting in available_settings_data[module_id]
         ):
             _LOGGER.debug(
                 "Skipping non existing setting data %s/%s", module_id, data_id
@@ -71,18 +71,18 @@ async def async_setup_entry(
 
 class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
     def __init__(
-            self,
-            coordinator,
-            entry_id: str,
-            platform_name: str,
-            module_id: str,
-            data_id: str,
-            switch_name: str,
-            switch_data: dict[str, Any],
-            is_on: str,
-            device_info: DeviceInfo,
-            attr_name: str,
-            attr_unique_id: str,
+        self,
+        coordinator,
+        entry_id: str,
+        platform_name: str,
+        module_id: str,
+        data_id: str,
+        switch_name: str,
+        switch_data: dict[str, Any],
+        is_on: str,
+        device_info: DeviceInfo,
+        attr_name: str,
+        attr_unique_id: str,
     ):
         """Create a new switch Entity for Plenticore process data."""
         super().__init__(coordinator)
@@ -103,10 +103,10 @@ class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
     def available(self) -> bool:
         """Return if entity is available."""
         return (
-                super().available
-                and self.coordinator.data is not None
-                and self.module_id in self.coordinator.data
-                and self.data_id in self.coordinator.data[self.module_id]
+            super().available
+            and self.coordinator.data is not None
+            and self.module_id in self.coordinator.data
+            and self.data_id in self.coordinator.data[self.module_id]
         )
 
     async def async_added_to_hass(self) -> None:
@@ -121,7 +121,9 @@ class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
 
     async def async_turn_on(self) -> None:
         """Turn device on."""
-        if await self.coordinator._async_write_data(self.module_id, {self.data_id: '1'}):
+        if await self.coordinator._async_write_data(
+            self.module_id, {self.data_id: "1"}
+        ):
             self._last_run_success = True
             await self.coordinator.async_request_refresh()
         else:
@@ -129,7 +131,9 @@ class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
 
     async def async_turn_off(self) -> None:
         """Turn device off."""
-        if await self.coordinator._async_write_data(self.module_id, {self.data_id: '0'}):
+        if await self.coordinator._async_write_data(
+            self.module_id, {self.data_id: "0"}
+        ):
             self._last_run_success = True
             await self.coordinator.async_request_refresh()
         else:
