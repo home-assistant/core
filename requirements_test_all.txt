@@ -221,7 +221,7 @@ arcam-fmj==0.7.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.21.2
+async-upnp-client==0.22.1
 
 # homeassistant.components.aurora
 auroranoaa==0.0.2
@@ -346,7 +346,7 @@ elgato==2.1.1
 elkm1-lib==0.8.10
 
 # homeassistant.components.mobile_app
-emoji==1.2.0
+emoji==1.5.0
 
 # homeassistant.components.emulated_roku
 emulated_roku==0.2.1
