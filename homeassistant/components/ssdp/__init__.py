@@ -394,7 +394,9 @@ class Scanner:
 
         # If there are no changes from a search, do not trigger a config flow
         if source != SsdpSource.SEARCH_ALIVE:
-            matching_domains = self._async_matching_domains(info_with_desc)
+            matching_domains = self.integration_matchers.async_matching_domains(
+                info_with_desc
+            )
 
         if not callbacks and not matching_domains:
             return
