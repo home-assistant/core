@@ -3,11 +3,11 @@
 from amberelectric import Configuration
 from amberelectric.api import amber_api
 
-from homeassistant.components.amberelectric.coordinator import AmberUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_API_TOKEN, CONF_SITE_ID, DOMAIN, PLATFORMS
+from .coordinator import AmberUpdateCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

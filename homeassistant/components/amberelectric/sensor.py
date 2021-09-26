@@ -1,6 +1,5 @@
 """Amber Electric Sensor definitions."""
 
-# TODO Use SEnsor Descriptions to set up all the different types of sensro that are required.
 # There are three types of sensor: Current, Forecast and Grid
 # Current and forecast will create general, controlled load and feed in as required
 # At the moment renewables in the only grid sensor.
