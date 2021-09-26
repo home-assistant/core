@@ -174,7 +174,7 @@ async def _async_process_requirements(
     hass: HomeAssistant,
     name: str,
     req: str,
-    install_failure_history: dict[str, bool],
+    install_failure_history: set[str],
     kwargs: Any,
 ) -> None:
     """Install a requirement and save failures."""
