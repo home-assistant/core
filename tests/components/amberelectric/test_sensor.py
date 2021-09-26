@@ -277,7 +277,7 @@ def test_renewable_sensor(hass: HomeAssistant, setup_general) -> None:
     assert len(hass.states.async_all()) == 3
     sensor = hass.states.get("sensor.mock_title_renewables")
     assert sensor
-    assert sensor.state == "50.6"
+    assert sensor.state == "51"
     attributes = sensor.attributes
     assert attributes is not None
     assert attributes["attribution"] == "Data provided by Amber Electric"

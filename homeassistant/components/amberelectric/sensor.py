@@ -71,7 +71,7 @@ class AmberSensor(CoordinatorEntity, SensorEntity):
     @property
     def icon(self):
         """Return the icon of the sensor."""
-        self.entity_description.icon
+        return self.entity_description.icon
 
 
 class AmberPriceSensor(AmberSensor):

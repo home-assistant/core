@@ -83,7 +83,7 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
             result["forecasts"]["general"] = [
                 interval for interval in forecasts if is_general(interval)
             ]
-            result["grid"]["renewables"] = general[0].renewables
+            result["grid"]["renewables"] = round(general[0].renewables)
 
             controlled_load = [
                 interval for interval in current if is_controlled_load(interval)
