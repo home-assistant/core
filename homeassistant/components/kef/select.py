@@ -23,6 +23,14 @@ from .media_player import KefMediaPlayer
 _LOGGER = logging.getLogger(__name__)
 
 
+def str2bool(option, inverse: bool = False):
+    """Parse the option."""
+    mapping = {"off": False, "on": True}
+    if inverse:
+        mapping = {v: k for k, v in mapping.items()}
+    return mapping.get(option, option)
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -48,17 +56,23 @@ async def async_setup_platform(
     for name, dsp_attr, options in (
         ["Bass Extension", "bass_extension", ["Standard", "Less", "Extra"]],
         ["Sub Polarity", "sub_polarity", ["-", "+"]],
+        ["Desk Mode", "desk_mode", ["on", "off"]],
+        ["Wall Mode", "wall_mode", ["on", "off"]],
+        ["Phase Correction", "phase_correction", ["on", "off"]],
+        ["High Pass", "high_pass", ["on", "off"]],
     ):
-        bass_extension = MediaSelect(
+        current_option = str2bool(speaker._dsp[dsp_attr], inverse=True)
+        _LOGGER.debug(f"{name}: {speaker._dsp}, {current_option}")
+        select = MediaSelect(
             unique_id=f"{speaker._unique_id}_{dsp_attr}",
             name=f"{speaker.name} {name}",
             icon="mdi:equalizer",
-            current_option=speaker._dsp[dsp_attr],
+            current_option=current_option,
             options=options,
             speaker=speaker,
             dsp_attr=dsp_attr,
         )
-        selects[dsp_attr] = bass_extension
+        selects[dsp_attr] = select
 
     async_add_entities(list(selects.values()))
 
@@ -94,10 +108,13 @@ class MediaSelect(SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Update the current selected option."""
         self._attr_current_option = option
-        await self._speaker.set_mode(**{self._dsp_attr: option})
+        if option != "Unknown":
+            await self._speaker.set_mode(**{self._dsp_attr: str2bool(option)})
         self.async_write_ha_state()
 
     async def async_update(self, **kwargs):
         """Update the select entity with the latest DSP settings."""
-        self._attr_current_option = self._speaker._dsp[self._dsp_attr]
+        self._attr_current_option = str2bool(
+            self._speaker._dsp[self._dsp_attr], inverse=True
+        )
         self.async_write_ha_state()
