@@ -23,18 +23,17 @@ async def async_setup_entry(
     coordinator: EzvizDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         DATA_COORDINATOR
     ]
-    switch_entities = []
+
     supported_switches = {switches.value for switches in DeviceSwitchType}
 
-    for idx, camera in enumerate(coordinator.data):
-        if not camera.get("switches"):
-            continue
-        for switch in camera["switches"]:
-            if switch not in supported_switches:
-                continue
-            switch_entities.append(EzvizSwitch(coordinator, idx, switch))
-
-    async_add_entities(switch_entities)
+    async_add_entities(
+        [
+            EzvizSwitch(coordinator, camera, switch)
+            for camera in coordinator.data
+            for switch in coordinator.data[camera].get("switches")
+            if switch in supported_switches
+        ]
+    )
 
 
 class EzvizSwitch(EzvizEntity, SwitchEntity):
@@ -44,14 +43,14 @@ class EzvizSwitch(EzvizEntity, SwitchEntity):
     ATTR_DEVICE_CLASS = DEVICE_CLASS_SWITCH
 
     def __init__(
-        self, coordinator: EzvizDataUpdateCoordinator, idx: int, switch: str
+        self, coordinator: EzvizDataUpdateCoordinator, serial: str, switch: str
     ) -> None:
         """Initialize the switch."""
-        super().__init__(coordinator, idx)
+        super().__init__(coordinator, serial)
         self._name = switch
         self._attr_name = f"{self._camera_name} {DeviceSwitchType(switch).name.title()}"
         self._attr_unique_id = (
-            f"{self._serial}_{self._camera_name}.{DeviceSwitchType(switch).name}"
+            f"{serial}_{self._camera_name}.{DeviceSwitchType(switch).name}"
         )
 
     @property

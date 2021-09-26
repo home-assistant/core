@@ -46,18 +46,16 @@ async def async_setup_entry(
     coordinator: EzvizDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         DATA_COORDINATOR
     ]
-    sensors = []
 
-    for idx, camera in enumerate(coordinator.data):
-        for sensor in camera:
-            # Only add sensor with value.
-            if camera.get(sensor) is None:
-                continue
-
-            if sensor in SENSOR_TYPES:
-                sensors.append(EzvizSensor(coordinator, idx, sensor))
-
-    async_add_entities(sensors)
+    async_add_entities(
+        [
+            EzvizSensor(coordinator, camera, sensor)
+            for camera in coordinator.data
+            for sensor, value in coordinator.data[camera].items()
+            if sensor in SENSOR_TYPES
+            if value is not None
+        ]
+    )
 
 
 class EzvizSensor(EzvizEntity, SensorEntity):
@@ -66,13 +64,13 @@ class EzvizSensor(EzvizEntity, SensorEntity):
     coordinator: EzvizDataUpdateCoordinator
 
     def __init__(
-        self, coordinator: EzvizDataUpdateCoordinator, idx: int, sensor: str
+        self, coordinator: EzvizDataUpdateCoordinator, serial: str, sensor: str
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, idx)
+        super().__init__(coordinator, serial)
         self._sensor_name = sensor
         self._attr_name = f"{self._camera_name} {sensor.title()}"
-        self._attr_unique_id = f"{self._serial}_{self._camera_name}.{sensor}"
+        self._attr_unique_id = f"{serial}_{self._camera_name}.{sensor}"
         self.entity_description = SENSOR_TYPES[sensor]
 
     @property

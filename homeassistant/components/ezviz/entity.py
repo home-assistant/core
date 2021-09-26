@@ -16,15 +16,14 @@ class EzvizEntity(CoordinatorEntity, Entity):
     def __init__(
         self,
         coordinator: EzvizDataUpdateCoordinator,
-        idx: int,
+        serial: str,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self._idx = idx
-        self._serial = self.data["serial"]
+        self._serial = serial
         self._camera_name = self.data["name"]
         self._attr_device_info: DeviceInfo = {
-            "identifiers": {(DOMAIN, self._serial)},
+            "identifiers": {(DOMAIN, serial)},
             "name": self.data["name"],
             "model": self.data["device_sub_category"],
             "manufacturer": MANUFACTURER,
@@ -34,4 +33,4 @@ class EzvizEntity(CoordinatorEntity, Entity):
     @property
     def data(self) -> dict[str, Any]:
         """Return coordinator data for this entity."""
-        return self.coordinator.data[self._idx]
+        return self.coordinator.data[self._serial]
