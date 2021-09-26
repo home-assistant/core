@@ -159,7 +159,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def _async_create_entry_from_device(self, device: SmartDevice) -> FlowResult:
         """Create a config entry from a smart device."""
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(updates={CONF_HOST: device.host})
         return self.async_create_entry(
             title=f"{device.alias} {device.model}",
             data={
