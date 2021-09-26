@@ -31,34 +31,34 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_devices: dict[str, SmartDevice] = {}
         self._discovered_device: SmartDevice | None = None
-        self._discovered_ip: str | None = None
 
     async def async_step_dhcp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
         """Handle discovery via dhcp."""
-        self.context[CONF_HOST] = self._discovered_ip = discovery_info[IP_ADDRESS]
-        await self.async_set_unique_id(dr.format_mac(discovery_info[MAC_ADDRESS]))
-        return await self._async_handle_discovery()
+        return await self._async_handle_discovery(
+            discovery_info[IP_ADDRESS], discovery_info[MAC_ADDRESS]
+        )
 
     async def async_step_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Handle discovery."""
-        self.context[CONF_HOST] = self._discovered_ip = discovery_info[CONF_HOST]
-        await self.async_set_unique_id(dr.format_mac(discovery_info[CONF_MAC]))
-        return await self._async_handle_discovery()
+        return await self._async_handle_discovery(
+            discovery_info[CONF_HOST], discovery_info[CONF_MAC]
+        )
 
-    async def _async_handle_discovery(self) -> FlowResult:
+    async def _async_handle_discovery(self, host: str, mac: str) -> FlowResult:
         """Handle any discovery."""
-        assert self._discovered_ip is not None
-        self._abort_if_unique_id_configured(updates={CONF_HOST: self._discovered_ip})
-        self._async_abort_entries_match({CONF_HOST: self._discovered_ip})
+        await self.async_set_unique_id(dr.format_mac(mac))
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+        self._async_abort_entries_match({CONF_HOST: host})
+        self.context[CONF_HOST] = host
         for progress in self._async_in_progress():
-            if progress.get("context", {}).get(CONF_HOST) == self._discovered_ip:
+            if progress.get("context", {}).get(CONF_HOST) == host:
                 return self.async_abort(reason="already_in_progress")
 
         try:
             self._discovered_device = await self._async_try_connect(
-                self._discovered_ip, raise_on_progress=True
+                host, raise_on_progress=True
             )
         except SmartDeviceException:
             return self.async_abort(reason="cannot_connect")
