@@ -173,7 +173,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             device = await self._async_try_connect(host, raise_on_progress=False)
         except SmartDeviceException:
-            _LOGGER.error("Failed to import %s: cannot connect", host)
+            _LOGGER.exception("Failed to import %s: cannot connect", host)
             return self.async_abort(reason="cannot_connect")
         return self._async_create_entry_from_device(device)
 
