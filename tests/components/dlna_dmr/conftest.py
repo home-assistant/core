@@ -88,7 +88,9 @@ def dmr_device_mock(domain_data_mock: Mock) -> Iterable[Mock]:
     ) as constructor:
         device = constructor.return_value
         device.on_event = None
-        device.device = domain_data_mock.upnp_factory.async_create_device.return_value
+        device.profile_device = (
+            domain_data_mock.upnp_factory.async_create_device.return_value
+        )
         device.media_image_url = "http://192.88.99.20:8200/AlbumArt/2624-17620.jpg"
         device.udn = "device_udn"
         device.manufacturer = "device_manufacturer"

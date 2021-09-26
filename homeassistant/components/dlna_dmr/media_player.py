@@ -392,7 +392,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
     @property
     def available(self) -> bool:
         """Device is available when we have a connection to it."""
-        return self._device is not None and self._device.device.available
+        return self._device is not None and self._device.profile_device.available
 
     async def async_update(self) -> None:
         """Retrieve the latest data."""
