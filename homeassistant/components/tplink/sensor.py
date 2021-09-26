@@ -1,7 +1,7 @@
 """Support for TPLink HS100/HS110/HS200 smart switch energy sensors."""
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import Final, cast
 
 from kasa import SmartDevice
 
@@ -11,7 +11,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.components.tplink import TPLinkDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_VOLTAGE,
@@ -26,21 +25,17 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .common import CoordinatedTPLinkEntity
 from .const import (
+    ATTR_CURRENT_A,
+    ATTR_CURRENT_POWER_W,
+    ATTR_TODAY_ENERGY_KWH,
+    ATTR_TOTAL_ENERGY_KWH,
     CONF_EMETER_PARAMS,
-    CONF_LIGHT,
-    CONF_SWITCH,
-    COORDINATORS,
-    DOMAIN as TPLINK_DOMAIN,
+    DOMAIN,
 )
-
-ATTR_CURRENT_A = "current_a"
-ATTR_CURRENT_POWER_W = "current_power_w"
-ATTR_TODAY_ENERGY_KWH = "today_energy_kwh"
-ATTR_TOTAL_ENERGY_KWH = "total_energy_kwh"
+from .coordinator import TPLinkDataUpdateCoordinator
+from .entity import CoordinatedTPLinkEntity
 
 ENERGY_SENSORS: Final[list[SensorEntityDescription]] = [
     SensorEntityDescription(
@@ -86,40 +81,37 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up switches."""
-    entities: list[SmartPlugSensor] = []
-    coordinators: dict[str, TPLinkDataUpdateCoordinator] = hass.data[TPLINK_DOMAIN][
-        COORDINATORS
-    ]
-    switches: list[SmartDevice] = hass.data[TPLINK_DOMAIN][CONF_SWITCH]
-    lights: list[SmartDevice] = hass.data[TPLINK_DOMAIN][CONF_LIGHT]
-    for device in switches + lights:
-        coordinator: TPLinkDataUpdateCoordinator = coordinators[device.device_id]
-        if not device.has_emeter:
-            continue
-        for description in ENERGY_SENSORS:
-            if coordinator.data[CONF_EMETER_PARAMS].get(description.key) is not None:
-                entities.append(SmartPlugSensor(device, coordinator, description))
-
-    async_add_entities(entities)
+    """Set up sensors."""
+    coordinator: TPLinkDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    device = coordinator.device
+    async_add_entities(
+        [
+            SmartPlugSensor(device, coordinator, description)
+            for description in ENERGY_SENSORS
+            if device.has_emeter
+            and coordinator.data[CONF_EMETER_PARAMS].get(description.key) is not None
+        ]
+    )
 
 
 class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
     """Representation of a TPLink Smart Plug energy sensor."""
 
+    coordinator: TPLinkDataUpdateCoordinator
+
     def __init__(
         self,
         device: SmartDevice,
-        coordinator: DataUpdateCoordinator,
+        coordinator: TPLinkDataUpdateCoordinator,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the switch."""
         super().__init__(device, coordinator)
-        self.device = device
         self.entity_description = description
+        self._attr_unique_id = f"{self.device.device_id}_{self.entity_description.key}"
 
     @property
-    def name(self) -> str | None:
+    def name(self) -> str:
         """Return the name of the Smart Plug.
 
         Overridden to include the description.
@@ -127,16 +119,6 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
         return f"{self.device.alias} {self.entity_description.name}"
 
     @property
-    def data(self) -> dict[str, Any]:
-        """Return data from DataUpdateCoordinator."""
-        return self.coordinator.data
-
-    @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float:
         """Return the sensors state."""
-        return self.data[CONF_EMETER_PARAMS][self.entity_description.key]
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        return f"{self.device.device_id}_{self.entity_description.key}"
+        return cast(float, self.data[CONF_EMETER_PARAMS][self.entity_description.key])

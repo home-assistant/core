@@ -1,20 +1,17 @@
 """Support for TPLink HS100/HS110/HS200 smart switch."""
 from __future__ import annotations
 
-from asyncio import sleep
 import logging
 from typing import Any
 
-from kasa import SmartDevice
-
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.components.tplink import TPLinkDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import CoordinatedTPLinkEntity
-from .const import CONF_SWITCH, COORDINATORS, DOMAIN as TPLINK_DOMAIN
+from .const import DOMAIN
+from .coordinator import TPLinkDataUpdateCoordinator
+from .entity import CoordinatedTPLinkEntity, async_refresh_after
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,18 +22,16 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches."""
-    entities: list[SmartPlugSwitch] = []
-    coordinators: dict[str, TPLinkDataUpdateCoordinator] = hass.data[TPLINK_DOMAIN][
-        COORDINATORS
-    ]
-    switches: list[SmartDevice] = hass.data[TPLINK_DOMAIN][CONF_SWITCH]
-    for switch in switches:
-        coordinator = coordinators[switch.device_id]
-        entities.append(SmartPlugSwitch(switch, coordinator))
-        if switch.is_strip:
-            _LOGGER.debug("Initializing strip with %s sockets", len(switch.children))
-            for child in switch.children:
-                entities.append(SmartPlugSwitch(child, coordinator))
+    coordinator: TPLinkDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    device = coordinator.device
+    if not device.is_plug and not device.is_strip:
+        return
+    entities = []
+    entities.append(SmartPlugSwitch(device, coordinator))
+    if device.is_strip:
+        _LOGGER.debug("Initializing strip with %s sockets", len(device.children))
+        for child in device.children:
+            entities.append(SmartPlugSwitch(child, coordinator))
 
     async_add_entities(entities)
 
@@ -44,23 +39,14 @@ async def async_setup_entry(
 class SmartPlugSwitch(CoordinatedTPLinkEntity, SwitchEntity):
     """Representation of a TPLink Smart Plug switch."""
 
+    coordinator: TPLinkDataUpdateCoordinator
+
+    @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.device.turn_on()
-        await self._async_device_workarounds()
-        await self._async_refresh_with_children()
 
+    @async_refresh_after
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.device.turn_off()
-        await self._async_device_workarounds()
-        await self._async_refresh_with_children()
-
-    async def _async_device_workarounds(self) -> None:
-        # Workaround for delayed device state update on HS210: #55190
-        if "HS210" in self.device.model:
-            await sleep(0.5)
-
-    async def _async_refresh_with_children(self) -> None:
-        self.coordinator.update_children = False
-        await self.coordinator.async_refresh()

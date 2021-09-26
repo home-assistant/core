@@ -1,45 +1,22 @@
 """Tests for the TP-Link component."""
 from __future__ import annotations
 
-from typing import Any
 from unittest.mock import patch
 
-from kasa import SmartDevice
-
-from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import tplink
+from homeassistant.components.tplink.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_HOST
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro
+from . import IP_ADDRESS, MAC_ADDRESS, _patch_discovery, _patch_single_discovery
 
-
-async def test_creating_entry_tries_discover(hass):
-    """Test setting up does discovery."""
-    with patch(
-        "homeassistant.components.tplink.async_setup_entry",
-        return_value=mock_coro(True),
-    ) as mock_setup, patch(
-        "homeassistant.components.tplink.common.Discover.discover",
-        return_value={"host": 1234},
-    ):
-        result = await hass.config_entries.flow.async_init(
-            tplink.DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-
-        # Confirmation form
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-
-        await hass.async_block_till_done()
-
-    assert len(mock_setup.mock_calls) == 1
+from tests.common import MockConfigEntry
 
 
 async def test_configuring_tplink_causes_discovery(hass):
     """Test that specifying empty config does discovery."""
-    with patch("homeassistant.components.tplink.common.Discover.discover") as discover:
+    with patch("homeassistant.components.tplink.Discover.discover") as discover:
         discover.return_value = {"host": 1234}
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -47,52 +24,28 @@ async def test_configuring_tplink_causes_discovery(hass):
     assert len(discover.mock_calls) == 1
 
 
-class UnknownSmartDevice(SmartDevice):
-    """Dummy class for testing."""
-
-    @property
-    def has_emeter(self) -> bool:
-        """Do nothing."""
-
-    def turn_off(self) -> None:
-        """Do nothing."""
-
-    def turn_on(self) -> None:
-        """Do nothing."""
-
-    @property
-    def is_on(self) -> bool:
-        """Do nothing."""
-
-    @property
-    def state_information(self) -> dict[str, Any]:
-        """Do nothing."""
-
-
-async def test_configuring_discovery_disabled(hass):
-    """Test that discover does not get called when disabled."""
-    with patch(
-        "homeassistant.components.tplink.async_setup_entry",
-        return_value=mock_coro(True),
-    ) as mock_setup, patch(
-        "homeassistant.components.tplink.common.Discover.discover", return_value=[]
-    ) as discover:
-        await async_setup_component(
-            hass, tplink.DOMAIN, {tplink.DOMAIN: {tplink.CONF_DISCOVERY: False}}
-        )
+async def test_config_entry_reload(hass):
+    """Test that a config entry can be reloaded."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    with _patch_discovery(), _patch_single_discovery():
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
-
-    assert discover.call_count == 0
-    assert mock_setup.call_count == 1
-
-
-async def test_no_config_creates_no_entry(hass):
-    """Test for when there is no tplink in config."""
-    with patch(
-        "homeassistant.components.tplink.async_setup_entry",
-        return_value=mock_coro(True),
-    ) as mock_setup:
-        await async_setup_component(hass, tplink.DOMAIN, {})
+        assert already_migrated_config_entry.state == ConfigEntryState.LOADED
+        await hass.config_entries.async_unload(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
+        assert already_migrated_config_entry.state == ConfigEntryState.NOT_LOADED
 
-    assert mock_setup.call_count == 0
+
+async def test_config_entry_retry(hass):
+    """Test that a config entry can be retried."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    with _patch_discovery(no_device=True), _patch_single_discovery(no_device=True):
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+        assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY

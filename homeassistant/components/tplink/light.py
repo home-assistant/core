@@ -1,11 +1,8 @@
 """Support for TPLink lights."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 from typing import Any
-
-from kasa import SmartBulb
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -19,29 +16,21 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     LightEntity,
 )
-from homeassistant.components.tplink import TPLinkDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
     color_temperature_mired_to_kelvin as mired_to_kelvin,
 )
 
-from .common import CoordinatedTPLinkEntity
-from .const import CONF_LIGHT, COORDINATORS, DOMAIN as TPLINK_DOMAIN
+from .const import DOMAIN
+from .coordinator import TPLinkDataUpdateCoordinator
+from .entity import CoordinatedTPLinkEntity, async_refresh_after
 
 PARALLEL_UPDATES = 0
-SCAN_INTERVAL = timedelta(seconds=5)
-CURRENT_POWER_UPDATE_INTERVAL = timedelta(seconds=60)
-HISTORICAL_POWER_UPDATE_INTERVAL = timedelta(minutes=60)
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_CURRENT_POWER_W = "current_power_w"
-ATTR_DAILY_ENERGY_KWH = "daily_energy_kwh"
-ATTR_MONTHLY_ENERGY_KWH = "monthly_energy_kwh"
 
 
 async def async_setup_entry(
@@ -50,49 +39,23 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches."""
-    coordinators: dict[str, TPLinkDataUpdateCoordinator] = hass.data[TPLINK_DOMAIN][
-        COORDINATORS
-    ]
-    async_add_entities(
-        [
-            TPLinkSmartBulb(device, coordinators[device.device_id])
-            for device in hass.data[TPLINK_DOMAIN][CONF_LIGHT]
-        ]
-    )
-
-
-def brightness_to_percentage(byt):
-    """Convert brightness from absolute 0..255 to percentage."""
-    return round((byt * 100.0) / 255.0)
-
-
-def brightness_from_percentage(percent):
-    """Convert percentage to absolute value 0..255."""
-    return round((percent * 255.0) / 100.0)
+    coordinator: TPLinkDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    device = coordinator.device
+    if device.is_bulb or device.is_light_strip or device.is_dimmer:
+        async_add_entities([TPLinkSmartBulb(device, coordinator)])
 
 
 class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     """Representation of a TPLink Smart Bulb."""
 
-    def __init__(
-        self, smartbulb: SmartBulb, coordinator: DataUpdateCoordinator
-    ) -> None:
-        """Initialize the bulb."""
-        super().__init__(smartbulb, coordinator)
-        self.device = smartbulb
+    coordinator: TPLinkDataUpdateCoordinator
 
+    @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        await self._async_turn_on(**kwargs)
-        await self.coordinator.async_refresh()
-
-    async def _async_turn_on(self, **kwargs: Any) -> None:
-        _LOGGER.debug("Turning on %s", kwargs)
-
         transition = kwargs.get(ATTR_TRANSITION)
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-        if brightness is not None:
-            brightness = int(brightness_to_percentage(brightness))
+        if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
+            brightness = round((brightness * 100.0) / 255.0)
 
         # Handle turning to temp mode
         if ATTR_COLOR_TEMP in kwargs:
@@ -116,10 +79,10 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         else:
             await self.device.turn_on(transition=transition)
 
+    @async_refresh_after
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self.device.turn_off(transition=kwargs.get(ATTR_TRANSITION))
-        await self.coordinator.async_refresh()
 
     @property
     def min_mireds(self) -> int:
@@ -139,7 +102,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     @property
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
-        return brightness_from_percentage(self.device.brightness)
+        return round((self.device.brightness * 255.0) / 100.0)
 
     @property
     def hs_color(self) -> tuple[int, int] | None:
