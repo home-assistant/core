@@ -14,7 +14,7 @@ certifi>=2020.12.5
 ciso8601==2.2.0
 cryptography==3.4.8
 defusedxml==0.7.1
-emoji==1.2.0
+emoji==1.5.0
 hass-nabucasa==0.50.0
 home-assistant-frontend==20210922.0
 httpx==0.19.0
