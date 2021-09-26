@@ -168,10 +168,6 @@ class ProbeEndpoint:
 
         remaining_channels = channel_pool.unclaimed_channels()
         for channel in remaining_channels:
-            # we may have claimed channels during previous iterations
-            if channel in channel_pool.claimed_channels:
-                continue
-
             unique_id = f"{channel_pool.unique_id}-{channel.cluster.cluster_id}"
 
             matches, claimed = zha_regs.ZHA_ENTITIES.get_multi_entity(
