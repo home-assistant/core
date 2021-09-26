@@ -39,6 +39,7 @@ IPV4_BROADCAST = IPv4Address("255.255.255.255")
 # Attributes for accessing info from SSDP response
 ATTR_SSDP_LOCATION = "ssdp_location"
 ATTR_SSDP_ST = "ssdp_st"
+ATTR_SSDP_NT = "ssdp_nt"
 ATTR_SSDP_UDN = "ssdp_udn"
 ATTR_SSDP_USN = "ssdp_usn"
 ATTR_SSDP_EXT = "ssdp_ext"
@@ -68,6 +69,7 @@ DISCOVERY_MAPPING = {
     "st": ATTR_SSDP_ST,
     "location": ATTR_SSDP_LOCATION,
     "_udn": ATTR_SSDP_UDN,
+    "nt": ATTR_SSDP_NT,
 }
 
 SsdpChange = Enum("SsdpChange", "ALIVE BYEBYE UPDATE")

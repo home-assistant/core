@@ -216,7 +216,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         data = {
             CONF_URL: discovery[ssdp.ATTR_SSDP_LOCATION],
             CONF_DEVICE_ID: discovery[ssdp.ATTR_SSDP_UDN],
-            CONF_TYPE: discovery[ssdp.ATTR_UPNP_DEVICE_TYPE],
+            CONF_TYPE: discovery.get(ssdp.ATTR_SSDP_NT) or discovery[ssdp.ATTR_SSDP_ST],
         }
         return self.async_create_entry(title=title, data=data, options=options)
 
