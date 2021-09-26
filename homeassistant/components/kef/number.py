@@ -7,7 +7,7 @@ from aiokef.aiokef import DSP_OPTION_MAPPING
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberEntity
-from homeassistant.const import CONF_HOST, DEVICE_DEFAULT_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -80,7 +80,7 @@ class KefDSPNumber(NumberEntity):
         self._speaker = speaker
         self._dsp_attr = dsp_attr
         self._attr_unique_id = unique_id
-        self._attr_name = name or DEVICE_DEFAULT_NAME
+        self._attr_name = name
 
         self._attr_max_value = max_value
         self._attr_min_value = min_value
