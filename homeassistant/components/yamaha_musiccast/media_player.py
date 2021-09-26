@@ -172,7 +172,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         ret = {}
         for inp in self.coordinator.data.zones[self._zone_id].input_list:
             label = self.coordinator.data.input_names.get(inp, "")
-            if (
+            if inp != label and (
                 label in self.coordinator.data.zones[self._zone_id].input_list
                 or list(self.coordinator.data.input_names.values()).count(label) > 1
             ):
