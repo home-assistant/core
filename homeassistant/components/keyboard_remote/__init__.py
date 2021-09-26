@@ -239,11 +239,12 @@ class KeyboardRemote:
                 self.hass.bus.async_fire(
                     KEYBOARD_REMOTE_COMMAND_RECEIVED,
                     {
-                            KEY_CODE: code,
-                            VALUE: event.value,
-                            TYPE: KEY_VALUE_NAME.get(2),
-                            DEVICE_DESCRIPTOR: path,
-                            DEVICE_NAME: name},
+                        KEY_CODE: code,
+                        VALUE: 2,
+                        TYPE: KEY_VALUE_NAME.get(2),
+                        DEVICE_DESCRIPTOR: path,
+                        DEVICE_NAME: name,
+                    },
                 )
                 await asyncio.sleep(repeat)
 
