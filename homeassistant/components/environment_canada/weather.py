@@ -4,6 +4,18 @@ from __future__ import annotations
 import datetime
 
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_CLOUDY,
+    ATTR_CONDITION_EXCEPTIONAL,
+    ATTR_CONDITION_FOG,
+    ATTR_CONDITION_LIGHTNING_RAINY,
+    ATTR_CONDITION_PARTLYCLOUDY,
+    ATTR_CONDITION_POURING,
+    ATTR_CONDITION_RAINY,
+    ATTR_CONDITION_SNOWY,
+    ATTR_CONDITION_SNOWY_RAINY,
+    ATTR_CONDITION_SUNNY,
+    ATTR_CONDITION_WINDY,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TEMP,
@@ -12,7 +24,6 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.const import (
-    CONF_NAME,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
     PRESSURE_HPA,
@@ -22,7 +33,57 @@ from homeassistant.const import (
 from homeassistant.util import dt
 
 from . import ECBaseEntity, convert
-from .const import DEFAULT_NAME, DOMAIN, EC_ICON_TO_HA_CONDITION_MAP
+from .const import DOMAIN
+
+# Icon codes from:
+# https://dd.weather.gc.ca/citypage_weather/docs/forecast_conditions_icon_code_descriptions_e.csv
+EC_ICON_TO_HA_CONDITION_MAP = {
+    0: ATTR_CONDITION_SUNNY,
+    1: ATTR_CONDITION_SUNNY,
+    2: ATTR_CONDITION_PARTLYCLOUDY,
+    3: ATTR_CONDITION_PARTLYCLOUDY,
+    4: ATTR_CONDITION_PARTLYCLOUDY,
+    5: ATTR_CONDITION_PARTLYCLOUDY,
+    6: ATTR_CONDITION_RAINY,
+    7: ATTR_CONDITION_SNOWY_RAINY,
+    8: ATTR_CONDITION_SNOWY,
+    9: ATTR_CONDITION_LIGHTNING_RAINY,
+    10: ATTR_CONDITION_CLOUDY,
+    11: ATTR_CONDITION_CLOUDY,
+    12: ATTR_CONDITION_RAINY,
+    13: ATTR_CONDITION_POURING,
+    14: ATTR_CONDITION_SNOWY_RAINY,
+    15: ATTR_CONDITION_SNOWY_RAINY,
+    16: ATTR_CONDITION_SNOWY,
+    17: ATTR_CONDITION_SNOWY,
+    18: ATTR_CONDITION_SNOWY,
+    19: ATTR_CONDITION_LIGHTNING_RAINY,
+    20: None,
+    21: None,
+    22: ATTR_CONDITION_PARTLYCLOUDY,
+    23: ATTR_CONDITION_FOG,
+    24: ATTR_CONDITION_FOG,
+    25: None,
+    26: None,
+    27: ATTR_CONDITION_SNOWY_RAINY,
+    28: ATTR_CONDITION_RAINY,
+    29: None,
+    30: ATTR_CONDITION_CLEAR_NIGHT,
+    31: ATTR_CONDITION_CLEAR_NIGHT,
+    32: ATTR_CONDITION_PARTLYCLOUDY,
+    33: ATTR_CONDITION_PARTLYCLOUDY,
+    34: ATTR_CONDITION_PARTLYCLOUDY,
+    35: ATTR_CONDITION_PARTLYCLOUDY,
+    36: ATTR_CONDITION_RAINY,
+    37: ATTR_CONDITION_SNOWY_RAINY,
+    38: ATTR_CONDITION_SNOWY,
+    39: ATTR_CONDITION_LIGHTNING_RAINY,
+    40: ATTR_CONDITION_SNOWY,
+    41: None,
+    42: None,
+    43: ATTR_CONDITION_WINDY,
+    44: ATTR_CONDITION_EXCEPTIONAL,
+}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -54,8 +115,7 @@ class ECWeather(ECBaseEntity, WeatherEntity):
 
     def __init__(self, coordinator, config, is_metric, hourly):
         """Initialise the platform."""
-        name = f"{config.get(CONF_NAME, DEFAULT_NAME)}{' Hourly' if hourly else ''}"
-        super().__init__(coordinator, config, name)
+        super().__init__(coordinator, config, "Hourly" if hourly else "")
 
         self._is_metric = is_metric
         self._hourly = hourly
