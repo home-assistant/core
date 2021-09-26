@@ -1,10 +1,10 @@
 """Firmware sensor of the Renson ventilation system."""
 import rensonVentilationLib.renson as renson
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
 
-class FirmwareSensor(Entity):
+class FirmwareSensor(BinarySensorEntity):
     """Check firmware update and store it in the state of the class."""
 
     def __init__(self, rensonApi: renson.RensonVentilation, hass):
@@ -19,8 +19,8 @@ class FirmwareSensor(Entity):
         return "Latest firmware"
 
     @property
-    def state(self):
-        """Return the state of the sensor."""
+    def is_on(self):
+        """Return true if the binary sensor is on."""
         return self._state
 
     async def async_update(self):

@@ -3,17 +3,15 @@ from rensonVentilationLib.fieldEnum import FieldEnum
 from rensonVentilationLib.generalEnum import DataType
 import rensonVentilationLib.renson as renson
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 
 
-class SensorValue(Entity):
+class SensorValue(SensorEntity):
     """Get a sensor data from the Renson API and store it in the state of the class."""
 
     def __init__(
         self,
-        name: str,
-        device_class: str,
-        unit_of_measurement: str,
+        description: SensorEntityDescription,
         field: FieldEnum,
         renson: renson.RensonVentilation,
         rawFormat: bool,
@@ -22,28 +20,11 @@ class SensorValue(Entity):
         super().__init__()
 
         self._state = None
-        self.sensorName = name
+        self.entity_description = description
         self.field = field
-        self.deviceClass = device_class
-        self.unitOfMeasurement = unit_of_measurement
         self.dataType = field.field_type
         self.renson = renson
         self.rawFormat = rawFormat
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self.sensorName
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return self.deviceClass
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of the sensor."""
-        return self.unitOfMeasurement
 
     @property
     def state(self):
