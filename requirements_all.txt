@@ -580,7 +580,7 @@ eliqonline==1.2.2
 elkm1-lib==0.8.10
 
 # homeassistant.components.mobile_app
-emoji==1.2.0
+emoji==1.5.0
 
 # homeassistant.components.emulated_roku
 emulated_roku==0.2.1
@@ -644,7 +644,7 @@ fitbit==0.3.1
 fixerio==1.0.0a0
 
 # homeassistant.components.fjaraskupan
-fjaraskupan==1.0.0
+fjaraskupan==1.0.1
 
 # homeassistant.components.flipr
 flipr-api==1.4.1
@@ -718,7 +718,7 @@ glances_api==0.2.0
 gntp==1.0.3
 
 # homeassistant.components.goalzero
-goalzero==0.1.7
+goalzero==0.2.0
 
 # homeassistant.components.google
 google-api-python-client==1.6.4
@@ -1094,7 +1094,7 @@ numato-gpio==0.10.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.21.1
+numpy==1.21.2
 
 # homeassistant.components.oasa_telematics
 oasatelematics==0.3
@@ -1450,6 +1450,9 @@ pyeconet==0.1.14
 # homeassistant.components.edimax
 pyedimax==0.2.1
 
+# homeassistant.components.efergy
+pyefergy==0.0.3
+
 # homeassistant.components.eight_sleep
 pyeight==0.1.9
 
@@ -1788,7 +1791,7 @@ pysesame2==1.0.1
 pysher==1.0.1
 
 # homeassistant.components.sia
-pysiaalarm==3.0.0
+pysiaalarm==3.0.1
 
 # homeassistant.components.signal_messenger
 pysignalclirestapi==0.3.4
@@ -1920,7 +1923,7 @@ python-qbittorrent==0.4.2
 python-ripple-api==0.0.3
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.25
+python-smarttub==0.0.27
 
 # homeassistant.components.sochain
 python-sochain-api==0.0.2
@@ -2364,7 +2367,7 @@ uvcclient==0.11.0
 vallox-websocket-api==2.8.1
 
 # homeassistant.components.velbus
-velbus-aio==2021.9.1
+velbus-aio==2021.9.4
 
 # homeassistant.components.venstar
 venstarcolortouch==0.14

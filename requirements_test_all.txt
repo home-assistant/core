@@ -346,7 +346,7 @@ elgato==2.1.1
 elkm1-lib==0.8.10
 
 # homeassistant.components.mobile_app
-emoji==1.2.0
+emoji==1.5.0
 
 # homeassistant.components.emulated_roku
 emulated_roku==0.2.1
@@ -370,7 +370,7 @@ faadelays==0.0.7
 feedparser==6.0.2
 
 # homeassistant.components.fjaraskupan
-fjaraskupan==1.0.0
+fjaraskupan==1.0.1
 
 # homeassistant.components.flipr
 flipr-api==1.4.1
@@ -426,7 +426,7 @@ gios==2.0.0
 glances_api==0.2.0
 
 # homeassistant.components.goalzero
-goalzero==0.1.7
+goalzero==0.2.0
 
 # homeassistant.components.google
 google-api-python-client==1.6.4
@@ -641,7 +641,7 @@ numato-gpio==0.10.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.21.1
+numpy==1.21.2
 
 # homeassistant.components.google
 oauth2client==4.0.0
@@ -837,6 +837,9 @@ pydispatcher==2.0.5
 
 # homeassistant.components.econet
 pyeconet==0.1.14
+
+# homeassistant.components.efergy
+pyefergy==0.0.3
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1050,7 +1053,7 @@ pyserial-asyncio==0.5
 pyserial==3.5
 
 # homeassistant.components.sia
-pysiaalarm==3.0.0
+pysiaalarm==3.0.1
 
 # homeassistant.components.signal_messenger
 pysignalclirestapi==0.3.4
@@ -1104,7 +1107,7 @@ python-openzwave-mqtt[mqtt-client]==1.4.0
 python-picnic-api==1.1.0
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.25
+python-smarttub==0.0.27
 
 # homeassistant.components.songpal
 python-songpal==0.12
@@ -1335,7 +1338,7 @@ url-normalize==1.4.1
 uvcclient==0.11.0
 
 # homeassistant.components.velbus
-velbus-aio==2021.9.1
+velbus-aio==2021.9.4
 
 # homeassistant.components.venstar
 venstarcolortouch==0.14
