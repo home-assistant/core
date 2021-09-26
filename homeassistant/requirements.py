@@ -196,7 +196,7 @@ async def _async_process_requirements(
         if await hass.async_add_executor_job(_install, req, kwargs):
             return
 
-    install_failure_history[req] = True
+    install_failure_history.add(req)
     raise RequirementsNotFound(name, [req])
 
 
