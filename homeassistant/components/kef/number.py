@@ -34,14 +34,18 @@ async def async_setup_platform(
     numbers = data.setdefault(NUMBER_DOMAIN, {})
     speaker = data[MEDIA_PLAYER_DOMAIN]
 
-    for name, dsp_attr, options in (
-        ["Desk dB", "desk_db", DSP_OPTION_MAPPING["desk_db"]],
-        ["Wall dB", "wall_db", DSP_OPTION_MAPPING["wall_db"]],
-        ["Treble dB", "treble_db", DSP_OPTION_MAPPING["treble_db"]],
-        ["High Hz", "high_hz", DSP_OPTION_MAPPING["high_hz"]],
-        ["Low Hz", "low_hz", DSP_OPTION_MAPPING["low_hz"]],
-        ["Sub dB", "sub_db", DSP_OPTION_MAPPING["sub_db"]],
+    if speaker._dsp is None:
+        await speaker.update_dsp()
+
+    for dsp_attr, options in (
+        ["desk_db", DSP_OPTION_MAPPING["desk_db"]],
+        ["wall_db", DSP_OPTION_MAPPING["wall_db"]],
+        ["treble_db", DSP_OPTION_MAPPING["treble_db"]],
+        ["high_hz", DSP_OPTION_MAPPING["high_hz"]],
+        ["low_hz", DSP_OPTION_MAPPING["low_hz"]],
+        ["sub_db", DSP_OPTION_MAPPING["sub_db"]],
     ):
+        name = dsp_attr.replace("_", " ")
         min_value = min(options)
         max_value = max(options)
         step = options[1] - options[0]
@@ -52,6 +56,7 @@ async def async_setup_platform(
             min_value=min_value,
             max_value=max_value,
             step=step,
+            value=speaker._dsp[dsp_attr],  # type: ignore
             speaker=speaker,
             dsp_attr=dsp_attr,
         )
@@ -73,6 +78,7 @@ class KefDSPNumber(NumberEntity):
         min_value: float,
         max_value: float,
         step: float,
+        value: float,
         speaker: KefMediaPlayer,
         dsp_attr: str,
     ) -> None:
@@ -85,6 +91,7 @@ class KefDSPNumber(NumberEntity):
         self._attr_max_value = max_value
         self._attr_min_value = min_value
         self._attr_step = step
+        self._attr_value = value
 
         self._attr_icon = icon
         self._attr_device_info = {
@@ -92,10 +99,15 @@ class KefDSPNumber(NumberEntity):
             "name": name,
         }
 
-    async def async_set_value(self, value: str) -> None:
+    async def async_set_value(self, value: float) -> None:
         """Update the current selected value."""
         _LOGGER.debug("Setting %s to %s", self._attr_name, value)
-        await getattr(self._speaker, f"set_{self._dsp_attr}")(value)
+        self._attr_value = value
+        if value != "Unknown":  # type: ignore
+            await getattr(self._speaker, f"set_{self._dsp_attr}")(value)
+            self._attr_available = True
+        else:
+            self._attr_available = False
         self.async_write_ha_state()
 
     async def async_update(self, **kwargs):
