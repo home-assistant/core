@@ -5,7 +5,6 @@ from collections.abc import Iterable
 from unittest.mock import Mock, patch
 
 from async_upnp_client import UpnpError
-from async_upnp_client.profiles.dlna import DmrDevice
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
