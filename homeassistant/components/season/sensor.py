@@ -35,10 +35,10 @@ STATE_WINTER = "winter"
 TYPE_ASTRONOMICAL = "astronomical"
 TYPE_METEOROLOGICAL = "meteorological"
 
-ATTR_SEASON = "season"
-ATTR_DAYS_LEFT = "days_left"
-ATTR_DAYS_IN = "days_in"
-ATTR_NEXT_SEASON_UTC = "next_season_utc"
+ENTITY_SEASON = "season"
+ENTITY_DAYS_LEFT = "days_left"
+ENTITY_DAYS_IN = "days_in"
+ENTITY_NEXT_SEASON_UTC = "next_season_utc"
 
 VALID_TYPES = [
     TYPE_ASTRONOMICAL,
@@ -58,32 +58,34 @@ SEASON_ICONS = {
     STATE_SUMMER: "mdi:sunglasses",
     STATE_AUTUMN: "mdi:leaf",
     STATE_WINTER: "mdi:snowflake",
+    ENTITY_DAYS_LEFT: "mdi:calendar-arrow-right",
+    ENTITY_DAYS_IN: "mdi:calendar-arrow-left",
+    ENTITY_NEXT_SEASON_UTC: "mdi:calendar-arrow-left",
 }
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
+
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
-        key="season",
+        key=ENTITY_SEASON,
         name="Season",
-        device_class=DEVICE_CLASS_SEASON,
+        icon=SEASON_ICONS[STATE_NONE],
     ),
     SensorEntityDescription(
-        key="days_left",
+        key=ENTITY_DAYS_LEFT,
         name="Days Left",
-        native_unit_of_measurement=TIME_DAYS,
-        icon="mdi:calendar-arrow-right",
+        icon=SEASON_ICONS[ENTITY_DAYS_LEFT],
     ),
     SensorEntityDescription(
-        key="days_in",
+        key=ENTITY_DAYS_IN,
         name="Days In",
-        native_unit_of_measurement=TIME_DAYS,
-        icon="mdi:calendar-arrow-left",
+        icon=SEASON_ICONS[ENTITY_DAYS_IN],
     ),
     SensorEntityDescription(
-        key="next_season_utc",
+        key=ENTITY_NEXT_SEASON_UTC,
         name="Next Season Start Date",
-        icon="mdi:calendar-arrow-left",
+        icon=SEASON_ICONS[ENTITY_NEXT_SEASON_UTC],
     ),
 )
 
@@ -124,7 +126,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     entities = []
     for description in SENSOR_TYPES:
-        if description.key in ATTR_SEASON:
+        if description.key in ENTITY_SEASON:
             entities.append(Season(season_data, description, name))
         elif hemisphere not in EQUATOR:
             entities.append(Season(season_data, description, name))
@@ -143,7 +145,7 @@ class Season(SensorEntity):
     ):
         """Initialize the sensor."""
         self.entity_description = description
-        if name in DEFAULT_NAME and description.key != ATTR_SEASON:
+        if name in DEFAULT_NAME and description.key != ENTITY_SEASON:
             self._attr_name = f"{name} {description.name}"
         else:
             self._attr_name = f"{description.name}"
@@ -154,11 +156,13 @@ class Season(SensorEntity):
         await self.season_data.async_update()
         if self.entity_description.key in self.season_data.data:
             self._attr_native_value = self.season_data.data[self.entity_description.key]
-            if self.entity_description.key in ATTR_SEASON:
+            if self.entity_description.key in ENTITY_SEASON:
                 self._attr_icon = SEASON_ICONS[
                     self.season_data.data[self.entity_description.key]
                 ]
-
+                self._attr_device_class = DEVICE_CLASS_SEASON
+            if  self.entity_description.key in (ENTITY_DAYS_LEFT, ENTITY_DAYS_IN):
+                self._attr_native_unit_of_measurement  = TIME_DAYS
 
 class SeasonData:
     """Calculate the current season."""
@@ -173,6 +177,7 @@ class SeasonData:
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
+        """Get the latest data from season."""
         # Update data
         self.datetime = utcnow().replace(tzinfo=None)
         self._data = get_season(self)
@@ -236,17 +241,17 @@ def get_season(self):
 
     if hemisphere == EQUATOR:
         self.data = {
-            ATTR_SEASON: season,
-            ATTR_DAYS_LEFT: days_left,
-            ATTR_DAYS_IN: days_in,
-            ATTR_NEXT_SEASON_UTC: next_date,
+            ENTITY_SEASON: season,
+            ENTITY_DAYS_LEFT: days_left,
+            ENTITY_DAYS_IN: days_in,
+            ENTITY_NEXT_SEASON_UTC: next_date,
         }
     else:
         self.data = {
-            ATTR_SEASON: season,
-            ATTR_DAYS_LEFT: days_left.days,
-            ATTR_DAYS_IN: abs(days_in.days) + 1,
-            ATTR_NEXT_SEASON_UTC: next_date.strftime("%Y %b %d %H:%M:%S"),
+            ENTITY_SEASON: season,
+            ENTITY_DAYS_LEFT: days_left.days,
+            ENTITY_DAYS_IN: abs(days_in.days) + 1,
+            ENTITY_NEXT_SEASON_UTC: next_date.strftime("%Y %b %d %H:%M:%S"),
         }
 
     return data
