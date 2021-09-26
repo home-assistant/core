@@ -3,8 +3,6 @@ from __future__ import annotations
 
 import logging
 
-from aiokef.aiokef import DSP_OPTION_MAPPING
-
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectEntity
 from homeassistant.const import CONF_HOST, DEVICE_DEFAULT_NAME
@@ -24,10 +22,7 @@ def str_to_option(option):
         return False
     if option == "on":
         return True
-    try:
-        return float(option)
-    except ValueError:
-        return option
+    return option
 
 
 def option_to_str(option):
@@ -36,8 +31,6 @@ def option_to_str(option):
         return "off"
     if option is True:
         return "on"
-    if isinstance(option, (int, float)):
-        return str(option)
     return option
 
 
@@ -67,12 +60,6 @@ async def async_setup_platform(
         ["Wall Mode", "wall_mode", ["on", "off"]],
         ["Phase Correction", "phase_correction", ["on", "off"]],
         ["High Pass", "high_pass", ["on", "off"]],
-        ["Desk dB", "desk_db", DSP_OPTION_MAPPING["desk_db"]],
-        ["Wall dB", "wall_db", DSP_OPTION_MAPPING["wall_db"]],
-        ["Treble dB", "treble_db", DSP_OPTION_MAPPING["treble_db"]],
-        ["High Hz", "high_hz", DSP_OPTION_MAPPING["high_hz"]],
-        ["Low Hz", "low_hz", DSP_OPTION_MAPPING["low_hz"]],
-        ["Sub dB", "sub_db", DSP_OPTION_MAPPING["sub_db"]],
     ):
         current_option = option_to_str(speaker._dsp[dsp_attr])
         select = MediaSelect(
@@ -80,7 +67,7 @@ async def async_setup_platform(
             name=f"{speaker.name} {name}",
             icon="mdi:equalizer",
             current_option=current_option,
-            options=list(map(str, options)),
+            options=options,
             speaker=speaker,
             dsp_attr=dsp_attr,
         )
@@ -121,19 +108,8 @@ class MediaSelect(SelectEntity):
         """Update the current selected option."""
         self._attr_current_option = option
         option = str_to_option(option)
-        if self._dsp_attr in (
-            "desk_mode",
-            "wall_mode",
-            "phase_correction",
-            "high_pass",
-            "sub_polarity",
-            "bass_extension",
-        ):
-            if option != "Unknown":
-                await self._speaker.set_mode(**{self._dsp_attr: option})
-        else:
-            set = getattr(self._speaker, f"set_{self._dsp_attr}")
-            await set(option)
+        if option != "Unknown":
+            await self._speaker.set_mode(**{self._dsp_attr: option})
         self.async_write_ha_state()
 
     async def async_update(self, **kwargs):
