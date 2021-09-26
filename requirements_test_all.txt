@@ -30,7 +30,7 @@ PyRMVtransport==0.3.2
 PyTransportNSW==0.1.1
 
 # homeassistant.components.camera
-PyTurboJPEG==1.5.2
+PyTurboJPEG==1.6.1
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.13.4
@@ -121,7 +121,7 @@ aioguardian==1.0.8
 aioharmony==0.2.7
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.6.2
+aiohomekit==0.6.3
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -144,6 +144,9 @@ aiomodernforms==0.1.8
 
 # homeassistant.components.yamaha_musiccast
 aiomusiccast==0.9.2
+
+# homeassistant.components.nanoleaf
+aionanoleaf==0.0.1
 
 # homeassistant.components.notion
 aionotion==3.0.2
@@ -187,6 +190,9 @@ aioymaps==1.1.0
 # homeassistant.components.airly
 airly==1.1.0
 
+# homeassistant.components.airthings
+airthings_cloud==0.0.1
+
 # homeassistant.components.airtouch4
 airtouch4pyapi==1.0.5
 
@@ -203,7 +209,7 @@ androidtv[async]==0.0.60
 apns2==0.3.0
 
 # homeassistant.components.apprise
-apprise==0.9.4
+apprise==0.9.5.1
 
 # homeassistant.components.aprs
 aprslib==0.6.46
@@ -275,7 +281,7 @@ co2signal==0.4.2
 coinbase==2.1.0
 
 # homeassistant.scripts.check_config
-colorlog==5.0.1
+colorlog==6.4.1
 
 # homeassistant.components.color_extractor
 colorthief==0.2.1
@@ -292,7 +298,7 @@ coronavirus==1.1.1
 croniter==1.0.6
 
 # homeassistant.components.crownstone
-crownstone-cloud==1.4.7
+crownstone-cloud==1.4.8
 
 # homeassistant.components.crownstone
 crownstone-sse==2.0.2
@@ -307,7 +313,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.debugpy
-debugpy==1.4.1
+debugpy==1.4.3
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -364,7 +370,7 @@ faadelays==0.0.7
 feedparser==6.0.2
 
 # homeassistant.components.fjaraskupan
-fjaraskupan==1.0.0
+fjaraskupan==1.0.1
 
 # homeassistant.components.flipr
 flipr-api==1.4.1
@@ -420,7 +426,7 @@ gios==2.0.0
 glances_api==0.2.0
 
 # homeassistant.components.goalzero
-goalzero==0.1.7
+goalzero==0.2.0
 
 # homeassistant.components.google
 google-api-python-client==1.6.4
@@ -477,7 +483,7 @@ hole==0.5.1
 holidays==0.11.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210911.0
+home-assistant-frontend==20210922.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -635,7 +641,7 @@ numato-gpio==0.10.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.21.1
+numpy==1.21.2
 
 # homeassistant.components.google
 oauth2client==4.0.0
@@ -832,6 +838,9 @@ pydispatcher==2.0.5
 # homeassistant.components.econet
 pyeconet==0.1.14
 
+# homeassistant.components.efergy
+pyefergy==0.0.3
+
 # homeassistant.components.everlights
 pyeverlights==0.1.0
 
@@ -965,9 +974,6 @@ pymyq==3.1.4
 # homeassistant.components.mysensors
 pymysensors==0.21.0
 
-# homeassistant.components.nanoleaf
-pynanoleaf==0.1.0
-
 # homeassistant.components.netgear
 pynetgear==0.7.0
 
@@ -1047,7 +1053,7 @@ pyserial-asyncio==0.5
 pyserial==3.5
 
 # homeassistant.components.sia
-pysiaalarm==3.0.0
+pysiaalarm==3.0.1
 
 # homeassistant.components.signal_messenger
 pysignalclirestapi==0.3.4
@@ -1101,7 +1107,7 @@ python-openzwave-mqtt[mqtt-client]==1.4.0
 python-picnic-api==1.1.0
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.25
+python-smarttub==0.0.27
 
 # homeassistant.components.songpal
 python-songpal==0.12
@@ -1295,7 +1301,7 @@ tellduslive==0.10.11
 tesla-powerwall==0.3.10
 
 # homeassistant.components.toon
-toonapi==0.2.0
+toonapi==0.2.1
 
 # homeassistant.components.totalconnect
 total_connect_client==0.57
@@ -1332,7 +1338,7 @@ url-normalize==1.4.1
 uvcclient==0.11.0
 
 # homeassistant.components.velbus
-velbus-aio==2021.9.1
+velbus-aio==2021.9.4
 
 # homeassistant.components.venstar
 venstarcolortouch==0.14
@@ -1354,7 +1360,7 @@ wakeonlan==2.0.1
 wallbox==0.4.4
 
 # homeassistant.components.folder_watcher
-watchdog==2.1.4
+watchdog==2.1.5
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.15.1
@@ -1398,7 +1404,7 @@ yeelight==0.7.5
 youless-api==0.12
 
 # homeassistant.components.zeroconf
-zeroconf==0.36.6
+zeroconf==0.36.7
 
 # homeassistant.components.zha
 zha-quirks==0.0.61

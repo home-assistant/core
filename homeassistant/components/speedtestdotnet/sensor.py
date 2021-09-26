@@ -43,7 +43,6 @@ class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
     """Implementation of a speedtest.net sensor."""
 
     coordinator: SpeedTestDataCoordinator
-
     _attr_icon = ICON
 
     def __init__(
@@ -54,7 +53,6 @@ class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-
         self._attr_name = f"{DEFAULT_NAME} {description.name}"
         self._attr_unique_id = description.key
         self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
@@ -73,10 +71,10 @@ class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
 
             if self.entity_description.key == "download":
                 self._attrs[ATTR_BYTES_RECEIVED] = self.coordinator.data[
-                    "bytes_received"
+                    ATTR_BYTES_RECEIVED
                 ]
             elif self.entity_description.key == "upload":
-                self._attrs[ATTR_BYTES_SENT] = self.coordinator.data["bytes_sent"]
+                self._attrs[ATTR_BYTES_SENT] = self.coordinator.data[ATTR_BYTES_SENT]
 
         return self._attrs
 

@@ -1,8 +1,6 @@
 """Support for Sure PetCare Flaps/Pets binary sensors."""
 from __future__ import annotations
 
-from abc import abstractmethod
-import logging
 from typing import cast
 
 from surepy.entities import SurepyEntity
@@ -17,14 +15,10 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
 
+from . import SurePetcareDataCoordinator
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .entity import SurePetcareEntity
 
 
 async def async_setup_entry(
@@ -34,7 +28,7 @@ async def async_setup_entry(
 
     entities: list[SurePetcareBinarySensor] = []
 
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: SurePetcareDataCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     for surepy_entity in coordinator.data.values():
 
@@ -54,41 +48,19 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SurePetcareBinarySensor(CoordinatorEntity, BinarySensorEntity):
+class SurePetcareBinarySensor(SurePetcareEntity, BinarySensorEntity):
     """A binary sensor implementation for Sure Petcare Entities."""
 
     def __init__(
         self,
-        _id: int,
-        coordinator: DataUpdateCoordinator,
+        surepetcare_id: int,
+        coordinator: SurePetcareDataCoordinator,
     ) -> None:
         """Initialize a Sure Petcare binary sensor."""
-        super().__init__(coordinator)
+        super().__init__(surepetcare_id, coordinator)
 
-        self._id = _id
-
-        surepy_entity: SurepyEntity = coordinator.data[_id]
-
-        # cover special case where a device has no name set
-        if surepy_entity.name:
-            name = surepy_entity.name
-        else:
-            name = f"Unnamed {surepy_entity.type.name.capitalize()}"
-
-        self._attr_name = f"{surepy_entity.type.name.capitalize()} {name.capitalize()}"
-        self._attr_unique_id = f"{surepy_entity.household_id}-{_id}"
-        self._update_attr(coordinator.data[_id])
-
-    @abstractmethod
-    @callback
-    def _update_attr(self, surepy_entity: SurepyEntity) -> None:
-        """Update the state and attributes."""
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Get the latest data and update the state."""
-        self._update_attr(self.coordinator.data[self._id])
-        self.async_write_ha_state()
+        self._attr_name = self._device_name
+        self._attr_unique_id = self._device_id
 
 
 class Hub(SurePetcareBinarySensor):
@@ -115,7 +87,6 @@ class Hub(SurePetcareBinarySensor):
             }
         else:
             self._attr_extra_state_attributes = {}
-        _LOGGER.debug("%s -> state: %s", self.name, state)
 
 
 class Pet(SurePetcareBinarySensor):
@@ -139,7 +110,6 @@ class Pet(SurePetcareBinarySensor):
             }
         else:
             self._attr_extra_state_attributes = {}
-        _LOGGER.debug("%s -> state: %s", self.name, state)
 
 
 class DeviceConnectivity(SurePetcareBinarySensor):
@@ -149,15 +119,13 @@ class DeviceConnectivity(SurePetcareBinarySensor):
 
     def __init__(
         self,
-        _id: int,
-        coordinator: DataUpdateCoordinator,
+        surepetcare_id: int,
+        coordinator: SurePetcareDataCoordinator,
     ) -> None:
         """Initialize a Sure Petcare Device."""
-        super().__init__(_id, coordinator)
-        self._attr_name = f"{self.name}_connectivity"
-        self._attr_unique_id = (
-            f"{self.coordinator.data[self._id].household_id}-{self._id}-connectivity"
-        )
+        super().__init__(surepetcare_id, coordinator)
+        self._attr_name = f"{self._device_name} Connectivity"
+        self._attr_unique_id = f"{self._device_id}-connectivity"
 
     @callback
     def _update_attr(self, surepy_entity: SurepyEntity) -> None:
@@ -170,4 +138,3 @@ class DeviceConnectivity(SurePetcareBinarySensor):
             }
         else:
             self._attr_extra_state_attributes = {}
-        _LOGGER.debug("%s -> state: %s", self.name, state)
