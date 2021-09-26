@@ -34,7 +34,7 @@ async def async_setup_platform(
     numbers = data.setdefault(NUMBER_DOMAIN, {})
     speaker = data[MEDIA_PLAYER_DOMAIN]
 
-    if speaker._dsp is None:
+    if speaker.dsp is None:
         await speaker.update_dsp()
 
     for dsp_attr, options in (
@@ -50,13 +50,13 @@ async def async_setup_platform(
         max_value = max(options)
         step = options[1] - options[0]
         select = KefDSPNumber(
-            unique_id=f"{speaker._unique_id}_{dsp_attr}",
+            unique_id=f"{speaker.unique_id}_{dsp_attr}",
             name=f"{speaker.name} {name}",
             icon="mdi:equalizer",
             min_value=min_value,
             max_value=max_value,
             step=step,
-            value=speaker._dsp[dsp_attr],  # type: ignore
+            value=speaker.dsp[dsp_attr],  # type: ignore
             speaker=speaker,
             dsp_attr=dsp_attr,
         )
@@ -112,5 +112,5 @@ class KefDSPNumber(NumberEntity):
 
     async def async_update(self, **kwargs):
         """Update the select entity with the latest DSP settings."""
-        self._attr_value = self._speaker._dsp[self._dsp_attr]
+        self._attr_value = self._speaker.dsp[self._dsp_attr]
         self.async_write_ha_state()

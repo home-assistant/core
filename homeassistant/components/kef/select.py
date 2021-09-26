@@ -51,7 +51,7 @@ async def async_setup_platform(
     selects = data.setdefault(SELECT_DOMAIN, {})
     speaker = data[MEDIA_PLAYER_DOMAIN]
 
-    if speaker._dsp is None:
+    if speaker.dsp is None:
         await speaker.update_dsp()
 
     for dsp_attr, options in (
@@ -64,9 +64,9 @@ async def async_setup_platform(
     ):
         dsp_attr = cast(str, dsp_attr)
         name = dsp_attr.replace("_", " ")
-        current_option = option_to_str(speaker._dsp[dsp_attr])  # type: ignore
+        current_option = option_to_str(speaker.dsp[dsp_attr])  # type: ignore
         select = MediaSelect(
-            unique_id=f"{speaker._unique_id}_{dsp_attr}",
+            unique_id=f"{speaker.unique_id}_{dsp_attr}",
             name=f"{speaker.name} {name}",
             icon="mdi:equalizer",
             current_option=current_option,
@@ -123,5 +123,5 @@ class MediaSelect(SelectEntity):
 
     async def async_update(self, **kwargs):
         """Update the select entity with the latest DSP settings."""
-        self._attr_current_option = option_to_str(self._speaker._dsp[self._dsp_attr])
+        self._attr_current_option = option_to_str(self._speaker.dsp[self._dsp_attr])
         self.async_write_ha_state()

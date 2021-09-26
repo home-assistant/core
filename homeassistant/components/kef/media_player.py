@@ -186,7 +186,7 @@ class KefMediaPlayer(MediaPlayerEntity):
         self._source = None
         self._volume = None
         self._is_online = None
-        self._dsp = None
+        self.dsp = None
         self._update_dsp_task_remover = None
 
     @property
@@ -212,7 +212,7 @@ class KefMediaPlayer(MediaPlayerEntity):
                 state = await self._speaker.get_state()
                 self._source = state.source
                 self._state = STATE_ON if state.is_on else STATE_OFF
-                if self._dsp is None:
+                if self.dsp is None:
                     # Only do this when necessary because it is a slow operation
                     await self.update_dsp()
             else:
@@ -337,7 +337,7 @@ class KefMediaPlayer(MediaPlayerEntity):
             return
 
         mode = await self._speaker.get_mode()
-        self._dsp = dict(
+        self.dsp = dict(
             desk_db=await self._speaker.get_desk_db(),
             wall_db=await self._speaker.get_wall_db(),
             treble_db=await self._speaker.get_treble_db(),
@@ -375,7 +375,7 @@ class KefMediaPlayer(MediaPlayerEntity):
     @property
     def extra_state_attributes(self):
         """Return the DSP settings of the KEF device."""
-        return self._dsp or {}
+        return self.dsp or {}
 
     async def set_mode(
         self,
@@ -395,34 +395,34 @@ class KefMediaPlayer(MediaPlayerEntity):
             sub_polarity=sub_polarity,
             bass_extension=bass_extension,
         )
-        self._dsp = None
+        self.dsp = None
 
     async def set_desk_db(self, db_value):
         """Set desk_db of the KEF speakers."""
         await self._speaker.set_desk_db(db_value)
-        self._dsp = None
+        self.dsp = None
 
     async def set_wall_db(self, db_value):
         """Set wall_db of the KEF speakers."""
         await self._speaker.set_wall_db(db_value)
-        self._dsp = None
+        self.dsp = None
 
     async def set_treble_db(self, db_value):
         """Set treble_db of the KEF speakers."""
         await self._speaker.set_treble_db(db_value)
-        self._dsp = None
+        self.dsp = None
 
     async def set_high_hz(self, hz_value):
         """Set high_hz of the KEF speakers."""
         await self._speaker.set_high_hz(hz_value)
-        self._dsp = None
+        self.dsp = None
 
     async def set_low_hz(self, hz_value):
         """Set low_hz of the KEF speakers."""
         await self._speaker.set_low_hz(hz_value)
-        self._dsp = None
+        self.dsp = None
 
     async def set_sub_db(self, db_value):
         """Set sub_db of the KEF speakers."""
         await self._speaker.set_sub_db(db_value)
-        self._dsp = None
+        self.dsp = None
