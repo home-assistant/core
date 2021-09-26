@@ -40,8 +40,9 @@ class ConnectError(IntegrationError):
 class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a DLNA DMR config flow.
 
-    The Unique Device Name (UDN) is used as the unique_id for config entries and
-    for entities.
+    The Unique Device Name (UDN) of the DMR device is used as the unique_id for
+    config entries and for entities. This UDN may differ from the root UDN if
+    the DMR is an embedded device.
     """
 
     VERSION = 1
@@ -116,7 +117,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 LOGGER.debug(
                     "Entry %s found via SSDP, with UDN %s",
                     import_data[CONF_URL],
-                    discovery[ssdp.ATTR_UPNP_UDN],
+                    discovery[ssdp.ATTR_SSDP_UDN],
                 )
                 break
         else:
@@ -152,7 +153,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._discoveries = [discovery_info]
 
-        udn = discovery_info[ssdp.ATTR_UPNP_UDN]
+        udn = discovery_info[ssdp.ATTR_SSDP_UDN]
         location = discovery_info[ssdp.ATTR_SSDP_LOCATION]
 
         # Abort if already configured, but update the last-known location
@@ -203,7 +204,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         LOGGER.debug("_async_create_entry_from_discovery: discovery: %s", discovery)
 
         location = discovery[ssdp.ATTR_SSDP_LOCATION]
-        udn = discovery[ssdp.ATTR_UPNP_UDN]
+        udn = discovery[ssdp.ATTR_SSDP_UDN]
 
         # Abort if already configured, but update the last-known location
         await self.async_set_unique_id(udn)
@@ -214,7 +215,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         data = {
             CONF_URL: discovery[ssdp.ATTR_SSDP_LOCATION],
-            CONF_DEVICE_ID: discovery[ssdp.ATTR_UPNP_UDN],
+            CONF_DEVICE_ID: discovery[ssdp.ATTR_SSDP_UDN],
             CONF_TYPE: discovery[ssdp.ATTR_UPNP_DEVICE_TYPE],
         }
         return self.async_create_entry(title=title, data=data, options=options)
@@ -238,7 +239,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         discoveries = [
             disc
             for disc in discoveries
-            if disc[ssdp.ATTR_UPNP_UDN] not in current_unique_ids
+            if disc[ssdp.ATTR_SSDP_UDN] not in current_unique_ids
         ]
 
         return discoveries
@@ -255,12 +256,12 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except UpnpError as err:
             raise ConnectError("could_not_connect") from err
 
-        if device.device_type not in DmrDevice.DEVICE_TYPES:
+        if not DmrDevice.is_profile_device(device):
             raise ConnectError("not_dmr")
 
         discovery = {
             ssdp.ATTR_SSDP_LOCATION: location,
-            ssdp.ATTR_UPNP_UDN: device.udn,
+            ssdp.ATTR_SSDP_UDN: device.udn,
             ssdp.ATTR_UPNP_DEVICE_TYPE: device.device_type,
             ssdp.ATTR_UPNP_FRIENDLY_NAME: device.name,
         }

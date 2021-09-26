@@ -139,7 +139,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
 
     _device_lock: asyncio.Lock  # Held when connecting or disconnecting the device
     _device: DmrDevice | None = None
-    _remove_ssdp_callbacks: list[Callable] = []
+    _remove_ssdp_callbacks: list[Callable]
     check_available: bool = False
 
     # Track BOOTID in SSDP advertisements for device changes
@@ -167,6 +167,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         self.poll_availability = poll_availability
         self.location = location
         self._device_lock = asyncio.Lock()
+        self._remove_ssdp_callbacks = []
 
     async def async_added_to_hass(self) -> None:
         """Handle addition."""
@@ -200,6 +201,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         """Handle removal."""
         for callback in self._remove_ssdp_callbacks:
             callback()
+        self._remove_ssdp_callbacks.clear()
         await self._device_disconnect()
 
     async def async_ssdp_callback(
@@ -213,21 +215,29 @@ class DlnaDmrEntity(MediaPlayerEntity):
             info.get(ssdp.ATTR_SSDP_LOCATION),
         )
 
-        if change == ssdp.SsdpChange.UPDATE:
-            # This is an announcement that bootid is about to change. We'll deal
-            # with it when the ssdp:alive message comes through.
-            return
-
         try:
             bootid_str = info[ssdp.ATTR_SSDP_BOOTID]
-            bootid = int(bootid_str, 10)
+            bootid: int | None = int(bootid_str, 10)
         except (KeyError, ValueError):
-            pass
-        else:
-            if self._bootid is not None and self._bootid != bootid and self._device:
-                # Device has rebooted, drop existing connection and maybe reconnect
-                await self._device_disconnect()
-            self._bootid = bootid
+            bootid = None
+
+        if change == ssdp.SsdpChange.UPDATE:
+            # This is an announcement that bootid is about to change
+            if self._bootid is not None and self._bootid == bootid:
+                # Store the new value (because our old value matches) so that we
+                # can ignore subsequent ssdp:alive messages
+                try:
+                    next_bootid_str = info[ssdp.ATTR_SSDP_NEXTBOOTID]
+                    self._bootid = int(next_bootid_str, 10)
+                except (KeyError, ValueError):
+                    pass
+            # Nothing left to do until ssdp:alive comes through
+            return
+
+        if self._bootid is not None and self._bootid != bootid and self._device:
+            # Device has rebooted, drop existing connection and maybe reconnect
+            await self._device_disconnect()
+        self._bootid = bootid
 
         if change == ssdp.SsdpChange.BYEBYE and self._device:
             # Device is going away, disconnect
@@ -265,22 +275,24 @@ class DlnaDmrEntity(MediaPlayerEntity):
         new_callback_url = entry.options.get(CONF_CALLBACK_URL_OVERRIDE)
 
         if (
-            new_port != self._event_addr.port
-            or new_callback_url != self._event_addr.callback_url
+            new_port == self._event_addr.port
+            and new_callback_url == self._event_addr.callback_url
         ):
-            # Changes to eventing requires a device reconnect for it to update correctly
-            await self._device_disconnect()
-            # Update _event_addr after disconnecting, to stop the right event listener
-            self._event_addr = self._event_addr._replace(
-                port=new_port, callback_url=new_callback_url
-            )
-            try:
-                await self._device_connect(self.location)
-            except UpnpError as err:
-                _LOGGER.warning("Couldn't (re)connect after config change: %s", err)
+            return
 
-            # Device was de/re-connected, state might have changed
-            self.schedule_update_ha_state()
+        # Changes to eventing requires a device reconnect for it to update correctly
+        await self._device_disconnect()
+        # Update _event_addr after disconnecting, to stop the right event listener
+        self._event_addr = self._event_addr._replace(
+            port=new_port, callback_url=new_callback_url
+        )
+        try:
+            await self._device_connect(self.location)
+        except UpnpError as err:
+            _LOGGER.warning("Couldn't (re)connect after config change: %s", err)
+
+        # Device was de/re-connected, state might have changed
+        self.schedule_update_ha_state()
 
     async def _device_connect(self, location: str) -> None:
         """Connect to the device now that it's available."""
@@ -322,32 +334,34 @@ class DlnaDmrEntity(MediaPlayerEntity):
                 raise
 
         if (
-            self.registry_entry
-            and self.registry_entry.config_entry_id
-            and not self.registry_entry.device_id
+            not self.registry_entry
+            or not self.registry_entry.config_entry_id
+            or self.registry_entry.device_id
         ):
-            # Create linked HA DeviceEntry now the information is known.
-            dev_reg = device_registry.async_get(self.hass)
-            device_entry = dev_reg.async_get_or_create(
-                config_entry_id=self.registry_entry.config_entry_id,
-                # Connection is based on the root device's UDN, which is
-                # currently equivalent to our UDN (embedded devices aren't
-                # supported by async_upnp_client)
-                connections={(device_registry.CONNECTION_UPNP, self._device.udn)},
-                identifiers={(DOMAIN, self.unique_id)},
-                manufacturer=self._device.manufacturer,
-                model=self._device.model_name,
-                name=self._device.name,
-            )
+            return
 
-            # Update entity registry to link to the device
-            ent_reg = entity_registry.async_get(self.hass)
-            ent_reg.async_get_or_create(
-                self.registry_entry.domain,
-                self.registry_entry.platform,
-                self.unique_id,
-                device_id=device_entry.id,
-            )
+        # Create linked HA DeviceEntry now the information is known.
+        dev_reg = device_registry.async_get(self.hass)
+        device_entry = dev_reg.async_get_or_create(
+            config_entry_id=self.registry_entry.config_entry_id,
+            # Connection is based on the root device's UDN, which is currently
+            # equivalent to our UDN (embedded devices aren't supported by
+            # async_upnp_client)
+            connections={(device_registry.CONNECTION_UPNP, self._device.udn)},
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer=self._device.manufacturer,
+            model=self._device.model_name,
+            name=self._device.name,
+        )
+
+        # Update entity registry to link to the device
+        ent_reg = entity_registry.async_get(self.hass)
+        ent_reg.async_get_or_create(
+            self.registry_entry.domain,
+            self.registry_entry.platform,
+            self.unique_id,
+            device_id=device_entry.id,
+        )
 
     async def _device_disconnect(self) -> None:
         """Destroy connections to the device now that it's not available.
@@ -421,19 +435,19 @@ class DlnaDmrEntity(MediaPlayerEntity):
             supported_features |= SUPPORT_VOLUME_SET
         if self._device.has_volume_mute:
             supported_features |= SUPPORT_VOLUME_MUTE
-        if self._device.has_play and self._device.can_play:
+        if self._device.can_play:
             supported_features |= SUPPORT_PLAY
-        if self._device.has_pause and self._device.can_pause:
+        if self._device.can_pause:
             supported_features |= SUPPORT_PAUSE
-        if self._device.has_stop and self._device.can_stop:
+        if self._device.can_stop:
             supported_features |= SUPPORT_STOP
-        if self._device.has_previous and self._device.can_previous:
+        if self._device.can_previous:
             supported_features |= SUPPORT_PREVIOUS_TRACK
-        if self._device.has_next and self._device.can_next:
+        if self._device.can_next:
             supported_features |= SUPPORT_NEXT_TRACK
         if self._device.has_play_media:
             supported_features |= SUPPORT_PLAY_MEDIA
-        if self._device.has_seek_rel_time and self._device.can_seek_rel_time:
+        if self._device.can_seek_rel_time:
             supported_features |= SUPPORT_SEEK
 
         return supported_features
@@ -548,7 +562,10 @@ class DlnaDmrEntity(MediaPlayerEntity):
             return STATE_OFF
         if self._device.transport_state is None:
             return STATE_ON
-        if self._device.transport_state == TransportState.PLAYING:
+        if self._device.transport_state in (
+            TransportState.PLAYING,
+            TransportState.TRANSITIONING,
+        ):
             return STATE_PLAYING
         if self._device.transport_state in (
             TransportState.PAUSED_PLAYBACK,

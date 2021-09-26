@@ -29,7 +29,7 @@
   "options": {
     "step": {
       "init": {
-        "title": "DLNA Digital Media Player configuration",
+        "title": "DLNA Digital Media Renderer configuration",
         "data": {
           "listen_port": "Event listener port (random if not set)",
           "callback_url_override": "Event listener callback URL",

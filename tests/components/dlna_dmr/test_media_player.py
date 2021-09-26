@@ -285,7 +285,7 @@ async def test_available_device(
         (None, ha_const.STATE_ON),
         (TransportState.STOPPED, ha_const.STATE_IDLE),
         (TransportState.PLAYING, ha_const.STATE_PLAYING),
-        (TransportState.TRANSITIONING, ha_const.STATE_IDLE),
+        (TransportState.TRANSITIONING, ha_const.STATE_PLAYING),
         (TransportState.PAUSED_PLAYBACK, ha_const.STATE_PAUSED),
         (TransportState.PAUSED_RECORDING, ha_const.STATE_PAUSED),
         (TransportState.RECORDING, ha_const.STATE_IDLE),
@@ -328,60 +328,29 @@ async def test_available_device(
     assert isinstance(attrs[ha_const.ATTR_ENTITY_PICTURE], str)
 
     # Check supported feature flags, one at a time.
-    # tuple(async_upnp_client dlna has_* name, can_* name, HA feature flag)
-    FEATURE_FLAGS: list[tuple[str, str | None, int]] = [
-        ("has_volume_level", None, mp_const.SUPPORT_VOLUME_SET),
-        ("has_volume_mute", None, mp_const.SUPPORT_VOLUME_MUTE),
-        ("has_play", "can_play", mp_const.SUPPORT_PLAY),
-        ("has_pause", "can_pause", mp_const.SUPPORT_PAUSE),
-        ("has_stop", "can_stop", mp_const.SUPPORT_STOP),
-        ("has_previous", "can_previous", mp_const.SUPPORT_PREVIOUS_TRACK),
-        ("has_next", "can_next", mp_const.SUPPORT_NEXT_TRACK),
-        ("has_play_media", None, mp_const.SUPPORT_PLAY_MEDIA),
-        ("has_seek_rel_time", "can_seek_rel_time", mp_const.SUPPORT_SEEK),
-        # TODO: remaining flags when implemented
+    # tuple(async_upnp_client feature check property, HA feature flag)
+    FEATURE_FLAGS: list[tuple[str, int]] = [
+        ("has_volume_level", mp_const.SUPPORT_VOLUME_SET),
+        ("has_volume_mute", mp_const.SUPPORT_VOLUME_MUTE),
+        ("can_play", mp_const.SUPPORT_PLAY),
+        ("can_pause", mp_const.SUPPORT_PAUSE),
+        ("can_stop", mp_const.SUPPORT_STOP),
+        ("can_previous", mp_const.SUPPORT_PREVIOUS_TRACK),
+        ("can_next", mp_const.SUPPORT_NEXT_TRACK),
+        ("has_play_media", mp_const.SUPPORT_PLAY_MEDIA),
+        ("can_seek_rel_time", mp_const.SUPPORT_SEEK),
     ]
     # Clear all feature properties
-    for has_prop, can_prop, _ in FEATURE_FLAGS:
-        setattr(dmr_device_mock, has_prop, False)
-        if can_prop:
-            setattr(dmr_device_mock, can_prop, False)
+    for feat_prop, _ in FEATURE_FLAGS:
+        setattr(dmr_device_mock, feat_prop, False)
     await async_update_entity(hass, mock_entity_id)
     entity_state = hass.states.get(mock_entity_id)
     assert entity_state is not None
     assert entity_state.attributes[ha_const.ATTR_SUPPORTED_FEATURES] == 0
     # Test the properties cumulatively
     expected_features = 0
-    for has_prop, can_prop, flag in FEATURE_FLAGS:
-        if can_prop:
-            # Combinations of has and can
-            # has = True, can = False: no feature
-            setattr(dmr_device_mock, has_prop, True)
-            setattr(dmr_device_mock, can_prop, False)
-            await async_update_entity(hass, mock_entity_id)
-            entity_state = hass.states.get(mock_entity_id)
-            assert entity_state is not None
-            assert (
-                entity_state.attributes[ha_const.ATTR_SUPPORTED_FEATURES]
-                == expected_features
-            )
-            # has = False, can = True: no feature
-            setattr(dmr_device_mock, has_prop, False)
-            setattr(dmr_device_mock, can_prop, True)
-            await async_update_entity(hass, mock_entity_id)
-            entity_state = hass.states.get(mock_entity_id)
-            assert entity_state is not None
-            assert (
-                entity_state.attributes[ha_const.ATTR_SUPPORTED_FEATURES]
-                == expected_features
-            )
-            # has = True, can = True: feature enabled
-            setattr(dmr_device_mock, has_prop, True)
-            setattr(dmr_device_mock, can_prop, True)
-            # Fall through to common check below
-        else:
-            setattr(dmr_device_mock, has_prop, True)
-
+    for feat_prop, flag in FEATURE_FLAGS:
+        setattr(dmr_device_mock, feat_prop, True)
         expected_features |= flag
         await async_update_entity(hass, mock_entity_id)
         entity_state = hass.states.get(mock_entity_id)
@@ -804,26 +773,184 @@ async def test_ssdp_byebye(
     dmr_device_mock.async_unsubscribe_services.assert_awaited_once()
 
 
-async def test_ssdp_update(
+async def test_ssdp_update_seen_bootid(
+    hass: HomeAssistant,
+    domain_data_mock: Mock,
     ssdp_scanner_mock: Mock,
-    mock_entity_id: str,
+    mock_disconnected_entity_id: str,
     dmr_device_mock: Mock,
 ) -> None:
-    """Test device does nothing when ssdp:update is received."""
+    """Test device does not reconnect when it gets ssdp:update with next bootid."""
+    # Start with a disconnected device
+    entity_id = mock_disconnected_entity_id
+    mock_state = hass.states.get(entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_UNAVAILABLE
+
+    # "Reconnect" the device
+    domain_data_mock.upnp_factory.async_create_device.side_effect = None
+
+    # Send SSDP alive with boot ID
     ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    await ssdp_callback(
+        {
+            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
+            ssdp.ATTR_SSDP_LOCATION: MOCK_DEVICE_LOCATION,
+            ssdp.ATTR_SSDP_BOOTID: "1",
+        },
+        ssdp.SsdpChange.ALIVE,
+    )
+    await hass.async_block_till_done()
+
+    # Send SSDP update with next boot ID
+    await ssdp_callback(
+        {
+            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
+            "_udn": MOCK_DEVICE_UDN,
+            "NTS": "ssdp:update",
+            ssdp.ATTR_SSDP_BOOTID: "1",
+            ssdp.ATTR_SSDP_NEXTBOOTID: "2",
+        },
+        ssdp.SsdpChange.UPDATE,
+    )
+    await hass.async_block_till_done()
+
+    # Device was not reconnected, even with a new boot ID
+    mock_state = hass.states.get(entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_IDLE
+
+    assert dmr_device_mock.async_unsubscribe_services.await_count == 0
+    assert dmr_device_mock.async_subscribe_services.await_count == 1
+
+    # Send SSDP update with same next boot ID, again
+    await ssdp_callback(
+        {
+            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
+            "_udn": MOCK_DEVICE_UDN,
+            "NTS": "ssdp:update",
+            ssdp.ATTR_SSDP_BOOTID: "1",
+            ssdp.ATTR_SSDP_NEXTBOOTID: "2",
+        },
+        ssdp.SsdpChange.UPDATE,
+    )
+    await hass.async_block_till_done()
+
+    # Nothing should change
+    mock_state = hass.states.get(entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_IDLE
+
+    assert dmr_device_mock.async_unsubscribe_services.await_count == 0
+    assert dmr_device_mock.async_subscribe_services.await_count == 1
+
+    # Send SSDP update with bad next boot ID
     await ssdp_callback(
         {
             ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
             "_udn": MOCK_DEVICE_UDN,
             "NTS": "ssdp:update",
             ssdp.ATTR_SSDP_BOOTID: "2",
+            ssdp.ATTR_SSDP_NEXTBOOTID: "7c848375-a106-4bd1-ac3c-8e50427c8e4f",
         },
         ssdp.SsdpChange.UPDATE,
     )
+    await hass.async_block_till_done()
 
-    # Device was not reconnected, even with a new boot ID
+    # Nothing should change
+    mock_state = hass.states.get(entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_IDLE
+
     assert dmr_device_mock.async_unsubscribe_services.await_count == 0
     assert dmr_device_mock.async_subscribe_services.await_count == 1
+
+    # Send a new SSDP alive with the new boot ID, device should not reconnect
+    await ssdp_callback(
+        {
+            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
+            ssdp.ATTR_SSDP_LOCATION: MOCK_DEVICE_LOCATION,
+            ssdp.ATTR_SSDP_BOOTID: "2",
+        },
+        ssdp.SsdpChange.ALIVE,
+    )
+    await hass.async_block_till_done()
+
+    mock_state = hass.states.get(entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_IDLE
+
+    assert dmr_device_mock.async_unsubscribe_services.await_count == 0
+    assert dmr_device_mock.async_subscribe_services.await_count == 1
+
+
+async def test_ssdp_update_missed_bootid(
+    hass: HomeAssistant,
+    domain_data_mock: Mock,
+    ssdp_scanner_mock: Mock,
+    mock_disconnected_entity_id: str,
+    dmr_device_mock: Mock,
+) -> None:
+    """Test device disconnects when it gets ssdp:update bootid it wasn't expecting."""
+    # Start with a disconnected device
+    entity_id = mock_disconnected_entity_id
+    mock_state = hass.states.get(entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_UNAVAILABLE
+
+    # "Reconnect" the device
+    domain_data_mock.upnp_factory.async_create_device.side_effect = None
+
+    # Send SSDP alive with boot ID
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    await ssdp_callback(
+        {
+            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
+            ssdp.ATTR_SSDP_LOCATION: MOCK_DEVICE_LOCATION,
+            ssdp.ATTR_SSDP_BOOTID: "1",
+        },
+        ssdp.SsdpChange.ALIVE,
+    )
+    await hass.async_block_till_done()
+
+    # Send SSDP update with skipped boot ID (not previously seen)
+    await ssdp_callback(
+        {
+            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
+            "_udn": MOCK_DEVICE_UDN,
+            "NTS": "ssdp:update",
+            ssdp.ATTR_SSDP_BOOTID: "2",
+            ssdp.ATTR_SSDP_NEXTBOOTID: "3",
+        },
+        ssdp.SsdpChange.UPDATE,
+    )
+    await hass.async_block_till_done()
+
+    # Device should not reconnect yet
+    mock_state = hass.states.get(entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_IDLE
+
+    assert dmr_device_mock.async_unsubscribe_services.await_count == 0
+    assert dmr_device_mock.async_subscribe_services.await_count == 1
+
+    # Send a new SSDP alive with the new boot ID, device should reconnect
+    await ssdp_callback(
+        {
+            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
+            ssdp.ATTR_SSDP_LOCATION: MOCK_DEVICE_LOCATION,
+            ssdp.ATTR_SSDP_BOOTID: "3",
+        },
+        ssdp.SsdpChange.ALIVE,
+    )
+    await hass.async_block_till_done()
+
+    mock_state = hass.states.get(entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_IDLE
+
+    assert dmr_device_mock.async_unsubscribe_services.await_count == 1
+    assert dmr_device_mock.async_subscribe_services.await_count == 2
 
 
 async def test_ssdp_bootid(

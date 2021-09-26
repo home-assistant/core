@@ -1,5 +1,8 @@
 """Test the DLNA config flow."""
-from unittest.mock import Mock
+from __future__ import annotations
+
+from collections.abc import Iterable
+from unittest.mock import Mock, patch
 
 from async_upnp_client import UpnpError
 import pytest
@@ -46,12 +49,27 @@ MOCK_CONFIG_IMPORT_DATA = {
     CONF_URL: MOCK_DEVICE_LOCATION,
 }
 
+MOCK_ROOT_DEVICE_UDN = "ROOT_DEVICE"
+
 MOCK_DISCOVERY = {
     ssdp.ATTR_SSDP_LOCATION: MOCK_DEVICE_LOCATION,
-    ssdp.ATTR_UPNP_UDN: MOCK_DEVICE_UDN,
+    ssdp.ATTR_SSDP_UDN: MOCK_DEVICE_UDN,
+    ssdp.ATTR_UPNP_UDN: MOCK_ROOT_DEVICE_UDN,
     ssdp.ATTR_UPNP_DEVICE_TYPE: MOCK_DEVICE_TYPE,
     ssdp.ATTR_UPNP_FRIENDLY_NAME: MOCK_DEVICE_NAME,
 }
+
+
+@pytest.fixture(autouse=True)
+def is_profile_device_mock() -> Iterable[Mock]:
+    """Mock the async_upnp_client DMR is_profile_device class method."""
+    with patch(
+        "homeassistant.components.dlna_dmr.config_flow.DmrDevice.is_profile_device",
+        autospec=True,
+    ) as method:
+        method.return_value = True
+
+        yield method
 
 
 async def test_user_flow(hass: HomeAssistant) -> None:
@@ -109,11 +127,12 @@ async def test_user_flow_uncontactable(
     assert result["step_id"] == "user"
 
 
-async def test_user_flow_wrong_st(hass: HomeAssistant, domain_data_mock: Mock) -> None:
+async def test_user_flow_wrong_st(
+    hass: HomeAssistant, is_profile_device_mock: Mock
+) -> None:
     """Test user-init'd config flow with user entering a URL for the wrong device."""
     # Device is the wrong type
-    upnp_device = domain_data_mock.upnp_factory.async_create_device.return_value
-    upnp_device.device_type = "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
+    is_profile_device_mock.return_value = False
 
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -131,7 +150,9 @@ async def test_user_flow_wrong_st(hass: HomeAssistant, domain_data_mock: Mock) -
     assert result["step_id"] == "user"
 
 
-async def test_import_flow_invalid(hass: HomeAssistant, domain_data_mock: Mock) -> None:
+async def test_import_flow_invalid(
+    hass: HomeAssistant, domain_data_mock: Mock, is_profile_device_mock: Mock
+) -> None:
     """Test import flow of invalid YAML config."""
     # Missing CONF_URL
     result = await hass.config_entries.flow.async_init(
@@ -155,8 +176,7 @@ async def test_import_flow_invalid(hass: HomeAssistant, domain_data_mock: Mock) 
 
     # Device is the wrong type
     domain_data_mock.upnp_factory.async_create_device.side_effect = None
-    upnp_device = domain_data_mock.upnp_factory.async_create_device.return_value
-    upnp_device.device_type = "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
+    is_profile_device_mock.return_value = False
 
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN,
@@ -497,7 +517,29 @@ async def test_ssdp_flow_existing(
         context={"source": config_entries.SOURCE_SSDP},
         data={
             ssdp.ATTR_SSDP_LOCATION: NEW_DEVICE_LOCATION,
-            ssdp.ATTR_UPNP_UDN: MOCK_DEVICE_UDN,
+            ssdp.ATTR_SSDP_UDN: MOCK_DEVICE_UDN,
+            ssdp.ATTR_UPNP_UDN: MOCK_ROOT_DEVICE_UDN,
+            ssdp.ATTR_UPNP_DEVICE_TYPE: MOCK_DEVICE_TYPE,
+            ssdp.ATTR_UPNP_FRIENDLY_NAME: MOCK_DEVICE_NAME,
+        },
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry_mock.data[CONF_URL] == NEW_DEVICE_LOCATION
+
+
+async def test_ssdp_flow_upnp_udn(
+    hass: HomeAssistant, config_entry_mock: MockConfigEntry
+) -> None:
+    """Test that SSDP discovery ignores the root device's UDN."""
+    config_entry_mock.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DLNA_DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data={
+            ssdp.ATTR_SSDP_LOCATION: NEW_DEVICE_LOCATION,
+            ssdp.ATTR_SSDP_UDN: MOCK_DEVICE_UDN,
+            ssdp.ATTR_UPNP_UDN: "DIFFERENT_ROOT_DEVICE",
             ssdp.ATTR_UPNP_DEVICE_TYPE: MOCK_DEVICE_TYPE,
             ssdp.ATTR_UPNP_FRIENDLY_NAME: MOCK_DEVICE_NAME,
         },

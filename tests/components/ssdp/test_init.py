@@ -69,7 +69,7 @@ async def test_ssdp_flow_dispatched_on_st(mock_get_ssdp, hass, caplog, mock_flow
         ssdp.ATTR_SSDP_SERVER: "mock-server",
         ssdp.ATTR_SSDP_EXT: "",
         ssdp.ATTR_UPNP_UDN: "uuid:mock-udn",
-        "_udn": ANY,
+        ssdp.ATTR_SSDP_UDN: ANY,
         "_timestamp": ANY,
     }
     assert "Failed to fetch ssdp data" not in caplog.text
@@ -340,7 +340,7 @@ async def test_scan_with_registered_callback(
             ssdp.ATTR_SSDP_USN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::mock-st",
             ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
             "x-rincon-bootseq": "55",
-            "_udn": ANY,
+            ssdp.ATTR_SSDP_UDN: ANY,
             "_timestamp": ANY,
         },
         ssdp.SsdpChange.ALIVE,
@@ -394,7 +394,7 @@ async def test_getting_existing_headers(mock_get_ssdp, hass, aioclient_mock):
             ssdp.ATTR_SSDP_USN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
             ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
             ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
-            "_udn": ANY,
+            ssdp.ATTR_SSDP_UDN: ANY,
             "_timestamp": ANY,
         }
     ]
@@ -411,7 +411,7 @@ async def test_getting_existing_headers(mock_get_ssdp, hass, aioclient_mock):
             ssdp.ATTR_SSDP_USN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
             ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
             ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
-            "_udn": ANY,
+            ssdp.ATTR_SSDP_UDN: ANY,
             "_timestamp": ANY,
         }
     ]
@@ -427,7 +427,7 @@ async def test_getting_existing_headers(mock_get_ssdp, hass, aioclient_mock):
         ssdp.ATTR_SSDP_USN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
         ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
         ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
-        "_udn": ANY,
+        ssdp.ATTR_SSDP_UDN: ANY,
         "_timestamp": ANY,
     }
 
