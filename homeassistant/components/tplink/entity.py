@@ -9,6 +9,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
 
 
@@ -55,7 +56,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity):
             "name": self.device.alias,
             "model": self.device.model,
             "manufacturer": "TP-Link",
-            # Note: mac instead of device_id here to connect subdevices to the main device
+            "identifiers": {(DOMAIN, str(self.device.device_id))},
             "connections": {(dr.CONNECTION_NETWORK_MAC, self.device.mac)},
             "sw_version": self.device.hw_info["sw_ver"],
         }
