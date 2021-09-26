@@ -68,9 +68,32 @@ async def async_test_illuminance(hass, cluster, entity_id):
 
 
 async def async_test_metering(hass, cluster, entity_id):
-    """Test metering sensor."""
+    """Test Smart Energy metering sensor."""
     await send_attributes_report(hass, cluster, {1025: 1, 1024: 12345, 1026: 100})
     assert_state(hass, entity_id, "12345.0", "unknown")
+    assert hass.states.get(entity_id).attributes["status"] == "NO_ALARMS"
+    assert hass.states.get(entity_id).attributes["device_type"] == "Electric Metering"
+
+    await send_attributes_report(hass, cluster, {1024: 12346, "status": 64})
+    assert_state(hass, entity_id, "12346.0", "unknown")
+    assert hass.states.get(entity_id).attributes["status"] == "SERVICE_DISCONNECT"
+
+    await send_attributes_report(
+        hass, cluster, {"status": 64, "metering_device_type": 1}
+    )
+    # currently only statuses for electric meters are supported
+    assert hass.states.get(entity_id).attributes["status"] == "bitmap8.64"
+
+
+async def async_test_smart_energy_summation(hass, cluster, entity_id):
+    """Test SmartEnergy Summation delivered sensro."""
+
+    await send_attributes_report(
+        hass, cluster, {1025: 1, "current_summ_delivered": 12321, 1026: 100}
+    )
+    assert_state(hass, entity_id, "12321.0", "unknown")
+    assert hass.states.get(entity_id).attributes["status"] == "NO_ALARMS"
+    assert hass.states.get(entity_id).attributes["device_type"] == "Electric Metering"
 
 
 async def async_test_electrical_measurement(hass, cluster, entity_id):
@@ -109,40 +132,79 @@ async def async_test_powerconfiguration(hass, cluster, entity_id):
 
 
 @pytest.mark.parametrize(
-    "cluster_id, test_func, report_count, read_plug",
+    "cluster_id, entity_suffix, test_func, report_count, read_plug, unsupported_attrs",
     (
-        (measurement.RelativeHumidity.cluster_id, async_test_humidity, 1, None),
+        (
+            measurement.RelativeHumidity.cluster_id,
+            "humidity",
+            async_test_humidity,
+            1,
+            None,
+            None,
+        ),
         (
             measurement.TemperatureMeasurement.cluster_id,
+            "temperature",
             async_test_temperature,
             1,
             None,
+            None,
         ),
-        (measurement.PressureMeasurement.cluster_id, async_test_pressure, 1, None),
+        (
+            measurement.PressureMeasurement.cluster_id,
+            "pressure",
+            async_test_pressure,
+            1,
+            None,
+            None,
+        ),
         (
             measurement.IlluminanceMeasurement.cluster_id,
+            "illuminance",
             async_test_illuminance,
             1,
+            None,
             None,
         ),
         (
             smartenergy.Metering.cluster_id,
+            "smartenergy_metering",
             async_test_metering,
             1,
             {
                 "demand_formatting": 0xF9,
                 "divisor": 1,
+                "metering_device_type": 0x00,
                 "multiplier": 1,
+                "status": 0x00,
             },
+            {"current_summ_delivered"},
+        ),
+        (
+            smartenergy.Metering.cluster_id,
+            "smartenergy_metering_summation_delivered",
+            async_test_smart_energy_summation,
+            1,
+            {
+                "demand_formatting": 0xF9,
+                "divisor": 1,
+                "metering_device_type": 0x00,
+                "multiplier": 1,
+                "status": 0x00,
+            },
+            {"instaneneous_demand"},
         ),
         (
             homeautomation.ElectricalMeasurement.cluster_id,
+            "electrical_measurement",
             async_test_electrical_measurement,
             1,
+            None,
             None,
         ),
         (
             general.PowerConfiguration.cluster_id,
+            "power",
             async_test_powerconfiguration,
             2,
             {
@@ -150,6 +212,7 @@ async def async_test_powerconfiguration(hass, cluster, entity_id):
                 "battery_voltage": 29,
                 "battery_quantity": 3,
             },
+            None,
         ),
     ),
 )
@@ -158,9 +221,11 @@ async def test_sensor(
     zigpy_device_mock,
     zha_device_joined_restored,
     cluster_id,
+    entity_suffix,
     test_func,
     report_count,
     read_plug,
+    unsupported_attrs,
 ):
     """Test zha sensor platform."""
 
@@ -174,12 +239,15 @@ async def test_sensor(
         }
     )
     cluster = zigpy_device.endpoints[1].in_clusters[cluster_id]
+    if unsupported_attrs:
+        for attr in unsupported_attrs:
+            cluster.add_unsupported_attribute(attr)
     if cluster_id == smartenergy.Metering.cluster_id:
         # this one is mains powered
         zigpy_device.node_desc.mac_capability_flags |= 0b_0000_0100
     cluster.PLUGGED_ATTR_READS = read_plug
     zha_device = await zha_device_joined_restored(zigpy_device)
-    entity_id = await find_entity_id(DOMAIN, zha_device, hass)
+    entity_id = ENTITY_ID_PREFIX.format(entity_suffix)
 
     await async_enable_traffic(hass, [zha_device], enabled=False)
     await hass.async_block_till_done()
