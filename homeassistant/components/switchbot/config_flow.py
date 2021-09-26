@@ -80,7 +80,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
 
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             await self.async_set_unique_id(user_input[CONF_MAC].replace(":", ""))
@@ -96,23 +96,33 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             self._discovered_devices = await self._get_switchbots()
 
         except NotConnectedError:
-            errors["base"] = "cannot_connect"
+            return self.async_abort(reason="cannot_connect")
 
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 
-        supported_devices = {
+        # Get devices already configured.
+        configured_devices = {
+            item.data.get(CONF_MAC) for item in self._async_current_entries()
+        }
+
+        # Get supported devices not yet configured.
+        unconfigured_devices = {
             device["mac_address"]
             for device in self._discovered_devices.values()
             if device.get("modelName") in SUPPORTED_MODEL_TYPES
+            if device.get("mac_address") not in configured_devices
         }
+
+        if not unconfigured_devices:
+            return self.async_abort(reason="no_unconfigured_devices")
 
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_NAME): str,
                 vol.Optional(CONF_PASSWORD): str,
-                vol.Required(CONF_MAC): vol.In(supported_devices),
+                vol.Required(CONF_MAC): vol.In(unconfigured_devices),
             }
         )
 

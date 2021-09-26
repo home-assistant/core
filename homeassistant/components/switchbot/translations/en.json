@@ -2,12 +2,12 @@
     "config": {
         "abort": {
             "already_configured_device": "Device is already configured",
+            "no_unconfigured_devices": "No unconfigured devices found.",
             "unknown": "Unexpected error",
+            "cannot_connect": "Failed to connect",
             "switchbot_unsupported_type": "Unsupported Switchbot Type."
         },
-        "error": {
-            "cannot_connect": "Failed to connect"
-        },
+        "error": {},
         "flow_title": "{name}",
         "step": {
 
