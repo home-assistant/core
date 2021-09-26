@@ -27,10 +27,9 @@ async def async_setup_entry(
     session: DecoraWifiPlatform = hass.data[DOMAIN][entry.entry_id]
     lights = session.lights
 
-    entities = []
-    if lights:
-        entities.extend([DecoraWifiLight(light) for light in lights])
-    async_add_entities(entities, True)
+    if not lights:
+        return
+    async_add_entities([DecoraWifiLight(light) for light in lights], True)
 
 
 class DecoraWifiLight(DecoraWifiEntity, LightEntity):

@@ -52,10 +52,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             password,
         )
     except LoginFailed as exc:
-        _LOGGER.error("Login failed")
         raise ConfigEntryAuthFailed from exc
     except CommFailed as exc:
-        _LOGGER.error("Communication with myLeviton failed")
         raise ConfigEntryNotReady from exc
     hass.data[DOMAIN][entry.entry_id] = session
 
@@ -67,8 +65,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
+    session: DecoraWifiPlatform = hass.data[DOMAIN].get(entry.entry_id, None)
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
+        if session:
+            try:
+                # Attempt to log out.
+                await hass.async_add_executor_job(session.teardown)
+            except CommFailed:
+                _LOGGER.debug(
+                    "Communication with myLeviton failed while attempting to logout"
+                )
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
