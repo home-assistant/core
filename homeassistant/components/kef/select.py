@@ -41,19 +41,25 @@ async def async_setup_platform(
 
     selects = data.setdefault(SELECT_DOMAIN, {})
     speaker = data[MEDIA_PLAYER_DOMAIN]
-    dsp_attr = "bass_extension"
+
     if speaker._dsp is None:
         await speaker.update_dsp()
-    bass_extension = MediaSelect(
-        unique_id=f"{speaker._unique_id}_{dsp_attr}",
-        name=f"{speaker.name} Bass Extension",
-        icon="mdi:equalizer",
-        current_option=speaker._dsp[dsp_attr],
-        options=["Standard", "Less", "Extra"],
-        speaker=speaker,
-        dsp_attr=dsp_attr,
-    )
-    selects[dsp_attr] = bass_extension
+
+    for name, dsp_attr, options in (
+        ["Bass Extension", "bass_extension", ["Standard", "Less", "Extra"]],
+        ["Sub Polarity", "sub_polarity", ["-", "+"]],
+    ):
+        bass_extension = MediaSelect(
+            unique_id=f"{speaker._unique_id}_{dsp_attr}",
+            name=f"{speaker.name} {name}",
+            icon="mdi:equalizer",
+            current_option=speaker._dsp[dsp_attr],
+            options=options,
+            speaker=speaker,
+            dsp_attr=dsp_attr,
+        )
+        selects[dsp_attr] = bass_extension
+
     async_add_entities(list(selects.values()))
 
 
