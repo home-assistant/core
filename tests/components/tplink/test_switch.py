@@ -34,7 +34,6 @@ async def test_plug(hass: HomeAssistant) -> None:
     with _patch_discovery(device=plug), _patch_single_discovery(device=plug):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
-        await hass.async_block_till_done()
 
     entity_id = "switch.my_plug"
     state = hass.states.get(entity_id)
@@ -63,7 +62,6 @@ async def test_plug_update_fails(hass: HomeAssistant) -> None:
     with _patch_discovery(device=plug), _patch_single_discovery(device=plug):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
-        await hass.async_block_till_done()
 
     entity_id = "switch.my_plug"
     state = hass.states.get(entity_id)
@@ -85,7 +83,6 @@ async def test_strip(hass: HomeAssistant) -> None:
     plug = _mocked_strip()
     with _patch_discovery(device=plug), _patch_single_discovery(device=plug):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
-        await hass.async_block_till_done()
         await hass.async_block_till_done()
 
     entity_id = "switch.my_strip"
