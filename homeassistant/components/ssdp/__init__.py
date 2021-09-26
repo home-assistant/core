@@ -71,12 +71,12 @@ SsdpCallback = Callable[[Mapping[str, Any], SsdpChange], Awaitable]
 
 
 SSDP_SOURCE_SSDP_CHANGE_MAPPING: Mapping[SsdpSource, SsdpChange] = {
-    SsdpSource.SEARCH: SsdpChange.ALIVE,
+    SsdpSource.SEARCH_ALIVE: SsdpChange.ALIVE,
+    SsdpSource.SEARCH_CHANGED: SsdpChange.ALIVE,
     SsdpSource.ADVERTISEMENT_ALIVE: SsdpChange.ALIVE,
     SsdpSource.ADVERTISEMENT_BYEBYE: SsdpChange.BYEBYE,
     SsdpSource.ADVERTISEMENT_UPDATE: SsdpChange.UPDATE,
 }
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -374,26 +374,39 @@ class Scanner:
         ]
 
     async def _ssdp_listener_callback(
-        self, ssdp_device: SsdpDevice, dst: DeviceOrServiceType, source: SsdpSource
+        self,
+        ssdp_device: SsdpDevice,
+        dst: DeviceOrServiceType,
+        source: SsdpSource,
     ) -> None:
         """Handle a device/service change."""
         _LOGGER.debug(
-            "Change, ssdp_device: %s, dst: %s, source: %s", ssdp_device, dst, source
+            "SSDP: ssdp_device: %s, dst: %s, source: %s", ssdp_device, dst, source
         )
 
         location = ssdp_device.location
         info_desc = await self._async_get_description_dict(location) or {}
         combined_headers = ssdp_device.combined_headers(dst)
         info_with_desc = CaseInsensitiveDict(combined_headers, **info_desc)
-        discovery_info = discovery_info_from_headers_and_description(info_with_desc)
 
         callbacks = self._async_get_matching_callbacks(combined_headers)
+        matching_domains: set[str] = set()
+
+        # If there are no changes from a search, do not trigger a config flow
+        if source != SsdpSource.SEARCH_ALIVE:
+            matching_domains = self.integration_matchers.async_matching_domains(
+                info_with_desc
+            )
+
+        if not callbacks and not matching_domains:
+            return
+
+        discovery_info = discovery_info_from_headers_and_description(info_with_desc)
         ssdp_change = SSDP_SOURCE_SSDP_CHANGE_MAPPING[source]
         await _async_process_callbacks(callbacks, discovery_info, ssdp_change)
 
-        for domain in self.integration_matchers.async_matching_domains(info_with_desc):
+        for domain in matching_domains:
             _LOGGER.debug("Discovered %s at %s", domain, location)
-
             flow: SSDPFlow = {
                 "domain": domain,
                 "context": {"source": config_entries.SOURCE_SSDP},
