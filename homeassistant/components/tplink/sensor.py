@@ -108,6 +108,7 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
         """Initialize the switch."""
         super().__init__(device, coordinator)
         self.entity_description = description
+        self._attr_unique_id = f"{self.device.device_id}_{self.entity_description.key}"
 
     @property
     def name(self) -> str:
@@ -121,8 +122,3 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
     def native_value(self) -> float:
         """Return the sensors state."""
         return cast(float, self.data[CONF_EMETER_PARAMS][self.entity_description.key])
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self.device.device_id}_{self.entity_description.key}"

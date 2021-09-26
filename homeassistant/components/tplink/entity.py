@@ -35,17 +35,13 @@ class CoordinatedTPLinkEntity(CoordinatorEntity):
         """Initialize the switch."""
         super().__init__(coordinator)
         self.device: SmartDevice = device
+        self._attr_unique_id = self.device.device_id
 
     @property
     def data(self) -> dict[str, Any]:
         """Return data from DataUpdateCoordinator."""
         data: dict[str, Any] = self.coordinator.data
         return data
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return cast(str, self.device.device_id)
 
     @property
     def name(self) -> str:
