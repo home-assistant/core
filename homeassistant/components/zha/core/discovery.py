@@ -161,8 +161,9 @@ class ProbeEndpoint:
             channel = channel_class(cluster, ep_channels)
             self.probe_single_cluster(component, channel, ep_channels)
 
+    @staticmethod
     @callback
-    def discover_multi_entities(self, channel_pool: zha_typing.ChannelPoolType) -> None:
+    def discover_multi_entities(channel_pool: zha_typing.ChannelPoolType) -> None:
         """Process an endpoint on and discover multiple entities."""
 
         remaining_channels = channel_pool.unclaimed_channels()
