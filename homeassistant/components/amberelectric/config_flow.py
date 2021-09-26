@@ -13,6 +13,8 @@ from homeassistant.const import CONF_API_TOKEN
 
 from .const import CONF_SITE_ID, CONF_SITE_NAME, CONF_SITE_NMI, DOMAIN
 
+API_URL = "https://app.amber.com.au/developers"
+
 
 class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
@@ -71,6 +73,7 @@ class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=self._errors,
+            description_placeholders={"api_url": API_URL},
         )
 
     async def async_step_site(self, user_input: dict[str, Any] = None):
@@ -90,6 +93,7 @@ class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         }
                     ),
                     errors={CONF_API_TOKEN: "no_site"},
+                    description_placeholders={"api_url": API_URL},
                 )
 
             site_nmi = user_input[CONF_SITE_NMI]
@@ -123,6 +127,7 @@ class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         }
                     ),
                     errors={CONF_API_TOKEN: "no_site"},
+                    description_placeholders={"api_url": API_URL},
                 )
 
         return self.async_show_form(

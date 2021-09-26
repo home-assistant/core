@@ -9,7 +9,7 @@
                     "site_name": "Site Name"
                 },
                 "title": "Amber Electric",
-                "description": "Go to https://app.amber.com.au/developers to generate an API key"
+                "description": "Go to {api_url} to generate an API key"
             },
             "site": {
                 "title": "Amber Electric",

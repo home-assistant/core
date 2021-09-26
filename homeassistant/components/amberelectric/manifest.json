@@ -7,7 +7,7 @@
         "@madpilot"
     ],
     "requirements": [
-        "amberelectric==1.0.0"
+        "amberelectric==1.0.3"
     ],
     "iot_class": "cloud_polling"
 }
