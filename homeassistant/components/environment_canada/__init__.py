@@ -10,6 +10,7 @@ from homeassistant.const import (
     ATTR_LOCATION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    CONF_NAME,
     LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
@@ -28,6 +29,7 @@ from .const import (
     ATTR_STATION,
     CONF_LANGUAGE,
     CONF_STATION,
+    DEFAULT_NAME,
     DOMAIN,
 )
 
@@ -169,12 +171,12 @@ class ECDataUpdateCoordinator(DataUpdateCoordinator):
 class ECBaseEntity(CoordinatorEntity):
     """Common base for EC weather."""
 
-    def __init__(self, coordinator, config, name):
+    def __init__(self, coordinator, config, name_tail):
         """Initialise the base for all EC entities."""
         super().__init__(coordinator)
         self._coordinator = coordinator
         self._config = config
-        self._name = name
+        self._name = f"{config.get(CONF_NAME, DEFAULT_NAME)}{f' {name_tail}' if name_tail else ''}"
         self._unique_id_tail = ""
 
     def get_value(self, key):

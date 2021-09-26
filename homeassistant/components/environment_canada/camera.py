@@ -6,11 +6,11 @@ import datetime
 import voluptuous as vol
 
 from homeassistant.components.camera import Camera
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers import entity_platform
 
 from . import ECBaseEntity
-from .const import ATTR_OBSERVATION_TIME, DEFAULT_NAME, DOMAIN
+from .const import ATTR_OBSERVATION_TIME, DOMAIN
 
 ATTR_UPDATED = "updated"
 
@@ -44,8 +44,7 @@ class ECCamera(ECBaseEntity, Camera):
 
     def __init__(self, coordinator, config):
         """Initialize the EC camera."""
-        name = f"{config.get(CONF_NAME, DEFAULT_NAME)} Radar"
-        ECBaseEntity.__init__(self, coordinator, config, name)
+        ECBaseEntity.__init__(self, coordinator, config, "Radar")
         Camera.__init__(self)
 
         self.content_type = "image/gif"
