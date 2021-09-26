@@ -12,14 +12,10 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_TYPE,
-    TIME_DAYS,
-)
-from homeassistant.util.dt import utcnow
+from homeassistant.const import CONF_NAME, CONF_TYPE, TIME_DAYS
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
+from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
 
