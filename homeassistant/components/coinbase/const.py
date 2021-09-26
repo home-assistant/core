@@ -314,7 +314,7 @@ RATES = {
     "CHF": "CHF",
     "CLF": "CLF",
     "CLP": "CLP",
-    "CLV"; "CLV",
+    "CLV": "CLV",
     "CNH": "CNH",
     "CNY": "CNY",
     "COMP": "COMP",
