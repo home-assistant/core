@@ -1,24 +1,37 @@
 """Support for tracking which astronomical or meteorological season it is."""
 from datetime import datetime
+from datetime import timedelta
 import logging
 
 import ephem
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_NAME, CONF_TYPE
-from homeassistant.helpers import config_validation as cv
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_TYPE,
+    TIME_DAYS,
+)
 from homeassistant.util.dt import utcnow
+from homeassistant.helpers import config_validation as cv
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Season"
 
+DEVICE_CLASS_SEASON = "season__season"
+
 EQUATOR = "equator"
 NORTHERN = "northern"
 SOUTHERN = "southern"
 
+STATE_NONE = None
 STATE_AUTUMN = "autumn"
 STATE_SPRING = "spring"
 STATE_SUMMER = "summer"
@@ -27,6 +40,7 @@ STATE_WINTER = "winter"
 TYPE_ASTRONOMICAL = "astronomical"
 TYPE_METEOROLOGICAL = "meteorological"
 
+ATTR_SEASON = "season"
 ATTR_DAYS_LEFT = "days_left"
 ATTR_DAYS_IN = "days_in"
 ATTR_NEXT_SEASON_UTC = "next_season_utc"
@@ -44,11 +58,40 @@ HEMISPHERE_SEASON_SWAP = {
 }
 
 SEASON_ICONS = {
+    STATE_NONE: "mdi:cloud",
     STATE_SPRING: "mdi:flower",
     STATE_SUMMER: "mdi:sunglasses",
     STATE_AUTUMN: "mdi:leaf",
     STATE_WINTER: "mdi:snowflake",
 }
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
+
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="season",
+        name="Season",
+        device_class=DEVICE_CLASS_SEASON,
+        #icon="mdi:none"
+    ),
+    SensorEntityDescription(
+        key="days_left",
+        name="Days Left",
+        native_unit_of_measurement=TIME_DAYS,
+        icon="mdi:calendar-arrow-right",
+    ),
+    SensorEntityDescription(
+        key="days_in",
+        name="Days In",
+        native_unit_of_measurement=TIME_DAYS,
+        icon="mdi:calendar-arrow-left",
+    ),
+    SensorEntityDescription(
+        key="next_season_utc",
+        name="Next Season Start Date",
+        icon="mdi:calendar-arrow-left",
+    ),
+)
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -59,7 +102,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass, 
+    config, 
+    async_add_entities, 
+    discovery_info=None
+):
     """Display the current season."""
     if None in (hass.config.latitude, hass.config.longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
@@ -75,11 +123,70 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         hemisphere = NORTHERN
     else:
         hemisphere = EQUATOR
+        
+    if EQUATOR in hemisphere:
+        _LOGGER.warning("Season cannot be determined for equator, 'unknown' state will be shown")
 
     _LOGGER.debug(_type)
-    add_entities([Season(hass, hemisphere, _type, name)], True)
+    
+    season_data = SeasonData(hemisphere, _type)
 
-    return True
+    entities = []
+    for description in SENSOR_TYPES:
+        if description.key in ATTR_SEASON:
+            entities.append(Season(season_data, description, name))
+        elif hemisphere not in EQUATOR:
+            entities.append(Season(season_data, description, name))
+
+    async_add_entities(entities, True)
+
+
+class Season(SensorEntity):
+    """Representation of the current season."""
+
+    def __init__(
+        self,
+        season_data,
+        description: SensorEntityDescription,
+        name,
+    ):
+        """Initialize the sensor."""
+        self.entity_description = description
+        if name in DEFAULT_NAME and description.key != ATTR_SEASON:
+            self._attr_name = f"{name} {description.name}"
+        else:
+            self._attr_name = f"{description.name}"
+        self.season_data = season_data
+
+    async def async_update(self):
+        """Get the latest data from Season and update the state."""
+        await self.season_data.async_update()
+        if self.entity_description.key in self.season_data.data:
+            self._attr_native_value = self.season_data.data[
+                self.entity_description.key
+            ]
+            if self.entity_description.key in ATTR_SEASON:
+                self._attr_icon = SEASON_ICONS[
+                    self.season_data.data[self.entity_description.key]
+                ]
+
+
+class SeasonData:
+    """Calculate the current season."""
+    
+    def __init__(self, hemisphere, _type):
+        """Initialize the data object."""
+
+        self.hemisphere = hemisphere
+        self.datetime = None
+        self.type = _type
+        self._data = {}
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    async def async_update(self):
+        # Update data
+        self.datetime = utcnow().replace(tzinfo=None)
+        self._data = get_season(self)
 
 
 def get_season(self):
@@ -88,6 +195,7 @@ def get_season(self):
     date = self.datetime
     hemisphere = self.hemisphere
     season_tracking_type = self.type
+    data = {}
 
     if season_tracking_type == TYPE_ASTRONOMICAL:
         spring_start = ephem.next_equinox(str(date.year)).datetime()
@@ -100,99 +208,56 @@ def get_season(self):
         autumn_start = spring_start.replace(month=9)
         winter_start = spring_start.replace(month=12)
 
-    if hemisphere == EQUATOR:
-        season = None
-        days_left = None
-        days_in = None
-        next_date = None
-    elif date < spring_start or date >= winter_start:
-        season = STATE_WINTER
-        if date.month >= 12:
-            spring_start = ephem.next_equinox(str(date.year + 1)).datetime()
-        else:
-            winter_start = ephem.next_solstice(
-                summer_start.replace(year=date.year - 1)
-            ).datetime()
-        days_left = spring_start.date() - date.date()
-        days_in = date.date() - winter_start.date()
-        next_date = spring_start
-    elif date < summer_start:
-        season = STATE_SPRING
-        days_left = summer_start.date() - date.date()
-        days_in = date.date() - spring_start.date()
-        next_date = summer_start
-    elif date < autumn_start:
-        season = STATE_SUMMER
-        days_left = autumn_start.date() - date.date()
-        days_in = date.date() - summer_start.date()
-        next_date = autumn_start
-    elif date < winter_start:
-        season = STATE_AUTUMN
-        days_left = winter_start.date() - date.date()
-        days_in = date.date() - autumn_start.date()
-        next_date = winter_start
+    if hemisphere != EQUATOR:
+        if date < spring_start or date >= winter_start:
+            season = STATE_WINTER
+            if date.month >= 12:
+                spring_start = ephem.next_equinox(str(date.year + 1)).datetime()
+            else:
+                winter_start = ephem.next_solstice(
+                    summer_start.replace(year=date.year - 1)
+                ).datetime()
+            days_left = spring_start.date() - date.date()
+            days_in = date.date() - winter_start.date()
+            next_date = spring_start
+        elif date < summer_start:
+            season = STATE_SPRING
+            days_left = summer_start.date() - date.date()
+            days_in = date.date() - spring_start.date()
+            next_date = summer_start
+        elif date < autumn_start:
+            season = STATE_SUMMER
+            days_left = autumn_start.date() - date.date()
+            days_in = date.date() - summer_start.date()
+            next_date = autumn_start
+        elif date < winter_start:
+            season = STATE_AUTUMN
+            days_left = winter_start.date() - date.date()
+            days_in = date.date() - autumn_start.date()
+            next_date = winter_start
+    else:
+        season = STATE_NONE
+        days_left = STATE_NONE
+        days_in = STATE_NONE
+        next_date = STATE_NONE
 
     # If user is located in the southern hemisphere swap the season
     if hemisphere == SOUTHERN:
         season = HEMISPHERE_SEASON_SWAP.get(season)
 
-    self.season = season
     if hemisphere == EQUATOR:
-        self.days_left = days_left
-        self.days_in = days_in
-        self.next_date = next_date
+        self.data = {
+            ATTR_SEASON: season,
+            ATTR_DAYS_LEFT: days_left,
+            ATTR_DAYS_IN: days_in,
+            ATTR_NEXT_SEASON_UTC: next_date,
+        }
     else:
-        self.days_left = days_left.days
-        self.days_in = abs(days_in.days) + 1
-        self.next_date = next_date.strftime("%Y %b %d %H:%M:%S")
+        self.data = {
+            ATTR_SEASON: season,
+            ATTR_DAYS_LEFT: days_left.days,
+            ATTR_DAYS_IN: abs(days_in.days) + 1,
+            ATTR_NEXT_SEASON_UTC: next_date.strftime("%Y %b %d %H:%M:%S"),
+        }
 
-
-class Season(SensorEntity):
-    """Representation of the current season."""
-
-    def __init__(self, hass, hemisphere, season_tracking_type, name):
-        """Initialize the season."""
-        self.hass = hass
-        self._name = name
-        self.hemisphere = hemisphere
-        self.datetime = None
-        self.type = season_tracking_type
-        self.season = None
-        self.days_left = None
-        self.days_in = None
-        self.next_date = None
-
-    @property
-    def name(self):
-        """Return the name."""
-        return self._name
-
-    @property
-    def native_value(self):
-        """Return the current season."""
-        return self.season
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return "season__season"
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return SEASON_ICONS.get(self.season, "mdi:cloud")
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the device."""
-        attr = {}
-        if self.hemisphere != EQUATOR:
-            attr[ATTR_DAYS_LEFT] = self.days_left
-            attr[ATTR_DAYS_IN] = self.days_in
-            attr[ATTR_NEXT_SEASON_UTC] = self.next_date
-        return attr
-
-    def update(self):
-        """Update season."""
-        self.datetime = utcnow().replace(tzinfo=None)
-        get_season(self)
+    return data
