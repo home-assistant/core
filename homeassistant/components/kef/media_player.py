@@ -1,17 +1,14 @@
 """Platform for the KEF Wireless Speakers."""
 
 from datetime import timedelta
-from functools import partial
-import ipaddress
 import logging
 
 from aiokef import AsyncKefSpeaker
 from aiokef.aiokef import DSP_OPTION_MAPPING
-from getmac import get_mac_address
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -24,6 +21,7 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_STEP,
     MediaPlayerEntity,
 )
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -32,31 +30,25 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.event import async_track_time_interval
 
+from .const import (
+    CONF_INVERSE_SPEAKER_MODE,
+    CONF_MAX_VOLUME,
+    CONF_STANDBY_TIME,
+    CONF_SUPPORTS_ON,
+    CONF_VOLUME_STEP,
+    DOMAIN,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "KEF"
-DEFAULT_PORT = 50001
-DEFAULT_MAX_VOLUME = 0.5
-DEFAULT_VOLUME_STEP = 0.05
-DEFAULT_INVERSE_SPEAKER_MODE = False
-DEFAULT_SUPPORTS_ON = True
-
-DOMAIN = "kef"
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
 SOURCES = {"LSX": ["Wifi", "Bluetooth", "Aux", "Opt"]}
 SOURCES["LS50"] = SOURCES["LSX"] + ["Usb"]
-
-CONF_MAX_VOLUME = "maximum_volume"
-CONF_VOLUME_STEP = "volume_step"
-CONF_INVERSE_SPEAKER_MODE = "inverse_speaker_mode"
-CONF_SUPPORTS_ON = "supports_on"
-CONF_STANDBY_TIME = "standby_time"
 
 SERVICE_MODE = "set_mode"
 SERVICE_DESK_DB = "set_desk_db"
@@ -69,47 +61,21 @@ SERVICE_UPDATE_DSP = "update_dsp"
 
 DSP_SCAN_INTERVAL = timedelta(seconds=3600)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_TYPE): vol.In(["LS50", "LSX"]),
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_MAX_VOLUME, default=DEFAULT_MAX_VOLUME): cv.small_float,
-        vol.Optional(CONF_VOLUME_STEP, default=DEFAULT_VOLUME_STEP): cv.small_float,
-        vol.Optional(
-            CONF_INVERSE_SPEAKER_MODE, default=DEFAULT_INVERSE_SPEAKER_MODE
-        ): cv.boolean,
-        vol.Optional(CONF_SUPPORTS_ON, default=DEFAULT_SUPPORTS_ON): cv.boolean,
-        vol.Optional(CONF_STANDBY_TIME): vol.In([20, 60]),
-    }
-)
-
-
-def get_ip_mode(host):
-    """Get the 'mode' used to retrieve the MAC address."""
-    try:
-        if ipaddress.ip_address(host).version == 6:
-            return "ip6"
-        return "ip"
-    except ValueError:
-        return "hostname"
-
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the KEF platform."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
+    if discovery_info is None:
+        return
 
-    host = config[CONF_HOST]
-    speaker_type = config[CONF_TYPE]
-    port = config[CONF_PORT]
-    name = config[CONF_NAME]
-    maximum_volume = config[CONF_MAX_VOLUME]
-    volume_step = config[CONF_VOLUME_STEP]
-    inverse_speaker_mode = config[CONF_INVERSE_SPEAKER_MODE]
-    supports_on = config[CONF_SUPPORTS_ON]
-    standby_time = config.get(CONF_STANDBY_TIME)
+    host = discovery_info[CONF_HOST]
+    speaker_type = discovery_info[CONF_TYPE]
+    port = discovery_info[CONF_PORT]
+    name = discovery_info[CONF_NAME]
+    maximum_volume = discovery_info[CONF_MAX_VOLUME]
+    volume_step = discovery_info[CONF_VOLUME_STEP]
+    inverse_speaker_mode = discovery_info[CONF_INVERSE_SPEAKER_MODE]
+    supports_on = discovery_info[CONF_SUPPORTS_ON]
+    standby_time = discovery_info.get(CONF_STANDBY_TIME)
 
     sources = SOURCES[speaker_type]
 
@@ -122,11 +88,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         sources,
     )
 
-    mode = get_ip_mode(host)
-    mac = await hass.async_add_executor_job(partial(get_mac_address, **{mode: host}))
-    if mac is None:
-        raise PlatformNotReady("Cannot get the ip address of kef speaker.")
-
+    mac = hass.data[DOMAIN][host]["mac"]
     unique_id = f"kef-{mac}"
 
     media_player = KefMediaPlayer(
@@ -144,11 +106,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         unique_id=unique_id,
     )
 
-    if host in hass.data[DOMAIN]:
-        _LOGGER.debug("%s is already configured", host)
-    else:
-        hass.data[DOMAIN][host] = media_player
-        async_add_entities([media_player], update_before_add=True)
+    hass.data[DOMAIN][host][MEDIA_PLAYER_DOMAIN] = media_player
+    async_add_entities([media_player], update_before_add=True)
 
     platform = entity_platform.async_get_current_platform()
 
@@ -386,6 +345,15 @@ class KefMediaPlayer(MediaPlayerEntity):
             sub_db=await self._speaker.get_sub_db(),
             **mode._asdict(),
         )
+
+    async def update_selects(self):
+        """Update the underlying `select` entities related to DSP settings."""
+        try:
+            selects = self.hass.data[DOMAIN][self.host][SELECT_DOMAIN]
+            for select in selects:
+                await select.async_update()
+        except KeyError:
+            pass
 
     async def async_added_to_hass(self):
         """Subscribe to DSP updates."""
