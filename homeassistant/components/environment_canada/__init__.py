@@ -29,14 +29,14 @@ from .const import (
     ATTR_STATION,
     CONF_LANGUAGE,
     CONF_STATION,
-    DEFAULT_NAME,
     DOMAIN,
 )
 
 PLATFORMS = ["camera", "sensor", "weather"]
 
-DEFAULT_WEATHER_UPDATE_INTERVAL = timedelta(minutes=5)
+DEFAULT_NAME = "Environment Canada"
 DEFAULT_RADAR_UPDATE_INTERVAL = timedelta(minutes=5)
+DEFAULT_WEATHER_UPDATE_INTERVAL = timedelta(minutes=5)
 
 _LOGGER = logging.getLogger(__name__)
 
