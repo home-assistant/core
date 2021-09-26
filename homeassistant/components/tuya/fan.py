@@ -5,15 +5,19 @@ import json
 import logging
 from typing import Any
 
-from homeassistant.components.fan import DIRECTION_FORWARD, DIRECTION_REVERSE
-from homeassistant.components.fan import DOMAIN as DEVICE_DOMAIN
+from tuya_iot import TuyaDevice, TuyaDeviceManager
+
 from homeassistant.components.fan import (
+    DIRECTION_FORWARD,
+    DIRECTION_REVERSE,
+    DOMAIN as DEVICE_DOMAIN,
     SUPPORT_DIRECTION,
     SUPPORT_OSCILLATE,
     SUPPORT_PRESET_MODE,
     SUPPORT_SET_SPEED,
     FanEntity,
 )
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -22,7 +26,6 @@ from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
 )
-from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from .base import TuyaHaEntity
 from .const import (
@@ -70,7 +73,9 @@ async def async_setup_entry(
         _LOGGER.debug("fan add-> %s", dev_ids)
         if not dev_ids:
             return
-        entities = await hass.async_add_executor_job(_setup_entities, hass, entry, dev_ids)
+        entities = await hass.async_add_executor_job(
+            _setup_entities, hass, entry, dev_ids
+        )
         async_add_entities(entities)
 
     async_dispatcher_connect(
@@ -85,7 +90,7 @@ async def async_setup_entry(
     await async_discover_device(device_ids)
 
 
-def _setup_entities(hass: HomeAssistant, entry:ConfigEntry, device_ids: list):
+def _setup_entities(hass: HomeAssistant, entry: ConfigEntry, device_ids: list):
     """Set up Tuya Fan."""
     device_manager = hass.data[DOMAIN][entry.entry_id][TUYA_DEVICE_MANAGER]
     entities = []
@@ -131,7 +136,7 @@ class TuyaHaFan(TuyaHaEntity, FanEntity):
                     if data:
                         self.air_purifier_speed_range_len = len(data)
                         self.air_purifier_speed_range_enum = data
-            except Exception:
+            except ValueError:
                 _LOGGER.error("Cannot parse the air-purifier speed range")
 
     def set_preset_mode(self, preset_mode: str) -> None:
@@ -207,7 +212,7 @@ class TuyaHaFan(TuyaHaEntity, FanEntity):
                 self.tuya_device.function.get(DPCODE_MODE, {}).values
             ).get("range")
             return data
-        except Exception:
+        except ValueError:
             _LOGGER.error("Cannot parse the preset modes")
         return []
 
