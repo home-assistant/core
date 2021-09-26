@@ -4,5 +4,11 @@
   "documentation": "https://www.home-assistant.io/integrations/vicare",
   "codeowners": ["@oischinger"],
   "requirements": ["PyViCare==2.13.1"],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "config_flow": true,
+  "dhcp": [
+    {
+      "macaddress": "B87424*"
+    }
+  ]
 }
