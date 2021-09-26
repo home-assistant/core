@@ -193,7 +193,7 @@ class Metering(ZigbeeChannel):
         self._format_spec = self.get_formatting(fmting)
 
         fmting = self.cluster.get(
-            "demand_formatting", 0xF9
+            "summa_formatting", 0xF9
         )  # 1 digit to the right, 15 digits to the left
         self._summa_format = self.get_formatting(fmting)
 
