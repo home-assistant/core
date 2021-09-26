@@ -467,7 +467,20 @@ async def test_migration_device_offline(hass: HomeAssistant):
 
     assert result["type"] == "create_entry"
     assert result["title"] == ALIAS
+    new_entry = result["result"]
     assert result["data"] == {
         CONF_HOST: None,
     }
     assert len(mock_setup_entry.mock_calls) == 2
+
+    # Ensure a manual import updates the missing host
+    config = {CONF_HOST: IP_ADDRESS}
+    with _patch_discovery(no_device=True), _patch_single_discovery():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert new_entry.data[CONF_HOST] == IP_ADDRESS
