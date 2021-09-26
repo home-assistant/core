@@ -9,6 +9,7 @@ from homeassistant.components.cover import ATTR_POSITION, CoverEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.const import ATTR_BATTERY_LEVEL
 
 from .base_class import TradfriBaseDevice
 from .const import ATTR_MODEL, CONF_GATEWAY_ID, DEVICES, DOMAIN, KEY_API
@@ -48,7 +49,10 @@ class TradfriCover(TradfriBaseDevice, CoverEntity):
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes."""
-        return {ATTR_MODEL: self._device.device_info.model_number}
+        return {
+            ATTR_BATTERY_LEVEL: self._device.device_info.battery_level,
+            ATTR_MODEL: self._device.device_info.model_number,
+        }
 
     @property
     def current_cover_position(self) -> int | None:
