@@ -541,7 +541,7 @@ directv==0.4.0
 discogs_client==2.3.0
 
 # homeassistant.components.discord
-discord.py==1.7.2
+discord.py==1.7.3
 
 # homeassistant.components.digitalloggers
 dlipower==0.7.165
