@@ -1,6 +1,5 @@
 """Support for tracking which astronomical or meteorological season it is."""
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 import ephem
@@ -68,7 +67,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="season",
         name="Season",
         device_class=DEVICE_CLASS_SEASON,
-        #icon="mdi:none"
     ),
     SensorEntityDescription(
         key="days_left",
@@ -98,12 +96,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(
-    hass, 
-    config, 
-    async_add_entities, 
-    discovery_info=None
-):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Display the current season."""
     if None in (hass.config.latitude, hass.config.longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
@@ -119,12 +112,14 @@ async def async_setup_platform(
         hemisphere = NORTHERN
     else:
         hemisphere = EQUATOR
-        
+
     if EQUATOR in hemisphere:
-        _LOGGER.warning("Season cannot be determined for equator, 'unknown' state will be shown")
+        _LOGGER.warning(
+            "Season cannot be determined for equator, 'unknown' state will be shown"
+        )
 
     _LOGGER.debug(_type)
-    
+
     season_data = SeasonData(hemisphere, _type)
 
     entities = []
@@ -158,9 +153,7 @@ class Season(SensorEntity):
         """Get the latest data from Season and update the state."""
         await self.season_data.async_update()
         if self.entity_description.key in self.season_data.data:
-            self._attr_native_value = self.season_data.data[
-                self.entity_description.key
-            ]
+            self._attr_native_value = self.season_data.data[self.entity_description.key]
             if self.entity_description.key in ATTR_SEASON:
                 self._attr_icon = SEASON_ICONS[
                     self.season_data.data[self.entity_description.key]
@@ -169,7 +162,7 @@ class Season(SensorEntity):
 
 class SeasonData:
     """Calculate the current season."""
-    
+
     def __init__(self, hemisphere, _type):
         """Initialize the data object."""
 
