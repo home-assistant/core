@@ -31,7 +31,7 @@ requests==2.25.1
 scapy==2.4.5
 sqlalchemy==1.4.23
 voluptuous-serialize==2.4.0
-voluptuous==0.12.1
+voluptuous==0.12.2
 yarl==1.6.3
 zeroconf==0.36.7
 
