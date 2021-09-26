@@ -159,7 +159,7 @@ async def async_process_requirements(
         pip_lock = hass.data[DATA_PIP_LOCK] = asyncio.Lock()
     install_failure_history = hass.data.get(DATA_INSTALL_FAILURE_HISTORY)
     if install_failure_history is None:
-        install_failure_history = hass.data[DATA_INSTALL_FAILURE_HISTORY] = {}
+        install_failure_history = hass.data[DATA_INSTALL_FAILURE_HISTORY] = set()
 
     kwargs = pip_kwargs(hass.config.config_dir)
 
