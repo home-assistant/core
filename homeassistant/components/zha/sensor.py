@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_TEMPERATURE,
     DOMAIN,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -267,8 +268,9 @@ class Illuminance(Sensor):
 class SmartEnergyMetering(Sensor):
     """Metering sensor."""
 
-    SENSOR_ATTR = "instantaneous_demand"
-    _device_class = DEVICE_CLASS_POWER
+    SENSOR_ATTR: int | str = "instantaneous_demand"
+    _device_class: str | None = DEVICE_CLASS_POWER
+    _state_class: str | None = STATE_CLASS_MEASUREMENT
 
     @classmethod
     def create_entity(
@@ -312,7 +314,8 @@ class SmartEnergyMetering(Sensor):
 class SmartEnergySummation(SmartEnergyMetering, id_suffix="summation_delivered"):
     """Smart Energy Metering summation sensor."""
 
-    SENSOR_ATTR = "current_summ_delivered"
+    SENSOR_ATTR: int | str = "current_summ_delivered"
+    _state_class: str = STATE_CLASS_TOTAL_INCREASING
 
     def formatter(self, value: int) -> int | float:
         """Pass through channel formatter."""
