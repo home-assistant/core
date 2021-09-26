@@ -4,7 +4,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from rensonVentilationLib.fieldEnum import CO2_FIELD
 import rensonVentilationLib.renson as renson
 import voluptuous as vol
 
@@ -24,25 +23,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class PlaceholderHub:
-    """Placeholder class to make tests pass."""
-
-    def __init__(self, host: str, hass: HomeAssistant) -> None:
-        """Initialize."""
-        self.host = host
-        self.hass = hass
-
-    async def connect(self) -> bool:
-        """Test if we can connect with the host."""
-        rensonLib = renson.RensonVentilation(self.host)
-
-        try:
-            await self.hass.async_add_executor_job(rensonLib.get_data_string, CO2_FIELD)
-        except ConnectionError:
-            raise CannotConnect
-        return True
-
-
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Renson Endura Delta."""
 
@@ -51,13 +31,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def validate_input(
         self, hass: HomeAssistant, data: dict[str, Any]
     ) -> dict[str, Any]:
-        """Validate the user input allows us to connect.
+        """Validate the user input allows us to connect."""
+        rensonLib = renson.RensonVentilation(data["host"])
 
-        Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-        """
-        hub = PlaceholderHub(data["host"], hass)
-
-        if not await hub.connect():
+        if not await self.hass.async_add_executor_job(rensonLib.connect):
             raise CannotConnect
 
         return {"title": "Renson Endura Delta"}
