@@ -120,9 +120,9 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema(
             {
+                vol.Required(CONF_MAC): vol.In(unconfigured_devices),
                 vol.Required(CONF_NAME): str,
                 vol.Optional(CONF_PASSWORD): str,
-                vol.Required(CONF_MAC): vol.In(unconfigured_devices),
             }
         )
 
