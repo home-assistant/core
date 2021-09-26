@@ -56,24 +56,6 @@ async def test_user_form_valid_mac(hass):
 
     assert len(mock_setup_entry.mock_calls) == 1
 
-    # test duplicate device creation fails.
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        USER_INPUT,
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
-
     # test curtain device creation.
 
     result = await hass.config_entries.flow.async_init(
@@ -100,6 +82,14 @@ async def test_user_form_valid_mac(hass):
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
+
+    # tests abort if no unconfigured devices are found.
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "no_unconfigured_devices"
 
 
 async def test_async_step_import(hass):
@@ -131,14 +121,14 @@ async def test_user_form_exception(hass, switchbot_config_flow):
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "cannot_connect"
 
     switchbot_config_flow.side_effect = Exception
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "unknown"
