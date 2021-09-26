@@ -11,8 +11,7 @@ from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -36,25 +35,28 @@ from .utils import async_entry_is_legacy
 TPLINK_HOST_SCHEMA = vol.Schema({vol.Required(CONF_HOST): cv.string})
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_LIGHT, default=[]): vol.All(
-                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
-                ),
-                vol.Optional(CONF_SWITCH, default=[]): vol.All(
-                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
-                ),
-                vol.Optional(CONF_STRIP, default=[]): vol.All(
-                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
-                ),
-                vol.Optional(CONF_DIMMER, default=[]): vol.All(
-                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
-                ),
-                vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Optional(CONF_LIGHT, default=[]): vol.All(
+                        cv.ensure_list, [TPLINK_HOST_SCHEMA]
+                    ),
+                    vol.Optional(CONF_SWITCH, default=[]): vol.All(
+                        cv.ensure_list, [TPLINK_HOST_SCHEMA]
+                    ),
+                    vol.Optional(CONF_STRIP, default=[]): vol.All(
+                        cv.ensure_list, [TPLINK_HOST_SCHEMA]
+                    ),
+                    vol.Optional(CONF_DIMMER, default=[]): vol.All(
+                        cv.ensure_list, [TPLINK_HOST_SCHEMA]
+                    ),
+                    vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 

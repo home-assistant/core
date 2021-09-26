@@ -97,7 +97,7 @@ async def async_migrate_entities_devices(
         if len(reg_entity.unique_id) < MAC_ADDRESS_LEN:
             continue
         if dr.format_mac(reg_entity.unique_id[:MAC_ADDRESS_LEN]) == new_entry.unique_id:
-            entity_registry._async_update_entity(  # pylint: disable=protected-access
+            entity_registry.async_update_entity(
                 reg_entity.entity_id, config_entry_id=new_entry.entry_id
             )
 
@@ -111,6 +111,6 @@ async def async_migrate_entities_devices(
                 connection_type == dr.CONNECTION_NETWORK_MAC
                 and value == new_entry.unique_id
             ):
-                device_registry._async_update_device(  # pylint: disable=protected-access
+                device_registry.async_update_device(
                     dev_entry.id, add_config_entry_id=new_entry.entry_id
                 )

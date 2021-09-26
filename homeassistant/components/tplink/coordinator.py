@@ -25,7 +25,7 @@ REQUEST_REFRESH_DELAY = 0.35
 
 
 class TPLinkDataUpdateCoordinator(DataUpdateCoordinator):
-    """DataUpdateCoordinator to gather data for specific SmartPlug."""
+    """DataUpdateCoordinator to gather data for a specific TPLink device."""
 
     def __init__(
         self,
