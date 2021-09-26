@@ -305,8 +305,9 @@ class SmartEnergyMetering(Sensor):
         attrs = {}
         if self._channel.device_type is not None:
             attrs["device_type"] = self._channel.device_type
-        if self._channel.status is not None:
-            attrs["status"] = self._channel.status.name or f"{self._channel.status}"
+        status = self._channel.status
+        if status is not None:
+            attrs["status"] = str(status)[len(status.__class__.__name__) + 1 :]
         return attrs
 
 

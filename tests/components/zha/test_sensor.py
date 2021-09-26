@@ -74,15 +74,18 @@ async def async_test_metering(hass, cluster, entity_id):
     assert hass.states.get(entity_id).attributes["status"] == "NO_ALARMS"
     assert hass.states.get(entity_id).attributes["device_type"] == "Electric Metering"
 
-    await send_attributes_report(hass, cluster, {1024: 12346, "status": 64})
+    await send_attributes_report(hass, cluster, {1024: 12346, "status": 64 + 8})
     assert_state(hass, entity_id, "12346.0", "unknown")
-    assert hass.states.get(entity_id).attributes["status"] == "SERVICE_DISCONNECT"
+    assert (
+        hass.states.get(entity_id).attributes["status"]
+        == "SERVICE_DISCONNECT|POWER_FAILURE"
+    )
 
     await send_attributes_report(
-        hass, cluster, {"status": 64, "metering_device_type": 1}
+        hass, cluster, {"status": 32, "metering_device_type": 1}
     )
     # currently only statuses for electric meters are supported
-    assert hass.states.get(entity_id).attributes["status"] == "bitmap8.64"
+    assert hass.states.get(entity_id).attributes["status"] == "<bitmap8.32: 32>"
 
 
 async def async_test_smart_energy_summation(hass, cluster, entity_id):
