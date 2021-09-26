@@ -239,6 +239,14 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
         return bright_value.get("min", 0), bright_value.get("max", 255)
 
     @property
+    def color_mode(self) -> str:
+        """Return the color_mode of the light."""
+        work_mode = self._work_mode()
+        if work_mode == WORK_MODE_WHITE:
+            return COLOR_MODE_COLOR_TEMP
+        return COLOR_MODE_HS
+
+    @property
     def hs_color(self) -> tuple[float, float] | None:
         """Return the hs_color of the light."""
         colour_json = self.tuya_device.status.get(self.dp_code_colour)
