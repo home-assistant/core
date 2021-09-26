@@ -344,14 +344,20 @@ class DlnaDmrEntity(MediaPlayerEntity):
         dev_reg = device_registry.async_get(self.hass)
         device_entry = dev_reg.async_get_or_create(
             config_entry_id=self.registry_entry.config_entry_id,
-            # Connection is based on the root device's UDN, which is currently
-            # equivalent to our UDN (embedded devices aren't supported by
-            # async_upnp_client)
-            connections={(device_registry.CONNECTION_UPNP, self._device.udn)},
+            # Connections are based on the root device's UDN, and the DMR
+            # embedded device's UDN. They may be the same, if the DMR is the
+            # root device.
+            connections={
+                (
+                    device_registry.CONNECTION_UPNP,
+                    self._device.profile_device.root_device.udn,
+                ),
+                (device_registry.CONNECTION_UPNP, self._device.udn),
+            },
             identifiers={(DOMAIN, self.unique_id)},
-            manufacturer=self._device.manufacturer,
-            model=self._device.model_name,
-            name=self._device.name,
+            default_manufacturer=self._device.manufacturer,
+            default_model=self._device.model_name,
+            default_name=self._device.name,
         )
 
         # Update entity registry to link to the device
