@@ -159,7 +159,7 @@ async def async_process_requirements(
         pip_lock = hass.data[DATA_PIP_LOCK] = asyncio.Lock()
     install_failure_history = hass.data.get(DATA_INSTALL_FAILURE_HISTORY)
     if install_failure_history is None:
-        install_failure_history = hass.data[DATA_INSTALL_FAILURE_HISTORY] = {}
+        install_failure_history = hass.data[DATA_INSTALL_FAILURE_HISTORY] = set()
 
     kwargs = pip_kwargs(hass.config.config_dir)
 
@@ -174,7 +174,7 @@ async def _async_process_requirements(
     hass: HomeAssistant,
     name: str,
     req: str,
-    install_failure_history: dict[str, bool],
+    install_failure_history: set[str],
     kwargs: Any,
 ) -> None:
     """Install a requirement and save failures."""
@@ -196,7 +196,7 @@ async def _async_process_requirements(
         if await hass.async_add_executor_job(_install, req, kwargs):
             return
 
-    install_failure_history[req] = True
+    install_failure_history.add(req)
     raise RequirementsNotFound(name, [req])
 
 
