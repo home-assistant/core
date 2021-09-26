@@ -167,6 +167,27 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         return STATE_OFF
 
     @property
+    def source_mapping(self):
+        """Return a mapping of the actual source names to their labels configured in the MusicCast App."""
+        ret = {}
+        for inp in self.coordinator.data.zones[self._zone_id].input_list:
+            label = self.coordinator.data.input_names.get(inp, "")
+            if (
+                label in self.coordinator.data.zones[self._zone_id].input_list
+                or list(self.coordinator.data.input_names.values()).count(label) > 1
+            ):
+                label += f" ({inp})"
+            if label == "":
+                label = inp
+            ret[inp] = label
+        return ret
+
+    @property
+    def reverse_source_mapping(self):
+        """Return a mapping from the source label to the source name."""
+        return {v: k for k, v in self.source_mapping.items()}
+
+    @property
     def volume_level(self):
         """Return the volume level of the media player (0..1)."""
         if ZoneFeature.VOLUME in self.coordinator.data.zones[self._zone_id].features:
@@ -499,17 +520,19 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
     async def async_select_source(self, source):
         """Select input source."""
-        await self.coordinator.musiccast.select_source(self._zone_id, source)
+        await self.coordinator.musiccast.select_source(
+            self._zone_id, self.reverse_source_mapping.get(source, source)
+        )
 
     @property
     def source(self):
         """Name of the current input source."""
-        return self.coordinator.data.zones[self._zone_id].input
+        return self.source_mapping.get(self.coordinator.data.zones[self._zone_id].input)
 
     @property
     def source_list(self):
         """List of available input sources."""
-        return self.coordinator.data.zones[self._zone_id].input_list
+        return list(self.source_mapping.values())
 
     @property
     def media_duration(self):
