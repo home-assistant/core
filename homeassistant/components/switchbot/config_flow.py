@@ -104,7 +104,8 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Get devices already configured.
         configured_devices = {
-            item.data.get(CONF_MAC) for item in self._async_current_entries()
+            item.data[CONF_MAC]
+            for item in self._async_current_entries(include_ignore=False)
         }
 
         # Get supported devices not yet configured.
