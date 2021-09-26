@@ -21,6 +21,7 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_STEP,
     MediaPlayerEntity,
 )
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
@@ -346,15 +347,19 @@ class KefMediaPlayer(MediaPlayerEntity):
             **mode._asdict(),
         )
         await self.update_selects()
+        await self.update_numbers()
 
     async def update_selects(self):
         """Update the underlying `select` entities related to DSP settings."""
-        try:
-            selects = self.hass.data[DOMAIN][self._speaker.host][SELECT_DOMAIN]
-            for select in selects.values():
-                await select.async_update()
-        except KeyError as e:
-            _LOGGER.warning(str(e))
+        selects = self.hass.data[DOMAIN][self._speaker.host][SELECT_DOMAIN]
+        for select in selects.values():
+            await select.async_update()
+
+    async def update_numbers(self):
+        """Update the underlying `number` entities related to DSP settings."""
+        numbers = self.hass.data[DOMAIN][self._speaker.host][NUMBER_DOMAIN]
+        for number in numbers.values():
+            await number.async_update()
 
     async def async_added_to_hass(self):
         """Subscribe to DSP updates."""

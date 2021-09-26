@@ -108,6 +108,9 @@ class MediaSelect(SelectEntity):
         """Update the current selected option."""
         self._attr_current_option = option
         option = str_to_option(option)
+        _LOGGER.debug(
+            "Setting %s to %s (%s)", self._attr_name, option, self._attr_current_option
+        )
         if option != "Unknown":
             await self._speaker.set_mode(**{self._dsp_attr: option})
         self.async_write_ha_state()

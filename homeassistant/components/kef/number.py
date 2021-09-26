@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
 
 from aiokef.aiokef import DSP_OPTION_MAPPING
 
@@ -95,12 +94,11 @@ class KefDSPNumber(NumberEntity):
 
     async def async_set_value(self, value: str) -> None:
         """Update the current selected value."""
+        _LOGGER.debug("Setting %s to %s", self._attr_name, value)
         await getattr(self._speaker, f"set_{self._dsp_attr}")(value)
         self.async_write_ha_state()
 
-    @property
-    def value(self) -> float:
-        """Return the entity value to represent the entity state."""
-        if self._speaker._dsp is None:
-            return "Unknown"
-        return cast(float, self._speaker._dsp[self._dsp_attr])
+    async def async_update(self, **kwargs):
+        """Update the select entity with the latest DSP settings."""
+        self._attr_value = self._speaker._dsp[self._dsp_attr]
+        self.async_write_ha_state()
