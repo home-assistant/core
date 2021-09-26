@@ -9,7 +9,6 @@ from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectEntity
 from homeassistant.const import CONF_HOST, DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -48,12 +47,9 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType = None,
 ) -> None:
-    """Set up the demo Select entity."""
+    """Set up the KEF DSP select entity."""
     if discovery_info is None:
         return
-    if not hass.data[DOMAIN]:
-        _LOGGER.debug("No speakers online yet")
-        raise PlatformNotReady()
 
     host = discovery_info[CONF_HOST]
     data = hass.data[DOMAIN][host]
@@ -79,7 +75,6 @@ async def async_setup_platform(
         ["Sub dB", "sub_db", DSP_OPTION_MAPPING["sub_db"]],
     ):
         current_option = option_to_str(speaker._dsp[dsp_attr])
-        _LOGGER.debug(f"{name}: {speaker._dsp}, {current_option}")
         select = MediaSelect(
             unique_id=f"{speaker._unique_id}_{dsp_attr}",
             name=f"{speaker.name} {name}",
@@ -95,7 +90,7 @@ async def async_setup_platform(
 
 
 class MediaSelect(SelectEntity):
-    """Representation of a demo select entity."""
+    """Representation of a KEF DSP select entity."""
 
     _attr_should_poll = False
 
@@ -109,7 +104,7 @@ class MediaSelect(SelectEntity):
         speaker: KefMediaPlayer,
         dsp_attr: str,
     ) -> None:
-        """Initialize the Demo select entity."""
+        """Initialize the KEF DSP select entity."""
         self._speaker = speaker
         self._dsp_attr = dsp_attr
         self._attr_unique_id = unique_id

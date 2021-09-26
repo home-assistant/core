@@ -6,6 +6,7 @@ from getmac import get_mac_address
 import voluptuous as vol
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
 from homeassistant.exceptions import PlatformNotReady
@@ -84,5 +85,8 @@ async def async_setup(hass, config):
         )
         hass.async_create_task(
             async_load_platform(hass, SELECT_DOMAIN, DOMAIN, conf, config)
+        )
+        hass.async_create_task(
+            async_load_platform(hass, NUMBER_DOMAIN, DOMAIN, conf, config)
         )
     return True
