@@ -117,7 +117,7 @@ class AirthingsHeaterEnergySensor(CoordinatorEntity, SensorEntity):
         self._id = airthings_device.device_id
         self._attr_device_info = {
             "identifiers": {(DOMAIN, airthings_device.device_id)},
-            "name": self.name,
+            "name": airthings_device.name,
             "manufacturer": "Airthings",
         }
 
