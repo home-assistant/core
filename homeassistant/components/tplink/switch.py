@@ -31,7 +31,7 @@ async def async_setup_entry(
         return
     entities = []
     if device.is_strip:
-        # Historiclly we only add the children if the device is a strip
+        # Historically we only add the children if the device is a strip
         _LOGGER.debug("Initializing strip with %s sockets", len(device.children))
         for child in device.children:
             entities.append(SmartPlugSwitch(child, coordinator))
