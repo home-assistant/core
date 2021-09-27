@@ -111,7 +111,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the step to pick discovered device."""
         if user_input is not None:
-            mac = user_input[CONF_DEVICE].split(" ")[-1]
+            mac = user_input[CONF_DEVICE]
             await self.async_set_unique_id(mac, raise_on_progress=False)
             return self._async_create_entry_from_device(self._discovered_devices[mac])
 
@@ -125,7 +125,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             for device in (await Discover.discover()).values()
         }
         devices_name = {
-            f"{device.alias} {device.model} ({device.host}) {formatted_mac}"
+            formatted_mac: f"{device.alias} {device.model} ({device.host}) {formatted_mac}"
             for formatted_mac, device in self._discovered_devices.items()
             if formatted_mac not in configured_devices
         }
