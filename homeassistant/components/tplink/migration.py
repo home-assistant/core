@@ -42,20 +42,16 @@ def async_migrate_legacy_entries(
     legacy_entry: ConfigEntry,
 ) -> None:
     """Migrate the legacy config entries to have an entry per device."""
-    entity_registry = er.async_get(hass)
-    tplink_reg_entities = er.async_entries_for_config_entry(
-        entity_registry, legacy_entry.entry_id
-    )
-
-    for reg_entity in tplink_reg_entities:
-        # Only migrate entities with a mac address only
-        if len(reg_entity.unique_id) not in MAC_ADDRESS_LENS:
-            continue
-        mac = dr.format_mac(reg_entity.unique_id)
-        if mac not in config_entries_by_mac and reg_entity.domain in (
-            "switch",
-            "light",
-        ):
+    device_registry = dr.async_get(hass)
+    for dev_entry in dr.async_entries_for_config_entry(
+        device_registry, legacy_entry.entry_id
+    ):
+        for connection_type, mac in dev_entry.connections:
+            if (
+                connection_type != dr.CONNECTION_NETWORK_MAC
+                or mac in config_entries_by_mac
+            ):
+                continue
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN,
@@ -63,9 +59,7 @@ def async_migrate_legacy_entries(
                     data={
                         CONF_HOST: hosts_by_mac.get(mac),
                         CONF_MAC: mac,
-                        CONF_NAME: reg_entity.name
-                        or reg_entity.original_name
-                        or f"TP-Link device {mac}",
+                        CONF_NAME: dev_entry.name or f"TP-Link device {mac}",
                     },
                 )
             )

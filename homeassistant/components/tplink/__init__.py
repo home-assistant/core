@@ -130,10 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SmartDeviceException as ex:
         raise ConfigEntryNotReady from ex
 
-    coordinator = TPLinkDataUpdateCoordinator(hass, device)
-    coordinator.data = coordinator.async_data_from_device()
-
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    hass.data[DOMAIN][entry.entry_id] = TPLinkDataUpdateCoordinator(hass, device)
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True

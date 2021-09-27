@@ -31,7 +31,6 @@ from .const import (
     ATTR_CURRENT_POWER_W,
     ATTR_TODAY_ENERGY_KWH,
     ATTR_TOTAL_ENERGY_KWH,
-    CONF_EMETER_PARAMS,
     DOMAIN,
 )
 from .coordinator import TPLinkDataUpdateCoordinator
@@ -83,13 +82,24 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors."""
     coordinator: TPLinkDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    entities: list[SmartPlugSensor] = []
     device = coordinator.device
-    async_add_entities(
-        SmartPlugSensor(device, coordinator, description)
-        for description in ENERGY_SENSORS
-        if device.has_emeter
-        and coordinator.data[CONF_EMETER_PARAMS].get(description.key) is not None
-    )
+    if device.is_strip:
+        # Historiclly we only add the children if the device is a strip
+        for child in device.children:
+            entities.extend(
+                SmartPlugSensor(child, coordinator, description)
+                for description in ENERGY_SENSORS
+                if device.has_emeter
+            )
+    else:
+        entities.extend(
+            SmartPlugSensor(device, coordinator, description)
+            for description in ENERGY_SENSORS
+            if device.has_emeter
+        )
+
+    async_add_entities(entities)
 
 
 class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
@@ -117,6 +127,20 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
         return f"{self.device.alias} {self.entity_description.name}"
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """Return the sensors state."""
-        return cast(float, self.data[CONF_EMETER_PARAMS][self.entity_description.key])
+        if self.entity_description.key == ATTR_CURRENT_POWER_W:
+            return cast(float, self.device.emeter_realtime.power)
+        if self.entity_description.key == ATTR_TOTAL_ENERGY_KWH:
+            return cast(float, self.device.emeter_realtime.total)
+        if self.entity_description.key == ATTR_VOLTAGE:
+            return cast(float, self.device.emeter_realtime.voltage)
+        if self.entity_description.key == ATTR_CURRENT_A:
+            return cast(float, self.device.emeter_realtime.current)
+
+        # ATTR_TODAY_ENERGY_KWH
+        if (emeter_today := self.device.emeter_today) is not None:
+            return cast(float, emeter_today)
+        # today's consumption not available, when device was off all the day
+        # bulb's do not report this information, so filter it out
+        return None if self.device.is_bulb else 0.0

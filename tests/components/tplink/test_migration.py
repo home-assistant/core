@@ -150,7 +150,7 @@ async def test_migration_device_online_end_to_end_ignores_other_devices(
         name=ALIAS,
     )
     other_device = device_reg.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id=other_domain_config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "556655665566")},
         name=ALIAS,
     )
