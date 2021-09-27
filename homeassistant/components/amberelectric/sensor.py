@@ -68,11 +68,6 @@ class AmberSensor(CoordinatorEntity, SensorEntity):
             f"{self.site_id}-{self.entity_description.key}-{self.channel_type}"
         )
 
-    @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return self.entity_description.icon
-
 
 class AmberPriceSensor(AmberSensor):
     """Amber Price Sensor."""
@@ -182,11 +177,6 @@ class AmberGridSensor(CoordinatorEntity, SensorEntity):
     def unique_id(self) -> str | None:
         """Return a unique id for each sensors."""
         return f"{self.site_id}-{self.entity_description.key}"
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon of the sensor."""
-        return self.entity_description.icon
 
     @property
     def native_value(self) -> str | None:
