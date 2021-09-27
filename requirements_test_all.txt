@@ -342,7 +342,7 @@ dynalite_devices==0.1.46
 elgato==2.1.1
 
 # homeassistant.components.elkm1
-elkm1-lib==0.8.10
+elkm1-lib==1.0.0
 
 # homeassistant.components.mobile_app
 emoji==1.5.0
