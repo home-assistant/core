@@ -9,6 +9,7 @@ import pytest
 from homeassistant.components.amberelectric.const import (
     CONF_API_TOKEN,
     CONF_SITE_ID,
+    CONF_SITE_NAME,
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
@@ -33,6 +34,7 @@ async def setup_general(hass) -> AsyncGenerator:
     MockConfigEntry(
         domain="amberelectric",
         data={
+            CONF_SITE_NAME: "mock_title",
             CONF_API_TOKEN: MOCK_API_TOKEN,
             CONF_SITE_ID: GENERAL_ONLY_SITE_ID,
         },
@@ -278,6 +280,3 @@ def test_renewable_sensor(hass: HomeAssistant, setup_general) -> None:
     sensor = hass.states.get("sensor.mock_title_renewables")
     assert sensor
     assert sensor.state == "51"
-    attributes = sensor.attributes
-    assert attributes is not None
-    assert attributes["attribution"] == "Data provided by Amber Electric"

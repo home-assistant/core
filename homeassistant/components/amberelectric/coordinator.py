@@ -19,12 +19,12 @@ from .const import LOGGER
 
 def is_current(interval: ActualInterval | CurrentInterval | ForecastInterval) -> bool:
     """Return true if the supplied interval is a CurrentInterval."""
-    return isinstance(interval, CurrentInterval)
+    return interval.__class__ == CurrentInterval
 
 
 def is_forecast(interval: ActualInterval | CurrentInterval | ForecastInterval) -> bool:
     """Return true if the supplied interval is a ForecastInterval."""
-    return isinstance(interval, ForecastInterval)
+    return interval.__class__ == ForecastInterval
 
 
 def is_general(interval: ActualInterval | CurrentInterval | ForecastInterval) -> bool:
@@ -55,6 +55,7 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
             hass,
             LOGGER,
             name="amberelectric",
+            update_method=self.async_update_data,
             update_interval=timedelta(minutes=1),
         )
         self._api = api
