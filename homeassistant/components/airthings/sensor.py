@@ -95,6 +95,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         name="RSSI",
+        entity_registry_enabled_default=False,
     ),
     "pm1": SensorEntityDescription(
         key="pm1",
