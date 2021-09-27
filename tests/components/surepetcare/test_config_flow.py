@@ -178,7 +178,7 @@ async def test_reauthentication(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            INPUT_DATA,
+            {"password": "test-password"},
         )
         await hass.async_block_till_done()
 
@@ -215,7 +215,7 @@ async def test_reauthentication_failure(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            INPUT_DATA,
+            {"password": "test-password"},
         )
         await hass.async_block_till_done()
 
@@ -253,7 +253,7 @@ async def test_reauthentication_cannot_connect(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            INPUT_DATA,
+            {"password": "test-password"},
         )
         await hass.async_block_till_done()
 
@@ -291,50 +291,10 @@ async def test_reauthentication_unknown_failure(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            INPUT_DATA,
+            {"password": "test-password"},
         )
         await hass.async_block_till_done()
 
     assert result2["step_id"] == "reauth_confirm"
     assert result["type"] == "form"
     assert result2["errors"]["base"] == "unknown"
-
-
-async def test_reauthentication_failure_no_existing_entry(hass):
-    """Test surepetcare reauthentication with no existing entry."""
-    old_entry = MockConfigEntry(
-        domain="surepetcare",
-        data=INPUT_DATA,
-        unique_id="USERID",
-    )
-    old_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": old_entry.unique_id,
-            "entry_id": old_entry.entry_id,
-        },
-        data=old_entry.data,
-    )
-
-    assert result["type"] == "form"
-    assert result["errors"] == {}
-    assert result["step_id"] == "reauth_confirm"
-
-    with patch(
-        "homeassistant.components.surepetcare.config_flow.surepy.client.SureAPIClient.get_token",
-        return_value={"token": "token"},
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "username": "test-username_different",
-                "password": "test-password",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] == "abort"
-    assert result2["reason"] == "reauth_failed_existing"

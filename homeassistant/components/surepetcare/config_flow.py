@@ -46,6 +46,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        """Initialize."""
+        self._username: str | None = None
+
     async def async_step_import(self, import_info: dict[str, Any] | None) -> FlowResult:
         """Set the config entry up from yaml."""
         return await self.async_step_user(import_info)
@@ -82,8 +86,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(self, _: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, config: dict[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
+        self._username = config[CONF_USERNAME]
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -92,6 +97,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Dialog that informs the user that reauth is required."""
         errors = {}
         if user_input is not None:
+            user_input[CONF_USERNAME] = self._username
             try:
                 await validate_input(self.hass, user_input)
             except SurePetcareAuthenticationError:
@@ -108,10 +114,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if existing_entry:
                     await self.hass.config_entries.async_reload(existing_entry.entry_id)
                     return self.async_abort(reason="reauth_successful")
-                return self.async_abort(reason="reauth_failed_existing")
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=USER_DATA_SCHEMA,
+            data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
             errors=errors,
         )
