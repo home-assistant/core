@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from surepy import Surepy
+import surepy
 from surepy.exceptions import SurePetcareAuthenticationError, SurePetcareError
 import voluptuous as vol
 
@@ -28,7 +28,7 @@ USER_DATA_SCHEMA = vol.Schema(
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
-    surepy = Surepy(
+    surepy_client = surepy.Surepy(
         data[CONF_USERNAME],
         data[CONF_PASSWORD],
         auth_token=None,
@@ -36,7 +36,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         session=async_get_clientsession(hass),
     )
 
-    token = await surepy.sac.get_token()
+    token = await surepy_client.sac.get_token()
 
     return {CONF_TOKEN: token}
 

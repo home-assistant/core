@@ -59,7 +59,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "surepy.client.SureAPIClient.get_token",
+        "homeassistant.components.surepetcare.config_flow.surepy.client.SureAPIClient.get_token",
         side_effect=SurePetcareAuthenticationError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -81,7 +81,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "surepy.client.SureAPIClient.get_token",
+        "homeassistant.components.surepetcare.config_flow.surepy.client.SureAPIClient.get_token",
         side_effect=SurePetcareError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -103,7 +103,7 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "surepy.client.SureAPIClient.get_token",
+        "homeassistant.components.surepetcare.config_flow.surepy.client.SureAPIClient.get_token",
         side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -173,7 +173,7 @@ async def test_reauthentication(hass):
     assert result["step_id"] == "reauth_confirm"
 
     with patch(
-        "surepy.client.SureAPIClient.get_token",
+        "homeassistant.components.surepetcare.config_flow.surepy.client.SureAPIClient.get_token",
         return_value={"token": "token"},
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -210,7 +210,7 @@ async def test_reauthentication_failure(hass):
     assert result["step_id"] == "reauth_confirm"
 
     with patch(
-        "surepy.client.SureAPIClient.get_token",
+        "homeassistant.components.surepetcare.config_flow.surepy.client.SureAPIClient.get_token",
         side_effect=SurePetcareAuthenticationError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -248,7 +248,7 @@ async def test_reauthentication_cannot_connect(hass):
     assert result["step_id"] == "reauth_confirm"
 
     with patch(
-        "surepy.client.SureAPIClient.get_token",
+        "homeassistant.components.surepetcare.config_flow.surepy.client.SureAPIClient.get_token",
         side_effect=SurePetcareError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -286,7 +286,7 @@ async def test_reauthentication_unknown_failure(hass):
     assert result["step_id"] == "reauth_confirm"
 
     with patch(
-        "surepy.client.SureAPIClient.get_token",
+        "homeassistant.components.surepetcare.config_flow.surepy.client.SureAPIClient.get_token",
         side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -324,7 +324,7 @@ async def test_reauthentication_failure_no_existing_entry(hass):
     assert result["step_id"] == "reauth_confirm"
 
     with patch(
-        "surepy.client.SureAPIClient.get_token",
+        "homeassistant.components.surepetcare.config_flow.surepy.client.SureAPIClient.get_token",
         return_value={"token": "token"},
     ):
         result2 = await hass.config_entries.flow.async_configure(
