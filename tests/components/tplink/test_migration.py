@@ -24,11 +24,19 @@ async def test_migration_device_online_end_to_end(
         connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)},
         name=ALIAS,
     )
+    switch_entity_reg = entity_reg.async_get_or_create(
+        config_entry=config_entry,
+        platform=DOMAIN,
+        domain="switch",
+        unique_id=MAC_ADDRESS,
+        original_name=ALIAS,
+        device_id=device.id,
+    )
     light_entity_reg = entity_reg.async_get_or_create(
         config_entry=config_entry,
         platform=DOMAIN,
         domain="light",
-        unique_id=MAC_ADDRESS,
+        unique_id=dr.format_mac(MAC_ADDRESS),
         original_name=ALIAS,
         device_id=device.id,
     )
@@ -55,6 +63,7 @@ async def test_migration_device_online_end_to_end(
 
         assert device.config_entries == {migrated_entry.entry_id}
         assert light_entity_reg.config_entry_id == migrated_entry.entry_id
+        assert switch_entity_reg.config_entry_id == migrated_entry.entry_id
         assert power_sensor_entity_reg.config_entry_id == migrated_entry.entry_id
         assert er.async_entries_for_config_entry(entity_reg, config_entry) == []
 
@@ -130,9 +139,19 @@ async def test_migration_device_online_end_to_end_ignores_other_devices(
     """Test migration from single config entry."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
+
+    other_domain_config_entry = MockConfigEntry(
+        domain="other_domain", data={}, unique_id="other_domain"
+    )
+    other_domain_config_entry.add_to_hass(hass)
     device = device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)},
+        name=ALIAS,
+    )
+    other_device = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "556655665566")},
         name=ALIAS,
     )
     light_entity_reg = entity_reg.async_get_or_create(
@@ -152,7 +171,7 @@ async def test_migration_device_online_end_to_end_ignores_other_devices(
         device_id=device.id,
     )
     ignored_entity_reg = entity_reg.async_get_or_create(
-        config_entry=config_entry,
+        config_entry=other_domain_config_entry,
         platform=DOMAIN,
         domain="sensor",
         unique_id="00:00:00:00:00:00_sensor",
@@ -165,7 +184,7 @@ async def test_migration_device_online_end_to_end_ignores_other_devices(
         domain="sensor",
         unique_id="garbage",
         original_name=ALIAS,
-        device_id=device.id,
+        device_id=other_device.id,
     )
 
     with _patch_discovery(), _patch_single_discovery():
@@ -183,7 +202,7 @@ async def test_migration_device_online_end_to_end_ignores_other_devices(
         assert device.config_entries == {migrated_entry.entry_id}
         assert light_entity_reg.config_entry_id == migrated_entry.entry_id
         assert power_sensor_entity_reg.config_entry_id == migrated_entry.entry_id
-        assert ignored_entity_reg.config_entry_id == config_entry.entry_id
+        assert ignored_entity_reg.config_entry_id == other_domain_config_entry.entry_id
         assert garbage_entity_reg.config_entry_id == config_entry.entry_id
 
         assert er.async_entries_for_config_entry(entity_reg, config_entry) == []
