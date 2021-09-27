@@ -20,7 +20,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, CURRENCY_DOLLAR, ENERGY_KILO_WATT_HOUR
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -35,6 +35,8 @@ ICONS = {
     "controlled_load": "mdi:clock-outline",
     "feed_in": "mdi:solar-power",
 }
+
+UNIT = f"{CURRENCY_DOLLAR}/{ENERGY_KILO_WATT_HOUR}"
 
 
 def friendly_channel_type(channel_type: str) -> str:
@@ -204,7 +206,7 @@ async def async_setup_entry(
         description = SensorEntityDescription(
             key="current",
             name=f"{entry.title} - {friendly_channel_type(channel_type)} Price",
-            native_unit_of_measurement="AUD/kWh",
+            native_unit_of_measurement=UNIT,
             state_class=STATE_CLASS_MEASUREMENT,
             icon=ICONS[channel_type],
         )
@@ -214,7 +216,7 @@ async def async_setup_entry(
         description = SensorEntityDescription(
             key="forecasts",
             name=f"{entry.title} - {friendly_channel_type(channel_type)} Forecast",
-            native_unit_of_measurement="AUD/kWh",
+            native_unit_of_measurement=UNIT,
             state_class=STATE_CLASS_MEASUREMENT,
             icon=ICONS[channel_type],
         )
