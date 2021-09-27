@@ -250,10 +250,7 @@ class SensorFilter(SensorEntity):
         ):
             self._device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
 
-        if (
-            self._attr_state_class is None
-            and new_state.attributes.get(ATTR_STATE_CLASS) is not None
-        ):
+        if self._attr_state_class is None:
             self._attr_state_class = new_state.attributes.get(ATTR_STATE_CLASS)
 
         if self._unit_of_measurement is None:
