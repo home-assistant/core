@@ -63,49 +63,48 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
 
     def update(self) -> dict[str, dict[str, Any]]:
         """Update callback."""
+
+        result: dict[str, dict[str, Any]] = {
+            "current": {},
+            "forecasts": {},
+            "grid": {},
+        }
         try:
-            result: dict[str, dict[str, Any]] = {
-                "current": {},
-                "forecasts": {},
-                "grid": {},
-            }
-
             data = self._api.get_current_price(self.site_id, next=48)
-
-            current = [interval for interval in data if is_current(interval)]
-            forecasts = [interval for interval in data if is_forecast(interval)]
-            general = [interval for interval in current if is_general(interval)]
-
-            if len(general) == 0:
-                raise UpdateFailed("No general channel configured")
-
-            result["current"]["general"] = general[0]
-            result["forecasts"]["general"] = [
-                interval for interval in forecasts if is_general(interval)
-            ]
-            result["grid"]["renewables"] = round(general[0].renewables)
-
-            controlled_load = [
-                interval for interval in current if is_controlled_load(interval)
-            ]
-            if controlled_load:
-                result["current"]["controlled_load"] = controlled_load[0]
-                result["forecasts"]["controlled_load"] = [
-                    interval for interval in forecasts if is_controlled_load(interval)
-                ]
-
-            feed_in = [interval for interval in current if is_feed_in(interval)]
-            if feed_in:
-                result["current"]["feed_in"] = feed_in[0]
-                result["forecasts"]["feed_in"] = [
-                    interval for interval in forecasts if is_feed_in(interval)
-                ]
-
-            LOGGER.debug("Fetched new Amber data: %s", data)
-            return result
-
         except ApiException as api_exception:
             raise UpdateFailed("Missing price data, skipping update") from api_exception
+
+        current = [interval for interval in data if is_current(interval)]
+        forecasts = [interval for interval in data if is_forecast(interval)]
+        general = [interval for interval in current if is_general(interval)]
+
+        if len(general) == 0:
+            raise UpdateFailed("No general channel configured")
+
+        result["current"]["general"] = general[0]
+        result["forecasts"]["general"] = [
+            interval for interval in forecasts if is_general(interval)
+        ]
+        result["grid"]["renewables"] = round(general[0].renewables)
+
+        controlled_load = [
+            interval for interval in current if is_controlled_load(interval)
+        ]
+        if controlled_load:
+            result["current"]["controlled_load"] = controlled_load[0]
+            result["forecasts"]["controlled_load"] = [
+                interval for interval in forecasts if is_controlled_load(interval)
+            ]
+
+        feed_in = [interval for interval in current if is_feed_in(interval)]
+        if feed_in:
+            result["current"]["feed_in"] = feed_in[0]
+            result["forecasts"]["feed_in"] = [
+                interval for interval in forecasts if is_feed_in(interval)
+            ]
+
+        LOGGER.debug("Fetched new Amber data: %s", data)
+        return result
 
     async def async_update_data(self) -> dict[str, Any]:
         """Async update wrapper."""
