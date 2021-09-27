@@ -15,7 +15,6 @@ from amberelectric.model.current_interval import CurrentInterval
 from amberelectric.model.forecast_interval import ForecastInterval
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_MONETARY,
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
     SensorEntityDescription,
@@ -216,8 +215,7 @@ async def async_setup_entry(
         description = SensorEntityDescription(
             key="current",
             name=f"{entry.title} - {friendly_channel_type(channel_type)} Price",
-            native_unit_of_measurement="AUD",
-            device_class=DEVICE_CLASS_MONETARY,
+            native_unit_of_measurement="AUD/kWh",
             state_class=STATE_CLASS_MEASUREMENT,
             icon=ICONS[channel_type],
         )
@@ -227,8 +225,7 @@ async def async_setup_entry(
         description = SensorEntityDescription(
             key="forecasts",
             name=f"{entry.title} - {friendly_channel_type(channel_type)} Forecast",
-            native_unit_of_measurement="AUD",
-            device_class=DEVICE_CLASS_MONETARY,
+            native_unit_of_measurement="AUD/kWh",
             state_class=STATE_CLASS_MEASUREMENT,
             icon=ICONS[channel_type],
         )
