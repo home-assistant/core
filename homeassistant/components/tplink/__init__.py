@@ -1,6 +1,8 @@
 """Component to embed TP-Link smart home devices."""
 from __future__ import annotations
 
+import asyncio
+import ipaddress
 from typing import Any
 
 from kasa import SmartDevice, SmartDeviceException
@@ -8,6 +10,7 @@ from kasa.discover import Discover
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import network
 from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
@@ -79,6 +82,23 @@ def async_trigger_discovery(
         )
 
 
+async def async_get_broadcast_addresses(hass: HomeAssistant) -> set[str]:
+    """Return a set of broadcast addresses."""
+    broadcast_addresses: set[str] = {"255.255.255.255"}
+    adapters = await network.async_get_adapters(hass)
+    if network.async_only_default_interface_enabled(adapters):
+        return broadcast_addresses
+    for adapter in adapters:
+        if not adapter["enabled"]:
+            continue
+        for ip_info in adapter["ipv4"]:
+            ip_interface = ipaddress.ip_interface(
+                f"{ip_info['address']}/{ip_info['network_prefix']}"
+            )
+            broadcast_addresses.add(ip_interface.network.broadcast_address.exploded)
+    return broadcast_addresses
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the TP-Link component."""
     conf = config.get(DOMAIN)
@@ -91,10 +111,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         elif entry.unique_id:
             config_entries_by_mac[entry.unique_id] = entry
 
-    discovered_devices = {
-        dr.format_mac(device.mac): device
-        for device in (await Discover.discover()).values()
-    }
+    broadcast_addresses = await async_get_broadcast_addresses(hass)
+    tasks = [Discover.discover(target=address) for address in broadcast_addresses]
+    discovered_devices: dict[str, SmartDevice] = {}
+    for device_list in await asyncio.gather(*tasks):
+        for device in device_list.values():
+            discovered_devices[dr.format_mac(device.mac)] = device
     hosts_by_mac = {mac: device.host for mac, device in discovered_devices.items()}
 
     if legacy_entry:
