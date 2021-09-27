@@ -237,9 +237,6 @@ async def async_setup(hass, config):
 
         await async_reload_integration_platforms(hass, DOMAIN, PLATFORMS)
 
-        if DOMAIN in conf:
-            await _process_config(hass, conf)
-
         hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)
 
     hass.services.async_register(
