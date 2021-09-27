@@ -1,6 +1,7 @@
 """Test the Yeelight light."""
 import asyncio
 import logging
+import socket
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
 import pytest
@@ -505,6 +506,64 @@ async def test_services(hass: HomeAssistant, caplog):
             {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_BRIGHTNESS: 55},
             blocking=True,
         )
+    assert hass.states.get(ENTITY_LIGHT).state == STATE_OFF
+
+    mocked_bulb.async_set_brightness = AsyncMock(side_effect=socket.error)
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "light",
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_BRIGHTNESS: 55},
+            blocking=True,
+        )
+    assert hass.states.get(ENTITY_LIGHT).state == STATE_UNAVAILABLE
+
+
+async def test_update_errors(hass: HomeAssistant, caplog):
+    """Test update errors."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            **CONFIG_ENTRY_DATA,
+            CONF_MODE_MUSIC: True,
+            CONF_SAVE_ON_CHANGE: True,
+            CONF_NIGHTLIGHT_SWITCH: True,
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    mocked_bulb = _mocked_bulb()
+    with _patch_discovery(), _patch_discovery_interval(), patch(
+        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_LIGHT).state == STATE_ON
+    assert hass.states.get(ENTITY_NIGHTLIGHT).state == STATE_OFF
+
+    # Timeout usually means the bulb is overloaded with commands
+    # but will still respond eventually.
+    mocked_bulb.async_get_properties = AsyncMock(side_effect=asyncio.TimeoutError)
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT},
+        blocking=True,
+    )
+    assert hass.states.get(ENTITY_LIGHT).state == STATE_ON
+
+    # socket.error usually means the bulb dropped the connection
+    # or lost wifi, then came back online and forced the existing
+    # connection closed with a TCP RST
+    mocked_bulb.async_get_properties = AsyncMock(side_effect=socket.error)
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT},
+        blocking=True,
+    )
     assert hass.states.get(ENTITY_LIGHT).state == STATE_UNAVAILABLE
 
 

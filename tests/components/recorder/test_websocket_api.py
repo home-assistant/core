@@ -86,18 +86,9 @@ async def test_validate_statistics_supported_device_class(
     await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
     await assert_validation_result(client, {})
 
-    # No statistics, invalid state - empty response
+    # No statistics, invalid state - expect error
     hass.states.async_set(
         "sensor.test", 11, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
-    )
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
-    await assert_validation_result(client, {})
-
-    # Statistics has run, invalid state - expect error
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
-    hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
-    hass.states.async_set(
-        "sensor.test", 12, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
     )
     await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
     expected = {
@@ -112,6 +103,15 @@ async def test_validate_statistics_supported_device_class(
             }
         ],
     }
+    await assert_validation_result(client, expected)
+
+    # Statistics has run, invalid state - expect error
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
+    hass.states.async_set(
+        "sensor.test", 12, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
+    )
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
     await assert_validation_result(client, expected)
 
     # Valid state - empty response

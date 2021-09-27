@@ -492,8 +492,7 @@ class ConfigEntry:
 
         Returns True if config entry is up-to-date or has been migrated.
         """
-        handler = HANDLERS.get(self.domain)
-        if handler is None:
+        if (handler := HANDLERS.get(self.domain)) is None:
             _LOGGER.error(
                 "Flow handler not found for entry %s for %s", self.title, self.domain
             )
@@ -716,9 +715,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
             )
             raise data_entry_flow.UnknownHandler
 
-        handler = HANDLERS.get(handler_key)
-
-        if handler is None:
+        if (handler := HANDLERS.get(handler_key)) is None:
             raise data_entry_flow.UnknownHandler
 
         if not context or "source" not in context:
@@ -814,9 +811,7 @@ class ConfigEntries:
 
     async def async_remove(self, entry_id: str) -> dict[str, Any]:
         """Remove an entry."""
-        entry = self.async_get_entry(entry_id)
-
-        if entry is None:
+        if (entry := self.async_get_entry(entry_id)) is None:
             raise UnknownEntry
 
         if not entry.state.recoverable:
@@ -933,9 +928,7 @@ class ConfigEntries:
 
         Return True if entry has been successfully loaded.
         """
-        entry = self.async_get_entry(entry_id)
-
-        if entry is None:
+        if (entry := self.async_get_entry(entry_id)) is None:
             raise UnknownEntry
 
         if entry.state is not ConfigEntryState.NOT_LOADED:
@@ -957,9 +950,7 @@ class ConfigEntries:
 
     async def async_unload(self, entry_id: str) -> bool:
         """Unload a config entry."""
-        entry = self.async_get_entry(entry_id)
-
-        if entry is None:
+        if (entry := self.async_get_entry(entry_id)) is None:
             raise UnknownEntry
 
         if not entry.state.recoverable:
@@ -972,9 +963,7 @@ class ConfigEntries:
 
         If an entry was not loaded, will just load.
         """
-        entry = self.async_get_entry(entry_id)
-
-        if entry is None:
+        if (entry := self.async_get_entry(entry_id)) is None:
             raise UnknownEntry
 
         unload_result = await self.async_unload(entry_id)
@@ -991,9 +980,7 @@ class ConfigEntries:
 
         If disabled_by is changed, the config entry will be reloaded.
         """
-        entry = self.async_get_entry(entry_id)
-
-        if entry is None:
+        if (entry := self.async_get_entry(entry_id)) is None:
             raise UnknownEntry
 
         if entry.disabled_by == disabled_by:
@@ -1066,8 +1053,7 @@ class ConfigEntries:
             return False
 
         for listener_ref in entry.update_listeners:
-            listener = listener_ref()
-            if listener is not None:
+            if (listener := listener_ref()) is not None:
                 self.hass.async_create_task(listener(self.hass, entry))
 
         self._async_schedule_save()

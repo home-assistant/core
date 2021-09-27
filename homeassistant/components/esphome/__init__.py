@@ -18,6 +18,8 @@ from aioesphomeapi import (
     EntityInfo,
     EntityState,
     HomeassistantServiceCall,
+    InvalidEncryptionKeyAPIError,
+    RequiresEncryptionAPIError,
     UserService,
     UserServiceArgType,
 )
@@ -52,6 +54,7 @@ from homeassistant.helpers.template import Template
 from .entry_data import RuntimeEntryData
 
 DOMAIN = "esphome"
+CONF_NOISE_PSK = "noise_psk"
 _LOGGER = logging.getLogger(__name__)
 _T = TypeVar("_T")
 
@@ -110,6 +113,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
     password = entry.data[CONF_PASSWORD]
+    noise_psk = entry.data.get(CONF_NOISE_PSK)
     device_id = None
 
     zeroconf_instance = await zeroconf.async_get_instance(hass)
@@ -121,6 +125,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         password,
         client_info=f"Home Assistant {const.__version__}",
         zeroconf_instance=zeroconf_instance,
+        noise_psk=noise_psk,
     )
 
     domain_data = DomainData.get(hass)
@@ -399,6 +404,11 @@ class ReconnectLogic(RecordUpdateListener):
         try:
             await self._cli.connect(on_stop=self._on_disconnect, login=True)
         except APIConnectionError as error:
+            if isinstance(
+                error, (RequiresEncryptionAPIError, InvalidEncryptionKeyAPIError)
+            ):
+                self._entry.async_start_reauth(self._hass)
+
             level = logging.WARNING if tries == 0 else logging.DEBUG
             _LOGGER.log(
                 level,

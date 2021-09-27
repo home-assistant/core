@@ -306,7 +306,11 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         if state:
             self._state = Decimal(state.state)
             self._unit_of_measurement = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            self._last_period = state.attributes.get(ATTR_LAST_PERIOD)
+            self._last_period = (
+                float(state.attributes.get(ATTR_LAST_PERIOD))
+                if state.attributes.get(ATTR_LAST_PERIOD)
+                else 0
+            )
             self._last_reset = dt_util.as_utc(
                 dt_util.parse_datetime(state.attributes.get(ATTR_LAST_RESET))
             )

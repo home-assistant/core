@@ -19,8 +19,10 @@ from homeassistant.const import (
     PERCENTAGE,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import ValloxStateProxy
 from .const import DOMAIN, METRIC_KEY_MODE, MODE_ON, SIGNAL_VALLOX_STATE_UPDATE
@@ -48,7 +50,7 @@ class ValloxSensor(SensorEntity):
         self._attr_name = f"{name} {description.name}"
         self._attr_available = False
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call to update."""
         self.async_on_remove(
             async_dispatcher_connect(
@@ -57,18 +59,23 @@ class ValloxSensor(SensorEntity):
         )
 
     @callback
-    def _update_callback(self):
+    def _update_callback(self) -> None:
         """Call update method."""
         self.async_schedule_update_ha_state(True)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch state from the ventilation unit."""
-        try:
-            self._attr_native_value = self._state_proxy.fetch_metric(
-                self.entity_description.metric_key
-            )
+        metric_key = self.entity_description.metric_key
 
-        except (OSError, KeyError) as err:
+        if metric_key is None:
+            self._attr_available = False
+            _LOGGER.error("Error updating sensor. Empty metric key")
+            return
+
+        try:
+            self._attr_native_value = self._state_proxy.fetch_metric(metric_key)
+
+        except (OSError, KeyError, TypeError) as err:
             self._attr_available = False
             _LOGGER.error("Error updating sensor: %s", err)
             return
@@ -79,7 +86,7 @@ class ValloxSensor(SensorEntity):
 class ValloxProfileSensor(ValloxSensor):
     """Child class for profile reporting."""
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch state from the ventilation unit."""
         try:
             self._attr_native_value = self._state_proxy.get_profile()
@@ -92,22 +99,21 @@ class ValloxProfileSensor(ValloxSensor):
         self._attr_available = True
 
 
-# There seems to be a quirk with respect to the fan speed reporting. The device
-# keeps on reporting the last valid fan speed from when the device was in
-# regular operation mode, even if it left that state and has been shut off in
-# the meantime.
+# There seems to be a quirk with respect to the fan speed reporting. The device keeps on reporting
+# the last valid fan speed from when the device was in regular operation mode, even if it left that
+# state and has been shut off in the meantime.
 #
-# Therefore, first query the overall state of the device, and report zero
-# percent fan speed in case it is not in regular operation mode.
+# Therefore, first query the overall state of the device, and report zero percent fan speed in case
+# it is not in regular operation mode.
 class ValloxFanSpeedSensor(ValloxSensor):
     """Child class for fan speed reporting."""
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch state from the ventilation unit."""
         try:
             fan_on = self._state_proxy.fetch_metric(METRIC_KEY_MODE) == MODE_ON
 
-        except (OSError, KeyError) as err:
+        except (OSError, KeyError, TypeError) as err:
             self._attr_available = False
             _LOGGER.error("Error updating sensor: %s", err)
             return
@@ -123,26 +129,28 @@ class ValloxFanSpeedSensor(ValloxSensor):
 class ValloxFilterRemainingSensor(ValloxSensor):
     """Child class for filter remaining time reporting."""
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch state from the ventilation unit."""
-        try:
-            days_remaining = int(
-                self._state_proxy.fetch_metric(self.entity_description.metric_key)
-            )
+        await super().async_update()
 
-        except (OSError, KeyError) as err:
-            self._attr_available = False
-            _LOGGER.error("Error updating sensor: %s", err)
+        # Check if the update in the super call was a success.
+        if not self._attr_available:
             return
 
-        days_remaining_delta = timedelta(days=days_remaining)
+        if not isinstance(self._attr_native_value, (int, float)):
+            self._attr_available = False
+            _LOGGER.error(
+                "Value has unexpected type: %s", type(self._attr_native_value)
+            )
+            return
 
-        # Since only a delta of days is received from the device, fix the
-        # time so the timestamp does not change with every update.
+        # Since only a delta of days is received from the device, fix the time so the timestamp does
+        # not change with every update.
+        days_remaining = float(self._attr_native_value)
+        days_remaining_delta = timedelta(days=days_remaining)
         now = datetime.utcnow().replace(hour=13, minute=0, second=0, microsecond=0)
 
         self._attr_native_value = (now + days_remaining_delta).isoformat()
-        self._attr_available = True
 
 
 @dataclass
@@ -235,7 +243,12 @@ SENSORS: tuple[ValloxSensorEntityDescription, ...] = (
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the sensors."""
     if discovery_info is None:
         return

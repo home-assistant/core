@@ -3,7 +3,7 @@ from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import NEW_LIGHT, POWER_PLUGS, SIRENS
+from .const import DOMAIN as DECONZ_DOMAIN, NEW_LIGHT, POWER_PLUGS, SIRENS
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
@@ -15,6 +15,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """
     gateway = get_gateway_from_config_entry(hass, config_entry)
     gateway.entities[DOMAIN] = set()
+
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+
+    # Siren platform replacing sirens in switch platform added in 2021.10
+    for light in gateway.api.lights.values():
+        if light.type not in SIRENS:
+            continue
+        if entity_id := entity_registry.async_get_entity_id(
+            DOMAIN, DECONZ_DOMAIN, light.unique_id
+        ):
+            entity_registry.async_remove(entity_id)
 
     @callback
     def async_add_switch(lights=gateway.api.lights.values()):
@@ -28,11 +39,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 and light.unique_id not in gateway.entities[DOMAIN]
             ):
                 entities.append(DeconzPowerPlug(light, gateway))
-
-            elif (
-                light.type in SIRENS and light.unique_id not in gateway.entities[DOMAIN]
-            ):
-                entities.append(DeconzSiren(light, gateway))
 
         if entities:
             async_add_entities(entities)
@@ -63,22 +69,3 @@ class DeconzPowerPlug(DeconzDevice, SwitchEntity):
     async def async_turn_off(self, **kwargs):
         """Turn off switch."""
         await self._device.set_state(on=False)
-
-
-class DeconzSiren(DeconzDevice, SwitchEntity):
-    """Representation of a deCONZ siren."""
-
-    TYPE = DOMAIN
-
-    @property
-    def is_on(self):
-        """Return true if switch is on."""
-        return self._device.is_on
-
-    async def async_turn_on(self, **kwargs):
-        """Turn on switch."""
-        await self._device.turn_on()
-
-    async def async_turn_off(self, **kwargs):
-        """Turn off switch."""
-        await self._device.turn_off()

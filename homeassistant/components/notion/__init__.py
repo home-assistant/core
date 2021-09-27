@@ -11,7 +11,7 @@ from aionotion.errors import InvalidCredentialsError, NotionError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
@@ -52,12 +52,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         client = await async_get_client(
             entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD], session=session
         )
-    except InvalidCredentialsError:
-        LOGGER.error("Invalid username and/or password")
-        return False
+    except InvalidCredentialsError as err:
+        raise ConfigEntryAuthFailed("Invalid username and/or password") from err
     except NotionError as err:
-        LOGGER.error("Config entry failed: %s", err)
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady("Config entry failed to load") from err
 
     async def async_update() -> dict[str, dict[str, Any]]:
         """Get the latest data from the Notion API."""
@@ -70,14 +68,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         results = await asyncio.gather(*tasks.values(), return_exceptions=True)
         for attr, result in zip(tasks, results):
+            if isinstance(result, InvalidCredentialsError):
+                raise ConfigEntryAuthFailed(
+                    "Invalid username and/or password"
+                ) from result
             if isinstance(result, NotionError):
                 raise UpdateFailed(
                     f"There was a Notion error while updating {attr}: {result}"
-                )
+                ) from result
             if isinstance(result, Exception):
                 raise UpdateFailed(
                     f"There was an unknown error while updating {attr}: {result}"
-                )
+                ) from result
 
             for item in result:
                 if attr == "bridges" and item["id"] not in data["bridges"]:

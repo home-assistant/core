@@ -164,8 +164,8 @@ UPDATE_REQUEST_PROPERTIES = [
     "active_mode",
 ]
 
-BULB_NETWORK_EXCEPTIONS = (socket.error, asyncio.TimeoutError)
-BULB_EXCEPTIONS = (BulbException, *BULB_NETWORK_EXCEPTIONS)
+BULB_NETWORK_EXCEPTIONS = (socket.error,)
+BULB_EXCEPTIONS = (BulbException, asyncio.TimeoutError, *BULB_NETWORK_EXCEPTIONS)
 
 
 PLATFORMS = ["binary_sensor", "light"]
@@ -303,17 +303,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    data_config_entries = hass.data[DOMAIN][DATA_CONFIG_ENTRIES]
-    entry_data = data_config_entries[entry.entry_id]
-
-    if entry_data[DATA_PLATFORMS_LOADED]:
-        if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-            return False
-
     if entry.data.get(CONF_ID):
         # discovery
         scanner = YeelightScanner.async_get(hass)
         scanner.async_unregister_callback(entry.data[CONF_ID])
+
+    data_config_entries = hass.data[DOMAIN][DATA_CONFIG_ENTRIES]
+    if entry.entry_id not in data_config_entries:
+        # Device not online
+        return True
+
+    entry_data = data_config_entries[entry.entry_id]
+    unload_ok = True
+    if entry_data[DATA_PLATFORMS_LOADED]:
+        unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if DATA_DEVICE in entry_data:
         device = entry_data[DATA_DEVICE]
@@ -322,8 +325,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.debug("Yeelight Listener stopped")
 
     data_config_entries.pop(entry.entry_id)
-
-    return True
+    return unload_ok
 
 
 @callback
@@ -612,9 +614,6 @@ class YeelightDevice:
     @property
     def is_nightlight_enabled(self) -> bool:
         """Return true / false if nightlight is currently enabled."""
-        if self.bulb is None:
-            return False
-
         # Only ceiling lights have active_mode, from SDK docs:
         # active_mode 0: daylight mode / 1: moonlight mode (ceiling light only)
         if self._active_mode is not None:
@@ -652,23 +651,22 @@ class YeelightDevice:
 
     async def _async_update_properties(self):
         """Read new properties from the device."""
-        if not self.bulb:
-            return
-
         try:
             await self.bulb.async_get_properties(UPDATE_REQUEST_PROPERTIES)
             self._available = True
             if not self._initialized:
                 self._initialized = True
                 async_dispatcher_send(self._hass, DEVICE_INITIALIZED.format(self._host))
-        except BULB_EXCEPTIONS as ex:
+        except BULB_NETWORK_EXCEPTIONS as ex:
             if self._available:  # just inform once
                 _LOGGER.error(
                     "Unable to update device %s, %s: %s", self._host, self.name, ex
                 )
             self._available = False
-
-        return self._available
+        except BULB_EXCEPTIONS as ex:
+            _LOGGER.debug(
+                "Unable to update device %s, %s: %s", self._host, self.name, ex
+            )
 
     async def async_setup(self):
         """Fetch capabilities and setup name if available."""

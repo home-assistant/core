@@ -109,9 +109,8 @@ async def async_setup_hass(
 
     config_dict = None
     basic_setup_success = False
-    safe_mode = runtime_config.safe_mode
 
-    if not safe_mode:
+    if not (safe_mode := runtime_config.safe_mode):
         await hass.async_add_executor_job(conf_util.process_ha_config_upgrade, hass)
 
         try:
@@ -368,8 +367,7 @@ async def async_mount_local_lib_path(config_dir: str) -> str:
     This function is a coroutine.
     """
     deps_dir = os.path.join(config_dir, "deps")
-    lib_dir = await async_get_user_site(deps_dir)
-    if lib_dir not in sys.path:
+    if (lib_dir := await async_get_user_site(deps_dir)) not in sys.path:
         sys.path.insert(0, lib_dir)
     return deps_dir
 
@@ -494,17 +492,13 @@ async def _async_set_up_integrations(
 
     _LOGGER.info("Domains to be set up: %s", domains_to_setup)
 
-    logging_domains = domains_to_setup & LOGGING_INTEGRATIONS
-
     # Load logging as soon as possible
-    if logging_domains:
+    if logging_domains := domains_to_setup & LOGGING_INTEGRATIONS:
         _LOGGER.info("Setting up logging: %s", logging_domains)
         await async_setup_multi_components(hass, logging_domains, config)
 
     # Start up debuggers. Start these first in case they want to wait.
-    debuggers = domains_to_setup & DEBUGGER_INTEGRATIONS
-
-    if debuggers:
+    if debuggers := domains_to_setup & DEBUGGER_INTEGRATIONS:
         _LOGGER.debug("Setting up debuggers: %s", debuggers)
         await async_setup_multi_components(hass, debuggers, config)
 
@@ -524,9 +518,7 @@ async def _async_set_up_integrations(
 
             stage_1_domains.add(domain)
 
-            dep_itg = integration_cache.get(domain)
-
-            if dep_itg is None:
+            if (dep_itg := integration_cache.get(domain)) is None:
                 continue
 
             deps_promotion.update(dep_itg.all_dependencies)

@@ -153,6 +153,10 @@ async def test_report_state(hass, aioclient_mock, hass_storage):
     await config.async_connect_agent_user(agent_user_id)
     message = {"devices": {}}
 
+    with patch.object(config, "async_call_homegraph_api"):
+        # Wait for google_assistant.helpers.async_initialize.sync_google to be called
+        await hass.async_block_till_done()
+
     with patch.object(config, "async_call_homegraph_api") as mock_call:
         await config.async_report_state(message, agent_user_id)
         mock_call.assert_called_once_with(

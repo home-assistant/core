@@ -29,6 +29,7 @@ homeassistant/components/aemet/* @noltari
 homeassistant/components/agent_dvr/* @ispysoftware
 homeassistant/components/airly/* @bieniu
 homeassistant/components/airnow/* @asymworks
+homeassistant/components/airthings/* @danielhiversen
 homeassistant/components/airtouch4/* @LonePurpleWolf
 homeassistant/components/airvisual/* @bachya
 homeassistant/components/alarmdecoder/* @ajschmidt8
@@ -133,6 +134,7 @@ homeassistant/components/ecobee/* @marthoc
 homeassistant/components/econet/* @vangorra @w1ll1am23
 homeassistant/components/ecovacs/* @OverloadUT
 homeassistant/components/edl21/* @mtdcr
+homeassistant/components/efergy/* @tkdrob
 homeassistant/components/egardia/* @jeroenterheerdt
 homeassistant/components/eight_sleep/* @mezz64
 homeassistant/components/elgato/* @frenck
@@ -503,7 +505,7 @@ homeassistant/components/supla/* @mwegrzynek
 homeassistant/components/surepetcare/* @benleb @danielhiversen
 homeassistant/components/swiss_hydrological_data/* @fabaff
 homeassistant/components/swiss_public_transport/* @fabaff
-homeassistant/components/switchbot/* @danielhiversen
+homeassistant/components/switchbot/* @danielhiversen @RenierM26
 homeassistant/components/switcher_kis/* @tomerfi @thecode
 homeassistant/components/switchmate/* @danielhiversen
 homeassistant/components/syncthing/* @zhulik
@@ -574,6 +576,7 @@ homeassistant/components/wake_on_lan/* @ntilley905
 homeassistant/components/wallbox/* @hesselonline
 homeassistant/components/waqi/* @andrey-git
 homeassistant/components/watson_tts/* @rutkai
+homeassistant/components/watttime/* @bachya
 homeassistant/components/weather/* @fabaff
 homeassistant/components/webostv/* @bendavid @thecode
 homeassistant/components/websocket_api/* @home-assistant/core

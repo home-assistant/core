@@ -366,9 +366,7 @@ async def async_process_deps_reqs(
 
     Module is a Python module of either a component or platform.
     """
-    processed = hass.data.get(DATA_DEPS_REQS)
-
-    if processed is None:
+    if (processed := hass.data.get(DATA_DEPS_REQS)) is None:
         processed = hass.data[DATA_DEPS_REQS] = set()
     elif integration.domain in processed:
         return
