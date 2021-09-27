@@ -36,7 +36,6 @@ async def test_color_light(hass: HomeAssistant) -> None:
     with _patch_discovery(device=bulb), _patch_single_discovery(device=bulb):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
-        await hass.async_block_till_done()
 
     entity_id = "light.my_bulb"
 
@@ -115,7 +114,6 @@ async def test_color_temp_light(hass: HomeAssistant, is_color: bool) -> None:
     with _patch_discovery(device=bulb), _patch_single_discovery(device=bulb):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
-        await hass.async_block_till_done()
 
     entity_id = "light.my_bulb"
 
@@ -179,7 +177,6 @@ async def test_brightness_only_light(hass: HomeAssistant) -> None:
     with _patch_discovery(device=bulb), _patch_single_discovery(device=bulb):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
-        await hass.async_block_till_done()
 
     entity_id = "light.my_bulb"
 
@@ -225,7 +222,6 @@ async def test_on_off_light(hass: HomeAssistant) -> None:
     with _patch_discovery(device=bulb), _patch_single_discovery(device=bulb):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
-        await hass.async_block_till_done()
 
     entity_id = "light.my_bulb"
 
@@ -260,7 +256,6 @@ async def test_off_at_start_light(hass: HomeAssistant) -> None:
 
     with _patch_discovery(device=bulb), _patch_single_discovery(device=bulb):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
-        await hass.async_block_till_done()
         await hass.async_block_till_done()
 
     entity_id = "light.my_bulb"

@@ -4,6 +4,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from kasa import SmartDevice
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -28,7 +30,6 @@ from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import CoordinatedTPLinkEntity, async_refresh_after
 
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -48,6 +49,15 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     """Representation of a TPLink Smart Bulb."""
 
     coordinator: TPLinkDataUpdateCoordinator
+
+    def __init__(
+        self,
+        device: SmartDevice,
+        coordinator: TPLinkDataUpdateCoordinator,
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(device, coordinator)
+        self._attr_unique_id = self.device.mac
 
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
