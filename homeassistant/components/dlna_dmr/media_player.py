@@ -93,7 +93,7 @@ def catch_request_errors(func: Func) -> Func:
             return await func(self, *args, **kwargs)
         except UpnpError as err:
             self.check_available = True
-            _LOGGER.error("Error during call %s: %s(%s)", func.__name__, type(err), err)
+            _LOGGER.error("Error during call %s: %r", func.__name__, err)
 
     return cast(Func, wrapper)
 
@@ -176,7 +176,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
             try:
                 await self._device_connect(self.location)
             except UpnpError as err:
-                _LOGGER.debug("Couldn't connect immediately: %s", err)
+                _LOGGER.debug("Couldn't connect immediately: %r", err)
 
         # Get SSDP notifications for only this device
         self._remove_ssdp_callbacks.append(
@@ -249,7 +249,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
                 await self._device_connect(location)
             except UpnpError as err:
                 _LOGGER.warning(
-                    "Failed connecting to recently alive device at %s: %s",
+                    "Failed connecting to recently alive device at %s: %r",
                     location,
                     err,
                 )
@@ -289,7 +289,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         try:
             await self._device_connect(self.location)
         except UpnpError as err:
-            _LOGGER.warning("Couldn't (re)connect after config change: %s", err)
+            _LOGGER.warning("Couldn't (re)connect after config change: %r", err)
 
         # Device was de/re-connected, state might have changed
         self.schedule_update_ha_state()
@@ -330,7 +330,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
                 self._device.on_event = None
                 self._device = None
                 await domain_data.async_release_event_notifier(self._event_addr)
-                _LOGGER.debug("Error while subscribing during device connect: %s", err)
+                _LOGGER.debug("Error while subscribing during device connect: %r", err)
                 raise
 
         if (
