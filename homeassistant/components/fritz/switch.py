@@ -218,18 +218,18 @@ def port_entities_list(
 
         # We can only handle port forwards of the given device
         if portmap["NewInternalClient"] == local_ip:
-            port_desc = portmap["NewPortMappingDescription"]
+            port_name = portmap["NewPortMappingDescription"]
             for entity in entities_list:
                 if entity.port_mapping and (
-                    port_desc in entity.port_mapping["NewPortMappingDescription"]
+                    port_name in entity.port_mapping["NewPortMappingDescription"]
                 ):
-                    port_desc = f"{port_desc} {portmap['NewExternalPort']}"
+                    port_name = f"{port_name} {portmap['NewExternalPort']}"
             entities_list.append(
                 FritzBoxPortSwitch(
                     fritzbox_tools,
                     device_friendly_name,
                     portmap,
-                    port_desc,
+                    port_name,
                     i,
                     con_type,
                 )
