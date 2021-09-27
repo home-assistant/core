@@ -1,6 +1,8 @@
 """Support for Aussie Broadband metric sensors."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.sensor import (
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
@@ -119,7 +121,9 @@ async def async_setup_entry(
 class AussieBroadandSensorEntity(CoordinatorEntity, SensorEntity):
     """Base class for Aussie Broadband metric sensors."""
 
-    def __init__(self, service: dict[str, Any], description: SensorEntityDescription) -> None:
+    def __init__(
+        self, service: dict[str, Any], description: SensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(service["coordinator"])
         self.entity_description = description

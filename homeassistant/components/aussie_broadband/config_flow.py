@@ -27,10 +27,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.data: dict = {}
         self.options: dict = {CONF_SERVICES: []}
-        self.services: list[dict[str, Any]] | None = None
+        self.services: list[dict[str]] = []
         self.client: AussieBB | None = None
 
-    async def auth(self, user_input: dict[str, str]) -> bool | dict[str, str]:
+    async def auth(self, user_input: dict[str, str]) -> dict[str, str]:
         """Reusable Auth Helper."""
         self.client = AussieBB(
             user_input[CONF_USERNAME],
@@ -38,7 +38,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             async_get_clientsession(self.hass),
         )
         try:
-            return await self.client.login()
+            await self.client.login()
+            return {}
         except AuthenticationException:
             return {"base": "invalid_auth"}
         except ClientError:
@@ -48,15 +49,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        errors = None
+        errors: dict[str, str] = {}
         if user_input is not None:
-            result = await self.auth(user_input)
-            if result is True:
+            errors = await self.auth(user_input)
+            if errors == {}:
                 await self.async_set_unique_id(user_input[CONF_USERNAME])
                 self._abort_if_unique_id_configured()
 
                 self.data = user_input
-                self.services = await self.client.get_services()
+                self.services = await self.client.get_services()  # type: ignore[union-attr]
 
                 if not self.services:
                     return self.async_abort(reason="no_services_found")
@@ -70,7 +71,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 # Account has more than one service, select service to add
                 return await self.async_step_service()
-            errors = result
 
         return self.async_show_form(
             step_id="user",
@@ -108,7 +108,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle reauth."""
-        errors = None
+        errors: dict[str, str] = {}
         if user_input and user_input.get(CONF_USERNAME):
             self._reauth_username = user_input[CONF_USERNAME]
 
@@ -118,8 +118,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: user_input[CONF_PASSWORD],
             }
 
-            result = await self.auth(data)
-            if result is True:
+            errors = await self.auth(data)
+            if errors == {}:
                 entry = await self.async_set_unique_id(self._reauth_username)
                 if entry:
                     self.hass.config_entries.async_update_entry(
@@ -129,7 +129,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     await self.hass.config_entries.async_reload(entry.entry_id)
                     return self.async_abort(reason="reauth_successful")
                 return self.async_create_entry(title=self._reauth_username, data=data)
-            errors = result
 
         return self.async_show_form(
             step_id="reauth",
