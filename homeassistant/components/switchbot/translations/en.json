@@ -13,9 +13,9 @@
 
             "user": {
                 "data": {
+                    "mac": "Mac",
                     "name": "Name",
-                    "password": "Password",
-                    "mac": "Mac"
+                    "password": "Password"
                 },
                 "title": "Setup Switchbot device"
             }
