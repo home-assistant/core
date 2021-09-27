@@ -65,4 +65,5 @@ async def async_remove_clients(controllers, data) -> None:
 
             clients_to_remove.append(client.mac)
 
-        await controller.api.clients.remove_clients(macs=clients_to_remove)
+        if clients_to_remove:
+            await controller.api.clients.remove_clients(macs=clients_to_remove)
