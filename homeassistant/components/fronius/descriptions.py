@@ -70,6 +70,7 @@ INVERTER_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         device_class=DEVICE_CLASS_CURRENT,
         state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:current-dc",
     ),
     "current_dc_2": SensorEntityDescription(
         key="current_dc_2",
@@ -77,6 +78,7 @@ INVERTER_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         device_class=DEVICE_CLASS_CURRENT,
         state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:current-dc",
     ),
     "power_ac": SensorEntityDescription(
         key="power_ac",
@@ -98,6 +100,7 @@ INVERTER_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=DEVICE_CLASS_VOLTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:current-dc",
     ),
     "voltage_dc_2": SensorEntityDescription(
         key="voltage_dc_2",
@@ -105,6 +108,7 @@ INVERTER_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=DEVICE_CLASS_VOLTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:current-dc",
     ),
 }
 
@@ -434,6 +438,7 @@ STORAGE_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         device_class=DEVICE_CLASS_CURRENT,
         state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:current-dc",
     ),
     "voltage_dc": SensorEntityDescription(
         key="voltage_dc",
@@ -441,6 +446,7 @@ STORAGE_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=DEVICE_CLASS_VOLTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:current-dc",
     ),
     "voltage_dc_maximum_cell": SensorEntityDescription(
         key="voltage_dc_maximum_cell",
@@ -448,6 +454,7 @@ STORAGE_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=DEVICE_CLASS_VOLTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:current-dc",
     ),
     "voltage_dc_minimum_cell": SensorEntityDescription(
         key="voltage_dc_minimum_cell",
@@ -455,6 +462,7 @@ STORAGE_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=DEVICE_CLASS_VOLTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:current-dc",
     ),
     "state_of_charge": SensorEntityDescription(
         key="state_of_charge",
