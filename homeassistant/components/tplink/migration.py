@@ -5,16 +5,19 @@ from datetime import datetime
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_NAME,
+    EVENT_HOMEASSISTANT_STARTED,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_DIMMER, CONF_LIGHT, CONF_STRIP, CONF_SWITCH, DOMAIN
 
 MAC_ADDRESS_LEN = 17
-CLEANUP_DELAY = 60
 
 
 async def async_cleanup_legacy_entry(
@@ -66,7 +69,7 @@ def async_migrate_legacy_entries(
     async def _async_cleanup_legacy_entry(_now: datetime) -> None:
         await async_cleanup_legacy_entry(hass, legacy_entry.entry_id)
 
-    async_call_later(hass, CLEANUP_DELAY, _async_cleanup_legacy_entry)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_cleanup_legacy_entry)
 
 
 @callback

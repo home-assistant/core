@@ -1,28 +1,16 @@
 """Test the tplink config flow."""
-from datetime import timedelta
 
 from homeassistant import setup
 from homeassistant.components.tplink import CONF_DISCOVERY, CONF_SWITCH, DOMAIN
-from homeassistant.components.tplink.migration import CLEANUP_DELAY
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
-from homeassistant.util import dt as dt_util
 
-from . import (
-    ALIAS,
-    IP_ADDRESS,
-    MAC_ADDRESS,
-    MODEL,
-    _patch_discovery,
-    _patch_single_discovery,
-)
+from . import ALIAS, IP_ADDRESS, MAC_ADDRESS, _patch_discovery, _patch_single_discovery
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
-DEVICE_ID = f"{ALIAS} {MODEL} ({IP_ADDRESS}) {MAC_ADDRESS}"
+from tests.common import MockConfigEntry
 
 
 async def test_migration_device_online_end_to_end(
@@ -70,9 +58,7 @@ async def test_migration_device_online_end_to_end(
         assert power_sensor_entity_reg.config_entry_id == migrated_entry.entry_id
         assert er.async_entries_for_config_entry(entity_reg, config_entry) == []
 
-        async_fire_time_changed(
-            hass, dt_util.utcnow() + timedelta(seconds=CLEANUP_DELAY + 5)
-        )
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
         legacy_entry = None
@@ -126,9 +112,7 @@ async def test_migration_device_online_end_to_end_after_downgrade(
         assert power_sensor_entity_reg.config_entry_id == config_entry.entry_id
         assert er.async_entries_for_config_entry(entity_reg, config_entry) == []
 
-        async_fire_time_changed(
-            hass, dt_util.utcnow() + timedelta(seconds=CLEANUP_DELAY + 5)
-        )
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
         legacy_entry = None
@@ -204,9 +188,7 @@ async def test_migration_device_online_end_to_end_ignores_other_devices(
 
         assert er.async_entries_for_config_entry(entity_reg, config_entry) == []
 
-        async_fire_time_changed(
-            hass, dt_util.utcnow() + timedelta(seconds=CLEANUP_DELAY + 5)
-        )
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
         legacy_entry = None
