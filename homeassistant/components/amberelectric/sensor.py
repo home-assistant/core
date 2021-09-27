@@ -62,9 +62,11 @@ class AmberSensor(CoordinatorEntity, SensorEntity):
         self.channel_type = channel_type
 
     @property
-    def unique_id(self) -> str | None:
+    def unique_id(self) -> None:
         """Return a unique id for each sensors."""
-        return f"{self.site_id}-{self.entity_description.key}-{self.channel_type}"
+        self._attr_unique_id = (
+            f"{self.site_id}-{self.entity_description.key}-{self.channel_type}"
+        )
 
     @property
     def icon(self):
