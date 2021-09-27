@@ -313,7 +313,7 @@ def main() -> int:
     )
 
     fault_file_name = os.path.join(config_dir, FAULT_LOG_FILENAME)
-    with open(fault_file_name, mode="a") as fault_file:
+    with open(fault_file_name, mode="a", encoding="utf8") as fault_file:
         faulthandler.enable(fault_file)
         exit_code = runner.run(runtime_conf)
         faulthandler.disable()
