@@ -589,9 +589,9 @@ class Recorder(threading.Thread):
         self.queue.put(ClearStatisticsTask(statistic_ids))
 
     @callback
-    def async_update_statistics_metadata(self, statistic_id, entity_id):
+    def async_update_statistics_metadata(self, statistic_id, unit_of_measurement):
         """Update statistics metadata for a statistic_id."""
-        self.queue.put(UpdateStatisticsMetadataTask(statistic_id, entity_id))
+        self.queue.put(UpdateStatisticsMetadataTask(statistic_id, unit_of_measurement))
 
     @callback
     def _async_setup_periodic_tasks(self):
