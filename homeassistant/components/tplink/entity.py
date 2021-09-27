@@ -12,10 +12,10 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
 
-F = TypeVar("F", bound=Callable[..., Any])
+WrapFuncType = TypeVar("WrapFuncType", bound=Callable[..., Any])
 
 
-def async_refresh_after(func: F) -> F:
+def async_refresh_after(func: WrapFuncType) -> WrapFuncType:
     """Define a wrapper to refresh after."""
 
     async def _async_wrap(
@@ -24,7 +24,7 @@ def async_refresh_after(func: F) -> F:
         await func(self, *args, **kwargs)
         await self.coordinator.async_request_refresh_without_children()
 
-    return cast(F, _async_wrap)
+    return cast(WrapFuncType, _async_wrap)
 
 
 class CoordinatedTPLinkEntity(CoordinatorEntity):
