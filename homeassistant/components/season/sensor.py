@@ -12,10 +12,9 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import CONF_NAME, CONF_TYPE, TIME_DAYS
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
-from homeassistant.util.dt import as_local, utcnow, get_time_zone
+from homeassistant.util.dt import as_local, get_time_zone, utcnow
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,15 +74,18 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=ENTITY_SEASON,
         name="Season",
         icon=SEASON_ICONS[STATE_NONE],
+        device_class= DEVICE_CLASS_SEASON,
     ),
     SensorEntityDescription(
         key=ENTITY_DAYS_LEFT,
         name="Days Left",
+        native_unit_of_measurement  = TIME_DAYS
         icon=SEASON_ICONS[ENTITY_DAYS_LEFT],
     ),
     SensorEntityDescription(
         key=ENTITY_DAYS_IN,
         name="Days In",
+        native_unit_of_measurement  = TIME_DAYS
         icon=SEASON_ICONS[ENTITY_DAYS_IN],
     ),
     SensorEntityDescription(
@@ -117,7 +119,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         _LOGGER.warning(
             "Time zone not set in Home Assistant configuration, UTC will be returned"
         )
-        
+
     if latitude < 0:
         hemisphere = SOUTHERN
     elif latitude > 0:
@@ -174,9 +176,6 @@ class Season(SensorEntity):
                 self._attr_extra_state_attributes = {
                     ATTR_LAST_UPDATED: self.season_data.data[ATTR_LAST_UPDATED]
                 }
-                self._attr_device_class = DEVICE_CLASS_SEASON
-            if self.entity_description.key in (ENTITY_DAYS_LEFT, ENTITY_DAYS_IN):
-                self._attr_native_unit_of_measurement  = TIME_DAYS
 
 
 class SeasonData:
@@ -248,14 +247,14 @@ def get_season(self):
             next_date = winter_start
 
         if time_zone is not None:
-            next_date = as_local(next_date.replace(tzinfo=get_time_zone('UTC')))
+            next_date = as_local(next_date.replace(tzinfo=get_time_zone("UTC")))
     else:
         season = STATE_NONE
         days_left = STATE_NONE
         days_in = STATE_NONE
         next_date = STATE_NONE
 
-    last_update = as_local(date.replace(tzinfo=get_time_zone('UTC')))
+    last_update = as_local(date.replace(tzinfo=get_time_zone("UTC")))
 
     # If user is located in the southern hemisphere swap the season
     if hemisphere == SOUTHERN:
