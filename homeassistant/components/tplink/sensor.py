@@ -85,12 +85,10 @@ async def async_setup_entry(
     coordinator: TPLinkDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     device = coordinator.device
     async_add_entities(
-        [
-            SmartPlugSensor(device, coordinator, description)
-            for description in ENERGY_SENSORS
-            if device.has_emeter
-            and coordinator.data[CONF_EMETER_PARAMS].get(description.key) is not None
-        ]
+        SmartPlugSensor(device, coordinator, description)
+        for description in ENERGY_SENSORS
+        if device.has_emeter
+        and coordinator.data[CONF_EMETER_PARAMS].get(description.key) is not None
     )
 
 
