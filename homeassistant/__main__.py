@@ -11,6 +11,8 @@ import threading
 
 from homeassistant.const import REQUIRED_PYTHON_VER, RESTART_EXIT_CODE, __version__
 
+FAULT_LOG_FILENAME = "home-assistant.log.fault"
+
 
 def validate_python() -> None:
     """Validate that the right Python version is running."""
@@ -263,8 +265,6 @@ def main() -> int:
     """Start Home Assistant."""
     validate_python()
 
-    faulthandler.enable()
-
     # Run a simple daemon runner process on Windows to handle restarts
     if os.name == "nt" and "--runner" not in sys.argv:
         nt_args = cmdline() + ["--runner"]
@@ -312,11 +312,15 @@ def main() -> int:
         open_ui=args.open_ui,
     )
 
-    exit_code = runner.run(runtime_conf)
-    if exit_code == RESTART_EXIT_CODE and not args.runner:
-        try_to_restart()
+    with open(os.path.join(config_dir, FAULT_LOG_FILENAME), mode="w") as fault_file:
+        faulthandler.enable(fault_file)
+        exit_code = runner.run(runtime_conf)
+        faulthandler.disable()
 
-    return exit_code
+        if exit_code == RESTART_EXIT_CODE and not args.runner:
+            try_to_restart()
+
+        return exit_code
 
 
 if __name__ == "__main__":
