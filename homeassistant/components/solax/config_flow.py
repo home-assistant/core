@@ -49,8 +49,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         try:
-            serial = await validate_api(user_input)
-            return self.async_create_entry(title=serial, data=user_input)
+            serial_number = await validate_api(user_input)
+            return self.async_create_entry(title=serial_number, data=user_input)
         except (ConnectionError, DiscoveryError):
             errors["base"] = "cannot_connect"
         except Exception:  # pylint: disable=broad-except

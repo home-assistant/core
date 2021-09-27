@@ -5,9 +5,9 @@
         "title": "Solax Inverter Connection",
         "description": "Please enter the connection details",
         "data": {
-          "ip_address": "IP Address",
-          "port": "Port",
-          "password": "Password"
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
