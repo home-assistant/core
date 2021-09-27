@@ -267,7 +267,7 @@ async def test_clear_statistics(hass, hass_ws_client):
     await hass.async_add_executor_job(trigger_db_commit, hass)
     await hass.async_block_till_done()
 
-    hass.data[DATA_INSTANCE].do_adhoc_statistics(period="hourly", start=now)
+    hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
     await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
 
     client = await hass_ws_client()
@@ -276,6 +276,7 @@ async def test_clear_statistics(hass, hass_ws_client):
             "id": 1,
             "type": "history/statistics_during_period",
             "start_time": now.isoformat(),
+            "period": "5minute",
         }
     )
     response = await client.receive_json()
@@ -285,7 +286,7 @@ async def test_clear_statistics(hass, hass_ws_client):
             {
                 "statistic_id": "sensor.test1",
                 "start": now.isoformat(),
-                "end": (now + timedelta(hours=1)).isoformat(),
+                "end": (now + timedelta(minutes=5)).isoformat(),
                 "mean": approx(value),
                 "min": approx(value),
                 "max": approx(value),
@@ -300,7 +301,7 @@ async def test_clear_statistics(hass, hass_ws_client):
             {
                 "statistic_id": "sensor.test2",
                 "start": now.isoformat(),
-                "end": (now + timedelta(hours=1)).isoformat(),
+                "end": (now + timedelta(minutes=5)).isoformat(),
                 "mean": approx(value * 2),
                 "min": approx(value * 2),
                 "max": approx(value * 2),
@@ -315,7 +316,7 @@ async def test_clear_statistics(hass, hass_ws_client):
             {
                 "statistic_id": "sensor.test3",
                 "start": now.isoformat(),
-                "end": (now + timedelta(hours=1)).isoformat(),
+                "end": (now + timedelta(minutes=5)).isoformat(),
                 "mean": approx(value * 3),
                 "min": approx(value * 3),
                 "max": approx(value * 3),
@@ -346,6 +347,7 @@ async def test_clear_statistics(hass, hass_ws_client):
             "id": 3,
             "type": "history/statistics_during_period",
             "start_time": now.isoformat(),
+            "period": "5minute",
         }
     )
     response = await client.receive_json()
@@ -369,6 +371,7 @@ async def test_clear_statistics(hass, hass_ws_client):
             "id": 5,
             "type": "history/statistics_during_period",
             "start_time": now.isoformat(),
+            "period": "5minute",
         }
     )
     response = await client.receive_json()
