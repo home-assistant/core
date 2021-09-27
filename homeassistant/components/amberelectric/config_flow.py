@@ -65,6 +65,7 @@ class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
+            description_placeholders={"api_url": API_URL},
             data_schema=vol.Schema(
                 {
                     vol.Required(
