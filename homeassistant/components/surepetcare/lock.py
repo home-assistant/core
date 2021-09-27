@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any
 
 from surepy.entities import SurepyEntity
 from surepy.enums import EntityType, LockState
@@ -29,25 +29,26 @@ async def async_setup_entry(
     coordinator: SurePetcareDataCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     for surepy_entity in coordinator.data.values():
-        if surepy_entity.type in [
+        if surepy_entity.type not in [
             EntityType.CAT_FLAP,
             EntityType.PET_FLAP,
         ]:
+            continue
 
-            for lock_state in (
-                LockState.LOCKED_IN,
-                LockState.LOCKED_OUT,
-                LockState.LOCKED_ALL,
-            ):
-                entities.append(
-                    SurePetcareLock(surepy_entity.id, coordinator, lock_state)
-                )
+        for lock_state in (
+            LockState.LOCKED_IN,
+            LockState.LOCKED_OUT,
+            LockState.LOCKED_ALL,
+        ):
+            entities.append(SurePetcareLock(surepy_entity.id, coordinator, lock_state))
 
     async_add_entities(entities)
 
 
 class SurePetcareLock(SurePetcareEntity, LockEntity):
     """A lock implementation for Sure Petcare Entities."""
+
+    coordinator: SurePetcareDataCoordinator
 
     def __init__(
         self,
@@ -84,8 +85,7 @@ class SurePetcareLock(SurePetcareEntity, LockEntity):
         """Lock the lock."""
         if self.state == STATE_LOCKED:
             return
-        coordinator = cast(SurePetcareDataCoordinator, self.coordinator)
-        await coordinator.lock_states_callbacks[self._lock_state](self._id)
+        await self.coordinator.lock_states_callbacks[self._lock_state](self._id)
         self._attr_is_locked = True
         self.async_write_ha_state()
 
@@ -93,7 +93,6 @@ class SurePetcareLock(SurePetcareEntity, LockEntity):
         """Unlock the lock."""
         if self.state == STATE_UNLOCKED:
             return
-        coordinator = cast(SurePetcareDataCoordinator, self.coordinator)
-        await coordinator.surepy.sac.unlock(self._id)
+        await self.coordinator.surepy.sac.unlock(self._id)
         self._attr_is_locked = False
         self.async_write_ha_state()
