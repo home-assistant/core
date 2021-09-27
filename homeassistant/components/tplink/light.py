@@ -28,7 +28,6 @@ from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import CoordinatedTPLinkEntity, async_refresh_after
 
-PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
