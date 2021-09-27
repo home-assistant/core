@@ -12,9 +12,10 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import CONF_NAME, CONF_TYPE, TIME_DAYS
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
-from homeassistant.util.dt import utcnow
+from homeassistant.util.dt import as_local, utcnow, get_time_zone
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +39,9 @@ TYPE_METEOROLOGICAL = "meteorological"
 ENTITY_SEASON = "season"
 ENTITY_DAYS_LEFT = "days_left"
 ENTITY_DAYS_IN = "days_in"
-ENTITY_NEXT_SEASON_UTC = "next_season_utc"
+ENTITY_NEXT_SEASON = "next_season"
+
+ATTR_LAST_UPDATED = "last_updated"
 
 VALID_TYPES = [
     TYPE_ASTRONOMICAL,
@@ -60,10 +63,11 @@ SEASON_ICONS = {
     STATE_WINTER: "mdi:snowflake",
     ENTITY_DAYS_LEFT: "mdi:calendar-arrow-right",
     ENTITY_DAYS_IN: "mdi:calendar-arrow-left",
-    ENTITY_NEXT_SEASON_UTC: "mdi:calendar-arrow-left",
+    ENTITY_NEXT_SEASON: "mdi:calendar-arrow-left",
 }
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(seconds=30)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=25)
 
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
@@ -83,9 +87,9 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         icon=SEASON_ICONS[ENTITY_DAYS_IN],
     ),
     SensorEntityDescription(
-        key=ENTITY_NEXT_SEASON_UTC,
-        name="Next Season Start Date",
-        icon=SEASON_ICONS[ENTITY_NEXT_SEASON_UTC],
+        key=ENTITY_NEXT_SEASON,
+        name="Next Start Date",
+        icon=SEASON_ICONS[ENTITY_NEXT_SEASON],
     ),
 )
 
@@ -104,10 +108,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
 
+    time_zone = hass.config.time_zone
     latitude = util.convert(hass.config.latitude, float)
     _type = config.get(CONF_TYPE)
     name = config.get(CONF_NAME)
 
+    if time_zone is None:
+        _LOGGER.warning(
+            "Time zone not set in Home Assistant configuration, UTC will be returned"
+        )
+        
     if latitude < 0:
         hemisphere = SOUTHERN
     elif latitude > 0:
@@ -122,7 +132,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     _LOGGER.debug(_type)
 
-    season_data = SeasonData(hemisphere, _type)
+    season_data = SeasonData(hemisphere, _type, time_zone)
 
     entities = []
     for description in SENSOR_TYPES:
@@ -150,6 +160,7 @@ class Season(SensorEntity):
         else:
             self._attr_name = f"{description.name}"
         self.season_data = season_data
+        self.datetime = None
 
     async def async_update(self):
         """Get the latest data from Season and update the state."""
@@ -160,19 +171,24 @@ class Season(SensorEntity):
                 self._attr_icon = SEASON_ICONS[
                     self.season_data.data[self.entity_description.key]
                 ]
+                self._attr_extra_state_attributes = {
+                    ATTR_LAST_UPDATED: self.season_data.data[ATTR_LAST_UPDATED]
+                }
                 self._attr_device_class = DEVICE_CLASS_SEASON
-            if  self.entity_description.key in (ENTITY_DAYS_LEFT, ENTITY_DAYS_IN):
+            if self.entity_description.key in (ENTITY_DAYS_LEFT, ENTITY_DAYS_IN):
                 self._attr_native_unit_of_measurement  = TIME_DAYS
+
 
 class SeasonData:
     """Calculate the current season."""
 
-    def __init__(self, hemisphere, _type):
+    def __init__(self, hemisphere, _type, time_zone):
         """Initialize the data object."""
 
         self.hemisphere = hemisphere
-        self.datetime = None
+        self.time_zone = time_zone
         self.type = _type
+        self.datetime = None
         self._data = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -189,6 +205,7 @@ def get_season(self):
     date = self.datetime
     hemisphere = self.hemisphere
     season_tracking_type = self.type
+    time_zone = self.time_zone
     data = {}
 
     if season_tracking_type == TYPE_ASTRONOMICAL:
@@ -229,11 +246,16 @@ def get_season(self):
             days_left = winter_start.date() - date.date()
             days_in = date.date() - autumn_start.date()
             next_date = winter_start
+
+        if time_zone is not None:
+            next_date = as_local(next_date.replace(tzinfo=get_time_zone('UTC')))
     else:
         season = STATE_NONE
         days_left = STATE_NONE
         days_in = STATE_NONE
         next_date = STATE_NONE
+
+    last_update = as_local(date.replace(tzinfo=get_time_zone('UTC')))
 
     # If user is located in the southern hemisphere swap the season
     if hemisphere == SOUTHERN:
@@ -244,14 +266,16 @@ def get_season(self):
             ENTITY_SEASON: season,
             ENTITY_DAYS_LEFT: days_left,
             ENTITY_DAYS_IN: days_in,
-            ENTITY_NEXT_SEASON_UTC: next_date,
+            ENTITY_NEXT_SEASON: next_date,
+            ATTR_LAST_UPDATED: last_update,
         }
     else:
         self.data = {
             ENTITY_SEASON: season,
             ENTITY_DAYS_LEFT: days_left.days,
             ENTITY_DAYS_IN: abs(days_in.days) + 1,
-            ENTITY_NEXT_SEASON_UTC: next_date.strftime("%Y %b %d %H:%M:%S"),
+            ENTITY_NEXT_SEASON: next_date.strftime("%Y %b %d %H:%M:%S"),
+            ATTR_LAST_UPDATED: last_update,
         }
 
     return data
