@@ -49,6 +49,14 @@ async def test_color_light_with_an_emeter(hass: HomeAssistant) -> None:
     for sensor_entity_id, value in expected.items():
         assert hass.states.get(sensor_entity_id).state == str(value)
 
+    not_expected = {
+        "sensor.my_bulb_current_consumption",
+        "sensor.my_bulb_total_consumption",
+        "sensor.my_bulb_voltage",
+    }
+    for sensor_entity_id in not_expected:
+        assert hass.states.get(sensor_entity_id) is None
+
 
 async def test_plug_with_an_emeter(hass: HomeAssistant) -> None:
     """Test a plug with an emeter."""
