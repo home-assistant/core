@@ -57,7 +57,8 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     ) -> None:
         """Initialize the switch."""
         super().__init__(device, coordinator)
-        self._attr_unique_id = self.device.mac
+        # For backwards compat with pyHS100
+        self._attr_unique_id = self.device.mac.replace(":", "").upper()
 
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
