@@ -48,6 +48,7 @@ def domain_data_mock(hass: HomeAssistant) -> Iterable[Mock]:
     upnp_device.available = True
     upnp_device.parent_device = None
     upnp_device.root_device = upnp_device
+    upnp_device.all_devices = [upnp_device]
     seal(upnp_device)
     domain_data.upnp_factory.async_create_device.return_value = upnp_device
 
