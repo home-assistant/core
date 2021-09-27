@@ -41,12 +41,6 @@ class CoordinatedTPLinkEntity(CoordinatorEntity):
         self._attr_unique_id = self.device.device_id
 
     @property
-    def data(self) -> dict[str, Any]:
-        """Return data from DataUpdateCoordinator."""
-        data: dict[str, Any] = self.coordinator.data
-        return data
-
-    @property
     def name(self) -> str:
         """Return the name of the Smart Plug."""
         return cast(str, self.device.alias)
