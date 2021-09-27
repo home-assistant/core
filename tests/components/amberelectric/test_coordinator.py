@@ -62,7 +62,7 @@ async def test_fetch_general_site(hass: HomeAssistant, current_price_api: Mock) 
 
     current_price_api.get_current_price.return_value = GENERAL_CHANNEL
     data_service = AmberUpdateCoordinator(hass, current_price_api, GENERAL_ONLY_SITE_ID)
-    result = await data_service.async_update_data()
+    result = await data_service.async_update_price_data()
 
     current_price_api.get_current_price.assert_called_with(
         GENERAL_ONLY_SITE_ID, next=48
@@ -89,7 +89,7 @@ async def test_fetch_no_general_site(
     current_price_api.get_current_price.return_value = CONTROLLED_LOAD_CHANNEL
     data_service = AmberUpdateCoordinator(hass, current_price_api, GENERAL_ONLY_SITE_ID)
     with pytest.raises(UpdateFailed):
-        await data_service.async_update_data()
+        await data_service.async_update_price_data()
 
     current_price_api.get_current_price.assert_called_with(
         GENERAL_ONLY_SITE_ID, next=48
@@ -101,7 +101,7 @@ async def test_fetch_api_error(hass: HomeAssistant, current_price_api: Mock) -> 
 
     current_price_api.get_current_price.return_value = GENERAL_CHANNEL
     data_service = AmberUpdateCoordinator(hass, current_price_api, GENERAL_ONLY_SITE_ID)
-    result = await data_service.async_update_data()
+    result = await data_service.async_update_price_data()
 
     current_price_api.get_current_price.assert_called_with(
         GENERAL_ONLY_SITE_ID, next=48
@@ -121,7 +121,7 @@ async def test_fetch_api_error(hass: HomeAssistant, current_price_api: Mock) -> 
 
     current_price_api.get_current_price.side_effect = ApiException(status=403)
     with pytest.raises(UpdateFailed):
-        await data_service.async_update_data()
+        await data_service.async_update_price_data()
 
     assert result["current"].get("general") == GENERAL_CHANNEL[0]
     assert result["forecasts"].get("general") == [
@@ -147,7 +147,7 @@ async def test_fetch_general_and_controlled_load_site(
     data_service = AmberUpdateCoordinator(
         hass, current_price_api, GENERAL_AND_CONTROLLED_SITE_ID
     )
-    result = await data_service.async_update_data()
+    result = await data_service.async_update_price_data()
 
     current_price_api.get_current_price.assert_called_with(
         GENERAL_AND_CONTROLLED_SITE_ID, next=48
@@ -179,7 +179,7 @@ async def test_fetch_general_and_feed_in_site(
     data_service = AmberUpdateCoordinator(
         hass, current_price_api, GENERAL_AND_FEED_IN_SITE_ID
     )
-    result = await data_service.async_update_data()
+    result = await data_service.async_update_price_data()
 
     current_price_api.get_current_price.assert_called_with(
         GENERAL_AND_FEED_IN_SITE_ID, next=48
