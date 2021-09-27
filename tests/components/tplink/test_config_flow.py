@@ -14,15 +14,12 @@ from . import (
     DEFAULT_ENTRY_TITLE,
     IP_ADDRESS,
     MAC_ADDRESS,
-    MODEL,
     MODULE,
     _patch_discovery,
     _patch_single_discovery,
 )
 
 from tests.common import MockConfigEntry
-
-DEVICE_ID = f"{ALIAS} {MODEL} ({IP_ADDRESS}) {MAC_ADDRESS}"
 
 
 async def test_discovery(hass: HomeAssistant):
@@ -63,7 +60,7 @@ async def test_discovery(hass: HomeAssistant):
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_DEVICE: DEVICE_ID},
+            {CONF_DEVICE: MAC_ADDRESS},
         )
         await hass.async_block_till_done()
 
@@ -136,7 +133,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant):
         f"{MODULE}.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_DEVICE: DEVICE_ID}
+            result["flow_id"], {CONF_DEVICE: MAC_ADDRESS}
         )
         assert result3["type"] == "create_entry"
         assert result3["title"] == DEFAULT_ENTRY_TITLE
@@ -411,10 +408,7 @@ async def test_migration_device_online(hass: HomeAssistant):
     """Test migration from single config entry."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
-    config = {
-        CONF_MAC: MAC_ADDRESS,
-        CONF_NAME: ALIAS,
-    }
+    config = {CONF_MAC: MAC_ADDRESS, CONF_NAME: ALIAS, CONF_HOST: IP_ADDRESS}
 
     with _patch_discovery(), _patch_single_discovery(), patch(
         f"{MODULE}.async_setup_entry", return_value=True
@@ -450,10 +444,7 @@ async def test_migration_device_offline(hass: HomeAssistant):
     """Test migration from single config entry."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
-    config = {
-        CONF_MAC: MAC_ADDRESS,
-        CONF_NAME: ALIAS,
-    }
+    config = {CONF_MAC: MAC_ADDRESS, CONF_NAME: ALIAS, CONF_HOST: None}
 
     with _patch_discovery(no_device=True), _patch_single_discovery(
         no_device=True

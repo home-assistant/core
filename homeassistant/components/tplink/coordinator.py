@@ -41,8 +41,8 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=device.host,
             update_interval=update_interval,
-            # We don't want an immediate refresh since the device and
-            # take a moment to reflect the state change
+            # We don't want an immediate refresh since the device
+            # takes a moment to reflect the state change
             request_refresh_debouncer=Debouncer(
                 hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
             ),

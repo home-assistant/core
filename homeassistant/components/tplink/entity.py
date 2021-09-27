@@ -1,7 +1,7 @@
 """Common code for tplink."""
 from __future__ import annotations
 
-from typing import Any, Callable, cast
+from typing import Any, Callable, TypeVar, cast
 
 from kasa import SmartDevice
 
@@ -12,8 +12,10 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
 
+F = TypeVar("F", bound=Callable[..., Any])
 
-def async_refresh_after(func: Callable) -> Callable:
+
+def async_refresh_after(func: F) -> F:
     """Define a wrapper to refresh after."""
 
     async def _async_wrap(
@@ -22,7 +24,7 @@ def async_refresh_after(func: Callable) -> Callable:
         await func(self, *args, **kwargs)
         await self.coordinator.async_request_refresh_without_children()
 
-    return _async_wrap
+    return cast(F, _async_wrap)
 
 
 class CoordinatedTPLinkEntity(CoordinatorEntity):

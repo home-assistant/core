@@ -16,8 +16,8 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import DISCOVERED_DEVICES, DOMAIN
-from .utils import async_entry_is_legacy
+from . import async_entry_is_legacy
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,15 +88,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
-        host = ""
         if user_input is not None:
-            host = user_input.get(CONF_HOST, "")
+            host = user_input[CONF_HOST]
             if not host:
                 return await self.async_step_pick_device()
             try:
-                device = await self._async_try_connect(
-                    user_input[CONF_HOST], raise_on_progress=False
-                )
+                device = await self._async_try_connect(host, raise_on_progress=False)
             except SmartDeviceException:
                 errors["base"] = "cannot_connect"
             else:
@@ -104,7 +101,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Optional(CONF_HOST, default=host): str}),
+            data_schema=vol.Schema({vol.Optional(CONF_HOST, default=""): str}),
             errors=errors,
         )
 
@@ -113,7 +110,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the step to pick discovered device."""
         if user_input is not None:
-            mac = user_input[CONF_DEVICE].split(" ")[-1]
+            mac = user_input[CONF_DEVICE]
             await self.async_set_unique_id(mac, raise_on_progress=False)
             return self._async_create_entry_from_device(self._discovered_devices[mac])
 
@@ -127,7 +124,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             for device in (await Discover.discover()).values()
         }
         devices_name = {
-            f"{device.alias} {device.model} ({device.host}) {formatted_mac}"
+            formatted_mac: f"{device.alias} {device.model} ({device.host}) {formatted_mac}"
             for formatted_mac, device in self._discovered_devices.items()
             if formatted_mac not in configured_devices
         }
@@ -142,17 +139,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_migration(self, migration_input: dict[str, Any]) -> FlowResult:
         """Handle migration from legacy config entry to per device config entry."""
         mac = migration_input[CONF_MAC]
-        name = migration_input[CONF_NAME]
-        discovered_devices = self.hass.data[DOMAIN][DISCOVERED_DEVICES]
-        host = None
-        if device := discovered_devices.get(mac):
-            host = device.host
         await self.async_set_unique_id(dr.format_mac(mac), raise_on_progress=False)
         self._abort_if_unique_id_configured()
         return self.async_create_entry(
-            title=name,
+            title=migration_input[CONF_NAME],
             data={
-                CONF_HOST: host,
+                CONF_HOST: migration_input[CONF_HOST],
             },
         )
 
@@ -173,7 +165,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             device = await self._async_try_connect(host, raise_on_progress=False)
         except SmartDeviceException:
-            _LOGGER.exception("Failed to import %s: cannot connect", host)
+            _LOGGER.error("Failed to import %s: cannot connect", host)
             return self.async_abort(reason="cannot_connect")
         return self._async_create_entry_from_device(device)
 
