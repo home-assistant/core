@@ -254,7 +254,7 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
         self._send_command(commands)
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of the light."""
         old_range = self._tuya_brightness_range()
         brightness = self.tuya_device.status.get(self.dp_code_bright, 0)
@@ -279,7 +279,7 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
         return bright_value.get("min", 0), bright_value.get("max", 255)
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> tuple[float, float]:
         """Return the hs_color of the light."""
         colour_data = json.loads(self.tuya_device.status.get(self.dp_code_colour, 0))
         s_range = self._tuya_hsv_s_range()
@@ -292,7 +292,7 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
         )
 
     @property
-    def color_temp(self):
+    def color_temp(self) -> int:
         """Return the color_temp of the light."""
         new_range = self._tuya_temp_range()
         tuya_color_temp = self.tuya_device.status.get(self.dp_code_temp, 0)
@@ -310,12 +310,12 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
         return ha_color_temp
 
     @property
-    def min_mireds(self):
+    def min_mireds(self) -> int:
         """Return color temperature min mireds."""
         return MIREDS_MIN
 
     @property
-    def max_mireds(self):
+    def max_mireds(self) -> int:
         """Return color temperature max mireds."""
         return MIREDS_MAX
 
