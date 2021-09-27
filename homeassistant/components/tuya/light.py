@@ -327,12 +327,12 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
 
     def _tuya_hsv_s_range(self) -> tuple[int, int]:
         hsv_data_range = self._tuya_hsv_function()
-        hsv_s = hsv_data_range.get("s")
+        hsv_s = hsv_data_range.get("s", {"min": 0, "max": 255})
         return hsv_s.get("min", 0), hsv_s.get("max", 255)
 
     def _tuya_hsv_v_range(self) -> tuple[int, int]:
         hsv_data_range = self._tuya_hsv_function()
-        hsv_v = hsv_data_range.get("v")
+        hsv_v = hsv_data_range.get("v", {"min": 0, "max": 255})
         return hsv_v.get("min", 0), hsv_v.get("max", 255)
 
     def _tuya_hsv_function(self) -> dict[str, dict]:
