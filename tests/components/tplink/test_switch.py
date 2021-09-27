@@ -85,18 +85,23 @@ async def test_strip(hass: HomeAssistant) -> None:
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "switch.my_strip"
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    # Verify we only create entities for the children
+    # since this is what the previous version did
+    assert hass.states.get("switch.my_strip") is None
 
-    await hass.services.async_call(
-        SWITCH_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
-    )
-    plug.turn_off.assert_called_once()
-    plug.turn_off.reset_mock()
+    for plug_id in range(2):
+        entity_id = f"switch.plug{plug_id}"
+        state = hass.states.get(entity_id)
+        assert state.state == STATE_ON
 
-    await hass.services.async_call(
-        SWITCH_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
-    )
-    plug.turn_on.assert_called_once()
-    plug.turn_on.reset_mock()
+        await hass.services.async_call(
+            SWITCH_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+        plug.children[plug_id].turn_off.assert_called_once()
+        plug.children[plug_id].turn_off.reset_mock()
+
+        await hass.services.async_call(
+            SWITCH_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+        plug.children[plug_id].turn_on.assert_called_once()
+        plug.children[plug_id].turn_on.reset_mock()
