@@ -86,7 +86,7 @@ class AmberPriceSensor(AmberSensor):
         """Return additional pieces of information about the price."""
         interval = self.coordinator.data[self.entity_description.key][self.channel_type]
 
-        data = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        data: dict[str, Any] = {ATTR_ATTRIBUTION: ATTRIBUTION}
         if interval is None:
             return data
 
