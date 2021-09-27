@@ -192,6 +192,7 @@ class SensorFilter(SensorEntity):
         self._filters = filters
         self._icon = None
         self._device_class = None
+        self._attr_state_class = None
 
     @callback
     def _update_filter_sensor_state_event(self, event):
