@@ -26,7 +26,7 @@ async def test_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result1["type"] == RESULT_TYPE_FORM
-    assert result1["errors"] is None
+    assert result1["errors"] == {}
 
     with patch("aussiebb.asyncio.AussieBB.__init__", return_value=None), patch(
         "aussiebb.asyncio.AussieBB.login", return_value=True
@@ -98,7 +98,7 @@ async def test_no_services(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result1["type"] == RESULT_TYPE_FORM
-    assert result1["errors"] is None
+    assert result1["errors"] == {}
 
     with patch("aussiebb.asyncio.AussieBB.__init__", return_value=None), patch(
         "aussiebb.asyncio.AussieBB.login", return_value=True
@@ -123,7 +123,7 @@ async def test_form_multiple_services(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     with patch("aussiebb.asyncio.AussieBB.__init__", return_value=None), patch(
         "aussiebb.asyncio.AussieBB.login", return_value=True
@@ -136,7 +136,7 @@ async def test_form_multiple_services(hass: HomeAssistant) -> None:
 
     assert result2["type"] == RESULT_TYPE_FORM
     assert result2["step_id"] == "service"
-    assert result2["errors"] is None
+    assert result2["errors"] == {}
 
     with patch(
         "homeassistant.components.aussie_broadband.async_setup_entry",

@@ -102,6 +102,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ): cv.multi_select(service_options)
                 }
             ),
+            errors={},
         )
 
     async def async_step_reauth(
