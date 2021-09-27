@@ -1,5 +1,4 @@
 """Support for Template alarm control panels."""
-from enum import Enum
 import logging
 
 import voluptuous as vol
@@ -59,12 +58,9 @@ CONF_CODE_ARM_REQUIRED = "code_arm_required"
 CONF_CODE_FORMAT = "code_format"
 
 
-class CodeFormat(Enum):
-    """Class to represent different code formats."""
+FORMAT_NONE = "none"
 
-    text = FORMAT_TEXT
-    number = FORMAT_NUMBER
-    none = None
+SUPPORTED_CODE_FORMATS = (FORMAT_TEXT, FORMAT_NUMBER, FORMAT_NONE)
 
 
 ALARM_CONTROL_PANEL_SCHEMA = vol.Schema(
@@ -75,7 +71,9 @@ ALARM_CONTROL_PANEL_SCHEMA = vol.Schema(
         vol.Optional(CONF_ARM_HOME_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_ARM_NIGHT_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
-        vol.Optional(CONF_CODE_FORMAT, default="number"): cv.enum(CodeFormat),
+        vol.Optional(CONF_CODE_FORMAT, default="number"): vol.In(
+            SUPPORTED_CODE_FORMATS
+        ),
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
@@ -205,7 +203,7 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
     @property
     def code_format(self):
         """Regex for code format or None if no code is required."""
-        return self._code_format.value
+        return None if self._code_format == FORMAT_NONE else self._code_format
 
     @property
     def code_arm_required(self):
