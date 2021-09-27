@@ -5,6 +5,7 @@
   "documentation": "https://www.home-assistant.io/integrations/tplink",
   "requirements": ["python-kasa==0.4.0.dev5"],
   "codeowners": ["@rytilahti", "@thegardenmonkey"],
+  "quality_scale": "platinum",
   "iot_class": "local_polling",
   "dhcp": [
     {
