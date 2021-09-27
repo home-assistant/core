@@ -1370,6 +1370,17 @@ def forgiving_float(value):
         return value
 
 
+def is_number(value):
+    """Try to convert value to a float."""
+    try:
+        fvalue = float(value)
+    except (ValueError, TypeError):
+        return False
+    if math.isnan(fvalue) or math.isinf(fvalue):
+        return False
+    return True
+
+
 def regex_match(value, find="", ignorecase=False):
     """Match value using regex."""
     if not isinstance(value, str):
@@ -1575,6 +1586,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["bitwise_and"] = bitwise_and
         self.filters["bitwise_or"] = bitwise_or
         self.filters["ord"] = ord
+        self.filters["is_number"] = is_number
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -1597,6 +1609,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["urlencode"] = urlencode
         self.globals["max"] = max
         self.globals["min"] = min
+        self.globals["is_number"] = is_number
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
 
