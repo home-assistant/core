@@ -46,6 +46,7 @@ from .const import (
     CONF_TARIFF,
     CONF_TARIFF_ENTITY,
     DAILY,
+    DATA_TARIFF_SENSORS,
     DATA_UTILITY,
     HOURLY,
     MONTHLY,
@@ -96,19 +97,20 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             CONF_TARIFF_ENTITY
         )
         conf_cron_pattern = hass.data[DATA_UTILITY][meter].get(CONF_CRON_PATTERN)
-
-        meters.append(
-            UtilityMeterSensor(
-                conf_meter_source,
-                conf.get(CONF_NAME),
-                conf_meter_type,
-                conf_meter_offset,
-                conf_meter_net_consumption,
-                conf.get(CONF_TARIFF),
-                conf_meter_tariff_entity,
-                conf_cron_pattern,
-            )
+        meter_sensor = UtilityMeterSensor(
+            meter,
+            conf_meter_source,
+            conf.get(CONF_NAME),
+            conf_meter_type,
+            conf_meter_offset,
+            conf_meter_net_consumption,
+            conf.get(CONF_TARIFF),
+            conf_meter_tariff_entity,
+            conf_cron_pattern,
         )
+        meters.append(meter_sensor)
+
+        hass.data[DATA_UTILITY][meter][DATA_TARIFF_SENSORS].append(meter_sensor)
 
     async_add_entities(meters)
 
@@ -126,6 +128,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
 
     def __init__(
         self,
+        parent_meter,
         source_entity,
         name,
         meter_type,
@@ -136,8 +139,9 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         cron_pattern=None,
     ):
         """Initialize the Utility Meter sensor."""
+        self._parent_meter = parent_meter
         self._sensor_source_id = source_entity
-        self._state = 0
+        self._state = None
         self._last_period = 0
         self._last_reset = dt_util.utcnow()
         self._collecting = None
@@ -153,11 +157,26 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         self._tariff = tariff
         self._tariff_entity = tariff_entity
 
+    def start(self, unit):
+        """Initialize unit and state upon source initial update."""
+        self._unit_of_measurement = unit
+        self._state = 0
+        self.async_write_ha_state()
+
     @callback
     def async_reading(self, event):
         """Handle the sensor state changes."""
         old_state = event.data.get("old_state")
         new_state = event.data.get("new_state")
+
+        if self._state is None and new_state.state:
+            # First state update initializes the utility_meter sensors
+            source_state = self.hass.states.get(self._sensor_source_id)
+            for sensor in self.hass.data[DATA_UTILITY][self._parent_meter][
+                DATA_TARIFF_SENSORS
+            ]:
+                sensor.start(source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
+
         if (
             old_state is None
             or new_state is None
@@ -333,7 +352,12 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
                 self._change_status(tariff_entity_state.state)
                 return
 
-            _LOGGER.debug("<%s> collecting from %s", self.name, self._sensor_source_id)
+            _LOGGER.debug(
+                "<%s> collecting %s from %s",
+                self.name,
+                self._unit_of_measurement,
+                self._sensor_source_id,
+            )
             self._collecting = async_track_state_change_event(
                 self.hass, [self._sensor_source_id], self.async_reading
             )
