@@ -40,7 +40,7 @@ REQUIRES = [
     'backports.zoneinfo;python_version<"3.9"',
     "bcrypt==3.1.7",
     "certifi>=2020.12.5",
-    "ciso8601==2.1.3",
+    "ciso8601==2.2.0",
     "httpx==0.19.0",
     "jinja2==3.0.1",
     "PyJWT==2.1.0",
@@ -50,7 +50,7 @@ REQUIRES = [
     "python-slugify==4.0.1",
     "pyyaml==5.4.1",
     "requests==2.26.0",
-    "voluptuous==0.12.1",
+    "voluptuous==0.12.2",
     "voluptuous-serialize==2.4.0",
     "yarl==1.6.3",
 ]
