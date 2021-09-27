@@ -20,7 +20,6 @@ from .const import (
     CONF_LIGHT,
     CONF_STRIP,
     CONF_SWITCH,
-    DISCOVERED_DEVICES,
     DOMAIN,
     PLATFORMS,
 )
@@ -83,8 +82,7 @@ def async_trigger_discovery(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the TP-Link component."""
     conf = config.get(DOMAIN)
-    domain_data = hass.data[DOMAIN] = {}
-
+    hass.data[DOMAIN] = {}
     legacy_entry = None
     config_entries_by_mac = {}
     for entry in hass.config_entries.async_entries(DOMAIN):
@@ -93,19 +91,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         elif entry.unique_id:
             config_entries_by_mac[entry.unique_id] = entry
 
-    domain_data[DISCOVERED_DEVICES] = {
+    discovered_devices = {
         dr.format_mac(device.mac): device
         for device in (await Discover.discover()).values()
     }
+    hosts_by_mac = {mac: device.host for mac, device in discovered_devices.items()}
 
     if legacy_entry:
-        async_migrate_legacy_entries(hass, config_entries_by_mac, legacy_entry)
+        async_migrate_legacy_entries(
+            hass, hosts_by_mac, config_entries_by_mac, legacy_entry
+        )
 
     if conf is not None:
         async_migrate_yaml_entries(hass, conf)
 
-    if domain_data[DISCOVERED_DEVICES]:
-        async_trigger_discovery(hass, domain_data[DISCOVERED_DEVICES])
+    if discovered_devices:
+        async_trigger_discovery(hass, discovered_devices)
 
     return True
 

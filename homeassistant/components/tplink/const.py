@@ -10,8 +10,6 @@ ATTR_CURRENT_POWER_W: Final = "current_power_w"
 ATTR_TODAY_ENERGY_KWH: Final = "today_energy_kwh"
 ATTR_TOTAL_ENERGY_KWH: Final = "total_energy_kwh"
 
-DISCOVERED_DEVICES: Final = "discovered_devices"
-
 CONF_EMETER_PARAMS: Final = "emeter_params"
 CONF_DIMMER: Final = "dimmer"
 CONF_DISCOVERY: Final = "discovery"

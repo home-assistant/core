@@ -30,6 +30,7 @@ async def async_cleanup_legacy_entry(
 @callback
 def async_migrate_legacy_entries(
     hass: HomeAssistant,
+    hosts_by_mac: dict[str, str],
     config_entries_by_mac: dict[str, ConfigEntry],
     legacy_entry: ConfigEntry,
 ) -> None:
@@ -53,6 +54,7 @@ def async_migrate_legacy_entries(
                     DOMAIN,
                     context={"source": "migration"},
                     data={
+                        CONF_HOST: hosts_by_mac.get(mac),
                         CONF_MAC: mac,
                         CONF_NAME: reg_entity.name
                         or reg_entity.original_name

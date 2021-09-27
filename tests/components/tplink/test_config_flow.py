@@ -411,10 +411,7 @@ async def test_migration_device_online(hass: HomeAssistant):
     """Test migration from single config entry."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
-    config = {
-        CONF_MAC: MAC_ADDRESS,
-        CONF_NAME: ALIAS,
-    }
+    config = {CONF_MAC: MAC_ADDRESS, CONF_NAME: ALIAS, CONF_HOST: IP_ADDRESS}
 
     with _patch_discovery(), _patch_single_discovery(), patch(
         f"{MODULE}.async_setup_entry", return_value=True
@@ -450,10 +447,7 @@ async def test_migration_device_offline(hass: HomeAssistant):
     """Test migration from single config entry."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
-    config = {
-        CONF_MAC: MAC_ADDRESS,
-        CONF_NAME: ALIAS,
-    }
+    config = {CONF_MAC: MAC_ADDRESS, CONF_NAME: ALIAS, CONF_HOST: None}
 
     with _patch_discovery(no_device=True), _patch_single_discovery(
         no_device=True

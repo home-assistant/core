@@ -17,7 +17,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import async_entry_is_legacy
-from .const import DISCOVERED_DEVICES, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,17 +140,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_migration(self, migration_input: dict[str, Any]) -> FlowResult:
         """Handle migration from legacy config entry to per device config entry."""
         mac = migration_input[CONF_MAC]
-        name = migration_input[CONF_NAME]
-        discovered_devices = self.hass.data[DOMAIN][DISCOVERED_DEVICES]
-        host = None
-        if device := discovered_devices.get(mac):
-            host = device.host
         await self.async_set_unique_id(dr.format_mac(mac), raise_on_progress=False)
         self._abort_if_unique_id_configured()
         return self.async_create_entry(
-            title=name,
+            title=migration_input[CONF_NAME],
             data={
-                CONF_HOST: host,
+                CONF_HOST: migration_input[CONF_HOST],
             },
         )
 
