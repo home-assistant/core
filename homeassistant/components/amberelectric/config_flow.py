@@ -73,31 +73,20 @@ class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=self._errors,
-            description_placeholders={"api_url": API_URL},
         )
 
     async def async_step_site(self, user_input: dict[str, Any] = None):
         """Step to select site."""
         self._errors = {}
 
+        if self._sites is None:
+            # Something really bad has happened - this shouldn't happen.
+            return await self.async_step_user()
+
         api_token = self._api_token
         if user_input is not None:
-            if self._sites is None:
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=vol.Schema(
-                        {
-                            vol.Required(
-                                CONF_API_TOKEN, default=user_input[CONF_API_TOKEN]
-                            ): str,
-                        }
-                    ),
-                    errors={CONF_API_TOKEN: "no_site"},
-                    description_placeholders={"api_url": API_URL},
-                )
-
             site_nmi = user_input[CONF_SITE_NMI]
-            sites = list(filter(lambda site: site.nmi == site_nmi, self._sites))
+            sites = [site for site in self._sites if site.nmi == site_nmi]
 
             if len(sites) != 0:
                 site: Site = sites[0]
@@ -118,25 +107,13 @@ class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_SITE_NAME: "",
             }
 
-            if self._sites is None:
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=vol.Schema(
-                        {
-                            vol.Required(CONF_API_TOKEN, default=api_token): str,
-                        }
-                    ),
-                    errors={CONF_API_TOKEN: "no_site"},
-                    description_placeholders={"api_url": API_URL},
-                )
-
         return self.async_show_form(
             step_id="site",
             data_schema=vol.Schema(
                 {
                     vol.Required(
                         CONF_SITE_NMI, default=user_input[CONF_SITE_NMI]
-                    ): vol.In(list(map(lambda site: site.nmi, self._sites))),
+                    ): vol.In([site.nmi for site in self._sites]),
                     vol.Optional(
                         CONF_SITE_NAME, default=user_input[CONF_SITE_NAME]
                     ): str,

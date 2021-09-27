@@ -118,7 +118,6 @@ async def test_no_site_no_data(hass: HomeAssistant, no_site_api: Mock) -> None:
     assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
     # Goes back to the user step
     assert result.get("step_id") == "user"
-    assert result.get("errors") == {"api_token": "no_site"}
 
 
 async def test_no_site_saved(hass: HomeAssistant, no_site_api: Mock) -> None:
@@ -132,7 +131,6 @@ async def test_no_site_saved(hass: HomeAssistant, no_site_api: Mock) -> None:
     assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
     # Goes back to the user step
     assert result.get("step_id") == "user"
-    assert result.get("errors") == {"api_token": "no_site"}
 
 
 async def test_invalid_key(hass: HomeAssistant, invalid_key_api: Mock) -> None:
