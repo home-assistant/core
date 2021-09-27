@@ -138,6 +138,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     season_data = SeasonData(hemisphere, _type, time_zone)
 
+    await season_data.async_update()
+
     entities = []
     for description in SENSOR_TYPES:
         if description.key in ENTITY_SEASON:
@@ -275,7 +277,7 @@ def get_season(self):
             ENTITY_SEASON: season,
             ENTITY_DAYS_LEFT: days_left.days,
             ENTITY_DAYS_IN: abs(days_in.days) + 1,
-            ENTITY_NEXT_SEASON: next_date.strftime("%Y %b %d %H:%M:%S"),
+            ENTITY_NEXT_SEASON: next_date.strftime("%Y-%m-%d, %H:%M:%S"),
             ATTR_LAST_UPDATED: last_update,
         }
 
