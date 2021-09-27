@@ -18,9 +18,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_DIMMER, CONF_LIGHT, CONF_STRIP, CONF_SWITCH, DOMAIN
 
-# Lights had the : stripped, plugs did not
-MAC_ADDRESS_LENS = (12, 17)
-
 _LOGGER = logging.getLogger(__name__)
 
 
