@@ -54,15 +54,17 @@ HEMISPHERE_SEASON_SWAP = {
     STATE_SUMMER: STATE_WINTER,
 }
 
+ICON_DEFAULT = "mdi:cloud"
+ICON_DAYS_LEFT = "mdi:calendar-arrow-right"
+ICON_DAYS_IN = "mdi:calendar-arrow-left"
+ICON_NEXT_SEASON = "mdi:calendar"
+
 SEASON_ICONS = {
-    STATE_NONE: "mdi:cloud",
+    STATE_NONE: ICON_DEFAULT,
     STATE_SPRING: "mdi:flower",
     STATE_SUMMER: "mdi:sunglasses",
     STATE_AUTUMN: "mdi:leaf",
     STATE_WINTER: "mdi:snowflake",
-    ENTITY_DAYS_LEFT: "mdi:calendar-arrow-right",
-    ENTITY_DAYS_IN: "mdi:calendar-arrow-left",
-    ENTITY_NEXT_SEASON: "mdi:calendar-arrow-left",
 }
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -73,25 +75,25 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ENTITY_SEASON,
         name="Season",
-        icon=SEASON_ICONS[STATE_NONE],
+        icon=ICON_DEFAULT,
         device_class=DEVICE_CLASS_SEASON,
     ),
     SensorEntityDescription(
         key=ENTITY_DAYS_LEFT,
         name="Days Left",
         native_unit_of_measurement=TIME_DAYS,
-        icon=SEASON_ICONS[ENTITY_DAYS_LEFT],
+        icon=ICON_DAYS_LEFT,
     ),
     SensorEntityDescription(
         key=ENTITY_DAYS_IN,
         name="Days In",
         native_unit_of_measurement=TIME_DAYS,
-        icon=SEASON_ICONS[ENTITY_DAYS_IN],
+        icon=ICON_DAYS_IN,
     ),
     SensorEntityDescription(
         key=ENTITY_NEXT_SEASON,
         name="Next Start Date",
-        icon=SEASON_ICONS[ENTITY_NEXT_SEASON],
+        icon=ICON_NEXT_SEASON,
     ),
 )
 
@@ -186,7 +188,7 @@ class SeasonData:
 
         self.hemisphere = hemisphere
         self.time_zone = time_zone
-        self.type = _type
+        self._type = _type
         self.datetime = None
         self._data = {}
 
@@ -203,7 +205,7 @@ def get_season(self):
 
     date = self.datetime
     hemisphere = self.hemisphere
-    season_tracking_type = self.type
+    season_tracking_type = self._type
     time_zone = self.time_zone
     data = {}
 
