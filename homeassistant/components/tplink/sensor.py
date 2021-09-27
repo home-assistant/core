@@ -1,7 +1,8 @@
 """Support for TPLink HS100/HS110/HS200 smart switch energy sensors."""
 from __future__ import annotations
 
-from typing import Final, cast
+from dataclasses import dataclass
+from typing import cast
 
 from kasa import SmartDevice
 
@@ -37,55 +38,62 @@ from .const import (
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import CoordinatedTPLinkEntity
 
-ENERGY_SENSORS: Final[list[SensorEntityDescription]] = [
-    SensorEntityDescription(
+
+@dataclass
+class TPLinkSensorEntityDescription(SensorEntityDescription):
+    """Describes TPLink sensor entity."""
+
+    emeter_attr: str | None = None
+
+
+ENERGY_SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
+    TPLinkSensorEntityDescription(
         key=ATTR_CURRENT_POWER_W,
         native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
         name="Current Consumption",
+        emeter_attr="power",
     ),
-    SensorEntityDescription(
+    TPLinkSensorEntityDescription(
         key=ATTR_TOTAL_ENERGY_KWH,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
         name="Total Consumption",
+        emeter_attr="total",
     ),
-    SensorEntityDescription(
+    TPLinkSensorEntityDescription(
         key=ATTR_TODAY_ENERGY_KWH,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
         name="Today's Consumption",
     ),
-    SensorEntityDescription(
+    TPLinkSensorEntityDescription(
         key=ATTR_VOLTAGE,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=DEVICE_CLASS_VOLTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
         name="Voltage",
+        emeter_attr="voltage",
     ),
-    SensorEntityDescription(
+    TPLinkSensorEntityDescription(
         key=ATTR_CURRENT_A,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         device_class=DEVICE_CLASS_CURRENT,
         state_class=STATE_CLASS_MEASUREMENT,
         name="Current",
+        emeter_attr="current",
     ),
-]
-
-KEY_TO_PROPERTY_MAP = {
-    ATTR_CURRENT_POWER_W: "power",
-    ATTR_TOTAL_ENERGY_KWH: "total",
-    ATTR_VOLTAGE: "voltage",
-    ATTR_CURRENT_A: "current",
-}
+)
 
 
-def async_get_key_value_from_device(device: SmartDevice, key: str) -> float | None:
+def async_emeter_from_device(
+    device: SmartDevice, description: TPLinkSensorEntityDescription
+) -> float | None:
     """Map a sensor key to the device attribute."""
-    if attr := KEY_TO_PROPERTY_MAP.get(key):
+    if attr := description.emeter_attr:
         val = getattr(device.emeter_realtime, attr)
         if val is None:
             return None
@@ -115,7 +123,7 @@ async def async_setup_entry(
         return [
             SmartPlugSensor(device, coordinator, description)
             for description in ENERGY_SENSORS
-            if async_get_key_value_from_device(device, description.key) is not None
+            if async_emeter_from_device(device, description) is not None
         ]
 
     if parent.is_strip:
@@ -132,12 +140,13 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
     """Representation of a TPLink Smart Plug energy sensor."""
 
     coordinator: TPLinkDataUpdateCoordinator
+    entity_description: TPLinkSensorEntityDescription
 
     def __init__(
         self,
         device: SmartDevice,
         coordinator: TPLinkDataUpdateCoordinator,
-        description: SensorEntityDescription,
+        description: TPLinkSensorEntityDescription,
     ) -> None:
         """Initialize the switch."""
         super().__init__(device, coordinator)
@@ -157,4 +166,4 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the sensors state."""
-        return async_get_key_value_from_device(self.device, self.entity_description.key)
+        return async_emeter_from_device(self.device, self.entity_description)
