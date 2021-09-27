@@ -522,7 +522,6 @@ debugpy==1.4.3
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
 # homeassistant.components.ohmconnect
-# homeassistant.components.ssdp
 defusedxml==0.7.1
 
 # homeassistant.components.deluge
