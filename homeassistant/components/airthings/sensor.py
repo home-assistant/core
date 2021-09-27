@@ -17,7 +17,6 @@ from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_PM1,
     DEVICE_CLASS_PM25,
     DEVICE_CLASS_PRESSURE,
@@ -80,7 +79,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "light": SensorEntityDescription(
         key="light",
-        device_class=DEVICE_CLASS_ILLUMINANCE,
         native_unit_of_measurement=PERCENTAGE,
         name="Light",
     ),
