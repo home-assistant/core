@@ -119,7 +119,7 @@ async def async_setup_entry(
 class AussieBroadandSensorEntity(CoordinatorEntity, SensorEntity):
     """Base class for Aussie Broadband metric sensors."""
 
-    def __init__(self, service: dict, description: SensorEntityDescription) -> None:
+    def __init__(self, service: dict[str, Any], description: SensorEntityDescription) -> None:
         """Initialize the sensor."""
         super().__init__(service["coordinator"])
         self.entity_description = description

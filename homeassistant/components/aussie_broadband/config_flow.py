@@ -27,10 +27,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.data: dict = {}
         self.options: dict = {CONF_SERVICES: []}
-        self.services = None
-        self.client = None
+        self.services: list[dict[str, Any]] | None = None
+        self.client: AussieBB | None = None
 
-    async def auth(self, user_input: dict[str, str]):
+    async def auth(self, user_input: dict[str, str]) -> bool | dict[str, str]:
         """Reusable Auth Helper."""
         self.client = AussieBB(
             user_input[CONF_USERNAME],
@@ -58,7 +58,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.data = user_input
                 self.services = await self.client.get_services()
 
-                if len(self.services) == 0:
+                if not self.services:
                     return self.async_abort(reason="no_services_found")
 
                 if len(self.services) == 1:
