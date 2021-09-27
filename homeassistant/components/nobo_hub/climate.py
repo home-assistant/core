@@ -126,30 +126,31 @@ def _set_on_commands(command_on_by_id, command_on_dict, hub):
     for zone_id, zone in hub.zones.items():
         # Replace unicode non-breaking space (used in Nobø Ecohub) with space
         zone_name = zone[ATTR_NAME].replace("\xa0", " ")
-        if zone_name in command_on_dict:
-            command_on_name = command_on_dict[zone_name]
-            if command_on_name is None or command_on_name == "":
-                _LOGGER.warning(
-                    "Can not turn on (or off) zone '%s', because ON week profile was not specified",
-                    zone_name,
-                )
-            else:
-                command_on_id = _get_id_from_name(command_on_name, hub.week_profiles)
-                if command_on_id is None or command_on_id == "":
-                    _LOGGER.warning(
-                        "Can not turn on (or off) zone '%s', because ON week profile '%s' was not found",
-                        zone_name,
-                        command_on_name,
-                    )
-                else:
-                    _LOGGER.debug(
-                        "To turn on heater %s '%s', week profile %s '%s' will be used",
-                        zone_id,
-                        zone_name,
-                        command_on_id,
-                        command_on_name,
-                    )
-                    command_on_by_id[zone_id] = command_on_id
+        if zone_name not in command_on_dict:
+            continue
+        command_on_name = command_on_dict[zone_name]
+        if command_on_name is None or command_on_name == "":
+            _LOGGER.warning(
+                "Can not turn on (or off) zone '%s', because ON week profile was not specified",
+                zone_name,
+            )
+            continue
+        command_on_id = _get_id_from_name(command_on_name, hub.week_profiles)
+        if command_on_id is None or command_on_id == "":
+            _LOGGER.warning(
+                "Can not turn on (or off) zone '%s', because ON week profile '%s' was not found",
+                zone_name,
+                command_on_name,
+            )
+        else:
+            _LOGGER.debug(
+                "To turn on heater %s '%s', week profile %s '%s' will be used",
+                zone_id,
+                zone_name,
+                command_on_id,
+                command_on_name,
+            )
+            command_on_by_id[zone_id] = command_on_id
 
 
 def _get_id_from_name(name, dictionary):
@@ -300,9 +301,9 @@ class NoboZone(ClimateEntity):
                 if (
                     self._nobo.overrides[override][ATTR_TARGET_TYPE]
                     == nobo.API.OVERRIDE_TARGET_ZONE
+                    and self._nobo.overrides[override][ATTR_TARGET_ID] == self._id
                 ):
-                    if self._nobo.overrides[override][ATTR_TARGET_ID] == self._id:
-                        self._attr_hvac_mode = HVAC_MODE_HEAT
+                    self._attr_hvac_mode = HVAC_MODE_HEAT
 
         current_temperature = self._nobo.get_current_zone_temperature(self._id)
         self._attr_current_temperature = (
