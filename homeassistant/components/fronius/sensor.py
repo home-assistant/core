@@ -172,7 +172,7 @@ class MeterSensor(_FroniusSensorEntity):
         meter_data = self._device_data()
 
         self._attr_extra_state_attributes = {
-            "meter_loaction": meter_data["meter_location"]["value"],
+            "meter_location": meter_data["meter_location"]["value"],
             "enable": meter_data["enable"]["value"],
             "visible": meter_data["visible"]["value"],
         }
