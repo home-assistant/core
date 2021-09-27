@@ -28,9 +28,9 @@ async def test_color_light_with_an_emeter(hass: HomeAssistant) -> None:
     bulb.color_temp = None
     bulb.has_emeter = True
     bulb.emeter_realtime = Mock(
-        power=100,
-        total=30,
-        voltage=121,
+        power=None,
+        total=None,
+        voltage=None,
         current=5,
     )
     bulb.emeter_today = 5000
@@ -40,10 +40,7 @@ async def test_color_light_with_an_emeter(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     expected = {
-        "sensor.my_bulb_current_consumption": 100,
-        "sensor.my_bulb_total_consumption": 30,
         "sensor.my_bulb_today_s_consumption": 5000,
-        "sensor.my_bulb_voltage": 121,
         "sensor.my_bulb_current": 5,
     }
     entity_id = "light.my_bulb"
