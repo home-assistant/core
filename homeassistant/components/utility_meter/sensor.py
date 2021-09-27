@@ -169,9 +169,8 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         old_state = event.data.get("old_state")
         new_state = event.data.get("new_state")
 
-        if (
-            self._unit_of_measurement is None or self._state is None
-        ) and new_state.state:
+        if self._state is None and new_state.state:
+            # First state update initializes the utility_meter sensors
             source_state = self.hass.states.get(self._sensor_source_id)
             for sensor in self.hass.data[DATA_UTILITY][self._parent_meter][
                 DATA_TARIFF_SENSORS
