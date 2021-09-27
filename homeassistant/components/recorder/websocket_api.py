@@ -67,7 +67,7 @@ def ws_clear_statistics(
 async def ws_update_statistics_metadata(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
-    """Clear statistics for a list of statistic_ids."""
+    """Update statistics metadata for a statistic_id."""
     hass.data[DATA_INSTANCE].async_update_statistics_metadata(
         msg["statistic_id"], msg["unit_of_measurement"]
     )
