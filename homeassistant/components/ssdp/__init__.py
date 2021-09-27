@@ -39,9 +39,13 @@ IPV4_BROADCAST = IPv4Address("255.255.255.255")
 # Attributes for accessing info from SSDP response
 ATTR_SSDP_LOCATION = "ssdp_location"
 ATTR_SSDP_ST = "ssdp_st"
+ATTR_SSDP_NT = "ssdp_nt"
+ATTR_SSDP_UDN = "ssdp_udn"
 ATTR_SSDP_USN = "ssdp_usn"
 ATTR_SSDP_EXT = "ssdp_ext"
 ATTR_SSDP_SERVER = "ssdp_server"
+ATTR_SSDP_BOOTID = "BOOTID.UPNP.ORG"
+ATTR_SSDP_NEXTBOOTID = "NEXTBOOTID.UPNP.ORG"
 # Attributes for accessing info from retrieved UPnP device description
 ATTR_UPNP_DEVICE_TYPE = "deviceType"
 ATTR_UPNP_FRIENDLY_NAME = "friendlyName"
@@ -56,7 +60,7 @@ ATTR_UPNP_UDN = "UDN"
 ATTR_UPNP_UPC = "UPC"
 ATTR_UPNP_PRESENTATION_URL = "presentationURL"
 
-PRIMARY_MATCH_KEYS = [ATTR_UPNP_MANUFACTURER, "st", ATTR_UPNP_DEVICE_TYPE]
+PRIMARY_MATCH_KEYS = [ATTR_UPNP_MANUFACTURER, "st", ATTR_UPNP_DEVICE_TYPE, "nt"]
 
 DISCOVERY_MAPPING = {
     "usn": ATTR_SSDP_USN,
@@ -64,6 +68,8 @@ DISCOVERY_MAPPING = {
     "server": ATTR_SSDP_SERVER,
     "st": ATTR_SSDP_ST,
     "location": ATTR_SSDP_LOCATION,
+    "_udn": ATTR_SSDP_UDN,
+    "nt": ATTR_SSDP_NT,
 }
 
 SsdpChange = Enum("SsdpChange", "ALIVE BYEBYE UPDATE")
