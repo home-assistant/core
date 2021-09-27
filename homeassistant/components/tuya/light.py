@@ -335,7 +335,7 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
         hsv_v = hsv_data_range.get("v")
         return hsv_v.get("min", 0), hsv_v.get("max", 255)
 
-    def _tuya_hsv_function(self) -> dict[str, dict]:
+    def _tuya_hsv_function(self) -> dict[str, dict[str, int]]:
         hsv_data = json.loads(
             self.tuya_device.function.get(self.dp_code_colour, {}).values
         )
