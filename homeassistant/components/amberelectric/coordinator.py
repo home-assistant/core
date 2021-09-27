@@ -55,7 +55,6 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
             hass,
             LOGGER,
             name="amberelectric",
-            update_method=self.async_update_data,
             update_interval=timedelta(minutes=1),
         )
         self._api = api
