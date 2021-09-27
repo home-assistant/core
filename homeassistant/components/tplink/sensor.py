@@ -75,6 +75,29 @@ ENERGY_SENSORS: Final[list[SensorEntityDescription]] = [
     ),
 ]
 
+KEY_TO_PROPERTY_MAP = {
+    ATTR_CURRENT_POWER_W: "power",
+    ATTR_TOTAL_ENERGY_KWH: "total",
+    ATTR_VOLTAGE: "voltage",
+    ATTR_CURRENT_A: "current",
+}
+
+
+def async_get_key_value_from_device(device: SmartDevice, key: str) -> float | None:
+    """Map a sensor key to the device attribute."""
+    if attr := KEY_TO_PROPERTY_MAP.get(key):
+        val = getattr(device.emeter_realtime, attr)
+        if val is None:
+            return None
+        return cast(float, val)
+
+    # ATTR_TODAY_ENERGY_KWH
+    if (emeter_today := device.emeter_today) is not None:
+        return cast(float, emeter_today)
+    # today's consumption not available, when device was off all the day
+    # bulb's do not report this information, so filter it out
+    return None if device.is_bulb else 0.0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -84,21 +107,23 @@ async def async_setup_entry(
     """Set up sensors."""
     coordinator: TPLinkDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[SmartPlugSensor] = []
-    device = coordinator.device
-    if device.is_strip:
-        # Historiclly we only add the children if the device is a strip
-        for child in device.children:
-            entities.extend(
-                SmartPlugSensor(child, coordinator, description)
-                for description in ENERGY_SENSORS
-                if device.has_emeter
-            )
-    else:
-        entities.extend(
+    parent = coordinator.device
+    if not parent.has_emeter:
+        return
+
+    def _async_sensors_for_device(device: SmartDevice) -> list[SmartPlugSensor]:
+        return [
             SmartPlugSensor(device, coordinator, description)
             for description in ENERGY_SENSORS
-            if device.has_emeter
-        )
+            if async_get_key_value_from_device(device, description.key) is not None
+        ]
+
+    if parent.is_strip:
+        # Historiclly we only add the children if the device is a strip
+        for child in parent.children:
+            entities.extend(_async_sensors_for_device(child))
+    else:
+        entities.extend(_async_sensors_for_device(parent))
 
     async_add_entities(entities)
 
@@ -132,18 +157,4 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the sensors state."""
-        if self.entity_description.key == ATTR_CURRENT_POWER_W:
-            return cast(float, self.device.emeter_realtime.power)
-        if self.entity_description.key == ATTR_TOTAL_ENERGY_KWH:
-            return cast(float, self.device.emeter_realtime.total)
-        if self.entity_description.key == ATTR_VOLTAGE:
-            return cast(float, self.device.emeter_realtime.voltage)
-        if self.entity_description.key == ATTR_CURRENT_A:
-            return cast(float, self.device.emeter_realtime.current)
-
-        # ATTR_TODAY_ENERGY_KWH
-        if (emeter_today := self.device.emeter_today) is not None:
-            return cast(float, emeter_today)
-        # today's consumption not available, when device was off all the day
-        # bulb's do not report this information, so filter it out
-        return None if self.device.is_bulb else 0.0
+        return async_get_key_value_from_device(self.device, self.entity_description.key)
