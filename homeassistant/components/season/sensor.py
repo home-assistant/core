@@ -138,6 +138,8 @@ async def async_setup_entry(
 
     await season_data.async_update()
 
+    await season_data.async_update()
+
     entities = []
     for description in SENSOR_TYPES:
         if description.key == ENTITY_SEASON:
