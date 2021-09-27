@@ -104,15 +104,16 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Get devices already configured.
         configured_devices = {
-            item.data.get(CONF_MAC) for item in self._async_current_entries()
+            item.data[CONF_MAC]
+            for item in self._async_current_entries(include_ignore=False)
         }
 
         # Get supported devices not yet configured.
         unconfigured_devices = {
             device["mac_address"]
             for device in self._discovered_devices.values()
-            if device.get("modelName") in SUPPORTED_MODEL_TYPES
-            if device.get("mac_address") not in configured_devices
+            if device["modelName"] in SUPPORTED_MODEL_TYPES
+            and device["mac_address"] not in configured_devices
         }
 
         if not unconfigured_devices:
