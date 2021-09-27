@@ -39,8 +39,8 @@ async def ws_validate_statistics(
         vol.Required("statistic_ids"): [str],
     }
 )
-@websocket_api.async_response
-async def ws_clear_statistics(
+@callback
+def ws_clear_statistics(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Clear statistics for a list of statistic_ids.
