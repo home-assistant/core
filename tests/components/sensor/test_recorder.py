@@ -494,9 +494,9 @@ def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
                 "min": None,
                 "last_reset": process_timestamp_to_utc_isoformat(dt_util.as_local(one)),
                 "state": approx(factor * seq[7]),
-                "sum": approx(factor * (sum(seq) - seq[0])),
+                "sum": approx(factor * (sum(seq) - seq[0] - seq[3])),
                 "sum_decrease": approx(factor * 0.0),
-                "sum_increase": approx(factor * (sum(seq) - seq[0])),
+                "sum_increase": approx(factor * (sum(seq) - seq[0] - seq[3])),
             },
         ]
     }
