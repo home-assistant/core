@@ -19,12 +19,12 @@ from .const import LOGGER
 
 def is_current(interval: ActualInterval | CurrentInterval | ForecastInterval) -> bool:
     """Return true if the supplied interval is a CurrentInterval."""
-    return interval.__class__ == CurrentInterval
+    return isinstance(interval, CurrentInterval)
 
 
 def is_forecast(interval: ActualInterval | CurrentInterval | ForecastInterval) -> bool:
     """Return true if the supplied interval is a ForecastInterval."""
-    return interval.__class__ == ForecastInterval
+    return isinstance(interval, ForecastInterval)
 
 
 def is_general(interval: ActualInterval | CurrentInterval | ForecastInterval) -> bool:
