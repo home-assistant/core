@@ -86,27 +86,28 @@ class AmberPriceSensor(AmberSensor):
         """Return additional pieces of information about the price."""
         interval = self.coordinator.data[self.entity_description.key][self.channel_type]
 
-        data = {}
-        if interval is not None:
-            data["duration"] = interval.duration
-            data["date"] = interval.date.isoformat()
-            data["per_kwh"] = round(interval.per_kwh)
-            if interval.channel_type == ChannelType.FEED_IN:
-                data["per_kwh"] = data["per_kwh"] * -1
-            data["nem_date"] = interval.nem_time.isoformat()
-            data["spot_per_kwh"] = round(interval.spot_per_kwh)
-            data["start_time"] = interval.start_time.isoformat()
-            data["end_time"] = interval.end_time.isoformat()
-            data["renewables"] = round(interval.renewables)
-            data["estimate"] = interval.estimate
-            data["spike_status"] = interval.spike_status.value
-            data["channel_type"] = interval.channel_type.value
+        data = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        if interval is None:
+            return data
 
-            if interval.range is not None:
-                data["range_min"] = interval.range.min
-                data["range_max"] = interval.range.max
+        data["duration"] = interval.duration
+        data["date"] = interval.date.isoformat()
+        data["per_kwh"] = round(interval.per_kwh)
+        if interval.channel_type == ChannelType.FEED_IN:
+            data["per_kwh"] = data["per_kwh"] * -1
+        data["nem_date"] = interval.nem_time.isoformat()
+        data["spot_per_kwh"] = round(interval.spot_per_kwh)
+        data["start_time"] = interval.start_time.isoformat()
+        data["end_time"] = interval.end_time.isoformat()
+        data["renewables"] = round(interval.renewables)
+        data["estimate"] = interval.estimate
+        data["spike_status"] = interval.spike_status.value
+        data["channel_type"] = interval.channel_type.value
 
-        data[ATTR_ATTRIBUTION] = ATTRIBUTION
+        if interval.range is not None:
+            data["range_min"] = interval.range.min
+            data["range_max"] = interval.range.max
+
         return data
 
 
@@ -132,9 +133,11 @@ class AmberForecastSensor(AmberSensor):
             self.channel_type
         ]
 
-        data: dict[str, Any] = {}
-        data["forecasts"] = []
-        data["channel_type"] = intervals[0].channel_type.value
+        data = {
+            "forecasts": [],
+            "channel_type": intervals[0].channel_type.value,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+        }
 
         for interval in intervals:
             datum = {}
@@ -156,7 +159,6 @@ class AmberForecastSensor(AmberSensor):
 
             data["forecasts"].append(datum)
 
-        data[ATTR_ATTRIBUTION] = ATTRIBUTION
         return data
 
 
@@ -172,6 +174,8 @@ class AmberGridSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.site_id = coordinator.site_id
         self.entity_description = description
+        self._attr_device_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        self._attr_unique_id = f"{coordinator.site_id}-{description.key}"
 
     @property
     def unique_id(self) -> str | None:
@@ -182,13 +186,6 @@ class AmberGridSensor(CoordinatorEntity, SensorEntity):
     def native_value(self) -> str | None:
         """Return the value of the sensor."""
         return self.coordinator.data["grid"][self.entity_description.key]
-
-    @property
-    def device_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return additional pieces of information about the sensor."""
-        data = {}
-        data[ATTR_ATTRIBUTION] = ATTRIBUTION
-        return data
 
 
 async def async_setup_entry(
