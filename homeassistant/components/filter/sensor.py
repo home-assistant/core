@@ -192,7 +192,6 @@ class SensorFilter(SensorEntity):
         self._filters = filters
         self._icon = None
         self._device_class = None
-        self._state_class = None
 
     @callback
     def _update_filter_sensor_state_event(self, event):
@@ -251,10 +250,10 @@ class SensorFilter(SensorEntity):
             self._device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
 
         if (
-            self._state_class is None
+            self._attr_state_class is None
             and new_state.attributes.get(ATTR_STATE_CLASS) is not None
         ):
-            self._state_class = new_state.attributes.get(ATTR_STATE_CLASS)
+            self._attr_state_class = new_state.attributes.get(ATTR_STATE_CLASS)
 
         if self._unit_of_measurement is None:
             self._unit_of_measurement = new_state.attributes.get(
@@ -348,11 +347,6 @@ class SensorFilter(SensorEntity):
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return self._icon
-
-    @property
-    def state_class(self):
-        """Return the state class of the sensor, if any."""
-        return self._state_class
 
     @property
     def native_unit_of_measurement(self):
