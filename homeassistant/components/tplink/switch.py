@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import legacy_device_id
 from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import CoordinatedTPLinkEntity, async_refresh_after
@@ -53,7 +54,7 @@ class SmartPlugSwitch(CoordinatedTPLinkEntity, SwitchEntity):
         """Initialize the switch."""
         super().__init__(device, coordinator)
         # For backwards compat with pyHS100
-        self._attr_unique_id = self.device.device_id
+        self._attr_unique_id = legacy_device_id(device)
 
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
