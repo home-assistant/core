@@ -79,13 +79,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ENTITY_DAYS_LEFT,
         name="Days Left",
-        native_unit_of_measurement  = TIME_DAYS
+        native_unit_of_measurement=TIME_DAYS,
         icon=SEASON_ICONS[ENTITY_DAYS_LEFT],
     ),
     SensorEntityDescription(
         key=ENTITY_DAYS_IN,
         name="Days In",
-        native_unit_of_measurement  = TIME_DAYS
+        native_unit_of_measurement=TIME_DAYS,
         icon=SEASON_ICONS[ENTITY_DAYS_IN],
     ),
     SensorEntityDescription(
