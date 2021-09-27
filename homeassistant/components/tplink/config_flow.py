@@ -16,8 +16,8 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import DiscoveryInfoType
 
+from . import async_entry_is_legacy
 from .const import DISCOVERED_DEVICES, DOMAIN
-from .utils import async_entry_is_legacy
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,9 +94,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not host:
                 return await self.async_step_pick_device()
             try:
-                device = await self._async_try_connect(
-                    host, raise_on_progress=False
-                )
+                device = await self._async_try_connect(host, raise_on_progress=False)
             except SmartDeviceException:
                 errors["base"] = "cannot_connect"
             else:

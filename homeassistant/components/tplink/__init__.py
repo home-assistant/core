@@ -30,7 +30,6 @@ from .migration import (
     async_migrate_legacy_entries,
     async_migrate_yaml_entries,
 )
-from .utils import async_entry_is_legacy
 
 TPLINK_HOST_SCHEMA = vol.Schema({vol.Required(CONF_HOST): cv.string})
 
@@ -147,3 +146,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass_data.pop(entry.entry_id)
     return unload_ok
+
+
+@callback
+def async_entry_is_legacy(entry: ConfigEntry) -> bool:
+    """Check if a config entry is the legacy shared one."""
+    return entry.unique_id is None or entry.unique_id == DOMAIN
