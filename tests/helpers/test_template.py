@@ -227,6 +227,12 @@ def test_float(hass):
         (0.0, True),
         ("0", True),
         ("0.0", True),
+        (True, True),
+        (False, True),
+        ("True", False),
+        ("False", False),
+        (None, False),
+        ("None", False),
         ("horse", False),
         (math.pi, True),
         (math.nan, False),
@@ -235,19 +241,16 @@ def test_float(hass):
         ("inf", False),
     ],
 )
-def test_isnumeric(hass, value, expected):
-    """Test isnumeric."""
-    hass.states.async_set("sensor.temperature", value)
+def test_isnumber(hass, value, expected):
+    """Test is_number."""
     assert (
-        template.Template(
-            "{{ isnumeric(states('sensor.temperature')) }}", hass
-        ).async_render()
+        template.Template("{{ is_number(value) }}", hass).async_render({"value": value})
         == expected
     )
     assert (
-        template.Template(
-            "{{ states('sensor.temperature') | isnumeric }}", hass
-        ).async_render()
+        template.Template("{{ value | is_number }}", hass).async_render(
+            {"value": value}
+        )
         == expected
     )
 

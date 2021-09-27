@@ -1370,7 +1370,7 @@ def forgiving_float(value):
         return value
 
 
-def is_numeric(value):
+def is_number(value):
     """Try to convert value to a float."""
     try:
         fvalue = float(value)
@@ -1586,7 +1586,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["bitwise_and"] = bitwise_and
         self.filters["bitwise_or"] = bitwise_or
         self.filters["ord"] = ord
-        self.filters["isnumeric"] = is_numeric
+        self.filters["is_number"] = is_number
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -1609,7 +1609,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["urlencode"] = urlencode
         self.globals["max"] = max
         self.globals["min"] = min
-        self.globals["isnumeric"] = is_numeric
+        self.globals["is_number"] = is_number
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
 
