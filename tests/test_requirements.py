@@ -213,10 +213,8 @@ async def test_get_integration_with_requirements_pip_install_fails_two_passes(ha
         assert integration
         assert integration.domain == "test_component"
 
-    assert len(mock_is_installed.mock_calls) == 3
+    assert len(mock_is_installed.mock_calls) == 1
     assert sorted(mock_call[1][0] for mock_call in mock_is_installed.mock_calls) == [
-        "test-comp-after-dep==1.0.0",
-        "test-comp-dep==1.0.0",
         "test-comp==1.0.0",
     ]
 

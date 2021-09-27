@@ -178,15 +178,15 @@ async def _async_process_requirements(
     kwargs: Any,
 ) -> None:
     """Install a requirement and save failures."""
-    if pkg_util.is_installed(req):
-        return
-
     if req in install_failure_history:
         _LOGGER.info(
             "Multiple attempts to install %s failed, install will be retried after next configuration check or restart",
             req,
         )
         raise RequirementsNotFound(name, [req])
+
+    if pkg_util.is_installed(req):
+        return
 
     def _install(req: str, kwargs: dict[str, Any]) -> bool:
         """Install requirement."""
