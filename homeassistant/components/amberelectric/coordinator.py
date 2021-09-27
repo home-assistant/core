@@ -55,7 +55,6 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
             hass,
             LOGGER,
             name="amberelectric",
-            update_method=self.async_update_price_data,
             update_interval=timedelta(minutes=1),
         )
         self._api = api
@@ -106,6 +105,6 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
         LOGGER.debug("Fetched new Amber data: %s", data)
         return result
 
-    async def async_update_price_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Async update wrapper."""
         return await self.hass.async_add_executor_job(self.update_price_data)
