@@ -142,6 +142,7 @@ async def async_setup_platform(
     # unique for different resolution streams.  If any cameras were configured
     # with this version, update the old entity with the new unique id.
     serial_number = await hass.async_add_executor_job(lambda: device.api.serial_number)  # type: ignore[no-any-return]
+    serial_number = serial_number.strip()
     registry = entity_registry.async_get(hass)
     entity_id = registry.async_get_entity_id(CAMERA_DOMAIN, DOMAIN, serial_number)
     if entity_id is not None:
