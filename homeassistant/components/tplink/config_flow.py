@@ -88,9 +88,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
-        host = ""
         if user_input is not None:
-            host = user_input.get(CONF_HOST, "")
+            host = user_input[CONF_HOST]
             if not host:
                 return await self.async_step_pick_device()
             try:
@@ -102,7 +101,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Optional(CONF_HOST, default=host): str}),
+            data_schema=vol.Schema({vol.Optional(CONF_HOST, default=""): str}),
             errors=errors,
         )
 
