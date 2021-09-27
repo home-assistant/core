@@ -445,6 +445,7 @@ def compile_statistics(  # noqa: C901
                         )
                     )
                     != old_last_reset
+                    and last_reset is not None
                 ):
                     if old_state is None:
                         _LOGGER.info(
