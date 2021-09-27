@@ -1,10 +1,7 @@
 """Support for Efergy sensors."""
 from __future__ import annotations
 
-import logging
-from typing import Any
-
-import requests
+from pyefergy import Efergy
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -23,12 +20,10 @@ from homeassistant.const import (
     POWER_WATT,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-
-_LOGGER = logging.getLogger(__name__)
-_RESOURCE = "https://engage.efergy.com/mobile_proxy/"
 
 CONF_APPTOKEN = "app_token"
 CONF_UTC_OFFSET = "utc_offset"
@@ -93,37 +88,36 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType = None,
 ) -> None:
     """Set up the Efergy sensor."""
-    app_token = config.get(CONF_APPTOKEN)
-    utc_offset = str(config.get(CONF_UTC_OFFSET))
+    api = Efergy(
+        config[CONF_APPTOKEN],
+        async_get_clientsession(hass),
+        utc_offset=config[CONF_UTC_OFFSET],
+    )
 
     dev = []
+    sensors = await api.get_sids()
     for variable in config[CONF_MONITORED_VARIABLES]:
         if variable[CONF_TYPE] == CONF_CURRENT_VALUES:
-            url_string = f"{_RESOURCE}getCurrentValuesSummary?token={app_token}"
-            response = requests.get(url_string, timeout=10)
-            for sensor in response.json():
-                sid = sensor["sid"]
+            for sensor in sensors:
                 dev.append(
                     EfergySensor(
-                        app_token,
-                        utc_offset,
+                        api,
                         variable[CONF_PERIOD],
                         variable[CONF_CURRENCY],
                         SENSOR_TYPES[variable[CONF_TYPE]],
-                        sid=sid,
+                        sid=sensor["sid"],
                     )
                 )
         dev.append(
             EfergySensor(
-                app_token,
-                utc_offset,
+                api,
                 variable[CONF_PERIOD],
                 variable[CONF_CURRENCY],
                 SENSOR_TYPES[variable[CONF_TYPE]],
@@ -138,8 +132,7 @@ class EfergySensor(SensorEntity):
 
     def __init__(
         self,
-        app_token: Any,
-        utc_offset: str,
+        api: Efergy,
         period: str,
         currency: str,
         description: SensorEntityDescription,
@@ -148,41 +141,15 @@ class EfergySensor(SensorEntity):
         """Initialize the sensor."""
         self.entity_description = description
         self.sid = sid
+        self.api = api
+        self.period = period
         if sid:
             self._attr_name = f"efergy_{sid}"
-        self.app_token = app_token
-        self.utc_offset = utc_offset
-        self.period = period
         if description.key == CONF_COST:
             self._attr_native_unit_of_measurement = f"{currency}/{period}"
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Get the Efergy monitor data from the web service."""
-        try:
-            if self.entity_description.key == CONF_INSTANT:
-                url_string = f"{_RESOURCE}getInstant?token={self.app_token}"
-                response = requests.get(url_string, timeout=10)
-                self._attr_native_value = response.json()["reading"]
-            elif self.entity_description.key == CONF_AMOUNT:
-                url_string = f"{_RESOURCE}getEnergy?token={self.app_token}&offset={self.utc_offset}&period={self.period}"
-                response = requests.get(url_string, timeout=10)
-                self._attr_native_value = response.json()["sum"]
-            elif self.entity_description.key == CONF_BUDGET:
-                url_string = f"{_RESOURCE}getBudget?token={self.app_token}"
-                response = requests.get(url_string, timeout=10)
-                self._attr_native_value = response.json()["status"]
-            elif self.entity_description.key == CONF_COST:
-                url_string = f"{_RESOURCE}getCost?token={self.app_token}&offset={self.utc_offset}&period={self.period}"
-                response = requests.get(url_string, timeout=10)
-                self._attr_native_value = response.json()["sum"]
-            elif self.entity_description.key == CONF_CURRENT_VALUES:
-                url_string = (
-                    f"{_RESOURCE}getCurrentValuesSummary?token={self.app_token}"
-                )
-                response = requests.get(url_string, timeout=10)
-                for sensor in response.json():
-                    if self.sid == sensor["sid"]:
-                        measurement = next(iter(sensor["data"][0].values()))
-                        self._attr_native_value = measurement
-        except (requests.RequestException, ValueError, KeyError):
-            _LOGGER.warning("Could not update status for %s", self.name)
+        self._attr_native_value = await self.api.async_get_reading(
+            self.entity_description.key, period=self.period, sid=self.sid
+        )

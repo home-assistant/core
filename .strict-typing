@@ -104,6 +104,7 @@ homeassistant.components.switcher_kis.*
 homeassistant.components.synology_dsm.*
 homeassistant.components.systemmonitor.*
 homeassistant.components.tag.*
+homeassistant.components.tautulli.*
 homeassistant.components.tcp.*
 homeassistant.components.tile.*
 homeassistant.components.tradfri.*
@@ -112,6 +113,7 @@ homeassistant.components.upcloud.*
 homeassistant.components.uptime.*
 homeassistant.components.uptimerobot.*
 homeassistant.components.vacuum.*
+homeassistant.components.vallox.*
 homeassistant.components.water_heater.*
 homeassistant.components.weather.*
 homeassistant.components.websocket_api.*

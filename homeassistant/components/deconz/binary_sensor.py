@@ -11,6 +11,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_VIBRATION,
     DOMAIN,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import callback
@@ -24,13 +25,31 @@ ATTR_ORIENTATION = "orientation"
 ATTR_TILTANGLE = "tiltangle"
 ATTR_VIBRATIONSTRENGTH = "vibrationstrength"
 
-DEVICE_CLASS = {
-    CarbonMonoxide: DEVICE_CLASS_GAS,
-    Fire: DEVICE_CLASS_SMOKE,
-    OpenClose: DEVICE_CLASS_OPENING,
-    Presence: DEVICE_CLASS_MOTION,
-    Vibration: DEVICE_CLASS_VIBRATION,
-    Water: DEVICE_CLASS_MOISTURE,
+ENTITY_DESCRIPTIONS = {
+    CarbonMonoxide: BinarySensorEntityDescription(
+        key="carbonmonoxide",
+        device_class=DEVICE_CLASS_GAS,
+    ),
+    Fire: BinarySensorEntityDescription(
+        key="fire",
+        device_class=DEVICE_CLASS_SMOKE,
+    ),
+    OpenClose: BinarySensorEntityDescription(
+        key="openclose",
+        device_class=DEVICE_CLASS_OPENING,
+    ),
+    Presence: BinarySensorEntityDescription(
+        key="presence",
+        device_class=DEVICE_CLASS_MOTION,
+    ),
+    Vibration: BinarySensorEntityDescription(
+        key="vibration",
+        device_class=DEVICE_CLASS_VIBRATION,
+    ),
+    Water: BinarySensorEntityDescription(
+        key="water",
+        device_class=DEVICE_CLASS_MOISTURE,
+    ),
 }
 
 
@@ -84,7 +103,9 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
     def __init__(self, device, gateway):
         """Initialize deCONZ binary sensor."""
         super().__init__(device, gateway)
-        self._attr_device_class = DEVICE_CLASS.get(type(self._device))
+
+        if entity_description := ENTITY_DESCRIPTIONS.get(type(device)):
+            self.entity_description = entity_description
 
     @callback
     def async_update_callback(self, force_update=False):

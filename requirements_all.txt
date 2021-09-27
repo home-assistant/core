@@ -55,7 +55,7 @@ PySocks==1.7.1
 PyTransportNSW==0.1.1
 
 # homeassistant.components.camera
-PyTurboJPEG==1.5.2
+PyTurboJPEG==1.6.1
 
 # homeassistant.components.vicare
 PyViCare==1.0.0
@@ -182,7 +182,7 @@ aioguardian==1.0.8
 aioharmony==0.2.7
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.6.2
+aiohomekit==0.6.3
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -217,6 +217,9 @@ aiomodernforms==0.1.8
 
 # homeassistant.components.yamaha_musiccast
 aiomusiccast==0.9.2
+
+# homeassistant.components.nanoleaf
+aionanoleaf==0.0.1
 
 # homeassistant.components.keyboard_remote
 aionotify==0.2.0
@@ -263,6 +266,9 @@ aioymaps==1.1.0
 # homeassistant.components.airly
 airly==1.1.0
 
+# homeassistant.components.airthings
+airthings_cloud==0.0.1
+
 # homeassistant.components.airtouch4
 airtouch4pyapi==1.0.5
 
@@ -297,7 +303,7 @@ apcaccess==0.0.13
 apns2==0.3.0
 
 # homeassistant.components.apprise
-apprise==0.9.4
+apprise==0.9.5.1
 
 # homeassistant.components.aprs
 aprslib==0.6.46
@@ -321,7 +327,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.21.2
+async-upnp-client==0.22.1
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -467,7 +473,7 @@ co2signal==0.4.2
 coinbase==2.1.0
 
 # homeassistant.scripts.check_config
-colorlog==5.0.1
+colorlog==6.4.1
 
 # homeassistant.components.color_extractor
 colorthief==0.2.1
@@ -490,7 +496,7 @@ coronavirus==1.1.1
 croniter==1.0.6
 
 # homeassistant.components.crownstone
-crownstone-cloud==1.4.7
+crownstone-cloud==1.4.8
 
 # homeassistant.components.crownstone
 crownstone-sse==2.0.2
@@ -505,7 +511,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.debugpy
-debugpy==1.4.1
+debugpy==1.4.3
 
 # homeassistant.components.decora
 # decora==0.6
@@ -516,7 +522,6 @@ debugpy==1.4.1
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
 # homeassistant.components.ohmconnect
-# homeassistant.components.ssdp
 defusedxml==0.7.1
 
 # homeassistant.components.deluge
@@ -574,7 +579,7 @@ eliqonline==1.2.2
 elkm1-lib==0.8.10
 
 # homeassistant.components.mobile_app
-emoji==1.2.0
+emoji==1.5.0
 
 # homeassistant.components.emulated_roku
 emulated_roku==0.2.1
@@ -638,7 +643,7 @@ fitbit==0.3.1
 fixerio==1.0.0a0
 
 # homeassistant.components.fjaraskupan
-fjaraskupan==1.0.0
+fjaraskupan==1.0.1
 
 # homeassistant.components.flipr
 flipr-api==1.4.1
@@ -712,7 +717,7 @@ glances_api==0.2.0
 gntp==1.0.3
 
 # homeassistant.components.goalzero
-goalzero==0.1.7
+goalzero==0.2.0
 
 # homeassistant.components.google
 google-api-python-client==1.6.4
@@ -1088,7 +1093,7 @@ numato-gpio==0.10.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.21.1
+numpy==1.21.2
 
 # homeassistant.components.oasa_telematics
 oasatelematics==0.3
@@ -1444,6 +1449,9 @@ pyeconet==0.1.14
 # homeassistant.components.edimax
 pyedimax==0.2.1
 
+# homeassistant.components.efergy
+pyefergy==0.0.3
+
 # homeassistant.components.eight_sleep
 pyeight==0.1.9
 
@@ -1646,9 +1654,6 @@ pymyq==3.1.4
 # homeassistant.components.mysensors
 pymysensors==0.21.0
 
-# homeassistant.components.nanoleaf
-pynanoleaf==0.1.0
-
 # homeassistant.components.nello
 pynello==2.0.3
 
@@ -1785,7 +1790,7 @@ pysesame2==1.0.1
 pysher==1.0.1
 
 # homeassistant.components.sia
-pysiaalarm==3.0.0
+pysiaalarm==3.0.1
 
 # homeassistant.components.signal_messenger
 pysignalclirestapi==0.3.4
@@ -1917,7 +1922,7 @@ python-qbittorrent==0.4.2
 python-ripple-api==0.0.3
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.25
+python-smarttub==0.0.27
 
 # homeassistant.components.sochain
 python-sochain-api==0.0.2
@@ -2312,7 +2317,7 @@ tmb==0.0.4
 todoist-python==8.0.0
 
 # homeassistant.components.toon
-toonapi==0.2.0
+toonapi==0.2.1
 
 # homeassistant.components.totalconnect
 total_connect_client==0.57
@@ -2361,7 +2366,7 @@ uvcclient==0.11.0
 vallox-websocket-api==2.8.1
 
 # homeassistant.components.velbus
-velbus-aio==2021.9.1
+velbus-aio==2021.9.4
 
 # homeassistant.components.venstar
 venstarcolortouch==0.14
@@ -2395,7 +2400,7 @@ wallbox==0.4.4
 waqiasync==1.0.0
 
 # homeassistant.components.folder_watcher
-watchdog==2.1.4
+watchdog==2.1.5
 
 # homeassistant.components.waterfurnace
 waterfurnace==1.1.0
@@ -2466,7 +2471,7 @@ youtube_dl==2021.04.26
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.36.6
+zeroconf==0.36.7
 
 # homeassistant.components.zha
 zha-quirks==0.0.61
