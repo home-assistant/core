@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from logging import getLogger
-from typing import Any
 
 from requests.exceptions import ConnectTimeout, HTTPError
 from skybellpy import Skybell
@@ -114,8 +113,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_update_data() -> None:
         """Fetch data from API endpoint."""
         try:
-            for device in devices:
-                await hass.async_add_executor_job(device.refresh)
+
+            if len(devices) == 1:
+                await hass.async_add_executor_job(devices[0].refresh)
+            else:
+                for device in devices:
+                    await hass.async_add_executor_job(device.refresh)
         except (ConnectTimeout, HTTPError) as err:
             raise UpdateFailed(f"Failed to communicating with device {err}") from err
 
@@ -151,7 +154,6 @@ class SkybellEntity(CoordinatorEntity):
         self,
         coordinator: DataUpdateCoordinator,
         device: SkybellDevice,
-        _: Any,
         server_unique_id: str,
     ) -> None:
         """Initialize a SkyBell entity."""
@@ -186,4 +188,4 @@ class SkybellEntity(CoordinatorEntity):
     @property
     def available(self) -> bool:
         """Return True if device is available."""
-        return self._device.wifi_status != "offline"
+        return super().available and self._device.wifi_status != "offline"

@@ -1,8 +1,6 @@
 """Light/LED support for the Skybell HD Doorbell."""
 from __future__ import annotations
 
-from typing import Any
-
 from skybellpy.device import SkybellDevice
 
 from homeassistant.components.light import (
@@ -39,13 +37,12 @@ async def async_setup_entry(
     skybell = hass.data[DOMAIN][entry.entry_id]
 
     lights = []
-    for light in skybell[DATA_DEVICES]:
+    for _ in skybell[DATA_DEVICES]:
         for device in skybell[DATA_DEVICES]:
             lights.append(
                 SkybellLight(
                     skybell[DATA_COORDINATOR],
                     device,
-                    light,
                     entry.entry_id,
                 )
             )
@@ -62,11 +59,10 @@ class SkybellLight(SkybellEntity, LightEntity):
         self,
         coordinator: DataUpdateCoordinator,
         device: SkybellDevice,
-        _: Any,
         server_unique_id: str,
     ) -> None:
         """Initialize a light for a Skybell device."""
-        super().__init__(coordinator, device, _, server_unique_id)
+        super().__init__(coordinator, device, server_unique_id)
         self._attr_name = device.name
         self._attr_unique_id = f"{server_unique_id}/{self.name}"
 

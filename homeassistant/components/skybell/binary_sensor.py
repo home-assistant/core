@@ -86,7 +86,7 @@ class SkybellBinarySensor(SkybellEntity, BinarySensorEntity):
         server_unique_id: str,
     ) -> None:
         """Initialize a binary sensor for a Skybell device."""
-        super().__init__(coordinator, device, description, server_unique_id)
+        super().__init__(coordinator, device, server_unique_id)
         self.entity_description = description
         self._attr_name = f"{device.name} {description.name}"
         self._event: dict[str, str] = {}

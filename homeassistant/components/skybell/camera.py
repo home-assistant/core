@@ -79,7 +79,7 @@ class SkybellCamera(SkybellEntity, Camera):
         server_unique_id: str,
     ) -> None:
         """Initialize a camera for a Skybell device."""
-        super().__init__(coordinator, device, camera, server_unique_id)
+        super().__init__(coordinator, device, server_unique_id)
         Camera.__init__(self)
         if CAMERA_TYPES[camera] is not None:
             self._attr_name = f"{device.name} {CAMERA_TYPES[camera]}"
@@ -88,7 +88,6 @@ class SkybellCamera(SkybellEntity, Camera):
         self._attr_unique_id = f"{server_unique_id}/{camera}"
 
         self._camera = camera
-        self._device = device
         self._url = ""
         self._response: Response | None = None
 
