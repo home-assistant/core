@@ -32,7 +32,6 @@ from .conftest import (
 )
 
 from tests.common import MockConfigEntry
-from asynctest.mock import create_autospec
 
 # Auto-use the domain_data_mock and dmr_device_mock fixtures for every test in this module
 pytestmark = [
