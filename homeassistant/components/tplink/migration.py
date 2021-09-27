@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-import logging
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
@@ -17,8 +16,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_DIMMER, CONF_LIGHT, CONF_STRIP, CONF_SWITCH, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_cleanup_legacy_entry(
@@ -97,9 +94,6 @@ async def async_migrate_entities_devices(
                 connection_type == dr.CONNECTION_NETWORK_MAC
                 and value == new_entry.unique_id
             ):
-                _LOGGER.warning(
-                    "MIGRATING device: %s to new config entry %s", dev_entry, new_entry
-                )
                 migrated_devices.append(dev_entry.id)
                 device_registry.async_update_device(
                     dev_entry.id, add_config_entry_id=new_entry.entry_id
@@ -110,9 +104,6 @@ async def async_migrate_entities_devices(
         entity_registry, legacy_entry_id
     ):
         if reg_entity.device_id in migrated_devices:
-            _LOGGER.warning(
-                "MIGRATING entity: %s to new config entry %s", reg_entity, new_entry
-            )
             entity_registry.async_update_entity(
                 reg_entity.entity_id, config_entry_id=new_entry.entry_id
             )
