@@ -17,7 +17,8 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_DIMMER, CONF_LIGHT, CONF_STRIP, CONF_SWITCH, DOMAIN
 
-MAC_ADDRESS_LEN = 17
+# Lights had the : stripped, plugs did not
+MAC_ADDRESS_LENS = (12, 17)
 
 
 async def async_cleanup_legacy_entry(
@@ -45,7 +46,7 @@ def async_migrate_legacy_entries(
 
     for reg_entity in tplink_reg_entities:
         # Only migrate entities with a mac address only
-        if len(reg_entity.unique_id) != MAC_ADDRESS_LEN:
+        if len(reg_entity.unique_id) not in MAC_ADDRESS_LENS:
             continue
         mac = dr.format_mac(reg_entity.unique_id)
         if mac not in config_entries_by_mac and reg_entity.domain in (
@@ -92,30 +93,26 @@ async def async_migrate_entities_devices(
     hass: HomeAssistant, legacy_entry_id: str, new_entry: ConfigEntry
 ) -> None:
     """Move entities and devices to the new config entry."""
-    entity_registry = er.async_get(hass)
-    tplink_reg_entities = er.async_entries_for_config_entry(
-        entity_registry, legacy_entry_id
-    )
-
-    for reg_entity in tplink_reg_entities:
-        # Only migrate entities with a mac address only
-        if len(reg_entity.unique_id) < MAC_ADDRESS_LEN:
-            continue
-        if dr.format_mac(reg_entity.unique_id[:MAC_ADDRESS_LEN]) == new_entry.unique_id:
-            entity_registry.async_update_entity(
-                reg_entity.entity_id, config_entry_id=new_entry.entry_id
-            )
-
+    migrated_devices = []
     device_registry = dr.async_get(hass)
-    tplink_dev_entities = dr.async_entries_for_config_entry(
+    for dev_entry in dr.async_entries_for_config_entry(
         device_registry, legacy_entry_id
-    )
-    for dev_entry in tplink_dev_entities:
+    ):
         for connection_type, value in dev_entry.connections:
             if (
                 connection_type == dr.CONNECTION_NETWORK_MAC
                 and value == new_entry.unique_id
             ):
+                migrated_devices.append(dev_entry.id)
                 device_registry.async_update_device(
                     dev_entry.id, add_config_entry_id=new_entry.entry_id
                 )
+
+    entity_registry = er.async_get(hass)
+    for reg_entity in er.async_entries_for_config_entry(
+        entity_registry, legacy_entry_id
+    ):
+        if reg_entity.device_id in migrated_devices:
+            entity_registry.async_update_entity(
+                reg_entity.entity_id, config_entry_id=new_entry.entry_id
+            )
