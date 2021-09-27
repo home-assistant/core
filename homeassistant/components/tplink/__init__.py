@@ -94,7 +94,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             config_entries_by_mac[entry.unique_id] = entry
 
     broadcast_addresses = await network.async_get_ipv4_broadcast_addresses(hass)
-    tasks = [Discover.discover(target=address) for address in broadcast_addresses]
+    tasks = [Discover.discover(target=str(address)) for address in broadcast_addresses]
     discovered_devices: dict[str, SmartDevice] = {}
     for device_list in await asyncio.gather(*tasks):
         for device in device_list.values():
