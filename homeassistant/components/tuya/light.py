@@ -19,7 +19,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -90,7 +90,8 @@ async def async_setup_entry(
         DEVICE_DOMAIN
     ] = TUYA_SUPPORT_TYPE
 
-    async def async_discover_device(dev_ids: list[str]):
+    @callback
+    def async_discover_device(dev_ids: list[str]):
         """Discover and add a discovered tuya light."""
         _LOGGER.debug("light add-> %s", dev_ids)
         if not dev_ids:
@@ -98,8 +99,10 @@ async def async_setup_entry(
         entities = _setup_entities(hass, entry, dev_ids)
         async_add_entities(entities)
 
-    async_dispatcher_connect(
-        hass, TUYA_DISCOVERY_NEW.format(DEVICE_DOMAIN), async_discover_device
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, TUYA_DISCOVERY_NEW.format(DEVICE_DOMAIN), async_discover_device
+        )
     )
 
     device_manager = hass.data[DOMAIN][entry.entry_id][TUYA_DEVICE_MANAGER]
@@ -107,7 +110,7 @@ async def async_setup_entry(
     for (device_id, device) in device_manager.device_map.items():
         if device.category in TUYA_SUPPORT_TYPE:
             device_ids.append(device_id)
-    await async_discover_device(device_ids)
+    async_discover_device(device_ids)
 
 
 def _setup_entities(
@@ -256,13 +259,6 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
         old_range = self._tuya_brightness_range()
         brightness = self.tuya_device.status.get(self.dp_code_bright, 0)
 
-        _LOGGER.debug(
-            "brightness id-> %s, work_mode-> %s, check true-> %s", 
-            self.tuya_device.id, 
-            self._work_mode(), 
-            self._work_mode().startswith(WORK_MODE_COLOUR)
-        )
-
         if self._work_mode().startswith(WORK_MODE_COLOUR):
             colour_data = json.loads(
                 self.tuya_device.status.get(self.dp_code_colour, 0)
@@ -339,7 +335,7 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
         hsv_v = hsv_data_range.get("v")
         return hsv_v.get("min", 0), hsv_v.get("max", 255)
 
-    def _tuya_hsv_function(self):
+    def _tuya_hsv_function(self) -> dict[str:dict]:
         hsv_data = json.loads(
             self.tuya_device.function.get(self.dp_code_colour, {}).values
         )
