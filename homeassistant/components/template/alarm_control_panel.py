@@ -71,7 +71,7 @@ ALARM_CONTROL_PANEL_SCHEMA = vol.Schema(
         vol.Optional(CONF_ARM_HOME_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_ARM_NIGHT_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
-        vol.Optional(CONF_CODE_FORMAT, default="number"): vol.In(
+        vol.Optional(CONF_CODE_FORMAT, default=FORMAT_NUMBER): vol.In(
             SUPPORTED_CODE_FORMATS
         ),
         vol.Optional(CONF_NAME): cv.string,
