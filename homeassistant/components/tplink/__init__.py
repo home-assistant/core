@@ -150,3 +150,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 def async_entry_is_legacy(entry: ConfigEntry) -> bool:
     """Check if a config entry is the legacy shared one."""
     return entry.unique_id is None or entry.unique_id == DOMAIN
+
+
+def legacy_device_id(device: SmartDevice) -> str:
+    """Convert the device id so it matches what was used in the original version."""
+    device_id: str = device.device_id
+    # Plugs are prefixed with the mac in python-kasa but not
+    # in pyHS100 so we need to strip off the mac
+    if "_" not in device_id:
+        return device_id
+    return device_id.split("_")[1]
