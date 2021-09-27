@@ -25,10 +25,18 @@ from homeassistant.components.switch import DOMAIN as DEVICE_SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceRegistry
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    async_entries_for_config_entry,
+    async_get,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntry
+from homeassistant.helpers.entity_registry import (
+    EntityRegistry,
+    RegistryEntry,
+    async_entries_for_device,
+)
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt as dt_util
 
@@ -361,17 +369,19 @@ class FritzBoxTools:
                     entity_removed = True
 
         if entity_removed:
-            await self._remove_empty_device(entity_reg)
+            await self._remove_empty_device(entity_reg, config_entry)
 
-    async def _remove_empty_device(self, entity_reg: EntityRegistry) -> None:
+    async def _remove_empty_device(
+        self, entity_reg: EntityRegistry, config_entry: ConfigEntry
+    ) -> None:
         """Remove devices with no entities."""
-        device_reg: DeviceRegistry = (
-            await self.hass.helpers.device_registry.async_get_registry()
-        )
-        for device_entry in dict(device_reg.devices.items()).values():
+
+        device_reg = async_get(self.hass)
+        device_list = async_entries_for_config_entry(device_reg, config_entry.entry_id)
+        for device_entry in device_list:
             if (
                 len(
-                    self.hass.helpers.entity_registry.async_entries_for_device(
+                    async_entries_for_device(
                         entity_reg,
                         device_entry.id,
                         include_disabled_entities=True,
