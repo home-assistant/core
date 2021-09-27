@@ -58,13 +58,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the OpenGarage covers."""
     devices = config.get(CONF_COVERS)
     for device_config in devices.values():
-        device_config[CONF_HOST] = (
-            f"{'https' if device_config[CONF_SSL] else 'http'}://"
-            f"{device_config.get(CONF_HOST)}"
-        )
-
-        del device_config[CONF_SSL]
-
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
