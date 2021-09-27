@@ -312,10 +312,14 @@ def main() -> int:
         open_ui=args.open_ui,
     )
 
-    with open(os.path.join(config_dir, FAULT_LOG_FILENAME), mode="w") as fault_file:
+    fault_file_name = os.path.join(config_dir, FAULT_LOG_FILENAME)
+    with open(fault_file_name, mode="w+") as fault_file:
         faulthandler.enable(fault_file)
         exit_code = runner.run(runtime_conf)
         faulthandler.disable()
+        fault_file.close()
+        if os.path.getsize(fault_file_name) == 0:
+            os.remove(fault_file_name)
 
         if exit_code == RESTART_EXIT_CODE and not args.runner:
             try_to_restart()
