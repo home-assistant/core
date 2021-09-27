@@ -42,9 +42,10 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         for entry_id in fritzbox_entry_ids:
             _LOGGER.debug("Executing service %s", service_call.service)
             fritz_tools: FritzBoxTools = hass.data[DOMAIN][entry_id]
-            config_entry = hass.config_entries.async_get_entry(entry_id)
-            assert config_entry
-            await fritz_tools.service_fritzbox(service_call, config_entry)
+            if config_entry := hass.config_entries.async_get_entry(entry_id):
+                await fritz_tools.service_fritzbox(service_call, config_entry)
+            else:
+                _LOGGER.error("Executing service %s failed, no config entry found", service_call.service)
 
     for service in SERVICE_LIST:
         hass.services.async_register(DOMAIN, service, async_call_fritz_service)
