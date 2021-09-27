@@ -188,7 +188,7 @@ class SeasonData:
 
         self.hemisphere = hemisphere
         self.time_zone = time_zone
-        self._type = _type
+        self.type = _type
         self.datetime = None
         self._data = {}
 
@@ -205,7 +205,7 @@ def get_season(self):
 
     date = self.datetime
     hemisphere = self.hemisphere
-    season_tracking_type = self._type
+    season_tracking_type = self.type
     time_zone = self.time_zone
     data = {}
 
