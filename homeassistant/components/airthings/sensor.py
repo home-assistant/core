@@ -25,7 +25,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     PRESSURE_MBAR,
-    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    SIGNAL_STRENGTH_DECIBELS,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
@@ -94,7 +94,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "rssi": SensorEntityDescription(
         key="rssi",
-        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         name="RSSI",
     ),
