@@ -101,8 +101,8 @@ async def _async_create_entities(hass, config):
         arm_away_action = device_config.get(CONF_ARM_AWAY_ACTION)
         arm_home_action = device_config.get(CONF_ARM_HOME_ACTION)
         arm_night_action = device_config.get(CONF_ARM_NIGHT_ACTION)
-        code_arm_required = device_config.get(CONF_CODE_ARM_REQUIRED)
-        code_format = device_config.get(CONF_CODE_FORMAT)
+        code_arm_required = device_config[CONF_CODE_ARM_REQUIRED]
+        code_format = device_config[CONF_CODE_FORMAT]
         unique_id = device_config.get(CONF_UNIQUE_ID)
 
         alarm_control_panels.append(
