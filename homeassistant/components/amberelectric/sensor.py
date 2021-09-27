@@ -178,9 +178,9 @@ class AmberGridSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.site_id}-{description.key}"
 
     @property
-    def unique_id(self) -> str | None:
+    def unique_id(self) -> None:
         """Return a unique id for each sensors."""
-        return f"{self.site_id}-{self.entity_description.key}"
+        self._attr_unique_id = f"{self.site_id}-{self.entity_description.key}"
 
     @property
     def native_value(self) -> str | None:
@@ -220,13 +220,13 @@ async def async_setup_entry(
         )
         entities.append(AmberForecastSensor(coordinator, description, channel_type))
 
-        renewables_description = SensorEntityDescription(
-            key="renewables",
-            name=f"{entry.title} - Renewables",
-            native_unit_of_measurement="%",
-            state_class=STATE_CLASS_MEASUREMENT,
-            icon="mdi:solar-power",
-        )
-        entities.append(AmberGridSensor(coordinator, renewables_description))
+    renewables_description = SensorEntityDescription(
+        key="renewables",
+        name=f"{entry.title} - Renewables",
+        native_unit_of_measurement="%",
+        state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:solar-power",
+    )
+    entities.append(AmberGridSensor(coordinator, renewables_description))
 
     async_add_entities(entities)
