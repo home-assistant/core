@@ -27,7 +27,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -104,7 +104,8 @@ async def async_setup_entry(
         DEVICE_DOMAIN
     ] = TUYA_SUPPORT_TYPE
 
-    async def async_discover_device(dev_ids: list[str]) -> None:
+    @callback
+    def async_discover_device(dev_ids: list[str]) -> None:
         """Discover and add a discovered tuya climate."""
         _LOGGER.debug("climate add-> %s", dev_ids)
         if not dev_ids:
@@ -123,7 +124,7 @@ async def async_setup_entry(
     for (device_id, device) in device_manager.device_map.items():
         if device.category in TUYA_SUPPORT_TYPE:
             device_ids.append(device_id)
-    await async_discover_device(device_ids)
+    async_discover_device(device_ids)
 
 
 def _setup_entities(
@@ -371,7 +372,7 @@ class TuyaHaClimate(TuyaHaEntity, ClimateEntity):
         if DPCODE_MODE not in self.tuya_device.status:
             return HVAC_MODE_OFF
         if self.tuya_device.status.get(DPCODE_MODE) is not None:
-            return TUYA_HVAC_TO_HA[self.tuya_device.status.get(DPCODE_MODE)]
+            return TUYA_HVAC_TO_HA[self.tuya_device.status[DPCODE_MODE]]
         return None
 
     @property
@@ -398,8 +399,7 @@ class TuyaHaClimate(TuyaHaEntity, ClimateEntity):
         modes = json.loads(self.tuya_device.function.get(DPCODE_MODE, {}).values).get(
             "range"
         )
-        preset_modes = [d for d in modes if d not in TUYA_HVAC_TO_HA]
-        return list(preset_modes)
+        return [d for d in modes if d not in TUYA_HVAC_TO_HA]
 
     @property
     def fan_mode(self) -> str | None:
