@@ -61,7 +61,7 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
         self._api = api
         self.site_id = site_id
 
-    def update(self) -> dict[str, dict[str, Any]]:
+    def update_data(self) -> dict[str, dict[str, Any]]:
         """Update callback."""
 
         result: dict[str, dict[str, Any]] = {
@@ -108,4 +108,4 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
 
     async def async_update_data(self) -> dict[str, Any]:
         """Async update wrapper."""
-        return await self.hass.async_add_executor_job(self.update)
+        return await self.hass.async_add_executor_job(self.update_data)
