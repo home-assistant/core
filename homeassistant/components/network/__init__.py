@@ -77,9 +77,9 @@ def async_only_default_interface_enabled(adapters: list[Adapter]) -> bool:
 
 
 @bind_hass
-async def async_get_ipv4_broadcast_addresses(hass: HomeAssistant) -> set[str]:
+async def async_get_ipv4_broadcast_addresses(hass: HomeAssistant) -> set[IPv4Address]:
     """Return a set of broadcast addresses."""
-    broadcast_addresses: set[str] = {IPV4_BROADCAST_ADDR}
+    broadcast_addresses: set[IPv4Address] = {IPv4Address(IPV4_BROADCAST_ADDR)}
     adapters = await async_get_adapters(hass)
     if async_only_default_interface_enabled(adapters):
         return broadcast_addresses
@@ -90,7 +90,9 @@ async def async_get_ipv4_broadcast_addresses(hass: HomeAssistant) -> set[str]:
             interface = ip_interface(
                 f"{ip_info['address']}/{ip_info['network_prefix']}"
             )
-            broadcast_addresses.add(interface.network.broadcast_address.exploded)
+            broadcast_addresses.add(
+                IPv4Address(interface.network.broadcast_address.exploded)
+            )
     return broadcast_addresses
 
 
