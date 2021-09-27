@@ -104,7 +104,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Unable to connect to surepetcare.io: Wrong credentials!")
         raise ConfigEntryAuthFailed from error
     except SurePetcareError as error:
-        _LOGGER.error("Unable to connect to surepetcare.io: Wrong %s!", error)
         raise ConfigEntryNotReady from error
 
     await coordinator.async_config_entry_first_refresh()
