@@ -1,10 +1,9 @@
 """Test the DLNA config flow."""
 from __future__ import annotations
 
-from collections.abc import Iterable
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
-from async_upnp_client import UpnpError
+from async_upnp_client import UpnpDevice, UpnpError
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
@@ -50,26 +49,16 @@ MOCK_CONFIG_IMPORT_DATA = {
 }
 
 MOCK_ROOT_DEVICE_UDN = "ROOT_DEVICE"
+MOCK_ROOT_DEVICE_TYPE = "ROOT_DEVICE_TYPE"
 
 MOCK_DISCOVERY = {
     ssdp.ATTR_SSDP_LOCATION: MOCK_DEVICE_LOCATION,
     ssdp.ATTR_SSDP_UDN: MOCK_DEVICE_UDN,
+    ssdp.ATTR_SSDP_ST: MOCK_DEVICE_TYPE,
     ssdp.ATTR_UPNP_UDN: MOCK_ROOT_DEVICE_UDN,
-    ssdp.ATTR_UPNP_DEVICE_TYPE: MOCK_DEVICE_TYPE,
+    ssdp.ATTR_UPNP_DEVICE_TYPE: MOCK_ROOT_DEVICE_TYPE,
     ssdp.ATTR_UPNP_FRIENDLY_NAME: MOCK_DEVICE_NAME,
 }
-
-
-@pytest.fixture(autouse=True)
-def is_profile_device_mock() -> Iterable[Mock]:
-    """Mock the async_upnp_client DMR is_profile_device class method."""
-    with patch(
-        "homeassistant.components.dlna_dmr.config_flow.DmrDevice.is_profile_device",
-        autospec=True,
-    ) as method:
-        method.return_value = True
-
-        yield method
 
 
 async def test_user_flow(hass: HomeAssistant) -> None:
@@ -127,12 +116,56 @@ async def test_user_flow_uncontactable(
     assert result["step_id"] == "user"
 
 
-async def test_user_flow_wrong_st(
-    hass: HomeAssistant, is_profile_device_mock: Mock
+async def test_user_flow_embedded_st(
+    hass: HomeAssistant, domain_data_mock: Mock
 ) -> None:
-    """Test user-init'd config flow with user entering a URL for the wrong device."""
+    """Test user-init'd flow for device with an embedded DMR."""
     # Device is the wrong type
-    is_profile_device_mock.return_value = False
+    upnp_device = domain_data_mock.upnp_factory.async_create_device.return_value
+    upnp_device.udn = MOCK_ROOT_DEVICE_UDN
+    upnp_device.device_type = MOCK_ROOT_DEVICE_TYPE
+    upnp_device.name = "ROOT_DEVICE_NAME"
+    embedded_device = Mock(spec=UpnpDevice)
+    embedded_device.udn = MOCK_DEVICE_UDN
+    embedded_device.device_type = MOCK_DEVICE_TYPE
+    embedded_device.name = MOCK_DEVICE_NAME
+    upnp_device.all_devices.append(embedded_device)
+
+    result = await hass.config_entries.flow.async_init(
+        DLNA_DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {}
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_URL: MOCK_DEVICE_LOCATION}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == MOCK_DEVICE_NAME
+    assert result["data"] == {
+        CONF_URL: MOCK_DEVICE_LOCATION,
+        CONF_DEVICE_ID: MOCK_DEVICE_UDN,
+        CONF_TYPE: MOCK_DEVICE_TYPE,
+    }
+    assert result["options"] == {CONF_POLL_AVAILABILITY: True}
+
+    # Wait for platform to be fully setup
+    await hass.async_block_till_done()
+
+    # Remove the device to clean up all resources, completing its life cycle
+    entry_id = result["result"].entry_id
+    assert await hass.config_entries.async_remove(entry_id) == {
+        "require_restart": False
+    }
+
+
+async def test_user_flow_wrong_st(hass: HomeAssistant, domain_data_mock: Mock) -> None:
+    """Test user-init'd config flow with user entering a URL for the wrong device."""
+    # Device has a sub device of the right type
+    upnp_device = domain_data_mock.upnp_factory.async_create_device.return_value
+    upnp_device.device_type = WRONG_DEVICE_TYPE
 
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -150,9 +183,7 @@ async def test_user_flow_wrong_st(
     assert result["step_id"] == "user"
 
 
-async def test_import_flow_invalid(
-    hass: HomeAssistant, domain_data_mock: Mock, is_profile_device_mock: Mock
-) -> None:
+async def test_import_flow_invalid(hass: HomeAssistant, domain_data_mock: Mock) -> None:
     """Test import flow of invalid YAML config."""
     # Missing CONF_URL
     result = await hass.config_entries.flow.async_init(
@@ -176,7 +207,8 @@ async def test_import_flow_invalid(
 
     # Device is the wrong type
     domain_data_mock.upnp_factory.async_create_device.side_effect = None
-    is_profile_device_mock.return_value = False
+    upnp_device = domain_data_mock.upnp_factory.async_create_device.return_value
+    upnp_device.device_type = WRONG_DEVICE_TYPE
 
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN,
@@ -539,8 +571,9 @@ async def test_ssdp_flow_upnp_udn(
         data={
             ssdp.ATTR_SSDP_LOCATION: NEW_DEVICE_LOCATION,
             ssdp.ATTR_SSDP_UDN: MOCK_DEVICE_UDN,
+            ssdp.ATTR_SSDP_ST: MOCK_DEVICE_TYPE,
             ssdp.ATTR_UPNP_UDN: "DIFFERENT_ROOT_DEVICE",
-            ssdp.ATTR_UPNP_DEVICE_TYPE: MOCK_DEVICE_TYPE,
+            ssdp.ATTR_UPNP_DEVICE_TYPE: "DIFFERENT_ROOT_DEVICE_TYPE",
             ssdp.ATTR_UPNP_FRIENDLY_NAME: MOCK_DEVICE_NAME,
         },
     )

@@ -46,6 +46,9 @@ def domain_data_mock(hass: HomeAssistant) -> Iterable[Mock]:
     upnp_device.device_url = MOCK_DEVICE_LOCATION
     upnp_device.device_type = "urn:schemas-upnp-org:device:MediaRenderer:1"
     upnp_device.available = True
+    upnp_device.parent_device = None
+    upnp_device.root_device = upnp_device
+    upnp_device.all_devices = [upnp_device]
     seal(upnp_device)
     domain_data.upnp_factory.async_create_device.return_value = upnp_device
 
@@ -86,7 +89,9 @@ def dmr_device_mock(domain_data_mock: Mock) -> Iterable[Mock]:
     ) as constructor:
         device = constructor.return_value
         device.on_event = None
-        device.device = domain_data_mock.upnp_factory.async_create_device.return_value
+        device.profile_device = (
+            domain_data_mock.upnp_factory.async_create_device.return_value
+        )
         device.media_image_url = "http://192.88.99.20:8200/AlbumArt/2624-17620.jpg"
         device.udn = "device_udn"
         device.manufacturer = "device_manufacturer"

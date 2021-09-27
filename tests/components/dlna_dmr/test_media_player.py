@@ -292,21 +292,21 @@ async def test_available_device(
         (TransportState.NO_MEDIA_PRESENT, ha_const.STATE_IDLE),
         (TransportState.VENDOR_DEFINED, ha_const.STATE_UNKNOWN),
     ]:
-        dmr_device_mock.device.available = True
+        dmr_device_mock.profile_device.available = True
         dmr_device_mock.transport_state = dev_state
         await async_update_entity(hass, mock_entity_id)
         entity_state = hass.states.get(mock_entity_id)
         assert entity_state is not None
         assert entity_state.state == ent_state
 
-    dmr_device_mock.device.available = False
+    dmr_device_mock.profile_device.available = False
     dmr_device_mock.transport_state = TransportState.PLAYING
     await async_update_entity(hass, mock_entity_id)
     entity_state = hass.states.get(mock_entity_id)
     assert entity_state is not None
     assert entity_state.state == ha_const.STATE_UNAVAILABLE
 
-    dmr_device_mock.device.available = True
+    dmr_device_mock.profile_device.available = True
     await async_update_entity(hass, mock_entity_id)
 
     # Check attributes come directly from the device

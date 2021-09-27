@@ -93,7 +93,7 @@ def catch_request_errors(func: Func) -> Func:
             return await func(self, *args, **kwargs)
         except UpnpError as err:
             self.check_available = True
-            _LOGGER.error("Error during call %s: %s(%s)", func.__name__, type(err), err)
+            _LOGGER.error("Error during call %s: %r", func.__name__, err)
 
     return cast(Func, wrapper)
 
@@ -176,7 +176,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
             try:
                 await self._device_connect(self.location)
             except UpnpError as err:
-                _LOGGER.debug("Couldn't connect immediately: %s", err)
+                _LOGGER.debug("Couldn't connect immediately: %r", err)
 
         # Get SSDP notifications for only this device
         self._remove_ssdp_callbacks.append(
@@ -249,7 +249,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
                 await self._device_connect(location)
             except UpnpError as err:
                 _LOGGER.warning(
-                    "Failed connecting to recently alive device at %s: %s",
+                    "Failed connecting to recently alive device at %s: %r",
                     location,
                     err,
                 )
@@ -289,7 +289,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         try:
             await self._device_connect(self.location)
         except UpnpError as err:
-            _LOGGER.warning("Couldn't (re)connect after config change: %s", err)
+            _LOGGER.warning("Couldn't (re)connect after config change: %r", err)
 
         # Device was de/re-connected, state might have changed
         self.schedule_update_ha_state()
@@ -330,7 +330,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
                 self._device.on_event = None
                 self._device = None
                 await domain_data.async_release_event_notifier(self._event_addr)
-                _LOGGER.debug("Error while subscribing during device connect: %s", err)
+                _LOGGER.debug("Error while subscribing during device connect: %r", err)
                 raise
 
         if (
@@ -344,14 +344,20 @@ class DlnaDmrEntity(MediaPlayerEntity):
         dev_reg = device_registry.async_get(self.hass)
         device_entry = dev_reg.async_get_or_create(
             config_entry_id=self.registry_entry.config_entry_id,
-            # Connection is based on the root device's UDN, which is currently
-            # equivalent to our UDN (embedded devices aren't supported by
-            # async_upnp_client)
-            connections={(device_registry.CONNECTION_UPNP, self._device.udn)},
+            # Connections are based on the root device's UDN, and the DMR
+            # embedded device's UDN. They may be the same, if the DMR is the
+            # root device.
+            connections={
+                (
+                    device_registry.CONNECTION_UPNP,
+                    self._device.profile_device.root_device.udn,
+                ),
+                (device_registry.CONNECTION_UPNP, self._device.udn),
+            },
             identifiers={(DOMAIN, self.unique_id)},
-            manufacturer=self._device.manufacturer,
-            model=self._device.model_name,
-            name=self._device.name,
+            default_manufacturer=self._device.manufacturer,
+            default_model=self._device.model_name,
+            default_name=self._device.name,
         )
 
         # Update entity registry to link to the device
@@ -386,7 +392,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
     @property
     def available(self) -> bool:
         """Device is available when we have a connection to it."""
-        return self._device is not None and self._device.device.available
+        return self._device is not None and self._device.profile_device.available
 
     async def async_update(self) -> None:
         """Retrieve the latest data."""

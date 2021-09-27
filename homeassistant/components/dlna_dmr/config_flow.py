@@ -9,6 +9,7 @@ from urllib.parse import urlparse
 
 from async_upnp_client.client import UpnpError
 from async_upnp_client.profiles.dlna import DmrDevice
+from async_upnp_client.profiles.profile import find_device_of_type
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -216,7 +217,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         data = {
             CONF_URL: discovery[ssdp.ATTR_SSDP_LOCATION],
             CONF_DEVICE_ID: discovery[ssdp.ATTR_SSDP_UDN],
-            CONF_TYPE: discovery[ssdp.ATTR_UPNP_DEVICE_TYPE],
+            CONF_TYPE: discovery.get(ssdp.ATTR_SSDP_NT) or discovery[ssdp.ATTR_SSDP_ST],
         }
         return self.async_create_entry(title=title, data=data, options=options)
 
@@ -256,13 +257,15 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except UpnpError as err:
             raise ConnectError("could_not_connect") from err
 
-        if not DmrDevice.is_profile_device(device):
-            raise ConnectError("not_dmr")
+        try:
+            device = find_device_of_type(device, DmrDevice.DEVICE_TYPES)
+        except UpnpError as err:
+            raise ConnectError("not_dmr") from err
 
         discovery = {
             ssdp.ATTR_SSDP_LOCATION: location,
             ssdp.ATTR_SSDP_UDN: device.udn,
-            ssdp.ATTR_UPNP_DEVICE_TYPE: device.device_type,
+            ssdp.ATTR_SSDP_ST: device.device_type,
             ssdp.ATTR_UPNP_FRIENDLY_NAME: device.name,
         }
 
