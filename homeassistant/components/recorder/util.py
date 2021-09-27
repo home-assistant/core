@@ -284,6 +284,9 @@ def setup_connection_for_dialect(dialect_name, dbapi_connection, first_connectio
         # approximately 8MiB of memory
         execute_on_connection(dbapi_connection, "PRAGMA cache_size = -8192")
 
+        # enable support for foreign keys
+        execute_on_connection(dbapi_connection, "PRAGMA foreign_keys=ON")
+
     if dialect_name == "mysql":
         execute_on_connection(dbapi_connection, "SET session wait_timeout=28800")
 
