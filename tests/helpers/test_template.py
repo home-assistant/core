@@ -220,6 +220,38 @@ def test_float(hass):
     )
 
 
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        (0, True),
+        (0.0, True),
+        ("0", True),
+        ("0.0", True),
+        ("horse", False),
+        (math.pi, True),
+        (math.nan, False),
+        (math.inf, False),
+        ("nan", False),
+        ("inf", False),
+    ],
+)
+def test_isnumeric(hass, value, expected):
+    """Test isnumeric."""
+    hass.states.async_set("sensor.temperature", value)
+    assert (
+        template.Template(
+            "{{ isnumeric(states('sensor.temperature')) }}", hass
+        ).async_render()
+        == expected
+    )
+    assert (
+        template.Template(
+            "{{ states('sensor.temperature') | isnumeric }}", hass
+        ).async_render()
+        == expected
+    )
+
+
 def test_rounding_value(hass):
     """Test rounding value."""
     hass.states.async_set("sensor.temperature", 12.78)
