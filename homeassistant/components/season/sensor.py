@@ -74,7 +74,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=ENTITY_SEASON,
         name="Season",
         icon=SEASON_ICONS[STATE_NONE],
-        device_class= DEVICE_CLASS_SEASON,
+        device_class=DEVICE_CLASS_SEASON,
     ),
     SensorEntityDescription(
         key=ENTITY_DAYS_LEFT,
