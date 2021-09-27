@@ -95,7 +95,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_pick_device()
             try:
                 device = await self._async_try_connect(
-                    user_input[CONF_HOST], raise_on_progress=False
+                    host, raise_on_progress=False
                 )
             except SmartDeviceException:
                 errors["base"] = "cannot_connect"
