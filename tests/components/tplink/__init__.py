@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from kasa import SmartBulb, SmartPlug, SmartStrip
 from kasa.exceptions import SmartDeviceException
+from kasa.protocol import TPLinkSmartHomeProtocol
 
 MODULE = "homeassistant.components.tplink"
 MODULE_CONFIG_FLOW = "homeassistant.components.tplink.config_flow"
@@ -12,6 +13,12 @@ ALIAS = "My Bulb"
 MODEL = "HS100"
 MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
 DEFAULT_ENTRY_TITLE = f"{ALIAS} {MODEL}"
+
+
+def _mock_protocol() -> TPLinkSmartHomeProtocol:
+    protocol = MagicMock(auto_spec=TPLinkSmartHomeProtocol)
+    protocol.close = AsyncMock()
+    return protocol
 
 
 def _mocked_bulb() -> SmartBulb:
@@ -36,6 +43,7 @@ def _mocked_bulb() -> SmartBulb:
     bulb.set_brightness = AsyncMock()
     bulb.set_hsv = AsyncMock()
     bulb.set_color_temp = AsyncMock()
+    bulb.protocol = _mock_protocol()
     return bulb
 
 
@@ -55,6 +63,7 @@ def _mocked_plug() -> SmartPlug:
     plug.hw_info = {"sw_ver": "1.0.0"}
     plug.turn_off = AsyncMock()
     plug.turn_on = AsyncMock()
+    plug.protocol = _mock_protocol()
     return plug
 
 
@@ -74,14 +83,17 @@ def _mocked_strip() -> SmartStrip:
     strip.hw_info = {"sw_ver": "1.0.0"}
     strip.turn_off = AsyncMock()
     strip.turn_on = AsyncMock()
+    strip.protocol = _mock_protocol()
     plug0 = _mocked_plug()
     plug0.alias = "Plug0"
     plug0.device_id = "bb:bb:cc:dd:ee:ff_PLUG0DEVICEID"
     plug0.mac = "bb:bb:cc:dd:ee:ff"
+    plug0.protocol = _mock_protocol()
     plug1 = _mocked_plug()
     plug1.device_id = "cc:bb:cc:dd:ee:ff_PLUG1DEVICEID"
     plug1.mac = "cc:bb:cc:dd:ee:ff"
     plug1.alias = "Plug1"
+    plug1.protocol = _mock_protocol()
     strip.children = [plug0, plug1]
     return strip
 
