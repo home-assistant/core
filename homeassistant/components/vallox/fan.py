@@ -67,29 +67,22 @@ async def async_setup_platform(
 class ValloxFan(FanEntity):
     """Representation of the fan."""
 
+    _attr_should_poll = False
+
     def __init__(
         self, name: str, client: Vallox, state_proxy: ValloxStateProxy
     ) -> None:
         """Initialize the fan."""
-        self._name = name
         self._client = client
         self._state_proxy = state_proxy
-        self._available = False
         self._is_on = False
         self._preset_mode: str | None = None
         self._fan_speed_home: int | None = None
         self._fan_speed_away: int | None = None
         self._fan_speed_boost: int | None = None
 
-    @property
-    def should_poll(self) -> bool:
-        """Do not poll the device."""
-        return False
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return self._name
+        self._attr_name = name
+        self._attr_available = False
 
     @property
     def supported_features(self) -> int:
@@ -101,11 +94,6 @@ class ValloxFan(FanEntity):
         """Return a list of available preset modes."""
         # Use the Vallox profile names for the preset names.
         return list(STR_TO_VALLOX_PROFILE_SETTABLE.keys())
-
-    @property
-    def available(self) -> bool:
-        """Return if state is known."""
-        return self._available
 
     @property
     def is_on(self) -> bool:
@@ -159,7 +147,7 @@ class ValloxFan(FanEntity):
             )
 
         except (OSError, KeyError, TypeError) as err:
-            self._available = False
+            self._attr_available = False
             _LOGGER.error("Error updating fan: %s", err)
             return
 
@@ -175,7 +163,7 @@ class ValloxFan(FanEntity):
             int(fan_speed_boost) if isinstance(fan_speed_boost, (int, float)) else None
         )
 
-        self._available = True
+        self._attr_available = True
 
     async def _async_set_preset_mode_internal(self, preset_mode: str) -> bool:
         """
@@ -201,11 +189,11 @@ class ValloxFan(FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        # This state change affects other entities like sensors. Force an immediate update that can
-        # be observed by all parties involved.
         update_needed = await self._async_set_preset_mode_internal(preset_mode)
 
         if update_needed:
+            # This state change affects other entities like sensors. Force an immediate update that
+            # can be observed by all parties involved.
             await self._state_proxy.async_update()
 
     async def async_turn_on(
@@ -223,7 +211,7 @@ class ValloxFan(FanEntity):
         if preset_mode:
             update_needed = await self._async_set_preset_mode_internal(preset_mode)
 
-        if not self._is_on:
+        if not self.is_on:
             try:
                 await self._client.set_values({METRIC_KEY_MODE: MODE_ON})
 
@@ -240,7 +228,7 @@ class ValloxFan(FanEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        if not self._is_on:
+        if not self.is_on:
             return
 
         try:
@@ -251,4 +239,4 @@ class ValloxFan(FanEntity):
             return
 
         # Same as for turn_on method.
-        await self._state_proxy.async_update(None)
+        await self._state_proxy.async_update()
