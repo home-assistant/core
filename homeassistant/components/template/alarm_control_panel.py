@@ -62,9 +62,9 @@ CONF_CODE_FORMAT = "code_format"
 class CodeFormat(Enum):
     """Class to represent different code formats."""
 
-    text = FORMAT_TEXT
+    no_code = None
     number = FORMAT_NUMBER
-    none = None
+    text = FORMAT_TEXT
 
 
 ALARM_CONTROL_PANEL_SCHEMA = vol.Schema(

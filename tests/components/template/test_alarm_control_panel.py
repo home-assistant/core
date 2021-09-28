@@ -278,7 +278,7 @@ async def test_no_action_scripts(hass, start_ha):
                     },
                 }
             },
-            "value must be one of ['none', 'number', 'text']",
+            "value must be one of ['no_code', 'number', 'text']",
         ),
     ],
 )
@@ -527,7 +527,7 @@ async def test_unique_id(hass, start_ha):
                     "panels": {
                         "test_template_panel": {
                             "value_template": "disarmed",
-                            "code_format": "none",
+                            "code_format": "no_code",
                             "code_arm_required": False,
                         }
                     },
