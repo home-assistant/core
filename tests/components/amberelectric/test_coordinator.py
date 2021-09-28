@@ -1,10 +1,15 @@
 """Tests for the Amber Electric Data Coordinator."""
+from __future__ import annotations
+
 from typing import Generator
 from unittest.mock import Mock, patch
 
 from amberelectric import ApiException
 from amberelectric.model.channel import Channel, ChannelType
+from amberelectric.model.current_interval import CurrentInterval
+from amberelectric.model.interval import SpikeStatus
 from amberelectric.model.site import Site
+from dateutil import parser
 import pytest
 
 from homeassistant.components.amberelectric.coordinator import AmberUpdateCoordinator
@@ -18,6 +23,7 @@ from tests.components.amberelectric.helpers import (
     GENERAL_AND_FEED_IN_SITE_ID,
     GENERAL_CHANNEL,
     GENERAL_ONLY_SITE_ID,
+    generate_current_interval,
 )
 
 
@@ -79,6 +85,7 @@ async def test_fetch_general_site(hass: HomeAssistant, current_price_api: Mock) 
     assert result["current"].get("feed_in") is None
     assert result["forecasts"].get("feed_in") is None
     assert result["grid"]["renewables"] == round(GENERAL_CHANNEL[0].renewables)
+    assert result["grid"]["spike_status"] == "none"
 
 
 async def test_fetch_no_general_site(
@@ -134,6 +141,7 @@ async def test_fetch_api_error(hass: HomeAssistant, current_price_api: Mock) -> 
     assert result["current"].get("feed_in") is None
     assert result["forecasts"].get("feed_in") is None
     assert result["grid"]["renewables"] == round(GENERAL_CHANNEL[0].renewables)
+    assert result["grid"]["spike_status"] == "none"
 
 
 async def test_fetch_general_and_controlled_load_site(
@@ -168,6 +176,7 @@ async def test_fetch_general_and_controlled_load_site(
     assert result["current"].get("feed_in") is None
     assert result["forecasts"].get("feed_in") is None
     assert result["grid"]["renewables"] == round(GENERAL_CHANNEL[0].renewables)
+    assert result["grid"]["spike_status"] == "none"
 
 
 async def test_fetch_general_and_feed_in_site(
@@ -200,3 +209,36 @@ async def test_fetch_general_and_feed_in_site(
         FEED_IN_CHANNEL[3],
     ]
     assert result["grid"]["renewables"] == round(GENERAL_CHANNEL[0].renewables)
+    assert result["grid"]["spike_status"] == "none"
+
+
+async def test_fetch_potential_spike(
+    hass: HomeAssistant, current_price_api: Mock
+) -> None:
+    """Test fetching a site with only a general channel."""
+
+    general_channel: list[CurrentInterval] = [
+        generate_current_interval(
+            ChannelType.GENERAL, parser.parse("2021-09-21T08:30:00+10:00")
+        ),
+    ]
+    general_channel[0].spike_status = SpikeStatus.POTENTIAL
+    current_price_api.get_current_price.return_value = general_channel
+    data_service = AmberUpdateCoordinator(hass, current_price_api, GENERAL_ONLY_SITE_ID)
+    result = await data_service._async_update_data()
+    assert result["grid"]["spike_status"] == "potential"
+
+
+async def test_fetch_spike(hass: HomeAssistant, current_price_api: Mock) -> None:
+    """Test fetching a site with only a general channel."""
+
+    general_channel: list[CurrentInterval] = [
+        generate_current_interval(
+            ChannelType.GENERAL, parser.parse("2021-09-21T08:30:00+10:00")
+        ),
+    ]
+    general_channel[0].spike_status = SpikeStatus.SPIKE
+    current_price_api.get_current_price.return_value = general_channel
+    data_service = AmberUpdateCoordinator(hass, current_price_api, GENERAL_ONLY_SITE_ID)
+    result = await data_service._async_update_data()
+    assert result["grid"]["spike_status"] == "spike"
