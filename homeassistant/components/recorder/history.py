@@ -6,7 +6,7 @@ from itertools import groupby
 import logging
 import time
 
-from sqlalchemy import and_, bindparam, func
+from sqlalchemy import bindparam, func
 from sqlalchemy.ext import baked
 
 from homeassistant.components import recorder
@@ -245,38 +245,23 @@ def _get_states_with_session(
     # last recorder run started.
     query = session.query(*QUERY_STATES)
 
-    most_recent_states_by_date = session.query(
-        States.entity_id.label("max_entity_id"),
-        func.max(States.last_updated).label("max_last_updated"),
+    most_recent_state_ids = session.query(
+        func.max(States.state_id).label("max_state_id"),
     ).filter(
         (States.last_updated >= run.start) & (States.last_updated < utc_point_in_time)
     )
 
     # Apply entity filters to the derived table
     if entity_ids:
-        most_recent_states_by_date = most_recent_states_by_date.filter(
+        most_recent_state_ids = most_recent_state_ids.filter(
             States.entity_id.in_(entity_ids)
         )
     else:
-        most_recent_states_by_date = most_recent_states_by_date.filter(
+        most_recent_state_ids = most_recent_state_ids.filter(
             ~States.domain.in_(IGNORE_DOMAINS)
         )
         if filters:
-            most_recent_states_by_date = filters.apply(most_recent_states_by_date)
-
-    most_recent_states_by_date = most_recent_states_by_date.group_by(States.entity_id)
-
-    most_recent_states_by_date = most_recent_states_by_date.subquery()
-
-    most_recent_state_ids = session.query(
-        func.max(States.state_id).label("max_state_id")
-    ).join(
-        most_recent_states_by_date,
-        and_(
-            States.entity_id == most_recent_states_by_date.c.max_entity_id,
-            States.last_updated == most_recent_states_by_date.c.max_last_updated,
-        ),
-    )
+            most_recent_state_ids = filters.apply(most_recent_state_ids)
 
     most_recent_state_ids = most_recent_state_ids.group_by(States.entity_id)
 
