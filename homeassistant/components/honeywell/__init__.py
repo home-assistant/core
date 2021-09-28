@@ -43,7 +43,7 @@ async def async_setup_entry(hass, config):
         _LOGGER.debug("No devices found")
         return False
 
-    data = HoneywellData(hass, client, username, password, devices)
+    data = HoneywellData(hass, config, client, username, password, devices)
     await data.async_update()
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config.entry_id] = data
@@ -54,14 +54,14 @@ async def async_setup_entry(hass, config):
     return True
 
 
-async def update_listener(hass, entry) -> None:
+async def update_listener(hass, config) -> None:
     """Update listener."""
-    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.config_entries.async_reload(config.entry_id)
 
 
-async def async_unload_entry(hass, entry):
-    """Unload the config entry and platforms."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+async def async_unload_entry(hass, config):
+    """Unload the config config and platforms."""
+    unload_ok = await hass.config_entries.async_unload_platforms(config, PLATFORMS)
     if unload_ok:
         hass.data.pop(DOMAIN)
     return unload_ok
@@ -85,9 +85,10 @@ def get_somecomfort_client(username, password):
 class HoneywellData:
     """Get the latest data and update."""
 
-    def __init__(self, hass, client, username, password, devices):
+    def __init__(self, hass, config, client, username, password, devices):
         """Initialize the data object."""
         self._hass = hass
+        self._config = config
         self._client = client
         self._username = username
         self._password = password
@@ -117,6 +118,7 @@ class HoneywellData:
             return False
 
         self.devices = devices
+        update_listener(self._hass, self._config)
         return True
 
     async def _refresh_devices(self):
