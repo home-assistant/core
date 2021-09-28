@@ -85,7 +85,7 @@ async def test_fetch_general_site(hass: HomeAssistant, current_price_api: Mock) 
     assert result["current"].get("feed_in") is None
     assert result["forecasts"].get("feed_in") is None
     assert result["grid"]["renewables"] == round(GENERAL_CHANNEL[0].renewables)
-    assert result["grid"]["spike_status"] == "none"
+    assert result["grid"]["price_spike"] == "none"
 
 
 async def test_fetch_no_general_site(
@@ -141,7 +141,7 @@ async def test_fetch_api_error(hass: HomeAssistant, current_price_api: Mock) -> 
     assert result["current"].get("feed_in") is None
     assert result["forecasts"].get("feed_in") is None
     assert result["grid"]["renewables"] == round(GENERAL_CHANNEL[0].renewables)
-    assert result["grid"]["spike_status"] == "none"
+    assert result["grid"]["price_spike"] == "none"
 
 
 async def test_fetch_general_and_controlled_load_site(
@@ -176,7 +176,7 @@ async def test_fetch_general_and_controlled_load_site(
     assert result["current"].get("feed_in") is None
     assert result["forecasts"].get("feed_in") is None
     assert result["grid"]["renewables"] == round(GENERAL_CHANNEL[0].renewables)
-    assert result["grid"]["spike_status"] == "none"
+    assert result["grid"]["price_spike"] == "none"
 
 
 async def test_fetch_general_and_feed_in_site(
@@ -209,7 +209,7 @@ async def test_fetch_general_and_feed_in_site(
         FEED_IN_CHANNEL[3],
     ]
     assert result["grid"]["renewables"] == round(GENERAL_CHANNEL[0].renewables)
-    assert result["grid"]["spike_status"] == "none"
+    assert result["grid"]["price_spike"] == "none"
 
 
 async def test_fetch_potential_spike(
@@ -226,7 +226,7 @@ async def test_fetch_potential_spike(
     current_price_api.get_current_price.return_value = general_channel
     data_service = AmberUpdateCoordinator(hass, current_price_api, GENERAL_ONLY_SITE_ID)
     result = await data_service._async_update_data()
-    assert result["grid"]["spike_status"] == "potential"
+    assert result["grid"]["price_spike"] == "potential"
 
 
 async def test_fetch_spike(hass: HomeAssistant, current_price_api: Mock) -> None:
@@ -241,4 +241,4 @@ async def test_fetch_spike(hass: HomeAssistant, current_price_api: Mock) -> None
     current_price_api.get_current_price.return_value = general_channel
     data_service = AmberUpdateCoordinator(hass, current_price_api, GENERAL_ONLY_SITE_ID)
     result = await data_service._async_update_data()
-    assert result["grid"]["spike_status"] == "spike"
+    assert result["grid"]["price_spike"] == "spike"

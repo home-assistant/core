@@ -25,10 +25,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import ATTRIBUTION, DOMAIN
 from .coordinator import AmberUpdateCoordinator
-
-ATTRIBUTION = "Data provided by Amber Electric"
 
 ICONS = {
     "general": "mdi:transmission-tower",
@@ -119,49 +117,53 @@ class AmberForecastSensor(AmberSensor):
     @property
     def native_value(self) -> str | None:
         """Return the first forecast price in $/kWh."""
-        intervals = self.coordinator.data[self.entity_description.key][
+        intervals = self.coordinator.data[self.entity_description.key].get(
             self.channel_type
-        ]
-        interval = intervals[0]
+        )
+        if intervals:
+            interval = intervals[0]
 
-        if interval.channel_type == ChannelType.FEED_IN:
-            return round(interval.per_kwh, 0) / 100 * -1
-        return round(interval.per_kwh, 0) / 100
+            if interval.channel_type == ChannelType.FEED_IN:
+                return round(interval.per_kwh, 0) / 100 * -1
+            return round(interval.per_kwh, 0) / 100
+        return None
 
     @property
     def device_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional pieces of information about the price."""
-        intervals = self.coordinator.data[self.entity_description.key][
+        intervals = self.coordinator.data[self.entity_description.key].get(
             self.channel_type
-        ]
+        )
 
-        data = {
-            "forecasts": [],
-            "channel_type": intervals[0].channel_type.value,
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-        }
+        if intervals:
+            data = {
+                "forecasts": [],
+                "channel_type": intervals[0].channel_type.value,
+                ATTR_ATTRIBUTION: ATTRIBUTION,
+            }
 
-        for interval in intervals:
-            datum = {}
-            datum["duration"] = interval.duration
-            datum["date"] = interval.date.isoformat()
-            datum["nem_date"] = interval.nem_time.isoformat()
-            datum["per_kwh"] = round(interval.per_kwh)
-            if interval.channel_type == ChannelType.FEED_IN:
-                datum["per_kwh"] = datum["per_kwh"] * -1
-            datum["spot_per_kwh"] = round(interval.spot_per_kwh)
-            datum["start_time"] = interval.start_time.isoformat()
-            datum["end_time"] = interval.end_time.isoformat()
-            datum["renewables"] = round(interval.renewables)
-            datum["spike_status"] = interval.spike_status.value
+            for interval in intervals:
+                datum = {}
+                datum["duration"] = interval.duration
+                datum["date"] = interval.date.isoformat()
+                datum["nem_date"] = interval.nem_time.isoformat()
+                datum["per_kwh"] = round(interval.per_kwh)
+                if interval.channel_type == ChannelType.FEED_IN:
+                    datum["per_kwh"] = datum["per_kwh"] * -1
+                datum["spot_per_kwh"] = round(interval.spot_per_kwh)
+                datum["start_time"] = interval.start_time.isoformat()
+                datum["end_time"] = interval.end_time.isoformat()
+                datum["renewables"] = round(interval.renewables)
+                datum["spike_status"] = interval.spike_status.value
 
-            if interval.range is not None:
-                datum["range_min"] = interval.range.min
-                datum["range_max"] = interval.range.max
+                if interval.range is not None:
+                    datum["range_min"] = interval.range.min
+                    datum["range_max"] = interval.range.max
 
-            data["forecasts"].append(datum)
+                data["forecasts"].append(datum)
 
-        return data
+            return data
+        return None
 
 
 class AmberGridSensor(CoordinatorEntity, SensorEntity):
