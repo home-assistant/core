@@ -1,7 +1,6 @@
 """Handle migration from legacy Z-Wave to OpenZWave and Z-Wave JS."""
 from __future__ import annotations
 
-from collections import defaultdict
 from typing import TYPE_CHECKING, TypedDict, cast
 
 from homeassistant.config_entries import ConfigEntry
@@ -96,7 +95,7 @@ class LegacyZWaveMigration:
         """Set up migration instance."""
         self._hass = hass
         self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
-        self._data: dict[str, dict[str, ZWaveMigrationData]] = defaultdict(dict)
+        self._data: dict[str, dict[str, ZWaveMigrationData]] = {}
 
     async def load_data(self) -> None:
         """Load Z-Wave migration data."""
@@ -109,6 +108,8 @@ class LegacyZWaveMigration:
         self, config_entry_id: str, entity_id: str, data: ZWaveMigrationData
     ) -> None:
         """Save Z-Wave migration data."""
+        if config_entry_id not in self._data:
+            self._data[config_entry_id] = {}
         self._data[config_entry_id][entity_id] = data
         self._store.async_delay_save(self._data_to_save, STORAGE_WRITE_DELAY)
 

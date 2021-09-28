@@ -1,7 +1,6 @@
 """Functions used to migrate unique IDs for Z-Wave JS entities."""
 from __future__ import annotations
 
-from collections import defaultdict
 from dataclasses import dataclass, field
 import logging
 from typing import TypedDict, cast
@@ -166,7 +165,7 @@ class LegacyZWaveMigration:
         """Set up migration instance."""
         self._hass = hass
         self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
-        self._data: dict[str, dict[str, ZWaveJSMigrationData]] = defaultdict(dict)
+        self._data: dict[str, dict[str, ZWaveJSMigrationData]] = {}
 
     async def load_data(self) -> None:
         """Load Z-Wave JS migration data."""
@@ -179,6 +178,8 @@ class LegacyZWaveMigration:
         self, config_entry_id: str, entity_id: str, data: ZWaveJSMigrationData
     ) -> None:
         """Save Z-Wave JS migration data."""
+        if config_entry_id not in self._data:
+            self._data[config_entry_id] = {}
         self._data[config_entry_id][entity_id] = data
         self._store.async_delay_save(self._data_to_save, STORAGE_WRITE_DELAY)
 
