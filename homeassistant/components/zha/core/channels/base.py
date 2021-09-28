@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from enum import Enum
-from functools import wraps
+from functools import partialmethod, wraps
 import logging
 from typing import Any
 
@@ -30,8 +30,9 @@ from ..const import (
     ZHA_CHANNEL_MSG_BIND,
     ZHA_CHANNEL_MSG_CFG_RPT,
     ZHA_CHANNEL_MSG_DATA,
+    ZHA_CHANNEL_READS_PER_REQ,
 )
-from ..helpers import LogMixin, safe_read
+from ..helpers import LogMixin, retryable_req, safe_read
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,6 +92,11 @@ class ZigbeeChannel(LogMixin):
 
     REPORT_CONFIG: tuple[dict[int | str, tuple[int, int, int | float]]] = ()
     BIND: bool = True
+
+    # Dict of attributes to read on channel initialization.
+    # Dict keys -- attribute ID or names, with bool value indicating whether a cached
+    # attribute read is acceptable.
+    ZCL_INIT_ATTRS: dict[int | str, bool] = {}
 
     def __init__(
         self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
@@ -301,6 +307,7 @@ class ZigbeeChannel(LogMixin):
             self.debug("skipping channel configuration")
         self._status = ChannelStatus.CONFIGURED
 
+    @retryable_req(delays=(1, 1, 3))
     async def async_initialize(self, from_cache: bool) -> None:
         """Initialize channel."""
         if not from_cache and self._ch_pool.skip_configuration:
@@ -308,9 +315,14 @@ class ZigbeeChannel(LogMixin):
             return
 
         self.debug("initializing channel: from_cache: %s", from_cache)
-        attributes = [cfg["attr"] for cfg in self.REPORT_CONFIG]
-        if attributes:
-            await self.get_attributes(attributes, from_cache=from_cache)
+        cached = [a for a, cached in self.ZCL_INIT_ATTRS.items() if cached]
+        uncached = [a for a, cached in self.ZCL_INIT_ATTRS.items() if not cached]
+        uncached.extend([cfg["attr"] for cfg in self.REPORT_CONFIG])
+
+        if cached:
+            await self._get_attributes(True, cached, from_cache=True)
+        if uncached:
+            await self._get_attributes(True, uncached, from_cache=from_cache)
 
         ch_specific_init = getattr(self, "async_initialize_channel_specific", None)
         if ch_specific_init:
@@ -367,28 +379,43 @@ class ZigbeeChannel(LogMixin):
         )
         return result.get(attribute)
 
-    async def get_attributes(self, attributes, from_cache=True):
+    async def _get_attributes(
+        self,
+        raise_exceptions: bool,
+        attributes: list[int | str],
+        from_cache: bool = True,
+    ) -> dict[int | str, Any]:
         """Get the values for a list of attributes."""
         manufacturer = None
         manufacturer_code = self._ch_pool.manufacturer_code
         if self.cluster.cluster_id >= 0xFC00 and manufacturer_code:
             manufacturer = manufacturer_code
-        try:
-            result, _ = await self.cluster.read_attributes(
-                attributes,
-                allow_cache=from_cache,
-                only_cache=from_cache and not self._ch_pool.is_mains_powered,
-                manufacturer=manufacturer,
-            )
-            return result
-        except (asyncio.TimeoutError, zigpy.exceptions.ZigbeeException) as ex:
-            self.debug(
-                "failed to get attributes '%s' on '%s' cluster: %s",
-                attributes,
-                self.cluster.ep_attribute,
-                str(ex),
-            )
-            return {}
+        chunk = attributes[:ZHA_CHANNEL_READS_PER_REQ]
+        rest = attributes[ZHA_CHANNEL_READS_PER_REQ:]
+        result = {}
+        while chunk:
+            try:
+                read, _ = await self.cluster.read_attributes(
+                    attributes,
+                    allow_cache=from_cache,
+                    only_cache=from_cache and not self._ch_pool.is_mains_powered,
+                    manufacturer=manufacturer,
+                )
+                result.update(read)
+            except (asyncio.TimeoutError, zigpy.exceptions.ZigbeeException) as ex:
+                self.debug(
+                    "failed to get attributes '%s' on '%s' cluster: %s",
+                    attributes,
+                    self.cluster.ep_attribute,
+                    str(ex),
+                )
+                if raise_exceptions:
+                    raise
+            chunk = rest[:ZHA_CHANNEL_READS_PER_REQ]
+            rest = rest[ZHA_CHANNEL_READS_PER_REQ:]
+        return result
+
+    get_attributes = partialmethod(_get_attributes, False)
 
     def log(self, level, msg, *args):
         """Log a message."""
