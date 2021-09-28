@@ -228,6 +228,7 @@ def async_register_api(hass: HomeAssistant) -> None:
         hass, websocket_subscribe_controller_statistics
     )
     websocket_api.async_register_command(hass, websocket_subscribe_node_statistics)
+    websocket_api.async_register_command(hass, websocket_node_ready)
     websocket_api.async_register_command(hass, websocket_migrate_zwave)
     hass.http.register_view(DumpView())
     hass.http.register_view(FirmwareUploadView())
