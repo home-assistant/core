@@ -5,6 +5,7 @@ from unittest.mock import Mock
 from homeassistant.components import tplink
 from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import (
@@ -120,3 +121,36 @@ async def test_color_light_no_emeter(hass: HomeAssistant) -> None:
     ]
     for sensor_entity_id in not_expected:
         assert hass.states.get(sensor_entity_id) is None
+
+
+async def test_sensor_unique_id(hass: HomeAssistant) -> None:
+    """Test a sensor unique ids."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    plug = _mocked_plug()
+    plug.color_temp = None
+    plug.has_emeter = True
+    plug.emeter_realtime = Mock(
+        power=100,
+        total=30,
+        voltage=121,
+        current=5,
+    )
+    plug.emeter_today = None
+    with _patch_discovery(device=plug), _patch_single_discovery(device=plug):
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+    expected = {
+        "sensor.my_plug_current_consumption": "aa:bb:cc:dd:ee:ff_current_power_w",
+        "sensor.my_plug_total_consumption": "aa:bb:cc:dd:ee:ff_total_energy_kwh",
+        "sensor.my_plug_today_s_consumption": "aa:bb:cc:dd:ee:ff_today_energy_kwh",
+        "sensor.my_plug_voltage": "aa:bb:cc:dd:ee:ff_voltage",
+        "sensor.my_plug_current": "aa:bb:cc:dd:ee:ff_current_a",
+    }
+    entity_registry = er.async_get(hass)
+    for sensor_entity_id, value in expected.items():
+        assert entity_registry.async_get(sensor_entity_id).unique_id == value
