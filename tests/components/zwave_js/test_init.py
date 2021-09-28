@@ -316,15 +316,28 @@ async def test_install_addon(
     """Test install and start the Z-Wave JS add-on during entry setup."""
     addon_installed.return_value["version"] = None
     device = "/test"
-    network_key = "abc123"
+    s0_legacy_key = "s0_legacy"
+    s2_access_control_key = "s2_access_control"
+    s2_authenticated_key = "s2_authenticated"
+    s2_unauthenticated_key = "s2_unauthenticated"
     addon_options = {
         "device": device,
-        "network_key": network_key,
+        "s0_legacy_key": s0_legacy_key,
+        "s2_access_control_key": s2_access_control_key,
+        "s2_authenticated_key": s2_authenticated_key,
+        "s2_unauthenticated_key": s2_unauthenticated_key,
     }
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
-        data={"use_addon": True, "usb_path": device, "network_key": network_key},
+        data={
+            "use_addon": True,
+            "usb_path": device,
+            "s0_legacy_key": s0_legacy_key,
+            "s2_access_control_key": s2_access_control_key,
+            "s2_authenticated_key": s2_authenticated_key,
+            "s2_unauthenticated_key": s2_unauthenticated_key,
+        },
     )
     entry.add_to_hass(hass)
 
