@@ -2,7 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "title": "Solax Inverter Connection",
         "description": "Please enter the connection details",
         "data": {
           "ip_address": "[%key:common::config_flow::data::ip%]",

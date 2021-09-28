@@ -4,9 +4,11 @@ from datetime import timedelta
 
 from solax import real_time_api
 from solax.inverter import InverterError
+import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
@@ -24,11 +26,19 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.exceptions import PlatformNotReady
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import DOMAIN
 
 DEFAULT_PORT = 80
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    cv.deprecated(DOMAIN),
+    {
+        vol.Required(CONF_IP_ADDRESS): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    },
+)
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
@@ -73,6 +83,17 @@ async def async_setup_entry(
         devices.append(Inverter(uid, serial, sensor, unit, state_class, device_class))
     endpoint.sensors = devices
     async_add_entities(devices)
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Platform setup."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=config,
+        )
+    )
 
 
 class RealTimeDataEndpoint:

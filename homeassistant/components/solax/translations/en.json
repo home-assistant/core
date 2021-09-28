@@ -11,8 +11,7 @@
                     "password": "Password",
                     "port": "Port"
                 },
-                "description": "Please enter the connection details",
-                "title": "Solax Inverter Connection"
+                "description": "Please enter the connection details"
             }
         }
     }
