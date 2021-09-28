@@ -108,31 +108,6 @@ async def test_no_site(hass: HomeAssistant, no_site_api: Mock) -> None:
     assert result.get("errors") == {"api_token": "no_site"}
 
 
-async def test_no_site_no_data(hass: HomeAssistant, no_site_api: Mock) -> None:
-    """Test no site."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": "site"},
-    )
-
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
-    # Goes back to the user step
-    assert result.get("step_id") == "user"
-
-
-async def test_no_site_saved(hass: HomeAssistant, no_site_api: Mock) -> None:
-    """Test no site."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": "site"},
-        data={CONF_API_TOKEN: "psk_123456789"},
-    )
-
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
-    # Goes back to the user step
-    assert result.get("step_id") == "user"
-
-
 async def test_invalid_key(hass: HomeAssistant, invalid_key_api: Mock) -> None:
     """Test invalid api key."""
     result = await hass.config_entries.flow.async_init(
