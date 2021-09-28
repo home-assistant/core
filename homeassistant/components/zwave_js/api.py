@@ -456,6 +456,7 @@ async def websocket_add_node(
             "node_id": node.node_id,
             "status": node.status,
             "ready": node.ready,
+            "low_security": event["result"].get("lowSecurity", False),
         }
         connection.send_message(
             websocket_api.event_message(
