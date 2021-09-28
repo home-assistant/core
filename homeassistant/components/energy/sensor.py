@@ -60,7 +60,7 @@ class SourceAdapter:
 
     source_type: Literal["grid", "gas"]
     flow_type: Literal["flow_from", "flow_net", "flow_to", None]
-    split_type: Literal["increase", "decrease", None]
+    split_type: Literal["increase", "decrease", "none"]
     stat_energy_key: Literal["stat_energy_from", "stat_energy_net", "stat_energy_to"]
     entity_energy_key: Literal[
         "entity_energy_from", "entity_energy_net", "entity_energy_to"
@@ -80,7 +80,7 @@ SOURCE_ADAPTERS: Final = (
     SourceAdapter(
         "grid",
         "flow_from",
-        None,
+        "none",
         "stat_energy_from",
         "entity_energy_from",
         "stat_cost",
@@ -92,7 +92,7 @@ SOURCE_ADAPTERS: Final = (
     SourceAdapter(
         "grid",
         "flow_to",
-        None,
+        "none",
         "stat_energy_to",
         "entity_energy_to",
         "stat_compensation",
@@ -128,7 +128,7 @@ SOURCE_ADAPTERS: Final = (
     SourceAdapter(
         "gas",
         None,
-        None,
+        "none",
         "stat_energy_from",
         "entity_energy_from",
         "stat_cost",
@@ -225,8 +225,8 @@ class SensorManager:
         # Make sure the right data is there
         # If the entity existed, we don't pop it from to_remove so it's removed
         if config.get(adapter.entity_energy_key) is None or (
-            config.get("entity_energy_price") is None
-            and config.get("number_energy_price") is None
+            config.get(adapter.entity_energy_price_key) is None
+            and config.get(adapter.number_energy_price_key) is None
         ):
             return
 
@@ -313,9 +313,9 @@ class EnergyCostSensor(SensorEntity):
             return
 
         # Determine energy price
-        if self._config["entity_energy_price"] is not None:
+        if self._config[self._adapter.entity_energy_price_key] is not None:
             energy_price_state = self.hass.states.get(
-                self._config["entity_energy_price"]
+                self._config[self._adapter.entity_energy_price_key]
             )
 
             if energy_price_state is None:
@@ -336,7 +336,9 @@ class EnergyCostSensor(SensorEntity):
 
         else:
             energy_price_state = None
-            energy_price = cast(float, self._config["number_energy_price"])
+            energy_price = cast(
+                float, self._config[self._adapter.number_energy_price_key]
+            )
 
         if self._last_energy_sensor_state is None:
             # Initialize as it's the first time all required entities are in place.
@@ -385,7 +387,12 @@ class EnergyCostSensor(SensorEntity):
         # Update with newly incurred cost
         old_energy_value = float(self._last_energy_sensor_state.state)
         cur_value = cast(float, self._attr_native_value)
-        self._attr_native_value = cur_value + (energy - old_energy_value) * energy_price
+        delta = (energy - old_energy_value) * energy_price
+        if self._adapter.split_type == "increase":
+            delta = max(delta, 0)
+        elif self._adapter.split_type == "decrease":
+            delta = -min(delta, 0)
+        self._attr_native_value = cur_value + delta
 
         self._last_energy_sensor_state = energy_state
 
@@ -406,9 +413,12 @@ class EnergyCostSensor(SensorEntity):
         self._update_cost()
 
         # Store stat ID in hass.data so frontend can look it up
+        self.hass.data[DOMAIN]["cost_sensors"].setdefault(
+            self._config[self._adapter.entity_energy_key], {}
+        )
         self.hass.data[DOMAIN]["cost_sensors"][
             self._config[self._adapter.entity_energy_key]
-        ] = self.entity_id
+        ][self._adapter.split_type] = self.entity_id
 
         @callback
         def async_state_changed_listener(*_: Any) -> None:
@@ -432,9 +442,15 @@ class EnergyCostSensor(SensorEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle removing from hass."""
-        self.hass.data[DOMAIN]["cost_sensors"].pop(
+        self.hass.data[DOMAIN]["cost_sensors"][
             self._config[self._adapter.entity_energy_key]
-        )
+        ].pop(self._adapter.split_type)
+        if not self.hass.data[DOMAIN]["cost_sensors"][
+            self._config[self._adapter.entity_energy_key]
+        ]:
+            self.hass.data[DOMAIN]["cost_sensors"].pop(
+                self._config[self._adapter.entity_energy_key]
+            )
         await super().async_will_remove_from_hass()
 
     @callback
