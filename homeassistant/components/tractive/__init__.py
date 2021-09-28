@@ -9,6 +9,7 @@ import aiotractive
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
     CONF_EMAIL,
     CONF_PASSWORD,
@@ -32,7 +33,7 @@ from .const import (
     TRACKER_POSITION_UPDATED,
 )
 
-PLATFORMS = ["device_tracker", "sensor"]
+PLATFORMS = ["binary_sensor", "device_tracker", "sensor"]
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -187,7 +188,10 @@ class TractiveClient:
                 continue
 
     def _send_hardware_update(self, event):
-        payload = {ATTR_BATTERY_LEVEL: event["hardware"]["battery_level"]}
+        payload = {
+            ATTR_BATTERY_LEVEL: event["hardware"]["battery_level"],
+            ATTR_BATTERY_CHARGING: event["charging_state"] == "CHARGING",
+        }
         self._dispatch_tracker_event(
             TRACKER_HARDWARE_STATUS_UPDATED, event["tracker_id"], payload
         )
