@@ -74,6 +74,8 @@ async def mock_entity_id(
     """
     entity_id = await setup_mock_component(hass, config_entry_mock)
 
+    assert dmr_device_mock.async_subscribe_services.await_count == 1
+
     yield entity_id
 
     # Unload config entry to clean up
@@ -97,6 +99,8 @@ async def mock_disconnected_entity_id(
     domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpConnectionError
 
     entity_id = await setup_mock_component(hass, config_entry_mock)
+
+    assert dmr_device_mock.async_subscribe_services.await_count == 0
 
     yield entity_id
 
@@ -240,7 +244,6 @@ async def test_setup_entry_with_options(
 
 async def test_event_subscribe_failure(
     hass: HomeAssistant,
-    domain_data_mock: Mock,
     config_entry_mock: MockConfigEntry,
     dmr_device_mock: Mock,
 ) -> None:
@@ -727,7 +730,6 @@ async def test_multiple_ssdp_alive(
     domain_data_mock: Mock,
     ssdp_scanner_mock: Mock,
     mock_disconnected_entity_id: str,
-    dmr_device_mock: Mock,
 ) -> None:
     """Test multiple SSDP alive notifications is ok, only connects to device once."""
     domain_data_mock.upnp_factory.async_create_device.reset_mock()
@@ -1067,7 +1069,6 @@ async def test_ssdp_bootid(
 
 async def test_become_unavailable(
     hass: HomeAssistant,
-    domain_data_mock: Mock,
     mock_entity_id: str,
     dmr_device_mock: Mock,
 ) -> None:
@@ -1265,7 +1266,6 @@ async def test_config_update_connect_failure(
     hass: HomeAssistant,
     domain_data_mock: Mock,
     config_entry_mock: MockConfigEntry,
-    dmr_device_mock: Mock,
     mock_entity_id: str,
 ) -> None:
     """Test DlnaDmrEntity gracefully handles connect failure after config change."""
