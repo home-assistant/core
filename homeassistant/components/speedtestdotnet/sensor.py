@@ -68,8 +68,12 @@ class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return native value for entity."""
-        state = self.coordinator.data[self.entity_description.key]
-        return cast(StateType, self.entity_description.value(state))
+        if self.coordinator.data:
+            state = self.coordinator.data[self.entity_description.key]
+            self._attr_native_value = cast(
+                StateType, self.entity_description.value(state)
+            )
+        return self._attr_native_value
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

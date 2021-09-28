@@ -28,7 +28,6 @@ SENSOR_TYPES: Final[tuple[SpeedtestSensorEntityDescription, ...]] = (
         name="Ping",
         native_unit_of_measurement=TIME_MILLISECONDS,
         state_class=STATE_CLASS_MEASUREMENT,
-        value=lambda value: round(value),
     ),
     SpeedtestSensorEntityDescription(
         key="download",
