@@ -340,7 +340,6 @@ class SmappeeSensor(SensorEntity):
         self.entity_description = description
         self._smappee_base = smappee_base
         self._service_location = service_location
-        self.data = None
 
     @property
     def name(self):
