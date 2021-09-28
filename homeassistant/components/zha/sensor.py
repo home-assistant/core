@@ -30,6 +30,14 @@ from homeassistant.const import (
     POWER_WATT,
     PRESSURE_HPA,
     TEMP_CELSIUS,
+    TIME_HOURS,
+    TIME_SECONDS,
+    VOLUME_CUBIC_FEET,
+    VOLUME_CUBIC_METERS,
+    VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
+    VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+    VOLUME_GALLONS,
+    VOLUME_LITERS,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -274,6 +282,22 @@ class SmartEnergyMetering(Sensor):
     _device_class: str | None = DEVICE_CLASS_POWER
     _state_class: str | None = STATE_CLASS_MEASUREMENT
 
+    unit_of_measure_map = {
+        0x00: POWER_WATT,
+        0x01: VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+        0x02: VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
+        0x03: f"100 {VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR}",
+        0x04: f"US {VOLUME_GALLONS}/{TIME_HOURS}",
+        0x05: f"IMP {VOLUME_GALLONS}/{TIME_HOURS}",
+        0x06: f"BTU/{TIME_HOURS}",
+        0x07: f"l/{TIME_HOURS}",
+        0x08: "kPa",  # gauge
+        0x09: "kPa",  # absolute
+        0x0A: f"1000 {VOLUME_GALLONS}/{TIME_HOURS}",
+        0x0B: "unitless",
+        0x0C: f"MJ/{TIME_SECONDS}",
+    }
+
     @classmethod
     def create_entity(
         cls,
@@ -294,12 +318,12 @@ class SmartEnergyMetering(Sensor):
 
     def formatter(self, value: int) -> int | float:
         """Pass through channel formatter."""
-        return self._channel.formatter_function(value)
+        return self._channel.demand_formatter(value)
 
     @property
     def native_unit_of_measurement(self) -> str:
         """Return Unit of measurement."""
-        return self._channel.unit_of_measurement
+        return self.unit_of_measure_map.get(self._channel.unit_of_measurement)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -321,18 +345,25 @@ class SmartEnergySummation(SmartEnergyMetering, id_suffix="summation_delivered")
     _device_class: str | None = DEVICE_CLASS_ENERGY
     _state_class: str = STATE_CLASS_TOTAL_INCREASING
 
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Return Unit of measurement."""
-        uom = self._channel.cluster.get("unit_of_measure")
-        if uom == 0:
-            return ENERGY_KILO_WATT_HOUR
-        return self._channel.unit_of_measurement
+    unit_of_measure_map = {
+        0x00: ENERGY_KILO_WATT_HOUR,
+        0x01: VOLUME_CUBIC_METERS,
+        0x02: VOLUME_CUBIC_FEET,
+        0x03: f"100 {VOLUME_CUBIC_FEET}",
+        0x04: f"US {VOLUME_GALLONS}",
+        0x05: f"IMP {VOLUME_GALLONS}",
+        0x06: "BTU",
+        0x07: VOLUME_LITERS,
+        0x08: "kPa",  # gauge
+        0x09: "kPa",  # absolute
+        0x0A: f"1000 {VOLUME_CUBIC_FEET}",
+        0x0B: "unitless",
+        0x0C: "MJ",
+    }
 
     def formatter(self, value: int) -> int | float:
         """Numeric pass-through formatter."""
-        uom = self._channel.cluster.get("unit_of_measure")
-        if uom != 0:
+        if self._channel.unit_of_measurement != 0:
             return self._channel.summa_formatter(value)
 
         # SmartEnergy cluster UOM 0 could be kW or kWh depending on context

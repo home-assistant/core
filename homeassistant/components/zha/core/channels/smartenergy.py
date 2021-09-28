@@ -6,15 +6,6 @@ from functools import partialmethod
 
 from zigpy.zcl.clusters import smartenergy
 
-from homeassistant.const import (
-    POWER_WATT,
-    TIME_HOURS,
-    TIME_SECONDS,
-    VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
-    VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
-)
-from homeassistant.core import callback
-
 from .. import registries, typing as zha_typing
 from ..const import REPORT_CONFIG_ASAP, REPORT_CONFIG_DEFAULT, REPORT_CONFIG_OP
 from .base import ZigbeeChannel
@@ -76,22 +67,6 @@ class Metering(ZigbeeChannel):
         "multiplier": True,
         "summa_formatting": True,
         "unit_of_measure": True,
-    }
-
-    unit_of_measure_map = {
-        0x00: POWER_WATT,
-        0x01: VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
-        0x02: VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
-        0x03: f"ccf/{TIME_HOURS}",
-        0x04: f"US gal/{TIME_HOURS}",
-        0x05: f"IMP gal/{TIME_HOURS}",
-        0x06: f"BTU/{TIME_HOURS}",
-        0x07: f"l/{TIME_HOURS}",
-        0x08: "kPa",
-        0x09: "kPa",
-        0x0A: f"mcf/{TIME_HOURS}",
-        0x0B: "unitless",
-        0x0C: f"MJ/{TIME_SECONDS}",
     }
 
     metering_device_type = {
@@ -171,18 +146,10 @@ class Metering(ZigbeeChannel):
             return self.DeviceStatusElectric(status)
         return self.DeviceStatusDefault(status)
 
-    @callback
-    def attribute_updated(self, attrid: int, value: int) -> None:
-        """Handle attribute update from Metering cluster."""
-        if None in (self._summa_format, self._format_spec):
-            return
-        super().attribute_updated(attrid, value)
-
     @property
     def unit_of_measurement(self) -> str:
         """Return unit of measurement."""
-        uom = self.cluster.get("unit_of_measure", 0x7F)
-        return self.unit_of_measure_map.get(uom & 0x7F, "unknown")
+        return self.cluster.get("unit_of_measure")
 
     async def async_initialize_channel_specific(self, from_cache: bool) -> None:
         """Fetch config from device and updates format specifier."""
@@ -219,7 +186,7 @@ class Metering(ZigbeeChannel):
     def _formatter_function(self, selector: FormatSelector, value: int) -> int | float:
         """Return formatted value for display."""
         value = value * self.multiplier / self.divisor
-        if self.unit_of_measurement == POWER_WATT:
+        if self.unit_of_measurement == 0:
             # Zigbee spec power unit is kW, but we show the value in W
             value_watt = value * 1000
             if value_watt < 100:
@@ -229,7 +196,7 @@ class Metering(ZigbeeChannel):
             return self._summa_format.format(value).lstrip()
         return self._format_spec.format(value).lstrip()
 
-    formatter_function = partialmethod(_formatter_function, FormatSelector.DEMAND)
+    demand_formatter = partialmethod(_formatter_function, FormatSelector.DEMAND)
     summa_formatter = partialmethod(_formatter_function, FormatSelector.SUMMATION)
 
 

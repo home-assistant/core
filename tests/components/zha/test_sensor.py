@@ -26,7 +26,8 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+    VOLUME_CUBIC_FEET,
+    VOLUME_CUBIC_METERS,
 )
 from homeassistant.helpers import restore_state
 from homeassistant.util import dt as dt_util
@@ -74,12 +75,12 @@ async def async_test_illuminance(hass, cluster, entity_id):
 async def async_test_metering(hass, cluster, entity_id):
     """Test Smart Energy metering sensor."""
     await send_attributes_report(hass, cluster, {1025: 1, 1024: 12345, 1026: 100})
-    assert_state(hass, entity_id, "12345.0", "unknown")
+    assert_state(hass, entity_id, "12345.0", None)
     assert hass.states.get(entity_id).attributes["status"] == "NO_ALARMS"
     assert hass.states.get(entity_id).attributes["device_type"] == "Electric Metering"
 
     await send_attributes_report(hass, cluster, {1024: 12346, "status": 64 + 8})
-    assert_state(hass, entity_id, "12346.0", "unknown")
+    assert_state(hass, entity_id, "12346.0", None)
     assert (
         hass.states.get(entity_id).attributes["status"]
         == "SERVICE_DISCONNECT|POWER_FAILURE"
@@ -98,7 +99,7 @@ async def async_test_smart_energy_summation(hass, cluster, entity_id):
     await send_attributes_report(
         hass, cluster, {1025: 1, "current_summ_delivered": 12321, 1026: 100}
     )
-    assert_state(hass, entity_id, "12.32", VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR)
+    assert_state(hass, entity_id, "12.32", VOLUME_CUBIC_METERS)
     assert hass.states.get(entity_id).attributes["status"] == "NO_ALARMS"
     assert hass.states.get(entity_id).attributes["device_type"] == "Electric Metering"
     assert (
@@ -537,25 +538,25 @@ async def test_unsupported_attributes_sensor(
             1,
             1232,
             "1.23",
-            VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+            VOLUME_CUBIC_METERS,
         ),
         (
             1,
             123200,
             "123.20",
-            VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+            VOLUME_CUBIC_METERS,
         ),
         (
             3,
             234,
             "0.23",
-            "ccf/h",
+            f"100 {VOLUME_CUBIC_FEET}",
         ),
         (
             3,
             236,
             "0.24",
-            "ccf/h",
+            f"100 {VOLUME_CUBIC_FEET}",
         ),
         (
             8,
