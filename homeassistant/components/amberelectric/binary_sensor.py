@@ -38,11 +38,6 @@ class AmberGridBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.site_id}-{description.key}"
 
     @property
-    def unique_id(self) -> None:
-        """Return a unique id for each sensors."""
-        self._attr_unique_id = f"{self.site_id}-{self.entity_description.key}"
-
-    @property
     def icon(self):
         """Return the sensor icon."""
         status = self.coordinator.data["grid"][self.entity_description.key]

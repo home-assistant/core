@@ -61,9 +61,6 @@ class AmberSensor(CoordinatorEntity, SensorEntity):
         self.entity_description = description
         self.channel_type = channel_type
 
-    @property
-    def unique_id(self) -> None:
-        """Return a unique id for each sensors."""
         self._attr_unique_id = (
             f"{self.site_id}-{self.entity_description.key}-{self.channel_type}"
         )
@@ -180,11 +177,6 @@ class AmberGridSensor(CoordinatorEntity, SensorEntity):
         self.entity_description = description
         self._attr_device_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self._attr_unique_id = f"{coordinator.site_id}-{description.key}"
-
-    @property
-    def unique_id(self) -> None:
-        """Return a unique id for each sensors."""
-        self._attr_unique_id = f"{self.site_id}-{self.entity_description.key}"
 
     @property
     def native_value(self) -> str | None:
