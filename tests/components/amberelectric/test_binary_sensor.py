@@ -116,6 +116,8 @@ def test_no_spike_sensor(hass: HomeAssistant, setup_no_spike) -> None:
     sensor = hass.states.get("binary_sensor.mock_title_price_spike")
     assert sensor
     assert sensor.state == "off"
+    assert sensor.attributes["icon"] == "mdi:power-plug"
+    assert sensor.attributes["spike_status"] == "none"
 
 
 def test_potential_spike_sensor(hass: HomeAssistant, setup_potential_spike) -> None:
@@ -124,6 +126,8 @@ def test_potential_spike_sensor(hass: HomeAssistant, setup_potential_spike) -> N
     sensor = hass.states.get("binary_sensor.mock_title_price_spike")
     assert sensor
     assert sensor.state == "off"
+    assert sensor.attributes["icon"] == "mdi:power-plug-outline"
+    assert sensor.attributes["spike_status"] == "potential"
 
 
 def test_spike_sensor(hass: HomeAssistant, setup_spike) -> None:
@@ -132,3 +136,5 @@ def test_spike_sensor(hass: HomeAssistant, setup_spike) -> None:
     sensor = hass.states.get("binary_sensor.mock_title_price_spike")
     assert sensor
     assert sensor.state == "on"
+    assert sensor.attributes["icon"] == "mdi:power-plug-off"
+    assert sensor.attributes["spike_status"] == "spike"

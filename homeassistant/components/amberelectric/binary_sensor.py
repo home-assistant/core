@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import Any
+
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -22,7 +25,7 @@ PRICE_SPIKE_ICONS = {
 }
 
 
-class AmberGridBinarySensor(CoordinatorEntity, BinarySensorEntity):
+class AmberPriceGridSensor(CoordinatorEntity, BinarySensorEntity):
     """Sensor to show single grid binary values."""
 
     def __init__(
@@ -34,19 +37,38 @@ class AmberGridBinarySensor(CoordinatorEntity, BinarySensorEntity):
         super().__init__(coordinator)
         self.site_id = coordinator.site_id
         self.entity_description = description
-        self._attr_device_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self._attr_unique_id = f"{coordinator.site_id}-{description.key}"
+        self._attr_device_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if the binary sensor is on."""
+        return self.coordinator.data["grid"][self.entity_description.key]
+
+
+class AmberPriceSpikeBinarySensor(AmberPriceGridSensor):
+    """Sensor to show single grid binary values."""
 
     @property
     def icon(self):
         """Return the sensor icon."""
-        status = self.coordinator.data["grid"][self.entity_description.key]
+        status = self.coordinator.data["grid"]["price_spike"]
         return PRICE_SPIKE_ICONS[status]
 
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        return self.coordinator.data["grid"][self.entity_description.key] == "spike"
+        return self.coordinator.data["grid"]["price_spike"] == "spike"
+
+    @property
+    def device_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return additional pieces of information about the price spike."""
+
+        spike_status = self.coordinator.data["grid"]["price_spike"]
+        return {
+            "spike_status": spike_status,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+        }
 
 
 async def async_setup_entry(
@@ -62,5 +84,5 @@ async def async_setup_entry(
         key="price_spike",
         name=f"{entry.title} - Price Spike",
     )
-    entities.append(AmberGridBinarySensor(coordinator, price_spike_description))
+    entities.append(AmberPriceSpikeBinarySensor(coordinator, price_spike_description))
     async_add_entities(entities)
