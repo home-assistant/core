@@ -1,7 +1,7 @@
 """Support for monitoring a Smappee energy sensor."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
@@ -45,7 +45,7 @@ class SmappeePollingSensorEntityDescription(SmappeeSensorEntityDescription):
 class SmappeeVoltageSensorEntityDescription(SmappeeSensorEntityDescription):
     """Describes Smappee sensor entity."""
 
-    phase_types: tuple[str, ...] = ()
+    phase_types: set[str] = field(default_factory=set)
 
 
 TREND_SENSORS: tuple[SmappeePollingSensorEntityDescription, ...] = (
@@ -151,7 +151,7 @@ VOLTAGE_SENSORS: tuple[SmappeeVoltageSensorEntityDescription, ...] = (
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         sensor_id="phase_voltage_a",
         device_class=DEVICE_CLASS_VOLTAGE,
-        phase_types=("ONE", "TWO", "THREE_STAR", "THREE_DELTA"),
+        phase_types={"ONE", "TWO", "THREE_STAR", "THREE_DELTA"},
     ),
     SmappeeVoltageSensorEntityDescription(
         key="phase_voltages_b",
@@ -160,7 +160,7 @@ VOLTAGE_SENSORS: tuple[SmappeeVoltageSensorEntityDescription, ...] = (
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         sensor_id="phase_voltage_b",
         device_class=DEVICE_CLASS_VOLTAGE,
-        phase_types=("TWO", "THREE_STAR", "THREE_DELTA"),
+        phase_types={"TWO", "THREE_STAR", "THREE_DELTA"},
     ),
     SmappeeVoltageSensorEntityDescription(
         key="phase_voltages_c",
@@ -169,7 +169,7 @@ VOLTAGE_SENSORS: tuple[SmappeeVoltageSensorEntityDescription, ...] = (
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         sensor_id="phase_voltage_c",
         device_class=DEVICE_CLASS_VOLTAGE,
-        phase_types=("THREE_STAR",),
+        phase_types={"THREE_STAR"},
     ),
     SmappeeVoltageSensorEntityDescription(
         key="line_voltages_a",
@@ -178,7 +178,7 @@ VOLTAGE_SENSORS: tuple[SmappeeVoltageSensorEntityDescription, ...] = (
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         sensor_id="line_voltage_a",
         device_class=DEVICE_CLASS_VOLTAGE,
-        phase_types=("ONE", "TWO", "THREE_STAR", "THREE_DELTA"),
+        phase_types={"ONE", "TWO", "THREE_STAR", "THREE_DELTA"},
     ),
     SmappeeVoltageSensorEntityDescription(
         key="line_voltages_b",
@@ -187,7 +187,7 @@ VOLTAGE_SENSORS: tuple[SmappeeVoltageSensorEntityDescription, ...] = (
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         sensor_id="line_voltage_b",
         device_class=DEVICE_CLASS_VOLTAGE,
-        phase_types=("TWO", "THREE_STAR", "THREE_DELTA"),
+        phase_types={"TWO", "THREE_STAR", "THREE_DELTA"},
     ),
     SmappeeVoltageSensorEntityDescription(
         key="line_voltages_c",
@@ -196,7 +196,7 @@ VOLTAGE_SENSORS: tuple[SmappeeVoltageSensorEntityDescription, ...] = (
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         sensor_id="line_voltage_c",
         device_class=DEVICE_CLASS_VOLTAGE,
-        phase_types=("THREE_STAR", "THREE_DELTA"),
+        phase_types={"THREE_STAR", "THREE_DELTA"},
     ),
 )
 
