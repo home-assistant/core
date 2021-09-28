@@ -466,16 +466,6 @@ def clear_statistics(instance: Recorder, statistic_ids: list[str]) -> None:
         ).delete(synchronize_session=False)
 
 
-def update_statistics_metadata(
-    instance: Recorder, statistic_id: str, unit_of_measurement: str | None
-) -> None:
-    """Update statistics metadata for a statistic_id."""
-    with session_scope(session=instance.get_session()) as session:  # type: ignore
-        session.query(StatisticsMeta).filter(
-            StatisticsMeta.statistic_id == statistic_id
-        ).update({StatisticsMeta.unit_of_measurement: unit_of_measurement})
-
-
 def list_statistic_ids(
     hass: HomeAssistant,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
@@ -517,8 +507,7 @@ def list_statistic_ids(
                 unit = _configured_unit(unit, units)
             platform_statistic_ids[statistic_id] = unit
 
-        for key, value in platform_statistic_ids.items():
-            statistic_ids.setdefault(key, value)
+        statistic_ids = {**statistic_ids, **platform_statistic_ids}
 
     # Return a map of statistic_id to unit_of_measurement
     return [

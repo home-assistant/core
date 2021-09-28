@@ -329,13 +329,6 @@ class ClearStatisticsTask(NamedTuple):
     statistic_ids: list[str]
 
 
-class UpdateStatisticsMetadataTask(NamedTuple):
-    """Object to store statistics_id and unit for update of statistics metadata."""
-
-    statistic_id: str
-    unit_of_measurement: str | None
-
-
 class PurgeTask(NamedTuple):
     """Object to store information about purge task."""
 
@@ -589,11 +582,6 @@ class Recorder(threading.Thread):
         self.queue.put(ClearStatisticsTask(statistic_ids))
 
     @callback
-    def async_update_statistics_metadata(self, statistic_id, unit_of_measurement):
-        """Update statistics metadata for a statistic_id."""
-        self.queue.put(UpdateStatisticsMetadataTask(statistic_id, unit_of_measurement))
-
-    @callback
     def _async_setup_periodic_tasks(self):
         """Prepare periodic tasks."""
         if self.hass.is_stopping or not self.get_session:
@@ -788,11 +776,6 @@ class Recorder(threading.Thread):
             return
         if isinstance(event, ClearStatisticsTask):
             statistics.clear_statistics(self, event.statistic_ids)
-            return
-        if isinstance(event, UpdateStatisticsMetadataTask):
-            statistics.update_statistics_metadata(
-                self, event.statistic_id, event.unit_of_measurement
-            )
             return
         if isinstance(event, WaitTask):
             self._queue_watch.set()
