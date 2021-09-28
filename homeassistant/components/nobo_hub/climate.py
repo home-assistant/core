@@ -176,7 +176,8 @@ class NoboZone(ClimateEntity):
     _attr_min_temp = MIN_TEMPERATURE
     _attr_precision = PRECISION_TENTHS
     _attr_preset_modes = PRESET_MODES
-    _attr_should_poll = False
+    # Need to poll to get preset change when in HVAC_MODE_AUTO.
+    _attr_should_poll = True
     _attr_supported_features = SUPPORT_FLAGS
     _attr_temperature_unit = TEMP_CELSIUS
 
@@ -198,7 +199,7 @@ class NoboZone(ClimateEntity):
 
         # Register for callbacks before initial update to avoid race condition.
         hub.register_callback(self._after_update)
-        self._update_attributes()
+        self.update()
 
     @property
     def hvac_modes(self):
@@ -281,7 +282,7 @@ class NoboZone(ClimateEntity):
         )
 
     @callback
-    def _update_attributes(self):
+    def update(self):
         """Fetch new state data for this zone."""
         state = self._nobo.get_current_zone_mode(self._id, dt_util.now())
         self._attr_hvac_mode = HVAC_MODE_AUTO
@@ -321,5 +322,5 @@ class NoboZone(ClimateEntity):
 
     @callback
     def _after_update(self, hub):
-        self._update_attributes()
+        self.update()
         self.async_schedule_update_ha_state()
