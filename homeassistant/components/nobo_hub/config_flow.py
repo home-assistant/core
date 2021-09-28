@@ -48,7 +48,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                return await self._test_connection(user_input)
+                serial = user_input.get(CONF_SERIAL)
+                ip_address = user_input.get(CONF_IP_ADDRESS)
+                await self.async_set_unique_id(serial)
+                self._abort_if_unique_id_configured()
+                name = await self._test_connection(serial, ip_address)
+                return self.async_create_entry(title=name, data=user_input)
             except InvalidSerial:
                 errors["base"] = "invalid_serial"
             except InvalidIP:
@@ -71,11 +76,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"devices": self._devices_str()},
         )
 
-    async def _test_connection(self, user_input):
-        serial = user_input.get(CONF_SERIAL)
-        ip_address = user_input.get(CONF_IP_ADDRESS)
+    async def _test_connection(self, serial, ip_address):
         if serial is None or not len(serial) == 12 or not serial.isdigit():
             raise InvalidSerial()
+
         if ip_address is not None:
             try:
                 socket.inet_aton(ip_address)
@@ -89,19 +93,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if ip_address is None:
                 raise DeviceNotFound()
 
-        await self.async_set_unique_id(serial)
-        self._abort_if_unique_id_configured()
-
-        # Test connection
         hub = nobo(serial=serial, ip=ip_address, discover=False, loop=self.hass.loop)
-        if await hub.async_connect_hub(ip_address, serial):
-            await hub.close()
-            await self.async_set_unique_id(serial, raise_on_progress=False)
-            self._abort_if_unique_id_configured(
-                reload_on_update=False, updates=user_input
-            )
-            return self.async_create_entry(title=hub.hub_info["name"], data=user_input)
-        raise CannotConnect()
+        if not await hub.async_connect_hub(ip_address, serial):
+            raise CannotConnect()
+
+        name = hub.hub_info["name"]
+        await hub.close()
+        return name
 
     def _devices_str(self):
         return ", ".join(
@@ -140,7 +138,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handles options flow for the component."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initializr the options flow."""
+        """Initialize the options flow."""
         self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None):

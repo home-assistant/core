@@ -16,8 +16,7 @@
                     "ip_address": "IP Address",
                     "serial": "Serial number"
                 },
-                "description": "Start by entering the complete serial number (12 digits) of the Nob\u00f8 Ecohub you want to add. If you have more than one hub, and they have the same serial prefix, you must also specify the IP address. If any devices were automatically found on your network, they are shown below.\n\nIf you cannot see your device or experience any issues, try specifying the device IP address.\n\n{devices}",
-                "title": "Nob\u00f8 Ecohub"
+                "description": "Start by entering the complete serial number (12 digits) of the Nob\u00f8 Ecohub you want to add. If you have more than one hub, and they have the same serial prefix, you must also specify the IP address. If any devices were automatically found on your network, they are shown below.\n\nIf you cannot see your device or experience any issues, try specifying the device IP address.\n\n{devices}"
             }
         }
     },

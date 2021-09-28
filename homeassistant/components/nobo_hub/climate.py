@@ -81,14 +81,14 @@ async def async_setup_entry(
     # Find OFF command (week profile) to use for all zones:
     command_off_name = config_entry.options.get(CONF_COMMAND_OFF)
     command_on_by_id: dict[str, str] = {}  # By default, nothing can be turned on
-    if command_off_name is None or command_off_name == "":
+    if command_off_name in [None or ""]:
         _LOGGER.debug(
             "Not possible to turn off (or on) any zone, because OFF week profile was not specified"
         )
         command_off_id = None
     else:
         command_off_id = _get_id_from_name(command_off_name, hub.week_profiles)
-        if command_off_id in ["", None]:
+        if command_off_id in (None, ""):
             _LOGGER.warning(
                 "Can not turn off (or on) any zone, because week profile '%s' was not found",
                 command_off_name,
@@ -117,7 +117,11 @@ async def async_setup_entry(
         for zone_id in hub.zones
     )
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, hub.stop)
+    async def _async_close(event):
+        """Close the Nobø Ecohub socket connection when HA stops."""
+        await hub.stop()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close)
 
     return True
 
@@ -129,14 +133,14 @@ def _set_on_commands(command_on_by_id, command_on_dict, hub):
         if zone_name not in command_on_dict:
             continue
         command_on_name = command_on_dict[zone_name]
-        if command_on_name in [None, ""]:
+        if command_on_name in (None, ""):
             _LOGGER.warning(
                 "Can not turn on (or off) zone '%s', because ON week profile was not specified",
                 zone_name,
             )
             continue
         command_on_id = _get_id_from_name(command_on_name, hub.week_profiles)
-        if command_on_id in [None, ""]:
+        if command_on_id in (None, ""):
             _LOGGER.warning(
                 "Can not turn on (or off) zone '%s', because ON week profile '%s' was not found",
                 zone_name,
@@ -183,21 +187,24 @@ class NoboZone(ClimateEntity):
         self._id = zone_id
         self._nobo = hub
         self._attr_unique_id = hub.hub_serial + ":" + zone_id
-        self._attr_name = self._nobo.zones[self._id][ATTR_NAME]
+        self._attr_name = hub.zones[self._id][ATTR_NAME]
         self._attr_hvac_mode = HVAC_MODE_AUTO
         self._command_off_id = command_off_id
         self._command_on_id = command_on_id
         self._override_type = override_type
+        self._can_turn_off = (
+            self._command_on_id is not None and self._command_off_id is not None
+        )
 
         # Register for callbacks before initial update to avoid race condition.
-        self._nobo.register_callback(self._after_update)
-        self.update()
+        hub.register_callback(self._after_update)
+        self._update_attributes()
 
     @property
     def hvac_modes(self):
         """Return the list of available operation modes."""
         # Only enable off-command if on- and off-command exists for this zone:
-        if self.can_turn_off():
+        if self._can_turn_off:
             return HVAC_MODES
         return HVAC_MODES_WITHOUT_OFF
 
@@ -210,7 +217,7 @@ class NoboZone(ClimateEntity):
             await self.async_set_preset_mode(PRESET_COMFORT)
             self._attr_hvac_mode = hvac_mode
 
-        if self.can_turn_off():
+        if self._can_turn_off:
             if hvac_mode == HVAC_MODE_OFF:
                 await self.async_set_preset_mode(PRESET_NONE)
                 self._attr_hvac_mode = hvac_mode
@@ -241,10 +248,6 @@ class NoboZone(ClimateEntity):
                 self._id,
                 self._attr_name,
             )
-
-    def can_turn_off(self) -> bool:
-        """Return true if heater can turn off and on."""
-        return self._command_on_id is not None and self._command_off_id is not None
 
     async def async_set_preset_mode(self, preset_mode):
         """Set new zone override."""
@@ -278,11 +281,9 @@ class NoboZone(ClimateEntity):
         )
 
     @callback
-    def update(self):
+    def _update_attributes(self):
         """Fetch new state data for this zone."""
-        state = self._nobo.get_current_zone_mode(
-            self._id, dt_util.as_local(dt_util.now())
-        )
+        state = self._nobo.get_current_zone_mode(self._id, dt_util.now())
         self._attr_hvac_mode = HVAC_MODE_AUTO
         self._attr_preset_mode = PRESET_NONE
 
@@ -305,6 +306,7 @@ class NoboZone(ClimateEntity):
                     and self._nobo.overrides[override][ATTR_TARGET_ID] == self._id
                 ):
                     self._attr_hvac_mode = HVAC_MODE_HEAT
+                    break
 
         current_temperature = self._nobo.get_current_zone_temperature(self._id)
         self._attr_current_temperature = (
@@ -319,5 +321,5 @@ class NoboZone(ClimateEntity):
 
     @callback
     def _after_update(self, hub):
-        self.update()
+        self._update_attributes()
         self.async_schedule_update_ha_state()
