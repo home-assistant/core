@@ -87,7 +87,7 @@ def _mocked_strip() -> SmartStrip:
 
 
 def _patch_discovery(device=None, no_device=False):
-    async def _discovery(*_):
+    async def _discovery(*args, **kwargs):
         if no_device:
             return {}
         return {IP_ADDRESS: _mocked_bulb()}
