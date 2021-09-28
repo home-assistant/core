@@ -24,7 +24,7 @@ ICON = "mdi:remote"
 
 KEY_CODE = "key_code"
 KEY_VALUE = {"key_up": 0, "key_down": 1, "key_hold": 2}
-KEY_VALUE_NAME = {0: "key_up", 1: "key_down", 2: "key_hold"}
+KEY_VALUE_NAME = {value: key for key, value in KEY_VALUE .items()}
 KEYBOARD_REMOTE_COMMAND_RECEIVED = "keyboard_remote_command_received"
 KEYBOARD_REMOTE_CONNECTED = "keyboard_remote_connected"
 KEYBOARD_REMOTE_DISCONNECTED = "keyboard_remote_disconnected"
