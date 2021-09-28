@@ -317,14 +317,14 @@ def main() -> int:
         faulthandler.enable(fault_file)
         exit_code = runner.run(runtime_conf)
         faulthandler.disable()
-        fault_file.close()
-        if os.path.getsize(fault_file_name) == 0:
-            os.remove(fault_file_name)
 
-        if exit_code == RESTART_EXIT_CODE and not args.runner:
-            try_to_restart()
+    if os.path.getsize(fault_file_name) == 0:
+        os.remove(fault_file_name)
 
-        return exit_code
+    if exit_code == RESTART_EXIT_CODE and not args.runner:
+        try_to_restart()
+
+    return exit_code
 
 
 if __name__ == "__main__":
