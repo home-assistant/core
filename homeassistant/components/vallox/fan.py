@@ -177,11 +177,9 @@ class ValloxFan(FanEntity):
 
         self._available = True
 
-    async def _async_set_preset_mode_internal(
-        self, preset_mode: str, update_state_proxy: bool
-    ) -> bool:
+    async def _async_set_preset_mode_internal(self, preset_mode: str) -> bool:
         """
-        Set new preset mode and optionally update the state proxy.
+        Set new preset mode.
 
         Returns true if the mode has been changed, false otherwise.
         """
@@ -199,16 +197,16 @@ class ValloxFan(FanEntity):
             _LOGGER.error("Error setting preset: %s", err)
             return False
 
-        if update_state_proxy:
-            await self._state_proxy.async_update()
-
         return True
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         # This state change affects other entities like sensors. Force an immediate update that can
         # be observed by all parties involved.
-        await self._async_set_preset_mode_internal(preset_mode, update_state_proxy=True)
+        update_needed = await self._async_set_preset_mode_internal(preset_mode)
+
+        if update_needed:
+            await self._state_proxy.async_update()
 
     async def async_turn_on(
         self,
@@ -223,9 +221,7 @@ class ValloxFan(FanEntity):
         update_needed = False
 
         if preset_mode:
-            update_needed = await self._async_set_preset_mode_internal(
-                preset_mode, update_state_proxy=False
-            )
+            update_needed = await self._async_set_preset_mode_internal(preset_mode)
 
         if not self._is_on:
             try:
