@@ -281,6 +281,9 @@ alpha_vantage==2.3.1
 # homeassistant.components.ambee
 ambee==0.3.0
 
+# homeassistant.components.amberelectric
+amberelectric==1.0.3
+
 # homeassistant.components.ambiclimate
 ambiclimate==0.2.1
 
