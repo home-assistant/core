@@ -42,7 +42,7 @@ RtmAPI==0.7.2
 WSDiscovery==2.0.0
 
 # homeassistant.components.waze_travel_time
-WazeRouteCalculator==0.12
+WazeRouteCalculator==0.13
 
 # homeassistant.components.abode
 abodepy==1.2.0
@@ -198,6 +198,9 @@ airtouch4pyapi==1.0.5
 
 # homeassistant.components.ambee
 ambee==0.3.0
+
+# homeassistant.components.amberelectric
+amberelectric==1.0.3
 
 # homeassistant.components.ambiclimate
 ambiclimate==0.2.1
@@ -1236,7 +1239,7 @@ smarthab==0.21
 smhi-pkg==1.0.15
 
 # homeassistant.components.sonos
-soco==0.23.3
+soco==0.24.0
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
@@ -1400,7 +1403,7 @@ yalexs==1.1.13
 yeelight==0.7.5
 
 # homeassistant.components.youless
-youless-api==0.12
+youless-api==0.13
 
 # homeassistant.components.zeroconf
 zeroconf==0.36.7

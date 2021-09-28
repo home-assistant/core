@@ -58,6 +58,15 @@
         }
     },
     "device_automation": {
+        "action_type": {
+            "clear_lock_usercode": "Clear usercode on {entity_name}",
+            "ping": "Ping device",
+            "refresh_value": "Refresh the value(s) for {entity_name}",
+            "reset_meter": "Reset meters on {subtype}",
+            "set_config_parameter": "Set value of config parameter {subtype}",
+            "set_lock_usercode": "Set a usercode on {entity_name}",
+            "set_value": "Set value of a Z-Wave Value"
+        },
         "condition_type": {
             "config_parameter": "Config parameter {subtype} value",
             "node_status": "Node status",
