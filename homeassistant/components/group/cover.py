@@ -87,8 +87,8 @@ class CoverGroup(GroupEntity, CoverEntity):
     """Representation of a CoverGroup."""
 
     _attr_is_closed: bool | None = None
-    _attr_is_opening: bool | None = False
-    _attr_is_closing: bool | None = False
+    _attr_is_opening: bool | None = None
+    _attr_is_closing: bool | None = None
     _attr_current_cover_position: int | None = 100
     _attr_assumed_state: bool = True
 
@@ -260,8 +260,8 @@ class CoverGroup(GroupEntity, CoverEntity):
         self._attr_assumed_state = False
 
         self._attr_is_closed = None
-        self._attr_is_closing = False
-        self._attr_is_opening = False
+        self._attr_is_closing = None
+        self._attr_is_opening = None
         for entity_id in self._entities:
             state = self.hass.states.get(entity_id)
             if not state:
