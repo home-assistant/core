@@ -10,6 +10,10 @@
   "iot_class": "local_polling",
   "dhcp": [
     {
+      "hostname": "ep*",
+      "macaddress": "E848B8*"
+    },
+    {
       "hostname": "hs*",
       "macaddress": "1C3BF3*"
     },
@@ -32,6 +36,10 @@
     {
       "hostname": "hs*",
       "macaddress": "C006C3*"
+    },
+    {
+      "hostname": "k[lp]*",
+      "macaddress": "003192*"
     },
     {
       "hostname": "k[lp]*",
