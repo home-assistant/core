@@ -221,7 +221,7 @@ arcam-fmj==0.7.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.22.3
+async-upnp-client==0.22.4
 
 # homeassistant.components.aurora
 auroranoaa==0.0.2
