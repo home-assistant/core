@@ -137,6 +137,7 @@ async def test_cost_sensor_price_entity_total_increasing(
             ]
             if flow_type == "flow_to"
             else [],
+            "flow_net": [],
             "cost_adjustment_day": 0,
         }
     )
@@ -341,6 +342,7 @@ async def test_cost_sensor_price_entity_total(
             ]
             if flow_type == "flow_to"
             else [],
+            "flow_net": [],
             "cost_adjustment_day": 0,
         }
     )
@@ -547,6 +549,7 @@ async def test_cost_sensor_price_entity_total_no_reset(
             ]
             if flow_type == "flow_to"
             else [],
+            "flow_net": [],
             "cost_adjustment_day": 0,
         }
     )
@@ -682,6 +685,7 @@ async def test_cost_sensor_handle_wh(hass, hass_storage) -> None:
                 }
             ],
             "flow_to": [],
+            "flow_net": [],
             "cost_adjustment_day": 0,
         }
     )
@@ -790,6 +794,7 @@ async def test_cost_sensor_wrong_state_class(
                 }
             ],
             "flow_to": [],
+            "flow_net": [],
             "cost_adjustment_day": 0,
         }
     )
@@ -852,6 +857,7 @@ async def test_cost_sensor_state_class_measurement_no_reset(
                 }
             ],
             "flow_to": [],
+            "flow_net": [],
             "cost_adjustment_day": 0,
         }
     )

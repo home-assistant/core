@@ -334,6 +334,7 @@ async def test_validation_grid(hass, mock_energy_manager, mock_is_entity_recorde
                             "stat_compensation": "sensor.grid_compensation_1",
                         }
                     ],
+                    "flow_net": [],
                 }
             ]
         }
@@ -437,6 +438,7 @@ async def test_validation_grid_price_not_exist(hass, mock_energy_manager):
                             "number_energy_price": 0.10,
                         }
                     ],
+                    "flow_net": [],
                 }
             ]
         }
@@ -512,6 +514,7 @@ async def test_validation_grid_price_errors(
                         }
                     ],
                     "flow_to": [],
+                    "flow_net": [],
                 }
             ]
         }

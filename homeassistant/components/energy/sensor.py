@@ -59,10 +59,19 @@ class SourceAdapter:
     """Adapter to allow sources and their flows to be used as sensors."""
 
     source_type: Literal["grid", "gas"]
-    flow_type: Literal["flow_from", "flow_to", None]
-    stat_energy_key: Literal["stat_energy_from", "stat_energy_to"]
-    entity_energy_key: Literal["entity_energy_from", "entity_energy_to"]
+    flow_type: Literal["flow_from", "flow_net", "flow_to", None]
+    split_type: Literal["increase", "decrease", None]
+    stat_energy_key: Literal["stat_energy_from", "stat_energy_net", "stat_energy_to"]
+    entity_energy_key: Literal[
+        "entity_energy_from", "entity_energy_net", "entity_energy_to"
+    ]
     total_money_key: Literal["stat_cost", "stat_compensation"]
+    entity_energy_price_key: Literal[
+        "entity_energy_price", "entity_energy_price_from", "entity_energy_price_to"
+    ]
+    number_energy_price_key: Literal[
+        "number_energy_price", "number_energy_price_from", "number_energy_price_to"
+    ]
     name_suffix: str
     entity_id_suffix: str
 
@@ -71,27 +80,60 @@ SOURCE_ADAPTERS: Final = (
     SourceAdapter(
         "grid",
         "flow_from",
+        None,
         "stat_energy_from",
         "entity_energy_from",
         "stat_cost",
+        "entity_energy_price",
+        "number_energy_price",
         "Cost",
         "cost",
     ),
     SourceAdapter(
         "grid",
         "flow_to",
+        None,
         "stat_energy_to",
         "entity_energy_to",
         "stat_compensation",
+        "entity_energy_price",
+        "number_energy_price",
+        "Compensation",
+        "compensation",
+    ),
+    SourceAdapter(
+        "grid",
+        "flow_net",
+        "increase",
+        "stat_energy_net",
+        "entity_energy_net",
+        "stat_compensation",
+        "entity_energy_price_from",
+        "number_energy_price_from",
+        "Compensation",
+        "compensation",
+    ),
+    SourceAdapter(
+        "grid",
+        "flow_net",
+        "decrease",
+        "stat_energy_net",
+        "entity_energy_net",
+        "stat_compensation",
+        "entity_energy_price_to",
+        "number_energy_price_to",
         "Compensation",
         "compensation",
     ),
     SourceAdapter(
         "gas",
         None,
+        None,
         "stat_energy_from",
         "entity_energy_from",
         "stat_cost",
+        "entity_energy_price",
+        "number_energy_price",
         "Cost",
         "cost",
     ),
@@ -173,7 +215,12 @@ class SensorManager:
         if config.get(adapter.total_money_key) is not None:
             return
 
-        key = (adapter.source_type, adapter.flow_type, config[adapter.stat_energy_key])
+        key = (
+            adapter.source_type,
+            adapter.flow_type,
+            adapter.split_type,
+            config[adapter.stat_energy_key],
+        )
 
         # Make sure the right data is there
         # If the entity existed, we don't pop it from to_remove so it's removed

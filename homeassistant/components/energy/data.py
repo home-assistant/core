@@ -26,7 +26,7 @@ async def async_get_manager(hass: HomeAssistant) -> EnergyManager:
 
 
 class FlowFromGridSourceType(TypedDict):
-    """Dictionary describing the 'from' stat for the grid source."""
+    """Dictionary describing a 'from' stat for the grid source."""
 
     # statistic_id of a an energy meter (kWh)
     stat_energy_from: str
@@ -43,7 +43,7 @@ class FlowFromGridSourceType(TypedDict):
 
 
 class FlowToGridSourceType(TypedDict):
-    """Dictionary describing the 'to' stat for the grid source."""
+    """Dictionary describing a 'to' stat for the grid source."""
 
     # kWh meter
     stat_energy_to: str
@@ -54,9 +54,28 @@ class FlowToGridSourceType(TypedDict):
     stat_compensation: str | None
 
     # Used to generate costs if stat_compensation is set to None
-    entity_energy_from: str | None  # entity_id of an energy meter (kWh), entity_id of the energy meter for stat_energy_from
+    entity_energy_to: str | None  # entity_id of an energy meter (kWh), entity_id of the energy meter for stat_energy_to
     entity_energy_price: str | None  # entity_id of an entity providing price ($/kWh)
     number_energy_price: float | None  # Price for energy ($/kWh)
+
+
+class FlowNetGridSourceType(TypedDict):
+    """Dictionary describing a 'net' stat for the grid source."""
+
+    # kWh meter
+    stat_energy_net: str
+
+    # statistic_id of net compensation ($)
+    # If set to None and entity_energy_from and entity_energy_price are configured,
+    # an EnergyCostSensor will be automatically created
+    stat_cost: str | None
+
+    # Used to generate costs if stat_compensation is set to None
+    entity_energy_net: str | None  # entity_id of an energy meter (kWh), entity_id of the energy meter for stat_energy_net
+    entity_energy_price_to: str | None
+    number_energy_price_to: str | None
+    entity_energy_price_from: str | None
+    number_energy_price_from: str | None
 
 
 class GridSourceType(TypedDict):
@@ -66,6 +85,7 @@ class GridSourceType(TypedDict):
 
     flow_from: list[FlowFromGridSourceType]
     flow_to: list[FlowToGridSourceType]
+    flow_net: list[FlowNetGridSourceType]
 
     cost_adjustment_day: float
 
@@ -127,7 +147,7 @@ class EnergyPreferencesUpdate(EnergyPreferences, total=False):
     """all types optional."""
 
 
-def _flow_from_ensure_single_price(
+def _flow_to_from_ensure_single_price(
     val: FlowFromGridSourceType,
 ) -> FlowFromGridSourceType:
     """Ensure we use a single price source."""
@@ -150,17 +170,33 @@ FLOW_FROM_GRID_SOURCE_SCHEMA = vol.All(
             vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
         }
     ),
-    _flow_from_ensure_single_price,
+    _flow_to_from_ensure_single_price,
 )
 
 
-FLOW_TO_GRID_SOURCE_SCHEMA = vol.Schema(
+FLOW_TO_GRID_SOURCE_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Required("stat_energy_to"): str,
+            vol.Optional("stat_compensation"): vol.Any(str, None),
+            vol.Optional("entity_energy_to"): vol.Any(str, None),
+            vol.Optional("entity_energy_price"): vol.Any(str, None),
+            vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
+        }
+    ),
+    _flow_to_from_ensure_single_price,
+)
+
+
+FLOW_NET_GRID_SOURCE_SCHEMA = vol.Schema(
     {
-        vol.Required("stat_energy_to"): str,
-        vol.Optional("stat_compensation"): vol.Any(str, None),
-        vol.Optional("entity_energy_to"): vol.Any(str, None),
-        vol.Optional("entity_energy_price"): vol.Any(str, None),
-        vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
+        vol.Required("stat_energy_net"): str,
+        vol.Optional("stat_cost"): vol.Any(str, None),
+        vol.Optional("entity_energy_net"): vol.Any(str, None),
+        vol.Optional("entity_energy_price_from"): vol.Any(str, None),
+        vol.Optional("number_energy_price_from"): vol.Any(vol.Coerce(float), None),
+        vol.Optional("entity_energy_price_to"): vol.Any(str, None),
+        vol.Optional("number_energy_price_to"): vol.Any(vol.Coerce(float), None),
     }
 )
 
@@ -194,6 +230,10 @@ GRID_SOURCE_SCHEMA = vol.Schema(
             [FLOW_TO_GRID_SOURCE_SCHEMA],
             _generate_unique_value_validator("stat_energy_to"),
         ),
+        vol.Required("flow_net"): vol.All(
+            [FLOW_NET_GRID_SOURCE_SCHEMA],
+            _generate_unique_value_validator("stat_energy_net"),
+        ),
         vol.Required("cost_adjustment_day"): vol.Coerce(float),
     }
 )
@@ -211,15 +251,18 @@ BATTERY_SOURCE_SCHEMA = vol.Schema(
         vol.Required("stat_energy_to"): str,
     }
 )
-GAS_SOURCE_SCHEMA = vol.Schema(
-    {
-        vol.Required("type"): "gas",
-        vol.Required("stat_energy_from"): str,
-        vol.Optional("stat_cost"): vol.Any(str, None),
-        vol.Optional("entity_energy_from"): vol.Any(str, None),
-        vol.Optional("entity_energy_price"): vol.Any(str, None),
-        vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
-    }
+GAS_SOURCE_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Required("type"): "gas",
+            vol.Required("stat_energy_from"): str,
+            vol.Optional("stat_cost"): vol.Any(str, None),
+            vol.Optional("entity_energy_from"): vol.Any(str, None),
+            vol.Optional("entity_energy_price"): vol.Any(str, None),
+            vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
+        }
+    ),
+    _flow_to_from_ensure_single_price,
 )
 
 

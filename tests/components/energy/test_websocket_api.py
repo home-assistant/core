@@ -121,6 +121,7 @@ async def test_save_preferences(
                         "number_energy_price": 0.20,
                     },
                 ],
+                "flow_net": [],
                 "cost_adjustment_day": 1.2,
             },
             {
@@ -183,6 +184,7 @@ async def test_save_preferences(
                     }
                 ],
                 "flow_to": [],
+                "flow_net": [],
                 "cost_adjustment_day": 1.2,
             },
             {
@@ -230,6 +232,7 @@ async def test_handle_duplicate_from_stat(hass, hass_ws_client) -> None:
                         },
                     ],
                     "flow_to": [],
+                    "flow_net": [],
                     "cost_adjustment_day": 0,
                 },
             ],
