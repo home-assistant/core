@@ -254,12 +254,6 @@ def _get_states_with_session(
         most_recent_state_ids = most_recent_state_ids.filter(
             States.entity_id.in_(entity_ids)
         )
-    else:
-        most_recent_state_ids = most_recent_state_ids.filter(
-            ~States.domain.in_(IGNORE_DOMAINS)
-        )
-        if filters:
-            most_recent_state_ids = filters.apply(most_recent_state_ids)
 
     most_recent_state_ids = most_recent_state_ids.group_by(States.entity_id)
     # Filtering out too old states after grouping improves the query time by 3-4x
@@ -273,6 +267,11 @@ def _get_states_with_session(
         most_recent_state_ids,
         States.state_id == most_recent_state_ids.c.max_state_id,
     )
+
+    if not entity_ids:
+        query = query.filter(~States.domain.in_(IGNORE_DOMAINS))
+        if filters:
+            query = filters.apply(query)
 
     return [LazyState(row) for row in execute(query)]
 
