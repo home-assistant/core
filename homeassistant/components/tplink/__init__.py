@@ -81,6 +81,17 @@ def async_trigger_discovery(
         )
 
 
+async def async_discover_devices(hass: HomeAssistant) -> dict[str, SmartDevice]:
+    """Discover TPLink devices on configured network interfaces."""
+    broadcast_addresses = await network.async_get_ipv4_broadcast_addresses(hass)
+    tasks = [Discover.discover(target=str(address)) for address in broadcast_addresses]
+    discovered_devices: dict[str, SmartDevice] = {}
+    for device_list in await asyncio.gather(*tasks):
+        for device in device_list.values():
+            discovered_devices[dr.format_mac(device.mac)] = device
+    return discovered_devices
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the TP-Link component."""
     conf = config.get(DOMAIN)
@@ -93,12 +104,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         elif entry.unique_id:
             config_entries_by_mac[entry.unique_id] = entry
 
-    broadcast_addresses = await network.async_get_ipv4_broadcast_addresses(hass)
-    tasks = [Discover.discover(target=str(address)) for address in broadcast_addresses]
-    discovered_devices: dict[str, SmartDevice] = {}
-    for device_list in await asyncio.gather(*tasks):
-        for device in device_list.values():
-            discovered_devices[dr.format_mac(device.mac)] = device
+    discovered_devices = await async_discover_devices(hass)
     hosts_by_mac = {mac: device.host for mac, device in discovered_devices.items()}
 
     if legacy_entry:
