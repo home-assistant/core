@@ -49,7 +49,22 @@ async def async_setup_entry(hass, config):
     hass.data[DOMAIN][config.entry_id] = data
     hass.config_entries.async_setup_platforms(config, PLATFORMS)
 
+    config.async_on_unload(config.add_update_listener(update_listener))
+
     return True
+
+
+async def update_listener(hass, entry) -> None:
+    """Update listener."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload the config entry and platforms."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data.pop(DOMAIN)
+    return unload_ok
 
 
 def get_somecomfort_client(username, password):
@@ -120,9 +135,9 @@ class HoneywellData:
                 break
             except (
                 somecomfort.client.APIRateLimited,
-                OSError,
-                somecomfort.client.ConnectionTimeout,
                 somecomfort.client.ConnectionError,
+                somecomfort.client.ConnectionTimeout,
+                OSError,
             ) as exp:
                 retries -= 1
                 if retries == 0:
