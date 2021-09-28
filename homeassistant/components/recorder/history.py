@@ -253,7 +253,13 @@ def _get_states_with_session(
     )
 
     if entity_ids:
-        most_recent_states_by_date.filter(States.entity_id.in_(entity_ids))
+        most_recent_states_by_date = most_recent_states_by_date.filter(
+            States.entity_id.in_(entity_ids)
+        )
+    else:
+        most_recent_states_by_date = most_recent_states_by_date.filter(
+            ~States.domain.in_(IGNORE_DOMAINS)
+        )
 
     most_recent_states_by_date = most_recent_states_by_date.group_by(States.entity_id)
 
@@ -278,12 +284,8 @@ def _get_states_with_session(
         States.state_id == most_recent_state_ids.c.max_state_id,
     )
 
-    if entity_ids is not None:
-        query = query.filter(States.entity_id.in_(entity_ids))
-    else:
-        query = query.filter(~States.domain.in_(IGNORE_DOMAINS))
-        if filters:
-            query = filters.apply(query)
+    if entity_ids is None and filters:
+        query = filters.apply(query)
 
     return [LazyState(row) for row in execute(query)]
 
