@@ -88,19 +88,17 @@ class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             site_nmi = user_input[CONF_SITE_NMI]
             sites = [site for site in self._sites if site.nmi == site_nmi]
-
-            if len(sites) != 0:
-                site: Site = sites[0]
-                site_id = site.id
-                name = user_input.get(CONF_SITE_NAME, site_id)
-                return self.async_create_entry(
-                    title=name,
-                    data={
-                        CONF_SITE_ID: site_id,
-                        CONF_API_TOKEN: api_token,
-                        CONF_SITE_NMI: site.nmi,
-                    },
-                )
+            site = sites[0]
+            site_id = site.id
+            name = user_input.get(CONF_SITE_NAME, site_id)
+            return self.async_create_entry(
+                title=name,
+                data={
+                    CONF_SITE_ID: site_id,
+                    CONF_API_TOKEN: api_token,
+                    CONF_SITE_NMI: site.nmi,
+                },
+            )
         else:
             user_input = {
                 CONF_API_TOKEN: api_token,
