@@ -390,11 +390,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
         domain_data = get_domain_data(self.hass)
         await domain_data.async_release_event_notifier(self._event_addr)
 
-    @property
-    def available(self) -> bool:
-        """Device is available when we have a connection to it."""
-        return self._device is not None and self._device.profile_device.available
-
     async def async_update(self) -> None:
         """Retrieve the latest data."""
         if not self._device:
@@ -426,6 +421,43 @@ class DlnaDmrEntity(MediaPlayerEntity):
             # Indicates a failure to resubscribe, check if device is still available
             self.check_available = True
         self.schedule_update_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Device is available when we have a connection to it."""
+        return self._device is not None and self._device.profile_device.available
+
+    @property
+    def unique_id(self) -> str:
+        """Report the UDN (Unique Device Name) as this entity's unique ID."""
+        return self.udn
+
+    @property
+    def usn(self) -> str:
+        """Get the USN based on the UDN (Unique Device Name) and device type."""
+        return f"{self.udn}::{self.device_type}"
+
+    @property
+    def state(self) -> str:
+        """State of the player."""
+        if not self._device or not self.available:
+            return STATE_OFF
+        if self._device.transport_state is None:
+            return STATE_ON
+        if self._device.transport_state in (
+            TransportState.PLAYING,
+            TransportState.TRANSITIONING,
+        ):
+            return STATE_PLAYING
+        if self._device.transport_state in (
+            TransportState.PAUSED_PLAYBACK,
+            TransportState.PAUSED_RECORDING,
+        ):
+            return STATE_PAUSED
+        if self._device.transport_state == TransportState.VENDOR_DEFINED:
+            return STATE_UNKNOWN
+
+        return STATE_IDLE
 
     @property
     def supported_features(self) -> int:
@@ -564,28 +596,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
         return self._device.media_image_url
 
     @property
-    def state(self) -> str:
-        """State of the player."""
-        if not self._device or not self.available:
-            return STATE_OFF
-        if self._device.transport_state is None:
-            return STATE_ON
-        if self._device.transport_state in (
-            TransportState.PLAYING,
-            TransportState.TRANSITIONING,
-        ):
-            return STATE_PLAYING
-        if self._device.transport_state in (
-            TransportState.PAUSED_PLAYBACK,
-            TransportState.PAUSED_RECORDING,
-        ):
-            return STATE_PAUSED
-        if self._device.transport_state == TransportState.VENDOR_DEFINED:
-            return STATE_UNKNOWN
-
-        return STATE_IDLE
-
-    @property
     def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
         if not self._device:
@@ -701,13 +711,3 @@ class DlnaDmrEntity(MediaPlayerEntity):
         if not self._device:
             return None
         return self._device.media_channel_name
-
-    @property
-    def unique_id(self) -> str:
-        """Report the UDN (Unique Device Name) as this entity's unique ID."""
-        return self.udn
-
-    @property
-    def usn(self) -> str:
-        """Get the USN based on the UDN (Unique Device Name) and device type."""
-        return f"{self.udn}::{self.device_type}"
