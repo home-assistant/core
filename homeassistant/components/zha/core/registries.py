@@ -83,7 +83,6 @@ SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {
     zcl.clusters.measurement.RelativeHumidity.cluster_id: SENSOR,
     zcl.clusters.measurement.TemperatureMeasurement.cluster_id: SENSOR,
     zcl.clusters.security.IasZone.cluster_id: BINARY_SENSOR,
-    zcl.clusters.smartenergy.Metering.cluster_id: SENSOR,
 }
 
 SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {
