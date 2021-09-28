@@ -88,7 +88,7 @@ async def async_setup_entry(
         command_off_id = None
     else:
         command_off_id = _get_id_from_name(command_off_name, hub.week_profiles)
-        if command_off_id == "" or command_off_id is None:
+        if command_off_id in ["", None]:
             _LOGGER.warning(
                 "Can not turn off (or on) any zone, because week profile '%s' was not found",
                 command_off_name,
@@ -102,7 +102,7 @@ async def async_setup_entry(
 
             # Find ON command (week profile) for the different zones:
             command_on_dict = config_entry.options.get(CONF_COMMAND_ON)
-            if command_on_dict is None or command_on_dict.keys().__len__ == 0:
+            if not command_on_dict:
                 _LOGGER.warning(
                     "Not possible to turn on any zone, because ON week profile was not specified"
                 )
@@ -129,14 +129,14 @@ def _set_on_commands(command_on_by_id, command_on_dict, hub):
         if zone_name not in command_on_dict:
             continue
         command_on_name = command_on_dict[zone_name]
-        if command_on_name is None or command_on_name == "":
+        if command_on_name in [None, ""]:
             _LOGGER.warning(
                 "Can not turn on (or off) zone '%s', because ON week profile was not specified",
                 zone_name,
             )
             continue
         command_on_id = _get_id_from_name(command_on_name, hub.week_profiles)
-        if command_on_id is None or command_on_id == "":
+        if command_on_id in [None, ""]:
             _LOGGER.warning(
                 "Can not turn on (or off) zone '%s', because ON week profile '%s' was not found",
                 zone_name,
@@ -248,21 +248,22 @@ class NoboZone(ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode):
         """Set new zone override."""
-        if self._nobo.zones[self._id][ATTR_OVERRIDE_ALLOWED] == "1":
-            if preset_mode == PRESET_ECO:
-                mode = nobo.API.OVERRIDE_MODE_ECO
-            elif preset_mode == PRESET_AWAY:
-                mode = nobo.API.OVERRIDE_MODE_AWAY
-            elif preset_mode == PRESET_COMFORT:
-                mode = nobo.API.OVERRIDE_MODE_COMFORT
-            else:  # PRESET_NONE
-                mode = nobo.API.OVERRIDE_MODE_NORMAL
-            await self._nobo.async_create_override(
-                mode,
-                self._override_type,
-                nobo.API.OVERRIDE_TARGET_ZONE,
-                self._id,
-            )
+        if self._nobo.zones[self._id][ATTR_OVERRIDE_ALLOWED] != "1":
+            return
+        if preset_mode == PRESET_ECO:
+            mode = nobo.API.OVERRIDE_MODE_ECO
+        elif preset_mode == PRESET_AWAY:
+            mode = nobo.API.OVERRIDE_MODE_AWAY
+        elif preset_mode == PRESET_COMFORT:
+            mode = nobo.API.OVERRIDE_MODE_COMFORT
+        else:  # PRESET_NONE
+            mode = nobo.API.OVERRIDE_MODE_NORMAL
+        await self._nobo.async_create_override(
+            mode,
+            self._override_type,
+            nobo.API.OVERRIDE_TARGET_ZONE,
+            self._id,
+        )
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
