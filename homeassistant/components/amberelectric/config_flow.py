@@ -80,9 +80,7 @@ class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Step to select site."""
         self._errors = {}
 
-        if self._sites is None:
-            # Something really bad has happened - this shouldn't happen.
-            return await self.async_step_user()
+        assert self._sites is not None
 
         api_token = self._api_token
         if user_input is not None:
