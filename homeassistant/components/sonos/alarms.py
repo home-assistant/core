@@ -7,6 +7,7 @@ from typing import Any
 
 from soco import SoCo
 from soco.alarms import Alarm, Alarms
+from soco.exceptions import SoCoException
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -71,7 +72,11 @@ class SonosAlarms(SonosHouseholdCoordinator):
 
     def update_cache(self, soco: SoCo, update_id: int | None = None) -> bool:
         """Update cache of known alarms and return if cache has changed."""
-        self.alarms.update(soco)
+        try:
+            self.alarms.update(soco)
+        except (OSError, SoCoException) as err:
+            _LOGGER.error("Could not update alarms using %s: %s", soco, err)
+            return False
 
         if update_id and self.alarms.last_id < update_id:
             # Skip updates if latest query result is outdated or lagging
