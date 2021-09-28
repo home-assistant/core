@@ -339,10 +339,13 @@ class SmartEnergySummation(SmartEnergyMetering, id_suffix="summation_delivered")
         cooked = float(value * self._channel.multiplier) / self._channel.divisor
         if cooked <= 1e1:
             return round(cooked, 3)
-        elif cooked < 1e2:
+
+        if cooked < 1e2:
             return round(cooked, 2)
-        elif cooked < 1e3:
+
+        if cooked < 1e3:
             return round(cooked, 1)
+
         return round(cooked)
 
 
