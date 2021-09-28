@@ -1,6 +1,7 @@
 """Support for AVM FRITZ!Box classes."""
 from __future__ import annotations
 
+from collections.abc import ValuesView
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import logging
@@ -40,6 +41,36 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _is_tracked(mac: str, current_devices: ValuesView) -> bool:
+    """Check if device is already tracked."""
+    for tracked in current_devices:
+        if mac in tracked:
+            return True
+    return False
+
+
+def device_filter_out_from_trackers(
+    mac: str,
+    device: FritzDevice,
+    pref_disable_new_entities: bool,
+    current_devices: ValuesView,
+) -> bool:
+    """Check if device should be filtered out from trackers."""
+    reason: str | None = None
+    if device.ip_address == "":
+        reason = "Missing IP"
+    elif _is_tracked(mac, current_devices):
+        reason = "Already tracked"
+    elif pref_disable_new_entities:
+        reason = "Disabled System Options"
+
+    if reason:
+        _LOGGER.debug(
+            "Skip adding device %s [%s], reason: %s", device.hostname, mac, reason
+        )
+    return bool(reason)
 
 
 class ClassSetupMissing(Exception):

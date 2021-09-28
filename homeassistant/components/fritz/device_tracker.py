@@ -20,7 +20,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from .common import FritzBoxTools, FritzData, FritzDevice, FritzDeviceBase
+from .common import (
+    FritzBoxTools,
+    FritzData,
+    FritzDevice,
+    FritzDeviceBase,
+    device_filter_out_from_trackers,
+)
 from .const import DATA_FRITZ, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -94,29 +100,14 @@ def _async_add_entities(
 ) -> None:
     """Add new tracker entities from the router."""
 
-    def _is_tracked(mac: str) -> bool:
-        for tracked in data_fritz.tracked.values():
-            if mac in tracked:
-                return True
-
-        return False
-
     new_tracked = []
     if router.unique_id not in data_fritz.tracked:
         data_fritz.tracked[router.unique_id] = set()
 
     for mac, device in router.devices.items():
-        reason: str | None = None
-        if device.ip_address == "":
-            reason = "Missing IP"
-        elif _is_tracked(mac):
-            reason = "Already tracked"
-        elif pref_disable_new_entities:
-            reason = "Disabled System Options"
-        _LOGGER.debug(
-            "Skip adding device %s [%s], reason: %s", device.hostname, mac, reason
-        )
-        if reason:
+        if device_filter_out_from_trackers(
+            mac, device, pref_disable_new_entities, data_fritz.tracked.values()
+        ):
             continue
 
         new_tracked.append(FritzBoxTracker(router, device))

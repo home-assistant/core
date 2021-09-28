@@ -31,6 +31,7 @@ from .common import (
     FritzDevice,
     FritzDeviceBase,
     SwitchInfo,
+    device_filter_out_from_trackers,
 )
 from .const import (
     DATA_FRITZ,
@@ -273,13 +274,6 @@ def profile_entities_list(
 ) -> list[FritzBoxProfileSwitch]:
     """Add new tracker entities from the router."""
 
-    def _is_tracked(mac: str) -> bool:
-        for tracked in data_fritz.profile_switches.values():
-            if mac in tracked:
-                return True
-
-        return False
-
     new_profiles: list[FritzBoxProfileSwitch] = []
 
     if "X_AVM-DE_HostFilter1" not in router.connection.services:
@@ -289,17 +283,9 @@ def profile_entities_list(
         data_fritz.profile_switches[router.unique_id] = set()
 
     for mac, device in router.devices.items():
-        reason: str | None = None
-        if device.ip_address == "":
-            reason = "Missing IP"
-        elif _is_tracked(mac):
-            reason = "Already tracked"
-        elif pref_disable_new_entities:
-            reason = "Disabled System Options"
-        _LOGGER.debug(
-            "Skip adding device %s [%s], reason: %s", device.hostname, mac, reason
-        )
-        if reason:
+        if device_filter_out_from_trackers(
+            mac, device, pref_disable_new_entities, data_fritz.profile_switches.values()
+        ):
             continue
 
         new_profiles.append(FritzBoxProfileSwitch(router, device))
