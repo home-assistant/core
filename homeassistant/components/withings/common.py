@@ -507,7 +507,7 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
 
 def json_message_response(message: str, message_code: int) -> Response:
     """Produce common json output."""
-    return HomeAssistantView.json({"message": message, "code": message_code}, 200)
+    return HomeAssistantView.json({"message": message, "code": message_code})
 
 
 class WebhookAvailability(IntEnum):

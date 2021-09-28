@@ -56,6 +56,18 @@ def patch_cluster(cluster):
         cluster.add = AsyncMock(return_value=[0])
 
 
+def update_attribute_cache(cluster):
+    """Update attribute cache based on plugged attributes."""
+    if cluster.PLUGGED_ATTR_READS:
+        attrs = [
+            make_attribute(cluster.attridx.get(attr, attr), value)
+            for attr, value in cluster.PLUGGED_ATTR_READS.items()
+        ]
+        hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
+        hdr.frame_control.disable_default_response = True
+        cluster.handle_message(hdr, [attrs])
+
+
 def get_zha_gateway(hass):
     """Return ZHA gateway from hass.data."""
     try:

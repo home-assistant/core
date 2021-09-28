@@ -508,7 +508,7 @@ class HomeAssistant:
         """Stop Home Assistant and shuts down all threads.
 
         The "force" flag commands async_stop to proceed regardless of
-        Home Assistan't current state. You should not set this flag
+        Home Assistant's current state. You should not set this flag
         unless you're testing.
 
         This method is a coroutine.
