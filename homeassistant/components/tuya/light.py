@@ -272,7 +272,9 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
     def _tuya_brightness_range(self) -> tuple[int, int]:
         if self.dp_code_bright not in self.tuya_device.status:
             return 0, 255
-        beight_json = self.tuya_device.function.get(self.dp_code_bright, "").values
+        beight_json = ""
+        if self.dp_code_bright in self.tuya_device.function:
+            beight_json = self.tuya_device.function[self.dp_code_bright].values
         if len(beight_json) == 0:
             return 0, 255
         bright_value = json.loads(beight_json)
@@ -323,7 +325,9 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
         return MIREDS_MAX
 
     def _tuya_temp_range(self) -> tuple[int, int]:
-        temp_json = self.tuya_device.function.get(self.dp_code_temp, "").values
+        temp_json = ""
+        if self.dp_code_temp in self.tuya_device.function:
+            temp_json = self.tuya_device.function[self.dp_code_temp].values
         if len(temp_json) == 0:
             return 0, 255
         temp_value = json.loads(temp_json)
@@ -340,7 +344,9 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
         return hsv_v.get("min", 0), hsv_v.get("max", 255)
 
     def _tuya_hsv_function(self) -> dict[str, dict] | None:
-        hsv_json = self.tuya_device.function.get(self.dp_code_colour, "").values
+        hsv_json = ""
+        if self.dp_code_colour in self.tuya_device.function:
+            hsv_json = self.tuya_device.function[self.dp_code_colour].values
         if len(hsv_json) == 0:
             return None
         hsv_data = json.loads(hsv_json)
