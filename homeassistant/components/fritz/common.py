@@ -170,7 +170,7 @@ class FritzBoxTools:
         return self._unique_id
 
     @property
-    def devices(self) -> dict[str, Any]:
+    def devices(self) -> dict[str, FritzDevice]:
         """Return devices."""
         return self._devices
 
