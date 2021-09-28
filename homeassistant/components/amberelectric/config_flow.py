@@ -97,12 +97,12 @@ class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_SITE_NMI: site.nmi,
                 },
             )
-        else:
-            user_input = {
-                CONF_API_TOKEN: api_token,
-                CONF_SITE_NMI: "",
-                CONF_SITE_NAME: "",
-            }
+
+        user_input = {
+            CONF_API_TOKEN: api_token,
+            CONF_SITE_NMI: "",
+            CONF_SITE_NAME: "",
+        }
 
         return self.async_show_form(
             step_id="site",
