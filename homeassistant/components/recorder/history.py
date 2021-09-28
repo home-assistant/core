@@ -252,6 +252,7 @@ def _get_states_with_session(
         (States.last_updated >= run.start) & (States.last_updated < utc_point_in_time)
     )
 
+    # Apply entity filters to the derived table
     if entity_ids:
         most_recent_states_by_date = most_recent_states_by_date.filter(
             States.entity_id.in_(entity_ids)
@@ -260,6 +261,8 @@ def _get_states_with_session(
         most_recent_states_by_date = most_recent_states_by_date.filter(
             ~States.domain.in_(IGNORE_DOMAINS)
         )
+        if filters:
+            most_recent_states_by_date = filters.apply(most_recent_states_by_date)
 
     most_recent_states_by_date = most_recent_states_by_date.group_by(States.entity_id)
 
@@ -283,9 +286,6 @@ def _get_states_with_session(
         most_recent_state_ids,
         States.state_id == most_recent_state_ids.c.max_state_id,
     )
-
-    if entity_ids is None and filters:
-        query = filters.apply(query)
 
     return [LazyState(row) for row in execute(query)]
 
