@@ -77,7 +77,7 @@ async def async_get_migration_data(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict[str, ZWaveMigrationData]:
     """Return Z-Wave migration data."""
-    migration_handler: LegacyZWaveMigration = get_legacy_zwave_migration(hass)
+    migration_handler: LegacyZWaveMigration = await get_legacy_zwave_migration(hass)
     return await migration_handler.get_data(config_entry)
 
 
