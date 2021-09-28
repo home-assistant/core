@@ -13,7 +13,12 @@ from miio import (
     AirPurifierMiot,
     DeviceException,
     Fan,
+    Fan1C,
     FanP5,
+    FanP9,
+    FanP10,
+    FanP11,
+    FanZA5,
 )
 from miio.gateway.gateway import GatewayException
 
@@ -33,7 +38,12 @@ from .const import (
     KEY_COORDINATOR,
     KEY_DEVICE,
     MODEL_AIRPURIFIER_3C,
+    MODEL_FAN_1C,
     MODEL_FAN_P5,
+    MODEL_FAN_P9,
+    MODEL_FAN_P10,
+    MODEL_FAN_P11,
+    MODEL_FAN_ZA5,
     MODELS_AIR_MONITOR,
     MODELS_FAN,
     MODELS_FAN_MIIO,
@@ -52,7 +62,7 @@ _LOGGER = logging.getLogger(__name__)
 
 GATEWAY_PLATFORMS = ["alarm_control_panel", "light", "sensor", "switch"]
 SWITCH_PLATFORMS = ["switch"]
-FAN_PLATFORMS = ["fan", "number", "select", "sensor", "switch"]
+FAN_PLATFORMS = ["binary_sensor", "fan", "number", "select", "sensor", "switch"]
 HUMIDIFIER_PLATFORMS = [
     "binary_sensor",
     "humidifier",
@@ -64,6 +74,15 @@ HUMIDIFIER_PLATFORMS = [
 LIGHT_PLATFORMS = ["light"]
 VACUUM_PLATFORMS = ["vacuum"]
 AIR_MONITOR_PLATFORMS = ["air_quality", "sensor"]
+
+MODEL_TO_CLASS_MAP = {
+    MODEL_FAN_1C: Fan1C,
+    MODEL_FAN_P10: FanP10,
+    MODEL_FAN_P11: FanP11,
+    MODEL_FAN_P5: FanP5,
+    MODEL_FAN_P9: FanP9,
+    MODEL_FAN_ZA5: FanZA5,
+}
 
 
 async def async_setup_entry(
@@ -150,8 +169,8 @@ async def async_create_miio_device_and_coordinator(
     elif model.startswith("zhimi.airfresh."):
         device = AirFresh(host, token)
     # Pedestal fans
-    elif model == MODEL_FAN_P5:
-        device = FanP5(host, token)
+    elif model in MODEL_TO_CLASS_MAP:
+        device = MODEL_TO_CLASS_MAP[model](host, token)
     elif model in MODELS_FAN_MIIO:
         device = Fan(host, token, model=model)
     else:
