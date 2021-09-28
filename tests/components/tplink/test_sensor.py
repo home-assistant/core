@@ -142,7 +142,6 @@ async def test_sensor_unique_id(hass: HomeAssistant) -> None:
     with _patch_discovery(device=plug), _patch_single_discovery(device=plug):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
-        await hass.async_block_till_done()
 
     expected = {
         "sensor.my_plug_current_consumption": "aa:bb:cc:dd:ee:ff_current_power_w",
