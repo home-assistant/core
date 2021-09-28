@@ -285,6 +285,42 @@ async def websocket_network_status(
 
 @websocket_api.websocket_command(
     {
+        vol.Required(TYPE): "zwave_js/node_ready",
+        vol.Required(ENTRY_ID): str,
+        vol.Required(NODE_ID): int,
+    }
+)
+@websocket_api.async_response
+@async_get_node
+async def websocket_node_ready(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    node: Node,
+) -> None:
+    """Subscribe to the node ready event of a Z-Wave JS node."""
+
+    @callback
+    def forward_event(event: dict) -> None:
+        """Forward the event."""
+        connection.send_message(
+            websocket_api.event_message(msg[ID], {"event": event["event"]})
+        )
+
+    @callback
+    def async_cleanup() -> None:
+        """Remove signal listeners."""
+        for unsub in unsubs:
+            unsub()
+
+    connection.subscriptions[msg["id"]] = async_cleanup
+    msg[DATA_UNSUBSCRIBE] = unsubs = [node.on("ready", forward_event)]
+
+    connection.send_result(msg[ID])
+
+
+@websocket_api.websocket_command(
+    {
         vol.Required(TYPE): "zwave_js/node_status",
         vol.Required(ENTRY_ID): str,
         vol.Required(NODE_ID): int,
