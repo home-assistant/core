@@ -63,7 +63,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_zeroconf(self, discovery_info):
         """Handle discovery from zeroconf."""
         self._discovered_ip = discovery_info["host"]
-        await self.async_set_unique_id(hex(int(discovery_info["name"][-26:-18])))
+        await self.async_set_unique_id(
+            "{0:#0{1}x}".format(int(discovery_info["name"][-26:-18]), 18)
+        )
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: self._discovered_ip}, reload_on_update=False
         )
