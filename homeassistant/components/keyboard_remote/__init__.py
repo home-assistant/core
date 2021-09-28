@@ -24,7 +24,7 @@ ICON = "mdi:remote"
 
 KEY_CODE = "key_code"
 KEY_VALUE = {"key_up": 0, "key_down": 1, "key_hold": 2}
-KEY_VALUE_NAME = {value: key for key, value in KEY_VALUE .items()}
+KEY_VALUE_NAME = {value: key for key, value in KEY_VALUE.items()}
 KEYBOARD_REMOTE_COMMAND_RECEIVED = "keyboard_remote_command_received"
 KEYBOARD_REMOTE_CONNECTED = "keyboard_remote_connected"
 KEYBOARD_REMOTE_DISCONNECTED = "keyboard_remote_disconnected"
@@ -240,7 +240,6 @@ class KeyboardRemote:
                     KEYBOARD_REMOTE_COMMAND_RECEIVED,
                     {
                         KEY_CODE: code,
-                        VALUE: 2,
                         TYPE: KEY_VALUE_NAME.get(2),
                         DEVICE_DESCRIPTOR: path,
                         DEVICE_NAME: name,
@@ -302,7 +301,6 @@ class KeyboardRemote:
                                 KEYBOARD_REMOTE_COMMAND_RECEIVED,
                                 {
                                     KEY_CODE: event.code,
-                                    VALUE: event.value,
                                     TYPE: KEY_VALUE_NAME.get(event.value),
                                     DEVICE_DESCRIPTOR: dev.path,
                                     DEVICE_NAME: dev.name,
