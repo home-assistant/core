@@ -250,7 +250,10 @@ def _get_states_with_session(
             session.query(
                 func.max(States.state_id).label("max_state_id"),
             )
-            .filter(States.last_updated < utc_point_in_time)
+            .filter(
+                (States.last_updated >= run.start)
+                & (States.last_updated < utc_point_in_time)
+            )
             .filter(States.entity_id.in_(entity_ids))
         )
         most_recent_state_ids = most_recent_state_ids.group_by(States.entity_id)
