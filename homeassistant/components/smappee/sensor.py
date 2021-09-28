@@ -55,6 +55,7 @@ TREND_SENSORS: tuple[SmappeePollingSensorEntityDescription, ...] = (
         native_unit_of_measurement=POWER_WATT,
         sensor_id="total_power",
         device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
         local_polling=True,  # both cloud and local
     ),
     SmappeePollingSensorEntityDescription(
@@ -63,6 +64,7 @@ TREND_SENSORS: tuple[SmappeePollingSensorEntityDescription, ...] = (
         native_unit_of_measurement=POWER_WATT,
         sensor_id="alwayson",
         device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SmappeePollingSensorEntityDescription(
         key="power_today",
@@ -70,6 +72,7 @@ TREND_SENSORS: tuple[SmappeePollingSensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         sensor_id="power_today",
         device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SmappeePollingSensorEntityDescription(
         key="power_current_hour",
@@ -77,6 +80,7 @@ TREND_SENSORS: tuple[SmappeePollingSensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         sensor_id="power_current_hour",
         device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SmappeePollingSensorEntityDescription(
         key="power_last_5_minutes",
@@ -84,6 +88,7 @@ TREND_SENSORS: tuple[SmappeePollingSensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         sensor_id="power_last_5_minutes",
         device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SmappeePollingSensorEntityDescription(
         key="alwayson_today",
@@ -91,6 +96,7 @@ TREND_SENSORS: tuple[SmappeePollingSensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         sensor_id="alwayson_today",
         device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
 )
 REACTIVE_SENSORS: tuple[SmappeeSensorEntityDescription, ...] = (
@@ -100,6 +106,7 @@ REACTIVE_SENSORS: tuple[SmappeeSensorEntityDescription, ...] = (
         native_unit_of_measurement=POWER_WATT,
         sensor_id="total_reactive_power",
         device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
 )
 SOLAR_SENSORS: tuple[SmappeePollingSensorEntityDescription, ...] = (
@@ -109,6 +116,7 @@ SOLAR_SENSORS: tuple[SmappeePollingSensorEntityDescription, ...] = (
         native_unit_of_measurement=POWER_WATT,
         sensor_id="solar_power",
         device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
         local_polling=True,  # both cloud and local
     ),
     SmappeePollingSensorEntityDescription(
@@ -117,6 +125,7 @@ SOLAR_SENSORS: tuple[SmappeePollingSensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         sensor_id="solar_today",
         device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SmappeePollingSensorEntityDescription(
         key="solar_current_hour",
@@ -124,6 +133,7 @@ SOLAR_SENSORS: tuple[SmappeePollingSensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         sensor_id="solar_current_hour",
         device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
 )
 VOLTAGE_SENSORS: tuple[SmappeeVoltageSensorEntityDescription, ...] = (
@@ -133,6 +143,7 @@ VOLTAGE_SENSORS: tuple[SmappeeVoltageSensorEntityDescription, ...] = (
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         sensor_id="phase_voltage_a",
         device_class=DEVICE_CLASS_VOLTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
         phase_types={"ONE", "TWO", "THREE_STAR", "THREE_DELTA"},
     ),
     SmappeeVoltageSensorEntityDescription(
@@ -141,6 +152,7 @@ VOLTAGE_SENSORS: tuple[SmappeeVoltageSensorEntityDescription, ...] = (
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         sensor_id="phase_voltage_b",
         device_class=DEVICE_CLASS_VOLTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
         phase_types={"TWO", "THREE_STAR", "THREE_DELTA"},
     ),
     SmappeeVoltageSensorEntityDescription(
@@ -149,6 +161,7 @@ VOLTAGE_SENSORS: tuple[SmappeeVoltageSensorEntityDescription, ...] = (
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         sensor_id="phase_voltage_c",
         device_class=DEVICE_CLASS_VOLTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
         phase_types={"THREE_STAR"},
     ),
     SmappeeVoltageSensorEntityDescription(
@@ -157,6 +170,7 @@ VOLTAGE_SENSORS: tuple[SmappeeVoltageSensorEntityDescription, ...] = (
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         sensor_id="line_voltage_a",
         device_class=DEVICE_CLASS_VOLTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
         phase_types={"ONE", "TWO", "THREE_STAR", "THREE_DELTA"},
     ),
     SmappeeVoltageSensorEntityDescription(
@@ -165,6 +179,7 @@ VOLTAGE_SENSORS: tuple[SmappeeVoltageSensorEntityDescription, ...] = (
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         sensor_id="line_voltage_b",
         device_class=DEVICE_CLASS_VOLTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
         phase_types={"TWO", "THREE_STAR", "THREE_DELTA"},
     ),
     SmappeeVoltageSensorEntityDescription(
@@ -173,6 +188,7 @@ VOLTAGE_SENSORS: tuple[SmappeeVoltageSensorEntityDescription, ...] = (
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         sensor_id="line_voltage_c",
         device_class=DEVICE_CLASS_VOLTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
         phase_types={"THREE_STAR", "THREE_DELTA"},
     ),
 )
@@ -235,6 +251,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         name=measurement.name,
                         sensor_id=measurement_id,
                         device_class=DEVICE_CLASS_POWER,
+                        state_class=STATE_CLASS_MEASUREMENT,
                     ),
                 )
                 for measurement_id, measurement in service_location.measurements.items()
@@ -277,6 +294,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         ),
                         native_unit_of_measurement=channel.get("uom"),
                         sensor_id=f"{sensor_id}-{channel.get('channel')}",
+                        state_class=STATE_CLASS_MEASUREMENT,
                     ),
                 )
                 for sensor_id, sensor in service_location.sensors.items()
@@ -296,6 +314,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
                         sensor_id=actuator_id,
                         device_class=DEVICE_CLASS_ENERGY,
+                        state_class=STATE_CLASS_TOTAL_INCREASING,
                     ),
                 )
                 for actuator_id, actuator in service_location.actuators.items()
@@ -335,24 +354,6 @@ class SmappeeSensor(SensorEntity):
             )
 
         return f"{self._service_location.service_location_name} - {sensor_name}"
-
-    @property
-    def state_class(self):
-        """Return the state class of this device."""
-        scm = STATE_CLASS_MEASUREMENT
-
-        if self.entity_description.key in (
-            "power_today",
-            "power_current_hour",
-            "power_last_5_minutes",
-            "solar_today",
-            "solar_current_hour",
-            "alwayson_today",
-            "switch",
-        ):
-            scm = STATE_CLASS_TOTAL_INCREASING
-
-        return scm
 
     @property
     def unique_id(self):
