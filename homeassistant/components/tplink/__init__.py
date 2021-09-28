@@ -151,8 +151,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass_data: dict[str, Any] = hass.data[DOMAIN]
     if entry.entry_id not in hass_data:
         return True
+    device: SmartDevice = hass.data[DOMAIN][entry.entry_id].device
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass_data.pop(entry.entry_id)
+    await device.protocol.close()
     return unload_ok
 
 
