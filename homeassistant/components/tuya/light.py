@@ -174,7 +174,6 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
             if self._work_mode().startswith(WORK_MODE_COLOUR):
                 colour_data = self._get_hsv()
                 v_range = self._tuya_hsv_v_range()
-                # hsv_v = colour_data.get('v', 0)
                 colour_data["v"] = int(
                     self.remap(kwargs[ATTR_BRIGHTNESS], 0, 255, v_range[0], v_range[1])
                 )
@@ -254,15 +253,16 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
         self._send_command(commands)
 
     @property
-    def brightness(self) -> int:
+    def brightness(self) -> int | None:
         """Return the brightness of the light."""
         old_range = self._tuya_brightness_range()
         brightness = self.tuya_device.status.get(self.dp_code_bright, 0)
 
         if self._work_mode().startswith(WORK_MODE_COLOUR):
-            colour_data = json.loads(
-                self.tuya_device.status.get(self.dp_code_colour, 0)
-            )
+            colour_json = self.tuya_device.status.get(self.dp_code_colour, "")
+            if len(colour_json) == 0:
+                return None
+            colour_data = json.loads(colour_json)
             v_range = self._tuya_hsv_v_range()
             hsv_v = colour_data.get("v", 0)
             return int(self.remap(hsv_v, v_range[0], v_range[1], 0, 255))
@@ -272,16 +272,19 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
     def _tuya_brightness_range(self) -> tuple[int, int]:
         if self.dp_code_bright not in self.tuya_device.status:
             return 0, 255
-
-        bright_value = json.loads(
-            self.tuya_device.function.get(self.dp_code_bright, {}).values
-        )
+        beight_json = self.tuya_device.function.get(self.dp_code_bright, "").values
+        if len(beight_json) == 0:
+            return 0, 255
+        bright_value = json.loads(beight_json)
         return bright_value.get("min", 0), bright_value.get("max", 255)
 
     @property
-    def hs_color(self) -> tuple[float, float]:
+    def hs_color(self) -> tuple[float, float] | None:
         """Return the hs_color of the light."""
-        colour_data = json.loads(self.tuya_device.status.get(self.dp_code_colour, 0))
+        colour_json = self.tuya_device.status.get(self.dp_code_colour, "")
+        if len(colour_json) == 0:
+            return None
+        colour_data = json.loads(colour_json)
         s_range = self._tuya_hsv_s_range()
         return colour_data.get("h", 0), self.remap(
             colour_data.get("s", 0),
@@ -320,9 +323,10 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
         return MIREDS_MAX
 
     def _tuya_temp_range(self) -> tuple[int, int]:
-        temp_value = json.loads(
-            self.tuya_device.function.get(self.dp_code_temp, {}).values
-        )
+        temp_json = self.tuya_device.function.get(self.dp_code_temp, "").values
+        if len(temp_json) == 0:
+            return 0, 255
+        temp_value = json.loads(temp_json)
         return temp_value.get("min", 0), temp_value.get("max", 255)
 
     def _tuya_hsv_s_range(self) -> tuple[int, int]:
@@ -335,18 +339,20 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
         hsv_v = hsv_data_range.get("v", {"min": 0, "max": 255})
         return hsv_v.get("min", 0), hsv_v.get("max", 255)
 
-    def _tuya_hsv_function(self) -> dict[str, dict]:
-        hsv_data = json.loads(
-            self.tuya_device.function.get(self.dp_code_colour, {}).values
-        )
+    def _tuya_hsv_function(self) -> dict[str, dict] | None:
+        hsv_json = self.tuya_device.function.get(self.dp_code_colour, "").values
+        if len(hsv_json) == 0:
+            return None
+        hsv_data = json.loads(hsv_json)
         if hsv_data == {}:
-            colour_data = json.loads(
-                self.tuya_device.status.get(self.dp_code_colour, 0)
-            )
+            colour_json = self.tuya_device.status.get(self.dp_code_colour, "")
+            if len(colour_json) == 0:
+                return None
+            colour_data = json.loads(colour_json)
             if (
                 self.dp_code_colour == DPCODE_COLOUR_DATA_V2
-                or colour_data.get("v") > 255
-                or colour_data.get("s") > 255
+                or colour_data.get("v", 0) > 255
+                or colour_data.get("s", 0) > 255
             ):
                 return DEFAULT_HSV_V2
             return DEFAULT_HSV
