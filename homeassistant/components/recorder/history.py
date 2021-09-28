@@ -6,7 +6,7 @@ from itertools import groupby
 import logging
 import time
 
-from sqlalchemy import and_, bindparam, func
+from sqlalchemy import bindparam, func
 from sqlalchemy.ext import baked
 
 from homeassistant.components import recorder
@@ -245,31 +245,27 @@ def _get_states_with_session(
     # last recorder run started.
     query = session.query(*QUERY_STATES)
 
-    most_recent_states_by_date = session.query(
-        States.entity_id.label("max_entity_id"),
-        func.max(States.last_updated).label("max_last_updated"),
-    ).filter(
-        (States.last_updated >= run.start) & (States.last_updated < utc_point_in_time)
-    )
-
-    if entity_ids:
-        most_recent_states_by_date.filter(States.entity_id.in_(entity_ids))
-
-    most_recent_states_by_date = most_recent_states_by_date.group_by(States.entity_id)
-
-    most_recent_states_by_date = most_recent_states_by_date.subquery()
-
     most_recent_state_ids = session.query(
-        func.max(States.state_id).label("max_state_id")
-    ).join(
-        most_recent_states_by_date,
-        and_(
-            States.entity_id == most_recent_states_by_date.c.max_entity_id,
-            States.last_updated == most_recent_states_by_date.c.max_last_updated,
-        ),
-    )
+        func.max(States.state_id).label("max_state_id"),
+    ).filter(States.last_updated < utc_point_in_time)
+
+    # Apply entity filters to the derived table
+    if entity_ids:
+        most_recent_state_ids = most_recent_state_ids.filter(
+            States.entity_id.in_(entity_ids)
+        )
+    else:
+        most_recent_state_ids = most_recent_state_ids.filter(
+            ~States.domain.in_(IGNORE_DOMAINS)
+        )
+        if filters:
+            most_recent_state_ids = filters.apply(most_recent_state_ids)
 
     most_recent_state_ids = most_recent_state_ids.group_by(States.entity_id)
+    # Filtering out too old states after grouping improves the query time by 3-4x
+    most_recent_state_ids = most_recent_state_ids.filter(
+        States.last_updated >= run.start
+    )
 
     most_recent_state_ids = most_recent_state_ids.subquery()
 
@@ -277,13 +273,6 @@ def _get_states_with_session(
         most_recent_state_ids,
         States.state_id == most_recent_state_ids.c.max_state_id,
     )
-
-    if entity_ids is not None:
-        query = query.filter(States.entity_id.in_(entity_ids))
-    else:
-        query = query.filter(~States.domain.in_(IGNORE_DOMAINS))
-        if filters:
-            query = filters.apply(query)
 
     return [LazyState(row) for row in execute(query)]
 
