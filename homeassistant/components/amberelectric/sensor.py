@@ -25,10 +25,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import ATTRIBUTION, DOMAIN
 from .coordinator import AmberUpdateCoordinator
-
-ATTRIBUTION = "Data provided by Amber Electric"
 
 ICONS = {
     "general": "mdi:transmission-tower",
@@ -63,9 +61,6 @@ class AmberSensor(CoordinatorEntity, SensorEntity):
         self.entity_description = description
         self.channel_type = channel_type
 
-    @property
-    def unique_id(self) -> None:
-        """Return a unique id for each sensors."""
         self._attr_unique_id = (
             f"{self.site_id}-{self.entity_description.key}-{self.channel_type}"
         )
@@ -119,9 +114,11 @@ class AmberForecastSensor(AmberSensor):
     @property
     def native_value(self) -> str | None:
         """Return the first forecast price in $/kWh."""
-        intervals = self.coordinator.data[self.entity_description.key][
+        intervals = self.coordinator.data[self.entity_description.key].get(
             self.channel_type
-        ]
+        )
+        if not intervals:
+            return None
         interval = intervals[0]
 
         if interval.channel_type == ChannelType.FEED_IN:
@@ -131,9 +128,12 @@ class AmberForecastSensor(AmberSensor):
     @property
     def device_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional pieces of information about the price."""
-        intervals = self.coordinator.data[self.entity_description.key][
+        intervals = self.coordinator.data[self.entity_description.key].get(
             self.channel_type
-        ]
+        )
+
+        if not intervals:
+            return None
 
         data = {
             "forecasts": [],
@@ -178,11 +178,6 @@ class AmberGridSensor(CoordinatorEntity, SensorEntity):
         self.entity_description = description
         self._attr_device_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self._attr_unique_id = f"{coordinator.site_id}-{description.key}"
-
-    @property
-    def unique_id(self) -> None:
-        """Return a unique id for each sensors."""
-        self._attr_unique_id = f"{self.site_id}-{self.entity_description.key}"
 
     @property
     def native_value(self) -> str | None:
