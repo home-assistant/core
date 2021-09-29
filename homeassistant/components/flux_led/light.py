@@ -197,7 +197,7 @@ async def async_setup_entry(
 
     try:
         custom_effect_colors = ast.literal_eval(
-            options.get(CONF_CUSTOM_EFFECT_COLORS, "")
+            options.get(CONF_CUSTOM_EFFECT_COLORS, "[]")
         )
     except (ValueError, TypeError, SyntaxError, MemoryError):
         custom_effect_colors = []
