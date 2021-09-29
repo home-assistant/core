@@ -1,8 +1,8 @@
 """Support for Daikin AC sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 from pydaikin.daikin_base import Appliance
 

@@ -1,8 +1,9 @@
 """Support for AVM FRITZ!SmartHome temperature sensor only devices."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Final
+from typing import Final
 
 from pyfritzhome.fritzhomedevice import FritzhomeDevice
 

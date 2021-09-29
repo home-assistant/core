@@ -1,4 +1,5 @@
 """Test the Z-Wave JS Websocket API."""
+from copy import deepcopy
 import json
 from unittest.mock import patch
 
@@ -17,6 +18,7 @@ from zwave_js_server.exceptions import (
     NotFoundError,
     SetValueFailed,
 )
+from zwave_js_server.model.node import Node
 from zwave_js_server.model.value import _get_value_id_from_dict, get_value_id
 
 from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
@@ -76,6 +78,51 @@ async def test_network_status(hass, integration, hass_ws_client):
 
     assert not msg["success"]
     assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
+async def test_node_ready(
+    hass,
+    multisensor_6_state,
+    client,
+    integration,
+    hass_ws_client,
+):
+    """Test the node ready websocket command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+    node_data = deepcopy(multisensor_6_state)  # Copy to allow modification in tests.
+    node = Node(client, node_data)
+    node.data["ready"] = False
+    client.driver.controller.nodes[node.node_id] = node
+
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/node_ready",
+            ENTRY_ID: entry.entry_id,
+            "node_id": node.node_id,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    node.data["ready"] = True
+    event = Event(
+        "ready",
+        {
+            "source": "node",
+            "event": "ready",
+            "nodeId": node.node_id,
+            "nodeState": node.data,
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    msg = await ws_client.receive_json()
+
+    assert msg["event"]["event"] == "ready"
 
 
 async def test_node_status(hass, multisensor_6, integration, hass_ws_client):

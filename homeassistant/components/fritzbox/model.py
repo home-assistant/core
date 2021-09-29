@@ -1,8 +1,9 @@
 """Models for the AVM FRITZ!SmartHome integration."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, TypedDict
+from typing import TypedDict
 
 from pyfritzhome import FritzhomeDevice
 

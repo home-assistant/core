@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from functools import partial
 import logging
-from typing import Callable
 
 from mysensors import BaseAsyncGateway
 import voluptuous as vol

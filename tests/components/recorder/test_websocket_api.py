@@ -293,8 +293,6 @@ async def test_clear_statistics(hass, hass_ws_client):
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "sum_decrease": None,
-                "sum_increase": None,
             }
         ],
         "sensor.test2": [
@@ -308,8 +306,6 @@ async def test_clear_statistics(hass, hass_ws_client):
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "sum_decrease": None,
-                "sum_increase": None,
             }
         ],
         "sensor.test3": [
@@ -323,8 +319,6 @@ async def test_clear_statistics(hass, hass_ws_client):
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "sum_decrease": None,
-                "sum_increase": None,
             }
         ],
     }

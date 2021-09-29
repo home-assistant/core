@@ -1,12 +1,13 @@
 """Support for Amcrest IP cameras."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 import threading
-from typing import Any, Callable
+from typing import Any
 
 import aiohttp
 from amcrest import AmcrestError, ApiWrapper, LoginError

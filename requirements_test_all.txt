@@ -482,7 +482,7 @@ hlk-sw16==0.0.9
 hole==0.5.1
 
 # homeassistant.components.workday
-holidays==0.11.2
+holidays==0.11.3
 
 # homeassistant.components.frontend
 home-assistant-frontend==20210922.0
@@ -659,6 +659,9 @@ ondilo==0.2.0
 
 # homeassistant.components.onvif
 onvif-zeep-async==1.2.0
+
+# homeassistant.components.opengarage
+open-garage==0.1.5
 
 # homeassistant.components.openerz
 openerz-api==0.1.0
