@@ -41,15 +41,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Importing configuration from YAML for flux_led")
         config_entry = self.hass.config_entries.async_entries(DOMAIN)
 
+        _LOGGER.warning(
+            "Your flux_led configuration has already been imported. Please remove it from your configuration"
+        )
+   
         if config_entry:
-            _LOGGER.warning(
-                "Your flux_led configuration has already been imported. Please remove configuration from your configuration.yaml"
-            )
             return self.async_abort(reason="single_instance_allowed")
 
-        _LOGGER.warning(
-            "Imported auto_add configuration for flux_led. Please remove from your configuration.yaml"
-        )
         return await self.async_step_user(
             user_input={
                 CONF_AUTOMATIC_ADD: data[CONF_AUTOMATIC_ADD],
