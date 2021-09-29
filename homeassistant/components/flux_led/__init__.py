@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_PROTOCOL,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -31,6 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["light"]
 DISCOVERY_INTERVAL = timedelta(minutes=15)
+REQUEST_REFRESH_DELAY = 0.35
 
 
 async def async_discover_devices(hass: HomeAssistant) -> list[dict[str, str]]:
@@ -134,7 +136,17 @@ class FluxLedUpdateCoordinator(DataUpdateCoordinator):
         self.host = host
         self.device = None
         update_interval = timedelta(seconds=5)
-        super().__init__(hass, _LOGGER, name=host, update_interval=update_interval)
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=host,
+            update_interval=update_interval,
+            # We don't want an immediate refresh since the device
+            # takes a moment to reflect the state change
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
+            ),
+        )
 
     async def _async_update_data(self) -> None:
         """Fetch all device and sensor data from api."""

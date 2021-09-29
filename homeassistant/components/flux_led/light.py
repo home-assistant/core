@@ -1,8 +1,10 @@
 """Support for FluxLED/MagicHome lights."""
 from __future__ import annotations
 
+from functools import partial
 import logging
 import random
+from typing import Any
 
 from flux_led.__main__ import WifiLedBulb
 import voluptuous as vol
@@ -318,7 +320,12 @@ class FluxLight(CoordinatorEntity, LightEntity):
             ATTR_MODEL: "LED Lights",
         }
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the specified or all lights on."""
+        await self.hass.async_add_executor_job(partial(self._turn_on, **kwargs))
+        await self.coordinator.async_request_refresh()
+
+    def _turn_on(self, **kwargs: Any) -> None:
         """Turn the specified or all lights on."""
         if not self.is_on:
             self._bulb.turnOn()
@@ -326,7 +333,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
         hs_color = kwargs.get(ATTR_HS_COLOR)
 
         if hs_color:
-            rgb = color_util.color_hs_to_RGB(*hs_color)
+            rgb: tuple[int, int, int] | None = color_util.color_hs_to_RGB(*hs_color)
         else:
             rgb = None
 
@@ -387,9 +394,10 @@ class FluxLight(CoordinatorEntity, LightEntity):
         else:
             self._bulb.setRgb(*tuple(rgb), brightness=brightness)
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
-        self._bulb.turnOff()
+        await self.hass.async_add_executor_job(self._bulb.turnOff)
+        await self.coordinator.async_request_refresh()
 
     @callback
     def _handle_coordinator_update(self) -> None:
