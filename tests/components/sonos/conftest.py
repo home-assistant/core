@@ -75,7 +75,7 @@ def soco_fixture(music_library, speaker_info, battery_info, alarm_clock):
 
 
 @pytest.fixture(name="discover", autouse=True)
-def discover_fixture(soco):
+def discover_fixture(soco, mock_ssdp):
     """Create a mock soco discover fixture."""
 
     async def do_callback(hass, callback, *args, **kwargs):
