@@ -62,15 +62,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     entities = []
 
-    for item in trackables:
+    for trackable in trackables:
         for description in SWITCH_TYPES:
             entities.append(
                 TractiveSwitch(
                     client.user_id,
-                    item.trackable,
-                    item.tracker,
-                    item.tracker_details,
-                    f"{item.trackable['_id']}_{description.key}",
+                    trackable,
                     description,
                 )
             )
@@ -83,16 +80,14 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
 
     entity_description: TractiveSwitchEntityDescription
 
-    def __init__(
-        self, user_id, trackable, tracker, tracker_details, unique_id, description
-    ):
+    def __init__(self, user_id, trackable, description):
         """Initialize switch entity."""
-        super().__init__(user_id, trackable, tracker_details)
+        super().__init__(user_id, trackable.trackable, trackable.tracker_details)
 
-        self._attr_name = f"{trackable['details']['name']} {description.name}"
-        self._attr_unique_id = unique_id
+        self._attr_name = f"{trackable.trackable['details']['name']} {description.name}"
+        self._attr_unique_id = f"{trackable.trackable['_id']}_{description.key}"
         self._attr_available = False
-        self._tracker = tracker
+        self._tracker = trackable.tracker
         self._method = getattr(self, description.method)
         self.entity_description = description
 
