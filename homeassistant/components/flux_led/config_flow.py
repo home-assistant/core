@@ -222,7 +222,7 @@ class OptionsFlow(config_entries.OptionsFlow):
         options = self._config_entry.options
         options_schema = vol.Schema(
             {
-                vol.Optional(CONF_MODE, default=MODE_AUTO): vol.All(
+                vol.Required(CONF_MODE, default=MODE_AUTO): vol.All(
                     cv.string,
                     vol.In(
                         [
@@ -236,15 +236,15 @@ class OptionsFlow(config_entries.OptionsFlow):
                     ),
                 ),
                 vol.Optional(
+                    CONF_CUSTOM_EFFECT_COLORS,
+                    default=options.get(CONF_CUSTOM_EFFECT_COLORS, ""),
+                ): str,
+                vol.Optional(
                     CONF_CUSTOM_EFFECT_SPEED_PCT,
                     default=options.get(
                         CONF_CUSTOM_EFFECT_SPEED_PCT, DEFAULT_EFFECT_SPEED
                     ),
                 ): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
-                vol.Optional(
-                    CONF_CUSTOM_EFFECT_COLORS,
-                    default=options.get(CONF_CUSTOM_EFFECT_COLORS),
-                ): str,
                 vol.Optional(
                     CONF_CUSTOM_EFFECT_TRANSITION, default=TRANSITION_GRADUAL
                 ): vol.In([TRANSITION_GRADUAL, TRANSITION_JUMP, TRANSITION_STROBE]),

@@ -46,11 +46,17 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["light"]
 DISCOVERY_INTERVAL = timedelta(minutes=15)
 REQUEST_REFRESH_DELAY = 0.35
+SCAN_TIMEOUT = 5
 
 
 async def async_discover_devices(hass: HomeAssistant) -> list[dict[str, str]]:
     """Discover ledned devices."""
-    return await hass.async_add_executor_job(BulbScanner().scan)
+
+    def _scan_with_timeout():
+        scanner = BulbScanner()
+        return scanner.scan(timeout=SCAN_TIMEOUT)
+
+    return await hass.async_add_executor_job(_scan_with_timeout)
 
 
 @callback

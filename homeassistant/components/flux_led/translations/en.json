@@ -24,9 +24,9 @@
         "step": {
             "configure": {
                 "data": {
-                    "custom_effect_colors": "A list of 1 to 16 colors, used in the effect loop (see example below). Defined as three comma-separated integers between 0 and 255 that represent the color in RGB. There is no way to set brightness, but you can define lower RGB values to simulate lower brightness. E.g., if you want 50% red, define it as [127,0,0] instead of [255,0,0].",
-                    "custom_effect_speed_pct": "A speed in percents (100 being the fastest), at which controller will transition between the colors.",
-                    "custom_effect_transition": "A type of transition, which will be used to transition between the colors",
+                    "custom_effect_colors": "List of 1 to 16 [R,G,B] colors. Example: [255,0,255],[60,128,0]",
+                    "custom_effect_speed_pct": "Speed in percents for the effect that switch colors.",
+                    "custom_effect_transition": "Type of transition between the colors.",
                     "mode": "The chosen brightness mode."
                 }
             }

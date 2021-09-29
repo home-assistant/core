@@ -1,6 +1,7 @@
 """Support for FluxLED/MagicHome lights."""
 from __future__ import annotations
 
+import ast
 from functools import partial
 import logging
 import random
@@ -195,10 +196,10 @@ async def async_setup_entry(
     options = entry.options
 
     try:
-        custom_effect_colors = CUSTOM_EFFECT_COLOR_SCHEMA(
-            options.get(CONF_CUSTOM_EFFECT_COLORS)
+        custom_effect_colors = ast.literal_eval(
+            options.get(CONF_CUSTOM_EFFECT_COLORS, "")
         )
-    except vol.Invalid:
+    except (ValueError, TypeError, SyntaxError, MemoryError):
         custom_effect_colors = []
 
     async_add_entities(
@@ -208,7 +209,7 @@ async def async_setup_entry(
                 entry.unique_id,
                 entry.data[CONF_NAME],
                 options.get(CONF_MODE, MODE_AUTO),
-                custom_effect_colors,
+                list(custom_effect_colors),
                 options.get(CONF_CUSTOM_EFFECT_SPEED_PCT, DEFAULT_EFFECT_SPEED),
                 options.get(CONF_CUSTOM_EFFECT_TRANSITION, TRANSITION_GRADUAL),
             )
