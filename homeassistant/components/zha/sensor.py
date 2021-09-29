@@ -24,7 +24,7 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_ENERGY,
-    ENERGY_KILO_WATT_HOUR,
+    ENERGY_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
@@ -346,7 +346,7 @@ class SmartEnergySummation(SmartEnergyMetering, id_suffix="summation_delivered")
     _state_class: str = STATE_CLASS_TOTAL_INCREASING
 
     unit_of_measure_map = {
-        0x00: ENERGY_KILO_WATT_HOUR,
+        0x00: ENERGY_WATT_HOUR,
         0x01: VOLUME_CUBIC_METERS,
         0x02: VOLUME_CUBIC_FEET,
         0x03: f"100 {VOLUME_CUBIC_FEET}",
@@ -366,18 +366,8 @@ class SmartEnergySummation(SmartEnergyMetering, id_suffix="summation_delivered")
         if self._channel.unit_of_measurement != 0:
             return self._channel.summa_formatter(value)
 
-        # SmartEnergy cluster UOM 0 could be kW or kWh depending on context
-        cooked = float(value * self._channel.multiplier) / self._channel.divisor
-        if cooked <= 1e1:
-            return round(cooked, 3)
-
-        if cooked < 1e2:
-            return round(cooked, 2)
-
-        if cooked < 1e3:
-            return round(cooked, 1)
-
-        return round(cooked)
+        cooked = float(self._channel.multiplier * 1e3 / self._channel.divisor) * value
+        return round(cooked, 1)
 
 
 @STRICT_MATCH(channel_names=CHANNEL_PRESSURE)
