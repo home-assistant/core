@@ -55,7 +55,9 @@ async def async_setup_entry(
         _LOGGER.debug("cover add-> %s", dev_ids)
         if not dev_ids:
             return
-        entities = _setup_entities(hass, entry, dev_ids)
+        entities = await hass.async_add_executor_job(
+            _setup_entities, hass, entry, dev_ids
+        )
         async_add_entities(entities)
 
     entry.async_on_unload(
