@@ -274,7 +274,6 @@ SENSOR_DESCRIPTIONS = (
         name="PM25 24h Avg",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=DEVICE_CLASS_PM25,
-        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_PM25_IN,
@@ -288,7 +287,6 @@ SENSOR_DESCRIPTIONS = (
         name="PM25 Indoor 24h Avg",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=DEVICE_CLASS_PM25,
-        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_PM25,
@@ -582,14 +580,12 @@ SENSOR_DESCRIPTIONS = (
         name="Wind Avg 10m",
         icon="mdi:weather-windy",
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_WINDSPDMPH_AVG2M,
         name="Wind Avg 2m",
         icon="mdi:weather-windy",
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_WINDSPEEDMPH,
