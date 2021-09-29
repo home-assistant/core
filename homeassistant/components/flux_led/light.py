@@ -208,7 +208,7 @@ async def async_setup_entry(
                 coordinator,
                 entry.unique_id,
                 entry.data[CONF_NAME],
-                options.get(CONF_MODE, MODE_AUTO),
+                options.get(CONF_MODE) or MODE_AUTO,
                 list(custom_effect_colors),
                 options.get(CONF_CUSTOM_EFFECT_SPEED_PCT, DEFAULT_EFFECT_SPEED),
                 options.get(CONF_CUSTOM_EFFECT_TRANSITION, TRANSITION_GRADUAL),
@@ -239,7 +239,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
         self._name = name
         self._unique_id = unique_id
         self._ip_address = coordinator.host
-        self._mode: str = mode or MODE_AUTO
+        self._mode = mode
         self._custom_effect_colors = custom_effect_colors
         self._custom_effect_speed_pct = custom_effect_speed_pct
         self._custom_effect_transition = custom_effect_transition
