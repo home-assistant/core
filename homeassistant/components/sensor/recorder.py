@@ -125,7 +125,7 @@ WARN_UNSUPPORTED_UNIT = "sensor_warn_unsupported_unit"
 WARN_UNSTABLE_UNIT = "sensor_warn_unstable_unit"
 
 
-def _get_entities(hass: HomeAssistant) -> list[tuple[str, str, str | None, str | None]]:
+def _get_entities(hass: HomeAssistant) -> list[tuple[str, State]]:
     """Get (entity_id, state_class, device_class) of all sensors for which to compile statistics."""
     all_sensors = hass.states.all(DOMAIN)
     entity_ids = []
@@ -133,11 +133,9 @@ def _get_entities(hass: HomeAssistant) -> list[tuple[str, str, str | None, str |
     for state in all_sensors:
         if not is_entity_recorded(hass, state.entity_id):
             continue
-        if (state_class := state.attributes.get(ATTR_STATE_CLASS)) not in STATE_CLASSES:
+        if (state.attributes.get(ATTR_STATE_CLASS)) not in STATE_CLASSES:
             continue
-        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        entity_ids.append((state.entity_id, state_class, device_class, unit))
+        entity_ids.append((state.entity_id, state))
 
     return entity_ids
 
@@ -300,12 +298,12 @@ def reset_detected(
     return state < 0.9 * previous_state
 
 
-def _wanted_statistics(
-    entities: list[tuple[str, str, str | None, str | None]]
-) -> dict[str, set[str]]:
+def _wanted_statistics(entities: list[tuple[str, State]]) -> dict[str, set[str]]:
     """Prepare a dict with wanted statistics for entities."""
     wanted_statistics = {}
-    for entity_id, state_class, device_class, _ in entities:
+    for entity_id, state in entities:
+        state_class = state.attributes[ATTR_STATE_CLASS]
+        device_class = state.attributes[ATTR_DEVICE_CLASS]
         if device_class in DEVICE_CLASS_STATISTICS[state_class]:
             wanted_statistics[entity_id] = DEVICE_CLASS_STATISTICS[state_class][
                 device_class
@@ -340,7 +338,6 @@ def compile_statistics(  # noqa: C901
     result: list[StatisticResult] = []
 
     entities = _get_entities(hass)
-
     wanted_statistics = _wanted_statistics(entities)
 
     # Get history between start and end
@@ -367,22 +364,16 @@ def compile_statistics(  # noqa: C901
         history_list = {**history_list, **_history_list}
     # If there are no recent state changes, the sensor's state may already be pruned
     # from the recorder. Get the state from the state machine instead.
-    for entity_id, _, _, _ in entities:
+    for entity_id, state in entities:
         if entity_id not in history_list:
-            state = hass.states.get(entity_id)
-            if not state:
-                continue
             history_list[entity_id] = (state,)
 
-    for (  # pylint: disable=too-many-nested-blocks
-        entity_id,
-        state_class,
-        device_class,
-        _,
-    ) in entities:
+    for (entity_id, state) in entities:  # pylint: disable=too-many-nested-blocks
         if entity_id not in history_list:
             continue
 
+        state_class = state.attributes[ATTR_STATE_CLASS]
+        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
         entity_history = history_list[entity_id]
         unit, fstates = _normalize_states(hass, entity_history, device_class, entity_id)
 
@@ -531,7 +522,11 @@ def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -
 
     statistic_ids = {}
 
-    for entity_id, state_class, device_class, native_unit in entities:
+    for entity_id, state in entities:
+        state_class = state.attributes[ATTR_STATE_CLASS]
+        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+        native_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
         if device_class in DEVICE_CLASS_STATISTICS[state_class]:
             provided_statistics = DEVICE_CLASS_STATISTICS[state_class][device_class]
         else:
@@ -539,9 +534,6 @@ def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -
 
         if statistic_type is not None and statistic_type not in provided_statistics:
             continue
-
-        state = hass.states.get(entity_id)
-        assert state
 
         if (
             "sum" in provided_statistics
@@ -571,15 +563,8 @@ def validate_statistics(
 
     entities = _get_entities(hass)
 
-    for (
-        entity_id,
-        _state_class,
-        device_class,
-        _unit,
-    ) in entities:
-        state = hass.states.get(entity_id)
-        assert state is not None
-
+    for (entity_id, state) in entities:
+        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if device_class not in UNIT_CONVERSIONS:
