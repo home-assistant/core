@@ -364,16 +364,16 @@ def compile_statistics(  # noqa: C901
         history_list = {**history_list, **_history_list}
     # If there are no recent state changes, the sensor's state may already be pruned
     # from the recorder. Get the state from the state machine instead.
-    for entity_id, state in entities:
+    for entity_id, _state in entities:
         if entity_id not in history_list:
-            history_list[entity_id] = (state,)
+            history_list[entity_id] = (_state,)
 
-    for (entity_id, state) in entities:  # pylint: disable=too-many-nested-blocks
+    for (entity_id, _state) in entities:  # pylint: disable=too-many-nested-blocks
         if entity_id not in history_list:
             continue
 
-        state_class = state.attributes[ATTR_STATE_CLASS]
-        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+        state_class = _state.attributes[ATTR_STATE_CLASS]
+        device_class = _state.attributes.get(ATTR_DEVICE_CLASS)
         entity_history = history_list[entity_id]
         unit, fstates = _normalize_states(hass, entity_history, device_class, entity_id)
 
