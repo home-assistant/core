@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 from bisect import bisect
+from collections.abc import Callable
 import logging
 import re
-from typing import Callable, NamedTuple
+from typing import NamedTuple
 
 import attr
 

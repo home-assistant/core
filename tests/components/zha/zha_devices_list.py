@@ -118,6 +118,7 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "sensor.centralite_3210_l_77665544_electrical_measurement",
             "sensor.centralite_3210_l_77665544_smartenergy_metering",
+            "sensor.centralite_3210_l_77665544_smartenergy_metering_summation_delivered",
             "switch.centralite_3210_l_77665544_on_off",
         ],
         DEV_SIG_ENT_MAP: {
@@ -130,6 +131,11 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergyMetering",
                 DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_77665544_smartenergy_metering",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_delivered"): {
+                DEV_SIG_CHANNELS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_77665544_smartenergy_metering_summation_delivered",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
@@ -391,6 +397,7 @@ DEVICES = [
         },
         DEV_SIG_ENTITIES: [
             "sensor.climaxtechnology_psmp5_00_00_02_02tc_77665544_smartenergy_metering",
+            "sensor.climaxtechnology_psmp5_00_00_02_02tc_77665544_smartenergy_metering_summation_delivered",
             "switch.climaxtechnology_psmp5_00_00_02_02tc_77665544_on_off",
         ],
         DEV_SIG_ENT_MAP: {
@@ -403,6 +410,11 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergyMetering",
                 DEV_SIG_ENT_MAP_ID: "sensor.climaxtechnology_psmp5_00_00_02_02tc_77665544_smartenergy_metering",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_delivered"): {
+                DEV_SIG_CHANNELS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.climaxtechnology_psmp5_00_00_02_02tc_77665544_smartenergy_metering_summation_delivered",
             },
         },
         DEV_SIG_EVT_CHANNELS: ["4:0x0019"],
@@ -943,6 +955,7 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "light.jasco_products_45852_77665544_level_on_off",
             "sensor.jasco_products_45852_77665544_smartenergy_metering",
+            "sensor.jasco_products_45852_77665544_smartenergy_metering_summation_delivered",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
@@ -954,6 +967,11 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergyMetering",
                 DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45852_77665544_smartenergy_metering",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_delivered"): {
+                DEV_SIG_CHANNELS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45852_77665544_smartenergy_metering_summation_delivered",
             },
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019", "2:0x0006", "2:0x0008"],
@@ -982,6 +1000,7 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "light.jasco_products_45856_77665544_on_off",
             "sensor.jasco_products_45856_77665544_smartenergy_metering",
+            "sensor.jasco_products_45856_77665544_smartenergy_metering_summation_delivered",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
@@ -993,6 +1012,11 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergyMetering",
                 DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45856_77665544_smartenergy_metering",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_delivered"): {
+                DEV_SIG_CHANNELS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45856_77665544_smartenergy_metering_summation_delivered",
             },
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019", "2:0x0006"],
@@ -1021,6 +1045,7 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "light.jasco_products_45857_77665544_level_on_off",
             "sensor.jasco_products_45857_77665544_smartenergy_metering",
+            "sensor.jasco_products_45857_77665544_smartenergy_metering_summation_delivered",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
@@ -1032,6 +1057,11 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergyMetering",
                 DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45857_77665544_smartenergy_metering",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_delivered"): {
+                DEV_SIG_CHANNELS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45857_77665544_smartenergy_metering_summation_delivered",
             },
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019", "2:0x0006", "2:0x0008"],
@@ -2782,12 +2812,6 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
                 DEV_SIG_ENT_MAP_ID: "binary_sensor.samjin_multi_77665544_ias_zone",
             },
-            ("binary_sensor", "00:11:22:33:44:55:66:77-1-64514"): {
-                DEV_SIG_CHANNELS: ["manufacturer_specific"],
-                DEV_SIG_ENT_MAP_CLASS: "BinaryInput",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.samjin_multi_77665544_manufacturer_specific",
-                "default_match": True,
-            },
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         SIG_MANUFACTURER: "Samjin",
@@ -2925,6 +2949,7 @@ DEVICES = [
             "light.sercomm_corp_sz_esw01_77665544_on_off",
             "sensor.sercomm_corp_sz_esw01_77665544_electrical_measurement",
             "sensor.sercomm_corp_sz_esw01_77665544_smartenergy_metering",
+            "sensor.sercomm_corp_sz_esw01_77665544_smartenergy_metering_summation_delivered",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
@@ -2936,6 +2961,11 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergyMetering",
                 DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_77665544_smartenergy_metering",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_delivered"): {
+                DEV_SIG_CHANNELS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_77665544_smartenergy_metering_summation_delivered",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
@@ -3423,6 +3453,7 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "light.sengled_e11_g13_77665544_level_on_off",
             "sensor.sengled_e11_g13_77665544_smartenergy_metering",
+            "sensor.sengled_e11_g13_77665544_smartenergy_metering_summation_delivered",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
@@ -3434,6 +3465,11 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergyMetering",
                 DEV_SIG_ENT_MAP_ID: "sensor.sengled_e11_g13_77665544_smartenergy_metering",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_delivered"): {
+                DEV_SIG_CHANNELS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.sengled_e11_g13_77665544_smartenergy_metering_summation_delivered",
             },
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
@@ -3455,6 +3491,7 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "light.sengled_e12_n14_77665544_level_on_off",
             "sensor.sengled_e12_n14_77665544_smartenergy_metering",
+            "sensor.sengled_e12_n14_77665544_smartenergy_metering_sumaiton_delivered",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
@@ -3466,6 +3503,11 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergyMetering",
                 DEV_SIG_ENT_MAP_ID: "sensor.sengled_e12_n14_77665544_smartenergy_metering",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_delivered"): {
+                DEV_SIG_CHANNELS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.sengled_e12_n14_77665544_smartenergy_metering_summation_delivered",
             },
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
@@ -3487,6 +3529,7 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "light.sengled_z01_a19nae26_77665544_level_light_color_on_off",
             "sensor.sengled_z01_a19nae26_77665544_smartenergy_metering",
+            "sensor.sengled_z01_a19nae26_77665544_smartenergy_metering_summation_delivered",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
@@ -3498,6 +3541,11 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergyMetering",
                 DEV_SIG_ENT_MAP_ID: "sensor.sengled_z01_a19nae26_77665544_smartenergy_metering",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_delivered"): {
+                DEV_SIG_CHANNELS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.sengled_z01_a19nae26_77665544_smartenergy_metering_summation_delivered",
             },
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],

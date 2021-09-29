@@ -249,7 +249,6 @@ class StatisticData(StatisticDataBase, total=False):
     last_reset: datetime | None
     state: float
     sum: float
-    sum_increase: float
 
 
 class StatisticsBase:
@@ -274,7 +273,6 @@ class StatisticsBase:
     last_reset = Column(DATETIME_TYPE)
     state = Column(DOUBLE_TYPE)
     sum = Column(DOUBLE_TYPE)
-    sum_increase = Column(DOUBLE_TYPE)
 
     @classmethod
     def from_stats(cls, metadata_id: str, stats: StatisticData):

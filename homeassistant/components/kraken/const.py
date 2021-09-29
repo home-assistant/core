@@ -1,8 +1,9 @@
 """Constants for the kraken integration."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Dict, TypedDict
+from typing import Dict, TypedDict
 
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator

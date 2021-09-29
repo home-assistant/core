@@ -65,6 +65,7 @@ homeassistant.components.local_ip.*
 homeassistant.components.lock.*
 homeassistant.components.mailbox.*
 homeassistant.components.media_player.*
+homeassistant.components.modbus.*
 homeassistant.components.mysensors.*
 homeassistant.components.nam.*
 homeassistant.components.neato.*

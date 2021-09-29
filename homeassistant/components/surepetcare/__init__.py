@@ -40,7 +40,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = ["binary_sensor", "lock", "sensor"]
 SCAN_INTERVAL = timedelta(minutes=3)
 
 CONFIG_SCHEMA = vol.Schema(
@@ -118,7 +118,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             vol.Required(ATTR_LOCK_STATE): vol.All(
                 cv.string,
                 vol.Lower,
-                vol.In(coordinator.lock_states.keys()),
+                vol.In(coordinator.lock_states_callbacks.keys()),
             ),
         }
     )
@@ -171,7 +171,7 @@ class SurePetcareDataCoordinator(DataUpdateCoordinator):
             api_timeout=SURE_API_TIMEOUT,
             session=async_get_clientsession(hass),
         )
-        self.lock_states = {
+        self.lock_states_callbacks = {
             LockState.UNLOCKED.name.lower(): self.surepy.sac.unlock,
             LockState.LOCKED_IN.name.lower(): self.surepy.sac.lock_in,
             LockState.LOCKED_OUT.name.lower(): self.surepy.sac.lock_out,
@@ -195,7 +195,7 @@ class SurePetcareDataCoordinator(DataUpdateCoordinator):
         """Call when setting the lock state."""
         flap_id = call.data[ATTR_FLAP_ID]
         state = call.data[ATTR_LOCK_STATE]
-        await self.lock_states[state](flap_id)
+        await self.lock_states_callbacks[state](flap_id)
         await self.async_request_refresh()
 
     def get_pets(self) -> dict[str, int]:

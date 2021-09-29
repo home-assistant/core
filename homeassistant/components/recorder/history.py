@@ -80,6 +80,11 @@ def _get_significant_states(
     """
     Return states changes during UTC period start_time - end_time.
 
+    entity_ids is an optional iterable of entities to include in the results.
+
+    filters is an optional SQLAlchemy filter which will be applied to the database
+    queries unless entity_ids is given, in which case its ignored.
+
     Significant states are all states where there is a state change,
     as well as all states from certain domains (for instance
     thermostat so that we get current temperature in our graphs).
@@ -240,30 +245,34 @@ def _get_states_with_session(
         if run is None:
             return []
 
-    # We have more than one entity to look at (most commonly we want
-    # all entities,) so we need to do a search on all states since the
-    # last recorder run started.
+    # We have more than one entity to look at so we need to do a query on states
+    # since the last recorder run started.
     query = session.query(*QUERY_STATES)
 
     if entity_ids:
+        # We got an include-list of entities, accelerate the query by filtering already
+        # in the inner query.
         most_recent_state_ids = (
             session.query(
                 func.max(States.state_id).label("max_state_id"),
             )
-            .filter(States.last_updated < utc_point_in_time)
+            .filter(
+                (States.last_updated >= run.start)
+                & (States.last_updated < utc_point_in_time)
+            )
             .filter(States.entity_id.in_(entity_ids))
         )
         most_recent_state_ids = most_recent_state_ids.group_by(States.entity_id)
-        # Filtering out too old states after grouping improves the query time by 3-4x
-        most_recent_state_ids = most_recent_state_ids.filter(
-            States.last_updated >= run.start
-        )
         most_recent_state_ids = most_recent_state_ids.subquery()
         query = query.join(
             most_recent_state_ids,
             States.state_id == most_recent_state_ids.c.max_state_id,
         )
     else:
+        # We did not get an include-list of entities, query all states in the inner
+        # query, then filter out unwanted domains as well as applying the custom filter.
+        # This filtering can't be done in the inner query because the domain column is
+        # not indexed and we can't control what's in the custom filter.
         most_recent_states_by_date = (
             session.query(
                 States.entity_id.label("max_entity_id"),
@@ -294,9 +303,8 @@ def _get_states_with_session(
             States.state_id == most_recent_state_ids.c.max_state_id,
         )
         query = query.filter(~States.domain.in_(IGNORE_DOMAINS))
-
-    if filters:
-        query = filters.apply(query)
+        if filters:
+            query = filters.apply(query)
 
     return [LazyState(row) for row in execute(query)]
 

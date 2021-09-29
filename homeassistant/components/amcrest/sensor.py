@@ -1,9 +1,10 @@
 """Support for Amcrest IP camera sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from amcrest import AmcrestError
 

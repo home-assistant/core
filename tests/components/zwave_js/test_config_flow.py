@@ -2053,3 +2053,71 @@ async def test_options_addon_not_installed(
     assert entry.data["integration_created_addon"] is True
     assert client.connect.call_count == 2
     assert client.disconnect.call_count == 1
+
+
+@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
+async def test_import_addon_installed(
+    hass,
+    supervisor,
+    addon_installed,
+    addon_options,
+    set_addon_options,
+    start_addon,
+    get_addon_discovery_info,
+):
+    """Test import step while add-on already installed on Supervisor."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={"usb_path": "/test/imported", "network_key": "imported123"},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "on_supervisor"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": True}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "configure_addon"
+
+    # the default input should be the imported data
+    default_input = result["data_schema"]({})
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], default_input
+    )
+
+    assert set_addon_options.call_args == call(
+        hass,
+        "core_zwave_js",
+        {"options": {"device": "/test/imported", "network_key": "imported123"}},
+    )
+
+    assert result["type"] == "progress"
+    assert result["step_id"] == "start_addon"
+
+    with patch(
+        "homeassistant.components.zwave_js.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.zwave_js.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert start_addon.call_args == call(hass, "core_zwave_js")
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == TITLE
+    assert result["data"] == {
+        "url": "ws://host1:3001",
+        "usb_path": "/test/imported",
+        "network_key": "imported123",
+        "use_addon": True,
+        "integration_created_addon": False,
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
