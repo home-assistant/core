@@ -76,7 +76,7 @@ body:
       label: Example YAML snippet
       description: |
         If applicable, please provide an example piece of YAML that can help reproduce this problem.
-        This can be a from an automation, script, scene, or configuration.
+        This can be from an automation, script, scene or configuration.
       render: yaml
   - type: textarea
     attributes:
