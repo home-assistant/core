@@ -60,7 +60,7 @@ def browse_media(  # noqa: C901
 ):
     """Implement the websocket media browsing helper."""
 
-    def item_payload(item):
+    def item_payload(item, short_name=False):
         """Create response payload for a single media item."""
         try:
             media_class = ITEM_TYPE_MEDIA_CLASS[item.type]
@@ -68,7 +68,7 @@ def browse_media(  # noqa: C901
             _LOGGER.debug("Unknown type received: %s", item.type)
             raise UnknownMediaType from err
         payload = {
-            "title": pretty_title(item),
+            "title": pretty_title(item, short_name),
             "media_class": media_class,
             "media_content_id": str(item.ratingKey),
             "media_content_type": item.type,
@@ -132,7 +132,7 @@ def browse_media(  # noqa: C901
             media_info.children = []
             for item in media:
                 try:
-                    media_info.children.append(item_payload(item))
+                    media_info.children.append(item_payload(item, short_name=True))
                 except UnknownMediaType:
                     continue
         return media_info
