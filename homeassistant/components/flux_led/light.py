@@ -45,7 +45,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.color as color_util
 
 from . import FluxLedUpdateCoordinator
-from .const import CONF_AUTOMATIC_ADD, CONF_CUSTOM_EFFECT, CONF_EFFECT_SPEED, DOMAIN
+from .const import CONF_AUTOMATIC_ADD, CONF_CUSTOM_EFFECT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -206,7 +206,6 @@ async def async_setup_entry(
                 coordinator,
                 entry.unique_id,
                 entry.data[CONF_NAME],
-                entry.options[CONF_EFFECT_SPEED],
             )
         ]
     )
@@ -222,7 +221,6 @@ class FluxLight(CoordinatorEntity, LightEntity):
         coordinator: FluxLedUpdateCoordinator,
         unique_id: str | None,
         name: str,
-        effect_speed: int,
     ):
         """Initialize the light."""
         super().__init__(coordinator)
@@ -236,7 +234,6 @@ class FluxLight(CoordinatorEntity, LightEntity):
         self._last_brightness = None
         self._last_hs_color: tuple[float, float] | None = None
         self._ip_address = coordinator.host
-        self._effect_speed = effect_speed
         self._mode: str | None = None
         self._bulb: WifiLedBulb = coordinator.device
 
