@@ -1,12 +1,16 @@
 {
   "config": {
+    "flow_title": "{model} {id} ({ip})",
     "step": {
       "user": {
-        "description": "Choose whether you want to automatically search for devices on your network.",
+        "description": "If you leave the host empty, discovery will be used to find devices.",
         "data": {
-          "automatic_add": "Enable automatic add of devices"
+          "host": "[%key:common::config_flow::data::host%]"
         }
-      }
+      },
+      "discovery_confirm": {
+        "description": "Do you want to setup {model} {id} ({ip})?"
+      }      
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
