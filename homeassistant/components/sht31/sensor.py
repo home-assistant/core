@@ -1,11 +1,11 @@
 """Support for Sensirion SHT31 temperature and humidity sensor."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
 import math
-from typing import Callable
 
 from Adafruit_SHT31 import SHT31
 import voluptuous as vol

@@ -1,10 +1,11 @@
 """Support for August binary sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Callable, cast
+from typing import cast
 
 from yalexs.activity import (
     ACTION_DOORBELL_CALL_MISSED,
