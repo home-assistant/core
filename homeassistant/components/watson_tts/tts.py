@@ -191,7 +191,9 @@ class WatsonTTSProvider(Provider):
     def get_tts_audio(self, message, language=None, options=None):
         """Request TTS file from Watson TTS."""
         response = self.service.synthesize(
-            text=message, accept=self.output_format, voice=self.default_voice
+            text=message,
+            accept=self.output_format,
+            voice=options.get(CONF_VOICE, self.default_voice),
         ).get_result()
 
         return (CONTENT_TYPE_EXTENSIONS[self.output_format], response.content)
