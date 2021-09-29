@@ -37,7 +37,6 @@ from homeassistant.const import (
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry, entity_registry
@@ -438,7 +437,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         return f"{self.udn}::{self.device_type}"
 
     @property
-    def state(self) -> str:
+    def state(self) -> str | None:
         """State of the player."""
         if not self._device or not self.available:
             return STATE_OFF
@@ -455,7 +454,8 @@ class DlnaDmrEntity(MediaPlayerEntity):
         ):
             return STATE_PAUSED
         if self._device.transport_state == TransportState.VENDOR_DEFINED:
-            return STATE_UNKNOWN
+            # Unable to map this state to anything reasonable, so it's "Unknown"
+            return None
 
         return STATE_IDLE
 
