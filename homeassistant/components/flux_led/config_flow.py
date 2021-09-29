@@ -47,7 +47,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._discovered_device: dict[str, Any] = {}
-        self._discovered_devices: list[dict[str, Any]] = []
+        self._discovered_devices: dict[str, dict[str, Any]] = {}
 
     @staticmethod
     @callback
@@ -169,14 +169,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             entry.data[CONF_HOST]
             for entry in self._async_current_entries(include_ignore=False)
         }
-        self._discovered_devices = await async_discover_devices(self.hass)
+        discovered_devices = await async_discover_devices(self.hass)
+        self._discovered_devices = {
+            dr.format_mac(device[FLUX_MAC]): device for device in discovered_devices
+        }
         devices_name = {
-            dr.format_mac(
-                device[FLUX_MAC]
-            ): f"{device[FLUX_MODEL]} {device[FLUX_MAC]} ({device[FLUX_HOST]}"
-            for device in self._discovered_devices
-            if dr.format_mac(device[FLUX_MAC]) not in current_unique_ids
-            and device[FLUX_HOST] not in current_hosts
+            mac: f"{device[FLUX_MODEL]} {mac} ({device[FLUX_HOST]}"
+            for mac, device in self._discovered_devices.items()
+            if mac not in current_unique_ids and device[FLUX_HOST] not in current_hosts
         }
         # Check if there is at least one device
         if not devices_name:
