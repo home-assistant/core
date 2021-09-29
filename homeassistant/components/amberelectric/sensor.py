@@ -117,13 +117,13 @@ class AmberForecastSensor(AmberSensor):
         intervals = self.coordinator.data[self.entity_description.key].get(
             self.channel_type
         )
-        if intervals:
-            interval = intervals[0]
+        if not intervals:
+            return None
+        interval = intervals[0]
 
-            if interval.channel_type == ChannelType.FEED_IN:
-                return round(interval.per_kwh, 0) / 100 * -1
-            return round(interval.per_kwh, 0) / 100
-        return None
+        if interval.channel_type == ChannelType.FEED_IN:
+            return round(interval.per_kwh, 0) / 100 * -1
+        return round(interval.per_kwh, 0) / 100
 
     @property
     def device_state_attributes(self) -> Mapping[str, Any] | None:
@@ -132,35 +132,36 @@ class AmberForecastSensor(AmberSensor):
             self.channel_type
         )
 
-        if intervals:
-            data = {
-                "forecasts": [],
-                "channel_type": intervals[0].channel_type.value,
-                ATTR_ATTRIBUTION: ATTRIBUTION,
-            }
+        if not intervals:
+            return None
 
-            for interval in intervals:
-                datum = {}
-                datum["duration"] = interval.duration
-                datum["date"] = interval.date.isoformat()
-                datum["nem_date"] = interval.nem_time.isoformat()
-                datum["per_kwh"] = round(interval.per_kwh)
-                if interval.channel_type == ChannelType.FEED_IN:
-                    datum["per_kwh"] = datum["per_kwh"] * -1
-                datum["spot_per_kwh"] = round(interval.spot_per_kwh)
-                datum["start_time"] = interval.start_time.isoformat()
-                datum["end_time"] = interval.end_time.isoformat()
-                datum["renewables"] = round(interval.renewables)
-                datum["spike_status"] = interval.spike_status.value
+        data = {
+            "forecasts": [],
+            "channel_type": intervals[0].channel_type.value,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+        }
 
-                if interval.range is not None:
-                    datum["range_min"] = interval.range.min
-                    datum["range_max"] = interval.range.max
+        for interval in intervals:
+            datum = {}
+            datum["duration"] = interval.duration
+            datum["date"] = interval.date.isoformat()
+            datum["nem_date"] = interval.nem_time.isoformat()
+            datum["per_kwh"] = round(interval.per_kwh)
+            if interval.channel_type == ChannelType.FEED_IN:
+                datum["per_kwh"] = datum["per_kwh"] * -1
+            datum["spot_per_kwh"] = round(interval.spot_per_kwh)
+            datum["start_time"] = interval.start_time.isoformat()
+            datum["end_time"] = interval.end_time.isoformat()
+            datum["renewables"] = round(interval.renewables)
+            datum["spike_status"] = interval.spike_status.value
 
-                data["forecasts"].append(datum)
+            if interval.range is not None:
+                datum["range_min"] = interval.range.min
+                datum["range_max"] = interval.range.max
 
-            return data
-        return None
+            data["forecasts"].append(datum)
+
+        return data
 
 
 class AmberGridSensor(CoordinatorEntity, SensorEntity):
