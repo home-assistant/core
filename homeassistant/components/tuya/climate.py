@@ -169,10 +169,12 @@ class TuyaHaClimate(TuyaHaEntity, ClimateEntity):
         dp_temp_current = (
             DPCODE_TEMP_CURRENT if self.is_celsius() else DPCODE_TEMP_CURRENT_F
         )
-        temp_current_value_range_item = self.tuya_device.status_range.get(dp_temp_current)
+        temp_current_value_range_item = self.tuya_device.status_range.get(
+            dp_temp_current
+        )
         if not temp_current_value_range_item:
             return None
-        
+
         temp_current_value_range = json.loads(temp_current_value_range_item.values)
         return temp_current_value_range.get("scale")
 
@@ -238,9 +240,7 @@ class TuyaHaClimate(TuyaHaEntity, ClimateEntity):
             [
                 {
                     "code": code,
-                    "value": int(
-                        kwargs["temperature"] * (10 ** temp_set_scale)
-                    ),
+                    "value": int(kwargs["temperature"] * (10 ** temp_set_scale)),
                 }
             ]
         )
@@ -299,23 +299,27 @@ class TuyaHaClimate(TuyaHaEntity, ClimateEntity):
     def target_temperature(self) -> float | None:
         """Return the temperature currently set to be reached."""
         temp_set_scale = self.get_temp_set_scale()
-        if not temp_set_scale:
+        if temp_set_scale is not None:
             return None
 
         dpcode_temp_set = self.tuya_device.status.get(DPCODE_TEMP_SET)
-        if not dpcode_temp_set:
+        if dpcode_temp_set is not None:
             return None
 
-        return (dpcode_temp_set * 1.0 / (10 ** temp_set_scale))
+        return dpcode_temp_set * 1.0 / (10 ** temp_set_scale)
 
     @property
-    def max_temp(self) -> float | None:
+    def max_temp(self) -> float:
         """Return the maximum temperature."""
+        if self.target_temperature_high is None:
+            return self._attr_max_temp
         return self.target_temperature_high
 
     @property
-    def min_temp(self) -> float | None:
+    def min_temp(self) -> float:
         """Return the minimum temperature."""
+        if self.target_temperature_low is None:
+            return self._attr_min_temp
         return self.target_temperature_low
 
     @property
@@ -328,11 +332,11 @@ class TuyaHaClimate(TuyaHaEntity, ClimateEntity):
         if self.is_celsius():
             if DPCODE_TEMP_SET not in self.tuya_device.function:
                 return None
-            
+
             function_item = self.tuya_device.function.get(DPCODE_TEMP_SET)
             if function_item is None:
                 return None
-            
+
             temp_value = json.loads(function_item.values)
 
             max = temp_value.get("max")
@@ -341,14 +345,14 @@ class TuyaHaClimate(TuyaHaEntity, ClimateEntity):
             return max * 1.0 / (10 ** scale)
         if DPCODE_TEMP_SET_F not in self.tuya_device.function:
             return None
-        
+
         function_item_f = self.tuya_device.function.get(DPCODE_TEMP_SET_F)
         if function_item_f is None:
             return None
-        
-        temp_value = json.loads(function_item_f.values)
 
-        max_f = temp_value.get("max")
+        temp_value_f = json.loads(function_item_f.values)
+
+        max_f = temp_value_f.get("max")
         if max_f is None:
             return None
         return max_f * 1.0 / (10 ** scale)
@@ -363,7 +367,7 @@ class TuyaHaClimate(TuyaHaEntity, ClimateEntity):
         if self.is_celsius():
             if DPCODE_TEMP_SET not in self.tuya_device.function:
                 return None
-            
+
             function_temp_item = self.tuya_device.function.get(DPCODE_TEMP_SET)
             if function_temp_item is None:
                 return None
@@ -372,7 +376,7 @@ class TuyaHaClimate(TuyaHaEntity, ClimateEntity):
             if min is None:
                 return None
             return min * 1.0 / (10 ** temp_set_scal)
-        
+
         if DPCODE_TEMP_SET_F not in self.tuya_device.function:
             return None
 
@@ -380,6 +384,7 @@ class TuyaHaClimate(TuyaHaEntity, ClimateEntity):
         if temp_value_temp_f is None:
             return None
         temp_value_f = json.loads(temp_value_temp_f.values)
+
         min_f = temp_value_f.get("min")
         if min_f is None:
             return None
@@ -407,7 +412,7 @@ class TuyaHaClimate(TuyaHaEntity, ClimateEntity):
         if temp_set_scale is None:
             return None
 
-        return (step * 1.0 / (10 ** temp_set_scale))
+        return step * 1.0 / (10 ** temp_set_scale)
 
     @property
     def target_humidity(self) -> int:
@@ -415,7 +420,7 @@ class TuyaHaClimate(TuyaHaEntity, ClimateEntity):
         return int(self.tuya_device.status.get(DPCODE_HUMIDITY_SET, 0))
 
     @property
-    def hvac_mode(self) -> str | None:
+    def hvac_mode(self) -> str:
         """Return hvac mode."""
         if not self.tuya_device.status.get(DPCODE_SWITCH, False):
             return HVAC_MODE_OFF
@@ -423,7 +428,7 @@ class TuyaHaClimate(TuyaHaEntity, ClimateEntity):
             return HVAC_MODE_OFF
         if self.tuya_device.status.get(DPCODE_MODE) is not None:
             return TUYA_HVAC_TO_HA[self.tuya_device.status[DPCODE_MODE]]
-        return None
+        return HVAC_MODE_OFF
 
     @property
     def hvac_modes(self) -> list[str]:
