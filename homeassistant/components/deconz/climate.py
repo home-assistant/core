@@ -84,13 +84,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         for sensor in sensors:
 
+            if not gateway.option_allow_clip_sensor and sensor.type.startswith("CLIP"):
+                continue
+
             if (
-                sensor.type in Thermostat.ZHATYPE
+                isinstance(sensor, Thermostat)
                 and sensor.unique_id not in gateway.entities[DOMAIN]
-                and (
-                    gateway.option_allow_clip_sensor
-                    or not sensor.type.startswith("CLIP")
-                )
             ):
                 entities.append(DeconzThermostat(sensor, gateway))
 

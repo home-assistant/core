@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pydeconz.light import Light
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -28,24 +30,11 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.color import color_hs_to_xy
 
-from .const import (
-    COVER_TYPES,
-    DOMAIN as DECONZ_DOMAIN,
-    LOCK_TYPES,
-    NEW_GROUP,
-    NEW_LIGHT,
-    POWER_PLUGS,
-    SIRENS,
-)
+from .const import DOMAIN as DECONZ_DOMAIN, NEW_GROUP, NEW_LIGHT, POWER_PLUGS
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
-CONTROLLER = ["Configuration tool"]
 DECONZ_GROUP = "is_deconz_group"
-
-OTHER_LIGHT_RESOURCE_TYPES = (
-    CONTROLLER + COVER_TYPES + LOCK_TYPES + POWER_PLUGS + SIRENS
-)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -60,7 +49,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         for light in lights:
             if (
-                light.type not in OTHER_LIGHT_RESOURCE_TYPES
+                isinstance(light, Light)
+                and light.type not in POWER_PLUGS
                 and light.unique_id not in gateway.entities[DOMAIN]
             ):
                 entities.append(DeconzLight(light, gateway))
