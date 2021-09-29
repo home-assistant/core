@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterable
+from collections.abc import AsyncIterable, Mapping
 from datetime import timedelta
 from types import MappingProxyType
+from typing import Any
 from unittest.mock import ANY, DEFAULT, Mock, patch
 
 from async_upnp_client.exceptions import UpnpConnectionError, UpnpError
@@ -73,6 +74,8 @@ async def mock_entity_id(
     """
     entity_id = await setup_mock_component(hass, config_entry_mock)
 
+    assert dmr_device_mock.async_subscribe_services.await_count == 1
+
     yield entity_id
 
     # Unload config entry to clean up
@@ -96,6 +99,8 @@ async def mock_disconnected_entity_id(
     domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpConnectionError
 
     entity_id = await setup_mock_component(hass, config_entry_mock)
+
+    assert dmr_device_mock.async_subscribe_services.await_count == 0
 
     yield entity_id
 
@@ -239,7 +244,6 @@ async def test_setup_entry_with_options(
 
 async def test_event_subscribe_failure(
     hass: HomeAssistant,
-    domain_data_mock: Mock,
     config_entry_mock: MockConfigEntry,
     dmr_device_mock: Mock,
 ) -> None:
@@ -310,11 +314,15 @@ async def test_available_device(
     await async_update_entity(hass, mock_entity_id)
 
     # Check attributes come directly from the device
-    entity_state = hass.states.get(mock_entity_id)
-    assert entity_state is not None
-    attrs = entity_state.attributes
-    assert attrs is not None
+    async def get_attrs() -> Mapping[str, Any]:
+        await async_update_entity(hass, mock_entity_id)
+        entity_state = hass.states.get(mock_entity_id)
+        assert entity_state is not None
+        attrs = entity_state.attributes
+        assert attrs is not None
+        return attrs
 
+    attrs = await get_attrs()
     assert attrs[mp_const.ATTR_MEDIA_VOLUME_LEVEL] is dmr_device_mock.volume_level
     assert attrs[mp_const.ATTR_MEDIA_VOLUME_MUTED] is dmr_device_mock.is_volume_muted
     assert attrs[mp_const.ATTR_MEDIA_DURATION] is dmr_device_mock.media_duration
@@ -323,9 +331,43 @@ async def test_available_device(
         attrs[mp_const.ATTR_MEDIA_POSITION_UPDATED_AT]
         is dmr_device_mock.media_position_updated_at
     )
-    assert attrs[mp_const.ATTR_MEDIA_TITLE] is dmr_device_mock.media_title
+    assert attrs[mp_const.ATTR_MEDIA_CONTENT_ID] is dmr_device_mock.current_track_uri
+    assert attrs[mp_const.ATTR_MEDIA_ARTIST] is dmr_device_mock.media_artist
+    assert attrs[mp_const.ATTR_MEDIA_ALBUM_NAME] is dmr_device_mock.media_album_name
+    assert attrs[mp_const.ATTR_MEDIA_ALBUM_ARTIST] is dmr_device_mock.media_album_artist
+    assert attrs[mp_const.ATTR_MEDIA_TRACK] is dmr_device_mock.media_track_number
+    assert attrs[mp_const.ATTR_MEDIA_SERIES_TITLE] is dmr_device_mock.media_series_title
+    assert attrs[mp_const.ATTR_MEDIA_SEASON] is dmr_device_mock.media_season_number
+    assert attrs[mp_const.ATTR_MEDIA_EPISODE] is dmr_device_mock.media_episode_number
+    assert attrs[mp_const.ATTR_MEDIA_CHANNEL] is dmr_device_mock.media_channel_name
     # Entity picture is cached, won't correspond to remote image
     assert isinstance(attrs[ha_const.ATTR_ENTITY_PICTURE], str)
+    # media_title depends on what is available
+    assert attrs[mp_const.ATTR_MEDIA_TITLE] is dmr_device_mock.media_program_title
+    dmr_device_mock.media_program_title = None
+    attrs = await get_attrs()
+    assert attrs[mp_const.ATTR_MEDIA_TITLE] is dmr_device_mock.media_title
+    # media_content_type is mapped from UPnP class to MediaPlayer type
+    dmr_device_mock.media_class = "object.item.audioItem.musicTrack"
+    attrs = await get_attrs()
+    assert attrs[mp_const.ATTR_MEDIA_CONTENT_TYPE] == mp_const.MEDIA_TYPE_MUSIC
+    dmr_device_mock.media_class = "object.item.videoItem.movie"
+    attrs = await get_attrs()
+    assert attrs[mp_const.ATTR_MEDIA_CONTENT_TYPE] == mp_const.MEDIA_TYPE_MOVIE
+    dmr_device_mock.media_class = "object.item.videoItem.videoBroadcast"
+    attrs = await get_attrs()
+    assert attrs[mp_const.ATTR_MEDIA_CONTENT_TYPE] == mp_const.MEDIA_TYPE_TVSHOW
+    # media_season & media_episode have a special case
+    dmr_device_mock.media_season_number = "0"
+    dmr_device_mock.media_episode_number = "123"
+    attrs = await get_attrs()
+    assert attrs[mp_const.ATTR_MEDIA_SEASON] == "1"
+    assert attrs[mp_const.ATTR_MEDIA_EPISODE] == "23"
+    dmr_device_mock.media_season_number = "0"
+    dmr_device_mock.media_episode_number = "S1E23"  # Unexpected and not parsed
+    attrs = await get_attrs()
+    assert attrs[mp_const.ATTR_MEDIA_SEASON] == "0"
+    assert attrs[mp_const.ATTR_MEDIA_EPISODE] == "S1E23"
 
     # Check supported feature flags, one at a time.
     # tuple(async_upnp_client feature check property, HA feature flag)
@@ -688,7 +730,6 @@ async def test_multiple_ssdp_alive(
     domain_data_mock: Mock,
     ssdp_scanner_mock: Mock,
     mock_disconnected_entity_id: str,
-    dmr_device_mock: Mock,
 ) -> None:
     """Test multiple SSDP alive notifications is ok, only connects to device once."""
     domain_data_mock.upnp_factory.async_create_device.reset_mock()
@@ -1028,7 +1069,6 @@ async def test_ssdp_bootid(
 
 async def test_become_unavailable(
     hass: HomeAssistant,
-    domain_data_mock: Mock,
     mock_entity_id: str,
     dmr_device_mock: Mock,
 ) -> None:
@@ -1226,7 +1266,6 @@ async def test_config_update_connect_failure(
     hass: HomeAssistant,
     domain_data_mock: Mock,
     config_entry_mock: MockConfigEntry,
-    dmr_device_mock: Mock,
     mock_entity_id: str,
 ) -> None:
     """Test DlnaDmrEntity gracefully handles connect failure after config change."""
