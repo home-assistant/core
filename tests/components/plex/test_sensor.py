@@ -55,7 +55,7 @@ class MockPlexMusic(MockPlexMedia):
 class MockPlexTVEpisode(MockPlexMedia):
     """Minimal mock of plexapi episode object."""
 
-    type = "tvshow"
+    type = "episode"
     title = "Episode 5"
     grandparentTitle = "TV Show"
     seasonEpisode = "s01e05"
@@ -130,7 +130,7 @@ async def test_library_sensor_values(
     assert library_tv_sensor.attributes["shows"] == 1
     assert (
         library_tv_sensor.attributes["last_added_item"]
-        == "TV Show - s01e05 - Episode 5 (2021)"
+        == "TV Show - S01E05 - Episode 5"
     )
     assert library_tv_sensor.attributes["last_added_timestamp"] == str(TIMESTAMP)
 
@@ -208,7 +208,7 @@ async def test_library_sensor_values(
         await hass.async_block_till_done()
 
     library_movies_sensor = hass.states.get("sensor.plex_server_1_library_movies")
-    assert library_movies_sensor.attributes["last_added_item"] == "Clip 1 (2021)"
+    assert library_movies_sensor.attributes["last_added_item"] == "Clip 1"
 
     # Test music library sensor
     entity_registry.async_update_entity(

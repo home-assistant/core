@@ -16,6 +16,7 @@ from .const import (
     PLEX_UPDATE_SENSOR_SIGNAL,
     SERVERS,
 )
+from .helpers import pretty_title
 
 LIBRARY_ATTRIBUTE_TYPES = {
     "artist": ["artist", "album"],
@@ -187,21 +188,7 @@ class PlexLibrarySectionSensor(SensorEntity):
         )
         if recently_added:
             media = recently_added[0]
-            if recent_libtype == "episode":
-                latest_item = (
-                    f"{media.grandparentTitle} - {media.seasonEpisode} - {media.title}"
-                )
-            elif media.type == "movie":
-                latest_item = media.title
-            elif media.type == "album":
-                latest_item = f"{media.parentTitle} - {media.title}"
-            else:
-                latest_item = media.title
-            if media.year is not None:
-                latest_item += f" ({media.year!s})"
-            elif parent_year := getattr(media, "parentYear", None):
-                latest_item += f" ({parent_year!s})"
-            self._attr_extra_state_attributes["last_added_item"] = latest_item
+            self._attr_extra_state_attributes["last_added_item"] = pretty_title(media)
             self._attr_extra_state_attributes["last_added_timestamp"] = media.addedAt
 
     @property
