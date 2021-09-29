@@ -1534,13 +1534,20 @@ async def test_options_addon_running(
             {},
             {
                 "device": "/test",
-                "network_key": "abc123",
+                "network_key": "old123",
+                "s0_legacy_key": "old123",
+                "s2_access_control_key": "old456",
+                "s2_authenticated_key": "old789",
+                "s2_unauthenticated_key": "old987",
                 "log_level": "info",
                 "emulate_hardware": False,
             },
             {
                 "usb_path": "/test",
-                "network_key": "abc123",
+                "s0_legacy_key": "old123",
+                "s2_access_control_key": "old456",
+                "s2_authenticated_key": "old789",
+                "s2_unauthenticated_key": "old987",
                 "log_level": "info",
                 "emulate_hardware": False,
             },
@@ -1599,7 +1606,18 @@ async def test_options_addon_running_no_changes(
     assert result["type"] == "create_entry"
     assert entry.data["url"] == "ws://host1:3001"
     assert entry.data["usb_path"] == new_addon_options["device"]
-    assert entry.data["network_key"] == new_addon_options["network_key"]
+    assert entry.data["s0_legacy_key"] == new_addon_options["s0_legacy_key"]
+    assert (
+        entry.data["s2_access_control_key"]
+        == new_addon_options["s2_access_control_key"]
+    )
+    assert (
+        entry.data["s2_authenticated_key"] == new_addon_options["s2_authenticated_key"]
+    )
+    assert (
+        entry.data["s2_unauthenticated_key"]
+        == new_addon_options["s2_unauthenticated_key"]
+    )
     assert entry.data["use_addon"] is True
     assert entry.data["integration_created_addon"] is False
     assert client.connect.call_count == 2
