@@ -246,7 +246,7 @@ class TuyaHaClimate(TuyaHaEntity, ClimateEntity):
         )
 
     def is_celsius(self) -> bool:
-        """Judge is celsius"""
+        """Return True if device reports in Celsius"""
         if (
             self.dp_temp_unit in self.tuya_device.status
             and self.tuya_device.status.get(self.dp_temp_unit).lower() == "c"
