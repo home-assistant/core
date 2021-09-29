@@ -302,18 +302,13 @@ class FluxLight(CoordinatorEntity, LightEntity):
         if current_mode == EFFECT_CUSTOM_CODE:
             return EFFECT_CUSTOM
 
-        for effect, code in EFFECT_MAP.items():
-            if current_mode == code:
-                return effect
-
-        return None
+        return EFFECT_ID_NAME.get(current_mode)
 
     @property
     def extra_state_attributes(self):
         """Return the attributes."""
         return {
             "ip_address": self._ip_address,
-            "current_effect": EFFECT_ID_NAME.get(self._bulb.raw_state[3]),
         }
 
     @property
