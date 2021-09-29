@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
 from datetime import timedelta
 from enum import Enum, IntEnum
 import logging
 import re
-from typing import Any, Callable, Dict
+from typing import Any, Dict
 
 from aiohttp.web import Response
 import requests
