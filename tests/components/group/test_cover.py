@@ -32,6 +32,7 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
+    STATE_UNKNOWN,
 )
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -99,7 +100,7 @@ async def setup_comp(hass, config_count):
 async def test_attributes(hass, setup_comp):
     """Test handling of state attributes."""
     state = hass.states.get(COVER_GROUP)
-    assert state.state == STATE_CLOSED
+    assert state.state == STATE_UNKNOWN
     assert state.attributes[ATTR_FRIENDLY_NAME] == DEFAULT_NAME
     assert state.attributes[ATTR_ENTITY_ID] == [
         DEMO_COVER,
@@ -111,6 +112,34 @@ async def test_attributes(hass, setup_comp):
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
     assert ATTR_CURRENT_POSITION not in state.attributes
     assert ATTR_CURRENT_TILT_POSITION not in state.attributes
+
+    # Set entity as closed
+    hass.states.async_set(DEMO_COVER, STATE_CLOSED, {})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(COVER_GROUP)
+    assert state.state == STATE_CLOSED
+
+    # Set entity as opening
+    hass.states.async_set(DEMO_COVER, STATE_OPENING, {})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(COVER_GROUP)
+    assert state.state == STATE_OPENING
+
+    # Set entity as closing
+    hass.states.async_set(DEMO_COVER, STATE_CLOSING, {})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(COVER_GROUP)
+    assert state.state == STATE_CLOSING
+
+    # Set entity as unknown again
+    hass.states.async_set(DEMO_COVER, STATE_UNKNOWN, {})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(COVER_GROUP)
+    assert state.state == STATE_UNKNOWN
 
     # Add Entity that supports open / close / stop
     hass.states.async_set(DEMO_COVER, STATE_OPEN, {ATTR_SUPPORTED_FEATURES: 11})
