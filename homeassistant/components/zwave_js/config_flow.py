@@ -718,13 +718,14 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
                 CONF_ADDON_LOG_LEVEL: user_input[CONF_LOG_LEVEL],
                 CONF_ADDON_EMULATE_HARDWARE: user_input[CONF_EMULATE_HARDWARE],
             }
-            new_addon_config.pop(CONF_ADDON_NETWORK_KEY, None)
 
             if new_addon_config != addon_config:
                 if addon_info.state == AddonState.RUNNING:
                     self.restart_addon = True
                 # Copy the add-on config to keep the objects separate.
                 self.original_addon_config = dict(addon_config)
+                # Remove legacy network_key
+                new_addon_config.pop(CONF_ADDON_NETWORK_KEY, None)
                 await self._async_set_addon_config(new_addon_config)
 
             if addon_info.state == AddonState.RUNNING and not self.restart_addon:
