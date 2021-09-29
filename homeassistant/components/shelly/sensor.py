@@ -83,6 +83,14 @@ SENSORS: Final = {
         device_class=sensor.DEVICE_CLASS_POWER,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
+    ("device", "voltage"): BlockAttributeDescription(
+        name="Voltage",
+        unit=ELECTRIC_POTENTIAL_VOLT,
+        value=lambda value: round(value, 1),
+        device_class=sensor.DEVICE_CLASS_VOLTAGE,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
+        default_enabled=False,
+    ),
     ("emeter", "voltage"): BlockAttributeDescription(
         name="Voltage",
         unit=ELECTRIC_POTENTIAL_VOLT,
@@ -247,6 +255,7 @@ RPC_SENSORS: Final = {
         value=lambda status, _: round(float(status["voltage"]), 1),
         device_class=sensor.DEVICE_CLASS_VOLTAGE,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
+        default_enabled=False,
     ),
     "energy": RpcAttributeDescription(
         key="switch",

@@ -3,13 +3,13 @@ from __future__ import annotations
 
 from asyncio import Semaphore, coroutines, ensure_future, gather, get_running_loop
 from asyncio.events import AbstractEventLoop
-from collections.abc import Awaitable, Coroutine
+from collections.abc import Awaitable, Callable, Coroutine
 import concurrent.futures
 import functools
 import logging
 import threading
 from traceback import extract_stack
-from typing import Any, Callable, TypeVar
+from typing import Any, TypeVar
 
 _LOGGER = logging.getLogger(__name__)
 

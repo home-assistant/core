@@ -42,7 +42,7 @@ RtmAPI==0.7.2
 WSDiscovery==2.0.0
 
 # homeassistant.components.waze_travel_time
-WazeRouteCalculator==0.12
+WazeRouteCalculator==0.13
 
 # homeassistant.components.abode
 abodepy==1.2.0
@@ -199,6 +199,9 @@ airtouch4pyapi==1.0.5
 # homeassistant.components.ambee
 ambee==0.3.0
 
+# homeassistant.components.amberelectric
+amberelectric==1.0.3
+
 # homeassistant.components.ambiclimate
 ambiclimate==0.2.1
 
@@ -221,7 +224,7 @@ arcam-fmj==0.7.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.22.1
+async-upnp-client==0.22.4
 
 # homeassistant.components.aurora
 auroranoaa==0.0.2
@@ -342,7 +345,7 @@ dynalite_devices==0.1.46
 elgato==2.1.1
 
 # homeassistant.components.elkm1
-elkm1-lib==0.8.10
+elkm1-lib==1.0.0
 
 # homeassistant.components.mobile_app
 emoji==1.5.0
@@ -479,7 +482,7 @@ hlk-sw16==0.0.9
 hole==0.5.1
 
 # homeassistant.components.workday
-holidays==0.11.2
+holidays==0.11.3
 
 # homeassistant.components.frontend
 home-assistant-frontend==20210922.0
@@ -757,9 +760,6 @@ py17track==3.2.1
 
 # homeassistant.components.control4
 pyControl4==0.0.6
-
-# homeassistant.components.tplink
-pyHS100==0.3.5.2
 
 # homeassistant.components.met_eireann
 pyMetEireann==2021.8.0
@@ -1093,6 +1093,9 @@ python-izone==1.1.6
 # homeassistant.components.juicenet
 python-juicenet==1.0.2
 
+# homeassistant.components.tplink
+python-kasa==0.4.0
+
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.8
 
@@ -1236,7 +1239,7 @@ smarthab==0.21
 smhi-pkg==1.0.15
 
 # homeassistant.components.sonos
-soco==0.23.3
+soco==0.24.0
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
@@ -1400,7 +1403,7 @@ yalexs==1.1.13
 yeelight==0.7.5
 
 # homeassistant.components.youless
-youless-api==0.12
+youless-api==0.13
 
 # homeassistant.components.zeroconf
 zeroconf==0.36.7

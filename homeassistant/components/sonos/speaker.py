@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
+from collections.abc import Callable, Coroutine
 import contextlib
 import datetime
 from functools import partial
 import logging
-from typing import Any, Callable
+from typing import Any
 import urllib.parse
 
 import async_timeout
@@ -177,6 +177,7 @@ class SonosSpeaker:
         # Device information
         self.mac_address = speaker_info["mac_address"]
         self.model_name = speaker_info["model_name"]
+        self.uid = speaker_info["uid"]
         self.version = speaker_info["display_version"]
         self.zone_name = speaker_info["zone_name"]
 
@@ -450,7 +451,9 @@ class SonosSpeaker:
         """Add the soco instance associated with the event to the callback."""
         if not (event_id := event.variables.get("favorites_update_id")):
             return
-        self.favorites.async_handle_event(event_id, self.soco)
+        if not (container_ids := event.variables.get("container_update_i_ds")):
+            return
+        self.favorites.async_handle_event(event_id, container_ids, self.soco)
 
     @callback
     def async_dispatch_media_update(self, event: SonosEvent) -> None:

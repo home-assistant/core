@@ -126,7 +126,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.telegram_bot.*",
     "homeassistant.components.template.*",
     "homeassistant.components.toon.*",
-    "homeassistant.components.tplink.*",
     "homeassistant.components.unifi.*",
     "homeassistant.components.upnp.*",
     "homeassistant.components.vera.*",
