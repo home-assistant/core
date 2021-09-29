@@ -54,7 +54,6 @@ QUERY_STATISTICS = [
     Statistics.last_reset,
     Statistics.state,
     Statistics.sum,
-    Statistics.sum_increase,
 ]
 
 QUERY_STATISTICS_SHORT_TERM = [
@@ -66,7 +65,6 @@ QUERY_STATISTICS_SHORT_TERM = [
     StatisticsShortTerm.last_reset,
     StatisticsShortTerm.state,
     StatisticsShortTerm.sum,
-    StatisticsShortTerm.sum_increase,
 ]
 
 QUERY_STATISTICS_SUMMARY_MEAN = [
@@ -82,7 +80,6 @@ QUERY_STATISTICS_SUMMARY_SUM = [
     StatisticsShortTerm.last_reset,
     StatisticsShortTerm.state,
     StatisticsShortTerm.sum,
-    StatisticsShortTerm.sum_increase,
     func.row_number()
     .over(
         partition_by=StatisticsShortTerm.metadata_id,
@@ -308,14 +305,13 @@ def compile_hourly_statistics(
 
     if stats:
         for stat in stats:
-            metadata_id, start, last_reset, state, _sum, sum_increase, _ = stat
+            metadata_id, start, last_reset, state, _sum, _ = stat
             if metadata_id in summary:
                 summary[metadata_id].update(
                     {
                         "last_reset": process_timestamp(last_reset),
                         "state": state,
                         "sum": _sum,
-                        "sum_increase": sum_increase,
                     }
                 )
             else:
@@ -324,7 +320,6 @@ def compile_hourly_statistics(
                     "last_reset": process_timestamp(last_reset),
                     "state": state,
                     "sum": _sum,
-                    "sum_increase": sum_increase,
                 }
 
     # Insert compiled hourly statistics in the database
@@ -693,9 +688,7 @@ def _sorted_statistics_to_dict(
                         db_state.last_reset
                     ),
                     "state": convert(db_state.state, units),
-                    "sum": (_sum := convert(db_state.sum, units)),
-                    "sum_increase": (inc := convert(db_state.sum_increase, units)),
-                    "sum_decrease": None if _sum is None or inc is None else inc - _sum,
+                    "sum": convert(db_state.sum, units),
                 }
             )
 

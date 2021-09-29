@@ -502,15 +502,6 @@ def _apply_update(instance, session, new_version, old_version):  # noqa: C901
                 ],
             )
     elif new_version == 21:
-        if engine.dialect.name in ["mysql", "oracle", "postgresql"]:
-            data_type = "DOUBLE PRECISION"
-        else:
-            data_type = "FLOAT"
-        _add_columns(
-            connection,
-            "statistics",
-            [f"sum_increase {data_type}"],
-        )
         # Try to change the character set of the statistic_meta table
         if engine.dialect.name == "mysql":
             for table in ("events", "states", "statistics_meta"):
@@ -591,7 +582,6 @@ def _apply_update(instance, session, new_version, old_version):  # noqa: C901
                         last_reset=last_statistic.last_reset,
                         state=last_statistic.state,
                         sum=last_statistic.sum,
-                        sum_increase=last_statistic.sum_increase,
                     )
                 )
     else:
