@@ -37,7 +37,6 @@ from homeassistant.const import (
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry, entity_registry
@@ -51,6 +50,7 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     LOGGER as _LOGGER,
+    MEDIA_TYPE_MAP,
 )
 from .data import EventListenAddr, get_domain_data
 
@@ -389,11 +389,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
         domain_data = get_domain_data(self.hass)
         await domain_data.async_release_event_notifier(self._event_addr)
 
-    @property
-    def available(self) -> bool:
-        """Device is available when we have a connection to it."""
-        return self._device is not None and self._device.profile_device.available
-
     async def async_update(self) -> None:
         """Retrieve the latest data."""
         if not self._device:
@@ -425,6 +420,44 @@ class DlnaDmrEntity(MediaPlayerEntity):
             # Indicates a failure to resubscribe, check if device is still available
             self.check_available = True
         self.schedule_update_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Device is available when we have a connection to it."""
+        return self._device is not None and self._device.profile_device.available
+
+    @property
+    def unique_id(self) -> str:
+        """Report the UDN (Unique Device Name) as this entity's unique ID."""
+        return self.udn
+
+    @property
+    def usn(self) -> str:
+        """Get the USN based on the UDN (Unique Device Name) and device type."""
+        return f"{self.udn}::{self.device_type}"
+
+    @property
+    def state(self) -> str | None:
+        """State of the player."""
+        if not self._device or not self.available:
+            return STATE_OFF
+        if self._device.transport_state is None:
+            return STATE_ON
+        if self._device.transport_state in (
+            TransportState.PLAYING,
+            TransportState.TRANSITIONING,
+        ):
+            return STATE_PLAYING
+        if self._device.transport_state in (
+            TransportState.PAUSED_PLAYBACK,
+            TransportState.PAUSED_RECORDING,
+        ):
+            return STATE_PAUSED
+        if self._device.transport_state == TransportState.VENDOR_DEFINED:
+            # Unable to map this state to anything reasonable, so it's "Unknown"
+            return None
+
+        return STATE_IDLE
 
     @property
     def supported_features(self) -> int:
@@ -552,7 +585,8 @@ class DlnaDmrEntity(MediaPlayerEntity):
         """Title of current playing media."""
         if not self._device:
             return None
-        return self._device.media_title
+        # Use the best available title
+        return self._device.media_program_title or self._device.media_title
 
     @property
     def media_image_url(self) -> str | None:
@@ -562,26 +596,18 @@ class DlnaDmrEntity(MediaPlayerEntity):
         return self._device.media_image_url
 
     @property
-    def state(self) -> str:
-        """State of the player."""
-        if not self._device or not self.available:
-            return STATE_OFF
-        if self._device.transport_state is None:
-            return STATE_ON
-        if self._device.transport_state in (
-            TransportState.PLAYING,
-            TransportState.TRANSITIONING,
-        ):
-            return STATE_PLAYING
-        if self._device.transport_state in (
-            TransportState.PAUSED_PLAYBACK,
-            TransportState.PAUSED_RECORDING,
-        ):
-            return STATE_PAUSED
-        if self._device.transport_state == TransportState.VENDOR_DEFINED:
-            return STATE_UNKNOWN
+    def media_content_id(self) -> str | None:
+        """Content ID of current playing media."""
+        if not self._device:
+            return None
+        return self._device.current_track_uri
 
-        return STATE_IDLE
+    @property
+    def media_content_type(self) -> str | None:
+        """Content type of current playing media."""
+        if not self._device or not self._device.media_class:
+            return None
+        return MEDIA_TYPE_MAP.get(self._device.media_class)
 
     @property
     def media_duration(self) -> int | None:
@@ -608,11 +634,80 @@ class DlnaDmrEntity(MediaPlayerEntity):
         return self._device.media_position_updated_at
 
     @property
-    def unique_id(self) -> str:
-        """Report the UDN (Unique Device Name) as this entity's unique ID."""
-        return self.udn
+    def media_artist(self) -> str | None:
+        """Artist of current playing media, music track only."""
+        if not self._device:
+            return None
+        return self._device.media_artist
 
     @property
-    def usn(self) -> str:
-        """Get the USN based on the UDN (Unique Device Name) and device type."""
-        return f"{self.udn}::{self.device_type}"
+    def media_album_name(self) -> str | None:
+        """Album name of current playing media, music track only."""
+        if not self._device:
+            return None
+        return self._device.media_album_name
+
+    @property
+    def media_album_artist(self) -> str | None:
+        """Album artist of current playing media, music track only."""
+        if not self._device:
+            return None
+        return self._device.media_album_artist
+
+    @property
+    def media_track(self) -> int | None:
+        """Track number of current playing media, music track only."""
+        if not self._device:
+            return None
+        return self._device.media_track_number
+
+    @property
+    def media_series_title(self) -> str | None:
+        """Title of series of current playing media, TV show only."""
+        if not self._device:
+            return None
+        return self._device.media_series_title
+
+    @property
+    def media_season(self) -> str | None:
+        """Season number, starting at 1, of current playing media, TV show only."""
+        if not self._device:
+            return None
+        # Some DMRs, like Kodi, leave this as 0 and encode the season & episode
+        # in the episode_number metadata, as {season:d}{episode:02d}
+        if (
+            not self._device.media_season_number
+            or self._device.media_season_number == "0"
+        ) and self._device.media_episode_number:
+            try:
+                episode = int(self._device.media_episode_number, 10)
+                if episode > 100:
+                    return str(episode // 100)
+            except ValueError:
+                pass
+        return self._device.media_season_number
+
+    @property
+    def media_episode(self) -> str | None:
+        """Episode number of current playing media, TV show only."""
+        if not self._device:
+            return None
+        # Complement to media_season math above
+        if (
+            not self._device.media_season_number
+            or self._device.media_season_number == "0"
+        ) and self._device.media_episode_number:
+            try:
+                episode = int(self._device.media_episode_number, 10)
+                if episode > 100:
+                    return str(episode % 100)
+            except ValueError:
+                pass
+        return self._device.media_episode_number
+
+    @property
+    def media_channel(self) -> str | None:
+        """Channel name currently playing."""
+        if not self._device:
+            return None
+        return self._device.media_channel_name
