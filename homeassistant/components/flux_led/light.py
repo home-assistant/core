@@ -56,6 +56,7 @@ from .const import (
     CONF_CUSTOM_EFFECT_TRANSITION,
     CONF_SPEED_PCT,
     CONF_TRANSITION,
+    DEFAULT_EFFECT_SPEED,
     DOMAIN,
     MODE_AUTO,
     MODE_RGB,
@@ -207,16 +208,17 @@ async def async_setup_entry(
         "set_custom_effect",
     )
 
+    options = entry.options
     async_add_entities(
         [
             FluxLight(
                 coordinator,
                 entry.unique_id,
                 entry.data[CONF_NAME],
-                entry.options[CONF_MODE],
-                entry.options[CONF_CUSTOM_EFFECT_COLORS],
-                entry.options[CONF_CUSTOM_EFFECT_SPEED_PCT],
-                entry.options[CONF_CUSTOM_EFFECT_TRANSITION],
+                options.get(CONF_MODE, MODE_AUTO),
+                options.get(CONF_CUSTOM_EFFECT_COLORS, []),
+                options.get(CONF_CUSTOM_EFFECT_SPEED_PCT, DEFAULT_EFFECT_SPEED),
+                options.get(CONF_CUSTOM_EFFECT_TRANSITION, TRANSITION_GRADUAL),
             )
         ]
     )
