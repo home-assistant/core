@@ -201,6 +201,7 @@ FLOWS = [
     "ondilo_ico",
     "onewire",
     "onvif",
+    "opengarage",
     "opentherm_gw",
     "openuv",
     "openweathermap",
