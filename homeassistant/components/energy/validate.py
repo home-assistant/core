@@ -272,12 +272,15 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
 
                 if flow.get("stat_cost") is not None:
                     _async_validate_cost_stat(hass, flow["stat_cost"], source_result)
+                elif flow.get("entity_energy_price") is not None:
+                    _async_validate_price_entity(
+                        hass, flow["entity_energy_price"], source_result
+                    )
 
-                else:
-                    if flow.get("entity_energy_price") is not None:
-                        _async_validate_price_entity(
-                            hass, flow["entity_energy_price"], source_result
-                        )
+                if (
+                    flow.get("entity_energy_price") is not None
+                    or flow.get("number_energy_price") is not None
+                ):
                     _async_validate_auto_generated_cost_entity(
                         hass,
                         hass.data[DOMAIN]["cost_sensors"][flow["stat_energy_from"]],
@@ -298,12 +301,15 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                     _async_validate_cost_stat(
                         hass, flow["stat_compensation"], source_result
                     )
+                elif flow.get("entity_energy_price") is not None:
+                    _async_validate_price_entity(
+                        hass, flow["entity_energy_price"], source_result
+                    )
 
-                else:
-                    if flow.get("entity_energy_price") is not None:
-                        _async_validate_price_entity(
-                            hass, flow["entity_energy_price"], source_result
-                        )
+                if (
+                    flow.get("entity_energy_price") is not None
+                    or flow.get("number_energy_price") is not None
+                ):
                     _async_validate_auto_generated_cost_entity(
                         hass,
                         hass.data[DOMAIN]["cost_sensors"][flow["stat_energy_to"]],
@@ -322,12 +328,15 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
 
             if source.get("stat_cost") is not None:
                 _async_validate_cost_stat(hass, source["stat_cost"], source_result)
+            elif source.get("entity_energy_price") is not None:
+                _async_validate_price_entity(
+                    hass, source["entity_energy_price"], source_result
+                )
 
-            else:
-                if source.get("entity_energy_price") is not None:
-                    _async_validate_price_entity(
-                        hass, source["entity_energy_price"], source_result
-                    )
+            if (
+                source.get("entity_energy_price") is not None
+                or source.get("number_energy_price") is not None
+            ):
                 _async_validate_auto_generated_cost_entity(
                     hass,
                     hass.data[DOMAIN]["cost_sensors"][source["stat_energy_from"]],
