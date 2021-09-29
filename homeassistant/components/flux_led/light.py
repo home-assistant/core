@@ -47,23 +47,31 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.color as color_util
 
 from . import FluxLedUpdateCoordinator
-from .const import CONF_AUTOMATIC_ADD, CONF_CUSTOM_EFFECT, DOMAIN
+from .const import (
+    CONF_AUTOMATIC_ADD,
+    CONF_COLORS,
+    CONF_CUSTOM_EFFECT,
+    CONF_CUSTOM_EFFECT_COLORS,
+    CONF_CUSTOM_EFFECT_SPEED_PCT,
+    CONF_CUSTOM_EFFECT_TRANSITION,
+    CONF_SPEED_PCT,
+    CONF_TRANSITION,
+    DOMAIN,
+    MODE_AUTO,
+    MODE_RGB,
+    MODE_RGBCW,
+    MODE_RGBW,
+    MODE_RGBWW,
+    MODE_WHITE,
+    TRANSITION_GRADUAL,
+    TRANSITION_JUMP,
+    TRANSITION_STROBE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_COLORS = "colors"
-CONF_SPEED_PCT = "speed_pct"
-CONF_TRANSITION = "transition"
-
 SUPPORT_FLUX_LED = SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_COLOR
-MODE_RGB = "rgb"
-MODE_RGBW = "rgbw"
-MODE_RGBCW = "rgbcw"
-MODE_RGBWW = "rgbww"
 
-# This mode enables white value to be controlled by brightness.
-# RGB value is ignored when this mode is specified.
-MODE_WHITE = "w"
 
 # Constant color temp values for 2 flux_led special modes
 # Warm-white and Cool-white modes
@@ -115,9 +123,6 @@ EFFECT_MAP = {
 }
 EFFECT_CUSTOM_CODE = 0x60
 
-TRANSITION_GRADUAL = "gradual"
-TRANSITION_JUMP = "jump"
-TRANSITION_STROBE = "strobe"
 
 FLUX_EFFECT_LIST = sorted(EFFECT_MAP) + [EFFECT_RANDOM]
 
@@ -208,6 +213,10 @@ async def async_setup_entry(
                 coordinator,
                 entry.unique_id,
                 entry.data[CONF_NAME],
+                entry.options[CONF_MODE],
+                entry.options[CONF_CUSTOM_EFFECT_COLORS],
+                entry.options[CONF_CUSTOM_EFFECT_SPEED_PCT],
+                entry.options[CONF_CUSTOM_EFFECT_TRANSITION],
             )
         ]
     )
@@ -223,6 +232,10 @@ class FluxLight(CoordinatorEntity, LightEntity):
         coordinator: FluxLedUpdateCoordinator,
         unique_id: str | None,
         name: str,
+        mode: str,
+        custom_effect_colors: str,
+        custom_effect_speed_pct: int,
+        custom_effect_transition: str,
     ):
         """Initialize the light."""
         super().__init__(coordinator)
@@ -236,7 +249,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
         self._last_brightness = None
         self._last_hs_color: tuple[float, float] | None = None
         self._ip_address = coordinator.host
-        self._mode: str | None = None
+        self._mode: str = mode or MODE_AUTO
         self._bulb: WifiLedBulb = coordinator.device
 
     @property
@@ -403,17 +416,18 @@ class FluxLight(CoordinatorEntity, LightEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         """Fetch the data from this light bulb."""
-        if self._bulb.protocol:
-            if self._bulb.raw_state[9] == self._bulb.raw_state[11]:
-                self._mode = MODE_RGBWW
+        if not self._mode or self._mode == MODE_AUTO:
+            if self._bulb.protocol:
+                if self._bulb.raw_state[9] == self._bulb.raw_state[11]:
+                    self._mode = MODE_RGBWW
+                else:
+                    self._mode = MODE_RGBCW
+            elif self._bulb.mode == "ww":
+                self._mode = MODE_WHITE
+            elif self._bulb.rgbwcapable and not self._bulb.rgbwprotocol:
+                self._mode = MODE_RGBW
             else:
-                self._mode = MODE_RGBCW
-        elif self._bulb.mode == "ww":
-            self._mode = MODE_WHITE
-        elif self._bulb.rgbwcapable and not self._bulb.rgbwprotocol:
-            self._mode = MODE_RGBW
-        else:
-            self._mode = MODE_RGB
+                self._mode = MODE_RGB
 
         self._hs_color = color_util.color_RGB_to_hs(*self._bulb.getRgb())
 

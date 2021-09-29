@@ -1,7 +1,6 @@
 """Config flow for Flux LED/MagicLight."""
 from __future__ import annotations
 
-import copy
 import logging
 from typing import Any
 
@@ -14,24 +13,28 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODE, CONF_NAME, CONF_
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import async_discover_devices
 from .const import (
-    CONF_AUTOMATIC_ADD,
-    CONF_CONFIGURE_DEVICE,
-    CONF_CUSTOM_EFFECT,
-    CONF_DEVICES,
-    CONF_EFFECT_SPEED,
-    CONF_REMOVE_DEVICE,
+    CONF_CUSTOM_EFFECT_COLORS,
+    CONF_CUSTOM_EFFECT_SPEED_PCT,
+    CONF_CUSTOM_EFFECT_TRANSITION,
     DEFAULT_EFFECT_SPEED,
     DOMAIN,
     FLUX_HOST,
     FLUX_MAC,
     FLUX_MODEL,
-    SIGNAL_ADD_DEVICE,
-    SIGNAL_REMOVE_DEVICE,
+    MODE_AUTO,
+    MODE_RGB,
+    MODE_RGBCW,
+    MODE_RGBW,
+    MODE_RGBWW,
+    MODE_WHITE,
+    TRANSITION_GRADUAL,
+    TRANSITION_JUMP,
+    TRANSITION_STROBE,
 )
 
 CONF_DEVICE = "device"
@@ -71,8 +74,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_PROTOCOL: user_input.get(CONF_PROTOCOL),
             },
             options={
-                CONF_CUSTOM_EFFECT: user_input[CONF_CUSTOM_EFFECT],
                 CONF_MODE: user_input[CONF_MODE],
+                CONF_CUSTOM_EFFECT_COLORS: user_input[CONF_CUSTOM_EFFECT_COLORS],
+                CONF_CUSTOM_EFFECT_SPEED_PCT: user_input[CONF_CUSTOM_EFFECT_SPEED_PCT],
+                CONF_CUSTOM_EFFECT_TRANSITION: user_input[
+                    CONF_CUSTOM_EFFECT_TRANSITION
+                ],
             },
         )
 
@@ -204,125 +211,55 @@ class OptionsFlow(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
-        return await self.async_step_prompt_options()
+        return await self.async_step_configure()
 
-    async def async_step_prompt_options(self, user_input=None):
-        """Manage the options."""
-
+    async def async_step_configure(self, user_input=None):
+        """Configure the options."""
         errors = {}
-
         if user_input is not None:
-            self._global_options = {
-                CONF_AUTOMATIC_ADD: user_input[CONF_AUTOMATIC_ADD],
-                CONF_EFFECT_SPEED: user_input[CONF_EFFECT_SPEED],
+            return self.async_create_entry(title="", data=user_input)
+
+        options = self._config_entry.options
+        options_schema = vol.Schema(
+            {
+                vol.Optional(CONF_MODE, default=MODE_AUTO): vol.All(
+                    cv.string,
+                    vol.In(
+                        [
+                            MODE_AUTO,
+                            MODE_RGBW,
+                            MODE_RGB,
+                            MODE_RGBCW,
+                            MODE_RGBWW,
+                            MODE_WHITE,
+                        ]
+                    ),
+                ),
+                vol.Optional(
+                    CONF_CUSTOM_EFFECT_SPEED_PCT,
+                    default=options.get(
+                        CONF_CUSTOM_EFFECT_SPEED_PCT, DEFAULT_EFFECT_SPEED
+                    ),
+                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
+                vol.Optional(
+                    CONF_CUSTOM_EFFECT_COLORS,
+                    default=options.get(CONF_CUSTOM_EFFECT_COLORS),
+                ): vol.All(
+                    cv.ensure_list,
+                    vol.Length(min=1, max=16),
+                    [
+                        vol.All(
+                            vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
+                            vol.Coerce(tuple),
+                        )
+                    ],
+                ),
+                vol.Optional(
+                    CONF_CUSTOM_EFFECT_TRANSITION, default=TRANSITION_GRADUAL
+                ): vol.In([TRANSITION_GRADUAL, TRANSITION_JUMP, TRANSITION_STROBE]),
             }
-
-            if CONF_CONFIGURE_DEVICE in user_input:
-                self._configure_device = user_input[CONF_CONFIGURE_DEVICE]
-                return await self.async_step_configure_device()
-
-            if CONF_REMOVE_DEVICE in user_input:
-                device_id = user_input[CONF_REMOVE_DEVICE]
-                config_data = copy.deepcopy(dict(self._config_entry.data))
-                del config_data[CONF_DEVICES][device_id]
-
-                self.hass.config_entries.async_update_entry(
-                    self._config_entry, data=config_data
-                )
-
-                async_dispatcher_send(
-                    self.hass, SIGNAL_REMOVE_DEVICE, {"device_id": device_id}
-                )
-
-                options_data = self._config_entry.options.copy()
-                if device_id in options_data:
-                    del options_data[device_id]
-                options_data["global"] = self._global_options
-
-                return self.async_create_entry(title="", data=options_data)
-
-            if CONF_HOST in user_input:
-                device_name = (
-                    user_input[CONF_NAME]
-                    if CONF_NAME in user_input
-                    else user_input[CONF_HOST]
-                )
-                device_id = user_input[CONF_HOST].replace(".", "_")
-                device_data = {
-                    CONF_HOST: user_input[CONF_HOST],
-                    CONF_NAME: device_name,
-                }
-                config_data = copy.deepcopy(dict(self._config_entry.data))
-                config_data[CONF_DEVICES][device_id] = device_data
-
-                self.hass.config_entries.async_update_entry(
-                    self._config_entry, data=config_data
-                )
-
-                async_dispatcher_send(
-                    self.hass, SIGNAL_ADD_DEVICE, {device_id: device_data}
-                )
-
-            options_data = self._config_entry.options.copy()
-            options_data["global"] = self._global_options
-            return self.async_create_entry(title="", data=options_data)
-
-        existing_devices = {}
-
-        for device_id, device in self._config_entry.data[CONF_DEVICES].items():
-            existing_devices[device_id] = device.get(CONF_NAME, device[CONF_HOST])
-
-        options = {
-            vol.Optional(
-                CONF_AUTOMATIC_ADD,
-                default=self._config_entry.options.get("global", {}).get(
-                    CONF_AUTOMATIC_ADD, self._config_entry.data[CONF_AUTOMATIC_ADD]
-                ),
-            ): bool,
-            vol.Optional(
-                CONF_EFFECT_SPEED,
-                default=self._config_entry.options.get("global", {}).get(
-                    CONF_EFFECT_SPEED, DEFAULT_EFFECT_SPEED
-                ),
-            ): vol.All(
-                vol.Coerce(int),
-                vol.Range(min=1, max=100),
-            ),
-            vol.Optional(CONF_HOST): str,
-            vol.Optional(CONF_NAME): str,
-            vol.Optional(CONF_CONFIGURE_DEVICE): vol.In(existing_devices),
-            vol.Optional(CONF_REMOVE_DEVICE): vol.In(existing_devices),
-        }
-
-        return self.async_show_form(
-            step_id="prompt_options", data_schema=vol.Schema(options), errors=errors
         )
 
-    async def async_step_configure_device(self, user_input=None):
-        """Manage the options."""
-
-        errors = {}
-
-        if user_input is not None:
-            options_data = self._config_entry.options.copy()
-            options_data[self._configure_device] = {
-                CONF_EFFECT_SPEED: user_input[CONF_EFFECT_SPEED]
-            }
-            options_data["global"] = self._global_options
-            return self.async_create_entry(title="", data=options_data)
-
-        options = {
-            vol.Required(
-                CONF_EFFECT_SPEED,
-                default=self._config_entry.options.get(self._configure_device, {}).get(
-                    CONF_EFFECT_SPEED, DEFAULT_EFFECT_SPEED
-                ),
-            ): vol.All(
-                vol.Coerce(int),
-                vol.Range(min=1, max=100),
-            )
-        }
-
         return self.async_show_form(
-            step_id="configure_device", data_schema=vol.Schema(options), errors=errors
+            step_id="configure", data_schema=options_schema, errors=errors
         )

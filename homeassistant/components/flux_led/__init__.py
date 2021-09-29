@@ -26,7 +26,20 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_CUSTOM_EFFECT, DOMAIN, FLUX_HOST
+from .const import (
+    CONF_COLORS,
+    CONF_CUSTOM_EFFECT,
+    CONF_CUSTOM_EFFECT_COLORS,
+    CONF_CUSTOM_EFFECT_SPEED_PCT,
+    CONF_CUSTOM_EFFECT_TRANSITION,
+    CONF_SPEED_PCT,
+    CONF_TRANSITION,
+    DEFAULT_EFFECT_SPEED,
+    DOMAIN,
+    FLUX_HOST,
+    MODE_AUTO,
+    TRANSITION_GRADUAL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,6 +85,7 @@ def async_import_from_yaml(
                 " %s has been migrated to a config entry and can be safely removed",
                 host,
             )
+            custom_effects = device_config.get(CONF_CUSTOM_EFFECT, {})
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN,
@@ -81,8 +95,14 @@ def async_import_from_yaml(
                         CONF_MAC: discovered_devices_by_host.get(host),
                         CONF_NAME: device_config[CONF_NAME],
                         CONF_PROTOCOL: device_config.get(CONF_PROTOCOL),
-                        CONF_MODE: device_config[ATTR_MODE],
-                        CONF_CUSTOM_EFFECT: device_config.get(CONF_CUSTOM_EFFECT),
+                        CONF_MODE: device_config.get(ATTR_MODE, MODE_AUTO),
+                        CONF_CUSTOM_EFFECT_COLORS: custom_effects.get(CONF_COLORS),
+                        CONF_CUSTOM_EFFECT_SPEED_PCT: custom_effects.get(
+                            CONF_SPEED_PCT, DEFAULT_EFFECT_SPEED
+                        ),
+                        CONF_CUSTOM_EFFECT_TRANSITION: custom_effects.get(
+                            CONF_TRANSITION, TRANSITION_GRADUAL
+                        ),
                     },
                 )
             )
@@ -106,6 +126,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Update listener."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Flux LED/MagicLight from a config entry."""
 
@@ -113,6 +138,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     await coordinator.async_config_entry_first_refresh()
     hass.data[DOMAIN][entry.entry_id] = coordinator
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    entry.async_on_unload(entry.add_update_listener(async_update_listener))
 
     return True
 
