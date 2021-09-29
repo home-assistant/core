@@ -58,6 +58,7 @@ class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         self.entity_description = description
         self._attr_name = f"{DEFAULT_NAME} {description.name}"
         self._attr_unique_id = description.key
+        self._state: StateType = None
         self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self._attr_device_info = {
             "identifiers": {(DOMAIN, "Speed Test")},
@@ -70,10 +71,8 @@ class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         """Return native value for entity."""
         if self.coordinator.data:
             state = self.coordinator.data[self.entity_description.key]
-            self._attr_native_value = cast(
-                StateType, self.entity_description.value(state)
-            )
-        return self._attr_native_value
+            self._state = cast(StateType, self.entity_description.value(state))
+        return self._state
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -101,4 +100,4 @@ class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         await super().async_added_to_hass()
         state = await self.async_get_last_state()
         if state:
-            self._attr_native_value = state.state
+            self._state = state.state
