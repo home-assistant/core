@@ -303,7 +303,7 @@ def _wanted_statistics(entities: list[tuple[str, State]]) -> dict[str, set[str]]
     wanted_statistics = {}
     for entity_id, state in entities:
         state_class = state.attributes[ATTR_STATE_CLASS]
-        device_class = state.attributes[ATTR_DEVICE_CLASS]
+        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
         if device_class in DEVICE_CLASS_STATISTICS[state_class]:
             wanted_statistics[entity_id] = DEVICE_CLASS_STATISTICS[state_class][
                 device_class
