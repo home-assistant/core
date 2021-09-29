@@ -111,9 +111,9 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
     @callback
     def handle_hardware_status_update(self, event: dict[str, Any]) -> None:
         """Handle hardware status update."""
-        if (_state := event[self.entity_description.key]) is None:
+        if (state := event[self.entity_description.key]) is None:
             return
-        self._attr_is_on = _state
+        self._attr_is_on = state
         self._attr_available = True
         self.async_write_ha_state()
 
