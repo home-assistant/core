@@ -171,8 +171,6 @@ def test_compile_hourly_statistics_purged_state_changes(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "sum_decrease": None,
-                "sum_increase": None,
             }
         ]
     }
