@@ -826,7 +826,10 @@ async def test_addon_running(
 ):
     """Test add-on already running on Supervisor."""
     addon_options["device"] = "/test"
-    addon_options["network_key"] = "abc123"
+    addon_options["s0_legacy_key"] = "new123"
+    addon_options["s2_access_control_key"] = "new456"
+    addon_options["s2_authenticated_key"] = "new789"
+    addon_options["s2_unauthenticated_key"] = "new987"
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
@@ -852,7 +855,10 @@ async def test_addon_running(
     assert result["data"] == {
         "url": "ws://host1:3001",
         "usb_path": "/test",
-        "network_key": "abc123",
+        "s0_legacy_key": "new123",
+        "s2_access_control_key": "new456",
+        "s2_authenticated_key": "new789",
+        "s2_unauthenticated_key": "new987",
         "use_addon": True,
         "integration_created_addon": False,
     }
