@@ -312,7 +312,7 @@ async def async_setup_entry(
 class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
     """Define FRITZ!Box connectivity class."""
 
-    connection_type: Literal["dsl"] | None = None
+    entity_description: FritzSensorEntityDescription
 
     def __init__(
         self,
@@ -321,7 +321,7 @@ class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
         description: FritzSensorEntityDescription,
     ) -> None:
         """Init FRITZ!Box connectivity class."""
-        self._entity_description = description
+        self.entity_description = description
         self._last_device_value: str | None = None
         self._attr_available = True
         self._attr_name = f"{device_friendly_name} {description.name}"
@@ -340,7 +340,7 @@ class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
             self._attr_available = False
             return
 
-        assert self._entity_description.value_fn
+        assert self.entity_description.value_fn
         self._attr_native_value = (
             self._last_device_value
-        ) = self._entity_description.value_fn(status, self._last_device_value)
+        ) = self.entity_description.value_fn(status, self._last_device_value)

@@ -54,8 +54,8 @@ async def async_setup_entry(
         return
 
     entities = [
-        FritzBoxBinarySensor(fritzbox_tools, entry.title, sensor_type)
-        for sensor_type in SENSOR_TYPES
+        FritzBoxBinarySensor(fritzbox_tools, entry.title, description)
+        for description in SENSOR_TYPES
     ]
 
     async_add_entities(entities, True)
