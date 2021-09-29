@@ -120,6 +120,7 @@ EFFECT_MAP = {
     EFFECT_WHITE_STROBE: 0x37,
     EFFECT_COLORJUMP: 0x38,
 }
+EFFECT_ID_NAME = {v: k for k, v in EFFECT_MAP.items()}
 EFFECT_CUSTOM_CODE = 0x60
 
 
@@ -312,7 +313,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
         """Return the attributes."""
         return {
             "ip_address": self._ip_address,
-            "current_effect": self._bulb.raw_state[3],
+            "current_effect": EFFECT_ID_NAME.get(self._bulb.raw_state[3]),
         }
 
     @property
