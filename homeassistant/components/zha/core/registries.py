@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import collections
-from typing import Callable, Dict
+from collections.abc import Callable
+from typing import Dict
 
 import attr
 from zigpy import zcl
