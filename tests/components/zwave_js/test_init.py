@@ -383,8 +383,27 @@ async def test_addon_info_failure(
 
 
 @pytest.mark.parametrize(
-    "old_device, new_device, old_network_key, new_network_key",
-    [("/old_test", "/new_test", "old123", "new123")],
+    (
+        "old_device, new_device, "
+        "old_s0_legacy_key, new_s0_legacy_key, "
+        "old_s2_access_control_key, new_s2_access_control_key, "
+        "old_s2_authenticated_key, new_s2_authenticated_key, "
+        "old_s2_unauthenticated_key, new_s2_unauthenticated_key"
+    ),
+    [
+        (
+            "/old_test",
+            "/new_test",
+            "old123",
+            "new123",
+            "old456",
+            "new456",
+            "old789",
+            "new789",
+            "old987",
+            "new987",
+        )
+    ],
 )
 async def test_addon_options_changed(
     hass,
@@ -396,12 +415,21 @@ async def test_addon_options_changed(
     start_addon,
     old_device,
     new_device,
-    old_network_key,
-    new_network_key,
+    old_s0_legacy_key,
+    new_s0_legacy_key,
+    old_s2_access_control_key,
+    new_s2_access_control_key,
+    old_s2_authenticated_key,
+    new_s2_authenticated_key,
+    old_s2_unauthenticated_key,
+    new_s2_unauthenticated_key,
 ):
     """Test update config entry data on entry setup if add-on options changed."""
     addon_options["device"] = new_device
-    addon_options["network_key"] = new_network_key
+    addon_options["s0_legacy_key"] = new_s0_legacy_key
+    addon_options["s2_access_control_key"] = new_s2_access_control_key
+    addon_options["s2_authenticated_key"] = new_s2_authenticated_key
+    addon_options["s2_unauthenticated_key"] = new_s2_unauthenticated_key
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
@@ -409,7 +437,10 @@ async def test_addon_options_changed(
             "url": "ws://host1:3001",
             "use_addon": True,
             "usb_path": old_device,
-            "network_key": old_network_key,
+            "s0_legacy_key": old_s0_legacy_key,
+            "s2_access_control_key": old_s2_access_control_key,
+            "s2_authenticated_key": old_s2_authenticated_key,
+            "s2_unauthenticated_key": old_s2_unauthenticated_key,
         },
     )
     entry.add_to_hass(hass)
@@ -419,7 +450,10 @@ async def test_addon_options_changed(
 
     assert entry.state == ConfigEntryState.LOADED
     assert entry.data["usb_path"] == new_device
-    assert entry.data["network_key"] == new_network_key
+    assert entry.data["s0_legacy_key"] == new_s0_legacy_key
+    assert entry.data["s2_access_control_key"] == new_s2_access_control_key
+    assert entry.data["s2_authenticated_key"] == new_s2_authenticated_key
+    assert entry.data["s2_unauthenticated_key"] == new_s2_unauthenticated_key
     assert install_addon.call_count == 0
     assert start_addon.call_count == 0
 
