@@ -102,7 +102,7 @@ def async_import_from_yaml(
                         CONF_NAME: device_config[CONF_NAME],
                         CONF_PROTOCOL: device_config.get(CONF_PROTOCOL),
                         CONF_MODE: device_config.get(ATTR_MODE, MODE_AUTO),
-                        CONF_CUSTOM_EFFECT_COLORS: custom_effects.get(CONF_COLORS),
+                        CONF_CUSTOM_EFFECT_COLORS: str(custom_effects.get(CONF_COLORS)),
                         CONF_CUSTOM_EFFECT_SPEED_PCT: custom_effects.get(
                             CONF_SPEED_PCT, DEFAULT_EFFECT_SPEED
                         ),
