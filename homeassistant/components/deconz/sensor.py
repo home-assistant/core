@@ -1,6 +1,7 @@
 """Support for deCONZ sensors."""
 from pydeconz.sensor import (
     AirQuality,
+    Battery,
     Consumption,
     Daylight,
     Humidity,
