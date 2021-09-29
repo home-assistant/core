@@ -240,12 +240,13 @@ def _get_states_with_session(
         if run is None:
             return []
 
-    # We have more than one entity to look at (most commonly we want
-    # all entities,) so we need to do a search on all states since the
-    # last recorder run started.
+    # We have more than one entity to look at so we need to do a query on states
+    # since the last recorder run started.
     query = session.query(*QUERY_STATES)
 
     if entity_ids:
+        # We got an include-list of entities, accelerate the query by filtering already
+        # in the inner query.
         most_recent_state_ids = (
             session.query(
                 func.max(States.state_id).label("max_state_id"),
@@ -264,6 +265,10 @@ def _get_states_with_session(
             States.state_id == most_recent_state_ids.c.max_state_id,
         )
     else:
+        # We did not get an include-list of entities, query all states in the inner
+        # query, then filter out unwanted domains as well as applying the custom filter.
+        # This filtering can't be done in the inner query because the domain column is
+        # not indexed and we can't control what's in the custom filter.
         most_recent_states_by_date = (
             session.query(
                 States.entity_id.label("max_entity_id"),
