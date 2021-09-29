@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -148,7 +147,7 @@ SENSOR_DESCRIPTIONS = (
         name="Daily Rain",
         icon="mdi:water",
         native_unit_of_measurement=PRECIPITATION_INCHES,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_DEWPOINT,
@@ -162,7 +161,7 @@ SENSOR_DESCRIPTIONS = (
         name="Event Rain",
         icon="mdi:water",
         native_unit_of_measurement=PRECIPITATION_INCHES,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_FEELSLIKE,
@@ -176,7 +175,7 @@ SENSOR_DESCRIPTIONS = (
         name="Hourly Rain Rate",
         icon="mdi:water",
         native_unit_of_measurement=PRECIPITATION_INCHES_PER_HOUR,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITY10,
@@ -261,14 +260,14 @@ SENSOR_DESCRIPTIONS = (
         name="Max Gust",
         icon="mdi:weather-windy",
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_MONTHLYRAININ,
         name="Monthly Rain",
         icon="mdi:water",
         native_unit_of_measurement=PRECIPITATION_INCHES,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_PM25_24H,
@@ -531,7 +530,7 @@ SENSOR_DESCRIPTIONS = (
         name="Lifetime Rain",
         icon="mdi:water",
         native_unit_of_measurement=PRECIPITATION_INCHES,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_UV,
@@ -545,7 +544,7 @@ SENSOR_DESCRIPTIONS = (
         name="Weekly Rain",
         icon="mdi:water",
         native_unit_of_measurement=PRECIPITATION_INCHES,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_WINDDIR,
@@ -604,7 +603,7 @@ SENSOR_DESCRIPTIONS = (
         name="Yearly Rain",
         icon="mdi:water",
         native_unit_of_measurement=PRECIPITATION_INCHES,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
 )
 
