@@ -1625,13 +1625,20 @@ async def different_device_server_version(*args):
             {},
             {
                 "device": "/test",
-                "network_key": "abc123",
+                "network_key": "old123",
+                "s0_legacy_key": "old123",
+                "s2_access_control_key": "old456",
+                "s2_authenticated_key": "old789",
+                "s2_unauthenticated_key": "old987",
                 "log_level": "info",
                 "emulate_hardware": False,
             },
             {
                 "usb_path": "/new",
-                "network_key": "new123",
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
                 "log_level": "info",
                 "emulate_hardware": False,
             },
@@ -1704,6 +1711,9 @@ async def test_options_different_device(
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     await hass.async_block_till_done()
+
+    # Legacy network key is not reset.
+    old_addon_options.pop("network_key")
 
     assert set_addon_options.call_count == 2
     assert set_addon_options.call_args == call(
