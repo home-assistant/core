@@ -80,6 +80,11 @@ def _get_significant_states(
     """
     Return states changes during UTC period start_time - end_time.
 
+    entity_ids is an optional iterable of entities to include in the results.
+
+    filters is an optional SQLAlchemy filter which will be applied to the database
+    queries unless entity_ids is given, in which case its ignored.
+
     Significant states are all states where there is a state change,
     as well as all states from certain domains (for instance
     thermostat so that we get current temperature in our graphs).
@@ -298,9 +303,8 @@ def _get_states_with_session(
             States.state_id == most_recent_state_ids.c.max_state_id,
         )
         query = query.filter(~States.domain.in_(IGNORE_DOMAINS))
-
-    if filters:
-        query = filters.apply(query)
+        if filters:
+            query = filters.apply(query)
 
     return [LazyState(row) for row in execute(query)]
 
