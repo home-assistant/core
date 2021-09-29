@@ -120,7 +120,7 @@ SENSOR_DESCRIPTIONS = (
         name="24 Hr Rain",
         icon="mdi:water",
         native_unit_of_measurement=PRECIPITATION_INCHES,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key=TYPE_BAROMABSIN,
@@ -148,7 +148,7 @@ SENSOR_DESCRIPTIONS = (
         name="Daily Rain",
         icon="mdi:water",
         native_unit_of_measurement=PRECIPITATION_INCHES,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key=TYPE_DEWPOINT,
@@ -176,7 +176,7 @@ SENSOR_DESCRIPTIONS = (
         name="Hourly Rain Rate",
         icon="mdi:water",
         native_unit_of_measurement=PRECIPITATION_INCHES_PER_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITY10,
