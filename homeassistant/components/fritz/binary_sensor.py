@@ -20,7 +20,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-SENSOR_TYPES = (
+SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="is_connected",
         name="Connection",
@@ -53,12 +53,12 @@ async def async_setup_entry(
         # Only routers are supported at the moment
         return
 
-    entities = []
-    for sensor_type in SENSOR_TYPES:
-        entities.append(FritzBoxBinarySensor(fritzbox_tools, entry.title, sensor_type))
+    entities = [
+        FritzBoxBinarySensor(fritzbox_tools, entry.title, sensor_type)
+        for sensor_type in SENSOR_TYPES
+    ]
 
-    if entities:
-        async_add_entities(entities, True)
+    async_add_entities(entities, True)
 
 
 class FritzBoxBinarySensor(FritzBoxBaseEntity, BinarySensorEntity):
@@ -68,15 +68,12 @@ class FritzBoxBinarySensor(FritzBoxBaseEntity, BinarySensorEntity):
         self,
         fritzbox_tools: FritzBoxTools,
         device_friendly_name: str,
-        sensor_type: BinarySensorEntityDescription,
+        description: BinarySensorEntityDescription,
     ) -> None:
         """Init FRITZ!Box connectivity class."""
-        self.entity_description: BinarySensorEntityDescription = sensor_type
-        self._attr_device_class = self.entity_description.device_class
-        self._attr_name = f"{device_friendly_name} {self.entity_description.name}"
-        self._attr_unique_id = (
-            f"{fritzbox_tools.unique_id}-{self.entity_description.key}"
-        )
+        self.entity_description = description
+        self._attr_name = f"{device_friendly_name} {description.name}"
+        self._attr_unique_id = f"{fritzbox_tools.unique_id}-{description.key}"
         super().__init__(fritzbox_tools, device_friendly_name)
 
     def update(self) -> None:

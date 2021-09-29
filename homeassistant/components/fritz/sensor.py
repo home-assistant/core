@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import datetime
 import logging
-from typing import Callable
+from typing import Any, Callable, Literal
 
 from fritzconnection.core.exceptions import (
     FritzActionError,
@@ -141,31 +141,37 @@ def _retrieve_link_attenuation_received_state(
 
 
 @dataclass
-class FritzSensorEntityDescription(SensorEntityDescription):
+class FritzRequireKeysMixin:
     """Fritz sensor data class."""
 
-    state_provider: Callable | None = None
-    connection_type: str | None = None
+    value_fn: Callable[[FritzStatus, Any], Any]
 
 
-SENSOR_TYPES = (
+@dataclass
+class FritzSensorEntityDescription(SensorEntityDescription, FritzRequireKeysMixin):
+    """Describes Fritz sensor entity."""
+
+    connection_type: Literal["dsl"] | None = None
+
+
+SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
     FritzSensorEntityDescription(
         key="external_ip",
         name="External IP",
         icon="mdi:earth",
-        state_provider=_retrieve_external_ip_state,
+        value_fn=_retrieve_external_ip_state,
     ),
     FritzSensorEntityDescription(
         key="device_uptime",
         name="Device Uptime",
         device_class=DEVICE_CLASS_TIMESTAMP,
-        state_provider=_retrieve_device_uptime_state,
+        value_fn=_retrieve_device_uptime_state,
     ),
     FritzSensorEntityDescription(
         key="connection_uptime",
         name="Connection Uptime",
         device_class=DEVICE_CLASS_TIMESTAMP,
-        state_provider=_retrieve_connection_uptime_state,
+        value_fn=_retrieve_connection_uptime_state,
     ),
     FritzSensorEntityDescription(
         key="kb_s_sent",
@@ -173,7 +179,7 @@ SENSOR_TYPES = (
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
         icon="mdi:upload",
-        state_provider=_retrieve_kb_s_sent_state,
+        value_fn=_retrieve_kb_s_sent_state,
     ),
     FritzSensorEntityDescription(
         key="kb_s_received",
@@ -181,21 +187,21 @@ SENSOR_TYPES = (
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
         icon="mdi:download",
-        state_provider=_retrieve_kb_s_received_state,
+        value_fn=_retrieve_kb_s_received_state,
     ),
     FritzSensorEntityDescription(
         key="max_kb_s_sent",
         name="Max Connection Upload Throughput",
         native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
         icon="mdi:upload",
-        state_provider=_retrieve_max_kb_s_sent_state,
+        value_fn=_retrieve_max_kb_s_sent_state,
     ),
     FritzSensorEntityDescription(
         key="max_kb_s_received",
         name="Max Connection Download Throughput",
         native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
         icon="mdi:download",
-        state_provider=_retrieve_max_kb_s_received_state,
+        value_fn=_retrieve_max_kb_s_received_state,
     ),
     FritzSensorEntityDescription(
         key="gb_sent",
@@ -203,7 +209,7 @@ SENSOR_TYPES = (
         state_class=STATE_CLASS_TOTAL_INCREASING,
         native_unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:upload",
-        state_provider=_retrieve_gb_sent_state,
+        value_fn=_retrieve_gb_sent_state,
     ),
     FritzSensorEntityDescription(
         key="gb_received",
@@ -211,14 +217,14 @@ SENSOR_TYPES = (
         state_class=STATE_CLASS_TOTAL_INCREASING,
         native_unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:download",
-        state_provider=_retrieve_gb_received_state,
+        value_fn=_retrieve_gb_received_state,
     ),
     FritzSensorEntityDescription(
         key="link_kb_s_sent",
         name="Link Upload Throughput",
         native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
         icon="mdi:upload",
-        state_provider=_retrieve_link_kb_s_sent_state,
+        value_fn=_retrieve_link_kb_s_sent_state,
         connection_type=DSL_CONNECTION,
     ),
     FritzSensorEntityDescription(
@@ -226,7 +232,7 @@ SENSOR_TYPES = (
         name="Link Download Throughput",
         native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
         icon="mdi:download",
-        state_provider=_retrieve_link_kb_s_received_state,
+        value_fn=_retrieve_link_kb_s_received_state,
         connection_type=DSL_CONNECTION,
     ),
     FritzSensorEntityDescription(
@@ -234,7 +240,7 @@ SENSOR_TYPES = (
         name="Link Upload Noise Margin",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         icon="mdi:upload",
-        state_provider=_retrieve_link_noise_margin_sent_state,
+        value_fn=_retrieve_link_noise_margin_sent_state,
         connection_type=DSL_CONNECTION,
     ),
     FritzSensorEntityDescription(
@@ -242,7 +248,7 @@ SENSOR_TYPES = (
         name="Link Download Noise Margin",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         icon="mdi:download",
-        state_provider=_retrieve_link_noise_margin_received_state,
+        value_fn=_retrieve_link_noise_margin_received_state,
         connection_type=DSL_CONNECTION,
     ),
     FritzSensorEntityDescription(
@@ -250,7 +256,7 @@ SENSOR_TYPES = (
         name="Link Upload Power Attenuation",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         icon="mdi:upload",
-        state_provider=_retrieve_link_attenuation_sent_state,
+        value_fn=_retrieve_link_attenuation_sent_state,
         connection_type=DSL_CONNECTION,
     ),
     FritzSensorEntityDescription(
@@ -258,7 +264,7 @@ SENSOR_TYPES = (
         name="Link Download Power Attenuation",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         icon="mdi:download",
-        state_provider=_retrieve_link_attenuation_received_state,
+        value_fn=_retrieve_link_attenuation_received_state,
         connection_type=DSL_CONNECTION,
     ),
 )
@@ -278,7 +284,6 @@ async def async_setup_entry(
         # Only routers are supported at the moment
         return
 
-    entities = []
     dsl: bool = False
     try:
         dslinterface = await hass.async_add_executor_job(
@@ -295,44 +300,33 @@ async def async_setup_entry(
     ):
         pass
 
-    for sensor_type in SENSOR_TYPES:
-        if not dsl and sensor_type.connection_type == DSL_CONNECTION:
-            continue
-        entities.append(FritzBoxSensor(fritzbox_tools, entry.title, sensor_type))
+    entities = [
+        FritzBoxSensor(fritzbox_tools, entry.title, description)
+        for description in SENSOR_TYPES
+        if dsl or description.connection_type != DSL_CONNECTION
+    ]
 
-    if entities:
-        async_add_entities(entities, True)
+    async_add_entities(entities, True)
 
 
 class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
     """Define FRITZ!Box connectivity class."""
 
+    connection_type: Literal["dsl"] | None = None
+
     def __init__(
         self,
         fritzbox_tools: FritzBoxTools,
         device_friendly_name: str,
-        sensor_type: FritzSensorEntityDescription,
+        description: FritzSensorEntityDescription,
     ) -> None:
         """Init FRITZ!Box connectivity class."""
-        self.entity_description: FritzSensorEntityDescription = sensor_type
+        self._entity_description = description
         self._last_device_value: str | None = None
         self._attr_available = True
-        self._attr_device_class = self.entity_description.device_class
-        self._attr_icon = self.entity_description.icon
-        self._attr_name = f"{device_friendly_name} {self.entity_description.name}"
-        self._attr_state_class = self.entity_description.state_class
-        self._attr_native_unit_of_measurement = (
-            self.entity_description.native_unit_of_measurement
-        )
-        self._attr_unique_id = (
-            f"{fritzbox_tools.unique_id}-{self.entity_description.key}"
-        )
+        self._attr_name = f"{device_friendly_name} {description.name}"
+        self._attr_unique_id = f"{fritzbox_tools.unique_id}-{description.key}"
         super().__init__(fritzbox_tools, device_friendly_name)
-
-    @property
-    def _state_provider(self) -> Callable | None:
-        """Return the state provider for the binary sensor."""
-        return self.entity_description.state_provider
 
     def update(self) -> None:
         """Update data."""
@@ -346,7 +340,7 @@ class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
             self._attr_available = False
             return
 
-        assert self._state_provider
-        self._attr_native_value = self._last_device_value = self._state_provider(
-            status, self._last_device_value
-        )
+        assert self._entity_description.value_fn
+        self._attr_native_value = (
+            self._last_device_value
+        ) = self._entity_description.value_fn(status, self._last_device_value)
