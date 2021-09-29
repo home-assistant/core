@@ -46,11 +46,11 @@ _LOGGER = logging.getLogger(__name__)
 class Trackables:
     """A class that describes trackables."""
 
-    tracker: aiotractive.tracker.Tracker | None = None
-    trackable: dict | None = None
-    tracker_details: dict | None = None
-    hw_info: dict | None = None
-    pos_report: dict | None = None
+    tracker: aiotractive.tracker.Tracker
+    trackable: dict
+    tracker_details: dict
+    hw_info: dict
+    pos_report: dict
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

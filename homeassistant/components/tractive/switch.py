@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import Trackables
 from .const import (
     ATTR_BUZZER,
     ATTR_LED,
@@ -42,7 +43,7 @@ class TractiveSwitchEntityDescription(
     """Class describing Tractive switch entities."""
 
 
-SWITCH_TYPES = (
+SWITCH_TYPES: tuple[TractiveSwitchEntityDescription, ...] = (
     TractiveSwitchEntityDescription(
         key=ATTR_BUZZER,
         name="Tracker Buzzer",
@@ -85,7 +86,12 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
 
     entity_description: TractiveSwitchEntityDescription
 
-    def __init__(self, user_id, trackables, description) -> None:
+    def __init__(
+        self,
+        user_id: str,
+        trackables: Trackables,
+        description: TractiveSwitchEntityDescription,
+    ) -> None:
         """Initialize switch entity."""
         super().__init__(user_id, trackables.trackable, trackables.tracker_details)
 
