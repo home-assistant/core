@@ -48,8 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     name = entry.data[CONF_NAME]
     host = entry.data[CONF_HOST]
 
-    session = async_get_clientsession(hass)
-    api = Yeti(host, hass.loop, session)
+    api = Yeti(host, async_get_clientsession(hass))
     try:
         await api.init_connect()
     except exceptions.ConnectError as ex:

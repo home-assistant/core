@@ -38,6 +38,7 @@ MOCK_CAT_FLAP = {
         "locking": {"mode": 0},
         "learn_mode": 0,
         "signal": {"device_rssi": 65, "hub_rssi": 64},
+        "online": True,
     },
 }
 
@@ -52,6 +53,7 @@ MOCK_PET_FLAP = {
         "locking": {"mode": 0},
         "learn_mode": 0,
         "signal": {"device_rssi": 70, "hub_rssi": 65},
+        "online": True,
     },
 }
 

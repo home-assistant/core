@@ -2,6 +2,7 @@
   "domain": "efergy",
   "name": "Efergy",
   "documentation": "https://www.home-assistant.io/integrations/efergy",
-  "codeowners": [],
+  "requirements": ["pyefergy==0.0.3"],
+  "codeowners": ["@tkdrob"],
   "iot_class": "cloud_polling"
 }

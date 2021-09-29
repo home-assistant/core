@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
+from collections.abc import Callable
 
 from async_timeout import timeout
 from zwave_js_server.client import Client as ZwaveClient
@@ -97,11 +98,22 @@ def register_node_in_dev_reg(
     dev_reg: device_registry.DeviceRegistry,
     client: ZwaveClient,
     node: ZwaveNode,
+    remove_device_func: Callable[[device_registry.DeviceEntry], None],
 ) -> device_registry.DeviceEntry:
     """Register node in dev reg."""
+    device_id = get_device_id(client, node)
+    # If a device already exists but it doesn't match the new node, it means the node
+    # was replaced with a different device and the device needs to be removeed so the
+    # new device can be created. Otherwise if the device exists and the node is the same,
+    # the node was replaced with the same device model and we can reuse the device.
+    if (device := dev_reg.async_get_device({device_id})) and (
+        device.model != node.device_config.label
+        or device.manufacturer != node.device_config.manufacturer
+    ):
+        remove_device_func(device)
     params = {
         "config_entry_id": entry.entry_id,
-        "identifiers": {get_device_id(client, node)},
+        "identifiers": {device_id},
         "sw_version": node.firmware_version,
         "name": node.name or node.device_config.description or f"Node {node.node_id}",
         "model": node.device_config.label,
@@ -134,6 +146,14 @@ async def async_setup_entry(  # noqa: C901
 
     registered_unique_ids: dict[str, dict[str, set[str]]] = defaultdict(dict)
     discovered_value_ids: dict[str, set[str]] = defaultdict(set)
+
+    @callback
+    def remove_device(device: device_registry.DeviceEntry) -> None:
+        """Remove device from registry."""
+        # note: removal of entity registry entry is handled by core
+        dev_reg.async_remove_device(device.id)
+        registered_unique_ids.pop(device.id, None)
+        discovered_value_ids.pop(device.id, None)
 
     async def async_handle_discovery_info(
         device: device_registry.DeviceEntry,
@@ -188,7 +208,9 @@ async def async_setup_entry(  # noqa: C901
         """Handle node ready event."""
         LOGGER.debug("Processing node %s", node)
         # register (or update) node in device registry
-        device = register_node_in_dev_reg(hass, entry, dev_reg, client, node)
+        device = register_node_in_dev_reg(
+            hass, entry, dev_reg, client, node, remove_device
+        )
         # We only want to create the defaultdict once, even on reinterviews
         if device.id not in registered_unique_ids:
             registered_unique_ids[device.id] = defaultdict(set)
@@ -265,7 +287,7 @@ async def async_setup_entry(  # noqa: C901
         )
         # we do submit the node to device registry so user has
         # some visual feedback that something is (in the process of) being added
-        register_node_in_dev_reg(hass, entry, dev_reg, client, node)
+        register_node_in_dev_reg(hass, entry, dev_reg, client, node, remove_device)
 
     async def async_on_value_added(
         value_updates_disc_info: dict[str, ZwaveDiscoveryInfo], value: Value
@@ -293,20 +315,24 @@ async def async_setup_entry(  # noqa: C901
         )
 
     @callback
-    def async_on_node_removed(node: ZwaveNode) -> None:
+    def async_on_node_removed(event: dict) -> None:
         """Handle node removed event."""
+        node: ZwaveNode = event["node"]
+        replaced: bool = event.get("replaced", False)
         # grab device in device registry attached to this node
         dev_id = get_device_id(client, node)
         device = dev_reg.async_get_device({dev_id})
-        # note: removal of entity registry entry is handled by core
-        dev_reg.async_remove_device(device.id)  # type: ignore
-        registered_unique_ids.pop(device.id, None)  # type: ignore
-        discovered_value_ids.pop(device.id, None)  # type: ignore
+        # We assert because we know the device exists
+        assert device
+        if not replaced:
+            remove_device(device)
 
     @callback
     def async_on_value_notification(notification: ValueNotification) -> None:
         """Relay stateless value notification events from Z-Wave nodes to hass."""
         device = dev_reg.async_get_device({get_device_id(client, notification.node)})
+        # We assert because we know the device exists
+        assert device
         raw_value = value = notification.value
         if notification.metadata.states:
             value = notification.metadata.states.get(str(value), value)
@@ -317,7 +343,7 @@ async def async_setup_entry(  # noqa: C901
                 ATTR_NODE_ID: notification.node.node_id,
                 ATTR_HOME_ID: client.driver.controller.home_id,
                 ATTR_ENDPOINT: notification.endpoint,
-                ATTR_DEVICE_ID: device.id,  # type: ignore
+                ATTR_DEVICE_ID: device.id,
                 ATTR_COMMAND_CLASS: notification.command_class,
                 ATTR_COMMAND_CLASS_NAME: notification.command_class_name,
                 ATTR_LABEL: notification.metadata.label,
@@ -336,11 +362,13 @@ async def async_setup_entry(  # noqa: C901
     ) -> None:
         """Relay stateless notification events from Z-Wave nodes to hass."""
         device = dev_reg.async_get_device({get_device_id(client, notification.node)})
+        # We assert because we know the device exists
+        assert device
         event_data = {
             ATTR_DOMAIN: DOMAIN,
             ATTR_NODE_ID: notification.node.node_id,
             ATTR_HOME_ID: client.driver.controller.home_id,
-            ATTR_DEVICE_ID: device.id,  # type: ignore
+            ATTR_DEVICE_ID: device.id,
             ATTR_COMMAND_CLASS: notification.command_class,
         }
 
@@ -379,6 +407,8 @@ async def async_setup_entry(  # noqa: C901
         disc_info = value_updates_disc_info[value.value_id]
 
         device = dev_reg.async_get_device({get_device_id(client, value.node)})
+        # We assert because we know the device exists
+        assert device
 
         unique_id = get_unique_id(
             client.driver.controller.home_id, disc_info.primary_value.value_id
@@ -394,7 +424,7 @@ async def async_setup_entry(  # noqa: C901
             {
                 ATTR_NODE_ID: value.node.node_id,
                 ATTR_HOME_ID: client.driver.controller.home_id,
-                ATTR_DEVICE_ID: device.id,  # type: ignore
+                ATTR_DEVICE_ID: device.id,
                 ATTR_ENTITY_ID: entity_id,
                 ATTR_COMMAND_CLASS: value.command_class,
                 ATTR_COMMAND_CLASS_NAME: value.command_class_name,
@@ -500,9 +530,7 @@ async def async_setup_entry(  # noqa: C901
         # listen for nodes being removed from the mesh
         # NOTE: This will not remove nodes that were removed when HA was not running
         entry.async_on_unload(
-            client.driver.controller.on(
-                "node removed", lambda event: async_on_node_removed(event["node"])
-            )
+            client.driver.controller.on("node removed", async_on_node_removed)
         )
 
     platform_task = hass.async_create_task(start_platforms())

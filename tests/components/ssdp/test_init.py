@@ -80,7 +80,7 @@ async def test_ssdp_flow_dispatched_on_st(mock_get_ssdp, hass, caplog, mock_flow
         ssdp.ATTR_SSDP_SERVER: "mock-server",
         ssdp.ATTR_SSDP_EXT: "",
         ssdp.ATTR_UPNP_UDN: "uuid:mock-udn",
-        "_udn": ANY,
+        ssdp.ATTR_SSDP_UDN: ANY,
         "_timestamp": ANY,
     }
     assert "Failed to fetch ssdp data" not in caplog.text
@@ -252,6 +252,77 @@ async def test_scan_not_all_match(mock_get_ssdp, hass, aioclient_mock, mock_flow
 
 
 @pytest.mark.usefixtures("mock_get_source_ip")
+@patch(
+    "homeassistant.components.ssdp.async_get_ssdp",
+    return_value={"mock-domain": [{"deviceType": "Paulus"}]},
+)
+async def test_flow_start_only_alive(
+    mock_get_ssdp, hass, aioclient_mock, mock_flow_init
+):
+    """Test config flow is only started for alive devices."""
+    aioclient_mock.get(
+        "http://1.1.1.1",
+        text="""
+<root>
+  <device>
+    <deviceType>Paulus</deviceType>
+  </device>
+</root>
+    """,
+    )
+    ssdp_listener = await init_ssdp_component(hass)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    # Search should start a flow
+    mock_ssdp_search_response = _ssdp_headers(
+        {
+            "st": "mock-st",
+            "location": "http://1.1.1.1",
+            "usn": "uuid:mock-udn::mock-st",
+        }
+    )
+    await ssdp_listener._on_search(mock_ssdp_search_response)
+    await hass.async_block_till_done()
+
+    mock_flow_init.assert_awaited_once_with(
+        "mock-domain", context={"source": config_entries.SOURCE_SSDP}, data=ANY
+    )
+
+    # ssdp:alive advertisement should start a flow
+    mock_flow_init.reset_mock()
+    mock_ssdp_advertisement = _ssdp_headers(
+        {
+            "location": "http://1.1.1.1",
+            "usn": "uuid:mock-udn::mock-st",
+            "nt": "upnp:rootdevice",
+            "nts": "ssdp:alive",
+        }
+    )
+    await ssdp_listener._on_alive(mock_ssdp_advertisement)
+    await hass.async_block_till_done()
+    mock_flow_init.assert_awaited_once_with(
+        "mock-domain", context={"source": config_entries.SOURCE_SSDP}, data=ANY
+    )
+
+    # ssdp:byebye advertisement should not start a flow
+    mock_flow_init.reset_mock()
+    mock_ssdp_advertisement["nts"] = "ssdp:byebye"
+    await ssdp_listener._on_byebye(mock_ssdp_advertisement)
+    await hass.async_block_till_done()
+    mock_flow_init.assert_not_called()
+
+    # ssdp:update advertisement should start a flow
+    mock_flow_init.reset_mock()
+    mock_ssdp_advertisement["nts"] = "ssdp:update"
+    await ssdp_listener._on_update(mock_ssdp_advertisement)
+    await hass.async_block_till_done()
+    mock_flow_init.assert_awaited_once_with(
+        "mock-domain", context={"source": config_entries.SOURCE_SSDP}, data=ANY
+    )
+
+
+@pytest.mark.usefixtures("mock_get_source_ip")
 async def test_start_stop_scanner(hass):
     """Test we start and stop the scanner."""
     ssdp_listener = await init_ssdp_component(hass)
@@ -347,7 +418,7 @@ async def test_scan_with_registered_callback(
             ssdp.ATTR_SSDP_USN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::mock-st",
             ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
             "x-rincon-bootseq": "55",
-            "_udn": ANY,
+            ssdp.ATTR_SSDP_UDN: ANY,
             "_timestamp": ANY,
         },
         ssdp.SsdpChange.ALIVE,
@@ -401,7 +472,7 @@ async def test_getting_existing_headers(mock_get_ssdp, hass, aioclient_mock):
             ssdp.ATTR_SSDP_USN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
             ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
             ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
-            "_udn": ANY,
+            ssdp.ATTR_SSDP_UDN: ANY,
             "_timestamp": ANY,
         }
     ]
@@ -418,7 +489,7 @@ async def test_getting_existing_headers(mock_get_ssdp, hass, aioclient_mock):
             ssdp.ATTR_SSDP_USN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
             ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
             ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
-            "_udn": ANY,
+            ssdp.ATTR_SSDP_UDN: ANY,
             "_timestamp": ANY,
         }
     ]
@@ -434,7 +505,7 @@ async def test_getting_existing_headers(mock_get_ssdp, hass, aioclient_mock):
         ssdp.ATTR_SSDP_USN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
         ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
         ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
-        "_udn": ANY,
+        ssdp.ATTR_SSDP_UDN: ANY,
         "_timestamp": ANY,
     }
 

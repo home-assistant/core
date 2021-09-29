@@ -2,13 +2,18 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Callable
 import datetime
 import itertools
 import logging
 import math
-from typing import Callable
 
 from homeassistant.components.recorder import history, statistics
+from homeassistant.components.recorder.models import (
+    StatisticData,
+    StatisticMetaData,
+    StatisticResult,
+)
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DEVICE_CLASS_ENERGY,
@@ -120,7 +125,7 @@ WARN_UNSUPPORTED_UNIT = "sensor_warn_unsupported_unit"
 WARN_UNSTABLE_UNIT = "sensor_warn_unstable_unit"
 
 
-def _get_entities(hass: HomeAssistant) -> list[tuple[str, str, str | None]]:
+def _get_entities(hass: HomeAssistant) -> list[tuple[str, str, str | None, str | None]]:
     """Get (entity_id, state_class, device_class) of all sensors for which to compile statistics."""
     all_sensors = hass.states.all(DOMAIN)
     entity_ids = []
@@ -129,7 +134,8 @@ def _get_entities(hass: HomeAssistant) -> list[tuple[str, str, str | None]]:
         if (state_class := state.attributes.get(ATTR_STATE_CLASS)) not in STATE_CLASSES:
             continue
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-        entity_ids.append((state.entity_id, state_class, device_class))
+        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        entity_ids.append((state.entity_id, state_class, device_class, unit))
 
     return entity_ids
 
@@ -293,11 +299,11 @@ def reset_detected(
 
 
 def _wanted_statistics(
-    entities: list[tuple[str, str, str | None]]
+    entities: list[tuple[str, str, str | None, str | None]]
 ) -> dict[str, set[str]]:
     """Prepare a dict with wanted statistics for entities."""
     wanted_statistics = {}
-    for entity_id, state_class, device_class in entities:
+    for entity_id, state_class, device_class, _ in entities:
         if device_class in DEVICE_CLASS_STATISTICS[state_class]:
             wanted_statistics[entity_id] = DEVICE_CLASS_STATISTICS[state_class][
                 device_class
@@ -307,14 +313,29 @@ def _wanted_statistics(
     return wanted_statistics
 
 
+def _last_reset_as_utc_isoformat(
+    last_reset_s: str | None, entity_id: str
+) -> str | None:
+    """Parse last_reset and convert it to UTC."""
+    if last_reset_s is None:
+        return None
+    last_reset = dt_util.parse_datetime(last_reset_s)
+    if last_reset is None:
+        _LOGGER.warning(
+            "Ignoring invalid last reset '%s' for %s", last_reset_s, entity_id
+        )
+        return None
+    return dt_util.as_utc(last_reset).isoformat()
+
+
 def compile_statistics(  # noqa: C901
     hass: HomeAssistant, start: datetime.datetime, end: datetime.datetime
-) -> dict:
+) -> list[StatisticResult]:
     """Compile statistics for all entities during start-end.
 
     Note: This will query the database and must not be run in the event loop
     """
-    result: dict = {}
+    result: list[StatisticResult] = []
 
     entities = _get_entities(hass)
 
@@ -347,6 +368,7 @@ def compile_statistics(  # noqa: C901
         entity_id,
         state_class,
         device_class,
+        _,
     ) in entities:
         if entity_id not in history_list:
             continue
@@ -375,21 +397,20 @@ def compile_statistics(  # noqa: C901
                     )
                 continue
 
-        result[entity_id] = {}
-
         # Set meta data
-        result[entity_id]["meta"] = {
+        meta: StatisticMetaData = {
+            "statistic_id": entity_id,
             "unit_of_measurement": unit,
             "has_mean": "mean" in wanted_statistics[entity_id],
             "has_sum": "sum" in wanted_statistics[entity_id],
         }
 
         # Make calculations
-        stat: dict = {}
+        stat: StatisticData = {"start": start}
         if "max" in wanted_statistics[entity_id]:
-            stat["max"] = max(*itertools.islice(zip(*fstates), 1))
+            stat["max"] = max(*itertools.islice(zip(*fstates), 1))  # type: ignore[typeddict-item]
         if "min" in wanted_statistics[entity_id]:
-            stat["min"] = min(*itertools.islice(zip(*fstates), 1))
+            stat["min"] = min(*itertools.islice(zip(*fstates), 1))  # type: ignore[typeddict-item]
 
         if "mean" in wanted_statistics[entity_id]:
             stat["mean"] = _time_weighted_average(fstates, start, end)
@@ -398,15 +419,12 @@ def compile_statistics(  # noqa: C901
             last_reset = old_last_reset = None
             new_state = old_state = None
             _sum = 0.0
-            sum_increase = 0.0
-            sum_increase_tmp = 0.0
             last_stats = statistics.get_last_statistics(hass, 1, entity_id, False)
             if entity_id in last_stats:
                 # We have compiled history for this sensor before, use that as a starting point
                 last_reset = old_last_reset = last_stats[entity_id][0]["last_reset"]
                 new_state = old_state = last_stats[entity_id][0]["state"]
                 _sum = last_stats[entity_id][0]["sum"] or 0.0
-                sum_increase = last_stats[entity_id][0]["sum_increase"] or 0.0
 
             for fstate, state in fstates:
 
@@ -420,8 +438,13 @@ def compile_statistics(  # noqa: C901
                 reset = False
                 if (
                     state_class != STATE_CLASS_TOTAL_INCREASING
-                    and (last_reset := state.attributes.get("last_reset"))
+                    and (
+                        last_reset := _last_reset_as_utc_isoformat(
+                            state.attributes.get("last_reset"), entity_id
+                        )
+                    )
                     != old_last_reset
+                    and last_reset is not None
                 ):
                     if old_state is None:
                         _LOGGER.info(
@@ -460,10 +483,6 @@ def compile_statistics(  # noqa: C901
                     # The sensor has been reset, update the sum
                     if old_state is not None:
                         _sum += new_state - old_state
-                        sum_increase += sum_increase_tmp
-                        sum_increase_tmp = 0.0
-                        if fstate > 0:
-                            sum_increase_tmp += fstate
                     # ..and update the starting point
                     new_state = fstate
                     old_last_reset = last_reset
@@ -473,31 +492,25 @@ def compile_statistics(  # noqa: C901
                     else:
                         old_state = new_state
                 else:
-                    if new_state is not None and fstate > new_state:
-                        sum_increase_tmp += fstate - new_state
                     new_state = fstate
 
             # Deprecated, will be removed in Home Assistant 2021.11
             if last_reset is None and state_class == STATE_CLASS_MEASUREMENT:
                 # No valid updates
-                result.pop(entity_id)
                 continue
 
             if new_state is None or old_state is None:
                 # No valid updates
-                result.pop(entity_id)
                 continue
 
             # Update the sum with the last state
             _sum += new_state - old_state
-            sum_increase += sum_increase_tmp
             if last_reset is not None:
                 stat["last_reset"] = dt_util.parse_datetime(last_reset)
             stat["sum"] = _sum
-            stat["sum_increase"] = sum_increase
             stat["state"] = new_state
 
-        result[entity_id]["stat"] = stat
+        result.append({"meta": meta, "stat": (stat,)})
 
     return result
 
@@ -508,7 +521,7 @@ def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -
 
     statistic_ids = {}
 
-    for entity_id, state_class, device_class in entities:
+    for entity_id, state_class, device_class, native_unit in entities:
         if device_class in DEVICE_CLASS_STATISTICS[state_class]:
             provided_statistics = DEVICE_CLASS_STATISTICS[state_class][device_class]
         else:
@@ -526,12 +539,6 @@ def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -
             and state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
         ):
             continue
-
-        metadata = statistics.get_metadata(hass, entity_id)
-        if metadata:
-            native_unit: str | None = metadata["unit_of_measurement"]
-        else:
-            native_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if device_class not in UNIT_CONVERSIONS:
             statistic_ids[entity_id] = native_unit
@@ -558,6 +565,7 @@ def validate_statistics(
         entity_id,
         _state_class,
         device_class,
+        _unit,
     ) in entities:
         state = hass.states.get(entity_id)
         assert state is not None

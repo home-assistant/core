@@ -20,7 +20,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from .common import FritzBoxTools, FritzData, FritzDevice, FritzDeviceBase
+from .common import (
+    FritzBoxTools,
+    FritzData,
+    FritzDevice,
+    FritzDeviceBase,
+    device_filter_out_from_trackers,
+)
 from .const import DATA_FRITZ, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,7 +80,9 @@ async def async_setup_entry(
     @callback
     def update_router() -> None:
         """Update the values of the router."""
-        _async_add_entities(router, async_add_entities, data_fritz)
+        _async_add_entities(
+            router, async_add_entities, data_fritz, entry.pref_disable_new_entities
+        )
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, router.signal_device_new, update_router)
@@ -88,22 +96,18 @@ def _async_add_entities(
     router: FritzBoxTools,
     async_add_entities: AddEntitiesCallback,
     data_fritz: FritzData,
+    pref_disable_new_entities: bool,
 ) -> None:
     """Add new tracker entities from the router."""
-
-    def _is_tracked(mac: str) -> bool:
-        for tracked in data_fritz.tracked.values():
-            if mac in tracked:
-                return True
-
-        return False
 
     new_tracked = []
     if router.unique_id not in data_fritz.tracked:
         data_fritz.tracked[router.unique_id] = set()
 
     for mac, device in router.devices.items():
-        if device.ip_address == "" or _is_tracked(mac):
+        if device_filter_out_from_trackers(
+            mac, device, pref_disable_new_entities, data_fritz.tracked.values()
+        ):
             continue
 
         new_tracked.append(FritzBoxTracker(router, device))

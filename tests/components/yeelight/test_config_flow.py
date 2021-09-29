@@ -33,6 +33,7 @@ from . import (
     MODULE_CONFIG_FLOW,
     NAME,
     UNIQUE_FRIENDLY_NAME,
+    ZEROCONF_DATA,
     _mocked_bulb,
     _patch_discovery,
     _patch_discovery_interval,
@@ -571,6 +572,70 @@ async def test_discovered_ssdp(hass):
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=CAPABILITIES
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_discovered_zeroconf(hass):
+    """Test we can setup when discovered from zeroconf."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    mocked_bulb = _mocked_bulb()
+    with _patch_discovery(), _patch_discovery_interval(), patch(
+        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=ZEROCONF_DATA,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] is None
+
+    with _patch_discovery(), _patch_discovery_interval(), patch(
+        f"{MODULE}.async_setup", return_value=True
+    ) as mock_async_setup, patch(
+        f"{MODULE}.async_setup_entry", return_value=True
+    ) as mock_async_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["data"] == {
+        CONF_HOST: IP_ADDRESS,
+        CONF_ID: "0x000000000015243f",
+        CONF_MODEL: MODEL,
+    }
+    assert mock_async_setup.called
+    assert mock_async_setup_entry.called
+
+    mocked_bulb = _mocked_bulb()
+    with _patch_discovery(), _patch_discovery_interval(), patch(
+        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=ZEROCONF_DATA,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+    mocked_bulb = _mocked_bulb()
+    with _patch_discovery(), _patch_discovery_interval(), patch(
+        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_SSDP},
+            data=CAPABILITIES,
         )
         await hass.async_block_till_done()
 

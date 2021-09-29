@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from datetime import datetime as dt, timedelta
+from http import HTTPStatus
 import logging
 import time
 from typing import cast
@@ -19,13 +20,7 @@ from homeassistant.components.recorder.statistics import (
     statistics_during_period,
 )
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.const import (
-    CONF_DOMAINS,
-    CONF_ENTITIES,
-    CONF_EXCLUDE,
-    CONF_INCLUDE,
-    HTTP_BAD_REQUEST,
-)
+from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.deprecation import deprecated_class, deprecated_function
@@ -203,7 +198,7 @@ class HistoryPeriodView(HomeAssistantView):
             datetime_ = dt_util.parse_datetime(datetime)
 
             if datetime_ is None:
-                return self.json_message("Invalid datetime", HTTP_BAD_REQUEST)
+                return self.json_message("Invalid datetime", HTTPStatus.BAD_REQUEST)
 
         now = dt_util.utcnow()
 
@@ -222,7 +217,7 @@ class HistoryPeriodView(HomeAssistantView):
             if end_time:
                 end_time = dt_util.as_utc(end_time)
             else:
-                return self.json_message("Invalid end_time", HTTP_BAD_REQUEST)
+                return self.json_message("Invalid end_time", HTTPStatus.BAD_REQUEST)
         else:
             end_time = start_time + one_day
         entity_ids_str = request.query.get("filter_entity_id")

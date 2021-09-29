@@ -1,6 +1,7 @@
 """Light platform support for yeelight."""
 from __future__ import annotations
 
+import asyncio
 import logging
 import math
 
@@ -207,6 +208,9 @@ SERVICE_SCHEMA_SET_AUTO_DELAY_OFF_SCENE = {
     vol.Required(ATTR_MINUTES): vol.All(vol.Coerce(int), vol.Range(min=1, max=60)),
     vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }
+
+
+STATE_CHANGE_TIME = 0.25  # seconds
 
 
 @callback
@@ -759,6 +763,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             await self.async_set_default()
 
         # Some devices (mainly nightlights) will not send back the on state so we need to force a refresh
+        await asyncio.sleep(STATE_CHANGE_TIME)
         if not self.is_on:
             await self.device.async_update(True)
 
@@ -778,6 +783,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
         await self._async_turn_off(duration)
         # Some devices will not send back the off state so we need to force a refresh
+        await asyncio.sleep(STATE_CHANGE_TIME)
         if self.is_on:
             await self.device.async_update(True)
 

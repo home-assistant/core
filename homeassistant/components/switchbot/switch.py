@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from switchbot import Switchbot  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -20,25 +21,13 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_platform,
-)
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    ATTR_BOT,
-    CONF_RETRY_COUNT,
-    DATA_COORDINATOR,
-    DEFAULT_NAME,
-    DOMAIN,
-    MANUFACTURER,
-)
+from .const import ATTR_BOT, CONF_RETRY_COUNT, DATA_COORDINATOR, DEFAULT_NAME, DOMAIN
 from .coordinator import SwitchbotDataUpdateCoordinator
+from .entity import SwitchbotEntity
 
 # Initialize the logger
 _LOGGER = logging.getLogger(__name__)
@@ -89,24 +78,24 @@ async def async_setup_entry(
         DATA_COORDINATOR
     ]
 
-    if entry.data[CONF_SENSOR_TYPE] != ATTR_BOT:
-        return
-
     async_add_entities(
         [
-            SwitchBot(
+            SwitchBotBotEntity(
                 coordinator,
                 entry.unique_id,
                 entry.data[CONF_MAC],
                 entry.data[CONF_NAME],
-                entry.data.get(CONF_PASSWORD, None),
-                entry.options[CONF_RETRY_COUNT],
+                coordinator.switchbot_api.Switchbot(
+                    mac=entry.data[CONF_MAC],
+                    password=entry.data.get(CONF_PASSWORD),
+                    retry_count=entry.options[CONF_RETRY_COUNT],
+                ),
             )
         ]
     )
 
 
-class SwitchBot(CoordinatorEntity, SwitchEntity, RestoreEntity):
+class SwitchBotBotEntity(SwitchbotEntity, SwitchEntity, RestoreEntity):
     """Representation of a Switchbot."""
 
     coordinator: SwitchbotDataUpdateCoordinator
@@ -118,25 +107,12 @@ class SwitchBot(CoordinatorEntity, SwitchEntity, RestoreEntity):
         idx: str | None,
         mac: str,
         name: str,
-        password: str,
-        retry_count: int,
+        device: Switchbot,
     ) -> None:
         """Initialize the Switchbot."""
-        super().__init__(coordinator)
-        self._idx = idx
-        self._last_run_success: bool | None = None
-        self._mac = mac
-        self._device = self.coordinator.switchbot_api.Switchbot(
-            mac=mac, password=password, retry_count=retry_count
-        )
-        self._attr_unique_id = self._mac.replace(":", "")
-        self._attr_name = name
-        self._attr_device_info: DeviceInfo = {
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac)},
-            "name": name,
-            "model": self.coordinator.data[self._idx]["modelName"],
-            "manufacturer": MANUFACTURER,
-        }
+        super().__init__(coordinator, idx, mac, name)
+        self._attr_unique_id = idx
+        self._device = device
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
@@ -152,42 +128,35 @@ class SwitchBot(CoordinatorEntity, SwitchEntity, RestoreEntity):
         _LOGGER.info("Turn Switchbot bot on %s", self._mac)
 
         async with self.coordinator.api_lock:
-            update_ok = await self.hass.async_add_executor_job(self._device.turn_on)
-
-        if update_ok:
-            self._last_run_success = True
-        else:
-            self._last_run_success = False
+            self._last_run_success = bool(
+                await self.hass.async_add_executor_job(self._device.turn_on)
+            )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         _LOGGER.info("Turn Switchbot bot off %s", self._mac)
 
         async with self.coordinator.api_lock:
-            update_ok = await self.hass.async_add_executor_job(self._device.turn_off)
-
-        if update_ok:
-            self._last_run_success = True
-        else:
-            self._last_run_success = False
+            self._last_run_success = bool(
+                await self.hass.async_add_executor_job(self._device.turn_off)
+            )
 
     @property
     def assumed_state(self) -> bool:
         """Return true if unable to access real state of entity."""
-        if not self.coordinator.data[self._idx]["data"]["switchMode"]:
+        if not self.data["data"]["switchMode"]:
             return True
         return False
 
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
-        return self.coordinator.data[self._idx]["data"]["isOn"]
+        return self.data["data"]["isOn"]
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         return {
-            "last_run_success": self._last_run_success,
-            "mac_address": self._mac,
-            "switch_mode": self.coordinator.data[self._idx]["data"]["switchMode"],
+            **super().extra_state_attributes,
+            "switch_mode": self.data["data"]["switchMode"],
         }

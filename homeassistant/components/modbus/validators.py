@@ -84,7 +84,7 @@ DEFAULT_STRUCT_FORMAT = {
 }
 
 
-def struct_validator(config):
+def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
     """Sensor schema validator."""
 
     data_type = config[CONF_DATA_TYPE]
@@ -154,13 +154,11 @@ def number_validator(value: Any) -> int | float:
         return value
 
     try:
-        value = int(value)
-        return value
+        return int(value)
     except (TypeError, ValueError):
         pass
     try:
-        value = float(value)
-        return value
+        return float(value)
     except (TypeError, ValueError) as err:
         raise vol.Invalid(f"invalid number {value}") from err
 

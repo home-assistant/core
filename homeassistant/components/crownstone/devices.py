@@ -10,13 +10,15 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_SW_VERSION,
 )
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import CROWNSTONE_INCLUDE_TYPES, DOMAIN
 
 
-class CrownstoneDevice:
-    """Representation of a Crownstone device."""
+class CrownstoneBaseEntity(Entity):
+    """Base entity class for Crownstone devices."""
+
+    _attr_should_poll = False
 
     def __init__(self, device: Crownstone) -> None:
         """Initialize the device."""

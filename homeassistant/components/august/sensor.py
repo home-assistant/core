@@ -1,9 +1,10 @@
 """Support for August sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Callable, Generic, TypeVar
+from typing import Generic, TypeVar
 
 from yalexs.activity import ActivityType
 from yalexs.keypad import KeypadDetail
