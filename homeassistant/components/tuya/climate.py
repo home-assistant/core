@@ -83,14 +83,6 @@ TUYA_HVAC_TO_HA = {
     "auto": HVAC_MODE_AUTO,
 }
 
-TUYA_ACTION_TO_HA = {
-    "off": CURRENT_HVAC_OFF,
-    "heating": CURRENT_HVAC_HEAT,
-    "cooling": CURRENT_HVAC_COOL,
-    "wind": CURRENT_HVAC_FAN,
-    "auto": CURRENT_HVAC_IDLE,
-}
-
 TUYA_SUPPORT_TYPE = {
     "kt",  # Air conditioner
     "qn",  # Heater
@@ -434,16 +426,6 @@ class TuyaHaClimate(TuyaHaEntity, ClimateEntity):
                 hvac_modes.append(ha_mode)
 
         return hvac_modes
-
-    @property
-    def preset_modes(self) -> list[str]:
-        """Return available presets."""
-        if DPCODE_MODE not in self.tuya_device.function:
-            return []
-        modes = json.loads(self.tuya_device.function.get(DPCODE_MODE, {}).values).get(
-            "range"
-        )
-        return [d for d in modes if d not in TUYA_HVAC_TO_HA]
 
     @property
     def fan_mode(self) -> str | None:
