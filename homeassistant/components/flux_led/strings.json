@@ -1,33 +1,33 @@
 {
   "config": {
+    "flow_title": "{model} {id} ({ipaddr})",
     "step": {
       "user": {
-        "description": "Choose whether you want to automatically search for devices on your network.",
+        "description": "If you leave the host empty, discovery will be used to find devices.",
         "data": {
-          "automatic_add": "Enable automatic add of devices"
+          "host": "[%key:common::config_flow::data::host%]"
         }
-      }
+      },
+      "discovery_confirm": {
+        "description": "Do you want to setup {model} {id} ({ipaddr})?"
+      }      
     },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },    
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
   },
   "options": {
     "step": {
-      "prompt_options": {
+      "configure": {
         "data": {
-          "automatic_add": "Enable automatic add of devices",
-          "effect_speed": "Default effect speed for all lights.",
-          "host": "Enter IP address to add a new light",
-          "name": "Enter the name for the new light (optional)",
-          "configure_device": "Select the device to configure",
-          "remove_device": "Select the device to delete"
-        }
-      },
-      "configure_device": {
-        "data": {
-          "effect_speed": "Default effect speed for this light."
+          "mode": "The chosen brightness mode.",
+          "custom_effect_colors": "Custom Effect: List of 1 to 16 [R,G,B] colors. Example: [255,0,255],[60,128,0]",
+          "custom_effect_speed_pct": "Custom Effect: Speed in percents for the effect that switch colors.",
+          "custom_effect_transition": "Custom Effect: Type of transition between the colors."
         }
       }
     }
