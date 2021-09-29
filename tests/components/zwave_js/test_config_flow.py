@@ -1945,10 +1945,20 @@ async def test_options_addon_running_server_info_failure(
         (
             {"config": ADDON_DISCOVERY_INFO},
             {},
-            {"device": "/test", "network_key": "abc123"},
+            {
+                "device": "/test",
+                "network_key": "abc123",
+                "s0_legacy_key": "abc123",
+                "s2_access_control_key": "old456",
+                "s2_authenticated_key": "old789",
+                "s2_unauthenticated_key": "old987",
+            },
             {
                 "usb_path": "/new",
-                "network_key": "new123",
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
                 "log_level": "info",
                 "emulate_hardware": False,
             },
@@ -1957,10 +1967,20 @@ async def test_options_addon_running_server_info_failure(
         (
             {"config": ADDON_DISCOVERY_INFO},
             {"use_addon": True},
-            {"device": "/test", "network_key": "abc123"},
+            {
+                "device": "/test",
+                "network_key": "abc123",
+                "s0_legacy_key": "abc123",
+                "s2_access_control_key": "old456",
+                "s2_authenticated_key": "old789",
+                "s2_unauthenticated_key": "old987",
+            },
             {
                 "usb_path": "/new",
-                "network_key": "new123",
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
                 "log_level": "info",
                 "emulate_hardware": False,
             },
@@ -2048,7 +2068,7 @@ async def test_options_addon_not_installed(
     assert result["type"] == "create_entry"
     assert entry.data["url"] == "ws://host1:3001"
     assert entry.data["usb_path"] == new_addon_options["device"]
-    assert entry.data["network_key"] == new_addon_options["network_key"]
+    assert entry.data["s0_legacy_key"] == new_addon_options["s0_legacy_key"]
     assert entry.data["use_addon"] is True
     assert entry.data["integration_created_addon"] is True
     assert client.connect.call_count == 2

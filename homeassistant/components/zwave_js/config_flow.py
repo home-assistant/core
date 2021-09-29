@@ -30,6 +30,7 @@ from .const import (
     CONF_ADDON_DEVICE,
     CONF_ADDON_EMULATE_HARDWARE,
     CONF_ADDON_LOG_LEVEL,
+    CONF_ADDON_NETWORK_KEY,
     CONF_ADDON_S0_LEGACY_KEY,
     CONF_ADDON_S2_ACCESS_CONTROL_KEY,
     CONF_ADDON_S2_AUTHENTICATED_KEY,
@@ -717,6 +718,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
                 CONF_ADDON_LOG_LEVEL: user_input[CONF_LOG_LEVEL],
                 CONF_ADDON_EMULATE_HARDWARE: user_input[CONF_EMULATE_HARDWARE],
             }
+            new_addon_config.pop(CONF_ADDON_NETWORK_KEY, None)
 
             if new_addon_config != addon_config:
                 if addon_info.state == AddonState.RUNNING:
