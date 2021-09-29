@@ -18,11 +18,29 @@ from homeassistant.components.light import (
 from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import MAC_ADDRESS, _mocked_bulb, _patch_discovery, _patch_single_discovery
 
 from tests.common import MockConfigEntry
+
+
+async def test_light_unique_id(hass: HomeAssistant) -> None:
+    """Test a light unique id."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    bulb.color_temp = None
+    with _patch_discovery(device=bulb), _patch_single_discovery(device=bulb):
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_bulb"
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get(entity_id).unique_id == "AABBCCDDEEFF"
 
 
 async def test_color_light(hass: HomeAssistant) -> None:
