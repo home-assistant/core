@@ -128,16 +128,16 @@ WARN_UNSTABLE_UNIT = "sensor_warn_unstable_unit"
 def _get_sensor_states(hass: HomeAssistant) -> list[State]:
     """Get the current state of all sensors for which to compile statistics."""
     all_sensors = hass.states.all(DOMAIN)
-    entity_ids = []
+    statistics_sensors = []
 
     for state in all_sensors:
         if not is_entity_recorded(hass, state.entity_id):
             continue
         if (state.attributes.get(ATTR_STATE_CLASS)) not in STATE_CLASSES:
             continue
-        entity_ids.append(state)
+        statistics_sensors.append(state)
 
-    return entity_ids
+    return statistics_sensors
 
 
 def _time_weighted_average(
