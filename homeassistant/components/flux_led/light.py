@@ -235,24 +235,21 @@ class FluxLight(CoordinatorEntity, LightEntity):
         unique_id: str | None,
         name: str,
         mode: str,
-        custom_effect_colors: str,
+        custom_effect_colors: list[tuple[int, int, int]],
         custom_effect_speed_pct: int,
         custom_effect_transition: str,
     ):
         """Initialize the light."""
         super().__init__(coordinator)
+        self._bulb: WifiLedBulb = coordinator.device
+
         self._name = name
         self._unique_id = unique_id
-        self._state = False
-        self._brightness = None
-        self._hs_color: tuple[float, float] | None = None
-        self._white_value = None
-        self._current_effect = None
-        self._last_brightness = None
-        self._last_hs_color: tuple[float, float] | None = None
         self._ip_address = coordinator.host
         self._mode: str = mode or MODE_AUTO
-        self._bulb: WifiLedBulb = coordinator.device
+        self._custom_effect_colors = custom_effect_colors
+        self._custom_effect_speed_pct = custom_effect_speed_pct
+        self._custom_effect_transition = custom_effect_transition
 
     @property
     def unique_id(self):
@@ -267,7 +264,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._bulb.isOn()
+        return self._bulb.is_on
 
     @property
     def brightness(self):
@@ -301,7 +298,9 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def effect_list(self):
         """Return the list of supported effects."""
-        return FLUX_EFFECT_LIST + [EFFECT_CUSTOM]
+        if self._custom_effect_colors:
+            return FLUX_EFFECT_LIST + [EFFECT_CUSTOM]
+        return FLUX_EFFECT_LIST
 
     @property
     def effect(self):
@@ -320,7 +319,10 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def extra_state_attributes(self):
         """Return the attributes."""
-        return {"ip_address": self._ip_address}
+        return {
+            "ip_address": self._ip_address,
+            "current_effect": self._bulb.raw_state[3],
+        }
 
     @property
     def device_info(self):
@@ -381,6 +383,16 @@ class FluxLight(CoordinatorEntity, LightEntity):
             )
             return
 
+        # Custom effect
+        if effect == EFFECT_CUSTOM:
+            if self._custom_effect_colors:
+                self._bulb.setCustomPattern(
+                    self._custom_effect_colors,
+                    self._custom_effect_speed_pct,
+                    self._custom_effect_transition,
+                )
+            return
+
         # Effect selection
         if effect in EFFECT_MAP:
             self._bulb.setPresetPattern(EFFECT_MAP[effect], 50)
@@ -430,17 +442,4 @@ class FluxLight(CoordinatorEntity, LightEntity):
                 self._mode = MODE_RGBW
             else:
                 self._mode = MODE_RGB
-
-        self._hs_color = color_util.color_RGB_to_hs(*self._bulb.getRgb())
-
-        self._current_effect = self._bulb.raw_state[3]
-
-        if self._bulb.is_on:
-            self._state = True
-        else:
-            self._state = False
-
-        if self._state:
-            self._last_hs_color = self._hs_color
-
         super()._handle_coordinator_update()
