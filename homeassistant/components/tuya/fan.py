@@ -193,8 +193,7 @@ class TuyaHaFan(TuyaHaEntity, FanEntity):
         """Return the current direction of the fan."""
         if self.tuya_device.status[DPCODE_FAN_DIRECTION]:
             return DIRECTION_FORWARD
-        else:
-            return DIRECTION_REVERSE
+        return DIRECTION_REVERSE
 
     @property
     def oscillating(self) -> bool:
