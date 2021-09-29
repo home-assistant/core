@@ -1,10 +1,9 @@
 """Support for deCONZ sensors."""
 from pydeconz.sensor import (
-    AncillaryControl,
+    AirQuality,
     Battery,
     Consumption,
     Daylight,
-    DoorLock,
     Humidity,
     LightLevel,
     Power,
@@ -12,6 +11,7 @@ from pydeconz.sensor import (
     Switch,
     Temperature,
     Thermostat,
+    Time,
 )
 
 from homeassistant.components.sensor import (
@@ -47,6 +47,18 @@ from homeassistant.helpers.dispatcher import (
 from .const import ATTR_DARK, ATTR_ON, NEW_SENSOR
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
+
+DECONZ_SENSORS = (
+    AirQuality,
+    Consumption,
+    Daylight,
+    Humidity,
+    LightLevel,
+    Power,
+    Pressure,
+    Temperature,
+    Time,
+)
 
 ATTR_CURRENT = "current"
 ATTR_POWER = "power"
@@ -136,13 +148,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 battery_handler.create_tracker(sensor)
 
             if (
-                not sensor.BINARY
-                and sensor.type
-                not in AncillaryControl.ZHATYPE
-                + Battery.ZHATYPE
-                + DoorLock.ZHATYPE
-                + Switch.ZHATYPE
-                + Thermostat.ZHATYPE
+                isinstance(sensor, DECONZ_SENSORS)
+                and not isinstance(sensor, Thermostat)
                 and sensor.unique_id not in gateway.entities[DOMAIN]
             ):
                 entities.append(DeconzSensor(sensor, gateway))
@@ -301,7 +308,7 @@ class DeconzBattery(DeconzDevice, SensorEntity):
         """Return the state attributes of the battery."""
         attr = {}
 
-        if self._device.type in Switch.ZHATYPE:
+        if isinstance(self._device, Switch):
             for event in self.gateway.events:
                 if self._device == event.device:
                     attr[ATTR_EVENT_ID] = event.event_id
