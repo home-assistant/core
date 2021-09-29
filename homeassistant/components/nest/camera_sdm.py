@@ -1,9 +1,10 @@
 """Support for Google Nest SDM Cameras."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import datetime
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from google_nest_sdm.camera_traits import (
     CameraEventImageTrait,
