@@ -6,8 +6,14 @@
   "requirements": ["flux_led==0.22"],
   "codeowners": ["@djtimca", "@icemanch"],
   "iot_class": "local_polling",
-  "dhcp": [{
+  "dhcp": [
+  {
     "macaddress": "18B905*",
-    "hostname": "bl*"
-  }]
+    "hostname": "[ba][lk]*"
+  },
+  {
+    "macaddress": "249494*",
+    "hostname": "[ba][lk]*"
+  }
+  ]
 }
