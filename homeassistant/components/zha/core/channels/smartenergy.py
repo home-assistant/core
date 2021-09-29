@@ -179,9 +179,10 @@ class Metering(ZigbeeChannel):
         width = r_digits + l_digits + (1 if r_digits > 0 else 0)
 
         if formatting & 0x80:
-            return "{:" + str(width) + "." + str(r_digits) + "f}"
+            # suppress leading 0
+            return f"{{:{width}.{r_digits}f}}"
 
-        return "{:0" + str(width) + "." + str(r_digits) + "f}"
+        return f"{{:0{width}.{r_digits}f}}"
 
     def _formatter_function(self, selector: FormatSelector, value: int) -> int | float:
         """Return formatted value for display."""
