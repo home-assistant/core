@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Callable
 import datetime
 import itertools
 import logging
 import math
-from typing import Callable
 
 from homeassistant.components.recorder import history, statistics
 from homeassistant.components.recorder.models import (
