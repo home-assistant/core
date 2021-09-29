@@ -299,11 +299,11 @@ class TuyaHaClimate(TuyaHaEntity, ClimateEntity):
     def target_temperature(self) -> float | None:
         """Return the temperature currently set to be reached."""
         temp_set_scale = self.get_temp_set_scale()
-        if temp_set_scale is not None:
+        if temp_set_scale is None:
             return None
 
         dpcode_temp_set = self.tuya_device.status.get(DPCODE_TEMP_SET)
-        if dpcode_temp_set is not None:
+        if dpcode_temp_set is None:
             return None
 
         return dpcode_temp_set * 1.0 / (10 ** temp_set_scale)
@@ -311,20 +311,6 @@ class TuyaHaClimate(TuyaHaEntity, ClimateEntity):
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        if self.target_temperature_high is None:
-            return self._attr_max_temp
-        return self.target_temperature_high
-
-    @property
-    def min_temp(self) -> float:
-        """Return the minimum temperature."""
-        if self.target_temperature_low is None:
-            return self._attr_min_temp
-        return self.target_temperature_low
-
-    @property
-    def target_temperature_high(self) -> float | None:
-        """Return the upper bound target temperature."""
         scale = self.get_temp_set_scale()
         if scale is None:
             return None
@@ -358,8 +344,8 @@ class TuyaHaClimate(TuyaHaEntity, ClimateEntity):
         return max_f * 1.0 / (10 ** scale)
 
     @property
-    def target_temperature_low(self) -> float | None:
-        """Return the lower bound target temperature."""
+    def min_temp(self) -> float:
+        """Return the minimum temperature."""
         temp_set_scal = self.get_temp_set_scale()
         if temp_set_scal is None:
             return None
