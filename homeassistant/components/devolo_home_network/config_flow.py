@@ -83,7 +83,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info[zeroconf.ATTR_PROPERTIES]["SN"])
         self._abort_if_unique_id_configured()
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context[CONF_HOST] = discovery_info[zeroconf.ATTR_HOST]
         self.context["title_placeholders"] = {
             PRODUCT: discovery_info[zeroconf.ATTR_PROPERTIES]["Product"],
