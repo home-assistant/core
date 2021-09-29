@@ -251,12 +251,8 @@ async def test_scan_not_all_match(mock_get_ssdp, hass, aioclient_mock, mock_flow
     assert not mock_flow_init.mock_calls
 
 
-@patch(  # XXX TODO: Isn't this duplicate with mock_get_source_ip?
-    "homeassistant.components.ssdp.Scanner._async_build_source_set",
-    return_value={IPv4Address("192.168.1.1")},
-)
 @pytest.mark.usefixtures("mock_get_source_ip")
-async def test_start_stop_scanner(mock_source_set, hass):
+async def test_start_stop_scanner(hass):
     """Test we start and stop the scanner."""
     ssdp_listener = await init_ssdp_component(hass)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -482,7 +478,6 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
 ]
 
 
-@pytest.mark.usefixtures("mock_get_source_ip")
 @patch(
     "homeassistant.components.ssdp.async_get_ssdp",
     return_value={
@@ -496,7 +491,7 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
 @patch(
     "homeassistant.components.ssdp.network.async_get_adapters",
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
-)  # XXX TODO: Isn't this duplicate with mock_get_source_ip?
+)
 async def test_async_detect_interfaces_setting_empty_route(
     mock_get_adapters, mock_get_ssdp, hass
 ):
@@ -508,7 +503,6 @@ async def test_async_detect_interfaces_setting_empty_route(
     assert source_ips == {IPv6Address("2001:db8::"), IPv4Address("192.168.1.5")}
 
 
-@pytest.mark.usefixtures("mock_get_source_ip")
 @patch(
     "homeassistant.components.ssdp.async_get_ssdp",
     return_value={
@@ -522,7 +516,7 @@ async def test_async_detect_interfaces_setting_empty_route(
 @patch(
     "homeassistant.components.ssdp.network.async_get_adapters",
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
-)  # XXX TODO: Isn't this duplicate with mock_get_source_ip?
+)
 async def test_bind_failure_skips_adapter(
     mock_get_adapters, mock_get_ssdp, hass, caplog
 ):
@@ -544,7 +538,6 @@ async def test_bind_failure_skips_adapter(
     }  # Note no SsdpListener for IPv6 address.
 
 
-@pytest.mark.usefixtures("mock_get_source_ip")
 @patch(
     "homeassistant.components.ssdp.async_get_ssdp",
     return_value={
@@ -558,7 +551,7 @@ async def test_bind_failure_skips_adapter(
 @patch(
     "homeassistant.components.ssdp.network.async_get_adapters",
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
-)  # XXX TODO: Isn't this duplicate with mock_get_source_ip?
+)
 async def test_ipv4_does_additional_search_for_sonos(
     mock_get_adapters, mock_get_ssdp, hass
 ):

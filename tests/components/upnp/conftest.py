@@ -1,6 +1,6 @@
 """Configuration for upnp tests."""
 from typing import Any, Mapping
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 from urllib.parse import urlparse
 
 import pytest
@@ -120,7 +120,7 @@ class MockDevice:
         }
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mock_upnp_device():
     """Mock homeassistant.components.upnp.Device."""
     with patch(
@@ -137,40 +137,3 @@ def mock_setup_entry():
         return_value=AsyncMock(True),
     ) as mock_setup:
         yield mock_setup
-
-
-@pytest.fixture
-async def ssdp_instant_discovery():
-    """Trigger SSDP discovery on callback register."""
-    # Set up device discovery callback.
-    async def register_callback(hass, callback, match_dict):
-        """Immediately do callback."""
-        await callback(TEST_DISCOVERY, ssdp.SsdpChange.ALIVE)
-        return MagicMock()
-
-    with patch(
-        "homeassistant.components.ssdp.async_register_callback",
-        side_effect=register_callback,
-    ) as mock_register, patch(
-        "homeassistant.components.ssdp.async_get_discovery_info_by_st",
-        return_value=[TEST_DISCOVERY],
-    ) as mock_get_info:
-        yield (mock_register, mock_get_info)
-
-
-@pytest.fixture
-async def ssdp_no_discovery():
-    """No SSDP discovery."""
-    # Set up device discovery callback.
-    async def register_callback(hass, callback, match_dict):
-        """Don't do callback."""
-        return MagicMock()
-
-    with patch(
-        "homeassistant.components.ssdp.async_register_callback",
-        side_effect=register_callback,
-    ) as mock_register, patch(
-        "homeassistant.components.ssdp.async_get_discovery_info_by_st",
-        return_value=[],
-    ) as mock_get_info:
-        yield (mock_register, mock_get_info)

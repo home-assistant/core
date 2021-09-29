@@ -3,8 +3,14 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from homeassistant import config_entries, core, setup
 from homeassistant.components.sonos.const import DATA_SONOS_DISCOVERY_MANAGER, DOMAIN
+
+pytestmark = [
+    pytest.mark.usefixtures("mock_ssdp"),
+]
 
 
 @patch("homeassistant.components.sonos.config_flow.soco.discover", return_value=True)

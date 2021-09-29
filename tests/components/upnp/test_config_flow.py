@@ -29,14 +29,14 @@ from .conftest import (
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
+pytestmark = [
+    pytest.mark.usefixtures("mock_ssdp"),
+    pytest.mark.usefixtures("mock_get_source_ip"),
+    pytest.mark.usefixtures("mock_upnp_device"),
+]
 
-@pytest.fixture(autouse=True)
-async def autouse_mock_ssdp(mock_ssdp):
-    """Auto use mock_ssdp."""
-    yield
 
-
-@pytest.mark.usefixtures("mock_setup_entry", "mock_get_source_ip")
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_ssdp(hass: HomeAssistant, set_ssdp_discovery):
     """Test config flow: discovered + configured through ssdp."""
     set_ssdp_discovery(TEST_DISCOVERY)
@@ -64,7 +64,6 @@ async def test_flow_ssdp(hass: HomeAssistant, set_ssdp_discovery):
     }
 
 
-@pytest.mark.usefixtures("mock_get_source_ip")
 async def test_flow_ssdp_incomplete_discovery(hass: HomeAssistant):
     """Test config flow: incomplete discovery through ssdp."""
     # Discovered via step ssdp.
@@ -82,7 +81,6 @@ async def test_flow_ssdp_incomplete_discovery(hass: HomeAssistant):
     assert result["reason"] == "incomplete_discovery"
 
 
-@pytest.mark.usefixtures("mock_get_source_ip")
 async def test_flow_ssdp_discovery_ignored(hass: HomeAssistant):
     """Test config flow: discovery through ssdp, but ignored, as hostname is used by existing config entry."""
     # Existing entry.
@@ -107,7 +105,7 @@ async def test_flow_ssdp_discovery_ignored(hass: HomeAssistant):
     assert result["reason"] == "discovery_ignored"
 
 
-@pytest.mark.usefixtures("mock_setup_entry", "mock_get_source_ip")
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_user(hass: HomeAssistant, set_ssdp_discovery):
     """Test config flow: discovered + configured through user."""
     set_ssdp_discovery(TEST_DISCOVERY)
@@ -133,7 +131,7 @@ async def test_flow_user(hass: HomeAssistant, set_ssdp_discovery):
     }
 
 
-@pytest.mark.usefixtures("mock_setup_entry", "mock_get_source_ip")
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_import(hass: HomeAssistant, set_ssdp_discovery):
     """Test config flow: configured through configuration.yaml."""
     set_ssdp_discovery(TEST_DISCOVERY)
@@ -151,7 +149,6 @@ async def test_flow_import(hass: HomeAssistant, set_ssdp_discovery):
     }
 
 
-@pytest.mark.usefixtures("mock_get_source_ip")
 async def test_flow_import_already_configured(hass: HomeAssistant, set_ssdp_discovery):
     """Test config flow: configured through configuration.yaml, but existing config entry."""
     set_ssdp_discovery(TEST_DISCOVERY)
@@ -177,8 +174,7 @@ async def test_flow_import_already_configured(hass: HomeAssistant, set_ssdp_disc
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_get_source_ip")
-async def test_flow_import_no_devices_found(hass: HomeAssistant, set_ssdp_discovery):
+async def test_flow_import_no_devices_found(hass: HomeAssistant):
     """Test config flow: no devices found, configured through configuration.yaml."""
     # Discovered via step import.
     result = await hass.config_entries.flow.async_init(
@@ -188,7 +184,6 @@ async def test_flow_import_no_devices_found(hass: HomeAssistant, set_ssdp_discov
     assert result["reason"] == "no_devices_found"
 
 
-@pytest.mark.usefixtures("mock_get_source_ip")
 async def test_options_flow(hass: HomeAssistant, set_ssdp_discovery):
     """Test options flow."""
     set_ssdp_discovery(TEST_DISCOVERY)
