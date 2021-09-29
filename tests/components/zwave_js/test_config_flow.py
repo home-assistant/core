@@ -2422,6 +2422,14 @@ async def test_import_addon_installed(
     # the default input should be the imported data
     default_input = result["data_schema"]({})
 
+    assert default_input == {
+        "usb_path": "/test/imported",
+        "s0_legacy_key": "imported123",
+        "s2_access_control_key": "",
+        "s2_authenticated_key": "",
+        "s2_unauthenticated_key": "",
+    }
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], default_input
     )
@@ -2429,7 +2437,15 @@ async def test_import_addon_installed(
     assert set_addon_options.call_args == call(
         hass,
         "core_zwave_js",
-        {"options": {"device": "/test/imported", "network_key": "imported123"}},
+        {
+            "options": {
+                "device": "/test/imported",
+                "s0_legacy_key": "imported123",
+                "s2_access_control_key": "",
+                "s2_authenticated_key": "",
+                "s2_unauthenticated_key": "",
+            }
+        },
     )
 
     assert result["type"] == "progress"
@@ -2452,7 +2468,10 @@ async def test_import_addon_installed(
     assert result["data"] == {
         "url": "ws://host1:3001",
         "usb_path": "/test/imported",
-        "network_key": "imported123",
+        "s0_legacy_key": "imported123",
+        "s2_access_control_key": "",
+        "s2_authenticated_key": "",
+        "s2_unauthenticated_key": "",
         "use_addon": True,
         "integration_created_addon": False,
     }
