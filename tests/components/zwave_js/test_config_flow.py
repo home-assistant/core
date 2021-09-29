@@ -278,7 +278,10 @@ async def test_supervisor_discovery(
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     addon_options["device"] = "/test"
-    addon_options["network_key"] = "abc123"
+    addon_options["s0_legacy_key"] = "new123"
+    addon_options["s2_access_control_key"] = "new456"
+    addon_options["s2_authenticated_key"] = "new789"
+    addon_options["s2_unauthenticated_key"] = "new987"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -300,7 +303,10 @@ async def test_supervisor_discovery(
     assert result["data"] == {
         "url": "ws://host1:3001",
         "usb_path": "/test",
-        "network_key": "abc123",
+        "s0_legacy_key": "new123",
+        "s2_access_control_key": "new456",
+        "s2_authenticated_key": "new789",
+        "s2_unauthenticated_key": "new987",
         "use_addon": True,
         "integration_created_addon": False,
     }
