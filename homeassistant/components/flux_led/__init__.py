@@ -25,7 +25,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_CUSTOM_EFFECT, DOMAIN
+from .const import CONF_CUSTOM_EFFECT, DOMAIN, FLUX_HOST
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,7 +90,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the flux_led component."""
     hass.data[DOMAIN] = {}
     discovered_devices = await async_discover_devices(hass)
-    discovered_devices_by_host = {device["ip"]: device for device in discovered_devices}
+    discovered_devices_by_host = {
+        device[FLUX_HOST]: device for device in discovered_devices
+    }
 
     async_import_from_yaml(hass, config, discovered_devices_by_host)
 

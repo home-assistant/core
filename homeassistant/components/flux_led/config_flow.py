@@ -26,6 +26,9 @@ from .const import (
     CONF_REMOVE_DEVICE,
     DEFAULT_EFFECT_SPEED,
     DOMAIN,
+    FLUX_HOST,
+    FLUX_MAC,
+    FLUX_MODEL,
     SIGNAL_ADD_DEVICE,
     SIGNAL_REMOVE_DEVICE,
 )
@@ -81,8 +84,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_handle_discovery(self) -> FlowResult:
         """Handle any discovery."""
-        mac = self._discovered_device["id"]
-        host = self._discovered_device["ip"]
+        mac = self._discovered_device[FLUX_MAC]
+        host = self._discovered_device[FLUX_HOST]
         await self.async_set_unique_id(dr.format_mac(mac))
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         self._async_abort_entries_match({CONF_HOST: host})
@@ -111,10 +114,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Create a config entry from a device."""
         device = self._discovered_device
         return self.async_create_entry(
-            title=f"{device['model']} {device['id']}",
+            title=f"{device[FLUX_MODEL]} {device[FLUX_MAC]}",
             data={
-                CONF_HOST: device["ip"],
-                CONF_NAME: f"{device['model']} {device['id']}",
+                CONF_HOST: device[FLUX_HOST],
+                CONF_NAME: f"{device[FLUX_MODEL]} {device[FLUX_MAC]}",
             },
         )
 
@@ -133,7 +136,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 return self._async_create_entry_from_device(
-                    {"id": None, "model": None, "ip": host}
+                    {FLUX_MAC: None, FLUX_MODEL: None, FLUX_HOST: host}
                 )
 
         return self.async_show_form(
@@ -159,11 +162,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_devices = await async_discover_devices(self.hass)
         devices_name = {
             dr.format_mac(
-                device["id"]
-            ): f"{device['model']} {device['id']} ({device['ip']}"
+                device[FLUX_MAC]
+            ): f"{device[FLUX_MODEL]} {device[FLUX_MAC]} ({device[FLUX_HOST]}"
             for device in self._discovered_devices
-            if dr.format_mac(device["id"]) not in current_unique_ids
-            and device["ip"] not in current_hosts
+            if dr.format_mac(device[FLUX_MAC]) not in current_unique_ids
+            and device[FLUX_HOST] not in current_hosts
         }
         # Check if there is at least one device
         if not devices_name:

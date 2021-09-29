@@ -20,3 +20,8 @@ CONF_CONFIGURE_DEVICE = "configure_device"
 CONF_REMOVE_DEVICE = "remove_device"
 CONF_CUSTOM_EFFECT = "custom_effect"
 CONF_MODEL = "model"
+
+
+FLUX_HOST = "ipaddr"
+FLUX_MAC = "id"
+FLUX_MODEL = "model"
