@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, Literal
 
 from aiotractive.exceptions import TractiveError
 
@@ -29,10 +29,17 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
-class TractiveSwitchEntityDescription(SwitchEntityDescription):
-    """Class describing Tractive switch entities."""
+class TractiveRequiredKeysMixin:
+    """Mixin for required keys."""
 
-    method: str | None = None
+    method: Literal["async_set_buzzer", "async_set_led", "async_set_live_tracking"]
+
+
+@dataclass
+class TractiveSwitchEntityDescription(
+    SwitchEntityDescription, TractiveRequiredKeysMixin
+):
+    """Class describing Tractive switch entities."""
 
 
 SWITCH_TYPES = (
