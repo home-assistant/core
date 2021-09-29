@@ -9,6 +9,7 @@ from flux_led import WifiLedBulb
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODE, CONF_NAME, CONF_PROTOCOL
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -74,6 +75,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_MODE: user_input[CONF_MODE],
             },
         )
+
+    async def async_step_dhcp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+        """Handle discovery via dhcp."""
+        self._discovered_device = {
+            FLUX_HOST: discovery_info[IP_ADDRESS],
+            FLUX_MODEL: discovery_info[HOSTNAME],
+            FLUX_MAC: discovery_info[MAC_ADDRESS],
+        }
+        return await self._async_handle_discovery()
 
     async def async_step_discovery(
         self, discovery_info: DiscoveryInfoType
