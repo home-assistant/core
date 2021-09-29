@@ -928,13 +928,20 @@ async def test_addon_running_already_configured(
 ):
     """Test that only one unique instance is allowed when add-on is running."""
     addon_options["device"] = "/test_new"
-    addon_options["network_key"] = "def456"
+    addon_options["s0_legacy_key"] = "new123"
+    addon_options["s2_access_control_key"] = "new456"
+    addon_options["s2_authenticated_key"] = "new789"
+    addon_options["s2_unauthenticated_key"] = "new987"
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             "url": "ws://localhost:3000",
             "usb_path": "/test",
-            "network_key": "abc123",
+            "network_key": "old123",
+            "s0_legacy_key": "old123",
+            "s2_access_control_key": "old456",
+            "s2_authenticated_key": "old789",
+            "s2_unauthenticated_key": "old987",
         },
         title=TITLE,
         unique_id=1234,
@@ -957,7 +964,10 @@ async def test_addon_running_already_configured(
     assert result["reason"] == "already_configured"
     assert entry.data["url"] == "ws://host1:3001"
     assert entry.data["usb_path"] == "/test_new"
-    assert entry.data["network_key"] == "def456"
+    assert entry.data["s0_legacy_key"] == "new123"
+    assert entry.data["s2_access_control_key"] == "new456"
+    assert entry.data["s2_authenticated_key"] == "new789"
+    assert entry.data["s2_unauthenticated_key"] == "new987"
 
 
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
