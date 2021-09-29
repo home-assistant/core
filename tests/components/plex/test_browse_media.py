@@ -11,12 +11,25 @@ from homeassistant.components.websocket_api.const import ERR_UNKNOWN_ERROR, TYPE
 from .const import DEFAULT_DATA
 
 
+class MockPlexShow:
+    """Mock a plexapi Season instance."""
+
+    ratingKey = 30
+    title = "TV Show"
+    type = "show"
+
+    def __iter__(self):
+        """Iterate over episodes."""
+        yield MockPlexSeason()
+
+
 class MockPlexSeason:
     """Mock a plexapi Season instance."""
 
     ratingKey = 20
     title = "Season 1"
     type = "season"
+    year = 2021
 
     def __iter__(self):
         """Iterate over episodes."""
@@ -29,7 +42,6 @@ class MockPlexEpisode:
     ratingKey = 10
     title = "Episode 1"
     grandparentTitle = "TV Show"
-    parentYear = 2021
     seasonEpisode = "s01e01"
     type = "episode"
 
@@ -197,17 +209,26 @@ async def test_browse_media(
 
     # Browse into a Plex TV show
     msg_id += 1
-    await websocket_client.send_json(
-        {
-            "id": msg_id,
-            "type": "media_player/browse_media",
-            "entity_id": media_players[0],
-            ATTR_MEDIA_CONTENT_TYPE: result["children"][-1][ATTR_MEDIA_CONTENT_TYPE],
-            ATTR_MEDIA_CONTENT_ID: str(result["children"][-1][ATTR_MEDIA_CONTENT_ID]),
-        }
-    )
+    mock_show = MockPlexShow()
+    mock_season = next(iter(mock_show))
+    with patch.object(
+        mock_plex_server, "fetch_item", return_value=mock_show
+    ) as mock_fetch:
+        await websocket_client.send_json(
+            {
+                "id": msg_id,
+                "type": "media_player/browse_media",
+                "entity_id": media_players[0],
+                ATTR_MEDIA_CONTENT_TYPE: result["children"][-1][
+                    ATTR_MEDIA_CONTENT_TYPE
+                ],
+                ATTR_MEDIA_CONTENT_ID: str(
+                    result["children"][-1][ATTR_MEDIA_CONTENT_ID]
+                ),
+            }
+        )
+        msg = await websocket_client.receive_json()
 
-    msg = await websocket_client.receive_json()
     assert msg["id"] == msg_id
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
@@ -215,10 +236,10 @@ async def test_browse_media(
     assert result[ATTR_MEDIA_CONTENT_TYPE] == "show"
     result_id = int(result[ATTR_MEDIA_CONTENT_ID])
     assert result["title"] == mock_plex_server.fetch_item(result_id).title
+    assert result["children"][0]["title"] == f"{mock_season.title} ({mock_season.year})"
 
     # Browse into a Plex TV show season
     msg_id += 1
-    mock_season = MockPlexSeason()
     mock_episode = next(iter(mock_season))
     with patch.object(
         mock_plex_server, "fetch_item", return_value=mock_season
@@ -244,10 +265,10 @@ async def test_browse_media(
     result = msg["result"]
     assert result[ATTR_MEDIA_CONTENT_TYPE] == "season"
     result_id = int(result[ATTR_MEDIA_CONTENT_ID])
-    assert result["title"] == mock_season.title
+    assert result["title"] == f"{mock_season.title} ({mock_season.year})"
     assert (
         result["children"][0]["title"]
-        == f"{mock_episode.grandparentTitle} - {mock_episode.seasonEpisode.upper()} - {mock_episode.title} ({mock_episode.parentYear})"
+        == f"{mock_episode.seasonEpisode.upper()} - {mock_episode.title}"
     )
 
     # Browse into a Plex music library
