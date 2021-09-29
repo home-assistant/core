@@ -979,8 +979,7 @@ class GrowattInverter(SensorEntity):
         """Return the unit of measurement of the sensor, if any."""
         if self.entity_description.currency:
             return self.probe.get_data("currency")
-        else:
-            return super().native_unit_of_measurement
+        return super().native_unit_of_measurement
 
     def update(self):
         """Get the latest data from the Growat API and updates the state."""
@@ -1011,8 +1010,8 @@ class GrowattData:
                 total_info = self.api.plant_info(self.device_id)
                 del total_info["deviceList"]
                 # PlantMoneyText comes in as "3.1/€" split between value and currency
-                plantMoneyText, currency = total_info["plantMoneyText"].split("/")
-                total_info["plantMoneyText"] = plantMoneyText
+                plant_money_text, currency = total_info["plantMoneyText"].split("/")
+                total_info["plantMoneyText"] = plant_money_text
                 total_info["currency"] = currency
                 self.data = total_info
             elif self.growatt_type == "inverter":
