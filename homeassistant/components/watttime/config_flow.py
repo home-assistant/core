@@ -62,7 +62,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 @callback
 def get_unique_id(data: dict[str, Any]) -> str:
-    """Get a unique ID (if possible) from provided data."""
+    """Get a unique ID from a data payload."""
     return f"{data[CONF_LATITUDE]}, {data[CONF_LONGITUDE]}"
 
 
