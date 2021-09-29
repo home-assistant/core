@@ -89,18 +89,16 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
     def __init__(
         self,
         user_id: str,
-        trackables: Trackables,
+        item: Trackables,
         description: TractiveSwitchEntityDescription,
     ) -> None:
         """Initialize switch entity."""
-        super().__init__(user_id, trackables.trackable, trackables.tracker_details)
+        super().__init__(user_id, item.trackable, item.tracker_details)
 
-        self._attr_name = (
-            f"{trackables.trackable['details']['name']} {description.name}"
-        )
-        self._attr_unique_id = f"{trackables.trackable['_id']}_{description.key}"
+        self._attr_name = f"{item.trackable['details']['name']} {description.name}"
+        self._attr_unique_id = f"{item.trackable['_id']}_{description.key}"
         self._attr_available = False
-        self._tracker = trackables.tracker
+        self._tracker = item.tracker
         self._method = getattr(self, description.method)
         self.entity_description = description
 
