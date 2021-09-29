@@ -118,7 +118,7 @@ class HoneywellData:
             return False
 
         self.devices = devices
-        update_listener(self._hass, self._config)
+        await self._hass.config_entries.async_reload(self._config.entry_id)
         return True
 
     async def _refresh_devices(self):
