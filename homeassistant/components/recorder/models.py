@@ -275,7 +275,7 @@ class StatisticsBase:
     sum = Column(DOUBLE_TYPE)
 
     @classmethod
-    def from_stats(cls, metadata_id: str, stats: StatisticData):
+    def from_stats(cls, metadata_id: int, stats: StatisticData):
         """Create object from a statistics."""
         return cls(  # type: ignore
             metadata_id=metadata_id,
