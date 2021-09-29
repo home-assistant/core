@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import concurrent.futures
 from datetime import datetime, timedelta
 import logging
@@ -9,7 +10,7 @@ import queue
 import sqlite3
 import threading
 import time
-from typing import Any, Callable, NamedTuple
+from typing import Any, NamedTuple
 
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, func, select
 from sqlalchemy.exc import SQLAlchemyError

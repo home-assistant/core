@@ -1,8 +1,9 @@
 """Constants for the Picnic integration."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable, Literal
+from typing import Any, Literal
 
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import CURRENCY_EURO, DEVICE_CLASS_TIMESTAMP

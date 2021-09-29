@@ -1,14 +1,14 @@
 """SQLAlchemy util functions."""
 from __future__ import annotations
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from datetime import timedelta
 import functools
 import logging
 import os
 import time
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from sqlalchemy import text
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
