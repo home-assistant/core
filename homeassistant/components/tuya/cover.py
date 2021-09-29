@@ -14,7 +14,7 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
@@ -49,7 +49,8 @@ async def async_setup_entry(
         DEVICE_DOMAIN
     ] = TUYA_SUPPORT_TYPE
 
-    async def async_discover_device(dev_ids: list[str]) -> None:
+    @callback
+    def async_discover_device(dev_ids: list[str]) -> None:
         """Discover and add a discovered tuya cover."""
         _LOGGER.debug("cover add-> %s", dev_ids)
         if not dev_ids:
@@ -70,7 +71,7 @@ async def async_setup_entry(
     for (device_id, device) in device_manager.device_map.items():
         if device.category in TUYA_SUPPORT_TYPE:
             device_ids.append(device_id)
-    await async_discover_device(device_ids)
+    async_discover_device(device_ids)
 
 
 def _setup_entities(
