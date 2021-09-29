@@ -49,7 +49,7 @@ async def async_setup_entry(
         DEVICE_DOMAIN
     ] = TUYA_SUPPORT_TYPE
 
-    async def async_discover_device(dev_ids):
+    async def async_discover_device(dev_ids: list[str]) -> None:
         """Discover and add a discovered tuya cover."""
         _LOGGER.debug("cover add-> %s", dev_ids)
         if not dev_ids:
@@ -59,8 +59,10 @@ async def async_setup_entry(
         )
         async_add_entities(entities)
 
-    async_dispatcher_connect(
-        hass, TUYA_DISCOVERY_NEW.format(DEVICE_DOMAIN), async_discover_device
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, TUYA_DISCOVERY_NEW.format(DEVICE_DOMAIN), async_discover_device
+        )
     )
 
     device_manager = hass.data[DOMAIN][entry.entry_id][TUYA_DEVICE_MANAGER]
@@ -72,7 +74,7 @@ async def async_setup_entry(
 
 
 def _setup_entities(
-    hass: HomeAssistant, entry: ConfigEntry, device_ids: list
+    hass: HomeAssistant, entry: ConfigEntry, device_ids: list[str]
 ) -> list[Entity]:
     """Set up Tuya Cover."""
     device_manager = hass.data[DOMAIN][entry.entry_id][TUYA_DEVICE_MANAGER]
@@ -115,11 +117,11 @@ class TuyaHaCover(TuyaHaEntity, CoverEntity):
         """Close cover."""
         self._send_command([{"code": DPCODE_CONTROL, "value": "close"}])
 
-    def stop_cover(self, **kwargs):
+    def stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         self._send_command([{"code": DPCODE_CONTROL, "value": "stop"}])
 
-    def set_cover_position(self, **kwargs):
+    def set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         _LOGGER.debug("cover--> %s", kwargs)
         self._send_command(
