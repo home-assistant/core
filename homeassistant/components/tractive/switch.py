@@ -64,17 +64,11 @@ async def async_setup_entry(
     client = hass.data[DOMAIN][entry.entry_id][CLIENT]
     trackables = hass.data[DOMAIN][entry.entry_id][TRACKABLES]
 
-    entities = []
-
-    for item in trackables:
-        for description in SWITCH_TYPES:
-            entities.append(
-                TractiveSwitch(
-                    client.user_id,
-                    item,
-                    description,
-                )
-            )
+    entities = [
+        TractiveSwitch(client.user_id, item, description)
+        for description in SWITCH_TYPES
+        for item in trackables
+    ]
 
     async_add_entities(entities)
 
