@@ -72,6 +72,9 @@ SWING_VERTICAL = "swing_vertical"
 SWING_HORIZONTAL = "swing_horizontal"
 SWING_BOTH = "swing_both"
 
+DEFAULT_MIN_TEMP = 7
+DEFAULT_MAX_TEMP = 35
+
 TUYA_HVAC_TO_HA = {
     "hot": HVAC_MODE_HEAT,
     "cold": HVAC_MODE_COOL,
@@ -246,7 +249,7 @@ class TuyaHaClimate(TuyaHaEntity, ClimateEntity):
         )
 
     def is_celsius(self) -> bool:
-        """Return True if device reports in Celsius"""
+        """Return True if device reports in Celsius."""
         if (
             self.dp_temp_unit in self.tuya_device.status
             and self.tuya_device.status.get(self.dp_temp_unit).lower() == "c"
@@ -313,69 +316,69 @@ class TuyaHaClimate(TuyaHaEntity, ClimateEntity):
         """Return the maximum temperature."""
         scale = self.get_temp_set_scale()
         if scale is None:
-            return None
+            return DEFAULT_MAX_TEMP
 
         if self.is_celsius():
             if DPCODE_TEMP_SET not in self.tuya_device.function:
-                return None
+                return DEFAULT_MAX_TEMP
 
             function_item = self.tuya_device.function.get(DPCODE_TEMP_SET)
             if function_item is None:
-                return None
+                return DEFAULT_MAX_TEMP
 
             temp_value = json.loads(function_item.values)
 
-            max = temp_value.get("max")
-            if max is None:
-                return None
-            return max * 1.0 / (10 ** scale)
+            temp_max = temp_value.get("max")
+            if temp_max is None:
+                return DEFAULT_MAX_TEMP
+            return temp_max * 1.0 / (10 ** scale)
         if DPCODE_TEMP_SET_F not in self.tuya_device.function:
-            return None
+            return DEFAULT_MAX_TEMP
 
         function_item_f = self.tuya_device.function.get(DPCODE_TEMP_SET_F)
         if function_item_f is None:
-            return None
+            return DEFAULT_MAX_TEMP
 
         temp_value_f = json.loads(function_item_f.values)
 
-        max_f = temp_value_f.get("max")
-        if max_f is None:
-            return None
-        return max_f * 1.0 / (10 ** scale)
+        temp_max_f = temp_value_f.get("max")
+        if temp_max_f is None:
+            return DEFAULT_MAX_TEMP
+        return temp_max_f * 1.0 / (10 ** scale)
 
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         temp_set_scal = self.get_temp_set_scale()
         if temp_set_scal is None:
-            return None
+            return DEFAULT_MIN_TEMP
 
         if self.is_celsius():
             if DPCODE_TEMP_SET not in self.tuya_device.function:
-                return None
+                return DEFAULT_MIN_TEMP
 
             function_temp_item = self.tuya_device.function.get(DPCODE_TEMP_SET)
             if function_temp_item is None:
-                return None
+                return DEFAULT_MIN_TEMP
             temp_value = json.loads(function_temp_item.values)
-            min = temp_value.get("min")
-            if min is None:
-                return None
-            return min * 1.0 / (10 ** temp_set_scal)
+            temp_min = temp_value.get("min")
+            if temp_min is None:
+                return DEFAULT_MIN_TEMP
+            return temp_min * 1.0 / (10 ** temp_set_scal)
 
         if DPCODE_TEMP_SET_F not in self.tuya_device.function:
-            return None
+            return DEFAULT_MIN_TEMP
 
         temp_value_temp_f = self.tuya_device.function.get(DPCODE_TEMP_SET_F)
         if temp_value_temp_f is None:
-            return None
+            return DEFAULT_MIN_TEMP
         temp_value_f = json.loads(temp_value_temp_f.values)
 
-        min_f = temp_value_f.get("min")
-        if min_f is None:
-            return None
+        temp_min_f = temp_value_f.get("min")
+        if temp_min_f is None:
+            return DEFAULT_MIN_TEMP
 
-        return min_f * 1.0 / (10 ** temp_set_scal)
+        return temp_min_f * 1.0 / (10 ** temp_set_scal)
 
     @property
     def target_temperature_step(self) -> float | None:
