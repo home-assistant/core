@@ -1,12 +1,12 @@
 """Support for AVM FRITZ!Box classes."""
 from __future__ import annotations
 
-from collections.abc import ValuesView
+from collections.abc import Callable, ValuesView
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import logging
 from types import MappingProxyType
-from typing import Any, Callable, TypedDict
+from typing import Any, TypedDict
 
 from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import (
