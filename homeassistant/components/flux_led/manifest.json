@@ -5,5 +5,21 @@
   "documentation": "https://www.home-assistant.io/integrations/flux_led",
   "requirements": ["flux_led==0.22"],
   "codeowners": ["@djtimca", "@icemanch"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "dhcp": [
+  {
+    "macaddress": "18B905*",
+    "hostname": "[ba][lk]*"
+  },
+  {
+    "macaddress": "249494*",
+    "hostname": "[ba][lk]*"
+  },
+  {
+    "macaddress": "B4E842*",
+    "hostname": "[ba][lk]*"
+  }
+  ]
 }
+
+
