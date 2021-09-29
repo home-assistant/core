@@ -125,8 +125,8 @@ WARN_UNSUPPORTED_UNIT = "sensor_warn_unsupported_unit"
 WARN_UNSTABLE_UNIT = "sensor_warn_unstable_unit"
 
 
-def _get_entities(hass: HomeAssistant) -> list[tuple[str, State]]:
-    """Get (entity_id, state_class, device_class) of all sensors for which to compile statistics."""
+def _get_sensor_states(hass: HomeAssistant) -> list[State]:
+    """Get the current state of all sensors for which to compile statistics."""
     all_sensors = hass.states.all(DOMAIN)
     entity_ids = []
 
@@ -135,7 +135,7 @@ def _get_entities(hass: HomeAssistant) -> list[tuple[str, State]]:
             continue
         if (state.attributes.get(ATTR_STATE_CLASS)) not in STATE_CLASSES:
             continue
-        entity_ids.append((state.entity_id, state))
+        entity_ids.append(state)
 
     return entity_ids
 
@@ -298,18 +298,18 @@ def reset_detected(
     return state < 0.9 * previous_state
 
 
-def _wanted_statistics(entities: list[tuple[str, State]]) -> dict[str, set[str]]:
+def _wanted_statistics(sensor_states: list[State]) -> dict[str, set[str]]:
     """Prepare a dict with wanted statistics for entities."""
     wanted_statistics = {}
-    for entity_id, state in entities:
+    for state in sensor_states:
         state_class = state.attributes[ATTR_STATE_CLASS]
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
         if device_class in DEVICE_CLASS_STATISTICS[state_class]:
-            wanted_statistics[entity_id] = DEVICE_CLASS_STATISTICS[state_class][
+            wanted_statistics[state.entity_id] = DEVICE_CLASS_STATISTICS[state_class][
                 device_class
             ]
         else:
-            wanted_statistics[entity_id] = DEFAULT_STATISTICS[state_class]
+            wanted_statistics[state.entity_id] = DEFAULT_STATISTICS[state_class]
     return wanted_statistics
 
 
@@ -337,11 +337,13 @@ def compile_statistics(  # noqa: C901
     """
     result: list[StatisticResult] = []
 
-    entities = _get_entities(hass)
-    wanted_statistics = _wanted_statistics(entities)
+    sensor_states = _get_sensor_states(hass)
+    wanted_statistics = _wanted_statistics(sensor_states)
 
     # Get history between start and end
-    entities_full_history = [i[0] for i in entities if "sum" in wanted_statistics[i[0]]]
+    entities_full_history = [
+        i.entity_id for i in sensor_states if "sum" in wanted_statistics[i.entity_id]
+    ]
     history_list = {}
     if entities_full_history:
         history_list = history.get_significant_states(  # type: ignore
@@ -352,7 +354,9 @@ def compile_statistics(  # noqa: C901
             significant_changes_only=False,
         )
     entities_significant_history = [
-        i[0] for i in entities if "sum" not in wanted_statistics[i[0]]
+        i.entity_id
+        for i in sensor_states
+        if "sum" not in wanted_statistics[i.entity_id]
     ]
     if entities_significant_history:
         _history_list = history.get_significant_states(  # type: ignore
@@ -364,11 +368,12 @@ def compile_statistics(  # noqa: C901
         history_list = {**history_list, **_history_list}
     # If there are no recent state changes, the sensor's state may already be pruned
     # from the recorder. Get the state from the state machine instead.
-    for entity_id, _state in entities:
-        if entity_id not in history_list:
-            history_list[entity_id] = (_state,)
+    for _state in sensor_states:
+        if _state.entity_id not in history_list:
+            history_list[_state.entity_id] = (_state,)
 
-    for (entity_id, _state) in entities:  # pylint: disable=too-many-nested-blocks
+    for _state in sensor_states:  # pylint: disable=too-many-nested-blocks
+        entity_id = _state.entity_id
         if entity_id not in history_list:
             continue
 
@@ -518,11 +523,11 @@ def compile_statistics(  # noqa: C901
 
 def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -> dict:
     """Return statistic_ids and meta data."""
-    entities = _get_entities(hass)
+    entities = _get_sensor_states(hass)
 
     statistic_ids = {}
 
-    for entity_id, state in entities:
+    for state in entities:
         state_class = state.attributes[ATTR_STATE_CLASS]
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
         native_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -543,14 +548,14 @@ def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -
             continue
 
         if device_class not in UNIT_CONVERSIONS:
-            statistic_ids[entity_id] = native_unit
+            statistic_ids[state.entity_id] = native_unit
             continue
 
         if native_unit not in UNIT_CONVERSIONS[device_class]:
             continue
 
         statistics_unit = DEVICE_CLASS_UNITS[device_class]
-        statistic_ids[entity_id] = statistics_unit
+        statistic_ids[state.entity_id] = statistics_unit
 
     return statistic_ids
 
@@ -561,9 +566,10 @@ def validate_statistics(
     """Validate statistics."""
     validation_result = defaultdict(list)
 
-    entities = _get_entities(hass)
+    sensor_states = _get_sensor_states(hass)
 
-    for (entity_id, state) in entities:
+    for state in sensor_states:
+        entity_id = state.entity_id
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
