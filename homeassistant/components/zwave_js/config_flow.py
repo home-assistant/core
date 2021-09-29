@@ -321,8 +321,10 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         This step will be used when importing data
         during Z-Wave to Z-Wave JS migration.
         """
-        self.network_key = data.get(CONF_NETWORK_KEY)
-        self.usb_path = data.get(CONF_USB_PATH)
+        # Note that the data comes from the zwave integration.
+        # So we don't use our constants here.
+        self.s0_legacy_key = data.get("network_key")
+        self.usb_path = data.get("usb_path")
         return await self.async_step_user()
 
     async def async_step_user(
