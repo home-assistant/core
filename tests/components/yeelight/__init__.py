@@ -37,6 +37,17 @@ CAPABILITIES = {
     "name": "",
 }
 
+ID_DECIMAL = f"{int(ID, 16):08d}"
+
+ZEROCONF_DATA = {
+    "host": IP_ADDRESS,
+    "port": 54321,
+    "hostname": f"yeelink-light-strip1_miio{ID_DECIMAL}.local.",
+    "type": "_miio._udp.local.",
+    "name": f"yeelink-light-strip1_miio{ID_DECIMAL}._miio._udp.local.",
+    "properties": {"epoch": "1", "mac": "000000000000"},
+}
+
 NAME = "name"
 SHORT_ID = hex(int("0x000000000015243f", 16))
 UNIQUE_NAME = f"yeelight_{MODEL}_{SHORT_ID}"
