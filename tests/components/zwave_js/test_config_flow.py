@@ -589,11 +589,28 @@ async def test_discovery_addon_not_running(
     assert result["step_id"] == "configure_addon"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"usb_path": "/test", "network_key": "abc123"}
+        result["flow_id"],
+        {
+            "usb_path": "/test",
+            "s0_legacy_key": "new123",
+            "s2_access_control_key": "new456",
+            "s2_authenticated_key": "new789",
+            "s2_unauthenticated_key": "new987",
+        },
     )
 
     assert set_addon_options.call_args == call(
-        hass, "core_zwave_js", {"options": {"device": "/test", "network_key": "abc123"}}
+        hass,
+        "core_zwave_js",
+        {
+            "options": {
+                "device": "/test",
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+            }
+        },
     )
 
     assert result["type"] == "progress"
@@ -616,7 +633,10 @@ async def test_discovery_addon_not_running(
     assert result["data"] == {
         "url": "ws://host1:3001",
         "usb_path": "/test",
-        "network_key": "abc123",
+        "s0_legacy_key": "new123",
+        "s2_access_control_key": "new456",
+        "s2_authenticated_key": "new789",
+        "s2_unauthenticated_key": "new987",
         "use_addon": True,
         "integration_created_addon": False,
     }
