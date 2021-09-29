@@ -33,7 +33,6 @@ from homeassistant.const import (
     ATTR_MODEL,
     ATTR_NAME,
     CONF_DEVICES,
-    CONF_HOST,
     CONF_MODE,
     CONF_NAME,
     CONF_PROTOCOL,
@@ -42,7 +41,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.color as color_util
 
@@ -168,27 +166,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Flux lights."""
-    for ipaddr, device_config in config.get(CONF_DEVICES, {}).items():
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data={
-                    CONF_HOST: ipaddr,
-                    CONF_NAME: device_config[CONF_NAME],
-                    CONF_PROTOCOL: device_config.get(CONF_PROTOCOL),
-                    CONF_MODE: device_config[ATTR_MODE],
-                    CONF_CUSTOM_EFFECT: device_config.get(CONF_CUSTOM_EFFECT),
-                },
-            )
-        )
+CUSTOM_EFFECT_COLOR_SCHEMA = vol.Schema(
+    vol.All(
+        cv.ensure_list,
+        vol.Length(min=1, max=16),
+        [vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple))],
+    )
+)
 
 
 async def async_setup_entry(
@@ -207,8 +191,15 @@ async def async_setup_entry(
         CUSTOM_EFFECT_SCHEMA,
         "set_custom_effect",
     )
-
     options = entry.options
+
+    try:
+        custom_effect_colors = CUSTOM_EFFECT_COLOR_SCHEMA(
+            options.get(CONF_CUSTOM_EFFECT_COLORS)
+        )
+    except vol.Invalid:
+        custom_effect_colors = []
+
     async_add_entities(
         [
             FluxLight(
@@ -216,7 +207,7 @@ async def async_setup_entry(
                 entry.unique_id,
                 entry.data[CONF_NAME],
                 options.get(CONF_MODE, MODE_AUTO),
-                options.get(CONF_CUSTOM_EFFECT_COLORS, []),
+                custom_effect_colors,
                 options.get(CONF_CUSTOM_EFFECT_SPEED_PCT, DEFAULT_EFFECT_SPEED),
                 options.get(CONF_CUSTOM_EFFECT_TRANSITION, TRANSITION_GRADUAL),
             )
