@@ -34,4 +34,4 @@ TUYA_PROJECT_TYPE = {1: "Custom Development", 0: "Smart Home PaaS"}
 
 TUYA_APP_TYPE = {"tuyaSmart": "TuyaSmart", "smartlife": "Smart Life"}
 
-PLATFORMS = ["cover", "light", "scene", "switch"]
+PLATFORMS = ["cover", "fan", "light", "scene", "switch"]
