@@ -8,7 +8,11 @@ from typing import Any
 from vallox_websocket_api import Vallox
 from vallox_websocket_api.exceptions import ValloxApiException
 
-from homeassistant.components.fan import SUPPORT_PRESET_MODE, FanEntity
+from homeassistant.components.fan import (
+    SUPPORT_PRESET_MODE,
+    FanEntity,
+    NotValidPresetModeError,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -171,8 +175,11 @@ class ValloxFan(FanEntity):
 
         Returns true if the mode has been changed, false otherwise.
         """
-        if preset_mode not in STR_TO_VALLOX_PROFILE_SETTABLE:
-            _LOGGER.error("%s is not a valid preset", preset_mode)
+        try:
+            self._valid_preset_mode_or_raise(preset_mode)  # type: ignore[no-untyped-call]
+
+        except NotValidPresetModeError as err:
+            _LOGGER.error(err)
             return False
 
         if preset_mode == self.preset_mode:
