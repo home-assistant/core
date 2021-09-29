@@ -8,8 +8,10 @@ from typing import Any
 from aiotractive.exceptions import TractiveError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ATTR_BUZZER,
@@ -55,19 +57,21 @@ SWITCH_TYPES = (
 )
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Tractive switches."""
     client = hass.data[DOMAIN][entry.entry_id][CLIENT]
     trackables = hass.data[DOMAIN][entry.entry_id][TRACKABLES]
 
     entities = []
 
-    for trackable in trackables:
+    for item in trackables:
         for description in SWITCH_TYPES:
             entities.append(
                 TractiveSwitch(
                     client.user_id,
-                    trackable,
+                    item,
                     description,
                 )
             )
@@ -80,25 +84,27 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
 
     entity_description: TractiveSwitchEntityDescription
 
-    def __init__(self, user_id, trackable, description):
+    def __init__(self, user_id, trackables, description) -> None:
         """Initialize switch entity."""
-        super().__init__(user_id, trackable.trackable, trackable.tracker_details)
+        super().__init__(user_id, trackables.trackable, trackables.tracker_details)
 
-        self._attr_name = f"{trackable.trackable['details']['name']} {description.name}"
-        self._attr_unique_id = f"{trackable.trackable['_id']}_{description.key}"
+        self._attr_name = (
+            f"{trackables.trackable['details']['name']} {description.name}"
+        )
+        self._attr_unique_id = f"{trackables.trackable['_id']}_{description.key}"
         self._attr_available = False
-        self._tracker = trackable.tracker
+        self._tracker = trackables.tracker
         self._method = getattr(self, description.method)
         self.entity_description = description
 
     @callback
-    def handle_server_unavailable(self):
+    def handle_server_unavailable(self) -> None:
         """Handle server unavailable."""
         self._attr_available = False
         self.async_write_ha_state()
 
     @callback
-    def handle_hardware_status_update(self, event):
+    def handle_hardware_status_update(self, event: dict[str, Any]) -> None:
         """Handle hardware status update."""
         if (_state := event[self.entity_description.key]) is None:
             return
@@ -106,7 +112,7 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
         self._attr_available = True
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
 
         self.async_on_remove(
@@ -125,7 +131,7 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
             )
         )
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on a switch."""
         try:
             result = await self._method(True)
@@ -137,7 +143,7 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
             self._attr_is_on = True
             self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off a switch."""
         try:
             result = await self._method(False)
