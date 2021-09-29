@@ -1,9 +1,9 @@
 """Helper class to implement include/exclude of entities and domains."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import fnmatch
 import re
-from typing import Callable
 
 import voluptuous as vol
 

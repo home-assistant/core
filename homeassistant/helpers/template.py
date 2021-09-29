@@ -5,7 +5,7 @@ from ast import literal_eval
 import asyncio
 import base64
 import collections.abc
-from collections.abc import Generator, Iterable
+from collections.abc import Callable, Generator, Iterable
 from contextlib import suppress
 from contextvars import ContextVar
 from datetime import datetime, timedelta
@@ -17,7 +17,7 @@ from operator import attrgetter
 import random
 import re
 import sys
-from typing import Any, Callable, cast
+from typing import Any, cast
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
