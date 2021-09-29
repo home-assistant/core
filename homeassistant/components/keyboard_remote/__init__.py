@@ -301,7 +301,7 @@ class KeyboardRemote:
                                 KEYBOARD_REMOTE_COMMAND_RECEIVED,
                                 {
                                     KEY_CODE: event.code,
-                                    TYPE: KEY_VALUE_NAME.get(event.value),
+                                    TYPE: KEY_VALUE_NAME[event.value],
                                     DEVICE_DESCRIPTOR: dev.path,
                                     DEVICE_NAME: dev.name,
                                 },
