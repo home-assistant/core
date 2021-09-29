@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -53,7 +52,6 @@ SENSOR_DESCRIPTION_UPTIME = SensorEntityDescription(
     name="Uptime",
     icon="mdi:timer",
     native_unit_of_measurement=TIME_MINUTES,
-    state_class=STATE_CLASS_TOTAL_INCREASING,
 )
 
 PAIRED_SENSOR_DESCRIPTIONS = (
