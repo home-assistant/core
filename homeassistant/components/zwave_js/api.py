@@ -1,10 +1,11 @@
 """Websocket API for Z-Wave JS."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import dataclasses
 from functools import partial, wraps
 import json
-from typing import Any, Callable
+from typing import Any
 
 from aiohttp import hdrs, web, web_exceptions, web_request
 import voluptuous as vol

@@ -1,6 +1,7 @@
 """Support for sending data to an Influx database."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 import logging
@@ -8,7 +9,7 @@ import math
 import queue
 import threading
 import time
-from typing import Any, Callable
+from typing import Any
 
 from influxdb import InfluxDBClient, exceptions
 from influxdb_client import InfluxDBClient as InfluxDBClientV2

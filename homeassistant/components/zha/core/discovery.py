@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Callable
 import logging
-from typing import Callable
 
 from homeassistant import const as ha_const
 from homeassistant.core import HomeAssistant, callback
