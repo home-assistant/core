@@ -101,7 +101,7 @@ async def setup_general_and_feed_in(hass) -> AsyncGenerator:
 
 async def test_general_price_sensor(hass: HomeAssistant, setup_general: Mock) -> None:
     """Test the General Price sensor."""
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 4
     price = hass.states.get("sensor.mock_title_general_price")
     assert price
     assert price.state == "0.08"
@@ -140,7 +140,7 @@ async def test_general_and_controlled_load_price_sensor(
     hass: HomeAssistant, setup_general_and_controlled_load: Mock
 ) -> None:
     """Test the Controlled Price sensor."""
-    assert len(hass.states.async_all()) == 5
+    assert len(hass.states.async_all()) == 6
     print(hass.states)
     price = hass.states.get("sensor.mock_title_controlled_load_price")
     assert price
@@ -164,7 +164,7 @@ async def test_general_and_feed_in_price_sensor(
     hass: HomeAssistant, setup_general_and_feed_in: Mock
 ) -> None:
     """Test the Feed In sensor."""
-    assert len(hass.states.async_all()) == 5
+    assert len(hass.states.async_all()) == 6
     print(hass.states)
     price = hass.states.get("sensor.mock_title_feed_in_price")
     assert price
@@ -188,7 +188,7 @@ async def test_general_forecast_sensor(
     hass: HomeAssistant, setup_general: Mock
 ) -> None:
     """Test the General Forecast sensor."""
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 4
     price = hass.states.get("sensor.mock_title_general_forecast")
     assert price
     assert price.state == "0.09"
@@ -230,7 +230,7 @@ async def test_controlled_load_forecast_sensor(
     hass: HomeAssistant, setup_general_and_controlled_load: Mock
 ) -> None:
     """Test the Controlled Load Forecast sensor."""
-    assert len(hass.states.async_all()) == 5
+    assert len(hass.states.async_all()) == 6
     price = hass.states.get("sensor.mock_title_controlled_load_forecast")
     assert price
     assert price.state == "0.09"
@@ -254,7 +254,7 @@ async def test_feed_in_forecast_sensor(
     hass: HomeAssistant, setup_general_and_feed_in: Mock
 ) -> None:
     """Test the Feed In Forecast sensor."""
-    assert len(hass.states.async_all()) == 5
+    assert len(hass.states.async_all()) == 6
     price = hass.states.get("sensor.mock_title_feed_in_forecast")
     assert price
     assert price.state == "-0.09"
@@ -276,7 +276,7 @@ async def test_feed_in_forecast_sensor(
 
 def test_renewable_sensor(hass: HomeAssistant, setup_general) -> None:
     """Testing the creation of the Amber renewables sensor."""
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 4
     sensor = hass.states.get("sensor.mock_title_renewables")
     assert sensor
     assert sensor.state == "51"
