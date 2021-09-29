@@ -381,6 +381,49 @@ async def test_remove_clients(hass, aioclient_mock, mock_unifi_websocket):
     assert hass.states.get("device_tracker.client_2")
 
 
+async def test_remove_client_but_keep_device_entry(
+    hass, aioclient_mock, mock_unifi_websocket
+):
+    """Test that unifi entity base remove config entry id from a multi integration device registry entry."""
+    client_1 = {
+        "essid": "ssid",
+        "hostname": "client_1",
+        "is_wired": False,
+        "last_seen": 1562600145,
+        "mac": "00:00:00:00:00:01",
+    }
+    await setup_unifi_integration(hass, aioclient_mock, clients_response=[client_1])
+
+    device_registry = dr.async_get(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id="other",
+        connections={("mac", "00:00:00:00:00:01")},
+    )
+
+    entity_registry = er.async_get(hass)
+    other_entity = entity_registry.async_get_or_create(
+        TRACKER_DOMAIN,
+        "other",
+        "unique_id",
+        device_id=device_entry.id,
+    )
+    assert len(device_entry.config_entries) == 2
+
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_CLIENT_REMOVED},
+            "data": [client_1],
+        }
+    )
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 0
+
+    device_entry = device_registry.async_get(other_entity.device_id)
+    assert len(device_entry.config_entries) == 1
+
+
 async def test_controller_state_change(hass, aioclient_mock, mock_unifi_websocket):
     """Verify entities state reflect on controller becoming unavailable."""
     client = {

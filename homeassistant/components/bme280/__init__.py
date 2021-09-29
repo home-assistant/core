@@ -30,7 +30,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_T_STANDBY,
     DOMAIN,
-    SENSOR_TYPES,
+    SENSOR_KEYS,
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -54,7 +54,7 @@ CONFIG_SCHEMA = vol.Schema(
                         ): vol.Coerce(float),
                         vol.Optional(
                             CONF_MONITORED_CONDITIONS, default=DEFAULT_MONITORED
-                        ): vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+                        ): vol.All(cv.ensure_list, [vol.In(SENSOR_KEYS)]),
                         vol.Optional(
                             CONF_OVERSAMPLING_TEMP, default=DEFAULT_OVERSAMPLING_TEMP
                         ): vol.Coerce(int),

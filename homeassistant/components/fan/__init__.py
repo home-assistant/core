@@ -25,6 +25,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
@@ -124,7 +125,7 @@ def is_on(hass, entity_id: str) -> bool:
     return state.state == STATE_ON
 
 
-async def async_setup(hass, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Expose fan control via statemachine and services."""
     component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL

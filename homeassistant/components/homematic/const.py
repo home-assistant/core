@@ -62,6 +62,7 @@ HM_DEVICE_TYPES = {
         "IPWIODevice",
         "IPSwitchBattery",
         "IPMultiIOPCB",
+        "IPGarageSwitch",
     ],
     DISCOVER_LIGHTS: [
         "Dimmer",
@@ -125,6 +126,7 @@ HM_DEVICE_TYPES = {
         "TempModuleSTE2",
         "IPMultiIOPCB",
         "ValveBoxW",
+        "CO2SensorIP",
     ],
     DISCOVER_CLIMATE: [
         "Thermostat",

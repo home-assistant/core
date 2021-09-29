@@ -130,6 +130,7 @@ class ONVIFDevice:
                 err,
             )
             self.available = False
+            await self.device.close()
         except Fault as err:
             LOGGER.error(
                 "Couldn't connect to camera '%s', please verify "

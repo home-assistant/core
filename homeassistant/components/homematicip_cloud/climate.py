@@ -262,7 +262,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         return self._home.get_functionalHome(IndoorClimateHome)
 
     @property
-    def _device_profiles(self) -> list[str]:
+    def _device_profiles(self) -> list[Any]:
         """Return the relevant profiles."""
         return [
             profile
@@ -301,10 +301,10 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         )
 
     @property
-    def _relevant_profile_group(self) -> list[str]:
+    def _relevant_profile_group(self) -> dict[str, int]:
         """Return the relevant profile groups."""
         if self._disabled_by_cooling_mode:
-            return []
+            return {}
 
         return HEATING_PROFILES if self._heat_mode_enabled else COOLING_PROFILES
 

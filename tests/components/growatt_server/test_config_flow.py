@@ -40,7 +40,7 @@ GROWATT_PLANT_LIST_RESPONSE = {
     },
     "success": True,
 }
-GROWATT_LOGIN_RESPONSE = {"userId": 123456, "userLevel": 1, "success": True}
+GROWATT_LOGIN_RESPONSE = {"user": {"id": 123456}, "userLevel": 1, "success": True}
 
 
 async def test_show_authenticate_form(hass):

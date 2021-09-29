@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrase\u00f1a"
+                },
+                "description": "Por favor, introduzca las credenciales utilizadas para iniciar sesi\u00f3n en mytotalconnectcomfort.com.",
+                "title": "Honeywell Total Connect Comfort (US)"
+            }
+        }
+    }
+}

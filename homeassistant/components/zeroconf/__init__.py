@@ -5,9 +5,10 @@ import asyncio
 from collections.abc import Coroutine
 from contextlib import suppress
 import fnmatch
-import ipaddress
+from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
 import socket
+import sys
 from typing import Any, TypedDict, cast
 
 import voluptuous as vol
@@ -28,6 +29,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_homekit, async_get_zeroconf, bind_hass
 
 from .models import HaAsyncServiceBrowser, HaAsyncZeroconf, HaZeroconf
@@ -130,41 +132,49 @@ async def _async_get_instance(hass: HomeAssistant, **zcargs: Any) -> HaAsyncZero
     return aio_zc
 
 
-def _async_use_default_interface(adapters: list[Adapter]) -> bool:
-    for adapter in adapters:
-        if adapter["enabled"] and not adapter["default"]:
-            return False
-    return True
+@callback
+def _async_zc_has_functional_dual_stack() -> bool:
+    """Return true for platforms that not support IP_ADD_MEMBERSHIP on an AF_INET6 socket.
+
+    Zeroconf only supports a single listen socket at this time.
+    """
+    return not sys.platform.startswith("freebsd") and not sys.platform.startswith(
+        "darwin"
+    )
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Zeroconf and make Home Assistant discoverable."""
-    zc_args: dict = {}
+    zc_args: dict = {"ip_version": IPVersion.V4Only}
 
     adapters = await network.async_get_adapters(hass)
 
-    ipv6 = True
-    if not any(adapter["enabled"] and adapter["ipv6"] for adapter in adapters):
-        ipv6 = False
-        zc_args["ip_version"] = IPVersion.V4Only
-    else:
-        zc_args["ip_version"] = IPVersion.All
+    ipv6 = False
+    if _async_zc_has_functional_dual_stack():
+        if any(adapter["enabled"] and adapter["ipv6"] for adapter in adapters):
+            ipv6 = True
+            zc_args["ip_version"] = IPVersion.All
+    elif not any(adapter["enabled"] and adapter["ipv4"] for adapter in adapters):
+        zc_args["ip_version"] = IPVersion.V6Only
+        ipv6 = True
 
-    if not ipv6 and _async_use_default_interface(adapters):
+    if not ipv6 and network.async_only_default_interface_enabled(adapters):
         zc_args["interfaces"] = InterfaceChoice.Default
     else:
-        interfaces = zc_args["interfaces"] = []
-        for adapter in adapters:
-            if not adapter["enabled"]:
-                continue
-            if ipv4s := adapter["ipv4"]:
-                interfaces.extend(
-                    ipv4["address"]
-                    for ipv4 in ipv4s
-                    if not ipaddress.ip_address(ipv4["address"]).is_loopback
-                )
-            if adapter["ipv6"] and adapter["index"] not in interfaces:
-                interfaces.append(adapter["index"])
+        zc_args["interfaces"] = [
+            str(source_ip)
+            for source_ip in await network.async_get_enabled_source_ips(hass)
+            if not source_ip.is_loopback
+            and not (isinstance(source_ip, IPv6Address) and source_ip.is_global)
+            and not (
+                isinstance(source_ip, IPv6Address)
+                and zc_args["ip_version"] == IPVersion.V4Only
+            )
+            and not (
+                isinstance(source_ip, IPv4Address)
+                and zc_args["ip_version"] == IPVersion.V6Only
+            )
+        ]
 
     aio_zc = await _async_get_instance(hass, **zc_args)
     zeroconf = cast(HaZeroconf, aio_zc.zeroconf)
@@ -208,7 +218,7 @@ def _get_announced_addresses(
     addresses = {
         addr.packed
         for addr in [
-            ipaddress.ip_address(ip["address"])
+            ip_address(ip["address"])
             for adapter in adapters
             if adapter["enabled"]
             for ip in cast(list, adapter["ipv6"]) + cast(list, adapter["ipv4"])
@@ -227,7 +237,9 @@ async def _async_register_hass_zc_service(
     hass: HomeAssistant, aio_zc: HaAsyncZeroconf, uuid: str
 ) -> None:
     # Get instance UUID
-    valid_location_name = _truncate_location_name_to_valid(hass.config.location_name)
+    valid_location_name = _truncate_location_name_to_valid(
+        hass.config.location_name or "Home"
+    )
 
     params = {
         "location_name": valid_location_name,
@@ -525,7 +537,7 @@ def info_from_service(service: AsyncServiceInfo) -> HaServiceInfo | None:
     address = service.addresses[0]
 
     return {
-        "host": str(ipaddress.ip_address(address)),
+        "host": str(ip_address(address)),
         "port": service.port,
         "hostname": service.server,
         "type": service.type,

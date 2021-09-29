@@ -133,6 +133,7 @@ DOMAIN_TO_GOOGLE_TYPES = {
     media_player.DOMAIN: TYPE_SETTOP,
     scene.DOMAIN: TYPE_SCENE,
     script.DOMAIN: TYPE_SCENE,
+    sensor.DOMAIN: TYPE_SENSOR,
     select.DOMAIN: TYPE_SENSOR,
     switch.DOMAIN: TYPE_SWITCH,
     vacuum.DOMAIN: TYPE_VACUUM,

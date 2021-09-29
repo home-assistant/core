@@ -31,6 +31,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.typing import ConfigType
 
 from . import api, config_flow
 from .const import (
@@ -69,7 +70,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Netatmo component."""
     hass.data[DOMAIN] = {
         DATA_PERSONS: {},

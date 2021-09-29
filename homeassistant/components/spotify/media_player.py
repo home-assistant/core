@@ -207,6 +207,7 @@ def spotify_exception_handler(func):
     """
 
     def wrapper(self, *args, **kwargs):
+        # pylint: disable=protected-access
         try:
             result = func(self, *args, **kwargs)
             self._attr_available = True

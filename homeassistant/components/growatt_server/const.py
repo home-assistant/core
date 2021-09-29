@@ -7,7 +7,7 @@ DEFAULT_NAME = "Growatt"
 
 SERVER_URLS = [
     "https://server.growatt.com/",
-    "https://server-us.growatt.com",
+    "https://server-us.growatt.com/",
     "http://server.smten.com/",
 ]
 

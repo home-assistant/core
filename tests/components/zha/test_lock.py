@@ -11,6 +11,7 @@ from homeassistant.components.lock import DOMAIN
 from homeassistant.const import STATE_LOCKED, STATE_UNAVAILABLE, STATE_UNLOCKED
 
 from .common import async_enable_traffic, find_entity_id, send_attributes_report
+from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
 from tests.common import mock_coro
 
@@ -28,9 +29,9 @@ async def lock(hass, zigpy_device_mock, zha_device_joined_restored):
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                "in_clusters": [closures.DoorLock.cluster_id, general.Basic.cluster_id],
-                "out_clusters": [],
-                "device_type": zigpy.profiles.zha.DeviceType.DOOR_LOCK,
+                SIG_EP_INPUT: [closures.DoorLock.cluster_id, general.Basic.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.DOOR_LOCK,
             }
         },
     )

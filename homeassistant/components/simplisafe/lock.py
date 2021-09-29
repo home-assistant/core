@@ -46,7 +46,7 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
 
         self._lock = lock
 
-    async def async_lock(self, **kwargs: dict[str, Any]) -> None:
+    async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         try:
             await self._lock.lock()
@@ -57,7 +57,7 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
         self._attr_is_locked = True
         self.async_write_ha_state()
 
-    async def async_unlock(self, **kwargs: dict[str, Any]) -> None:
+    async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         try:
             await self._lock.unlock()

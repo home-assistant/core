@@ -1,10 +1,9 @@
 """Webhooks for Home Assistant."""
 from __future__ import annotations
 
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 import logging
 import secrets
-from typing import Callable
 
 from aiohttp.web import Request, Response
 import voluptuous as vol
@@ -131,6 +130,7 @@ class WebhookView(HomeAssistantView):
 
     async def _handle(self, request: Request, webhook_id):
         """Handle webhook call."""
+        # pylint: disable=no-self-use
         _LOGGER.debug("Handling webhook %s payload for %s", request.method, webhook_id)
         hass = request.app["hass"]
         return await async_handle_webhook(hass, webhook_id, request)

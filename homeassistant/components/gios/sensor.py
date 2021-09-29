@@ -86,7 +86,6 @@ class GiosSensor(CoordinatorEntity, SensorEntity):
             "manufacturer": MANUFACTURER,
             "entry_type": "service",
         }
-        self._attr_icon = "mdi:blur"
         self._attr_name = f"{name} {description.name}"
         self._attr_unique_id = f"{coordinator.gios.station_id}-{description.key}"
         self._attrs: dict[str, Any] = {

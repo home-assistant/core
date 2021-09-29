@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
+from typing import Any, cast
 
 import pyatmo
 import voluptuous as vol
@@ -439,7 +439,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         """Return a list of available preset modes."""
         return SUPPORT_PRESET
 
-    async def async_set_temperature(self, **kwargs: dict) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature for 2 hours."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is None:
@@ -589,7 +589,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
 
         return {}
 
-    async def _async_service_set_schedule(self, **kwargs: dict) -> None:
+    async def _async_service_set_schedule(self, **kwargs: Any) -> None:
         schedule_name = kwargs.get(ATTR_SCHEDULE_NAME)
         schedule_id = None
         for sid, name in self.hass.data[DOMAIN][DATA_SCHEDULES][self._home_id].items():

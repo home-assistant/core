@@ -62,7 +62,7 @@ class AdGuardHomeSensor(AdGuardHomeDeviceEntity, SensorEntity):
         enabled_default: bool = True,
     ) -> None:
         """Initialize AdGuard Home sensor."""
-        self._state = None
+        self._state: int | str | None = None
         self._unit_of_measurement = unit_of_measurement
         self.measurement = measurement
 
@@ -82,7 +82,7 @@ class AdGuardHomeSensor(AdGuardHomeDeviceEntity, SensorEntity):
         )
 
     @property
-    def native_value(self) -> str | None:
+    def native_value(self) -> int | str | None:
         """Return the state of the sensor."""
         return self._state
 

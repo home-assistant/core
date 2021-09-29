@@ -23,7 +23,7 @@
                     "ssl": "Utilitza un certificat SSL",
                     "verify_ssl": "Verifica el certificat SSL"
                 },
-                "description": "Configura la impressora amb el protocol d'impressi\u00f3 per Internet (IPP) per integrar-la amb Home Assistant.",
+                "description": "Configura la integraci\u00f3 amb Home Assistant d'una impressora amb protocol d'impressi\u00f3 per Internet (IPP).",
                 "title": "Enlla\u00e7 d'impressora"
             },
             "zeroconf_confirm": {

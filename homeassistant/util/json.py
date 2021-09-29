@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 from collections import deque
+from collections.abc import Callable
 import json
 import logging
 import os
 import tempfile
-from typing import Any, Callable
+from typing import Any
 
 from homeassistant.core import Event, State
 from homeassistant.exceptions import HomeAssistantError

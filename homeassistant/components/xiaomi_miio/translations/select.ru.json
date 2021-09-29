@@ -3,7 +3,7 @@
         "xiaomi_miio__led_brightness": {
             "bright": "\u042f\u0440\u043a\u043e",
             "dim": "\u0422\u0443\u0441\u043a\u043b\u043e",
-            "off": "\u0412\u044b\u043a\u043b\u044e\u0447\u0435\u043d\u043e"
+            "off": "\u041e\u0442\u043a\u043b."
         }
     }
 }

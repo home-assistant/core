@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Host already configured"
+        },
+        "error": {
+            "config": "Connection or login error: please check your configuration"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host (Optional)",
+                    "password": "Password",
+                    "port": "Port (Optional)",
+                    "ssl": "Use SSL (Optional)",
+                    "username": "Username (Optional)"
+                },
+                "description": "Default host: {host}\nDefault port: {port}\nDefault username: {username}"
+            }
+        }
+    },
+    "options": {
+        "step": {
+          "init": {
+            "description": "Specify optional settings",
+            "data": {
+              "consider_home": "Consider home time (seconds)"
+            }
+          }
+        }
+    }
+}

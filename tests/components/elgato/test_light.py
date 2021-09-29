@@ -45,7 +45,7 @@ async def test_light_state_temperature(
     assert state
     assert state.attributes.get(ATTR_BRIGHTNESS) == 54
     assert state.attributes.get(ATTR_COLOR_TEMP) == 297
-    assert state.attributes.get(ATTR_HS_COLOR) is None
+    assert state.attributes.get(ATTR_HS_COLOR) == (27.316, 47.743)
     assert state.attributes.get(ATTR_COLOR_MODE) == COLOR_MODE_COLOR_TEMP
     assert state.attributes.get(ATTR_MIN_MIREDS) == 143
     assert state.attributes.get(ATTR_MAX_MIREDS) == 344

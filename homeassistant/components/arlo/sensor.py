@@ -49,7 +49,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="battery_level",
         name="Battery Level",
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_BATTERY,
     ),
     SensorEntityDescription(
@@ -60,19 +60,19 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="temperature",
         name="Temperature",
-        unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
     ),
     SensorEntityDescription(
         key="humidity",
         name="Humidity",
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_HUMIDITY,
     ),
     SensorEntityDescription(
         key="air_quality",
         name="Air Quality",
-        unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         icon="mdi:biohazard",
     ),
 )

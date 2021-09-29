@@ -15,7 +15,6 @@ from homeassistant.const import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
 )
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt
@@ -553,5 +552,4 @@ async def test_unsupported_sensor(hass, aioclient_mock):
     with patch.dict(DECONZ_WEB_REQUEST, data):
         await setup_deconz_integration(hass, aioclient_mock)
 
-    assert len(hass.states.async_all()) == 1
-    assert hass.states.get("sensor.name").state == STATE_UNKNOWN
+    assert len(hass.states.async_all()) == 0

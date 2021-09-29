@@ -4,13 +4,21 @@ from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
+    DEVICE_CLASS_AQI,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_NITROGEN_DIOXIDE,
+    DEVICE_CLASS_OZONE,
+    DEVICE_CLASS_PM10,
+    DEVICE_CLASS_PM25,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_SULPHUR_DIOXIDE,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
@@ -52,7 +60,7 @@ SIMPLE_SENSOR = {
         "state_class": STATE_CLASS_MEASUREMENT,
         "unit": PRESSURE_HPA,
     },
-    CharacteristicsTypes.get_uuid(CharacteristicsTypes.TEMPERATURE_CURRENT): {
+    CharacteristicsTypes.TEMPERATURE_CURRENT: {
         "name": "Current Temperature",
         "device_class": DEVICE_CLASS_TEMPERATURE,
         "state_class": STATE_CLASS_MEASUREMENT,
@@ -62,7 +70,7 @@ SIMPLE_SENSOR = {
         "probe": lambda char: char.service.type
         != ServicesTypes.get_uuid(ServicesTypes.TEMPERATURE_SENSOR),
     },
-    CharacteristicsTypes.get_uuid(CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT): {
+    CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT: {
         "name": "Current Humidity",
         "device_class": DEVICE_CLASS_HUMIDITY,
         "state_class": STATE_CLASS_MEASUREMENT,
@@ -72,7 +80,57 @@ SIMPLE_SENSOR = {
         "probe": lambda char: char.service.type
         != ServicesTypes.get_uuid(ServicesTypes.HUMIDITY_SENSOR),
     },
+    CharacteristicsTypes.AIR_QUALITY: {
+        "name": "Air Quality",
+        "device_class": DEVICE_CLASS_AQI,
+        "state_class": STATE_CLASS_MEASUREMENT,
+    },
+    CharacteristicsTypes.DENSITY_PM25: {
+        "name": "PM2.5 Density",
+        "device_class": DEVICE_CLASS_PM25,
+        "state_class": STATE_CLASS_MEASUREMENT,
+        "unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    },
+    CharacteristicsTypes.DENSITY_PM10: {
+        "name": "PM10 Density",
+        "device_class": DEVICE_CLASS_PM10,
+        "state_class": STATE_CLASS_MEASUREMENT,
+        "unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    },
+    CharacteristicsTypes.DENSITY_OZONE: {
+        "name": "Ozone Density",
+        "device_class": DEVICE_CLASS_OZONE,
+        "state_class": STATE_CLASS_MEASUREMENT,
+        "unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    },
+    CharacteristicsTypes.DENSITY_NO2: {
+        "name": "Nitrogen Dioxide Density",
+        "device_class": DEVICE_CLASS_NITROGEN_DIOXIDE,
+        "state_class": STATE_CLASS_MEASUREMENT,
+        "unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    },
+    CharacteristicsTypes.DENSITY_SO2: {
+        "name": "Sulphur Dioxide Density",
+        "device_class": DEVICE_CLASS_SULPHUR_DIOXIDE,
+        "state_class": STATE_CLASS_MEASUREMENT,
+        "unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    },
+    CharacteristicsTypes.DENSITY_VOC: {
+        "name": "Volatile Organic Compound Density",
+        "device_class": DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
+        "state_class": STATE_CLASS_MEASUREMENT,
+        "unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    },
 }
+
+# For legacy reasons, "built-in" characteristic types are in their short form
+# And vendor types don't have a short form
+# This means long and short forms get mixed up in this dict, and comparisons
+# don't work!
+# We call get_uuid on *every* type to normalise them to the long form
+# Eventually aiohomekit will use the long form exclusively amd this can be removed.
+for k, v in list(SIMPLE_SENSOR.items()):
+    SIMPLE_SENSOR[CharacteristicsTypes.get_uuid(k)] = SIMPLE_SENSOR.pop(k)
 
 
 class HomeKitHumiditySensor(HomeKitEntity, SensorEntity):

@@ -45,6 +45,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery, event
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "hdmi_cec"
 
@@ -186,7 +187,7 @@ def parse_mapping(mapping, parents=None):
                 yield (val, pad_physical_address(cur))
 
 
-def setup(hass: HomeAssistant, base_config):  # noqa: C901
+def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
     """Set up the CEC capability."""
 
     # Parse configuration into a dict of device name to physical address

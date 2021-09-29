@@ -1,9 +1,14 @@
 """Provides device automations for Climate."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
-from homeassistant.components.automation import AutomationActionType
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.components.device_automation import (
     DEVICE_TRIGGER_BASE_SCHEMA,
     toggle_entity,
@@ -28,6 +33,8 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
 
+# mypy: disallow-any-generics
+
 TARGET_TRIGGER_SCHEMA = vol.All(
     DEVICE_TRIGGER_BASE_SCHEMA.extend(
         {
@@ -48,7 +55,9 @@ TOGGLE_TRIGGER_SCHEMA = toggle_entity.TRIGGER_SCHEMA.extend(
 TRIGGER_SCHEMA = vol.Any(TARGET_TRIGGER_SCHEMA, TOGGLE_TRIGGER_SCHEMA)
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, Any]]:
     """List device triggers for Humidifier devices."""
     registry = await entity_registry.async_get_registry(hass)
     triggers = await toggle_entity.async_get_triggers(hass, device_id, DOMAIN)
@@ -74,7 +83,7 @@ async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
     action: AutomationActionType,
-    automation_info: dict,
+    automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     trigger_type = config[CONF_TYPE]
@@ -105,7 +114,9 @@ async def async_attach_trigger(
     )
 
 
-async def async_get_trigger_capabilities(hass: HomeAssistant, config):
+async def async_get_trigger_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
     trigger_type = config[CONF_TYPE]
 

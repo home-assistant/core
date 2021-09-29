@@ -66,7 +66,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomematicIP Cloud sensors from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
-    entities = []
+    entities: list[HomematicipGenericEntity] = []
     for device in hap.home.devices:
         if isinstance(device, AsyncHomeControlAccessPoint):
             entities.append(HomematicipAccesspointDutyCycle(hap, device))
@@ -155,7 +155,7 @@ class HomematicipHeatingThermostat(HomematicipGenericEntity, SensorEntity):
         super().__init__(hap, device, post="Heating")
 
     @property
-    def icon(self) -> str:
+    def icon(self) -> str | None:
         """Return the icon."""
         if super().icon:
             return super().icon

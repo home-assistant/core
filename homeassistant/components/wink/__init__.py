@@ -1,9 +1,12 @@
 """Support for Wink hubs."""
+from __future__ import annotations
+
 from datetime import timedelta
 import json
 import logging
 import os
 import time
+from typing import Any
 
 from aiohttp.web import Response
 from pubnubsubhandler import PubNubSubscriptionHandler
@@ -208,7 +211,7 @@ WINK_COMPONENTS = [
     "water_heater",
 ]
 
-WINK_HUBS = []
+WINK_HUBS: list[Any] = []
 
 
 def _request_app_setup(hass, config):

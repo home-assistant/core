@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "could_not_connect": "Failed to connect to DLNA device",
+            "discovery_error": "Failed to discover a matching DLNA device",
+            "incomplete_config": "Configuration is missing a required variable",
+            "non_unique_id": "Multiple devices found with the same unique ID",
+            "not_dmr": "Device is not a Digital Media Renderer"
+        },
+        "error": {
+            "could_not_connect": "Failed to connect to DLNA device",
+            "not_dmr": "Device is not a Digital Media Renderer"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "Do you want to start set up?"
+            },
+            "user": {
+                "data": {
+                    "url": "URL"
+                },
+                "description": "URL to a device description XML file",
+                "title": "DLNA Digital Media Renderer"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_url": "Invalid URL"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "callback_url_override": "Event listener callback URL",
+                    "listen_port": "Event listener port (random if not set)",
+                    "poll_availability": "Poll for device availability"
+                },
+                "title": "DLNA Digital Media Renderer configuration"
+            }
+        }
+    }
+}

@@ -23,6 +23,7 @@ from homeassistant.helpers import device_registry, discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
@@ -79,7 +80,7 @@ _SERVICE_MAP = {
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the BMW Connected Drive component from configuration.yaml."""
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][DATA_HASS_CONFIG] = config

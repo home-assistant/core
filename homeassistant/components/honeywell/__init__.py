@@ -1,4 +1,5 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
+import asyncio
 from datetime import timedelta
 
 import somecomfort
@@ -9,7 +10,8 @@ from homeassistant.util import Throttle
 
 from .const import _LOGGER, CONF_DEV_ID, CONF_LOC_ID, DOMAIN
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
+UPDATE_LOOP_SLEEP_TIME = 5
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 PLATFORMS = ["climate"]
 
 
@@ -41,8 +43,8 @@ async def async_setup_entry(hass, config):
         _LOGGER.debug("No devices found")
         return False
 
-    data = HoneywellService(hass, client, username, password, devices[0])
-    await data.update()
+    data = HoneywellData(hass, client, username, password, devices)
+    await data.async_update()
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config.entry_id] = data
     hass.config_entries.async_setup_platforms(config, PLATFORMS)
@@ -65,16 +67,16 @@ def get_somecomfort_client(username, password):
         ) from ex
 
 
-class HoneywellService:
+class HoneywellData:
     """Get the latest data and update."""
 
-    def __init__(self, hass, client, username, password, device):
+    def __init__(self, hass, client, username, password, devices):
         """Initialize the data object."""
         self._hass = hass
         self._client = client
         self._username = username
         self._password = password
-        self.device = device
+        self.devices = devices
 
     async def _retry(self) -> bool:
         """Recreate a new somecomfort client.
@@ -93,23 +95,28 @@ class HoneywellService:
             device
             for location in self._client.locations_by_id.values()
             for device in location.devices_by_id.values()
-            if device.name == self.device.name
         ]
 
-        if len(devices) != 1:
-            _LOGGER.error("Failed to find device %s", self.device.name)
+        if len(devices) == 0:
+            _LOGGER.error("Failed to find any devices")
             return False
 
-        self.device = devices[0]
+        self.devices = devices
         return True
 
+    async def _refresh_devices(self):
+        """Refresh each enabled device."""
+        for device in self.devices:
+            await self._hass.async_add_executor_job(device.refresh)
+            await asyncio.sleep(UPDATE_LOOP_SLEEP_TIME)
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def update(self) -> None:
+    async def async_update(self) -> None:
         """Update the state."""
         retries = 3
         while retries > 0:
             try:
-                await self._hass.async_add_executor_job(self.device.refresh)
+                await self._refresh_devices()
                 break
             except (
                 somecomfort.client.APIRateLimited,
@@ -120,13 +127,9 @@ class HoneywellService:
                 if retries == 0:
                     raise exp
 
-                result = await self._hass.async_add_executor_job(self._retry())
+                result = await self._retry()
 
                 if not result:
                     raise exp
 
                 _LOGGER.error("SomeComfort update failed, Retrying - Error: %s", exp)
-
-        _LOGGER.debug(
-            "latestData = %s ", self.device._data  # pylint: disable=protected-access
-        )

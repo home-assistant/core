@@ -36,8 +36,6 @@ from homeassistant.util import Throttle
 from .browse_media import browse_node, browse_top_level
 from .const import DATA_INFO, DATA_VOLUMIO, DOMAIN
 
-_CONFIGURING = {}
-
 SUPPORT_VOLUMIO = (
     SUPPORT_PAUSE
     | SUPPORT_VOLUME_SET

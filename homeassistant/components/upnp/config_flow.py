@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
+from homeassistant.components.ssdp import SsdpChange
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
 
@@ -20,8 +21,7 @@ from .const import (
     CONFIG_ENTRY_UDN,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    DOMAIN_DEVICES,
-    LOGGER as _LOGGER,
+    LOGGER,
     SSDP_SEARCH_TIMEOUT,
     ST_IGD_V1,
     ST_IGD_V2,
@@ -41,23 +41,25 @@ async def _async_wait_for_discoveries(hass: HomeAssistant) -> bool:
     """Wait for a device to be discovered."""
     device_discovered_event = asyncio.Event()
 
-    @callback
-    def device_discovered(info: Mapping[str, Any]) -> None:
-        _LOGGER.info(
+    async def device_discovered(info: Mapping[str, Any], change: SsdpChange) -> None:
+        if change == SsdpChange.BYEBYE:
+            return
+
+        LOGGER.info(
             "Device discovered: %s, at: %s",
             info[ssdp.ATTR_SSDP_USN],
             info[ssdp.ATTR_SSDP_LOCATION],
         )
         device_discovered_event.set()
 
-    cancel_discovered_callback_1 = ssdp.async_register_callback(
+    cancel_discovered_callback_1 = await ssdp.async_register_callback(
         hass,
         device_discovered,
         {
             ssdp.ATTR_SSDP_ST: ST_IGD_V1,
         },
     )
-    cancel_discovered_callback_2 = ssdp.async_register_callback(
+    cancel_discovered_callback_2 = await ssdp.async_register_callback(
         hass,
         device_discovered,
         {
@@ -78,11 +80,11 @@ async def _async_wait_for_discoveries(hass: HomeAssistant) -> bool:
     return True
 
 
-def _discovery_igd_devices(hass: HomeAssistant) -> list[Mapping[str, Any]]:
+async def _async_discover_igd_devices(hass: HomeAssistant) -> list[Mapping[str, Any]]:
     """Discovery IGD devices."""
-    return ssdp.async_get_discovery_info_by_st(
+    return await ssdp.async_get_discovery_info_by_st(
         hass, ST_IGD_V1
-    ) + ssdp.async_get_discovery_info_by_st(hass, ST_IGD_V2)
+    ) + await ssdp.async_get_discovery_info_by_st(hass, ST_IGD_V2)
 
 
 class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -103,7 +105,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: Mapping | None = None
     ) -> Mapping[str, Any]:
         """Handle a flow start."""
-        _LOGGER.debug("async_step_user: user_input: %s", user_input)
+        LOGGER.debug("async_step_user: user_input: %s", user_input)
 
         if user_input is not None:
             # Ensure wanted device was discovered.
@@ -122,7 +124,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._async_create_entry_from_discovery(discovery)
 
         # Discover devices.
-        discoveries = _discovery_igd_devices(self.hass)
+        discoveries = await _async_discover_igd_devices(self.hass)
 
         # Store discoveries which have not been configured.
         current_unique_ids = {
@@ -162,21 +164,21 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         configured before, find any device and create a config_entry for it.
         Otherwise, do nothing.
         """
-        _LOGGER.debug("async_step_import: import_info: %s", import_info)
+        LOGGER.debug("async_step_import: import_info: %s", import_info)
 
         # Landed here via configuration.yaml entry.
         # Any device already added, then abort.
         if self._async_current_entries():
-            _LOGGER.debug("Already configured, aborting")
+            LOGGER.debug("Already configured, aborting")
             return self.async_abort(reason="already_configured")
 
         # Discover devices.
         await _async_wait_for_discoveries(self.hass)
-        discoveries = _discovery_igd_devices(self.hass)
+        discoveries = await _async_discover_igd_devices(self.hass)
 
         # Ensure anything to add. If not, silently abort.
         if not discoveries:
-            _LOGGER.info("No UPnP devices discovered, aborting")
+            LOGGER.info("No UPnP devices discovered, aborting")
             return self.async_abort(reason="no_devices_found")
 
         # Ensure complete discovery.
@@ -187,7 +189,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             or ssdp.ATTR_SSDP_LOCATION not in discovery
             or ssdp.ATTR_SSDP_USN not in discovery
         ):
-            _LOGGER.debug("Incomplete discovery, ignoring")
+            LOGGER.debug("Incomplete discovery, ignoring")
             return self.async_abort(reason="incomplete_discovery")
 
         # Ensure not already configuring/configured.
@@ -202,7 +204,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         This flow is triggered by the SSDP component. It will check if the
         host is already configured and delegate to the import step if not.
         """
-        _LOGGER.debug("async_step_ssdp: discovery_info: %s", discovery_info)
+        LOGGER.debug("async_step_ssdp: discovery_info: %s", discovery_info)
 
         # Ensure complete discovery.
         if (
@@ -211,7 +213,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             or ssdp.ATTR_SSDP_LOCATION not in discovery_info
             or ssdp.ATTR_SSDP_USN not in discovery_info
         ):
-            _LOGGER.debug("Incomplete discovery, ignoring")
+            LOGGER.debug("Incomplete discovery, ignoring")
             return self.async_abort(reason="incomplete_discovery")
 
         # Ensure not already configuring/configured.
@@ -225,7 +227,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         for config_entry in existing_entries:
             entry_hostname = config_entry.data.get(CONFIG_ENTRY_HOSTNAME)
             if entry_hostname == hostname:
-                _LOGGER.debug(
+                LOGGER.debug(
                     "Found existing config_entry with same hostname, discovery ignored"
                 )
                 return self.async_abort(reason="discovery_ignored")
@@ -244,7 +246,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: Mapping | None = None
     ) -> Mapping[str, Any]:
         """Confirm integration via SSDP."""
-        _LOGGER.debug("async_step_ssdp_confirm: user_input: %s", user_input)
+        LOGGER.debug("async_step_ssdp_confirm: user_input: %s", user_input)
         if user_input is None:
             return self.async_show_form(step_id="ssdp_confirm")
 
@@ -264,7 +266,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         discovery: Mapping,
     ) -> Mapping[str, Any]:
         """Create an entry from discovery."""
-        _LOGGER.debug(
+        LOGGER.debug(
             "_async_create_entry_from_discovery: discovery: %s",
             discovery,
         )
@@ -288,13 +290,12 @@ class UpnpOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input: Mapping = None) -> None:
         """Manage the options."""
         if user_input is not None:
-            udn = self.config_entry.data[CONFIG_ENTRY_UDN]
-            coordinator = self.hass.data[DOMAIN][DOMAIN_DEVICES][udn].coordinator
+            coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id]
             update_interval_sec = user_input.get(
                 CONFIG_ENTRY_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
             )
             update_interval = timedelta(seconds=update_interval_sec)
-            _LOGGER.debug("Updating coordinator, update_interval: %s", update_interval)
+            LOGGER.debug("Updating coordinator, update_interval: %s", update_interval)
             coordinator.update_interval = update_interval
             return self.async_create_entry(title="", data=user_input)
 

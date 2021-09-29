@@ -4,9 +4,9 @@ import json
 import pytest
 
 import homeassistant.components.automation as automation
-from homeassistant.components.mqtt import DOMAIN, debug_info
-from homeassistant.components.mqtt.device_trigger import async_attach_trigger
+from homeassistant.components.mqtt import _LOGGER, DOMAIN, debug_info
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -697,18 +697,22 @@ async def test_attach_remove(hass, device_reg, mqtt_mock):
     def callback(trigger):
         calls.append(trigger["trigger"]["payload"])
 
-    remove = await async_attach_trigger(
+    remove = await async_initialize_triggers(
         hass,
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "device_id": device_entry.id,
-            "discovery_id": "bla1",
-            "type": "button_short_press",
-            "subtype": "button_1",
-        },
+        [
+            {
+                "platform": "device",
+                "domain": DOMAIN,
+                "device_id": device_entry.id,
+                "discovery_id": "bla1",
+                "type": "button_short_press",
+                "subtype": "button_1",
+            },
+        ],
         callback,
-        None,
+        DOMAIN,
+        "mock-name",
+        _LOGGER.log,
     )
 
     # Fake short press.
@@ -751,18 +755,22 @@ async def test_attach_remove_late(hass, device_reg, mqtt_mock):
     def callback(trigger):
         calls.append(trigger["trigger"]["payload"])
 
-    remove = await async_attach_trigger(
+    remove = await async_initialize_triggers(
         hass,
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "device_id": device_entry.id,
-            "discovery_id": "bla1",
-            "type": "button_short_press",
-            "subtype": "button_1",
-        },
+        [
+            {
+                "platform": "device",
+                "domain": DOMAIN,
+                "device_id": device_entry.id,
+                "discovery_id": "bla1",
+                "type": "button_short_press",
+                "subtype": "button_1",
+            },
+        ],
         callback,
-        None,
+        DOMAIN,
+        "mock-name",
+        _LOGGER.log,
     )
 
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
@@ -808,18 +816,22 @@ async def test_attach_remove_late2(hass, device_reg, mqtt_mock):
     def callback(trigger):
         calls.append(trigger["trigger"]["payload"])
 
-    remove = await async_attach_trigger(
+    remove = await async_initialize_triggers(
         hass,
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "device_id": device_entry.id,
-            "discovery_id": "bla1",
-            "type": "button_short_press",
-            "subtype": "button_1",
-        },
+        [
+            {
+                "platform": "device",
+                "domain": DOMAIN,
+                "device_id": device_entry.id,
+                "discovery_id": "bla1",
+                "type": "button_short_press",
+                "subtype": "button_1",
+            },
+        ],
         callback,
-        None,
+        DOMAIN,
+        "mock-name",
+        _LOGGER.log,
     )
 
     # Remove the trigger

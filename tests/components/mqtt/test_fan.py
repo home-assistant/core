@@ -77,9 +77,6 @@ async def test_controlling_state_via_topic(hass, mqtt_mock, caplog):
                 "payload_on": "StAtE_On",
                 "oscillation_state_topic": "oscillation-state-topic",
                 "oscillation_command_topic": "oscillation-command-topic",
-                # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-                "speed_state_topic": "speed-state-topic",
-                "speed_command_topic": "speed-command-topic",
                 "payload_oscillation_off": "OsC_OfF",
                 "payload_oscillation_on": "OsC_On",
                 "percentage_state_topic": "percentage-state-topic",
@@ -96,12 +93,6 @@ async def test_controlling_state_via_topic(hass, mqtt_mock, caplog):
                 ],
                 "speed_range_min": 1,
                 "speed_range_max": 200,
-                # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-                "speeds": ["off", "low"],
-                "payload_off_speed": "speed_OfF",
-                "payload_low_speed": "speed_lOw",
-                "payload_medium_speed": "speed_mEdium",
-                "payload_high_speed": "speed_High",
                 "payload_reset_percentage": "rEset_percentage",
                 "payload_reset_preset_mode": "rEset_preset_mode",
             }
@@ -180,33 +171,10 @@ async def test_controlling_state_via_topic(hass, mqtt_mock, caplog):
     assert "not a valid preset mode" in caplog.text
     caplog.clear()
 
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    assert state.attributes.get("speed") == fan.SPEED_OFF
-
-    async_fire_mqtt_message(hass, "speed-state-topic", "speed_lOw")
-    state = hass.states.get("fan.test")
-    assert state.attributes.get("speed") == fan.SPEED_LOW
-
-    async_fire_mqtt_message(hass, "speed-state-topic", "speed_mEdium")
-    assert "not a valid speed" in caplog.text
-    caplog.clear()
-
-    async_fire_mqtt_message(hass, "speed-state-topic", "speed_High")
-    assert "not a valid speed" in caplog.text
-    caplog.clear()
-
-    async_fire_mqtt_message(hass, "speed-state-topic", "speed_OfF")
-    state = hass.states.get("fan.test")
-    assert state.attributes.get("speed") == fan.SPEED_OFF
-
     async_fire_mqtt_message(hass, "percentage-state-topic", "rEset_percentage")
     state = hass.states.get("fan.test")
     assert state.attributes.get(fan.ATTR_PERCENTAGE) is None
     assert state.attributes.get(fan.ATTR_SPEED) is None
-
-    async_fire_mqtt_message(hass, "speed-state-topic", "speed_very_high")
-    assert "not a valid speed" in caplog.text
-    caplog.clear()
 
 
 async def test_controlling_state_via_topic_with_different_speed_range(
@@ -284,9 +252,6 @@ async def test_controlling_state_via_topic_no_percentage_topics(
                 "name": "test",
                 "state_topic": "state-topic",
                 "command_topic": "command-topic",
-                # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-                "speed_state_topic": "speed-state-topic",
-                "speed_command_topic": "speed-command-topic",
                 "preset_mode_state_topic": "preset-mode-state-topic",
                 "preset_mode_command_topic": "preset-mode-command-topic",
                 "preset_modes": [
@@ -296,8 +261,6 @@ async def test_controlling_state_via_topic_no_percentage_topics(
                     "eco",
                     "breeze",
                 ],
-                # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-                "speeds": ["off", "low", "medium"],
             }
         },
     )
@@ -311,22 +274,16 @@ async def test_controlling_state_via_topic_no_percentage_topics(
     state = hass.states.get("fan.test")
     assert state.attributes.get("preset_mode") == "smart"
     assert state.attributes.get(fan.ATTR_PERCENTAGE) is None
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    assert state.attributes.get("speed") == fan.SPEED_OFF
 
     async_fire_mqtt_message(hass, "preset-mode-state-topic", "auto")
     state = hass.states.get("fan.test")
     assert state.attributes.get("preset_mode") == "auto"
     assert state.attributes.get(fan.ATTR_PERCENTAGE) is None
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    assert state.attributes.get("speed") == fan.SPEED_OFF
 
     async_fire_mqtt_message(hass, "preset-mode-state-topic", "whoosh")
     state = hass.states.get("fan.test")
     assert state.attributes.get("preset_mode") == "whoosh"
     assert state.attributes.get(fan.ATTR_PERCENTAGE) is None
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    assert state.attributes.get("speed") == fan.SPEED_OFF
 
     async_fire_mqtt_message(hass, "preset-mode-state-topic", "medium")
     assert "not a valid preset mode" in caplog.text
@@ -335,25 +292,6 @@ async def test_controlling_state_via_topic_no_percentage_topics(
     async_fire_mqtt_message(hass, "preset-mode-state-topic", "low")
     assert "not a valid preset mode" in caplog.text
     caplog.clear()
-
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    async_fire_mqtt_message(hass, "speed-state-topic", "medium")
-    state = hass.states.get("fan.test")
-    assert state.attributes.get("preset_mode") == "whoosh"
-    assert state.attributes.get(fan.ATTR_PERCENTAGE) == 100
-    assert state.attributes.get("speed") == fan.SPEED_MEDIUM
-
-    async_fire_mqtt_message(hass, "speed-state-topic", "low")
-    state = hass.states.get("fan.test")
-    assert state.attributes.get("preset_mode") == "whoosh"
-    assert state.attributes.get(fan.ATTR_PERCENTAGE) == 50
-    assert state.attributes.get("speed") == fan.SPEED_LOW
-
-    async_fire_mqtt_message(hass, "speed-state-topic", "off")
-    state = hass.states.get("fan.test")
-    assert state.attributes.get("preset_mode") == "whoosh"
-    assert state.attributes.get(fan.ATTR_PERCENTAGE) == 0
-    assert state.attributes.get("speed") == fan.SPEED_OFF
 
 
 async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock, caplog):
@@ -558,22 +496,13 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock, caplog):
                 "oscillation_command_topic": "oscillation-command-topic",
                 "payload_oscillation_off": "OsC_OfF",
                 "payload_oscillation_on": "OsC_On",
-                # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-                "speed_command_topic": "speed-command-topic",
                 "percentage_command_topic": "percentage-command-topic",
                 "preset_mode_command_topic": "preset-mode-command-topic",
-                # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-                "speeds": ["off", "low", "medium"],
                 "preset_modes": [
                     "whoosh",
                     "breeze",
                     "silent",
                 ],
-                # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-                "payload_off_speed": "speed_OfF",
-                "payload_low_speed": "speed_lOw",
-                "payload_medium_speed": "speed_mEdium",
-                "payload_high_speed": "speed_High",
             }
         },
     )
@@ -625,10 +554,8 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock, caplog):
         await common.async_set_percentage(hass, "fan.test", 101)
 
     await common.async_set_percentage(hass, "fan.test", 100)
-    assert mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("percentage-command-topic", "100", 0, False)
-    mqtt_mock.async_publish.assert_any_call(
-        "speed-command-topic", "speed_mEdium", 0, False
+    mqtt_mock.async_publish.assert_called_once_with(
+        "percentage-command-topic", "100", 0, False
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -636,26 +563,15 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock, caplog):
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_set_percentage(hass, "fan.test", 0)
-    assert mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("percentage-command-topic", "0", 0, False)
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    mqtt_mock.async_publish.assert_any_call(
-        "speed-command-topic", "speed_OfF", 0, False
+    mqtt_mock.async_publish.assert_called_once_with(
+        "percentage-command-topic", "0", 0, False
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.attributes.get(fan.ATTR_PERCENTAGE) == 0
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    assert state.attributes.get(fan.ATTR_SPEED) == fan.SPEED_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
     await common.async_set_preset_mode(hass, "fan.test", "low")
-    assert "not a valid preset mode" in caplog.text
-    caplog.clear()
-
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    await common.async_set_preset_mode(hass, "fan.test", "medium")
     assert "not a valid preset mode" in caplog.text
     caplog.clear()
 
@@ -684,41 +600,6 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock, caplog):
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.attributes.get(fan.ATTR_PRESET_MODE) == "silent"
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    await common.async_set_speed(hass, "fan.test", fan.SPEED_LOW)
-    mqtt_mock.async_publish.assert_called_once_with(
-        "speed-command-topic", "speed_lOw", 0, False
-    )
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    await common.async_set_speed(hass, "fan.test", fan.SPEED_MEDIUM)
-    mqtt_mock.async_publish.assert_called_once_with(
-        "speed-command-topic", "speed_mEdium", 0, False
-    )
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    await common.async_set_speed(hass, "fan.test", fan.SPEED_HIGH)
-    assert "not a valid speed" in caplog.text
-    caplog.clear()
-
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    await common.async_set_speed(hass, "fan.test", fan.SPEED_OFF)
-    mqtt_mock.async_publish.assert_called_once_with(
-        "speed-command-topic", "speed_OfF", 0, False
-    )
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
@@ -888,7 +769,6 @@ async def test_sending_mqtt_commands_and_optimistic_no_legacy(hass, mqtt_mock, c
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.attributes.get(fan.ATTR_PERCENTAGE) == 0
-    assert state.attributes.get(fan.ATTR_SPEED) is None
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_set_preset_mode(hass, "fan.test", "low")
@@ -1028,7 +908,6 @@ async def test_sending_mqtt_command_templates_(hass, mqtt_mock, caplog):
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.attributes.get(fan.ATTR_PERCENTAGE) == 0
-    assert state.attributes.get(fan.ATTR_SPEED) is None
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_set_preset_mode(hass, "fan.test", "low")
@@ -1111,13 +990,8 @@ async def test_sending_mqtt_commands_and_optimistic_no_percentage_topic(
                 "platform": "mqtt",
                 "name": "test",
                 "command_topic": "command-topic",
-                # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-                "speed_state_topic": "speed-state-topic",
-                "speed_command_topic": "speed-command-topic",
                 "preset_mode_command_topic": "preset-mode-command-topic",
                 "preset_mode_state_topic": "preset-mode-state-topic",
-                # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-                "speeds": ["off", "low", "medium"],
                 "preset_modes": [
                     "whoosh",
                     "breeze",
@@ -1132,32 +1006,6 @@ async def test_sending_mqtt_commands_and_optimistic_no_percentage_topic(
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    with pytest.raises(MultipleInvalid):
-        await common.async_set_percentage(hass, "fan.test", -1)
-
-    with pytest.raises(MultipleInvalid):
-        await common.async_set_percentage(hass, "fan.test", 101)
-
-    await common.async_set_percentage(hass, "fan.test", 100)
-    mqtt_mock.async_publish.assert_any_call("speed-command-topic", "medium", 0, False)
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("fan.test")
-    assert state.attributes.get(fan.ATTR_PERCENTAGE) == 100
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    await common.async_set_percentage(hass, "fan.test", 0)
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    mqtt_mock.async_publish.assert_any_call("speed-command-topic", "off", 0, False)
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("fan.test")
-    assert state.attributes.get(fan.ATTR_PERCENTAGE) == 0
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    await common.async_set_preset_mode(hass, "fan.test", "low")
-    assert "not a valid preset mode" in caplog.text
-    caplog.clear()
 
     await common.async_set_preset_mode(hass, "fan.test", "medium")
     assert "not a valid preset mode" in caplog.text
@@ -1190,185 +1038,6 @@ async def test_sending_mqtt_commands_and_optimistic_no_percentage_topic(
     assert state.attributes.get(fan.ATTR_PRESET_MODE) is None
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    await common.async_set_speed(hass, "fan.test", fan.SPEED_LOW)
-    mqtt_mock.async_publish.assert_called_once_with(
-        "speed-command-topic", "low", 0, False
-    )
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    await common.async_set_speed(hass, "fan.test", fan.SPEED_MEDIUM)
-    mqtt_mock.async_publish.assert_called_once_with(
-        "speed-command-topic", "medium", 0, False
-    )
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    await common.async_set_speed(hass, "fan.test", fan.SPEED_HIGH)
-    assert "not a valid speed" in caplog.text
-    caplog.clear()
-    await common.async_set_speed(hass, "fan.test", fan.SPEED_OFF)
-
-    mqtt_mock.async_publish.assert_any_call("speed-command-topic", "off", 0, False)
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    await common.async_turn_on(hass, "fan.test", speed="medium")
-    assert mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    mqtt_mock.async_publish.assert_any_call("speed-command-topic", "medium", 0, False)
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("fan.test")
-    assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    await common.async_turn_off(hass, "fan.test")
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "OFF", 0, False)
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    await common.async_turn_on(hass, "fan.test", speed="high")
-    assert mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
-    mqtt_mock.async_publish.assert_any_call(
-        "preset-mode-command-topic", "high", 0, False
-    )
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("fan.test")
-    assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    await common.async_turn_off(hass, "fan.test")
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "OFF", 0, False)
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-
-# use of speeds is deprecated, support will be removed after a quarter (2021.7)
-async def test_sending_mqtt_commands_and_optimistic_legacy_speeds_only(
-    hass, mqtt_mock, caplog
-):
-    """Test optimistic mode without state topics with legacy speeds."""
-    assert await async_setup_component(
-        hass,
-        fan.DOMAIN,
-        {
-            fan.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "command_topic": "command-topic",
-                "speed_state_topic": "speed-state-topic",
-                "speed_command_topic": "speed-command-topic",
-                "speeds": ["off", "low", "medium", "high"],
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    await common.async_set_percentage(hass, "fan.test", 100)
-    mqtt_mock.async_publish.assert_any_call("speed-command-topic", "high", 0, False)
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("fan.test")
-    assert state.attributes.get(fan.ATTR_PERCENTAGE) == 100
-    assert state.attributes.get(fan.ATTR_SPEED) == "off"
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    await common.async_set_percentage(hass, "fan.test", 0)
-    mqtt_mock.async_publish.assert_any_call("speed-command-topic", "off", 0, False)
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("fan.test")
-    assert state.attributes.get(fan.ATTR_PERCENTAGE) == 0
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    await common.async_set_preset_mode(hass, "fan.test", "low")
-    assert "not a valid preset mode" in caplog.text
-    caplog.clear()
-
-    await common.async_set_speed(hass, "fan.test", fan.SPEED_LOW)
-    mqtt_mock.async_publish.assert_called_once_with(
-        "speed-command-topic", "low", 0, False
-    )
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    await common.async_set_speed(hass, "fan.test", fan.SPEED_MEDIUM)
-    mqtt_mock.async_publish.assert_called_once_with(
-        "speed-command-topic", "medium", 0, False
-    )
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    await common.async_set_speed(hass, "fan.test", fan.SPEED_HIGH)
-    mqtt_mock.async_publish.assert_called_once_with(
-        "speed-command-topic", "high", 0, False
-    )
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    await common.async_set_speed(hass, "fan.test", fan.SPEED_OFF)
-    mqtt_mock.async_publish.assert_called_once_with(
-        "speed-command-topic", "off", 0, False
-    )
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    await common.async_turn_on(hass, "fan.test", speed="medium")
-    assert mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
-    mqtt_mock.async_publish.assert_any_call("speed-command-topic", "medium", 0, False)
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("fan.test")
-    assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    await common.async_turn_off(hass, "fan.test")
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "OFF", 0, False)
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    await common.async_turn_on(hass, "fan.test", speed="off")
-    assert mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
-    mqtt_mock.async_publish.assert_any_call("speed-command-topic", "off", 0, False)
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("fan.test")
-    assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    await common.async_turn_off(hass, "fan.test")
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "OFF", 0, False)
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
 
 async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, caplog):
     """Test optimistic mode with state topic and turn on attributes."""
@@ -1381,17 +1050,12 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, ca
                 "name": "test",
                 "state_topic": "state-topic",
                 "command_topic": "command-topic",
-                # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-                "speed_state_topic": "speed-state-topic",
-                "speed_command_topic": "speed-command-topic",
                 "oscillation_state_topic": "oscillation-state-topic",
                 "oscillation_command_topic": "oscillation-command-topic",
                 "percentage_state_topic": "percentage-state-topic",
                 "percentage_command_topic": "percentage-command-topic",
                 "preset_mode_command_topic": "preset-mode-command-topic",
                 "preset_mode_state_topic": "preset-mode-state-topic",
-                # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-                "speeds": ["off", "low", "medium"],
                 "preset_modes": [
                     "whoosh",
                     "breeze",
@@ -1421,30 +1085,10 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, ca
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_turn_on(hass, "fan.test", speed=fan.SPEED_MEDIUM)
-    assert mqtt_mock.async_publish.call_count == 3
-    mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    mqtt_mock.async_publish.assert_any_call("speed-command-topic", "medium", 0, False)
-    mqtt_mock.async_publish.assert_any_call("percentage-command-topic", "100", 0, False)
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("fan.test")
-    assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    await common.async_turn_off(hass, "fan.test")
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "OFF", 0, False)
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
     await common.async_turn_on(hass, "fan.test", percentage=25)
-    assert mqtt_mock.async_publish.call_count == 3
+    assert mqtt_mock.async_publish.call_count == 2
     mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
     mqtt_mock.async_publish.assert_any_call("percentage-command-topic", "25", 0, False)
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    mqtt_mock.async_publish.assert_any_call("speed-command-topic", "low", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.state == STATE_ON
@@ -1457,7 +1101,6 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, ca
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
     with pytest.raises(NotValidPresetModeError):
         await common.async_turn_on(hass, "fan.test", preset_mode="auto")
 
@@ -1525,11 +1168,9 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, ca
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_turn_on(hass, "fan.test", percentage=50)
-    assert mqtt_mock.async_publish.call_count == 3
+    assert mqtt_mock.async_publish.call_count == 2
     mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
     mqtt_mock.async_publish.assert_any_call("percentage-command-topic", "50", 0, False)
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    mqtt_mock.async_publish.assert_any_call("speed-command-topic", "low", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.state == STATE_ON
@@ -1552,40 +1193,36 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, ca
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_set_percentage(hass, "fan.test", 33)
-    assert mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("percentage-command-topic", "33", 0, False)
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    mqtt_mock.async_publish.assert_any_call("speed-command-topic", "low", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "percentage-command-topic", "33", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_set_percentage(hass, "fan.test", 50)
-    assert mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("percentage-command-topic", "50", 0, False)
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    mqtt_mock.async_publish.assert_any_call("speed-command-topic", "low", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "percentage-command-topic", "50", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_set_percentage(hass, "fan.test", 100)
-    assert mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("percentage-command-topic", "100", 0, False)
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    mqtt_mock.async_publish.assert_any_call("speed-command-topic", "medium", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "percentage-command-topic", "100", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_set_percentage(hass, "fan.test", 0)
-    assert mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("percentage-command-topic", "0", 0, False)
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    mqtt_mock.async_publish.assert_any_call("speed-command-topic", "off", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "percentage-command-topic", "0", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
@@ -1629,33 +1266,6 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, ca
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    await common.async_set_speed(hass, "fan.test", fan.SPEED_MEDIUM)
-    mqtt_mock.async_publish.assert_called_once_with(
-        "speed-command-topic", "medium", 0, False
-    )
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    await common.async_set_speed(hass, "fan.test", fan.SPEED_HIGH)
-    assert "not a valid speed" in caplog.text
-    caplog.clear()
-
-    await common.async_set_speed(hass, "fan.test", fan.SPEED_OFF)
-    mqtt_mock.async_publish.assert_called_once_with(
-        "speed-command-topic", "off", 0, False
-    )
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    await common.async_set_speed(hass, "fan.test", "cUsToM")
-    assert "not a valid speed" in caplog.text
-    caplog.clear()
-
 
 async def test_attributes(hass, mqtt_mock, caplog):
     """Test attributes."""
@@ -1668,8 +1278,6 @@ async def test_attributes(hass, mqtt_mock, caplog):
                 "name": "test",
                 "command_topic": "command-topic",
                 "oscillation_command_topic": "oscillation-command-topic",
-                # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-                "speed_command_topic": "speed-command-topic",
                 "preset_mode_command_topic": "preset-mode-command-topic",
                 "percentage_command_topic": "percentage-command-topic",
                 "preset_modes": [
@@ -1683,103 +1291,30 @@ async def test_attributes(hass, mqtt_mock, caplog):
 
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
-    assert state.attributes.get(fan.ATTR_SPEED_LIST) == [
-        "low",
-        "medium",
-        "high",
-    ]
 
     await common.async_turn_on(hass, "fan.test")
     state = hass.states.get("fan.test")
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_ASSUMED_STATE)
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    assert state.attributes.get(fan.ATTR_SPEED) is None
     assert state.attributes.get(fan.ATTR_OSCILLATING) is None
 
     await common.async_turn_off(hass, "fan.test")
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    assert state.attributes.get(fan.ATTR_SPEED) is None
     assert state.attributes.get(fan.ATTR_OSCILLATING) is None
 
     await common.async_oscillate(hass, "fan.test", True)
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    assert state.attributes.get(fan.ATTR_SPEED) is None
     assert state.attributes.get(fan.ATTR_OSCILLATING) is True
 
     await common.async_oscillate(hass, "fan.test", False)
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    assert state.attributes.get(fan.ATTR_SPEED) is None
     assert state.attributes.get(fan.ATTR_OSCILLATING) is False
-
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    await common.async_set_speed(hass, "fan.test", fan.SPEED_LOW)
-    state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-    assert state.attributes.get(fan.ATTR_SPEED) == "low"
-    assert state.attributes.get(fan.ATTR_OSCILLATING) is False
-
-    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-    await common.async_set_speed(hass, "fan.test", fan.SPEED_MEDIUM)
-    state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-    assert state.attributes.get(fan.ATTR_SPEED) == "medium"
-    assert state.attributes.get(fan.ATTR_OSCILLATING) is False
-
-    await common.async_set_speed(hass, "fan.test", fan.SPEED_HIGH)
-    state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-    assert state.attributes.get(fan.ATTR_SPEED) == "high"
-    assert state.attributes.get(fan.ATTR_OSCILLATING) is False
-
-    await common.async_set_speed(hass, "fan.test", fan.SPEED_OFF)
-    state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-    assert state.attributes.get(fan.ATTR_SPEED) == "off"
-    assert state.attributes.get(fan.ATTR_OSCILLATING) is False
-
-    await common.async_set_speed(hass, "fan.test", "cUsToM")
-    assert "not a valid speed" in caplog.text
-    caplog.clear()
-
-
-# use of speeds is deprecated, support will be removed after a quarter (2021.7)
-async def test_custom_speed_list(hass, mqtt_mock):
-    """Test optimistic mode without state topic."""
-    assert await async_setup_component(
-        hass,
-        fan.DOMAIN,
-        {
-            fan.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "command_topic": "command-topic",
-                "oscillation_command_topic": "oscillation-command-topic",
-                "oscillation_state_topic": "oscillation-state-topic",
-                "speed_command_topic": "speed-command-topic",
-                "speed_state_topic": "speed-state-topic",
-                "speeds": ["off", "high"],
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
-    assert state.attributes.get(fan.ATTR_SPEED_LIST) == ["high"]
 
 
 async def test_supported_features(hass, mqtt_mock):
@@ -1799,29 +1334,6 @@ async def test_supported_features(hass, mqtt_mock):
                     "name": "test2",
                     "command_topic": "command-topic",
                     "oscillation_command_topic": "oscillation-command-topic",
-                },
-                {
-                    "platform": "mqtt",
-                    "name": "test3a1",
-                    "command_topic": "command-topic",
-                    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-                    "speed_command_topic": "speed-command-topic",
-                },
-                {
-                    "platform": "mqtt",
-                    "name": "test3a2",
-                    "command_topic": "command-topic",
-                    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-                    "speed_command_topic": "speed-command-topic",
-                    "speeds": ["low"],
-                },
-                {
-                    "platform": "mqtt",
-                    "name": "test3a3",
-                    "command_topic": "command-topic",
-                    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-                    "speed_command_topic": "speed-command-topic",
-                    "speeds": ["off"],
                 },
                 {
                     "platform": "mqtt",
@@ -1848,14 +1360,6 @@ async def test_supported_features(hass, mqtt_mock):
                     "command_topic": "command-topic",
                     "preset_mode_command_topic": "preset-mode-command-topic",
                     "preset_modes": ["eco", "smart", "auto"],
-                },
-                {
-                    "platform": "mqtt",
-                    "name": "test4",
-                    "command_topic": "command-topic",
-                    "oscillation_command_topic": "oscillation-command-topic",
-                    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-                    "speed_command_topic": "speed-command-topic",
                 },
                 {
                     "platform": "mqtt",
@@ -1941,19 +1445,6 @@ async def test_supported_features(hass, mqtt_mock):
     state = hass.states.get("fan.test2")
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == fan.SUPPORT_OSCILLATE
 
-    state = hass.states.get("fan.test3a1")
-    assert (
-        state.attributes.get(ATTR_SUPPORTED_FEATURES)
-        and fan.SUPPORT_SET_SPEED == fan.SUPPORT_SET_SPEED
-    )
-    state = hass.states.get("fan.test3a2")
-    assert (
-        state.attributes.get(ATTR_SUPPORTED_FEATURES)
-        and fan.SUPPORT_SET_SPEED == fan.SUPPORT_SET_SPEED
-    )
-    state = hass.states.get("fan.test3a3")
-    assert state is None
-
     state = hass.states.get("fan.test3b")
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == fan.SUPPORT_SET_SPEED
 
@@ -1964,12 +1455,6 @@ async def test_supported_features(hass, mqtt_mock):
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == fan.SUPPORT_PRESET_MODE
     state = hass.states.get("fan.test3c3")
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == fan.SUPPORT_PRESET_MODE
-
-    state = hass.states.get("fan.test4")
-    assert (
-        state.attributes.get(ATTR_SUPPORTED_FEATURES)
-        == fan.SUPPORT_OSCILLATE | fan.SUPPORT_SET_SPEED
-    )
 
     state = hass.states.get("fan.test4pcta")
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == fan.SUPPORT_SET_SPEED

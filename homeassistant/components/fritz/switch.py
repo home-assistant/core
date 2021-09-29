@@ -31,6 +31,7 @@ from .common import (
     FritzDevice,
     FritzDeviceBase,
     SwitchInfo,
+    device_filter_out_from_trackers,
 )
 from .const import (
     DATA_FRITZ,
@@ -267,16 +268,11 @@ def wifi_entities_list(
 
 
 def profile_entities_list(
-    router: FritzBoxTools, data_fritz: FritzData
+    router: FritzBoxTools,
+    data_fritz: FritzData,
+    pref_disable_new_entities: bool,
 ) -> list[FritzBoxProfileSwitch]:
     """Add new tracker entities from the router."""
-
-    def _is_tracked(mac: str) -> bool:
-        for tracked in data_fritz.profile_switches.values():
-            if mac in tracked:
-                return True
-
-        return False
 
     new_profiles: list[FritzBoxProfileSwitch] = []
 
@@ -287,7 +283,9 @@ def profile_entities_list(
         data_fritz.profile_switches[router.unique_id] = set()
 
     for mac, device in router.devices.items():
-        if device.ip_address == "" or _is_tracked(mac):
+        if device_filter_out_from_trackers(
+            mac, device, pref_disable_new_entities, data_fritz.profile_switches.values()
+        ):
             continue
 
         new_profiles.append(FritzBoxProfileSwitch(router, device))
@@ -301,13 +299,14 @@ def all_entities_list(
     device_friendly_name: str,
     data_fritz: FritzData,
     local_ip: str,
+    pref_disable_new_entities: bool,
 ) -> list[Entity]:
     """Get a list of all entities."""
     return [
         *deflection_entities_list(fritzbox_tools, device_friendly_name),
         *port_entities_list(fritzbox_tools, device_friendly_name, local_ip),
         *wifi_entities_list(fritzbox_tools, device_friendly_name),
-        *profile_entities_list(fritzbox_tools, data_fritz),
+        *profile_entities_list(fritzbox_tools, data_fritz, pref_disable_new_entities),
     ]
 
 
@@ -326,7 +325,12 @@ async def async_setup_entry(
     )
 
     entities_list = await hass.async_add_executor_job(
-        all_entities_list, fritzbox_tools, entry.title, data_fritz, local_ip
+        all_entities_list,
+        fritzbox_tools,
+        entry.title,
+        data_fritz,
+        local_ip,
+        entry.pref_disable_new_entities,
     )
 
     async_add_entities(entities_list)
@@ -334,7 +338,11 @@ async def async_setup_entry(
     @callback
     def update_router() -> None:
         """Update the values of the router."""
-        async_add_entities(profile_entities_list(fritzbox_tools, data_fritz))
+        async_add_entities(
+            profile_entities_list(
+                fritzbox_tools, data_fritz, entry.pref_disable_new_entities
+            )
+        )
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, fritzbox_tools.signal_device_new, update_router)
@@ -408,11 +416,10 @@ class FritzBoxBaseSwitch(FritzBoxBaseEntity):
         """Turn off switch."""
         await self._async_handle_turn_on_off(turn_on=False)
 
-    async def _async_handle_turn_on_off(self, turn_on: bool) -> bool:
+    async def _async_handle_turn_on_off(self, turn_on: bool) -> None:
         """Handle switch state change request."""
         await self._switch(turn_on)
         self._attr_is_on = turn_on
-        return True
 
 
 class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
@@ -468,9 +475,9 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
         self._is_available = True
 
         attributes_dict = {
-            "NewInternalClient": "internalIP",
-            "NewInternalPort": "internalPort",
-            "NewExternalPort": "externalPort",
+            "NewInternalClient": "internal_ip",
+            "NewInternalPort": "internal_port",
+            "NewExternalPort": "external_port",
             "NewProtocol": "protocol",
             "NewPortMappingDescription": "description",
         }
@@ -547,15 +554,15 @@ class FritzBoxDeflectionSwitch(FritzBoxBaseSwitch, SwitchEntity):
         self._attr_is_on = self.dict_of_deflection["Enable"] == "1"
         self._is_available = True
 
-        self._attributes["Type"] = self.dict_of_deflection["Type"]
-        self._attributes["Number"] = self.dict_of_deflection["Number"]
-        self._attributes["DeflectionToNumber"] = self.dict_of_deflection[
+        self._attributes["type"] = self.dict_of_deflection["Type"]
+        self._attributes["number"] = self.dict_of_deflection["Number"]
+        self._attributes["deflection_to_number"] = self.dict_of_deflection[
             "DeflectionToNumber"
         ]
         # Return mode sample: "eImmediately"
-        self._attributes["Mode"] = self.dict_of_deflection["Mode"][1:]
-        self._attributes["Outgoing"] = self.dict_of_deflection["Outgoing"]
-        self._attributes["PhonebookID"] = self.dict_of_deflection["PhonebookID"]
+        self._attributes["mode"] = self.dict_of_deflection["Mode"][1:]
+        self._attributes["outgoing"] = self.dict_of_deflection["Outgoing"]
+        self._attributes["phonebook_id"] = self.dict_of_deflection["PhonebookID"]
 
     async def _async_switch_on_off_executor(self, turn_on: bool) -> None:
         """Handle deflection switch."""
@@ -674,7 +681,7 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch, SwitchEntity):
 
         std = wifi_info["NewStandard"]
         self._attributes["standard"] = std if std else None
-        self._attributes["BSSID"] = wifi_info["NewBSSID"]
+        self._attributes["bssid"] = wifi_info["NewBSSID"]
         self._attributes["mac_address_control"] = wifi_info[
             "NewMACAddressControlEnabled"
         ]

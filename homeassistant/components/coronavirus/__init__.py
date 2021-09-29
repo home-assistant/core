@@ -8,13 +8,14 @@ import coronavirus
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client, entity_registry, update_coordinator
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
 PLATFORMS = ["sensor"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Coronavirus component."""
     # Make sure coordinator is initialized.
     await get_coordinator(hass)

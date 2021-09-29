@@ -8,6 +8,7 @@
             "relayer_connected": "Yeniden Katman ba\u011fl\u0131",
             "remote_connected": "Uzaktan Ba\u011fl\u0131",
             "remote_enabled": "Uzaktan Etkinle\u015ftirildi",
+            "remote_server": "Sunucuyu Uzaktan Kontrol et",
             "subscription_expiration": "Aboneli\u011fin Sona Ermesi"
         }
     }

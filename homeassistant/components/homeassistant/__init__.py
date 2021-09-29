@@ -26,6 +26,7 @@ from homeassistant.helpers.service import (
     async_extract_config_entry_ids,
     async_extract_referenced_entity_ids,
 )
+from homeassistant.helpers.typing import ConfigType
 
 ATTR_ENTRY_ID = "entry_id"
 
@@ -51,7 +52,7 @@ SCHEMA_RELOAD_CONFIG_ENTRY = vol.All(
 SHUTDOWN_SERVICES = (SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART)
 
 
-async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:  # noqa: C901
+async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Set up general services related to Home Assistant."""
 
     async def async_save_persistent_states(service):

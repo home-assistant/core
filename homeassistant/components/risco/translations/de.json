@@ -44,7 +44,7 @@
                     "B": "Gruppe B",
                     "C": "Gruppe C",
                     "D": "Gruppe D",
-                    "arm": "Aktiv, abwesend",
+                    "arm": "Aktiv (abwesend)",
                     "partial_arm": "Teilweise aktiv (STAY)"
                 },
                 "description": "W\u00e4hle aus, welchen Zustand dein Home Assistant-Alarm f\u00fcr jeden von Risco gemeldeten Zustand melden soll",
