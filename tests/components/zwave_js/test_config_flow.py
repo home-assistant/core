@@ -808,7 +808,10 @@ async def test_not_addon(hass, supervisor):
     assert result["data"] == {
         "url": "ws://localhost:3000",
         "usb_path": None,
-        "network_key": None,
+        "s0_legacy_key": None,
+        "s2_access_control_key": None,
+        "s2_authenticated_key": None,
+        "s2_unauthenticated_key": None,
         "use_addon": False,
         "integration_created_addon": False,
     }
