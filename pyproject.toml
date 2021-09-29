@@ -54,6 +54,7 @@ good-names = [
     "k",
     "Run",
     "T",
+    "ip",
 ]
 
 [tool.pylint."MESSAGES CONTROL"]
