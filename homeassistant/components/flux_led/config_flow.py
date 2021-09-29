@@ -244,16 +244,7 @@ class OptionsFlow(config_entries.OptionsFlow):
                 vol.Optional(
                     CONF_CUSTOM_EFFECT_COLORS,
                     default=options.get(CONF_CUSTOM_EFFECT_COLORS),
-                ): vol.All(
-                    cv.ensure_list,
-                    vol.Length(min=1, max=16),
-                    [
-                        vol.All(
-                            vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
-                            vol.Coerce(tuple),
-                        )
-                    ],
-                ),
+                ): str,
                 vol.Optional(
                     CONF_CUSTOM_EFFECT_TRANSITION, default=TRANSITION_GRADUAL
                 ): vol.In([TRANSITION_GRADUAL, TRANSITION_JUMP, TRANSITION_STROBE]),
