@@ -10,11 +10,6 @@ from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.components.climate import DOMAIN as DEVICE_DOMAIN, ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_FAN,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_OFF,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
