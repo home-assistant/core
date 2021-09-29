@@ -55,9 +55,17 @@ from .const import (
     ATTR_VALUE_RAW,
     CONF_ADDON_DEVICE,
     CONF_ADDON_NETWORK_KEY,
+    CONF_ADDON_S0_LEGACY_KEY,
+    CONF_ADDON_S2_ACCESS_CONTROL_KEY,
+    CONF_ADDON_S2_AUTHENTICATED_KEY,
+    CONF_ADDON_S2_UNAUTHENTICATED_KEY,
     CONF_DATA_COLLECTION_OPTED_IN,
     CONF_INTEGRATION_CREATED_ADDON,
     CONF_NETWORK_KEY,
+    CONF_S0_LEGACY_KEY,
+    CONF_S2_ACCESS_CONTROL_KEY,
+    CONF_S2_AUTHENTICATED_KEY,
+    CONF_S2_UNAUTHENTICATED_KEY,
     CONF_USB_PATH,
     CONF_USE_ADDON,
     DATA_CLIENT,
@@ -653,29 +661,61 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
         raise ConfigEntryNotReady from err
 
     usb_path: str = entry.data[CONF_USB_PATH]
-    network_key: str = entry.data[CONF_NETWORK_KEY]
+    # s0_legacy_key was saved as network_key before s2 was added.
+    s0_legacy_key: str = entry.data.get(CONF_S0_LEGACY_KEY, "")
+    if not s0_legacy_key:
+        s0_legacy_key = entry.data.get(CONF_NETWORK_KEY, "")
+    s2_access_control_key: str = entry.data.get(CONF_S2_ACCESS_CONTROL_KEY, "")
+    s2_authenticated_key: str = entry.data.get(CONF_S2_AUTHENTICATED_KEY, "")
+    s2_unauthenticated_key: str = entry.data.get(CONF_S2_UNAUTHENTICATED_KEY, "")
     addon_state = addon_info.state
 
     if addon_state == AddonState.NOT_INSTALLED:
         addon_manager.async_schedule_install_setup_addon(
-            usb_path, network_key, catch_error=True
+            usb_path,
+            s0_legacy_key,
+            s2_access_control_key,
+            s2_authenticated_key,
+            s2_unauthenticated_key,
+            catch_error=True,
         )
         raise ConfigEntryNotReady
 
     if addon_state == AddonState.NOT_RUNNING:
         addon_manager.async_schedule_setup_addon(
-            usb_path, network_key, catch_error=True
+            usb_path,
+            s0_legacy_key,
+            s2_access_control_key,
+            s2_authenticated_key,
+            s2_unauthenticated_key,
+            catch_error=True,
         )
         raise ConfigEntryNotReady
 
     addon_options = addon_info.options
     addon_device = addon_options[CONF_ADDON_DEVICE]
-    addon_network_key = addon_options[CONF_ADDON_NETWORK_KEY]
+    # s0_legacy_key was saved as network_key before s2 was added.
+    addon_s0_legacy_key = addon_options.get(CONF_ADDON_S0_LEGACY_KEY, "")
+    if not addon_s0_legacy_key:
+        addon_s0_legacy_key = addon_options.get(CONF_ADDON_NETWORK_KEY, "")
+    addon_s2_access_control_key = addon_options.get(
+        CONF_ADDON_S2_ACCESS_CONTROL_KEY, ""
+    )
+    addon_s2_authenticated_key = addon_options.get(CONF_ADDON_S2_AUTHENTICATED_KEY, "")
+    addon_s2_unauthenticated_key = addon_options.get(
+        CONF_ADDON_S2_UNAUTHENTICATED_KEY, ""
+    )
     updates = {}
     if usb_path != addon_device:
         updates[CONF_USB_PATH] = addon_device
-    if network_key != addon_network_key:
-        updates[CONF_NETWORK_KEY] = addon_network_key
+    if s0_legacy_key != addon_s0_legacy_key:
+        updates[CONF_S0_LEGACY_KEY] = addon_s0_legacy_key
+    if s2_access_control_key != addon_s2_access_control_key:
+        updates[CONF_S2_ACCESS_CONTROL_KEY] = addon_s2_access_control_key
+    if s2_authenticated_key != addon_s2_authenticated_key:
+        updates[CONF_S2_AUTHENTICATED_KEY] = addon_s2_authenticated_key
+    if s2_unauthenticated_key != addon_s2_unauthenticated_key:
+        updates[CONF_S2_UNAUTHENTICATED_KEY] = addon_s2_unauthenticated_key
     if updates:
         hass.config_entries.async_update_entry(entry, data={**entry.data, **updates})
 
