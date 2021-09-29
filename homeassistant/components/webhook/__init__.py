@@ -1,10 +1,9 @@
 """Webhooks for Home Assistant."""
 from __future__ import annotations
 
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 import logging
 import secrets
-from typing import Callable
 
 from aiohttp.web import Request, Response
 import voluptuous as vol
