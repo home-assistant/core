@@ -240,7 +240,7 @@ class KeyboardRemote:
                     KEYBOARD_REMOTE_COMMAND_RECEIVED,
                     {
                         KEY_CODE: code,
-                        TYPE: KEY_VALUE_NAME.get(2),
+                        TYPE: "key_hold",
                         DEVICE_DESCRIPTOR: path,
                         DEVICE_NAME: name,
                     },
