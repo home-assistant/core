@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
+from collections.abc import Callable, Coroutine
 import contextlib
 import datetime
 from functools import partial
 import logging
-from typing import Any, Callable
+from typing import Any
 import urllib.parse
 
 import async_timeout

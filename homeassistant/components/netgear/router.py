@@ -1,8 +1,10 @@
 """Represent the Netgear router and its devices."""
+from __future__ import annotations
+
 from abc import abstractmethod
+from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import Callable
 
 from pynetgear import Netgear
 
@@ -62,7 +64,7 @@ def async_setup_netgear_entry(
     hass: HomeAssistantType,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    entity_class_generator: Callable[["NetgearRouter", dict], list],
+    entity_class_generator: Callable[[NetgearRouter, dict], list],
 ) -> None:
     """Set up device tracker for Netgear component."""
     router = hass.data[DOMAIN][entry.unique_id]
