@@ -499,6 +499,7 @@ async def test_usb_discovery(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_usb_discovery_addon_not_running(
     hass,
     supervisor,
@@ -528,18 +529,35 @@ async def test_usb_discovery_addon_not_running(
     data_schema = result["data_schema"]
     assert data_schema({}) == {
         "usb_path": USB_DISCOVERY_INFO["device"],
-        "network_key": "",
+        "s0_legacy_key": "",
+        "s2_access_control_key": "",
+        "s2_authenticated_key": "",
+        "s2_unauthenticated_key": "",
     }
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"usb_path": USB_DISCOVERY_INFO["device"], "network_key": "abc123"},
+        {
+            "usb_path": USB_DISCOVERY_INFO["device"],
+            "s0_legacy_key": "new123",
+            "s2_access_control_key": "new456",
+            "s2_authenticated_key": "new789",
+            "s2_unauthenticated_key": "new987",
+        },
     )
 
     assert set_addon_options.call_args == call(
         hass,
         "core_zwave_js",
-        {"options": {"device": USB_DISCOVERY_INFO["device"], "network_key": "abc123"}},
+        {
+            "options": {
+                "device": USB_DISCOVERY_INFO["device"],
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+            }
+        },
     )
 
     assert result["type"] == "progress"
@@ -559,10 +577,16 @@ async def test_usb_discovery_addon_not_running(
 
     assert result["type"] == "create_entry"
     assert result["title"] == TITLE
-    assert result["data"]["usb_path"] == USB_DISCOVERY_INFO["device"]
-    assert result["data"]["integration_created_addon"] is False
-    assert result["data"]["use_addon"] is True
-    assert result["data"]["network_key"] == "abc123"
+    assert result["data"] == {
+        "url": "ws://host1:3001",
+        "usb_path": USB_DISCOVERY_INFO["device"],
+        "s0_legacy_key": "new123",
+        "s2_access_control_key": "new456",
+        "s2_authenticated_key": "new789",
+        "s2_unauthenticated_key": "new987",
+        "use_addon": True,
+        "integration_created_addon": False,
+    }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
