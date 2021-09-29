@@ -56,7 +56,7 @@ async def async_setup_entry(
         if not dev_ids:
             return
 
-        entities = _setup_entities( hass, entry, dev_ids)
+        entities = _setup_entities(hass, entry, dev_ids)
 
         async_add_entities(entities)
 
@@ -107,7 +107,7 @@ class TuyaHaCover(TuyaHaEntity, CoverEntity):
             return 1 + int(0.98 * (100 - position))
         if self.tuya_device.status.get(DPCODE_SITUATION_SET) == "fully_open":
             return 1 + 0.98 * position
-        
+
         return 1 + int(0.98 * (100 - position))
 
     def open_cover(self, **kwargs: Any) -> None:
