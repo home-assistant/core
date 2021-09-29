@@ -340,7 +340,6 @@ class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
             self._attr_available = False
             return
 
-        assert self.entity_description.value_fn
         self._attr_native_value = (
             self._last_device_value
         ) = self.entity_description.value_fn(status, self._last_device_value)
