@@ -7,7 +7,7 @@ import dataclasses
 from datetime import datetime, timedelta
 from itertools import groupby
 import logging
-from typing import TYPE_CHECKING, Any, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal
 
 from sqlalchemy import bindparam, func
 from sqlalchemy.exc import SQLAlchemyError
@@ -208,7 +208,7 @@ def _update_or_add_metadata(
             statistic_id,
             new_metadata,
         )
-        return cast(int, meta.id)
+        return meta.id  # type: ignore[no-any-return]
 
     metadata_id, old_metadata = next(iter(old_metadata_dict.items()))
     if (
