@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -599,7 +600,7 @@ SENSOR_DESCRIPTIONS = (
         name="Yearly Rain",
         icon="mdi:water",
         native_unit_of_measurement=PRECIPITATION_INCHES,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
 )
 
