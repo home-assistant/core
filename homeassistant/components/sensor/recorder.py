@@ -2,13 +2,13 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 import datetime
 import itertools
 import logging
 import math
 
-from homeassistant.components.recorder import history, statistics
+from homeassistant.components.recorder import history, is_entity_recorded, statistics
 from homeassistant.components.recorder.models import (
     StatisticData,
     StatisticMetaData,
@@ -131,6 +131,8 @@ def _get_entities(hass: HomeAssistant) -> list[tuple[str, str, str | None, str |
     entity_ids = []
 
     for state in all_sensors:
+        if not is_entity_recorded(hass, state.entity_id):
+            continue
         if (state_class := state.attributes.get(ATTR_STATE_CLASS)) not in STATE_CLASSES:
             continue
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
@@ -193,7 +195,7 @@ def _parse_float(state: str) -> float:
 
 def _normalize_states(
     hass: HomeAssistant,
-    entity_history: list[State],
+    entity_history: Iterable[State],
     device_class: str | None,
     entity_id: str,
 ) -> tuple[str | None, list[tuple[float, State]]]:
@@ -363,6 +365,14 @@ def compile_statistics(  # noqa: C901
             entity_ids=entities_significant_history,
         )
         history_list = {**history_list, **_history_list}
+    # If there are no recent state changes, the sensor's state may already be pruned
+    # from the recorder. Get the state from the state machine instead.
+    for entity_id, _, _, _ in entities:
+        if entity_id not in history_list:
+            state = hass.states.get(entity_id)
+            if not state:
+                continue
+            history_list[entity_id] = (state,)
 
     for (  # pylint: disable=too-many-nested-blocks
         entity_id,

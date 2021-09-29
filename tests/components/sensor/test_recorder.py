@@ -119,6 +119,66 @@ def test_compile_hourly_statistics(
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
+@pytest.mark.parametrize(
+    "device_class,unit,native_unit",
+    [
+        (None, "%", "%"),
+    ],
+)
+def test_compile_hourly_statistics_purged_state_changes(
+    hass_recorder, caplog, device_class, unit, native_unit
+):
+    """Test compiling hourly statistics."""
+    zero = dt_util.utcnow()
+    hass = hass_recorder()
+    recorder = hass.data[DATA_INSTANCE]
+    setup_component(hass, "sensor", {})
+    attributes = {
+        "device_class": device_class,
+        "state_class": "measurement",
+        "unit_of_measurement": unit,
+    }
+    four, states = record_states(hass, zero, "sensor.test1", attributes)
+    hist = history.get_significant_states(hass, zero, four)
+    assert dict(states) == dict(hist)
+
+    mean = min = max = float(hist["sensor.test1"][-1].state)
+
+    # Purge all states from the database
+    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=four):
+        hass.services.call("recorder", "purge", {"keep_days": 0})
+        hass.block_till_done()
+        wait_recording_done(hass)
+    hist = history.get_significant_states(hass, zero, four)
+    assert not hist
+
+    recorder.do_adhoc_statistics(start=zero)
+    wait_recording_done(hass)
+    statistic_ids = list_statistic_ids(hass)
+    assert statistic_ids == [
+        {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
+    ]
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert stats == {
+        "sensor.test1": [
+            {
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "mean": approx(mean),
+                "min": approx(min),
+                "max": approx(max),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+                "sum_decrease": None,
+                "sum_increase": None,
+            }
+        ]
+    }
+    assert "Error while processing event StatisticsTask" not in caplog.text
+
+
 @pytest.mark.parametrize("attributes", [TEMPERATURE_SENSOR_ATTRIBUTES])
 def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes):
     """Test compiling hourly statistics for unsupported sensor."""
