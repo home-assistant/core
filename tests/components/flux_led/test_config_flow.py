@@ -1,17 +1,37 @@
 """Define tests for the Flux LED/Magic Home config flow."""
+from __future__ import annotations
+
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant import config_entries, setup
-from homeassistant.components.flux_led.const import DOMAIN
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_NAME
+from homeassistant.components.flux_led.const import (
+    CONF_CUSTOM_EFFECT_COLORS,
+    CONF_CUSTOM_EFFECT_SPEED_PCT,
+    CONF_CUSTOM_EFFECT_TRANSITION,
+    DOMAIN,
+    MODE_RGB,
+    TRANSITION_STROBE,
+)
+from homeassistant.const import (
+    CONF_DEVICE,
+    CONF_HOST,
+    CONF_MAC,
+    CONF_MODE,
+    CONF_NAME,
+    CONF_PROTOCOL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
 
 from . import (
-    ALIAS,
     DEFAULT_ENTRY_TITLE,
+    DHCP_DISCOVERY,
+    DHCP_HOSTNAME,
+    DHCP_IP_ADDRESS,
+    DHCP_MAC_ADDRESS,
+    FLUX_DISCOVERY,
     IP_ADDRESS,
     MAC_ADDRESS,
     MODULE,
@@ -66,7 +86,7 @@ async def test_discovery(hass: HomeAssistant):
 
     assert result3["type"] == "create_entry"
     assert result3["title"] == DEFAULT_ENTRY_TITLE
-    assert result3["data"] == {CONF_HOST: IP_ADDRESS}
+    assert result3["data"] == {CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE}
     mock_setup.assert_called_once()
     mock_setup_entry.assert_called_once()
 
@@ -139,6 +159,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant):
         assert result3["title"] == DEFAULT_ENTRY_TITLE
         assert result3["data"] == {
             CONF_HOST: IP_ADDRESS,
+            CONF_NAME: DEFAULT_ENTRY_TITLE,
         }
         await hass.async_block_till_done()
 
@@ -178,17 +199,14 @@ async def test_import(hass: HomeAssistant):
     """Test import from yaml."""
     config = {
         CONF_HOST: IP_ADDRESS,
+        CONF_MAC: MAC_ADDRESS,
+        CONF_NAME: "floor lamp",
+        CONF_PROTOCOL: "ledenet",
+        CONF_MODE: MODE_RGB,
+        CONF_CUSTOM_EFFECT_COLORS: "[255,0,0], [0,0,255]",
+        CONF_CUSTOM_EFFECT_SPEED_PCT: 30,
+        CONF_CUSTOM_EFFECT_TRANSITION: TRANSITION_STROBE,
     }
-
-    # Cannot connect
-    with _patch_discovery(no_device=True), _patch_wifibulb(no_device=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "cannot_connect"
 
     # Success
     with _patch_discovery(), _patch_wifibulb(), patch(
@@ -202,9 +220,17 @@ async def test_import(hass: HomeAssistant):
         await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
-    assert result["title"] == DEFAULT_ENTRY_TITLE
+    assert result["title"] == "floor lamp"
     assert result["data"] == {
         CONF_HOST: IP_ADDRESS,
+        CONF_NAME: "floor lamp",
+        CONF_PROTOCOL: "ledenet",
+    }
+    assert result["options"] == {
+        CONF_MODE: MODE_RGB,
+        CONF_CUSTOM_EFFECT_COLORS: "[255,0,0], [0,0,255]",
+        CONF_CUSTOM_EFFECT_SPEED_PCT: 30,
+        CONF_CUSTOM_EFFECT_TRANSITION: TRANSITION_STROBE,
     }
     mock_setup.assert_called_once()
     mock_setup_entry.assert_called_once()
@@ -249,10 +275,8 @@ async def test_manual(hass: HomeAssistant):
         )
         await hass.async_block_till_done()
     assert result4["type"] == "create_entry"
-    assert result4["title"] == DEFAULT_ENTRY_TITLE
-    assert result4["data"] == {
-        CONF_HOST: IP_ADDRESS,
-    }
+    assert result4["title"] == IP_ADDRESS
+    assert result4["data"] == {CONF_HOST: IP_ADDRESS, CONF_NAME: IP_ADDRESS}
 
     # Duplicate
     result = await hass.config_entries.flow.async_init(
@@ -268,8 +292,8 @@ async def test_manual(hass: HomeAssistant):
     assert result2["reason"] == "already_configured"
 
 
-async def test_manual_no_capabilities(hass: HomeAssistant):
-    """Test manually setup without successful get_capabilities."""
+async def test_manual_no_discovery_data(hass: HomeAssistant):
+    """Test manually setup without discovery data."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -285,10 +309,11 @@ async def test_manual_no_capabilities(hass: HomeAssistant):
         )
         await hass.async_block_till_done()
 
+    import pprint
+
+    pprint.pprint(result)
     assert result["type"] == "create_entry"
-    assert result["data"] == {
-        CONF_HOST: IP_ADDRESS,
-    }
+    assert result["data"] == {CONF_HOST: IP_ADDRESS, CONF_NAME: IP_ADDRESS}
 
 
 async def test_discovered_by_discovery_and_dhcp(hass):
@@ -299,7 +324,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DISCOVERY},
-            data={CONF_HOST: IP_ADDRESS, CONF_MAC: MAC_ADDRESS, CONF_NAME: ALIAS},
+            data=FLUX_DISCOVERY,
         )
         await hass.async_block_till_done()
     assert result["type"] == RESULT_TYPE_FORM
@@ -309,7 +334,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={"ip": IP_ADDRESS, "macaddress": MAC_ADDRESS, "hostname": ALIAS},
+            data=DHCP_DISCOVERY,
         )
         await hass.async_block_till_done()
     assert result2["type"] == RESULT_TYPE_ABORT
@@ -319,34 +344,22 @@ async def test_discovered_by_discovery_and_dhcp(hass):
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={"ip": IP_ADDRESS, "macaddress": "00:00:00:00:00:00"},
+            data={
+                DHCP_HOSTNAME: "any",
+                DHCP_IP_ADDRESS: IP_ADDRESS,
+                DHCP_MAC_ADDRESS: "00:00:00:00:00:00",
+            },
         )
         await hass.async_block_till_done()
     assert result3["type"] == RESULT_TYPE_ABORT
     assert result3["reason"] == "already_in_progress"
 
-    with _patch_discovery(no_device=True), _patch_wifibulb(no_device=True):
-        result3 = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_DHCP},
-            data={"ip": "1.2.3.5", "macaddress": "00:00:00:00:00:01"},
-        )
-        await hass.async_block_till_done()
-    assert result3["type"] == RESULT_TYPE_ABORT
-    assert result3["reason"] == "cannot_connect"
-
 
 @pytest.mark.parametrize(
     "source, data",
     [
-        (
-            config_entries.SOURCE_DHCP,
-            {"ip": IP_ADDRESS, "macaddress": MAC_ADDRESS, "hostname": ALIAS},
-        ),
-        (
-            config_entries.SOURCE_DISCOVERY,
-            {CONF_HOST: IP_ADDRESS, CONF_MAC: MAC_ADDRESS, CONF_NAME: ALIAS},
-        ),
+        (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
+        (config_entries.SOURCE_DISCOVERY, FLUX_DISCOVERY),
     ],
 )
 async def test_discovered_by_dhcp_or_discovery(hass, source, data):
@@ -371,107 +384,6 @@ async def test_discovered_by_dhcp_or_discovery(hass, source, data):
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["data"] == {
-        CONF_HOST: IP_ADDRESS,
-    }
+    assert result2["data"] == {CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE}
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
-
-
-@pytest.mark.parametrize(
-    "source, data",
-    [
-        (
-            config_entries.SOURCE_DHCP,
-            {"ip": IP_ADDRESS, "macaddress": MAC_ADDRESS, "hostname": ALIAS},
-        ),
-        (
-            config_entries.SOURCE_DISCOVERY,
-            {CONF_HOST: IP_ADDRESS, CONF_MAC: MAC_ADDRESS, CONF_NAME: ALIAS},
-        ),
-    ],
-)
-async def test_discovered_by_dhcp_or_discovery_failed_to_get_device(hass, source, data):
-    """Test we abort if we cannot get the unique id when discovered from dhcp."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    with _patch_discovery(no_device=True), _patch_wifibulb(no_device=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": source}, data=data
-        )
-        await hass.async_block_till_done()
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "cannot_connect"
-
-
-async def test_migration_device_online(hass: HomeAssistant):
-    """Test migration from single config entry."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
-    config_entry.add_to_hass(hass)
-    config = {CONF_MAC: MAC_ADDRESS, CONF_NAME: ALIAS, CONF_HOST: IP_ADDRESS}
-
-    with _patch_discovery(), _patch_wifibulb(), patch(
-        f"{MODULE}.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        await setup.async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "migration"}, data=config
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == ALIAS
-    assert result["data"] == {
-        CONF_HOST: IP_ADDRESS,
-    }
-    assert len(mock_setup_entry.mock_calls) == 2
-
-    # Duplicate
-    with _patch_discovery(), _patch_wifibulb():
-        await setup.async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "migration"}, data=config
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
-
-
-async def test_migration_device_offline(hass: HomeAssistant):
-    """Test migration from single config entry."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
-    config_entry.add_to_hass(hass)
-    config = {CONF_MAC: MAC_ADDRESS, CONF_NAME: ALIAS, CONF_HOST: None}
-
-    with _patch_discovery(no_device=True), _patch_wifibulb(no_device=True), patch(
-        f"{MODULE}.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        await setup.async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "migration"}, data=config
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == ALIAS
-    new_entry = result["result"]
-    assert result["data"] == {
-        CONF_HOST: None,
-    }
-    assert len(mock_setup_entry.mock_calls) == 2
-
-    # Ensure a manual import updates the missing host
-    config = {CONF_HOST: IP_ADDRESS}
-    with _patch_discovery(no_device=True), _patch_wifibulb():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
-    assert new_entry.data[CONF_HOST] == IP_ADDRESS
