@@ -40,6 +40,7 @@ from .const import (
     DOMAIN,
     FLUX_HOST,
     FLUX_LED_EXCEPTIONS,
+    FLUX_MAC,
     MODE_AUTO,
     STARTUP_SCAN_TIMEOUT,
     TRANSITION_GRADUAL,
@@ -88,13 +89,13 @@ def async_trigger_discovery(
 def async_import_from_yaml(
     hass: HomeAssistant,
     config: ConfigType,
-    discovered_devices_by_host: dict[str, dict[str, Any]],
+    discovered_mac_by_host: dict[str, str],
 ) -> None:
     """Import devices from yaml."""
     for entry_config in config.get(LIGHT_DOMAIN, []):
         if entry_config.get(CONF_PLATFORM) != DOMAIN:
             continue
-        for host, device_config in entry_config.get[CONF_DEVICES]:
+        for host, device_config in entry_config[CONF_DEVICES].items():
             _LOGGER.warning(
                 "Configuring flux_led via yaml is deprecated; the configuration for"
                 " %s has been migrated to a config entry and can be safely removed",
@@ -107,7 +108,7 @@ def async_import_from_yaml(
                     context={"source": config_entries.SOURCE_IMPORT},
                     data={
                         CONF_HOST: host,
-                        CONF_MAC: discovered_devices_by_host.get(host),
+                        CONF_MAC: discovered_mac_by_host.get(host),
                         CONF_NAME: device_config[CONF_NAME],
                         CONF_PROTOCOL: device_config.get(CONF_PROTOCOL),
                         CONF_MODE: device_config.get(ATTR_MODE, MODE_AUTO),
@@ -127,11 +128,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the flux_led component."""
     hass.data[DOMAIN] = {}
     discovered_devices = await async_discover_devices(hass, STARTUP_SCAN_TIMEOUT)
-    discovered_devices_by_host = {
-        device[FLUX_HOST]: device for device in discovered_devices
+    discovered_mac_by_host = {
+        device[FLUX_HOST]: device[FLUX_MAC] for device in discovered_devices
     }
 
-    async_import_from_yaml(hass, config, discovered_devices_by_host)
+    async_import_from_yaml(hass, config, discovered_mac_by_host)
 
     async def _async_discovery(*_):
         async_trigger_discovery(
