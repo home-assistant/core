@@ -24,7 +24,7 @@ from .models import (
     StatisticsShortTerm,
     process_timestamp,
 )
-from .statistics import _get_metadata, get_start_time
+from .statistics import get_metadata_with_session, get_start_time
 from .util import session_scope
 
 _LOGGER = logging.getLogger(__name__)
@@ -564,7 +564,7 @@ def _apply_update(instance, session, new_version, old_version):  # noqa: C901
                     fake_start_time += timedelta(minutes=5)
 
         # Copy last hourly statistic to the newly created 5-minute statistics table
-        sum_statistics = _get_metadata(
+        sum_statistics = get_metadata_with_session(
             instance.hass, session, None, statistic_type="sum"
         )
         for metadata_id in sum_statistics:

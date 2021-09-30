@@ -488,7 +488,7 @@ hole==0.5.1
 holidays==0.11.3.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210922.0
+home-assistant-frontend==20210930.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -588,7 +588,7 @@ mficlient==0.3.0
 micloud==0.3
 
 # homeassistant.components.mill
-millheater==0.5.2
+millheater==0.6.0
 
 # homeassistant.components.minio
 minio==4.0.9
@@ -1085,7 +1085,7 @@ pyspcwebgw==0.4.0
 pysqueezebox==0.5.5
 
 # homeassistant.components.syncthru
-pysyncthru==0.7.3
+pysyncthru==0.7.10
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.2.11

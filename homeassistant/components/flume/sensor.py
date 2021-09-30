@@ -44,7 +44,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
-SCAN_INTERVAL = timedelta(minutes=1)
+SCAN_INTERVAL = timedelta(minutes=15)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

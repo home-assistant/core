@@ -195,7 +195,7 @@ def _update_or_add_metadata(
     Updating metadata source is not possible.
     """
     statistic_id = new_metadata["statistic_id"]
-    old_metadata_dict = _get_metadata(hass, session, [statistic_id], None)
+    old_metadata_dict = get_metadata_with_session(hass, session, [statistic_id], None)
     if not old_metadata_dict:
         unit = new_metadata["unit_of_measurement"]
         has_mean = new_metadata["has_mean"]
@@ -210,7 +210,7 @@ def _update_or_add_metadata(
         )
         return meta.id  # type: ignore[no-any-return]
 
-    metadata_id, old_metadata = next(iter(old_metadata_dict.items()))
+    metadata_id, old_metadata = old_metadata_dict[statistic_id]
     if (
         old_metadata["has_mean"] != new_metadata["has_mean"]
         or old_metadata["has_sum"] != new_metadata["has_sum"]
@@ -361,13 +361,15 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
     return True
 
 
-def _get_metadata(
+def get_metadata_with_session(
     hass: HomeAssistant,
     session: scoped_session,
-    statistic_ids: list[str] | None,
+    statistic_ids: Iterable[str] | None,
     statistic_type: Literal["mean"] | Literal["sum"] | None,
-) -> dict[int, StatisticMetaData]:
-    """Fetch meta data, returns a dict of StatisticMetaData indexed by statistic_id.
+) -> dict[str, tuple[int, StatisticMetaData]]:
+    """Fetch meta data.
+
+    Returns a dict of (metadata_id, StatisticMetaData) indexed by statistic_id.
 
     If statistic_ids is given, fetch metadata only for the listed statistics_ids.
     If statistic_type is given, fetch metadata only for statistic_ids supporting it.
@@ -403,24 +405,21 @@ def _get_metadata(
 
     metadata_ids = [metadata[0] for metadata in result]
     # Prepare the result dict
-    metadata: dict[int, StatisticMetaData] = {}
+    metadata: dict[str, tuple[int, StatisticMetaData]] = {}
     for _id in metadata_ids:
         meta = _meta(result, _id)
         if meta:
-            metadata[_id] = meta
+            metadata[meta["statistic_id"]] = (_id, meta)
     return metadata
 
 
 def get_metadata(
     hass: HomeAssistant,
-    statistic_id: str,
-) -> StatisticMetaData | None:
-    """Return metadata for a statistic_id."""
+    statistic_ids: Iterable[str],
+) -> dict[str, tuple[int, StatisticMetaData]]:
+    """Return metadata for statistic_ids."""
     with session_scope(hass=hass) as session:
-        metadata = _get_metadata(hass, session, [statistic_id], None)
-        if not metadata:
-            return None
-        return next(iter(metadata.values()))
+        return get_metadata_with_session(hass, session, statistic_ids, None)
 
 
 def _configured_unit(unit: str, units: UnitSystem) -> str:
@@ -459,9 +458,9 @@ def list_statistic_ids(
 
     # Query the database
     with session_scope(hass=hass) as session:
-        metadata = _get_metadata(hass, session, None, statistic_type)
+        metadata = get_metadata_with_session(hass, session, None, statistic_type)
 
-        for meta in metadata.values():
+        for _, meta in metadata.values():
             unit = meta["unit_of_measurement"]
             if unit is not None:
                 # Display unit according to user settings
@@ -470,7 +469,7 @@ def list_statistic_ids(
 
         statistic_ids = {
             meta["statistic_id"]: meta["unit_of_measurement"]
-            for meta in metadata.values()
+            for _, meta in metadata.values()
         }
 
     # Query all integrations with a registered recorder platform
@@ -537,13 +536,13 @@ def statistics_during_period(
     metadata = None
     with session_scope(hass=hass) as session:
         # Fetch metadata for the given (or all) statistic_ids
-        metadata = _get_metadata(hass, session, statistic_ids, None)
+        metadata = get_metadata_with_session(hass, session, statistic_ids, None)
         if not metadata:
             return {}
 
         metadata_ids = None
         if statistic_ids is not None:
-            metadata_ids = list(metadata.keys())
+            metadata_ids = [metadata_id for metadata_id, _ in metadata.values()]
 
         if period == "hour":
             bakery = STATISTICS_BAKERY
@@ -578,7 +577,7 @@ def get_last_statistics(
     statistic_ids = [statistic_id]
     with session_scope(hass=hass) as session:
         # Fetch metadata for the given statistic_id
-        metadata = _get_metadata(hass, session, statistic_ids, None)
+        metadata = get_metadata_with_session(hass, session, statistic_ids, None)
         if not metadata:
             return {}
 
@@ -587,7 +586,7 @@ def get_last_statistics(
         )
 
         baked_query += lambda q: q.filter_by(metadata_id=bindparam("metadata_id"))
-        metadata_id = next(iter(metadata.keys()))
+        metadata_id = metadata[statistic_id][0]
 
         baked_query += lambda q: q.order_by(
             StatisticsShortTerm.metadata_id, StatisticsShortTerm.start.desc()
@@ -618,7 +617,7 @@ def _sorted_statistics_to_dict(
     hass: HomeAssistant,
     stats: list,
     statistic_ids: list[str] | None,
-    metadata: dict[int, StatisticMetaData],
+    _metadata: dict[str, tuple[int, StatisticMetaData]],
     convert_units: bool,
     duration: timedelta,
 ) -> dict[str, list[dict]]:
@@ -634,6 +633,8 @@ def _sorted_statistics_to_dict(
     if statistic_ids is not None:
         for stat_id in statistic_ids:
             result[stat_id] = []
+
+    metadata = dict(_metadata.values())
 
     # Append all statistic entries, and optionally do unit conversion
     for meta_id, group in groupby(stats, lambda stat: stat.metadata_id):  # type: ignore
