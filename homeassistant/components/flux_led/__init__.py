@@ -35,9 +35,11 @@ from .const import (
     CONF_SPEED_PCT,
     CONF_TRANSITION,
     DEFAULT_EFFECT_SPEED,
+    DISCOVER_SCAN_TIMEOUT,
     DOMAIN,
     FLUX_HOST,
     MODE_AUTO,
+    STARTUP_SCAN_TIMEOUT,
     TRANSITION_GRADUAL,
 )
 
@@ -46,15 +48,16 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["light"]
 DISCOVERY_INTERVAL = timedelta(minutes=15)
 REQUEST_REFRESH_DELAY = 0.35
-SCAN_TIMEOUT = 5
 
 
-async def async_discover_devices(hass: HomeAssistant) -> list[dict[str, str]]:
+async def async_discover_devices(
+    hass: HomeAssistant, timeout: int
+) -> list[dict[str, str]]:
     """Discover ledned devices."""
 
     def _scan_with_timeout():
         scanner = BulbScanner()
-        return scanner.scan(timeout=SCAN_TIMEOUT)
+        return scanner.scan(timeout=timeout)
 
     return await hass.async_add_executor_job(_scan_with_timeout)
 
@@ -117,7 +120,7 @@ def async_import_from_yaml(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the flux_led component."""
     hass.data[DOMAIN] = {}
-    discovered_devices = await async_discover_devices(hass)
+    discovered_devices = await async_discover_devices(hass, STARTUP_SCAN_TIMEOUT)
     discovered_devices_by_host = {
         device[FLUX_HOST]: device for device in discovered_devices
     }
@@ -125,7 +128,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_import_from_yaml(hass, config, discovered_devices_by_host)
 
     async def _async_discovery(*_):
-        async_trigger_discovery(hass, await async_discover_devices(hass))
+        async_trigger_discovery(
+            hass, await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT)
+        )
 
     async_trigger_discovery(hass, discovered_devices)
     async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)

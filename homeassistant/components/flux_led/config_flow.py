@@ -22,6 +22,7 @@ from .const import (
     CONF_CUSTOM_EFFECT_SPEED_PCT,
     CONF_CUSTOM_EFFECT_TRANSITION,
     DEFAULT_EFFECT_SPEED,
+    DISCOVER_SCAN_TIMEOUT,
     DOMAIN,
     FLUX_HOST,
     FLUX_MAC,
@@ -38,6 +39,7 @@ from .const import (
 )
 
 CONF_DEVICE = "device"
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -189,12 +191,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             entry.data[CONF_HOST]
             for entry in self._async_current_entries(include_ignore=False)
         }
-        discovered_devices = await async_discover_devices(self.hass)
+        discovered_devices = await async_discover_devices(
+            self.hass, DISCOVER_SCAN_TIMEOUT
+        )
         self._discovered_devices = {
             dr.format_mac(device[FLUX_MAC]): device for device in discovered_devices
         }
         devices_name = {
-            mac: f"{device[FLUX_MODEL]} {mac} ({device[FLUX_HOST]}"
+            mac: f"{device[FLUX_MODEL]} {mac} ({device[FLUX_HOST]})"
             for mac, device in self._discovered_devices.items()
             if mac not in current_unique_ids and device[FLUX_HOST] not in current_hosts
         }
