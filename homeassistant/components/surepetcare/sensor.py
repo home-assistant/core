@@ -31,7 +31,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Sure PetCare Flaps sensors."""
 
-    entities: list[SureBattery] = []
+    entities: list[SurePetcareSensor] = []
 
     coordinator: SurePetcareDataCoordinator = hass.data[DOMAIN][entry.entry_id]
 
@@ -44,6 +44,9 @@ async def async_setup_entry(
             EntityType.FELAQUA,
         ]:
             entities.append(SureBattery(surepy_entity.id, coordinator))
+
+        if surepy_entity.type == EntityType.FELAQUA:
+            entities.append(Felaqua(surepy_entity.id, coordinator))
 
     async_add_entities(entities)
 
