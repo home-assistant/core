@@ -8,6 +8,7 @@ from unittest.mock import patch
 import pytest
 from pytest import approx
 
+from homeassistant import loader
 from homeassistant.components.recorder import history
 from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
@@ -609,6 +610,26 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
+@pytest.mark.parametrize(
+    "entity_id,warning_1,warning_2",
+    [
+        (
+            "sensor.test1",
+            "",
+            "bug report at https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue",
+        ),
+        (
+            "sensor.today_energy",
+            "from integration demo ",
+            "bug report at https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+demo%22",
+        ),
+        (
+            "sensor.custom_sensor",
+            "from integration test ",
+            "report it to the custom component author",
+        ),
+    ],
+)
 @pytest.mark.parametrize("state_class", ["total_increasing"])
 @pytest.mark.parametrize(
     "device_class,unit,native_unit,factor",
@@ -617,28 +638,48 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
     ],
 )
 def test_compile_hourly_sum_statistics_negative_state(
-    hass_recorder, caplog, state_class, device_class, unit, native_unit, factor
+    hass_recorder,
+    caplog,
+    entity_id,
+    warning_1,
+    warning_2,
+    state_class,
+    device_class,
+    unit,
+    native_unit,
+    factor,
 ):
     """Test compiling hourly statistics with negative states."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
+    hass.data.pop(loader.DATA_CUSTOM_COMPONENTS)
     recorder = hass.data[DATA_INSTANCE]
-    setup_component(hass, "sensor", {})
+
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    mocksensor = platform.MockSensor(name="custom_sensor")
+    mocksensor._attr_should_poll = False
+    platform.ENTITIES["custom_sensor"] = mocksensor
+
+    setup_component(
+        hass, "sensor", {"sensor": [{"platform": "demo"}, {"platform": "test"}]}
+    )
+    hass.block_till_done()
     attributes = {
         "device_class": device_class,
         "state_class": state_class,
         "unit_of_measurement": unit,
     }
-    seq = [10, 11, 15, 16, 20, -20, 20, 10]
+    seq = [15, 16, 15, 16, 20, -20, 20, 10]
 
-    states = {"sensor.test1": []}
+    states = {entity_id: []}
+    if state := hass.states.get(entity_id):
+        states[entity_id].append(state)
     one = zero
     for i in range(len(seq)):
         one = one + timedelta(seconds=5)
-        _states = record_meter_state(
-            hass, one, "sensor.test1", attributes, seq[i : i + 1]
-        )
-        states["sensor.test1"].extend(_states["sensor.test1"])
+        _states = record_meter_state(hass, one, entity_id, attributes, seq[i : i + 1])
+        states[entity_id].extend(_states[entity_id])
 
     hist = history.get_significant_states(
         hass,
@@ -646,35 +687,35 @@ def test_compile_hourly_sum_statistics_negative_state(
         one + timedelta.resolution,
         significant_changes_only=False,
     )
-    assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
+    assert dict(states)[entity_id] == dict(hist)[entity_id]
 
     recorder.do_adhoc_statistics(start=zero)
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
-    assert statistic_ids == [
-        {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
-    ]
+    assert {
+        "statistic_id": entity_id,
+        "unit_of_measurement": native_unit,
+    } in statistic_ids
     stats = statistics_during_period(hass, zero, period="5minute")
-    assert stats == {
-        "sensor.test1": [
-            {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
-                "max": None,
-                "mean": None,
-                "min": None,
-                "last_reset": None,
-                "state": approx(factor * seq[7]),
-                "sum": approx(factor * 20),  # (20 - 10) + (10 - 0)
-            },
-        ]
-    }
+    assert stats[entity_id] == [
+        {
+            "statistic_id": entity_id,
+            "start": process_timestamp_to_utc_isoformat(zero),
+            "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+            "max": None,
+            "mean": None,
+            "min": None,
+            "last_reset": None,
+            "state": approx(factor * seq[7]),
+            "sum": approx(factor * 15),  # (15 - 10) + (10 - 0)
+        },
+    ]
     assert "Error while processing event StatisticsTask" not in caplog.text
     assert (
-        "Entity sensor.test1 has state class total_increasing, but its state is negative"
+        f"Entity {entity_id} {warning_1}has state class total_increasing, but its state is negative"
         in caplog.text
     )
+    assert warning_2 in caplog.text
 
 
 @pytest.mark.parametrize(
