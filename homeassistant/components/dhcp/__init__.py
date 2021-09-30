@@ -305,7 +305,7 @@ class DHCPWatcher(WatcherBase):
             options = packet[DHCP].options
             request_type = _decode_dhcp_option(options, MESSAGE_TYPE)
             if request_type != DHCP_REQUEST:
-                # DHCP request
+                # Not a DHCP request
                 return
 
             ip_address = _decode_dhcp_option(options, REQUESTED_ADDR) or packet[IP].src
