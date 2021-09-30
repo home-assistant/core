@@ -115,4 +115,3 @@ class SurePetcareLock(SurePetcareEntity, LockEntity):
         finally:
             self._attr_is_unlocking = False
             self.async_write_ha_state()
-        self._attr_is_locked = False
