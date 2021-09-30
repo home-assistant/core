@@ -255,7 +255,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.2
 
 # homeassistant.components.unifi
-aiounifi==26
+aiounifi==27
 
 # homeassistant.components.watttime
 aiowatttime==0.1.1
@@ -2260,7 +2260,7 @@ sucks==0.9.4
 sunwatcher==0.2.1
 
 # homeassistant.components.surepetcare
-surepy==0.7.1
+surepy==0.7.2
 
 # homeassistant.components.swiss_hydrological_data
 swisshydrodata==0.1.0
@@ -2332,7 +2332,7 @@ tp-connected==0.0.4
 transmissionrpc==0.11
 
 # homeassistant.components.tuya
-tuyaha==0.0.10
+tuya-iot-py-sdk==0.4.1
 
 # homeassistant.components.twentemilieu
 twentemilieu==0.3.0
@@ -2477,7 +2477,7 @@ zengge==0.2
 zeroconf==0.36.7
 
 # homeassistant.components.zha
-zha-quirks==0.0.61
+zha-quirks==0.0.62
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9

@@ -50,7 +50,10 @@ COVER_SCHEMA = vol.Schema(
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_COVERS): cv.schema_with_slug_keys(COVER_SCHEMA)}
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {vol.Required(CONF_COVERS): cv.schema_with_slug_keys(COVER_SCHEMA)},
+    ),
 )
 
 

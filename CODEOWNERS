@@ -269,7 +269,7 @@ homeassistant/components/kaiterra/* @Michsior14
 homeassistant/components/keba/* @dannerph
 homeassistant/components/keenetic_ndms2/* @foxel
 homeassistant/components/kef/* @basnijholt
-homeassistant/components/keyboard_remote/* @bendavid
+homeassistant/components/keyboard_remote/* @bendavid @lanrat
 homeassistant/components/kmtronic/* @dgomes
 homeassistant/components/knx/* @Julius2342 @farmio @marvin-w
 homeassistant/components/kodi/* @OnFreund @cgtobi
@@ -545,7 +545,7 @@ homeassistant/components/trafikverket_train/* @endor-force
 homeassistant/components/trafikverket_weatherstation/* @endor-force
 homeassistant/components/transmission/* @engrbm87 @JPHutchins
 homeassistant/components/tts/* @pvizeli
-homeassistant/components/tuya/* @ollo69
+homeassistant/components/tuya/* @Tuya
 homeassistant/components/twentemilieu/* @frenck
 homeassistant/components/twinkly/* @dr1rrb
 homeassistant/components/ubus/* @noltari

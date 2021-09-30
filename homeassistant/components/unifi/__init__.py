@@ -11,6 +11,7 @@ from .const import (
     UNIFI_WIRELESS_CLIENTS,
 )
 from .controller import UniFiController
+from .services import async_setup_services, async_unload_services
 
 SAVE_DELAY = 10
 STORAGE_KEY = "unifi_data"
@@ -43,6 +44,7 @@ async def async_setup_entry(hass, config_entry):
         )
 
     hass.data[UNIFI_DOMAIN][config_entry.entry_id] = controller
+    await async_setup_services(hass)
 
     config_entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller.shutdown)
@@ -68,6 +70,10 @@ async def async_setup_entry(hass, config_entry):
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
     controller = hass.data[UNIFI_DOMAIN].pop(config_entry.entry_id)
+
+    if not hass.data[UNIFI_DOMAIN]:
+        await async_unload_services(hass)
+
     return await controller.async_reset()
 
 
