@@ -54,7 +54,7 @@ REQUEST_REFRESH_DELAY = 0.35
 
 async def async_wifi_bulb_for_host(hass: HomeAssistant, host: str) -> WifiLedBulb:
     """Create a WifiLedBulb from a host."""
-    await hass.async_add_executor_job(WifiLedBulb, host)
+    return await hass.async_add_executor_job(WifiLedBulb, host)
 
 
 async def async_discover_devices(

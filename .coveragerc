@@ -343,7 +343,6 @@ omit =
     homeassistant/components/flume/sensor.py
     homeassistant/components/flunearyou/__init__.py
     homeassistant/components/flunearyou/sensor.py
-    homeassistant/components/flux_led/light.py
     homeassistant/components/flux_led/__init__.py
     homeassistant/components/folder/sensor.py
     homeassistant/components/folder_watcher/*

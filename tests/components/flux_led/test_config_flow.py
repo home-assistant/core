@@ -311,9 +311,6 @@ async def test_manual_no_discovery_data(hass: HomeAssistant):
         )
         await hass.async_block_till_done()
 
-    import pprint
-
-    pprint.pprint(result)
     assert result["type"] == "create_entry"
     assert result["data"] == {CONF_HOST: IP_ADDRESS, CONF_NAME: IP_ADDRESS}
 

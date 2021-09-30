@@ -31,7 +31,12 @@ FLUX_DISCOVERY = {FLUX_HOST: IP_ADDRESS, FLUX_MODEL: MODEL, FLUX_MAC: FLUX_MAC_A
 
 
 def _mocked_bulb() -> WifiLedBulb:
-    return MagicMock(auto_spec=WifiLedBulb)
+    bulb = MagicMock(auto_spec=WifiLedBulb)
+    bulb.getRgb = MagicMock(return_value=[255, 0, 0])
+    bulb.getRgbw = MagicMock(return_value=[255, 0, 0, 50])
+    bulb.brightness = 128
+    bulb.rgbwcapable = True
+    return bulb
 
 
 def _patch_discovery(device=None, no_device=False):
@@ -44,7 +49,7 @@ def _patch_discovery(device=None, no_device=False):
 
 
 def _patch_wifibulb(device=None, no_device=False):
-    def _wifi_led_bulb(*_):
+    def _wifi_led_bulb(*args, **kwargs):
         if no_device:
             raise socket.timeout
         return device if device else _mocked_bulb()
