@@ -1,5 +1,6 @@
 """Support for Ezviz alarm."""
-import logging
+from __future__ import annotations
+
 from typing import Any
 
 from pyezviz.constants import DefenseModeType
@@ -32,8 +33,6 @@ from .const import (
 )
 from .coordinator import EzvizDataUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -50,8 +49,7 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity, RestoreEntity):
     """Representation of a Ezviz alarm control panel."""
 
     coordinator: EzvizDataUpdateCoordinator
-    _name = "Ezviz Alarm"
-    _model = "Ezviz Alarm"
+    _attr_name = "Ezviz Alarm"
     _attr_supported_features = SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
     _attr_code_arm_required = False
 
@@ -59,6 +57,14 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity, RestoreEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._attr_state = STATE_ALARM_DISARMED
+        self._model = "Ezviz Alarm"
+        self._attr_unique_id = "Ezviz Alarm"
+        self._attr_device_info: DeviceInfo = {
+            "identifiers": {(DOMAIN, self._attr_name)},
+            "name": self._attr_name,
+            "model": self._model,
+            "manufacturer": MANUFACTURER,
+        }
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
@@ -72,26 +78,6 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity, RestoreEntity):
             or STATE_ALARM_ARMED_NIGHT
         ):
             self._attr_state = state.state
-
-    @property
-    def name(self) -> str:
-        """Return the name of the alarm."""
-        return self._name
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of the alarm."""
-        return self._name
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device_info of the device."""
-        return {
-            "identifiers": {(DOMAIN, self._name)},
-            "name": self._name,
-            "model": self._model,
-            "manufacturer": MANUFACTURER,
-        }
 
     def alarm_disarm(self, code: Any = None) -> None:
         """Send disarm command."""
