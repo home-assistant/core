@@ -2,13 +2,20 @@
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 from surepy.entities import SurepyEntity
+from surepy.entities.devices import Felaqua as SurepyFelaqua
 from surepy.enums import EntityType
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_VOLTAGE, DEVICE_CLASS_BATTERY, PERCENTAGE
+from homeassistant.const import (
+    ATTR_VOLTAGE,
+    DEVICE_CLASS_BATTERY,
+    PERCENTAGE,
+    VOLUME_MILLILITERS,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -93,3 +100,25 @@ class SureBattery(SurePetcareSensor):
             }
         else:
             self._attr_extra_state_attributes = {}
+
+
+class Felaqua(SurePetcareSensor):
+    """Sure Petcare Felaqua."""
+
+    _attr_native_unit_of_measurement = VOLUME_MILLILITERS
+
+    def __init__(
+        self, surepetcare_id: int, coordinator: SurePetcareDataCoordinator
+    ) -> None:
+        """Initialize a Sure Petcare Felaqua sensor."""
+        super().__init__(surepetcare_id, coordinator)
+
+        surepy_entity: SurepyFelaqua = coordinator.data[surepetcare_id]
+
+        self._attr_entity_picture = surepy_entity.icon
+
+    @callback
+    def _update_attr(self, surepy_entity: SurepyEntity) -> None:
+        """Update the state."""
+        surepy_entity = cast(SurepyFelaqua, surepy_entity)
+        self._attr_native_value = surepy_entity.water_remaining
