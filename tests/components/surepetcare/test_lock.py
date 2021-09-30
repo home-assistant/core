@@ -1,4 +1,6 @@
 """The tests for the Sure Petcare lock platform."""
+import pytest
+from surepy.exceptions import SurePetcareError
 
 from homeassistant.components.surepetcare.const import DOMAIN
 from homeassistant.helpers import entity_registry as er
@@ -73,3 +75,41 @@ async def test_locks(hass, surepetcare) -> None:
         state = hass.states.get(entity_id)
         assert state.state == "unlocked"
         assert surepetcare.unlock.call_count == 1
+
+
+async def test_lock_failing(hass, surepetcare) -> None:
+    """Test handling of lock failing."""
+    assert await async_setup_component(hass, DOMAIN, MOCK_CONFIG)
+    await hass.async_block_till_done()
+
+    surepetcare.lock_in.side_effect = SurePetcareError
+    surepetcare.lock_out.side_effect = SurePetcareError
+    surepetcare.lock.side_effect = SurePetcareError
+
+    for entity_id, unique_id in EXPECTED_ENTITY_IDS.items():
+        with pytest.raises(SurePetcareError):
+            await hass.services.async_call(
+                "lock", "lock", {"entity_id": entity_id}, blocking=True
+            )
+        state = hass.states.get(entity_id)
+        assert state.state == "unlocked"
+
+
+async def test_unlock_failing(hass, surepetcare) -> None:
+    """Test handling of unlock failing."""
+    assert await async_setup_component(hass, DOMAIN, MOCK_CONFIG)
+    await hass.async_block_till_done()
+
+    entity_id = list(EXPECTED_ENTITY_IDS.keys())[0]
+
+    await hass.services.async_call(
+        "lock", "lock", {"entity_id": entity_id}, blocking=True
+    )
+    surepetcare.unlock.side_effect = SurePetcareError
+
+    with pytest.raises(SurePetcareError):
+        await hass.services.async_call(
+            "lock", "unlock", {"entity_id": entity_id}, blocking=True
+        )
+    state = hass.states.get(entity_id)
+    assert state.state == "locked"
