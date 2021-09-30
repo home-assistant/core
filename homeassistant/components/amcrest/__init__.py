@@ -380,3 +380,4 @@ class AmcrestDevice:
     stream_source: str
     resolution: int
     control_light: bool
+    channel: int = 0
