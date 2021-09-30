@@ -567,7 +567,7 @@ def _apply_update(instance, session, new_version, old_version):  # noqa: C901
         sum_statistics = get_metadata_with_session(
             instance.hass, session, None, statistic_type="sum"
         )
-        for metadata_id in sum_statistics:
+        for metadata_id, _ in sum_statistics.values():
             last_statistic = (
                 session.query(Statistics)
                 .filter_by(metadata_id=metadata_id)
