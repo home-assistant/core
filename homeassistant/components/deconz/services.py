@@ -51,10 +51,6 @@ SELECT_GATEWAY_SCHEMA = vol.All(vol.Schema({vol.Optional(CONF_BRIDGE_ID): str}))
 @callback
 def async_setup_services(hass):
     """Set up services for deCONZ integration."""
-    if hass.data.get(DECONZ_SERVICES, False):
-        return
-
-    hass.data[DECONZ_SERVICES] = True
 
     async def async_call_deconz_service(service_call):
         """Call correct deCONZ service."""
@@ -110,14 +106,12 @@ def async_setup_services(hass):
 @callback
 def async_unload_services(hass):
     """Unload deCONZ services."""
-    if not hass.data.get(DECONZ_SERVICES):
-        return
-
-    hass.data[DECONZ_SERVICES] = False
-
-    hass.services.async_remove(DOMAIN, SERVICE_CONFIGURE_DEVICE)
-    hass.services.async_remove(DOMAIN, SERVICE_DEVICE_REFRESH)
-    hass.services.async_remove(DOMAIN, SERVICE_REMOVE_ORPHANED_ENTRIES)
+    for service_name in (
+        SERVICE_CONFIGURE_DEVICE,
+        SERVICE_DEVICE_REFRESH,
+        SERVICE_REMOVE_ORPHANED_ENTRIES,
+    ):
+        hass.services.async_remove(DOMAIN, service_name)
 
 
 async def async_configure_service(gateway, data):

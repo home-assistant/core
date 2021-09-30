@@ -32,11 +32,12 @@ async def async_setup_entry(hass, config_entry):
     if not await gateway.async_setup():
         return False
 
+    if not hass.data[DOMAIN]:
+        async_setup_services(hass)
+
     hass.data[DOMAIN][config_entry.entry_id] = gateway
 
     await gateway.async_update_device_registry()
-
-    async_setup_services(hass)
 
     config_entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, gateway.shutdown)
