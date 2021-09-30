@@ -69,7 +69,7 @@ async def handle_webhook(hass, webhook_id, request):
         data = WEBHOOK_SCHEMA(dict(await request.post()))
     except vol.MultipleInvalid as error:
         return web.Response(
-            text=error.error_message, status=HTTPStatus.UNPROCESSABLE_ENTITY.value
+            text=error.error_message, status=HTTPStatus.UNPROCESSABLE_ENTITY
         )
 
     device = data[ATTR_DEVICE_ID]
@@ -107,7 +107,7 @@ async def handle_webhook(hass, webhook_id, request):
     _LOGGER.error("Received unidentified message from Locative: %s", direction)
     return web.Response(
         text=f"Received unidentified message: {direction}",
-        status=HTTPStatus.UNPROCESSABLE_ENTITY.value,
+        status=HTTPStatus.UNPROCESSABLE_ENTITY,
     )
 
 

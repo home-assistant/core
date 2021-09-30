@@ -1045,7 +1045,7 @@ class MediaPlayerImageView(HomeAssistantView):
         )
 
         if not authenticated:
-            return web.Response(status=HTTPStatus.UNAUTHORIZED.value)
+            return web.Response(status=HTTPStatus.UNAUTHORIZED)
 
         if media_content_type and media_content_id:
             media_image_id = request.query.get("media_image_id")
@@ -1056,7 +1056,7 @@ class MediaPlayerImageView(HomeAssistantView):
             data, content_type = await player.async_get_media_image()
 
         if data is None:
-            return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR.value)
+            return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
         headers: LooseHeaders = {CACHE_CONTROL: "max-age=3600"}
         return web.Response(body=data, content_type=content_type, headers=headers)

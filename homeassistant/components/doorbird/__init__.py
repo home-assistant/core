@@ -333,7 +333,7 @@ class DoorBirdRequestView(HomeAssistantView):
 
         if device is None:
             return web.Response(
-                status=HTTPStatus.UNAUTHORIZED.value, text="Invalid token provided."
+                status=HTTPStatus.UNAUTHORIZED, text="Invalid token provided."
             )
 
         if device:

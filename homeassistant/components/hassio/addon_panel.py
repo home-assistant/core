@@ -54,7 +54,7 @@ class HassIOAddonPanel(HomeAssistantView):
         # Panel exists for add-on slug
         if addon not in panels or not panels[addon][ATTR_ENABLE]:
             _LOGGER.error("Panel is not enable for %s", addon)
-            return web.Response(status=HTTPStatus.BAD_REQUEST.value)
+            return web.Response(status=HTTPStatus.BAD_REQUEST)
         data = panels[addon]
 
         # Register panel

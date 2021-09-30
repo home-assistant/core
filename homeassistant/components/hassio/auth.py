@@ -83,7 +83,7 @@ class HassIOAuth(HassIOBaseAuth):
         except auth_ha.InvalidAuth:
             raise HTTPNotFound() from None
 
-        return web.Response(status=HTTPStatus.OK.value)
+        return web.Response(status=HTTPStatus.OK)
 
 
 class HassIOPasswordReset(HassIOBaseAuth):
@@ -113,4 +113,4 @@ class HassIOPasswordReset(HassIOBaseAuth):
         except auth_ha.InvalidUser as err:
             raise HTTPNotFound() from err
 
-        return web.Response(status=HTTPStatus.OK.value)
+        return web.Response(status=HTTPStatus.OK)

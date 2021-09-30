@@ -115,7 +115,7 @@ def request_handler_factory(
     async def handle(request: web.Request) -> web.StreamResponse:
         """Handle incoming request."""
         if request.app[KEY_HASS].is_stopping:
-            return web.Response(status=HTTPStatus.SERVICE_UNAVAILABLE.value)
+            return web.Response(status=HTTPStatus.SERVICE_UNAVAILABLE)
 
         authenticated = request.get(KEY_AUTHENTICATED, False)
 

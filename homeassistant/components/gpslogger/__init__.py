@@ -66,7 +66,7 @@ async def handle_webhook(hass, webhook_id, request):
         data = WEBHOOK_SCHEMA(dict(await request.post()))
     except vol.MultipleInvalid as error:
         return web.Response(
-            text=error.error_message, status=HTTPStatus.UNPROCESSABLE_ENTITY.value
+            text=error.error_message, status=HTTPStatus.UNPROCESSABLE_ENTITY
         )
 
     attrs = {

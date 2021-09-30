@@ -640,7 +640,7 @@ class TextToSpeechView(HomeAssistantView):
             content, data = await self.tts.async_read_tts(filename)
         except HomeAssistantError as err:
             _LOGGER.error("Error on load tts: %s", err)
-            return web.Response(status=HTTPStatus.NOT_FOUND.value)
+            return web.Response(status=HTTPStatus.NOT_FOUND)
 
         return web.Response(body=data, content_type=content)
 

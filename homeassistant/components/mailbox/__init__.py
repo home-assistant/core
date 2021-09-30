@@ -255,8 +255,8 @@ class MailboxMediaView(MailboxView):
                     stream = await mailbox.async_get_media(msgid)
                 except StreamError as err:
                     _LOGGER.error("Error getting media: %s", err)
-                    return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR.value)
+                    return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
             if stream:
                 return web.Response(body=stream, content_type=mailbox.media_type)
 
-        return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR.value)
+        return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)

@@ -407,14 +407,14 @@ async def handle_webhook(
     except (json.decoder.JSONDecodeError, UnicodeDecodeError):
         return Response(
             text="Could not decode request",
-            status=HTTPStatus.BAD_REQUEST.value,
+            status=HTTPStatus.BAD_REQUEST,
         )
 
     for key in (ATTR_DEVICE_ID, ATTR_EVENT_TYPE):
         if key not in data:
             return Response(
                 text=f"Missing webhook parameter: {key}",
-                status=HTTPStatus.BAD_REQUEST.value,
+                status=HTTPStatus.BAD_REQUEST,
             )
 
     event_type = data[ATTR_EVENT_TYPE]
@@ -425,7 +425,7 @@ async def handle_webhook(
     if not device:
         return Response(
             text=f"Device not found: {device_id}",
-            status=HTTPStatus.BAD_REQUEST.value,
+            status=HTTPStatus.BAD_REQUEST,
         )
 
     hass.bus.async_fire(

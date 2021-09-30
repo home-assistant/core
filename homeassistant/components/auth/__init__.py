@@ -273,15 +273,15 @@ class TokenView(HomeAssistantView):
         token = data.get("token")
 
         if token is None:
-            return web.Response(status=HTTPStatus.OK.value)
+            return web.Response(status=HTTPStatus.OK)
 
         refresh_token = await hass.auth.async_get_refresh_token_by_token(token)
 
         if refresh_token is None:
-            return web.Response(status=HTTPStatus.OK.value)
+            return web.Response(status=HTTPStatus.OK)
 
         await hass.auth.async_remove_refresh_token(refresh_token)
-        return web.Response(status=HTTPStatus.OK.value)
+        return web.Response(status=HTTPStatus.OK)
 
     async def _async_handle_auth_code(self, hass, data, remote_addr):
         """Handle authorization code request."""

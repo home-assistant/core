@@ -51,9 +51,7 @@ class ZWaveLogView(HomeAssistantView):
         try:
             lines = int(request.query.get("lines", 0))
         except ValueError:
-            return Response(
-                text="Invalid datetime", status=HTTPStatus.BAD_REQUEST.value
-            )
+            return Response(text="Invalid datetime", status=HTTPStatus.BAD_REQUEST)
 
         hass = request.app["hass"]
         response = await hass.async_add_executor_job(self._get_log, hass, lines)

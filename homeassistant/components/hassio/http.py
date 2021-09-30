@@ -73,7 +73,7 @@ class HassIOView(HomeAssistantView):
         """Route data to Hass.io."""
         hass = request.app["hass"]
         if _need_auth(hass, path) and not request[KEY_AUTHENTICATED]:
-            return web.Response(status=HTTPStatus.UNAUTHORIZED.value)
+            return web.Response(status=HTTPStatus.UNAUTHORIZED)
 
         return await self._command_proxy(path, request)
 

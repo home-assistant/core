@@ -201,12 +201,12 @@ class CalendarEventView(http.HomeAssistantView):
         start = request.query.get("start")
         end = request.query.get("end")
         if None in (start, end, entity):
-            return web.Response(status=HTTPStatus.BAD_REQUEST.value)
+            return web.Response(status=HTTPStatus.BAD_REQUEST)
         try:
             start_date = dt.parse_datetime(start)
             end_date = dt.parse_datetime(end)
         except (ValueError, AttributeError):
-            return web.Response(status=HTTPStatus.BAD_REQUEST.value)
+            return web.Response(status=HTTPStatus.BAD_REQUEST)
         event_list = await entity.async_get_events(
             request.app["hass"], start_date, end_date
         )
