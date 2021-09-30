@@ -6,12 +6,13 @@ from unittest.mock import patch
 from homeassistant.components import flux_led
 from homeassistant.components.flux_led.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 from . import FLUX_DISCOVERY, IP_ADDRESS, MAC_ADDRESS, _patch_discovery, _patch_wifibulb
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_configuring_flux_led_causes_discovery(hass):
@@ -21,7 +22,14 @@ async def test_configuring_flux_led_causes_discovery(hass):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    assert len(discover.mock_calls) == 1
+        assert len(discover.mock_calls) == 1
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        assert len(discover.mock_calls) == 2
+
+        async_fire_time_changed(hass, utcnow() + flux_led.DISCOVERY_INTERVAL)
+        await hass.async_block_till_done()
+        assert len(discover.mock_calls) == 3
 
 
 async def test_config_entry_reload(hass):
