@@ -1,0 +1,9 @@
+{
+  "domain": "sia",
+  "name": "SIA Alarm Systems",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/sia",
+  "requirements": ["pysiaalarm==3.0.0"],
+  "codeowners": ["@eavanvalkenburg"],
+  "iot_class": "local_push"
+}

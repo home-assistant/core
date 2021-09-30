@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "Kodi: {name}",
+    "flow_title": "{name}",
     "step": {
       "user": {
         "description": "Kodi connection information. Please make sure to enable \"Allow control of Kodi via HTTP\" in System/Settings/Network/Services.",

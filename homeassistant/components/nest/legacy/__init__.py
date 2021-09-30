@@ -9,6 +9,7 @@ from nest.nest import APIError, AuthorizationError
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
@@ -17,7 +18,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
@@ -96,7 +97,7 @@ def nest_update_event_broker(hass, nest):
     _LOGGER.debug("Stop listening for nest.update_event")
 
 
-async def async_setup_legacy(hass, config):
+async def async_setup_legacy(hass: HomeAssistant, config: dict) -> bool:
     """Set up Nest components using the legacy nest API."""
     if DOMAIN not in config:
         return True
@@ -122,7 +123,7 @@ async def async_setup_legacy(hass, config):
     return True
 
 
-async def async_setup_legacy_entry(hass, entry):
+async def async_setup_legacy_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Nest from legacy config entry."""
 
     nest = Nest(access_token=entry.data["tokens"]["access_token"])
@@ -249,7 +250,9 @@ async def async_setup_legacy_entry(hass, entry):
         """Stop Nest update event listener."""
         nest.update_event.set()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shut_down)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shut_down)
+    )
 
     _LOGGER.debug("async_setup_nest is done")
 

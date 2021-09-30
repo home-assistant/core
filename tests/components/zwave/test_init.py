@@ -5,7 +5,6 @@ from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
-from pytz import utc
 import voluptuous as vol
 
 from homeassistant.bootstrap import async_setup_component
@@ -19,6 +18,7 @@ from homeassistant.components.zwave import (
 from homeassistant.components.zwave.binary_sensor import get_device
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed, mock_registry
 from tests.mock.zwave import MockEntityValues, MockNetwork, MockNode, MockValue
@@ -140,7 +140,7 @@ async def test_auto_heal_midnight(hass, mock_openzwave, legacy_patchable_time):
     network = hass.data[zwave.DATA_NETWORK]
     assert not network.heal.called
 
-    time = utc.localize(datetime(2017, 5, 6, 0, 0, 0))
+    time = datetime(2017, 5, 6, 0, 0, 0, tzinfo=dt_util.UTC)
     async_fire_time_changed(hass, time)
     await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -156,7 +156,7 @@ async def test_auto_heal_disabled(hass, mock_openzwave):
     network = hass.data[zwave.DATA_NETWORK]
     assert not network.heal.called
 
-    time = utc.localize(datetime(2017, 5, 6, 0, 0, 0))
+    time = datetime(2017, 5, 6, 0, 0, 0, tzinfo=dt_util.UTC)
     async_fire_time_changed(hass, time)
     await hass.async_block_till_done()
     assert not network.heal.called

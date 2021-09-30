@@ -1,15 +1,15 @@
 """The Bond integration."""
-import asyncio
 from asyncio import TimeoutError as AsyncIOTimeoutError
 
 from aiohttp import ClientError, ClientTimeout
 from bond_api import Bond, BPUPSubscriptions, start_bpup
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
 
 from .const import BPUP_STOP, BPUP_SUBS, BRIDGE_MAKE, DOMAIN, HUB
@@ -17,6 +17,7 @@ from .utils import BondHub
 
 PLATFORMS = ["cover", "fan", "light", "switch"]
 _API_TIMEOUT = SLOW_UPDATE_WARNING - 1
+_STOP_CANCEL = "stop_cancel"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -25,7 +26,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     token = entry.data[CONF_ACCESS_TOKEN]
     config_entry_id = entry.entry_id
 
-    bond = Bond(host=host, token=token, timeout=ClientTimeout(total=_API_TIMEOUT))
+    bond = Bond(
+        host=host,
+        token=token,
+        timeout=ClientTimeout(total=_API_TIMEOUT),
+        session=async_get_clientsession(hass),
+    )
     hub = BondHub(bond)
     try:
         await hub.setup()
@@ -35,11 +41,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     bpup_subs = BPUPSubscriptions()
     stop_bpup = await start_bpup(host, bpup_subs)
 
+    @callback
+    def _async_stop_event(event: Event) -> None:
+        stop_bpup()
+
+    stop_event_cancel = hass.bus.async_listen(
+        EVENT_HOMEASSISTANT_STOP, _async_stop_event
+    )
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         HUB: hub,
         BPUP_SUBS: bpup_subs,
         BPUP_STOP: stop_bpup,
+        _STOP_CANCEL: stop_event_cancel,
     }
 
     if not entry.unique_id:
@@ -60,26 +74,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _async_remove_old_device_identifiers(config_entry_id, device_registry, hub)
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     data = hass.data[DOMAIN][entry.entry_id]
+    data[_STOP_CANCEL]()
     if BPUP_STOP in data:
         data[BPUP_STOP]()
 

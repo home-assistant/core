@@ -2,13 +2,10 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Preview",
+      "label": "Run Home Assistant Core",
       "type": "shell",
       "command": "hass -c ./config",
-      "group": {
-        "kind": "test",
-        "isDefault": true
-      },
+      "group": "test",
       "presentation": {
         "reveal": "always",
         "panel": "new"
@@ -19,7 +16,9 @@
       "label": "Pytest",
       "type": "shell",
       "command": "pytest --timeout=10 tests",
-      "dependsOn": ["Install all Test Requirements"],
+      "dependsOn": [
+        "Install all Test Requirements"
+      ],
       "group": {
         "kind": "test",
         "isDefault": true
@@ -48,7 +47,24 @@
       "label": "Pylint",
       "type": "shell",
       "command": "pylint homeassistant",
-      "dependsOn": ["Install all Requirements"],
+      "dependsOn": [
+        "Install all Requirements"
+      ],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Code Coverage",
+      "detail": "Generate code coverage report for a given integration.",
+      "type": "shell",
+      "command": "pytest ./tests/components/${input:integrationName}/ --cov=homeassistant.components.${input:integrationName} --cov-report term-missing",
       "group": {
         "kind": "test",
         "isDefault": true
@@ -100,6 +116,13 @@
         "panel": "new"
       },
       "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "integrationName",
+      "type": "promptString",
+      "description": "For which integration should the task run?"
     }
   ]
 }

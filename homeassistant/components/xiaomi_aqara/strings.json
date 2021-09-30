@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "Xiaomi Aqara Gateway: {name}",
+    "flow_title": "{name}",
     "step": {
       "user": {
         "title": "Xiaomi Aqara Gateway",

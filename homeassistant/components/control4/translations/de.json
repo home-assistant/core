@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "IP-Addresse",
+                    "host": "IP-Adresse",
                     "password": "Passwort",
                     "username": "Benutzername"
                 },

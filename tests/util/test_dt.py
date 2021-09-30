@@ -16,17 +16,12 @@ def teardown():
 
 def test_get_time_zone_retrieves_valid_time_zone():
     """Test getting a time zone."""
-    time_zone = dt_util.get_time_zone(TEST_TIME_ZONE)
-
-    assert time_zone is not None
-    assert time_zone.zone == TEST_TIME_ZONE
+    assert dt_util.get_time_zone(TEST_TIME_ZONE) is not None
 
 
 def test_get_time_zone_returns_none_for_garbage_time_zone():
     """Test getting a non existing time zone."""
-    time_zone = dt_util.get_time_zone("Non existing time zone")
-
-    assert time_zone is None
+    assert dt_util.get_time_zone("Non existing time zone") is None
 
 
 def test_set_default_time_zone():
@@ -35,8 +30,7 @@ def test_set_default_time_zone():
 
     dt_util.set_default_time_zone(time_zone)
 
-    # We cannot compare the timezones directly because of DST
-    assert time_zone.zone == dt_util.now().tzinfo.zone
+    assert dt_util.now().tzinfo is time_zone
 
 
 def test_utcnow():
@@ -239,35 +233,111 @@ def test_find_next_time_expression_time_dst():
         return dt_util.find_next_time_expression_time(dt, seconds, minutes, hours)
 
     # Entering DST, clocks are rolled forward
-    assert tz.localize(datetime(2018, 3, 26, 2, 30, 0)) == find(
-        tz.localize(datetime(2018, 3, 25, 1, 50, 0)), 2, 30, 0
+    assert datetime(2018, 3, 26, 2, 30, 0, tzinfo=tz) == find(
+        datetime(2018, 3, 25, 1, 50, 0, tzinfo=tz), 2, 30, 0
     )
 
-    assert tz.localize(datetime(2018, 3, 26, 2, 30, 0)) == find(
-        tz.localize(datetime(2018, 3, 25, 3, 50, 0)), 2, 30, 0
+    assert datetime(2018, 3, 26, 2, 30, 0, tzinfo=tz) == find(
+        datetime(2018, 3, 25, 3, 50, 0, tzinfo=tz), 2, 30, 0
     )
 
-    assert tz.localize(datetime(2018, 3, 26, 2, 30, 0)) == find(
-        tz.localize(datetime(2018, 3, 26, 1, 50, 0)), 2, 30, 0
+    assert datetime(2018, 3, 26, 2, 30, 0, tzinfo=tz) == find(
+        datetime(2018, 3, 26, 1, 50, 0, tzinfo=tz), 2, 30, 0
     )
 
     # Leaving DST, clocks are rolled back
-    assert tz.localize(datetime(2018, 10, 28, 2, 30, 0), is_dst=False) == find(
-        tz.localize(datetime(2018, 10, 28, 2, 5, 0), is_dst=False), 2, 30, 0
+    assert datetime(2018, 10, 28, 2, 30, 0, tzinfo=tz, fold=0) == find(
+        datetime(2018, 10, 28, 2, 5, 0, tzinfo=tz, fold=0), 2, 30, 0
     )
 
-    assert tz.localize(datetime(2018, 10, 28, 2, 30, 0), is_dst=False) == find(
-        tz.localize(datetime(2018, 10, 28, 2, 55, 0), is_dst=True), 2, 30, 0
+    assert datetime(2018, 10, 28, 2, 30, 0, tzinfo=tz, fold=0) == find(
+        datetime(2018, 10, 28, 2, 5, 0, tzinfo=tz), 2, 30, 0
     )
 
-    assert tz.localize(datetime(2018, 10, 28, 4, 30, 0), is_dst=False) == find(
-        tz.localize(datetime(2018, 10, 28, 2, 55, 0), is_dst=True), 4, 30, 0
+    assert datetime(2018, 10, 28, 2, 30, 0, tzinfo=tz, fold=1) == find(
+        datetime(2018, 10, 28, 2, 55, 0, tzinfo=tz), 2, 30, 0
     )
 
-    assert tz.localize(datetime(2018, 10, 28, 2, 30, 0), is_dst=True) == find(
-        tz.localize(datetime(2018, 10, 28, 2, 5, 0), is_dst=True), 2, 30, 0
+    assert datetime(2018, 10, 28, 2, 30, 0, tzinfo=tz, fold=1) == find(
+        datetime(2018, 10, 28, 2, 55, 0, tzinfo=tz, fold=0), 2, 30, 0
     )
 
-    assert tz.localize(datetime(2018, 10, 29, 2, 30, 0)) == find(
-        tz.localize(datetime(2018, 10, 28, 2, 55, 0), is_dst=False), 2, 30, 0
+    assert datetime(2018, 10, 28, 4, 30, 0, tzinfo=tz, fold=0) == find(
+        datetime(2018, 10, 28, 2, 55, 0, tzinfo=tz, fold=1), 4, 30, 0
+    )
+
+    assert datetime(2018, 10, 28, 2, 30, 0, tzinfo=tz, fold=1) == find(
+        datetime(2018, 10, 28, 2, 5, 0, tzinfo=tz, fold=1), 2, 30, 0
+    )
+
+    assert datetime(2018, 10, 28, 2, 30, 0, tzinfo=tz, fold=1) == find(
+        datetime(2018, 10, 28, 2, 55, 0, tzinfo=tz, fold=0), 2, 30, 0
+    )
+
+
+def test_find_next_time_expression_time_dst_chicago():
+    """Test daylight saving time for find_next_time_expression_time."""
+    tz = dt_util.get_time_zone("America/Chicago")
+    dt_util.set_default_time_zone(tz)
+
+    def find(dt, hour, minute, second):
+        """Call test_find_next_time_expression_time."""
+        seconds = dt_util.parse_time_expression(second, 0, 59)
+        minutes = dt_util.parse_time_expression(minute, 0, 59)
+        hours = dt_util.parse_time_expression(hour, 0, 23)
+
+        return dt_util.find_next_time_expression_time(dt, seconds, minutes, hours)
+
+    # Entering DST, clocks are rolled forward
+    assert datetime(2021, 3, 15, 2, 30, 0, tzinfo=tz) == find(
+        datetime(2021, 3, 14, 1, 50, 0, tzinfo=tz), 2, 30, 0
+    )
+
+    assert datetime(2021, 3, 15, 2, 30, 0, tzinfo=tz) == find(
+        datetime(2021, 3, 14, 3, 50, 0, tzinfo=tz), 2, 30, 0
+    )
+
+    assert datetime(2021, 3, 15, 2, 30, 0, tzinfo=tz) == find(
+        datetime(2021, 3, 14, 1, 50, 0, tzinfo=tz), 2, 30, 0
+    )
+
+    assert datetime(2021, 3, 14, 3, 30, 0, tzinfo=tz) == find(
+        datetime(2021, 3, 14, 1, 50, 0, tzinfo=tz), 3, 30, 0
+    )
+
+    # Leaving DST, clocks are rolled back
+    assert datetime(2021, 11, 7, 2, 30, 0, tzinfo=tz, fold=0) == find(
+        datetime(2021, 11, 7, 2, 5, 0, tzinfo=tz, fold=0), 2, 30, 0
+    )
+
+    assert datetime(2021, 11, 7, 2, 30, 0, tzinfo=tz) == find(
+        datetime(2021, 11, 7, 2, 5, 0, tzinfo=tz), 2, 30, 0
+    )
+
+    assert datetime(2021, 11, 7, 2, 30, 0, tzinfo=tz, fold=0) == find(
+        datetime(2021, 11, 7, 2, 5, 0, tzinfo=tz), 2, 30, 0
+    )
+
+    assert datetime(2021, 11, 7, 2, 30, 0, tzinfo=tz, fold=1) == find(
+        datetime(2021, 11, 7, 2, 10, 0, tzinfo=tz), 2, 30, 0
+    )
+
+    assert datetime(2021, 11, 7, 2, 30, 0, tzinfo=tz, fold=1) == find(
+        datetime(2021, 11, 7, 2, 30, 0, tzinfo=tz, fold=0), 2, 30, 0
+    )
+
+    assert datetime(2021, 11, 8, 2, 30, 0, tzinfo=tz, fold=1) == find(
+        datetime(2021, 11, 7, 2, 55, 0, tzinfo=tz, fold=0), 2, 30, 0
+    )
+
+    assert datetime(2021, 11, 7, 4, 30, 0, tzinfo=tz, fold=0) == find(
+        datetime(2021, 11, 7, 2, 55, 0, tzinfo=tz, fold=1), 4, 30, 0
+    )
+
+    assert datetime(2021, 11, 7, 2, 30, 0, tzinfo=tz, fold=1) == find(
+        datetime(2021, 11, 7, 2, 5, 0, tzinfo=tz, fold=1), 2, 30, 0
+    )
+
+    assert datetime(2021, 11, 8, 2, 30, 0, tzinfo=tz) == find(
+        datetime(2021, 11, 7, 2, 55, 0, tzinfo=tz, fold=0), 2, 30, 0
     )

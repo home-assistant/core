@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Teenus on juba seadistatud"
+            "already_configured": "Teenus on juba seadistatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
             "cannot_connect": "\u00dchenduse loomine nurjus. Proovi uuesti",
@@ -9,6 +10,13 @@
             "unknown": "Ootamatu t\u00f5rge"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Salas\u00f5ma"
+                },
+                "description": "Kasutaja {username} salas\u00f5na ei kehti enam.",
+                "title": "Taastuvasta oma MyQ konto"
+            },
             "user": {
                 "data": {
                     "password": "Salas\u00f5na",

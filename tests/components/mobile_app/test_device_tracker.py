@@ -48,6 +48,7 @@ async def test_sending_location(hass, create_registrations, webhook_client):
                 "course": 6,
                 "speed": 7,
                 "vertical_accuracy": 8,
+                "location_name": "",
             },
         },
     )
@@ -82,7 +83,6 @@ async def test_restoring_location(hass, create_registrations, webhook_client):
                 "course": 60,
                 "speed": 70,
                 "vertical_accuracy": 80,
-                "location_name": "bar",
             },
         },
     )
@@ -104,6 +104,7 @@ async def test_restoring_location(hass, create_registrations, webhook_client):
 
     assert state_1 is not state_2
     assert state_2.name == "Test 1"
+    assert state_2.state == "not_home"
     assert state_2.attributes["source_type"] == "gps"
     assert state_2.attributes["latitude"] == 10
     assert state_2.attributes["longitude"] == 20

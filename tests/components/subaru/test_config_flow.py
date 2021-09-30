@@ -27,7 +27,6 @@ from .conftest import (
 
 from tests.common import MockConfigEntry
 
-ASYNC_SETUP = "homeassistant.components.subaru.async_setup"
 ASYNC_SETUP_ENTRY = "homeassistant.components.subaru.async_setup_entry"
 
 
@@ -96,8 +95,6 @@ async def test_user_form_pin_not_required(hass, user_form):
         MOCK_API_IS_PIN_REQUIRED,
         return_value=False,
     ) as mock_is_pin_required, patch(
-        ASYNC_SETUP, return_value=True
-    ) as mock_setup, patch(
         ASYNC_SETUP_ENTRY, return_value=True
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
@@ -106,7 +103,6 @@ async def test_user_form_pin_not_required(hass, user_form):
         )
     assert len(mock_connect.mock_calls) == 1
     assert len(mock_is_pin_required.mock_calls) == 1
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
     expected = {
@@ -119,6 +115,7 @@ async def test_user_form_pin_not_required(hass, user_form):
         "type": "create_entry",
         "version": 1,
         "data": deepcopy(TEST_CONFIG),
+        "options": {},
     }
     expected["data"][CONF_PIN] = None
     result["data"][CONF_DEVICE_ID] = TEST_DEVICE_ID
@@ -135,6 +132,7 @@ async def test_pin_form_init(pin_form):
         "handler": DOMAIN,
         "step_id": "pin",
         "type": "form",
+        "last_step": None,
     }
     assert pin_form == expected
 
@@ -160,8 +158,6 @@ async def test_pin_form_success(hass, pin_form):
         MOCK_API_UPDATE_SAVED_PIN,
         return_value=True,
     ) as mock_update_saved_pin, patch(
-        ASYNC_SETUP, return_value=True
-    ) as mock_setup, patch(
         ASYNC_SETUP_ENTRY, return_value=True
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
@@ -170,7 +166,6 @@ async def test_pin_form_success(hass, pin_form):
 
     assert len(mock_test_pin.mock_calls) == 1
     assert len(mock_update_saved_pin.mock_calls) == 1
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     expected = {
         "title": TEST_USERNAME,
@@ -182,6 +177,7 @@ async def test_pin_form_success(hass, pin_form):
         "type": "create_entry",
         "version": 1,
         "data": TEST_CONFIG,
+        "options": {},
     }
     result["data"][CONF_DEVICE_ID] = TEST_DEVICE_ID
     assert result == expected

@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, HTTP_OK
@@ -16,7 +16,7 @@ DEFAULT_TIMEOUT = 10
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
 
 
 def get_scanner(hass, config):

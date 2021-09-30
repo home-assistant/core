@@ -3,6 +3,7 @@
   "name": "Camera",
   "documentation": "https://www.home-assistant.io/integrations/camera",
   "dependencies": ["http"],
+  "requirements": ["PyTurboJPEG==1.5.2"],
   "after_dependencies": ["media_player"],
   "codeowners": [],
   "quality_scale": "internal"

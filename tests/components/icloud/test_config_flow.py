@@ -20,7 +20,7 @@ from homeassistant.components.icloud.const import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -157,7 +157,7 @@ def mock_controller_service_validate_verification_code_failed():
         yield service_mock
 
 
-async def test_user(hass: HomeAssistantType, service: MagicMock):
+async def test_user(hass: HomeAssistant, service: MagicMock):
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=None
@@ -175,9 +175,7 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
     assert result["step_id"] == CONF_TRUSTED_DEVICE
 
 
-async def test_user_with_cookie(
-    hass: HomeAssistantType, service_authenticated: MagicMock
-):
+async def test_user_with_cookie(hass: HomeAssistant, service_authenticated: MagicMock):
     """Test user config with presence of a cookie."""
     # test with all provided
     result = await hass.config_entries.flow.async_init(
@@ -199,7 +197,7 @@ async def test_user_with_cookie(
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
 
 
-async def test_import(hass: HomeAssistantType, service: MagicMock):
+async def test_import(hass: HomeAssistant, service: MagicMock):
     """Test import step."""
     # import with required
     result = await hass.config_entries.flow.async_init(
@@ -227,7 +225,7 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
 
 
 async def test_import_with_cookie(
-    hass: HomeAssistantType, service_authenticated: MagicMock
+    hass: HomeAssistant, service_authenticated: MagicMock
 ):
     """Test import step with presence of a cookie."""
     # import with required
@@ -268,7 +266,7 @@ async def test_import_with_cookie(
 
 
 async def test_two_accounts_setup(
-    hass: HomeAssistantType, service_authenticated: MagicMock
+    hass: HomeAssistant, service_authenticated: MagicMock
 ):
     """Test to setup two accounts."""
     MockConfigEntry(
@@ -293,7 +291,7 @@ async def test_two_accounts_setup(
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
 
 
-async def test_already_setup(hass: HomeAssistantType):
+async def test_already_setup(hass: HomeAssistant):
     """Test we abort if the account is already setup."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -320,7 +318,7 @@ async def test_already_setup(hass: HomeAssistantType):
     assert result["reason"] == "already_configured"
 
 
-async def test_login_failed(hass: HomeAssistantType):
+async def test_login_failed(hass: HomeAssistant):
     """Test when we have errors during login."""
     with patch(
         "homeassistant.components.icloud.config_flow.PyiCloudService.authenticate",
@@ -336,7 +334,7 @@ async def test_login_failed(hass: HomeAssistantType):
 
 
 async def test_no_device(
-    hass: HomeAssistantType, service_authenticated_no_device: MagicMock
+    hass: HomeAssistant, service_authenticated_no_device: MagicMock
 ):
     """Test when we have no devices."""
     result = await hass.config_entries.flow.async_init(
@@ -348,7 +346,7 @@ async def test_no_device(
     assert result["reason"] == "no_device"
 
 
-async def test_trusted_device(hass: HomeAssistantType, service: MagicMock):
+async def test_trusted_device(hass: HomeAssistant, service: MagicMock):
     """Test trusted_device step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -361,7 +359,7 @@ async def test_trusted_device(hass: HomeAssistantType, service: MagicMock):
     assert result["step_id"] == CONF_TRUSTED_DEVICE
 
 
-async def test_trusted_device_success(hass: HomeAssistantType, service: MagicMock):
+async def test_trusted_device_success(hass: HomeAssistant, service: MagicMock):
     """Test trusted_device step success."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -377,7 +375,7 @@ async def test_trusted_device_success(hass: HomeAssistantType, service: MagicMoc
 
 
 async def test_send_verification_code_failed(
-    hass: HomeAssistantType, service_send_verification_code_failed: MagicMock
+    hass: HomeAssistant, service_send_verification_code_failed: MagicMock
 ):
     """Test when we have errors during send_verification_code."""
     result = await hass.config_entries.flow.async_init(
@@ -394,7 +392,7 @@ async def test_send_verification_code_failed(
     assert result["errors"] == {CONF_TRUSTED_DEVICE: "send_verification_code"}
 
 
-async def test_verification_code(hass: HomeAssistantType, service: MagicMock):
+async def test_verification_code(hass: HomeAssistant, service: MagicMock):
     """Test verification_code step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -410,7 +408,7 @@ async def test_verification_code(hass: HomeAssistantType, service: MagicMock):
     assert result["step_id"] == CONF_VERIFICATION_CODE
 
 
-async def test_verification_code_success(hass: HomeAssistantType, service: MagicMock):
+async def test_verification_code_success(hass: HomeAssistant, service: MagicMock):
     """Test verification_code step success."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -436,7 +434,7 @@ async def test_verification_code_success(hass: HomeAssistantType, service: Magic
 
 
 async def test_validate_verification_code_failed(
-    hass: HomeAssistantType, service_validate_verification_code_failed: MagicMock
+    hass: HomeAssistant, service_validate_verification_code_failed: MagicMock
 ):
     """Test when we have errors during validate_verification_code."""
     result = await hass.config_entries.flow.async_init(
@@ -456,7 +454,7 @@ async def test_validate_verification_code_failed(
     assert result["errors"] == {"base": "validate_verification_code"}
 
 
-async def test_2fa_code_success(hass: HomeAssistantType, service_2fa: MagicMock):
+async def test_2fa_code_success(hass: HomeAssistant, service_2fa: MagicMock):
     """Test 2fa step success."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -481,7 +479,7 @@ async def test_2fa_code_success(hass: HomeAssistantType, service_2fa: MagicMock)
 
 
 async def test_validate_2fa_code_failed(
-    hass: HomeAssistantType, service_validate_2fa_code_failed: MagicMock
+    hass: HomeAssistant, service_validate_2fa_code_failed: MagicMock
 ):
     """Test when we have errors during validate_verification_code."""
     result = await hass.config_entries.flow.async_init(
@@ -499,9 +497,7 @@ async def test_validate_2fa_code_failed(
     assert result["errors"] == {"base": "validate_verification_code"}
 
 
-async def test_password_update(
-    hass: HomeAssistantType, service_authenticated: MagicMock
-):
+async def test_password_update(hass: HomeAssistant, service_authenticated: MagicMock):
     """Test that password reauthentication works successfully."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
@@ -525,7 +521,7 @@ async def test_password_update(
     assert config_entry.data[CONF_PASSWORD] == PASSWORD_2
 
 
-async def test_password_update_wrong_password(hass: HomeAssistantType):
+async def test_password_update_wrong_password(hass: HomeAssistant):
     """Test that during password reauthentication wrong password returns correct error."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME

@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_setup": "Solo puede configurar una cuenta Point.",
-            "authorize_url_fail": "Error desconocido al generar una URL de autorizaci\u00f3n.",
             "authorize_url_timeout": "Tiempo de espera agotado para generar la URL de autorizaci\u00f3n.",
             "external_setup": "Punto configurado con \u00e9xito desde otro flujo.",
             "no_flows": "Debe configurar Point antes de poder autenticarse con \u00e9l. [Lea las instrucciones] (https://www.home-assistant.io/components/point/)."

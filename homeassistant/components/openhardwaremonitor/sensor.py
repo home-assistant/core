@@ -62,12 +62,12 @@ class OpenHardwareMonitorDevice(SensorEntity):
         return self._name
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit_of_measurement
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self.value
 
@@ -88,8 +88,7 @@ class OpenHardwareMonitorDevice(SensorEntity):
         array = self._data.data[OHM_CHILDREN]
         _attributes = {}
 
-        for path_index in range(0, len(self.path)):
-            path_number = self.path[path_index]
+        for path_index, path_number in enumerate(self.path):
             values = array[path_number]
 
             if path_index == len(self.path) - 1:
@@ -109,7 +108,7 @@ class OpenHardwareMonitorDevice(SensorEntity):
                 self.attributes = _attributes
                 return
             array = array[path_number][OHM_CHILDREN]
-            _attributes.update({"level_%s" % path_index: values[OHM_NAME]})
+            _attributes.update({f"level_{path_index}": values[OHM_NAME]})
 
 
 class OpenHardwareMonitorData:

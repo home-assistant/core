@@ -4,7 +4,6 @@
             "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
-            "duplicate_entry": "Denne verten er allerede lagt til.",
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },

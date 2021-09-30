@@ -19,6 +19,7 @@ COMMAND_ON_LIST = [
     "On",
     "Up",
     "Stop",
+    "Group on",
     "Open (inline relay)",
     "Stop (inline relay)",
     "Enable sun automation",
@@ -26,9 +27,15 @@ COMMAND_ON_LIST = [
 
 COMMAND_OFF_LIST = [
     "Off",
+    "Group off",
     "Down",
     "Close (inline relay)",
     "Disable sun automation",
+]
+
+COMMAND_GROUP_LIST = [
+    "Group on",
+    "Group off",
 ]
 
 ATTR_EVENT = "event"

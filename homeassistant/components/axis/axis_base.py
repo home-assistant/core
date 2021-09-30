@@ -1,5 +1,6 @@
 """Base classes for Axis entities."""
 
+from homeassistant.const import ATTR_IDENTIFIERS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -14,6 +15,8 @@ class AxisEntityBase(Entity):
         """Initialize the Axis event."""
         self.device = device
 
+        self._attr_device_info = {ATTR_IDENTIFIERS: {(AXIS_DOMAIN, device.unique_id)}}
+
     async def async_added_to_hass(self):
         """Subscribe device events."""
         self.async_on_remove(
@@ -27,11 +30,6 @@ class AxisEntityBase(Entity):
         """Return True if device is available."""
         return self.device.available
 
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return {"identifiers": {(AXIS_DOMAIN, self.device.unique_id)}}
-
     @callback
     def update_callback(self, no_delay=None):
         """Update the entities state."""
@@ -41,10 +39,17 @@ class AxisEntityBase(Entity):
 class AxisEventBase(AxisEntityBase):
     """Base common to all Axis entities from event stream."""
 
+    _attr_should_poll = False
+
     def __init__(self, event, device):
         """Initialize the Axis event."""
         super().__init__(device)
         self.event = event
+
+        self._attr_name = f"{device.name} {event.TYPE} {event.id}"
+        self._attr_unique_id = f"{device.unique_id}-{event.topic}-{event.id}"
+
+        self._attr_device_class = event.CLASS
 
     async def async_added_to_hass(self) -> None:
         """Subscribe sensors events."""
@@ -54,23 +59,3 @@ class AxisEventBase(AxisEntityBase):
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
         self.event.remove_callback(self.update_callback)
-
-    @property
-    def device_class(self):
-        """Return the class of the event."""
-        return self.event.CLASS
-
-    @property
-    def name(self):
-        """Return the name of the event."""
-        return f"{self.device.name} {self.event.TYPE} {self.event.id}"
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this device."""
-        return f"{self.device.unique_id}-{self.event.topic}-{self.event.id}"

@@ -11,15 +11,6 @@
             "location_not_found": "Posizione non trovata"
         },
         "step": {
-            "geography": {
-                "data": {
-                    "api_key": "Chiave API",
-                    "latitude": "Latitudine",
-                    "longitude": "Logitudine"
-                },
-                "description": "Utilizzare l'API di AirVisual cloud per monitorare una posizione geografica.",
-                "title": "Configurare una Geografia"
-            },
             "geography_by_coords": {
                 "data": {
                     "api_key": "Chiave API",
@@ -54,11 +45,6 @@
                 "title": "Riautenticare AirVisual"
             },
             "user": {
-                "data": {
-                    "cloud_api": "Posizione geografica",
-                    "node_pro": "AirVisual Node Pro",
-                    "type": "Tipo di integrazione"
-                },
                 "description": "Scegliere il tipo di dati AirVisual che si desidera monitorare.",
                 "title": "Configura AirVisual"
             }

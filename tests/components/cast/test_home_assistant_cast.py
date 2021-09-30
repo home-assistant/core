@@ -2,7 +2,6 @@
 
 from unittest.mock import patch
 
-from homeassistant import config_entries
 from homeassistant.components.cast import home_assistant_cast
 from homeassistant.config import async_process_ha_core_config
 
@@ -93,7 +92,6 @@ async def test_use_cloud_url(hass, mock_zeroconf):
 async def test_remove_entry(hass, mock_zeroconf):
     """Test removing config entry removes user."""
     entry = MockConfigEntry(
-        connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
         data={},
         domain="cast",
         title="Google Cast",

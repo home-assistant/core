@@ -60,27 +60,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class FloDailyUsageSensor(FloEntity, SensorEntity):
     """Monitors the daily water usage."""
 
+    _attr_icon = WATER_ICON
+    _attr_native_unit_of_measurement = VOLUME_GALLONS
+
     def __init__(self, device):
         """Initialize the daily water usage sensor."""
         super().__init__("daily_consumption", NAME_DAILY_USAGE, device)
         self._state: float = None
 
     @property
-    def icon(self) -> str:
-        """Return the daily usage icon."""
-        return WATER_ICON
-
-    @property
-    def state(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the current daily usage."""
         if self._device.consumption_today is None:
             return None
         return round(self._device.consumption_today, 1)
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return gallons as the unit measurement for water."""
-        return VOLUME_GALLONS
 
 
 class FloSystemModeSensor(FloEntity, SensorEntity):
@@ -92,7 +85,7 @@ class FloSystemModeSensor(FloEntity, SensorEntity):
         self._state: str = None
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the current system mode."""
         if not self._device.current_system_mode:
             return None
@@ -102,31 +95,27 @@ class FloSystemModeSensor(FloEntity, SensorEntity):
 class FloCurrentFlowRateSensor(FloEntity, SensorEntity):
     """Monitors the current water flow rate."""
 
+    _attr_icon = GAUGE_ICON
+    _attr_native_unit_of_measurement = "gpm"
+
     def __init__(self, device):
         """Initialize the flow rate sensor."""
         super().__init__("current_flow_rate", NAME_FLOW_RATE, device)
         self._state: float = None
 
     @property
-    def icon(self) -> str:
-        """Return the daily usage icon."""
-        return GAUGE_ICON
-
-    @property
-    def state(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the current flow rate."""
         if self._device.current_flow_rate is None:
             return None
         return round(self._device.current_flow_rate, 1)
 
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit measurement."""
-        return "gpm"
-
 
 class FloTemperatureSensor(FloEntity, SensorEntity):
     """Monitors the temperature."""
+
+    _attr_device_class = DEVICE_CLASS_TEMPERATURE
+    _attr_native_unit_of_measurement = TEMP_FAHRENHEIT
 
     def __init__(self, name, device):
         """Initialize the temperature sensor."""
@@ -134,25 +123,18 @@ class FloTemperatureSensor(FloEntity, SensorEntity):
         self._state: float = None
 
     @property
-    def state(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the current temperature."""
         if self._device.temperature is None:
             return None
         return round(self._device.temperature, 1)
 
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return fahrenheit as the unit measurement for temperature."""
-        return TEMP_FAHRENHEIT
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the device class for this sensor."""
-        return DEVICE_CLASS_TEMPERATURE
-
 
 class FloHumiditySensor(FloEntity, SensorEntity):
     """Monitors the humidity."""
+
+    _attr_device_class = DEVICE_CLASS_HUMIDITY
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(self, device):
         """Initialize the humidity sensor."""
@@ -160,25 +142,18 @@ class FloHumiditySensor(FloEntity, SensorEntity):
         self._state: float = None
 
     @property
-    def state(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the current humidity."""
         if self._device.humidity is None:
             return None
         return round(self._device.humidity, 1)
 
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return percent as the unit measurement for humidity."""
-        return PERCENTAGE
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the device class for this sensor."""
-        return DEVICE_CLASS_HUMIDITY
-
 
 class FloPressureSensor(FloEntity, SensorEntity):
     """Monitors the water pressure."""
+
+    _attr_device_class = DEVICE_CLASS_PRESSURE
+    _attr_native_unit_of_measurement = PRESSURE_PSI
 
     def __init__(self, device):
         """Initialize the pressure sensor."""
@@ -186,25 +161,18 @@ class FloPressureSensor(FloEntity, SensorEntity):
         self._state: float = None
 
     @property
-    def state(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the current water pressure."""
         if self._device.current_psi is None:
             return None
         return round(self._device.current_psi, 1)
 
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return gallons as the unit measurement for water."""
-        return PRESSURE_PSI
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the device class for this sensor."""
-        return DEVICE_CLASS_PRESSURE
-
 
 class FloBatterySensor(FloEntity, SensorEntity):
     """Monitors the battery level for battery-powered leak detectors."""
+
+    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(self, device):
         """Initialize the battery sensor."""
@@ -212,16 +180,6 @@ class FloBatterySensor(FloEntity, SensorEntity):
         self._state: float = None
 
     @property
-    def state(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the current battery level."""
         return self._device.battery_level
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return percentage as the unit measurement for battery."""
-        return PERCENTAGE
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the device class for this sensor."""
-        return DEVICE_CLASS_BATTERY

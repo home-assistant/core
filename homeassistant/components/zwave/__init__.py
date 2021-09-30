@@ -392,7 +392,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass, config_entry):  # noqa: C901
     """Set up Z-Wave from a config entry.
 
     Will automatically load components to support devices found on the network.
@@ -1114,8 +1114,8 @@ class ZWaveDeviceEntityValues:
         """
         if not check_node_schema(value.node, self._schema):
             return
-        for name in self._values:
-            if self._values[name] is not None:
+        for name, name_value in self._values.items():
+            if name_value is not None:
                 continue
             if not check_value_schema(value, self._schema[const.DISC_VALUES][name]):
                 continue

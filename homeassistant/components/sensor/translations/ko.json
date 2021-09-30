@@ -13,7 +13,6 @@
             "is_pressure": "\ud604\uc7ac {entity_name}\uc758 \uc555\ub825\uc774 ~ \uc774\uba74",
             "is_signal_strength": "\ud604\uc7ac {entity_name}\uc758 \uc2e0\ud638 \uac15\ub3c4\uac00 ~ \uc774\uba74",
             "is_temperature": "\ud604\uc7ac {entity_name}\uc758 \uc628\ub3c4\uac00 ~ \uc774\uba74",
-            "is_timestamp": "\ud604\uc7ac {entity_name}\uc758 \uc2dc\uac01\uc774 ~ \uc774\uba74",
             "is_value": "\ud604\uc7ac {entity_name}\uc758 \uac12\uc774 ~ \uc774\uba74",
             "is_voltage": "\ud604\uc7ac {entity_name}\uc758 \uc804\uc555\uc774 ~ \uc774\uba74"
         },
@@ -30,7 +29,6 @@
             "pressure": "{entity_name}\uc758 \uc555\ub825\uc774 \ubcc0\ud560 \ub54c",
             "signal_strength": "{entity_name}\uc758 \uc2e0\ud638 \uac15\ub3c4\uac00 \ubcc0\ud560 \ub54c",
             "temperature": "{entity_name}\uc758 \uc628\ub3c4\uac00 \ubcc0\ud560 \ub54c",
-            "timestamp": "{entity_name}\uc758 \uc2dc\uac01\uc774 \ubcc0\ud560 \ub54c",
             "value": "{entity_name}\uc758 \uac12\uc774 \ubcc0\ud560 \ub54c",
             "voltage": "{entity_name}\uc758 \uc804\uc555\uc774 \ubcc0\ud560 \ub54c"
         }

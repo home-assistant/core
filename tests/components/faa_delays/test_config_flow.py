@@ -27,8 +27,6 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch.object(faadelays.Airport, "update", new=mock_valid_airport), patch(
-        "homeassistant.components.faa_delays.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.faa_delays.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -45,7 +43,6 @@ async def test_form(hass):
         "id": "test",
     }
     await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

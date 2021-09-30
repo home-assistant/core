@@ -4,7 +4,6 @@
             "already_configured": "El dispositivo ya est\u00e1 configurado"
         },
         "error": {
-            "duplicate_entry": "Ese host ya ha sido a\u00f1adido.",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "unknown": "Error inesperado"
         },

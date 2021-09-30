@@ -1,0 +1,10 @@
+{
+    "config": {
+        "step": {
+            "authorize": {
+                "description": "Please authorise this app at https://www.ecobee.com/consumerportal/index.html with PIN code:\n\n{pin}\n\nThen, press Submit.",
+                "title": "Authorise app on ecobee.com"
+            }
+        }
+    }
+}

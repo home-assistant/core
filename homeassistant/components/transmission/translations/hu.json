@@ -28,7 +28,8 @@
                     "limit": "Limit",
                     "order": "Sorrend",
                     "scan_interval": "Friss\u00edt\u00e9si gyakoris\u00e1g"
-                }
+                },
+                "title": "Adja meg az Transmission be\u00e1ll\u00edt\u00e1sokat"
             }
         }
     }

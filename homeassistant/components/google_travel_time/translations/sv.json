@@ -1,0 +1,27 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Kunde inte ansluta"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "destination": "Destination",
+                    "origin": "Ursprung"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "avoid": "Undvik",
+                    "language": "Spr\u00e5k",
+                    "time": "Tid",
+                    "units": "Enheter"
+                }
+            }
+        }
+    }
+}

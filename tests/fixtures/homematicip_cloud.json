@@ -7037,7 +7037,7 @@
             "dutyCycle": false,
             "homeId": "00000000-0000-0000-0000-000000000001",
             "id": "00000000-0000-0000-0000-000000000016",
-            "ignorableDevices": [],
+            "ignorableDeviceChannels": [],
             "label": "INTERNAL",
             "lastStatusUpdate": 1524515489257,
             "lowBat": false,
@@ -7373,7 +7373,7 @@
             "dutyCycle": false,
             "homeId": "00000000-0000-0000-0000-000000000001",
             "id": "00000000-0000-0000-0000-000000000005",
-            "ignorableDevices": [],
+            "ignorableDeviceChannels": [],
             "label": "EXTERNAL",
             "lastStatusUpdate": 1524516526498,
             "lowBat": false,
@@ -8363,7 +8363,10 @@
                 "activationInProgress": false,
                 "active": true,
                 "alarmActive": false,
-                "alarmEventDeviceId": "3014F7110000000000000007",
+                "alarmEventDeviceChannel": {
+                    "channelIndex": 1,
+                    "deviceId": "3014F7110000000000000007"
+                },
                 "alarmEventTimestamp": 1524504122047,
                 "alarmSecurityJournalEntryType": "SENSOR_EVENT",
                 "functionalGroups": [

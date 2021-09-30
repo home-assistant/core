@@ -2,13 +2,15 @@
 from __future__ import annotations
 
 import math
-from typing import Any, Callable, Iterable
+from typing import Any, Final
 
+from xknx import XKNX
 from xknx.devices import Fan as XknxFan
 
 from homeassistant.components.fan import SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.percentage import (
     int_states_in_range,
@@ -16,38 +18,55 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from .const import DOMAIN
+from .const import DOMAIN, KNX_ADDRESS
 from .knx_entity import KnxEntity
+from .schema import FanSchema
 
-DEFAULT_PERCENTAGE = 50
+DEFAULT_PERCENTAGE: Final = 50
 
 
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    async_add_entities: Callable[[Iterable[Entity]], None],
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up fans for KNX platform."""
-    entities = []
-    for device in hass.data[DOMAIN].xknx.devices:
-        if isinstance(device, XknxFan):
-            entities.append(KNXFan(device))
-    async_add_entities(entities)
+    if not discovery_info or not discovery_info["platform_config"]:
+        return
+    platform_config = discovery_info["platform_config"]
+    xknx: XKNX = hass.data[DOMAIN].xknx
+
+    async_add_entities(KNXFan(xknx, entity_config) for entity_config in platform_config)
 
 
 class KNXFan(KnxEntity, FanEntity):
     """Representation of a KNX fan."""
 
-    def __init__(self, device: XknxFan) -> None:
-        """Initialize of KNX fan."""
-        self._device: XknxFan
-        super().__init__(device)
+    _device: XknxFan
 
-        self._step_range: tuple[int, int] | None = None
-        if device.max_step:
-            # FanSpeedMode.STEP:
-            self._step_range = (1, device.max_step)
+    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
+        """Initialize of KNX fan."""
+        max_step = config.get(FanSchema.CONF_MAX_STEP)
+        super().__init__(
+            device=XknxFan(
+                xknx,
+                name=config[CONF_NAME],
+                group_address_speed=config.get(KNX_ADDRESS),
+                group_address_speed_state=config.get(FanSchema.CONF_STATE_ADDRESS),
+                group_address_oscillation=config.get(
+                    FanSchema.CONF_OSCILLATION_ADDRESS
+                ),
+                group_address_oscillation_state=config.get(
+                    FanSchema.CONF_OSCILLATION_STATE_ADDRESS
+                ),
+                max_step=max_step,
+            )
+        )
+        # FanSpeedMode.STEP if max_step is set
+        self._step_range: tuple[int, int] | None = (1, max_step) if max_step else None
+
+        self._attr_unique_id = str(self._device.speed.group_address)
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""

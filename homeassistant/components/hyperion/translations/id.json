@@ -45,6 +45,7 @@
         "step": {
             "init": {
                 "data": {
+                    "effect_show_list": "Efek hyperion untuk ditampilkan",
                     "priority": "Prioritas hyperion digunakan untuk warna dan efek"
                 }
             }

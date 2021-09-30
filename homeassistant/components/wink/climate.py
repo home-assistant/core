@@ -234,7 +234,7 @@ class WinkThermostat(WinkDevice, ClimateEntity):
             return HVAC_MODE_HEAT
         if wink_mode == "eco":
             return HVAC_MODE_AUTO
-        return WINK_HVAC_TO_HA.get(wink_mode)
+        return WINK_HVAC_TO_HA.get(wink_mode, "")
 
     @property
     def hvac_modes(self):
@@ -437,7 +437,7 @@ class WinkAC(WinkDevice, ClimateEntity):
         wink_mode = self.wink.current_mode()
         if wink_mode == "auto_eco":
             return HVAC_MODE_COOL
-        return WINK_HVAC_TO_HA.get(wink_mode)
+        return WINK_HVAC_TO_HA.get(wink_mode, "")
 
     @property
     def hvac_modes(self):

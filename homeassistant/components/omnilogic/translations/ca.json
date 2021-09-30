@@ -21,6 +21,7 @@
         "step": {
             "init": {
                 "data": {
+                    "ph_offset": "Compensaci\u00f3 de pH (positiu o negatiu)",
                     "polling_interval": "Interval d'escaneig (segons)"
                 }
             }

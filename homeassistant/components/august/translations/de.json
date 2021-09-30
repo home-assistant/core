@@ -17,16 +17,6 @@
                 "description": "Gib das Passwort f\u00fcr {username} ein.",
                 "title": "August-Konto erneut authentifizieren"
             },
-            "user": {
-                "data": {
-                    "login_method": "Anmeldemethode",
-                    "password": "Passwort",
-                    "timeout": "Zeit\u00fcberschreitung (Sekunden)",
-                    "username": "Benutzername"
-                },
-                "description": "Wenn die Anmeldemethode \"E-Mail\" lautet, ist Benutzername die E-Mail-Adresse. Wenn die Anmeldemethode \"Telefon\" ist, ist Benutzername die Telefonnummer im Format \"+ NNNNNNNNN\".",
-                "title": "Richten Sie ein August-Konto ein"
-            },
             "user_validate": {
                 "data": {
                     "login_method": "Anmeldemethode",
@@ -40,7 +30,7 @@
                 "data": {
                     "code": "Verifizierungs-Code"
                 },
-                "description": "Bitte \u00fcberpr\u00fcfen Sie Ihre {login_method} ({username}) und geben Sie den Best\u00e4tigungscode ein",
+                "description": "Bitte \u00fcberpr\u00fcfe deine {login_method} ({username}) und gib den Best\u00e4tigungscode ein",
                 "title": "Zwei-Faktor-Authentifizierung"
             }
         }

@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "AVM FRITZ!Box call monitor: {name}",
+    "flow_title": "{name}",
     "step": {
       "user": {
         "data": {

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 import logging
-from typing import Any
+from typing import Any, Final
 
 import voluptuous as vol
 
@@ -17,28 +17,27 @@ from homeassistant.util.yaml.loader import JSON_TYPE
 
 from . import const
 
-_LOGGER = logging.getLogger(__name__)
-# mypy: allow-untyped-defs
+_LOGGER: Final = logging.getLogger(__name__)
 
 # Minimal requirements of a message
-MINIMAL_MESSAGE_SCHEMA = vol.Schema(
+MINIMAL_MESSAGE_SCHEMA: Final = vol.Schema(
     {vol.Required("id"): cv.positive_int, vol.Required("type"): cv.string},
     extra=vol.ALLOW_EXTRA,
 )
 
 # Base schema to extend by message handlers
-BASE_COMMAND_MESSAGE_SCHEMA = vol.Schema({vol.Required("id"): cv.positive_int})
+BASE_COMMAND_MESSAGE_SCHEMA: Final = vol.Schema({vol.Required("id"): cv.positive_int})
 
-IDEN_TEMPLATE = "__IDEN__"
-IDEN_JSON_TEMPLATE = '"__IDEN__"'
+IDEN_TEMPLATE: Final = "__IDEN__"
+IDEN_JSON_TEMPLATE: Final = '"__IDEN__"'
 
 
-def result_message(iden: int, result: Any = None) -> dict:
+def result_message(iden: int, result: Any = None) -> dict[str, Any]:
     """Return a success result message."""
     return {"id": iden, "type": const.TYPE_RESULT, "success": True, "result": result}
 
 
-def error_message(iden: int, code: str, message: str) -> dict:
+def error_message(iden: int | None, code: str, message: str) -> dict[str, Any]:
     """Return an error result message."""
     return {
         "id": iden,
@@ -48,7 +47,7 @@ def error_message(iden: int, code: str, message: str) -> dict:
     }
 
 
-def event_message(iden: JSON_TYPE, event: Any) -> dict:
+def event_message(iden: JSON_TYPE, event: Any) -> dict[str, Any]:
     """Return an event message."""
     return {"id": iden, "type": "event", "event": event}
 
@@ -75,7 +74,7 @@ def _cached_event_message(event: Event) -> str:
     return message_to_json(event_message(IDEN_TEMPLATE, event))
 
 
-def message_to_json(message: Any) -> str:
+def message_to_json(message: dict[str, Any]) -> str:
     """Serialize a websocket message to json."""
     try:
         return const.JSON_DUMP(message)

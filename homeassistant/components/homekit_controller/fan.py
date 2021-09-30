@@ -84,7 +84,8 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
     def speed_count(self):
         """Speed count for the fan."""
         return round(
-            100 / max(1, self.service[CharacteristicsTypes.ROTATION_SPEED].minStep or 0)
+            min(self.service[CharacteristicsTypes.ROTATION_SPEED].maxValue or 100, 100)
+            / max(1, self.service[CharacteristicsTypes.ROTATION_SPEED].minStep or 0)
         )
 
     async def async_set_direction(self, direction):

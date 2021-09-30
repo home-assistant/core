@@ -34,7 +34,6 @@ class FlickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Flick config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def _validate_input(self, user_input):
         auth = SimpleFlickAuth(

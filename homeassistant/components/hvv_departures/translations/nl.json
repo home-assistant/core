@@ -36,7 +36,7 @@
             "init": {
                 "data": {
                     "filter": "Selecteer lijnen",
-                    "offset": "Offset (minuten)",
+                    "offset": "Afwijking (minuten)",
                     "real_time": "Gebruik realtime gegevens"
                 },
                 "description": "Wijzig opties voor deze vertreksensor",

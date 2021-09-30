@@ -12,6 +12,7 @@
         "step": {
             "user": {
                 "data": {
+                    "mfa": "Codi MFA (opcional)",
                     "password": "Contrasenya",
                     "username": "Correu electr\u00f2nic"
                 },

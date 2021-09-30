@@ -12,8 +12,11 @@
                 "data": {
                     "api_key": "API kulcs",
                     "latitude": "Sz\u00e9less\u00e9g",
-                    "longitude": "Hossz\u00fas\u00e1g"
-                }
+                    "longitude": "Hossz\u00fas\u00e1g",
+                    "station": "METAR \u00e1llom\u00e1s k\u00f3dja"
+                },
+                "description": "Ha a METAR \u00e1llom\u00e1s k\u00f3dja nincs megadva, a sz\u00e9less\u00e9gi \u00e9s hossz\u00fas\u00e1gi fokokat haszn\u00e1lja a legk\u00f6zelebbi \u00e1llom\u00e1s megkeres\u00e9s\u00e9hez. Egyel\u0151re az API-kulcs b\u00e1rmi lehet. Javasoljuk, hogy \u00e9rv\u00e9nyes e -mail c\u00edmet haszn\u00e1ljon.",
+                "title": "Csatlakozzon az National Weather Service-hez"
             }
         }
     }

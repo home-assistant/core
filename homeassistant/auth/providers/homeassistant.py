@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import base64
 from collections import OrderedDict
+from collections.abc import Mapping
 import logging
 from typing import Any, cast
 
@@ -12,10 +13,13 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
+
+# mypy: disallow-any-generics
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "auth_provider.homeassistant"
@@ -233,7 +237,7 @@ class HassAuthProvider(AuthProvider):
             await data.async_load()
             self.data = data
 
-    async def async_login_flow(self, context: dict | None) -> LoginFlow:
+    async def async_login_flow(self, context: dict[str, Any] | None) -> LoginFlow:
         """Return a flow to login."""
         return HassLoginFlow(self)
 
@@ -277,7 +281,7 @@ class HassAuthProvider(AuthProvider):
         await self.data.async_save()
 
     async def async_get_or_create_credentials(
-        self, flow_result: dict[str, str]
+        self, flow_result: Mapping[str, str]
     ) -> Credentials:
         """Get credentials based on the flow result."""
         if self.data is None:
@@ -319,7 +323,7 @@ class HassLoginFlow(LoginFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResult:
         """Handle the step of the form."""
         errors = {}
 

@@ -7,19 +7,28 @@
   "after_dependencies": ["cloud"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
-  "dhcp": [{
-   "hostname": "rachio-*",
-   "macaddress": "009D6B*"
-  },
-  {
-   "hostname": "rachio-*",
-   "macaddress": "F0038C*"
-  },
-  {
-   "hostname": "rachio-*",
-   "macaddress": "74C63B*"
-  }],
+  "dhcp": [
+    {
+      "hostname": "rachio-*",
+      "macaddress": "009D6B*"
+    },
+    {
+      "hostname": "rachio-*",
+      "macaddress": "F0038C*"
+    },
+    {
+      "hostname": "rachio-*",
+      "macaddress": "74C63B*"
+    }
+  ],
   "homekit": {
     "models": ["Rachio"]
-  }
+  },
+  "zeroconf": [
+    {
+      "type": "_http._tcp.local.",
+      "name": "rachio*"
+    }
+  ],
+  "iot_class": "cloud_push"
 }

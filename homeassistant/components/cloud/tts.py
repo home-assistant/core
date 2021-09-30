@@ -61,7 +61,7 @@ async def async_get_engine(hass, config, discovery_info=None):
 class CloudProvider(Provider):
     """NabuCasa Cloud speech API provider."""
 
-    def __init__(self, cloud: Cloud, language: str, gender: str):
+    def __init__(self, cloud: Cloud, language: str, gender: str) -> None:
         """Initialize cloud provider."""
         self.cloud = cloud
         self.name = "Cloud"

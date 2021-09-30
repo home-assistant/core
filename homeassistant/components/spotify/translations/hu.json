@@ -3,7 +3,8 @@
         "abort": {
             "authorize_url_timeout": "Id\u0151t\u00fall\u00e9p\u00e9s az \u00e9rv\u00e9nyes\u00edt\u00e9si url gener\u00e1l\u00e1sa sor\u00e1n.",
             "missing_configuration": "A Spotify integr\u00e1ci\u00f3 nincs konfigur\u00e1lva. K\u00e9rj\u00fck, k\u00f6vesse a dokument\u00e1ci\u00f3t.",
-            "no_url_available": "Nincs el\u00e9rhet\u0151 URL. A hib\u00e1r\u00f3l tov\u00e1bbi inform\u00e1ci\u00f3t [a s\u00fag\u00f3ban]({docs_url}) tal\u00e1lsz."
+            "no_url_available": "Nincs el\u00e9rhet\u0151 URL. A hib\u00e1r\u00f3l tov\u00e1bbi inform\u00e1ci\u00f3t [a s\u00fag\u00f3ban]({docs_url}) tal\u00e1lsz.",
+            "reauth_account_mismatch": "A Spotify-fi\u00f3kkal hiteles\u00edtett fi\u00f3k nem egyezik meg az \u00faj hiteles\u00edt\u00e9shez sz\u00fcks\u00e9ges fi\u00f3kkal."
         },
         "create_entry": {
             "default": "A Spotify sikeresen hiteles\u00edtett."
@@ -13,6 +14,7 @@
                 "title": "V\u00e1lassz hiteles\u00edt\u00e9si m\u00f3dszert"
             },
             "reauth_confirm": {
+                "description": "A Spotify integr\u00e1ci\u00f3nak \u00fajra hiteles\u00edtenie kell a Spotify fi\u00f3kot: {account}",
                 "title": "Integr\u00e1ci\u00f3 \u00fajrahiteles\u00edt\u00e9se"
             }
         }

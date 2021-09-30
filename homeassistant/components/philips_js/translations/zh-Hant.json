@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
@@ -28,6 +28,15 @@
     "device_automation": {
         "trigger_type": {
             "turn_on": "\u88dd\u7f6e\u5fc5\u9808\u70ba\u958b\u555f\u72c0\u614b"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_notify": "\u5141\u8a31\u4f7f\u7528\u6578\u64da\u9032\u884c\u901a\u77e5\u670d\u52d9\u3002"
+                }
+            }
         }
     }
 }

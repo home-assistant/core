@@ -8,7 +8,7 @@
         "error": {
             "invalid_auth": "Autenticazione non valida"
         },
-        "flow_title": "Monitoraggio chiamate FRITZ! Box AVM: {name}",
+        "flow_title": "{name}",
         "step": {
             "phonebook": {
                 "data": {

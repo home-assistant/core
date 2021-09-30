@@ -1,4 +1,6 @@
 """Support for Netgear Arlo IP cameras."""
+from __future__ import annotations
+
 import logging
 
 from haffmpeg.camera import CameraMjpeg
@@ -55,14 +57,16 @@ class ArloCam(Camera):
         """Initialize an Arlo camera."""
         super().__init__()
         self._camera = camera
-        self._name = self._camera.name
+        self._attr_name = camera.name
         self._motion_status = False
         self._ffmpeg = hass.data[DATA_FFMPEG]
         self._ffmpeg_arguments = device_info.get(CONF_FFMPEG_ARGUMENTS)
         self._last_refresh = None
         self.attrs = {}
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         return self._camera.last_image_from_cache
 
@@ -101,11 +105,6 @@ class ArloCam(Camera):
             )
         finally:
             await stream.close()
-
-    @property
-    def name(self):
-        """Return the name of this camera."""
-        return self._name
 
     @property
     def extra_state_attributes(self):

@@ -38,7 +38,7 @@ CLIENT_CONNECTED_ATTRIBUTES = [
     "ip",
     "is_11r",
     "is_guest",
-    "noted",
+    "note",
     "qos_policy_applied",
     "radio",
     "radio_proto",
@@ -85,7 +85,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             add_device_entities(controller, async_add_entities, devices)
 
     for signal in (controller.signal_update, controller.signal_options_update):
-        controller.listeners.append(async_dispatcher_connect(hass, signal, items_added))
+        config_entry.async_on_unload(
+            async_dispatcher_connect(hass, signal, items_added)
+        )
 
     items_added()
 
@@ -256,13 +258,11 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         """Return the client state attributes."""
         raw = self.client.raw
 
+        attributes_to_check = CLIENT_STATIC_ATTRIBUTES
         if self.is_connected:
-            attributes = {
-                k: raw[k] for k in CLIENT_CONNECTED_ALL_ATTRIBUTES if k in raw
-            }
-        else:
-            attributes = {k: raw[k] for k in CLIENT_STATIC_ATTRIBUTES if k in raw}
+            attributes_to_check = CLIENT_CONNECTED_ALL_ATTRIBUTES
 
+        attributes = {k: raw[k] for k in attributes_to_check if k in raw}
         attributes["is_wired"] = self.is_wired
 
         return attributes

@@ -9,11 +9,8 @@
       "type": "python",
       "request": "launch",
       "module": "homeassistant",
-      "args": [
-        "--debug",
-        "-c",
-        "config"
-      ]
+      "justMyCode": false,
+      "args": ["--debug", "-c", "config"]
     },
     {
       // Debug by attaching to local Home Asistant server using Remote Python Debugger.
@@ -28,7 +25,7 @@
           "localRoot": "${workspaceFolder}",
           "remoteRoot": "."
         }
-      ],
+      ]
     },
     {
       // Debug by attaching to remote Home Asistant server using Remote Python Debugger.
@@ -43,7 +40,7 @@
           "localRoot": "${workspaceFolder}",
           "remoteRoot": "/usr/src/homeassistant"
         }
-      ],
+      ]
     }
   ]
 }

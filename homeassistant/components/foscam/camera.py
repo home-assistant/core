@@ -1,4 +1,6 @@
 """This component provides basic support for Foscam IP cameras."""
+from __future__ import annotations
+
 import asyncio
 
 from libpyfoscam import FoscamCamera
@@ -90,7 +92,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a Foscam IP camera from a config entry."""
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_PTZ,
         {
@@ -172,7 +174,9 @@ class HassFoscamCamera(Camera):
         """Return the entity unique ID."""
         return self._unique_id
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         # Send the request to snap a picture and return raw jpg data
         # Handle exception if host is not reachable or url failed

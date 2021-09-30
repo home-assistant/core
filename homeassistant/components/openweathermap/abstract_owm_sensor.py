@@ -3,7 +3,15 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import ATTRIBUTION, SENSOR_DEVICE_CLASS, SENSOR_NAME, SENSOR_UNIT
+from .const import (
+    ATTRIBUTION,
+    DEFAULT_NAME,
+    DOMAIN,
+    MANUFACTURER,
+    SENSOR_DEVICE_CLASS,
+    SENSOR_NAME,
+    SENSOR_UNIT,
+)
 
 
 class AbstractOpenWeatherMapSensor(SensorEntity):
@@ -37,6 +45,17 @@ class AbstractOpenWeatherMapSensor(SensorEntity):
         return self._unique_id
 
     @property
+    def device_info(self):
+        """Return the device info."""
+        split_unique_id = self._unique_id.split("-")
+        return {
+            "identifiers": {(DOMAIN, f"{split_unique_id[0]}-{split_unique_id[1]}")},
+            "name": DEFAULT_NAME,
+            "manufacturer": MANUFACTURER,
+            "entry_type": "service",
+        }
+
+    @property
     def should_poll(self):
         """Return the polling requirement of the entity."""
         return False
@@ -52,7 +71,7 @@ class AbstractOpenWeatherMapSensor(SensorEntity):
         return self._device_class
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 

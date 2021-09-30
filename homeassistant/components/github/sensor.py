@@ -1,8 +1,11 @@
-"""Support for GitHub."""
+"""Sensor platform for the GitHub integratiom."""
+from __future__ import annotations
+
+import asyncio
 from datetime import timedelta
 import logging
 
-import github
+from aiogithubapi import GitHubAPI, GitHubException
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -13,6 +16,7 @@ from homeassistant.const import (
     CONF_PATH,
     CONF_URL,
 )
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,23 +56,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the GitHub sensor platform."""
     sensors = []
+    session = async_get_clientsession(hass)
     for repository in config[CONF_REPOS]:
         data = GitHubData(
             repository=repository,
-            access_token=config.get(CONF_ACCESS_TOKEN),
+            access_token=config[CONF_ACCESS_TOKEN],
+            session=session,
             server_url=config.get(CONF_URL),
         )
-        if data.setup_error is True:
-            _LOGGER.error(
-                "Error setting up GitHub platform. %s",
-                "Check previous errors for details",
-            )
-        else:
-            sensors.append(GitHubSensor(data))
-    add_entities(sensors, True)
+        sensors.append(GitHubSensor(data))
+    async_add_entities(sensors, True)
 
 
 class GitHubSensor(SensorEntity):
@@ -108,7 +108,7 @@ class GitHubSensor(SensorEntity):
         return self._unique_id
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -121,7 +121,7 @@ class GitHubSensor(SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {
-            ATTR_PATH: self._repository_path,
+            ATTR_PATH: self._github_data.repository_path,
             ATTR_NAME: self._name,
             ATTR_LATEST_COMMIT_MESSAGE: self._latest_commit_message,
             ATTR_LATEST_COMMIT_SHA: self._latest_commit_sha,
@@ -150,122 +150,164 @@ class GitHubSensor(SensorEntity):
         """Return the icon to use in the frontend."""
         return "mdi:github"
 
-    def update(self):
+    async def async_update(self):
         """Collect updated data from GitHub API."""
-        self._github_data.update()
+        await self._github_data.async_update()
+        self._available = self._github_data.available
+        if not self._available:
+            return
 
         self._name = self._github_data.name
-        self._repository_path = self._github_data.repository_path
-        self._available = self._github_data.available
-        self._latest_commit_message = self._github_data.latest_commit_message
-        self._latest_commit_sha = self._github_data.latest_commit_sha
-        if self._github_data.latest_release_url is not None:
-            self._latest_release_tag = self._github_data.latest_release_url.split(
-                "tag/"
-            )[1]
-        else:
-            self._latest_release_tag = None
-        self._latest_release_url = self._github_data.latest_release_url
-        self._state = self._github_data.latest_commit_sha[0:7]
-        self._open_issue_count = self._github_data.open_issue_count
-        self._latest_open_issue_url = self._github_data.latest_open_issue_url
-        self._pull_request_count = self._github_data.pull_request_count
-        self._latest_open_pr_url = self._github_data.latest_open_pr_url
-        self._stargazers = self._github_data.stargazers
-        self._forks = self._github_data.forks
-        self._clones = self._github_data.clones
-        self._clones_unique = self._github_data.clones_unique
-        self._views = self._github_data.views
-        self._views_unique = self._github_data.views_unique
+        self._state = self._github_data.last_commit.sha[0:7]
+
+        self._latest_commit_message = self._github_data.last_commit.commit.message
+        self._latest_commit_sha = self._github_data.last_commit.sha
+        self._stargazers = self._github_data.repository_response.data.stargazers_count
+        self._forks = self._github_data.repository_response.data.forks_count
+
+        self._pull_request_count = len(self._github_data.pulls_response.data)
+        self._open_issue_count = (
+            self._github_data.repository_response.data.open_issues_count or 0
+        ) - self._pull_request_count
+
+        if self._github_data.last_release:
+            self._latest_release_tag = self._github_data.last_release.tag_name
+            self._latest_release_url = self._github_data.last_release.html_url
+
+        if self._github_data.last_issue:
+            self._latest_open_issue_url = self._github_data.last_issue.html_url
+
+        if self._github_data.last_pull_request:
+            self._latest_open_pr_url = self._github_data.last_pull_request.html_url
+
+        if self._github_data.clones_response:
+            self._clones = self._github_data.clones_response.data.count
+            self._clones_unique = self._github_data.clones_response.data.uniques
+
+        if self._github_data.views_response:
+            self._views = self._github_data.views_response.data.count
+            self._views_unique = self._github_data.views_response.data.uniques
 
 
 class GitHubData:
     """GitHub Data object."""
 
-    def __init__(self, repository, access_token=None, server_url=None):
+    def __init__(self, repository, access_token, session, server_url=None):
         """Set up GitHub."""
-        self._github = github
+        self._repository = repository
+        self.repository_path = repository[CONF_PATH]
+        self._github = GitHubAPI(
+            token=access_token, session=session, **{"base_url": server_url}
+        )
 
-        self.setup_error = False
-
-        try:
-            if server_url is not None:
-                server_url += "/api/v3"
-                self._github_obj = github.Github(access_token, base_url=server_url)
-            else:
-                self._github_obj = github.Github(access_token)
-
-            self.repository_path = repository[CONF_PATH]
-
-            repo = self._github_obj.get_repo(self.repository_path)
-        except self._github.GithubException as err:
-            _LOGGER.error("GitHub error for %s: %s", self.repository_path, err)
-            self.setup_error = True
-            return
-
-        self.name = repository.get(CONF_NAME, repo.name)
         self.available = False
-        self.latest_commit_message = None
-        self.latest_commit_sha = None
-        self.latest_release_url = None
-        self.open_issue_count = None
-        self.latest_open_issue_url = None
-        self.pull_request_count = None
-        self.latest_open_pr_url = None
-        self.stargazers = None
-        self.forks = None
-        self.clones = None
-        self.clones_unique = None
-        self.views = None
-        self.views_unique = None
+        self.repository_response = None
+        self.commit_response = None
+        self.issues_response = None
+        self.pulls_response = None
+        self.releases_response = None
+        self.views_response = None
+        self.clones_response = None
 
-    def update(self):
-        """Update GitHub Sensor."""
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._repository.get(CONF_NAME, self.repository_response.data.name)
+
+    @property
+    def last_commit(self):
+        """Return the last issue."""
+        return self.commit_response.data[0] if self.commit_response.data else None
+
+    @property
+    def last_issue(self):
+        """Return the last issue."""
+        return self.issues_response.data[0] if self.issues_response.data else None
+
+    @property
+    def last_pull_request(self):
+        """Return the last pull request."""
+        return self.pulls_response.data[0] if self.pulls_response.data else None
+
+    @property
+    def last_release(self):
+        """Return the last release."""
+        return self.releases_response.data[0] if self.releases_response.data else None
+
+    async def async_update(self):
+        """Update GitHub data."""
         try:
-            repo = self._github_obj.get_repo(self.repository_path)
+            await asyncio.gather(
+                self._update_repository(),
+                self._update_commit(),
+                self._update_issues(),
+                self._update_pulls(),
+                self._update_releases(),
+            )
 
-            self.stargazers = repo.stargazers_count
-            self.forks = repo.forks_count
-
-            open_pull_requests = repo.get_pulls(state="open", sort="created")
-            if open_pull_requests is not None:
-                self.pull_request_count = open_pull_requests.totalCount
-                if open_pull_requests.totalCount > 0:
-                    self.latest_open_pr_url = open_pull_requests[0].html_url
-
-            open_issues = repo.get_issues(state="open", sort="created")
-            if open_issues is not None:
-                if self.pull_request_count is None:
-                    self.open_issue_count = open_issues.totalCount
-                else:
-                    # pull requests are treated as issues too so we need to reduce the received count
-                    self.open_issue_count = (
-                        open_issues.totalCount - self.pull_request_count
-                    )
-
-                if open_issues.totalCount > 0:
-                    self.latest_open_issue_url = open_issues[0].html_url
-
-            latest_commit = repo.get_commits()[0]
-            self.latest_commit_sha = latest_commit.sha
-            self.latest_commit_message = latest_commit.commit.message
-
-            releases = repo.get_releases()
-            if releases and releases.totalCount > 0:
-                self.latest_release_url = releases[0].html_url
-
-            if repo.permissions.push:
-                clones = repo.get_clones_traffic()
-                if clones is not None:
-                    self.clones = clones.get("count")
-                    self.clones_unique = clones.get("uniques")
-
-                views = repo.get_views_traffic()
-                if views is not None:
-                    self.views = views.get("count")
-                    self.views_unique = views.get("uniques")
+            if self.repository_response.data.permissions.push:
+                await asyncio.gather(
+                    self._update_clones(),
+                    self._update_views(),
+                )
 
             self.available = True
-        except self._github.GithubException as err:
+        except GitHubException as err:
             _LOGGER.error("GitHub error for %s: %s", self.repository_path, err)
             self.available = False
+
+    async def _update_repository(self):
+        """Update repository data."""
+        self.repository_response = await self._github.repos.get(self.repository_path)
+
+    async def _update_commit(self):
+        """Update commit data."""
+        self.commit_response = await self._github.repos.list_commits(
+            self.repository_path, **{"params": {"per_page": 1}}
+        )
+
+    async def _update_issues(self):
+        """Update issues data."""
+        self.issues_response = await self._github.repos.issues.list(
+            self.repository_path
+        )
+
+    async def _update_releases(self):
+        """Update releases data."""
+        self.releases_response = await self._github.repos.releases.list(
+            self.repository_path
+        )
+
+    async def _update_clones(self):
+        """Update clones data."""
+        self.clones_response = await self._github.repos.traffic.clones(
+            self.repository_path
+        )
+
+    async def _update_views(self):
+        """Update views data."""
+        self.views_response = await self._github.repos.traffic.views(
+            self.repository_path
+        )
+
+    async def _update_pulls(self):
+        """Update pulls data."""
+        response = await self._github.repos.pulls.list(
+            self.repository_path, **{"params": {"per_page": 100}}
+        )
+        if not response.is_last_page:
+            results = await asyncio.gather(
+                *(
+                    self._github.repos.pulls.list(
+                        self.repository_path,
+                        **{"params": {"per_page": 100, "page": page_number}},
+                    )
+                    for page_number in range(
+                        response.next_page_number, response.last_page_number + 1
+                    )
+                )
+            )
+            for result in results:
+                response.data.extend(result.data)
+
+        self.pulls_response = response

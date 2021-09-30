@@ -4,5 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/vilfo",
   "requirements": ["vilfo-api-client==0.3.2"],
-  "codeowners": ["@ManneW"]
+  "codeowners": ["@ManneW"],
+  "iot_class": "local_polling"
 }

@@ -8,8 +8,9 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_NAME,
     CONF_OFFSET,
+    DEVICE_CLASS_TEMPERATURE,
     DEVICE_DEFAULT_NAME,
-    TEMP_FAHRENHEIT,
+    TEMP_CELSIUS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,15 +35,14 @@ def get_temper_devices():
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Temper sensors."""
-    temp_unit = hass.config.units.temperature_unit
-    name = config.get(CONF_NAME)
+    prefix = name = config[CONF_NAME]
     scaling = {"scale": config.get(CONF_SCALE), "offset": config.get(CONF_OFFSET)}
     temper_devices = get_temper_devices()
 
     for idx, dev in enumerate(temper_devices):
         if idx != 0:
-            name = f"{name}_{idx!s}"
-        TEMPER_SENSORS.append(TemperSensor(dev, temp_unit, name, scaling))
+            name = f"{prefix}_{idx!s}"
+        TEMPER_SENSORS.append(TemperSensor(dev, name, scaling))
     add_entities(TEMPER_SENSORS)
 
 
@@ -60,29 +60,16 @@ def reset_devices():
 class TemperSensor(SensorEntity):
     """Representation of a Temper temperature sensor."""
 
-    def __init__(self, temper_device, temp_unit, name, scaling):
+    _attr_device_class = DEVICE_CLASS_TEMPERATURE
+    _attr_native_unit_of_measurement = TEMP_CELSIUS
+
+    def __init__(self, temper_device, name, scaling):
         """Initialize the sensor."""
-        self.temp_unit = temp_unit
         self.scale = scaling["scale"]
         self.offset = scaling["offset"]
-        self.current_value = None
-        self._name = name
         self.set_temper_device(temper_device)
 
-    @property
-    def name(self):
-        """Return the name of the temperature sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the entity."""
-        return self.current_value
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self.temp_unit
+        self._attr_name = name
 
     def set_temper_device(self, temper_device):
         """Assign the underlying device for this sensor."""
@@ -94,11 +81,8 @@ class TemperSensor(SensorEntity):
     def update(self):
         """Retrieve latest state."""
         try:
-            format_str = (
-                "fahrenheit" if self.temp_unit == TEMP_FAHRENHEIT else "celsius"
-            )
-            sensor_value = self.temper_device.get_temperature(format_str)
-            self.current_value = round(sensor_value, 1)
+            sensor_value = self.temper_device.get_temperature("celsius")
+            self._attr_native_value = round(sensor_value, 1)
         except OSError:
             _LOGGER.error(
                 "Failed to get temperature. The device address may"

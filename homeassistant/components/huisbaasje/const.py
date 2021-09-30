@@ -8,6 +8,7 @@ from huisbaasje.const import (
     SOURCE_TYPE_GAS,
 )
 
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
@@ -48,26 +49,31 @@ SENSORS_INFO = [
         "name": "Huisbaasje Current Power",
         "device_class": DEVICE_CLASS_POWER,
         "source_type": SOURCE_TYPE_ELECTRICITY,
+        "state_class": STATE_CLASS_MEASUREMENT,
     },
     {
         "name": "Huisbaasje Current Power In",
         "device_class": DEVICE_CLASS_POWER,
         "source_type": SOURCE_TYPE_ELECTRICITY_IN,
+        "state_class": STATE_CLASS_MEASUREMENT,
     },
     {
         "name": "Huisbaasje Current Power In Low",
         "device_class": DEVICE_CLASS_POWER,
         "source_type": SOURCE_TYPE_ELECTRICITY_IN_LOW,
+        "state_class": STATE_CLASS_MEASUREMENT,
     },
     {
         "name": "Huisbaasje Current Power Out",
         "device_class": DEVICE_CLASS_POWER,
         "source_type": SOURCE_TYPE_ELECTRICITY_OUT,
+        "state_class": STATE_CLASS_MEASUREMENT,
     },
     {
         "name": "Huisbaasje Current Power Out Low",
         "device_class": DEVICE_CLASS_POWER,
         "source_type": SOURCE_TYPE_ELECTRICITY_OUT_LOW,
+        "state_class": STATE_CLASS_MEASUREMENT,
     },
     {
         "name": "Huisbaasje Energy Today",
@@ -107,6 +113,7 @@ SENSORS_INFO = [
         "source_type": SOURCE_TYPE_GAS,
         "icon": "mdi:fire",
         "precision": 1,
+        "state_class": STATE_CLASS_MEASUREMENT,
     },
     {
         "name": "Huisbaasje Gas Today",

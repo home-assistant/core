@@ -22,7 +22,7 @@ from openzwavemqtt.util.mqtt_client import MQTTClient
 
 from homeassistant.components import mqtt
 from homeassistant.components.hassio.handler import HassioAPIError
-from homeassistant.config_entries import ENTRY_STATE_LOADED, ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -56,14 +56,11 @@ DATA_DEVICES = "zwave-mqtt-devices"
 DATA_STOP_MQTT_CLIENT = "ozw_stop_mqtt_client"
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Initialize basic config of ozw component."""
-    hass.data[DOMAIN] = {}
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(  # noqa: C901
+    hass: HomeAssistant, entry: ConfigEntry
+) -> bool:
     """Set up ozw from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
     ozw_data = hass.data[DOMAIN][entry.entry_id] = {}
     ozw_data[DATA_UNSUBSCRIBE] = []
 
@@ -97,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     else:
         mqtt_entries = hass.config_entries.async_entries("mqtt")
-        if not mqtt_entries or mqtt_entries[0].state != ENTRY_STATE_LOADED:
+        if not mqtt_entries or mqtt_entries[0].state is not ConfigEntryState.LOADED:
             _LOGGER.error("MQTT integration is not set up")
             return False
 
@@ -105,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
         @callback
         def send_message(topic, payload):
-            if mqtt_entry.state != ENTRY_STATE_LOADED:
+            if mqtt_entry.state is not ConfigEntryState.LOADED:
                 _LOGGER.error("MQTT integration is not set up")
                 return
 
@@ -153,7 +150,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         # The actual removal action of a Z-Wave node is reported as instance event
         # Only when this event is detected we cleanup the device and entities from hass
         # Note: Find a more elegant way of doing this, e.g. a notification of this event from OZW
-        if event in ["removenode", "removefailednode"] and "Node" in event_data:
+        if event in ("removenode", "removefailednode") and "Node" in event_data:
             removed_nodes.append(event_data["Node"])
 
     @callback
@@ -163,9 +160,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         node_id = value.node.node_id
 
         # Filter out CommandClasses we're definitely not interested in.
-        if value.command_class in [
-            CommandClass.MANUFACTURER_SPECIFIC,
-        ]:
+        if value.command_class in (CommandClass.MANUFACTURER_SPECIFIC,):
             return
 
         _LOGGER.debug(
@@ -216,10 +211,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             value.command_class,
         )
         # Handle a scene activation message
-        if value.command_class in [
+        if value.command_class in (
             CommandClass.SCENE_ACTIVATION,
             CommandClass.CENTRAL_SCENE,
-        ]:
+        ):
             async_handle_scene_activated(hass, value)
             return
 
@@ -267,10 +262,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     async def start_platforms():
         await asyncio.gather(
-            *[
+            *(
                 hass.config_entries.async_forward_entry_setup(entry, platform)
                 for platform in PLATFORMS
-            ]
+            )
         )
         if entry.data.get(CONF_USE_ADDON):
             mqtt_client_task = asyncio.create_task(mqtt_client.start_client(manager))
@@ -303,17 +298,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     # cleanup platforms
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if not unload_ok:
         return False
 

@@ -22,8 +22,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
-from homeassistant.core import callback
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant, callback
 
 from .config_flow import get_entry_client
 from .const import (
@@ -38,7 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: config_entries.ConfigEntry,
     async_add_entities,
 ):
@@ -53,7 +52,7 @@ async def async_setup_entry(
                 State(client, zone),
                 config_entry.unique_id or config_entry.entry_id,
             )
-            for zone in [1, 2]
+            for zone in (1, 2)
         ],
         True,
     )
@@ -64,6 +63,8 @@ async def async_setup_entry(
 class ArcamFmj(MediaPlayerEntity):
     """Representation of a media device."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         device_name,
@@ -73,9 +74,9 @@ class ArcamFmj(MediaPlayerEntity):
         """Initialize device."""
         self._state = state
         self._device_name = device_name
-        self._name = f"{device_name} - Zone: {state.zn}"
+        self._attr_name = f"{device_name} - Zone: {state.zn}"
         self._uuid = uuid
-        self._support = (
+        self._attr_supported_features = (
             SUPPORT_SELECT_SOURCE
             | SUPPORT_PLAY_MEDIA
             | SUPPORT_BROWSE_MEDIA
@@ -86,7 +87,9 @@ class ArcamFmj(MediaPlayerEntity):
             | SUPPORT_TURN_ON
         )
         if state.zn == 1:
-            self._support |= SUPPORT_SELECT_SOUND_MODE
+            self._attr_supported_features |= SUPPORT_SELECT_SOUND_MODE
+        self._attr_unique_id = f"{uuid}-{state.zn}"
+        self._attr_entity_registry_enabled_default = state.zn == 1
 
     def _get_2ch(self):
         """Return if source is 2 channel or not."""
@@ -102,14 +105,11 @@ class ArcamFmj(MediaPlayerEntity):
         )
 
     @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._state.zn == 1
-
-    @property
-    def unique_id(self):
-        """Return unique identifier if known."""
-        return f"{self._uuid}-{self._state.zn}"
+    def state(self):
+        """Return the state of the device."""
+        if self._state.get_power():
+            return STATE_ON
+        return STATE_OFF
 
     @property
     def device_info(self):
@@ -123,28 +123,6 @@ class ArcamFmj(MediaPlayerEntity):
             "model": "Arcam FMJ AVR",
             "manufacturer": "Arcam",
         }
-
-    @property
-    def should_poll(self) -> bool:
-        """No need to poll."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the controlled device."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        if self._state.get_power():
-            return STATE_ON
-        return STATE_OFF
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return self._support
 
     async def async_added_to_hass(self):
         """Once registered, add listener for events."""

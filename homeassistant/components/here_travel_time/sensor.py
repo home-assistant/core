@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
-from typing import Callable
 
 import herepy
 import voluptuous as vol
@@ -26,8 +25,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import location
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import DiscoveryInfoType
-import homeassistant.util.dt as dt
+from homeassistant.util import dt
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -145,7 +145,7 @@ PLATFORM_SCHEMA = vol.All(
 async def async_setup_platform(
     hass: HomeAssistant,
     config: dict[str, str | bool],
-    async_add_entities: Callable,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the HERE travel time platform."""
@@ -256,7 +256,7 @@ class HERETravelTimeSensor(SensorEntity):
         )
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         if self._here_data.traffic_mode and self._here_data.traffic_time is not None:
             return str(round(self._here_data.traffic_time / 60))
@@ -292,7 +292,7 @@ class HERETravelTimeSensor(SensorEntity):
         return res
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 

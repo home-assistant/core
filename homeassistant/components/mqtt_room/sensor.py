@@ -120,7 +120,7 @@ class MQTTRoomSensor(SensorEntity):
                     if (
                         device.get(ATTR_ROOM) == self._state
                         or device.get(ATTR_DISTANCE) < self._distance
-                        or timediff.seconds >= self._timeout
+                        or timediff.total_seconds() >= self._timeout
                     ):
                         update_state(**device)
 
@@ -139,7 +139,7 @@ class MQTTRoomSensor(SensorEntity):
         return {ATTR_DISTANCE: self._distance}
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the current room of the entity."""
         return self._state
 

@@ -108,7 +108,7 @@ class MVGLiveSensor(SensorEntity):
         return self._station
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the next departure time."""
         return self._state
 
@@ -128,7 +128,7 @@ class MVGLiveSensor(SensorEntity):
         return self._icon
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return TIME_MINUTES
 
@@ -202,7 +202,7 @@ class MVGLiveData:
 
             # now select the relevant data
             _nextdep = {ATTR_ATTRIBUTION: ATTRIBUTION}
-            for k in ["destination", "linename", "time", "direction", "product"]:
+            for k in ("destination", "linename", "time", "direction", "product"):
                 _nextdep[k] = _departure.get(k, "")
             _nextdep["time"] = int(_nextdep["time"])
             self.departures.append(_nextdep)

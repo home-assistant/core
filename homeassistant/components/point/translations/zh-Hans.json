@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_setup": "\u60a8\u53ea\u80fd\u914d\u7f6e\u4e00\u4e2a Point \u5e10\u6237\u3002",
-            "authorize_url_fail": "\u751f\u6210\u6388\u6743\u7f51\u5740\u65f6\u53d1\u751f\u672a\u77e5\u9519\u8bef\u3002",
             "authorize_url_timeout": "\u751f\u6210\u6388\u6743\u7f51\u5740\u8d85\u65f6\u3002",
             "external_setup": "Point\u914d\u7f6e\u6210\u529f\u3002",
             "no_flows": "\u60a8\u9700\u8981\u5148\u914d\u7f6e Point\uff0c\u7136\u540e\u624d\u80fd\u5bf9\u5176\u8fdb\u884c\u6388\u6743\u3002 [\u8bf7\u9605\u8bfb\u8bf4\u660e](https://www.home-assistant.io/components/point/)\u3002"

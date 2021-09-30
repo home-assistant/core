@@ -1,4 +1,6 @@
 """Support for the Foobot indoor air quality monitor."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -7,7 +9,7 @@ import aiohttp
 from foobot_async import FoobotClient
 import voluptuous as vol
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_TIME,
@@ -16,6 +18,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_TOKEN,
     CONF_USERNAME,
+    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     TEMP_CELSIUS,
     TIME_SECONDS,
@@ -35,19 +38,49 @@ ATTR_CARBON_DIOXIDE = "CO2"
 ATTR_VOLATILE_ORGANIC_COMPOUNDS = "VOC"
 ATTR_FOOBOT_INDEX = "index"
 
-SENSOR_TYPES = {
-    "time": [ATTR_TIME, TIME_SECONDS],
-    "pm": [ATTR_PM2_5, CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, "mdi:cloud"],
-    "tmp": [ATTR_TEMPERATURE, TEMP_CELSIUS, "mdi:thermometer"],
-    "hum": [ATTR_HUMIDITY, PERCENTAGE, "mdi:water-percent"],
-    "co2": [ATTR_CARBON_DIOXIDE, CONCENTRATION_PARTS_PER_MILLION, "mdi:molecule-co2"],
-    "voc": [
-        ATTR_VOLATILE_ORGANIC_COMPOUNDS,
-        CONCENTRATION_PARTS_PER_BILLION,
-        "mdi:cloud",
-    ],
-    "allpollu": [ATTR_FOOBOT_INDEX, PERCENTAGE, "mdi:percent"],
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="time",
+        name=ATTR_TIME,
+        native_unit_of_measurement=TIME_SECONDS,
+    ),
+    SensorEntityDescription(
+        key="pm",
+        name=ATTR_PM2_5,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        icon="mdi:cloud",
+    ),
+    SensorEntityDescription(
+        key="tmp",
+        name=ATTR_TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key="hum",
+        name=ATTR_HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:water-percent",
+    ),
+    SensorEntityDescription(
+        key="co2",
+        name=ATTR_CARBON_DIOXIDE,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        icon="mdi:molecule-co2",
+    ),
+    SensorEntityDescription(
+        key="voc",
+        name=ATTR_VOLATILE_ORGANIC_COMPOUNDS,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        icon="mdi:cloud",
+    ),
+    SensorEntityDescription(
+        key="allpollu",
+        name=ATTR_FOOBOT_INDEX,
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:percent",
+    ),
+)
 
 SCAN_INTERVAL = timedelta(minutes=10)
 PARALLEL_UPDATES = 1
@@ -67,17 +100,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     client = FoobotClient(
         token, username, async_get_clientsession(hass), timeout=TIMEOUT
     )
-    dev = []
+    entities = []
     try:
         devices = await client.get_devices()
         _LOGGER.debug("The following devices were found: %s", devices)
         for device in devices:
             foobot_data = FoobotData(client, device["uuid"])
-            for sensor_type in SENSOR_TYPES:
-                if sensor_type == "time":
-                    continue
-                foobot_sensor = FoobotSensor(foobot_data, device, sensor_type)
-                dev.append(foobot_sensor)
+            entities.extend(
+                [
+                    FoobotSensor(foobot_data, device, description)
+                    for description in SENSOR_TYPES
+                    if description.key != "time"
+                ]
+            )
     except (
         aiohttp.client_exceptions.ClientConnectorError,
         asyncio.TimeoutError,
@@ -89,48 +124,28 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     except FoobotClient.ClientError:
         _LOGGER.error("Failed to fetch data from foobot servers")
         return
-    async_add_entities(dev, True)
+    async_add_entities(entities, True)
 
 
 class FoobotSensor(SensorEntity):
     """Implementation of a Foobot sensor."""
 
-    def __init__(self, data, device, sensor_type):
+    def __init__(self, data, device, description: SensorEntityDescription):
         """Initialize the sensor."""
-        self._uuid = device["uuid"]
+        self.entity_description = description
         self.foobot_data = data
-        self._name = f"Foobot {device['name']} {SENSOR_TYPES[sensor_type][0]}"
-        self.type = sensor_type
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+
+        self._attr_name = f"Foobot {device['name']} {description.name}"
+        self._attr_unique_id = f"{device['uuid']}_{description.key}"
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return SENSOR_TYPES[self.type][2]
-
-    @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         try:
-            data = self.foobot_data.data[self.type]
+            data = self.foobot_data.data[self.entity_description.key]
         except (KeyError, TypeError):
             data = None
         return data
-
-    @property
-    def unique_id(self):
-        """Return the unique id of this entity."""
-        return f"{self._uuid}_{self.type}"
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity."""
-        return self._unit_of_measurement
 
     async def async_update(self):
         """Get the latest data."""

@@ -2,5 +2,6 @@
   "domain": "thethingsnetwork",
   "name": "The Things Network",
   "documentation": "https://www.home-assistant.io/integrations/thethingsnetwork",
-  "codeowners": ["@fabaff"]
+  "codeowners": ["@fabaff"],
+  "iot_class": "local_push"
 }

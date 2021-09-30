@@ -4,18 +4,12 @@
             "port_name_in_use": "P\u0159\u00edslu\u0161enstv\u00ed nebo p\u0159emost\u011bn\u00ed se stejn\u00fdm n\u00e1zvem nebo portem je ji\u017e nastaveno."
         },
         "step": {
-            "accessory_mode": {
-                "data": {
-                    "entity_id": "Entita"
-                }
-            },
             "pairing": {
                 "title": "P\u00e1rov\u00e1n\u00ed s HomeKit"
             },
             "user": {
                 "data": {
-                    "include_domains": "Dom\u00e9ny, kter\u00e9 maj\u00ed b\u00fdt zahrnuty",
-                    "mode": "Re\u017eim"
+                    "include_domains": "Dom\u00e9ny, kter\u00e9 maj\u00ed b\u00fdt zahrnuty"
                 },
                 "title": "Vyberte dom\u00e9ny, kter\u00e9 chcete zahrnout"
             }
@@ -24,9 +18,6 @@
     "options": {
         "step": {
             "advanced": {
-                "data": {
-                    "safe_mode": "Nouzov\u00fd re\u017eim (povolit pouze v p\u0159\u00edpad\u011b, \u017ee p\u00e1rov\u00e1n\u00ed sel\u017ee)"
-                },
                 "description": "Tato nastaven\u00ed je t\u0159eba upravit pouze v p\u0159\u00edpad\u011b, \u017ee HomeKit nen\u00ed funk\u010dn\u00ed.",
                 "title": "Pokro\u010dil\u00e9 nastaven\u00ed"
             },

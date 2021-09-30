@@ -9,7 +9,7 @@
             "old_firmware": "Nem t\u00e1mogatott r\u00e9gi firmware a Bond eszk\u00f6z\u00f6n - k\u00e9rj\u00fck friss\u00edtsd, miel\u0151tt folytatn\u00e1d",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
-        "flow_title": "Bond: {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "confirm": {
                 "data": {

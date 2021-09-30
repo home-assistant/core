@@ -9,7 +9,7 @@
             "invalid_auth": "Ugyldig godkjenning",
             "project_error": "Kunne ikke f\u00e5 prosjektinformasjon."
         },
-        "flow_title": "",
+        "flow_title": "{project_url}",
         "step": {
             "reauth": {
                 "data": {

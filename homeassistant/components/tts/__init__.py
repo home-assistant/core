@@ -9,7 +9,7 @@ import logging
 import mimetypes
 import os
 import re
-from typing import cast
+from typing import Optional, Tuple, cast
 
 from aiohttp import web
 import mutagen
@@ -33,13 +33,12 @@ from homeassistant.const import (
     HTTP_NOT_FOUND,
     PLATFORM_FORMAT,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.service import async_set_service_schema
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.util.yaml import load_yaml
@@ -47,6 +46,8 @@ from homeassistant.util.yaml import load_yaml
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
+
+TtsAudioType = Tuple[Optional[str], Optional[bytes]]
 
 ATTR_CACHE = "cache"
 ATTR_LANGUAGE = "language"
@@ -519,7 +520,7 @@ class SpeechManager:
 class Provider:
     """Represent a single TTS provider."""
 
-    hass: HomeAssistantType | None = None
+    hass: HomeAssistant | None = None
     name: str | None = None
 
     @property

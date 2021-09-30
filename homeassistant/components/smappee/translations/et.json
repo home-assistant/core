@@ -9,7 +9,7 @@
             "missing_configuration": "Osis pole seadistatud. Palun vaata dokumentatsiooni.",
             "no_url_available": "URL pole saadaval. Rohkem teavet [check the help section]({docs_url})"
         },
-        "flow_title": "",
+        "flow_title": "{name}",
         "step": {
             "environment": {
                 "data": {

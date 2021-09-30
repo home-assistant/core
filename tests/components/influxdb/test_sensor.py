@@ -313,7 +313,7 @@ async def test_config_failure(hass, config_ext):
 async def test_state_matches_query_result(
     hass, mock_client, config_ext, queries, set_query_mock, make_resultset
 ):
-    """Test state of sensor matches respone from query api."""
+    """Test state of sensor matches response from query api."""
     set_query_mock(mock_client, return_value=make_resultset(42))
 
     sensors = await _setup(hass, config_ext, queries, ["sensor.test"])
@@ -344,7 +344,7 @@ async def test_state_matches_query_result(
 async def test_state_matches_first_query_result_for_multiple_return(
     hass, caplog, mock_client, config_ext, queries, set_query_mock, make_resultset
 ):
-    """Test state of sensor matches respone from query api."""
+    """Test state of sensor matches response from query api."""
     set_query_mock(mock_client, return_value=make_resultset(42, "not used"))
 
     sensors = await _setup(hass, config_ext, queries, ["sensor.test"])
@@ -370,7 +370,7 @@ async def test_state_matches_first_query_result_for_multiple_return(
 async def test_state_for_no_results(
     hass, caplog, mock_client, config_ext, queries, set_query_mock
 ):
-    """Test state of sensor matches respone from query api."""
+    """Test state of sensor matches response from query api."""
     set_query_mock(mock_client)
 
     sensors = await _setup(hass, config_ext, queries, ["sensor.test"])

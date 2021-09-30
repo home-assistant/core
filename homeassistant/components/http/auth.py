@@ -1,28 +1,33 @@
 """Authentication for HTTP component."""
+from __future__ import annotations
+
+from collections.abc import Awaitable, Callable
+from datetime import timedelta
 import logging
 import secrets
+from typing import Final
 from urllib.parse import unquote
 
 from aiohttp import hdrs
-from aiohttp.web import middleware
+from aiohttp.web import Application, Request, StreamResponse, middleware
 import jwt
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
 from .const import KEY_AUTHENTICATED, KEY_HASS_REFRESH_TOKEN_ID, KEY_HASS_USER
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 _LOGGER = logging.getLogger(__name__)
 
-DATA_API_PASSWORD = "api_password"
-DATA_SIGN_SECRET = "http.auth.sign_secret"
-SIGN_QUERY_PARAM = "authSig"
+DATA_API_PASSWORD: Final = "api_password"
+DATA_SIGN_SECRET: Final = "http.auth.sign_secret"
+SIGN_QUERY_PARAM: Final = "authSig"
 
 
 @callback
-def async_sign_path(hass, refresh_token_id, path, expiration):
+def async_sign_path(
+    hass: HomeAssistant, refresh_token_id: str, path: str, expiration: timedelta
+) -> str:
     """Sign a path for temporary access without auth header."""
     secret = hass.data.get(DATA_SIGN_SECRET)
 
@@ -44,17 +49,19 @@ def async_sign_path(hass, refresh_token_id, path, expiration):
 
 
 @callback
-def setup_auth(hass, app):
+def setup_auth(hass: HomeAssistant, app: Application) -> None:
     """Create auth middleware for the app."""
 
-    async def async_validate_auth_header(request):
+    async def async_validate_auth_header(request: Request) -> bool:
         """
         Test authorization header against access token.
 
         Basic auth_type is legacy code, should be removed with api_password.
         """
         try:
-            auth_type, auth_val = request.headers.get(hdrs.AUTHORIZATION).split(" ", 1)
+            auth_type, auth_val = request.headers.get(hdrs.AUTHORIZATION, "").split(
+                " ", 1
+            )
         except ValueError:
             # If no space in authorization header
             return False
@@ -71,7 +78,7 @@ def setup_auth(hass, app):
         request[KEY_HASS_REFRESH_TOKEN_ID] = refresh_token.id
         return True
 
-    async def async_validate_signed_request(request):
+    async def async_validate_signed_request(request: Request) -> bool:
         """Validate a signed request."""
         secret = hass.data.get(DATA_SIGN_SECRET)
 
@@ -103,7 +110,9 @@ def setup_auth(hass, app):
         return True
 
     @middleware
-    async def auth_middleware(request, handler):
+    async def auth_middleware(
+        request: Request, handler: Callable[[Request], Awaitable[StreamResponse]]
+    ) -> StreamResponse:
         """Authenticate as middleware."""
         authenticated = False
 

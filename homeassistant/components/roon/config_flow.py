@@ -18,7 +18,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({"host": str})
+DATA_SCHEMA = vol.Schema({vol.Required("host"): str})
 
 TIMEOUT = 120
 
@@ -105,7 +105,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for roon."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize the Roon flow."""

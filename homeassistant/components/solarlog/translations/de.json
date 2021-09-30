@@ -11,7 +11,7 @@
             "user": {
                 "data": {
                     "host": "Host",
-                    "name": "Das Pr\u00e4fix, das f\u00fcr Ihre Solar-Log-Sensoren verwendet werden soll"
+                    "name": "Das Pr\u00e4fix, das f\u00fcr deine Solar-Log-Sensoren verwendet werden soll"
                 },
                 "title": "Definiere deine Solar-Log-Verbindung"
             }

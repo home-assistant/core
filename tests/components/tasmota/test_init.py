@@ -5,6 +5,7 @@ from unittest.mock import call
 
 from homeassistant.components import websocket_api
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
+from homeassistant.helpers import device_registry as dr
 
 from .test_common import DEFAULT_CONFIG
 
@@ -22,14 +23,18 @@ async def test_device_remove(
     await hass.async_block_till_done()
 
     # Verify device entry is created
-    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
+    device_entry = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
     assert device_entry is not None
 
     device_reg.async_remove_device(device_entry.id)
     await hass.async_block_till_done()
 
     # Verify device entry is removed
-    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
+    device_entry = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
     assert device_entry is None
 
     # Verify retained discovery topic has been cleared
@@ -52,7 +57,7 @@ async def test_device_remove_non_tasmota_device(
     mac = "12:34:56:AB:CD:EF"
     device_entry = device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={("mac", mac)},
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
     )
     assert device_entry is not None
 
@@ -60,7 +65,9 @@ async def test_device_remove_non_tasmota_device(
     await hass.async_block_till_done()
 
     # Verify device entry is removed
-    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
+    device_entry = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
     assert device_entry is None
 
     # Verify no Tasmota discovery message was sent
@@ -76,7 +83,7 @@ async def test_device_remove_stale_tasmota_device(
     mac = "12:34:56:AB:CD:EF"
     device_entry = device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={("mac", mac)},
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
     )
     assert device_entry is not None
 
@@ -84,7 +91,9 @@ async def test_device_remove_stale_tasmota_device(
     await hass.async_block_till_done()
 
     # Verify device entry is removed
-    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
+    device_entry = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
     assert device_entry is None
 
     # Verify retained discovery topic has been cleared
@@ -109,7 +118,9 @@ async def test_tasmota_ws_remove_discovered_device(
     await hass.async_block_till_done()
 
     # Verify device entry is created
-    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
+    device_entry = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
     assert device_entry is not None
 
     client = await hass_ws_client(hass)
@@ -120,7 +131,9 @@ async def test_tasmota_ws_remove_discovered_device(
     assert response["success"]
 
     # Verify device entry is cleared
-    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
+    device_entry = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
     assert device_entry is None
 
 
@@ -135,7 +148,9 @@ async def test_tasmota_ws_remove_discovered_device_twice(
     await hass.async_block_till_done()
 
     # Verify device entry is created
-    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
+    device_entry = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
     assert device_entry is not None
 
     client = await hass_ws_client(hass)
@@ -163,7 +178,7 @@ async def test_tasmota_ws_remove_non_tasmota_device(
 
     device_entry = device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={("mac", "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     assert device_entry is not None
 

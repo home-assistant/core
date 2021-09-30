@@ -3,5 +3,6 @@
   "name": "Sky Hub",
   "documentation": "https://www.home-assistant.io/integrations/sky_hub",
   "requirements": ["pyskyqhub==0.1.3"],
-  "codeowners": ["@rogerselwyn"]
+  "codeowners": ["@rogerselwyn"],
+  "iot_class": "local_polling"
 }

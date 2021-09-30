@@ -24,20 +24,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class CloudRemoteBinary(BinarySensorEntity):
     """Representation of an Cloud Remote UI Connection binary sensor."""
 
+    _attr_name = "Remote UI"
+    _attr_device_class = DEVICE_CLASS_CONNECTIVITY
+    _attr_should_poll = False
+    _attr_unique_id = "cloud-remote-ui-connectivity"
+
     def __init__(self, cloud):
         """Initialize the binary sensor."""
         self.cloud = cloud
         self._unsub_dispatcher = None
-
-    @property
-    def name(self) -> str:
-        """Return the name of the binary sensor, if any."""
-        return "Remote UI"
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return "cloud-remote-ui-connectivity"
 
     @property
     def is_on(self) -> bool:
@@ -45,19 +40,9 @@ class CloudRemoteBinary(BinarySensorEntity):
         return self.cloud.remote.is_connected
 
     @property
-    def device_class(self) -> str:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_CONNECTIVITY
-
-    @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.cloud.remote.certificate is not None
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state."""
-        return False
 
     async def async_added_to_hass(self):
         """Register update dispatcher."""

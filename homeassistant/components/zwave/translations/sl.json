@@ -12,8 +12,7 @@
                     "network_key": "Omre\u017eni klju\u010d (pustite prazno za samodejno generiranje)",
                     "usb_path": "USB Pot"
                 },
-                "description": "Za informacije o konfiguracijskih spremenljivka si oglejte https://www.home-assistant.io/docs/z-wave/installation/",
-                "title": "Nastavite Z-Wave"
+                "description": "Za informacije o konfiguracijskih spremenljivka si oglejte https://www.home-assistant.io/docs/z-wave/installation/"
             }
         }
     },

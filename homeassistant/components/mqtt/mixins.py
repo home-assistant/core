@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import abstractmethod
 import json
 import logging
+from typing import Callable
 
 import voluptuous as vol
 
@@ -37,7 +38,7 @@ from .discovery import (
     clear_discovery_hash,
     set_discovery_hash,
 )
-from .models import Message
+from .models import ReceiveMessage
 from .subscription import async_subscribe_topics, async_unsubscribe_topics
 from .util import valid_subscribe_topic
 
@@ -66,6 +67,25 @@ CONF_SW_VERSION = "sw_version"
 CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
 CONF_SUGGESTED_AREA = "suggested_area"
+
+MQTT_ATTRIBUTES_BLOCKED = {
+    "assumed_state",
+    "available",
+    "context_recent_time",
+    "device_class",
+    "device_info",
+    "entity_picture",
+    "entity_registry_enabled_default",
+    "extra_state_attributes",
+    "force_update",
+    "icon",
+    "name",
+    "should_poll",
+    "state",
+    "supported_features",
+    "unique_id",
+    "unit_of_measurement",
+}
 
 MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
     {
@@ -175,9 +195,11 @@ async def async_setup_entry_helper(hass, domain, async_setup, schema):
 class MqttAttributes(Entity):
     """Mixin used for platforms that support JSON attributes."""
 
+    _attributes_extra_blocked: frozenset[str] = frozenset()
+
     def __init__(self, config: dict) -> None:
         """Initialize the JSON attributes mixin."""
-        self._attributes = None
+        self._attributes: dict | None = None
         self._attributes_sub_state = None
         self._attributes_config = config
 
@@ -199,14 +221,20 @@ class MqttAttributes(Entity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def attributes_message_received(msg: Message) -> None:
+        def attributes_message_received(msg: ReceiveMessage) -> None:
             try:
                 payload = msg.payload
                 if attr_tpl is not None:
                     payload = attr_tpl.async_render_with_possible_json_value(payload)
-                json_dict = json.loads(payload)
+                json_dict = json.loads(payload) if isinstance(payload, str) else None
                 if isinstance(json_dict, dict):
-                    self._attributes = json_dict
+                    filtered_dict = {
+                        k: v
+                        for k, v in json_dict.items()
+                        if k not in MQTT_ATTRIBUTES_BLOCKED
+                        and k not in self._attributes_extra_blocked
+                    }
+                    self._attributes = filtered_dict
                     self.async_write_ha_state()
                 else:
                     _LOGGER.warning("JSON result was not a dictionary")
@@ -245,7 +273,7 @@ class MqttAvailability(Entity):
     def __init__(self, config: dict) -> None:
         """Initialize the availability mixin."""
         self._availability_sub_state = None
-        self._available = {}
+        self._available: dict = {}
         self._available_latest = False
         self._availability_setup_from_config(config)
 
@@ -290,7 +318,7 @@ class MqttAvailability(Entity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def availability_message_received(msg: Message) -> None:
+        def availability_message_received(msg: ReceiveMessage) -> None:
             """Handle a new received MQTT availability message."""
             topic = msg.topic
             if msg.payload == self._avail_topics[topic][CONF_PAYLOAD_AVAILABLE]:
@@ -302,7 +330,10 @@ class MqttAvailability(Entity):
 
             self.async_write_ha_state()
 
-        self._available = {topic: False for topic in self._avail_topics}
+        self._available = {
+            topic: (self._available[topic] if topic in self._available else False)
+            for topic in self._avail_topics
+        }
         topics = {
             f"availability_{topic}": {
                 "topic": topic,
@@ -370,7 +401,7 @@ class MqttDiscoveryUpdate(Entity):
         """Initialize the discovery update mixin."""
         self._discovery_data = discovery_data
         self._discovery_update = discovery_update
-        self._remove_signal = None
+        self._remove_signal: Callable | None = None
         self._removed_from_hass = False
 
     async def async_added_to_hass(self) -> None:

@@ -2,7 +2,7 @@
     "source": "controller",
     "event": "node added",
     "node": {
-        "nodeId": 53,
+        "nodeId": 67,
         "index": 0,
         "status": 0,
         "ready": false,
@@ -17,7 +17,7 @@
         "interviewAttempts": 1,
         "endpoints": [
             {
-                "nodeId": 53,
+                "nodeId": 67,
                 "index": 0
             }
         ],

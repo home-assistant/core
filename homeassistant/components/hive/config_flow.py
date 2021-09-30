@@ -20,7 +20,6 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Hive config flow."""
 
     VERSION = CONFIG_ENTRY_VERSION
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize the config flow."""

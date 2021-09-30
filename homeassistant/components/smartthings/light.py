@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Sequence
+from collections.abc import Sequence
 
 from pysmartthings import Capability
 

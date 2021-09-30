@@ -1,4 +1,6 @@
 """Support for IP Cameras."""
+from __future__ import annotations
+
 import asyncio
 from contextlib import closing
 import logging
@@ -106,7 +108,9 @@ class MjpegCamera(Camera):
             self._auth = aiohttp.BasicAuth(self._username, password=self._password)
         self._verify_ssl = device_info.get(CONF_VERIFY_SSL)
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         # DigestAuth is not supported
         if (
@@ -130,11 +134,17 @@ class MjpegCamera(Camera):
         except aiohttp.ClientError as err:
             _LOGGER.error("Error getting new camera image from %s: %s", self._name, err)
 
-    def camera_image(self):
+        return None
+
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         if self._username and self._password:
             if self._authentication == HTTP_DIGEST_AUTHENTICATION:
-                auth = HTTPDigestAuth(self._username, self._password)
+                auth: HTTPDigestAuth | HTTPBasicAuth = HTTPDigestAuth(
+                    self._username, self._password
+                )
             else:
                 auth = HTTPBasicAuth(self._username, self._password)
             req = requests.get(

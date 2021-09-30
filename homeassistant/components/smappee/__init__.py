@@ -1,7 +1,6 @@
 """The Smappee integration."""
-import asyncio
 
-from pysmappee import Smappee
+from pysmappee import Smappee, helper, mqtt
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -13,6 +12,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from . import api, config_flow
@@ -38,7 +38,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Smappee component."""
     hass.data[DOMAIN] = {}
 
@@ -72,11 +72,24 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Smappee from a zeroconf or config entry."""
     if CONF_IP_ADDRESS in entry.data:
-        smappee_api = api.api.SmappeeLocalApi(ip=entry.data[CONF_IP_ADDRESS])
-        smappee = Smappee(api=smappee_api, serialnumber=entry.data[CONF_SERIALNUMBER])
+        if helper.is_smappee_genius(entry.data[CONF_SERIALNUMBER]):
+            # next generation: local mqtt broker
+            smappee_mqtt = mqtt.SmappeeLocalMqtt(
+                serial_number=entry.data[CONF_SERIALNUMBER]
+            )
+            await hass.async_add_executor_job(smappee_mqtt.start_and_wait_for_config)
+            smappee = Smappee(
+                api=smappee_mqtt, serialnumber=entry.data[CONF_SERIALNUMBER]
+            )
+        else:
+            # legacy devices through local api
+            smappee_api = api.api.SmappeeLocalApi(ip=entry.data[CONF_IP_ADDRESS])
+            smappee = Smappee(
+                api=smappee_api, serialnumber=entry.data[CONF_SERIALNUMBER]
+            )
         await hass.async_add_executor_job(smappee.load_local_service_location)
     else:
         implementation = (
@@ -92,28 +105,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data[DOMAIN][entry.entry_id] = SmappeeBase(hass, smappee)
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
-
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id, None)
-
     return unload_ok
 
 

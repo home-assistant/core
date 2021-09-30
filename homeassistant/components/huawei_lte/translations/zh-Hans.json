@@ -1,7 +1,8 @@
 {
     "config": {
         "error": {
-            "incorrect_username": "\u7528\u6237\u540d\u9519\u8bef"
+            "incorrect_username": "\u7528\u6237\u540d\u9519\u8bef",
+            "login_attempts_exceeded": "\u5df2\u8d85\u8fc7\u6700\u5927\u767b\u5f55\u6b21\u6570\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5"
         }
     }
 }

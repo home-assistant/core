@@ -16,7 +16,7 @@
             "no_usable_service": "Leiti seade kuid ei suudetud tuvastada moodust \u00fchenduse loomiseks. Kui n\u00e4ed seda teadet pidevalt, proovi m\u00e4\u00e4rata seadme IP-aadress v\u00f5i taask\u00e4ivita Apple TV.",
             "unknown": "Ootamatu t\u00f5rge"
         },
-        "flow_title": "Apple TV: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "description": "Oled  Home Assistantile lisamas Apple TV-d nimega {name}.\n\n**Protsessi l\u00f5puleviimiseks pead v\u00f5ib-olla sisestama mitu PIN-koodi.**\n\nPane t\u00e4hele, et  selle sidumisega * ei saa * v\u00e4lja l\u00fclitada oma Apple TV-d. Ainult Home Assistant-i meediam\u00e4ngija l\u00fclitub v\u00e4lja!",

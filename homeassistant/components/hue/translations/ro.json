@@ -4,7 +4,8 @@
             "all_configured": "Toate pun\u021bile Philips Hue sunt deja configurate",
             "already_configured": "Gateway-ul este deja configurat",
             "cannot_connect": "Nu se poate conecta la gateway.",
-            "discover_timeout": "Imposibil de descoperit podurile Hue"
+            "discover_timeout": "Imposibil de descoperit podurile Hue",
+            "unknown": "Eroare nea\u0219teptat\u0103"
         },
         "error": {
             "linking": "A ap\u0103rut o eroare de leg\u0103tur\u0103 necunoscut\u0103.",

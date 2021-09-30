@@ -2,14 +2,16 @@
 from __future__ import annotations
 
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
 import dataclasses
 import logging
+import threading
 from typing import Any
 
 from homeassistant import bootstrap
 from homeassistant.core import callback
 from homeassistant.helpers.frame import warn_use
+from homeassistant.util.executor import InterruptibleThreadPoolExecutor
+from homeassistant.util.thread import deadlock_safe_shutdown
 
 # mypy: disallow-any-generics
 
@@ -64,23 +66,13 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):  # type: ignore[valid
         if self.debug:
             loop.set_debug(True)
 
-        executor = ThreadPoolExecutor(
+        executor = InterruptibleThreadPoolExecutor(
             thread_name_prefix="SyncWorker", max_workers=MAX_EXECUTOR_WORKERS
         )
         loop.set_default_executor(executor)
         loop.set_default_executor = warn_use(  # type: ignore
             loop.set_default_executor, "sets default executor on the event loop"
         )
-
-        # Shut down executor when we shut down loop
-        orig_close = loop.close
-
-        def close() -> None:
-            executor.shutdown(wait=True)
-            orig_close()
-
-        loop.close = close  # type: ignore
-
         return loop
 
 
@@ -103,6 +95,9 @@ async def setup_and_run_hass(runtime_config: RuntimeConfig) -> int:
 
     if hass is None:
         return 1
+
+    # threading._shutdown can deadlock forever
+    threading._shutdown = deadlock_safe_shutdown  # type: ignore[attr-defined] # pylint: disable=protected-access
 
     return await hass.async_run()
 

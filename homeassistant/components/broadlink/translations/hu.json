@@ -5,6 +5,7 @@
             "already_in_progress": "A konfigur\u00e1ci\u00f3 m\u00e1r folyamatban van.",
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "invalid_host": "\u00c9rv\u00e9nytelen hosztn\u00e9v vagy IP-c\u00edm",
+            "not_supported": "Az eszk\u00f6z nem t\u00e1mogatott",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "error": {

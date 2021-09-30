@@ -22,10 +22,10 @@ async def system_health_info(hass):
     health_info.update(await hass.data[DOMAIN]["resources"].async_get_info())
 
     dashboards_info = await asyncio.gather(
-        *[
+        *(
             hass.data[DOMAIN]["dashboards"][dashboard].async_get_info()
             for dashboard in hass.data[DOMAIN]["dashboards"]
-        ]
+        )
     )
 
     modes = set()

@@ -72,8 +72,6 @@ async def test_successful_discovery_and_auth(hass):
         "homeassistant.components.roon.config_flow.RoonDiscovery",
         return_value=RoonDiscoveryMock(),
     ), patch(
-        "homeassistant.components.roon.async_setup", return_value=True
-    ), patch(
         "homeassistant.components.roon.async_setup_entry",
         return_value=True,
     ):
@@ -111,8 +109,6 @@ async def test_unsuccessful_discovery_user_form_and_auth(hass):
     ), patch(
         "homeassistant.components.roon.config_flow.RoonDiscovery",
         return_value=RoonDiscoveryFailedMock(),
-    ), patch(
-        "homeassistant.components.roon.async_setup", return_value=True
     ), patch(
         "homeassistant.components.roon.async_setup_entry",
         return_value=True,
@@ -161,8 +157,6 @@ async def test_successful_discovery_no_auth(hass):
         "homeassistant.components.roon.config_flow.AUTHENTICATE_TIMEOUT",
         0.01,
     ), patch(
-        "homeassistant.components.roon.async_setup", return_value=True
-    ), patch(
         "homeassistant.components.roon.async_setup_entry",
         return_value=True,
     ):
@@ -195,8 +189,6 @@ async def test_unexpected_exception(hass):
     ), patch(
         "homeassistant.components.roon.config_flow.RoonDiscovery",
         return_value=RoonDiscoveryMock(),
-    ), patch(
-        "homeassistant.components.roon.async_setup", return_value=True
     ), patch(
         "homeassistant.components.roon.async_setup_entry",
         return_value=True,

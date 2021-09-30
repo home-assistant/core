@@ -12,7 +12,8 @@
             "installation": {
                 "data": {
                     "giid": "Telep\u00edt\u00e9s"
-                }
+                },
+                "description": "A Home Assistant t\u00f6bb Verisure telep\u00edt\u00e9st tal\u00e1lt a Saj\u00e1t oldalak fi\u00f3kodban. K\u00e9rj\u00fck, v\u00e1lassza ki azt a telep\u00edt\u00e9st, amelyet hozz\u00e1 k\u00edv\u00e1n adni a Home Assistant programhoz."
             },
             "reauth_confirm": {
                 "data": {

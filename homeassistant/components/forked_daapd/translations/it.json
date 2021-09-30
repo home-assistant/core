@@ -12,7 +12,7 @@
             "wrong_password": "Password errata",
             "wrong_server_type": "L'integrazione forked-daapd richiede un server forked-daapd con versione >= 27.0."
         },
-        "flow_title": "server forked-daapd: {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {

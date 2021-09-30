@@ -1,22 +1,22 @@
 """Define fixtures available for all tests."""
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
-from pytest import fixture
-from surepy import SurePetcare
+import pytest
+from surepy import MESTART_RESOURCE
 
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from . import MOCK_API_DATA
 
 
-@fixture
-async def surepetcare(hass):
+async def _mock_call(method, resource):
+    if method == "GET" and resource == MESTART_RESOURCE:
+        return {"data": MOCK_API_DATA}
+
+
+@pytest.fixture
+async def surepetcare():
     """Mock the SurePetcare for easier testing."""
-    with patch("homeassistant.components.surepetcare.SurePetcare") as mock_surepetcare:
-        instance = mock_surepetcare.return_value = SurePetcare(
-            "test-username",
-            "test-password",
-            hass.loop,
-            async_get_clientsession(hass),
-            api_timeout=1,
-        )
-        instance._get_resource = AsyncMock(return_value=None)
-        yield mock_surepetcare
+    with patch("surepy.SureAPIClient", autospec=True) as mock_client_class:
+        client = mock_client_class.return_value
+        client.resources = {}
+        client.call = _mock_call
+        yield client

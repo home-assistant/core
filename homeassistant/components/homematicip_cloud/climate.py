@@ -26,7 +26,8 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
 from .hap import HomematicipHAP
@@ -43,7 +44,7 @@ HMIP_ECO_CM = "ECO"
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the HomematicIP climate from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
@@ -73,7 +74,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
             self._simple_heating = self._first_radiator_thermostat
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         return {
             "identifiers": {(HMIPC_DOMAIN, self._device.id)},
@@ -261,7 +262,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         return self._home.get_functionalHome(IndoorClimateHome)
 
     @property
-    def _device_profiles(self) -> list[str]:
+    def _device_profiles(self) -> list[Any]:
         """Return the relevant profiles."""
         return [
             profile
@@ -300,10 +301,10 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         )
 
     @property
-    def _relevant_profile_group(self) -> list[str]:
+    def _relevant_profile_group(self) -> dict[str, int]:
         """Return the relevant profile groups."""
         if self._disabled_by_cooling_mode:
-            return []
+            return {}
 
         return HEATING_PROFILES if self._heat_mode_enabled else COOLING_PROFILES
 

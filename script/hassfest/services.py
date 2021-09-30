@@ -65,25 +65,23 @@ def grep_dir(path: pathlib.Path, glob_pattern: str, search_pattern: str) -> bool
 
 def validate_services(integration: Integration):
     """Validate services."""
-    # Find if integration uses services
-    has_services = grep_dir(
-        integration.path,
-        "**/*.py",
-        r"(hass\.services\.(register|async_register))|async_register_entity_service",
-    )
-
-    if not has_services:
-        return
-
     try:
         data = load_yaml(str(integration.path / "services.yaml"))
     except FileNotFoundError:
-        integration.add_error("services", "Registers services but has no services.yaml")
+        # Find if integration uses services
+        has_services = grep_dir(
+            integration.path,
+            "**/*.py",
+            r"(hass\.services\.(register|async_register))|async_register_entity_service|async_register_admin_service",
+        )
+
+        if has_services:
+            integration.add_error(
+                "services", "Registers services but has no services.yaml"
+            )
         return
     except HomeAssistantError:
-        integration.add_error(
-            "services", "Registers services but unable to load services.yaml"
-        )
+        integration.add_error("services", "Unable to load services.yaml")
         return
 
     try:

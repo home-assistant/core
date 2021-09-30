@@ -19,7 +19,7 @@ from homeassistant.components.airvisual.const import (
     INTEGRATION_TYPE_GEOGRAPHY_NAME,
     INTEGRATION_TYPE_NODE_PRO,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_IP_ADDRESS,
@@ -349,7 +349,7 @@ async def test_step_reauth(hass):
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth"}, data=entry_data
+        DOMAIN, context={"source": SOURCE_REAUTH}, data=entry_data
     )
     assert result["step_id"] == "reauth_confirm"
 

@@ -16,5 +16,6 @@ PLATFORM_LOOKUP = {
     "water_heater": "water_heater",
 }
 SERVICE_BOOST_HOT_WATER = "boost_hot_water"
-SERVICE_BOOST_HEATING = "boost_heating"
+SERVICE_BOOST_HEATING_ON = "boost_heating_on"
+SERVICE_BOOST_HEATING_OFF = "boost_heating_off"
 WATER_HEATER_MODES = ["on", "off"]

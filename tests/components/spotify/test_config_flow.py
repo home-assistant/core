@@ -5,7 +5,7 @@ from spotipy import SpotifyException
 
 from homeassistant import data_entry_flow, setup
 from homeassistant.components.spotify.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -181,7 +181,7 @@ async def test_reauthentication(
     old_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth"}, data=old_entry.data
+        DOMAIN, context={"source": SOURCE_REAUTH}, data=old_entry.data
     )
 
     flows = hass.config_entries.flow.async_progress()
@@ -246,7 +246,7 @@ async def test_reauth_account_mismatch(
     old_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth"}, data=old_entry.data
+        DOMAIN, context={"source": SOURCE_REAUTH}, data=old_entry.data
     )
 
     flows = hass.config_entries.flow.async_progress()

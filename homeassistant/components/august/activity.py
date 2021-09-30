@@ -31,7 +31,6 @@ class ActivityStream(AugustSubscriberMixin):
         self._house_ids = house_ids
         self._latest_activities = {}
         self._last_update_time = None
-        self._abort_async_track_time_interval = None
         self.pubnub = pubnub
         self._update_debounce = {}
 
@@ -52,7 +51,7 @@ class ActivityStream(AugustSubscriberMixin):
         return Debouncer(
             self._hass,
             _LOGGER,
-            cooldown=ACTIVITY_UPDATE_INTERVAL.seconds,
+            cooldown=ACTIVITY_UPDATE_INTERVAL.total_seconds(),
             immediate=True,
             function=_async_update_house_id,
         )
@@ -62,9 +61,9 @@ class ActivityStream(AugustSubscriberMixin):
         """Cleanup any debounces."""
         for debouncer in self._update_debounce.values():
             debouncer.async_cancel()
-        for house_id in self._schedule_updates:
-            if self._schedule_updates[house_id] is not None:
-                self._schedule_updates[house_id]()
+        for house_id, updater in self._schedule_updates.items():
+            if updater is not None:
+                updater()
                 self._schedule_updates[house_id] = None
 
     def get_latest_device_activity(self, device_id, activity_types):
@@ -99,10 +98,10 @@ class ActivityStream(AugustSubscriberMixin):
     async def _async_update_device_activities(self, time):
         _LOGGER.debug("Start retrieving device activities")
         await asyncio.gather(
-            *[
+            *(
                 self._update_debounce[house_id].async_call()
                 for house_id in self._house_ids
-            ]
+            )
         )
         self._last_update_time = time
 
@@ -121,7 +120,9 @@ class ActivityStream(AugustSubscriberMixin):
         # we catch the case where the lock operator is
         # not updated or the lock failed
         self._schedule_updates[house_id] = async_call_later(
-            self._hass, ACTIVITY_UPDATE_INTERVAL.seconds + 1, _update_house_activities
+            self._hass,
+            ACTIVITY_UPDATE_INTERVAL.total_seconds() + 1,
+            _update_house_activities,
         )
 
     async def _async_update_house_id(self, house_id):

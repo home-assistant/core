@@ -61,7 +61,7 @@ class ZWaveLogView(HomeAssistantView):
     def _get_log(self, hass, lines):
         """Retrieve the logfile content."""
         logfilepath = hass.config.path(OZW_LOG_FILENAME)
-        with open(logfilepath) as logfile:
+        with open(logfilepath, encoding="utf8") as logfile:
             data = (line.rstrip() for line in logfile)
             if lines == 0:
                 loglines = list(data)
@@ -226,7 +226,7 @@ class ZWaveProtectionView(HomeAssistantView):
                 return self.json(protection_options)
             protections = node.get_protections()
             protection_options = {
-                "value_id": "{:d}".format(list(protections)[0]),
+                "value_id": f"{list(protections)[0]:d}",
                 "selected": node.get_protection_item(list(protections)[0]),
                 "options": node.get_protection_items(list(protections)[0]),
             }

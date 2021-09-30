@@ -297,7 +297,7 @@ class ComfoConnectSensor(SensorEntity):
         self.schedule_update_ha_state()
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the entity."""
         try:
             return self._ccb.data[self._sensor_id]
@@ -325,7 +325,7 @@ class ComfoConnectSensor(SensorEntity):
         return SENSOR_TYPES[self._sensor_type][ATTR_ICON]
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
         return SENSOR_TYPES[self._sensor_type][ATTR_UNIT]
 

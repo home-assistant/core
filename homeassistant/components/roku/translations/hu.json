@@ -19,13 +19,18 @@
                 "title": "Roku"
             },
             "ssdp_confirm": {
+                "data": {
+                    "one": "\u00dcres",
+                    "other": "\u00dcres"
+                },
                 "description": "Be szeretn\u00e9d \u00e1ll\u00edtani a {name}-t?",
                 "title": "Roku"
             },
             "user": {
                 "data": {
                     "host": "Hoszt"
-                }
+                },
+                "description": "Adja meg Roku adatait."
             }
         }
     }

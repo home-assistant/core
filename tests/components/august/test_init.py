@@ -9,11 +9,7 @@ from yalexs.exceptions import AugustApiAIOHTTPError
 from homeassistant import setup
 from homeassistant.components.august.const import DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
-from homeassistant.config_entries import (
-    ENTRY_STATE_LOADED,
-    ENTRY_STATE_SETUP_ERROR,
-    ENTRY_STATE_SETUP_RETRY,
-)
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_LOCK,
@@ -36,7 +32,7 @@ from tests.components.august.mocks import (
 
 
 async def test_august_is_offline(hass):
-    """Config entry state is ENTRY_STATE_SETUP_RETRY when august is offline."""
+    """Config entry state is SETUP_RETRY when august is offline."""
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -53,7 +49,7 @@ async def test_august_is_offline(hass):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ENTRY_STATE_SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unlock_throws_august_api_http_error(hass):
@@ -141,7 +137,7 @@ async def test_lock_has_doorsense(hass):
 
 
 async def test_auth_fails(hass):
-    """Config entry state is ENTRY_STATE_SETUP_ERROR when auth fails."""
+    """Config entry state is SETUP_ERROR when auth fails."""
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -159,7 +155,7 @@ async def test_auth_fails(hass):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ENTRY_STATE_SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
     flows = hass.config_entries.flow.async_progress()
 
@@ -167,7 +163,7 @@ async def test_auth_fails(hass):
 
 
 async def test_bad_password(hass):
-    """Config entry state is ENTRY_STATE_SETUP_ERROR when the password has been changed."""
+    """Config entry state is SETUP_ERROR when the password has been changed."""
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -187,7 +183,7 @@ async def test_bad_password(hass):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ENTRY_STATE_SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
     flows = hass.config_entries.flow.async_progress()
 
@@ -195,7 +191,7 @@ async def test_bad_password(hass):
 
 
 async def test_http_failure(hass):
-    """Config entry state is ENTRY_STATE_SETUP_RETRY when august is offline."""
+    """Config entry state is SETUP_RETRY when august is offline."""
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -213,13 +209,13 @@ async def test_http_failure(hass):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ENTRY_STATE_SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
     assert hass.config_entries.flow.async_progress() == []
 
 
 async def test_unknown_auth_state(hass):
-    """Config entry state is ENTRY_STATE_SETUP_ERROR when august is in an unknown auth state."""
+    """Config entry state is SETUP_ERROR when august is in an unknown auth state."""
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -237,7 +233,7 @@ async def test_unknown_auth_state(hass):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ENTRY_STATE_SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
     flows = hass.config_entries.flow.async_progress()
 
@@ -245,7 +241,7 @@ async def test_unknown_auth_state(hass):
 
 
 async def test_requires_validation_state(hass):
-    """Config entry state is ENTRY_STATE_SETUP_ERROR when august requires validation."""
+    """Config entry state is SETUP_ERROR when august requires validation."""
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -265,10 +261,36 @@ async def test_requires_validation_state(hass):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ENTRY_STATE_SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
     assert len(hass.config_entries.flow.async_progress()) == 1
     assert hass.config_entries.flow.async_progress()[0]["context"]["source"] == "reauth"
+
+
+async def test_unknown_auth_http_401(hass):
+    """Config entry state is SETUP_ERROR when august gets an http."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=_mock_get_config()[DOMAIN],
+        title="August august",
+    )
+    config_entry.add_to_hass(hass)
+    assert hass.config_entries.flow.async_progress() == []
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    with patch(
+        "yalexs.authenticator_async.AuthenticatorAsync.async_authenticate",
+        return_value=_mock_august_authentication("original_token", 1234, None),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+
+    assert flows[0]["step_id"] == "reauth_validate"
 
 
 async def test_load_unload(hass):
@@ -280,7 +302,7 @@ async def test_load_unload(hass):
         hass, [august_operative_lock, august_inoperative_lock]
     )
 
-    assert config_entry.state == ENTRY_STATE_LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()

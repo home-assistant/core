@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "area_id": "\u5206\u5340 ID",
+                    "name": "\u540d\u7a31",
+                    "password": "\u5bc6\u78bc",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                }
+            },
+            "user": {
+                "data": {
+                    "area_id": "\u5206\u5340 ID",
+                    "name": "\u540d\u7a31",
+                    "password": "\u5bc6\u78bc",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                }
+            }
+        }
+    }
+}

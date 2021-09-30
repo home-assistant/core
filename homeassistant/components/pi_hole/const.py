@@ -1,6 +1,10 @@
 """Constants for the pi_hole integration."""
+from __future__ import annotations
+
+from dataclasses import dataclass
 from datetime import timedelta
 
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import PERCENTAGE
 
 DOMAIN = "pi_hole"
@@ -25,28 +29,67 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 DATA_KEY_API = "api"
 DATA_KEY_COORDINATOR = "coordinator"
 
-SENSOR_DICT = {
-    "ads_blocked_today": ["Ads Blocked Today", "ads", "mdi:close-octagon-outline"],
-    "ads_percentage_today": [
-        "Ads Percentage Blocked Today",
-        PERCENTAGE,
-        "mdi:close-octagon-outline",
-    ],
-    "clients_ever_seen": ["Seen Clients", "clients", "mdi:account-outline"],
-    "dns_queries_today": [
-        "DNS Queries Today",
-        "queries",
-        "mdi:comment-question-outline",
-    ],
-    "domains_being_blocked": ["Domains Blocked", "domains", "mdi:block-helper"],
-    "queries_cached": ["DNS Queries Cached", "queries", "mdi:comment-question-outline"],
-    "queries_forwarded": [
-        "DNS Queries Forwarded",
-        "queries",
-        "mdi:comment-question-outline",
-    ],
-    "unique_clients": ["DNS Unique Clients", "clients", "mdi:account-outline"],
-    "unique_domains": ["DNS Unique Domains", "domains", "mdi:domain"],
-}
 
-SENSOR_LIST = list(SENSOR_DICT)
+@dataclass
+class PiHoleSensorEntityDescription(SensorEntityDescription):
+    """Describes PiHole sensor entity."""
+
+    icon: str = "mdi:pi-hole"
+
+
+SENSOR_TYPES: tuple[PiHoleSensorEntityDescription, ...] = (
+    PiHoleSensorEntityDescription(
+        key="ads_blocked_today",
+        name="Ads Blocked Today",
+        native_unit_of_measurement="ads",
+        icon="mdi:close-octagon-outline",
+    ),
+    PiHoleSensorEntityDescription(
+        key="ads_percentage_today",
+        name="Ads Percentage Blocked Today",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:close-octagon-outline",
+    ),
+    PiHoleSensorEntityDescription(
+        key="clients_ever_seen",
+        name="Seen Clients",
+        native_unit_of_measurement="clients",
+        icon="mdi:account-outline",
+    ),
+    PiHoleSensorEntityDescription(
+        key="dns_queries_today",
+        name="DNS Queries Today",
+        native_unit_of_measurement="queries",
+        icon="mdi:comment-question-outline",
+    ),
+    PiHoleSensorEntityDescription(
+        key="domains_being_blocked",
+        name="Domains Blocked",
+        native_unit_of_measurement="domains",
+        icon="mdi:block-helper",
+    ),
+    PiHoleSensorEntityDescription(
+        key="queries_cached",
+        name="DNS Queries Cached",
+        native_unit_of_measurement="queries",
+        icon="mdi:comment-question-outline",
+    ),
+    PiHoleSensorEntityDescription(
+        key="queries_forwarded",
+        name="DNS Queries Forwarded",
+        native_unit_of_measurement="queries",
+        icon="mdi:comment-question-outline",
+    ),
+    PiHoleSensorEntityDescription(
+        key="unique_clients",
+        name="DNS Unique Clients",
+        native_unit_of_measurement="clients",
+        icon="mdi:account-outline",
+    ),
+    PiHoleSensorEntityDescription(
+        key="unique_domains",
+        name="DNS Unique Domains",
+        native_unit_of_measurement="domains",
+        icon="mdi:domain",
+    ),
+)

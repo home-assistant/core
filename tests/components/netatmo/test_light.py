@@ -1,19 +1,25 @@
 """The tests for Netatmo light."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
+from homeassistant.components.netatmo import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, CONF_WEBHOOK_ID
 
-from .common import FAKE_WEBHOOK_ACTIVATION, simulate_webhook
+from .common import FAKE_WEBHOOK_ACTIVATION, selected_platforms, simulate_webhook
 
 
-async def test_light_setup_and_services(hass, light_entry):
+async def test_light_setup_and_services(hass, config_entry, netatmo_auth):
     """Test setup and services."""
-    webhook_id = light_entry.data[CONF_WEBHOOK_ID]
+    with selected_platforms(["light"]):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
 
     # Fake webhook activation
     await simulate_webhook(hass, webhook_id, FAKE_WEBHOOK_ACTIVATION)
@@ -45,7 +51,7 @@ async def test_light_setup_and_services(hass, light_entry):
     assert hass.states.get(light_entity).state == "on"
 
     # Test turning light off
-    with patch("pyatmo.camera.CameraData.set_state") as mock_set_state:
+    with patch("pyatmo.camera.AsyncCameraData.async_set_state") as mock_set_state:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
@@ -60,7 +66,7 @@ async def test_light_setup_and_services(hass, light_entry):
         )
 
     # Test turning light on
-    with patch("pyatmo.camera.CameraData.set_state") as mock_set_state:
+    with patch("pyatmo.camera.AsyncCameraData.async_set_state") as mock_set_state:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
@@ -73,3 +79,43 @@ async def test_light_setup_and_services(hass, light_entry):
             camera_id="12:34:56:00:a5:a4",
             floodlight="on",
         )
+
+
+async def test_setup_component_no_devices(hass, config_entry):
+    """Test setup with no devices."""
+    fake_post_hits = 0
+
+    async def fake_post_request_no_data(*args, **kwargs):
+        """Fake error during requesting backend data."""
+        nonlocal fake_post_hits
+        fake_post_hits += 1
+        return "{}"
+
+    with patch(
+        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+    ) as mock_auth, patch(
+        "homeassistant.components.netatmo.PLATFORMS", ["light"]
+    ), patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+    ), patch(
+        "homeassistant.components.webhook.async_generate_url"
+    ):
+        mock_auth.return_value.async_post_request.side_effect = (
+            fake_post_request_no_data
+        )
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Fake webhook activation
+        await simulate_webhook(
+            hass, config_entry.data[CONF_WEBHOOK_ID], FAKE_WEBHOOK_ACTIVATION
+        )
+        await hass.async_block_till_done()
+
+        assert fake_post_hits == 1
+
+        assert hass.config_entries.async_entries(DOMAIN)
+        assert len(hass.states.async_all()) == 0

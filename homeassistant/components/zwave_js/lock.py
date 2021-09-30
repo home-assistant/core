@@ -2,16 +2,16 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable
+from typing import Any
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import (
+from zwave_js_server.const import CommandClass
+from zwave_js_server.const.command_class.lock import (
     ATTR_CODE_SLOT,
     ATTR_USERCODE,
     LOCK_CMD_CLASS_TO_LOCKED_STATE_MAP,
     LOCK_CMD_CLASS_TO_PROPERTY_MAP,
-    CommandClass,
     DoorLockMode,
 )
 from zwave_js_server.model.value import Value as ZwaveValue
@@ -23,8 +23,9 @@ from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
+from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
@@ -46,7 +47,9 @@ SERVICE_CLEAR_LOCK_USERCODE = "clear_lock_usercode"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Z-Wave lock from config entry."""
     client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
@@ -59,16 +62,15 @@ async def async_setup_entry(
 
         async_add_entities(entities)
 
-    hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(
             hass, f"{DOMAIN}_{config_entry.entry_id}_add_{LOCK_DOMAIN}", async_add_lock
         )
     )
 
-    platform = entity_platform.current_platform.get()
-    assert platform
+    platform = entity_platform.async_get_current_platform()
 
-    platform.async_register_entity_service(  # type: ignore
+    platform.async_register_entity_service(
         SERVICE_SET_LOCK_USERCODE,
         {
             vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
@@ -77,7 +79,7 @@ async def async_setup_entry(
         "async_set_lock_usercode",
     )
 
-    platform.async_register_entity_service(  # type: ignore
+    platform.async_register_entity_service(
         SERVICE_CLEAR_LOCK_USERCODE,
         {
             vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
@@ -101,9 +103,7 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
             ]
         ) == int(self.info.primary_value.value)
 
-    async def _set_lock_state(
-        self, target_state: str, **kwargs: dict[str, Any]
-    ) -> None:
+    async def _set_lock_state(self, target_state: str, **kwargs: Any) -> None:
         """Set the lock state."""
         target_value: ZwaveValue = self.get_zwave_value(
             LOCK_CMD_CLASS_TO_PROPERTY_MAP[self.info.primary_value.command_class]
@@ -114,11 +114,11 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
                 STATE_TO_ZWAVE_MAP[self.info.primary_value.command_class][target_state],
             )
 
-    async def async_lock(self, **kwargs: dict[str, Any]) -> None:
+    async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         await self._set_lock_state(STATE_LOCKED)
 
-    async def async_unlock(self, **kwargs: dict[str, Any]) -> None:
+    async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         await self._set_lock_state(STATE_UNLOCKED)
 

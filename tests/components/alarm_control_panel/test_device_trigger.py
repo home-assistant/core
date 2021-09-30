@@ -9,6 +9,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
@@ -48,7 +49,50 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_get_triggers(hass, device_reg, entity_reg):
+@pytest.mark.parametrize(
+    "set_state,features_reg,features_state,expected_trigger_types",
+    [
+        (False, 0, 0, ["triggered", "disarmed", "arming"]),
+        (
+            False,
+            47,
+            0,
+            [
+                "triggered",
+                "disarmed",
+                "arming",
+                "armed_home",
+                "armed_away",
+                "armed_night",
+                "armed_vacation",
+            ],
+        ),
+        (True, 0, 0, ["triggered", "disarmed", "arming"]),
+        (
+            True,
+            0,
+            47,
+            [
+                "triggered",
+                "disarmed",
+                "arming",
+                "armed_home",
+                "armed_away",
+                "armed_night",
+                "armed_vacation",
+            ],
+        ),
+    ],
+)
+async def test_get_triggers(
+    hass,
+    device_reg,
+    entity_reg,
+    set_state,
+    features_reg,
+    features_state,
+    expected_trigger_types,
+):
     """Test we get the expected triggers from an alarm_control_panel."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -56,53 +100,30 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         config_entry_id=config_entry.entry_id,
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
-    hass.states.async_set(
-        "alarm_control_panel.test_5678", "attributes", {"supported_features": 15}
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        supported_features=features_reg,
     )
-    expected_triggers = [
+    if set_state:
+        hass.states.async_set(
+            "alarm_control_panel.test_5678",
+            "attributes",
+            {"supported_features": features_state},
+        )
+    expected_triggers = []
+
+    expected_triggers += [
         {
             "platform": "device",
             "domain": DOMAIN,
-            "type": "disarmed",
+            "type": trigger,
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "triggered",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "arming",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "armed_home",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "armed_away",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "armed_night",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
-        },
+        }
+        for trigger in expected_trigger_types
     ]
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
     assert_lists_same(triggers, expected_triggers)
@@ -238,6 +259,25 @@ async def test_if_fires_on_state_change(hass, calls):
                         },
                     },
                 },
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": "",
+                        "entity_id": "alarm_control_panel.entity",
+                        "type": "armed_vacation",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "armed_vacation - {{ trigger.platform}} - "
+                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
+                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                            )
+                        },
+                    },
+                },
             ]
         },
     )
@@ -285,6 +325,15 @@ async def test_if_fires_on_state_change(hass, calls):
     assert (
         calls[4].data["some"]
         == "armed_night - device - alarm_control_panel.entity - armed_away - armed_night - None"
+    )
+
+    # Fake that the entity is armed vacation.
+    hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_ARMED_VACATION)
+    await hass.async_block_till_done()
+    assert len(calls) == 6
+    assert (
+        calls[5].data["some"]
+        == "armed_vacation - device - alarm_control_panel.entity - armed_night - armed_vacation - None"
     )
 
 

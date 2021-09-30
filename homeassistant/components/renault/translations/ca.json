@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El compte ja ha estat configurat",
+            "kamereon_no_account": "No s'ha pogut trobar cap compte Kamereon."
+        },
+        "error": {
+            "invalid_credentials": "Autenticaci\u00f3 inv\u00e0lida"
+        },
+        "step": {
+            "kamereon": {
+                "data": {
+                    "kamereon_account_id": "ID del compte Kamereon"
+                },
+                "title": "Seleccioneu l'ID del compte Kamereon"
+            },
+            "user": {
+                "data": {
+                    "locale": "Llengua/regi\u00f3",
+                    "password": "Contrasenya",
+                    "username": "Correu electr\u00f2nic"
+                },
+                "title": "Defineix les credencials de Renault"
+            }
+        }
+    }
+}

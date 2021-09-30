@@ -3,7 +3,8 @@ from unittest.mock import patch
 
 from serial import SerialException
 
-from homeassistant.components.litejet.const import DOMAIN
+from homeassistant import config_entries, data_entry_flow
+from homeassistant.components.litejet.const import CONF_DEFAULT_TRANSITION, DOMAIN
 from homeassistant.const import CONF_PORT
 
 from tests.common import MockConfigEntry
@@ -12,7 +13,7 @@ from tests.common import MockConfigEntry
 async def test_show_config_form(hass):
     """Test show configuration form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == "form"
@@ -24,7 +25,7 @@ async def test_create_entry(hass, mock_litejet):
     test_data = {CONF_PORT: "/dev/test"}
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}, data=test_data
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
     )
 
     assert result["type"] == "create_entry"
@@ -43,7 +44,7 @@ async def test_flow_entry_already_exists(hass):
     test_data = {CONF_PORT: "/dev/test"}
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}, data=test_data
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
     )
 
     assert result["type"] == "abort"
@@ -58,7 +59,7 @@ async def test_flow_open_failed(hass):
         mock_pylitejet.side_effect = SerialException
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data=test_data
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
         )
 
     assert result["type"] == "form"
@@ -69,9 +70,28 @@ async def test_import_step(hass):
     """Test initializing via import step."""
     test_data = {CONF_PORT: "/dev/imported"}
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "import"}, data=test_data
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=test_data
     )
 
     assert result["type"] == "create_entry"
     assert result["title"] == test_data[CONF_PORT]
     assert result["data"] == test_data
+
+
+async def test_options(hass):
+    """Test updating options."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_PORT: "/dev/test"})
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_DEFAULT_TRANSITION: 12},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"] == {CONF_DEFAULT_TRANSITION: 12}
