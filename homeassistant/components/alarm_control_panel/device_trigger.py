@@ -1,18 +1,20 @@
 """Provides device automations for Alarm control panel."""
 from __future__ import annotations
 
+from typing import Any, Final
+
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
+    SUPPORT_ALARM_ARM_VACATION,
 )
 from homeassistant.components.automation import AutomationActionType
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
@@ -22,20 +24,27 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry
+from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
 
-BASIC_TRIGGER_TYPES = {"triggered", "disarmed", "arming"}
-TRIGGER_TYPES = BASIC_TRIGGER_TYPES | {"armed_home", "armed_away", "armed_night"}
+BASIC_TRIGGER_TYPES: Final[set[str]] = {"triggered", "disarmed", "arming"}
+TRIGGER_TYPES: Final[set[str]] = BASIC_TRIGGER_TYPES | {
+    "armed_home",
+    "armed_away",
+    "armed_night",
+    "armed_vacation",
+}
 
-TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA: Final = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
@@ -44,23 +53,19 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, Any]]:
     """List device triggers for Alarm control panel devices."""
     registry = await entity_registry.async_get_registry(hass)
-    triggers = []
+    triggers: list[dict[str, str]] = []
 
     # Get all the integrations entities for this device
     for entry in entity_registry.async_entries_for_device(registry, device_id):
         if entry.domain != DOMAIN:
             continue
 
-        entity_state = hass.states.get(entry.entity_id)
-
-        # We need a state or else we can't populate the HVAC and preset modes.
-        if entity_state is None:
-            continue
-
-        supported_features = entity_state.attributes[ATTR_SUPPORTED_FEATURES]
+        supported_features = get_supported_features(hass, entry.entity_id)
 
         # Add triggers for each entity that belongs to this integration
         base_trigger = {
@@ -98,11 +103,20 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
                     CONF_TYPE: "armed_night",
                 }
             )
+        if supported_features & SUPPORT_ALARM_ARM_VACATION:
+            triggers.append(
+                {
+                    **base_trigger,
+                    CONF_TYPE: "armed_vacation",
+                }
+            )
 
     return triggers
 
 
-async def async_get_trigger_capabilities(hass: HomeAssistant, config: dict) -> dict:
+async def async_get_trigger_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
     return {
         "extra_fields": vol.Schema(
@@ -130,6 +144,8 @@ async def async_attach_trigger(
         to_state = STATE_ALARM_ARMED_AWAY
     elif config[CONF_TYPE] == "armed_night":
         to_state = STATE_ALARM_ARMED_NIGHT
+    elif config[CONF_TYPE] == "armed_vacation":
+        to_state = STATE_ALARM_ARMED_VACATION
 
     state_config = {
         state_trigger.CONF_PLATFORM: "state",

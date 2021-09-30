@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Lokalizacja jest ju\u017c skonfigurowana"
+        },
+        "error": {
+            "invalid_hosts": "Nieprawid\u0142owe hosta"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "exclude": "Adresy sieciowe (rozdzielone przecinkami) do wykluczenia ze skanowania",
+                    "home_interval": "Minimalna liczba minut mi\u0119dzy skanami aktywnych urz\u0105dze\u0144 (oszcz\u0119dzanie baterii)",
+                    "hosts": "Adresy sieciowe (oddzielone przecinkami) do skanowania",
+                    "scan_options": "Surowe konfigurowalne opcje skanowania dla Nmap"
+                },
+                "description": "Skonfiguruj hosta do skanowania przez Nmap. Adresy sieciowe i te wykluczone mog\u0105 by\u0107 adresami IP (192.168.1.1), sieciami IP (192.168.0.0/24) lub zakresami IP (192.168.1.0-32)."
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_hosts": "Nieprawid\u0142owe hosta"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "exclude": "Adresy sieciowe (rozdzielone przecinkami) do wykluczenia ze skanowania",
+                    "home_interval": "Minimalna liczba minut mi\u0119dzy skanami aktywnych urz\u0105dze\u0144 (oszcz\u0119dzanie baterii)",
+                    "hosts": "Adresy sieciowe (oddzielone przecinkami) do skanowania",
+                    "interval_seconds": "Cz\u0119stotliwo\u015b\u0107 skanowania",
+                    "scan_options": "Surowe konfigurowalne opcje skanowania dla Nmap",
+                    "track_new_devices": "\u015aled\u017a nowe urz\u0105dzenia"
+                },
+                "description": "Skonfiguruj hosta do skanowania przez Nmap. Adresy sieciowe i te wykluczone mog\u0105 by\u0107 adresami IP (192.168.1.1), sieciami IP (192.168.0.0/24) lub zakresami IP (192.168.1.0-32)."
+            }
+        }
+    },
+    "title": "Nmap Tracker"
+}

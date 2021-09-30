@@ -167,7 +167,7 @@ class MpdDevice(MediaPlayerEntity):
                 self._commands = list(await self._client.commands())
 
             await self._fetch_status()
-        except (mpd.ConnectionError, OSError, BrokenPipeError, ValueError) as error:
+        except (mpd.ConnectionError, OSError, ValueError) as error:
             # Cleanly disconnect in case connection is not in valid state
             _LOGGER.debug("Error updating status: %s", error)
             self._disconnect()

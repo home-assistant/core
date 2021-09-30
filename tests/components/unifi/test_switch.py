@@ -793,8 +793,6 @@ async def test_restore_client_succeed(hass, aioclient_mock):
         title="Mock Title",
         data=ENTRY_CONFIG,
         source="test",
-        connection_class=config_entries.CONN_CLASS_LOCAL_POLL,
-        system_options={},
         options={},
         entry_id=1,
     )
@@ -885,8 +883,6 @@ async def test_restore_client_no_old_state(hass, aioclient_mock):
         title="Mock Title",
         data=ENTRY_CONFIG,
         source="test",
-        connection_class=config_entries.CONN_CLASS_LOCAL_POLL,
-        system_options={},
         options={},
         entry_id=1,
     )

@@ -67,10 +67,10 @@ def _append(path: Path, text):
     path.write_text(path.read_text() + text)
 
 
-def _custom_tasks(template, info) -> None:
+def _custom_tasks(template, info: Info) -> None:
     """Handle custom tasks for templates."""
     if template == "integration":
-        changes = {"codeowners": [info.codeowner]}
+        changes = {"codeowners": [info.codeowner], "iot_class": info.iot_class}
 
         if info.requirement:
             changes["requirements"] = [info.requirement]
@@ -113,7 +113,6 @@ def _custom_tasks(template, info) -> None:
     elif template == "config_flow":
         info.update_manifest(config_flow=True)
         info.update_strings(
-            title=info.name,
             config={
                 "step": {
                     "user": {
@@ -138,7 +137,6 @@ def _custom_tasks(template, info) -> None:
     elif template == "config_flow_discovery":
         info.update_manifest(config_flow=True)
         info.update_strings(
-            title=info.name,
             config={
                 "step": {
                     "confirm": {
@@ -155,7 +153,6 @@ def _custom_tasks(template, info) -> None:
     elif template == "config_flow_oauth2":
         info.update_manifest(config_flow=True, dependencies=["http"])
         info.update_strings(
-            title=info.name,
             config={
                 "step": {
                     "pick_implementation": {

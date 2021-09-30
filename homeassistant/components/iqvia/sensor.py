@@ -104,9 +104,12 @@ class ForecastSensor(IQVIAEntity):
     @callback
     def update_from_latest_data(self):
         """Update the sensor."""
-        data = self.coordinator.data.get("Location")
+        if not self.available:
+            return
 
-        if not data or not data.get("periods"):
+        data = self.coordinator.data.get("Location", {})
+
+        if not data.get("periods"):
             return
 
         indices = [p["Index"] for p in data["periods"]]
@@ -117,7 +120,8 @@ class ForecastSensor(IQVIAEntity):
             if i["minimum"] <= average <= i["maximum"]
         ]
 
-        self._attrs.update(
+        self._attr_native_value = average
+        self._attr_extra_state_attributes.update(
             {
                 ATTR_CITY: data["City"].title(),
                 ATTR_RATING: rating,
@@ -131,10 +135,16 @@ class ForecastSensor(IQVIAEntity):
             outlook_coordinator = self.hass.data[DOMAIN][DATA_COORDINATOR][
                 self._entry.entry_id
             ][TYPE_ALLERGY_OUTLOOK]
-            self._attrs[ATTR_OUTLOOK] = outlook_coordinator.data.get("Outlook")
-            self._attrs[ATTR_SEASON] = outlook_coordinator.data.get("Season")
 
-        self._state = average
+            if not outlook_coordinator.last_update_success:
+                return
+
+            self._attr_extra_state_attributes[
+                ATTR_OUTLOOK
+            ] = outlook_coordinator.data.get("Outlook")
+            self._attr_extra_state_attributes[
+                ATTR_SEASON
+            ] = outlook_coordinator.data.get("Season")
 
 
 class IndexSensor(IQVIAEntity):
@@ -169,7 +179,7 @@ class IndexSensor(IQVIAEntity):
             if i["minimum"] <= period["Index"] <= i["maximum"]
         ]
 
-        self._attrs.update(
+        self._attr_extra_state_attributes.update(
             {
                 ATTR_CITY: data["City"].title(),
                 ATTR_RATING: rating,
@@ -181,7 +191,7 @@ class IndexSensor(IQVIAEntity):
         if self._type in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW):
             for idx, attrs in enumerate(period["Triggers"]):
                 index = idx + 1
-                self._attrs.update(
+                self._attr_extra_state_attributes.update(
                     {
                         f"{ATTR_ALLERGEN_GENUS}_{index}": attrs["Genus"],
                         f"{ATTR_ALLERGEN_NAME}_{index}": attrs["Name"],
@@ -191,7 +201,7 @@ class IndexSensor(IQVIAEntity):
         elif self._type in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW):
             for idx, attrs in enumerate(period["Triggers"]):
                 index = idx + 1
-                self._attrs.update(
+                self._attr_extra_state_attributes.update(
                     {
                         f"{ATTR_ALLERGEN_NAME}_{index}": attrs["Name"],
                         f"{ATTR_ALLERGEN_AMOUNT}_{index}": attrs["PPM"],
@@ -199,6 +209,8 @@ class IndexSensor(IQVIAEntity):
                 )
         elif self._type == TYPE_DISEASE_TODAY:
             for attrs in period["Triggers"]:
-                self._attrs[f"{attrs['Name'].lower()}_index"] = attrs["Index"]
+                self._attr_extra_state_attributes[
+                    f"{attrs['Name'].lower()}_index"
+                ] = attrs["Index"]
 
-        self._state = period["Index"]
+        self._attr_native_value = period["Index"]

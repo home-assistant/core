@@ -14,7 +14,8 @@
             "reauth": {
                 "data": {
                     "password": "Jelsz\u00f3"
-                }
+                },
+                "description": "A hiteles\u00edt\u00e9si tokenek \u00e9rv\u00e9nytelenn\u00e9 v\u00e1ltak, a l\u00e9trehoz\u00e1shoz jelentkezzen be."
             },
             "user": {
                 "data": {

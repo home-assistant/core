@@ -54,6 +54,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import utcnow
 
 from tests.common import async_fire_time_changed
@@ -65,6 +66,10 @@ VALVE_POSITION = "valve_position"
 
 async def test_setup_thermostat(hass, cube: MaxCube):
     """Test a successful setup of a thermostat device."""
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_is_registered(ENTITY_ID)
+    entity = entity_registry.async_get(ENTITY_ID)
+    assert entity.unique_id == "AABBCCDD01"
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVAC_MODE_AUTO
@@ -94,6 +99,11 @@ async def test_setup_thermostat(hass, cube: MaxCube):
 
 async def test_setup_wallthermostat(hass, cube: MaxCube):
     """Test a successful setup of a wall thermostat device."""
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_is_registered(WALL_ENTITY_ID)
+    entity = entity_registry.async_get(WALL_ENTITY_ID)
+    assert entity.unique_id == "AABBCCDD02"
+
     state = hass.states.get(WALL_ENTITY_ID)
     assert state.state == HVAC_MODE_OFF
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "TestRoom TestWallThermostat"

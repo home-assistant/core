@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "not_lutron_device": "\u6240\u767c\u73fe\u7684\u88dd\u7f6e\u4e26\u975e Lutron \u88dd\u7f6e"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
-        "flow_title": "Lutron Cas\u00e9ta {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "import_failed": {
                 "description": "\u7121\u6cd5\u8a2d\u5b9a\u7531 configuration.yaml \u532f\u5165\u7684 bridge\uff08\u4e3b\u6a5f\uff1a{host}\uff09\u3002",

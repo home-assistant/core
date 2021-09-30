@@ -8,7 +8,8 @@ from bond_api import BPUPSubscriptions, DeviceType
 from homeassistant import core
 from homeassistant.components import fan
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.core import CoreState
 from homeassistant.util import utcnow
 
 from .common import patch_bond_device_state, setup_platform
@@ -167,3 +168,26 @@ async def test_polling_fails_and_recovers(hass: core.HomeAssistant):
     state = hass.states.get("fan.name_1")
     assert state.state == STATE_ON
     assert state.attributes[fan.ATTR_PERCENTAGE] == 33
+
+
+async def test_polling_stops_at_the_stop_event(hass: core.HomeAssistant):
+    """Test that polling stops at the stop event."""
+    await setup_platform(
+        hass, FAN_DOMAIN, ceiling_fan("name-1"), bond_device_id="test-device-id"
+    )
+
+    with patch_bond_device_state(side_effect=asyncio.TimeoutError):
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=230))
+        await hass.async_block_till_done()
+
+    assert hass.states.get("fan.name_1").state == STATE_UNAVAILABLE
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    hass.state = CoreState.stopping
+    await hass.async_block_till_done()
+
+    with patch_bond_device_state(return_value={"power": 1, "speed": 1}):
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=230))
+        await hass.async_block_till_done()
+
+    assert hass.states.get("fan.name_1").state == STATE_UNAVAILABLE

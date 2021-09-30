@@ -17,16 +17,6 @@
                 "description": "Inserisci la password per {username}.",
                 "title": "Riautentica un account di August"
             },
-            "user": {
-                "data": {
-                    "login_method": "Metodo di accesso",
-                    "password": "Password",
-                    "timeout": "Timeout (in secondi)",
-                    "username": "Nome utente"
-                },
-                "description": "Se il metodo di accesso \u00e8 \"e-mail\", il nome utente \u00e8 l'indirizzo e-mail. Se il metodo di accesso \u00e8 \"telefono\", il nome utente \u00e8 il numero di telefono nel formato \"+NNNNNNNNN\".",
-                "title": "Configura un account di August"
-            },
             "user_validate": {
                 "data": {
                     "login_method": "Metodo di accesso",

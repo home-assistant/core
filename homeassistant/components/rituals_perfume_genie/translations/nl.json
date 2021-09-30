@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Account is al geconfigureerd"
+            "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",

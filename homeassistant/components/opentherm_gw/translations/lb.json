@@ -20,8 +20,7 @@
         "step": {
             "init": {
                 "data": {
-                    "floor_temperature": "Buedem Temperatur",
-                    "precision": "Pr\u00e4zisioun"
+                    "floor_temperature": "Buedem Temperatur"
                 },
                 "description": "Optioune fir OpenTherm Gateway"
             }

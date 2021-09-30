@@ -1,7 +1,8 @@
 """Common vera code."""
 from __future__ import annotations
 
-from typing import DefaultDict, NamedTuple
+from collections import defaultdict
+from typing import NamedTuple
 
 import pyvera as pv
 
@@ -17,7 +18,7 @@ class ControllerData(NamedTuple):
     """Controller data."""
 
     controller: pv.VeraController
-    devices: DefaultDict[str, list[pv.VeraDevice]]
+    devices: defaultdict[str, list[pv.VeraDevice]]
     scenes: list[pv.VeraScene]
     config_entry: ConfigEntry
 

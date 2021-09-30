@@ -165,7 +165,7 @@ async def test_gather_with_concurrency():
         return runs
 
     results = await hasync.gather_with_concurrency(
-        2, *[_increment_runs_if_in_time() for i in range(4)]
+        2, *(_increment_runs_if_in_time() for i in range(4))
     )
 
     assert results == [2, 2, -1, -1]

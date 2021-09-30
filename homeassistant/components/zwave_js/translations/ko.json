@@ -4,7 +4,6 @@
             "addon_get_discovery_info_failed": "Z-Wave JS \uc560\ub4dc\uc628\uc758 \uac80\uc0c9 \uc815\ubcf4\ub97c \uac00\uc838\uc624\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4.",
             "addon_info_failed": "Z-Wave JS \uc560\ub4dc\uc628\uc758 \uc815\ubcf4\ub97c \uac00\uc838\uc624\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4.",
             "addon_install_failed": "Z-Wave JS \uc560\ub4dc\uc628\uc744 \uc124\uce58\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4.",
-            "addon_missing_discovery_info": "Z-Wave JS \uc560\ub4dc\uc628\uc758 \uac80\uc0c9 \uc815\ubcf4\uac00 \uc5c6\uc2b5\ub2c8\ub2e4.",
             "addon_set_config_failed": "Z-Wave JS \uad6c\uc131\uc744 \uc124\uc815\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4.",
             "addon_start_failed": "Z-Wave JS \uc560\ub4dc\uc628\uc744 \uc2dc\uc791\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4.",
             "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
@@ -49,11 +48,6 @@
             },
             "start_addon": {
                 "title": "Z-Wave JS \uc560\ub4dc\uc628\uc774 \uc2dc\uc791\ud558\ub294 \uc911\uc785\ub2c8\ub2e4."
-            },
-            "user": {
-                "data": {
-                    "url": "URL \uc8fc\uc18c"
-                }
             }
         }
     },

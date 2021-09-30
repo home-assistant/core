@@ -24,5 +24,19 @@
                 }
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "Az eszk\u00f6znek be kell lennie kapcsolva"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_notify": "Adat\u00e9rtes\u00edt\u00e9si szolg\u00e1ltat\u00e1s haszn\u00e1lat\u00e1nak enged\u00e9lyez\u00e9se."
+                }
+            }
+        }
     }
 }

@@ -9,21 +9,19 @@ from typing import Any, Callable, cast
 from awesomeversion import AwesomeVersion
 from hyperion import client, const as hyperion_const
 
+from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SOURCE, CONF_TOKEN
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_registry import (
-    async_entries_for_config_entry,
-    async_get_registry,
-)
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_INSTANCE_CLIENTS,
@@ -37,7 +35,7 @@ from .const import (
     SIGNAL_INSTANCE_REMOVE,
 )
 
-PLATFORMS = [LIGHT_DOMAIN, SWITCH_DOMAIN]
+PLATFORMS = [LIGHT_DOMAIN, SWITCH_DOMAIN, CAMERA_DOMAIN]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,6 +68,11 @@ _LOGGER = logging.getLogger(__name__)
 def get_hyperion_unique_id(server_id: str, instance: int, name: str) -> str:
     """Get a unique_id for a Hyperion instance."""
     return f"{server_id}_{instance}_{name}"
+
+
+def get_hyperion_device_id(server_id: str, instance: int) -> str:
+    """Get an id for a Hyperion device/instance."""
+    return f"{server_id}_{instance}"
 
 
 def split_hyperion_unique_id(unique_id: str) -> tuple[str, int, str] | None:
@@ -109,17 +112,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def _create_reauth_flow(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-) -> None:
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={CONF_SOURCE: SOURCE_REAUTH}, data=config_entry.data
-        )
-    )
-
-
 @callback
 def listen_for_instance_updates(
     hass: HomeAssistant,
@@ -145,11 +137,11 @@ def listen_for_instance_updates(
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Hyperion from a config entry."""
-    host = config_entry.data[CONF_HOST]
-    port = config_entry.data[CONF_PORT]
-    token = config_entry.data.get(CONF_TOKEN)
+    host = entry.data[CONF_HOST]
+    port = entry.data[CONF_PORT]
+    token = entry.data.get(CONF_TOKEN)
 
     hyperion_client = await async_create_connect_hyperion_client(
         host, port, token=token, raw_connection=True
@@ -181,14 +173,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         and token is None
     ):
         await hyperion_client.async_client_disconnect()
-        await _create_reauth_flow(hass, config_entry)
-        return False
+        raise ConfigEntryAuthFailed
 
     # Client login doesn't work? => Reauth.
     if not await hyperion_client.async_client_login():
         await hyperion_client.async_client_disconnect()
-        await _create_reauth_flow(hass, config_entry)
-        return False
+        raise ConfigEntryAuthFailed
 
     # Cannot switch instance or cannot load state? => Not ready.
     if (
@@ -201,7 +191,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     # We need 1 root client (to manage instances being removed/added) and then 1 client
     # per Hyperion server instance which is shared for all entities associated with
     # that instance.
-    hass.data[DOMAIN][config_entry.entry_id] = {
+    hass.data[DOMAIN][entry.entry_id] = {
         CONF_ROOT_CLIENT: hyperion_client,
         CONF_INSTANCE_CLIENTS: {},
         CONF_ON_UNLOAD: [],
@@ -215,13 +205,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     async def async_instances_to_clients_raw(instances: list[dict[str, Any]]) -> None:
         """Convert instances to Hyperion clients."""
-        registry = await async_get_registry(hass)
+        device_registry = dr.async_get(hass)
         running_instances: set[int] = set()
         stopped_instances: set[int] = set()
-        existing_instances = hass.data[DOMAIN][config_entry.entry_id][
-            CONF_INSTANCE_CLIENTS
-        ]
-        server_id = cast(str, config_entry.unique_id)
+        existing_instances = hass.data[DOMAIN][entry.entry_id][CONF_INSTANCE_CLIENTS]
+        server_id = cast(str, entry.unique_id)
 
         # In practice, an instance can be in 3 states as seen by this function:
         #
@@ -250,7 +238,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             instance_name = instance.get(hyperion_const.KEY_FRIENDLY_NAME, DEFAULT_NAME)
             async_dispatcher_send(
                 hass,
-                SIGNAL_INSTANCE_ADD.format(config_entry.entry_id),
+                SIGNAL_INSTANCE_ADD.format(entry.entry_id),
                 instance_num,
                 instance_name,
             )
@@ -259,18 +247,23 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         for instance_num in set(existing_instances) - running_instances:
             del existing_instances[instance_num]
             async_dispatcher_send(
-                hass, SIGNAL_INSTANCE_REMOVE.format(config_entry.entry_id), instance_num
+                hass, SIGNAL_INSTANCE_REMOVE.format(entry.entry_id), instance_num
             )
 
-        # Deregister entities that belong to removed instances.
-        for entry in async_entries_for_config_entry(registry, config_entry.entry_id):
-            data = split_hyperion_unique_id(entry.unique_id)
-            if not data:
-                continue
-            if data[0] == server_id and (
-                data[1] not in running_instances and data[1] not in stopped_instances
-            ):
-                registry.async_remove(entry.entity_id)
+        # Ensure every device associated with this config entry is still in the list of
+        # motionEye cameras, otherwise remove the device (and thus entities).
+        known_devices = {
+            get_hyperion_device_id(server_id, instance_num)
+            for instance_num in running_instances | stopped_instances
+        }
+        for device_entry in dr.async_entries_for_config_entry(
+            device_registry, entry.entry_id
+        ):
+            for (kind, key) in device_entry.identifiers:
+                if kind == DOMAIN and key in known_devices:
+                    break
+            else:
+                device_registry.async_remove_device(device_entry.id)
 
     hyperion_client.set_callbacks(
         {
@@ -280,40 +273,31 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     async def setup_then_listen() -> None:
         await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_setup(config_entry, platform)
+            *(
+                hass.config_entries.async_forward_entry_setup(entry, platform)
                 for platform in PLATFORMS
-            ]
+            )
         )
         assert hyperion_client
         if hyperion_client.instances is not None:
             await async_instances_to_clients_raw(hyperion_client.instances)
-        hass.data[DOMAIN][config_entry.entry_id][CONF_ON_UNLOAD].append(
-            config_entry.add_update_listener(_async_entry_updated)
+        hass.data[DOMAIN][entry.entry_id][CONF_ON_UNLOAD].append(
+            entry.add_update_listener(_async_entry_updated)
         )
 
     hass.async_create_task(setup_then_listen())
     return True
 
 
-async def _async_entry_updated(
-    hass: HomeAssistantType, config_entry: ConfigEntry
-) -> None:
+async def _async_entry_updated(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Handle entry updates."""
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-async def async_unload_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
     if unload_ok and config_entry.entry_id in hass.data[DOMAIN]:
         config_data = hass.data[DOMAIN].pop(config_entry.entry_id)
@@ -322,12 +306,12 @@ async def async_unload_entry(
 
         # Disconnect the shared instance clients.
         await asyncio.gather(
-            *[
+            *(
                 config_data[CONF_INSTANCE_CLIENTS][
                     instance_num
                 ].async_client_disconnect()
                 for instance_num in config_data[CONF_INSTANCE_CLIENTS]
-            ]
+            )
         )
 
         # Disconnect the root client.

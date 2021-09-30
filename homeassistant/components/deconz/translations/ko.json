@@ -14,8 +14,8 @@
         "flow_title": "deCONZ Zigbee \uac8c\uc774\ud2b8\uc6e8\uc774 ({host})",
         "step": {
             "hassio_confirm": {
-                "description": "Hass.io {addon} \uc560\ub4dc\uc628\uc5d0\uc11c \uc81c\uacf5\ub41c deCONZ \uac8c\uc774\ud2b8\uc6e8\uc774\uc5d0 \uc5f0\uacb0\ud558\ub3c4\ub85d Home Assistant\ub97c \uad6c\uc131\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
-                "title": "Hass.io \uc560\ub4dc\uc628\uc758 deCONZ Zigbee \uac8c\uc774\ud2b8\uc6e8\uc774"
+                "description": "{addon} \uc560\ub4dc\uc628\uc5d0\uc11c \uc81c\uacf5\ud558\ub294 deCONZ \uac8c\uc774\ud2b8\uc6e8\uc774\uc5d0 \uc5f0\uacb0\ud558\ub3c4\ub85d Home Assistant\ub97c \uad6c\uc131\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
+                "title": "Home Assistant \uc560\ub4dc\uc628\uc758 deCONZ Zigbee \uac8c\uc774\ud2b8\uc6e8\uc774"
             },
             "link": {
                 "description": "Home Assistant\uc5d0 \ub4f1\ub85d\ud558\ub824\uba74 deCONZ \uac8c\uc774\ud2b8\uc6e8\uc774\ub97c \uc7a0\uae08 \ud574\uc81c\ud574\uc8fc\uc138\uc694.\n\n 1. deCONZ \uc124\uc815 -> \uac8c\uc774\ud2b8\uc6e8\uc774 -> \uace0\uae09\uc73c\ub85c \uc774\ub3d9\ud574\uc8fc\uc138\uc694\n 2. \"\uc571 \uc778\uc99d\ud558\uae30\" \ubc84\ud2bc\uc744 \ub20c\ub7ec\uc8fc\uc138\uc694",
@@ -42,6 +42,10 @@
             "button_2": "\ub450 \ubc88\uc9f8",
             "button_3": "\uc138 \ubc88\uc9f8",
             "button_4": "\ub124 \ubc88\uc9f8",
+            "button_5": "\ub2e4\uc12f \ubc88\uc9f8 \ubc84\ud2bc",
+            "button_6": "\uc5ec\uc12f \ubc88\uc9f8 \ubc84\ud2bc",
+            "button_7": "\uc77c\uacf1 \ubc88\uc9f8 \ubc84\ud2bc",
+            "button_8": "\uc5ec\ub35f \ubc88\uc9f8 \ubc84\ud2bc",
             "close": "\ub2eb\uae30",
             "dim_down": "\uc5b4\ub461\uac8c \ud558\uae30",
             "dim_up": "\ubc1d\uac8c \ud558\uae30",

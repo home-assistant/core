@@ -98,7 +98,7 @@ class WaterFurnaceData(threading.Thread):
 
         # sleep first before the reconnect attempt
         _LOGGER.debug("Sleeping for fail # %s", self._fails)
-        time.sleep(self._fails * ERROR_INTERVAL.seconds)
+        time.sleep(self._fails * ERROR_INTERVAL.total_seconds())
 
         try:
             self.client.login()
@@ -149,4 +149,4 @@ class WaterFurnaceData(threading.Thread):
 
             else:
                 self.hass.helpers.dispatcher.dispatcher_send(UPDATE_TOPIC)
-                time.sleep(SCAN_INTERVAL.seconds)
+                time.sleep(SCAN_INTERVAL.total_seconds())

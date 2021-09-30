@@ -1,0 +1,49 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "port": "[%key:common::config_flow::data::port%]",
+          "protocol": "Protocol",
+          "account": "Account ID",
+          "encryption_key": "Encryption Key",
+          "ping_interval": "Ping Interval (min)",
+          "zones": "Number of zones for the account",
+          "additional_account": "Additional accounts"
+        },
+        "title": "Create a connection for SIA based alarm systems."
+      },
+      "additional_account": {
+        "data": {
+          "account": "[%key:component::sia::config::step::user::data::account%]",
+          "encryption_key": "[%key:component::sia::config::step::user::data::encryption_key%]",
+          "ping_interval": "[%key:component::sia::config::step::user::data::ping_interval%]",
+          "zones": "[%key:component::sia::config::step::user::data::zones%]",
+          "additional_account": "[%key:component::sia::config::step::user::data::additional_account%]"
+        },
+        "title": "Add another account to the current port."
+      }
+    },
+    "error": {
+      "invalid_key_format": "The key is not a hex value, please use only 0-9 and A-F.",
+      "invalid_key_length": "The key is not the right length, it has to be 16, 24 or 32 hex characters.",
+      "invalid_account_format": "The account is not a hex value, please use only 0-9 and A-F.",
+      "invalid_account_length": "The account is not the right length, it has to be between 3 and 16 characters.",
+      "invalid_ping": "The ping interval needs to be between 1 and 1440 minutes.",
+      "invalid_zones": "There needs to be at least 1 zone.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "options": {
+    "step": {
+      "options": {
+        "data": {
+          "ignore_timestamps": "Ignore the timestamp check of the SIA events",
+          "zones": "[%key:component::sia::config::step::user::data::zones%]"
+        },
+        "description": "Set the options for account: {account}",
+        "title": "Options for the SIA Setup."
+      }
+    }
+  }
+}

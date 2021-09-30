@@ -15,9 +15,8 @@ write:
         text:
     level:
       name: Level
-      description: "Log level: debug, info, warning, error, critical."
+      description: "Log level."
       default: error
-      example: debug
       selector:
         select:
           options:

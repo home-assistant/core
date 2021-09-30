@@ -1,7 +1,7 @@
 """Support for Bond generic devices."""
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any
 
 from bond_api import Action, BPUPSubscriptions, DeviceType
 
@@ -9,16 +9,17 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import BPUP_SUBS, DOMAIN, HUB
 from .entity import BondEntity
-from .utils import BondDevice, BondHub
+from .utils import BondHub
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Bond generic devices."""
     data = hass.data[DOMAIN][entry.entry_id]
@@ -37,19 +38,8 @@ async def async_setup_entry(
 class BondSwitch(BondEntity, SwitchEntity):
     """Representation of a Bond generic device."""
 
-    def __init__(self, hub: BondHub, device: BondDevice, bpup_subs: BPUPSubscriptions):
-        """Create HA entity representing Bond generic device (switch)."""
-        super().__init__(hub, device, bpup_subs)
-
-        self._power: bool | None = None
-
     def _apply_state(self, state: dict) -> None:
-        self._power = state.get("power")
-
-    @property
-    def is_on(self) -> bool:
-        """Return True if power is on."""
-        return self._power == 1
+        self._attr_is_on = state.get("power") == 1
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""

@@ -12,6 +12,7 @@
         "step": {
             "user": {
                 "data": {
+                    "mfa": "MFA Code (optioneel)",
                     "password": "Wachtwoord",
                     "username": "E-mail"
                 },

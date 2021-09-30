@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament",
             "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3.",
             "unknown": "Error inesperat"
         },
@@ -9,8 +10,14 @@
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "invalid_zone": "Zona inv\u00e0lida"
         },
-        "flow_title": "Cloudflare: {name}",
+        "flow_title": "{name}",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_token": "Token d'API",
+                    "description": "Torna a autenticar-te amb el compte de Cloudflare."
+                }
+            },
             "records": {
                 "data": {
                     "records": "Registres"

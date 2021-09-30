@@ -3,12 +3,25 @@ from homeassistant.components import search
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
+    entity,
     entity_registry as er,
 )
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+
+MOCK_ENTITY_SOURCES = {
+    "light.platform_config_source": {
+        "source": entity.SOURCE_PLATFORM_CONFIG,
+        "domain": "wled",
+    },
+    "light.config_entry_source": {
+        "source": entity.SOURCE_CONFIG_ENTRY,
+        "config_entry": "config_entry_id",
+        "domain": "wled",
+    },
+}
 
 
 async def test_search(hass):
@@ -47,6 +60,18 @@ async def test_search(hass):
         config_entry=wled_config_entry,
         device_id=wled_device.id,
     )
+
+    entity_sources = {
+        "light.wled_platform_config_source": {
+            "source": entity.SOURCE_PLATFORM_CONFIG,
+            "domain": "wled",
+        },
+        "light.wled_config_entry_source": {
+            "source": entity.SOURCE_CONFIG_ENTRY,
+            "config_entry": wled_config_entry.entry_id,
+            "domain": "wled",
+        },
+    }
 
     # Non related info.
     kitchen_area = area_reg.async_create("Kitchen")
@@ -221,7 +246,7 @@ async def test_search(hass):
         ("automation", "automation.wled_entity"),
         ("automation", "automation.wled_device"),
     ):
-        searcher = search.Searcher(hass, device_reg, entity_reg)
+        searcher = search.Searcher(hass, device_reg, entity_reg, entity_sources)
         results = searcher.async_search(search_type, search_id)
         # Add the item we searched for, it's omitted from results
         results.setdefault(search_type, set()).add(search_id)
@@ -254,7 +279,7 @@ async def test_search(hass):
         ("scene", "scene.scene_wled_hue"),
         ("group", "group.wled_hue"),
     ):
-        searcher = search.Searcher(hass, device_reg, entity_reg)
+        searcher = search.Searcher(hass, device_reg, entity_reg, entity_sources)
         results = searcher.async_search(search_type, search_id)
         # Add the item we searched for, it's omitted from results
         results.setdefault(search_type, set()).add(search_id)
@@ -276,8 +301,13 @@ async def test_search(hass):
         ("script", "script.non_existing"),
         ("automation", "automation.non_existing"),
     ):
-        searcher = search.Searcher(hass, device_reg, entity_reg)
+        searcher = search.Searcher(hass, device_reg, entity_reg, entity_sources)
         assert searcher.async_search(search_type, search_id) == {}
+
+    searcher = search.Searcher(hass, device_reg, entity_reg, entity_sources)
+    assert searcher.async_search("entity", "light.wled_config_entry_source") == {
+        "config_entry": {wled_config_entry.entry_id},
+    }
 
 
 async def test_area_lookup(hass):
@@ -326,13 +356,13 @@ async def test_area_lookup(hass):
         },
     )
 
-    searcher = search.Searcher(hass, device_reg, entity_reg)
+    searcher = search.Searcher(hass, device_reg, entity_reg, MOCK_ENTITY_SOURCES)
     assert searcher.async_search("area", living_room_area.id) == {
         "script": {"script.wled"},
         "automation": {"automation.area_turn_on"},
     }
 
-    searcher = search.Searcher(hass, device_reg, entity_reg)
+    searcher = search.Searcher(hass, device_reg, entity_reg, MOCK_ENTITY_SOURCES)
     assert searcher.async_search("automation", "automation.area_turn_on") == {
         "area": {living_room_area.id},
     }

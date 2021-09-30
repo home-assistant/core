@@ -2,5 +2,6 @@
   "domain": "remote",
   "name": "Remote",
   "documentation": "https://www.home-assistant.io/integrations/remote",
-  "codeowners": []
+  "codeowners": [],
+  "quality_scale": "internal"
 }

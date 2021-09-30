@@ -26,6 +26,7 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_PLATFORM,
     CONF_URL,
+    HTTP_BEARER_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.exceptions import TemplateError
@@ -68,6 +69,7 @@ ATTR_USERNAME = "username"
 ATTR_VERIFY_SSL = "verify_ssl"
 ATTR_TIMEOUT = "timeout"
 ATTR_MESSAGE_TAG = "message_tag"
+ATTR_CHANNEL_POST = "channel_post"
 
 CONF_ALLOWED_CHAT_IDS = "allowed_chat_ids"
 CONF_PROXY_URL = "proxy_url"
@@ -254,7 +256,9 @@ def load_data(
         if url is not None:
             # Load data from URL
             params = {"timeout": 15}
-            if username is not None and password is not None:
+            if authentication == HTTP_BEARER_AUTHENTICATION and password is not None:
+                params["headers"] = {"Authorization": f"Bearer {password}"}
+            elif username is not None and password is not None:
                 if authentication == HTTP_DIGEST_AUTHENTICATION:
                     params["auth"] = HTTPDigestAuth(username, password)
                 else:
@@ -303,9 +307,7 @@ async def async_setup(hass, config):
 
         p_type = p_config.get(CONF_PLATFORM)
 
-        platform = importlib.import_module(
-            ".{}".format(p_config[CONF_PLATFORM]), __name__
-        )
+        platform = importlib.import_module(f".{p_config[CONF_PLATFORM]}", __name__)
 
         _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
         try:
@@ -330,7 +332,7 @@ async def async_setup(hass, config):
             attribute_templ = data.get(attribute)
             if attribute_templ:
                 if any(
-                    isinstance(attribute_templ, vtype) for vtype in [float, int, str]
+                    isinstance(attribute_templ, vtype) for vtype in (float, int, str)
                 ):
                     data[attribute] = attribute_templ
                 else:
@@ -350,7 +352,7 @@ async def async_setup(hass, config):
 
         msgtype = service.service
         kwargs = dict(service.data)
-        for attribute in [
+        for attribute in (
             ATTR_MESSAGE,
             ATTR_TITLE,
             ATTR_URL,
@@ -358,7 +360,7 @@ async def async_setup(hass, config):
             ATTR_CAPTION,
             ATTR_LONGITUDE,
             ATTR_LATITUDE,
-        ]:
+        ):
             _render_template_attr(kwargs, attribute)
         _LOGGER.debug("New telegram message %s: %s", msgtype, kwargs)
 
@@ -846,7 +848,7 @@ class BaseTelegramBotEntity:
 
         if (
             msg_data["from"].get("id") not in self.allowed_chat_ids
-            and msg_data["chat"].get("id") not in self.allowed_chat_ids
+            and msg_data["message"]["chat"].get("id") not in self.allowed_chat_ids
         ):
             # Neither from id nor chat id was in allowed_chat_ids,
             # origin is not allowed.
@@ -867,6 +869,31 @@ class BaseTelegramBotEntity:
             data[ATTR_CHAT_ID] = msg_data[ATTR_MESSAGE]["chat"]["id"]
 
         return True, data
+
+    def _get_channel_post_data(self, msg_data):
+        """Return boolean msg_data_is_ok and dict msg_data."""
+        if not msg_data:
+            return False, None
+
+        if "sender_chat" in msg_data and "chat" in msg_data and "text" in msg_data:
+            if (
+                msg_data["sender_chat"].get("id") not in self.allowed_chat_ids
+                and msg_data["chat"].get("id") not in self.allowed_chat_ids
+            ):
+                # Neither sender_chat id nor chat id was in allowed_chat_ids,
+                # origin is not allowed.
+                _LOGGER.error("Incoming message is not allowed (%s)", msg_data)
+                return True, None
+
+            data = {
+                ATTR_MSGID: msg_data["message_id"],
+                ATTR_CHAT_ID: msg_data["chat"]["id"],
+                ATTR_TEXT: msg_data["text"],
+            }
+            return True, data
+
+        _LOGGER.error("Incoming message does not have required data (%s)", msg_data)
+        return False, None
 
     def process_message(self, data):
         """Check for basic message rules and fire an event if message is ok."""
@@ -915,6 +942,15 @@ class BaseTelegramBotEntity:
             event_data[ATTR_MSG] = data[ATTR_MSG]
             event_data[ATTR_CHAT_INSTANCE] = data[ATTR_CHAT_INSTANCE]
             event_data[ATTR_MSGID] = data[ATTR_MSGID]
+
+            self.hass.bus.async_fire(event, event_data)
+            return True
+        if ATTR_CHANNEL_POST in data:
+            event = EVENT_TELEGRAM_TEXT
+            data = data.get(ATTR_CHANNEL_POST)
+            message_ok, event_data = self._get_channel_post_data(data)
+            if event_data is None:
+                return message_ok
 
             self.hass.bus.async_fire(event, event_data)
             return True

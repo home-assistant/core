@@ -1,14 +1,14 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Failed to connect"
+            "cannot_connect": "Failed to connect",
+            "powered_off": "Is projector turned on? You need to turn on projector for initial configuration."
         },
         "step": {
             "user": {
                 "data": {
                     "host": "Host",
-                    "name": "Name",
-                    "port": "Port"
+                    "name": "Name"
                 }
             }
         }

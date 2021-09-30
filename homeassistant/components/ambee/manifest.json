@@ -1,0 +1,10 @@
+{
+  "domain": "ambee",
+  "name": "Ambee",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/ambee",
+  "requirements": ["ambee==0.3.0"],
+  "codeowners": ["@frenck"],
+  "quality_scale": "platinum",
+  "iot_class": "cloud_polling"
+}

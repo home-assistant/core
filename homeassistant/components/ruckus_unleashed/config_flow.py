@@ -12,7 +12,13 @@ from .const import API_SERIAL, API_SYSTEM_OVERVIEW, DOMAIN
 
 _LOGGER = logging.getLogger(__package__)
 
-DATA_SCHEMA = vol.Schema({"host": str, "username": str, "password": str})
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required("host"): str,
+        vol.Required("username"): str,
+        vol.Required("password"): str,
+    }
+)
 
 
 def validate_input(hass: core.HomeAssistant, data):
@@ -46,7 +52,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ruckus Unleashed."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""

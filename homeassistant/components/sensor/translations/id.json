@@ -13,7 +13,6 @@
             "is_pressure": "Tekanan {entity_name} saat ini",
             "is_signal_strength": "Kekuatan sinyal {entity_name} saat ini",
             "is_temperature": "Suhu {entity_name} saat ini",
-            "is_timestamp": "Stempel waktu {entity_name} saat ini",
             "is_value": "Nilai {entity_name} saat ini",
             "is_voltage": "Tegangan {entity_name} saat ini"
         },
@@ -30,7 +29,6 @@
             "pressure": "Perubahan tekanan {entity_name}",
             "signal_strength": "Perubahan kekuatan sinyal {entity_name}",
             "temperature": "Perubahan suhu {entity_name}",
-            "timestamp": "Perubahan stempel waktu {entity_name}",
             "value": "Perubahan nilai {entity_name}",
             "voltage": "Perubahan tegangan {entity_name}"
         }

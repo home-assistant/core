@@ -17,7 +17,7 @@ from homeassistant.const import (
     UNIT_NOT_RECOGNIZED_TEMPLATE,
 )
 
-VALID_UNITS = [
+VALID_UNITS: tuple[str, ...] = (
     LENGTH_KILOMETERS,
     LENGTH_MILES,
     LENGTH_FEET,
@@ -26,7 +26,7 @@ VALID_UNITS = [
     LENGTH_MILLIMETERS,
     LENGTH_INCHES,
     LENGTH_YARD,
-]
+)
 
 TO_METERS: dict[str, Callable[[float], float]] = {
     LENGTH_METERS: lambda meters: meters,

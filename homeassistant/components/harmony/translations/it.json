@@ -7,7 +7,7 @@
             "cannot_connect": "Impossibile connettersi",
             "unknown": "Errore imprevisto"
         },
-        "flow_title": "Logitech Harmony Hub {name}",
+        "flow_title": "{name}",
         "step": {
             "link": {
                 "description": "Vuoi impostare {name} ({host})?",

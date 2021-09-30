@@ -1,5 +1,4 @@
 """Support the UPB PIM."""
-import asyncio
 
 import upb_lib
 
@@ -29,10 +28,7 @@ async def async_setup_entry(hass, config_entry):
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = {"upb": upb}
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     def _element_changed(element, changeset):
         change = changeset.get("last_change")
@@ -60,21 +56,13 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload the config_entry."""
-
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
-
     if unload_ok:
         upb = hass.data[DOMAIN][config_entry.entry_id]["upb"]
         upb.disconnect()
         hass.data[DOMAIN].pop(config_entry.entry_id)
-
     return unload_ok
 
 

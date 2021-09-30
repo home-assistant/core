@@ -17,6 +17,8 @@ from homeassistant.loader import (
 from homeassistant.util.async_ import gather_with_concurrency
 from homeassistant.util.json import load_json
 
+# mypy: disallow-any-generics
+
 _LOGGER = logging.getLogger(__name__)
 
 TRANSLATION_LOAD_LOCK = "translation_load_lock"
@@ -24,7 +26,7 @@ TRANSLATION_FLATTEN_CACHE = "translation_flatten_cache"
 LOCALE_EN = "en"
 
 
-def recursive_flatten(prefix: Any, data: dict) -> dict[str, Any]:
+def recursive_flatten(prefix: Any, data: dict[str, Any]) -> dict[str, Any]:
     """Return a flattened representation of dict data."""
     output = {}
     for key, value in data.items():
@@ -155,7 +157,7 @@ async def async_get_component_strings(
             domains,
             await gather_with_concurrency(
                 MAX_LOAD_CONCURRENTLY,
-                *[async_get_integration(hass, domain) for domain in domains],
+                *(async_get_integration(hass, domain) for domain in domains),
             ),
         )
     )
@@ -212,7 +214,7 @@ class _TranslationCache:
         self,
         language: str,
         category: str,
-        components: set,
+        components: set[str],
     ) -> list[dict[str, dict[str, Any]]]:
         """Load resources into the cache."""
         components_to_load = components - self.loaded.setdefault(language, set())
@@ -224,7 +226,7 @@ class _TranslationCache:
 
         return [cached.get(component, {}).get(category, {}) for component in components]
 
-    async def _async_load(self, language: str, components: set) -> None:
+    async def _async_load(self, language: str, components: set[str]) -> None:
         """Populate the cache for a given set of components."""
         _LOGGER.debug(
             "Cache miss for %s: %s",
@@ -234,10 +236,10 @@ class _TranslationCache:
         # Fetch the English resources, as a fallback for missing keys
         languages = [LOCALE_EN] if language == LOCALE_EN else [LOCALE_EN, language]
         for translation_strings in await asyncio.gather(
-            *[
+            *(
                 async_get_component_strings(self.hass, lang, components)
                 for lang in languages
-            ]
+            )
         ):
             self._build_category_cache(language, components, translation_strings)
 
@@ -247,7 +249,7 @@ class _TranslationCache:
     def _build_category_cache(
         self,
         language: str,
-        components: set,
+        components: set[str],
         translation_strings: dict[str, dict[str, Any]],
     ) -> None:
         """Extract resources into the cache."""

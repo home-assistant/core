@@ -8,7 +8,7 @@
             "syncthru_not_supported": "Seade ei toeta SyncThru-d",
             "unknown_state": "Printeri olek teadmata, kontrolli URL-i ja v\u00f5rgu\u00fchendust"
         },
-        "flow_title": "",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "data": {

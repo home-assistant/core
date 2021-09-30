@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Kontoen er allerede konfigurert"
+            "already_configured": "Kontoen er allerede konfigurert",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
@@ -9,6 +10,13 @@
             "unknown": "Uventet feil"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passord"
+                },
+                "description": "Passordet for {username} er ikke lenger gyldig.",
+                "title": "Godkjenn Flume-kontoen din p\u00e5 nytt"
+            },
             "user": {
                 "data": {
                     "client_id": "Klient ID",

@@ -4,5 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/geofency",
   "dependencies": ["webhook"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_push"
 }

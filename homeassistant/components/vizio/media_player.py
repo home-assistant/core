@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from pyvizio import VizioAsync
 from pyvizio.api.apps import find_app_name
@@ -26,15 +26,15 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -64,9 +64,9 @@ PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Vizio media player entry."""
     host = config_entry.data[CONF_HOST]
@@ -87,7 +87,7 @@ async def async_setup_entry(
             (
                 key
                 for key in config_entry.data.get(CONF_APPS, {})
-                if key in [CONF_INCLUDE, CONF_EXCLUDE]
+                if key in (CONF_INCLUDE, CONF_EXCLUDE)
             ),
             None,
         )
@@ -121,7 +121,7 @@ async def async_setup_entry(
     entity = VizioDevice(config_entry, device, name, device_class, apps_coordinator)
 
     async_add_entities([entity], update_before_add=True)
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_UPDATE_SETTING, UPDATE_SETTING_SCHEMA, "async_update_setting"
     )
@@ -284,7 +284,7 @@ class VizioDevice(MediaPlayerEntity):
 
     @staticmethod
     async def _async_send_update_options_signal(
-        hass: HomeAssistantType, config_entry: ConfigEntry
+        hass: HomeAssistant, config_entry: ConfigEntry
     ) -> None:
         """Send update event when Vizio config entry is updated."""
         # Move this method to component level if another entity ever gets added for a single config entry.
@@ -381,17 +381,17 @@ class VizioDevice(MediaPlayerEntity):
         # show the combination with , otherwise just return inputs
         if self._available_apps:
             return [
-                *[
+                *(
                     _input
                     for _input in self._available_inputs
                     if _input not in INPUT_APPS
-                ],
+                ),
                 *self._available_apps,
-                *[
+                *(
                     app
                     for app in self._get_additional_app_names()
                     if app not in self._available_apps
-                ],
+                ),
             ]
 
         return self._available_inputs
@@ -424,7 +424,7 @@ class VizioDevice(MediaPlayerEntity):
         return self._config_entry.unique_id
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device registry information."""
         return {
             "identifiers": {(DOMAIN, self._config_entry.unique_id)},

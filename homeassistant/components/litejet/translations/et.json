@@ -15,5 +15,15 @@
                 "title": "Loo \u00fchendus LiteJetiga"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "default_transition": "Heleduse vaike\u00fclemineku aeg (sekundites)"
+                },
+                "title": "LiteJeti seadistamine"
+            }
+        }
     }
 }

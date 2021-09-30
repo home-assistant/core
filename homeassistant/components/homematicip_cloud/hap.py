@@ -1,6 +1,9 @@
 """Access point for the HomematicIP Cloud component."""
+from __future__ import annotations
+
 import asyncio
 import logging
+from typing import Any, Callable
 
 from homematicip.aio.auth import AsyncAuth
 from homematicip.aio.home import AsyncHome
@@ -8,10 +11,9 @@ from homematicip.base.base_connection import HmipConnectionError
 from homematicip.base.enums import EventType
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import HMIPC_AUTHTOKEN, HMIPC_HAPID, HMIPC_NAME, HMIPC_PIN, PLATFORMS
 from .errors import HmipcConnectionError
@@ -22,11 +24,12 @@ _LOGGER = logging.getLogger(__name__)
 class HomematicipAuth:
     """Manages HomematicIP client registration."""
 
+    auth: AsyncAuth
+
     def __init__(self, hass, config) -> None:
         """Initialize HomematicIP Cloud client registration."""
         self.hass = hass
         self.config = config
-        self.auth = None
 
     async def async_setup(self) -> bool:
         """Connect to HomematicIP for registration."""
@@ -54,7 +57,7 @@ class HomematicipAuth:
         except HmipConnectionError:
             return False
 
-    async def get_auth(self, hass: HomeAssistantType, hapid, pin):
+    async def get_auth(self, hass: HomeAssistant, hapid, pin):
         """Create a HomematicIP access point object."""
         auth = AsyncAuth(hass.loop, async_get_clientsession(hass))
         try:
@@ -70,18 +73,19 @@ class HomematicipAuth:
 class HomematicipHAP:
     """Manages HomematicIP HTTP and WebSocket connection."""
 
-    def __init__(self, hass: HomeAssistantType, config_entry: ConfigEntry) -> None:
+    home: AsyncHome
+
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize HomematicIP Cloud connection."""
         self.hass = hass
         self.config_entry = config_entry
-        self.home = None
 
         self._ws_close_requested = False
-        self._retry_task = None
+        self._retry_task: asyncio.Task | None = None
         self._tries = 0
         self._accesspoint_connected = True
-        self.hmip_device_by_entity_id = {}
-        self.reset_connection_listener = None
+        self.hmip_device_by_entity_id: dict[str, Any] = {}
+        self.reset_connection_listener: Callable | None = None
 
     async def async_setup(self, tries: int = 0) -> bool:
         """Initialize connection."""
@@ -102,12 +106,8 @@ class HomematicipHAP:
             "Connected to HomematicIP with HAP %s", self.config_entry.unique_id
         )
 
-        for platform in PLATFORMS:
-            self.hass.async_create_task(
-                self.hass.config_entries.async_forward_entry_setup(
-                    self.config_entry, platform
-                )
-            )
+        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
+
         return True
 
     @callback
@@ -215,10 +215,9 @@ class HomematicipHAP:
             self._retry_task.cancel()
         await self.home.disable_events()
         _LOGGER.info("Closed connection to HomematicIP cloud server")
-        for platform in PLATFORMS:
-            await self.hass.config_entries.async_forward_entry_unload(
-                self.config_entry, platform
-            )
+        await self.hass.config_entries.async_unload_platforms(
+            self.config_entry, PLATFORMS
+        )
         self.hmip_device_by_entity_id = {}
         return True
 
@@ -234,7 +233,11 @@ class HomematicipHAP:
         )
 
     async def get_hap(
-        self, hass: HomeAssistantType, hapid: str, authtoken: str, name: str
+        self,
+        hass: HomeAssistant,
+        hapid: str | None,
+        authtoken: str | None,
+        name: str | None,
     ) -> AsyncHome:
         """Create a HomematicIP access point object."""
         home = AsyncHome(hass.loop, async_get_clientsession(hass))

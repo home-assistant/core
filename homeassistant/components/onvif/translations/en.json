@@ -18,6 +18,16 @@
                 },
                 "title": "Configure authentication"
             },
+            "configure": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name",
+                    "password": "Password",
+                    "port": "Port",
+                    "username": "Username"
+                },
+                "title": "Configure ONVIF device"
+            },
             "configure_profile": {
                 "data": {
                     "include": "Create camera entity"
@@ -40,6 +50,9 @@
                 "title": "Configure ONVIF device"
             },
             "user": {
+                "data": {
+                    "auto": "Search automatically"
+                },
                 "description": "By clicking submit, we will search your network for ONVIF devices that support Profile S.\n\nSome manufacturers have started to disable ONVIF by default. Please ensure ONVIF is enabled in your camera's configuration.",
                 "title": "ONVIF device setup"
             }

@@ -1,10 +1,12 @@
 """Provides device automations for Netatmo."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -54,7 +56,7 @@ SUBTYPES = {
 
 TRIGGER_TYPES = OUTDOOR_CAMERA_TRIGGERS + INDOOR_CAMERA_TRIGGERS + CLIMATE_TRIGGERS
 
-TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
@@ -63,7 +65,9 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-async def async_validate_trigger_config(hass, config):
+async def async_validate_trigger_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
 
@@ -82,7 +86,9 @@ async def async_validate_trigger_config(hass, config):
     return config
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, Any]]:
     """List device triggers for Netatmo devices."""
     registry = await entity_registry.async_get_registry(hass)
     device_registry = await hass.helpers.device_registry.async_get_registry()
@@ -129,10 +135,10 @@ async def async_attach_trigger(
     device = device_registry.async_get(config[CONF_DEVICE_ID])
 
     if not device:
-        return
+        return lambda: None
 
     if device.model not in DEVICES:
-        return
+        return lambda: None
 
     event_config = {
         event_trigger.CONF_PLATFORM: "event",
@@ -142,10 +148,11 @@ async def async_attach_trigger(
             ATTR_DEVICE_ID: config[ATTR_DEVICE_ID],
         },
     }
+
     if config[CONF_TYPE] in SUBTYPES:
-        event_config[event_trigger.CONF_EVENT_DATA]["data"] = {
-            "mode": config[CONF_SUBTYPE]
-        }
+        event_config.update(
+            {event_trigger.CONF_EVENT_DATA: {"data": {"mode": config[CONF_SUBTYPE]}}}
+        )
 
     event_config = event_trigger.TRIGGER_SCHEMA(event_config)
     return await event_trigger.async_attach_trigger(

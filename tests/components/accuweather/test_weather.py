@@ -1,7 +1,7 @@
 """Test weather of AccuWeather integration."""
 from datetime import timedelta
 import json
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 from homeassistant.components.accuweather.const import ATTRIBUTION
 from homeassistant.components.weather import (
@@ -112,6 +112,10 @@ async def test_availability(hass):
         return_value=json.loads(
             load_fixture("accuweather/current_conditions_data.json")
         ),
+    ), patch(
+        "homeassistant.components.accuweather.AccuWeather.requests_remaining",
+        new_callable=PropertyMock,
+        return_value=10,
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -137,7 +141,11 @@ async def test_manual_update_entity(hass):
     ) as mock_current, patch(
         "homeassistant.components.accuweather.AccuWeather.async_get_forecast",
         return_value=forecast,
-    ) as mock_forecast:
+    ) as mock_forecast, patch(
+        "homeassistant.components.accuweather.AccuWeather.requests_remaining",
+        new_callable=PropertyMock,
+        return_value=10,
+    ):
         await hass.services.async_call(
             "homeassistant",
             "update_entity",

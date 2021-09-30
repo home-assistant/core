@@ -319,8 +319,10 @@ class OnkyoDevice(MediaPlayerEntity):
         preset_raw = self.command("preset query")
         if self._audio_info_supported:
             audio_information_raw = self.command("audio-information query")
+            self._parse_audio_information(audio_information_raw)
         if self._video_info_supported:
             video_information_raw = self.command("video-information query")
+            self._parse_video_information(video_information_raw)
         if not (volume_raw and mute_raw and current_source_raw):
             return
 
@@ -342,9 +344,6 @@ class OnkyoDevice(MediaPlayerEntity):
         self._volume = volume_raw[1] / (
             self._receiver_max_volume * self._max_volume / 100
         )
-
-        self._parse_audio_information(audio_information_raw)
-        self._parse_video_information(video_information_raw)
 
         if not hdmi_out_raw:
             return

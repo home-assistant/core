@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'emplacement est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "common::config_flow::data::api_key",
+                    "destination": "Destination",
+                    "name": "Nom",
+                    "origin": "Origine"
+                },
+                "description": "Lorsque vous sp\u00e9cifiez l'origine et la destination, vous pouvez fournir un ou plusieurs emplacements s\u00e9par\u00e9s par le caract\u00e8re de tuyau, sous la forme d'une adresse, de coordonn\u00e9es de latitude / longitude ou d'un identifiant de lieu Google. Lorsque vous sp\u00e9cifiez l'emplacement \u00e0 l'aide d'un identifiant de lieu Google, l'identifiant doit \u00eatre pr\u00e9c\u00e9d\u00e9 de `place_id:`."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "avoid": "\u00c9viter de",
+                    "language": "Langue",
+                    "mode": "Mode voyage",
+                    "time": "Temps",
+                    "time_type": "Type de temps",
+                    "transit_mode": "Mode de transit",
+                    "transit_routing_preference": "Pr\u00e9f\u00e9rence de routage de transport en commun",
+                    "units": "Unit\u00e9s"
+                },
+                "description": "Vous pouvez \u00e9ventuellement sp\u00e9cifier une heure de d\u00e9part ou une heure d'arriv\u00e9e. Si vous sp\u00e9cifiez une heure de d\u00e9part, vous pouvez entrer \u00abnow\u00bb, un horodatage Unix ou une cha\u00eene de 24 heures comme \u00ab08: 00: 00\u00bb. Si vous sp\u00e9cifiez une heure d'arriv\u00e9e, vous pouvez utiliser un horodatage Unix ou une cha\u00eene de 24 heures comme `08: 00: 00`"
+            }
+        }
+    },
+    "title": "Temps de trajet Google Maps"
+}

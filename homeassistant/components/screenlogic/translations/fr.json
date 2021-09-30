@@ -18,7 +18,7 @@
             },
             "gateway_select": {
                 "data": {
-                    "selected_gateway": "passerelle"
+                    "selected_gateway": "Passerelle"
                 },
                 "description": "Les passerelles ScreenLogic suivantes ont \u00e9t\u00e9 d\u00e9couvertes. S\u2019il vous pla\u00eet s\u00e9lectionner un \u00e0 configurer, ou choisissez de configurer manuellement une passerelle ScreenLogic.",
                 "title": "ScreenLogic"

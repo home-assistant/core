@@ -7,6 +7,7 @@
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "invalid_auth": "Niepoprawne uwierzytelnienie"
         },
+        "flow_title": "{device} ({ip_address})",
         "step": {
             "user": {
                 "data": {
@@ -15,7 +16,7 @@
                     "username": "Nazwa u\u017cytkownika"
                 },
                 "description": "Wprowad\u017a wymagane informacje poni\u017cej.",
-                "title": "Konfiguracja GogoGate2 lub iSmartGate"
+                "title": "Konfiguracja Gogogate2 lub ismartgate"
             }
         }
     }

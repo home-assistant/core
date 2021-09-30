@@ -1,13 +1,15 @@
 """The tests for the Command line Binary sensor platform."""
+from __future__ import annotations
+
+from typing import Any
+
 from homeassistant import setup
 from homeassistant.components.binary_sensor import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.helpers.typing import Any, Dict, HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 
-async def setup_test_entity(
-    hass: HomeAssistantType, config_dict: Dict[str, Any]
-) -> None:
+async def setup_test_entity(hass: HomeAssistant, config_dict: dict[str, Any]) -> None:
     """Set up a test command line binary_sensor entity."""
     assert await setup.async_setup_component(
         hass,
@@ -17,7 +19,7 @@ async def setup_test_entity(
     await hass.async_block_till_done()
 
 
-async def test_setup(hass: HomeAssistantType) -> None:
+async def test_setup(hass: HomeAssistant) -> None:
     """Test sensor setup."""
     await setup_test_entity(
         hass,
@@ -34,7 +36,7 @@ async def test_setup(hass: HomeAssistantType) -> None:
     assert entity_state.name == "Test"
 
 
-async def test_template(hass: HomeAssistantType) -> None:
+async def test_template(hass: HomeAssistant) -> None:
     """Test setting the state with a template."""
 
     await setup_test_entity(
@@ -51,7 +53,7 @@ async def test_template(hass: HomeAssistantType) -> None:
     assert entity_state.state == STATE_ON
 
 
-async def test_sensor_off(hass: HomeAssistantType) -> None:
+async def test_sensor_off(hass: HomeAssistant) -> None:
     """Test setting the state with a template."""
     await setup_test_entity(
         hass,

@@ -11,10 +11,10 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_SENSORS,
     CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -29,7 +29,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_PARTNER = "partner"
 
 DATA_EIGHT = "eight_sleep"
-DEFAULT_PARTNER = False
 DOMAIN = "eight_sleep"
 
 HEAT_ENTITY = "heat"
@@ -86,12 +85,15 @@ SERVICE_EIGHT_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_PARTNER, default=DEFAULT_PARTNER): cv.boolean,
-            }
+        DOMAIN: vol.All(
+            cv.deprecated(CONF_PARTNER),
+            vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Optional(CONF_PARTNER): cv.boolean,
+                }
+            ),
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -104,7 +106,6 @@ async def async_setup(hass, config):
     conf = config.get(DOMAIN)
     user = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
-    partner = conf.get(CONF_PARTNER)
 
     if hass.config.time_zone is None:
         _LOGGER.error("Timezone is not set in Home Assistant")
@@ -112,7 +113,7 @@ async def async_setup(hass, config):
 
     timezone = str(hass.config.time_zone)
 
-    eight = EightSleep(user, password, timezone, partner, None, hass.loop)
+    eight = EightSleep(user, password, timezone, async_get_clientsession(hass))
 
     hass.data[DATA_EIGHT] = eight
 
@@ -147,8 +148,7 @@ async def async_setup(hass, config):
     sensors = []
     binary_sensors = []
     if eight.users:
-        for user in eight.users:
-            obj = eight.users[user]
+        for obj in eight.users.values():
             for sensor in SENSORS:
                 sensors.append(f"{obj.side}_{sensor}")
             binary_sensors.append(f"{obj.side}_presence")
@@ -189,12 +189,6 @@ async def async_setup(hass, config):
     hass.services.async_register(
         DOMAIN, SERVICE_HEAT_SET, async_service_handler, schema=SERVICE_EIGHT_SCHEMA
     )
-
-    async def stop_eight(event):
-        """Handle stopping eight api session."""
-        await eight.stop()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_eight)
 
     return True
 

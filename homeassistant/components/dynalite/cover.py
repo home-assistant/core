@@ -1,5 +1,4 @@
 """Support for the Dynalite channels as covers."""
-from typing import Callable
 
 from homeassistant.components.cover import (
     DEVICE_CLASS_SHUTTER,
@@ -8,6 +7,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .dynalitebase import DynaliteBase, async_setup_entry_base
 
@@ -15,7 +15,9 @@ DEFAULT_COVER_CLASS = DEVICE_CLASS_SHUTTER
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Record the async_add_entities function to add them later when received from Dynalite."""
 

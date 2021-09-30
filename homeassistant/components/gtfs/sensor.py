@@ -11,7 +11,10 @@ import pygtfs
 from sqlalchemy.sql import text
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_NAME,
@@ -19,12 +22,9 @@ from homeassistant.const import (
     DEVICE_CLASS_TIMESTAMP,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    HomeAssistantType,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
@@ -257,8 +257,8 @@ WHEELCHAIR_ACCESS_OPTIONS = {1: True, 2: False}
 WHEELCHAIR_BOARDING_DEFAULT = STATE_UNKNOWN
 WHEELCHAIR_BOARDING_OPTIONS = {1: True, 2: False}
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {  # type: ignore
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
+    {
         vol.Required(CONF_ORIGIN): cv.string,
         vol.Required(CONF_DESTINATION): cv.string,
         vol.Required(CONF_DATA): cv.string,
@@ -482,7 +482,7 @@ def get_next_departure(
 
 
 def setup_platform(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config: ConfigType,
     add_entities: Callable[[list], None],
     discovery_info: DiscoveryInfoType | None = None,
@@ -493,7 +493,7 @@ def setup_platform(
     origin = config.get(CONF_ORIGIN)
     destination = config.get(CONF_DESTINATION)
     name = config.get(CONF_NAME)
-    offset = config.get(CONF_OFFSET)
+    offset: datetime.timedelta = config[CONF_OFFSET]
     include_tomorrow = config[CONF_TOMORROW]
 
     if not os.path.exists(gtfs_dir):
@@ -521,13 +521,15 @@ def setup_platform(
 class GTFSDepartureSensor(SensorEntity):
     """Implementation of a GTFS departure sensor."""
 
+    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+
     def __init__(
         self,
         gtfs: Any,
         name: Any | None,
         origin: Any,
         destination: Any,
-        offset: cv.time_period,
+        offset: datetime.timedelta,
         include_tomorrow: bool,
     ) -> None:
         """Initialize the sensor."""
@@ -542,10 +544,10 @@ class GTFSDepartureSensor(SensorEntity):
         self._icon = ICON
         self._name = ""
         self._state: str | None = None
-        self._attributes = {}
+        self._attributes: dict[str, Any] = {}
 
         self._agency = None
-        self._departure = {}
+        self._departure: dict[str, Any] = {}
         self._destination = None
         self._origin = None
         self._route = None
@@ -560,7 +562,7 @@ class GTFSDepartureSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self) -> str | None:  # type: ignore
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self._state
 
@@ -578,11 +580,6 @@ class GTFSDepartureSensor(SensorEntity):
     def icon(self) -> str:
         """Icon to use in the frontend, if any."""
         return self._icon
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of this device."""
-        return DEVICE_CLASS_TIMESTAMP
 
     def update(self) -> None:
         """Get the latest data from GTFS and update the states."""
@@ -699,7 +696,7 @@ class GTFSDepartureSensor(SensorEntity):
                 del self._attributes[ATTR_LAST]
 
         # Add contextual information
-        self._attributes[ATTR_OFFSET] = self._offset.seconds / 60
+        self._attributes[ATTR_OFFSET] = self._offset.total_seconds() / 60
 
         if self._state is None:
             self._attributes[ATTR_INFO] = (

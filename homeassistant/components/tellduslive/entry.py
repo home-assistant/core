@@ -93,7 +93,6 @@ class TelldusLiveEntity(Entity):
     @property
     def _battery_level(self):
         """Return the battery level of a device."""
-
         if self.device.battery == BATTERY_LOW:
             return 1
         if self.device.battery == BATTERY_UNKNOWN:

@@ -8,6 +8,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
+    CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
 )
 import homeassistant.helpers.config_validation as cv
@@ -18,7 +19,6 @@ DEFAULT_NAME = "KWB"
 MODE_SERIAL = 0
 MODE_TCP = 1
 
-CONF_TYPE = "type"
 CONF_RAW = "raw"
 
 SERIAL_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -94,13 +94,13 @@ class KWBSensor(SensorEntity):
         return self._sensor.available
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of value."""
         if self._sensor.value is not None and self._sensor.available:
             return self._sensor.value
         return None
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._sensor.unit_of_measurement

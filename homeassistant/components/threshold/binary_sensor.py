@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
     CONF_NAME,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import callback
@@ -100,7 +101,9 @@ class ThresholdSensor(BinarySensorEntity):
 
             try:
                 self.sensor_value = (
-                    None if new_state.state == STATE_UNKNOWN else float(new_state.state)
+                    None
+                    if new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+                    else float(new_state.state)
                 )
             except (ValueError, TypeError):
                 self.sensor_value = None

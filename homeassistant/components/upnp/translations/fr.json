@@ -21,7 +21,17 @@
             "user": {
                 "data": {
                     "scan_interval": "Intervalle de mise \u00e0 jour (secondes, minimum 30)",
+                    "unique_id": "Appareil",
                     "usn": "Appareil"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Intervalle de mise \u00e0 jour (secondes, minimum 30)"
                 }
             }
         }

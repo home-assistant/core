@@ -369,6 +369,8 @@ class XBeeDigitalOut(XBeeDigitalIn):
 class XBeeAnalogIn(SensorEntity):
     """Representation of a GPIO pin configured as an analog input."""
 
+    _attr_native_unit_of_measurement = PERCENTAGE
+
     def __init__(self, config, device):
         """Initialize the XBee analog in device."""
         self._config = config
@@ -414,14 +416,9 @@ class XBeeAnalogIn(SensorEntity):
         return self._config.should_poll
 
     @property
-    def state(self):
+    def sensor_state(self):
         """Return the state of the entity."""
         return self._value
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return PERCENTAGE
 
     def update(self):
         """Get the latest reading from the ADC."""

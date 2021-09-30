@@ -1,44 +1,64 @@
-"""Support for the Rainforest Eagle-200 energy monitor."""
-from datetime import timedelta
-import logging
+"""Support for the Rainforest Eagle energy monitor."""
+from __future__ import annotations
 
-from eagle200_reader import EagleReader
-from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
-from uEagle import Eagle as LegacyReader
+import logging
+from typing import Any
+
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_ENERGY,
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+    SensorEntityDescription,
+    StateType,
+)
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    CONF_HOST,
     CONF_IP_ADDRESS,
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
+    POWER_KILO_WATT,
 )
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-CONF_CLOUD_ID = "cloud_id"
-CONF_INSTALL_CODE = "install_code"
-POWER_KILO_WATT = "kW"
+from .const import CONF_CLOUD_ID, CONF_INSTALL_CODE, DOMAIN
+from .data import EagleDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-MIN_SCAN_INTERVAL = timedelta(seconds=30)
-
-SENSORS = {
-    "instantanous_demand": ("Eagle-200 Meter Power Demand", POWER_KILO_WATT),
-    "summation_delivered": (
-        "Eagle-200 Total Meter Energy Delivered",
-        ENERGY_KILO_WATT_HOUR,
+SENSORS = (
+    SensorEntityDescription(
+        key="zigbee:InstantaneousDemand",
+        # We can drop the "Eagle-200" part of the name in HA 2021.12
+        name="Eagle-200 Meter Power Demand",
+        native_unit_of_measurement=POWER_KILO_WATT,
+        device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
-    "summation_received": (
-        "Eagle-200 Total Meter Energy Received",
-        ENERGY_KILO_WATT_HOUR,
+    SensorEntityDescription(
+        key="zigbee:CurrentSummationDelivered",
+        name="Eagle-200 Total Meter Energy Delivered",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
-    "summation_total": (
-        "Eagle-200 Net Meter Energy (Delivered minus Received)",
-        ENERGY_KILO_WATT_HOUR,
+    SensorEntityDescription(
+        key="zigbee:CurrentSummationReceived",
+        name="Eagle-200 Total Meter Energy Received",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
-}
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -49,133 +69,86 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def hwtest(cloud_id, install_code, ip_address):
-    """Try API call 'get_network_info' to see if target device is Legacy or Eagle-200."""
-    reader = LeagleReader(cloud_id, install_code, ip_address)
-    response = reader.get_network_info()
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: dict[str, Any] | None = None,
+):
+    """Import config as config entry."""
+    _LOGGER.warning(
+        "Configuration of the rainforest_eagle platform in YAML is deprecated "
+        "and will be removed in Home Assistant 2021.11; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_HOST: config[CONF_IP_ADDRESS],
+                CONF_CLOUD_ID: config[CONF_CLOUD_ID],
+                CONF_INSTALL_CODE: config[CONF_INSTALL_CODE],
+            },
+        )
+    )
 
-    # Branch to test if target is Legacy Model
-    if (
-        "NetworkInfo" in response
-        and response["NetworkInfo"].get("ModelId", None) == "Z109-EAGLE"
-    ):
-        return reader
 
-    # Branch to test if target is Eagle-200 Model
-    if (
-        "Response" in response
-        and response["Response"].get("Command", None) == "get_network_info"
-    ):
-        return EagleReader(ip_address, cloud_id, install_code)
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up a config entry."""
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    entities = [EagleSensor(coordinator, description) for description in SENSORS]
 
-    # Catch-all if hardware ID tests fail
-    raise ValueError("Couldn't determine device model.")
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Create the Eagle-200 sensor."""
-    ip_address = config[CONF_IP_ADDRESS]
-    cloud_id = config[CONF_CLOUD_ID]
-    install_code = config[CONF_INSTALL_CODE]
-
-    try:
-        eagle_reader = hwtest(cloud_id, install_code, ip_address)
-    except (ConnectError, HTTPError, Timeout, ValueError) as error:
-        _LOGGER.error("Failed to connect during setup: %s", error)
-        return
-
-    eagle_data = EagleData(eagle_reader)
-    eagle_data.update()
-    monitored_conditions = list(SENSORS)
-    sensors = []
-    for condition in monitored_conditions:
-        sensors.append(
+    if coordinator.data.get("zigbee:Price") not in (None, "invalid"):
+        entities.append(
             EagleSensor(
-                eagle_data, condition, SENSORS[condition][0], SENSORS[condition][1]
+                coordinator,
+                SensorEntityDescription(
+                    key="zigbee:Price",
+                    name="Meter Price",
+                    native_unit_of_measurement=f"{coordinator.data['zigbee:PriceCurrency']}/{ENERGY_KILO_WATT_HOUR}",
+                    state_class=STATE_CLASS_MEASUREMENT,
+                ),
             )
         )
 
-    add_entities(sensors)
+    async_add_entities(entities)
 
 
-class EagleSensor(SensorEntity):
-    """Implementation of the Rainforest Eagle-200 sensor."""
+class EagleSensor(CoordinatorEntity, SensorEntity):
+    """Implementation of the Rainforest Eagle sensor."""
 
-    def __init__(self, eagle_data, sensor_type, name, unit):
+    coordinator: EagleDataCoordinator
+
+    def __init__(self, coordinator, entity_description):
         """Initialize the sensor."""
-        self.eagle_data = eagle_data
-        self._type = sensor_type
-        self._name = name
-        self._unit_of_measurement = unit
-        self._state = None
+        super().__init__(coordinator)
+        self.entity_description = entity_description
 
     @property
-    def device_class(self):
-        """Return the power device class for the instantanous_demand sensor."""
-        if self._type == "instantanous_demand":
-            return DEVICE_CLASS_POWER
-
-        return None
+    def unique_id(self) -> str | None:
+        """Return unique ID of entity."""
+        return f"{self.coordinator.cloud_id}-${self.coordinator.hardware_address}-{self.entity_description.key}"
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.coordinator.is_connected
 
     @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
+    def native_value(self) -> StateType:
+        """Return native value of the sensor."""
+        return self.coordinator.data.get(self.entity_description.key)
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit_of_measurement
-
-    def update(self):
-        """Get the energy information from the Rainforest Eagle."""
-        self.eagle_data.update()
-        self._state = self.eagle_data.get_state(self._type)
-
-
-class EagleData:
-    """Get the latest data from the Eagle-200 device."""
-
-    def __init__(self, eagle_reader):
-        """Initialize the data object."""
-        self._eagle_reader = eagle_reader
-        self.data = {}
-
-    @Throttle(MIN_SCAN_INTERVAL)
-    def update(self):
-        """Get the latest data from the Eagle-200 device."""
-        try:
-            self.data = self._eagle_reader.update()
-            _LOGGER.debug("API data: %s", self.data)
-        except (ConnectError, HTTPError, Timeout, ValueError) as error:
-            _LOGGER.error("Unable to connect during update: %s", error)
-            self.data = {}
-
-    def get_state(self, sensor_type):
-        """Get the sensor value from the dictionary."""
-        state = self.data.get(sensor_type)
-        _LOGGER.debug("Updating: %s - %s", sensor_type, state)
-        return state
-
-
-class LeagleReader(LegacyReader, SensorEntity):
-    """Wraps uEagle to make it behave like eagle_reader, offering update()."""
-
-    def update(self):
-        """Fetch and return the four sensor values in a dict."""
-        out = {}
-
-        resp = self.get_instantaneous_demand()["InstantaneousDemand"]
-        out["instantanous_demand"] = resp["Demand"]
-
-        resp = self.get_current_summation()["CurrentSummation"]
-        out["summation_delivered"] = resp["SummationDelivered"]
-        out["summation_received"] = resp["SummationReceived"]
-        out["summation_total"] = out["summation_delivered"] - out["summation_received"]
-
-        return out
+    def device_info(self) -> DeviceInfo | None:
+        """Return device info."""
+        return {
+            "name": self.coordinator.model,
+            "identifiers": {(DOMAIN, self.coordinator.cloud_id)},
+            "manufacturer": "Rainforest Automation",
+            "model": self.coordinator.model,
+        }

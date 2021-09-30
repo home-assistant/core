@@ -123,12 +123,12 @@ class SQLSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the query's current state."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit_of_measurement
 
@@ -151,7 +151,7 @@ class SQLSensor(SensorEntity):
                 self._state = None
                 return
 
-            for res in result:
+            for res in result.mappings():
                 _LOGGER.debug("result = %s", res.items())
                 data = res[self._column_name]
                 for key, value in res.items():

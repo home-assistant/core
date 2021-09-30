@@ -2,16 +2,17 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Coroutine, Iterable, KeysView
 from datetime import datetime, timedelta
 import enum
-from functools import wraps
+from functools import lru_cache, wraps
 import random
 import re
 import socket
 import string
 import threading
 from types import MappingProxyType
-from typing import Any, Callable, Coroutine, Iterable, KeysView, TypeVar
+from typing import Any, Callable, TypeVar
 
 import slugify as unicode_slug
 
@@ -78,9 +79,9 @@ def sanitize_path(path: str) -> str:
     return path
 
 
-def slugify(text: str, *, separator: str = "_") -> str:
+def slugify(text: str | None, *, separator: str = "_") -> str:
     """Slugify a given text."""
-    if text == "":
+    if text == "" or text is None:
         return ""
     slug = unicode_slug.slugify(text, separator=separator)
     return "unknown" if slug == "" else slug
@@ -129,6 +130,7 @@ def ensure_unique_string(
 
 
 # Taken from: http://stackoverflow.com/a/11735897
+@lru_cache(maxsize=None)
 def get_local_ip() -> str:
     """Try to determine the local IP address of the machine."""
     try:
@@ -158,9 +160,6 @@ def get_random_string(length: int = 10) -> str:
 
 class OrderedEnum(enum.Enum):
     """Taken from Python 3.4.0 docs."""
-
-    # https://github.com/PyCQA/pylint/issues/2306
-    # pylint: disable=comparison-with-callable
 
     def __ge__(self, other: ENUM_T) -> bool:
         """Return the greater than element."""

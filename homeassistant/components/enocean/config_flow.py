@@ -3,7 +3,6 @@
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import CONN_CLASS_ASSUMED
 from homeassistant.const import CONF_DEVICE
 
 from . import dongle
@@ -15,7 +14,6 @@ class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     MANUAL_PATH_VALUE = "Custom path"
-    CONNECTION_CLASS = CONN_CLASS_ASSUMED
 
     def __init__(self):
         """Initialize the EnOcean config flow."""

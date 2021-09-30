@@ -5,7 +5,7 @@
             "unknown": "Onverwachte fout"
         },
         "error": {
-            "empty": "Geen resultaat bij het zoeken naar een stad: controleer de invoer: stad"
+            "empty": "Geen resultaat bij het zoeken naar een stad: controleer het veld stad"
         },
         "step": {
             "cities": {

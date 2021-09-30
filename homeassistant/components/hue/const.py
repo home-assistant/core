@@ -18,3 +18,7 @@ GROUP_TYPE_LIGHT_GROUP = "LightGroup"
 GROUP_TYPE_ROOM = "Room"
 GROUP_TYPE_LUMINAIRE = "Luminaire"
 GROUP_TYPE_LIGHT_SOURCE = "LightSource"
+
+ATTR_GROUP_NAME = "group_name"
+ATTR_SCENE_NAME = "scene_name"
+ATTR_TRANSITION = "transition"

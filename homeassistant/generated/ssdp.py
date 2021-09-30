@@ -83,6 +83,11 @@ SSDP = {
             "manufacturer": "DIRECTV"
         }
     ],
+    "fritz": [
+        {
+            "st": "urn:schemas-upnp-org:device:fritzbox:1"
+        }
+    ],
     "fritzbox": [
         {
             "st": "urn:schemas-upnp-org:device:fritzbox:1"
@@ -129,6 +134,16 @@ SSDP = {
         {
             "deviceType": "urn:udi-com:device:X_Insteon_Lighting_Device:1",
             "manufacturer": "Universal Devices Inc."
+        }
+    ],
+    "keenetic_ndms2": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            "manufacturer": "Keenetic Ltd."
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            "manufacturer": "ZyXEL Communications Corp."
         }
     ],
     "konnected": [
@@ -199,6 +214,11 @@ SSDP = {
     "wilight": [
         {
             "manufacturer": "All Automacao Ltda"
+        }
+    ],
+    "yamaha_musiccast": [
+        {
+            "manufacturer": "Yamaha Corporation"
         }
     ]
 }

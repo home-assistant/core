@@ -12,12 +12,13 @@
         },
         "error": {
             "authentication_error": "Codice HomeKit errato. Per favore, controllate e riprovate.",
+            "insecure_setup_code": "Il codice di installazione richiesto non \u00e8 sicuro a causa della sua natura banale. Questo accessorio non soddisfa i requisiti di sicurezza di base.",
             "max_peers_error": "Il dispositivo ha rifiutato di aggiungere l'abbinamento in quanto non dispone di una memoria libera per esso.",
             "pairing_failed": "Si \u00e8 verificato un errore non gestito durante il tentativo di abbinamento con questo dispositivo. Potrebbe trattarsi di un errore temporaneo o il dispositivo potrebbe non essere attualmente supportato.",
             "unable_to_pair": "Impossibile abbinare, per favore riprova.",
             "unknown_error": "Il dispositivo ha riportato un errore sconosciuto. L'abbinamento non \u00e8 riuscito."
         },
-        "flow_title": "{name} tramite il Protocollo degli Accessori HomeKit",
+        "flow_title": "{name}",
         "step": {
             "busy_error": {
                 "description": "Interrompere l'associazione su tutti i controller o provare a riavviare il dispositivo, quindi continuare a riprendere l'associazione.",
@@ -29,6 +30,7 @@
             },
             "pair": {
                 "data": {
+                    "allow_insecure_setup_codes": "Consenti l'associazione con codici di installazione non sicuri.",
                     "pairing_code": "Codice di abbinamento"
                 },
                 "description": "Il controller HomeKit comunica con {name} sulla rete locale utilizzando una connessione crittografata sicura senza un controller HomeKit separato o iCloud. Inserisci il tuo codice di associazione HomeKit (nel formato XXX-XX-XXX) per utilizzare questo accessorio. Questo codice si trova solitamente sul dispositivo stesso o nella confezione.",

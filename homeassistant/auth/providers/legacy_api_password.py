@@ -5,17 +5,21 @@ It will be removed when auth system production ready
 """
 from __future__ import annotations
 
+from collections.abc import Mapping
 import hmac
 from typing import Any, cast
 
 import voluptuous as vol
 
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
+
+# mypy: disallow-any-generics
 
 AUTH_PROVIDER_TYPE = "legacy_api_password"
 CONF_API_PASSWORD = "api_password"
@@ -42,7 +46,7 @@ class LegacyApiPasswordAuthProvider(AuthProvider):
         """Return api_password."""
         return str(self.config[CONF_API_PASSWORD])
 
-    async def async_login_flow(self, context: dict | None) -> LoginFlow:
+    async def async_login_flow(self, context: dict[str, Any] | None) -> LoginFlow:
         """Return a flow to login."""
         return LegacyLoginFlow(self)
 
@@ -57,7 +61,7 @@ class LegacyApiPasswordAuthProvider(AuthProvider):
             raise InvalidAuthError
 
     async def async_get_or_create_credentials(
-        self, flow_result: dict[str, str]
+        self, flow_result: Mapping[str, str]
     ) -> Credentials:
         """Return credentials for this login."""
         credentials = await self.async_credentials()
@@ -82,7 +86,7 @@ class LegacyLoginFlow(LoginFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResult:
         """Handle the step of the form."""
         errors = {}
 

@@ -1,5 +1,5 @@
 """Demo platform that offers a fake Number entity."""
-import voluptuous as vol
+from __future__ import annotations
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.const import DEVICE_DEFAULT_NAME
@@ -40,26 +40,32 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class DemoNumber(NumberEntity):
     """Representation of a demo Number entity."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
-        unique_id,
-        name,
-        state,
-        icon,
-        assumed,
-        min_value=None,
-        max_value=None,
+        unique_id: str,
+        name: str,
+        state: float,
+        icon: str,
+        assumed: bool,
+        min_value: float | None = None,
+        max_value: float | None = None,
         step=None,
-    ):
+    ) -> None:
         """Initialize the Demo Number entity."""
-        self._unique_id = unique_id
-        self._name = name or DEVICE_DEFAULT_NAME
-        self._state = state
-        self._icon = icon
-        self._assumed = assumed
-        self._min_value = min_value
-        self._max_value = max_value
-        self._step = step
+        self._attr_assumed_state = assumed
+        self._attr_icon = icon
+        self._attr_name = name or DEVICE_DEFAULT_NAME
+        self._attr_unique_id = unique_id
+        self._attr_value = state
+
+        if min_value is not None:
+            self._attr_min_value = min_value
+        if max_value is not None:
+            self._attr_max_value = max_value
+        if step is not None:
+            self._attr_step = step
 
     @property
     def device_info(self):
@@ -72,59 +78,7 @@ class DemoNumber(NumberEntity):
             "name": self.name,
         }
 
-    @property
-    def unique_id(self):
-        """Return the unique id."""
-        return self._unique_id
-
-    @property
-    def should_poll(self):
-        """No polling needed for a demo Number entity."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the device if any."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Return the icon to use for device if any."""
-        return self._icon
-
-    @property
-    def assumed_state(self):
-        """Return if the state is based on assumptions."""
-        return self._assumed
-
-    @property
-    def value(self):
-        """Return the current value."""
-        return self._state
-
-    @property
-    def min_value(self):
-        """Return the minimum value."""
-        return self._min_value or super().min_value
-
-    @property
-    def max_value(self):
-        """Return the maximum value."""
-        return self._max_value or super().max_value
-
-    @property
-    def step(self):
-        """Return the value step."""
-        return self._step or super().step
-
     async def async_set_value(self, value):
         """Update the current value."""
-        num_value = float(value)
-
-        if num_value < self.min_value or num_value > self.max_value:
-            raise vol.Invalid(
-                f"Invalid value for {self.entity_id}: {value} (range {self.min_value} - {self.max_value})"
-            )
-
-        self._state = num_value
+        self._attr_value = value
         self.async_write_ha_state()

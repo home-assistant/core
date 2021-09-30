@@ -48,6 +48,9 @@ class TestStatisticsSensor(unittest.TestCase):
         self.median = round(statistics.median(self.values), 2)
         self.deviation = round(statistics.stdev(self.values), 2)
         self.variance = round(statistics.variance(self.values), 2)
+        self.quantiles = [
+            round(quantile, 2) for quantile in statistics.quantiles(self.values)
+        ]
         self.change = round(self.values[-1] - self.values[0], 2)
         self.average_change = round(self.change / (len(self.values) - 1), 2)
         self.change_rate = round(self.change / (60 * (self.count - 1)), 2)
@@ -112,6 +115,7 @@ class TestStatisticsSensor(unittest.TestCase):
         assert self.variance == state.attributes.get("variance")
         assert self.median == state.attributes.get("median")
         assert self.deviation == state.attributes.get("standard_deviation")
+        assert self.quantiles == state.attributes.get("quantiles")
         assert self.mean == state.attributes.get("mean")
         assert self.count == state.attributes.get("count")
         assert self.total == state.attributes.get("total")
@@ -188,6 +192,7 @@ class TestStatisticsSensor(unittest.TestCase):
         # require at least two data points
         assert state.attributes.get("variance") == STATE_UNKNOWN
         assert state.attributes.get("standard_deviation") == STATE_UNKNOWN
+        assert state.attributes.get("quantiles") == STATE_UNKNOWN
 
     def test_max_age(self):
         """Test value deprecation."""

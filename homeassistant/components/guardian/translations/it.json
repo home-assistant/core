@@ -6,6 +6,9 @@
             "cannot_connect": "Impossibile connettersi"
         },
         "step": {
+            "discovery_confirm": {
+                "description": "Vuoi configurare questo dispositivo Guardian?"
+            },
             "user": {
                 "data": {
                     "ip_address": "Indirizzo IP",

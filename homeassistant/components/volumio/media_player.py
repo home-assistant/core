@@ -36,8 +36,6 @@ from homeassistant.util import Throttle
 from .browse_media import browse_node, browse_top_level
 from .const import DATA_INFO, DATA_VOLUMIO, DOMAIN
 
-_CONFIGURING = {}
-
 SUPPORT_VOLUMIO = (
     SUPPORT_PAUSE
     | SUPPORT_VOLUME_SET
@@ -259,7 +257,7 @@ class Volumio(MediaPlayerEntity):
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
         self.thumbnail_cache = {}
-        if media_content_type in [None, "library"]:
+        if media_content_type in (None, "library"):
             return await browse_top_level(self._volumio)
 
         return await browse_node(

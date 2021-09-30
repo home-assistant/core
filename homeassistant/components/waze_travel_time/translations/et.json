@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "See asukoht on juba seadistatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "destination": "Sihtkoht",
+                    "name": "Nimi",
+                    "origin": "L\u00e4htekoht",
+                    "region": "Piirkond"
+                },
+                "description": "L\u00e4htekoha ja sihtkoha jaoks sisesta asukoha aadress v\u00f5i GPS-koordinaadid (GPS-koordinaadid tuleb eraldada komaga). Samuti saaf sisestada \u00fcksuse ID, mis annab selle teabe olekus, \u00fcksuse ID laius- ja pikkuskraadi atribuutidega v\u00f5i tsoonis\u00f5braliku nime."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "avoid_ferries": "V\u00e4ltida parvlaevu?",
+                    "avoid_subscription_roads": "V\u00e4ltida teid mis vajavad vinjetti / ettemaksu?",
+                    "avoid_toll_roads": "V\u00e4ltida tasulisi teid?",
+                    "excl_filter": "Substring EI ole valitud teekonna kirjelduses",
+                    "incl_filter": "Alamstring valitud teekonna kirjelduses",
+                    "realtime": "Travel Time reaalajas?",
+                    "units": "\u00dchikud",
+                    "vehicle_type": "S\u00f5iduki t\u00fc\u00fcp"
+                },
+                "description": "\"Alamstringi\" sisendid v\u00f5imaldavad sundida sidumist kasutama kindlat teekondai v\u00f5i v\u00e4ltima kindlat teekonda aja arvutamisel."
+            }
+        }
+    },
+    "title": ""
+}

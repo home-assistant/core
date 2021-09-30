@@ -8,7 +8,7 @@
             "syncthru_not_supported": "Apparaat ondersteunt SyncThru niet",
             "unknown_state": "Printerstatus onbekend, controleer URL en netwerkconnectiviteit"
         },
-        "flow_title": "Samsung SyncThru Printer: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "data": {

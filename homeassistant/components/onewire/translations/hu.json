@@ -12,7 +12,8 @@
                 "data": {
                     "host": "Hoszt",
                     "port": "Port"
-                }
+                },
+                "title": "Owserver adatok be\u00e1ll\u00edt\u00e1sa"
             },
             "user": {
                 "data": {

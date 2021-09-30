@@ -1,7 +1,7 @@
 """The Remote Python Debugger integration."""
 from __future__ import annotations
 
-from asyncio import Event
+from asyncio import Event, get_running_loop
 import logging
 from threading import Thread
 
@@ -15,8 +15,8 @@ from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "debugpy"
-CONF_WAIT = "wait"
 CONF_START = "start"
+CONF_WAIT = "wait"
 SERVICE_START = "start"
 
 CONFIG_SCHEMA = vol.Schema(
@@ -43,7 +43,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def debug_start(
         call: ServiceCall | None = None, *, wait: bool = True
     ) -> None:
-        """Start the debugger."""
+        """Enable asyncio debugging and start the debugger."""
+        get_running_loop().set_debug(True)
+
         debugpy.listen((conf[CONF_HOST], conf[CONF_PORT]))
 
         wait = conf[CONF_WAIT]

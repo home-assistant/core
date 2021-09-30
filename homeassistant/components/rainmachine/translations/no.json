@@ -6,6 +6,7 @@
         "error": {
             "invalid_auth": "Ugyldig godkjenning"
         },
+        "flow_title": "{ip}",
         "step": {
             "user": {
                 "data": {

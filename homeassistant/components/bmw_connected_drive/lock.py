@@ -4,7 +4,6 @@ import logging
 from bimmer_connected.state import LockState
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 
 from . import DOMAIN as BMW_DOMAIN, BMWConnectedDriveBaseEntity
 from .const import CONF_ACCOUNT, DATA_ENTRIES
@@ -33,50 +32,17 @@ class BMWLock(BMWConnectedDriveBaseEntity, LockEntity):
         super().__init__(account, vehicle)
 
         self._attribute = attribute
-        self._name = f"{self._vehicle.name} {self._attribute}"
-        self._unique_id = f"{self._vehicle.vin}-{self._attribute}"
+        self._attr_name = f"{vehicle.name} {attribute}"
+        self._attr_unique_id = f"{vehicle.vin}-{attribute}"
         self._sensor_name = sensor_name
-        self._state = None
-        self.door_lock_state_available = (
-            DOOR_LOCK_STATE in self._vehicle.available_attributes
-        )
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the lock."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the lock."""
-        return self._name
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the lock."""
-        vehicle_state = self._vehicle.state
-        result = self._attrs.copy()
-
-        if self.door_lock_state_available:
-            result["door_lock_state"] = vehicle_state.door_lock_state.value
-            result["last_update_reason"] = vehicle_state.last_update_reason
-        return result
-
-    @property
-    def is_locked(self):
-        """Return true if lock is locked."""
-        if self.door_lock_state_available:
-            result = self._state == STATE_LOCKED
-        else:
-            result = None
-        return result
+        self.door_lock_state_available = DOOR_LOCK_STATE in vehicle.available_attributes
 
     def lock(self, **kwargs):
         """Lock the car."""
         _LOGGER.debug("%s: locking doors", self._vehicle.name)
         # Optimistic state set here because it takes some time before the
         # update callback response
-        self._state = STATE_LOCKED
+        self._attr_is_locked = True
         self.schedule_update_ha_state()
         self._vehicle.remote_services.trigger_remote_door_lock()
 
@@ -85,18 +51,23 @@ class BMWLock(BMWConnectedDriveBaseEntity, LockEntity):
         _LOGGER.debug("%s: unlocking doors", self._vehicle.name)
         # Optimistic state set here because it takes some time before the
         # update callback response
-        self._state = STATE_UNLOCKED
+        self._attr_is_locked = False
         self.schedule_update_ha_state()
         self._vehicle.remote_services.trigger_remote_door_unlock()
 
     def update(self):
         """Update state of the lock."""
         _LOGGER.debug("%s: updating data for %s", self._vehicle.name, self._attribute)
-        vehicle_state = self._vehicle.state
+        if self._vehicle.state.door_lock_state in [LockState.LOCKED, LockState.SECURED]:
+            self._attr_is_locked = True
+        else:
+            self._attr_is_locked = False
+        if not self.door_lock_state_available:
+            self._attr_is_locked = None
 
-        # Possible values: LOCKED, SECURED, SELECTIVE_LOCKED, UNLOCKED
-        self._state = (
-            STATE_LOCKED
-            if vehicle_state.door_lock_state in [LockState.LOCKED, LockState.SECURED]
-            else STATE_UNLOCKED
-        )
+        vehicle_state = self._vehicle.state
+        result = self._attrs.copy()
+        if self.door_lock_state_available:
+            result["door_lock_state"] = vehicle_state.door_lock_state.value
+            result["last_update_reason"] = vehicle_state.last_update_reason
+        self._attr_extra_state_attributes = result

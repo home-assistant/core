@@ -45,7 +45,7 @@
                 "data": {
                     "scan_interval": "Scaninterval (seconden)"
                 },
-                "description": "Werk het scaninterval bij om vaker naar gegevens te vragen.",
+                "description": "Werk het scaninterval bij om vaker gegevens op te vragen.",
                 "title": "Opties voor Hive"
             }
         }

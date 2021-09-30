@@ -3,5 +3,6 @@
   "name": "Deutsche Bahn",
   "documentation": "https://www.home-assistant.io/integrations/deutsche_bahn",
   "requirements": ["schiene==0.23"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

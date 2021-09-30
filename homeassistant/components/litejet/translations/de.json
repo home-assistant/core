@@ -15,5 +15,15 @@
                 "title": "Verbinde zu LiteJet"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "default_transition": "Standard\u00fcbergang (Sekunden)"
+                },
+                "title": "LiteJet konfigurieren"
+            }
+        }
     }
 }

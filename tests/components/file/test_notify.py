@@ -63,7 +63,7 @@ async def test_notify_file(hass, timestamp):
 
         full_filename = os.path.join(hass.config.path(), filename)
         assert m_open.call_count == 1
-        assert m_open.call_args == call(full_filename, "a")
+        assert m_open.call_args == call(full_filename, "a", encoding="utf8")
 
         assert m_open.return_value.write.call_count == 2
         if not timestamp:

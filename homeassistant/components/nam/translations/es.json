@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "device_unsupported": "El dispositivo no es compatible."
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "unknown": "Error inesperado"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm_discovery": {
+                "description": "\u00bfQuieres configurar Nettigo Air Monitor en {host} ?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Configurar la integraci\u00f3n de Nettigo Air Monitor."
+            }
+        }
+    }
+}

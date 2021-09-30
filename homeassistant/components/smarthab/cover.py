@@ -37,6 +37,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SmartHabCover(CoverEntity):
     """Representation a cover."""
 
+    _attr_device_class = DEVICE_CLASS_WINDOW
+
     def __init__(self, cover):
         """Initialize a SmartHabCover."""
         self._cover = cover
@@ -68,11 +70,6 @@ class SmartHabCover(CoverEntity):
     def is_closed(self) -> bool:
         """Return if the cover is closed or not."""
         return self._cover.state == 0
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_WINDOW
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""

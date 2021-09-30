@@ -2,6 +2,7 @@
   "domain": "amazon_polly",
   "name": "Amazon Polly",
   "documentation": "https://www.home-assistant.io/integrations/amazon_polly",
-  "requirements": ["boto3==1.9.252"],
-  "codeowners": []
+  "requirements": ["boto3==1.16.52"],
+  "codeowners": [],
+  "iot_class": "cloud_push"
 }

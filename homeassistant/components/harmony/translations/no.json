@@ -7,7 +7,7 @@
             "cannot_connect": "Tilkobling mislyktes",
             "unknown": "Uventet feil"
         },
-        "flow_title": "",
+        "flow_title": "{name}",
         "step": {
             "link": {
                 "description": "Vil du konfigurere {name} ({host})?",

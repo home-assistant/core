@@ -4,7 +4,7 @@ import hmac
 
 import pytest
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import mailgun, webhook
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_API_KEY, CONF_DOMAIN
@@ -35,7 +35,7 @@ async def webhook_id_with_api_key(hass):
         {"internal_url": "http://example.local:8123"},
     )
     result = await hass.config_entries.flow.async_init(
-        "mailgun", context={"source": "user"}
+        "mailgun", context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM, result
 
@@ -55,7 +55,7 @@ async def webhook_id_without_api_key(hass):
         {"internal_url": "http://example.local:8123"},
     )
     result = await hass.config_entries.flow.async_init(
-        "mailgun", context={"source": "user"}
+        "mailgun", context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM, result
 

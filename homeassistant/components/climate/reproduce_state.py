@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import Context, HomeAssistant, State
@@ -40,8 +41,8 @@ async def _async_reproduce_states(
         data = data or {}
         data["entity_id"] = state.entity_id
         for key in keys:
-            if key in state.attributes:
-                data[key] = state.attributes[key]
+            if (value := state.attributes.get(key)) is not None:
+                data[key] = value
 
         await hass.services.async_call(
             DOMAIN, service, data, blocking=True, context=context

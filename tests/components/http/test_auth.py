@@ -53,7 +53,7 @@ def app(hass):
     app = web.Application()
     app["hass"] = hass
     app.router.add_get("/", mock_handler)
-    async_setup_forwarded(app, [])
+    async_setup_forwarded(app, True, [])
     return app
 
 

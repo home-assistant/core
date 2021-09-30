@@ -8,7 +8,7 @@ from typing import Any, Callable
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_PLATFORM
+from homeassistant.const import CONF_ID, CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
@@ -21,7 +21,8 @@ _PLATFORM_ALIASES = {
 
 
 async def _async_get_trigger_platform(hass: HomeAssistant, config: ConfigType) -> Any:
-    platform = config[CONF_PLATFORM]
+    platform_and_sub_type = config[CONF_PLATFORM].split(".")
+    platform = platform_and_sub_type[0]
     for alias, triggers in _PLATFORM_ALIASES.items():
         if platform in triggers:
             platform = alias
@@ -74,7 +75,10 @@ async def async_initialize_triggers(
     triggers = []
     for idx, conf in enumerate(trigger_config):
         platform = await _async_get_trigger_platform(hass, conf)
-        info = {**info, "trigger_id": f"{idx}"}
+        trigger_id = conf.get(CONF_ID, f"{idx}")
+        trigger_idx = f"{idx}"
+        trigger_data = {"id": trigger_id, "idx": trigger_idx}
+        info = {**info, "trigger_data": trigger_data}
         triggers.append(platform.async_attach_trigger(hass, conf, action, info))
 
     attach_results = await asyncio.gather(*triggers, return_exceptions=True)

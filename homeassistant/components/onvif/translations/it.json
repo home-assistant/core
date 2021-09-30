@@ -18,6 +18,16 @@
                 },
                 "title": "Configurare l'autenticazione"
             },
+            "configure": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nome",
+                    "password": "Password",
+                    "port": "Porta",
+                    "username": "Nome utente"
+                },
+                "title": "Configura il dispositivo ONVIF"
+            },
             "configure_profile": {
                 "data": {
                     "include": "Crea entit\u00e0 telecamera"
@@ -40,6 +50,9 @@
                 "title": "Configurare il dispositivo ONVIF"
             },
             "user": {
+                "data": {
+                    "auto": "Cerca automaticamente"
+                },
                 "description": "Facendo clic su Invia, cercheremo nella tua rete i dispositivi ONVIF che supportano il profilo S. \n\nAlcuni produttori hanno iniziato a disabilitare ONVIF per impostazione predefinita. Assicurati che ONVIF sia abilitato nella configurazione della tua telecamera.",
                 "title": "Configurazione del dispositivo ONVIF"
             }

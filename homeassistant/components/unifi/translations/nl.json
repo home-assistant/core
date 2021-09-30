@@ -10,7 +10,7 @@
             "service_unavailable": "Kan geen verbinding maken",
             "unknown_client_mac": "Geen client beschikbaar op dat MAC-adres"
         },
-        "flow_title": "UniFi Netwerk {site} ({host})",
+        "flow_title": "{site} ({host})",
         "step": {
             "user": {
                 "data": {

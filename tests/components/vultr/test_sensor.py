@@ -29,6 +29,7 @@ class TestVultrSensorSetup(unittest.TestCase):
     def add_entities(self, devices, action):
         """Mock add devices."""
         for device in devices:
+            device.hass = self.hass
             self.DEVICES.append(device)
 
     def setUp(self):

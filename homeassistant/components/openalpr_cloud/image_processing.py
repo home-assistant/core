@@ -17,7 +17,7 @@ from homeassistant.components.image_processing import (
 from homeassistant.components.openalpr_local.image_processing import (
     ImageProcessingAlprEntity,
 )
-from homeassistant.const import CONF_API_KEY, HTTP_OK
+from homeassistant.const import CONF_API_KEY, CONF_REGION, HTTP_OK
 from homeassistant.core import split_entity_id
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -40,8 +40,6 @@ OPENALPR_REGIONS = [
     "us",
     "vn2",
 ]
-
-CONF_REGION = "region"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

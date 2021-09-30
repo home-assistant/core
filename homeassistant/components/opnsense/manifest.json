@@ -3,5 +3,6 @@
   "name": "OPNSense",
   "documentation": "https://www.home-assistant.io/integrations/opnsense",
   "requirements": ["pyopnsense==0.2.0"],
-  "codeowners": ["@mtreinish"]
+  "codeowners": ["@mtreinish"],
+  "iot_class": "local_polling"
 }

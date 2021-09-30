@@ -173,7 +173,7 @@ class CounterStorageCollection(collection.StorageCollection):
 class Counter(RestoreEntity):
     """Representation of a counter."""
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         """Initialize a counter."""
         self._config: dict = config
         self._state: int | None = config[CONF_INITIAL]

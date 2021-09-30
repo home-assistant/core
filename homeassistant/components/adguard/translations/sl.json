@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "existing_instance_updated": "Posodobljena obstoje\u010da konfiguracija.",
-            "single_instance_allowed": "Dovoljena je samo ena konfiguracija AdGuard Home."
+            "existing_instance_updated": "Posodobljena obstoje\u010da konfiguracija."
         },
         "step": {
             "hassio_confirm": {

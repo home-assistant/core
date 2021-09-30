@@ -84,7 +84,7 @@ class GpsdSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of GPSD."""
         if self.agps_thread.data_stream.mode == 3:
             return "3D Fix"

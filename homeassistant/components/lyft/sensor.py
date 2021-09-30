@@ -39,6 +39,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Lyft sensor."""
+    _LOGGER.warning(
+        "The Lyft integration has been deprecated and will be removed in "
+        "Home Assistant Core 2021.10"
+    )
 
     auth_flow = ClientCredentialGrant(
         client_id=config.get(CONF_CLIENT_ID),
@@ -99,12 +103,12 @@ class LyftSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 

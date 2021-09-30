@@ -6,7 +6,7 @@
         "error": {
             "invalid_url": "Neplatn\u00e1 URL adresa"
         },
-        "flow_title": "Tisk\u00e1rna Samsung SyncThru: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "data": {

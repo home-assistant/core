@@ -82,7 +82,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     first_run = hass.data[DOMAIN][config_entry.entry_id][FIRST_RUN]
     async_add_entities(entities, first_run)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     def _call_service(entities, service_call):
         for entity in entities:

@@ -82,4 +82,5 @@ async def async_remove_user(
 
     if user_id is not None:
         user = await hass.auth.async_get_user(user_id)
-        await hass.auth.async_remove_user(user)
+        if user:
+            await hass.auth.async_remove_user(user)

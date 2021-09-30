@@ -1,4 +1,6 @@
 """Config flow for the Velbus platform."""
+from __future__ import annotations
+
 import velbus
 import voluptuous as vol
 
@@ -22,11 +24,10 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self) -> None:
         """Initialize the velbus config flow."""
-        self._errors = {}
+        self._errors: dict[str, str] = {}
 
     def _create_device(self, name: str, prt: str):
         """Create an entry async."""

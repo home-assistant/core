@@ -1,11 +1,17 @@
 """Bitcoin information service that uses blockchain.com."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
 from blockchain import exchangerates, statistics
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_CURRENCY,
@@ -25,34 +31,112 @@ ICON = "mdi:currency-btc"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-OPTION_TYPES = {
-    "exchangerate": ["Exchange rate (1 BTC)", None],
-    "trade_volume_btc": ["Trade volume", "BTC"],
-    "miners_revenue_usd": ["Miners revenue", "USD"],
-    "btc_mined": ["Mined", "BTC"],
-    "trade_volume_usd": ["Trade volume", "USD"],
-    "difficulty": ["Difficulty", None],
-    "minutes_between_blocks": ["Time between Blocks", TIME_MINUTES],
-    "number_of_transactions": ["No. of Transactions", None],
-    "hash_rate": ["Hash rate", f"PH/{TIME_SECONDS}"],
-    "timestamp": ["Timestamp", None],
-    "mined_blocks": ["Mined Blocks", None],
-    "blocks_size": ["Block size", None],
-    "total_fees_btc": ["Total fees", "BTC"],
-    "total_btc_sent": ["Total sent", "BTC"],
-    "estimated_btc_sent": ["Estimated sent", "BTC"],
-    "total_btc": ["Total", "BTC"],
-    "total_blocks": ["Total Blocks", None],
-    "next_retarget": ["Next retarget", None],
-    "estimated_transaction_volume_usd": ["Est. Transaction volume", "USD"],
-    "miners_revenue_btc": ["Miners revenue", "BTC"],
-    "market_price_usd": ["Market price", "USD"],
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="exchangerate",
+        name="Exchange rate (1 BTC)",
+    ),
+    SensorEntityDescription(
+        key="trade_volume_btc",
+        name="Trade volume",
+        native_unit_of_measurement="BTC",
+    ),
+    SensorEntityDescription(
+        key="miners_revenue_usd",
+        name="Miners revenue",
+        native_unit_of_measurement="USD",
+    ),
+    SensorEntityDescription(
+        key="btc_mined",
+        name="Mined",
+        native_unit_of_measurement="BTC",
+    ),
+    SensorEntityDescription(
+        key="trade_volume_usd",
+        name="Trade volume",
+        native_unit_of_measurement="USD",
+    ),
+    SensorEntityDescription(
+        key="difficulty",
+        name="Difficulty",
+    ),
+    SensorEntityDescription(
+        key="minutes_between_blocks",
+        name="Time between Blocks",
+        native_unit_of_measurement=TIME_MINUTES,
+    ),
+    SensorEntityDescription(
+        key="number_of_transactions",
+        name="No. of Transactions",
+    ),
+    SensorEntityDescription(
+        key="hash_rate",
+        name="Hash rate",
+        native_unit_of_measurement=f"PH/{TIME_SECONDS}",
+    ),
+    SensorEntityDescription(
+        key="timestamp",
+        name="Timestamp",
+    ),
+    SensorEntityDescription(
+        key="mined_blocks",
+        name="Mined Blocks",
+    ),
+    SensorEntityDescription(
+        key="blocks_size",
+        name="Block size",
+    ),
+    SensorEntityDescription(
+        key="total_fees_btc",
+        name="Total fees",
+        native_unit_of_measurement="BTC",
+    ),
+    SensorEntityDescription(
+        key="total_btc_sent",
+        name="Total sent",
+        native_unit_of_measurement="BTC",
+    ),
+    SensorEntityDescription(
+        key="estimated_btc_sent",
+        name="Estimated sent",
+        native_unit_of_measurement="BTC",
+    ),
+    SensorEntityDescription(
+        key="total_btc",
+        name="Total",
+        native_unit_of_measurement="BTC",
+    ),
+    SensorEntityDescription(
+        key="total_blocks",
+        name="Total Blocks",
+    ),
+    SensorEntityDescription(
+        key="next_retarget",
+        name="Next retarget",
+    ),
+    SensorEntityDescription(
+        key="estimated_transaction_volume_usd",
+        name="Est. Transaction volume",
+        native_unit_of_measurement="USD",
+    ),
+    SensorEntityDescription(
+        key="miners_revenue_btc",
+        name="Miners revenue",
+        native_unit_of_measurement="BTC",
+    ),
+    SensorEntityDescription(
+        key="market_price_usd",
+        name="Market price",
+        native_unit_of_measurement="USD",
+    ),
+)
+
+OPTION_KEYS = [desc.key for desc in SENSOR_TYPES]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_DISPLAY_OPTIONS, default=[]): vol.All(
-            cv.ensure_list, [vol.In(OPTION_TYPES)]
+            cv.ensure_list, [vol.In(OPTION_KEYS)]
         ),
         vol.Optional(CONF_CURRENCY, default=DEFAULT_CURRENCY): cv.string,
     }
@@ -69,49 +153,26 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         currency = DEFAULT_CURRENCY
 
     data = BitcoinData()
-    dev = []
-    for variable in config[CONF_DISPLAY_OPTIONS]:
-        dev.append(BitcoinSensor(data, variable, currency))
+    entities = [
+        BitcoinSensor(data, currency, description)
+        for description in SENSOR_TYPES
+        if description.key in config[CONF_DISPLAY_OPTIONS]
+    ]
 
-    add_entities(dev, True)
+    add_entities(entities, True)
 
 
 class BitcoinSensor(SensorEntity):
     """Representation of a Bitcoin sensor."""
 
-    def __init__(self, data, option_type, currency):
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_icon = ICON
+
+    def __init__(self, data, currency, description: SensorEntityDescription):
         """Initialize the sensor."""
+        self.entity_description = description
         self.data = data
-        self._name = OPTION_TYPES[option_type][0]
-        self._unit_of_measurement = OPTION_TYPES[option_type][1]
         self._currency = currency
-        self.type = option_type
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     def update(self):
         """Get the latest data and updates the states."""
@@ -119,49 +180,50 @@ class BitcoinSensor(SensorEntity):
         stats = self.data.stats
         ticker = self.data.ticker
 
-        if self.type == "exchangerate":
-            self._state = ticker[self._currency].p15min
-            self._unit_of_measurement = self._currency
-        elif self.type == "trade_volume_btc":
-            self._state = f"{stats.trade_volume_btc:.1f}"
-        elif self.type == "miners_revenue_usd":
-            self._state = f"{stats.miners_revenue_usd:.0f}"
-        elif self.type == "btc_mined":
-            self._state = str(stats.btc_mined * 0.00000001)
-        elif self.type == "trade_volume_usd":
-            self._state = f"{stats.trade_volume_usd:.1f}"
-        elif self.type == "difficulty":
-            self._state = f"{stats.difficulty:.0f}"
-        elif self.type == "minutes_between_blocks":
-            self._state = f"{stats.minutes_between_blocks:.2f}"
-        elif self.type == "number_of_transactions":
-            self._state = str(stats.number_of_transactions)
-        elif self.type == "hash_rate":
-            self._state = f"{stats.hash_rate * 0.000001:.1f}"
-        elif self.type == "timestamp":
-            self._state = stats.timestamp
-        elif self.type == "mined_blocks":
-            self._state = str(stats.mined_blocks)
-        elif self.type == "blocks_size":
-            self._state = f"{stats.blocks_size:.1f}"
-        elif self.type == "total_fees_btc":
-            self._state = f"{stats.total_fees_btc * 0.00000001:.2f}"
-        elif self.type == "total_btc_sent":
-            self._state = f"{stats.total_btc_sent * 0.00000001:.2f}"
-        elif self.type == "estimated_btc_sent":
-            self._state = f"{stats.estimated_btc_sent * 0.00000001:.2f}"
-        elif self.type == "total_btc":
-            self._state = f"{stats.total_btc * 0.00000001:.2f}"
-        elif self.type == "total_blocks":
-            self._state = f"{stats.total_blocks:.0f}"
-        elif self.type == "next_retarget":
-            self._state = f"{stats.next_retarget:.2f}"
-        elif self.type == "estimated_transaction_volume_usd":
-            self._state = f"{stats.estimated_transaction_volume_usd:.2f}"
-        elif self.type == "miners_revenue_btc":
-            self._state = f"{stats.miners_revenue_btc * 0.00000001:.1f}"
-        elif self.type == "market_price_usd":
-            self._state = f"{stats.market_price_usd:.2f}"
+        sensor_type = self.entity_description.key
+        if sensor_type == "exchangerate":
+            self._attr_native_value = ticker[self._currency].p15min
+            self._attr_native_unit_of_measurement = self._currency
+        elif sensor_type == "trade_volume_btc":
+            self._attr_native_value = f"{stats.trade_volume_btc:.1f}"
+        elif sensor_type == "miners_revenue_usd":
+            self._attr_native_value = f"{stats.miners_revenue_usd:.0f}"
+        elif sensor_type == "btc_mined":
+            self._attr_native_value = str(stats.btc_mined * 0.00000001)
+        elif sensor_type == "trade_volume_usd":
+            self._attr_native_value = f"{stats.trade_volume_usd:.1f}"
+        elif sensor_type == "difficulty":
+            self._attr_native_value = f"{stats.difficulty:.0f}"
+        elif sensor_type == "minutes_between_blocks":
+            self._attr_native_value = f"{stats.minutes_between_blocks:.2f}"
+        elif sensor_type == "number_of_transactions":
+            self._attr_native_value = str(stats.number_of_transactions)
+        elif sensor_type == "hash_rate":
+            self._attr_native_value = f"{stats.hash_rate * 0.000001:.1f}"
+        elif sensor_type == "timestamp":
+            self._attr_native_value = stats.timestamp
+        elif sensor_type == "mined_blocks":
+            self._attr_native_value = str(stats.mined_blocks)
+        elif sensor_type == "blocks_size":
+            self._attr_native_value = f"{stats.blocks_size:.1f}"
+        elif sensor_type == "total_fees_btc":
+            self._attr_native_value = f"{stats.total_fees_btc * 0.00000001:.2f}"
+        elif sensor_type == "total_btc_sent":
+            self._attr_native_value = f"{stats.total_btc_sent * 0.00000001:.2f}"
+        elif sensor_type == "estimated_btc_sent":
+            self._attr_native_value = f"{stats.estimated_btc_sent * 0.00000001:.2f}"
+        elif sensor_type == "total_btc":
+            self._attr_native_value = f"{stats.total_btc * 0.00000001:.2f}"
+        elif sensor_type == "total_blocks":
+            self._attr_native_value = f"{stats.total_blocks:.0f}"
+        elif sensor_type == "next_retarget":
+            self._attr_native_value = f"{stats.next_retarget:.2f}"
+        elif sensor_type == "estimated_transaction_volume_usd":
+            self._attr_native_value = f"{stats.estimated_transaction_volume_usd:.2f}"
+        elif sensor_type == "miners_revenue_btc":
+            self._attr_native_value = f"{stats.miners_revenue_btc * 0.00000001:.1f}"
+        elif sensor_type == "market_price_usd":
+            self._attr_native_value = f"{stats.market_price_usd:.2f}"
 
 
 class BitcoinData:

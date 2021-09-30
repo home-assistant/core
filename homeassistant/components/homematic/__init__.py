@@ -611,6 +611,8 @@ def _device_from_servicecall(hass, service):
     interface = service.data.get(ATTR_INTERFACE)
     if address == "BIDCOS-RF":
         address = "BidCoS-RF"
+    if address == "HMIP-RCV-1":
+        address = "HmIP-RCV-1"
 
     if interface:
         return hass.data[DATA_HOMEMATIC].devices[interface].get(address)

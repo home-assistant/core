@@ -105,7 +105,7 @@ class GdacsSensor(SensorEntity):
         self._removed = status_info.removed
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._total
 
@@ -125,7 +125,7 @@ class GdacsSensor(SensorEntity):
         return DEFAULT_ICON
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return DEFAULT_UNIT_OF_MEASUREMENT
 

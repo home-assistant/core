@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from collections.abc import Iterator
 import fnmatch
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, TextIO, TypeVar, Union, overload
+from typing import Any, TextIO, TypeVar, Union, overload
 
 import yaml
 
@@ -17,8 +18,8 @@ from .objects import Input, NodeListClass, NodeStrClass
 
 # mypy: allow-untyped-calls, no-warn-return-any
 
-JSON_TYPE = Union[List, Dict, str]  # pylint: disable=invalid-name
-DICT_T = TypeVar("DICT_T", bound=Dict)  # pylint: disable=invalid-name
+JSON_TYPE = Union[list, dict, str]  # pylint: disable=invalid-name
+DICT_T = TypeVar("DICT_T", bound=dict)  # pylint: disable=invalid-name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 class Secrets:
     """Store secrets while loading YAML."""
 
-    def __init__(self, config_dir: Path):
+    def __init__(self, config_dir: Path) -> None:
         """Initialize secrets."""
         self.config_dir = config_dir
         self._cache: dict[Path, dict[str, str]] = {}
@@ -97,10 +98,10 @@ class SafeLineLoader(yaml.SafeLoader):
         super().__init__(stream)
         self.secrets = secrets
 
-    def compose_node(self, parent: yaml.nodes.Node, index: int) -> yaml.nodes.Node:
+    def compose_node(self, parent: yaml.nodes.Node, index: int) -> yaml.nodes.Node:  # type: ignore[override]
         """Annotate a node with the first line it was seen."""
         last_line: int = self.line
-        node: yaml.nodes.Node = super().compose_node(parent, index)
+        node: yaml.nodes.Node = super().compose_node(parent, index)  # type: ignore[assignment]
         node.__line__ = last_line + 1  # type: ignore
         return node
 
@@ -263,7 +264,7 @@ def _ordered_dict(loader: SafeLineLoader, node: yaml.nodes.MappingNode) -> Order
             fname = getattr(loader.stream, "name", "")
             raise yaml.MarkedYAMLError(
                 context=f'invalid key: "{key}"',
-                context_mark=yaml.Mark(fname, 0, line, -1, None, None),
+                context_mark=yaml.Mark(fname, 0, line, -1, None, None),  # type: ignore[arg-type]
             ) from exc
 
         if key in seen:

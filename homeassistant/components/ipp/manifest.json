@@ -6,5 +6,6 @@
   "codeowners": ["@ctalkington"],
   "config_flow": true,
   "quality_scale": "platinum",
-  "zeroconf": ["_ipps._tcp.local.", "_ipp._tcp.local."]
+  "zeroconf": ["_ipps._tcp.local.", "_ipp._tcp.local."],
+  "iot_class": "local_polling"
 }

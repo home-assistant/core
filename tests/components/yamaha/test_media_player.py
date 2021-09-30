@@ -130,6 +130,32 @@ async def test_enable_output(hass, device, main_zone):
     assert main_zone.enable_output.call_args == call(port, enabled)
 
 
+@pytest.mark.parametrize(
+    "cursor,method",
+    [
+        (yamaha.CURSOR_TYPE_DOWN, "menu_down"),
+        (yamaha.CURSOR_TYPE_LEFT, "menu_left"),
+        (yamaha.CURSOR_TYPE_RETURN, "menu_return"),
+        (yamaha.CURSOR_TYPE_RIGHT, "menu_right"),
+        (yamaha.CURSOR_TYPE_SELECT, "menu_sel"),
+        (yamaha.CURSOR_TYPE_UP, "menu_up"),
+    ],
+)
+@pytest.mark.usefixtures("device")
+async def test_menu_cursor(hass, main_zone, cursor, method):
+    """Verify that the correct menu method is called for the menu_cursor service."""
+    assert await async_setup_component(hass, mp.DOMAIN, CONFIG)
+    await hass.async_block_till_done()
+
+    data = {
+        "entity_id": "media_player.yamaha_receiver_main_zone",
+        "cursor": cursor,
+    }
+    await hass.services.async_call(DOMAIN, yamaha.SERVICE_MENU_CURSOR, data, True)
+
+    getattr(main_zone, method).assert_called_once_with()
+
+
 async def test_select_scene(hass, device, main_zone, caplog):
     """Test select scene service."""
     scene_prop = PropertyMock(return_value=None)

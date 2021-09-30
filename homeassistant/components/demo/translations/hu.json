@@ -1,9 +1,16 @@
 {
     "options": {
         "step": {
+            "init": {
+                "data": {
+                    "one": "\u00dcres",
+                    "other": "\u00dcres"
+                }
+            },
             "options_1": {
                 "data": {
                     "bool": "Opcion\u00e1lis logikai \u00e9rt\u00e9k",
+                    "constant": "\u00c1lland\u00f3",
                     "int": "Numerikus bemenet"
                 }
             },

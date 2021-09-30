@@ -13,7 +13,7 @@
             "cannot_connect": "\u00dchendamine nurjus",
             "connection_upgrade": "Printeriga \u00fchenduse loomine nurjus. Proovi uuesti kui SSL/TLS-i suvand on m\u00e4rgitud."
         },
-        "flow_title": "Printer: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

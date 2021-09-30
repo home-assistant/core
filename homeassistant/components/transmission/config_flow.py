@@ -41,7 +41,6 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle Tansmission config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @staticmethod
     @callback
@@ -55,7 +54,7 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
 
-            for entry in self.hass.config_entries.async_entries(DOMAIN):
+            for entry in self._async_current_entries():
                 if (
                     entry.data[CONF_HOST] == user_input[CONF_HOST]
                     and entry.data[CONF_PORT] == user_input[CONF_PORT]
@@ -86,7 +85,9 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config):
         """Import from Transmission client config."""
-        import_config[CONF_SCAN_INTERVAL] = import_config[CONF_SCAN_INTERVAL].seconds
+        import_config[CONF_SCAN_INTERVAL] = import_config[
+            CONF_SCAN_INTERVAL
+        ].total_seconds()
         return await self.async_step_user(user_input=import_config)
 
 

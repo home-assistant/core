@@ -14,7 +14,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
     for service_location in smappee_base.smappee.service_locations.values():
         for actuator_id, actuator in service_location.actuators.items():
-            if actuator.type in ["SWITCH", "COMFORT_PLUG"]:
+            if actuator.type in ("SWITCH", "COMFORT_PLUG"):
                 entities.append(
                     SmappeeActuator(
                         smappee_base,
@@ -102,7 +102,7 @@ class SmappeeActuator(SwitchEntity):
 
     def turn_on(self, **kwargs):
         """Turn on Comport Plug."""
-        if self._actuator_type in ["SWITCH", "COMFORT_PLUG"]:
+        if self._actuator_type in ("SWITCH", "COMFORT_PLUG"):
             self._service_location.set_actuator_state(self._actuator_id, state="ON_ON")
         elif self._actuator_type == "INFINITY_OUTPUT_MODULE":
             self._service_location.set_actuator_state(
@@ -111,7 +111,7 @@ class SmappeeActuator(SwitchEntity):
 
     def turn_off(self, **kwargs):
         """Turn off Comport Plug."""
-        if self._actuator_type in ["SWITCH", "COMFORT_PLUG"]:
+        if self._actuator_type in ("SWITCH", "COMFORT_PLUG"):
             self._service_location.set_actuator_state(
                 self._actuator_id, state="OFF_OFF"
             )
@@ -127,17 +127,6 @@ class SmappeeActuator(SwitchEntity):
             self._connection_state == "CONNECTED"
             or self._actuator_type == "COMFORT_PLUG"
         )
-
-    @property
-    def today_energy_kwh(self):
-        """Return the today total energy usage in kWh."""
-        if self._actuator_type == "SWITCH":
-            cons = self._service_location.actuators.get(
-                self._actuator_id
-            ).consumption_today
-            if cons is not None:
-                return round(cons / 1000.0, 2)
-        return None
 
     @property
     def unique_id(

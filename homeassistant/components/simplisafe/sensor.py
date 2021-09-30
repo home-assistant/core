@@ -2,14 +2,18 @@
 from simplipy.entity import EntityTypes
 
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_FAHRENHEIT
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SimpliSafeBaseSensor
 from .const import DATA_CLIENT, DOMAIN, LOGGER
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up SimpliSafe freeze sensors based on a config entry."""
     simplisafe = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
     sensors = []
@@ -29,32 +33,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class SimplisafeFreezeSensor(SimpliSafeBaseSensor, SensorEntity):
     """Define a SimpliSafe freeze sensor entity."""
 
-    def __init__(self, simplisafe, system, sensor):
-        """Initialize."""
-        super().__init__(simplisafe, system, sensor)
-        self._state = None
-
-    @property
-    def device_class(self):
-        """Return type of sensor."""
-        return DEVICE_CLASS_TEMPERATURE
-
-    @property
-    def unique_id(self):
-        """Return unique ID of sensor."""
-        return self._sensor.serial
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return TEMP_FAHRENHEIT
-
-    @property
-    def state(self):
-        """Return the sensor state."""
-        return self._state
+    _attr_device_class = DEVICE_CLASS_TEMPERATURE
+    _attr_native_unit_of_measurement = TEMP_FAHRENHEIT
 
     @callback
-    def async_update_from_rest_api(self):
+    def async_update_from_rest_api(self) -> None:
         """Update the entity with the provided REST API data."""
-        self._state = self._sensor.temperature
+        self._attr_native_value = self._sensor.temperature

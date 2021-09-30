@@ -10,3 +10,8 @@ ATTR_DEVICES_LIST = "devices_list"
 ATTR_LAST_ACTIVITY = "last_activity"
 ATTR_ACTIVITY_STARTING = "activity_starting"
 PREVIOUS_ACTIVE_ACTIVITY = "Previous Active Activity"
+
+
+HARMONY_DATA = "harmony_data"
+CANCEL_LISTENER = "cancel_listener"
+CANCEL_STOP = "cancel_stop"

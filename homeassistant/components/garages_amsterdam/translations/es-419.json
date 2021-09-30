@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "garage_name": "Nombre del garaje"
+                },
+                "title": "Elija un garaje para monitorear"
+            }
+        }
+    }
+}

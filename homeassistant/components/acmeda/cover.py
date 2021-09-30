@@ -61,7 +61,7 @@ class AcmedaCover(AcmedaBase, CoverEntity):
         None is unknown, 0 is closed, 100 is fully open.
         """
         position = None
-        if self.roller.type in [7, 10]:
+        if self.roller.type in (7, 10):
             position = 100 - self.roller.closed_percent
         return position
 

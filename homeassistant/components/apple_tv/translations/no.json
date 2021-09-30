@@ -16,7 +16,7 @@
             "no_usable_service": "En enhet ble funnet, men kunne ikke identifisere noen m\u00e5te \u00e5 etablere en tilkobling til den. Hvis du fortsetter \u00e5 se denne meldingen, kan du pr\u00f8ve \u00e5 angi IP-adressen eller starte Apple TV p\u00e5 nytt.",
             "unknown": "Uventet feil"
         },
-        "flow_title": "",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "description": "Du er i ferd med \u00e5 legge til Apple TV med navnet {name} i Home Assistant.\n\n**For \u00e5 fullf\u00f8re prosessen m\u00e5 du kanskje angi flere PIN-koder.**\n\nV\u00e6r oppmerksom p\u00e5 at du *ikke* kan sl\u00e5 av Apple TV med denne integreringen. Bare mediespilleren i Home Assistant sl\u00e5r seg av!",

@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato",
+            "kamereon_no_account": "Impossibile trovare l'account Kamereon."
+        },
+        "error": {
+            "invalid_credentials": "Autenticazione non valida"
+        },
+        "step": {
+            "kamereon": {
+                "data": {
+                    "kamereon_account_id": "ID account Kamereon"
+                },
+                "title": "Seleziona l'id dell'account Kamereon"
+            },
+            "user": {
+                "data": {
+                    "locale": "Locale",
+                    "password": "Password",
+                    "username": "E-mail"
+                },
+                "title": "Imposta le credenziali Renault"
+            }
+        }
+    }
+}

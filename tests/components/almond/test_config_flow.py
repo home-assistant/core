@@ -49,7 +49,7 @@ async def test_hassio(hass):
     """Test that Hass.io can discover this integration."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": "hassio"},
+        context={"source": config_entries.SOURCE_HASSIO},
         data={"addon": "Almond add-on", "host": "almond-addon", "port": "1234"},
     )
 
@@ -82,7 +82,7 @@ async def test_abort_if_existing_entry(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "single_instance_allowed"
 
-    result = await flow.async_step_import()
+    result = await flow.async_step_import({})
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "single_instance_allowed"
 

@@ -2,18 +2,23 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable
 from datetime import timedelta
 from itertools import chain
 import logging
 from types import ModuleType
-from typing import Any, Callable, Iterable
+from typing import Any, Callable
 
 import voluptuous as vol
 
 from homeassistant import config as conf_util
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_SCAN_INTERVAL
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.const import (
+    CONF_ENTITY_NAMESPACE,
+    CONF_SCAN_INTERVAL,
+    EVENT_HOMEASSISTANT_STOP,
+)
+from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_per_platform,
@@ -71,7 +76,7 @@ class EntityComponent:
         domain: str,
         hass: HomeAssistant,
         scan_interval: timedelta = DEFAULT_SCAN_INTERVAL,
-    ):
+    ) -> None:
         """Initialize an entity component."""
         self.logger = logger
         self.hass = hass
@@ -118,6 +123,8 @@ class EntityComponent:
 
         This method must be run in the event loop.
         """
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
+
         self.config = config
 
         # Look in config for Domain, Domain 2, Domain 3 etc and load them
@@ -239,9 +246,7 @@ class EntityComponent:
                 platform_type, platform, scan_interval, entity_namespace
             )
 
-        await self._platforms[key].async_setup(  # type: ignore
-            platform_config, discovery_info
-        )
+        await self._platforms[key].async_setup(platform_config, discovery_info)
 
     async def _async_reset(self) -> None:
         """Remove entities and reset the entity component to initial values.
@@ -321,4 +326,10 @@ class EntityComponent:
             platform=platform,
             scan_interval=scan_interval,
             entity_namespace=entity_namespace,
+        )
+
+    async def _async_shutdown(self, event: Event) -> None:
+        """Call when Home Assistant is stopping."""
+        await asyncio.gather(
+            *(platform.async_shutdown() for platform in chain(self._platforms.values()))
         )
