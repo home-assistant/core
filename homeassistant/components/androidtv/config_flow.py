@@ -211,49 +211,40 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         apps = {APPS_NEW_ID: "Add new"}
         apps.update(self._apps)
+        options = self.config_entry.options
         data_schema = vol.Schema(
             {
                 vol.Optional(CONF_APPS): vol.In(apps),
                 vol.Optional(
                     CONF_GET_SOURCES,
-                    default=self.config_entry.options.get(
-                        CONF_GET_SOURCES, DEFAULT_GET_SOURCES
-                    ),
+                    default=options.get(CONF_GET_SOURCES, DEFAULT_GET_SOURCES),
                 ): bool,
                 vol.Optional(
                     CONF_EXCLUDE_UNNAMED_APPS,
-                    default=self.config_entry.options.get(
+                    default=options.get(
                         CONF_EXCLUDE_UNNAMED_APPS, DEFAULT_EXCLUDE_UNNAMED_APPS
                     ),
                 ): bool,
                 vol.Optional(
                     CONF_SCREENCAP,
-                    default=self.config_entry.options.get(
-                        CONF_SCREENCAP, DEFAULT_SCREENCAP
-                    ),
+                    default=options.get(CONF_SCREENCAP, DEFAULT_SCREENCAP),
                 ): bool,
                 vol.Optional(
                     CONF_TURN_OFF_COMMAND,
                     description={
-                        "suggested_value": self.config_entry.options.get(
-                            CONF_TURN_OFF_COMMAND, ""
-                        )
+                        "suggested_value": options.get(CONF_TURN_OFF_COMMAND, "")
                     },
                 ): str,
                 vol.Optional(
                     CONF_TURN_ON_COMMAND,
                     description={
-                        "suggested_value": self.config_entry.options.get(
-                            CONF_TURN_ON_COMMAND, ""
-                        )
+                        "suggested_value": options.get(CONF_TURN_ON_COMMAND, "")
                     },
                 ): str,
                 vol.Optional(
                     CONF_STATE_DETECTION_RULES,
                     description={
-                        "suggested_value": self.config_entry.options.get(
-                            CONF_STATE_DETECTION_RULES, ""
-                        )
+                        "suggested_value": options.get(CONF_STATE_DETECTION_RULES, "")
                     },
                 ): str,
             }
