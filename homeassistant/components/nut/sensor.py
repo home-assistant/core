@@ -44,37 +44,32 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     entities = []
 
-    if CONF_RESOURCES in config_entry.options:
-        resources = config_entry.options[CONF_RESOURCES]
-    else:
-        resources = config_entry.data[CONF_RESOURCES]
+    enabled_resources = [
+        resource.lower() for resource in config_entry.data[CONF_RESOURCES]
+    ]
+    resources = [sensor_id for sensor_id in SENSOR_TYPES.keys() if sensor_id in status]
 
-    for resource in resources:
-        sensor_type = resource.lower()
+    for sensor_type in resources:
 
         # Display status is a special case that falls back to the status value
         # of the UPS instead.
-        if sensor_type in status or (
-            sensor_type == KEY_STATUS_DISPLAY and KEY_STATUS in status
-        ):
-            entities.append(
-                NUTSensor(
-                    coordinator,
-                    data,
-                    name.title(),
-                    SENSOR_TYPES[sensor_type],
-                    unique_id,
-                    manufacturer,
-                    model,
-                    firmware,
-                )
+        enabled_default = sensor_type in enabled_resources or (
+            KEY_STATUS_DISPLAY in enabled_resources and KEY_STATUS in status
+        )
+
+        entities.append(
+            NUTSensor(
+                coordinator,
+                data,
+                name.title(),
+                SENSOR_TYPES[sensor_type],
+                unique_id,
+                manufacturer,
+                model,
+                firmware,
+                enabled_default,
             )
-        else:
-            _LOGGER.info(
-                "Sensor type: %s does not appear in the NUT status "
-                "output, cannot add",
-                sensor_type,
-            )
+        )
 
     async_add_entities(entities, True)
 
@@ -92,6 +87,7 @@ class NUTSensor(CoordinatorEntity, SensorEntity):
         manufacturer: str | None,
         model: str | None,
         firmware: str | None,
+        enabled_default: bool,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -102,6 +98,7 @@ class NUTSensor(CoordinatorEntity, SensorEntity):
         self._device_name = name
         self._data = data
         self._unique_id = unique_id
+        self._attr_entity_registry_enabled_default = enabled_default
 
         self._attr_name = f"{name} {sensor_description.name}"
         if unique_id is not None:

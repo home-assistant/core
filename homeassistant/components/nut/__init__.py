@@ -11,7 +11,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_RESOURCES,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
@@ -154,13 +153,6 @@ def _unique_id_from_status(status):
     if serial:
         unique_id_group.append(serial)
     return "_".join(unique_id_group)
-
-
-def find_resources_in_config_entry(config_entry):
-    """Find the configured resources in the config entry."""
-    if CONF_RESOURCES in config_entry.options:
-        return config_entry.options[CONF_RESOURCES]
-    return config_entry.data[CONF_RESOURCES]
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
