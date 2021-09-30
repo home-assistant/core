@@ -1,4 +1,5 @@
 """Tests for light platform."""
+from datetime import timedelta
 
 from homeassistant.components import flux_led
 from homeassistant.components.flux_led.const import DOMAIN
@@ -10,10 +11,11 @@ from homeassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN as LIGHT_DOMAIN,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 from . import (
     DEFAULT_ENTRY_TITLE,
@@ -23,7 +25,7 @@ from . import (
     _patch_wifibulb,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_light_unique_id(hass: HomeAssistant) -> None:
@@ -56,7 +58,7 @@ async def test_rgb_light(hass: HomeAssistant) -> None:
     entity_id = "light.az120444_aabbccddeeff"
 
     state = hass.states.get(entity_id)
-    assert state.state == "on"
+    assert state.state == STATE_ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
     assert attributes[ATTR_COLOR_MODE] == "rgbw"
@@ -69,6 +71,9 @@ async def test_rgb_light(hass: HomeAssistant) -> None:
     bulb.turnOff.assert_called_once()
 
     bulb.is_on = False
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_OFF
 
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
