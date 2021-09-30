@@ -40,9 +40,50 @@ from .common import (
     send_attribute_report,
     send_attributes_report,
 )
-from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
+from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 ENTITY_ID_PREFIX = "sensor.fakemanufacturer_fakemodel_e769900a_{}"
+
+
+@pytest.fixture
+async def elec_measurement_zigpy_dev(hass, zigpy_device_mock):
+    """Electric Measurement zigpy device."""
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [
+                    general.Basic.cluster_id,
+                    homeautomation.ElectricalMeasurement.cluster_id,
+                ],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.SIMPLE_SENSOR,
+                SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+            }
+        },
+    )
+    zigpy_device.node_desc.mac_capability_flags |= 0b_0000_0100
+    zigpy_device.endpoints[1].electrical_measurement.PLUGGED_ATTR_READS = {
+        "ac_current_divisor": 10,
+        "ac_current_multiplier": 1,
+        "ac_power_divisor": 10,
+        "ac_power_multiplier": 1,
+        "ac_voltage_divisor": 10,
+        "ac_voltage_multiplier": 1,
+        "measurement_type": 8,
+        "power_divisor": 10,
+        "power_multiplier": 1,
+    }
+    return zigpy_device
+
+
+@pytest.fixture
+async def elec_measurement_zha_dev(elec_measurement_zigpy_dev, zha_device_joined):
+    """Electric Measurement ZHA device."""
+
+    zha_dev = await zha_device_joined(elec_measurement_zigpy_dev)
+    zha_dev.available = True
+    return zha_dev
 
 
 async def async_test_humidity(hass, cluster, entity_id):
@@ -650,3 +691,37 @@ async def test_se_summation_uom(
     await zha_device_joined(zigpy_device)
 
     assert_state(hass, entity_id, expected_state, expected_uom)
+
+
+@pytest.mark.parametrize(
+    "raw_measurement_type, expected_type",
+    (
+        (1, "ACTIVE_MEASUREMENT"),
+        (8, "PHASE_A_MEASUREMENT"),
+        (9, "ACTIVE_MEASUREMENT, PHASE_A_MEASUREMENT"),
+        (
+            15,
+            "ACTIVE_MEASUREMENT, REACTIVE_MEASUREMENT, APPARENT_MEASUREMENT, PHASE_A_MEASUREMENT",
+        ),
+    ),
+)
+async def test_elec_measurement_sensor_type(
+    hass,
+    elec_measurement_zigpy_dev,
+    raw_measurement_type,
+    expected_type,
+    zha_device_joined,
+):
+    """Test zha smart energy summation."""
+
+    entity_id = ENTITY_ID_PREFIX.format("electrical_measurement")
+    zigpy_dev = elec_measurement_zigpy_dev
+    zigpy_dev.endpoints[1].electrical_measurement.PLUGGED_ATTR_READS[
+        "measurement_type"
+    ] = raw_measurement_type
+
+    await zha_device_joined(zigpy_dev)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["measurement_type"] == expected_type

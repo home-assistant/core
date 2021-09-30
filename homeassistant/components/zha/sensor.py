@@ -234,6 +234,15 @@ class ElectricalMeasurement(Sensor):
         """Return True if HA needs to poll for state changes."""
         return True
 
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return device state attrs for sensor."""
+        attrs = {}
+        if self._channel.measurement_type is not None:
+            attrs["measurement_type"] = self._channel.measurement_type
+
+        return attrs
+
     def formatter(self, value: int) -> int | float:
         """Return 'normalized' value."""
         value = value * self._channel.multiplier / self._channel.divisor
