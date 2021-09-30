@@ -6,6 +6,7 @@ from typing import Any
 
 from surepy.entities import SurepyEntity
 from surepy.enums import EntityType, LockState
+from surepy.exceptions import SurePetcareError
 
 from homeassistant.components.lock import STATE_LOCKED, STATE_UNLOCKED, LockEntity
 from homeassistant.config_entries import ConfigEntry
@@ -83,16 +84,35 @@ class SurePetcareLock(SurePetcareEntity, LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
-        if self.state == STATE_LOCKED:
+        if self.state != STATE_UNLOCKED:
             return
-        await self.coordinator.lock_states_callbacks[self._lock_state](self._id)
-        self._attr_is_locked = True
+        self._attr_is_locking = True
         self.async_write_ha_state()
+
+        try:
+            await self.coordinator.lock_states_callbacks[self._lock_state](self._id)
+        except SurePetcareError:
+            raise
+        else:
+            self._attr_is_locked = True
+        finally:
+            self._attr_is_locking = False
+            self.async_write_ha_state()
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
-        if self.state == STATE_UNLOCKED:
+        if self.state != STATE_LOCKED:
             return
-        await self.coordinator.surepy.sac.unlock(self._id)
-        self._attr_is_locked = False
+        self._attr_is_unlocking = True
         self.async_write_ha_state()
+
+        try:
+            await self.coordinator.surepy.sac.unlock(self._id)
+        except SurePetcareError:
+            raise
+        else:
+            self._attr_is_locked = False
+        finally:
+            self._attr_is_unlocking = False
+            self.async_write_ha_state()
+        self._attr_is_locked = False
