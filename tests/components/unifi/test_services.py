@@ -3,27 +3,18 @@
 from unittest.mock import patch
 
 from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
-from homeassistant.components.unifi.services import (
-    SERVICE_REMOVE_CLIENTS,
-    async_remove_clients,
-)
+from homeassistant.components.unifi.services import SERVICE_REMOVE_CLIENTS
 
 from .test_controller import setup_unifi_integration
 
 
-@patch("homeassistant.core.ServiceRegistry.async_remove")
-@patch("homeassistant.core.ServiceRegistry.async_register")
-async def test_service_setup_and_unload(
-    register_service_mock, remove_service_mock, hass, aioclient_mock
-):
+async def test_service_setup_and_unload(hass, aioclient_mock):
     """Verify service setup works."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    assert register_service_mock.called_with(
-        UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS, async_remove_clients
-    )
+    assert hass.services.has_service(UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS)
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
-    assert remove_service_mock.called_with(UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS)
+    assert not hass.services.has_service(UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS)
 
 
 @patch("homeassistant.core.ServiceRegistry.async_remove")
