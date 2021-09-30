@@ -14,33 +14,8 @@ from aiodiscover.discovery import (
     IP_ADDRESS as DISCOVERY_IP_ADDRESS,
     MAC_ADDRESS as DISCOVERY_MAC_ADDRESS,
 )
-
-# Local import because importing from scapy has side effects such as opening
-# sockets
-from scapy import (  # pylint: disable=import-outside-toplevel,unused-import  # noqa: F401
-    arch,
-)
-
-# Local import because importing from scapy has side effects such as opening
-# sockets
-from scapy.arch.common import compile_filter  # pylint: disable=import-outside-toplevel
 from scapy.config import conf
 from scapy.error import Scapy_Exception
-
-# Local import because importing from scapy has side effects such as opening
-# sockets
-from scapy.layers.dhcp import DHCP  # pylint: disable=import-outside-toplevel
-from scapy.layers.inet import IP  # pylint: disable=import-outside-toplevel
-from scapy.layers.l2 import Ether  # pylint: disable=import-outside-toplevel
-
-#
-# Importing scapy.sendrecv will cause a scapy resync which will
-# import scapy.arch.read_routes which will import scapy.sendrecv
-#
-# We avoid this circular import by importing arch above to ensure
-# the module is loaded and avoid the problem
-#
-from scapy.sendrecv import AsyncSniffer  # pylint: disable=import-outside-toplevel
 
 from homeassistant.components.device_tracker.const import (
     ATTR_HOST_NAME,
@@ -302,6 +277,22 @@ class DHCPWatcher(WatcherBase):
 
     async def async_start(self):
         """Start watching for dhcp packets."""
+        # Local import because importing from scapy has side effects such as opening
+        # sockets
+        from scapy import (  # pylint: disable=import-outside-toplevel,unused-import  # noqa: F401
+            arch,
+        )
+
+        #
+        # Importing scapy.sendrecv will cause a scapy resync which will
+        # import scapy.arch.read_routes which will import scapy.sendrecv
+        #
+        # We avoid this circular import by importing arch above to ensure
+        # the module is loaded and avoid the problem
+        #
+        from scapy.sendrecv import (  # pylint: disable=import-outside-toplevel
+            AsyncSniffer,
+        )
 
         # disable scapy promiscuous mode as we do not need it
         conf.sniff_promisc = 0
@@ -339,6 +330,12 @@ class DHCPWatcher(WatcherBase):
 
     def handle_dhcp_packet(self, packet):
         """Process a dhcp packet."""
+        # Local import because importing from scapy has side effects such as opening
+        # sockets
+        from scapy.layers.dhcp import DHCP  # pylint: disable=import-outside-toplevel
+        from scapy.layers.inet import IP  # pylint: disable=import-outside-toplevel
+        from scapy.layers.l2 import Ether  # pylint: disable=import-outside-toplevel
+
         _LOGGER.debug("Handle incoming packet: %s -- %s", packet, DHCP in packet)
         if DHCP not in packet:
             return
@@ -417,5 +414,10 @@ def _verify_working_pcap(cap_filter):
     If we cannot create a filter we will be listening for
     all traffic which is too intensive.
     """
+    # Local import because importing from scapy has side effects such as opening
+    # sockets
+    from scapy.arch.common import (  # pylint: disable=import-outside-toplevel
+        compile_filter,
+    )
 
     compile_filter(cap_filter)
