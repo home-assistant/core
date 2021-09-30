@@ -82,6 +82,85 @@ async def test_light_no_unique_id(hass: HomeAssistant) -> None:
     assert entity_registry.async_get(entity_id) is None
 
 
+async def test_rgb_light(hass: HomeAssistant) -> None:
+    """Test an rgb light."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
+        unique_id=MAC_ADDRESS,
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    bulb.rgbwcapable = False
+    bulb.protocol = None
+    with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
+        await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.az120444_aabbccddeeff"
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    attributes = state.attributes
+    assert attributes[ATTR_BRIGHTNESS] == 128
+    assert attributes[ATTR_COLOR_MODE] == "hs"
+    assert attributes[ATTR_EFFECT_LIST] == FLUX_EFFECT_LIST
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["hs"]
+    assert attributes[ATTR_HS_COLOR] == (0, 100)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    bulb.turnOff.assert_called_once()
+
+    bulb.is_on = False
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    bulb.turnOn.assert_called_once()
+    bulb.turnOn.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
+        blocking=True,
+    )
+    bulb.setRgb.assert_called_with(255, 0, 0, brightness=100)
+    bulb.setRgb.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_HS_COLOR: (10, 30)},
+        blocking=True,
+    )
+    bulb.setRgb.assert_called_with(255, 191, 178, brightness=128)
+    bulb.setRgb.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "random"},
+        blocking=True,
+    )
+    bulb.setRgb.assert_called_once()
+    bulb.setRgb.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "purple_fade"},
+        blocking=True,
+    )
+    bulb.setPresetPattern.assert_called_with(43, 50)
+    bulb.setPresetPattern.reset_mock()
+
+
 async def test_rgbw_light(hass: HomeAssistant) -> None:
     """Test an rgbw light."""
     already_migrated_config_entry = MockConfigEntry(
