@@ -2332,7 +2332,7 @@ tp-connected==0.0.4
 transmissionrpc==0.11
 
 # homeassistant.components.tuya
-tuyaha==0.0.10
+tuya-iot-py-sdk==0.4.1
 
 # homeassistant.components.twentemilieu
 twentemilieu==0.3.0

@@ -1,61 +1,74 @@
-"""Support for the Tuya scenes."""
+"""Support for Tuya scenes."""
+from __future__ import annotations
+
+import logging
 from typing import Any
 
-from homeassistant.components.scene import DOMAIN as SENSOR_DOMAIN, Scene
-from homeassistant.const import CONF_PLATFORM
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from tuya_iot import TuyaHomeManager, TuyaScene
 
-from . import TuyaDevice
-from .const import DOMAIN, TUYA_DATA, TUYA_DISCOVERY_NEW
+from homeassistant.components.scene import Scene
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-ENTITY_ID_FORMAT = SENSOR_DOMAIN + ".{}"
+from .const import DOMAIN, TUYA_HOME_MANAGER
 
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up tuya sensors dynamically through tuya discovery."""
-
-    platform = config_entry.data[CONF_PLATFORM]
-
-    async def async_discover_sensor(dev_ids):
-        """Discover and add a discovered tuya sensor."""
-        if not dev_ids:
-            return
-        entities = await hass.async_add_executor_job(
-            _setup_entities,
-            hass,
-            dev_ids,
-            platform,
-        )
-        async_add_entities(entities)
-
-    async_dispatcher_connect(
-        hass, TUYA_DISCOVERY_NEW.format(SENSOR_DOMAIN), async_discover_sensor
-    )
-
-    devices_ids = hass.data[DOMAIN]["pending"].pop(SENSOR_DOMAIN)
-    await async_discover_sensor(devices_ids)
+_LOGGER = logging.getLogger(__name__)
 
 
-def _setup_entities(hass, dev_ids, platform):
-    """Set up Tuya Scene."""
-    tuya = hass.data[DOMAIN][TUYA_DATA]
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up tuya scenes."""
     entities = []
-    for dev_id in dev_ids:
-        device = tuya.get_device_by_id(dev_id)
-        if device is None:
-            continue
-        entities.append(TuyaScene(device, platform))
-    return entities
+
+    home_manager = hass.data[DOMAIN][entry.entry_id][TUYA_HOME_MANAGER]
+    scenes = await hass.async_add_executor_job(home_manager.query_scenes)
+    for scene in scenes:
+        entities.append(TuyaHAScene(home_manager, scene))
+
+    async_add_entities(entities)
 
 
-class TuyaScene(TuyaDevice, Scene):
-    """Tuya Scene."""
+class TuyaHAScene(Scene):
+    """Tuya Scene Remote."""
 
-    def __init__(self, tuya, platform):
-        """Init Tuya scene."""
-        super().__init__(tuya, platform)
-        self.entity_id = ENTITY_ID_FORMAT.format(tuya.object_id())
+    def __init__(self, home_manager: TuyaHomeManager, scene: TuyaScene) -> None:
+        """Init Tuya Scene."""
+        super().__init__()
+        self.home_manager = home_manager
+        self.scene = scene
+
+    @property
+    def should_poll(self) -> bool:
+        """Hass should not poll."""
+        return False
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return a unique ID."""
+        return f"tys{self.scene.scene_id}"
+
+    @property
+    def name(self) -> str | None:
+        """Return Tuya scene name."""
+        return self.scene.name
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        return {
+            "identifiers": {(DOMAIN, f"{self.unique_id}")},
+            "manufacturer": "tuya",
+            "name": self.scene.name,
+            "model": "Tuya Scene",
+        }
+
+    @property
+    def available(self) -> bool:
+        """Return if the scene is enabled."""
+        return self.scene.enabled
 
     def activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
-        self._tuya.activate()
+        self.home_manager.trigger_scene(self.scene.home_id, self.scene.scene_id)
