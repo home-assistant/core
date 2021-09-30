@@ -304,7 +304,6 @@ class DHCPWatcher(WatcherBase):
                 return
 
             options = packet[DHCP].options
-            _LOGGER.debug("Handle incoming packet options: %s -- %s", packet, options)
 
             request_type = _decode_dhcp_option(options, MESSAGE_TYPE)
 
