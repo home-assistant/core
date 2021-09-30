@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Dict, cast
 
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import CommandClass
+from zwave_js_server.const import TARGET_VALUE_PROPERTY, CommandClass
 from zwave_js_server.const.command_class.sound_switch import ToneID
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectEntity
@@ -142,7 +142,7 @@ class ZwaveMultilevelSwitchSelectEntity(ZWaveBaseEntity, SelectEntity):
     ) -> None:
         """Initialize a ZwaveSelectEntity entity."""
         super().__init__(config_entry, client, info)
-        self._target_value = self.get_zwave_value("targetValue")
+        self._target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
         assert self.info.platform_data_template
         self._lookup_map = cast(
             Dict[int, str], self.info.platform_data_template.static_data

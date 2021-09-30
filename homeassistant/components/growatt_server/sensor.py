@@ -5,7 +5,6 @@ from dataclasses import dataclass
 import datetime
 import json
 import logging
-import re
 
 import growattServer
 
@@ -19,7 +18,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_URL,
     CONF_USERNAME,
-    CURRENCY_EURO,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
@@ -57,6 +55,7 @@ class GrowattSensorEntityDescription(SensorEntityDescription, GrowattRequiredKey
     """Describes Growatt sensor entity."""
 
     precision: int | None = None
+    currency: bool = False
 
 
 TOTAL_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
@@ -64,13 +63,13 @@ TOTAL_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="total_money_today",
         name="Total money today",
         api_key="plantMoneyText",
-        native_unit_of_measurement=CURRENCY_EURO,
+        currency=True,
     ),
     GrowattSensorEntityDescription(
         key="total_money_total",
         name="Money lifetime",
         api_key="totalMoneyText",
-        native_unit_of_measurement=CURRENCY_EURO,
+        currency=True,
     ),
     GrowattSensorEntityDescription(
         key="total_energy_today",
@@ -975,6 +974,13 @@ class GrowattInverter(SensorEntity):
             result = round(result, self.entity_description.precision)
         return result
 
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement of the sensor, if any."""
+        if self.entity_description.currency:
+            return self.probe.get_data("currency")
+        return super().native_unit_of_measurement
+
     def update(self):
         """Get the latest data from the Growat API and updates the state."""
         self.probe.update()
@@ -1003,10 +1009,10 @@ class GrowattData:
             if self.growatt_type == "total":
                 total_info = self.api.plant_info(self.device_id)
                 del total_info["deviceList"]
-                # PlantMoneyText comes in as "3.1/€" remove anything that isn't part of the number
-                total_info["plantMoneyText"] = re.sub(
-                    r"[^\d.,]", "", total_info["plantMoneyText"]
-                )
+                # PlantMoneyText comes in as "3.1/€" split between value and currency
+                plant_money_text, currency = total_info["plantMoneyText"].split("/")
+                total_info["plantMoneyText"] = plant_money_text
+                total_info["currency"] = currency
                 self.data = total_info
             elif self.growatt_type == "inverter":
                 inverter_info = self.api.inverter_detail(self.device_id)

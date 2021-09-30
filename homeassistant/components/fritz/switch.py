@@ -167,7 +167,7 @@ def port_entities_list(
     """Get list of port forwarding entities."""
 
     _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_PORTFORWARD)
-    entities_list: list = []
+    entities_list: list[FritzBoxPortSwitch] = []
     service_name = "Layer3Forwarding"
     connection_type = service_call_action(
         fritzbox_tools, service_name, "1", "GetDefaultConnectionService"
@@ -219,11 +219,18 @@ def port_entities_list(
 
         # We can only handle port forwards of the given device
         if portmap["NewInternalClient"] == local_ip:
+            port_name = portmap["NewPortMappingDescription"]
+            for entity in entities_list:
+                if entity.port_mapping and (
+                    port_name in entity.port_mapping["NewPortMappingDescription"]
+                ):
+                    port_name = f"{port_name} {portmap['NewExternalPort']}"
             entities_list.append(
                 FritzBoxPortSwitch(
                     fritzbox_tools,
                     device_friendly_name,
                     portmap,
+                    port_name,
                     i,
                     con_type,
                 )
@@ -430,6 +437,7 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
         fritzbox_tools: FritzBoxTools,
         device_friendly_name: str,
         port_mapping: dict[str, Any] | None,
+        port_name: str,
         idx: int,
         connection_type: str,
     ) -> None:
@@ -445,7 +453,7 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
             return
 
         switch_info = SwitchInfo(
-            description=f'Port forward {port_mapping["NewPortMappingDescription"]}',
+            description=f"Port forward {port_name}",
             friendly_name=device_friendly_name,
             icon="mdi:check-network",
             type=SWITCH_TYPE_PORTFORWARD,
