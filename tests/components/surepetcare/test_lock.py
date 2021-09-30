@@ -78,7 +78,7 @@ async def test_locks(hass, surepetcare) -> None:
 
 
 async def test_lock_failing(hass, surepetcare) -> None:
-    """Test the generation of unique ids."""
+    """Test handling of lock failing."""
     assert await async_setup_component(hass, DOMAIN, MOCK_CONFIG)
     await hass.async_block_till_done()
 
@@ -96,7 +96,7 @@ async def test_lock_failing(hass, surepetcare) -> None:
 
 
 async def test_unlock_failing(hass, surepetcare) -> None:
-    """Test the generation of unique ids."""
+    """Test handling of unlock failing."""
     assert await async_setup_component(hass, DOMAIN, MOCK_CONFIG)
     await hass.async_block_till_done()
 
