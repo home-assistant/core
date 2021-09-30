@@ -5,9 +5,12 @@ import pytest
 
 from homeassistant.components import flux_led
 from homeassistant.components.flux_led.const import (
+    CONF_COLORS,
     CONF_CUSTOM_EFFECT_COLORS,
     CONF_CUSTOM_EFFECT_SPEED_PCT,
     CONF_CUSTOM_EFFECT_TRANSITION,
+    CONF_SPEED_PCT,
+    CONF_TRANSITION,
     DOMAIN,
     MODE_AUTO,
     TRANSITION_JUMP,
@@ -517,6 +520,57 @@ async def test_rgb_light_custom_effects_invalid_colors(hass: HomeAssistant) -> N
     assert attributes[ATTR_EFFECT_LIST] == FLUX_EFFECT_LIST
     assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs", "rgbw"]
     assert attributes[ATTR_HS_COLOR] == (0, 100)
+
+
+async def test_rgb_light_custom_effect_via_service(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test an rgb light with a custom effect set via the service."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
+        unique_id=MAC_ADDRESS,
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
+        await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.az120444_aabbccddeeff"
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    attributes = state.attributes
+    assert attributes[ATTR_BRIGHTNESS] == 128
+    assert attributes[ATTR_COLOR_MODE] == "rgbw"
+    assert attributes[ATTR_EFFECT_LIST] == [*FLUX_EFFECT_LIST]
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs", "rgbw"]
+    assert attributes[ATTR_HS_COLOR] == (0, 100)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    bulb.turnOff.assert_called_once()
+
+    bulb.is_on = False
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_custom_effect",
+        {
+            ATTR_ENTITY_ID: entity_id,
+            CONF_COLORS: [[0, 0, 255], [255, 0, 0]],
+            CONF_SPEED_PCT: 30,
+            CONF_TRANSITION: "jump",
+        },
+        blocking=True,
+    )
+    bulb.setCustomPattern.assert_called_with([(0, 0, 255), (255, 0, 0)], 30, "jump")
+    bulb.setCustomPattern.reset_mock()
 
 
 async def test_rgbw_detection_without_protocol(hass: HomeAssistant) -> None:
