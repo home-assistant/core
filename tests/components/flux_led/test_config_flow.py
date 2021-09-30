@@ -364,6 +364,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
 )
 async def test_discovered_by_dhcp_or_discovery(hass, source, data):
     """Test we can setup when discovered from dhcp or discovery."""
+
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     with _patch_discovery(), _patch_wifibulb():
@@ -387,3 +388,30 @@ async def test_discovered_by_dhcp_or_discovery(hass, source, data):
     assert result2["data"] == {CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE}
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
+
+
+@pytest.mark.parametrize(
+    "source, data",
+    [
+        (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
+        (config_entries.SOURCE_DISCOVERY, FLUX_DISCOVERY),
+    ],
+)
+async def test_discovered_by_dhcp_or_discovery_adds_missing_unique_id(
+    hass, source, data
+):
+    """Test we can setup when discovered from dhcp or discovery."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: IP_ADDRESS})
+    config_entry.add_to_hass(hass)
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    with _patch_discovery(), _patch_wifibulb():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": source}, data=data
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+    assert config_entry.unique_id == MAC_ADDRESS
