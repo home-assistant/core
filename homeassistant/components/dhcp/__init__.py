@@ -282,6 +282,9 @@ class DHCPWatcher(WatcherBase):
         from scapy import (  # pylint: disable=import-outside-toplevel,unused-import  # noqa: F401
             arch,
         )
+        from scapy.layers.dhcp import DHCP  # pylint: disable=import-outside-toplevel
+        from scapy.layers.inet import IP  # pylint: disable=import-outside-toplevel
+        from scapy.layers.l2 import Ether  # pylint: disable=import-outside-toplevel
 
         #
         # Importing scapy.sendrecv will cause a scapy resync which will
@@ -326,6 +329,28 @@ class DHCPWatcher(WatcherBase):
                 hostname,
                 mac_address,
             )
+
+            if ip_address is None or mac_address is None:
+                return
+
+            self.process_client(ip_address, hostname, mac_address)
+
+        def _handle_dhcp_packet(packet):
+            """Process a dhcp packet."""
+            if DHCP not in packet:
+                return
+
+            options = packet[DHCP].options
+
+            request_type = _decode_dhcp_option(options, MESSAGE_TYPE)
+
+            if request_type != DHCP_REQUEST:
+                # DHCP request
+                return
+
+            ip_address = _decode_dhcp_option(options, REQUESTED_ADDR) or packet[IP].src
+            hostname = _decode_dhcp_option(options, HOSTNAME) or ""
+            mac_address = _format_mac(packet[Ether].src)
 
             if ip_address is None or mac_address is None:
                 return
