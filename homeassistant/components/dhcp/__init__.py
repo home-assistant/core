@@ -303,9 +303,7 @@ class DHCPWatcher(WatcherBase):
                 return
 
             options = packet[DHCP].options
-
             request_type = _decode_dhcp_option(options, MESSAGE_TYPE)
-
             if request_type != DHCP_REQUEST:
                 # DHCP request
                 return
@@ -314,10 +312,8 @@ class DHCPWatcher(WatcherBase):
             hostname = _decode_dhcp_option(options, HOSTNAME) or ""
             mac_address = _format_mac(packet[Ether].src)
 
-            if ip_address is None or mac_address is None:
-                return
-
-            self.process_client(ip_address, hostname, mac_address)
+            if ip_address is not None and mac_address is not None:
+                self.process_client(ip_address, hostname, mac_address)
 
         # disable scapy promiscuous mode as we do not need it
         conf.sniff_promisc = 0
