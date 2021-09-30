@@ -49,7 +49,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["light"]
 DISCOVERY_INTERVAL = timedelta(minutes=15)
-REQUEST_REFRESH_DELAY = 0.5
+REQUEST_REFRESH_DELAY = 0.35
 
 
 async def async_discover_devices(
