@@ -47,7 +47,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     enabled_resources = [
         resource.lower() for resource in config_entry.data[CONF_RESOURCES]
     ]
-    resources = [sensor_id for sensor_id in SENSOR_TYPES.keys() if sensor_id in status]
+    resources = [sensor_id for sensor_id in SENSOR_TYPES if sensor_id in status]
 
     for sensor_type in resources:
 
