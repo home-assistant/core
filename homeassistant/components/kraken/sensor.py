@@ -129,12 +129,14 @@ class KrakenSensor(CoordinatorEntity[Optional[KrakenResponse]], SensorEntity):
         super()._handle_coordinator_update()
 
     def _update_internal_state(self) -> None:
+        if not self.coordinator.data:
+            return
         try:
             self._attr_native_value = self.entity_description.value_fn(
                 self.coordinator, self.tracked_asset_pair_wsname  # type: ignore[arg-type]
             )
-            self._received_data_at_least_once = True  # Received data at least one time.
-        except TypeError:
+            self._received_data_at_least_once = True
+        except KeyError:
             if self._received_data_at_least_once:
                 if self._available:
                     _LOGGER.warning(
