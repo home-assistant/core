@@ -68,6 +68,7 @@ homeassistant.components.media_player.*
 homeassistant.components.modbus.*
 homeassistant.components.mysensors.*
 homeassistant.components.nam.*
+homeassistant.components.nanoleaf.*
 homeassistant.components.neato.*
 homeassistant.components.nest.*
 homeassistant.components.netatmo.*

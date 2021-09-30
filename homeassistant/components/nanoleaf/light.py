@@ -1,6 +1,8 @@
 """Support for Nanoleaf Lights."""
 from __future__ import annotations
 
+from typing import Any
+
 from aionanoleaf import Nanoleaf, Unavailable
 import voluptuous as vol
 
@@ -79,19 +81,19 @@ class NanoleafLight(LightEntity):
         self._attr_max_mireds = 833
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of the light."""
         return int(self._nanoleaf.brightness * 2.55)
 
     @property
-    def color_temp(self):
+    def color_temp(self) -> int:
         """Return the current color temperature."""
         return color_util.color_temperature_kelvin_to_mired(
             self._nanoleaf.color_temperature
         )
 
     @property
-    def effect(self):
+    def effect(self) -> str | None:
         """Return the current effect."""
         # The API returns the *Solid* effect if the Nanoleaf is in HS or CT mode.
         # The effects *Static* and *Dynamic* are not supported by Home Assistant.
@@ -102,27 +104,27 @@ class NanoleafLight(LightEntity):
         )
 
     @property
-    def effect_list(self):
+    def effect_list(self) -> list[str]:
         """Return the list of supported effects."""
         return self._nanoleaf.effects_list
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon to use in the frontend, if any."""
         return "mdi:triangle-outline"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if light is on."""
         return self._nanoleaf.is_on
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> tuple[int, int]:
         """Return the color in HS."""
         return self._nanoleaf.hue, self._nanoleaf.saturation
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         return (
             SUPPORT_BRIGHTNESS
@@ -132,7 +134,7 @@ class NanoleafLight(LightEntity):
             | SUPPORT_TRANSITION
         )
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         hs_color = kwargs.get(ATTR_HS_COLOR)
@@ -166,7 +168,7 @@ class NanoleafLight(LightEntity):
                 )
             await self._nanoleaf.set_effect(effect)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         transition = kwargs.get(ATTR_TRANSITION)
         await self._nanoleaf.turn_off(transition)
