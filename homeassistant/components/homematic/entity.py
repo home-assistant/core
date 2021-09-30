@@ -148,7 +148,7 @@ class HMDevice(Entity):
                     # Remember the channel for this attribute to ignore invalid events later
                     self._channel_map[node] = str(channel)
 
-        _LOGGER.debug(f"Channel map for {self._address}: {str(self._channel_map)}")
+        _LOGGER.debug("Channel map for %s: %s", self._address, str(self._channel_map))
 
         # Set callbacks
         self._hmdevice.setEventCallback(callback=self._hm_event_callback, bequeath=True)
