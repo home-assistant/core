@@ -64,6 +64,8 @@ async def test_light_unique_id(hass: HomeAssistant) -> None:
     entity_id = "light.az120444_aabbccddeeff"
     entity_registry = er.async_get(hass)
     assert entity_registry.async_get(entity_id).unique_id == MAC_ADDRESS
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
 
 
 async def test_light_no_unique_id(hass: HomeAssistant) -> None:
@@ -80,6 +82,8 @@ async def test_light_no_unique_id(hass: HomeAssistant) -> None:
     entity_id = "light.az120444_aabbccddeeff"
     entity_registry = er.async_get(hass)
     assert entity_registry.async_get(entity_id) is None
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
 
 
 async def test_rgb_light(hass: HomeAssistant) -> None:

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Final
 
 from flux_led import WifiLedBulb
 import voluptuous as vol
@@ -39,7 +39,7 @@ from .const import (
     TRANSITION_STROBE,
 )
 
-CONF_DEVICE = "device"
+CONF_DEVICE: Final = "device"
 
 
 _LOGGER = logging.getLogger(__name__)

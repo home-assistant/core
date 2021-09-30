@@ -41,6 +41,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.color as color_util
@@ -248,34 +249,34 @@ class FluxLight(CoordinatorEntity, LightEntity):
         self._custom_effect_transition = custom_effect_transition
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str | None:
         """Return the unique ID of the light."""
         return self._unique_id
 
     @property
-    def name(self):
-        """Return the name of the device if any."""
+    def name(self) -> str:
+        """Return the name of the device."""
         return self._name
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._bulb.is_on
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         if self._mode == MODE_WHITE:
             return self.white_value
         return self._bulb.brightness
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> tuple[float, float] | None:
         """Return the color property."""
         return color_util.color_RGB_to_hs(*self._bulb.getRgb())
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         if self._mode == MODE_WHITE:
             return SUPPORT_BRIGHTNESS
@@ -284,41 +285,41 @@ class FluxLight(CoordinatorEntity, LightEntity):
         return SUPPORT_FLUX_LED
 
     @property
-    def white_value(self):
+    def white_value(self) -> int:
         """Return the white value of this light between 0..255."""
         return self._bulb.getRgbw()[3]
 
     @property
-    def effect_list(self):
+    def effect_list(self) -> list[str]:
         """Return the list of supported effects."""
         if self._custom_effect_colors:
             return FLUX_EFFECT_LIST + [EFFECT_CUSTOM]
         return FLUX_EFFECT_LIST
 
     @property
-    def effect(self):
+    def effect(self) -> str | None:
         """Return the current effect."""
         if (current_mode := self._bulb.raw_state[3]) == EFFECT_CUSTOM_CODE:
             return EFFECT_CUSTOM
         return EFFECT_ID_NAME.get(current_mode)
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the attributes."""
         return {
             "ip_address": self._ip_address,
         }
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        if self._unique_id:
-            return {
-                ATTR_IDENTIFIERS: {(DOMAIN, self._unique_id)},
-                ATTR_NAME: self._name,
-                ATTR_MANUFACTURER: "FluxLED/Magic Home",
-                ATTR_MODEL: "LED Lights",
-            }
+        assert self._unique_id is not None
+        return {
+            ATTR_IDENTIFIERS: {(DOMAIN, self._unique_id)},
+            ATTR_NAME: self._name,
+            ATTR_MANUFACTURER: "FluxLED/Magic Home",
+            ATTR_MODEL: "LED Lights",
+        }
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified or all lights on."""
@@ -401,7 +402,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
         # handle RGB mode
         self._bulb.setRgb(*tuple(rgb), brightness=brightness)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn the specified or all lights off."""
         await self.hass.async_add_executor_job(self._bulb.turnOff)
         await self.coordinator.async_request_refresh()
