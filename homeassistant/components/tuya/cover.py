@@ -100,11 +100,14 @@ class TuyaHaCover(TuyaHaEntity, CoverEntity):
         return None
 
     @property
+    def is_reversed(self) -> bool:
+        """Return if the cover is reversed."""
+        return self.tuya_device.status.get(DPCODE_SITUATION_SET) == "fully_closed"
+
+    @property
     def current_cover_position(self) -> int:
         """Return cover current position."""
         position = self.tuya_device.status.get(DPCODE_PERCENT_STATE, 0)
-        if DPCODE_SITUATION_SET not in self.tuya_device.status:
-            return 1 + int(0.98 * (100 - position))
         if self.tuya_device.status.get(DPCODE_SITUATION_SET) == "fully_open":
             return 1 + 0.98 * position
 
