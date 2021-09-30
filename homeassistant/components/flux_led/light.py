@@ -187,9 +187,7 @@ async def async_setup_entry(
     """Set up the Flux lights."""
     coordinator: FluxLedUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    # register custom_effect service
-    platform = entity_platform.current_platform.get()
-    assert platform is not None
+    platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_CUSTOM_EFFECT,
         CUSTOM_EFFECT_SCHEMA,
