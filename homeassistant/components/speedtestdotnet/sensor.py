@@ -61,7 +61,7 @@ class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         self._state: StateType = None
         self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self._attr_device_info = {
-            "identifiers": {(DOMAIN, "Speed Test")},
+            "identifiers": {(DOMAIN, self.coordinator.config_entry.entry_id)},
             "name": DEFAULT_NAME,
             "entry_type": "service",
         }
