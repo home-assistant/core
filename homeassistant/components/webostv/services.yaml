@@ -38,8 +38,7 @@ command:
           domain: media_player
     command:
       name: Command
-      description: >-
-        Endpoint of the command.
+      description: Endpoint of the command.
       required: true
       example: "system.launcher/open"
       selector:
