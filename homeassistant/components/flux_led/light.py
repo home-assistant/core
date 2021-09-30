@@ -200,7 +200,10 @@ async def async_setup_entry(
         custom_effect_colors = ast.literal_eval(
             options.get(CONF_CUSTOM_EFFECT_COLORS, "[]")
         )
-    except (ValueError, TypeError, SyntaxError, MemoryError):
+    except (ValueError, TypeError, SyntaxError, MemoryError) as ex:
+        _LOGGER.warning(
+            "Could not parse custom effect colors for %s: %s", entry.unique_id, ex
+        )
         custom_effect_colors = []
 
     async_add_entities(
@@ -236,7 +239,6 @@ class FluxLight(CoordinatorEntity, LightEntity):
         """Initialize the light."""
         super().__init__(coordinator)
         self._bulb: WifiLedBulb = coordinator.device
-
         self._name = name
         self._unique_id = unique_id
         self._ip_address = coordinator.host
@@ -265,7 +267,6 @@ class FluxLight(CoordinatorEntity, LightEntity):
         """Return the brightness of this light between 0..255."""
         if self._mode == MODE_WHITE:
             return self.white_value
-
         return self._bulb.brightness
 
     @property
@@ -276,13 +277,10 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-
-        if self._mode in WHITE_MODES:
-            return SUPPORT_FLUX_LED | SUPPORT_WHITE_VALUE | SUPPORT_COLOR_TEMP
-
         if self._mode == MODE_WHITE:
             return SUPPORT_BRIGHTNESS
-
+        if self._mode in WHITE_MODES:
+            return SUPPORT_FLUX_LED | SUPPORT_WHITE_VALUE | SUPPORT_COLOR_TEMP
         return SUPPORT_FLUX_LED
 
     @property
@@ -314,15 +312,13 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def device_info(self):
         """Return the device information."""
-        if not self._unique_id:
-            return None
-
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._unique_id)},
-            ATTR_NAME: self._name,
-            ATTR_MANUFACTURER: "FluxLED/Magic Home",
-            ATTR_MODEL: "LED Lights",
-        }
+        if self._unique_id:
+            return {
+                ATTR_IDENTIFIERS: {(DOMAIN, self._unique_id)},
+                ATTR_NAME: self._name,
+                ATTR_MANUFACTURER: "FluxLED/Magic Home",
+                ATTR_MODEL: "LED Lights",
+            }
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified or all lights on."""
@@ -385,13 +381,13 @@ class FluxLight(CoordinatorEntity, LightEntity):
         if brightness is None:
             brightness = self.brightness
 
-        if white is None and self._mode in WHITE_MODES:
-            white = self.white_value
-
         # handle W only mode (use brightness instead of white value)
         if self._mode == MODE_WHITE:
             self._bulb.setRgbw(0, 0, 0, w=brightness)
             return
+
+        if white is None and self._mode in WHITE_MODES:
+            white = self.white_value
 
         # Preserve color on brightness/white level change
         if rgb is None:
