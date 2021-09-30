@@ -86,11 +86,15 @@ class HoneywellOptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Required(
                         CONF_COOL_AWAY_TEMPERATURE,
-                        default=DEFAULT_COOL_AWAY_TEMPERATURE,
+                        default=self.config_entry.options.get(
+                            CONF_COOL_AWAY_TEMPERATURE, DEFAULT_COOL_AWAY_TEMPERATURE
+                        ),
                     ): int,
                     vol.Required(
                         CONF_HEAT_AWAY_TEMPERATURE,
-                        default=DEFAULT_HEAT_AWAY_TEMPERATURE,
+                        default=self.config_entry.options.get(
+                            CONF_HEAT_AWAY_TEMPERATURE, DEFAULT_HEAT_AWAY_TEMPERATURE
+                        ),
                     ): int,
                 }
             ),
