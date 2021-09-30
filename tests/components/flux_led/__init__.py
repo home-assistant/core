@@ -1,11 +1,12 @@
 """Tests for the flux_led integration."""
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+import socket
+from unittest.mock import MagicMock, patch
 
-from homeassistant.components.flux_led.const import FLUX_HOST, FLUX_MODEL, FLUX_MAC
 from flux_led import WifiLedBulb
 
+from homeassistant.components.flux_led.const import FLUX_HOST, FLUX_MAC, FLUX_MODEL
 
 MODULE = "homeassistant.flux_led.tplink"
 MODULE_CONFIG_FLOW = "homeassistant.components.flux_led.config_flow"
@@ -15,24 +16,14 @@ MODEL = "AZ120444"
 MAC_ADDRESS = "aabbccddeeff"
 DEFAULT_ENTRY_TITLE = f"{ALIAS} {MODEL}"
 
-def  _mocked_discovered_bulb() -> dict[str, str]:
-    return {
-        FLUX_HOST: IP_ADDRESS
-        FLUX_MODEL: MODEL,
-        FLUX_MAC: MAC_ADDRESS
-    }
+
+def _mocked_discovered_bulb() -> dict[str, str]:
+    return {FLUX_HOST: IP_ADDRESS, FLUX_MODEL: MODEL, FLUX_MAC: MAC_ADDRESS}
 
 
-def _mock_protocol() -> TPLinkSmartHomeProtocol:
-    protocol = MagicMock(auto_spec=TPLinkSmartHomeProtocol)
-    protocol.close = AsyncMock()
-    return protocol
-
-
-def _mocked_bulb() -> SmartBulb:
+def _mocked_bulb() -> WifiLedBulb:
     bulb = MagicMock(auto_spec=WifiLedBulb)
     return bulb
-
 
 
 def _patch_discovery(device=None, no_device=False):
@@ -50,6 +41,4 @@ def _patch_wifibulb(device=None, no_device=False):
             raise socket.timeout
         return device if device else _mocked_bulb()
 
-    return patch(
-        "homeassistant.components.flux_led.WifiLedBulb", new=_discover_single
-    )
+    return patch("homeassistant.components.flux_led.WifiLedBulb", new=_mocked_bulb)
