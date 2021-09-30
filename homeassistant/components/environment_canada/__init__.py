@@ -3,7 +3,7 @@ from datetime import timedelta
 import logging
 
 import aiohttp
-from env_canada import ECAirQuality, ECRadar, ECWeather
+from env_canada import ECWeather
 
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -32,26 +32,13 @@ from .const import (
     DOMAIN,
 )
 
-PLATFORMS = ["camera", "sensor", "weather"]
+PLATFORMS = ["weather"]
 
 DEFAULT_NAME = "Environment Canada"
 DEFAULT_RADAR_UPDATE_INTERVAL = timedelta(minutes=5)
 DEFAULT_WEATHER_UPDATE_INTERVAL = timedelta(minutes=5)
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class MyECRadar(ECRadar):
-    """Slim wrapper to add update method."""
-
-    def __init__(self, coordinates):
-        """Init my radar."""
-        super().__init__(coordinates=coordinates, precip_type=None)
-        self.image = None
-
-    async def update(self):
-        """Get the update."""
-        self.image = await self.get_loop(fps=5)
 
 
 async def async_setup_entry(hass, config_entry):
@@ -72,18 +59,6 @@ async def async_setup_entry(hass, config_entry):
         hass, weather_data, "weather", DEFAULT_WEATHER_UPDATE_INTERVAL
     )
     await coordinators["weather_coordinator"].async_config_entry_first_refresh()
-
-    radar_data = MyECRadar(coordinates=(lat, lon))
-    coordinators["radar_coordinator"] = ECDataUpdateCoordinator(
-        hass, radar_data, "radar", DEFAULT_RADAR_UPDATE_INTERVAL
-    )
-    await coordinators["radar_coordinator"].async_config_entry_first_refresh()
-
-    aqhi_data = ECAirQuality(coordinates=(lat, lon))
-    coordinators["aqhi_coordinator"] = ECDataUpdateCoordinator(
-        hass, aqhi_data, "AQHI", DEFAULT_WEATHER_UPDATE_INTERVAL
-    )
-    await coordinators["aqhi_coordinator"].async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = coordinators
