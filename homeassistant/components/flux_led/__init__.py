@@ -38,6 +38,7 @@ from .const import (
     DISCOVER_SCAN_TIMEOUT,
     DOMAIN,
     FLUX_HOST,
+    FLUX_LED_EXCEPTIONS,
     MODE_AUTO,
     STARTUP_SCAN_TIMEOUT,
     TRANSITION_GRADUAL,
@@ -194,5 +195,5 @@ class FluxLedUpdateCoordinator(DataUpdateCoordinator):
                 )
             else:
                 await self.hass.async_add_executor_job(self.device.update_state)
-        except BrokenPipeError as ex:
+        except FLUX_LED_EXCEPTIONS as ex:
             raise UpdateFailed(ex) from ex

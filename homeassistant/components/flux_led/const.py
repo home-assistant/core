@@ -1,14 +1,19 @@
 """Constants of the FluxLed/MagicHome Integration."""
 
+import socket
+
 DOMAIN = "flux_led"
 
 API = "flux_api"
+
 
 CONF_AUTOMATIC_ADD = "automatic_add"
 DEFAULT_NETWORK_SCAN_INTERVAL = 120
 DEFAULT_SCAN_INTERVAL = 5
 DEFAULT_EFFECT_SPEED = 50
 
+
+FLUX_LED_EXCEPTIONS = (socket.timeout, BrokenPipeError)
 
 STARTUP_SCAN_TIMEOUT = 5
 DISCOVER_SCAN_TIMEOUT = 10

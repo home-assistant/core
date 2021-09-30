@@ -25,6 +25,7 @@ from .const import (
     DISCOVER_SCAN_TIMEOUT,
     DOMAIN,
     FLUX_HOST,
+    FLUX_LED_EXCEPTIONS,
     FLUX_MAC,
     FLUX_MODEL,
     MODE_AUTO,
@@ -164,7 +165,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_pick_device()
             try:
                 await self._async_try_connect(host)
-            except BrokenPipeError:
+            except FLUX_LED_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
             else:
                 return self._async_create_entry_from_device(
