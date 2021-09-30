@@ -6,9 +6,11 @@ import pytest
 from homeassistant.components import flux_led
 from homeassistant.components.flux_led.const import (
     CONF_COLORS,
+    CONF_CUSTOM_EFFECT,
     CONF_CUSTOM_EFFECT_COLORS,
     CONF_CUSTOM_EFFECT_SPEED_PCT,
     CONF_CUSTOM_EFFECT_TRANSITION,
+    CONF_DEVICES,
     CONF_SPEED_PCT,
     CONF_TRANSITION,
     DOMAIN,
@@ -31,6 +33,8 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_MODE,
     CONF_NAME,
+    CONF_PLATFORM,
+    CONF_PROTOCOL,
     STATE_OFF,
     STATE_ON,
 )
@@ -599,3 +603,52 @@ async def test_rgbw_detection_without_protocol(hass: HomeAssistant) -> None:
     assert attributes[ATTR_EFFECT_LIST] == FLUX_EFFECT_LIST
     assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs", "rgbw"]
     assert attributes[ATTR_HS_COLOR] == (0, 100)
+
+
+async def test_migrate_from_yaml(hass: HomeAssistant) -> None:
+    """Test migrate from yaml."""
+    config = {
+        LIGHT_DOMAIN: [
+            {
+                CONF_PLATFORM: DOMAIN,
+                CONF_DEVICES: {
+                    IP_ADDRESS: {
+                        CONF_NAME: "flux_lamppost",
+                        CONF_PROTOCOL: "ledenet",
+                        CONF_CUSTOM_EFFECT: {
+                            CONF_SPEED_PCT: 30,
+                            CONF_TRANSITION: "strobe",
+                            CONF_COLORS: [[255, 0, 0], [255, 255, 0], [0, 255, 0]],
+                        },
+                    }
+                },
+            }
+        ],
+    }
+    with _patch_discovery(), _patch_wifibulb():
+        await async_setup_component(hass, LIGHT_DOMAIN, config)
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert entries
+
+    migrated_entry = None
+    for entry in entries:
+        if entry.unique_id == MAC_ADDRESS:
+            migrated_entry = entry
+            break
+
+    assert migrated_entry is not None
+    assert migrated_entry.data == {
+        CONF_HOST: IP_ADDRESS,
+        CONF_NAME: "flux_lamppost",
+        CONF_PROTOCOL: "ledenet",
+    }
+    assert migrated_entry.options == {
+        CONF_MODE: "auto",
+        CONF_CUSTOM_EFFECT_COLORS: "[(255, 0, 0), (255, 255, 0), (0, 255, 0)]",
+        CONF_CUSTOM_EFFECT_SPEED_PCT: 30,
+        CONF_CUSTOM_EFFECT_TRANSITION: "strobe",
+    }
