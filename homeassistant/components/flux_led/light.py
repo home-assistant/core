@@ -124,6 +124,7 @@ EFFECT_MAP = {
 EFFECT_ID_NAME = {v: k for k, v in EFFECT_MAP.items()}
 EFFECT_CUSTOM_CODE = 0x60
 
+WHITE_MODES = {MODE_RGBW, MODE_RGBWW, MODE_RGBCW}
 
 FLUX_EFFECT_LIST = sorted(EFFECT_MAP) + [EFFECT_RANDOM]
 
@@ -276,7 +277,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
     def supported_features(self):
         """Flag supported features."""
 
-        if self._mode in (MODE_RGBW, MODE_RGBWW, MODE_RGBCW):
+        if self._mode in WHITE_MODES:
             return SUPPORT_FLUX_LED | SUPPORT_WHITE_VALUE | SUPPORT_COLOR_TEMP
 
         if self._mode == MODE_WHITE:
@@ -384,7 +385,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
         if brightness is None:
             brightness = self.brightness
 
-        if white is None and self._mode == MODE_RGBW:
+        if white is None and self._mode in WHITE_MODES:
             white = self.white_value
 
         # handle W only mode (use brightness instead of white value)
@@ -397,7 +398,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
             rgb = self._bulb.getRgb()
 
         # handle RGBW mode
-        if self._mode in (MODE_RGBW, MODE_RGBWW, MODE_RGBCW):
+        if self._mode in WHITE_MODES:
             self._bulb.setRgbw(*tuple(rgb), w=white, brightness=brightness)
             return
 
