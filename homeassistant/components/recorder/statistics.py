@@ -645,7 +645,7 @@ def _sorted_statistics_to_dict(
         for stat_id in statistic_ids:
             result[stat_id] = []
 
-    metadata = {metadata_id: metadata for metadata_id, metadata in _metadata.values()}
+    metadata = dict(_metadata.values())
 
     # Append all statistic entries, and optionally do unit conversion
     for meta_id, group in groupby(stats, lambda stat: stat.metadata_id):  # type: ignore
