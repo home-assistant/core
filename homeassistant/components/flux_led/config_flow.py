@@ -57,7 +57,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: config_entries.ConfigEntry):
+    def async_get_options_flow(config_entry: config_entries.ConfigEntry) -> OptionsFlow:
         """Get the options flow for the Flux LED component."""
         return OptionsFlow(config_entry)
 
@@ -224,9 +224,11 @@ class OptionsFlow(config_entries.OptionsFlow):
         """Initialize the flux_led options flow."""
         self._config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Configure the options."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 

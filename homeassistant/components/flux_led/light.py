@@ -5,7 +5,7 @@ import ast
 from functools import partial
 import logging
 import random
-from typing import Any, Final
+from typing import Any, Final, cast
 
 from flux_led import WifiLedBulb
 import voluptuous as vol
@@ -246,14 +246,14 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
-        return self._bulb.is_on
+        return cast(bool, self._bulb.is_on)
 
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         if self._mode == MODE_WHITE:
             return self.white_value
-        return self._bulb.brightness
+        return cast(int, self._bulb.brightness)
 
     @property
     def hs_color(self) -> tuple[float, float] | None:
@@ -272,7 +272,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def white_value(self) -> int:
         """Return the white value of this light between 0..255."""
-        return self._bulb.getRgbw()[3]
+        return cast(int, self._bulb.getRgbw()[3])
 
     @property
     def effect_list(self) -> list[str]:
@@ -389,7 +389,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
 
     def set_custom_effect(
         self, colors: list[tuple[int, int, int]], speed_pct: int, transition: str
-    ):
+    ) -> None:
         """Set a custom effect on the bulb."""
         self._bulb.setCustomPattern(
             colors,
@@ -397,7 +397,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
             transition,
         )
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the specified or all lights off."""
         await self.hass.async_add_executor_job(self._bulb.turnOff)
         await self.coordinator.async_request_refresh()

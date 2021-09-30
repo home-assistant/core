@@ -63,8 +63,10 @@ async def async_discover_devices(
 ) -> list[dict[str, str]]:
     """Discover ledned devices."""
 
-    def _scan_with_timeout():
-        return BulbScanner().scan(timeout=timeout)
+    def _scan_with_timeout() -> list[dict[str, str]]:
+        scanner = BulbScanner()
+        discovered: list[dict[str, str]] = scanner.scan(timeout=timeout)
+        return discovered
 
     return await hass.async_add_executor_job(_scan_with_timeout)
 
@@ -134,7 +136,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async_import_from_yaml(hass, config, discovered_mac_by_host)
 
-    async def _async_discovery(*_):
+    async def _async_discovery(*_: Any) -> None:
         async_trigger_discovery(
             hass, await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT)
         )
@@ -150,7 +152,7 @@ async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flux LED/MagicLight from a config entry."""
 
     coordinator = FluxLedUpdateCoordinator(hass, entry.data[CONF_HOST])
@@ -174,12 +176,12 @@ class FluxLedUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(
         self,
-        hass,
-        host,
+        hass: HomeAssistant,
+        host: str,
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific device."""
         self.host = host
-        self.device = None
+        self.device: WifiLedBulb | None = None
         update_interval = timedelta(seconds=5)
         super().__init__(
             hass,
