@@ -24,6 +24,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import color as color_util
@@ -77,6 +78,13 @@ class NanoleafLight(LightEntity):
         self._nanoleaf = nanoleaf
         self._attr_unique_id = self._nanoleaf.serial_no
         self._attr_name = self._nanoleaf.name
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._nanoleaf.serial_no)},
+            name=self._nanoleaf.name,
+            manufacturer=self._nanoleaf.manufacturer,
+            model=self._nanoleaf.model,
+            sw_version=self._nanoleaf.firmware_version,
+        )
         self._attr_min_mireds = 154
         self._attr_max_mireds = 833
 
