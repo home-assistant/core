@@ -131,27 +131,23 @@ FLUX_EFFECT_LIST: Final = sorted(EFFECT_MAP) + [EFFECT_RANDOM]
 
 SERVICE_CUSTOM_EFFECT: Final = "set_custom_effect"
 
-CUSTOM_EFFECT_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_COLORS): vol.All(
-            cv.ensure_list,
-            vol.Length(min=1, max=16),
-            [
-                vol.All(
-                    vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple)
-                )
-            ],
-        ),
-        vol.Optional(CONF_SPEED_PCT, default=50): vol.All(
-            vol.Range(min=0, max=100), vol.Coerce(int)
-        ),
-        vol.Optional(CONF_TRANSITION, default=TRANSITION_GRADUAL): vol.All(
-            cv.string, vol.In([TRANSITION_GRADUAL, TRANSITION_JUMP, TRANSITION_STROBE])
-        ),
-    }
-)
+CUSTOM_EFFECT_DICT: Final = {
+    vol.Required(CONF_COLORS): vol.All(
+        cv.ensure_list,
+        vol.Length(min=1, max=16),
+        [vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple))],
+    ),
+    vol.Optional(CONF_SPEED_PCT, default=50): vol.All(
+        vol.Range(min=0, max=100), vol.Coerce(int)
+    ),
+    vol.Optional(CONF_TRANSITION, default=TRANSITION_GRADUAL): vol.All(
+        cv.string, vol.In([TRANSITION_GRADUAL, TRANSITION_JUMP, TRANSITION_STROBE])
+    ),
+}
 
-DEVICE_SCHEMA = vol.Schema(
+CUSTOM_EFFECT_SCHEMA: Final = vol.Schema(CUSTOM_EFFECT_DICT)
+
+DEVICE_SCHEMA: Final = vol.Schema(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(ATTR_MODE, default=MODE_RGBW): vol.All(
@@ -170,15 +166,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-CUSTOM_EFFECT_COLOR_SCHEMA = vol.Schema(
-    vol.All(
-        cv.ensure_list,
-        vol.Length(min=1, max=16),
-        [vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple))],
-    )
-)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: config_entries.ConfigEntry,
@@ -187,12 +174,10 @@ async def async_setup_entry(
     """Set up the Flux lights."""
     coordinator: FluxLedUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    # register custom_effect service
-    platform = entity_platform.current_platform.get()
-    assert platform is not None
+    platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_CUSTOM_EFFECT,
-        CUSTOM_EFFECT_SCHEMA,
+        CUSTOM_EFFECT_DICT,
         "set_custom_effect",
     )
     options = entry.options
@@ -401,6 +386,16 @@ class FluxLight(CoordinatorEntity, LightEntity):
 
         # handle RGB mode
         self._bulb.setRgb(*tuple(rgb), brightness=brightness)
+
+    def set_custom_effect(
+        self, colors: list[tuple[int, int, int]], speed_pct: int, transition: str
+    ):
+        """Set a custom effect on the bulb."""
+        self._bulb.setCustomPattern(
+            colors,
+            speed_pct,
+            transition,
+        )
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the specified or all lights off."""
