@@ -50,12 +50,12 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 async def test_light_unique_id(hass: HomeAssistant) -> None:
     """Test a light unique id."""
-    already_migrated_config_entry = MockConfigEntry(
+    config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
         unique_id=MAC_ADDRESS,
     )
-    already_migrated_config_entry.add_to_hass(hass)
+    config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
     with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
@@ -68,10 +68,10 @@ async def test_light_unique_id(hass: HomeAssistant) -> None:
 
 async def test_light_no_unique_id(hass: HomeAssistant) -> None:
     """Test a light without a unique id."""
-    already_migrated_config_entry = MockConfigEntry(
+    config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE}
     )
-    already_migrated_config_entry.add_to_hass(hass)
+    config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
     with _patch_discovery(no_device=True), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
@@ -84,12 +84,12 @@ async def test_light_no_unique_id(hass: HomeAssistant) -> None:
 
 async def test_rgb_light(hass: HomeAssistant) -> None:
     """Test an rgb light."""
-    already_migrated_config_entry = MockConfigEntry(
+    config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
         unique_id=MAC_ADDRESS,
     )
-    already_migrated_config_entry.add_to_hass(hass)
+    config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
     bulb.rgbwcapable = False
     bulb.protocol = None
@@ -163,12 +163,12 @@ async def test_rgb_light(hass: HomeAssistant) -> None:
 
 async def test_rgbw_light(hass: HomeAssistant) -> None:
     """Test an rgbw light."""
-    already_migrated_config_entry = MockConfigEntry(
+    config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
         unique_id=MAC_ADDRESS,
     )
-    already_migrated_config_entry.add_to_hass(hass)
+    config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
     with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
@@ -258,12 +258,12 @@ async def test_rgbw_light(hass: HomeAssistant) -> None:
 
 async def test_rgbcw_light(hass: HomeAssistant) -> None:
     """Test an rgbcw light."""
-    already_migrated_config_entry = MockConfigEntry(
+    config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
         unique_id=MAC_ADDRESS,
     )
-    already_migrated_config_entry.add_to_hass(hass)
+    config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
     bulb.raw_state = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     bulb.raw_state[9] = 1
@@ -357,12 +357,12 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
 
 async def test_white_light(hass: HomeAssistant) -> None:
     """Test a white light."""
-    already_migrated_config_entry = MockConfigEntry(
+    config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
         unique_id=MAC_ADDRESS,
     )
-    already_migrated_config_entry.add_to_hass(hass)
+    config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
     bulb.mode = "ww"
     bulb.protocol = None
