@@ -64,7 +64,7 @@ class FFmpegBinarySensor(FFmpegBase, BinarySensorEntity):
 
         self._state = False
         self._config = config
-        self._attr_name = config.get(CONF_NAME)
+        self._attr_name = config[CONF_NAME]
         self._attr_unique_id = config.get(CONF_UNIQUE_ID)
 
     @callback
