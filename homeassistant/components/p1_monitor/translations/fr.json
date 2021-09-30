@@ -9,7 +9,8 @@
                 "data": {
                     "host": "H\u00f4te",
                     "name": "Nom"
-                }
+                },
+                "description": "Configurez P1 Monitor pour l'int\u00e9grer \u00e0 Home Assistant."
             }
         }
     }

@@ -63,6 +63,11 @@ def get_fixtures(vehicle_type: str) -> dict[str, Any]:
             if "hvac_status" in mock_vehicle["endpoints"]
             else load_fixture("renault/no_data.json")
         ).get_attributes(schemas.KamereonVehicleHvacStatusDataSchema),
+        "location": schemas.KamereonVehicleDataResponseSchema.loads(
+            load_fixture(f"renault/{mock_vehicle['endpoints']['location']}")
+            if "location" in mock_vehicle["endpoints"]
+            else load_fixture("renault/no_data.json")
+        ).get_attributes(schemas.KamereonVehicleLocationDataSchema),
     }
 
 
@@ -132,6 +137,9 @@ async def setup_renault_integration_vehicle(hass: HomeAssistant, vehicle_type: s
     ), patch(
         "renault_api.renault_vehicle.RenaultVehicle.get_hvac_status",
         return_value=mock_fixtures["hvac_status"],
+    ), patch(
+        "renault_api.renault_vehicle.RenaultVehicle.get_location",
+        return_value=mock_fixtures["location"],
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -181,6 +189,9 @@ async def setup_renault_integration_vehicle_with_no_data(
     ), patch(
         "renault_api.renault_vehicle.RenaultVehicle.get_hvac_status",
         return_value=mock_fixtures["hvac_status"],
+    ), patch(
+        "renault_api.renault_vehicle.RenaultVehicle.get_location",
+        return_value=mock_fixtures["location"],
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -228,6 +239,9 @@ async def setup_renault_integration_vehicle_with_side_effect(
         side_effect=side_effect,
     ), patch(
         "renault_api.renault_vehicle.RenaultVehicle.get_hvac_status",
+        side_effect=side_effect,
+    ), patch(
+        "renault_api.renault_vehicle.RenaultVehicle.get_location",
         side_effect=side_effect,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)

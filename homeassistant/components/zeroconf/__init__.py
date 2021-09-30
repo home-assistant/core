@@ -5,9 +5,10 @@ import asyncio
 from collections.abc import Coroutine
 from contextlib import suppress
 import fnmatch
-from ipaddress import IPv6Address, ip_address
+from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
 import socket
+import sys
 from typing import Any, TypedDict, cast
 
 import voluptuous as vol
@@ -131,18 +132,31 @@ async def _async_get_instance(hass: HomeAssistant, **zcargs: Any) -> HaAsyncZero
     return aio_zc
 
 
+@callback
+def _async_zc_has_functional_dual_stack() -> bool:
+    """Return true for platforms that not support IP_ADD_MEMBERSHIP on an AF_INET6 socket.
+
+    Zeroconf only supports a single listen socket at this time.
+    """
+    return not sys.platform.startswith("freebsd") and not sys.platform.startswith(
+        "darwin"
+    )
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Zeroconf and make Home Assistant discoverable."""
-    zc_args: dict = {}
+    zc_args: dict = {"ip_version": IPVersion.V4Only}
 
     adapters = await network.async_get_adapters(hass)
 
-    ipv6 = True
-    if not any(adapter["enabled"] and adapter["ipv6"] for adapter in adapters):
-        ipv6 = False
-        zc_args["ip_version"] = IPVersion.V4Only
-    else:
-        zc_args["ip_version"] = IPVersion.All
+    ipv6 = False
+    if _async_zc_has_functional_dual_stack():
+        if any(adapter["enabled"] and adapter["ipv6"] for adapter in adapters):
+            ipv6 = True
+            zc_args["ip_version"] = IPVersion.All
+    elif not any(adapter["enabled"] and adapter["ipv4"] for adapter in adapters):
+        zc_args["ip_version"] = IPVersion.V6Only
+        ipv6 = True
 
     if not ipv6 and network.async_only_default_interface_enabled(adapters):
         zc_args["interfaces"] = InterfaceChoice.Default
@@ -152,6 +166,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             for source_ip in await network.async_get_enabled_source_ips(hass)
             if not source_ip.is_loopback
             and not (isinstance(source_ip, IPv6Address) and source_ip.is_global)
+            and not (
+                isinstance(source_ip, IPv6Address)
+                and zc_args["ip_version"] == IPVersion.V4Only
+            )
+            and not (
+                isinstance(source_ip, IPv4Address)
+                and zc_args["ip_version"] == IPVersion.V6Only
+            )
         ]
 
     aio_zc = await _async_get_instance(hass, **zc_args)

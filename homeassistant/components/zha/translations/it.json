@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "not_zha_device": "Questo dispositivo non \u00e8 un dispositivo zha",
-            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione.",
+            "usb_probe_failed": "Impossibile interrogare il dispositivo USB"
         },
         "error": {
             "cannot_connect": "Impossibile connettersi"

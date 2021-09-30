@@ -126,14 +126,14 @@ def add_parts_to_segment(segment, source):
     """Add relevant part data to segment for testing recorder."""
     moof_locs = list(find_box(source.getbuffer(), b"moof")) + [len(source.getbuffer())]
     segment.init = source.getbuffer()[: moof_locs[0]].tobytes()
-    segment.parts_by_byterange = {
-        moof_locs[i]: Part(
+    segment.parts = [
+        Part(
             duration=None,
             has_keyframe=None,
             data=source.getbuffer()[moof_locs[i] : moof_locs[i + 1]],
         )
         for i in range(len(moof_locs) - 1)
-    }
+    ]
 
 
 async def test_recorder_save(tmpdir):

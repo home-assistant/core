@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import timedelta
 from functools import partial
 import logging
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import web
 from amcrest import AmcrestError
@@ -13,9 +14,11 @@ from haffmpeg.camera import CameraMjpeg
 import voluptuous as vol
 
 from homeassistant.components.camera import SUPPORT_ON_OFF, SUPPORT_STREAM, Camera
+from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.ffmpeg import DATA_FFMPEG, FFmpegManager
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_stream,
     async_aiohttp_proxy_web,
@@ -32,6 +35,7 @@ from .const import (
     COMM_TIMEOUT,
     DATA_AMCREST,
     DEVICES,
+    DOMAIN,
     SERVICE_UPDATE,
     SNAPSHOT_TIMEOUT,
 )
@@ -132,7 +136,21 @@ async def async_setup_platform(
 
     name = discovery_info[CONF_NAME]
     device = hass.data[DATA_AMCREST][DEVICES][name]
-    async_add_entities([AmcrestCam(name, device, hass.data[DATA_FFMPEG])], True)
+    entity = AmcrestCam(name, device, hass.data[DATA_FFMPEG])
+
+    # 2021.9.0 introduced unique id's for the camera entity, but these were not
+    # unique for different resolution streams.  If any cameras were configured
+    # with this version, update the old entity with the new unique id.
+    serial_number = await hass.async_add_executor_job(lambda: device.api.serial_number)  # type: ignore[no-any-return]
+    serial_number = serial_number.strip()
+    registry = entity_registry.async_get(hass)
+    entity_id = registry.async_get_entity_id(CAMERA_DOMAIN, DOMAIN, serial_number)
+    if entity_id is not None:
+        _LOGGER.debug("Updating unique id for camera %s", entity_id)
+        new_unique_id = f"{serial_number}-{device.resolution}-{device.channel}"
+        registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
+
+    async_add_entities([entity], True)
 
 
 class CannotSnapshot(Exception):
@@ -155,6 +173,7 @@ class AmcrestCam(Camera):
         self._ffmpeg_arguments = device.ffmpeg_arguments
         self._stream_source = device.stream_source
         self._resolution = device.resolution
+        self._channel = device.channel
         self._token = self._auth = device.authentication
         self._control_light = device.control_light
         self._is_recording: bool = False
@@ -374,20 +393,25 @@ class AmcrestCam(Camera):
         try:
             if self._brand is None:
                 resp = self._api.vendor_information.strip()
-                if resp.startswith("vendor="):
-                    self._brand = resp.split("=")[-1]
+                _LOGGER.debug("Assigned brand=%s", resp)
+                if resp:
+                    self._brand = resp
                 else:
                     self._brand = "unknown"
             if self._model is None:
                 resp = self._api.device_type.strip()
-                _LOGGER.debug("Device_type=%s", resp)
-                if resp.startswith("type="):
-                    self._model = resp.split("=")[-1]
+                _LOGGER.debug("Assigned model=%s", resp)
+                if resp:
+                    self._model = resp
                 else:
                     self._model = "unknown"
             if self._attr_unique_id is None:
-                self._attr_unique_id = self._api.serial_number.strip()
-                _LOGGER.debug("Assigned unique_id=%s", self._attr_unique_id)
+                serial_number = self._api.serial_number.strip()
+                if serial_number:
+                    self._attr_unique_id = (
+                        f"{serial_number}-{self._resolution}-{self._channel}"
+                    )
+                    _LOGGER.debug("Assigned unique_id=%s", self._attr_unique_id)
             self.is_streaming = self._get_video()
             self._is_recording = self._get_recording()
             self._motion_detection_enabled = self._get_motion_detection()

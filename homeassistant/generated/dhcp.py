@@ -260,27 +260,17 @@ DHCP = [
         "hostname": "tado*"
     },
     {
-        "domain": "tesla",
-        "hostname": "tesla_*",
-        "macaddress": "4CFCAA*"
-    },
-    {
-        "domain": "tesla",
-        "hostname": "tesla_*",
-        "macaddress": "044EAF*"
-    },
-    {
-        "domain": "tesla",
-        "hostname": "tesla_*",
-        "macaddress": "98ED5C*"
-    },
-    {
         "domain": "toon",
         "hostname": "eneco-*",
         "macaddress": "74C63B*"
     },
     {
         "domain": "tplink",
+        "hostname": "ep*",
+        "macaddress": "E848B8*"
+    },
+    {
+        "domain": "tplink",
         "hostname": "hs*",
         "macaddress": "1C3BF3*"
     },
@@ -306,6 +296,16 @@ DHCP = [
     },
     {
         "domain": "tplink",
+        "hostname": "hs*",
+        "macaddress": "C006C3*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "003192*"
+    },
+    {
+        "domain": "tplink",
         "hostname": "k[lp]*",
         "macaddress": "1C3BF3*"
     },
@@ -331,6 +331,11 @@ DHCP = [
     },
     {
         "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "C006C3*"
+    },
+    {
+        "domain": "tplink",
         "hostname": "lb*",
         "macaddress": "1C3BF3*"
     },
@@ -353,30 +358,6 @@ DHCP = [
         "domain": "tplink",
         "hostname": "lb*",
         "macaddress": "B09575*"
-    },
-    {
-        "domain": "tuya",
-        "macaddress": "508A06*"
-    },
-    {
-        "domain": "tuya",
-        "macaddress": "7CF666*"
-    },
-    {
-        "domain": "tuya",
-        "macaddress": "10D561*"
-    },
-    {
-        "domain": "tuya",
-        "macaddress": "D4A651*"
-    },
-    {
-        "domain": "tuya",
-        "macaddress": "68572D*"
-    },
-    {
-        "domain": "tuya",
-        "macaddress": "1869D8*"
     },
     {
         "domain": "verisure",

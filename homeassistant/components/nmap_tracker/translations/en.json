@@ -25,6 +25,7 @@
         "step": {
             "init": {
                 "data": {
+                    "consider_home": "Seconds to wait till marking a device tracker as not home after not being seen.",
                     "exclude": "Network addresses (comma seperated) to exclude from scanning",
                     "home_interval": "Minimum number of minutes between scans of active devices (preserve battery)",
                     "hosts": "Network addresses (comma seperated) to scan",

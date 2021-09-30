@@ -151,11 +151,11 @@ class DeconzGateway:
         # Gateway service
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
-            identifiers={(DECONZ_DOMAIN, self.api.config.bridgeid)},
+            identifiers={(DECONZ_DOMAIN, self.api.config.bridge_id)},
             manufacturer="Dresden Elektronik",
-            model=self.api.config.modelid,
+            model=self.api.config.model_id,
             name=self.api.config.name,
-            sw_version=self.api.config.swversion,
+            sw_version=self.api.config.software_version,
             via_device=(CONNECTION_NETWORK_MAC, self.api.config.mac),
         )
 
@@ -266,12 +266,12 @@ async def get_gateway(
         config[CONF_HOST],
         config[CONF_PORT],
         config[CONF_API_KEY],
-        async_add_device=async_add_device_callback,
+        add_device=async_add_device_callback,
         connection_status=async_connection_status_callback,
     )
     try:
         with async_timeout.timeout(10):
-            await deconz.initialize()
+            await deconz.refresh_state()
         return deconz
 
     except errors.Unauthorized as err:

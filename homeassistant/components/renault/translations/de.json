@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Konto wurde bereits konfiguriert",
-            "kamereon_no_account": "Kamereon-Konto kann nicht gefunden werden."
+            "kamereon_no_account": "Kamereon-Konto kann nicht gefunden werden.",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
             "invalid_credentials": "Ung\u00fcltige Authentifizierung"
@@ -13,6 +14,13 @@
                     "kamereon_account_id": "Kamereon-Kontonummer"
                 },
                 "title": "Kamereon-Kontonummer ausw\u00e4hlen"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passwort"
+                },
+                "description": "Bitte \u00e4ndere Dein Passwort f\u00fcr {username}",
+                "title": "Integration erneut authentifizieren"
             },
             "user": {
                 "data": {

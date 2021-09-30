@@ -18,11 +18,13 @@ DEVICE_DESCRIPTOR = "device_descriptor"
 DEVICE_ID_GROUP = "Device description"
 DEVICE_NAME = "device_name"
 DOMAIN = "keyboard_remote"
+VALUE = "value"
 
 ICON = "mdi:remote"
 
 KEY_CODE = "key_code"
 KEY_VALUE = {"key_up": 0, "key_down": 1, "key_hold": 2}
+KEY_VALUE_NAME = {value: key for key, value in KEY_VALUE.items()}
 KEYBOARD_REMOTE_COMMAND_RECEIVED = "keyboard_remote_command_received"
 KEYBOARD_REMOTE_CONNECTED = "keyboard_remote_connected"
 KEYBOARD_REMOTE_DISCONNECTED = "keyboard_remote_disconnected"
@@ -236,7 +238,12 @@ class KeyboardRemote:
             while True:
                 self.hass.bus.async_fire(
                     KEYBOARD_REMOTE_COMMAND_RECEIVED,
-                    {KEY_CODE: code, DEVICE_DESCRIPTOR: path, DEVICE_NAME: name},
+                    {
+                        KEY_CODE: code,
+                        TYPE: "key_hold",
+                        DEVICE_DESCRIPTOR: path,
+                        DEVICE_NAME: name,
+                    },
                 )
                 await asyncio.sleep(repeat)
 
@@ -294,6 +301,7 @@ class KeyboardRemote:
                                 KEYBOARD_REMOTE_COMMAND_RECEIVED,
                                 {
                                     KEY_CODE: event.code,
+                                    TYPE: KEY_VALUE_NAME[event.value],
                                     DEVICE_DESCRIPTOR: dev.path,
                                     DEVICE_NAME: dev.name,
                                 },

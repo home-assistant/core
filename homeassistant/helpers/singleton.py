@@ -26,31 +26,27 @@ def singleton(data_key: str) -> Callable[[FUNC], FUNC]:
             @bind_hass
             @functools.wraps(func)
             def wrapped(hass: HomeAssistant) -> T:
-                obj: T | None = hass.data.get(data_key)
-                if obj is None:
-                    obj = hass.data[data_key] = func(hass)
-                return obj
+                if data_key not in hass.data:
+                    hass.data[data_key] = func(hass)
+                return cast(T, hass.data[data_key])
 
             return wrapped
 
         @bind_hass
         @functools.wraps(func)
         async def async_wrapped(hass: HomeAssistant) -> T:
-            obj_or_evt = hass.data.get(data_key)
-
-            if not obj_or_evt:
+            if data_key not in hass.data:
                 evt = hass.data[data_key] = asyncio.Event()
-
                 result = await func(hass)
-
                 hass.data[data_key] = result
                 evt.set()
                 return cast(T, result)
 
+            obj_or_evt = hass.data[data_key]
+
             if isinstance(obj_or_evt, asyncio.Event):
-                evt = obj_or_evt
-                await evt.wait()
-                return cast(T, hass.data.get(data_key))
+                await obj_or_evt.wait()
+                return cast(T, hass.data[data_key])
 
             return cast(T, obj_or_evt)
 

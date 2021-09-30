@@ -83,6 +83,26 @@ SSDP = {
             "manufacturer": "DIRECTV"
         }
     ],
+    "dlna_dmr": [
+        {
+            "st": "urn:schemas-upnp-org:device:MediaRenderer:1"
+        },
+        {
+            "st": "urn:schemas-upnp-org:device:MediaRenderer:2"
+        },
+        {
+            "st": "urn:schemas-upnp-org:device:MediaRenderer:3"
+        },
+        {
+            "nt": "urn:schemas-upnp-org:device:MediaRenderer:1"
+        },
+        {
+            "nt": "urn:schemas-upnp-org:device:MediaRenderer:2"
+        },
+        {
+            "nt": "urn:schemas-upnp-org:device:MediaRenderer:3"
+        }
+    ],
     "fritz": [
         {
             "st": "urn:schemas-upnp-org:device:fritzbox:1"
@@ -149,6 +169,12 @@ SSDP = {
     "konnected": [
         {
             "manufacturer": "konnected.io"
+        }
+    ],
+    "netgear": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            "manufacturer": "NETGEAR, Inc."
         }
     ],
     "roku": [

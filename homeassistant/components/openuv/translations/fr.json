@@ -21,6 +21,10 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "from_window": "Indice UV de d\u00e9part pour la fen\u00eatre de protection",
+                    "to_window": "Indice UV de fin pour la fen\u00eatre de protection"
+                },
                 "title": "Configurer OpenUV"
             }
         }

@@ -1,11 +1,16 @@
 """Support for Iperf3 network measurement tool."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
 import iperf3
 import voluptuous as vol
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_HOSTS,
@@ -40,10 +45,19 @@ ATTR_UPLOAD = "upload"
 ATTR_VERSION = "Version"
 ATTR_HOST = "host"
 
-SENSOR_TYPES = {
-    ATTR_DOWNLOAD: [ATTR_DOWNLOAD.capitalize(), DATA_RATE_MEGABITS_PER_SECOND],
-    ATTR_UPLOAD: [ATTR_UPLOAD.capitalize(), DATA_RATE_MEGABITS_PER_SECOND],
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=ATTR_DOWNLOAD,
+        name=ATTR_DOWNLOAD.capitalize(),
+        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+    ),
+    SensorEntityDescription(
+        key=ATTR_UPLOAD,
+        name=ATTR_UPLOAD.capitalize(),
+        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+    ),
+)
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 PROTOCOLS = ["tcp", "udp"]
 
@@ -62,9 +76,9 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Required(CONF_HOSTS): vol.All(cv.ensure_list, [HOST_CONFIG_SCHEMA]),
-                vol.Optional(
-                    CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)
-                ): vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES))]),
+                vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(
+                    cv.ensure_list, [vol.In(SENSOR_KEYS)]
+                ),
                 vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL): vol.All(
                     cv.time_period, cv.positive_timedelta
                 ),

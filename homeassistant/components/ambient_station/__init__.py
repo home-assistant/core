@@ -75,6 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 config_entry.data[CONF_API_KEY],
                 config_entry.data[CONF_APP_KEY],
                 session=session,
+                logger=LOGGER,
             ),
         )
         hass.loop.create_task(ambient.ws_connect())
@@ -177,9 +178,7 @@ class AmbientStation:
         def on_subscribed(data: dict) -> None:
             """Define a handler to fire when the subscription is set."""
             for station in data["devices"]:
-                mac = station["macAddress"]
-
-                if mac in self.stations:
+                if (mac := station["macAddress"]) in self.stations:
                     continue
 
                 LOGGER.debug("New station subscription: %s", data)
@@ -225,7 +224,7 @@ class AmbientWeatherEntity(Entity):
         station_name: str,
         description: EntityDescription,
     ) -> None:
-        """Initialize the sensor."""
+        """Initialize the entity."""
         self._ambient = ambient
         self._attr_device_info = {
             "identifiers": {(DOMAIN, mac_address)},

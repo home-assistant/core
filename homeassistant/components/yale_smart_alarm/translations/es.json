@@ -19,7 +19,7 @@
                 "data": {
                     "area_id": "ID de \u00e1rea",
                     "name": "Nombre",
-                    "password": "Clave",
+                    "password": "Contrase\u00f1a",
                     "username": "Nombre de usuario"
                 }
             }
