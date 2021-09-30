@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, Final
 
 from flux_led import BulbScanner, WifiLedBulb
 
@@ -47,9 +47,9 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["light"]
-DISCOVERY_INTERVAL = timedelta(minutes=15)
-REQUEST_REFRESH_DELAY = 0.35
+PLATFORMS: Final = ["light"]
+DISCOVERY_INTERVAL: Final = timedelta(minutes=15)
+REQUEST_REFRESH_DELAY: Final = 0.35
 
 
 async def async_wifi_bulb_for_host(hass: HomeAssistant, host: str) -> WifiLedBulb:

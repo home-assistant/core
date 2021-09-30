@@ -5,7 +5,7 @@ import ast
 from functools import partial
 import logging
 import random
-from typing import Any
+from typing import Any, Final
 
 from flux_led import WifiLedBulb
 import voluptuous as vol
@@ -41,6 +41,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.color as color_util
@@ -70,36 +71,36 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_FLUX_LED = SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_COLOR
+SUPPORT_FLUX_LED: Final = SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_COLOR
 
 
 # Constant color temp values for 2 flux_led special modes
 # Warm-white and Cool-white modes
-COLOR_TEMP_WARM_VS_COLD_WHITE_CUT_OFF = 285
+COLOR_TEMP_WARM_VS_COLD_WHITE_CUT_OFF: Final = 285
 
 # List of supported effects which aren't already declared in LIGHT
-EFFECT_RED_FADE = "red_fade"
-EFFECT_GREEN_FADE = "green_fade"
-EFFECT_BLUE_FADE = "blue_fade"
-EFFECT_YELLOW_FADE = "yellow_fade"
-EFFECT_CYAN_FADE = "cyan_fade"
-EFFECT_PURPLE_FADE = "purple_fade"
-EFFECT_WHITE_FADE = "white_fade"
-EFFECT_RED_GREEN_CROSS_FADE = "rg_cross_fade"
-EFFECT_RED_BLUE_CROSS_FADE = "rb_cross_fade"
-EFFECT_GREEN_BLUE_CROSS_FADE = "gb_cross_fade"
-EFFECT_COLORSTROBE = "colorstrobe"
-EFFECT_RED_STROBE = "red_strobe"
-EFFECT_GREEN_STROBE = "green_strobe"
-EFFECT_BLUE_STROBE = "blue_strobe"
-EFFECT_YELLOW_STROBE = "yellow_strobe"
-EFFECT_CYAN_STROBE = "cyan_strobe"
-EFFECT_PURPLE_STROBE = "purple_strobe"
-EFFECT_WHITE_STROBE = "white_strobe"
-EFFECT_COLORJUMP = "colorjump"
-EFFECT_CUSTOM = "custom"
+EFFECT_RED_FADE: Final = "red_fade"
+EFFECT_GREEN_FADE: Final = "green_fade"
+EFFECT_BLUE_FADE: Final = "blue_fade"
+EFFECT_YELLOW_FADE: Final = "yellow_fade"
+EFFECT_CYAN_FADE: Final = "cyan_fade"
+EFFECT_PURPLE_FADE: Final = "purple_fade"
+EFFECT_WHITE_FADE: Final = "white_fade"
+EFFECT_RED_GREEN_CROSS_FADE: Final = "rg_cross_fade"
+EFFECT_RED_BLUE_CROSS_FADE: Final = "rb_cross_fade"
+EFFECT_GREEN_BLUE_CROSS_FADE: Final = "gb_cross_fade"
+EFFECT_COLORSTROBE: Final = "colorstrobe"
+EFFECT_RED_STROBE: Final = "red_strobe"
+EFFECT_GREEN_STROBE: Final = "green_strobe"
+EFFECT_BLUE_STROBE: Final = "blue_strobe"
+EFFECT_YELLOW_STROBE: Final = "yellow_strobe"
+EFFECT_CYAN_STROBE: Final = "cyan_strobe"
+EFFECT_PURPLE_STROBE: Final = "purple_strobe"
+EFFECT_WHITE_STROBE: Final = "white_strobe"
+EFFECT_COLORJUMP: Final = "colorjump"
+EFFECT_CUSTOM: Final = "custom"
 
-EFFECT_MAP = {
+EFFECT_MAP: Final = {
     EFFECT_COLORLOOP: 0x25,
     EFFECT_RED_FADE: 0x26,
     EFFECT_GREEN_FADE: 0x27,
@@ -121,14 +122,14 @@ EFFECT_MAP = {
     EFFECT_WHITE_STROBE: 0x37,
     EFFECT_COLORJUMP: 0x38,
 }
-EFFECT_ID_NAME = {v: k for k, v in EFFECT_MAP.items()}
-EFFECT_CUSTOM_CODE = 0x60
+EFFECT_ID_NAME: Final = {v: k for k, v in EFFECT_MAP.items()}
+EFFECT_CUSTOM_CODE: Final = 0x60
 
-WHITE_MODES = {MODE_RGBW, MODE_RGBWW, MODE_RGBCW}
+WHITE_MODES: Final = {MODE_RGBW, MODE_RGBWW, MODE_RGBCW}
 
-FLUX_EFFECT_LIST = sorted(EFFECT_MAP) + [EFFECT_RANDOM]
+FLUX_EFFECT_LIST: Final = sorted(EFFECT_MAP) + [EFFECT_RANDOM]
 
-SERVICE_CUSTOM_EFFECT = "set_custom_effect"
+SERVICE_CUSTOM_EFFECT: Final = "set_custom_effect"
 
 CUSTOM_EFFECT_SCHEMA = vol.Schema(
     {
@@ -248,34 +249,34 @@ class FluxLight(CoordinatorEntity, LightEntity):
         self._custom_effect_transition = custom_effect_transition
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str | None:
         """Return the unique ID of the light."""
         return self._unique_id
 
     @property
-    def name(self):
-        """Return the name of the device if any."""
+    def name(self) -> str:
+        """Return the name of the device."""
         return self._name
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._bulb.is_on
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         if self._mode == MODE_WHITE:
             return self.white_value
         return self._bulb.brightness
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> tuple[float, float] | None:
         """Return the color property."""
         return color_util.color_RGB_to_hs(*self._bulb.getRgb())
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         if self._mode == MODE_WHITE:
             return SUPPORT_BRIGHTNESS
@@ -284,41 +285,41 @@ class FluxLight(CoordinatorEntity, LightEntity):
         return SUPPORT_FLUX_LED
 
     @property
-    def white_value(self):
+    def white_value(self) -> int:
         """Return the white value of this light between 0..255."""
         return self._bulb.getRgbw()[3]
 
     @property
-    def effect_list(self):
+    def effect_list(self) -> list[str]:
         """Return the list of supported effects."""
         if self._custom_effect_colors:
             return FLUX_EFFECT_LIST + [EFFECT_CUSTOM]
         return FLUX_EFFECT_LIST
 
     @property
-    def effect(self):
+    def effect(self) -> str | None:
         """Return the current effect."""
         if (current_mode := self._bulb.raw_state[3]) == EFFECT_CUSTOM_CODE:
             return EFFECT_CUSTOM
         return EFFECT_ID_NAME.get(current_mode)
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the attributes."""
         return {
             "ip_address": self._ip_address,
         }
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        if self._unique_id:
-            return {
-                ATTR_IDENTIFIERS: {(DOMAIN, self._unique_id)},
-                ATTR_NAME: self._name,
-                ATTR_MANUFACTURER: "FluxLED/Magic Home",
-                ATTR_MODEL: "LED Lights",
-            }
+        assert self._unique_id is not None
+        return {
+            ATTR_IDENTIFIERS: {(DOMAIN, self._unique_id)},
+            ATTR_NAME: self._name,
+            ATTR_MANUFACTURER: "FluxLED/Magic Home",
+            ATTR_MODEL: "LED Lights",
+        }
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified or all lights on."""
@@ -401,7 +402,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
         # handle RGB mode
         self._bulb.setRgb(*tuple(rgb), brightness=brightness)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn the specified or all lights off."""
         await self.hass.async_add_executor_job(self._bulb.turnOff)
         await self.coordinator.async_request_refresh()
