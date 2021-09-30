@@ -41,7 +41,7 @@ async def test_service_setup(hass):
     with patch(
         "homeassistant.core.ServiceRegistry.async_register", return_value=Mock(True)
     ) as async_register:
-        await async_setup_services(hass)
+        async_setup_services(hass)
         assert hass.data[DECONZ_SERVICES] is True
         assert async_register.call_count == 3
 
@@ -52,7 +52,7 @@ async def test_service_setup_already_registered(hass):
     with patch(
         "homeassistant.core.ServiceRegistry.async_register", return_value=Mock(True)
     ) as async_register:
-        await async_setup_services(hass)
+        async_setup_services(hass)
         async_register.assert_not_called()
 
 
@@ -62,7 +62,7 @@ async def test_service_unload(hass):
     with patch(
         "homeassistant.core.ServiceRegistry.async_remove", return_value=Mock(True)
     ) as async_remove:
-        await async_unload_services(hass)
+        async_unload_services(hass)
         assert hass.data[DECONZ_SERVICES] is False
         assert async_remove.call_count == 3
 
@@ -72,7 +72,7 @@ async def test_service_unload_not_registered(hass):
     with patch(
         "homeassistant.core.ServiceRegistry.async_remove", return_value=Mock(True)
     ) as async_remove:
-        await async_unload_services(hass)
+        async_unload_services(hass)
         assert DECONZ_SERVICES not in hass.data
         async_remove.assert_not_called()
 

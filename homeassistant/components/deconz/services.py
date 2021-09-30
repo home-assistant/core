@@ -5,6 +5,7 @@ import asyncio
 from pydeconz.utils import normalize_bridge_id
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity_registry import (
@@ -47,7 +48,8 @@ SERVICE_REMOVE_ORPHANED_ENTRIES = "remove_orphaned_entries"
 SELECT_GATEWAY_SCHEMA = vol.All(vol.Schema({vol.Optional(CONF_BRIDGE_ID): str}))
 
 
-async def async_setup_services(hass):
+@callback
+def async_setup_services(hass):
     """Set up services for deCONZ integration."""
     if hass.data.get(DECONZ_SERVICES, False):
         return
@@ -105,7 +107,8 @@ async def async_setup_services(hass):
     )
 
 
-async def async_unload_services(hass):
+@callback
+def async_unload_services(hass):
     """Unload deCONZ services."""
     if not hass.data.get(DECONZ_SERVICES):
         return
