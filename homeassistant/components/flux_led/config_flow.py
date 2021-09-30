@@ -142,6 +142,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def _async_create_entry_from_device(self, device: dict[str, Any]) -> FlowResult:
         """Create a config entry from a device."""
+        self._async_abort_entries_match({CONF_HOST: device[FLUX_HOST]})
         if device.get(FLUX_MAC):
             name = f"{device[FLUX_MODEL]} {device[FLUX_MAC]}"
         else:
