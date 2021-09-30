@@ -282,6 +282,7 @@ class DHCPWatcher(WatcherBase):
         from scapy import (  # pylint: disable=import-outside-toplevel,unused-import  # noqa: F401
             arch,
         )
+
         #
         # Importing scapy.sendrecv will cause a scapy resync which will
         # import scapy.arch.read_routes which will import scapy.sendrecv
@@ -295,7 +296,7 @@ class DHCPWatcher(WatcherBase):
         from scapy.layers.dhcp import DHCP  # pylint: disable=import-outside-toplevel
         from scapy.layers.inet import IP  # pylint: disable=import-outside-toplevel
         from scapy.layers.l2 import Ether  # pylint: disable=import-outside-toplevel
-        
+
         def _handle_dhcp_packet(packet):
             """Process a dhcp packet."""
             _LOGGER.debug("Handle incoming packet: %s -- %s", packet, DHCP in packet)
@@ -364,7 +365,6 @@ class DHCPWatcher(WatcherBase):
         self._sniffer.start()
         if self._sniffer.thread:
             self._sniffer.thread.name = self.__class__.__name__
-
 
     def create_task(self, task):
         """Pass a task to hass.add_job since we are in a thread."""
