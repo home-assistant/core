@@ -87,11 +87,6 @@ async def test_lock_failing(hass, surepetcare) -> None:
     surepetcare.lock.side_effect = SurePetcareError
 
     for entity_id, unique_id in EXPECTED_ENTITY_IDS.items():
-        surepetcare.reset_mock()
-        await hass.services.async_call(
-            "lock", "unlock", {"entity_id": entity_id}, blocking=True
-        )
-
         with pytest.raises(SurePetcareError):
             await hass.services.async_call(
                 "lock", "lock", {"entity_id": entity_id}, blocking=True
