@@ -41,7 +41,22 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SureBattery(SurePetcareEntity, SensorEntity):
+class SurePetcareSensor(SurePetcareEntity, SensorEntity):
+    """A sensor implementation for Sure Petcare Entities."""
+
+    def __init__(
+        self,
+        surepetcare_id: int,
+        coordinator: SurePetcareDataCoordinator,
+    ) -> None:
+        """Initialize a Sure Petcare sensor."""
+        super().__init__(surepetcare_id, coordinator)
+
+        self._attr_name = self._device_name
+        self._attr_unique_id = self._device_id
+
+
+class SureBattery(SurePetcareSensor):
     """A sensor implementation for Sure Petcare Entities."""
 
     _attr_device_class = DEVICE_CLASS_BATTERY
