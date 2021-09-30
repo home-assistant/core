@@ -39,7 +39,7 @@ async def async_wifi_bulb_for_host(hass: HomeAssistant, host: str) -> WifiLedBul
 async def async_discover_devices(
     hass: HomeAssistant, timeout: int
 ) -> list[dict[str, str]]:
-    """Discover ledned devices."""
+    """Discover flux led devices."""
 
     def _scan_with_timeout() -> list[dict[str, str]]:
         scanner = BulbScanner()
