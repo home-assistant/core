@@ -49,8 +49,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._discovered_device: dict[str, Any] = {}
         self._discovered_devices: dict[str, dict[str, Any]] = {}
+        self._discovered_device: dict[str, Any] = {}
 
     @staticmethod
     @callback
@@ -101,11 +101,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_handle_discovery(self) -> FlowResult:
         """Handle any discovery."""
-        mac = self._discovered_device[FLUX_MAC]
-        host = self._discovered_device[FLUX_HOST]
-        await self.async_set_unique_id(dr.format_mac(mac))
+        device = self._discovered_device
+        mac = dr.format_mac(device[FLUX_MAC])
+        host = device[FLUX_HOST]
+        await self.async_set_unique_id(mac)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
-        self._async_abort_entries_match({CONF_HOST: host})
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.data[CONF_HOST] == host and not entry.unique_id:
+                name = f"{device[FLUX_MODEL]} {device[FLUX_MAC]}"
+                self.hass.config_entries.async_update_entry(
+                    entry,
+                    data={**entry.data, CONF_NAME: name},
+                    title=name,
+                    unique_id=mac,
+                )
+                return self.async_abort(reason="already_configured")
         self.context[CONF_HOST] = host
         for progress in self._async_in_progress():
             if progress.get("context", {}).get(CONF_HOST) == host:
@@ -129,12 +139,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def _async_create_entry_from_device(self, device: dict[str, Any]) -> FlowResult:
         """Create a config entry from a device."""
-        device = self._discovered_device
+        if device.get(FLUX_MAC):
+            name = f"{device[FLUX_MODEL]} {device[FLUX_MAC]}"
+        else:
+            name = device[FLUX_HOST]
         return self.async_create_entry(
-            title=f"{device[FLUX_MODEL]} {device[FLUX_MAC]}",
+            title=name,
             data={
                 CONF_HOST: device[FLUX_HOST],
-                CONF_NAME: f"{device[FLUX_MODEL]} {device[FLUX_MAC]}",
+                CONF_NAME: name,
             },
         )
 
