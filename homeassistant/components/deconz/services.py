@@ -47,6 +47,18 @@ SERVICE_DEVICE_REFRESH = "device_refresh"
 SERVICE_REMOVE_ORPHANED_ENTRIES = "remove_orphaned_entries"
 SELECT_GATEWAY_SCHEMA = vol.All(vol.Schema({vol.Optional(CONF_BRIDGE_ID): str}))
 
+SUPPORTED_SERVICES = (
+    SERVICE_CONFIGURE_DEVICE,
+    SERVICE_DEVICE_REFRESH,
+    SERVICE_REMOVE_ORPHANED_ENTRIES,
+)
+
+SCHEMAS = {
+    SERVICE_CONFIGURE_DEVICE: SERVICE_CONFIGURE_DEVICE_SCHEMA,
+    SERVICE_DEVICE_REFRESH: SELECT_GATEWAY_SCHEMA,
+    SERVICE_REMOVE_ORPHANED_ENTRIES: SELECT_GATEWAY_SCHEMA,
+}
+
 
 @callback
 def async_setup_services(hass):
@@ -81,37 +93,17 @@ def async_setup_services(hass):
         elif service == SERVICE_REMOVE_ORPHANED_ENTRIES:
             await async_remove_orphaned_entries_service(gateway)
 
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_CONFIGURE_DEVICE,
-        async_call_deconz_service,
-        schema=SERVICE_CONFIGURE_DEVICE_SCHEMA,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_DEVICE_REFRESH,
-        async_call_deconz_service,
-        schema=SELECT_GATEWAY_SCHEMA,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_REMOVE_ORPHANED_ENTRIES,
-        async_call_deconz_service,
-        schema=SELECT_GATEWAY_SCHEMA,
-    )
+    for service in SUPPORTED_SERVICES:
+        hass.services.async_register(
+            DOMAIN, service, async_call_deconz_service, schema=SCHEMAS[service]
+        )
 
 
 @callback
 def async_unload_services(hass):
     """Unload deCONZ services."""
-    for service_name in (
-        SERVICE_CONFIGURE_DEVICE,
-        SERVICE_DEVICE_REFRESH,
-        SERVICE_REMOVE_ORPHANED_ENTRIES,
-    ):
-        hass.services.async_remove(DOMAIN, service_name)
+    for service in SUPPORTED_SERVICES:
+        hass.services.async_remove(DOMAIN, service)
 
 
 async def async_configure_service(gateway, data):
