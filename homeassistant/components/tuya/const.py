@@ -1,9 +1,9 @@
 """Constants for the Tuya integration."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Callable
 
 from tuya_iot import TuyaCloudOpenAPIEndpoint
 
