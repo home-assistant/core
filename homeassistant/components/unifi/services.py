@@ -2,17 +2,11 @@
 
 from .const import DOMAIN as UNIFI_DOMAIN
 
-UNIFI_SERVICES = "unifi_services"
-
 SERVICE_REMOVE_CLIENTS = "remove_clients"
 
 
 async def async_setup_services(hass) -> None:
     """Set up services for UniFi integration."""
-    if hass.data.get(UNIFI_SERVICES, False):
-        return
-
-    hass.data[UNIFI_SERVICES] = True
 
     async def async_call_unifi_service(service_call) -> None:
         """Call correct UniFi service."""
@@ -33,11 +27,6 @@ async def async_setup_services(hass) -> None:
 
 async def async_unload_services(hass) -> None:
     """Unload UniFi services."""
-    if not hass.data.get(UNIFI_SERVICES):
-        return
-
-    hass.data[UNIFI_SERVICES] = False
-
     hass.services.async_remove(UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS)
 
 

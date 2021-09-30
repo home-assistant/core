@@ -1,58 +1,39 @@
 """deCONZ service tests."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
-from homeassistant.components.unifi.services import (
-    SERVICE_REMOVE_CLIENTS,
-    UNIFI_SERVICES,
-    async_setup_services,
-    async_unload_services,
-)
+from homeassistant.components.unifi.services import SERVICE_REMOVE_CLIENTS
 
 from .test_controller import setup_unifi_integration
 
 
-async def test_service_setup(hass):
+@patch("homeassistant.components.unifi.async_unload_services")
+@patch("homeassistant.components.unifi.async_setup_services")
+async def test_service_setup_and_unload(
+    setup_unifi_services_mock, unload_unifi_services_mock, hass, aioclient_mock
+):
     """Verify service setup works."""
-    assert UNIFI_SERVICES not in hass.data
-    with patch(
-        "homeassistant.core.ServiceRegistry.async_register", return_value=Mock(True)
-    ) as async_register:
-        await async_setup_services(hass)
-        assert hass.data[UNIFI_SERVICES] is True
-        assert async_register.call_count == 1
+    config_entry = await setup_unifi_integration(hass, aioclient_mock)
+    assert setup_unifi_services_mock.call_count == 1
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert unload_unifi_services_mock.call_count == 1
 
 
-async def test_service_setup_already_registered(hass):
-    """Make sure that services are only registered once."""
-    hass.data[UNIFI_SERVICES] = True
-    with patch(
-        "homeassistant.core.ServiceRegistry.async_register", return_value=Mock(True)
-    ) as async_register:
-        await async_setup_services(hass)
-        async_register.assert_not_called()
+@patch("homeassistant.components.unifi.async_unload_services")
+@patch("homeassistant.components.unifi.async_setup_services")
+async def test_service_setup_and_unload_not_called_if_multiple_integrations_detected(
+    setup_unifi_services_mock, unload_unifi_services_mock, hass, aioclient_mock
+):
+    """Make sure that services are only setup and removed once."""
+    hass.data[UNIFI_DOMAIN] = {"integration setup": True}
 
+    config_entry = await setup_unifi_integration(hass, aioclient_mock)
+    setup_unifi_services_mock.assert_not_called()
 
-async def test_service_unload(hass):
-    """Verify service unload works."""
-    hass.data[UNIFI_SERVICES] = True
-    with patch(
-        "homeassistant.core.ServiceRegistry.async_remove", return_value=Mock(True)
-    ) as async_remove:
-        await async_unload_services(hass)
-        assert hass.data[UNIFI_SERVICES] is False
-        assert async_remove.call_count == 1
-
-
-async def test_service_unload_not_registered(hass):
-    """Make sure that services can only be unloaded once."""
-    with patch(
-        "homeassistant.core.ServiceRegistry.async_remove", return_value=Mock(True)
-    ) as async_remove:
-        await async_unload_services(hass)
-        assert UNIFI_SERVICES not in hass.data
-        async_remove.assert_not_called()
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    unload_unifi_services_mock.assert_not_called()
 
 
 async def test_remove_clients(hass, aioclient_mock):
@@ -102,6 +83,8 @@ async def test_remove_clients(hass, aioclient_mock):
         "cmd": "forget-sta",
         "macs": ["00:00:00:00:00:01"],
     }
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 async def test_remove_clients_controller_unavailable(hass, aioclient_mock):
