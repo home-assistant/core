@@ -1,11 +1,14 @@
 """UniFi services."""
 
+from homeassistant.core import callback
+
 from .const import DOMAIN as UNIFI_DOMAIN
 
 SERVICE_REMOVE_CLIENTS = "remove_clients"
 
 
-async def async_setup_services(hass) -> None:
+@callback
+def async_setup_services(hass) -> None:
     """Set up services for UniFi integration."""
 
     async def async_call_unifi_service(service_call) -> None:
@@ -25,7 +28,8 @@ async def async_setup_services(hass) -> None:
     )
 
 
-async def async_unload_services(hass) -> None:
+@callback
+def async_unload_services(hass) -> None:
     """Unload UniFi services."""
     hass.services.async_remove(UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS)
 

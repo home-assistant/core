@@ -44,7 +44,7 @@ async def async_setup_entry(hass, config_entry):
         )
 
     if not hass.data[UNIFI_DOMAIN]:
-        await async_setup_services(hass)
+        async_setup_services(hass)
 
     hass.data[UNIFI_DOMAIN][config_entry.entry_id] = controller
 
@@ -74,7 +74,7 @@ async def async_unload_entry(hass, config_entry):
     controller = hass.data[UNIFI_DOMAIN].pop(config_entry.entry_id)
 
     if not hass.data[UNIFI_DOMAIN]:
-        await async_unload_services(hass)
+        async_unload_services(hass)
 
     return await controller.async_reset()
 
