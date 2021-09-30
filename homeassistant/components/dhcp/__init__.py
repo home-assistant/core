@@ -299,7 +299,6 @@ class DHCPWatcher(WatcherBase):
 
         def _handle_dhcp_packet(packet):
             """Process a dhcp packet."""
-            _LOGGER.debug("Handle incoming packet: %s -- %s", packet, DHCP in packet)
             if DHCP not in packet:
                 return
 
