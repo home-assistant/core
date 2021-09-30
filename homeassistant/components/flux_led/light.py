@@ -38,7 +38,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PROTOCOL,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -275,7 +275,8 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        if self._mode == MODE_RGBW:
+
+        if self._mode in (MODE_RGBW, MODE_RGBWW, MODE_RGBCW):
             return SUPPORT_FLUX_LED | SUPPORT_WHITE_VALUE | SUPPORT_COLOR_TEMP
 
         if self._mode == MODE_WHITE:
@@ -383,33 +384,34 @@ class FluxLight(CoordinatorEntity, LightEntity):
         if brightness is None:
             brightness = self.brightness
 
-        # Preserve color on brightness/white level change
-        if rgb is None:
-            rgb = self._bulb.getRgb()
-
         if white is None and self._mode == MODE_RGBW:
             white = self.white_value
 
         # handle W only mode (use brightness instead of white value)
         if self._mode == MODE_WHITE:
             self._bulb.setRgbw(0, 0, 0, w=brightness)
+            return
+
+        # Preserve color on brightness/white level change
+        if rgb is None:
+            rgb = self._bulb.getRgb()
 
         # handle RGBW mode
-        elif self._mode == MODE_RGBW:
+        if self._mode in (MODE_RGBW, MODE_RGBWW, MODE_RGBCW):
             self._bulb.setRgbw(*tuple(rgb), w=white, brightness=brightness)
+            return
 
         # handle RGB mode
-        else:
-            self._bulb.setRgb(*tuple(rgb), brightness=brightness)
+        self._bulb.setRgb(*tuple(rgb), brightness=brightness)
 
     async def async_turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
         await self.hass.async_add_executor_job(self._bulb.turnOff)
         await self.coordinator.async_request_refresh()
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
         if not self._mode or self._mode == MODE_AUTO:
             if self._bulb.protocol:
                 if self._bulb.raw_state[9] == self._bulb.raw_state[11]:
@@ -422,4 +424,3 @@ class FluxLight(CoordinatorEntity, LightEntity):
                 self._mode = MODE_RGBW
             else:
                 self._mode = MODE_RGB
-        super()._handle_coordinator_update()
