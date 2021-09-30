@@ -149,14 +149,10 @@ class OpenGarageCover(CoordinatorEntity, CoverEntity):
             self._state = state
 
         _LOGGER.debug("%s status: %s", self.name, self._state)
-        if self.coordinator.data.get("rssi") is not None:
-            self._attr_extra_state_attributes[
-                ATTR_SIGNAL_STRENGTH
-            ] = self.coordinator.data["rssi"]
-        if self.coordinator.data.get("dist") is not None:
-            self._attr_extra_state_attributes[
-                ATTR_DISTANCE_SENSOR
-            ] = self.coordinator.data["dist"]
+        if status.get("rssi") is not None:
+            self._attr_extra_state_attributes[ATTR_SIGNAL_STRENGTH] = status.get("rssi")
+        if status.get("dist") is not None:
+            self._attr_extra_state_attributes[ATTR_DISTANCE_SENSOR] = status.get("dist")
         if self._state is not None:
             self._attr_extra_state_attributes[ATTR_DOOR_STATE] = self._state
 
