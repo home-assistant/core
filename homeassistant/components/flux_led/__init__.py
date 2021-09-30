@@ -52,14 +52,18 @@ DISCOVERY_INTERVAL = timedelta(minutes=15)
 REQUEST_REFRESH_DELAY = 0.35
 
 
+async def async_wifi_bulb_for_host(hass: HomeAssistant, host: str) -> WifiLedBulb:
+    """Create a WifiLedBulb from a host."""
+    await hass.async_add_executor_job(WifiLedBulb, host)
+
+
 async def async_discover_devices(
     hass: HomeAssistant, timeout: int
 ) -> list[dict[str, str]]:
     """Discover ledned devices."""
 
     def _scan_with_timeout():
-        scanner = BulbScanner()
-        return scanner.scan(timeout=timeout)
+        return BulbScanner().scan(timeout=timeout)
 
     return await hass.async_add_executor_job(_scan_with_timeout)
 
@@ -192,9 +196,7 @@ class FluxLedUpdateCoordinator(DataUpdateCoordinator):
         """Fetch all device and sensor data from api."""
         try:
             if not self.device:
-                self.device = await self.hass.async_add_executor_job(
-                    WifiLedBulb, self.host
-                )
+                self.device = await async_wifi_bulb_for_host(self.hass, self.host)
             else:
                 await self.hass.async_add_executor_job(self.device.update_state)
         except FLUX_LED_EXCEPTIONS as ex:

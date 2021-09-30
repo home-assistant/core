@@ -1,23 +1,96 @@
 """Define tests for the Flux LED/Magic Home config flow."""
+from __future__ import annotations
+
 from unittest.mock import patch
+
+import pytest
 
 from homeassistant import config_entries, setup
 from homeassistant.components.flux_led.const import (
-    CONF_AUTOMATIC_ADD,
-    CONF_CONFIGURE_DEVICE,
-    CONF_EFFECT_SPEED,
-    CONF_REMOVE_DEVICE,
-    DEFAULT_EFFECT_SPEED,
+    CONF_CUSTOM_EFFECT_COLORS,
+    CONF_CUSTOM_EFFECT_SPEED_PCT,
+    CONF_CUSTOM_EFFECT_TRANSITION,
     DOMAIN,
+    MODE_RGB,
+    TRANSITION_STROBE,
 )
-from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_NAME
+from homeassistant.const import (
+    CONF_DEVICE,
+    CONF_HOST,
+    CONF_MAC,
+    CONF_MODE,
+    CONF_NAME,
+    CONF_PROTOCOL,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
+
+from . import (
+    DEFAULT_ENTRY_TITLE,
+    DHCP_DISCOVERY,
+    DHCP_HOSTNAME,
+    DHCP_IP_ADDRESS,
+    DHCP_MAC_ADDRESS,
+    FLUX_DISCOVERY,
+    IP_ADDRESS,
+    MAC_ADDRESS,
+    MODULE,
+    _patch_discovery,
+    _patch_wifibulb,
+)
 
 from tests.common import MockConfigEntry
 
 
-async def test_setup_form(hass):
-    """Test we get the setup confirm form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+async def test_discovery(hass: HomeAssistant):
+    """Test setting up discovery."""
+    with _patch_discovery(), _patch_wifibulb():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+        assert result["type"] == "form"
+        assert result["step_id"] == "user"
+        assert not result["errors"]
+
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+        assert result2["type"] == "form"
+        assert result2["step_id"] == "pick_device"
+        assert not result2["errors"]
+
+        # test we can try again
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == "form"
+        assert result["step_id"] == "user"
+        assert not result["errors"]
+
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+        assert result2["type"] == "form"
+        assert result2["step_id"] == "pick_device"
+        assert not result2["errors"]
+
+    with _patch_discovery(), _patch_wifibulb(), patch(
+        f"{MODULE}.async_setup", return_value=True
+    ) as mock_setup, patch(
+        f"{MODULE}.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_DEVICE: MAC_ADDRESS},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] == "create_entry"
+    assert result3["title"] == DEFAULT_ENTRY_TITLE
+    assert result3["data"] == {CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE}
+    mock_setup.assert_called_once()
+    mock_setup_entry.assert_called_once()
+
+    # ignore configured devices
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -25,457 +98,320 @@ async def test_setup_form(hass):
     assert result["step_id"] == "user"
     assert not result["errors"]
 
+    with _patch_discovery(), _patch_wifibulb():
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
 
-async def test_setup_automatic_add(hass):
-    """Test the results with automatic add set to True."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "no_devices_found"
+
+
+async def test_discovery_with_existing_device_present(hass: HomeAssistant):
+    """Test setting up discovery."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.2"}, unique_id="dd:dd:dd:dd:dd:dd"
+    )
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(), _patch_wifibulb(no_device=True):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
-    with patch(
-        "homeassistant.components.flux_led.BulbScanner.scan",
-        return_value=[
-            {
-                "ipaddr": "1.1.1.1",
-                "id": "test_id",
-                "model": "test_model",
-            }
-        ],
-    ), patch(
-        "homeassistant.components.flux_led.BulbScanner.getBulbInfo",
-        return_value=[
-            {
-                "ipaddr": "1.1.1.1",
-                "id": "test_id",
-                "model": "test_model",
-            }
-        ],
-    ), patch(
-        "homeassistant.components.flux_led.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_AUTOMATIC_ADD: True,
-            },
-        )
-
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "FluxLED/MagicHome"
-    assert result2["data"] == {
-        CONF_AUTOMATIC_ADD: True,
-        CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
-        CONF_DEVICES: {"1_1_1_1": {CONF_NAME: "1.1.1.1", CONF_HOST: "1.1.1.1"}},
-    }
-
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_setup_manual_add(hass):
-    """Test the results with automatic add set to False."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.flux_led.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_AUTOMATIC_ADD: False,
-            },
-        )
-
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "FluxLED/MagicHome"
-    assert result2["data"] == {
-        CONF_AUTOMATIC_ADD: False,
-        CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
-        CONF_DEVICES: {},
-    }
-
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_already_configured(hass):
-    """Test config flow when flux_led component is already setup."""
-    MockConfigEntry(
-        domain="flux_led",
-        data={
-            CONF_AUTOMATIC_ADD: False,
-            CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
-            CONF_DEVICES: {},
-        },
-    ).add_to_hass(hass)
-
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "single_instance_allowed"
-
-
-async def test_import_automatic_add(hass):
-    """Test the import of an existing configuration when automatic add is enabled."""
-
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    with patch(
-        "homeassistant.components.flux_led.BulbScanner.scan",
-        return_value=[
-            {
-                "ipaddr": "1.1.1.1",
-                "id": "test_id",
-                "model": "test_model",
-            }
-        ],
-    ), patch(
-        "homeassistant.components.flux_led.BulbScanner.getBulbInfo",
-        return_value=[
-            {
-                "ipaddr": "1.1.1.1",
-                "id": "test_id",
-                "model": "test_model",
-            }
-        ],
-    ), patch(
-        "homeassistant.components.flux_led.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_AUTOMATIC_ADD: True},
-        )
-
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "FluxLED/MagicHome"
-    assert result2["data"] == {
-        CONF_AUTOMATIC_ADD: True,
-        CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
-        CONF_DEVICES: {"1_1_1_1": {CONF_NAME: "1.1.1.1", CONF_HOST: "1.1.1.1"}},
-    }
-
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import_automatic_add_already_setup(hass):
-    """Test import auto added when the integration is already configured."""
-    MockConfigEntry(
-        domain="flux_led",
-        data={
-            CONF_AUTOMATIC_ADD: False,
-            CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
-            CONF_DEVICES: {},
-        },
-    ).add_to_hass(hass)
-
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    with patch(
-        "homeassistant.components.flux_led.BulbScanner.scan",
-        return_value=[
-            {
-                "ipaddr": "1.1.1.1",
-                "id": "test_id",
-                "model": "test_model",
-            }
-        ],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_AUTOMATIC_ADD: True},
-        )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "single_instance_allowed"
-
-
-async def test_import_manual(hass):
-    """Test the import of an existing manual configuration."""
-
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    with patch(
-        "homeassistant.components.flux_led.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                CONF_AUTOMATIC_ADD: False,
-                CONF_DEVICES: {
-                    "1_1_1_1": {
-                        CONF_NAME: "TestLight",
-                        CONF_HOST: "1.1.1.1",
-                    }
-                },
-            },
-        )
-
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "FluxLED/MagicHome"
-    assert result2["data"] == {
-        CONF_AUTOMATIC_ADD: False,
-        CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
-        CONF_DEVICES: {
-            "1_1_1_1": {
-                CONF_NAME: "TestLight",
-                CONF_HOST: "1.1.1.1",
-            }
-        },
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import_manual_already_setup(hass):
-    """Test import manual added when the device is already configured."""
-    MockConfigEntry(
-        domain="flux_led",
-        data={
-            CONF_AUTOMATIC_ADD: False,
-            CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
-            CONF_DEVICES: {
-                "1_1_1_1": {
-                    CONF_NAME: "TestLight",
-                    CONF_HOST: "1.1.1.1",
-                }
-            },
-        },
-    ).add_to_hass(hass)
-
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_AUTOMATIC_ADD: False,
-            CONF_DEVICES: {
-                "1_1_1_1": {
-                    CONF_NAME: "TestLight",
-                    CONF_HOST: "1.1.1.1",
-                }
-            },
-        },
-    )
-    assert result["type"] == "abort"
-    assert result["reason"] == "single_instance_allowed"
-
-
-async def test_options_set_global_options(hass):
-    """Test set global options through options flow."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    entry = MockConfigEntry(
-        domain="flux_led",
-        data={
-            CONF_AUTOMATIC_ADD: False,
-            CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
-            CONF_DEVICES: {
-                "1_1_1_1": {
-                    CONF_NAME: "TestLight",
-                    CONF_HOST: "1.1.1.1",
-                }
-            },
-        },
-    )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.flux_led.BulbScanner.scan",
-        return_value=[
-            {
-                "ipaddr": "1.1.1.1",
-                "id": "test_id",
-                "model": "test_model",
-            }
-        ],
-    ), patch(
-        "homeassistant.components.flux_led.light.WifiLedBulb.connect",
-        return_value=True,
-    ):
-        result = await hass.config_entries.options.async_init(entry.entry_id)
-
     assert result["type"] == "form"
-    assert result["step_id"] == "prompt_options"
+    assert result["step_id"] == "user"
+    assert not result["errors"]
 
-    result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_AUTOMATIC_ADD: True, CONF_EFFECT_SPEED: 80},
-    )
-
-    assert result2["type"] == "create_entry"
-    assert result2["data"] == {
-        "global": {
-            CONF_AUTOMATIC_ADD: True,
-            CONF_EFFECT_SPEED: 80,
-        }
-    }
-
-
-async def test_options_add_and_remove_new_light(hass):
-    """Test manual adding and removing of new light through options flow."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    entry = MockConfigEntry(
-        domain="flux_led",
-        data={
-            CONF_AUTOMATIC_ADD: False,
-            CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
-            CONF_DEVICES: {
-                "1_1_1_1": {
-                    CONF_NAME: "TestLight",
-                    CONF_HOST: "1.1.1.1",
-                }
-            },
-        },
-    )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.flux_led.BulbScanner.scan",
-        return_value=[
-            {
-                "ipaddr": "1.1.1.1",
-                "id": "test_id",
-                "model": "test_model",
-            }
-        ],
-    ), patch(
-        "homeassistant.components.flux_led.light.WifiLedBulb.connect",
-        return_value=True,
-    ):
-        result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "prompt_options"
-
-    result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_HOST: "1.1.1.2", CONF_NAME: "TestLight2"},
-    )
-
-    assert result2["type"] == "create_entry"
-    assert result2["data"] == {
-        "global": {
-            CONF_AUTOMATIC_ADD: False,
-            CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
-        },
-    }
-
-    assert entry.data == {
-        CONF_AUTOMATIC_ADD: False,
-        CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
-        CONF_DEVICES: {
-            "1_1_1_1": {
-                CONF_NAME: "TestLight",
-                CONF_HOST: "1.1.1.1",
-            },
-            "1_1_1_2": {
-                CONF_NAME: "TestLight2",
-                CONF_HOST: "1.1.1.2",
-            },
-        },
-    }
-
-    # Remove the new light.
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "prompt_options"
-
-    result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_REMOVE_DEVICE: "1_1_1_2"},
-    )
-
-    assert result2["type"] == "create_entry"
-    assert result2["data"] == {
-        "global": {
-            CONF_AUTOMATIC_ADD: False,
-            CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
-        }
-    }
-
-    assert entry.data == {
-        CONF_AUTOMATIC_ADD: False,
-        CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
-        CONF_DEVICES: {
-            "1_1_1_1": {
-                CONF_NAME: "TestLight",
-                CONF_HOST: "1.1.1.1",
-            },
-        },
-    }
-
-
-async def test_options_configure_light(hass):
-    """Test configuration of a light through options flow."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    entry = MockConfigEntry(
-        domain="flux_led",
-        data={
-            CONF_AUTOMATIC_ADD: False,
-            CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
-            CONF_DEVICES: {
-                "1_1_1_1": {
-                    CONF_NAME: "TestLight",
-                    CONF_HOST: "1.1.1.1",
-                }
-            },
-        },
-    )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.flux_led.BulbScanner.scan",
-        return_value=[
-            {
-                "ipaddr": "1.1.1.1",
-                "id": "test_id",
-                "model": "test_model",
-            }
-        ],
-    ), patch(
-        "homeassistant.components.flux_led.light.WifiLedBulb.connect",
-        return_value=True,
-    ):
-        result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "prompt_options"
-
-    result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_CONFIGURE_DEVICE: "1_1_1_1"},
-    )
+    with _patch_discovery(), _patch_wifibulb():
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
 
     assert result2["type"] == "form"
-    assert result2["step_id"] == "configure_device"
+    assert result2["step_id"] == "pick_device"
+    assert not result2["errors"]
 
-    result3 = await hass.config_entries.options.async_configure(
-        result2["flow_id"],
-        user_input={CONF_EFFECT_SPEED: 80},
+    # Now abort and make sure we can start over
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    with _patch_discovery(), _patch_wifibulb():
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "form"
+    assert result2["step_id"] == "pick_device"
+    assert not result2["errors"]
+
+    with _patch_discovery(), _patch_wifibulb(), patch(
+        f"{MODULE}.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_DEVICE: MAC_ADDRESS}
+        )
+        assert result3["type"] == "create_entry"
+        assert result3["title"] == DEFAULT_ENTRY_TITLE
+        assert result3["data"] == {
+            CONF_HOST: IP_ADDRESS,
+            CONF_NAME: DEFAULT_ENTRY_TITLE,
+        }
+        await hass.async_block_till_done()
+
+    mock_setup_entry.assert_called_once()
+
+    # ignore configured devices
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    with _patch_discovery(), _patch_wifibulb():
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "no_devices_found"
+
+
+async def test_discovery_no_device(hass: HomeAssistant):
+    """Test discovery without device."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result3["type"] == "create_entry"
-    assert result3["data"] == {
-        "global": {
-            CONF_AUTOMATIC_ADD: False,
-            CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
-        },
-        "1_1_1_1": {
-            CONF_EFFECT_SPEED: 80,
-        },
+    with _patch_discovery(no_device=True), _patch_wifibulb():
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "no_devices_found"
+
+
+async def test_import(hass: HomeAssistant):
+    """Test import from yaml."""
+    config = {
+        CONF_HOST: IP_ADDRESS,
+        CONF_MAC: MAC_ADDRESS,
+        CONF_NAME: "floor lamp",
+        CONF_PROTOCOL: "ledenet",
+        CONF_MODE: MODE_RGB,
+        CONF_CUSTOM_EFFECT_COLORS: "[255,0,0], [0,0,255]",
+        CONF_CUSTOM_EFFECT_SPEED_PCT: 30,
+        CONF_CUSTOM_EFFECT_TRANSITION: TRANSITION_STROBE,
     }
+
+    # Success
+    with _patch_discovery(), _patch_wifibulb(), patch(
+        f"{MODULE}.async_setup", return_value=True
+    ) as mock_setup, patch(
+        f"{MODULE}.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == "floor lamp"
+    assert result["data"] == {
+        CONF_HOST: IP_ADDRESS,
+        CONF_NAME: "floor lamp",
+        CONF_PROTOCOL: "ledenet",
+    }
+    assert result["options"] == {
+        CONF_MODE: MODE_RGB,
+        CONF_CUSTOM_EFFECT_COLORS: "[255,0,0], [0,0,255]",
+        CONF_CUSTOM_EFFECT_SPEED_PCT: 30,
+        CONF_CUSTOM_EFFECT_TRANSITION: TRANSITION_STROBE,
+    }
+    mock_setup.assert_called_once()
+    mock_setup_entry.assert_called_once()
+
+    # Duplicate
+    with _patch_discovery(), _patch_wifibulb():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+
+
+async def test_manual(hass: HomeAssistant):
+    """Test manually setup."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    # Cannot connect (timeout)
+    with _patch_discovery(no_device=True), _patch_wifibulb(no_device=True):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "form"
+    assert result2["step_id"] == "user"
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+    # Success
+    with _patch_discovery(), _patch_wifibulb(), patch(
+        f"{MODULE}.async_setup", return_value=True
+    ), patch(f"{MODULE}.async_setup_entry", return_value=True):
+        result4 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
+        )
+        await hass.async_block_till_done()
+    assert result4["type"] == "create_entry"
+    assert result4["title"] == IP_ADDRESS
+    assert result4["data"] == {CONF_HOST: IP_ADDRESS, CONF_NAME: IP_ADDRESS}
+
+    # Duplicate
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with _patch_discovery(no_device=True), _patch_wifibulb(no_device=True):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "already_configured"
+
+
+async def test_manual_no_discovery_data(hass: HomeAssistant):
+    """Test manually setup without discovery data."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    with _patch_discovery(no_device=True), _patch_wifibulb(), patch(
+        f"{MODULE}.async_setup", return_value=True
+    ), patch(f"{MODULE}.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
+        )
+        await hass.async_block_till_done()
+
+    import pprint
+
+    pprint.pprint(result)
+    assert result["type"] == "create_entry"
+    assert result["data"] == {CONF_HOST: IP_ADDRESS, CONF_NAME: IP_ADDRESS}
+
+
+async def test_discovered_by_discovery_and_dhcp(hass):
+    """Test we get the form with discovery and abort for dhcp source when we get both."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    with _patch_discovery(), _patch_wifibulb():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DISCOVERY},
+            data=FLUX_DISCOVERY,
+        )
+        await hass.async_block_till_done()
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] is None
+
+    with _patch_discovery(), _patch_wifibulb():
+        result2 = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DHCP_DISCOVERY,
+        )
+        await hass.async_block_till_done()
+    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["reason"] == "already_in_progress"
+
+    with _patch_discovery(), _patch_wifibulb():
+        result3 = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data={
+                DHCP_HOSTNAME: "any",
+                DHCP_IP_ADDRESS: IP_ADDRESS,
+                DHCP_MAC_ADDRESS: "00:00:00:00:00:00",
+            },
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] == RESULT_TYPE_ABORT
+    assert result3["reason"] == "already_in_progress"
+
+
+@pytest.mark.parametrize(
+    "source, data",
+    [
+        (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
+        (config_entries.SOURCE_DISCOVERY, FLUX_DISCOVERY),
+    ],
+)
+async def test_discovered_by_dhcp_or_discovery(hass, source, data):
+    """Test we can setup when discovered from dhcp or discovery."""
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    with _patch_discovery(), _patch_wifibulb():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": source}, data=data
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] is None
+
+    with _patch_discovery(), _patch_wifibulb(), patch(
+        f"{MODULE}.async_setup", return_value=True
+    ) as mock_async_setup, patch(
+        f"{MODULE}.async_setup_entry", return_value=True
+    ) as mock_async_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["data"] == {CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE}
+    assert mock_async_setup.called
+    assert mock_async_setup_entry.called
+
+
+@pytest.mark.parametrize(
+    "source, data",
+    [
+        (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
+        (config_entries.SOURCE_DISCOVERY, FLUX_DISCOVERY),
+    ],
+)
+async def test_discovered_by_dhcp_or_discovery_adds_missing_unique_id(
+    hass, source, data
+):
+    """Test we can setup when discovered from dhcp or discovery."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: IP_ADDRESS})
+    config_entry.add_to_hass(hass)
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    with _patch_discovery(), _patch_wifibulb():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": source}, data=data
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+    assert config_entry.unique_id == MAC_ADDRESS

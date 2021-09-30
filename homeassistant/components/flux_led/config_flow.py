@@ -16,7 +16,7 @@ from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from . import async_discover_devices
+from . import async_discover_devices, async_wifi_bulb_for_host
 from .const import (
     CONF_CUSTOM_EFFECT_COLORS,
     CONF_CUSTOM_EFFECT_SPEED_PCT,
@@ -91,7 +91,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_device = {
             FLUX_HOST: discovery_info[IP_ADDRESS],
             FLUX_MODEL: discovery_info[HOSTNAME],
-            FLUX_MAC: discovery_info[MAC_ADDRESS],
+            FLUX_MAC: discovery_info[MAC_ADDRESS].replace(":", ""),
         }
         return await self._async_handle_discovery()
 
@@ -214,7 +214,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_try_connect(self, host: str) -> WifiLedBulb:
         """Try to connect."""
         self._async_abort_entries_match({CONF_HOST: host})
-        return await self.hass.async_add_executor_job(WifiLedBulb, host)
+        return await async_wifi_bulb_for_host(self.hass, host)
 
 
 class OptionsFlow(config_entries.OptionsFlow):
