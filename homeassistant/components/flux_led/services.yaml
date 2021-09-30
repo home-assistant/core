@@ -13,7 +13,7 @@ set_custom_effect:
         - [0,0,255]
       required: true
       selector:
-        text:
+        object:
     speed_pct:
       description: Effect speed for the custom effect (0-100).
       example: 80
