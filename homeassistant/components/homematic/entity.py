@@ -114,7 +114,7 @@ class HMDevice(Entity):
         has_changed = False
 
         # Is data needed for this instance?
-        if device.partition(':')[2] == self._channel_map.get(attribute):
+        if device.partition(":")[2] == self._channel_map.get(attribute):
             self._data[attribute] = value
             has_changed = True
 
