@@ -223,16 +223,9 @@ class OptionsFlow(config_entries.OptionsFlow):
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize the flux_led options flow."""
-
         self._config_entry = config_entry
-        self._global_options = None
-        self._configure_device = None
 
     async def async_step_init(self, user_input=None):
-        """Manage the options."""
-        return await self.async_step_configure()
-
-    async def async_step_configure(self, user_input=None):
         """Configure the options."""
         errors = {}
         if user_input is not None:
@@ -271,5 +264,5 @@ class OptionsFlow(config_entries.OptionsFlow):
         )
 
         return self.async_show_form(
-            step_id="configure", data_schema=options_schema, errors=errors
+            step_id="init", data_schema=options_schema, errors=errors
         )
