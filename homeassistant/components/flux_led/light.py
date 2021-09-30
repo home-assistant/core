@@ -5,7 +5,7 @@ import ast
 from functools import partial
 import logging
 import random
-from typing import Any
+from typing import Any, Final
 
 from flux_led import WifiLedBulb
 import voluptuous as vol
@@ -70,36 +70,36 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_FLUX_LED = SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_COLOR
+SUPPORT_FLUX_LED: Final = SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_COLOR
 
 
 # Constant color temp values for 2 flux_led special modes
 # Warm-white and Cool-white modes
-COLOR_TEMP_WARM_VS_COLD_WHITE_CUT_OFF = 285
+COLOR_TEMP_WARM_VS_COLD_WHITE_CUT_OFF: Final = 285
 
 # List of supported effects which aren't already declared in LIGHT
-EFFECT_RED_FADE = "red_fade"
-EFFECT_GREEN_FADE = "green_fade"
-EFFECT_BLUE_FADE = "blue_fade"
-EFFECT_YELLOW_FADE = "yellow_fade"
-EFFECT_CYAN_FADE = "cyan_fade"
-EFFECT_PURPLE_FADE = "purple_fade"
-EFFECT_WHITE_FADE = "white_fade"
-EFFECT_RED_GREEN_CROSS_FADE = "rg_cross_fade"
-EFFECT_RED_BLUE_CROSS_FADE = "rb_cross_fade"
-EFFECT_GREEN_BLUE_CROSS_FADE = "gb_cross_fade"
-EFFECT_COLORSTROBE = "colorstrobe"
-EFFECT_RED_STROBE = "red_strobe"
-EFFECT_GREEN_STROBE = "green_strobe"
-EFFECT_BLUE_STROBE = "blue_strobe"
-EFFECT_YELLOW_STROBE = "yellow_strobe"
-EFFECT_CYAN_STROBE = "cyan_strobe"
-EFFECT_PURPLE_STROBE = "purple_strobe"
-EFFECT_WHITE_STROBE = "white_strobe"
-EFFECT_COLORJUMP = "colorjump"
-EFFECT_CUSTOM = "custom"
+EFFECT_RED_FADE: Final = "red_fade"
+EFFECT_GREEN_FADE: Final = "green_fade"
+EFFECT_BLUE_FADE: Final = "blue_fade"
+EFFECT_YELLOW_FADE: Final = "yellow_fade"
+EFFECT_CYAN_FADE: Final = "cyan_fade"
+EFFECT_PURPLE_FADE: Final = "purple_fade"
+EFFECT_WHITE_FADE: Final = "white_fade"
+EFFECT_RED_GREEN_CROSS_FADE: Final = "rg_cross_fade"
+EFFECT_RED_BLUE_CROSS_FADE: Final = "rb_cross_fade"
+EFFECT_GREEN_BLUE_CROSS_FADE: Final = "gb_cross_fade"
+EFFECT_COLORSTROBE: Final = "colorstrobe"
+EFFECT_RED_STROBE: Final = "red_strobe"
+EFFECT_GREEN_STROBE: Final = "green_strobe"
+EFFECT_BLUE_STROBE: Final = "blue_strobe"
+EFFECT_YELLOW_STROBE: Final = "yellow_strobe"
+EFFECT_CYAN_STROBE: Final = "cyan_strobe"
+EFFECT_PURPLE_STROBE: Final = "purple_strobe"
+EFFECT_WHITE_STROBE: Final = "white_strobe"
+EFFECT_COLORJUMP: Final = "colorjump"
+EFFECT_CUSTOM: Final = "custom"
 
-EFFECT_MAP = {
+EFFECT_MAP: Final = {
     EFFECT_COLORLOOP: 0x25,
     EFFECT_RED_FADE: 0x26,
     EFFECT_GREEN_FADE: 0x27,
@@ -121,14 +121,14 @@ EFFECT_MAP = {
     EFFECT_WHITE_STROBE: 0x37,
     EFFECT_COLORJUMP: 0x38,
 }
-EFFECT_ID_NAME = {v: k for k, v in EFFECT_MAP.items()}
-EFFECT_CUSTOM_CODE = 0x60
+EFFECT_ID_NAME: Final = {v: k for k, v in EFFECT_MAP.items()}
+EFFECT_CUSTOM_CODE: Final = 0x60
 
-WHITE_MODES = {MODE_RGBW, MODE_RGBWW, MODE_RGBCW}
+WHITE_MODES: Final = {MODE_RGBW, MODE_RGBWW, MODE_RGBCW}
 
-FLUX_EFFECT_LIST = sorted(EFFECT_MAP) + [EFFECT_RANDOM]
+FLUX_EFFECT_LIST: Final = sorted(EFFECT_MAP) + [EFFECT_RANDOM]
 
-SERVICE_CUSTOM_EFFECT = "set_custom_effect"
+SERVICE_CUSTOM_EFFECT: Final = "set_custom_effect"
 
 CUSTOM_EFFECT_SCHEMA = vol.Schema(
     {

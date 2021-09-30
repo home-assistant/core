@@ -1,53 +1,51 @@
 """Constants of the FluxLed/MagicHome Integration."""
 
 import socket
+from typing import Final
 
-DOMAIN = "flux_led"
+DOMAIN: Final = "flux_led"
 
-API = "flux_api"
-
-
-CONF_AUTOMATIC_ADD = "automatic_add"
-DEFAULT_NETWORK_SCAN_INTERVAL = 120
-DEFAULT_SCAN_INTERVAL = 5
-DEFAULT_EFFECT_SPEED = 50
+API: Final = "flux_api"
 
 
-FLUX_LED_EXCEPTIONS = (socket.timeout, BrokenPipeError)
+CONF_AUTOMATIC_ADD: Final = "automatic_add"
+DEFAULT_NETWORK_SCAN_INTERVAL: Final = 120
+DEFAULT_SCAN_INTERVAL: Final = 5
+DEFAULT_EFFECT_SPEED: Final = 50
 
-STARTUP_SCAN_TIMEOUT = 5
-DISCOVER_SCAN_TIMEOUT = 10
 
-DEFAULT_SPEED = 70
+FLUX_LED_EXCEPTIONS: Final = (socket.timeout, BrokenPipeError)
 
-CONF_EFFECT_SPEED = "effect_speed"
-CONF_DEVICES = "devices"
-CONF_CUSTOM_EFFECT = "custom_effect"
-CONF_MODEL = "model"
+STARTUP_SCAN_TIMEOUT: Final = 5
+DISCOVER_SCAN_TIMEOUT: Final = 10
 
-MODE_AUTO = "auto"
-MODE_RGB = "rgb"
-MODE_RGBW = "rgbw"
-MODE_RGBCW = "rgbcw"
-MODE_RGBWW = "rgbww"
+CONF_DEVICES: Final = "devices"
+CONF_CUSTOM_EFFECT: Final = "custom_effect"
+CONF_MODEL: Final = "model"
+
+MODE_AUTO: Final = "auto"
+MODE_RGB: Final = "rgb"
+MODE_RGBW: Final = "rgbw"
+MODE_RGBCW: Final = "rgbcw"
+MODE_RGBWW: Final = "rgbww"
 
 # This mode enables white value to be controlled by brightness.
 # RGB value is ignored when this mode is specified.
-MODE_WHITE = "w"
+MODE_WHITE: Final = "w"
 
-TRANSITION_GRADUAL = "gradual"
-TRANSITION_JUMP = "jump"
-TRANSITION_STROBE = "strobe"
+TRANSITION_GRADUAL: Final = "gradual"
+TRANSITION_JUMP: Final = "jump"
+TRANSITION_STROBE: Final = "strobe"
 
-CONF_COLORS = "colors"
-CONF_SPEED_PCT = "speed_pct"
-CONF_TRANSITION = "transition"
+CONF_COLORS: Final = "colors"
+CONF_SPEED_PCT: Final = "speed_pct"
+CONF_TRANSITION: Final = "transition"
 
 
-CONF_CUSTOM_EFFECT_COLORS = "custom_effect_colors"
-CONF_CUSTOM_EFFECT_SPEED_PCT = "custom_effect_speed_pct"
-CONF_CUSTOM_EFFECT_TRANSITION = "custom_effect_transition"
+CONF_CUSTOM_EFFECT_COLORS: Final = "custom_effect_colors"
+CONF_CUSTOM_EFFECT_SPEED_PCT: Final = "custom_effect_speed_pct"
+CONF_CUSTOM_EFFECT_TRANSITION: Final = "custom_effect_transition"
 
-FLUX_HOST = "ipaddr"
-FLUX_MAC = "id"
-FLUX_MODEL = "model"
+FLUX_HOST: Final = "ipaddr"
+FLUX_MAC: Final = "id"
+FLUX_MODEL: Final = "model"
