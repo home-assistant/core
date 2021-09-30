@@ -308,9 +308,6 @@ class DHCPWatcher(WatcherBase):
 
             request_type = _decode_dhcp_option(options, MESSAGE_TYPE)
 
-            _LOGGER.debug(
-                "Handle incoming packet request_type: %s -- %s", packet, request_type
-            )
             if request_type != DHCP_REQUEST:
                 # DHCP request
                 return
