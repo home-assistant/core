@@ -6,7 +6,6 @@ from typing import Any
 
 from surepy.entities import SurepyEntity
 from surepy.enums import EntityType, LockState
-from surepy.exceptions import SurePetcareError
 
 from homeassistant.components.lock import STATE_LOCKED, STATE_UNLOCKED, LockEntity
 from homeassistant.config_entries import ConfigEntry
@@ -91,10 +90,6 @@ class SurePetcareLock(SurePetcareEntity, LockEntity):
 
         try:
             await self.coordinator.lock_states_callbacks[self._lock_state](self._id)
-        except SurePetcareError:
-            _LOGGER.error("Lock flap failed")
-            raise
-        else:
             self._attr_is_locked = True
         finally:
             self._attr_is_locking = False
@@ -109,10 +104,6 @@ class SurePetcareLock(SurePetcareEntity, LockEntity):
 
         try:
             await self.coordinator.surepy.sac.unlock(self._id)
-        except SurePetcareError:
-            _LOGGER.error("Unlock flap failed")
-            raise
-        else:
             self._attr_is_locked = False
         finally:
             self._attr_is_unlocking = False
