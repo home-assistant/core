@@ -29,7 +29,7 @@ MOCK_FEEDER = {
 
 MOCK_FELAQUA = {
     "id": 31337,
-    "product_id": 3,
+    "product_id": 8,
     "household_id": HOUSEHOLD_ID,
     "name": "Felaqua",
     "parent": {"product_id": 1, "id": HUB_ID},
