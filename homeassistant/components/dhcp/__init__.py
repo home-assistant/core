@@ -344,8 +344,13 @@ class DHCPWatcher(WatcherBase):
             return
 
         options = packet[DHCP].options
+        _LOGGER.debug("Handle incoming packet options: %s -- %s", packet, options)
 
         request_type = _decode_dhcp_option(options, MESSAGE_TYPE)
+
+        _LOGGER.debug(
+            "Handle incoming packet request_type: %s -- %s", packet, request_type
+        )
         if request_type != DHCP_REQUEST:
             # DHCP request
             return
@@ -353,6 +358,14 @@ class DHCPWatcher(WatcherBase):
         ip_address = _decode_dhcp_option(options, REQUESTED_ADDR) or packet[IP].src
         hostname = _decode_dhcp_option(options, HOSTNAME) or ""
         mac_address = _format_mac(packet[Ether].src)
+
+        _LOGGER.debug(
+            "Handle incoming packet ip_address, hostname, mac_address: %s %s %s %s",
+            packet,
+            ip_address,
+            hostname,
+            mac_address,
+        )
 
         if ip_address is None or mac_address is None:
             return
