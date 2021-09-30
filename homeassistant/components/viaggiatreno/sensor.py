@@ -1,6 +1,7 @@
 """Support for the Italian train system using ViaggiaTreno API."""
 import asyncio
 import logging
+import time
 
 import aiohttp
 import async_timeout
@@ -17,7 +18,7 @@ ATTRIBUTION = "Powered by ViaggiaTreno Data"
 VIAGGIATRENO_ENDPOINT = (
     "http://www.viaggiatreno.it/viaggiatrenonew/"
     "resteasy/viaggiatreno/andamentoTreno/"
-    "{station_id}/{train_id}"
+    "{station_id}/{train_id}/{timestamp}"
 )
 
 REQUEST_TIMEOUT = 5  # seconds
@@ -94,7 +95,7 @@ class ViaggiaTrenoSensor(SensorEntity):
         self._name = name
 
         self.uri = VIAGGIATRENO_ENDPOINT.format(
-            station_id=station_id, train_id=train_id
+            station_id=station_id, train_id=train_id, timestamp=int(time.time()) * 1000
         )
 
     @property
