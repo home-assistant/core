@@ -734,7 +734,10 @@ class Entity(ABC):
         Not to be extended by integrations.
         """
         if self.platform:
-            info = {"domain": self.platform.platform_name}
+            info = {
+                "domain": self.platform.platform_name,
+                "custom_component": "custom_components" in type(self).__module__,
+            }
 
             if self.platform.config_entry:
                 info["source"] = SOURCE_CONFIG_ENTRY
