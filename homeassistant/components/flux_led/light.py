@@ -184,7 +184,7 @@ async def async_setup_entry(
 
     try:
         custom_effect_colors = ast.literal_eval(
-            options.get(CONF_CUSTOM_EFFECT_COLORS, "[]")
+            options.get(CONF_CUSTOM_EFFECT_COLORS) or "[]"
         )
     except (ValueError, TypeError, SyntaxError, MemoryError) as ex:
         _LOGGER.warning(
