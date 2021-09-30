@@ -8,13 +8,12 @@ set_custom_effect:
     colors:
       description: List of colors for the custom effect (RGB). (Required, Max 16 Colors)
       example: |
-        colors:
-          - [255,0,0]
-          - [0,255,0]
-          - [0,0,255]
+        - [255,0,0]
+        - [0,255,0]
+        - [0,0,255]
     speed_pct:
       description: Effect speed for the custom effect (0-100). (Optional, default 50)
-      example: 'speed_pct: 80'
+      example: 80
     transition:
       description: Effect transition. (One of gradual, jump, strobe. Default gradual.)
-      example: 'transition: jump'
+      example: 'jump'
