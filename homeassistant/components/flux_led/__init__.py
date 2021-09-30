@@ -8,19 +8,8 @@ from typing import Any, Final
 from flux_led import BulbScanner, WifiLedBulb
 
 from homeassistant import config_entries
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_MODE,
-    CONF_DEVICES,
-    CONF_HOST,
-    CONF_MAC,
-    CONF_MODE,
-    CONF_NAME,
-    CONF_PLATFORM,
-    CONF_PROTOCOL,
-    EVENT_HOMEASSISTANT_STARTED,
-)
+from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.event import async_track_time_interval
@@ -28,22 +17,11 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    CONF_COLORS,
-    CONF_CUSTOM_EFFECT,
-    CONF_CUSTOM_EFFECT_COLORS,
-    CONF_CUSTOM_EFFECT_SPEED_PCT,
-    CONF_CUSTOM_EFFECT_TRANSITION,
-    CONF_SPEED_PCT,
-    CONF_TRANSITION,
-    DEFAULT_EFFECT_SPEED,
     DISCOVER_SCAN_TIMEOUT,
     DOMAIN,
-    FLUX_HOST,
+    FLUX_LED_DISCOVERY,
     FLUX_LED_EXCEPTIONS,
-    FLUX_MAC,
-    MODE_AUTO,
     STARTUP_SCAN_TIMEOUT,
-    TRANSITION_GRADUAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,61 +65,19 @@ def async_trigger_discovery(
         )
 
 
-@callback
-def async_import_from_yaml(
-    hass: HomeAssistant,
-    config: ConfigType,
-    discovered_mac_by_host: dict[str, str],
-) -> None:
-    """Import devices from yaml."""
-    for entry_config in config.get(LIGHT_DOMAIN, []):
-        if entry_config.get(CONF_PLATFORM) != DOMAIN:
-            continue
-        for host, device_config in entry_config[CONF_DEVICES].items():
-            _LOGGER.warning(
-                "Configuring flux_led via yaml is deprecated; the configuration for"
-                " %s has been migrated to a config entry and can be safely removed",
-                host,
-            )
-            custom_effects = device_config.get(CONF_CUSTOM_EFFECT, {})
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": config_entries.SOURCE_IMPORT},
-                    data={
-                        CONF_HOST: host,
-                        CONF_MAC: discovered_mac_by_host.get(host),
-                        CONF_NAME: device_config[CONF_NAME],
-                        CONF_PROTOCOL: device_config.get(CONF_PROTOCOL),
-                        CONF_MODE: device_config.get(ATTR_MODE, MODE_AUTO),
-                        CONF_CUSTOM_EFFECT_COLORS: str(custom_effects.get(CONF_COLORS)),
-                        CONF_CUSTOM_EFFECT_SPEED_PCT: custom_effects.get(
-                            CONF_SPEED_PCT, DEFAULT_EFFECT_SPEED
-                        ),
-                        CONF_CUSTOM_EFFECT_TRANSITION: custom_effects.get(
-                            CONF_TRANSITION, TRANSITION_GRADUAL
-                        ),
-                    },
-                )
-            )
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the flux_led component."""
-    hass.data[DOMAIN] = {}
-    discovered_devices = await async_discover_devices(hass, STARTUP_SCAN_TIMEOUT)
-    discovered_mac_by_host = {
-        device[FLUX_HOST]: device[FLUX_MAC] for device in discovered_devices
-    }
-
-    async_import_from_yaml(hass, config, discovered_mac_by_host)
+    domain_data = hass.data[DOMAIN] = {}
+    domain_data[FLUX_LED_DISCOVERY] = await async_discover_devices(
+        hass, STARTUP_SCAN_TIMEOUT
+    )
 
     async def _async_discovery(*_: Any) -> None:
         async_trigger_discovery(
             hass, await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT)
         )
 
-    async_trigger_discovery(hass, discovered_devices)
+    async_trigger_discovery(hass, domain_data[FLUX_LED_DISCOVERY])
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_discovery)
     async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
     return True

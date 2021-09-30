@@ -67,7 +67,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         host = user_input[CONF_HOST]
         self._async_abort_entries_match({CONF_HOST: host})
         if mac := user_input[CONF_MAC]:
-            await self.async_set_unique_id(dr.format_mac(mac))
+            await self.async_set_unique_id(dr.format_mac(mac), raise_on_progress=False)
             self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         return self.async_create_entry(
             title=user_input[CONF_NAME],

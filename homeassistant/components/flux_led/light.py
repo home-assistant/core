@@ -34,6 +34,8 @@ from homeassistant.const import (
     ATTR_MODEL,
     ATTR_NAME,
     CONF_DEVICES,
+    CONF_HOST,
+    CONF_MAC,
     CONF_MODE,
     CONF_NAME,
     CONF_PROTOCOL,
@@ -43,6 +45,7 @@ from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.color as color_util
 
@@ -58,6 +61,9 @@ from .const import (
     CONF_TRANSITION,
     DEFAULT_EFFECT_SPEED,
     DOMAIN,
+    FLUX_HOST,
+    FLUX_LED_DISCOVERY,
+    FLUX_MAC,
     MODE_AUTO,
     MODE_RGB,
     MODE_RGBCW,
@@ -150,8 +156,8 @@ CUSTOM_EFFECT_SCHEMA: Final = vol.Schema(CUSTOM_EFFECT_DICT)
 DEVICE_SCHEMA: Final = vol.Schema(
     {
         vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(ATTR_MODE, default=MODE_RGBW): vol.All(
-            cv.string, vol.In([MODE_RGBW, MODE_RGB, MODE_WHITE])
+        vol.Optional(ATTR_MODE, default=MODE_AUTO): vol.All(
+            cv.string, vol.In([MODE_AUTO, MODE_RGBW, MODE_RGB, MODE_WHITE])
         ),
         vol.Optional(CONF_PROTOCOL): vol.All(cv.string, vol.In(["ledenet"])),
         vol.Optional(CONF_CUSTOM_EFFECT): CUSTOM_EFFECT_SCHEMA,
@@ -164,6 +170,48 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
     }
 )
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> bool:
+    """Set up the flux led platform."""
+    domain_data = hass.data[DOMAIN]
+    discovered_mac_by_host = {
+        device[FLUX_HOST]: device[FLUX_MAC]
+        for device in domain_data[FLUX_LED_DISCOVERY]
+    }
+    for host, device_config in config.get(CONF_DEVICES, {}).items():
+        _LOGGER.warning(
+            "Configuring flux_led via yaml is deprecated; the configuration for"
+            " %s has been migrated to a config entry and can be safely removed",
+            host,
+        )
+        custom_effects = device_config.get(CONF_CUSTOM_EFFECT, {})
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_IMPORT},
+                data={
+                    CONF_HOST: host,
+                    CONF_MAC: discovered_mac_by_host.get(host),
+                    CONF_NAME: device_config[CONF_NAME],
+                    CONF_PROTOCOL: device_config.get(CONF_PROTOCOL),
+                    CONF_MODE: device_config.get(ATTR_MODE, MODE_AUTO),
+                    CONF_CUSTOM_EFFECT_COLORS: str(custom_effects.get(CONF_COLORS)),
+                    CONF_CUSTOM_EFFECT_SPEED_PCT: custom_effects.get(
+                        CONF_SPEED_PCT, DEFAULT_EFFECT_SPEED
+                    ),
+                    CONF_CUSTOM_EFFECT_TRANSITION: custom_effects.get(
+                        CONF_TRANSITION, TRANSITION_GRADUAL
+                    ),
+                },
+            )
+        )
+    return True
 
 
 async def async_setup_entry(

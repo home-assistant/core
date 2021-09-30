@@ -13,6 +13,7 @@ DEFAULT_NETWORK_SCAN_INTERVAL: Final = 120
 DEFAULT_SCAN_INTERVAL: Final = 5
 DEFAULT_EFFECT_SPEED: Final = 50
 
+FLUX_LED_DISCOVERY: Final = "flux_led_discovery"
 
 FLUX_LED_EXCEPTIONS: Final = (socket.timeout, BrokenPipeError)
 
