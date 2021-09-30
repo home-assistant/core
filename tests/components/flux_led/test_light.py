@@ -82,7 +82,7 @@ async def test_rgb_light(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
-    bulb.setRgbw.assert_called_with(255, 0, 0, w=None, brightness=100)
+    bulb.setRgbw.assert_called_with(255, 0, 0, w=50, brightness=100)
     bulb.setRgbw.reset_mock()
 
     await hass.services.async_call(
@@ -109,5 +109,5 @@ async def test_rgb_light(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_HS_COLOR: (10, 30)},
         blocking=True,
     )
-    bulb.setRgbw.assert_called_with(255, 191, 178, w=None, brightness=128)
+    bulb.setRgbw.assert_called_with(255, 191, 178, w=50, brightness=128)
     bulb.setRgbw.reset_mock()
