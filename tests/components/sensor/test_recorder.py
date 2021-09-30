@@ -891,16 +891,14 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     assert (
         "Entity sensor.test1 has state class total_increasing, but its state is not "
         "strictly increasing. Please create a bug report at https://github.com/"
-        "home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A"
-        "+recorder%22"
+        "home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
     ) not in caplog.text
     recorder.do_adhoc_statistics(start=period2)
     wait_recording_done(hass)
     assert (
         "Entity sensor.test1 has state class total_increasing, but its state is not "
         "strictly increasing. Please create a bug report at https://github.com/"
-        "home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A"
-        "+recorder%22"
+        "home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
     ) in caplog.text
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
