@@ -92,6 +92,7 @@ class SurePetcareLock(SurePetcareEntity, LockEntity):
         try:
             await self.coordinator.lock_states_callbacks[self._lock_state](self._id)
         except SurePetcareError:
+            _LOGGER.error("Lock flap failed")
             raise
         else:
             self._attr_is_locked = True
@@ -109,6 +110,7 @@ class SurePetcareLock(SurePetcareEntity, LockEntity):
         try:
             await self.coordinator.surepy.sac.unlock(self._id)
         except SurePetcareError:
+            _LOGGER.error("Unlock flap failed")
             raise
         else:
             self._attr_is_locked = False
