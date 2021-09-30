@@ -319,14 +319,6 @@ class DHCPWatcher(WatcherBase):
             hostname = _decode_dhcp_option(options, HOSTNAME) or ""
             mac_address = _format_mac(packet[Ether].src)
 
-            _LOGGER.debug(
-                "Handle incoming packet ip_address, hostname, mac_address: %s %s %s %s",
-                packet,
-                ip_address,
-                hostname,
-                mac_address,
-            )
-
             if ip_address is None or mac_address is None:
                 return
 
