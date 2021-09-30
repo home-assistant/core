@@ -125,7 +125,9 @@ class FritzBoxTools:
         self.username = username
         self._mac: str | None = None
         self._model: str | None = None
-        self._sw_version: str | None = None
+        self._current_firmware: str | None = None
+        self._latest_firmware: str | None = None
+        self._update_available: bool = False
 
     async def async_setup(self) -> None:
         """Wrap up FritzboxTools class setup."""
@@ -152,7 +154,9 @@ class FritzBoxTools:
             self._unique_id = info["NewSerialNumber"]
 
         self._model = info.get("NewModelName")
-        self._sw_version = info.get("NewSoftwareVersion")
+        self._current_firmware = info.get("NewSoftwareVersion")
+
+        self._update_available, self._latest_firmware = self._update_device_info()
 
     async def async_start(self, options: MappingProxyType[str, Any]) -> None:
         """Start FritzHosts connection."""
@@ -187,11 +191,21 @@ class FritzBoxTools:
         return self._model
 
     @property
-    def sw_version(self) -> str:
-        """Return SW version."""
-        if not self._sw_version:
+    def current_firmware(self) -> str:
+        """Return current SW version."""
+        if not self._current_firmware:
             raise ClassSetupMissing()
-        return self._sw_version
+        return self._current_firmware
+
+    @property
+    def latest_firmware(self) -> str | None:
+        """Return latest SW version."""
+        return self._latest_firmware
+
+    @property
+    def update_available(self) -> bool:
+        """Return if new SW version is available."""
+        return self._update_available
 
     @property
     def mac(self) -> str:
@@ -215,9 +229,16 @@ class FritzBoxTools:
         """Event specific per FRITZ!Box entry to signal updates in devices."""
         return f"{DOMAIN}-device-update-{self._unique_id}"
 
-    def _update_info(self) -> list[HostInfo]:
-        """Retrieve latest information from the FRITZ!Box."""
+    def _update_hosts_info(self) -> list[HostInfo]:
+        """Retrieve latest hosts information from the FRITZ!Box."""
         return self.fritz_hosts.get_hosts_info()  # type: ignore [no-any-return]
+
+    def _update_device_info(self) -> tuple[bool, str | None]:
+        """Retrieve latest device information from the FRITZ!Box."""
+        userinterface = self.connection.call_action("UserInterface1", "GetInfo")
+        return userinterface.get("NewUpgradeAvailable"), userinterface.get(
+            "NewX_AVM-DE_Version"
+        )
 
     def scan_devices(self, now: datetime | None = None) -> None:
         """Scan for new devices and return a list of found device ids."""
@@ -232,7 +253,7 @@ class FritzBoxTools:
             consider_home = _default_consider_home
 
         new_device = False
-        for known_host in self._update_info():
+        for known_host in self._update_hosts_info():
             if not known_host.get("mac"):
                 continue
 
@@ -254,6 +275,9 @@ class FritzBoxTools:
         dispatcher_send(self.hass, self.signal_device_update)
         if new_device:
             dispatcher_send(self.hass, self.signal_device_new)
+
+        _LOGGER.debug("Checking host info for FRITZ!Box router %s", self.host)
+        self._update_available, self._latest_firmware = self._update_device_info()
 
     async def service_fritzbox(self, service: str) -> None:
         """Define FRITZ!Box services."""
@@ -460,5 +484,5 @@ class FritzBoxBaseEntity:
             "name": self._device_name,
             "manufacturer": "AVM",
             "model": self._fritzbox_tools.model,
-            "sw_version": self._fritzbox_tools.sw_version,
+            "sw_version": self._fritzbox_tools.current_firmware,
         }
