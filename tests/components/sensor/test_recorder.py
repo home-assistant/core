@@ -1725,12 +1725,17 @@ def test_compile_hourly_statistics_changing_statistics(
     assert statistic_ids == [
         {"statistic_id": "sensor.test1", "unit_of_measurement": None}
     ]
-    metadata = get_metadata(hass, "sensor.test1")
+    metadata = get_metadata(hass, ("sensor.test1",))
     assert metadata == {
-        "has_mean": True,
-        "has_sum": False,
-        "statistic_id": "sensor.test1",
-        "unit_of_measurement": None,
+        "sensor.test1": (
+            1,
+            {
+                "has_mean": True,
+                "has_sum": False,
+                "statistic_id": "sensor.test1",
+                "unit_of_measurement": None,
+            },
+        )
     }
 
     # Add more states, with changed state class
@@ -1745,12 +1750,17 @@ def test_compile_hourly_statistics_changing_statistics(
     assert statistic_ids == [
         {"statistic_id": "sensor.test1", "unit_of_measurement": None}
     ]
-    metadata = get_metadata(hass, "sensor.test1")
+    metadata = get_metadata(hass, ("sensor.test1",))
     assert metadata == {
-        "has_mean": False,
-        "has_sum": True,
-        "statistic_id": "sensor.test1",
-        "unit_of_measurement": None,
+        "sensor.test1": (
+            1,
+            {
+                "has_mean": False,
+                "has_sum": True,
+                "statistic_id": "sensor.test1",
+                "unit_of_measurement": None,
+            },
+        )
     }
     stats = statistics_during_period(hass, period0, period="5minute")
     assert stats == {
