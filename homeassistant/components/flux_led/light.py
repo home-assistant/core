@@ -412,15 +412,16 @@ class FluxLight(CoordinatorEntity, LightEntity):
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
-        if not self._mode or self._mode == MODE_AUTO:
-            if self._bulb.protocol:
-                if self._bulb.raw_state[9] == self._bulb.raw_state[11]:
-                    self._mode = MODE_RGBWW
-                else:
-                    self._mode = MODE_RGBCW
-            elif self._bulb.mode == "ww":
-                self._mode = MODE_WHITE
-            elif self._bulb.rgbwcapable and not self._bulb.rgbwprotocol:
-                self._mode = MODE_RGBW
+        if self._mode and self._mode != MODE_AUTO:
+            return
+        if self._bulb.protocol:
+            if self._bulb.raw_state[9] == self._bulb.raw_state[11]:
+                self._mode = MODE_RGBWW
             else:
-                self._mode = MODE_RGB
+                self._mode = MODE_RGBCW
+        elif self._bulb.mode == "ww":
+            self._mode = MODE_WHITE
+        elif self._bulb.rgbwcapable and not self._bulb.rgbwprotocol:
+            self._mode = MODE_RGBW
+        else:
+            self._mode = MODE_RGB
