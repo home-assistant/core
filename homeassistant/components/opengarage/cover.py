@@ -139,8 +139,8 @@ class OpenGarageCover(CoordinatorEntity, CoverEntity):
             self._attr_available = False
             return
 
-        state = STATES_MAP.get(status.get("door"))
         self._device_name = self._attr_name = status["name"]
+        state = STATES_MAP.get(status.get("door"))
         if self._state_before_move is not None:
             if self._state_before_move != state:
                 self._state = state
