@@ -7,6 +7,7 @@ import logging
 from typing import Any
 
 from bimmer_connected.state import ChargingState, LockState
+from bimmer_connected.vehicle import ConnectedDriveVehicle
 from bimmer_connected.vehicle_status import ConditionBasedServiceReport, VehicleStatus
 
 from homeassistant.components.binary_sensor import (
@@ -16,10 +17,16 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import LENGTH_KILOMETERS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN as BMW_DOMAIN, BMWConnectedDriveBaseEntity
+from . import (
+    DOMAIN as BMW_DOMAIN,
+    BMWConnectedDriveAccount,
+    BMWConnectedDriveBaseEntity,
+)
 from .const import CONF_ACCOUNT, DATA_ENTRIES
 
 _LOGGER = logging.getLogger(__name__)
@@ -80,7 +87,7 @@ def _check_control_messages(
     if has_check_control_messages:
         cbs_list = []
         for message in check_control_messages:
-            cbs_list.append(message["ccmDescriptionShort"])
+            cbs_list.append(message["ccmDescriptionShort"])  # type: ignore  # needs fix in 'bimmer_connected'
         extra_attributes["check_control_messages"] = cbs_list
     else:
         extra_attributes["check_control_messages"] = "OK"
@@ -200,9 +207,15 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the BMW ConnectedDrive binary sensors from config entry."""
-    account = hass.data[BMW_DOMAIN][DATA_ENTRIES][config_entry.entry_id][CONF_ACCOUNT]
+    account: BMWConnectedDriveAccount = hass.data[BMW_DOMAIN][DATA_ENTRIES][
+        config_entry.entry_id
+    ][CONF_ACCOUNT]
 
     entities = [
         BMWConnectedDriveSensor(account, vehicle, description)
@@ -218,7 +231,12 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, BinarySensorEntity):
 
     entity_description: BMWBinarySensorEntityDescription
 
-    def __init__(self, account, vehicle, description: BMWBinarySensorEntityDescription):
+    def __init__(
+        self,
+        account: BMWConnectedDriveAccount,
+        vehicle: ConnectedDriveVehicle,
+        description: BMWBinarySensorEntityDescription,
+    ) -> None:
         """Initialize sensor."""
         super().__init__(account, vehicle)
         self.entity_description = description
@@ -226,7 +244,7 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, BinarySensorEntity):
         self._attr_name = f"{vehicle.name} {description.key}"
         self._attr_unique_id = f"{vehicle.vin}-{description.key}"
 
-    def update(self):
+    def update(self) -> None:
         """Read new state data from the library."""
         vehicle_state = self._vehicle.state
         result = self._attrs.copy()
