@@ -666,9 +666,7 @@ def test_compile_hourly_sum_statistics_negative_state(
                 "min": None,
                 "last_reset": None,
                 "state": approx(factor * seq[7]),
-                "sum": approx(factor * 40),  # (20 - 10) + (10 - (-20))
-                "sum_decrease": approx(factor * 20.0),
-                "sum_increase": approx(factor * 60),
+                "sum": approx(factor * 20),  # (20 - 10) + (10 - 0)
             },
         ]
     }

@@ -47,6 +47,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import entity_sources
 import homeassistant.util.dt as dt_util
 import homeassistant.util.pressure as pressure_util
@@ -258,6 +259,24 @@ def _normalize_states(
     return DEVICE_CLASS_UNITS[device_class], fstates
 
 
+def _suggest_report_issue(hass: HomeAssistant, entity_id: str) -> str:
+    """Suggest to report an issue."""
+    domain = entity_sources(hass).get(entity_id, {}).get("domain")
+    custom_component = entity_sources(hass).get(entity_id, {}).get("custom_component")
+    report_issue = ""
+    if custom_component:
+        report_issue = "report it to the custom component author."
+    else:
+        report_issue = (
+            "create a bug report at "
+            "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
+        )
+        if domain:
+            report_issue += f"+label%3A%22integration%3A+{domain}%22"
+
+    return report_issue
+
+
 def warn_dip(hass: HomeAssistant, entity_id: str) -> None:
     """Log a warning once if a sensor with state_class_total has a decreasing value.
 
@@ -279,11 +298,10 @@ def warn_dip(hass: HomeAssistant, entity_id: str) -> None:
             return
         _LOGGER.warning(
             "Entity %s %shas state class total_increasing, but its state is "
-            "not strictly increasing. Please create a bug report at %s",
+            "not strictly increasing. Please %s",
             entity_id,
             f"from integration {domain} " if domain else "",
-            "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
-            "+label%3A%22integration%3A+recorder%22",
+            _suggest_report_issue(hass, entity_id),
         )
 
 
@@ -296,11 +314,10 @@ def warn_negative(hass: HomeAssistant, entity_id: str) -> None:
         domain = entity_sources(hass).get(entity_id, {}).get("domain")
         _LOGGER.warning(
             "Entity %s %shas state class total_increasing, but its state is "
-            "negative. Please create a bug report at %s",
+            "negative. Please %s",
             entity_id,
             f"from integration {domain} " if domain else "",
-            "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
-            "+label%3A%22integration%3A+recorder%22",
+            _suggest_report_issue(hass, entity_id),
         )
 
 
@@ -316,6 +333,7 @@ def reset_detected(
 
     if state < 0:
         warn_negative(hass, entity_id)
+        raise HomeAssistantError
 
     return state < 0.9 * previous_state
 
@@ -495,17 +513,20 @@ def compile_statistics(  # noqa: C901
                         entity_id,
                         fstate,
                     )
-                elif state_class == STATE_CLASS_TOTAL_INCREASING and (
-                    old_state is None
-                    or reset_detected(hass, entity_id, fstate, new_state)
-                ):
-                    reset = True
-                    _LOGGER.info(
-                        "Detected new cycle for %s, value dropped from %s to %s",
-                        entity_id,
-                        new_state,
-                        fstate,
-                    )
+                elif state_class == STATE_CLASS_TOTAL_INCREASING:
+                    try:
+                        if old_state is None or reset_detected(
+                            hass, entity_id, fstate, new_state
+                        ):
+                            reset = True
+                            _LOGGER.info(
+                                "Detected new cycle for %s, value dropped from %s to %s",
+                                entity_id,
+                                new_state,
+                                fstate,
+                            )
+                    except HomeAssistantError:
+                        continue
 
                 if reset:
                     # The sensor has been reset, update the sum
