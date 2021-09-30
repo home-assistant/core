@@ -231,7 +231,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
         custom_effect_colors: list[tuple[int, int, int]],
         custom_effect_speed_pct: int,
         custom_effect_transition: str,
-    ):
+    ) -> None:
         """Initialize the light."""
         super().__init__(coordinator)
         self._bulb: WifiLedBulb = coordinator.device
@@ -298,11 +298,8 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def effect(self):
         """Return the current effect."""
-        current_mode = self._bulb.raw_state[3]
-
-        if current_mode == EFFECT_CUSTOM_CODE:
+        if (current_mode := self._bulb.raw_state[3]) == EFFECT_CUSTOM_CODE:
             return EFFECT_CUSTOM
-
         return EFFECT_ID_NAME.get(current_mode)
 
     @property
@@ -335,20 +332,14 @@ class FluxLight(CoordinatorEntity, LightEntity):
         if not self.is_on:
             self._bulb.turnOn()
 
-        hs_color = kwargs.get(ATTR_HS_COLOR)
-
-        if hs_color:
+        if hs_color := kwargs.get(ATTR_HS_COLOR):
             rgb: tuple[int, int, int] | None = color_util.color_hs_to_RGB(*hs_color)
         else:
             rgb = None
 
         brightness = kwargs.get(ATTR_BRIGHTNESS)
-        effect = kwargs.get(ATTR_EFFECT)
-        white = kwargs.get(ATTR_WHITE_VALUE)
-        color_temp = kwargs.get(ATTR_COLOR_TEMP)
-
         # handle special modes
-        if color_temp is not None:
+        if (color_temp := kwargs.get(ATTR_COLOR_TEMP)) is not None:
             if brightness is None:
                 brightness = self.brightness
             if color_temp > COLOR_TEMP_WARM_VS_COLD_WHITE_CUT_OFF:
@@ -357,6 +348,8 @@ class FluxLight(CoordinatorEntity, LightEntity):
                 self._bulb.setRgbw(w2=brightness)
             return
 
+        white = kwargs.get(ATTR_WHITE_VALUE)
+        effect = kwargs.get(ATTR_EFFECT)
         # Show warning if effect set with rgb, brightness, or white level
         if effect and (brightness or white or rgb):
             _LOGGER.warning(
@@ -417,7 +410,6 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        """Fetch the data from this light bulb."""
         if not self._mode or self._mode == MODE_AUTO:
             if self._bulb.protocol:
                 if self._bulb.raw_state[9] == self._bulb.raw_state[11]:

@@ -161,8 +161,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            host = user_input[CONF_HOST]
-            if not host:
+            if not (host := user_input[CONF_HOST]):
                 return await self.async_step_pick_device()
             try:
                 await self._async_try_connect(host)
@@ -234,7 +233,9 @@ class OptionsFlow(config_entries.OptionsFlow):
         options = self._config_entry.options
         options_schema = vol.Schema(
             {
-                vol.Required(CONF_MODE, default=MODE_AUTO): vol.All(
+                vol.Required(
+                    CONF_MODE, default=options.get(CONF_MODE, MODE_AUTO)
+                ): vol.All(
                     cv.string,
                     vol.In(
                         [
@@ -258,7 +259,10 @@ class OptionsFlow(config_entries.OptionsFlow):
                     ),
                 ): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
                 vol.Optional(
-                    CONF_CUSTOM_EFFECT_TRANSITION, default=TRANSITION_GRADUAL
+                    CONF_CUSTOM_EFFECT_TRANSITION,
+                    default=options.get(
+                        CONF_CUSTOM_EFFECT_TRANSITION, TRANSITION_GRADUAL
+                    ),
                 ): vol.In([TRANSITION_GRADUAL, TRANSITION_JUMP, TRANSITION_STROBE]),
             }
         )
