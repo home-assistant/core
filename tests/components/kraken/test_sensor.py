@@ -13,7 +13,12 @@ from homeassistant.components.kraken.const import (
 from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
 import homeassistant.util.dt as dt_util
 
-from .const import TICKER_INFORMATION_RESPONSE, TRADEABLE_ASSET_PAIR_RESPONSE
+from .const import (
+    MISSING_PAIR_TICKER_INFORMATION_RESPONSE,
+    MISSING_PAIR_TRADEABLE_ASSET_PAIR_RESPONSE,
+    TICKER_INFORMATION_RESPONSE,
+    TRADEABLE_ASSET_PAIR_RESPONSE,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -230,38 +235,46 @@ async def test_missing_pair_marks_sensor_unavailable(hass):
     with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
         "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
         return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
-    ):
-        with patch(
-            "pykrakenapi.KrakenAPI.get_ticker_information",
-            return_value=TICKER_INFORMATION_RESPONSE,
-        ):
-            entry = MockConfigEntry(
-                domain=DOMAIN,
-                options={
-                    CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
-                    CONF_TRACKED_ASSET_PAIRS: [DEFAULT_TRACKED_ASSET_PAIR],
-                },
-            )
-            entry.add_to_hass(hass)
+    ) as tradeable_asset_pairs_mock, patch(
+        "pykrakenapi.KrakenAPI.get_ticker_information",
+        return_value=TICKER_INFORMATION_RESPONSE,
+    ) as ticket_information_mock:
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            options={
+                CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+                CONF_TRACKED_ASSET_PAIRS: [DEFAULT_TRACKED_ASSET_PAIR],
+            },
+        )
+        entry.add_to_hass(hass)
 
-            await hass.config_entries.async_setup(entry.entry_id)
+        await hass.config_entries.async_setup(entry.entry_id)
 
-            await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
-            hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-            await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
 
-            sensor = hass.states.get("sensor.xbt_usd_ask")
-            assert sensor.state == "0.0003494"
+        sensor = hass.states.get("sensor.xbt_usd_ask")
+        assert sensor.state == "0.0003494"
 
-        with patch(
-            "pykrakenapi.KrakenAPI.get_ticker_information",
-            side_effect=KrakenAPIError("EQuery:Unknown asset pair"),
-        ):
-            async_fire_time_changed(
-                hass, utcnow + timedelta(seconds=DEFAULT_SCAN_INTERVAL * 2)
-            )
-            await hass.async_block_till_done()
+        tradeable_asset_pairs_mock.return_value = (
+            MISSING_PAIR_TRADEABLE_ASSET_PAIR_RESPONSE
+        )
+        ticket_information_mock.side_effect = KrakenAPIError(
+            "EQuery:Unknown asset pair"
+        )
+        async_fire_time_changed(
+            hass, utcnow + timedelta(seconds=DEFAULT_SCAN_INTERVAL * 2)
+        )
+        await hass.async_block_till_done()
 
-            sensor = hass.states.get("sensor.xbt_usd_ask")
-            assert sensor.state == "unavailable"
+        ticket_information_mock.side_effect = None
+        ticket_information_mock.return_value = MISSING_PAIR_TICKER_INFORMATION_RESPONSE
+        async_fire_time_changed(
+            hass, utcnow + timedelta(seconds=DEFAULT_SCAN_INTERVAL * 2)
+        )
+        await hass.async_block_till_done()
+
+        sensor = hass.states.get("sensor.xbt_usd_ask")
+        assert sensor.state == "unavailable"

@@ -1,39 +1,37 @@
+#!/usr/bin/env python3
 """Constants for the Tuya integration."""
-
-CONF_BRIGHTNESS_RANGE_MODE = "brightness_range_mode"
-CONF_COUNTRYCODE = "country_code"
-CONF_CURR_TEMP_DIVIDER = "curr_temp_divider"
-CONF_DISCOVERY_INTERVAL = "discovery_interval"
-CONF_MAX_KELVIN = "max_kelvin"
-CONF_MAX_TEMP = "max_temp"
-CONF_MIN_KELVIN = "min_kelvin"
-CONF_MIN_TEMP = "min_temp"
-CONF_QUERY_DEVICE = "query_device"
-CONF_QUERY_INTERVAL = "query_interval"
-CONF_SET_TEMP_DIVIDED = "set_temp_divided"
-CONF_SUPPORT_COLOR = "support_color"
-CONF_TEMP_DIVIDER = "temp_divider"
-CONF_TEMP_STEP_OVERRIDE = "temp_step_override"
-CONF_TUYA_MAX_COLTEMP = "tuya_max_coltemp"
-
-DEFAULT_DISCOVERY_INTERVAL = 605
-DEFAULT_QUERY_INTERVAL = 120
-DEFAULT_TUYA_MAX_COLTEMP = 10000
 
 DOMAIN = "tuya"
 
-SIGNAL_CONFIG_ENTITY = "tuya_config"
-SIGNAL_DELETE_ENTITY = "tuya_delete"
-SIGNAL_UPDATE_ENTITY = "tuya_update"
+CONF_PROJECT_TYPE = "tuya_project_type"
+CONF_ENDPOINT = "endpoint"
+CONF_ACCESS_ID = "access_id"
+CONF_ACCESS_SECRET = "access_secret"
+CONF_USERNAME = "username"
+CONF_PASSWORD = "password"
+CONF_COUNTRY_CODE = "country_code"
+CONF_APP_TYPE = "tuya_app_type"
 
-TUYA_DATA = "tuya_data"
-TUYA_DEVICES_CONF = "devices_config"
 TUYA_DISCOVERY_NEW = "tuya_discovery_new_{}"
+TUYA_DEVICE_MANAGER = "tuya_device_manager"
+TUYA_HOME_MANAGER = "tuya_home_manager"
+TUYA_MQTT_LISTENER = "tuya_mqtt_listener"
+TUYA_HA_TUYA_MAP = "tuya_ha_tuya_map"
+TUYA_HA_DEVICES = "tuya_ha_devices"
 
-TUYA_PLATFORMS = {
-    "tuya": "Tuya",
-    "smart_life": "Smart Life",
-    "jinvoo_smart": "Jinvoo Smart",
+TUYA_HA_SIGNAL_UPDATE_ENTITY = "tuya_entry_update"
+
+TUYA_ENDPOINT = {
+    "https://openapi.tuyaus.com": "America",
+    "https://openapi.tuyacn.com": "China",
+    "https://openapi.tuyaeu.com": "Europe",
+    "https://openapi.tuyain.com": "India",
+    "https://openapi-ueaz.tuyaus.com": "EasternAmerica",
+    "https://openapi-weaz.tuyaeu.com": "WesternEurope",
 }
 
-TUYA_TYPE_NOT_QUERY = ["scene", "switch"]
+TUYA_PROJECT_TYPE = {1: "Custom Development", 0: "Smart Home PaaS"}
+
+TUYA_APP_TYPE = {"tuyaSmart": "TuyaSmart", "smartlife": "Smart Life"}
+
+PLATFORMS = ["climate", "fan", "light", "scene", "switch"]

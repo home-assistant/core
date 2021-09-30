@@ -353,6 +353,24 @@ class DHCPWatcher(WatcherBase):
             if ip_address is not None and mac_address is not None:
                 self.process_client(ip_address, hostname, mac_address)
 
+        def _handle_dhcp_packet(packet):
+            """Process a dhcp packet."""
+            if DHCP not in packet:
+                return
+
+            options = packet[DHCP].options
+            request_type = _decode_dhcp_option(options, MESSAGE_TYPE)
+            if request_type != DHCP_REQUEST:
+                # Not a DHCP request
+                return
+
+            ip_address = _decode_dhcp_option(options, REQUESTED_ADDR) or packet[IP].src
+            hostname = _decode_dhcp_option(options, HOSTNAME) or ""
+            mac_address = _format_mac(packet[Ether].src)
+
+            if ip_address is not None and mac_address is not None:
+                self.process_client(ip_address, hostname, mac_address)
+
         # disable scapy promiscuous mode as we do not need it
         conf.sniff_promisc = 0
 
