@@ -1,7 +1,6 @@
 """Support for Nanoleaf Lights."""
 from __future__ import annotations
 
-from aiohttp import ServerDisconnectedError
 from aionanoleaf import Nanoleaf, Unavailable
 import voluptuous as vol
 
@@ -175,9 +174,6 @@ class NanoleafLight(LightEntity):
     async def async_update(self) -> None:
         """Fetch new state data for this light."""
         try:
-            await self._nanoleaf.get_info()
-        except ServerDisconnectedError:
-            # Retry the request once if the device disconnected
             await self._nanoleaf.get_info()
         except Unavailable:
             self._attr_available = False
