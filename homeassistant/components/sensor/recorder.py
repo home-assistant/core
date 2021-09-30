@@ -8,7 +8,14 @@ import itertools
 import logging
 import math
 
-from homeassistant.components.recorder import history, is_entity_recorded, statistics
+from sqlalchemy.orm.session import Session
+
+from homeassistant.components.recorder import (
+    history,
+    is_entity_recorded,
+    statistics,
+    util as recorder_util,
+)
 from homeassistant.components.recorder.models import (
     StatisticData,
     StatisticMetaData,
@@ -196,6 +203,8 @@ def _parse_float(state: str) -> float:
 
 def _normalize_states(
     hass: HomeAssistant,
+    session: Session,
+    old_metadatas: dict[str, tuple[int, StatisticMetaData]],
     entity_history: Iterable[State],
     device_class: str | None,
     entity_id: str,
@@ -221,10 +230,10 @@ def _normalize_states(
                 if entity_id not in hass.data[WARN_UNSTABLE_UNIT]:
                     hass.data[WARN_UNSTABLE_UNIT].add(entity_id)
                     extra = ""
-                    if old_metadata := statistics.get_metadata(hass, entity_id):
+                    if old_metadata := old_metadatas.get(entity_id):
                         extra = (
                             " and matches the unit of already compiled statistics "
-                            f"({old_metadata['unit_of_measurement']})"
+                            f"({old_metadata[1]['unit_of_measurement']})"
                         )
                     _LOGGER.warning(
                         "The unit of %s is changing, got multiple %s, generation of long term "
@@ -368,17 +377,32 @@ def _last_reset_as_utc_isoformat(
     return dt_util.as_utc(last_reset).isoformat()
 
 
-def compile_statistics(  # noqa: C901
+def compile_statistics(
     hass: HomeAssistant, start: datetime.datetime, end: datetime.datetime
 ) -> list[StatisticResult]:
     """Compile statistics for all entities during start-end.
 
     Note: This will query the database and must not be run in the event loop
     """
+    with recorder_util.session_scope(hass=hass) as session:
+        result = _compile_statistics(hass, session, start, end)
+    return result
+
+
+def _compile_statistics(  # noqa: C901
+    hass: HomeAssistant,
+    session: Session,
+    start: datetime.datetime,
+    end: datetime.datetime,
+) -> list[StatisticResult]:
+    """Compile statistics for all entities during start-end."""
     result: list[StatisticResult] = []
 
     sensor_states = _get_sensor_states(hass)
     wanted_statistics = _wanted_statistics(sensor_states)
+    old_metadatas = statistics.get_metadata_with_session(
+        hass, session, [i.entity_id for i in sensor_states], None
+    )
 
     # Get history between start and end
     entities_full_history = [
@@ -386,8 +410,9 @@ def compile_statistics(  # noqa: C901
     ]
     history_list = {}
     if entities_full_history:
-        history_list = history.get_significant_states(  # type: ignore
+        history_list = history.get_significant_states_with_session(  # type: ignore
             hass,
+            session,
             start - datetime.timedelta.resolution,
             end,
             entity_ids=entities_full_history,
@@ -399,8 +424,9 @@ def compile_statistics(  # noqa: C901
         if "sum" not in wanted_statistics[i.entity_id]
     ]
     if entities_significant_history:
-        _history_list = history.get_significant_states(  # type: ignore
+        _history_list = history.get_significant_states_with_session(  # type: ignore
             hass,
+            session,
             start - datetime.timedelta.resolution,
             end,
             entity_ids=entities_significant_history,
@@ -420,14 +446,16 @@ def compile_statistics(  # noqa: C901
         state_class = _state.attributes[ATTR_STATE_CLASS]
         device_class = _state.attributes.get(ATTR_DEVICE_CLASS)
         entity_history = history_list[entity_id]
-        unit, fstates = _normalize_states(hass, entity_history, device_class, entity_id)
+        unit, fstates = _normalize_states(
+            hass, session, old_metadatas, entity_history, device_class, entity_id
+        )
 
         if not fstates:
             continue
 
         # Check metadata
-        if old_metadata := statistics.get_metadata(hass, entity_id):
-            if old_metadata["unit_of_measurement"] != unit:
+        if old_metadata := old_metadatas.get(entity_id):
+            if old_metadata[1]["unit_of_measurement"] != unit:
                 if WARN_UNSTABLE_UNIT not in hass.data:
                     hass.data[WARN_UNSTABLE_UNIT] = set()
                 if entity_id not in hass.data[WARN_UNSTABLE_UNIT]:
@@ -438,8 +466,8 @@ def compile_statistics(  # noqa: C901
                         "will be suppressed unless the unit changes back to %s",
                         entity_id,
                         unit,
-                        old_metadata["unit_of_measurement"],
-                        old_metadata["unit_of_measurement"],
+                        old_metadata[1]["unit_of_measurement"],
+                        old_metadata[1]["unit_of_measurement"],
                     )
                 continue
 
@@ -617,10 +645,10 @@ def validate_statistics(
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if device_class not in UNIT_CONVERSIONS:
-            metadata = statistics.get_metadata(hass, entity_id)
+            metadata = statistics.get_metadata(hass, (entity_id,))
             if not metadata:
                 continue
-            metadata_unit = metadata["unit_of_measurement"]
+            metadata_unit = metadata[entity_id][1]["unit_of_measurement"]
             if state_unit != metadata_unit:
                 validation_result[entity_id].append(
                     statistics.ValidationIssue(
