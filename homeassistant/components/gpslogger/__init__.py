@@ -1,4 +1,6 @@
 """Support for GPSLogger."""
+from http import HTTPStatus
+
 from aiohttp import web
 import voluptuous as vol
 
@@ -6,12 +8,7 @@ from homeassistant.components.device_tracker import (
     ATTR_BATTERY,
     DOMAIN as DEVICE_TRACKER,
 )
-from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONF_WEBHOOK_ID,
-    HTTP_UNPROCESSABLE_ENTITY,
-)
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_WEBHOOK_ID
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -68,7 +65,9 @@ async def handle_webhook(hass, webhook_id, request):
     try:
         data = WEBHOOK_SCHEMA(dict(await request.post()))
     except vol.MultipleInvalid as error:
-        return web.Response(text=error.error_message, status=HTTP_UNPROCESSABLE_ENTITY)
+        return web.Response(
+            text=error.error_message, status=HTTPStatus.UNPROCESSABLE_ENTITY
+        )
 
     attrs = {
         ATTR_SPEED: data.get(ATTR_SPEED),
