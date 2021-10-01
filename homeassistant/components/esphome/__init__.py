@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 import functools
 import logging
 import math
-from typing import Any, Callable, Generic, NamedTuple, TypeVar, cast, overload
+from typing import Any, Callable, Generic, TypeVar, cast, overload
 
 from aioesphomeapi import (
     APIClient,
@@ -18,8 +18,6 @@ from aioesphomeapi import (
     EntityInfo,
     EntityState,
     HomeassistantServiceCall,
-    InvalidEncryptionKeyAPIError,
-    RequiresEncryptionAPIError,
     UserService,
     UserServiceArgType,
 )
@@ -54,7 +52,6 @@ from homeassistant.helpers.template import Template
 from .entry_data import RuntimeEntryData
 
 DOMAIN = "esphome"
-CONF_NOISE_PSK = "noise_psk"
 _LOGGER = logging.getLogger(__name__)
 _T = TypeVar("_T")
 
@@ -113,7 +110,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
     password = entry.data[CONF_PASSWORD]
-    noise_psk = entry.data.get(CONF_NOISE_PSK)
     device_id = None
 
     zeroconf_instance = await zeroconf.async_get_instance(hass)
@@ -125,7 +121,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         password,
         client_info=f"Home Assistant {const.__version__}",
         zeroconf_instance=zeroconf_instance,
-        noise_psk=noise_psk,
     )
 
     domain_data = DomainData.get(hass)
@@ -226,7 +221,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
             # Only communicate changes to the state or attribute tracked
             if (
-                event.data.get("old_state") is not None
+                "old_state" in event.data
                 and "new_state" in event.data
                 and (
                     (
@@ -404,11 +399,6 @@ class ReconnectLogic(RecordUpdateListener):
         try:
             await self._cli.connect(on_stop=self._on_disconnect, login=True)
         except APIConnectionError as error:
-            if isinstance(
-                error, (RequiresEncryptionAPIError, InvalidEncryptionKeyAPIError)
-            ):
-                self._entry.async_start_reauth(self._hass)
-
             level = logging.WARNING if tries == 0 else logging.DEBUG
             _LOGGER.log(
                 level,
@@ -569,60 +559,51 @@ async def _async_setup_device_registry(
     return device_entry.id
 
 
-class ServiceMetadata(NamedTuple):
-    """Metadata for services."""
-
-    validator: Any
-    example: str
-    selector: dict[str, Any]
-    description: str | None = None
-
-
 ARG_TYPE_METADATA = {
-    UserServiceArgType.BOOL: ServiceMetadata(
-        validator=cv.boolean,
-        example="False",
-        selector={"boolean": None},
-    ),
-    UserServiceArgType.INT: ServiceMetadata(
-        validator=vol.Coerce(int),
-        example="42",
-        selector={"number": {CONF_MODE: "box"}},
-    ),
-    UserServiceArgType.FLOAT: ServiceMetadata(
-        validator=vol.Coerce(float),
-        example="12.3",
-        selector={"number": {CONF_MODE: "box", "step": 1e-3}},
-    ),
-    UserServiceArgType.STRING: ServiceMetadata(
-        validator=cv.string,
-        example="Example text",
-        selector={"text": None},
-    ),
-    UserServiceArgType.BOOL_ARRAY: ServiceMetadata(
-        validator=[cv.boolean],
-        description="A list of boolean values.",
-        example="[True, False]",
-        selector={"object": {}},
-    ),
-    UserServiceArgType.INT_ARRAY: ServiceMetadata(
-        validator=[vol.Coerce(int)],
-        description="A list of integer values.",
-        example="[42, 34]",
-        selector={"object": {}},
-    ),
-    UserServiceArgType.FLOAT_ARRAY: ServiceMetadata(
-        validator=[vol.Coerce(float)],
-        description="A list of floating point numbers.",
-        example="[ 12.3, 34.5 ]",
-        selector={"object": {}},
-    ),
-    UserServiceArgType.STRING_ARRAY: ServiceMetadata(
-        validator=[cv.string],
-        description="A list of strings.",
-        example="['Example text', 'Another example']",
-        selector={"object": {}},
-    ),
+    UserServiceArgType.BOOL: {
+        "validator": cv.boolean,
+        "example": "False",
+        "selector": {"boolean": None},
+    },
+    UserServiceArgType.INT: {
+        "validator": vol.Coerce(int),
+        "example": "42",
+        "selector": {"number": {CONF_MODE: "box"}},
+    },
+    UserServiceArgType.FLOAT: {
+        "validator": vol.Coerce(float),
+        "example": "12.3",
+        "selector": {"number": {CONF_MODE: "box", "step": 1e-3}},
+    },
+    UserServiceArgType.STRING: {
+        "validator": cv.string,
+        "example": "Example text",
+        "selector": {"text": None},
+    },
+    UserServiceArgType.BOOL_ARRAY: {
+        "validator": [cv.boolean],
+        "description": "A list of boolean values.",
+        "example": "[True, False]",
+        "selector": {"object": {}},
+    },
+    UserServiceArgType.INT_ARRAY: {
+        "validator": [vol.Coerce(int)],
+        "description": "A list of integer values.",
+        "example": "[42, 34]",
+        "selector": {"object": {}},
+    },
+    UserServiceArgType.FLOAT_ARRAY: {
+        "validator": [vol.Coerce(float)],
+        "description": "A list of floating point numbers.",
+        "example": "[ 12.3, 34.5 ]",
+        "selector": {"object": {}},
+    },
+    UserServiceArgType.STRING_ARRAY: {
+        "validator": [cv.string],
+        "description": "A list of strings.",
+        "example": "['Example text', 'Another example']",
+        "selector": {"object": {}},
+    },
 }
 
 
@@ -645,13 +626,13 @@ async def _register_service(
             )
             return
         metadata = ARG_TYPE_METADATA[arg.type]
-        schema[vol.Required(arg.name)] = metadata.validator
+        schema[vol.Required(arg.name)] = metadata["validator"]
         fields[arg.name] = {
             "name": arg.name,
             "required": True,
-            "description": metadata.description,
-            "example": metadata.example,
-            "selector": metadata.selector,
+            "description": metadata.get("description"),
+            "example": metadata["example"],
+            "selector": metadata["selector"],
         }
 
     async def execute_service(call: ServiceCall) -> None:
@@ -824,7 +805,6 @@ def esphome_state_property(func: _PropT) -> _PropT:
     @property  # type: ignore[misc]
     @functools.wraps(func)
     def _wrapper(self):  # type: ignore[no-untyped-def]
-        # pylint: disable=protected-access
         if not self._has_state:
             return None
         val = func(self)
