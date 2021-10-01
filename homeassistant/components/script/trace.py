@@ -6,11 +6,12 @@ from contextlib import contextmanager
 import logging
 from typing import Any
 
-from homeassistant.components.trace import ActionTrace, async_store_trace
-from homeassistant.components.trace.const import (
-    CONF_STORED_TRACES,
-    DATA_RESTORED_TRACES,
+from homeassistant.components.trace import (
+    ActionTrace,
+    async_store_trace,
+    restore_traces as trace_restore_traces,
 )
+from homeassistant.components.trace.const import CONF_STORED_TRACES
 from homeassistant.core import Context, HomeAssistant
 
 from .const import DOMAIN
@@ -50,12 +51,4 @@ def trace_script(
 
 def restore_traces(hass):
     """Restore saved traces."""
-    restored_traces = hass.data[DATA_RESTORED_TRACES].pop(DOMAIN, {})
-    for traces in restored_traces.values():
-        for json_trace in traces.values():
-            try:
-                trace = ScriptTrace.from_dict(json_trace)
-                async_store_trace(hass, trace, None)
-            # Catch any exception to not blow up if the stored trace is invalid
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Failed to restore trace")
+    trace_restore_traces(hass, ScriptTrace, DOMAIN)

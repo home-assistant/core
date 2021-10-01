@@ -91,6 +91,19 @@ def async_store_trace(hass, trace, stored_traces):
         traces[key][trace.run_id] = trace
 
 
+def restore_traces(hass, cls, domain):
+    """Restore saved traces."""
+    restored_traces = hass.data[DATA_RESTORED_TRACES].pop(domain, {})
+    for traces in restored_traces.values():
+        for json_trace in traces.values():
+            try:
+                trace = cls.from_dict(json_trace)
+                async_store_trace(hass, trace, None)
+            # Catch any exception to not blow up if the stored trace is invalid
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Failed to restore trace")
+
+
 class ActionTrace:
     """Base container for a script or automation trace."""
 
