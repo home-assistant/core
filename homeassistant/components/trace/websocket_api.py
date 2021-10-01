@@ -58,7 +58,7 @@ def async_setup(hass: HomeAssistant) -> None:
 )
 def websocket_trace_get(hass, connection, msg):
     """Get a script or automation trace."""
-    key = (msg["domain"], msg["item_id"])
+    key = f"{msg['domain']}.{msg['item_id']}"
     run_id = msg["run_id"]
 
     try:
@@ -98,7 +98,7 @@ def get_debug_traces(hass, key):
 def websocket_trace_list(hass, connection, msg):
     """Summarize script and automation traces."""
     domain = msg["domain"]
-    key = (domain, msg["item_id"]) if "item_id" in msg else None
+    key = f"{msg['domain']}.{msg['item_id']}" if "item_id" in msg else None
 
     if not key:
         traces = []
@@ -122,7 +122,7 @@ def websocket_trace_list(hass, connection, msg):
 )
 def websocket_trace_contexts(hass, connection, msg):
     """Retrieve contexts we have traces for."""
-    key = (msg["domain"], msg["item_id"]) if "item_id" in msg else None
+    key = f"{msg['domain']}.{msg['item_id']}" if "item_id" in msg else None
 
     if key is not None:
         values = {key: hass.data[DATA_TRACE].get(key, {})}
@@ -151,7 +151,7 @@ def websocket_trace_contexts(hass, connection, msg):
 )
 def websocket_breakpoint_set(hass, connection, msg):
     """Set breakpoint."""
-    key = (msg["domain"], msg["item_id"])
+    key = f"{msg['domain']}.{msg['item_id']}"
     node = msg["node"]
     run_id = msg.get("run_id")
 
@@ -178,7 +178,7 @@ def websocket_breakpoint_set(hass, connection, msg):
 )
 def websocket_breakpoint_clear(hass, connection, msg):
     """Clear breakpoint."""
-    key = (msg["domain"], msg["item_id"])
+    key = f"{msg['domain']}.{msg['item_id']}"
     node = msg["node"]
     run_id = msg.get("run_id")
 
@@ -254,7 +254,7 @@ def websocket_subscribe_breakpoint_events(hass, connection, msg):
 )
 def websocket_debug_continue(hass, connection, msg):
     """Resume execution of halted script or automation."""
-    key = (msg["domain"], msg["item_id"])
+    key = f"{msg['domain']}.{msg['item_id']}"
     run_id = msg["run_id"]
 
     result = debug_continue(hass, key, run_id)
@@ -274,7 +274,7 @@ def websocket_debug_continue(hass, connection, msg):
 )
 def websocket_debug_step(hass, connection, msg):
     """Single step a halted script or automation."""
-    key = (msg["domain"], msg["item_id"])
+    key = f"{msg['domain']}.{msg['item_id']}"
     run_id = msg["run_id"]
 
     result = debug_step(hass, key, run_id)
@@ -294,7 +294,7 @@ def websocket_debug_step(hass, connection, msg):
 )
 def websocket_debug_stop(hass, connection, msg):
     """Stop a halted script or automation."""
-    key = (msg["domain"], msg["item_id"])
+    key = f"{msg['domain']}.{msg['item_id']}"
     run_id = msg["run_id"]
 
     result = debug_stop(hass, key, run_id)

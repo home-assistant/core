@@ -2,11 +2,19 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
+import logging
 from typing import Any
 
 from homeassistant.components.trace import ActionTrace, async_store_trace
-from homeassistant.components.trace.const import CONF_STORED_TRACES
+from homeassistant.components.trace.const import (
+    CONF_STORED_TRACES,
+    DATA_RESTORED_TRACES,
+)
 from homeassistant.core import Context
+
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
@@ -15,16 +23,18 @@ from homeassistant.core import Context
 class AutomationTrace(ActionTrace):
     """Container for automation trace."""
 
+    _domain = DOMAIN
+
     def __init__(
         self,
         item_id: str,
         config: dict[str, Any],
         blueprint_inputs: dict[str, Any],
         context: Context,
+        run_id: None | str = None,
     ) -> None:
         """Container for automation trace."""
-        key = ("automation", item_id)
-        super().__init__(key, config, blueprint_inputs, context)
+        super().__init__(item_id, config, blueprint_inputs, context, run_id)
         self._trigger_description: str | None = None
 
     def set_trigger_description(self, trigger: str) -> None:
@@ -36,6 +46,13 @@ class AutomationTrace(ActionTrace):
         result = super().as_short_dict()
         result["trigger"] = self._trigger_description
         return result
+
+    @classmethod
+    def from_dict(cls, data):
+        """Restore from dict."""
+        automation_trace = super().from_dict(data)
+        automation_trace._trigger_description = data["trigger"]
+        return automation_trace
 
 
 @contextmanager
@@ -55,3 +72,15 @@ def trace_automation(
     finally:
         if automation_id:
             trace.finished()
+
+
+def restore_traces(hass):
+    """Restore saved traces."""
+    restored_traces = hass.data[DATA_RESTORED_TRACES].pop(DOMAIN, {})
+    for traces in restored_traces.values():
+        for json_trace in traces.values():
+            try:
+                trace = AutomationTrace.from_dict(json_trace)
+                async_store_trace(hass, trace, None)
+            except Exception:
+                _LOGGER.exception("Failed to restore trace")
