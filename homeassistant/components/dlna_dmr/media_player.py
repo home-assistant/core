@@ -118,10 +118,6 @@ async def async_setup_entry(
         location=entry.data[CONF_URL],
     )
 
-    entry.async_on_unload(
-        entry.add_update_listener(entity.async_config_update_listener)
-    )
-
     async_add_entities([entity])
 
 
@@ -139,7 +135,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
 
     _device_lock: asyncio.Lock  # Held when connecting or disconnecting the device
     _device: DmrDevice | None = None
-    _remove_ssdp_callbacks: list[Callable]
     check_available: bool = False
 
     # Track BOOTID in SSDP advertisements for device changes
@@ -167,10 +162,19 @@ class DlnaDmrEntity(MediaPlayerEntity):
         self.poll_availability = poll_availability
         self.location = location
         self._device_lock = asyncio.Lock()
-        self._remove_ssdp_callbacks = []
 
     async def async_added_to_hass(self) -> None:
         """Handle addition."""
+        # Update this entity when the associated config entry is modified
+        if self.registry_entry and self.registry_entry.config_entry_id:
+            config_entry = self.hass.config_entries.async_get_entry(
+                self.registry_entry.config_entry_id
+            )
+            assert config_entry is not None
+            self.async_on_remove(
+                config_entry.add_update_listener(self.async_config_update_listener)
+            )
+
         # Try to connect to the last known location, but don't worry if not available
         if not self._device:
             try:
@@ -179,7 +183,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
                 _LOGGER.debug("Couldn't connect immediately: %r", err)
 
         # Get SSDP notifications for only this device
-        self._remove_ssdp_callbacks.append(
+        self.async_on_remove(
             await ssdp.async_register_callback(
                 self.hass, self.async_ssdp_callback, {"USN": self.usn}
             )
@@ -189,7 +193,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         # (device name) which often is not the USN (service within the device)
         # that we're interested in. So also listen for byebye advertisements for
         # the UDN, which is reported in the _udn field of the combined_headers.
-        self._remove_ssdp_callbacks.append(
+        self.async_on_remove(
             await ssdp.async_register_callback(
                 self.hass,
                 self.async_ssdp_callback,
@@ -199,9 +203,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle removal."""
-        for callback in self._remove_ssdp_callbacks:
-            callback()
-        self._remove_ssdp_callbacks.clear()
         await self._device_disconnect()
 
     async def async_ssdp_callback(

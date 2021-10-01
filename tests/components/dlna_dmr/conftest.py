@@ -80,6 +80,9 @@ def config_entry_mock() -> Iterable[MockConfigEntry]:
     )
     yield mock_entry
 
+    # Update listeners should be removed when the entity is destroyed
+    assert not mock_entry.update_listeners
+
 
 @pytest.fixture
 def dmr_device_mock(domain_data_mock: Mock) -> Iterable[Mock]:
