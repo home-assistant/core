@@ -503,6 +503,31 @@ async def test_electrical_measurement_init(
     "cluster_id, unsupported_attributes, entity_ids, missing_entity_ids",
     (
         (
+            homeautomation.ElectricalMeasurement.cluster_id,
+            {"rms_voltage", "rms_current"},
+            {"electrical_measurement"},
+            {
+                "electrical_measurement_rms_voltage",
+                "electrical_measurement_rms_current",
+            },
+        ),
+        (
+            homeautomation.ElectricalMeasurement.cluster_id,
+            {"rms_current"},
+            {"electrical_measurement_rms_voltage", "electrical_measurement"},
+            {"electrical_measurement_rms_current"},
+        ),
+        (
+            homeautomation.ElectricalMeasurement.cluster_id,
+            set(),
+            {
+                "electrical_measurement_rms_voltage",
+                "electrical_measurement",
+                "electrical_measurement_rms_current",
+            },
+            set(),
+        ),
+        (
             smartenergy.Metering.cluster_id,
             {
                 "instantaneous_demand",

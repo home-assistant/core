@@ -9,6 +9,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CO,
     DEVICE_CLASS_CO2,
+    DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
@@ -24,6 +25,7 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_ENERGY,
+    ELECTRIC_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
@@ -238,7 +240,7 @@ class Battery(Sensor):
         return state_attrs
 
 
-@STRICT_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
+@MULTI_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
 class ElectricalMeasurement(Sensor):
     """Active power measurement."""
 
@@ -280,6 +282,36 @@ class ElectricalMeasurement(Sensor):
         if not self.available:
             return
         await super().async_update()
+
+
+@MULTI_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
+class ElectricalMeasurementRMSCurrent(ElectricalMeasurement, id_suffix="rms_current"):
+    """RMS current measurement."""
+
+    SENSOR_ATTR = "rms_current"
+    _device_class = DEVICE_CLASS_CURRENT
+    _unit = ELECTRIC_CURRENT_AMPERE
+    _div_mul_prefix = "ac_current"
+
+    @property
+    def should_poll(self) -> bool:
+        """Poll indirectly by ElectricalMeasurementSensor."""
+        return False
+
+
+@MULTI_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
+class ElectricalMeasurementRMSVoltage(ElectricalMeasurement, id_suffix="rms_voltage"):
+    """RMS Voltage measurement."""
+
+    SENSOR_ATTR = "rms_voltage"
+    _device_class = DEVICE_CLASS_CURRENT
+    _unit = ELECTRIC_CURRENT_AMPERE
+    _div_mul_prefix = "ac_voltage"
+
+    @property
+    def should_poll(self) -> bool:
+        """Poll indirectly by ElectricalMeasurementSensor."""
+        return False
 
 
 @STRICT_MATCH(generic_ids=CHANNEL_ST_HUMIDITY_CLUSTER)
