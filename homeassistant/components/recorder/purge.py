@@ -38,7 +38,11 @@ def purge_old_data(
         event_ids = _select_event_ids_to_purge(session, purge_before)
         state_ids = _select_state_ids_to_purge(session, purge_before, event_ids)
         if state_ids:
+            # Purge states from database
             _purge_state_ids(session, state_ids)
+            # Evict eny entries in the old_states cache referring to a purged state
+            _evict_purged_state_from_old_states_cache(instance, state_ids)
+
         if event_ids:
             _purge_event_ids(session, event_ids)
             # If states or events purging isn't processing the purge_before yet,
@@ -102,6 +106,22 @@ def _purge_state_ids(session: Session, state_ids: list[int]) -> None:
         .delete(synchronize_session=False)
     )
     _LOGGER.debug("Deleted %s states", deleted_rows)
+
+
+def _evict_purged_state_from_old_states_cache(
+    instance: Recorder, purged_state_ids: list[int]
+) -> None:
+    """Evict purged states from the old states cache."""
+    # Make a map from old_state_id to entity_id
+    old_state_reversed = {}
+    for entity_id, old_state in instance._old_states.items():
+        if old_state.state_id:
+            old_state_reversed[old_state.state_id] = entity_id
+
+    # Evict any purged state from the old states cache
+    old_state_ids = set(old_state_reversed.keys())
+    for purged_state_id in old_state_ids.intersection(purged_state_ids):
+        instance._old_states.pop(old_state_reversed[purged_state_id])
 
 
 def _purge_event_ids(session: Session, event_ids: list[int]) -> None:
