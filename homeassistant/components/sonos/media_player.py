@@ -6,8 +6,8 @@ import logging
 from typing import Any
 import urllib.parse
 
-from pysonos import alarms
-from pysonos.core import (
+from soco import alarms
+from soco.core import (
     MUSIC_SRC_LINE_IN,
     MUSIC_SRC_RADIO,
     PLAY_MODE_BY_MEANING,
@@ -120,10 +120,13 @@ ATTR_INCLUDE_LINKED_ZONES = "include_linked_zones"
 ATTR_MASTER = "master"
 ATTR_WITH_GROUP = "with_group"
 ATTR_BUTTONS_ENABLED = "buttons_enabled"
+ATTR_CROSSFADE = "crossfade"
 ATTR_NIGHT_SOUND = "night_sound"
 ATTR_SPEECH_ENHANCE = "speech_enhance"
 ATTR_QUEUE_POSITION = "queue_position"
 ATTR_STATUS_LIGHT = "status_light"
+ATTR_EQ_BASS = "bass_level"
+ATTR_EQ_TREBLE = "treble_level"
 
 
 async def async_setup_entry(
@@ -231,9 +234,16 @@ async def async_setup_entry(
         SERVICE_SET_OPTION,
         {
             vol.Optional(ATTR_BUTTONS_ENABLED): cv.boolean,
+            vol.Optional(ATTR_CROSSFADE): cv.boolean,
             vol.Optional(ATTR_NIGHT_SOUND): cv.boolean,
             vol.Optional(ATTR_SPEECH_ENHANCE): cv.boolean,
             vol.Optional(ATTR_STATUS_LIGHT): cv.boolean,
+            vol.Optional(ATTR_EQ_BASS): vol.All(
+                vol.Coerce(int), vol.Range(min=-10, max=10)
+            ),
+            vol.Optional(ATTR_EQ_TREBLE): vol.All(
+                vol.Coerce(int), vol.Range(min=-10, max=10)
+            ),
         },
         "set_option",
     )
@@ -609,13 +619,19 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     def set_option(
         self,
         buttons_enabled: bool | None = None,
+        crossfade: bool | None = None,
         night_sound: bool | None = None,
         speech_enhance: bool | None = None,
         status_light: bool | None = None,
+        bass_level: int | None = None,
+        treble_level: int | None = None,
     ) -> None:
         """Modify playback options."""
         if buttons_enabled is not None:
             self.soco.buttons_enabled = buttons_enabled
+
+        if crossfade is not None:
+            self.soco.cross_fade = crossfade
 
         if night_sound is not None and self.speaker.night_mode is not None:
             self.soco.night_mode = night_sound
@@ -625,6 +641,12 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         if status_light is not None:
             self.soco.status_light = status_light
+
+        if bass_level is not None:
+            self.soco.bass = bass_level
+
+        if treble_level is not None:
+            self.soco.treble = treble_level
 
     @soco_error()
     def play_queue(self, queue_position: int = 0) -> None:
@@ -642,6 +664,12 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         attributes: dict[str, Any] = {
             ATTR_SONOS_GROUP: self.speaker.sonos_group_entities
         }
+
+        if self.speaker.bass_level is not None:
+            attributes[ATTR_EQ_BASS] = self.speaker.bass_level
+
+        if self.speaker.treble_level is not None:
+            attributes[ATTR_EQ_TREBLE] = self.speaker.treble_level
 
         if self.speaker.night_mode is not None:
             attributes[ATTR_NIGHT_SOUND] = self.speaker.night_mode

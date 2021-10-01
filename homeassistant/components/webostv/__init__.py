@@ -112,7 +112,7 @@ def convert_client_keys(config_file):
         return
 
     # Try to parse the file as being JSON
-    with open(config_file) as json_file:
+    with open(config_file, encoding="utf8") as json_file:
         try:
             json_conf = json.load(json_file)
         except (json.JSONDecodeError, UnicodeDecodeError):

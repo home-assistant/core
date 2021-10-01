@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Apparaat is al geconfigureerd"
+            "already_configured": "Apparaat is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie was succesvol",
+            "reconfigure_successful": "Herconfiguratie was succesvol"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
@@ -28,6 +30,14 @@
                 },
                 "description": "Wil je {name} ({host}) instellen?",
                 "title": "Synology DSM"
+            },
+            "reauth": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                },
+                "description": "Reden: {details}",
+                "title": "Synology DSM Verifieer de integratie opnieuw"
             },
             "user": {
                 "data": {

@@ -35,12 +35,33 @@
     },
     "device_automation": {
         "trigger_subtype": {
+            "button_1": "Els\u0151 gomb",
+            "button_2": "M\u00e1sodik gomb",
+            "button_3": "Harmadik gomb",
+            "button_4": "Negyedik gomb",
+            "dim_down": "S\u00f6t\u00e9t\u00edt",
+            "dim_up": "Vil\u00e1gos\u00edt",
+            "double_buttons_1_3": "Els\u0151 \u00e9s harmadik gomb",
+            "double_buttons_2_4": "M\u00e1sodik \u00e9s negyedik gomb",
             "turn_off": "Kikapcsol\u00e1s",
             "turn_on": "Bekapcsol\u00e1s"
         },
         "trigger_type": {
+            "remote_button_long_release": "A \"{subtype}\" gomb hossz\u00fa megnyom\u00e1s ut\u00e1n elengedve",
             "remote_button_short_press": "\"{subtype}\" gomb lenyomva",
-            "remote_button_short_release": "\"{subtype}\" gomb elengedve"
+            "remote_button_short_release": "\"{subtype}\" gomb elengedve",
+            "remote_double_button_long_press": "Mindk\u00e9t \"{subtype}\" hossz\u00fa megnyom\u00e1st k\u00f6vet\u0151en megjelent",
+            "remote_double_button_short_press": "Mindk\u00e9t \"{subtype}\" megjelent"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_hue_groups": "Hue csoportok enged\u00e9lyez\u00e9se",
+                    "allow_unreachable": "Hagyja, hogy az el\u00e9rhetetlen izz\u00f3k helyesen jelents\u00e9k \u00e1llapotukat"
+                }
+            }
         }
     }
 }

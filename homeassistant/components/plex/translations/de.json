@@ -21,7 +21,7 @@
                 "data": {
                     "host": "Host",
                     "port": "Port",
-                    "ssl": "SSL verwenden",
+                    "ssl": "Verwendet ein SSL-Zertifikat",
                     "token": "Token (optional)",
                     "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
                 },

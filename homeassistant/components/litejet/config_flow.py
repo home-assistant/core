@@ -10,11 +10,42 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PORT
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN
+from .const import CONF_DEFAULT_TRANSITION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class LiteJetOptionsFlow(config_entries.OptionsFlow):
+    """Handle LiteJet options."""
+
+    def __init__(self, config_entry):
+        """Initialize LiteJet options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Manage LiteJet options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_DEFAULT_TRANSITION,
+                        default=self.config_entry.options.get(
+                            CONF_DEFAULT_TRANSITION, 0
+                        ),
+                    ): cv.positive_int,
+                }
+            ),
+        )
 
 
 class LiteJetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -54,3 +85,9 @@ class LiteJetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_data):
         """Import litejet config from configuration.yaml."""
         return self.async_create_entry(title=import_data[CONF_PORT], data=import_data)
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return LiteJetOptionsFlow(config_entry)

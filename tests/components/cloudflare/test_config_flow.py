@@ -55,7 +55,7 @@ async def test_user_form(hass, cfupdate_flow):
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "records"
-    assert result["errors"] == {}
+    assert result["errors"] is None
 
     with _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(

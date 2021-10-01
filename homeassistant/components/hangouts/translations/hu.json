@@ -19,6 +19,7 @@
             },
             "user": {
                 "data": {
+                    "authorization_code": "Enged\u00e9lyez\u00e9si k\u00f3d (k\u00e9zi hiteles\u00edt\u00e9shez sz\u00fcks\u00e9ges)",
                     "email": "E-mail",
                     "password": "Jelsz\u00f3"
                 },

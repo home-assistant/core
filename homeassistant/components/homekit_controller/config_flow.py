@@ -3,6 +3,7 @@ import logging
 import re
 
 import aiohomekit
+from aiohomekit.exceptions import AuthenticationError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -270,7 +271,32 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # invalid. Remove it automatically.
         existing = find_existing_host(self.hass, hkid)
         if not paired and existing:
-            await self.hass.config_entries.async_remove(existing.entry_id)
+            if self.controller is None:
+                await self._async_setup_controller()
+
+            pairing = self.controller.load_pairing(
+                existing.data["AccessoryPairingID"], dict(existing.data)
+            )
+            try:
+                await pairing.list_accessories_and_characteristics()
+            except AuthenticationError:
+                _LOGGER.debug(
+                    "%s (%s - %s) is unpaired. Removing invalid pairing for this device",
+                    name,
+                    model,
+                    hkid,
+                )
+                await self.hass.config_entries.async_remove(existing.entry_id)
+            else:
+                _LOGGER.debug(
+                    "%s (%s - %s) claims to be unpaired but isn't. "
+                    "It's implementation of HomeKit is defective "
+                    "or a zeroconf relay is broadcasting stale data",
+                    name,
+                    model,
+                    hkid,
+                )
+                return self.async_abort(reason="already_paired")
 
         # Set unique-id and error out if it's already configured
         self._abort_if_unique_id_configured(updates=updated_ip_port)

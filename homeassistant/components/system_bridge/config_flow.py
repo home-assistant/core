@@ -8,8 +8,6 @@ import async_timeout
 from systembridge import Bridge
 from systembridge.client import BridgeClient
 from systembridge.exceptions import BridgeAuthenticationException
-from systembridge.objects.os import Os
-from systembridge.objects.system import System
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -17,7 +15,7 @@ from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import BRIDGE_CONNECTION_ERRORS, DOMAIN
 
@@ -47,10 +45,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     hostname = data[CONF_HOST]
     try:
         async with async_timeout.timeout(30):
-            bridge_os: Os = await bridge.async_get_os()
-            if bridge_os.hostname is not None:
-                hostname = bridge_os.hostname
-            bridge_system: System = await bridge.async_get_system()
+            await bridge.async_get_information()
+            if (
+                bridge.information is not None
+                and bridge.information.host is not None
+                and bridge.information.uuid is not None
+            ):
+                hostname = bridge.information.host
+                uuid = bridge.information.uuid
     except BridgeAuthenticationException as exception:
         _LOGGER.info(exception)
         raise InvalidAuth from exception
@@ -58,7 +60,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         _LOGGER.info(exception)
         raise CannotConnect from exception
 
-    return {"hostname": hostname, "uuid": bridge_system.uuid.os}
+    return {"hostname": hostname, "uuid": uuid}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -167,7 +169,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_authenticate()
 
-    async def async_step_reauth(self, entry_data: ConfigType) -> FlowResult:
+    async def async_step_reauth(self, entry_data: dict[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         self._name = entry_data[CONF_HOST]
         self._input = {

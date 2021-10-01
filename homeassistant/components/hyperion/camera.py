@@ -27,14 +27,13 @@ from homeassistant.components.camera import (
     async_get_still_stream,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import HomeAssistantType
 
 from . import (
     get_hyperion_device_id,
@@ -57,7 +56,7 @@ IMAGE_STREAM_JPG_SENTINEL = "data:image/jpg;base64,"
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
@@ -211,7 +210,9 @@ class HyperionCamera(Camera):
         finally:
             await self._stop_image_streaming_for_client()
 
-    async def async_camera_image(self) -> bytes | None:
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return single camera image bytes."""
         async with self._image_streaming() as is_streaming:
             if is_streaming:

@@ -389,7 +389,9 @@ async def test_ssdp_legacy_not_supported(hass: HomeAssistant, remote: Mock):
 
 
 async def test_ssdp_websocket_success_populates_mac_address(
-    hass: HomeAssistant, remotews: Mock
+    hass: HomeAssistant,
+    remote: Mock,
+    remotews: Mock,
 ):
     """Test starting a flow from ssdp for a supported device populates the mac."""
     result = await hass.config_entries.flow.async_init(
@@ -441,7 +443,9 @@ async def test_ssdp_model_not_supported(hass: HomeAssistant, remote: Mock):
     assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
-async def test_ssdp_not_successful(hass: HomeAssistant, remote: Mock):
+async def test_ssdp_not_successful(
+    hass: HomeAssistant, remote: Mock, no_mac_address: Mock
+):
     """Test starting a flow from discovery but no device found."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -469,7 +473,9 @@ async def test_ssdp_not_successful(hass: HomeAssistant, remote: Mock):
         assert result["reason"] == RESULT_CANNOT_CONNECT
 
 
-async def test_ssdp_not_successful_2(hass: HomeAssistant, remote: Mock):
+async def test_ssdp_not_successful_2(
+    hass: HomeAssistant, remote: Mock, no_mac_address: Mock
+):
     """Test starting a flow from discovery but no device found."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -564,7 +570,9 @@ async def test_import_legacy(hass: HomeAssistant, remote: Mock):
     assert entries[0].data[CONF_PORT] == LEGACY_PORT
 
 
-async def test_import_legacy_without_name(hass: HomeAssistant, remote: Mock):
+async def test_import_legacy_without_name(
+    hass: HomeAssistant, remote: Mock, no_mac_address: Mock
+):
     """Test importing from yaml without a name."""
     with patch(
         "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
@@ -651,7 +659,7 @@ async def test_import_unknown_host(hass: HomeAssistant, remotews: Mock):
     assert result["reason"] == RESULT_UNKNOWN_HOST
 
 
-async def test_dhcp(hass: HomeAssistant, remotews: Mock):
+async def test_dhcp(hass: HomeAssistant, remote: Mock, remotews: Mock):
     """Test starting a flow from dhcp."""
     # confirm to add the entry
     result = await hass.config_entries.flow.async_init(
@@ -677,7 +685,7 @@ async def test_dhcp(hass: HomeAssistant, remotews: Mock):
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-async def test_zeroconf(hass: HomeAssistant, remotews: Mock):
+async def test_zeroconf(hass: HomeAssistant, remote: Mock, remotews: Mock):
     """Test starting a flow from zeroconf."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -715,7 +723,7 @@ async def test_zeroconf_ignores_soundbar(hass: HomeAssistant, remotews_soundbar:
 
 
 async def test_zeroconf_no_device_info(
-    hass: HomeAssistant, remotews_no_device_info: Mock
+    hass: HomeAssistant, remote: Mock, remotews_no_device_info: Mock
 ):
     """Test starting a flow from zeroconf where device_info returns None."""
     result = await hass.config_entries.flow.async_init(
@@ -795,6 +803,55 @@ async def test_autodetect_websocket(hass: HomeAssistant, remote: Mock, remotews:
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+
+
+async def test_websocket_no_mac(hass: HomeAssistant, remote: Mock, remotews: Mock):
+    """Test for send key with autodetection of protocol."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote",
+        side_effect=OSError("Boom"),
+    ), patch(
+        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
+        return_value="fake_host",
+    ), patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWS"
+    ) as remotews, patch(
+        "getmac.get_mac_address", return_value="gg:hh:ii:ll:mm:nn"
+    ):
+        enter = Mock()
+        type(enter).token = PropertyMock(return_value="123456789")
+        remote = Mock()
+        remote.__enter__ = Mock(return_value=enter)
+        remote.__exit__ = Mock(return_value=False)
+        remote.rest_device_info.return_value = {
+            "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
+            "device": {
+                "modelName": "82GXARRS",
+                "networkType": "lan",
+                "udn": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
+                "name": "[TV] Living Room",
+                "type": "Samsung SmartTV",
+            },
+        }
+        remotews.return_value = remote
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
+        )
+        assert result["type"] == "create_entry"
+        assert result["data"][CONF_METHOD] == "websocket"
+        assert result["data"][CONF_TOKEN] == "123456789"
+        assert result["data"][CONF_MAC] == "gg:hh:ii:ll:mm:nn"
+        assert remotews.call_count == 2
+        assert remotews.call_args_list == [
+            call(**AUTODETECT_WEBSOCKET_SSL),
+            call(**DEVICEINFO_WEBSOCKET_SSL),
+        ]
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].data[CONF_MAC] == "gg:hh:ii:ll:mm:nn"
 
 
 async def test_autodetect_auth_missing(hass: HomeAssistant, remote: Mock):

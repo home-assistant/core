@@ -1,6 +1,7 @@
 """Component to interface with locks that can be controlled remotely."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import functools as ft
 import logging
@@ -28,7 +29,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA_BASE,
     make_entity_service_schema,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
 
@@ -84,9 +85,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
+@dataclass
+class LockEntityDescription(EntityDescription):
+    """A class that describes lock entities."""
+
+
 class LockEntity(Entity):
     """Base class for lock entities."""
 
+    entity_description: LockEntityDescription
     _attr_changed_by: str | None = None
     _attr_code_format: str | None = None
     _attr_is_locked: bool | None = None

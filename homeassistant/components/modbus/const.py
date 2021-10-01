@@ -1,5 +1,4 @@
 """Constants used in modbus integration."""
-
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate.const import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
@@ -29,8 +28,10 @@ CONF_FANS = "fans"
 CONF_HUB = "hub"
 CONF_INPUTS = "inputs"
 CONF_INPUT_TYPE = "input_type"
+CONF_LAZY_ERROR = "lazy_error_count"
 CONF_MAX_TEMP = "max_temp"
 CONF_MIN_TEMP = "min_temp"
+CONF_MSG_WAIT = "message_wait_milliseconds"
 CONF_PARITY = "parity"
 CONF_REGISTER = "register"
 CONF_REGISTER_TYPE = "register_type"
@@ -39,9 +40,7 @@ CONF_RETRIES = "retries"
 CONF_RETRY_ON_EMPTY = "retry_on_empty"
 CONF_REVERSE_ORDER = "reverse_order"
 CONF_PRECISION = "precision"
-CONF_RTUOVERTCP = "rtuovertcp"
 CONF_SCALE = "scale"
-CONF_SERIAL = "serial"
 CONF_STATE_CLOSED = "state_closed"
 CONF_STATE_CLOSING = "state_closing"
 CONF_STATE_OFF = "state_off"
@@ -58,12 +57,15 @@ CONF_SWAP_NONE = "none"
 CONF_SWAP_WORD = "word"
 CONF_SWAP_WORD_BYTE = "word_byte"
 CONF_TARGET_TEMP = "target_temp_register"
-CONF_TCP = "tcp"
-CONF_UDP = "udp"
 CONF_VERIFY = "verify"
 CONF_VERIFY_REGISTER = "verify_register"
 CONF_VERIFY_STATE = "verify_state"
 CONF_WRITE_TYPE = "write_type"
+
+RTUOVERTCP = "rtuovertcp"
+SERIAL = "serial"
+TCP = "tcp"
+UDP = "udp"
 
 # service call attributes
 ATTR_ADDRESS = "address"
@@ -104,26 +106,22 @@ CALL_TYPE_X_REGISTER_HOLDINGS = "holdings"
 # service calls
 SERVICE_WRITE_COIL = "write_coil"
 SERVICE_WRITE_REGISTER = "write_register"
+SERVICE_STOP = "stop"
+SERVICE_RESTART = "restart"
+
+# dispatcher signals
+SIGNAL_STOP_ENTITY = "modbus.stop"
+SIGNAL_START_ENTITY = "modbus.start"
 
 # integration names
 DEFAULT_HUB = "modbus_hub"
 DEFAULT_SCAN_INTERVAL = 15  # seconds
 DEFAULT_SLAVE = 1
 DEFAULT_STRUCTURE_PREFIX = ">f"
-DEFAULT_STRUCT_FORMAT = {
-    DATA_TYPE_INT16: "h",
-    DATA_TYPE_INT32: "i",
-    DATA_TYPE_INT64: "q",
-    DATA_TYPE_UINT16: "H",
-    DATA_TYPE_UINT32: "I",
-    DATA_TYPE_UINT64: "Q",
-    DATA_TYPE_FLOAT16: "e",
-    DATA_TYPE_FLOAT32: "f",
-    DATA_TYPE_FLOAT64: "d",
-    DATA_TYPE_STRING: "s",
-}
 DEFAULT_TEMP_UNIT = "C"
 MODBUS_DOMAIN = "modbus"
+
+ACTIVE_SCAN_INTERVAL = 2  # limit to force an extra update
 
 PLATFORMS = (
     (BINARY_SENSOR_DOMAIN, CONF_BINARY_SENSORS),

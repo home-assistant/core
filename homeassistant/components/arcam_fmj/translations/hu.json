@@ -5,14 +5,27 @@
             "already_in_progress": "A konfigur\u00e1ci\u00f3 m\u00e1r folyamatban van.",
             "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         },
+        "error": {
+            "one": "\u00dcres",
+            "other": "\u00dcres"
+        },
         "flow_title": "{host}",
         "step": {
+            "confirm": {
+                "description": "Hozz\u00e1 szeretn\u00e9 adni az Arcam FMJ \"{host}\" eszk\u00f6zt a HomeAssistanthoz?"
+            },
             "user": {
                 "data": {
                     "host": "Hoszt",
                     "port": "Port"
-                }
+                },
+                "description": "K\u00e9rj\u00fck, adja meg az eszk\u00f6z gazdag\u00e9pnev\u00e9t vagy IP-c\u00edm\u00e9t."
             }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "{entity_name} bekapcsol\u00e1s\u00e1t k\u00e9rt\u00e9k"
         }
     }
 }

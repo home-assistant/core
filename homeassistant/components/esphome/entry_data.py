@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 from aioesphomeapi import (
     COMPONENT_TYPE_TO_INFO,
@@ -19,6 +20,7 @@ from aioesphomeapi import (
     FanInfo,
     LightInfo,
     NumberInfo,
+    SelectInfo,
     SensorInfo,
     SwitchInfo,
     TextSensorInfo,
@@ -41,6 +43,7 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], str] = {
     FanInfo: "fan",
     LightInfo: "light",
     NumberInfo: "number",
+    SelectInfo: "select",
     SensorInfo: "sensor",
     SwitchInfo: "switch",
     TextSensorInfo: "sensor",

@@ -1,121 +1,126 @@
 """A sensor for incoming calls using a USB modem that supports caller ID."""
-import logging
+from __future__ import annotations
 
-from basicmodem.basicmodem import BasicModem as bm
+from phone_modem import DEFAULT_PORT, PhoneModem
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.typing import DiscoveryInfoType
 
-_LOGGER = logging.getLogger(__name__)
-DEFAULT_NAME = "Modem CallerID"
-ICON = "mdi:phone-classic"
-DEFAULT_DEVICE = "/dev/ttyACM0"
+from .const import CID, DATA_KEY_API, DEFAULT_NAME, DOMAIN, ICON, SERVICE_REJECT_CALL
 
-STATE_RING = "ring"
-STATE_CALLERID = "callerid"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
-    }
+# Deprecated in Home Assistant 2021.10
+PLATFORM_SCHEMA = cv.deprecated(
+    vol.All(
+        PLATFORM_SCHEMA.extend(
+            {
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                vol.Optional(CONF_DEVICE, default=DEFAULT_PORT): cv.string,
+            }
+        )
+    )
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up modem caller ID sensor platform."""
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigEntry,
+    async_add_entities: entity_platform.AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the Modem Caller ID component."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
 
-    name = config.get(CONF_NAME)
-    port = config.get(CONF_DEVICE)
 
-    modem = bm(port)
-    if modem.state == modem.STATE_FAILED:
-        _LOGGER.error("Unable to initialize modem")
-        return
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: entity_platform.AddEntitiesCallback,
+) -> None:
+    """Set up the Modem Caller ID sensor."""
+    api = hass.data[DOMAIN][entry.entry_id][DATA_KEY_API]
+    async_add_entities(
+        [
+            ModemCalleridSensor(
+                api,
+                entry.title,
+                entry.data[CONF_DEVICE],
+                entry.entry_id,
+            )
+        ]
+    )
 
-    add_entities([ModemCalleridSensor(hass, name, port, modem)])
+    async def _async_on_hass_stop(self) -> None:
+        """HA is shutting down, close modem port."""
+        if hass.data[DOMAIN][entry.entry_id][DATA_KEY_API]:
+            await hass.data[DOMAIN][entry.entry_id][DATA_KEY_API].close()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_on_hass_stop)
+    )
+
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(SERVICE_REJECT_CALL, {}, "async_reject_call")
 
 
 class ModemCalleridSensor(SensorEntity):
     """Implementation of USB modem caller ID sensor."""
 
-    def __init__(self, hass, name, port, modem):
+    _attr_icon = ICON
+    _attr_should_poll = False
+
+    def __init__(
+        self, api: PhoneModem, name: str, device: str, server_unique_id: str
+    ) -> None:
         """Initialize the sensor."""
-        self._attributes = {"cid_time": 0, "cid_number": "", "cid_name": ""}
-        self._name = name
-        self.port = port
-        self.modem = modem
-        self._state = STATE_IDLE
-        modem.registercallback(self._incomingcallcallback)
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self._stop_modem)
+        self.device = device
+        self.api = api
+        self._attr_name = name
+        self._attr_unique_id = server_unique_id
+        self._attr_native_value = STATE_IDLE
+        self._attr_extra_state_attributes = {
+            CID.CID_TIME: 0,
+            CID.CID_NUMBER: "",
+            CID.CID_NAME: "",
+        }
 
-    def set_state(self, state):
-        """Set the state."""
-        self._state = state
+    async def async_added_to_hass(self) -> None:
+        """Call when the modem sensor is added to Home Assistant."""
+        self.api.registercallback(self._async_incoming_call)
+        await super().async_added_to_hass()
 
-    def set_attributes(self, attributes):
-        """Set the state attributes."""
-        self._attributes = attributes
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def icon(self):
-        """Return icon."""
-        return ICON
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return self._attributes
-
-    def _stop_modem(self, event):
-        """HA is shutting down, close modem port."""
-        if self.modem:
-            self.modem.close()
-            self.modem = None
-
-    def _incomingcallcallback(self, newstate):
+    @callback
+    def _async_incoming_call(self, new_state) -> None:
         """Handle new states."""
-        if newstate == self.modem.STATE_RING:
-            if self.state == self.modem.STATE_IDLE:
-                att = {
-                    "cid_time": self.modem.get_cidtime,
-                    "cid_number": "",
-                    "cid_name": "",
+        if new_state == PhoneModem.STATE_RING:
+            if self.native_value == PhoneModem.STATE_IDLE:
+                self._attr_extra_state_attributes = {
+                    CID.CID_NUMBER: "",
+                    CID.CID_NAME: "",
                 }
-                self.set_attributes(att)
-            self._state = STATE_RING
-            self.schedule_update_ha_state()
-        elif newstate == self.modem.STATE_CALLERID:
-            att = {
-                "cid_time": self.modem.get_cidtime,
-                "cid_number": self.modem.get_cidnumber,
-                "cid_name": self.modem.get_cidname,
+        elif new_state == PhoneModem.STATE_CALLERID:
+            self._attr_extra_state_attributes = {
+                CID.CID_NUMBER: self.api.cid_number,
+                CID.CID_NAME: self.api.cid_name,
             }
-            self.set_attributes(att)
-            self._state = STATE_CALLERID
-            self.schedule_update_ha_state()
-        elif newstate == self.modem.STATE_IDLE:
-            self._state = STATE_IDLE
-            self.schedule_update_ha_state()
+        self._attr_extra_state_attributes[CID.CID_TIME] = self.api.cid_time
+        self._attr_native_value = self.api.state
+        self.async_write_ha_state()
+
+    async def async_reject_call(self) -> None:
+        """Reject Incoming Call."""
+        await self.api.reject_call(self.device)

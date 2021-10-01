@@ -446,7 +446,11 @@ async def test_hue_events(hass, mock_bridge):
     assert len(hass.states.async_all()) == 7
     assert len(events) == 0
 
+    mock_bridge.api.sensors["7"].last_event = {"type": "button"}
+    mock_bridge.api.sensors["8"].last_event = {"type": "button"}
+
     new_sensor_response = dict(SENSOR_RESPONSE)
+    new_sensor_response["7"] = dict(new_sensor_response["7"])
     new_sensor_response["7"]["state"] = {
         "buttonevent": 18,
         "lastupdated": "2019-12-28T22:58:03",
@@ -470,6 +474,7 @@ async def test_hue_events(hass, mock_bridge):
     }
 
     new_sensor_response = dict(new_sensor_response)
+    new_sensor_response["8"] = dict(new_sensor_response["8"])
     new_sensor_response["8"]["state"] = {
         "buttonevent": 3002,
         "lastupdated": "2019-12-28T22:58:03",
@@ -494,6 +499,7 @@ async def test_hue_events(hass, mock_bridge):
 
     # Fire old event, it should be ignored
     new_sensor_response = dict(new_sensor_response)
+    new_sensor_response["8"] = dict(new_sensor_response["8"])
     new_sensor_response["8"]["state"] = {
         "buttonevent": 18,
         "lastupdated": "2019-12-28T22:58:02",

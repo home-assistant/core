@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine, Sequence
+from collections.abc import Callable, Coroutine, Sequence
 from datetime import timedelta
 import hashlib
 from types import ModuleType
-from typing import Any, Callable, Final, final
+from typing import Any, Final, final
 
 import attr
 import voluptuous as vol
@@ -898,7 +898,7 @@ async def async_load_config(
 
 def update_config(path: str, dev_id: str, device: Device) -> None:
     """Add device to YAML configuration file."""
-    with open(path, "a") as out:
+    with open(path, "a", encoding="utf8") as out:
         device_config = {
             device.dev_id: {
                 ATTR_NAME: device.name,

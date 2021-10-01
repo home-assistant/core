@@ -7,6 +7,7 @@ import logging
 from aiomusiccast import MusicCastConnectionException
 from aiomusiccast.musiccast_device import MusicCastData, MusicCastDevice
 
+from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -19,7 +20,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import BRAND, DOMAIN
+from .const import BRAND, CONF_SERIAL, CONF_UPNP_DESC, DOMAIN
 
 PLATFORMS = ["media_player"]
 
@@ -27,10 +28,42 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=60)
 
 
+async def get_upnp_desc(hass: HomeAssistant, host: str):
+    """Get the upnp description URL for a given host, using the SSPD scanner."""
+    ssdp_entries = await ssdp.async_get_discovery_info_by_st(hass, "upnp:rootdevice")
+    matches = [w for w in ssdp_entries if w.get("_host", "") == host]
+    upnp_desc = None
+    for match in matches:
+        if match.get(ssdp.ATTR_SSDP_LOCATION):
+            upnp_desc = match[ssdp.ATTR_SSDP_LOCATION]
+            break
+
+    if not upnp_desc:
+        _LOGGER.warning(
+            "The upnp_description was not found automatically, setting a default one"
+        )
+        upnp_desc = f"http://{host}:49154/MediaRenderer/desc.xml"
+    return upnp_desc
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up MusicCast from a config entry."""
 
-    client = MusicCastDevice(entry.data[CONF_HOST], async_get_clientsession(hass))
+    if entry.data.get(CONF_UPNP_DESC) is None:
+        hass.config_entries.async_update_entry(
+            entry,
+            data={
+                CONF_HOST: entry.data[CONF_HOST],
+                CONF_SERIAL: entry.data["serial"],
+                CONF_UPNP_DESC: await get_upnp_desc(hass, entry.data[CONF_HOST]),
+            },
+        )
+
+    client = MusicCastDevice(
+        entry.data[CONF_HOST],
+        async_get_clientsession(hass),
+        entry.data[CONF_UPNP_DESC],
+    )
     coordinator = MusicCastDataUpdateCoordinator(hass, client=client)
     await coordinator.async_config_entry_first_refresh()
 

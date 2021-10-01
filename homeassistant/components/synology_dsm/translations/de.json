@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
+            "reconfigure_successful": "Die Neukonfiguration war erfolgreich"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
@@ -24,10 +26,25 @@
                     "port": "Port",
                     "ssl": "Verwendet ein SSL-Zertifikat",
                     "username": "Benutzername",
-                    "verify_ssl": "SSL Zertifikat verifizieren"
+                    "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
                 },
                 "description": "M\u00f6chtest du {name} ({host}) einrichten?",
                 "title": "Synology DSM"
+            },
+            "reauth": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "description": "Grund: {details}",
+                "title": "Synology DSM Integration erneut authentifizieren"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "title": "Synology DSM Integration erneut authentifizieren"
             },
             "user": {
                 "data": {
@@ -36,7 +53,7 @@
                     "port": "Port",
                     "ssl": "Verwendet ein SSL-Zertifikat",
                     "username": "Benutzername",
-                    "verify_ssl": "SSL Zertifikat verifizieren"
+                    "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
                 },
                 "title": "Synology DSM"
             }

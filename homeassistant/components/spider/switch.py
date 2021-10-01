@@ -44,16 +44,6 @@ class SpiderPowerPlug(SwitchEntity):
         return self.power_plug.name
 
     @property
-    def current_power_w(self):
-        """Return the current power usage in W."""
-        return round(self.power_plug.current_energy_consumption)
-
-    @property
-    def today_energy_kwh(self):
-        """Return the current power usage in Kwh."""
-        return round(self.power_plug.today_energy_consumption / 1000, 2)
-
-    @property
     def is_on(self):
         """Return true if switch is on. Standby is on."""
         return self.power_plug.is_on
@@ -73,4 +63,4 @@ class SpiderPowerPlug(SwitchEntity):
 
     def update(self):
         """Get the latest data."""
-        self.power_plug = self.api.get_power_plug(self.unique_id)
+        self.power_plug = self.api.get_power_plug(self.power_plug.id)

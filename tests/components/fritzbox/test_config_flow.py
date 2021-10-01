@@ -21,14 +21,14 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from . import MOCK_CONFIG
+from .const import CONF_FAKE_NAME, MOCK_CONFIG
 
 from tests.common import MockConfigEntry
 
 MOCK_USER_DATA = MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]
 MOCK_SSDP_DATA = {
     ATTR_SSDP_LOCATION: "https://fake_host:12345/test",
-    ATTR_UPNP_FRIENDLY_NAME: "fake_name",
+    ATTR_UPNP_FRIENDLY_NAME: CONF_FAKE_NAME,
     ATTR_UPNP_UDN: "uuid:only-a-test",
 }
 
@@ -192,7 +192,7 @@ async def test_ssdp(hass: HomeAssistant, fritz: Mock):
         user_input={CONF_PASSWORD: "fake_pass", CONF_USERNAME: "fake_user"},
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "fake_name"
+    assert result["title"] == CONF_FAKE_NAME
     assert result["data"][CONF_HOST] == "fake_host"
     assert result["data"][CONF_PASSWORD] == "fake_pass"
     assert result["data"][CONF_USERNAME] == "fake_user"

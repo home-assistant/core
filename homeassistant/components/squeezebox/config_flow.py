@@ -5,8 +5,9 @@ import logging
 from pysqueezebox import Server, async_discover
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
+from homeassistant import config_entries, data_entry_flow
+from homeassistant.components.dhcp import MAC_ADDRESS
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -15,6 +16,8 @@ from homeassistant.const import (
     HTTP_UNAUTHORIZED,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.entity_registry import async_get
 
 from .const import DEFAULT_PORT, DOMAIN
 
@@ -166,28 +169,18 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason=error)
         return self.async_create_entry(title=config[CONF_HOST], data=config)
 
-    async def async_step_discovery(self, discovery_info):
-        """Handle discovery."""
-        _LOGGER.debug("Reached discovery flow with info: %s", discovery_info)
+    async def async_step_integration_discovery(self, discovery_info):
+        """Handle discovery of a server."""
+        _LOGGER.debug("Reached server discovery flow with info: %s", discovery_info)
         if "uuid" in discovery_info:
             await self.async_set_unique_id(discovery_info.pop("uuid"))
             self._abort_if_unique_id_configured()
         else:
             # attempt to connect to server and determine uuid. will fail if
             # password required
-
-            if CONF_HOST not in discovery_info and IP_ADDRESS in discovery_info:
-                discovery_info[CONF_HOST] = discovery_info[IP_ADDRESS]
-
-            if CONF_PORT not in discovery_info:
-                discovery_info[CONF_PORT] = DEFAULT_PORT
-
             error = await self._validate_input(discovery_info)
             if error:
-                if MAC_ADDRESS in discovery_info:
-                    await self.async_set_unique_id(discovery_info[MAC_ADDRESS])
-                else:
-                    await self._async_handle_discovery_without_unique_id()
+                await self._async_handle_discovery_without_unique_id()
 
         # update schema with suggested values from discovery
         self.data_schema = _base_schema(discovery_info)
@@ -195,3 +188,23 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.context.update({"title_placeholders": {"host": discovery_info[CONF_HOST]}})
 
         return await self.async_step_edit()
+
+    async def async_step_dhcp(self, discovery_info):
+        """Handle dhcp discovery of a Squeezebox player."""
+        _LOGGER.debug(
+            "Reached dhcp discovery of a player with info: %s", discovery_info
+        )
+        await self.async_set_unique_id(format_mac(discovery_info[MAC_ADDRESS]))
+        self._abort_if_unique_id_configured()
+
+        _LOGGER.debug("Configuring dhcp player with unique id: %s", self.unique_id)
+
+        registry = async_get(self.hass)
+
+        # if we have detected this player, do nothing. if not, there must be a server out there for us to configure, so start the normal user flow (which tries to autodetect server)
+        if registry.async_get_entity_id(MP_DOMAIN, DOMAIN, self.unique_id) is not None:
+            # this player is already known, so do nothing other than mark as configured
+            raise data_entry_flow.AbortFlow("already_configured")
+
+        # if the player is unknown, then we likely need to configure its server
+        return await self.async_step_user()

@@ -16,17 +16,28 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_TEMPERATURE,
     DOMAIN,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
+    DEVICE_CLASS_ENERGY,
+    ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
     PRESSURE_HPA,
     TEMP_CELSIUS,
+    TIME_HOURS,
+    TIME_SECONDS,
+    VOLUME_CUBIC_FEET,
+    VOLUME_CUBIC_METERS,
+    VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
+    VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+    VOLUME_GALLONS,
+    VOLUME_LITERS,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -72,6 +83,7 @@ BATTERY_SIZES = {
 
 CHANNEL_ST_HUMIDITY_CLUSTER = f"channel_0x{SMARTTHINGS_HUMIDITY_CLUSTER:04x}"
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
+MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, DOMAIN)
 
 
 async def async_setup_entry(
@@ -135,12 +147,12 @@ class Sensor(ZhaEntity, SensorEntity):
         return self._state_class
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity."""
         return self._unit
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the state of the entity."""
         assert self.SENSOR_ATTR is not None
         raw_state = self._channel.cluster.get(self.SENSOR_ATTR)
@@ -214,6 +226,7 @@ class ElectricalMeasurement(Sensor):
 
     SENSOR_ATTR = "active_power"
     _device_class = DEVICE_CLASS_POWER
+    _state_class = STATE_CLASS_MEASUREMENT
     _unit = POWER_WATT
 
     @property
@@ -261,21 +274,100 @@ class Illuminance(Sensor):
         return round(pow(10, ((value - 1) / 10000)), 1)
 
 
-@STRICT_MATCH(channel_names=CHANNEL_SMARTENERGY_METERING)
+@MULTI_MATCH(channel_names=CHANNEL_SMARTENERGY_METERING)
 class SmartEnergyMetering(Sensor):
     """Metering sensor."""
 
-    SENSOR_ATTR = "instantaneous_demand"
-    _device_class = DEVICE_CLASS_POWER
+    SENSOR_ATTR: int | str = "instantaneous_demand"
+    _device_class: str | None = DEVICE_CLASS_POWER
+    _state_class: str | None = STATE_CLASS_MEASUREMENT
+
+    unit_of_measure_map = {
+        0x00: POWER_WATT,
+        0x01: VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+        0x02: VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
+        0x03: f"100 {VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR}",
+        0x04: f"US {VOLUME_GALLONS}/{TIME_HOURS}",
+        0x05: f"IMP {VOLUME_GALLONS}/{TIME_HOURS}",
+        0x06: f"BTU/{TIME_HOURS}",
+        0x07: f"l/{TIME_HOURS}",
+        0x08: "kPa",  # gauge
+        0x09: "kPa",  # absolute
+        0x0A: f"1000 {VOLUME_GALLONS}/{TIME_HOURS}",
+        0x0B: "unitless",
+        0x0C: f"MJ/{TIME_SECONDS}",
+    }
+
+    @classmethod
+    def create_entity(
+        cls,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: list[ChannelType],
+        **kwargs,
+    ) -> ZhaEntity | None:
+        """Entity Factory.
+
+        Return entity if it is a supported configuration, otherwise return None
+        """
+        se_channel = channels[0]
+        if cls.SENSOR_ATTR in se_channel.cluster.unsupported_attributes:
+            return None
+
+        return cls(unique_id, zha_device, channels, **kwargs)
 
     def formatter(self, value: int) -> int | float:
         """Pass through channel formatter."""
-        return self._channel.formatter_function(value)
+        return self._channel.demand_formatter(value)
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return Unit of measurement."""
-        return self._channel.unit_of_measurement
+        return self.unit_of_measure_map.get(self._channel.unit_of_measurement)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return device state attrs for battery sensors."""
+        attrs = {}
+        if self._channel.device_type is not None:
+            attrs["device_type"] = self._channel.device_type
+        status = self._channel.status
+        if status is not None:
+            attrs["status"] = str(status)[len(status.__class__.__name__) + 1 :]
+        return attrs
+
+
+@MULTI_MATCH(channel_names=CHANNEL_SMARTENERGY_METERING)
+class SmartEnergySummation(SmartEnergyMetering, id_suffix="summation_delivered"):
+    """Smart Energy Metering summation sensor."""
+
+    SENSOR_ATTR: int | str = "current_summ_delivered"
+    _device_class: str | None = DEVICE_CLASS_ENERGY
+    _state_class: str = STATE_CLASS_TOTAL_INCREASING
+
+    unit_of_measure_map = {
+        0x00: ENERGY_KILO_WATT_HOUR,
+        0x01: VOLUME_CUBIC_METERS,
+        0x02: VOLUME_CUBIC_FEET,
+        0x03: f"100 {VOLUME_CUBIC_FEET}",
+        0x04: f"US {VOLUME_GALLONS}",
+        0x05: f"IMP {VOLUME_GALLONS}",
+        0x06: "BTU",
+        0x07: VOLUME_LITERS,
+        0x08: "kPa",  # gauge
+        0x09: "kPa",  # absolute
+        0x0A: f"1000 {VOLUME_CUBIC_FEET}",
+        0x0B: "unitless",
+        0x0C: "MJ",
+    }
+
+    def formatter(self, value: int) -> int | float:
+        """Numeric pass-through formatter."""
+        if self._channel.unit_of_measurement != 0:
+            return self._channel.summa_formatter(value)
+
+        cooked = float(self._channel.multiplier * value) / self._channel.divisor
+        return round(cooked, 3)
 
 
 @STRICT_MATCH(channel_names=CHANNEL_PRESSURE)

@@ -17,6 +17,7 @@
             "is_no_problem": "{entity_name} ei leia probleemi",
             "is_no_smoke": "{entity_name} ei tuvasta suitsu",
             "is_no_sound": "{entity_name} ei tuvasta heli",
+            "is_no_update": "{entity_name} on ajakohane",
             "is_no_vibration": "{entity_name} ei tuvasta vibratsiooni",
             "is_not_bat_low": "{entity_name} aku on laetud",
             "is_not_cold": "{entity_name} ei ole k\u00fclm",
@@ -42,6 +43,7 @@
             "is_smoke": "{entity_name} tuvastab suitsu",
             "is_sound": "{entity_name} tuvastab heli",
             "is_unsafe": "{entity_name} on ebaturvaline",
+            "is_update": "{entity_name} on saadaval uuendus",
             "is_vibration": "{entity_name} tuvastab vibratsiooni"
         },
         "trigger_type": {
@@ -61,6 +63,7 @@
             "no_problem": "{entity_name} l\u00f5petas probleemi tuvastamise",
             "no_smoke": "{entity_name} l\u00f5petas suitsu tuvastamise",
             "no_sound": "{entity_name} l\u00f5petas heli tuvastamise",
+            "no_update": "{entity_name} on uuendatud",
             "no_vibration": "{entity_name} l\u00f5petas vibratsiooni tuvastamise",
             "not_bat_low": "{entity_name} aku on laetud",
             "not_cold": "{entity_name} ei ole enam k\u00fclm",
@@ -86,6 +89,7 @@
             "turned_off": "{entity_name} l\u00fclitus v\u00e4lja",
             "turned_on": "{entity_name} l\u00fclitus sisse",
             "unsafe": "{entity_name} on ebaturvaline",
+            "update": "{entity_name} sai saadavaloleva uuenduse",
             "vibration": "{entity_name} registreeris vibratsiooni"
         }
     },
@@ -177,6 +181,10 @@
         "sound": {
             "off": "Puudub",
             "on": "Tuvastatud"
+        },
+        "update": {
+            "off": "Ajakohane",
+            "on": "Saadaval on uuendus"
         },
         "vibration": {
             "off": "Puudub",

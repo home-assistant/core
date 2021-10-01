@@ -10,7 +10,14 @@ from homeassistant.components.homekit.const import (
     TYPE_SPRINKLER,
     TYPE_VALVE,
 )
-from homeassistant.components.homekit.type_switches import Outlet, Switch, Vacuum, Valve
+from homeassistant.components.homekit.type_switches import (
+    Outlet,
+    SelectSwitch,
+    Switch,
+    Vacuum,
+    Valve,
+)
+from homeassistant.components.select.const import ATTR_OPTIONS
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_RETURN_TO_BASE,
@@ -26,6 +33,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_TYPE,
+    SERVICE_SELECT_OPTION,
     STATE_OFF,
     STATE_ON,
 )
@@ -329,7 +337,13 @@ async def test_reset_switch(hass, hk_driver, events):
     future = dt_util.utcnow() + timedelta(seconds=1)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
+    assert acc.char_on.value is True
+
+    future = dt_util.utcnow() + timedelta(seconds=10)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
     assert acc.char_on.value is False
+
     assert len(events) == 1
     assert not call_turn_off
 
@@ -367,7 +381,13 @@ async def test_script_switch(hass, hk_driver, events):
     future = dt_util.utcnow() + timedelta(seconds=1)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
+    assert acc.char_on.value is True
+
+    future = dt_util.utcnow() + timedelta(seconds=10)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
     assert acc.char_on.value is False
+
     assert len(events) == 1
     assert not call_turn_off
 
@@ -375,3 +395,57 @@ async def test_script_switch(hass, hk_driver, events):
     await hass.async_block_till_done()
     assert acc.char_on.value is False
     assert len(events) == 1
+
+
+@pytest.mark.parametrize(
+    "domain",
+    ["input_select", "select"],
+)
+async def test_input_select_switch(hass, hk_driver, events, domain):
+    """Test if select switch accessory is handled correctly."""
+    entity_id = f"{domain}.test"
+
+    hass.states.async_set(
+        entity_id, "option1", {ATTR_OPTIONS: ["option1", "option2", "option3"]}
+    )
+    await hass.async_block_till_done()
+    acc = SelectSwitch(hass, hk_driver, "SelectSwitch", entity_id, 2, None)
+    await acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.select_chars["option1"].value is True
+    assert acc.select_chars["option2"].value is False
+    assert acc.select_chars["option3"].value is False
+
+    call_select_option = async_mock_service(hass, domain, SERVICE_SELECT_OPTION)
+    acc.select_chars["option2"].client_update_value(True)
+    await hass.async_block_till_done()
+
+    assert call_select_option
+    assert call_select_option[0].data == {"entity_id": entity_id, "option": "option2"}
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] is None
+
+    hass.states.async_set(
+        entity_id, "option2", {ATTR_OPTIONS: ["option1", "option2", "option3"]}
+    )
+    await hass.async_block_till_done()
+    assert acc.select_chars["option1"].value is False
+    assert acc.select_chars["option2"].value is True
+    assert acc.select_chars["option3"].value is False
+
+    hass.states.async_set(
+        entity_id, "option3", {ATTR_OPTIONS: ["option1", "option2", "option3"]}
+    )
+    await hass.async_block_till_done()
+    assert acc.select_chars["option1"].value is False
+    assert acc.select_chars["option2"].value is False
+    assert acc.select_chars["option3"].value is True
+
+    hass.states.async_set(
+        entity_id, "invalid", {ATTR_OPTIONS: ["option1", "option2", "option3"]}
+    )
+    await hass.async_block_till_done()
+    assert acc.select_chars["option1"].value is False
+    assert acc.select_chars["option2"].value is False
+    assert acc.select_chars["option3"].value is False

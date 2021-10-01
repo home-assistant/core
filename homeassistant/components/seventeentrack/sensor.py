@@ -125,7 +125,7 @@ class SeventeenTrackSummarySensor(SensorEntity):
         return f"Seventeentrack Packages {self._status}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         return self._state
 
@@ -135,7 +135,7 @@ class SeventeenTrackSummarySensor(SensorEntity):
         return f"summary_{self._data.account_id}_{slugify(self._status)}"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return "packages"
 
@@ -211,7 +211,7 @@ class SeventeenTrackPackageSensor(SensorEntity):
         return f"Seventeentrack Package: {name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         return self._state
 

@@ -5,6 +5,7 @@ import asyncio
 import base64
 import collections
 from contextlib import suppress
+from dataclasses import dataclass
 import datetime as dt
 import functools as ft
 import hashlib
@@ -61,7 +62,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA_BASE,
     datetime,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.network import get_url
 from homeassistant.loader import bind_hass
@@ -371,9 +372,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
+@dataclass
+class MediaPlayerEntityDescription(EntityDescription):
+    """A class that describes media player entities."""
+
+
 class MediaPlayerEntity(Entity):
     """ABC for media player entities."""
 
+    entity_description: MediaPlayerEntityDescription
     _access_token: str | None = None
 
     _attr_app_id: str | None = None
@@ -500,6 +507,7 @@ class MediaPlayerEntity(Entity):
 
         Must be implemented by integration.
         """
+        # pylint: disable=no-self-use
         return None, None
 
     @property
@@ -806,11 +814,10 @@ class MediaPlayerEntity(Entity):
     async def async_toggle(self):
         """Toggle the power on the media player."""
         if hasattr(self, "toggle"):
-            # pylint: disable=no-member
             await self.hass.async_add_executor_job(self.toggle)
             return
 
-        if self.state in [STATE_OFF, STATE_IDLE]:
+        if self.state in (STATE_OFF, STATE_IDLE):
             await self.async_turn_on()
         else:
             await self.async_turn_off()
@@ -821,7 +828,6 @@ class MediaPlayerEntity(Entity):
         This method is a coroutine.
         """
         if hasattr(self, "volume_up"):
-            # pylint: disable=no-member
             await self.hass.async_add_executor_job(self.volume_up)
             return
 
@@ -834,7 +840,6 @@ class MediaPlayerEntity(Entity):
         This method is a coroutine.
         """
         if hasattr(self, "volume_down"):
-            # pylint: disable=no-member
             await self.hass.async_add_executor_job(self.volume_down)
             return
 
@@ -844,7 +849,6 @@ class MediaPlayerEntity(Entity):
     async def async_media_play_pause(self):
         """Play or pause the media player."""
         if hasattr(self, "media_play_pause"):
-            # pylint: disable=no-member
             await self.hass.async_add_executor_job(self.media_play_pause)
             return
 

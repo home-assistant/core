@@ -8,7 +8,7 @@ from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityDescription
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -99,7 +99,14 @@ async def async_setup_entry(
         for device in location.devices:
             entities.append(
                 LyricClimate(
-                    coordinator, location, device, hass.config.units.temperature_unit
+                    coordinator,
+                    ClimateEntityDescription(
+                        key=f"{device.macID}_thermostat",
+                        name=device.name,
+                    ),
+                    location,
+                    device,
+                    hass.config.units.temperature_unit,
                 )
             )
 
@@ -117,9 +124,13 @@ async def async_setup_entry(
 class LyricClimate(LyricDeviceEntity, ClimateEntity):
     """Defines a Honeywell Lyric climate entity."""
 
+    coordinator: DataUpdateCoordinator
+    entity_description: ClimateEntityDescription
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
+        description: ClimateEntityDescription,
         location: LyricLocation,
         device: LyricDevice,
         temperature_unit: str,
@@ -148,9 +159,8 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             location,
             device,
             f"{device.macID}_thermostat",
-            device.name,
-            None,
         )
+        self.entity_description = description
 
     @property
     def supported_features(self) -> int:
@@ -190,6 +200,8 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         """Return the temperature we try to reach."""
         device = self.device
         if not device.hasDualSetpointStatus:
+            if self.hvac_mode == HVAC_MODE_COOL:
+                return device.changeableValues.coolSetpoint
             return device.changeableValues.heatSetpoint
         return None
 
@@ -266,7 +278,14 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             temp = kwargs.get(ATTR_TEMPERATURE)
             _LOGGER.debug("Set temperature: %s", temp)
             try:
-                await self._update_thermostat(self.location, device, heatSetpoint=temp)
+                if self.hvac_mode == HVAC_MODE_COOL:
+                    await self._update_thermostat(
+                        self.location, device, coolSetpoint=temp
+                    )
+                else:
+                    await self._update_thermostat(
+                        self.location, device, heatSetpoint=temp
+                    )
             except LYRIC_EXCEPTIONS as exception:
                 _LOGGER.error(exception)
         await self.coordinator.async_refresh()

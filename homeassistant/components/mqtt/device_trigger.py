@@ -1,13 +1,17 @@
 """Provides device automations for MQTT."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-from typing import Callable
+from typing import Any
 
 import attr
 import voluptuous as vol
 
-from homeassistant.components.automation import AutomationActionType
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.const import (
     CONF_DEVICE,
@@ -86,7 +90,7 @@ class TriggerInstance:
     """Attached trigger settings."""
 
     action: AutomationActionType = attr.ib()
-    automation_info: dict = attr.ib()
+    automation_info: AutomationTriggerInfo = attr.ib()
     trigger: Trigger = attr.ib()
     remove: CALLBACK_TYPE | None = attr.ib(default=None)
 
@@ -287,7 +291,9 @@ async def async_device_removed(hass: HomeAssistant, device_id: str):
             )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, Any]]:
     """List device triggers for MQTT devices."""
     triggers: list[dict] = []
 
@@ -314,7 +320,7 @@ async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
     action: AutomationActionType,
-    automation_info: dict,
+    automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     if DEVICE_TRIGGERS not in hass.data:

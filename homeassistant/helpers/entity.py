@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from abc import ABC
 import asyncio
-from collections.abc import Awaitable, Iterable, Mapping
+from collections.abc import Awaitable, Iterable, Mapping, MutableMapping
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import functools as ft
 import logging
@@ -98,13 +99,11 @@ def get_capability(hass: HomeAssistant, entity_id: str, capability: str) -> Any 
 
     First try the statemachine, then entity registry.
     """
-    state = hass.states.get(entity_id)
-    if state:
+    if state := hass.states.get(entity_id):
         return state.attributes.get(capability)
 
     entity_registry = er.async_get(hass)
-    entry = entity_registry.async_get(entity_id)
-    if not entry:
+    if not (entry := entity_registry.async_get(entity_id)):
         raise HomeAssistantError(f"Unknown entity {entity_id}")
 
     return entry.capabilities.get(capability) if entry.capabilities else None
@@ -115,13 +114,11 @@ def get_device_class(hass: HomeAssistant, entity_id: str) -> str | None:
 
     First try the statemachine, then entity registry.
     """
-    state = hass.states.get(entity_id)
-    if state:
+    if state := hass.states.get(entity_id):
         return state.attributes.get(ATTR_DEVICE_CLASS)
 
     entity_registry = er.async_get(hass)
-    entry = entity_registry.async_get(entity_id)
-    if not entry:
+    if not (entry := entity_registry.async_get(entity_id)):
         raise HomeAssistantError(f"Unknown entity {entity_id}")
 
     return entry.device_class
@@ -132,13 +129,11 @@ def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
 
     First try the statemachine, then entity registry.
     """
-    state = hass.states.get(entity_id)
-    if state:
+    if state := hass.states.get(entity_id):
         return state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
     entity_registry = er.async_get(hass)
-    entry = entity_registry.async_get(entity_id)
-    if not entry:
+    if not (entry := entity_registry.async_get(entity_id)):
         raise HomeAssistantError(f"Unknown entity {entity_id}")
 
     return entry.supported_features or 0
@@ -149,13 +144,11 @@ def get_unit_of_measurement(hass: HomeAssistant, entity_id: str) -> str | None:
 
     First try the statemachine, then entity registry.
     """
-    state = hass.states.get(entity_id)
-    if state:
+    if state := hass.states.get(entity_id):
         return state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
     entity_registry = er.async_get(hass)
-    entry = entity_registry.async_get(entity_id)
-    if not entry:
+    if not (entry := entity_registry.async_get(entity_id)):
         raise HomeAssistantError(f"Unknown entity {entity_id}")
 
     return entry.unit_of_measurement
@@ -164,18 +157,33 @@ def get_unit_of_measurement(hass: HomeAssistant, entity_id: str) -> str | None:
 class DeviceInfo(TypedDict, total=False):
     """Entity device information for device registry."""
 
-    name: str
+    name: str | None
     connections: set[tuple[str, str]]
     identifiers: set[tuple[str, str]]
-    manufacturer: str
-    model: str
-    suggested_area: str
-    sw_version: str
+    manufacturer: str | None
+    model: str | None
+    suggested_area: str | None
+    sw_version: str | None
     via_device: tuple[str, str]
     entry_type: str | None
     default_name: str
     default_manufacturer: str
     default_model: str
+
+
+@dataclass
+class EntityDescription:
+    """A class that describes Home Assistant entities."""
+
+    # This is the key identifier for this entity
+    key: str
+
+    device_class: str | None = None
+    entity_registry_enabled_default: bool = True
+    force_update: bool = False
+    icon: str | None = None
+    name: str | None = None
+    unit_of_measurement: str | None = None
 
 
 class Entity(ABC):
@@ -193,6 +201,9 @@ class Entity(ABC):
 
     # Owning platform instance. Will be set by EntityPlatform
     platform: EntityPlatform | None = None
+
+    # Entity description instance for this Entity
+    entity_description: EntityDescription
 
     # If we reported if this entity was slow
     _slow_reported = False
@@ -223,19 +234,19 @@ class Entity(ABC):
     _attr_assumed_state: bool = False
     _attr_available: bool = True
     _attr_context_recent_time: timedelta = timedelta(seconds=5)
-    _attr_device_class: str | None = None
+    _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
     _attr_entity_picture: str | None = None
-    _attr_entity_registry_enabled_default: bool = True
-    _attr_extra_state_attributes: Mapping[str, Any] | None = None
-    _attr_force_update: bool = False
-    _attr_icon: str | None = None
-    _attr_name: str | None = None
+    _attr_entity_registry_enabled_default: bool
+    _attr_extra_state_attributes: MutableMapping[str, Any]
+    _attr_force_update: bool
+    _attr_icon: str | None
+    _attr_name: str | None
     _attr_should_poll: bool = True
     _attr_state: StateType = STATE_UNKNOWN
     _attr_supported_features: int | None = None
     _attr_unique_id: str | None = None
-    _attr_unit_of_measurement: str | None = None
+    _attr_unit_of_measurement: str | None
 
     @property
     def should_poll(self) -> bool:
@@ -253,7 +264,11 @@ class Entity(ABC):
     @property
     def name(self) -> str | None:
         """Return the name of the entity."""
-        return self._attr_name
+        if hasattr(self, "_attr_name"):
+            return self._attr_name
+        if hasattr(self, "entity_description"):
+            return self.entity_description.name
+        return None
 
     @property
     def state(self) -> StateType:
@@ -296,7 +311,9 @@ class Entity(ABC):
         Implemented by platform classes. Convention for attribute names
         is lowercase snake_case.
         """
-        return self._attr_extra_state_attributes
+        if hasattr(self, "_attr_extra_state_attributes"):
+            return self._attr_extra_state_attributes
+        return None
 
     @property
     def device_info(self) -> DeviceInfo | None:
@@ -309,17 +326,29 @@ class Entity(ABC):
     @property
     def device_class(self) -> str | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return self._attr_device_class
+        if hasattr(self, "_attr_device_class"):
+            return self._attr_device_class
+        if hasattr(self, "entity_description"):
+            return self.entity_description.device_class
+        return None
 
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
-        return self._attr_unit_of_measurement
+        if hasattr(self, "_attr_unit_of_measurement"):
+            return self._attr_unit_of_measurement
+        if hasattr(self, "entity_description"):
+            return self.entity_description.unit_of_measurement
+        return None
 
     @property
     def icon(self) -> str | None:
         """Return the icon to use in the frontend, if any."""
-        return self._attr_icon
+        if hasattr(self, "_attr_icon"):
+            return self._attr_icon
+        if hasattr(self, "entity_description"):
+            return self.entity_description.icon
+        return None
 
     @property
     def entity_picture(self) -> str | None:
@@ -343,7 +372,11 @@ class Entity(ABC):
         If True, a state change will be triggered anytime the state property is
         updated, not just when the value changes.
         """
-        return self._attr_force_update
+        if hasattr(self, "_attr_force_update"):
+            return self._attr_force_update
+        if hasattr(self, "entity_description"):
+            return self.entity_description.force_update
+        return False
 
     @property
     def supported_features(self) -> int | None:
@@ -358,7 +391,11 @@ class Entity(ABC):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        return self._attr_entity_registry_enabled_default
+        if hasattr(self, "_attr_entity_registry_enabled_default"):
+            return self._attr_entity_registry_enabled_default
+        if hasattr(self, "entity_description"):
+            return self.entity_description.entity_registry_enabled_default
+        return True
 
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
@@ -422,8 +459,7 @@ class Entity(ABC):
         """Convert state to string."""
         if not self.available:
             return STATE_UNAVAILABLE
-        state = self.state
-        if state is None:
+        if (state := self.state) is None:
             return STATE_UNKNOWN
         if isinstance(state, float):
             # If the entity's state is a float, limit precision according to machine
@@ -466,53 +502,35 @@ class Entity(ABC):
 
         entry = self.registry_entry
         # pylint: disable=consider-using-ternary
-        name = (entry and entry.name) or self.name
-        if name is not None:
+        if (name := (entry and entry.name) or self.name) is not None:
             attr[ATTR_FRIENDLY_NAME] = name
 
-        icon = (entry and entry.icon) or self.icon
-        if icon is not None:
+        if (icon := (entry and entry.icon) or self.icon) is not None:
             attr[ATTR_ICON] = icon
 
-        entity_picture = self.entity_picture
-        if entity_picture is not None:
+        if (entity_picture := self.entity_picture) is not None:
             attr[ATTR_ENTITY_PICTURE] = entity_picture
 
-        assumed_state = self.assumed_state
-        if assumed_state:
+        if assumed_state := self.assumed_state:
             attr[ATTR_ASSUMED_STATE] = assumed_state
 
-        supported_features = self.supported_features
-        if supported_features is not None:
+        if (supported_features := self.supported_features) is not None:
             attr[ATTR_SUPPORTED_FEATURES] = supported_features
 
-        device_class = self.device_class
-        if device_class is not None:
+        if (device_class := self.device_class) is not None:
             attr[ATTR_DEVICE_CLASS] = str(device_class)
 
         end = timer()
 
         if end - start > 0.4 and not self._slow_reported:
             self._slow_reported = True
-            extra = ""
-            if "custom_components" in type(self).__module__:
-                extra = "Please report it to the custom component author."
-            else:
-                extra = (
-                    "Please create a bug report at "
-                    "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
-                )
-                if self.platform:
-                    extra += (
-                        f"+label%3A%22integration%3A+{self.platform.platform_name}%22"
-                    )
-
+            report_issue = self._suggest_report_issue()
             _LOGGER.warning(
-                "Updating state for %s (%s) took %.3f seconds. %s",
+                "Updating state for %s (%s) took %.3f seconds. Please %s",
                 self.entity_id,
                 type(self),
                 end - start,
-                extra,
+                report_issue,
             )
 
         # Overwrite properties that have been set in the config file.
@@ -589,7 +607,6 @@ class Entity(ABC):
             await self.parallel_updates.acquire()
 
         try:
-            # pylint: disable=no-member
             if hasattr(self, "async_update"):
                 task = self.hass.async_create_task(self.async_update())  # type: ignore
             elif hasattr(self, "update"):
@@ -604,8 +621,7 @@ class Entity(ABC):
             finished, _ = await asyncio.wait([task], timeout=SLOW_UPDATE_WARNING)
 
             for done in finished:
-                exc = done.exception()
-                if exc:
+                if exc := done.exception():
                     raise exc
                 return
 
@@ -718,7 +734,10 @@ class Entity(ABC):
         Not to be extended by integrations.
         """
         if self.platform:
-            info = {"domain": self.platform.platform_name}
+            info = {
+                "domain": self.platform.platform_name,
+                "custom_component": "custom_components" in type(self).__module__,
+            }
 
             if self.platform.config_entry:
                 info["source"] = SOURCE_CONFIG_ENTRY
@@ -813,10 +832,33 @@ class Entity(ABC):
             if self.parallel_updates:
                 self.parallel_updates.release()
 
+    def _suggest_report_issue(self) -> str:
+        """Suggest to report an issue."""
+        report_issue = ""
+        if "custom_components" in type(self).__module__:
+            report_issue = "report it to the custom component author."
+        else:
+            report_issue = (
+                "create a bug report at "
+                "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
+            )
+            if self.platform:
+                report_issue += (
+                    f"+label%3A%22integration%3A+{self.platform.platform_name}%22"
+                )
+
+        return report_issue
+
+
+@dataclass
+class ToggleEntityDescription(EntityDescription):
+    """A class that describes toggle entities."""
+
 
 class ToggleEntity(Entity):
     """An abstract class for entities that can be turned on and off."""
 
+    entity_description: ToggleEntityDescription
     _attr_is_on: bool
     _attr_state: None = None
 

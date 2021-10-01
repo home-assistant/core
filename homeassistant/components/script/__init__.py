@@ -32,6 +32,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import (
     ATTR_CUR,
     ATTR_MAX,
@@ -42,6 +43,7 @@ from homeassistant.helpers.script import (
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.trace import trace_get, trace_path
 from homeassistant.loader import bind_hass
+from homeassistant.util.dt import parse_datetime
 
 from .config import ScriptConfig, async_validate_config_item
 from .const import (
@@ -296,7 +298,7 @@ async def _async_process_config(hass, config, component) -> bool:
     return blueprints_used
 
 
-class ScriptEntity(ToggleEntity):
+class ScriptEntity(ToggleEntity, RestoreEntity):
     """Representation of a script entity."""
 
     icon = None
@@ -401,7 +403,12 @@ class ScriptEntity(ToggleEntity):
             # Prepare tracing the execution of the script's sequence
             script_trace.set_trace(trace_get())
             with trace_path("sequence"):
-                return await self.script.async_run(variables, context)
+                this = None
+                state = self.hass.states.get(self.entity_id)
+                if state:
+                    this = state.as_dict()
+                script_vars = {"this": this, **(variables or {})}
+                return await self.script.async_run(script_vars, context)
 
     async def async_turn_off(self, **kwargs):
         """Stop running the script.
@@ -409,6 +416,12 @@ class ScriptEntity(ToggleEntity):
         If multiple runs are in progress, all will be stopped.
         """
         await self.script.async_stop()
+
+    async def async_added_to_hass(self) -> None:
+        """Restore last triggered on startup."""
+        if state := await self.async_get_last_state():
+            if last_triggered := state.attributes.get("last_triggered"):
+                self.script.last_triggered = parse_datetime(last_triggered)
 
     async def async_will_remove_from_hass(self):
         """Stop script and remove service when it will be removed from Home Assistant."""

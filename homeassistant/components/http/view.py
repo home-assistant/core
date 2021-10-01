@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable
+from http import HTTPStatus
 import json
 import logging
 from typing import Any
@@ -48,7 +49,7 @@ class HomeAssistantView:
     @staticmethod
     def json(
         result: Any,
-        status_code: int = HTTP_OK,
+        status_code: HTTPStatus | int = HTTPStatus.OK,
         headers: LooseHeaders | None = None,
     ) -> web.Response:
         """Return a JSON response."""
@@ -60,7 +61,7 @@ class HomeAssistantView:
         response = web.Response(
             body=msg,
             content_type=CONTENT_TYPE_JSON,
-            status=status_code,
+            status=int(status_code),
             headers=headers,
         )
         response.enable_compression()
@@ -69,7 +70,7 @@ class HomeAssistantView:
     def json_message(
         self,
         message: str,
-        status_code: int = HTTP_OK,
+        status_code: HTTPStatus | int = HTTPStatus.OK,
         message_code: str | None = None,
         headers: LooseHeaders | None = None,
     ) -> web.Response:
@@ -158,7 +159,7 @@ def request_handler_factory(
         else:
             assert (
                 False
-            ), f"Result should be None, string, bytes or Response. Got: {result}"
+            ), f"Result should be None, string, bytes or StreamResponse. Got: {result}"
 
         return web.Response(body=bresult, status=status_code)
 

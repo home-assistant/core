@@ -27,7 +27,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
-from homeassistant.config_entries import SOURCE_DISCOVERY
+from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
 from homeassistant.const import (
     ATTR_COMMAND,
     CONF_HOST,
@@ -43,6 +43,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -127,7 +128,7 @@ async def start_server_discovery(hass):
         asyncio.create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
-                context={"source": SOURCE_DISCOVERY},
+                context={"source": SOURCE_INTEGRATION_DISCOVERY},
                 data={
                     CONF_HOST: server.host,
                     CONF_PORT: int(server.port),
@@ -146,7 +147,6 @@ async def start_server_discovery(hass):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up squeezebox platform from platform entry in configuration.yaml (deprecated)."""
-
     if config:
         await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
@@ -283,7 +283,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._player.player_id
+        return format_mac(self._player.player_id)
 
     @property
     def available(self):
@@ -573,7 +573,6 @@ class SqueezeBoxEntity(MediaPlayerEntity):
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
-
         _LOGGER.debug(
             "Reached async_browse_media with content_type %s and content_id %s",
             media_content_type,

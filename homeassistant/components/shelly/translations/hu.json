@@ -11,6 +11,9 @@
         },
         "flow_title": "{name}",
         "step": {
+            "confirm_discovery": {
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani a(z) {model} a(z) {host} c\u00edmen? \n\n A jelsz\u00f3val v\u00e9dett akkumul\u00e1toros eszk\u00f6z\u00f6ket fel kell \u00e9breszteni, miel\u0151tt folytatn\u00e1 a be\u00e1ll\u00edt\u00e1st.\n Az elemmel m\u0171k\u00f6d\u0151, jelsz\u00f3val nem v\u00e9dett eszk\u00f6z\u00f6k hozz\u00e1ad\u00e1sra ker\u00fclnek, amikor az eszk\u00f6z fel\u00e9bred, most manu\u00e1lisan \u00e9bresztheti fel az eszk\u00f6zt egy rajta l\u00e9v\u0151 gombbal, vagy v\u00e1rhat a k\u00f6vetkez\u0151 adatfriss\u00edt\u00e9sre."
+            },
             "credentials": {
                 "data": {
                     "password": "Jelsz\u00f3",

@@ -19,7 +19,7 @@ from .common import (
     mock_get_exchange_rates,
     mocked_get_accounts,
 )
-from .const import BAD_CURRENCY, BAD_EXCHANGE_RATE, GOOD_CURRENCY, GOOD_EXCHNAGE_RATE
+from .const import BAD_CURRENCY, BAD_EXCHANGE_RATE, GOOD_CURRENCY, GOOD_EXCHANGE_RATE
 
 from tests.common import MockConfigEntry
 
@@ -160,7 +160,7 @@ async def test_option_form(hass):
             result["flow_id"],
             user_input={
                 CONF_CURRENCIES: [GOOD_CURRENCY],
-                CONF_EXCHANGE_RATES: [GOOD_EXCHNAGE_RATE],
+                CONF_EXCHANGE_RATES: [GOOD_EXCHANGE_RATE],
             },
         )
         assert result2["type"] == "create_entry"

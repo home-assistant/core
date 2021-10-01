@@ -1,6 +1,11 @@
 """The ViCare integration."""
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
 import enum
 import logging
+from typing import Generic, TypeVar
 
 from PyViCare.PyViCareDevice import Device
 from PyViCare.PyViCareFuelCell import FuelCell
@@ -9,6 +14,7 @@ from PyViCare.PyViCareHeatPump import HeatPump
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONF_CLIENT_ID,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
@@ -23,7 +29,6 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["climate", "sensor", "binary_sensor", "water_heater"]
 
 DOMAIN = "vicare"
-PYVICARE_ERROR = "error"
 VICARE_API = "api"
 VICARE_NAME = "name"
 VICARE_HEATING_TYPE = "heating_type"
@@ -31,6 +36,16 @@ VICARE_HEATING_TYPE = "heating_type"
 CONF_CIRCUIT = "circuit"
 CONF_HEATING_TYPE = "heating_type"
 DEFAULT_HEATING_TYPE = "generic"
+
+
+ApiT = TypeVar("ApiT", bound=Device)
+
+
+@dataclass()
+class ViCareRequiredKeysMixin(Generic[ApiT]):
+    """Mixin for required keys."""
+
+    value_getter: Callable[[ApiT], bool]
 
 
 class HeatingType(enum.Enum):
@@ -48,6 +63,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
+                vol.Required(CONF_CLIENT_ID): cv.string,
                 vol.Optional(CONF_SCAN_INTERVAL, default=60): vol.All(
                     cv.time_period, lambda value: value.total_seconds()
                 ),
@@ -71,7 +87,7 @@ def setup(hass, config):
         params["circuit"] = conf[CONF_CIRCUIT]
 
     params["cacheDuration"] = conf.get(CONF_SCAN_INTERVAL)
-
+    params["client_id"] = conf.get(CONF_CLIENT_ID)
     heating_type = conf[CONF_HEATING_TYPE]
 
     try:

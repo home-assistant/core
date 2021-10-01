@@ -32,7 +32,7 @@ async def test_caching_data(hass):
     await data.store.async_save([state.as_dict() for state in stored_states])
 
     # Emulate a fresh load
-    hass.data[DATA_RESTORE_STATE_TASK] = None
+    hass.data.pop(DATA_RESTORE_STATE_TASK)
 
     entity = RestoreEntity()
     entity.hass = hass
@@ -59,7 +59,7 @@ async def test_periodic_write(hass):
     await data.store.async_save([])
 
     # Emulate a fresh load
-    hass.data[DATA_RESTORE_STATE_TASK] = None
+    hass.data.pop(DATA_RESTORE_STATE_TASK)
 
     entity = RestoreEntity()
     entity.hass = hass
@@ -98,6 +98,62 @@ async def test_periodic_write(hass):
     assert not mock_write_data.called
 
 
+async def test_save_persistent_states(hass):
+    """Test that we cancel the currently running job, save the data, and verify the perdiodic job continues."""
+    data = await RestoreStateData.async_get_instance(hass)
+    await hass.async_block_till_done()
+    await data.store.async_save([])
+
+    # Emulate a fresh load
+    hass.data.pop(DATA_RESTORE_STATE_TASK)
+
+    entity = RestoreEntity()
+    entity.hass = hass
+    entity.entity_id = "input_boolean.b1"
+
+    with patch(
+        "homeassistant.helpers.restore_state.Store.async_save"
+    ) as mock_write_data:
+        await entity.async_get_last_state()
+        await hass.async_block_till_done()
+
+    # Startup Save
+    assert mock_write_data.called
+
+    with patch(
+        "homeassistant.helpers.restore_state.Store.async_save"
+    ) as mock_write_data:
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
+        await hass.async_block_till_done()
+
+    # Not quite the first interval
+    assert not mock_write_data.called
+
+    with patch(
+        "homeassistant.helpers.restore_state.Store.async_save"
+    ) as mock_write_data:
+        await RestoreStateData.async_save_persistent_states(hass)
+        await hass.async_block_till_done()
+
+    assert mock_write_data.called
+
+    with patch(
+        "homeassistant.helpers.restore_state.Store.async_save"
+    ) as mock_write_data:
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
+        await hass.async_block_till_done()
+    # Verify still saving
+    assert mock_write_data.called
+
+    with patch(
+        "homeassistant.helpers.restore_state.Store.async_save"
+    ) as mock_write_data:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+    # Verify normal shutdown
+    assert mock_write_data.called
+
+
 async def test_hass_starting(hass):
     """Test that we cache data."""
     hass.state = CoreState.starting
@@ -114,7 +170,8 @@ async def test_hass_starting(hass):
     await data.store.async_save([state.as_dict() for state in stored_states])
 
     # Emulate a fresh load
-    hass.data[DATA_RESTORE_STATE_TASK] = None
+    hass.state = CoreState.not_running
+    hass.data.pop(DATA_RESTORE_STATE_TASK)
 
     entity = RestoreEntity()
     entity.hass = hass

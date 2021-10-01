@@ -29,12 +29,12 @@ from .const import (
     ATTR_INTENSITY,
     ATTR_ON,
     ATTR_PALETTE,
-    ATTR_PLAYLIST,
     ATTR_PRESET,
     ATTR_REVERSE,
     ATTR_SEGMENT_ID,
     ATTR_SPEED,
     DOMAIN,
+    LOGGER,
     SERVICE_EFFECT,
     SERVICE_PRESET,
 )
@@ -163,6 +163,13 @@ class WLEDMasterLight(WLEDEntity, LightEntity):
         preset: int,
     ) -> None:
         """Set a WLED light to a saved preset."""
+        # The WLED preset service is replaced by a preset select entity
+        # and marked deprecated as of Home Assistant 2021.8
+        LOGGER.warning(
+            "The 'wled.preset' service is deprecated and replaced by a "
+            "dedicated preset select entity; Please use that entity to "
+            "change presets instead"
+        )
         await self.coordinator.wled.preset(preset=preset)
 
 
@@ -212,15 +219,10 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
-        playlist: int | None = self.coordinator.data.state.playlist
-        if playlist == -1:
-            playlist = None
-
         segment = self.coordinator.data.state.segments[self._segment]
         return {
             ATTR_INTENSITY: segment.intensity,
             ATTR_PALETTE: segment.palette.name,
-            ATTR_PLAYLIST: playlist,
             ATTR_REVERSE: segment.reverse,
             ATTR_SPEED: segment.speed,
         }

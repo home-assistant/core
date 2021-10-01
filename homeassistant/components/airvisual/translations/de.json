@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Diese Koordinaten oder Node/Pro ID sind bereits registriert.",
+            "already_configured": "Diese Node/Pro ID oder Standort ist bereits konfiguriert.",
             "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
@@ -40,7 +40,7 @@
             },
             "reauth_confirm": {
                 "data": {
-                    "api_key": "API-Key"
+                    "api_key": "API-Schl\u00fcssel"
                 },
                 "title": "AirVisual erneut authentifizieren"
             },

@@ -3,6 +3,7 @@ from copy import deepcopy
 from unittest.mock import call, patch
 
 import pytest
+from zwave_js_server.event import Event
 from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVersion
 from zwave_js_server.model.node import Node
 
@@ -124,10 +125,43 @@ async def test_listen_failure(hass, client, error):
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_new_entity_on_value_added(hass, multisensor_6, client, integration):
+    """Test we create a new entity if a value is added after the fact."""
+    node: Node = multisensor_6
+
+    # Add a value on a random endpoint so we can be sure we should get a new entity
+    event = Event(
+        type="value added",
+        data={
+            "source": "node",
+            "event": "value added",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Multilevel Sensor",
+                "commandClass": 49,
+                "endpoint": 10,
+                "property": "Ultraviolet",
+                "propertyName": "Ultraviolet",
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": False,
+                    "label": "Ultraviolet",
+                    "ccSpecific": {"sensorType": 27, "scale": 0},
+                },
+                "value": 0,
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.multisensor_6_ultraviolet_10") is not None
+
+
 async def test_on_node_added_ready(hass, multisensor_6_state, client, integration):
     """Test we handle a ready node added event."""
     dev_reg = dr.async_get(hass)
-    node = Node(client, multisensor_6_state)
+    node = Node(client, deepcopy(multisensor_6_state))
     event = {"node": node}
     air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
 
@@ -238,15 +272,28 @@ async def test_start_addon(
 ):
     """Test start the Z-Wave JS add-on during entry setup."""
     device = "/test"
-    network_key = "abc123"
+    s0_legacy_key = "s0_legacy"
+    s2_access_control_key = "s2_access_control"
+    s2_authenticated_key = "s2_authenticated"
+    s2_unauthenticated_key = "s2_unauthenticated"
     addon_options = {
         "device": device,
-        "network_key": network_key,
+        "s0_legacy_key": s0_legacy_key,
+        "s2_access_control_key": s2_access_control_key,
+        "s2_authenticated_key": s2_authenticated_key,
+        "s2_unauthenticated_key": s2_unauthenticated_key,
     }
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
-        data={"use_addon": True, "usb_path": device, "network_key": network_key},
+        data={
+            "use_addon": True,
+            "usb_path": device,
+            "s0_legacy_key": s0_legacy_key,
+            "s2_access_control_key": s2_access_control_key,
+            "s2_authenticated_key": s2_authenticated_key,
+            "s2_unauthenticated_key": s2_unauthenticated_key,
+        },
     )
     entry.add_to_hass(hass)
 
@@ -269,15 +316,28 @@ async def test_install_addon(
     """Test install and start the Z-Wave JS add-on during entry setup."""
     addon_installed.return_value["version"] = None
     device = "/test"
-    network_key = "abc123"
+    s0_legacy_key = "s0_legacy"
+    s2_access_control_key = "s2_access_control"
+    s2_authenticated_key = "s2_authenticated"
+    s2_unauthenticated_key = "s2_unauthenticated"
     addon_options = {
         "device": device,
-        "network_key": network_key,
+        "s0_legacy_key": s0_legacy_key,
+        "s2_access_control_key": s2_access_control_key,
+        "s2_authenticated_key": s2_authenticated_key,
+        "s2_unauthenticated_key": s2_unauthenticated_key,
     }
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
-        data={"use_addon": True, "usb_path": device, "network_key": network_key},
+        data={
+            "use_addon": True,
+            "usb_path": device,
+            "s0_legacy_key": s0_legacy_key,
+            "s2_access_control_key": s2_access_control_key,
+            "s2_authenticated_key": s2_authenticated_key,
+            "s2_unauthenticated_key": s2_unauthenticated_key,
+        },
     )
     entry.add_to_hass(hass)
 
@@ -323,8 +383,27 @@ async def test_addon_info_failure(
 
 
 @pytest.mark.parametrize(
-    "old_device, new_device, old_network_key, new_network_key",
-    [("/old_test", "/new_test", "old123", "new123")],
+    (
+        "old_device, new_device, "
+        "old_s0_legacy_key, new_s0_legacy_key, "
+        "old_s2_access_control_key, new_s2_access_control_key, "
+        "old_s2_authenticated_key, new_s2_authenticated_key, "
+        "old_s2_unauthenticated_key, new_s2_unauthenticated_key"
+    ),
+    [
+        (
+            "/old_test",
+            "/new_test",
+            "old123",
+            "new123",
+            "old456",
+            "new456",
+            "old789",
+            "new789",
+            "old987",
+            "new987",
+        )
+    ],
 )
 async def test_addon_options_changed(
     hass,
@@ -336,12 +415,21 @@ async def test_addon_options_changed(
     start_addon,
     old_device,
     new_device,
-    old_network_key,
-    new_network_key,
+    old_s0_legacy_key,
+    new_s0_legacy_key,
+    old_s2_access_control_key,
+    new_s2_access_control_key,
+    old_s2_authenticated_key,
+    new_s2_authenticated_key,
+    old_s2_unauthenticated_key,
+    new_s2_unauthenticated_key,
 ):
     """Test update config entry data on entry setup if add-on options changed."""
     addon_options["device"] = new_device
-    addon_options["network_key"] = new_network_key
+    addon_options["s0_legacy_key"] = new_s0_legacy_key
+    addon_options["s2_access_control_key"] = new_s2_access_control_key
+    addon_options["s2_authenticated_key"] = new_s2_authenticated_key
+    addon_options["s2_unauthenticated_key"] = new_s2_unauthenticated_key
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
@@ -349,7 +437,10 @@ async def test_addon_options_changed(
             "url": "ws://host1:3001",
             "use_addon": True,
             "usb_path": old_device,
-            "network_key": old_network_key,
+            "s0_legacy_key": old_s0_legacy_key,
+            "s2_access_control_key": old_s2_access_control_key,
+            "s2_authenticated_key": old_s2_authenticated_key,
+            "s2_unauthenticated_key": old_s2_unauthenticated_key,
         },
     )
     entry.add_to_hass(hass)
@@ -359,14 +450,17 @@ async def test_addon_options_changed(
 
     assert entry.state == ConfigEntryState.LOADED
     assert entry.data["usb_path"] == new_device
-    assert entry.data["network_key"] == new_network_key
+    assert entry.data["s0_legacy_key"] == new_s0_legacy_key
+    assert entry.data["s2_access_control_key"] == new_s2_access_control_key
+    assert entry.data["s2_authenticated_key"] == new_s2_authenticated_key
+    assert entry.data["s2_unauthenticated_key"] == new_s2_unauthenticated_key
     assert install_addon.call_count == 0
     assert start_addon.call_count == 0
 
 
 @pytest.mark.parametrize(
-    "addon_version, update_available, update_calls, snapshot_calls, "
-    "update_addon_side_effect, create_shapshot_side_effect",
+    "addon_version, update_available, update_calls, backup_calls, "
+    "update_addon_side_effect, create_backup_side_effect",
     [
         ("1.0", True, 1, 1, None, None),
         ("1.0", False, 0, 0, None, None),
@@ -380,15 +474,15 @@ async def test_update_addon(
     addon_info,
     addon_installed,
     addon_running,
-    create_shapshot,
+    create_backup,
     update_addon,
     addon_options,
     addon_version,
     update_available,
     update_calls,
-    snapshot_calls,
+    backup_calls,
     update_addon_side_effect,
-    create_shapshot_side_effect,
+    create_backup_side_effect,
 ):
     """Test update the Z-Wave JS add-on during entry setup."""
     device = "/test"
@@ -397,7 +491,7 @@ async def test_update_addon(
     addon_options["network_key"] = network_key
     addon_info.return_value["version"] = addon_version
     addon_info.return_value["update_available"] = update_available
-    create_shapshot.side_effect = create_shapshot_side_effect
+    create_backup.side_effect = create_backup_side_effect
     update_addon.side_effect = update_addon_side_effect
     client.connect.side_effect = InvalidServerVersion("Invalid version")
     entry = MockConfigEntry(
@@ -416,7 +510,7 @@ async def test_update_addon(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
-    assert create_shapshot.call_count == snapshot_calls
+    assert create_backup.call_count == backup_calls
     assert update_addon.call_count == update_calls
 
 
@@ -469,7 +563,7 @@ async def test_stop_addon(
 
 
 async def test_remove_entry(
-    hass, addon_installed, stop_addon, create_shapshot, uninstall_addon, caplog
+    hass, addon_installed, stop_addon, create_backup, uninstall_addon, caplog
 ):
     """Test remove the config entry."""
     # test successful remove without created add-on
@@ -500,8 +594,8 @@ async def test_remove_entry(
 
     assert stop_addon.call_count == 1
     assert stop_addon.call_args == call(hass, "core_zwave_js")
-    assert create_shapshot.call_count == 1
-    assert create_shapshot.call_args == call(
+    assert create_backup.call_count == 1
+    assert create_backup.call_args == call(
         hass,
         {"name": "addon_core_zwave_js_1.0", "addons": ["core_zwave_js"]},
         partial=True,
@@ -511,7 +605,7 @@ async def test_remove_entry(
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     stop_addon.reset_mock()
-    create_shapshot.reset_mock()
+    create_backup.reset_mock()
     uninstall_addon.reset_mock()
 
     # test add-on stop failure
@@ -523,27 +617,27 @@ async def test_remove_entry(
 
     assert stop_addon.call_count == 1
     assert stop_addon.call_args == call(hass, "core_zwave_js")
-    assert create_shapshot.call_count == 0
+    assert create_backup.call_count == 0
     assert uninstall_addon.call_count == 0
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     assert "Failed to stop the Z-Wave JS add-on" in caplog.text
     stop_addon.side_effect = None
     stop_addon.reset_mock()
-    create_shapshot.reset_mock()
+    create_backup.reset_mock()
     uninstall_addon.reset_mock()
 
-    # test create snapshot failure
+    # test create backup failure
     entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    create_shapshot.side_effect = HassioAPIError()
+    create_backup.side_effect = HassioAPIError()
 
     await hass.config_entries.async_remove(entry.entry_id)
 
     assert stop_addon.call_count == 1
     assert stop_addon.call_args == call(hass, "core_zwave_js")
-    assert create_shapshot.call_count == 1
-    assert create_shapshot.call_args == call(
+    assert create_backup.call_count == 1
+    assert create_backup.call_args == call(
         hass,
         {"name": "addon_core_zwave_js_1.0", "addons": ["core_zwave_js"]},
         partial=True,
@@ -551,10 +645,10 @@ async def test_remove_entry(
     assert uninstall_addon.call_count == 0
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-    assert "Failed to create a snapshot of the Z-Wave JS add-on" in caplog.text
-    create_shapshot.side_effect = None
+    assert "Failed to create a backup of the Z-Wave JS add-on" in caplog.text
+    create_backup.side_effect = None
     stop_addon.reset_mock()
-    create_shapshot.reset_mock()
+    create_backup.reset_mock()
     uninstall_addon.reset_mock()
 
     # test add-on uninstall failure
@@ -566,8 +660,8 @@ async def test_remove_entry(
 
     assert stop_addon.call_count == 1
     assert stop_addon.call_args == call(hass, "core_zwave_js")
-    assert create_shapshot.call_count == 1
-    assert create_shapshot.call_args == call(
+    assert create_backup.call_count == 1
+    assert create_backup.call_args == call(
         hass,
         {"name": "addon_core_zwave_js_1.0", "addons": ["core_zwave_js"]},
         partial=True,
@@ -622,3 +716,85 @@ async def test_suggested_area(hass, client, eaton_rf9640_dimmer):
 
     entity = ent_reg.async_get(EATON_RF9640_ENTITY)
     assert dev_reg.async_get(entity.device_id).area_id is not None
+
+
+async def test_node_removed(hass, multisensor_6_state, client, integration):
+    """Test that device gets removed when node gets removed."""
+    dev_reg = dr.async_get(hass)
+    node = Node(client, deepcopy(multisensor_6_state))
+    device_id = f"{client.driver.controller.home_id}-{node.node_id}"
+    event = {"node": node}
+
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+    old_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert old_device.id
+
+    event = {"node": node, "replaced": False}
+
+    client.driver.controller.emit("node removed", event)
+    await hass.async_block_till_done()
+    # Assert device has been removed
+    assert not dev_reg.async_get(old_device.id)
+
+
+async def test_replace_same_node(hass, multisensor_6_state, client, integration):
+    """Test when a node is replaced with itself that the device remains."""
+    dev_reg = dr.async_get(hass)
+    node = Node(client, deepcopy(multisensor_6_state))
+    device_id = f"{client.driver.controller.home_id}-{node.node_id}"
+    event = {"node": node}
+
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+    old_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert old_device.id
+
+    event = {"node": node, "replaced": True}
+
+    client.driver.controller.emit("node removed", event)
+    await hass.async_block_till_done()
+    # Assert device has remained
+    assert dev_reg.async_get(old_device.id)
+
+    event = {"node": node}
+
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+    # Assert device has remained
+    assert dev_reg.async_get(old_device.id)
+
+
+async def test_replace_different_node(
+    hass, multisensor_6_state, hank_binary_switch_state, client, integration
+):
+    """Test when a node is replaced with a different node."""
+    hank_binary_switch_state = deepcopy(hank_binary_switch_state)
+    multisensor_6_state = deepcopy(multisensor_6_state)
+    hank_binary_switch_state["nodeId"] = multisensor_6_state["nodeId"]
+    dev_reg = dr.async_get(hass)
+    old_node = Node(client, multisensor_6_state)
+    device_id = f"{client.driver.controller.home_id}-{old_node.node_id}"
+    new_node = Node(client, hank_binary_switch_state)
+    event = {"node": old_node}
+
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert device
+
+    event = {"node": old_node, "replaced": True}
+
+    client.driver.controller.emit("node removed", event)
+    await hass.async_block_till_done()
+    # Device should still be there after the node was removed
+    assert device
+
+    event = {"node": new_node}
+
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+    device = dev_reg.async_get(device.id)
+    # assert device is new
+    assert device
+    assert device.manufacturer == "HANK Electronics Ltd."

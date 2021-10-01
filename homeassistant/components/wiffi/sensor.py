@@ -5,6 +5,8 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
 from homeassistant.const import DEGREE, PRESSURE_MBAR, TEMP_CELSIUS
@@ -70,6 +72,12 @@ class NumberEntity(WiffiEntity, SensorEntity):
             metric.unit_of_measurement, metric.unit_of_measurement
         )
         self._value = metric.value
+
+        if self._is_measurement_entity():
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
+        elif self._is_metered_entity():
+            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
+
         self.reset_expiration_date()
 
     @property
@@ -78,12 +86,12 @@ class NumberEntity(WiffiEntity, SensorEntity):
         return self._device_class
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
         return self._unit_of_measurement
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the value of the entity."""
         return self._value
 
@@ -97,7 +105,9 @@ class NumberEntity(WiffiEntity, SensorEntity):
         self._unit_of_measurement = UOM_MAP.get(
             metric.unit_of_measurement, metric.unit_of_measurement
         )
+
         self._value = metric.value
+
         self.async_write_ha_state()
 
 
@@ -111,7 +121,7 @@ class StringEntity(WiffiEntity, SensorEntity):
         self.reset_expiration_date()
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the value of the entity."""
         return self._value
 

@@ -1,6 +1,7 @@
 """Provides functionality to interact with climate devices."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import functools as ft
 import logging
@@ -26,7 +27,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA_BASE,
     make_entity_service_schema,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
@@ -169,9 +170,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
+@dataclass
+class ClimateEntityDescription(EntityDescription):
+    """A class that describes climate entities."""
+
+
 class ClimateEntity(Entity):
     """Base class for climate entities."""
 
+    entity_description: ClimateEntityDescription
     _attr_current_humidity: int | None = None
     _attr_current_temperature: float | None = None
     _attr_fan_mode: str | None
@@ -497,7 +504,6 @@ class ClimateEntity(Entity):
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
         if hasattr(self, "turn_on"):
-            # pylint: disable=no-member
             await self.hass.async_add_executor_job(self.turn_on)  # type: ignore[attr-defined]
             return
 
@@ -511,7 +517,6 @@ class ClimateEntity(Entity):
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
         if hasattr(self, "turn_off"):
-            # pylint: disable=no-member
             await self.hass.async_add_executor_job(self.turn_off)  # type: ignore[attr-defined]
             return
 

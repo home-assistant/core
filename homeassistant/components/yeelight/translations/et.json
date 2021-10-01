@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "\u00dchendamine nurjus"
         },
-        "flow_title": "{model} {host}",
+        "flow_title": "{model} {id} ({host})",
         "step": {
             "discovery_confirm": {
                 "description": "Kas seadistada {model} ({host})?"

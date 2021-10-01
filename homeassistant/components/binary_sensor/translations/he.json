@@ -35,24 +35,24 @@
             "on": "\u05de\u05d7\u05d5\u05d1\u05e8"
         },
         "door": {
-            "off": "\u05e1\u05d2\u05d5\u05e8\u05d4",
+            "off": "\u05e1\u05d2\u05d5\u05e8",
             "on": "\u05e4\u05ea\u05d5\u05d7"
         },
         "garage_door": {
-            "off": "\u05e1\u05d2\u05d5\u05e8\u05d4",
-            "on": "\u05e4\u05ea\u05d5\u05d7\u05d4"
+            "off": "\u05e1\u05d2\u05d5\u05e8",
+            "on": "\u05e4\u05ea\u05d5\u05d7"
         },
         "gas": {
             "off": "\u05e0\u05e7\u05d9",
-            "on": "\u05d0\u05d5\u05ea\u05e8"
+            "on": "\u05d6\u05d5\u05d4\u05d4"
         },
         "heat": {
-            "off": "\u05e8\u05d2\u05d9\u05dc",
+            "off": "\u05e0\u05d5\u05e8\u05de\u05dc\u05d9",
             "on": "\u05d7\u05dd"
         },
         "light": {
             "off": "\u05d0\u05d9\u05df \u05d0\u05d5\u05e8",
-            "on": "\u05d6\u05d5\u05d4\u05d4 \u05d0\u05d5\u05e8"
+            "on": "\u05d6\u05d5\u05d4\u05ea\u05d4 \u05ea\u05d0\u05d5\u05e8\u05d4"
         },
         "lock": {
             "off": "\u05e0\u05e2\u05d5\u05dc",
@@ -64,7 +64,7 @@
         },
         "motion": {
             "off": "\u05e0\u05e7\u05d9",
-            "on": "\u05d0\u05d5\u05ea\u05e8"
+            "on": "\u05d6\u05d5\u05d4\u05d4"
         },
         "moving": {
             "off": "\u05dc\u05d0 \u05d6\u05d6",
@@ -72,17 +72,17 @@
         },
         "occupancy": {
             "off": "\u05e0\u05e7\u05d9",
-            "on": "\u05d0\u05d5\u05ea\u05e8"
+            "on": "\u05d6\u05d5\u05d4\u05d4"
         },
         "opening": {
-            "off": "\u05e0\u05e1\u05d2\u05e8",
+            "off": "\u05e1\u05d2\u05d5\u05e8",
             "on": "\u05e4\u05ea\u05d5\u05d7"
         },
         "plug": {
             "off": "\u05de\u05e0\u05d5\u05ea\u05e7"
         },
         "presence": {
-            "off": "\u05dc\u05d0 \u05d1\u05d1\u05d9\u05ea",
+            "off": "\u05d1\u05d7\u05d5\u05e5",
             "on": "\u05d1\u05d1\u05d9\u05ea"
         },
         "problem": {
@@ -95,18 +95,22 @@
         },
         "smoke": {
             "off": "\u05e0\u05e7\u05d9",
-            "on": "\u05d0\u05d5\u05ea\u05e8"
+            "on": "\u05d6\u05d5\u05d4\u05d4"
         },
         "sound": {
             "off": "\u05e0\u05e7\u05d9",
-            "on": "\u05d0\u05d5\u05ea\u05e8"
+            "on": "\u05d6\u05d5\u05d4\u05d4"
+        },
+        "update": {
+            "off": "\u05e2\u05d3\u05db\u05e0\u05d9",
+            "on": "\u05e2\u05d3\u05db\u05d5\u05df \u05d6\u05de\u05d9\u05df"
         },
         "vibration": {
             "off": "\u05e0\u05e7\u05d9",
-            "on": "\u05d0\u05d5\u05ea\u05e8"
+            "on": "\u05d6\u05d5\u05d4\u05d4"
         },
         "window": {
-            "off": "\u05e0\u05e1\u05d2\u05e8",
+            "off": "\u05e1\u05d2\u05d5\u05e8",
             "on": "\u05e4\u05ea\u05d5\u05d7"
         }
     },

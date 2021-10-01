@@ -1,5 +1,6 @@
 """Test real forwarded middleware."""
 from ipaddress import ip_network
+from unittest.mock import Mock, patch
 
 from aiohttp import web
 from aiohttp.hdrs import X_FORWARDED_FOR, X_FORWARDED_HOST, X_FORWARDED_PROTO
@@ -441,3 +442,22 @@ async def test_x_forwarded_host_with_empty_header(aiohttp_client, caplog):
 
     assert resp.status == 400
     assert "Empty value received in X-Forward-Host header" in caplog.text
+
+
+async def test_x_forwarded_cloud(aiohttp_client, caplog):
+    """Test that cloud requests are not processed."""
+    app = web.Application()
+    app.router.add_get("/", mock_handler)
+    async_setup_forwarded(app, True, [ip_network("127.0.0.1")])
+
+    mock_api_client = await aiohttp_client(app)
+
+    with patch(
+        "hass_nabucasa.remote.is_cloud_request", Mock(get=Mock(return_value=True))
+    ):
+        resp = await mock_api_client.get(
+            "/", headers={X_FORWARDED_FOR: "222.222.222.222", X_FORWARDED_HOST: ""}
+        )
+
+    # This request would normally fail because it's invalid, now it works.
+    assert resp.status == 200

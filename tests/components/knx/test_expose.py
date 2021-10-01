@@ -2,9 +2,12 @@
 from homeassistant.components.knx import CONF_KNX_EXPOSE, KNX_ADDRESS
 from homeassistant.components.knx.schema import ExposeSchema
 from homeassistant.const import CONF_ATTRIBUTE, CONF_ENTITY_ID, CONF_TYPE
+from homeassistant.core import HomeAssistant
+
+from .conftest import KNXTestKit
 
 
-async def test_binary_expose(hass, knx):
+async def test_binary_expose(hass: HomeAssistant, knx: KNXTestKit):
     """Test a binary expose to only send telegrams on state change."""
     entity_id = "fake.entity"
     await knx.setup_integration(
@@ -31,7 +34,7 @@ async def test_binary_expose(hass, knx):
     await knx.assert_write("1/1/8", False)
 
 
-async def test_expose_attribute(hass, knx):
+async def test_expose_attribute(hass: HomeAssistant, knx: KNXTestKit):
     """Test an expose to only send telegrams on attribute change."""
     entity_id = "fake.entity"
     attribute = "fake_attribute"
@@ -76,7 +79,7 @@ async def test_expose_attribute(hass, knx):
     await knx.assert_telegram_count(0)
 
 
-async def test_expose_attribute_with_default(hass, knx):
+async def test_expose_attribute_with_default(hass: HomeAssistant, knx: KNXTestKit):
     """Test an expose to only send telegrams on attribute change."""
     entity_id = "fake.entity"
     attribute = "fake_attribute"

@@ -4,8 +4,9 @@ from __future__ import annotations
 import datetime
 import logging
 
-from pysonos.core import SoCo
-from pysonos.exceptions import SoCoException
+import soco.config as soco_config
+from soco.core import SoCo
+from soco.exceptions import SoCoException
 
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.dispatcher import (
@@ -65,10 +66,14 @@ class SonosEntity(Entity):
     async def async_poll(self, now: datetime.datetime) -> None:
         """Poll the entity if subscriptions fail."""
         if not self.speaker.subscriptions_failed:
+            if soco_config.EVENT_ADVERTISE_IP:
+                listener_msg = f"{self.speaker.subscription_address} (advertising as {soco_config.EVENT_ADVERTISE_IP})"
+            else:
+                listener_msg = self.speaker.subscription_address
             _LOGGER.warning(
-                "%s cannot reach [%s], falling back to polling, functionality may be limited",
+                "%s cannot reach %s, falling back to polling, functionality may be limited",
                 self.speaker.zone_name,
-                self.speaker.subscription_address,
+                listener_msg,
             )
             self.speaker.subscriptions_failed = True
             await self.speaker.async_unsubscribe()
@@ -90,7 +95,10 @@ class SonosEntity(Entity):
             "name": self.speaker.zone_name,
             "model": self.speaker.model_name.replace("Sonos ", ""),
             "sw_version": self.speaker.version,
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self.speaker.mac_address)},
+            "connections": {
+                (dr.CONNECTION_NETWORK_MAC, self.speaker.mac_address),
+                (dr.CONNECTION_UPNP, f"uuid:{self.speaker.uid}"),
+            },
             "manufacturer": "Sonos",
             "suggested_area": self.speaker.zone_name,
         }

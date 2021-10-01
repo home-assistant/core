@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u00da\u010det je ji\u017e nastaven"
+        },
+        "error": {
+            "invalid_credentials": "Neplatn\u00e9 ov\u011b\u0159en\u00ed"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Heslo",
+                    "username": "E-mail"
+                }
+            }
+        }
+    }
+}

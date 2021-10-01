@@ -54,7 +54,7 @@ class IcloudDeviceBatterySensor(SensorEntity):
     """Representation of a iCloud device battery sensor."""
 
     _attr_device_class = DEVICE_CLASS_BATTERY
-    _attr_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(self, account: IcloudAccount, device: IcloudDevice) -> None:
         """Initialize the battery sensor."""
@@ -73,7 +73,7 @@ class IcloudDeviceBatterySensor(SensorEntity):
         return f"{self._device.name} battery state"
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Battery state percentage."""
         return self._device.battery_level
 

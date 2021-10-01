@@ -1,5 +1,7 @@
 """Constants used be the HomeKit component."""
 
+from homeassistant.const import CONF_DEVICES
+
 # #### Misc ####
 DEBOUNCE_TIMEOUT = 0.5
 DEVICE_PRECISION_LEEWAY = 6
@@ -22,9 +24,6 @@ AUDIO_CODEC_COPY = "copy"
 ATTR_DISPLAY_NAME = "display_name"
 ATTR_VALUE = "value"
 ATTR_INTEGRATION = "platform"
-ATTR_MANUFACTURER = "manufacturer"
-ATTR_MODEL = "model"
-ATTR_SOFTWARE_VERSION = "sw_version"
 ATTR_KEY_NAME = "key_name"
 # Current attribute used by homekit_controller
 ATTR_OBSTRUCTION_DETECTED = "obstruction-detected"
@@ -99,6 +98,7 @@ HOMEKIT_MODES = [HOMEKIT_MODE_BRIDGE, HOMEKIT_MODE_ACCESSORY]
 # #### HomeKit Component Services ####
 SERVICE_HOMEKIT_START = "start"
 SERVICE_HOMEKIT_RESET_ACCESSORY = "reset_accessory"
+SERVICE_HOMEKIT_UNPAIR = "unpair"
 
 # #### String Constants ####
 BRIDGE_MODEL = "Bridge"
@@ -138,6 +138,7 @@ SERV_MOTION_SENSOR = "MotionSensor"
 SERV_OCCUPANCY_SENSOR = "OccupancySensor"
 SERV_OUTLET = "Outlet"
 SERV_SECURITY_SYSTEM = "SecuritySystem"
+SERV_SERVICE_LABEL = "ServiceLabel"
 SERV_SMOKE_SENSOR = "SmokeSensor"
 SERV_SPEAKER = "Speaker"
 SERV_STATELESS_PROGRAMMABLE_SWITCH = "StatelessProgrammableSwitch"
@@ -207,6 +208,8 @@ CHAR_ROTATION_DIRECTION = "RotationDirection"
 CHAR_ROTATION_SPEED = "RotationSpeed"
 CHAR_SATURATION = "Saturation"
 CHAR_SERIAL_NUMBER = "SerialNumber"
+CHAR_SERVICE_LABEL_INDEX = "ServiceLabelIndex"
+CHAR_SERVICE_LABEL_NAMESPACE = "ServiceLabelNamespace"
 CHAR_SLEEP_DISCOVER_MODE = "SleepDiscoveryMode"
 CHAR_SMOKE_DETECTED = "SmokeDetected"
 CHAR_STATUS_LOW_BATTERY = "StatusLowBattery"
@@ -294,4 +297,12 @@ CONFIG_OPTIONS = [
     CONF_SAFE_MODE,
     CONF_ENTITY_CONFIG,
     CONF_HOMEKIT_MODE,
+    CONF_DEVICES,
 ]
+
+# ### Maximum Lengths ###
+MAX_NAME_LENGTH = 64
+MAX_SERIAL_LENGTH = 64
+MAX_MODEL_LENGTH = 64
+MAX_VERSION_LENGTH = 64
+MAX_MANUFACTURER_LENGTH = 64

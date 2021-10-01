@@ -17,6 +17,7 @@
             "is_no_problem": "{entity_name} nem \u00e9szlel probl\u00e9m\u00e1t",
             "is_no_smoke": "{entity_name} nem \u00e9rz\u00e9kel f\u00fcst\u00f6t",
             "is_no_sound": "{entity_name} nem \u00e9rz\u00e9kel hangot",
+            "is_no_update": "{entity_name} naprak\u00e9sz",
             "is_no_vibration": "{entity_name} nem \u00e9rz\u00e9kel rezg\u00e9st",
             "is_not_bat_low": "{entity_name} akkufesz\u00fclts\u00e9g megfelel\u0151",
             "is_not_cold": "{entity_name} nem hideg",
@@ -42,6 +43,7 @@
             "is_smoke": "{entity_name} f\u00fcst\u00f6t \u00e9rz\u00e9kel",
             "is_sound": "{entity_name} hangot \u00e9rz\u00e9kel",
             "is_unsafe": "{entity_name} nem biztons\u00e1gos",
+            "is_update": "{entity_name} egy friss\u00edt\u00e9s \u00e1ll rendelkez\u00e9sre",
             "is_vibration": "{entity_name} rezg\u00e9st \u00e9rz\u00e9kel"
         },
         "trigger_type": {
@@ -61,6 +63,7 @@
             "no_problem": "{entity_name} m\u00e1r nem \u00e9szlel probl\u00e9m\u00e1t",
             "no_smoke": "{entity_name} m\u00e1r nem \u00e9rz\u00e9kel f\u00fcst\u00f6t",
             "no_sound": "{entity_name} m\u00e1r nem \u00e9rz\u00e9kel hangot",
+            "no_update": "{entity_name} naprak\u00e9sz lett",
             "no_vibration": "{entity_name} m\u00e1r nem \u00e9rz\u00e9kel rezg\u00e9st",
             "not_bat_low": "{entity_name} akkufesz\u00fclts\u00e9g megfelel\u0151",
             "not_cold": "{entity_name} m\u00e1r nem hideg",
@@ -86,6 +89,7 @@
             "turned_off": "{entity_name} ki lett kapcsolva",
             "turned_on": "{entity_name} be lett kapcsolva",
             "unsafe": "{entity_name} m\u00e1r nem biztons\u00e1gos",
+            "update": "{entity_name} el\u00e9rhet\u0151 friss\u00edt\u00e9s",
             "vibration": "{entity_name} rezg\u00e9st \u00e9rz\u00e9kel"
         }
     },
@@ -177,6 +181,10 @@
         "sound": {
             "off": "Norm\u00e1l",
             "on": "\u00c9szlelve"
+        },
+        "update": {
+            "off": "Naprak\u00e9sz",
+            "on": "Friss\u00edt\u00e9s el\u00e9rhet\u0151"
         },
         "vibration": {
             "off": "Norm\u00e1l",

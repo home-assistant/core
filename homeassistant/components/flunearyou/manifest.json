@@ -3,7 +3,7 @@
   "name": "Flu Near You",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/flunearyou",
-  "requirements": ["pyflunearyou==1.0.7"],
+  "requirements": ["pyflunearyou==2.0.2"],
   "codeowners": ["@bachya"],
   "iot_class": "cloud_polling"
 }

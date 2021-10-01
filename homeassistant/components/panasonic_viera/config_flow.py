@@ -1,7 +1,7 @@
 """Config flow for Panasonic Viera TV integration."""
 from functools import partial
 import logging
-from urllib.request import URLError
+from urllib.error import URLError
 
 from panasonic_viera import TV_TYPE_ENCRYPTED, RemoteControl, SOAPError
 import voluptuous as vol

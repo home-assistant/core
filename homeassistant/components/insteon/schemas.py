@@ -40,6 +40,7 @@ from .const import (
     CONF_X10_ALL_UNITS_OFF,
     DOMAIN,
     HOUSECODES,
+    INSTEON_ADDR_REGEX,
     PORT_HUB_V1,
     PORT_HUB_V2,
     SRV_ALL_LINK_GROUP,
@@ -62,6 +63,13 @@ def set_default_port(schema: dict) -> dict:
         # Found hub_version but not ip_port
         schema[CONF_IP_PORT] = PORT_HUB_V1 if hub_version == 1 else PORT_HUB_V2
     return schema
+
+
+def insteon_address(value: str) -> str:
+    """Validate an Insteon address."""
+    if not INSTEON_ADDR_REGEX.match(value):
+        raise vol.Invalid("Invalid Insteon Address")
+    return str(value).replace(".", "").lower()
 
 
 CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(

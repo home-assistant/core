@@ -193,6 +193,7 @@ def test_core_config_schema():
         {"longitude": -181},
         {"external_url": "not an url"},
         {"internal_url": "not an url"},
+        {"currency", 100},
         {"customize": "bla"},
         {"customize": {"light.sensor": 100}},
         {"customize": {"entity_id": []}},
@@ -208,9 +209,23 @@ def test_core_config_schema():
             "external_url": "https://www.example.com",
             "internal_url": "http://example.local",
             CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
+            "currency": "USD",
             "customize": {"sensor.temperature": {"hidden": True}},
         }
     )
+
+
+def test_core_config_schema_internal_external_warning(caplog):
+    """Test that we warn for internal/external URL with path."""
+    config_util.CORE_CONFIG_SCHEMA(
+        {
+            "external_url": "https://www.example.com/bla",
+            "internal_url": "http://example.local/yo",
+        }
+    )
+
+    assert "Invalid external_url set" in caplog.text
+    assert "Invalid internal_url set" in caplog.text
 
 
 def test_customize_dict_schema():
@@ -360,6 +375,7 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
             "unit_system": "metric",
             "external_url": "https://www.example.com",
             "internal_url": "http://example.local",
+            "currency": "EUR",
         },
         "key": "core.config",
         "version": 1,
@@ -376,6 +392,7 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
     assert hass.config.time_zone == "Europe/Copenhagen"
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
+    assert hass.config.currency == "EUR"
     assert len(hass.config.allowlist_external_dirs) == 3
     assert "/etc" in hass.config.allowlist_external_dirs
     assert hass.config.config_source == SOURCE_STORAGE
@@ -423,6 +440,7 @@ async def test_updating_configuration(hass, hass_storage):
             "unit_system": "metric",
             "external_url": "https://www.example.com",
             "internal_url": "http://example.local",
+            "currency": "BTC",
         },
         "key": "core.config",
         "version": 1,
@@ -431,12 +449,14 @@ async def test_updating_configuration(hass, hass_storage):
     await config_util.async_process_ha_core_config(
         hass, {"allowlist_external_dirs": "/etc"}
     )
-    await hass.config.async_update(latitude=50)
+    await hass.config.async_update(latitude=50, currency="USD")
 
     new_core_data = copy.deepcopy(core_data)
     new_core_data["data"]["latitude"] = 50
+    new_core_data["data"]["currency"] = "USD"
     assert hass_storage["core.config"] == new_core_data
     assert hass.config.latitude == 50
+    assert hass.config.currency == "USD"
 
 
 async def test_override_stored_configuration(hass, hass_storage):
@@ -484,6 +504,7 @@ async def test_loading_configuration(hass):
             "internal_url": "http://example.local",
             "media_dirs": {"mymedia": "/usr"},
             "legacy_templates": True,
+            "currency": "EUR",
         },
     )
 
@@ -501,6 +522,7 @@ async def test_loading_configuration(hass):
     assert hass.config.media_dirs == {"mymedia": "/usr"}
     assert hass.config.config_source == config_util.SOURCE_YAML
     assert hass.config.legacy_templates is True
+    assert hass.config.currency == "EUR"
 
 
 async def test_loading_configuration_temperature_unit(hass):
@@ -528,6 +550,7 @@ async def test_loading_configuration_temperature_unit(hass):
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
     assert hass.config.config_source == config_util.SOURCE_YAML
+    assert hass.config.currency == "EUR"
 
 
 async def test_loading_configuration_default_media_dirs_docker(hass):
@@ -640,19 +663,30 @@ async def test_merge(merge_log_err, hass):
         "pack_list": {"light": {"platform": "test"}},
         "pack_list2": {"light": [{"platform": "test"}]},
         "pack_none": {"wake_on_lan": None},
+        "pack_special": {
+            "automation": [{"some": "yay"}],
+            "script": {"a_script": "yay"},
+            "template": [{"some": "yay"}],
+        },
     }
     config = {
         config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
         "input_boolean": {"ib2": None},
         "light": {"platform": "test"},
+        "automation": [],
+        "script": {},
+        "template": [],
     }
     await config_util.merge_packages_config(hass, config, packages)
 
     assert merge_log_err.call_count == 0
-    assert len(config) == 5
+    assert len(config) == 8
     assert len(config["input_boolean"]) == 2
     assert len(config["input_select"]) == 1
     assert len(config["light"]) == 3
+    assert len(config["automation"]) == 1
+    assert len(config["script"]) == 1
+    assert len(config["template"]) == 1
     assert isinstance(config["wake_on_lan"], OrderedDict)
 
 

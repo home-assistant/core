@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dieser Samsung TV ist bereits konfiguriert",
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
             "auth_missing": "Home Assistant ist nicht berechtigt, eine Verbindung zu diesem Samsung TV herzustellen. \u00dcberpr\u00fcfe den Ger\u00e4teverbindungsmanager in den Einstellungen deines Fernsehger\u00e4ts, um Home Assistant zu autorisieren.",
             "cannot_connect": "Verbindung fehlgeschlagen",

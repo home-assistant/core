@@ -20,8 +20,8 @@
     },
     "state": {
         "_": {
-            "off": "Eteint",
-            "on": "Allum\u00e9"
+            "off": "Inactif",
+            "on": "Actif"
         }
     },
     "title": "Humidificateur"

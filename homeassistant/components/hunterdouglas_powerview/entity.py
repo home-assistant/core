@@ -71,7 +71,7 @@ class ShadeEntity(HDEntity):
             "name": self._shade_name,
             "suggested_area": self._room_name,
             "manufacturer": MANUFACTURER,
-            "model": self._shade.raw_data[ATTR_TYPE],
+            "model": str(self._shade.raw_data[ATTR_TYPE]),
             "via_device": (DOMAIN, self._device_info[DEVICE_SERIAL_NUMBER]),
         }
 

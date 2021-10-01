@@ -149,6 +149,18 @@ def test_types(type_name, entity_id, state, attrs, config):
             "open",
             {ATTR_SUPPORTED_FEATURES: (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE)},
         ),
+        (
+            "WindowCoveringBasic",
+            "cover.open_window",
+            "open",
+            {
+                ATTR_SUPPORTED_FEATURES: (
+                    cover.SUPPORT_OPEN
+                    | cover.SUPPORT_CLOSE
+                    | cover.SUPPORT_SET_TILT_POSITION
+                )
+            },
+        ),
     ],
 )
 def test_type_covers(type_name, entity_id, state, attrs):
@@ -262,6 +274,8 @@ def test_type_sensors(type_name, entity_id, state, attrs):
         ("Switch", "remote.test", "on", {}, {}),
         ("Switch", "scene.test", "on", {}, {}),
         ("Switch", "script.test", "on", {}, {}),
+        ("SelectSwitch", "input_select.test", "option1", {}, {}),
+        ("SelectSwitch", "select.test", "option1", {}, {}),
         ("Switch", "switch.test", "on", {}, {}),
         ("Switch", "switch.test", "on", {}, {CONF_TYPE: TYPE_SWITCH}),
         ("Valve", "switch.test", "on", {}, {CONF_TYPE: TYPE_FAUCET}),

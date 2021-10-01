@@ -107,7 +107,7 @@ class OctoPrintSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         sensor_unit = self.unit_of_measurement
         if sensor_unit in (TEMP_CELSIUS, PERCENTAGE):
@@ -118,7 +118,7 @@ class OctoPrintSensor(SensorEntity):
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 

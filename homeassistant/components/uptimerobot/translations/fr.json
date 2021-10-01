@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Le compte est d\u00e9j\u00e0 configur\u00e9",
+            "reauth_failed_existing": "Impossible de mettre \u00e0 jour l'entr\u00e9e de configuration, veuillez supprimer l'int\u00e9gration et la configurer \u00e0 nouveau.",
+            "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi",
+            "unknown": "Erreur inattendue"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_api_key": "Cl\u00e9 API invalide",
+            "reauth_failed_matching_account": "La cl\u00e9 API que vous avez fournie ne correspond pas \u00e0 l\u2019ID de compte pour la configuration existante.",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Cl\u00e9 d'API"
+                },
+                "description": "Vous devez fournir une nouvelle cl\u00e9 API en lecture seule \u00e0 partir d'Uptime Robot",
+                "title": "R\u00e9-authentifier l'int\u00e9gration"
+            },
+            "user": {
+                "data": {
+                    "api_key": "Cl\u00e9 d'API"
+                },
+                "description": "Vous devez fournir une cl\u00e9 API en lecture seule \u00e0 partir d'Uptime Robot"
+            }
+        }
+    }
+}

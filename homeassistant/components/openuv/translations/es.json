@@ -17,5 +17,12 @@
                 "title": "Completa tu informaci\u00f3n"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Configurar OpenUV"
+            }
+        }
     }
 }

@@ -1,13 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dieser Drucker ist bereits konfiguriert",
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "unsupported_model": "Dieses Druckermodell wird nicht unterst\u00fctzt."
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
             "snmp_error": "SNMP-Server deaktiviert oder Drucker nicht unterst\u00fctzt.",
-            "wrong_host": " Ung\u00fcltiger Hostname oder IP-Adresse"
+            "wrong_host": "Ung\u00fcltiger Hostname oder IP-Adresse"
         },
         "flow_title": "{model} {serial_number}",
         "step": {

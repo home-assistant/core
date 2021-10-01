@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine, Iterable, KeysView
+from collections.abc import Callable, Coroutine, Iterable, KeysView
 from datetime import datetime, timedelta
 import enum
 from functools import lru_cache, wraps
@@ -12,7 +12,7 @@ import socket
 import string
 import threading
 from types import MappingProxyType
-from typing import Any, Callable, TypeVar
+from typing import Any, TypeVar
 
 import slugify as unicode_slug
 
@@ -79,9 +79,9 @@ def sanitize_path(path: str) -> str:
     return path
 
 
-def slugify(text: str, *, separator: str = "_") -> str:
+def slugify(text: str | None, *, separator: str = "_") -> str:
     """Slugify a given text."""
-    if text == "":
+    if text == "" or text is None:
         return ""
     slug = unicode_slug.slugify(text, separator=separator)
     return "unknown" if slug == "" else slug

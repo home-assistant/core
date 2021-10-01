@@ -40,7 +40,14 @@ from homeassistant.components.zha.core.const import (
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import Context
 
-from .conftest import FIXTURE_GRP_ID, FIXTURE_GRP_NAME
+from .conftest import (
+    FIXTURE_GRP_ID,
+    FIXTURE_GRP_NAME,
+    SIG_EP_INPUT,
+    SIG_EP_OUTPUT,
+    SIG_EP_PROFILE,
+    SIG_EP_TYPE,
+)
 
 IEEE_SWITCH_DEVICE = "01:2d:6f:00:0a:90:69:e7"
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
@@ -53,9 +60,10 @@ async def device_switch(hass, zigpy_device_mock, zha_device_joined):
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                "in_clusters": [general.OnOff.cluster_id, general.Basic.cluster_id],
-                "out_clusters": [],
-                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_INPUT: [general.OnOff.cluster_id, general.Basic.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
             }
         },
         ieee=IEEE_SWITCH_DEVICE,
@@ -72,13 +80,14 @@ async def device_groupable(hass, zigpy_device_mock, zha_device_joined):
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                "in_clusters": [
+                SIG_EP_INPUT: [
                     general.OnOff.cluster_id,
                     general.Basic.cluster_id,
                     general.Groups.cluster_id,
                 ],
-                "out_clusters": [],
-                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
             }
         },
         ieee=IEEE_GROUPABLE_DEVICE,
@@ -136,7 +145,7 @@ async def test_device_cluster_attributes(zha_client):
     msg = await zha_client.receive_json()
 
     attributes = msg["result"]
-    assert len(attributes) == 4
+    assert len(attributes) == 5
 
     for attribute in attributes:
         assert attribute[ID] is not None

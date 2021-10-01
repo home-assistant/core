@@ -51,7 +51,7 @@ class VerisureThermometer(CoordinatorEntity, SensorEntity):
     coordinator: VerisureDataUpdateCoordinator
 
     _attr_device_class = DEVICE_CLASS_TEMPERATURE
-    _attr_unit_of_measurement = TEMP_CELSIUS
+    _attr_native_unit_of_measurement = TEMP_CELSIUS
 
     def __init__(
         self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
@@ -84,7 +84,7 @@ class VerisureThermometer(CoordinatorEntity, SensorEntity):
         }
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the entity."""
         return self.coordinator.data["climate"][self.serial_number]["temperature"]
 
@@ -104,7 +104,7 @@ class VerisureHygrometer(CoordinatorEntity, SensorEntity):
     coordinator: VerisureDataUpdateCoordinator
 
     _attr_device_class = DEVICE_CLASS_HUMIDITY
-    _attr_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(
         self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
@@ -137,7 +137,7 @@ class VerisureHygrometer(CoordinatorEntity, SensorEntity):
         }
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the entity."""
         return self.coordinator.data["climate"][self.serial_number]["humidity"]
 
@@ -156,7 +156,7 @@ class VerisureMouseDetection(CoordinatorEntity, SensorEntity):
 
     coordinator: VerisureDataUpdateCoordinator
 
-    _attr_unit_of_measurement = "Mice"
+    _attr_native_unit_of_measurement = "Mice"
 
     def __init__(
         self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
@@ -186,7 +186,7 @@ class VerisureMouseDetection(CoordinatorEntity, SensorEntity):
         }
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the entity."""
         return self.coordinator.data["mice"][self.serial_number]["detections"]
 

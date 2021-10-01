@@ -2,7 +2,7 @@
   "domain": "wirelesstag",
   "name": "Wireless Sensor Tags",
   "documentation": "https://www.home-assistant.io/integrations/wirelesstag",
-  "requirements": ["wirelesstagpy==0.4.1"],
-  "codeowners": [],
-  "iot_class": "local_push"
+  "requirements": ["wirelesstagpy==0.5.0"],
+  "codeowners": ["@sergeymaysak"],
+  "iot_class": "cloud_push"
 }

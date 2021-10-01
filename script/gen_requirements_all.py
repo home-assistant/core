@@ -19,6 +19,7 @@ COMMENT_REQUIREMENTS = (
     "beewi_smartclim",  # depends on bluepy
     "blinkt",
     "bluepy",
+    "bme280spi",
     "bme680",
     "decora",
     "decora_wifi",
@@ -43,6 +44,10 @@ COMMENT_REQUIREMENTS = (
     "tf-models-official",
     "VL53L1X2",
 )
+
+COMMENT_REQUIREMENTS_NORMALIZED = {
+    commented.lower().replace("_", "-") for commented in COMMENT_REQUIREMENTS
+}
 
 IGNORE_PIN = ("colorlog>2.1,<3", "urllib3")
 
@@ -70,7 +75,13 @@ httplib2>=0.19.0
 
 # gRPC 1.32+ currently causes issues on ARMv7, see:
 # https://github.com/home-assistant/core/issues/40148
+# Newer versions of some other libraries pin a higher version of grpcio,
+# so those also need to be kept at an old version until the grpcio pin
+# is reverted, see:
+# https://github.com/home-assistant/core/issues/53427
 grpcio==1.31.0
+google-cloud-pubsub==2.1.0
+google-api-core<=1.31.2
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
@@ -83,10 +94,18 @@ enum34==1000000000.0.0
 typing==1000000000.0.0
 uuid==1000000000.0.0
 
-# httpcore 0.13.4 breaks several integrations
-# https://github.com/home-assistant/core/issues/51778
-httpcore==0.13.3
+# Temporary constraint on pandas, to unblock 2021.7 releases
+# until we have fixed the wheels builds for newer versions.
+pandas==1.3.0
 
+# regex causes segfault with version 2021.8.27
+# https://bitbucket.org/mrabarnett/mrab-regex/issues/421/2021827-results-in-fatal-python-error
+# This is fixed in 2021.8.28
+regex==2021.8.28
+
+# anyio has a bug that was fixed in 3.3.1
+# can remove after httpx/httpcore updates its anyio version pin
+anyio>=3.3.1
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
@@ -96,6 +115,8 @@ IGNORE_PRE_COMMIT_HOOK_ID = (
     "prettier",
     "python-typing-update",
 )
+
+PACKAGE_REGEX = re.compile(r"^(?:--.+\s)?([-_\.\w\d]+).*==.+$")
 
 
 def has_tests(module: str):
@@ -160,9 +181,24 @@ def gather_recursive_requirements(domain, seen=None):
     return reqs
 
 
+def normalize_package_name(requirement: str) -> str:
+    """Return a normalized package name from a requirement string."""
+    # This function is also used in hassfest.
+    match = PACKAGE_REGEX.search(requirement)
+    if not match:
+        return ""
+
+    # pipdeptree needs lowercase and dash instead of underscore as separator
+    package = match.group(1).lower().replace("_", "-")
+
+    return package
+
+
 def comment_requirement(req):
     """Comment out requirement. Some don't install on all systems."""
-    return any(ign.lower() in req.lower() for ign in COMMENT_REQUIREMENTS)
+    return any(
+        normalize_package_name(req) == ign for ign in COMMENT_REQUIREMENTS_NORMALIZED
+    )
 
 
 def gather_modules():

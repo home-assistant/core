@@ -10,7 +10,7 @@
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "cloud_credentials_incomplete": "Dane logowania do chmury niekompletne, prosz\u0119 poda\u0107 nazw\u0119 u\u017cytkownika, has\u0142o i kraj",
-            "cloud_login_error": "Nie mo\u017cna zalogowa\u0107 si\u0119 do chmury Xioami Miio, sprawd\u017a po\u015bwiadczenia.",
+            "cloud_login_error": "Nie mo\u017cna zalogowa\u0107 si\u0119 do chmury Xiaomi Miio, sprawd\u017a po\u015bwiadczenia.",
             "cloud_no_devices": "Na tym koncie Xiaomi Miio nie znaleziono \u017cadnych urz\u0105dze\u0144.",
             "no_device_selected": "Nie wybrano \u017cadnego urz\u0105dzenia, wybierz jedno urz\u0105dzenie",
             "unknown_device": "Model urz\u0105dzenia nie jest znany, nie mo\u017cna skonfigurowa\u0107 urz\u0105dzenia przy u\u017cyciu interfejsu u\u017cytkownika."

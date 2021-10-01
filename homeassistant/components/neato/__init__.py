@@ -1,7 +1,7 @@
 """Support for Neato botvac connected vacuum cleaners."""
-from datetime import timedelta
 import logging
 
+import aiohttp
 from pybotvac import Account, Neato
 from pybotvac.exceptions import NeatoException
 import voluptuous as vol
@@ -12,17 +12,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import Throttle
 
 from . import api, config_flow
-from .const import (
-    NEATO_CONFIG,
-    NEATO_DOMAIN,
-    NEATO_LOGIN,
-    NEATO_MAP_DATA,
-    NEATO_PERSISTENT_MAPS,
-    NEATO_ROBOTS,
-)
+from .const import NEATO_CONFIG, NEATO_DOMAIN, NEATO_LOGIN
+from .hub import NeatoHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,9 +70,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
+    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    try:
+        await session.async_ensure_token_valid()
+    except aiohttp.ClientResponseError as ex:
+        _LOGGER.debug("API error: %s (%s)", ex.code, ex.message)
+        if ex.code in (401, 403):
+            raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
+        raise ConfigEntryNotReady from ex
+
     neato_session = api.ConfigEntryAuth(hass, entry, implementation)
     hass.data[NEATO_DOMAIN][entry.entry_id] = neato_session
     hub = NeatoHub(hass, Account(neato_session))
+
+    await hub.async_update_entry_unique_id(entry)
 
     try:
         await hass.async_add_executor_job(hub.update_robots)
@@ -94,32 +98,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigType) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[NEATO_DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-class NeatoHub:
-    """A My Neato hub wrapper class."""
-
-    def __init__(self, hass: HomeAssistant, neato: Account) -> None:
-        """Initialize the Neato hub."""
-        self._hass = hass
-        self.my_neato: Account = neato
-
-    @Throttle(timedelta(minutes=1))
-    def update_robots(self):
-        """Update the robot states."""
-        _LOGGER.debug("Running HUB.update_robots %s", self._hass.data.get(NEATO_ROBOTS))
-        self._hass.data[NEATO_ROBOTS] = self.my_neato.robots
-        self._hass.data[NEATO_PERSISTENT_MAPS] = self.my_neato.persistent_maps
-        self._hass.data[NEATO_MAP_DATA] = self.my_neato.maps
-
-    def download_map(self, url):
-        """Download a new map image."""
-        map_image_data = self.my_neato.get_map_image(url)
-        return map_image_data

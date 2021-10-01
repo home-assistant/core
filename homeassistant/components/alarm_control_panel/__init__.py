@@ -1,6 +1,7 @@
 """Component to interface with an alarm control panel."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any, Final, final
@@ -22,7 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
@@ -117,9 +118,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
+@dataclass
+class AlarmControlPanelEntityDescription(EntityDescription):
+    """A class that describes alarm control panel entities."""
+
+
 class AlarmControlPanelEntity(Entity):
     """An abstract class for alarm control entities."""
 
+    entity_description: AlarmControlPanelEntityDescription
     _attr_changed_by: str | None = None
     _attr_code_arm_required: bool = True
     _attr_code_format: str | None = None

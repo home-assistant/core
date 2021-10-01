@@ -10,11 +10,11 @@ from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
 )
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt
@@ -118,7 +118,7 @@ async def test_sensors(hass, aioclient_mock, mock_deconz_websocket):
 
     consumption_sensor = hass.states.get("sensor.consumption_sensor")
     assert consumption_sensor.state == "0.002"
-    assert ATTR_DEVICE_CLASS not in consumption_sensor.attributes
+    assert consumption_sensor.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_ENERGY
 
     assert not hass.states.get("sensor.clip_light_level_sensor")
 
@@ -552,5 +552,4 @@ async def test_unsupported_sensor(hass, aioclient_mock):
     with patch.dict(DECONZ_WEB_REQUEST, data):
         await setup_deconz_integration(hass, aioclient_mock)
 
-    assert len(hass.states.async_all()) == 1
-    assert hass.states.get("sensor.name").state == STATE_UNKNOWN
+    assert len(hass.states.async_all()) == 0

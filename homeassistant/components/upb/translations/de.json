@@ -5,7 +5,7 @@
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
-            "invalid_upb_file": "Fehlende oder ung\u00fcltige UPB UPStart-Exportdatei, \u00fcberpr\u00fcfe  den Namen und den Pfad der Datei.",
+            "invalid_upb_file": "Fehlende oder ung\u00fcltige UPB UPStart-Exportdatei, \u00fcberpr\u00fcfe den Namen und den Pfad der Datei.",
             "unknown": "Unerwarteter Fehler"
         },
         "step": {

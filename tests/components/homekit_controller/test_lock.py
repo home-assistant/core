@@ -57,3 +57,23 @@ async def test_switch_read_lock_state(hass, utcnow):
     helper.characteristics[LOCK_TARGET_STATE].value = 1
     state = await helper.poll_and_get_state()
     assert state.state == "locked"
+
+    helper.characteristics[LOCK_CURRENT_STATE].value = 2
+    helper.characteristics[LOCK_TARGET_STATE].value = 1
+    state = await helper.poll_and_get_state()
+    assert state.state == "jammed"
+
+    helper.characteristics[LOCK_CURRENT_STATE].value = 3
+    helper.characteristics[LOCK_TARGET_STATE].value = 1
+    state = await helper.poll_and_get_state()
+    assert state.state == "unknown"
+
+    helper.characteristics[LOCK_CURRENT_STATE].value = 0
+    helper.characteristics[LOCK_TARGET_STATE].value = 1
+    state = await helper.poll_and_get_state()
+    assert state.state == "locking"
+
+    helper.characteristics[LOCK_CURRENT_STATE].value = 1
+    helper.characteristics[LOCK_TARGET_STATE].value = 0
+    state = await helper.poll_and_get_state()
+    assert state.state == "unlocking"

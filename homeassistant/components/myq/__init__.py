@@ -3,6 +3,13 @@ from datetime import timedelta
 import logging
 
 import pymyq
+from pymyq.const import (
+    DEVICE_STATE as MYQ_DEVICE_STATE,
+    DEVICE_STATE_ONLINE as MYQ_DEVICE_STATE_ONLINE,
+    KNOWN_MODELS,
+    MANUFACTURER,
+)
+from pymyq.device import MyQDevice
 from pymyq.errors import InvalidCredentialsError, MyQError
 
 from homeassistant.config_entries import ConfigEntry
@@ -10,7 +17,11 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import DOMAIN, MYQ_COORDINATOR, MYQ_GATEWAY, PLATFORMS, UPDATE_INTERVAL
 
@@ -63,3 +74,46 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+class MyQEntity(CoordinatorEntity):
+    """Base class for MyQ Entities."""
+
+    def __init__(self, coordinator: DataUpdateCoordinator, device: MyQDevice) -> None:
+        """Initialize class."""
+        super().__init__(coordinator)
+        self._device = device
+        self._attr_unique_id = device.device_id
+
+    @property
+    def name(self):
+        """Return the name if any, name can change if user changes it within MyQ."""
+        return self._device.name
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        device_info = {
+            "identifiers": {(DOMAIN, self._device.device_id)},
+            "name": self._device.name,
+            "manufacturer": MANUFACTURER,
+            "sw_version": self._device.firmware_version,
+        }
+        model = (
+            KNOWN_MODELS.get(self._device.device_id[2:4])
+            if self._device.device_id is not None
+            else None
+        )
+        if model:
+            device_info["model"] = model
+        if self._device.parent_device_id:
+            device_info["via_device"] = (DOMAIN, self._device.parent_device_id)
+        return device_info
+
+    @property
+    def available(self):
+        """Return if the device is online."""
+        # Not all devices report online so assume True if its missing
+        return super().available and self._device.device_json[MYQ_DEVICE_STATE].get(
+            MYQ_DEVICE_STATE_ONLINE, True
+        )

@@ -39,6 +39,8 @@ from .const import (
 )
 from .helpers import async_get_blueprints
 
+PACKAGE_MERGE_HINT = "dict"
+
 SCRIPT_ENTITY_SCHEMA = make_script_schema(
     {
         vol.Optional(CONF_ALIAS): cv.string,

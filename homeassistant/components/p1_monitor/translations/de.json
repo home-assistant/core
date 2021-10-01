@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name"
+                },
+                "description": "Richte den P1-Monitor zur Integration mit Home Assistant ein."
+            }
+        }
+    }
+}

@@ -10,6 +10,8 @@ from homeassistant import core as hacore
 from homeassistant.components.climate.const import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_ACTION,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     CURRENT_HVAC_ACTIONS,
 )
 from homeassistant.components.http import HomeAssistantView
@@ -54,12 +56,14 @@ COMPONENT_CONFIG_SCHEMA_ENTRY = vol.Schema(
     {vol.Optional(CONF_OVERRIDE_METRIC): cv.string}
 )
 
+DEFAULT_NAMESPACE = "homeassistant"
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
             {
                 vol.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
-                vol.Optional(CONF_PROM_NAMESPACE): cv.string,
+                vol.Optional(CONF_PROM_NAMESPACE, default=DEFAULT_NAMESPACE): cv.string,
                 vol.Optional(CONF_DEFAULT_METRIC): cv.string,
                 vol.Optional(CONF_OVERRIDE_METRIC): cv.string,
                 vol.Optional(CONF_COMPONENT_CONFIG, default={}): vol.Schema(
@@ -291,7 +295,9 @@ class PrometheusMetrics:
 
     def _handle_light(self, state):
         metric = self._metric(
-            "light_state", self.prometheus_cli.Gauge, "Load level of a light (0..1)"
+            "light_brightness_percent",
+            self.prometheus_cli.Gauge,
+            "Light brightness percentage (0..100)",
         )
 
         try:
@@ -311,28 +317,43 @@ class PrometheusMetrics:
         value = self.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 
-    def _handle_climate(self, state):
-        temp = state.attributes.get(ATTR_TEMPERATURE)
+    def _handle_climate_temp(self, state, attr, metric_name, metric_description):
+        temp = state.attributes.get(attr)
         if temp:
             if self._climate_units == TEMP_FAHRENHEIT:
                 temp = fahrenheit_to_celsius(temp)
             metric = self._metric(
-                "temperature_c",
+                metric_name,
                 self.prometheus_cli.Gauge,
-                "Temperature in degrees Celsius",
+                metric_description,
             )
             metric.labels(**self._labels(state)).set(temp)
 
-        current_temp = state.attributes.get(ATTR_CURRENT_TEMPERATURE)
-        if current_temp:
-            if self._climate_units == TEMP_FAHRENHEIT:
-                current_temp = fahrenheit_to_celsius(current_temp)
-            metric = self._metric(
-                "current_temperature_c",
-                self.prometheus_cli.Gauge,
-                "Current Temperature in degrees Celsius",
-            )
-            metric.labels(**self._labels(state)).set(current_temp)
+    def _handle_climate(self, state):
+        self._handle_climate_temp(
+            state,
+            ATTR_TEMPERATURE,
+            "climate_target_temperature_celsius",
+            "Target temperature in degrees Celsius",
+        )
+        self._handle_climate_temp(
+            state,
+            ATTR_TARGET_TEMP_HIGH,
+            "climate_target_temperature_high_celsius",
+            "Target high temperature in degrees Celsius",
+        )
+        self._handle_climate_temp(
+            state,
+            ATTR_TARGET_TEMP_LOW,
+            "climate_target_temperature_low_celsius",
+            "Target low temperature in degrees Celsius",
+        )
+        self._handle_climate_temp(
+            state,
+            ATTR_CURRENT_TEMPERATURE,
+            "climate_current_temperature_celsius",
+            "Current temperature in degrees Celsius",
+        )
 
         current_action = state.attributes.get(ATTR_HVAC_ACTION)
         if current_action:
@@ -414,7 +435,7 @@ class PrometheusMetrics:
         """Get metric based on device class attribute."""
         metric = state.attributes.get(ATTR_DEVICE_CLASS)
         if metric is not None:
-            return f"{metric}_{unit}"
+            return f"sensor_{metric}_{unit}"
         return None
 
     def _sensor_override_metric(self, state, unit):
@@ -442,8 +463,8 @@ class PrometheusMetrics:
             return
 
         units = {
-            TEMP_CELSIUS: "c",
-            TEMP_FAHRENHEIT: "c",  # F should go into C metric
+            TEMP_CELSIUS: "celsius",
+            TEMP_FAHRENHEIT: "celsius",  # F should go into C metric
             PERCENTAGE: "percent",
         }
         default = unit.replace("/", "_per_")

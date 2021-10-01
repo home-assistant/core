@@ -76,7 +76,7 @@ class GaragesamsterdamSensor(CoordinatorEntity, SensorEntity):
         )
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         return getattr(self.coordinator.data[self._garage_name], self._info_type)
 
@@ -86,7 +86,7 @@ class GaragesamsterdamSensor(CoordinatorEntity, SensorEntity):
         return SENSORS[self._info_type]
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return unit of measurement."""
         return "cars"
 

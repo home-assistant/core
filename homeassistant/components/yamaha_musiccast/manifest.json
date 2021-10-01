@@ -4,12 +4,15 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/yamaha_musiccast",
   "requirements": [
-    "aiomusiccast==0.8.0"
+    "aiomusiccast==0.9.2"
   ],
   "ssdp": [
     {
       "manufacturer": "Yamaha Corporation"
     }
+  ],
+  "dependencies": [
+    "ssdp"
   ],
   "iot_class": "local_push",
   "codeowners": [

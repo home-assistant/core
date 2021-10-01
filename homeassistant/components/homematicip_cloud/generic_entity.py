@@ -13,7 +13,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN as HMIPC_DOMAIN
-from .hap import HomematicipHAP
+from .hap import AsyncHome, HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,7 +82,7 @@ class HomematicipGenericEntity(Entity):
     ) -> None:
         """Initialize the generic entity."""
         self._hap = hap
-        self._home = hap.home
+        self._home: AsyncHome = hap.home
         self._device = device
         self._post = post
         self._channel = channel
@@ -92,7 +92,7 @@ class HomematicipGenericEntity(Entity):
         _LOGGER.info("Setting up %s (%s)", self.name, self._device.modelType)
 
     @property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> DeviceInfo | None:
         """Return device specific attributes."""
         # Only physical devices should be HA devices.
         if isinstance(self._device, AsyncDevice):

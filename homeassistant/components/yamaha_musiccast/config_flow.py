@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 from urllib.parse import urlparse
 
 from aiohttp import ClientConnectorError
@@ -13,9 +14,9 @@ from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from . import get_upnp_desc
+from .const import CONF_SERIAL, CONF_UPNP_DESC, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,9 +28,10 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
 
     serial_number: str | None = None
     host: str
+    upnp_description: str | None = None
 
     async def async_step_user(
-        self, user_input: ConfigType | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initiated by the user."""
         # Request user input, unless we are preparing discovery flow
@@ -64,7 +66,8 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
                 title=host,
                 data={
                     CONF_HOST: host,
-                    "serial": serial_number,
+                    CONF_SERIAL: serial_number,
+                    CONF_UPNP_DESC: await get_upnp_desc(self.hass, host),
                 },
             )
 
@@ -89,8 +92,14 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self.serial_number = discovery_info[ssdp.ATTR_UPNP_SERIAL]
         self.host = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
+        self.upnp_description = discovery_info[ssdp.ATTR_SSDP_LOCATION]
         await self.async_set_unique_id(self.serial_number)
-        self._abort_if_unique_id_configured({CONF_HOST: self.host})
+        self._abort_if_unique_id_configured(
+            {
+                CONF_HOST: self.host,
+                CONF_UPNP_DESC: self.upnp_description,
+            }
+        )
         self.context.update(
             {
                 "title_placeholders": {
@@ -108,7 +117,8 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
                 title=self.host,
                 data={
                     CONF_HOST: self.host,
-                    "serial": self.serial_number,
+                    CONF_SERIAL: self.serial_number,
+                    CONF_UPNP_DESC: self.upnp_description,
                 },
             )
 

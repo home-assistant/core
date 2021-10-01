@@ -470,7 +470,7 @@ class LIFXLight(LightEntity):
 
         model = product_map.get(self.bulb.product) or self.bulb.product
         if model is not None:
-            info["model"] = model
+            info["model"] = str(model)
 
         return info
 

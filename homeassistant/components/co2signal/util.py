@@ -1,13 +1,14 @@
 """Utils for CO2 signal."""
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.core import HomeAssistant
 
 from .const import CONF_COUNTRY_CODE
 
 
-def get_extra_name(hass: HomeAssistant, config: dict) -> str | None:
+def get_extra_name(config: Mapping) -> str | None:
     """Return the extra name describing the location if not home."""
     if CONF_COUNTRY_CODE in config:
         return config[CONF_COUNTRY_CODE]

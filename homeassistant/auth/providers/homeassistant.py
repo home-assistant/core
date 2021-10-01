@@ -19,6 +19,8 @@ from homeassistant.exceptions import HomeAssistantError
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
 
+# mypy: disallow-any-generics
+
 STORAGE_VERSION = 1
 STORAGE_KEY = "auth_provider.homeassistant"
 
@@ -80,9 +82,7 @@ class Data:
 
     async def async_load(self) -> None:
         """Load stored data."""
-        data = await self._store.async_load()
-
-        if data is None:
+        if (data := await self._store.async_load()) is None:
             data = {"users": []}
 
         seen: set[str] = set()
@@ -91,9 +91,7 @@ class Data:
             username = user["username"]
 
             # check if we have duplicates
-            folded = username.casefold()
-
-            if folded in seen:
+            if (folded := username.casefold()) in seen:
                 self.is_legacy = True
 
                 logging.getLogger(__name__).warning(
@@ -235,7 +233,7 @@ class HassAuthProvider(AuthProvider):
             await data.async_load()
             self.data = data
 
-    async def async_login_flow(self, context: dict | None) -> LoginFlow:
+    async def async_login_flow(self, context: dict[str, Any] | None) -> LoginFlow:
         """Return a flow to login."""
         return HassLoginFlow(self)
 

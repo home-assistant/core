@@ -1,4 +1,6 @@
 """Camera that loads a picture from a local file."""
+from __future__ import annotations
+
 import logging
 import mimetypes
 import os
@@ -73,7 +75,9 @@ class LocalFile(Camera):
         if content is not None:
             self.content_type = content
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return image response."""
         try:
             with open(self._file_path, "rb") as file:
@@ -84,6 +88,7 @@ class LocalFile(Camera):
                 self._name,
                 self._file_path,
             )
+        return None
 
     def check_file_path_access(self, file_path):
         """Check that filepath given is readable."""

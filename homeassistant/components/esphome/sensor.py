@@ -11,12 +11,14 @@ from aioesphomeapi import (
     TextSensorInfo,
     TextSensorState,
 )
+from aioesphomeapi.model import LastResetType
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASSES,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -67,6 +69,7 @@ _STATE_CLASSES: EsphomeEnumMapper[SensorStateClass, str | None] = EsphomeEnumMap
     {
         SensorStateClass.NONE: None,
         SensorStateClass.MEASUREMENT: STATE_CLASS_MEASUREMENT,
+        SensorStateClass.TOTAL_INCREASING: STATE_CLASS_TOTAL_INCREASING,
     }
 )
 
@@ -87,7 +90,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
         return self._static_info.force_update
 
     @esphome_state_property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the entity."""
         if math.isnan(self._state.state):
             return None
@@ -98,7 +101,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
         return f"{self._state.state:.{self._static_info.accuracy_decimals}f}"
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         if not self._static_info.unit_of_measurement:
             return None
@@ -116,6 +119,14 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
         """Return the state class of this entity."""
         if not self._static_info.state_class:
             return None
+        state_class = self._static_info.state_class
+        reset_type = self._static_info.last_reset_type
+        if (
+            state_class == SensorStateClass.MEASUREMENT
+            and reset_type == LastResetType.AUTO
+        ):
+            # Legacy, last_reset_type auto was the equivalent to the TOTAL_INCREASING state class
+            return STATE_CLASS_TOTAL_INCREASING
         return _STATE_CLASSES.from_esphome(self._static_info.state_class)
 
 
@@ -128,7 +139,7 @@ class EsphomeTextSensor(EsphomeEntity[TextSensorInfo, TextSensorState], SensorEn
         return self._static_info.icon
 
     @esphome_state_property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the entity."""
         if self._state.missing_state:
             return None

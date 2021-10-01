@@ -1,7 +1,6 @@
 """Support for MySensors switches."""
 from __future__ import annotations
 
-from contextlib import suppress
 from typing import Any
 
 import voluptuous as vol
@@ -108,18 +107,6 @@ async def async_setup_entry(
 
 class MySensorsSwitch(mysensors.device.MySensorsEntity, SwitchEntity):
     """Representation of the value of a MySensors Switch child node."""
-
-    @property
-    def current_power_w(self) -> float | None:
-        """Return the current power usage in W."""
-        set_req = self.gateway.const.SetReq
-        value = self._values.get(set_req.V_WATT)
-        float_value: float | None = None
-        if value is not None:
-            with suppress(ValueError):
-                float_value = float(value)
-
-        return float_value
 
     @property
     def is_on(self) -> bool:

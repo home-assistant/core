@@ -1,8 +1,30 @@
 {
   "domain": "dlna_dmr",
   "name": "DLNA Digital Media Renderer",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/dlna_dmr",
-  "requirements": ["async-upnp-client==0.19.0"],
-  "codeowners": [],
+  "requirements": ["async-upnp-client==0.22.4"],
+  "dependencies": ["network", "ssdp"],
+  "ssdp": [
+    {
+      "st": "urn:schemas-upnp-org:device:MediaRenderer:1"
+    },
+    {
+      "st": "urn:schemas-upnp-org:device:MediaRenderer:2"
+    },
+    {
+      "st": "urn:schemas-upnp-org:device:MediaRenderer:3"
+    },
+    {
+      "nt": "urn:schemas-upnp-org:device:MediaRenderer:1"
+    },
+    {
+      "nt": "urn:schemas-upnp-org:device:MediaRenderer:2"
+    },
+    {
+      "nt": "urn:schemas-upnp-org:device:MediaRenderer:3"
+    }
+  ],
+  "codeowners": ["@StevenLooman", "@chishm"],
   "iot_class": "local_push"
 }

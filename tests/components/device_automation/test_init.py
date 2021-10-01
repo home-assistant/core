@@ -1,6 +1,9 @@
 """The test for light device automation."""
+from unittest.mock import patch
+
 import pytest
 
+from homeassistant.components import device_automation
 import homeassistant.components.automation as automation
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
@@ -370,6 +373,98 @@ async def test_websocket_get_no_condition_capabilities(
     assert msg["success"]
     capabilities = msg["result"]
     assert capabilities == expected_capabilities
+
+
+async def test_async_get_device_automations_single_device_trigger(
+    hass, device_reg, entity_reg
+):
+    """Test we get can fetch the triggers for a device id."""
+    await async_setup_component(hass, "device_automation", {})
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create("light", "test", "5678", device_id=device_entry.id)
+    result = await device_automation.async_get_device_automations(
+        hass, "trigger", [device_entry.id]
+    )
+    assert device_entry.id in result
+    assert len(result[device_entry.id]) == 2
+
+
+async def test_async_get_device_automations_all_devices_trigger(
+    hass, device_reg, entity_reg
+):
+    """Test we get can fetch all the triggers when no device id is passed."""
+    await async_setup_component(hass, "device_automation", {})
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create("light", "test", "5678", device_id=device_entry.id)
+    result = await device_automation.async_get_device_automations(hass, "trigger")
+    assert device_entry.id in result
+    assert len(result[device_entry.id]) == 2
+
+
+async def test_async_get_device_automations_all_devices_condition(
+    hass, device_reg, entity_reg
+):
+    """Test we get can fetch all the conditions when no device id is passed."""
+    await async_setup_component(hass, "device_automation", {})
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create("light", "test", "5678", device_id=device_entry.id)
+    result = await device_automation.async_get_device_automations(hass, "condition")
+    assert device_entry.id in result
+    assert len(result[device_entry.id]) == 2
+
+
+async def test_async_get_device_automations_all_devices_action(
+    hass, device_reg, entity_reg
+):
+    """Test we get can fetch all the actions when no device id is passed."""
+    await async_setup_component(hass, "device_automation", {})
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create("light", "test", "5678", device_id=device_entry.id)
+    result = await device_automation.async_get_device_automations(hass, "action")
+    assert device_entry.id in result
+    assert len(result[device_entry.id]) == 3
+
+
+async def test_async_get_device_automations_all_devices_action_exception_throw(
+    hass, device_reg, entity_reg, caplog
+):
+    """Test we get can fetch all the actions when no device id is passed and can handle one throwing an exception."""
+    await async_setup_component(hass, "device_automation", {})
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create("light", "test", "5678", device_id=device_entry.id)
+    with patch(
+        "homeassistant.components.light.device_trigger.async_get_triggers",
+        side_effect=KeyError,
+    ):
+        result = await device_automation.async_get_device_automations(hass, "trigger")
+    assert device_entry.id in result
+    assert len(result[device_entry.id]) == 0
+    assert "KeyError" in caplog.text
 
 
 async def test_websocket_get_trigger_capabilities(

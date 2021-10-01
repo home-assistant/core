@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi",
             "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible.",
             "unknown": "Erreur inattendue"
         },
@@ -11,6 +12,12 @@
         },
         "flow_title": "Cloudflare: {name}",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_token": "Jeton d'API",
+                    "description": "R\u00e9-authentifiez-vous avec votre compte Cloudflare."
+                }
+            },
             "records": {
                 "data": {
                     "records": "Enregistrements"

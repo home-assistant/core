@@ -23,6 +23,7 @@ from homeassistant.const import (
     EVENT_CORE_CONFIG_UPDATE,
     SERVICE_HOMEASSISTANT_RESTART,
     SERVICE_HOMEASSISTANT_STOP,
+    SERVICE_SAVE_PERSISTENT_STATES,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -543,3 +544,18 @@ async def test_stop_homeassistant(hass):
         assert not mock_check.called
         await hass.async_block_till_done()
         assert mock_restart.called
+
+
+async def test_save_persistent_states(hass):
+    """Test we can call save_persistent_states."""
+    await async_setup_component(hass, "homeassistant", {})
+    with patch(
+        "homeassistant.helpers.restore_state.RestoreStateData.async_save_persistent_states",
+        return_value=None,
+    ) as mock_save:
+        await hass.services.async_call(
+            "homeassistant",
+            SERVICE_SAVE_PERSISTENT_STATES,
+            blocking=True,
+        )
+        assert mock_save.called

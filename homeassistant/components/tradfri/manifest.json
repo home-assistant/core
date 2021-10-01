@@ -7,6 +7,6 @@
   "homekit": {
     "models": ["TRADFRI"]
   },
-  "codeowners": [],
+  "codeowners": ["@janiversen"],
   "iot_class": "local_polling"
 }

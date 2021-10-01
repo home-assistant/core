@@ -25,7 +25,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA_BASE,
     make_entity_service_schema,
 )
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
@@ -445,7 +445,11 @@ async def async_setup(hass, config):  # noqa: C901
                 )
 
         # If both white and brightness are specified, override white
-        if ATTR_WHITE in params and COLOR_MODE_WHITE in supported_color_modes:
+        if (
+            supported_color_modes
+            and ATTR_WHITE in params
+            and COLOR_MODE_WHITE in supported_color_modes
+        ):
             params[ATTR_WHITE] = params.pop(ATTR_BRIGHTNESS, params[ATTR_WHITE])
 
         # Remove deprecated white value if the light supports color mode
@@ -529,7 +533,7 @@ class Profile:
     transition: int | None = None
     hs_color: tuple[float, float] | None = dataclasses.field(init=False)
 
-    SCHEMA = vol.Schema(  # pylint: disable=invalid-name
+    SCHEMA = vol.Schema(
         vol.Any(
             vol.ExactSequence(
                 (
@@ -586,7 +590,7 @@ class Profiles:
         for profile_path in profile_paths:
             if not os.path.isfile(profile_path):
                 continue
-            with open(profile_path) as inp:
+            with open(profile_path, encoding="utf8") as inp:
                 reader = csv.reader(inp)
 
                 # Skip the header
@@ -638,9 +642,15 @@ class Profiles:
             params.setdefault(ATTR_TRANSITION, profile.transition)
 
 
+@dataclasses.dataclass
+class LightEntityDescription(ToggleEntityDescription):
+    """A class that describes binary sensor entities."""
+
+
 class LightEntity(ToggleEntity):
     """Base class for light entities."""
 
+    entity_description: LightEntityDescription
     _attr_brightness: int | None = None
     _attr_color_mode: str | None = None
     _attr_color_temp: int | None = None
@@ -823,6 +833,13 @@ class LightEntity(ToggleEntity):
             data[ATTR_RGB_COLOR] = tuple(int(x) for x in rgb_color[0:3])
             data[ATTR_RGBWW_COLOR] = tuple(int(x) for x in rgbww_color[0:5])
             data[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
+        elif color_mode == COLOR_MODE_COLOR_TEMP and self.color_temp:
+            hs_color = color_util.color_temperature_to_hs(
+                color_util.color_temperature_mired_to_kelvin(self.color_temp)
+            )
+            data[ATTR_HS_COLOR] = (round(hs_color[0], 3), round(hs_color[1], 3))
+            data[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(*hs_color)
+            data[ATTR_XY_COLOR] = color_util.color_hs_to_xy(*hs_color)
         return data
 
     @final
@@ -857,7 +874,7 @@ class LightEntity(ToggleEntity):
         if color_mode == COLOR_MODE_COLOR_TEMP:
             data[ATTR_COLOR_TEMP] = self.color_temp
 
-        if color_mode in COLOR_MODES_COLOR:
+        if color_mode in COLOR_MODES_COLOR or color_mode == COLOR_MODE_COLOR_TEMP:
             data.update(self._light_internal_convert_color(color_mode))
 
         if supported_features & SUPPORT_COLOR_TEMP and not self.supported_color_modes:

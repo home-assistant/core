@@ -39,6 +39,7 @@ from .const import (
     CHAR_ROTATION_DIRECTION,
     CHAR_ROTATION_SPEED,
     CHAR_SWING_MODE,
+    MAX_NAME_LENGTH,
     PROP_MIN_STEP,
     SERV_FANV2,
     SERV_SWITCH,
@@ -100,7 +101,8 @@ class Fan(HomeAccessory):
                 preset_serv = self.add_preload_service(SERV_SWITCH, CHAR_NAME)
                 serv_fan.add_linked_service(preset_serv)
                 preset_serv.configure_char(
-                    CHAR_NAME, value=f"{self.display_name} {preset_mode}"
+                    CHAR_NAME,
+                    value=f"{self.display_name} {preset_mode}"[:MAX_NAME_LENGTH],
                 )
 
                 self.preset_mode_chars[preset_mode] = preset_serv.configure_char(
@@ -191,16 +193,14 @@ class Fan(HomeAccessory):
         state = new_state.state
         if state in (STATE_ON, STATE_OFF):
             self._state = 1 if state == STATE_ON else 0
-            if self.char_active.value != self._state:
-                self.char_active.set_value(self._state)
+            self.char_active.set_value(self._state)
 
         # Handle Direction
         if self.char_direction is not None:
             direction = new_state.attributes.get(ATTR_DIRECTION)
             if direction in (DIRECTION_FORWARD, DIRECTION_REVERSE):
                 hk_direction = 1 if direction == DIRECTION_REVERSE else 0
-                if self.char_direction.value != hk_direction:
-                    self.char_direction.set_value(hk_direction)
+                self.char_direction.set_value(hk_direction)
 
         # Handle Speed
         if self.char_speed is not None and state != STATE_OFF:
@@ -219,8 +219,8 @@ class Fan(HomeAccessory):
             # the rotation speed is mapped to 1 otherwise the update is ignored
             # in order to avoid this incorrect behavior.
             if percentage == 0 and state == STATE_ON:
-                percentage = 1
-            if percentage is not None and self.char_speed.value != percentage:
+                percentage = max(1, self.char_speed.properties[PROP_MIN_STEP])
+            if percentage is not None:
                 self.char_speed.set_value(percentage)
 
         # Handle Oscillating
@@ -228,11 +228,9 @@ class Fan(HomeAccessory):
             oscillating = new_state.attributes.get(ATTR_OSCILLATING)
             if isinstance(oscillating, bool):
                 hk_oscillating = 1 if oscillating else 0
-                if self.char_swing.value != hk_oscillating:
-                    self.char_swing.set_value(hk_oscillating)
+                self.char_swing.set_value(hk_oscillating)
 
         current_preset_mode = new_state.attributes.get(ATTR_PRESET_MODE)
         for preset_mode, char in self.preset_mode_chars.items():
             hk_value = 1 if preset_mode == current_preset_mode else 0
-            if char.value != hk_value:
-                char.set_value(hk_value)
+            char.set_value(hk_value)

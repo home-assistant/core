@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Das Ger\u00e4t ist bereits konfiguriert",
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
             "unknown": "Unerwarteter Fehler"
         },

@@ -27,7 +27,7 @@ from homeassistant.const import (
     CONF_TYPE,
     TEMP_CELSIUS,
 )
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.core import HomeAssistant, callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import STORAGE_DIR
 import homeassistant.util.temperature as temp_util
@@ -433,34 +433,32 @@ def _get_test_socket():
     return test_socket
 
 
-def port_is_available(port: int) -> bool:
+@callback
+def async_port_is_available(port: int) -> bool:
     """Check to see if a port is available."""
-    test_socket = _get_test_socket()
     try:
-        test_socket.bind(("", port))
+        _get_test_socket().bind(("", port))
     except OSError:
         return False
-
     return True
 
 
-async def async_find_next_available_port(hass: HomeAssistant, start_port: int) -> int:
+@callback
+def async_find_next_available_port(hass: HomeAssistant, start_port: int) -> int:
     """Find the next available port not assigned to a config entry."""
     exclude_ports = {
         entry.data[CONF_PORT]
         for entry in hass.config_entries.async_entries(DOMAIN)
         if CONF_PORT in entry.data
     }
-
-    return await hass.async_add_executor_job(
-        _find_next_available_port, start_port, exclude_ports
-    )
+    return _async_find_next_available_port(start_port, exclude_ports)
 
 
-def _find_next_available_port(start_port: int, exclude_ports: set) -> int:
+@callback
+def _async_find_next_available_port(start_port: int, exclude_ports: set) -> int:
     """Find the next available port starting with the given port."""
     test_socket = _get_test_socket()
-    for port in range(start_port, MAX_PORT):
+    for port in range(start_port, MAX_PORT + 1):
         if port in exclude_ports:
             continue
         try:
@@ -499,12 +497,11 @@ def accessory_friendly_name(hass_name, accessory):
 
 def state_needs_accessory_mode(state):
     """Return if the entity represented by the state must be paired in accessory mode."""
-    if state.domain == CAMERA_DOMAIN:
+    if state.domain in (CAMERA_DOMAIN, LOCK_DOMAIN):
         return True
 
     return (
-        state.domain == LOCK_DOMAIN
-        or state.domain == MEDIA_PLAYER_DOMAIN
+        state.domain == MEDIA_PLAYER_DOMAIN
         and state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TV
         or state.domain == REMOTE_DOMAIN
         and state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) & SUPPORT_ACTIVITY

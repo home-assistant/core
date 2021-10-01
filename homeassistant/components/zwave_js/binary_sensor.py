@@ -6,6 +6,10 @@ from typing import TypedDict
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass
+from zwave_js_server.const.command_class.lock import DOOR_STATUS_PROPERTY
+from zwave_js_server.const.command_class.notification import (
+    CC_SPECIFIC_NOTIFICATION_TYPE,
+)
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY,
@@ -196,9 +200,6 @@ NOTIFICATION_SENSOR_MAPPINGS: list[NotificationSensorMapping] = [
 ]
 
 
-PROPERTY_DOOR_STATUS = "doorStatus"
-
-
 class PropertySensorMapping(TypedDict, total=False):
     """Represent a property sensor mapping dict type."""
 
@@ -211,7 +212,7 @@ class PropertySensorMapping(TypedDict, total=False):
 # Mappings for property sensors
 PROPERTY_SENSOR_MAPPINGS: list[PropertySensorMapping] = [
     {
-        "property_name": PROPERTY_DOOR_STATUS,
+        "property_name": DOOR_STATUS_PROPERTY,
         "on_states": ["open"],
         "device_class": DEVICE_CLASS_DOOR,
         "enabled": True,
@@ -277,12 +278,6 @@ class ZWaveBooleanBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
             if self.info.primary_value.command_class == CommandClass.BATTERY
             else None
         )
-        # Legacy binary sensors are phased out (replaced by notification sensors)
-        # Disable by default to not confuse users
-        self._attr_entity_registry_enabled_default = bool(
-            self.info.primary_value.command_class != CommandClass.SENSOR_BINARY
-            or self.info.node.device_class.generic.key == 0x20
-        )
 
     @property
     def is_on(self) -> bool | None:
@@ -333,7 +328,9 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         for mapping in NOTIFICATION_SENSOR_MAPPINGS:
             if (
                 mapping["type"]
-                != self.info.primary_value.metadata.cc_specific["notificationType"]
+                != self.info.primary_value.metadata.cc_specific[
+                    CC_SPECIFIC_NOTIFICATION_TYPE
+                ]
             ):
                 continue
             if not mapping.get("states") or self.state_key in mapping["states"]:

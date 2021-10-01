@@ -17,7 +17,7 @@
                     "host": "Host",
                     "password": "Passwort",
                     "port": "Port",
-                    "ssl": "AdGuard Home verwendet ein SSL-Zertifikat",
+                    "ssl": "Verwendet ein SSL-Zertifikat",
                     "username": "Benutzername",
                     "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
                 },

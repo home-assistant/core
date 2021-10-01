@@ -53,12 +53,12 @@ class APICount(SensorEntity):
         return "Connected clients"
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return current API count."""
         return self.count
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
         return "clients"
 

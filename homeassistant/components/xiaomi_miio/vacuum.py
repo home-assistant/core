@@ -7,7 +7,6 @@ import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     ATTR_CLEANED_AREA,
-    PLATFORM_SCHEMA,
     STATE_CLEANING,
     STATE_DOCKED,
     STATE_ERROR,
@@ -26,15 +25,13 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     StateVacuumEntity,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_HOST, CONF_TOKEN, STATE_OFF, STATE_ON
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.util.dt import as_utc
 
 from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
-    DOMAIN,
     SERVICE_CLEAN_SEGMENT,
     SERVICE_CLEAN_ZONE,
     SERVICE_GOTO,
@@ -48,15 +45,6 @@ from .device import XiaomiMiioEntity
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Xiaomi Vacuum cleaner"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
 ATTR_CLEAN_START = "clean_start"
 ATTR_CLEAN_STOP = "clean_stop"
@@ -117,20 +105,6 @@ STATE_CODE_TO_STATE = {
     100: STATE_DOCKED,  # "Charging complete"
     101: STATE_ERROR,  # "Device offline"
 }
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Import Miio configuration from YAML."""
-    _LOGGER.warning(
-        "Loading Xiaomi Miio Vacuum via platform setup is deprecated; Please remove it from your configuration"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

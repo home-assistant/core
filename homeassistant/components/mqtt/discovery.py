@@ -291,7 +291,7 @@ async def async_start(  # noqa: C901
                     result
                     and result["type"] == RESULT_TYPE_ABORT
                     and result["reason"]
-                    in ["already_configured", "single_instance_allowed"]
+                    in ("already_configured", "single_instance_allowed")
                 ):
                     unsub = hass.data[INTEGRATION_UNSUBSCRIBE].pop(key, None)
                     if unsub is None:

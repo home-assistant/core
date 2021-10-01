@@ -12,7 +12,10 @@ from typing import Any
 
 import aiohttp
 
+from homeassistant.const import __version__ as HA_VERSION
+
 WHOAMI_URL = "https://whoami.home-assistant.io/v1"
+WHOAMI_URL_DEV = "https://whoami-v1-dev.home-assistant.workers.dev/v1"
 
 # Constants from https://github.com/maurycyp/vincenty
 # Earth ellipsoid according to WGS 84
@@ -32,6 +35,7 @@ LocationInfo = collections.namedtuple(
     [
         "ip",
         "country_code",
+        "currency",
         "region_code",
         "region_name",
         "city",
@@ -161,7 +165,9 @@ def vincenty(
 async def _get_whoami(session: aiohttp.ClientSession) -> dict[str, Any] | None:
     """Query whoami.home-assistant.io for location data."""
     try:
-        resp = await session.get(WHOAMI_URL, timeout=30)
+        resp = await session.get(
+            WHOAMI_URL_DEV if HA_VERSION.endswith("0.dev0") else WHOAMI_URL, timeout=30
+        )
     except (aiohttp.ClientError, asyncio.TimeoutError):
         return None
 
@@ -173,6 +179,7 @@ async def _get_whoami(session: aiohttp.ClientSession) -> dict[str, Any] | None:
     return {
         "ip": raw_info.get("ip"),
         "country_code": raw_info.get("country"),
+        "currency": raw_info.get("currency"),
         "region_code": raw_info.get("region_code"),
         "region_name": raw_info.get("region"),
         "city": raw_info.get("city"),

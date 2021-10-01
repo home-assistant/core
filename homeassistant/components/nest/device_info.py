@@ -1,11 +1,15 @@
 """Library for extracting device specific information common to entities."""
 
+from __future__ import annotations
+
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_traits import InfoTrait
 
+from homeassistant.helpers.entity import DeviceInfo
+
 from .const import DOMAIN
 
-DEVICE_TYPE_MAP = {
+DEVICE_TYPE_MAP: dict[str, str] = {
     "sdm.devices.types.CAMERA": "Camera",
     "sdm.devices.types.DISPLAY": "Display",
     "sdm.devices.types.DOORBELL": "Doorbell",
@@ -13,7 +17,7 @@ DEVICE_TYPE_MAP = {
 }
 
 
-class DeviceInfo:
+class NestDeviceInfo:
     """Provide device info from the SDM device, shared across platforms."""
 
     device_brand = "Google Nest"
@@ -23,21 +27,23 @@ class DeviceInfo:
         self._device = device
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
-        return {
-            # The API "name" field is a unique device identifier.
-            "identifiers": {(DOMAIN, self._device.name)},
-            "name": self.device_name,
-            "manufacturer": self.device_brand,
-            "model": self.device_model,
-        }
+        return DeviceInfo(
+            {
+                # The API "name" field is a unique device identifier.
+                "identifiers": {(DOMAIN, self._device.name)},
+                "name": self.device_name,
+                "manufacturer": self.device_brand,
+                "model": self.device_model,
+            }
+        )
 
     @property
-    def device_name(self):
+    def device_name(self) -> str | None:
         """Return the name of the physical device that includes the sensor."""
         if InfoTrait.NAME in self._device.traits:
-            trait = self._device.traits[InfoTrait.NAME]
+            trait: InfoTrait = self._device.traits[InfoTrait.NAME]
             if trait.custom_name:
                 return trait.custom_name
         # Build a name from the room/structure.  Note: This room/structure name
@@ -50,7 +56,7 @@ class DeviceInfo:
         return self.device_model
 
     @property
-    def device_model(self):
+    def device_model(self) -> str | None:
         """Return device model information."""
         # The API intentionally returns minimal information about specific
         # devices, instead relying on traits, but we can infer a generic model

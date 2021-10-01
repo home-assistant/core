@@ -207,6 +207,7 @@ def spotify_exception_handler(func):
     """
 
     def wrapper(self, *args, **kwargs):
+        # pylint: disable=protected-access
         try:
             result = func(self, *args, **kwargs)
             self._attr_available = True
@@ -491,7 +492,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             )
             raise NotImplementedError
 
-        if media_content_type in [None, "library"]:
+        if media_content_type in (None, "library"):
             return await self.hass.async_add_executor_job(library_payload)
 
         payload = {

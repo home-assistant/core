@@ -146,20 +146,6 @@ def _async_sanitize_channel_names(channel_list: list[str]) -> list[str]:
     return [channel.lstrip("#") for channel in channel_list]
 
 
-@callback
-def _async_templatize_blocks(hass: HomeAssistant, value: Any) -> Any:
-    """Recursive template creator helper function."""
-    if isinstance(value, list):
-        return [_async_templatize_blocks(hass, item) for item in value]
-    if isinstance(value, dict):
-        return {
-            key: _async_templatize_blocks(hass, item) for key, item in value.items()
-        }
-
-    tmpl = template.Template(value, hass=hass)  # type: ignore  # no-untyped-call
-    return tmpl.async_render(parse_result=False)
-
-
 class SlackNotificationService(BaseNotificationService):
     """Define the Slack notification logic."""
 
@@ -314,9 +300,9 @@ class SlackNotificationService(BaseNotificationService):
         # Message Type 1: A text-only message
         if ATTR_FILE not in data:
             if ATTR_BLOCKS_TEMPLATE in data:
-                blocks = _async_templatize_blocks(
-                    self._hass, data[ATTR_BLOCKS_TEMPLATE]
-                )
+                value = cv.template_complex(data[ATTR_BLOCKS_TEMPLATE])
+                template.attach(self._hass, value)
+                blocks = template.render_complex(value)
             elif ATTR_BLOCKS in data:
                 blocks = data[ATTR_BLOCKS]
             else:

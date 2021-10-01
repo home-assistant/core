@@ -7,7 +7,12 @@ from typing import Any
 import pysma
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -16,6 +21,10 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_SSL,
     CONF_VERIFY_SSL,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
+    ENERGY_KILO_WATT_HOUR,
+    POWER_WATT,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -157,6 +166,13 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         self._config_entry_unique_id = config_entry_unique_id
         self._device_info = device_info
 
+        if self.native_unit_of_measurement == ENERGY_KILO_WATT_HOUR:
+            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
+            self._attr_device_class = DEVICE_CLASS_ENERGY
+        if self.native_unit_of_measurement == POWER_WATT:
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
+            self._attr_device_class = DEVICE_CLASS_POWER
+
         # Set sensor enabled to False.
         # Will be enabled by async_added_to_hass if actually used.
         self._sensor.enabled = False
@@ -167,12 +183,12 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         return self._sensor.name
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self._sensor.value
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         return self._sensor.unit
 

@@ -5,6 +5,7 @@ import asyncio
 from datetime import timedelta
 import logging
 import time
+from typing import Optional, cast
 
 from aiohttp import ClientError, ClientSession
 import async_timeout
@@ -166,7 +167,7 @@ async def _configure_almond_for_ha(
 
     _LOGGER.debug("Configuring Almond to connect to Home Assistant at %s", hass_url)
     store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
-    data = await store.async_load()
+    data = cast(Optional[dict], await store.async_load())
 
     if data is None:
         data = {}
@@ -204,7 +205,7 @@ async def _configure_almond_for_ha(
             )
     except (asyncio.TimeoutError, ClientError) as err:
         if isinstance(err, asyncio.TimeoutError):
-            msg = "Request timeout"
+            msg: str | ClientError = "Request timeout"
         else:
             msg = err
         _LOGGER.warning("Unable to configure Almond: %s", msg)

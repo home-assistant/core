@@ -76,7 +76,7 @@ class TtnDataSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the entity."""
         if self._ttn_data_storage.data is not None:
             try:
@@ -86,7 +86,7 @@ class TtnDataSensor(SensorEntity):
         return None
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 

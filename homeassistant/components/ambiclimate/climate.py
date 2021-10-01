@@ -154,8 +154,6 @@ class AmbiclimateEntity(ClimateEntity):
             "name": self.name,
             "manufacturer": "Ambiclimate",
         }
-        self._attr_min_temp = heater.get_min_temp()
-        self._attr_max_temp = heater.get_max_temp()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -184,6 +182,8 @@ class AmbiclimateEntity(ClimateEntity):
             await self._store.async_save(token_info)
 
         data = await self._heater.update_device()
+        self._attr_min_temp = self._heater.get_min_temp()
+        self._attr_max_temp = self._heater.get_max_temp()
         self._attr_target_temperature = data.get("target_temperature")
         self._attr_current_temperature = data.get("temperature")
         self._attr_current_humidity = data.get("humidity")

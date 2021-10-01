@@ -1,6 +1,7 @@
 """Provides functionality to interact with fans."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import functools as ft
 import logging
@@ -22,8 +23,9 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
@@ -123,7 +125,7 @@ def is_on(hass, entity_id: str) -> bool:
     return state.state == STATE_ON
 
 
-async def async_setup(hass, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Expose fan control via statemachine and services."""
     component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
@@ -224,8 +226,15 @@ def _fan_native(method):
     return method
 
 
+@dataclass
+class FanEntityDescription(ToggleEntityDescription):
+    """A class that describes fan entities."""
+
+
 class FanEntity(ToggleEntity):
     """Base class for fan entities."""
+
+    entity_description: FanEntityDescription
 
     @_fan_native
     def set_speed(self, speed: str) -> None:

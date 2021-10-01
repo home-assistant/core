@@ -8,14 +8,13 @@ import zigpy.zcl.clusters.security as security
 import zigpy.zcl.foundation as zcl_f
 
 import homeassistant.components.automation as automation
-from homeassistant.components.device_automation import (
-    _async_get_device_automations as async_get_device_automations,
-)
 from homeassistant.components.zha import DOMAIN
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_service, mock_coro
+from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
+
+from tests.common import async_get_device_automations, async_mock_service, mock_coro
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 SHORT_PRESS = "remote_button_short_press"
@@ -31,9 +30,9 @@ async def device_ias(hass, zigpy_device_mock, zha_device_joined_restored):
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                "in_clusters": [c.cluster_id for c in clusters],
-                "out_clusters": [general.OnOff.cluster_id],
-                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_INPUT: [c.cluster_id for c in clusters],
+                SIG_EP_OUTPUT: [general.OnOff.cluster_id],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
             }
         },
     )

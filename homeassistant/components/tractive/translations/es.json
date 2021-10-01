@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El sistema ya est\u00e1 configurado"
+        },
+        "error": {
+            "invalid_auth": "Autenticaci\u00f3n err\u00f3nea",
+            "unknown": "Error desconocido"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Correo-e",
+                    "password": "Clave"
+                }
+            }
+        }
+    }
+}

@@ -194,7 +194,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
     @property
     def hvac_mode(self) -> str:
         """Return the current operating mode of a Zone."""
-        if self._evo_tcs.systemModeStatus["mode"] in [EVO_AWAY, EVO_HEATOFF]:
+        if self._evo_tcs.systemModeStatus["mode"] in (EVO_AWAY, EVO_HEATOFF):
             return HVAC_MODE_AUTO
         is_off = self.target_temperature <= self.min_temp
         return HVAC_MODE_OFF if is_off else HVAC_MODE_HEAT
@@ -207,7 +207,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
-        if self._evo_tcs.systemModeStatus["mode"] in [EVO_AWAY, EVO_HEATOFF]:
+        if self._evo_tcs.systemModeStatus["mode"] in (EVO_AWAY, EVO_HEATOFF):
             return TCS_PRESET_TO_HA.get(self._evo_tcs.systemModeStatus["mode"])
         return EVO_PRESET_TO_HA.get(self._evo_device.setpointStatus["setpointMode"])
 

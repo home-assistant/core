@@ -332,6 +332,7 @@ class DeviceRegistry:
         new_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         sw_version: str | None | UndefinedType = UNDEFINED,
         via_device_id: str | None | UndefinedType = UNDEFINED,
+        add_config_entry_id: str | UndefinedType = UNDEFINED,
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
         disabled_by: str | None | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
@@ -347,6 +348,7 @@ class DeviceRegistry:
             new_identifiers=new_identifiers,
             sw_version=sw_version,
             via_device_id=via_device_id,
+            add_config_entry_id=add_config_entry_id,
             remove_config_entry_id=remove_config_entry_id,
             disabled_by=disabled_by,
             suggested_area=suggested_area,
@@ -670,6 +672,7 @@ def async_config_entry_disabled_by_changed(
     the config entry is disabled, enable devices in the registry that are associated
     with a config entry when the config entry is enabled and the devices are marked
     DISABLED_CONFIG_ENTRY.
+    Only disable a device if all associated config entries are disabled.
     """
 
     devices = async_entries_for_config_entry(registry, config_entry.entry_id)
@@ -681,9 +684,19 @@ def async_config_entry_disabled_by_changed(
             registry.async_update_device(device.id, disabled_by=None)
         return
 
+    enabled_config_entries = {
+        entry.entry_id
+        for entry in registry.hass.config_entries.async_entries()
+        if not entry.disabled_by
+    }
+
     for device in devices:
         if device.disabled:
             # Device already disabled, do not overwrite
+            continue
+        if len(device.config_entries) > 1 and device.config_entries.intersection(
+            enabled_config_entries
+        ):
             continue
         registry.async_update_device(device.id, disabled_by=DISABLED_CONFIG_ENTRY)
 

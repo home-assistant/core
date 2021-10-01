@@ -1,11 +1,14 @@
 """Support for Google Nest SDM climate devices."""
 from __future__ import annotations
 
+from typing import Any, cast
+
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_traits import FanTrait, TemperatureTrait
 from google_nest_sdm.exceptions import GoogleNestException
 from google_nest_sdm.thermostat_traits import (
     ThermostatEcoTrait,
+    ThermostatHeatCoolTrait,
     ThermostatHvacTrait,
     ThermostatModeTrait,
     ThermostatTemperatureSetpointTrait,
@@ -37,12 +40,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_SUBSCRIBER, DOMAIN
-from .device_info import DeviceInfo
+from .device_info import NestDeviceInfo
 
 # Mapping for sdm.devices.traits.ThermostatMode mode field
-THERMOSTAT_MODE_MAP = {
+THERMOSTAT_MODE_MAP: dict[str, str] = {
     "OFF": HVAC_MODE_OFF,
     "HEAT": HVAC_MODE_HEAT,
     "COOL": HVAC_MODE_COOL,
@@ -78,7 +83,7 @@ MAX_FAN_DURATION = 43200  # 15 hours is the max in the SDM API
 
 
 async def async_setup_sdm_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the client entities."""
 
@@ -101,7 +106,7 @@ class ThermostatEntity(ClimateEntity):
     def __init__(self, device: Device) -> None:
         """Initialize ThermostatEntity."""
         self._device = device
-        self._device_info = DeviceInfo(device)
+        self._device_info = NestDeviceInfo(device)
         self._supported_features = 0
 
     @property
@@ -116,16 +121,16 @@ class ThermostatEntity(ClimateEntity):
         return self._device.name
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         """Return the name of the entity."""
         return self._device_info.device_name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         return self._device_info.device_info
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when entity is added to register update signal handler."""
         self._supported_features = self._get_supported_features()
         self.async_on_remove(
@@ -133,20 +138,20 @@ class ThermostatEntity(ClimateEntity):
         )
 
     @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> str:
         """Return the unit of temperature measurement for the system."""
         return TEMP_CELSIUS
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if TemperatureTrait.NAME not in self._device.traits:
             return None
-        trait = self._device.traits[TemperatureTrait.NAME]
+        trait: TemperatureTrait = self._device.traits[TemperatureTrait.NAME]
         return trait.ambient_temperature_celsius
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the temperature currently set to be reached."""
         trait = self._target_temperature_trait
         if not trait:
@@ -158,7 +163,7 @@ class ThermostatEntity(ClimateEntity):
         return None
 
     @property
-    def target_temperature_high(self):
+    def target_temperature_high(self) -> float | None:
         """Return the upper bound target temperature."""
         if self.hvac_mode != HVAC_MODE_HEAT_COOL:
             return None
@@ -168,7 +173,7 @@ class ThermostatEntity(ClimateEntity):
         return trait.cool_celsius
 
     @property
-    def target_temperature_low(self):
+    def target_temperature_low(self) -> float | None:
         """Return the lower bound target temperature."""
         if self.hvac_mode != HVAC_MODE_HEAT_COOL:
             return None
@@ -178,19 +183,26 @@ class ThermostatEntity(ClimateEntity):
         return trait.heat_celsius
 
     @property
-    def _target_temperature_trait(self):
+    def _target_temperature_trait(
+        self,
+    ) -> ThermostatHeatCoolTrait | None:
         """Return the correct trait with a target temp depending on mode."""
         if (
             self.preset_mode == PRESET_ECO
             and ThermostatEcoTrait.NAME in self._device.traits
         ):
-            return self._device.traits[ThermostatEcoTrait.NAME]
+            return cast(
+                ThermostatEcoTrait, self._device.traits[ThermostatEcoTrait.NAME]
+            )
         if ThermostatTemperatureSetpointTrait.NAME in self._device.traits:
-            return self._device.traits[ThermostatTemperatureSetpointTrait.NAME]
+            return cast(
+                ThermostatTemperatureSetpointTrait,
+                self._device.traits[ThermostatTemperatureSetpointTrait.NAME],
+            )
         return None
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> str:
         """Return the current operation (e.g. heat, cool, idle)."""
         hvac_mode = HVAC_MODE_OFF
         if ThermostatModeTrait.NAME in self._device.traits:
@@ -202,7 +214,7 @@ class ThermostatEntity(ClimateEntity):
         return hvac_mode
 
     @property
-    def hvac_modes(self):
+    def hvac_modes(self) -> list[str]:
         """List of available operation modes."""
         supported_modes = []
         for mode in self._get_device_hvac_modes:
@@ -213,7 +225,7 @@ class ThermostatEntity(ClimateEntity):
         return supported_modes
 
     @property
-    def _get_device_hvac_modes(self):
+    def _get_device_hvac_modes(self) -> set[str]:
         """Return the set of SDM API hvac modes supported by the device."""
         modes = []
         if ThermostatModeTrait.NAME in self._device.traits:
@@ -222,7 +234,7 @@ class ThermostatEntity(ClimateEntity):
         return set(modes)
 
     @property
-    def hvac_action(self):
+    def hvac_action(self) -> str | None:
         """Return the current HVAC action (heating, cooling)."""
         trait = self._device.traits[ThermostatHvacTrait.NAME]
         if trait.status in THERMOSTAT_HVAC_STATUS_MAP:
@@ -230,7 +242,7 @@ class ThermostatEntity(ClimateEntity):
         return None
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str:
         """Return the current active preset."""
         if ThermostatEcoTrait.NAME in self._device.traits:
             trait = self._device.traits[ThermostatEcoTrait.NAME]
@@ -238,7 +250,7 @@ class ThermostatEntity(ClimateEntity):
         return PRESET_NONE
 
     @property
-    def preset_modes(self):
+    def preset_modes(self) -> list[str]:
         """Return the available presets."""
         modes = []
         if ThermostatEcoTrait.NAME in self._device.traits:
@@ -249,7 +261,7 @@ class ThermostatEntity(ClimateEntity):
         return modes
 
     @property
-    def fan_mode(self):
+    def fan_mode(self) -> str:
         """Return the current fan mode."""
         if FanTrait.NAME in self._device.traits:
             trait = self._device.traits[FanTrait.NAME]
@@ -257,7 +269,7 @@ class ThermostatEntity(ClimateEntity):
         return FAN_OFF
 
     @property
-    def fan_modes(self):
+    def fan_modes(self) -> list[str]:
         """Return the list of available fan modes."""
         modes = []
         if FanTrait.NAME in self._device.traits:
@@ -265,11 +277,11 @@ class ThermostatEntity(ClimateEntity):
         return modes
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Bitmap of supported features."""
         return self._supported_features
 
-    def _get_supported_features(self):
+    def _get_supported_features(self) -> int:
         """Compute the bitmap of supported features from the current state."""
         features = 0
         if HVAC_MODE_HEAT_COOL in self.hvac_modes:
@@ -285,7 +297,7 @@ class ThermostatEntity(ClimateEntity):
                 features |= SUPPORT_FAN_MODE
         return features
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
         if hvac_mode not in self.hvac_modes:
             raise ValueError(f"Unsupported hvac_mode '{hvac_mode}'")
@@ -297,7 +309,7 @@ class ThermostatEntity(ClimateEntity):
         trait = self._device.traits[ThermostatModeTrait.NAME]
         await trait.set_mode(api_mode)
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         low_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
         high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
@@ -313,14 +325,14 @@ class ThermostatEntity(ClimateEntity):
         elif self.hvac_mode == HVAC_MODE_HEAT and temp:
             await trait.set_heat(temp)
 
-    async def async_set_preset_mode(self, preset_mode):
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
         if preset_mode not in self.preset_modes:
             raise ValueError(f"Unsupported preset_mode '{preset_mode}'")
         trait = self._device.traits[ThermostatEcoTrait.NAME]
         await trait.set_mode(PRESET_INV_MODE_MAP[preset_mode])
 
-    async def async_set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         if fan_mode not in self.fan_modes:
             raise ValueError(f"Unsupported fan_mode '{fan_mode}'")

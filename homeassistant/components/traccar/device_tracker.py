@@ -74,6 +74,26 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 SCAN_INTERVAL = DEFAULT_SCAN_INTERVAL
 
+EVENTS = [
+    EVENT_DEVICE_MOVING,
+    EVENT_COMMAND_RESULT,
+    EVENT_DEVICE_FUEL_DROP,
+    EVENT_GEOFENCE_ENTER,
+    EVENT_DEVICE_OFFLINE,
+    EVENT_DRIVER_CHANGED,
+    EVENT_GEOFENCE_EXIT,
+    EVENT_DEVICE_OVERSPEED,
+    EVENT_DEVICE_ONLINE,
+    EVENT_DEVICE_STOPPED,
+    EVENT_MAINTENANCE,
+    EVENT_ALARM,
+    EVENT_TEXT_MESSAGE,
+    EVENT_DEVICE_UNKNOWN,
+    EVENT_IGNITION_OFF,
+    EVENT_IGNITION_ON,
+    EVENT_ALL_EVENTS,
+]
+
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_PASSWORD): cv.string,
@@ -91,27 +111,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
         ),
         vol.Optional(CONF_EVENT, default=[]): vol.All(
             cv.ensure_list,
-            [
-                vol.Any(
-                    EVENT_DEVICE_MOVING,
-                    EVENT_COMMAND_RESULT,
-                    EVENT_DEVICE_FUEL_DROP,
-                    EVENT_GEOFENCE_ENTER,
-                    EVENT_DEVICE_OFFLINE,
-                    EVENT_DRIVER_CHANGED,
-                    EVENT_GEOFENCE_EXIT,
-                    EVENT_DEVICE_OVERSPEED,
-                    EVENT_DEVICE_ONLINE,
-                    EVENT_DEVICE_STOPPED,
-                    EVENT_MAINTENANCE,
-                    EVENT_ALARM,
-                    EVENT_TEXT_MESSAGE,
-                    EVENT_DEVICE_UNKNOWN,
-                    EVENT_IGNITION_OFF,
-                    EVENT_IGNITION_ON,
-                    EVENT_ALL_EVENTS,
-                )
-            ],
+            [vol.In(EVENTS)],
         ),
     }
 )
@@ -203,6 +203,8 @@ class TraccarScanner:
     ):
         """Initialize."""
 
+        if EVENT_ALL_EVENTS in event_types:
+            event_types = EVENTS
         self._event_types = {camelcase(evt): evt for evt in event_types}
         self._custom_attributes = custom_attributes
         self._scan_interval = scan_interval
@@ -324,7 +326,7 @@ class TraccarScanner:
                         "device_traccar_id": event["deviceId"],
                         "device_name": device_name,
                         "type": event["type"],
-                        "serverTime": event["serverTime"],
+                        "serverTime": event.get("eventTime") or event.get("serverTime"),
                         "attributes": event["attributes"],
                     },
                 )

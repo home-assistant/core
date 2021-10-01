@@ -147,7 +147,7 @@ class CurrentSensor(GEMSensor):
     """Entity showing power usage on one channel of the monitor."""
 
     _attr_icon = CURRENT_SENSOR_ICON
-    _attr_unit_of_measurement = UNIT_WATTS
+    _attr_native_unit_of_measurement = UNIT_WATTS
 
     def __init__(self, monitor_serial_number, number, name, net_metering):
         """Construct the entity."""
@@ -158,7 +158,7 @@ class CurrentSensor(GEMSensor):
         return monitor.channels[self._number - 1]
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the current number of watts being used by the channel."""
         if not self._sensor:
             return None
@@ -203,7 +203,7 @@ class PulseCounter(GEMSensor):
         return monitor.pulse_counters[self._number - 1]
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the current rate of change for the given pulse counter."""
         if not self._sensor or self._sensor.pulses_per_second is None:
             return None
@@ -225,7 +225,7 @@ class PulseCounter(GEMSensor):
             return 3600
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement for this pulse counter."""
         return f"{self._counted_quantity}/{self._time_unit}"
 
@@ -253,7 +253,7 @@ class TemperatureSensor(GEMSensor):
         return monitor.temperature_sensors[self._number - 1]
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the current temperature being reported by this sensor."""
         if not self._sensor:
             return None
@@ -261,7 +261,7 @@ class TemperatureSensor(GEMSensor):
         return self._sensor.temperature
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement for this sensor (user specified)."""
         return self._unit
 
@@ -270,7 +270,7 @@ class VoltageSensor(GEMSensor):
     """Entity showing voltage."""
 
     _attr_icon = VOLTAGE_ICON
-    _attr_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
+    _attr_native_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
 
     def __init__(self, monitor_serial_number, number, name):
         """Construct the entity."""
@@ -281,7 +281,7 @@ class VoltageSensor(GEMSensor):
         return monitor
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the current voltage being reported by this sensor."""
         if not self._sensor:
             return None

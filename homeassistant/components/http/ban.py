@@ -217,7 +217,7 @@ async def async_load_ip_bans_config(hass: HomeAssistant, path: str) -> list[IpBa
 
 def update_ip_bans_config(path: str, ip_ban: IpBan) -> None:
     """Update config file with new banned IP address."""
-    with open(path, "a") as out:
+    with open(path, "a", encoding="utf8") as out:
         ip_ = {str(ip_ban.ip_address): {ATTR_BANNED_AT: ip_ban.banned_at.isoformat()}}
         out.write("\n")
         out.write(yaml.dump(ip_))

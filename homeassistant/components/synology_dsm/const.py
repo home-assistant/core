@@ -1,7 +1,7 @@
 """Constants for Synology DSM."""
 from __future__ import annotations
 
-from typing import Final, TypedDict
+from dataclasses import dataclass
 
 from synology_dsm.api.core.security import SynoCoreSecurity
 from synology_dsm.api.core.upgrade import SynoCoreUpgrade
@@ -10,7 +10,16 @@ from synology_dsm.api.dsm.information import SynoDSMInformation
 from synology_dsm.api.storage.storage import SynoStorage
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 
-from homeassistant.components.binary_sensor import DEVICE_CLASS_SAFETY
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_SAFETY,
+    DEVICE_CLASS_UPDATE,
+    BinarySensorEntityDescription,
+)
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorEntityDescription,
+)
+from homeassistant.components.switch import SwitchEntityDescription
 from homeassistant.const import (
     DATA_MEGABYTES,
     DATA_RATE_KILOBYTES_PER_SECOND,
@@ -18,18 +27,9 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     PERCENTAGE,
+    TEMP_CELSIUS,
 )
-
-
-class EntityInfo(TypedDict):
-    """TypedDict for EntityInfo."""
-
-    name: str
-    unit: str | None
-    icon: str | None
-    device_class: str | None
-    enable: bool
-
+from homeassistant.helpers.entity import EntityDescription
 
 DOMAIN = "synology_dsm"
 PLATFORMS = ["binary_sensor", "camera", "sensor", "switch"]
@@ -37,6 +37,8 @@ COORDINATOR_CAMERAS = "coordinator_cameras"
 COORDINATOR_CENTRAL = "coordinator_central"
 COORDINATOR_SWITCHES = "coordinator_switches"
 SYSTEM_LOADED = "system_loaded"
+EXCEPTION_DETAILS = "details"
+EXCEPTION_UNKNOWN = "unknown"
 
 # Entry keys
 SYNO_API = "syno_api"
@@ -57,12 +59,6 @@ DEFAULT_TIMEOUT = 10  # sec
 
 ENTITY_UNIT_LOAD = "load"
 
-ENTITY_NAME: Final = "name"
-ENTITY_UNIT: Final = "unit"
-ENTITY_ICON: Final = "icon"
-ENTITY_CLASS: Final = "device_class"
-ENTITY_ENABLE: Final = "enable"
-
 # Services
 SERVICE_REBOOT = "reboot"
 SERVICE_SHUTDOWN = "shutdown"
@@ -71,261 +67,302 @@ SERVICES = [
     SERVICE_SHUTDOWN,
 ]
 
-# Entity keys should start with the API_KEY to fetch
+
+@dataclass
+class SynologyDSMRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    api_key: str
+
+
+@dataclass
+class SynologyDSMEntityDescription(EntityDescription, SynologyDSMRequiredKeysMixin):
+    """Generic Synology DSM entity description."""
+
+
+@dataclass
+class SynologyDSMBinarySensorEntityDescription(
+    BinarySensorEntityDescription, SynologyDSMEntityDescription
+):
+    """Describes Synology DSM binary sensor entity."""
+
+
+@dataclass
+class SynologyDSMSensorEntityDescription(
+    SensorEntityDescription, SynologyDSMEntityDescription
+):
+    """Describes Synology DSM sensor entity."""
+
+
+@dataclass
+class SynologyDSMSwitchEntityDescription(
+    SwitchEntityDescription, SynologyDSMEntityDescription
+):
+    """Describes Synology DSM switch entity."""
+
 
 # Binary sensors
-UPGRADE_BINARY_SENSORS: dict[str, EntityInfo] = {
-    f"{SynoCoreUpgrade.API_KEY}:update_available": {
-        ENTITY_NAME: "Update available",
-        ENTITY_UNIT: None,
-        ENTITY_ICON: "mdi:update",
-        ENTITY_CLASS: None,
-        ENTITY_ENABLE: True,
-    },
-}
+UPGRADE_BINARY_SENSORS: tuple[SynologyDSMBinarySensorEntityDescription, ...] = (
+    SynologyDSMBinarySensorEntityDescription(
+        api_key=SynoCoreUpgrade.API_KEY,
+        key="update_available",
+        name="Update available",
+        device_class=DEVICE_CLASS_UPDATE,
+    ),
+)
 
-SECURITY_BINARY_SENSORS: dict[str, EntityInfo] = {
-    f"{SynoCoreSecurity.API_KEY}:status": {
-        ENTITY_NAME: "Security status",
-        ENTITY_UNIT: None,
-        ENTITY_ICON: None,
-        ENTITY_CLASS: DEVICE_CLASS_SAFETY,
-        ENTITY_ENABLE: True,
-    },
-}
+SECURITY_BINARY_SENSORS: tuple[SynologyDSMBinarySensorEntityDescription, ...] = (
+    SynologyDSMBinarySensorEntityDescription(
+        api_key=SynoCoreSecurity.API_KEY,
+        key="status",
+        name="Security status",
+        device_class=DEVICE_CLASS_SAFETY,
+    ),
+)
 
-STORAGE_DISK_BINARY_SENSORS: dict[str, EntityInfo] = {
-    f"{SynoStorage.API_KEY}:disk_exceed_bad_sector_thr": {
-        ENTITY_NAME: "Exceeded Max Bad Sectors",
-        ENTITY_UNIT: None,
-        ENTITY_ICON: None,
-        ENTITY_CLASS: DEVICE_CLASS_SAFETY,
-        ENTITY_ENABLE: True,
-    },
-    f"{SynoStorage.API_KEY}:disk_below_remain_life_thr": {
-        ENTITY_NAME: "Below Min Remaining Life",
-        ENTITY_UNIT: None,
-        ENTITY_ICON: None,
-        ENTITY_CLASS: DEVICE_CLASS_SAFETY,
-        ENTITY_ENABLE: True,
-    },
-}
+STORAGE_DISK_BINARY_SENSORS: tuple[SynologyDSMBinarySensorEntityDescription, ...] = (
+    SynologyDSMBinarySensorEntityDescription(
+        api_key=SynoStorage.API_KEY,
+        key="disk_exceed_bad_sector_thr",
+        name="Exceeded Max Bad Sectors",
+        device_class=DEVICE_CLASS_SAFETY,
+    ),
+    SynologyDSMBinarySensorEntityDescription(
+        api_key=SynoStorage.API_KEY,
+        key="disk_below_remain_life_thr",
+        name="Below Min Remaining Life",
+        device_class=DEVICE_CLASS_SAFETY,
+    ),
+)
 
 # Sensors
-UTILISATION_SENSORS: dict[str, EntityInfo] = {
-    f"{SynoCoreUtilization.API_KEY}:cpu_other_load": {
-        ENTITY_NAME: "CPU Utilization (Other)",
-        ENTITY_UNIT: PERCENTAGE,
-        ENTITY_ICON: "mdi:chip",
-        ENTITY_CLASS: None,
-        ENTITY_ENABLE: False,
-    },
-    f"{SynoCoreUtilization.API_KEY}:cpu_user_load": {
-        ENTITY_NAME: "CPU Utilization (User)",
-        ENTITY_UNIT: PERCENTAGE,
-        ENTITY_ICON: "mdi:chip",
-        ENTITY_CLASS: None,
-        ENTITY_ENABLE: True,
-    },
-    f"{SynoCoreUtilization.API_KEY}:cpu_system_load": {
-        ENTITY_NAME: "CPU Utilization (System)",
-        ENTITY_UNIT: PERCENTAGE,
-        ENTITY_ICON: "mdi:chip",
-        ENTITY_CLASS: None,
-        ENTITY_ENABLE: False,
-    },
-    f"{SynoCoreUtilization.API_KEY}:cpu_total_load": {
-        ENTITY_NAME: "CPU Utilization (Total)",
-        ENTITY_UNIT: PERCENTAGE,
-        ENTITY_ICON: "mdi:chip",
-        ENTITY_CLASS: None,
-        ENTITY_ENABLE: True,
-    },
-    f"{SynoCoreUtilization.API_KEY}:cpu_1min_load": {
-        ENTITY_NAME: "CPU Load Average (1 min)",
-        ENTITY_UNIT: ENTITY_UNIT_LOAD,
-        ENTITY_ICON: "mdi:chip",
-        ENTITY_CLASS: None,
-        ENTITY_ENABLE: False,
-    },
-    f"{SynoCoreUtilization.API_KEY}:cpu_5min_load": {
-        ENTITY_NAME: "CPU Load Average (5 min)",
-        ENTITY_UNIT: ENTITY_UNIT_LOAD,
-        ENTITY_ICON: "mdi:chip",
-        ENTITY_CLASS: None,
-        ENTITY_ENABLE: True,
-    },
-    f"{SynoCoreUtilization.API_KEY}:cpu_15min_load": {
-        ENTITY_NAME: "CPU Load Average (15 min)",
-        ENTITY_UNIT: ENTITY_UNIT_LOAD,
-        ENTITY_ICON: "mdi:chip",
-        ENTITY_CLASS: None,
-        ENTITY_ENABLE: True,
-    },
-    f"{SynoCoreUtilization.API_KEY}:memory_real_usage": {
-        ENTITY_NAME: "Memory Usage (Real)",
-        ENTITY_UNIT: PERCENTAGE,
-        ENTITY_ICON: "mdi:memory",
-        ENTITY_CLASS: None,
-        ENTITY_ENABLE: True,
-    },
-    f"{SynoCoreUtilization.API_KEY}:memory_size": {
-        ENTITY_NAME: "Memory Size",
-        ENTITY_UNIT: DATA_MEGABYTES,
-        ENTITY_ICON: "mdi:memory",
-        ENTITY_CLASS: None,
-        ENTITY_ENABLE: False,
-    },
-    f"{SynoCoreUtilization.API_KEY}:memory_cached": {
-        ENTITY_NAME: "Memory Cached",
-        ENTITY_UNIT: DATA_MEGABYTES,
-        ENTITY_ICON: "mdi:memory",
-        ENTITY_CLASS: None,
-        ENTITY_ENABLE: False,
-    },
-    f"{SynoCoreUtilization.API_KEY}:memory_available_swap": {
-        ENTITY_NAME: "Memory Available (Swap)",
-        ENTITY_UNIT: DATA_MEGABYTES,
-        ENTITY_ICON: "mdi:memory",
-        ENTITY_CLASS: None,
-        ENTITY_ENABLE: True,
-    },
-    f"{SynoCoreUtilization.API_KEY}:memory_available_real": {
-        ENTITY_NAME: "Memory Available (Real)",
-        ENTITY_UNIT: DATA_MEGABYTES,
-        ENTITY_ICON: "mdi:memory",
-        ENTITY_CLASS: None,
-        ENTITY_ENABLE: True,
-    },
-    f"{SynoCoreUtilization.API_KEY}:memory_total_swap": {
-        ENTITY_NAME: "Memory Total (Swap)",
-        ENTITY_UNIT: DATA_MEGABYTES,
-        ENTITY_ICON: "mdi:memory",
-        ENTITY_CLASS: None,
-        ENTITY_ENABLE: True,
-    },
-    f"{SynoCoreUtilization.API_KEY}:memory_total_real": {
-        ENTITY_NAME: "Memory Total (Real)",
-        ENTITY_UNIT: DATA_MEGABYTES,
-        ENTITY_ICON: "mdi:memory",
-        ENTITY_CLASS: None,
-        ENTITY_ENABLE: True,
-    },
-    f"{SynoCoreUtilization.API_KEY}:network_up": {
-        ENTITY_NAME: "Network Up",
-        ENTITY_UNIT: DATA_RATE_KILOBYTES_PER_SECOND,
-        ENTITY_ICON: "mdi:upload",
-        ENTITY_CLASS: None,
-        ENTITY_ENABLE: True,
-    },
-    f"{SynoCoreUtilization.API_KEY}:network_down": {
-        ENTITY_NAME: "Network Down",
-        ENTITY_UNIT: DATA_RATE_KILOBYTES_PER_SECOND,
-        ENTITY_ICON: "mdi:download",
-        ENTITY_CLASS: None,
-        ENTITY_ENABLE: True,
-    },
-}
-STORAGE_VOL_SENSORS: dict[str, EntityInfo] = {
-    f"{SynoStorage.API_KEY}:volume_status": {
-        ENTITY_NAME: "Status",
-        ENTITY_UNIT: None,
-        ENTITY_ICON: "mdi:checkbox-marked-circle-outline",
-        ENTITY_CLASS: None,
-        ENTITY_ENABLE: True,
-    },
-    f"{SynoStorage.API_KEY}:volume_size_total": {
-        ENTITY_NAME: "Total Size",
-        ENTITY_UNIT: DATA_TERABYTES,
-        ENTITY_ICON: "mdi:chart-pie",
-        ENTITY_CLASS: None,
-        ENTITY_ENABLE: False,
-    },
-    f"{SynoStorage.API_KEY}:volume_size_used": {
-        ENTITY_NAME: "Used Space",
-        ENTITY_UNIT: DATA_TERABYTES,
-        ENTITY_ICON: "mdi:chart-pie",
-        ENTITY_CLASS: None,
-        ENTITY_ENABLE: True,
-    },
-    f"{SynoStorage.API_KEY}:volume_percentage_used": {
-        ENTITY_NAME: "Volume Used",
-        ENTITY_UNIT: PERCENTAGE,
-        ENTITY_ICON: "mdi:chart-pie",
-        ENTITY_CLASS: None,
-        ENTITY_ENABLE: True,
-    },
-    f"{SynoStorage.API_KEY}:volume_disk_temp_avg": {
-        ENTITY_NAME: "Average Disk Temp",
-        ENTITY_UNIT: None,
-        ENTITY_ICON: None,
-        ENTITY_CLASS: DEVICE_CLASS_TEMPERATURE,
-        ENTITY_ENABLE: True,
-    },
-    f"{SynoStorage.API_KEY}:volume_disk_temp_max": {
-        ENTITY_NAME: "Maximum Disk Temp",
-        ENTITY_UNIT: None,
-        ENTITY_ICON: None,
-        ENTITY_CLASS: DEVICE_CLASS_TEMPERATURE,
-        ENTITY_ENABLE: False,
-    },
-}
-STORAGE_DISK_SENSORS: dict[str, EntityInfo] = {
-    f"{SynoStorage.API_KEY}:disk_smart_status": {
-        ENTITY_NAME: "Status (Smart)",
-        ENTITY_UNIT: None,
-        ENTITY_ICON: "mdi:checkbox-marked-circle-outline",
-        ENTITY_CLASS: None,
-        ENTITY_ENABLE: False,
-    },
-    f"{SynoStorage.API_KEY}:disk_status": {
-        ENTITY_NAME: "Status",
-        ENTITY_UNIT: None,
-        ENTITY_ICON: "mdi:checkbox-marked-circle-outline",
-        ENTITY_CLASS: None,
-        ENTITY_ENABLE: True,
-    },
-    f"{SynoStorage.API_KEY}:disk_temp": {
-        ENTITY_NAME: "Temperature",
-        ENTITY_UNIT: None,
-        ENTITY_ICON: None,
-        ENTITY_CLASS: DEVICE_CLASS_TEMPERATURE,
-        ENTITY_ENABLE: True,
-    },
-}
+UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
+    SynologyDSMSensorEntityDescription(
+        api_key=SynoCoreUtilization.API_KEY,
+        key="cpu_other_load",
+        name="CPU Utilization (Other)",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:chip",
+        entity_registry_enabled_default=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SynologyDSMSensorEntityDescription(
+        api_key=SynoCoreUtilization.API_KEY,
+        key="cpu_user_load",
+        name="CPU Utilization (User)",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:chip",
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SynologyDSMSensorEntityDescription(
+        api_key=SynoCoreUtilization.API_KEY,
+        key="cpu_system_load",
+        name="CPU Utilization (System)",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:chip",
+        entity_registry_enabled_default=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SynologyDSMSensorEntityDescription(
+        api_key=SynoCoreUtilization.API_KEY,
+        key="cpu_total_load",
+        name="CPU Utilization (Total)",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:chip",
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SynologyDSMSensorEntityDescription(
+        api_key=SynoCoreUtilization.API_KEY,
+        key="cpu_1min_load",
+        name="CPU Load Average (1 min)",
+        native_unit_of_measurement=ENTITY_UNIT_LOAD,
+        icon="mdi:chip",
+        entity_registry_enabled_default=False,
+    ),
+    SynologyDSMSensorEntityDescription(
+        api_key=SynoCoreUtilization.API_KEY,
+        key="cpu_5min_load",
+        name="CPU Load Average (5 min)",
+        native_unit_of_measurement=ENTITY_UNIT_LOAD,
+        icon="mdi:chip",
+    ),
+    SynologyDSMSensorEntityDescription(
+        api_key=SynoCoreUtilization.API_KEY,
+        key="cpu_15min_load",
+        name="CPU Load Average (15 min)",
+        native_unit_of_measurement=ENTITY_UNIT_LOAD,
+        icon="mdi:chip",
+    ),
+    SynologyDSMSensorEntityDescription(
+        api_key=SynoCoreUtilization.API_KEY,
+        key="memory_real_usage",
+        name="Memory Usage (Real)",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:memory",
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SynologyDSMSensorEntityDescription(
+        api_key=SynoCoreUtilization.API_KEY,
+        key="memory_size",
+        name="Memory Size",
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:memory",
+        entity_registry_enabled_default=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SynologyDSMSensorEntityDescription(
+        api_key=SynoCoreUtilization.API_KEY,
+        key="memory_cached",
+        name="Memory Cached",
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:memory",
+        entity_registry_enabled_default=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SynologyDSMSensorEntityDescription(
+        api_key=SynoCoreUtilization.API_KEY,
+        key="memory_available_swap",
+        name="Memory Available (Swap)",
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:memory",
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SynologyDSMSensorEntityDescription(
+        api_key=SynoCoreUtilization.API_KEY,
+        key="memory_available_real",
+        name="Memory Available (Real)",
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:memory",
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SynologyDSMSensorEntityDescription(
+        api_key=SynoCoreUtilization.API_KEY,
+        key="memory_total_swap",
+        name="Memory Total (Swap)",
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:memory",
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SynologyDSMSensorEntityDescription(
+        api_key=SynoCoreUtilization.API_KEY,
+        key="memory_total_real",
+        name="Memory Total (Real)",
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:memory",
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SynologyDSMSensorEntityDescription(
+        api_key=SynoCoreUtilization.API_KEY,
+        key="network_up",
+        name="Upload Throughput",
+        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+        icon="mdi:upload",
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SynologyDSMSensorEntityDescription(
+        api_key=SynoCoreUtilization.API_KEY,
+        key="network_down",
+        name="Download Throughput",
+        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+        icon="mdi:download",
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+)
+STORAGE_VOL_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
+    SynologyDSMSensorEntityDescription(
+        api_key=SynoStorage.API_KEY,
+        key="volume_status",
+        name="Status",
+        icon="mdi:checkbox-marked-circle-outline",
+    ),
+    SynologyDSMSensorEntityDescription(
+        api_key=SynoStorage.API_KEY,
+        key="volume_size_total",
+        name="Total Size",
+        native_unit_of_measurement=DATA_TERABYTES,
+        icon="mdi:chart-pie",
+        entity_registry_enabled_default=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SynologyDSMSensorEntityDescription(
+        api_key=SynoStorage.API_KEY,
+        key="volume_size_used",
+        name="Used Space",
+        native_unit_of_measurement=DATA_TERABYTES,
+        icon="mdi:chart-pie",
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SynologyDSMSensorEntityDescription(
+        api_key=SynoStorage.API_KEY,
+        key="volume_percentage_used",
+        name="Volume Used",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:chart-pie",
+    ),
+    SynologyDSMSensorEntityDescription(
+        api_key=SynoStorage.API_KEY,
+        key="volume_disk_temp_avg",
+        name="Average Disk Temp",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
+    SynologyDSMSensorEntityDescription(
+        api_key=SynoStorage.API_KEY,
+        key="volume_disk_temp_max",
+        name="Maximum Disk Temp",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        entity_registry_enabled_default=False,
+    ),
+)
+STORAGE_DISK_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
+    SynologyDSMSensorEntityDescription(
+        api_key=SynoStorage.API_KEY,
+        key="disk_smart_status",
+        name="Status (Smart)",
+        icon="mdi:checkbox-marked-circle-outline",
+        entity_registry_enabled_default=False,
+    ),
+    SynologyDSMSensorEntityDescription(
+        api_key=SynoStorage.API_KEY,
+        key="disk_status",
+        name="Status",
+        icon="mdi:checkbox-marked-circle-outline",
+    ),
+    SynologyDSMSensorEntityDescription(
+        api_key=SynoStorage.API_KEY,
+        key="disk_temp",
+        name="Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+)
 
-INFORMATION_SENSORS: dict[str, EntityInfo] = {
-    f"{SynoDSMInformation.API_KEY}:temperature": {
-        ENTITY_NAME: "temperature",
-        ENTITY_UNIT: None,
-        ENTITY_ICON: None,
-        ENTITY_CLASS: DEVICE_CLASS_TEMPERATURE,
-        ENTITY_ENABLE: True,
-    },
-    f"{SynoDSMInformation.API_KEY}:uptime": {
-        ENTITY_NAME: "last boot",
-        ENTITY_UNIT: None,
-        ENTITY_ICON: None,
-        ENTITY_CLASS: DEVICE_CLASS_TIMESTAMP,
-        ENTITY_ENABLE: False,
-    },
-}
+INFORMATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
+    SynologyDSMSensorEntityDescription(
+        api_key=SynoDSMInformation.API_KEY,
+        key="temperature",
+        name="temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SynologyDSMSensorEntityDescription(
+        api_key=SynoDSMInformation.API_KEY,
+        key="uptime",
+        name="last boot",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+        entity_registry_enabled_default=False,
+    ),
+)
 
 # Switch
-SURVEILLANCE_SWITCH: dict[str, EntityInfo] = {
-    f"{SynoSurveillanceStation.HOME_MODE_API_KEY}:home_mode": {
-        ENTITY_NAME: "home mode",
-        ENTITY_UNIT: None,
-        ENTITY_ICON: "mdi:home-account",
-        ENTITY_CLASS: None,
-        ENTITY_ENABLE: True,
-    },
-}
-
-
-TEMP_SENSORS_KEYS = [
-    "volume_disk_temp_avg",
-    "volume_disk_temp_max",
-    "disk_temp",
-    "temperature",
-]
+SURVEILLANCE_SWITCH: tuple[SynologyDSMSwitchEntityDescription, ...] = (
+    SynologyDSMSwitchEntityDescription(
+        api_key=SynoSurveillanceStation.HOME_MODE_API_KEY,
+        key="home_mode",
+        name="home mode",
+        icon="mdi:home-account",
+    ),
+)

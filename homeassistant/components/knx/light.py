@@ -10,11 +10,13 @@ from xknx.telegram.address import parse_device_group_address
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
+    ATTR_HS_COLOR,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_XY_COLOR,
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
+    COLOR_MODE_HS,
     COLOR_MODE_ONOFF,
     COLOR_MODE_RGB,
     COLOR_MODE_RGBW,
@@ -158,6 +160,12 @@ def _create_light(xknx: XKNX, config: ConfigType) -> XknxLight:
         group_address_color_state=config.get(LightSchema.CONF_COLOR_STATE_ADDRESS),
         group_address_rgbw=config.get(LightSchema.CONF_RGBW_ADDRESS),
         group_address_rgbw_state=config.get(LightSchema.CONF_RGBW_STATE_ADDRESS),
+        group_address_hue=config.get(LightSchema.CONF_HUE_ADDRESS),
+        group_address_hue_state=config.get(LightSchema.CONF_HUE_STATE_ADDRESS),
+        group_address_saturation=config.get(LightSchema.CONF_SATURATION_ADDRESS),
+        group_address_saturation_state=config.get(
+            LightSchema.CONF_SATURATION_STATE_ADDRESS
+        ),
         group_address_xyy_color=config.get(LightSchema.CONF_XYY_ADDRESS),
         group_address_xyy_color_state=config.get(LightSchema.CONF_XYY_STATE_ADDRESS),
         group_address_tunable_white=group_address_tunable_white,
@@ -284,6 +292,13 @@ class KNXLight(KnxEntity, LightEntity):
         return None
 
     @property
+    def hs_color(self) -> tuple[float, float] | None:
+        """Return the hue and saturation color value [float, float]."""
+        # Hue is scaled 0..360 int encoded in 1 byte in KNX (-> only 256 possible values)
+        # Saturation is scaled 0..100 int
+        return self._device.current_hs_color
+
+    @property
     def xy_color(self) -> tuple[float, float] | None:
         """Return the xy color value [float, float]."""
         if self._device.current_xyy_color is not None:
@@ -315,6 +330,8 @@ class KNXLight(KnxEntity, LightEntity):
         """Return the color mode of the light."""
         if self._device.supports_xyy_color:
             return COLOR_MODE_XY
+        if self._device.supports_hs_color:
+            return COLOR_MODE_HS
         if self._device.supports_rgbw:
             return COLOR_MODE_RGBW
         if self._device.supports_color:
@@ -339,6 +356,7 @@ class KNXLight(KnxEntity, LightEntity):
         mireds = kwargs.get(ATTR_COLOR_TEMP)
         rgb = kwargs.get(ATTR_RGB_COLOR)
         rgbw = kwargs.get(ATTR_RGBW_COLOR)
+        hs_color = kwargs.get(ATTR_HS_COLOR)
         xy_color = kwargs.get(ATTR_XY_COLOR)
 
         if (
@@ -347,6 +365,7 @@ class KNXLight(KnxEntity, LightEntity):
             and mireds is None
             and rgb is None
             and rgbw is None
+            and hs_color is None
             and xy_color is None
         ):
             await self._device.set_on()
@@ -395,6 +414,12 @@ class KNXLight(KnxEntity, LightEntity):
                 XYYColor(color=xy_color, brightness=brightness)
             )
             return
+
+        if hs_color is not None:
+            # round so only one telegram will be sent if the other matches state
+            hue = round(hs_color[0])
+            sat = round(hs_color[1])
+            await self._device.set_hs_color((hue, sat))
 
         if brightness is not None:
             # brightness: 1..255; 0 brightness will call async_turn_off()

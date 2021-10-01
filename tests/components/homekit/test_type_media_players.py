@@ -242,7 +242,7 @@ async def test_media_player_television(hass, hk_driver, events, caplog):
     hass.states.async_set(entity_id, STATE_ON, {ATTR_INPUT_SOURCE: "HDMI 5"})
     await hass.async_block_till_done()
     assert acc.char_input_source.value == 0
-    assert caplog.records[-2].levelname == "WARNING"
+    assert caplog.records[-2].levelname == "DEBUG"
 
     # Set from HomeKit
     call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")

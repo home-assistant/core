@@ -11,8 +11,8 @@
         "step": {
             "user": {
                 "data": {
-                    "client_id": "Client ID (Optional)",
-                    "client_secret": "Client Secret (Optional)",
+                    "client_id": "Client ID (optional)",
+                    "client_secret": "Client Secret (optional)",
                     "password": "Password",
                     "username": "Username"
                 },
