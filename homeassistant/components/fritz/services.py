@@ -45,7 +45,10 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             if config_entry := hass.config_entries.async_get_entry(entry_id):
                 await fritz_tools.service_fritzbox(service_call, config_entry)
             else:
-                _LOGGER.error("Executing service %s failed, no config entry found", service_call.service)
+                _LOGGER.error(
+                    "Executing service %s failed, no config entry found",
+                    service_call.service,
+                )
 
     for service in SERVICE_LIST:
         hass.services.async_register(DOMAIN, service, async_call_fritz_service)
