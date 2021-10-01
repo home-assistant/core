@@ -51,7 +51,9 @@ class AutomationTrace(ActionTrace):
     def from_dict(cls, data):
         """Restore from dict."""
         automation_trace = super().from_dict(data)
-        automation_trace._trigger_description = data["trigger"]
+        automation_trace._trigger_description = (  # pylint: disable=protected-access
+            data["trigger"]
+        )
         return automation_trace
 
 
@@ -82,5 +84,6 @@ def restore_traces(hass):
             try:
                 trace = AutomationTrace.from_dict(json_trace)
                 async_store_trace(hass, trace, None)
-            except Exception:
+            # Catch any exception to not blow up if the stored trace is invalid
+            except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Failed to restore trace")

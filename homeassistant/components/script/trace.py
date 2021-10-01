@@ -56,5 +56,6 @@ def restore_traces(hass):
             try:
                 trace = ScriptTrace.from_dict(json_trace)
                 async_store_trace(hass, trace, None)
-            except Exception:
+            # Catch any exception to not blow up if the stored trace is invalid
+            except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Failed to restore trace")

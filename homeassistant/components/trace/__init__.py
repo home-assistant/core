@@ -63,7 +63,7 @@ async def async_setup(hass, config):
         hass.data[DATA_RESTORED_TRACES][domain][key] = traces
         for run_id in traces:
             max_run_id = max(int(run_id), max_run_id)
-    ActionTrace._run_ids = count(max_run_id + 1)
+    ActionTrace._run_ids = count(max_run_id + 1)  # pylint: disable=protected-access
 
     async def _async_store_traces_at_stop(*_) -> None:
         """Save traces to storage."""

@@ -78,6 +78,7 @@ class TraceElement:
         return result
 
     @staticmethod
+    # pylint: disable=protected-access
     def from_dict(data: dict[str, Any]) -> TraceElement:
         """Restore from dict."""
         element = TraceElement({}, data["path"])
