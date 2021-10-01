@@ -123,14 +123,14 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
         return self.cluster.get("ac_voltage_multiplier") or 1
 
     @property
-    def divisor(self) -> int:
+    def ac_power_divisor(self) -> int:
         """Return active power divisor."""
         return self.cluster.get(
             "ac_power_divisor", self.cluster.get("power_divisor") or 1
         )
 
     @property
-    def multiplier(self) -> int:
+    def ac_power_multiplier(self) -> int:
         """Return active power divisor."""
         return self.cluster.get(
             "ac_power_multiplier", self.cluster.get("power_multiplier") or 1

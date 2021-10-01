@@ -246,6 +246,7 @@ class ElectricalMeasurement(Sensor):
     _device_class = DEVICE_CLASS_POWER
     _state_class = STATE_CLASS_MEASUREMENT
     _unit = POWER_WATT
+    _div_mul_prefix = "ac_power"
 
     @property
     def should_poll(self) -> bool:
@@ -267,8 +268,10 @@ class ElectricalMeasurement(Sensor):
 
     def formatter(self, value: int) -> int | float:
         """Return 'normalized' value."""
-        value = value * self._channel.multiplier / self._channel.divisor
-        if value < 100 and self._channel.divisor > 1:
+        multiplier = getattr(self._channel, f"{self._div_mul_prefix}_multiplier")
+        divisor = getattr(self._channel, f"{self._div_mul_prefix}_divisor")
+        value = float(value * multiplier) / divisor
+        if value < 100 and divisor > 1:
             return round(value, self._decimals)
         return round(value)
 

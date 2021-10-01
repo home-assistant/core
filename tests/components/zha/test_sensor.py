@@ -1,6 +1,5 @@
 """Test zha sensor."""
 import math
-from unittest import mock
 
 import pytest
 import zigpy.profiles.zha
@@ -153,30 +152,24 @@ async def async_test_smart_energy_summation(hass, cluster, entity_id):
 
 async def async_test_electrical_measurement(hass, cluster, entity_id):
     """Test electrical measurement sensor."""
-    with mock.patch(
-        (
-            "homeassistant.components.zha.core.channels.homeautomation"
-            ".ElectricalMeasurementChannel.divisor"
-        ),
-        new_callable=mock.PropertyMock,
-    ) as divisor_mock:
-        divisor_mock.return_value = 1
-        await send_attributes_report(hass, cluster, {0: 1, 1291: 100, 10: 1000})
-        assert_state(hass, entity_id, "100", POWER_WATT)
+    # update divisor cached value
+    await send_attributes_report(hass, cluster, {"ac_power_divisor": 1})
+    await send_attributes_report(hass, cluster, {0: 1, 1291: 100, 10: 1000})
+    assert_state(hass, entity_id, "100", POWER_WATT)
 
-        await send_attributes_report(hass, cluster, {0: 1, 1291: 99, 10: 1000})
-        assert_state(hass, entity_id, "99", POWER_WATT)
+    await send_attributes_report(hass, cluster, {0: 1, 1291: 99, 10: 1000})
+    assert_state(hass, entity_id, "99", POWER_WATT)
 
-        divisor_mock.return_value = 10
-        await send_attributes_report(hass, cluster, {0: 1, 1291: 1000, 10: 5000})
-        assert_state(hass, entity_id, "100", POWER_WATT)
+    await send_attributes_report(hass, cluster, {"ac_power_divisor": 10})
+    await send_attributes_report(hass, cluster, {0: 1, 1291: 1000, 10: 5000})
+    assert_state(hass, entity_id, "100", POWER_WATT)
 
-        await send_attributes_report(hass, cluster, {0: 1, 1291: 99, 10: 5000})
-        assert_state(hass, entity_id, "9.9", POWER_WATT)
+    await send_attributes_report(hass, cluster, {0: 1, 1291: 99, 10: 5000})
+    assert_state(hass, entity_id, "9.9", POWER_WATT)
 
-        assert "active_power_max" not in hass.states.get(entity_id).attributes
-        await send_attributes_report(hass, cluster, {0: 1, 0x050D: 88, 10: 5000})
-        assert hass.states.get(entity_id).attributes["active_power_max"] == "8.8"
+    assert "active_power_max" not in hass.states.get(entity_id).attributes
+    await send_attributes_report(hass, cluster, {0: 1, 0x050D: 88, 10: 5000})
+    assert hass.states.get(entity_id).attributes["active_power_max"] == "8.8"
 
 
 async def async_test_powerconfiguration(hass, cluster, entity_id):
@@ -480,29 +473,29 @@ async def test_electrical_measurement_init(
     assert int(hass.states.get(entity_id).state) == 100
 
     channel = zha_device.channels.pools[0].all_channels["1:0x0b04"]
-    assert channel.divisor == 1
-    assert channel.multiplier == 1
+    assert channel.ac_power_divisor == 1
+    assert channel.ac_power_multiplier == 1
 
     # update power divisor
     await send_attributes_report(hass, cluster, {0: 1, 1291: 20, 0x0403: 5, 10: 1000})
-    assert channel.divisor == 5
-    assert channel.multiplier == 1
+    assert channel.ac_power_divisor == 5
+    assert channel.ac_power_multiplier == 1
     assert hass.states.get(entity_id).state == "4.0"
 
     await send_attributes_report(hass, cluster, {0: 1, 1291: 30, 0x0605: 10, 10: 1000})
-    assert channel.divisor == 10
-    assert channel.multiplier == 1
+    assert channel.ac_power_divisor == 10
+    assert channel.ac_power_multiplier == 1
     assert hass.states.get(entity_id).state == "3.0"
 
     # update power multiplier
     await send_attributes_report(hass, cluster, {0: 1, 1291: 20, 0x0402: 6, 10: 1000})
-    assert channel.divisor == 10
-    assert channel.multiplier == 6
+    assert channel.ac_power_divisor == 10
+    assert channel.ac_power_multiplier == 6
     assert hass.states.get(entity_id).state == "12.0"
 
     await send_attributes_report(hass, cluster, {0: 1, 1291: 30, 0x0604: 20, 10: 1000})
-    assert channel.divisor == 10
-    assert channel.multiplier == 20
+    assert channel.ac_power_divisor == 10
+    assert channel.ac_power_multiplier == 20
     assert hass.states.get(entity_id).state == "60.0"
 
 
