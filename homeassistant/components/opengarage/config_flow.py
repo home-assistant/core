@@ -67,8 +67,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_PORT: import_info.get(CONF_PORT, DEFAULT_PORT),
             CONF_VERIFY_SSL: import_info.get(CONF_VERIFY_SSL, False),
         }
-
-        import_info.pop(CONF_SSL, None)
         return await self.async_step_user(user_input)
 
     async def async_step_user(
