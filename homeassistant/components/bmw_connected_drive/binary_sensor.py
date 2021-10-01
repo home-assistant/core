@@ -56,9 +56,7 @@ SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_PROBLEM,
         icon="mdi:car-tire-alert",
     ),
-)
-
-SENSOR_TYPES_ELEC: tuple[BinarySensorEntityDescription, ...] = (
+    # electric
     BinarySensorEntityDescription(
         key="charging_status",
         name="Charging status",
@@ -77,27 +75,13 @@ SENSOR_TYPES_ELEC: tuple[BinarySensorEntityDescription, ...] = (
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the BMW ConnectedDrive binary sensors from config entry."""
     account = hass.data[BMW_DOMAIN][DATA_ENTRIES][config_entry.entry_id][CONF_ACCOUNT]
-    entities = []
 
-    for vehicle in account.account.vehicles:
-        if vehicle.has_hv_battery:
-            _LOGGER.debug("BMW with a high voltage battery")
-            entities.extend(
-                [
-                    BMWConnectedDriveSensor(account, vehicle, description)
-                    for description in (*SENSOR_TYPES, *SENSOR_TYPES_ELEC)
-                    if description.key in vehicle.available_attributes
-                ]
-            )
-        elif vehicle.has_internal_combustion_engine:
-            _LOGGER.debug("BMW with an internal combustion engine")
-            entities.extend(
-                [
-                    BMWConnectedDriveSensor(account, vehicle, description)
-                    for description in SENSOR_TYPES
-                    if description.key in vehicle.available_attributes
-                ]
-            )
+    entities = [
+        BMWConnectedDriveSensor(account, vehicle, description)
+        for vehicle in account.account.vehicles
+        for description in SENSOR_TYPES
+        if description.key in vehicle.available_attributes
+    ]
     async_add_entities(entities, True)
 
 
