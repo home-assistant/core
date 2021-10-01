@@ -87,8 +87,12 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
         self.debug("async_update")
 
         # This is a polling channel. Don't allow cache.
-        attrs = [a["attr"] for a in self.REPORT_CONFIG]
-        result = await self.get_attribute_values(attrs, from_cache=False)
+        attrs = [
+            a["attr"]
+            for a in self.REPORT_CONFIG
+            if a["attr"] not in self.cluster.unsupported_attributes
+        ]
+        result = await self.get_attributes(attrs, from_cache=False)
         if result:
             for attr, value in result.items():
                 self.async_send_signal(

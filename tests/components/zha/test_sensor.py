@@ -1,4 +1,5 @@
 """Test zha sensor."""
+import math
 from unittest import mock
 
 import pytest
@@ -9,6 +10,7 @@ import zigpy.zcl.clusters.measurement as measurement
 import zigpy.zcl.clusters.smartenergy as smartenergy
 
 from homeassistant.components.sensor import DOMAIN
+from homeassistant.components.zha.core.const import ZHA_CHANNEL_READS_PER_REQ
 import homeassistant.config as config_util
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -30,6 +32,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.helpers import restore_state
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
 
 from .common import (
@@ -716,7 +719,7 @@ async def test_elec_measurement_sensor_type(
     expected_type,
     zha_device_joined,
 ):
-    """Test zha smart energy summation."""
+    """Test zha electrical measurement sensor type."""
 
     entity_id = ENTITY_ID_PREFIX.format("electrical_measurement")
     zigpy_dev = elec_measurement_zigpy_dev
@@ -729,3 +732,67 @@ async def test_elec_measurement_sensor_type(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.attributes["measurement_type"] == expected_type
+
+
+@pytest.mark.parametrize(
+    "supported_attributes",
+    (
+        set(),
+        {
+            "active_power",
+            "active_power_max",
+            "rms_current",
+            "rms_current_max",
+            "rms_voltage",
+            "rms_voltage_max",
+        },
+        {
+            "active_power",
+        },
+        {
+            "active_power",
+            "active_power_max",
+        },
+        {
+            "rms_current",
+            "rms_current_max",
+        },
+        {
+            "rms_voltage",
+            "rms_voltage_max",
+        },
+    ),
+)
+async def test_elec_measurement_skip_unsupported_attribute(
+    hass,
+    elec_measurement_zha_dev,
+    supported_attributes,
+):
+    """Test zha electrical measurement skipping update of unsupported attributes."""
+
+    entity_id = ENTITY_ID_PREFIX.format("electrical_measurement")
+    zha_dev = elec_measurement_zha_dev
+
+    cluster = zha_dev.device.endpoints[1].electrical_measurement
+
+    all_attrs = {
+        "active_power",
+        "active_power_max",
+        "rms_current",
+        "rms_current_max",
+        "rms_voltage",
+        "rms_voltage_max",
+    }
+    for attr in all_attrs - supported_attributes:
+        cluster.add_unsupported_attribute(attr)
+    cluster.read_attributes.reset_mock()
+
+    await async_update_entity(hass, entity_id)
+    await hass.async_block_till_done()
+    assert cluster.read_attributes.call_count == math.ceil(
+        len(supported_attributes) / ZHA_CHANNEL_READS_PER_REQ
+    )
+    read_attrs = {
+        a for call in cluster.read_attributes.call_args_list for a in call[0][0]
+    }
+    assert read_attrs == supported_attributes
