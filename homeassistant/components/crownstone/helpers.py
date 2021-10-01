@@ -28,8 +28,8 @@ def list_ports_as_str(
         ports_as_string.append(
             usb.human_readable_device_name(
                 port.device,
-                port.serial_number if port.serial_number else None,
-                port.manufacturer if port.manufacturer else None,
+                port.serial_number,
+                port.manufacturer,
                 port.description,
                 f"{hex(port.vid)[2:]:0>4}".upper() if port.vid else None,
                 f"{hex(port.pid)[2:]:0>4}".upper() if port.pid else None,
