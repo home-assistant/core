@@ -139,12 +139,12 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
     @property
     def measurement_type(self) -> str | None:
         """Return Measurement type."""
-        mt = self.cluster.get("measurement_type")
-        if mt is None:
+        meas_type = self.cluster.get("measurement_type")
+        if meas_type is None:
             return None
 
-        mt = self.MeasurementType(mt)
-        return ", ".join(m.name for m in self.MeasurementType if m in mt)
+        meas_type = self.MeasurementType(meas_type)
+        return ", ".join(m.name for m in self.MeasurementType if m in meas_type)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(
