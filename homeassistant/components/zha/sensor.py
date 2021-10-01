@@ -129,6 +129,24 @@ class Sensor(ZhaEntity, SensorEntity):
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._channel: ChannelType = channels[0]
 
+    @classmethod
+    def create_entity(
+        cls,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: list[ChannelType],
+        **kwargs,
+    ) -> ZhaEntity | None:
+        """Entity Factory.
+
+        Return entity if it is a supported configuration, otherwise return None
+        """
+        se_channel = channels[0]
+        if cls.SENSOR_ATTR in se_channel.cluster.unsupported_attributes:
+            return None
+
+        return cls(unique_id, zha_device, channels, **kwargs)
+
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
@@ -310,24 +328,6 @@ class SmartEnergyMetering(Sensor):
         0x0B: "unitless",
         0x0C: f"MJ/{TIME_SECONDS}",
     }
-
-    @classmethod
-    def create_entity(
-        cls,
-        unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
-        **kwargs,
-    ) -> ZhaEntity | None:
-        """Entity Factory.
-
-        Return entity if it is a supported configuration, otherwise return None
-        """
-        se_channel = channels[0]
-        if cls.SENSOR_ATTR in se_channel.cluster.unsupported_attributes:
-            return None
-
-        return cls(unique_id, zha_device, channels, **kwargs)
 
     def formatter(self, value: int) -> int | float:
         """Pass through channel formatter."""
