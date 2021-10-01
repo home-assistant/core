@@ -60,13 +60,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_info):
         """Set the config entry up from yaml."""
-        import_info[CONF_HOST] = (
-            f"{'https' if import_info[CONF_SSL] else 'http'}://"
-            f"{import_info.get(CONF_HOST)}"
-        )
 
-        del import_info[CONF_SSL]
-        return await self.async_step_user(import_info)
+        user_input = {
+            CONF_DEVICE_KEY: import_info[CONF_DEVICE_KEY],
+            CONF_HOST: f"{'https' if import_info.get(CONF_SSL, False) else 'http'}://{import_info[CONF_HOST]}",
+            CONF_PORT: import_info.get(CONF_PORT, DEFAULT_PORT),
+            CONF_VERIFY_SSL: import_info.get(CONF_VERIFY_SSL, False),
+        }
+
+        import_info.pop(CONF_SSL, None)
+        return await self.async_step_user(user_input)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
