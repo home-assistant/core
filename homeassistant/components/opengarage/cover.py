@@ -49,17 +49,17 @@ COVER_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = cv.deprecated(
-    vol.All(
-        PLATFORM_SCHEMA.extend(
-            {vol.Required(CONF_COVERS): cv.schema_with_slug_keys(COVER_SCHEMA)},
-        )
-    )
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_COVERS): cv.schema_with_slug_keys(COVER_SCHEMA)}
 )
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the OpenGarage covers."""
+    _LOGGER.warning(
+        "Open Garage YAML configuration is deprecated, "
+        "it has been imported into the UI automatically and can be safely removed."
+    )
     devices = config.get(CONF_COVERS)
     for device_config in devices.values():
         hass.async_create_task(
