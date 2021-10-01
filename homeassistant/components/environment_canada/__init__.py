@@ -132,7 +132,7 @@ class ECDataUpdateCoordinator(DataUpdateCoordinator):
                 elif isinstance(exc, aiohttp.ClientResponseError):
                     if exc.status == 404:
                         _LOGGER.error(
-                            "Station ID is bad or no longer exists. Check your configuration."
+                            "Station ID is bad or no longer exists; check your configuration"
                         )
                     else:
                         _LOGGER.exception("Unexpected exception")
