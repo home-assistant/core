@@ -26,6 +26,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_ENERGY,
     ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
@@ -143,8 +144,8 @@ class Sensor(ZhaEntity, SensorEntity):
 
         Return entity if it is a supported configuration, otherwise return None
         """
-        se_channel = channels[0]
-        if cls.SENSOR_ATTR in se_channel.cluster.unsupported_attributes:
+        channel = channels[0]
+        if cls.SENSOR_ATTR in channel.cluster.unsupported_attributes:
             return None
 
         return cls(unique_id, zha_device, channels, **kwargs)
@@ -305,7 +306,7 @@ class ElectricalMeasurementRMSVoltage(ElectricalMeasurement, id_suffix="rms_volt
 
     SENSOR_ATTR = "rms_voltage"
     _device_class = DEVICE_CLASS_CURRENT
-    _unit = ELECTRIC_CURRENT_AMPERE
+    _unit = ELECTRIC_POTENTIAL_VOLT
     _div_mul_prefix = "ac_voltage"
 
     @property
