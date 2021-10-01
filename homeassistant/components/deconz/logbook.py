@@ -1,7 +1,7 @@
 """Describe deCONZ logbook events."""
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 from homeassistant.const import ATTR_DEVICE_ID, CONF_EVENT
 from homeassistant.core import HomeAssistant, callback

@@ -1,10 +1,11 @@
 """The ViCare integration."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 import enum
 import logging
-from typing import Callable, Generic, TypeVar
+from typing import Generic, TypeVar
 
 from PyViCare.PyViCareDevice import Device
 from PyViCare.PyViCareFuelCell import FuelCell

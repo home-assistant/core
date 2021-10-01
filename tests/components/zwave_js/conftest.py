@@ -455,6 +455,12 @@ def lock_popp_electric_strike_lock_control_state_fixture():
     )
 
 
+@pytest.fixture(name="fortrezz_ssa1_siren_state", scope="session")
+def fortrezz_ssa1_siren_state_fixture():
+    """Load the fortrezz ssa1 siren node state fixture data."""
+    return json.loads(load_fixture("zwave_js/fortrezz_ssa1_siren_state.json"))
+
+
 @pytest.fixture(name="client")
 def mock_client_fixture(controller_state, version_state, log_config_state):
     """Mock a client."""
@@ -855,6 +861,14 @@ def lock_popp_electric_strike_lock_control_fixture(
 ):
     """Mock a popp electric strike lock control node."""
     node = Node(client, copy.deepcopy(lock_popp_electric_strike_lock_control_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="fortrezz_ssa1_siren")
+def fortrezz_ssa1_siren_fixture(client, fortrezz_ssa1_siren_state):
+    """Mock a fortrezz ssa1 siren node."""
+    node = Node(client, copy.deepcopy(fortrezz_ssa1_siren_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 

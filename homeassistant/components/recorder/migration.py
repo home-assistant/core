@@ -24,7 +24,7 @@ from .models import (
     StatisticsShortTerm,
     process_timestamp,
 )
-from .statistics import _get_metadata, get_start_time
+from .statistics import get_metadata_with_session, get_start_time
 from .util import session_scope
 
 _LOGGER = logging.getLogger(__name__)
@@ -502,19 +502,22 @@ def _apply_update(instance, session, new_version, old_version):  # noqa: C901
                 ],
             )
     elif new_version == 21:
-        _add_columns(
-            connection,
-            "statistics",
-            ["sum_increase DOUBLE PRECISION"],
-        )
         # Try to change the character set of the statistic_meta table
         if engine.dialect.name == "mysql":
             for table in ("events", "states", "statistics_meta"):
+                _LOGGER.warning(
+                    "Updating character set and collation of table %s to utf8mb4. "
+                    "Note: this can take several minutes on large databases and slow "
+                    "computers. Please be patient!",
+                    table,
+                )
                 with contextlib.suppress(SQLAlchemyError):
                     connection.execute(
+                        # Using LOCK=EXCLUSIVE to prevent the database from corrupting
+                        # https://github.com/home-assistant/core/issues/56104
                         text(
                             f"ALTER TABLE {table} CONVERT TO "
-                            "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+                            "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci LOCK=EXCLUSIVE"
                         )
                     )
     elif new_version == 22:
@@ -561,10 +564,10 @@ def _apply_update(instance, session, new_version, old_version):  # noqa: C901
                     fake_start_time += timedelta(minutes=5)
 
         # Copy last hourly statistic to the newly created 5-minute statistics table
-        sum_statistics = _get_metadata(
+        sum_statistics = get_metadata_with_session(
             instance.hass, session, None, statistic_type="sum"
         )
-        for metadata_id in sum_statistics:
+        for metadata_id, _ in sum_statistics.values():
             last_statistic = (
                 session.query(Statistics)
                 .filter_by(metadata_id=metadata_id)
@@ -579,7 +582,6 @@ def _apply_update(instance, session, new_version, old_version):  # noqa: C901
                         last_reset=last_statistic.last_reset,
                         state=last_statistic.state,
                         sum=last_statistic.sum,
-                        sum_increase=last_statistic.sum_increase,
                     )
                 )
     else:

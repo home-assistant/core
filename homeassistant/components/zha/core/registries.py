@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import collections
-from typing import Callable, Dict
+from collections.abc import Callable
+from typing import Dict
 
 import attr
 from zigpy import zcl
@@ -83,7 +84,6 @@ SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {
     zcl.clusters.measurement.RelativeHumidity.cluster_id: SENSOR,
     zcl.clusters.measurement.TemperatureMeasurement.cluster_id: SENSOR,
     zcl.clusters.security.IasZone.cluster_id: BINARY_SENSOR,
-    zcl.clusters.smartenergy.Metering.cluster_id: SENSOR,
 }
 
 SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {
@@ -246,7 +246,9 @@ class ZHAEntityRegistry:
     def __init__(self):
         """Initialize Registry instance."""
         self._strict_registry: RegistryDictType = collections.defaultdict(dict)
-        self._loose_registry: RegistryDictType = collections.defaultdict(dict)
+        self._multi_entity_registry: RegistryDictType = collections.defaultdict(
+            lambda: collections.defaultdict(list)
+        )
         self._group_registry: GroupRegistryDictType = {}
 
     def get_entity(
@@ -265,6 +267,27 @@ class ZHAEntityRegistry:
                 return self._strict_registry[component][match], claimed
 
         return default, []
+
+    def get_multi_entity(
+        self,
+        manufacturer: str,
+        model: str,
+        primary_channel: ChannelType,
+        aux_channels: list[ChannelType],
+        components: set | None = None,
+    ) -> tuple[dict[str, list[CALLABLE_T]], list[ChannelType]]:
+        """Match ZHA Channels to potentially multiple ZHA Entity classes."""
+        result: dict[str, list[CALLABLE_T]] = collections.defaultdict(list)
+        claimed: set[ChannelType] = set()
+        for component in components or self._multi_entity_registry:
+            matches = self._multi_entity_registry[component]
+            for match in sorted(matches, key=lambda x: x.weight, reverse=True):
+                if match.strict_matched(manufacturer, model, [primary_channel]):
+                    claimed |= set(match.claim_channels(aux_channels))
+                    ent_classes = self._multi_entity_registry[component][match]
+                    result[component].extend(ent_classes)
+
+        return result, list(claimed)
 
     def get_group_entity(self, component: str) -> CALLABLE_T:
         """Match a ZHA group to a ZHA Entity class."""
@@ -295,7 +318,7 @@ class ZHAEntityRegistry:
 
         return decorator
 
-    def loose_match(
+    def multipass_match(
         self,
         component: str,
         channel_names: Callable | set[str] | str = None,
@@ -315,7 +338,7 @@ class ZHAEntityRegistry:
 
             All non empty fields of a match rule must match.
             """
-            self._loose_registry[component][rule] = zha_entity
+            self._multi_entity_registry[component][rule].append(zha_entity)
             return zha_entity
 
         return decorator

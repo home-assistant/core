@@ -1,6 +1,7 @@
 """Helpers to help during startup."""
-from collections.abc import Awaitable
-from typing import Callable
+from __future__ import annotations
+
+from collections.abc import Awaitable, Callable
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import Event, HomeAssistant, callback

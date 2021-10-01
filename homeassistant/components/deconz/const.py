@@ -57,23 +57,6 @@ ATTR_OFFSET = "offset"
 ATTR_ON = "on"
 ATTR_VALVE = "valve"
 
-# Covers
-LEVEL_CONTROLLABLE_OUTPUT = "Level controllable output"
-DAMPERS = [LEVEL_CONTROLLABLE_OUTPUT]
-WINDOW_COVERING_CONTROLLER = "Window covering controller"
-WINDOW_COVERING_DEVICE = "Window covering device"
-WINDOW_COVERS = [WINDOW_COVERING_CONTROLLER, WINDOW_COVERING_DEVICE]
-COVER_TYPES = DAMPERS + WINDOW_COVERS
-
-# Fans
-FANS = ["Fan"]
-
-# Locks
-LOCK_TYPES = ["Door Lock", "ZHADoorLock"]
-
-# Sirens
-SIRENS = ["Warning device"]
-
 # Switches
 POWER_PLUGS = ["On/Off light", "On/Off plug-in unit", "Smart plug"]
 

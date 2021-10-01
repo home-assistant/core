@@ -31,6 +31,7 @@ homeassistant.components.crownstone.*
 homeassistant.components.device_automation.*
 homeassistant.components.device_tracker.*
 homeassistant.components.devolo_home_control.*
+homeassistant.components.dlna_dmr.*
 homeassistant.components.dnsip.*
 homeassistant.components.dsmr.*
 homeassistant.components.dunehd.*
@@ -64,8 +65,10 @@ homeassistant.components.local_ip.*
 homeassistant.components.lock.*
 homeassistant.components.mailbox.*
 homeassistant.components.media_player.*
+homeassistant.components.modbus.*
 homeassistant.components.mysensors.*
 homeassistant.components.nam.*
+homeassistant.components.nanoleaf.*
 homeassistant.components.neato.*
 homeassistant.components.nest.*
 homeassistant.components.netatmo.*
@@ -107,6 +110,7 @@ homeassistant.components.tag.*
 homeassistant.components.tautulli.*
 homeassistant.components.tcp.*
 homeassistant.components.tile.*
+homeassistant.components.tplink.*
 homeassistant.components.tradfri.*
 homeassistant.components.tts.*
 homeassistant.components.upcloud.*
