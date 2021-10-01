@@ -18,6 +18,8 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
     DEVICE_CLASS_ENERGY,
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
@@ -172,6 +174,42 @@ async def async_test_electrical_measurement(hass, cluster, entity_id):
     assert hass.states.get(entity_id).attributes["active_power_max"] == "8.8"
 
 
+async def async_test_em_rms_current(hass, cluster, entity_id):
+    """Test electrical measurement RMS Current sensor."""
+
+    await send_attributes_report(hass, cluster, {0: 1, 0x0508: 1234, 10: 1000})
+    assert_state(hass, entity_id, "1.2", ELECTRIC_CURRENT_AMPERE)
+
+    await send_attributes_report(hass, cluster, {"ac_current_divisor": 10})
+    await send_attributes_report(hass, cluster, {0: 1, 0x0508: 236, 10: 1000})
+    assert_state(hass, entity_id, "23.6", ELECTRIC_CURRENT_AMPERE)
+
+    await send_attributes_report(hass, cluster, {0: 1, 0x0508: 1236, 10: 1000})
+    assert_state(hass, entity_id, "124", ELECTRIC_CURRENT_AMPERE)
+
+    assert "rms_current_max" not in hass.states.get(entity_id).attributes
+    await send_attributes_report(hass, cluster, {0: 1, 0x050A: 88, 10: 5000})
+    assert hass.states.get(entity_id).attributes["rms_current_max"] == "8.8"
+
+
+async def async_test_em_rms_voltage(hass, cluster, entity_id):
+    """Test electrical measurement RMS Voltage sensor."""
+
+    await send_attributes_report(hass, cluster, {0: 1, 0x0505: 1234, 10: 1000})
+    assert_state(hass, entity_id, "123", ELECTRIC_POTENTIAL_VOLT)
+
+    await send_attributes_report(hass, cluster, {0: 1, 0x0505: 234, 10: 1000})
+    assert_state(hass, entity_id, "23.4", ELECTRIC_POTENTIAL_VOLT)
+
+    await send_attributes_report(hass, cluster, {"ac_voltage_divisor": 100})
+    await send_attributes_report(hass, cluster, {0: 1, 0x0505: 2236, 10: 1000})
+    assert_state(hass, entity_id, "22.4", ELECTRIC_POTENTIAL_VOLT)
+
+    assert "rms_voltage_max" not in hass.states.get(entity_id).attributes
+    await send_attributes_report(hass, cluster, {0: 1, 0x0507: 888, 10: 5000})
+    assert hass.states.get(entity_id).attributes["rms_voltage_max"] == "8.9"
+
+
 async def async_test_powerconfiguration(hass, cluster, entity_id):
     """Test powerconfiguration/battery sensor."""
     await send_attributes_report(hass, cluster, {33: 98})
@@ -253,8 +291,24 @@ async def async_test_powerconfiguration(hass, cluster, entity_id):
             "electrical_measurement",
             async_test_electrical_measurement,
             6,
-            None,
-            None,
+            {"ac_power_divisor": 1000, "ac_power_multiplier": 1},
+            {"rms_current", "rms_voltage"},
+        ),
+        (
+            homeautomation.ElectricalMeasurement.cluster_id,
+            "electrical_measurement_rms_current",
+            async_test_em_rms_current,
+            6,
+            {"ac_current_divisor": 1000, "ac_current_multiplier": 1},
+            {"active_power", "rms_voltage"},
+        ),
+        (
+            homeautomation.ElectricalMeasurement.cluster_id,
+            "electrical_measurement_rms_voltage",
+            async_test_em_rms_voltage,
+            6,
+            {"ac_voltage_divisor": 10, "ac_voltage_multiplier": 1},
+            {"active_power", "rms_current"},
         ),
         (
             general.PowerConfiguration.cluster_id,
@@ -296,7 +350,10 @@ async def test_sensor(
     if unsupported_attrs:
         for attr in unsupported_attrs:
             cluster.add_unsupported_attribute(attr)
-    if cluster_id == smartenergy.Metering.cluster_id:
+    if cluster_id in (
+        smartenergy.Metering.cluster_id,
+        homeautomation.ElectricalMeasurement.cluster_id,
+    ):
         # this one is mains powered
         zigpy_device.node_desc.mac_capability_flags |= 0b_0000_0100
     cluster.PLUGGED_ATTR_READS = read_plug
