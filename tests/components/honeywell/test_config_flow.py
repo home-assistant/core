@@ -67,6 +67,7 @@ async def test_async_step_import(hass: HomeAssistant) -> None:
         assert result["data"] == FAKE_CONFIG
 
 
+@patch("homeassistant.components.honeywell.UPDATE_LOOP_SLEEP_TIME", 0)
 async def test_show_option_form(hass: HomeAssistant, config_entry) -> None:
     """Test that the option form is shown."""
     config_entry.add_to_hass(hass)
@@ -81,6 +82,7 @@ async def test_show_option_form(hass: HomeAssistant, config_entry) -> None:
     assert result["step_id"] == "init"
 
 
+@patch("homeassistant.components.honeywell.UPDATE_LOOP_SLEEP_TIME", 0)
 async def test_create_option_entry(hass: HomeAssistant, config_entry) -> None:
     """Test that the config entry is created."""
     config_entry.add_to_hass(hass)
