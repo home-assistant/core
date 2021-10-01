@@ -1,11 +1,12 @@
 """Support for AVM FRITZ!Box classes."""
 from __future__ import annotations
 
+from collections.abc import Callable, ValuesView
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import logging
 from types import MappingProxyType
-from typing import Any, Callable, TypedDict
+from typing import Any, TypedDict
 
 from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import (
@@ -80,6 +81,13 @@ def device_filter_out_from_trackers(
             "Skip adding device %s [%s], reason: %s", device.hostname, mac, reason
         )
     return bool(reason)
+
+
+def _cleanup_entity_filter(device: RegistryEntry) -> bool:
+    """Filter only relevant entities."""
+    return device.domain == DEVICE_TRACKER_DOMAIN or (
+        device.domain == DEVICE_SWITCH_DOMAIN and "_internet_access" in device.entity_id
+    )
 
 
 class ClassSetupMissing(Exception):
@@ -302,7 +310,6 @@ class FritzBoxTools:
         if not self.connection:
             raise HomeAssistantError("Unable to establish a connection")
 
-        mode = service_call.data["mode"]
         try:
             if service_call.service == SERVICE_REBOOT:
                 await self.hass.async_add_executor_job(
@@ -318,7 +325,7 @@ class FritzBoxTools:
                 )
                 return
 
-            if service_call.service == SERVICE_CLEANUP and mode == "stale":
+            if service_call.service == SERVICE_CLEANUP:
                 device_hosts_list: list = await self.hass.async_add_executor_job(
                     self.fritz_hosts.get_hosts_info
                 )
@@ -339,34 +346,20 @@ class FritzBoxTools:
         )
         entity_removed: bool = False
 
-        if mode == "stale":
-            for ha_host in ha_device_list:
-                if not _cleanup_entity_filter(ha_host):
-                    continue
-                dev_found: bool = False
-                for device_host in device_hosts_list:
-                    if ha_host.unique_id.split("_")[0] == device_host["mac"]:
-                        dev_found = True
-                        break
-                if not dev_found:
-                    _LOGGER.info(
-                        "Removing entity: %s", ha_host.name or ha_host.original_name
-                    )
-                    entity_reg.async_remove(ha_host.entity_id)
-                    entity_removed = True
-
-        elif mode == "disabled":
-            if not config_entry.pref_disable_new_entities:
+        for ha_host in ha_device_list:
+            if not _cleanup_entity_filter(ha_host):
+                continue
+            dev_found: bool = False
+            for device_host in device_hosts_list:
+                if ha_host.unique_id.split("_")[0] == device_host["mac"]:
+                    dev_found = True
+                    break
+            if not dev_found:
                 _LOGGER.info(
-                    "System option 'Enable newly added entities' is on, nothing to do"
+                    "Removing entity: %s", ha_host.name or ha_host.original_name
                 )
-                return
-
-            for ha_host in ha_device_list:
-                if ha_host.disabled and _cleanup_entity_filter(ha_host):
-                    _LOGGER.info("Removing entity: %s", ha_host.entity_id)
-                    entity_reg.async_remove(ha_host.entity_id)
-                    entity_removed = True
+                entity_reg.async_remove(ha_host.entity_id)
+                entity_removed = True
 
         if entity_removed:
             await self._remove_empty_device(entity_reg, config_entry)
