@@ -1047,7 +1047,7 @@ nessclient==0.9.15
 netdata==0.2.0
 
 # homeassistant.components.discovery
-netdisco==2.9.0
+netdisco==3.0.0
 
 # homeassistant.components.nmap_tracker
 netmap==0.7.0.2
