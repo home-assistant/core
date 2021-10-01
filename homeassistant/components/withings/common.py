@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
 from datetime import timedelta
 from enum import Enum, IntEnum
 import logging
 import re
-from typing import Any, Callable, Dict
+from typing import Any, Dict
 
 from aiohttp.web import Response
 import requests
@@ -507,7 +508,7 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
 
 def json_message_response(message: str, message_code: int) -> Response:
     """Produce common json output."""
-    return HomeAssistantView.json({"message": message, "code": message_code}, 200)
+    return HomeAssistantView.json({"message": message, "code": message_code})
 
 
 class WebhookAvailability(IntEnum):
@@ -640,6 +641,7 @@ class DataManager:
 
         Withings' API occasionally and incorrectly throws errors. Retrying the call tends to work.
         """
+        # pylint: disable=no-self-use
         exception = None
         for attempt in range(1, attempts + 1):
             _LOGGER.debug("Attempt %s of %s", attempt, attempts)

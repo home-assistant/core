@@ -45,6 +45,10 @@ COMMENT_REQUIREMENTS = (
     "VL53L1X2",
 )
 
+COMMENT_REQUIREMENTS_NORMALIZED = {
+    commented.lower().replace("_", "-") for commented in COMMENT_REQUIREMENTS
+}
+
 IGNORE_PIN = ("colorlog>2.1,<3", "urllib3")
 
 URL_PIN = (
@@ -98,6 +102,10 @@ pandas==1.3.0
 # https://bitbucket.org/mrabarnett/mrab-regex/issues/421/2021827-results-in-fatal-python-error
 # This is fixed in 2021.8.28
 regex==2021.8.28
+
+# anyio has a bug that was fixed in 3.3.1
+# can remove after httpx/httpcore updates its anyio version pin
+anyio>=3.3.1
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
@@ -107,6 +115,8 @@ IGNORE_PRE_COMMIT_HOOK_ID = (
     "prettier",
     "python-typing-update",
 )
+
+PACKAGE_REGEX = re.compile(r"^(?:--.+\s)?([-_\.\w\d]+).*==.+$")
 
 
 def has_tests(module: str):
@@ -171,9 +181,24 @@ def gather_recursive_requirements(domain, seen=None):
     return reqs
 
 
+def normalize_package_name(requirement: str) -> str:
+    """Return a normalized package name from a requirement string."""
+    # This function is also used in hassfest.
+    match = PACKAGE_REGEX.search(requirement)
+    if not match:
+        return ""
+
+    # pipdeptree needs lowercase and dash instead of underscore as separator
+    package = match.group(1).lower().replace("_", "-")
+
+    return package
+
+
 def comment_requirement(req):
     """Comment out requirement. Some don't install on all systems."""
-    return any(ign.lower() in req.lower() for ign in COMMENT_REQUIREMENTS)
+    return any(
+        normalize_package_name(req) == ign for ign in COMMENT_REQUIREMENTS_NORMALIZED
+    )
 
 
 def gather_modules():

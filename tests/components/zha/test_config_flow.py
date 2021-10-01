@@ -506,7 +506,7 @@ async def test_user_flow_existing_config_entry(hass):
     assert result["type"] == "abort"
 
 
-@patch("zigpy_cc.zigbee.application.ControllerApplication.probe", return_value=False)
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=False)
 @patch(
     "zigpy_deconz.zigbee.application.ControllerApplication.probe", return_value=False
 )
@@ -514,7 +514,7 @@ async def test_user_flow_existing_config_entry(hass):
     "zigpy_zigate.zigbee.application.ControllerApplication.probe", return_value=False
 )
 @patch("zigpy_xbee.zigbee.application.ControllerApplication.probe", return_value=False)
-async def test_probe_radios(xbee_probe, zigate_probe, deconz_probe, cc_probe, hass):
+async def test_probe_radios(xbee_probe, zigate_probe, deconz_probe, znp_probe, hass):
     """Test detect radios."""
     app_ctrl_cls = MagicMock()
     app_ctrl_cls.SCHEMA_DEVICE = zigpy.config.SCHEMA_DEVICE
@@ -527,6 +527,7 @@ async def test_probe_radios(xbee_probe, zigate_probe, deconz_probe, cc_probe, ha
     with p1 as probe_mock:
         res = await config_flow.detect_radios("/dev/null")
         assert probe_mock.await_count == 1
+        assert znp_probe.await_count == 1  # ZNP appears earlier in the radio list
         assert res[CONF_RADIO_TYPE] == "ezsp"
         assert zigpy.config.CONF_DEVICE in res
         assert (
@@ -538,10 +539,10 @@ async def test_probe_radios(xbee_probe, zigate_probe, deconz_probe, cc_probe, ha
         assert xbee_probe.await_count == 1
         assert zigate_probe.await_count == 1
         assert deconz_probe.await_count == 1
-        assert cc_probe.await_count == 1
+        assert znp_probe.await_count == 2
 
 
-@patch("zigpy_cc.zigbee.application.ControllerApplication.probe", return_value=False)
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=False)
 @patch(
     "zigpy_deconz.zigbee.application.ControllerApplication.probe", return_value=False
 )
@@ -549,7 +550,7 @@ async def test_probe_radios(xbee_probe, zigate_probe, deconz_probe, cc_probe, ha
     "zigpy_zigate.zigbee.application.ControllerApplication.probe", return_value=False
 )
 @patch("zigpy_xbee.zigbee.application.ControllerApplication.probe", return_value=False)
-async def test_probe_new_ezsp(xbee_probe, zigate_probe, deconz_probe, cc_probe, hass):
+async def test_probe_new_ezsp(xbee_probe, zigate_probe, deconz_probe, znp_probe, hass):
     """Test detect radios."""
     app_ctrl_cls = MagicMock()
     app_ctrl_cls.SCHEMA_DEVICE = zigpy.config.SCHEMA_DEVICE
@@ -619,3 +620,38 @@ async def test_user_port_config(probe_mock, hass):
     )
     assert result["data"][CONF_RADIO_TYPE] == "ezsp"
     assert probe_mock.await_count == 1
+
+
+@pytest.mark.parametrize(
+    "old_type,new_type",
+    [
+        ("ezsp", "ezsp"),
+        ("ti_cc", "znp"),  # only one that should change
+        ("znp", "znp"),
+        ("deconz", "deconz"),
+    ],
+)
+async def test_migration_ti_cc_to_znp(old_type, new_type, hass, config_entry):
+    """Test zigpy-cc to zigpy-znp config migration."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=old_type + new_type,
+        data={
+            CONF_RADIO_TYPE: old_type,
+            CONF_DEVICE: {
+                CONF_DEVICE_PATH: "/dev/ttyUSB1",
+                CONF_BAUDRATE: 115200,
+                CONF_FLOWCONTROL: None,
+            },
+        },
+    )
+
+    config_entry.version = 2
+    config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.zha.async_setup_entry", return_value=True):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.version > 2
+    assert config_entry.data[CONF_RADIO_TYPE] == new_type

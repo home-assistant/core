@@ -1,9 +1,10 @@
 """Helper methods for common tasks."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import functools as ft
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from soco.exceptions import SoCoException, SoCoUPnPException
 
@@ -39,16 +40,6 @@ def soco_error(errorcodes: list[str] | None = None) -> Callable:
         return wrapper
 
     return decorator
-
-
-def uid_to_short_hostname(uid: str) -> str:
-    """Convert a Sonos uid to a short hostname."""
-    hostname_uid = uid
-    if hostname_uid.startswith(UID_PREFIX):
-        hostname_uid = hostname_uid[len(UID_PREFIX) :]
-    if hostname_uid.endswith(UID_POSTFIX):
-        hostname_uid = hostname_uid[: -len(UID_POSTFIX)]
-    return f"Sonos-{hostname_uid}"
 
 
 def hostname_to_uid(hostname: str) -> str:

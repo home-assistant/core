@@ -194,4 +194,16 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         native_unit_of_measurement=DATA_MEBIBYTES,
         icon="mdi:docker",
     ),
+    GlancesSensorEntityDescription(
+        key="used",
+        type="raid",
+        name_suffix="Raid used",
+        icon="mdi:harddisk",
+    ),
+    GlancesSensorEntityDescription(
+        key="available",
+        type="raid",
+        name_suffix="Raid available",
+        icon="mdi:harddisk",
+    ),
 )

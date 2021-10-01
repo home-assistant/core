@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Default host: {host}\nDefault port: {port}\nDefault username: {username}",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%] (Optional)",
+          "port": "[%key:common::config_flow::data::port%] (Optional)",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "username": "[%key:common::config_flow::data::username%] (Optional)",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "config": "Connection or login error: please check your configuration"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Specify optional settings",
+        "data": {
+          "consider_home": "Consider home time (seconds)"
+        }
+      }
+    }
+  }
+}

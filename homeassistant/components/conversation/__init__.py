@@ -1,4 +1,5 @@
 """Support for functionality to have conversations with Home Assistant."""
+from http import HTTPStatus
 import logging
 import re
 
@@ -8,7 +9,6 @@ from homeassistant import core
 from homeassistant.components import http, websocket_api
 from homeassistant.components.ais_ai_service.ais_agent import AisAgent
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.loader import bind_hass
 
@@ -147,7 +147,7 @@ class ConversationProcessView(http.HomeAssistantView):
                         "message": str(err),
                     },
                 },
-                status_code=HTTP_INTERNAL_SERVER_ERROR,
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
         return self.json(intent_result)

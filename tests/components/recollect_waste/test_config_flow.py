@@ -9,7 +9,7 @@ from homeassistant.components.recollect_waste import (
     CONF_SERVICE_ID,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_FRIENDLY_NAME
 
 from tests.common import MockConfigEntry
@@ -79,22 +79,6 @@ async def test_show_form(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
-
-
-async def test_step_import(hass):
-    """Test that the user step works."""
-    conf = {CONF_PLACE_ID: "12345", CONF_SERVICE_ID: "12345"}
-
-    with patch(
-        "homeassistant.components.recollect_waste.async_setup_entry", return_value=True
-    ), patch("aiorecollect.client.Client.async_get_pickup_events", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-        )
-        await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "12345, 12345"
-        assert result["data"] == {CONF_PLACE_ID: "12345", CONF_SERVICE_ID: "12345"}
 
 
 async def test_step_user(hass):

@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import Callable
 
 from systembridge import Bridge
 from systembridge.exceptions import (
@@ -66,6 +66,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[Bridge]):
                     "battery",
                     "cpu",
                     "filesystem",
+                    "graphics",
                     "memory",
                     "network",
                     "os",

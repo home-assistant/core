@@ -1,6 +1,7 @@
 """Support for Konnected devices."""
 import copy
 import hmac
+from http import HTTPStatus
 import json
 import logging
 
@@ -28,9 +29,6 @@ from homeassistant.const import (
     CONF_SWITCHES,
     CONF_TYPE,
     CONF_ZONE,
-    HTTP_BAD_REQUEST,
-    HTTP_NOT_FOUND,
-    HTTP_UNAUTHORIZED,
     STATE_OFF,
     STATE_ON,
 )
@@ -325,7 +323,9 @@ class KonnectedView(HomeAssistantView):
             (True for token in tokens if hmac.compare_digest(f"Bearer {token}", auth)),
             False,
         ):
-            return self.json_message("unauthorized", status_code=HTTP_UNAUTHORIZED)
+            return self.json_message(
+                "unauthorized", status_code=HTTPStatus.UNAUTHORIZED
+            )
 
         try:  # Konnected 2.2.0 and above supports JSON payloads
             payload = await request.json()
@@ -339,7 +339,7 @@ class KonnectedView(HomeAssistantView):
         device = data[CONF_DEVICES].get(device_id)
         if device is None:
             return self.json_message(
-                "unregistered device", status_code=HTTP_BAD_REQUEST
+                "unregistered device", status_code=HTTPStatus.BAD_REQUEST
             )
 
         panel = device.get("panel")
@@ -364,7 +364,7 @@ class KonnectedView(HomeAssistantView):
 
         if zone_data is None:
             return self.json_message(
-                "unregistered sensor/actuator", status_code=HTTP_BAD_REQUEST
+                "unregistered sensor/actuator", status_code=HTTPStatus.BAD_REQUEST
             )
 
         zone_data["device_id"] = device_id
@@ -385,7 +385,7 @@ class KonnectedView(HomeAssistantView):
         device = data[CONF_DEVICES].get(device_id)
         if not device:
             return self.json_message(
-                f"Device {device_id} not configured", status_code=HTTP_NOT_FOUND
+                f"Device {device_id} not configured", status_code=HTTPStatus.NOT_FOUND
             )
 
         panel = device.get("panel")
@@ -417,7 +417,7 @@ class KonnectedView(HomeAssistantView):
             )
             return self.json_message(
                 f"Switch on zone or pin {target} not configured",
-                status_code=HTTP_NOT_FOUND,
+                status_code=HTTPStatus.NOT_FOUND,
             )
 
         resp = {}

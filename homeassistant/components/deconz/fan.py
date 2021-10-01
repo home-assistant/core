@@ -1,6 +1,8 @@
 """Support for deCONZ fans."""
 from __future__ import annotations
 
+from pydeconz.light import Fan
+
 from homeassistant.components.fan import (
     DOMAIN,
     SPEED_HIGH,
@@ -17,7 +19,7 @@ from homeassistant.util.percentage import (
     percentage_to_ordered_list_item,
 )
 
-from .const import FANS, NEW_LIGHT
+from .const import NEW_LIGHT
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
@@ -39,7 +41,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
 
         for light in lights:
 
-            if light.type in FANS and light.uniqueid not in gateway.entities[DOMAIN]:
+            if (
+                isinstance(light, Fan)
+                and light.unique_id not in gateway.entities[DOMAIN]
+            ):
                 entities.append(DeconzFan(light, gateway))
 
         if entities:

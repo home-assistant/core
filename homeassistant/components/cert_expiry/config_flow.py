@@ -1,4 +1,6 @@
 """Config flow for the Cert Expiry platform."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
@@ -25,7 +27,7 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._errors = {}
+        self._errors: dict[str, str] = {}
 
     async def _test_connection(self, user_input=None):
         """Test connection to the server and try to get the certificate."""
