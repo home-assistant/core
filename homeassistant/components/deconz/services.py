@@ -53,7 +53,7 @@ SUPPORTED_SERVICES = (
     SERVICE_REMOVE_ORPHANED_ENTRIES,
 )
 
-SCHEMAS = {
+SERVICE_TO_SCHEMA = {
     SERVICE_CONFIGURE_DEVICE: SERVICE_CONFIGURE_DEVICE_SCHEMA,
     SERVICE_DEVICE_REFRESH: SELECT_GATEWAY_SCHEMA,
     SERVICE_REMOVE_ORPHANED_ENTRIES: SELECT_GATEWAY_SCHEMA,
@@ -95,7 +95,10 @@ def async_setup_services(hass):
 
     for service in SUPPORTED_SERVICES:
         hass.services.async_register(
-            DOMAIN, service, async_call_deconz_service, schema=SCHEMAS[service]
+            DOMAIN,
+            service,
+            async_call_deconz_service,
+            schema=SERVICE_TO_SCHEMA[service],
         )
 
 
