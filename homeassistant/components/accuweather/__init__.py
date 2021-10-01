@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 from typing import Any, Dict
 
-from accuweather import AccuWeather, ApiError, InvalidApiKeyError, RequestsExceededError, InvalidCoordinatesError
+from accuweather import AccuWeather, ApiError, InvalidApiKeyError, InvalidCoordinatesError, RequestsExceededError
 from aiohttp import ClientSession, ClientError
 from aiohttp.client_exceptions import ClientConnectorError
 from async_timeout import timeout
