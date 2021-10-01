@@ -27,8 +27,7 @@ CONF_MODEL: Final = "model"
 MODE_AUTO: Final = "auto"
 MODE_RGB: Final = "rgb"
 MODE_RGBW: Final = "rgbw"
-MODE_RGBCW: Final = "rgbcw"
-MODE_RGBWW: Final = "rgbww"
+
 
 # This mode enables white value to be controlled by brightness.
 # RGB value is ignored when this mode is specified.
