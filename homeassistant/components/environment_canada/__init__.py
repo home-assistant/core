@@ -14,6 +14,7 @@ from homeassistant.const import (
     LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
+    PRESSURE_HPA,
     PRESSURE_INHG,
     SPEED_MILES_PER_HOUR,
 )
@@ -84,7 +85,7 @@ def convert(key, value, is_metric, from_units, to_units):
     if value is None:
         return None
 
-    if key == "pressure":
+    if from_units == PRESSURE_HPA:
         value = int(value * 10)  # Convert kPa to hPa
     elif key == "tendency":
         value = value.title()
