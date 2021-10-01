@@ -48,14 +48,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         resource.lower() for resource in config_entry.data[CONF_RESOURCES]
     ]
     resources = [sensor_id for sensor_id in SENSOR_TYPES if sensor_id in status]
+    # Display status is a special case that falls back to the status value
+    # of the UPS instead.
+    if KEY_STATUS in resources:
+        resources.append(KEY_STATUS_DISPLAY)
 
     for sensor_type in resources:
-
-        # Display status is a special case that falls back to the status value
-        # of the UPS instead.
-        enabled_default = sensor_type in enabled_resources or (
-            KEY_STATUS_DISPLAY in enabled_resources and KEY_STATUS in status
-        )
 
         entities.append(
             NUTSensor(
@@ -67,7 +65,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 manufacturer,
                 model,
                 firmware,
-                enabled_default,
+                sensor_type in enabled_resources,
             )
         )
 
