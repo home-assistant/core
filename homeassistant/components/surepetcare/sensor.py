@@ -31,7 +31,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Sure PetCare Flaps sensors."""
 
-    entities: list[SurePetcareSensor] = []
+    entities: list[SurePetcareEntity] = []
 
     coordinator: SurePetcareDataCoordinator = hass.data[DOMAIN][entry.entry_id]
 
@@ -51,22 +51,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SurePetcareSensor(SurePetcareEntity, SensorEntity):
-    """A sensor implementation for Sure Petcare Entities."""
-
-    def __init__(
-        self,
-        surepetcare_id: int,
-        coordinator: SurePetcareDataCoordinator,
-    ) -> None:
-        """Initialize a Sure Petcare sensor."""
-        super().__init__(surepetcare_id, coordinator)
-
-        self._attr_name = self._device_name
-        self._attr_unique_id = self._device_id
-
-
-class SureBattery(SurePetcareSensor):
+class SureBattery(SurePetcareEntity, SensorEntity):
     """A sensor implementation for Sure Petcare Entities."""
 
     _attr_device_class = DEVICE_CLASS_BATTERY
@@ -105,7 +90,7 @@ class SureBattery(SurePetcareSensor):
             self._attr_extra_state_attributes = {}
 
 
-class Felaqua(SurePetcareSensor):
+class Felaqua(SurePetcareEntity, SensorEntity):
     """Sure Petcare Felaqua."""
 
     _attr_native_unit_of_measurement = VOLUME_MILLILITERS
@@ -118,6 +103,8 @@ class Felaqua(SurePetcareSensor):
 
         surepy_entity: SurepyFelaqua = coordinator.data[surepetcare_id]
 
+        self._attr_name = self._device_name
+        self._attr_unique_id = self._device_id
         self._attr_entity_picture = surepy_entity.icon
 
     @callback
