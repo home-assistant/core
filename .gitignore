@@ -1,5 +1,5 @@
 NULL
-config/*
+/config
 config2/*
 homeassistant/components/ais_updater/scripts/fix_script.sh
 

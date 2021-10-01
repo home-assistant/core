@@ -45,6 +45,7 @@ async def test_zeroconf_form(hass: core.HomeAssistant):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data={
             "host": "192.168.4.2",
+            "name": "Sonos-aaa@Living Room._sonos._tcp.local.",
             "hostname": "Sonos-aaa",
             "properties": {"bootseq": "1234"},
         },

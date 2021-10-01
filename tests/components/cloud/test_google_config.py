@@ -31,6 +31,8 @@ async def test_google_update_report_state(mock_conf, hass, cloud_prefs):
     await mock_conf.async_initialize()
     await mock_conf.async_connect_agent_user("mock-user-id")
 
+    mock_conf._cloud.subscription_expired = False
+
     with patch.object(mock_conf, "async_sync_entities") as mock_sync, patch(
         "homeassistant.components.google_assistant.report_state.async_enable_report_state"
     ) as mock_report_state:
@@ -39,6 +41,25 @@ async def test_google_update_report_state(mock_conf, hass, cloud_prefs):
 
     assert len(mock_sync.mock_calls) == 1
     assert len(mock_report_state.mock_calls) == 1
+
+
+async def test_google_update_report_state_subscription_expired(
+    mock_conf, hass, cloud_prefs
+):
+    """Test Google config not reporting state when subscription has expired."""
+    await mock_conf.async_initialize()
+    await mock_conf.async_connect_agent_user("mock-user-id")
+
+    assert mock_conf._cloud.subscription_expired
+
+    with patch.object(mock_conf, "async_sync_entities") as mock_sync, patch(
+        "homeassistant.components.google_assistant.report_state.async_enable_report_state"
+    ) as mock_report_state:
+        await cloud_prefs.async_update(google_report_state=True)
+        await hass.async_block_till_done()
+
+    assert len(mock_sync.mock_calls) == 0
+    assert len(mock_report_state.mock_calls) == 0
 
 
 async def test_sync_entities(mock_conf, hass, cloud_prefs):
@@ -112,7 +133,9 @@ async def test_google_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
 
     with patch.object(
         config, "async_schedule_google_sync_all"
-    ) as mock_sync, patch.object(ga_helpers, "SYNC_DELAY", 0):
+    ) as mock_sync, patch.object(config, "async_sync_entities_all"), patch.object(
+        ga_helpers, "SYNC_DELAY", 0
+    ):
         # Created entity
         hass.bus.async_fire(
             EVENT_ENTITY_REGISTRY_UPDATED,
@@ -172,6 +195,7 @@ async def test_sync_google_when_started(hass, mock_cloud_login, cloud_prefs):
     with patch.object(config, "async_sync_entities_all") as mock_sync:
         await config.async_initialize()
         await config.async_connect_agent_user("mock-user-id")
+        await hass.async_block_till_done()
         assert len(mock_sync.mock_calls) == 1
 
 
@@ -242,3 +266,32 @@ async def test_setup_integration(hass, mock_conf, cloud_prefs):
     await cloud_prefs.async_update()
     await hass.async_block_till_done()
     assert "google_assistant" in hass.config.components
+
+
+async def test_google_handle_logout(hass, cloud_prefs, mock_cloud_login):
+    """Test Google config responds to logging out."""
+    gconf = CloudGoogleConfig(
+        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, Mock(is_logged_in=False)
+    )
+
+    await gconf.async_initialize()
+
+    with patch(
+        "homeassistant.components.google_assistant.report_state.async_enable_report_state",
+    ) as mock_enable:
+        gconf.async_enable_report_state()
+
+    assert len(mock_enable.mock_calls) == 1
+
+    # This will trigger a prefs update when we logout.
+    await cloud_prefs.get_cloud_user()
+
+    with patch.object(
+        hass.data["cloud"].auth,
+        "async_check_token",
+        side_effect=AssertionError("Should not be called"),
+    ):
+        await cloud_prefs.async_set_username(None)
+        await hass.async_block_till_done()
+
+    assert len(mock_enable.return_value.mock_calls) == 1

@@ -2,12 +2,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Generator, Iterable
+from collections.abc import Awaitable, Callable, Generator, Iterable
 import contextlib
 import logging.handlers
 from timeit import default_timer as timer
 from types import ModuleType
-from typing import Callable
 
 from homeassistant import config as conf_util, core, loader, requirements
 from homeassistant.config import async_notify_setup_error
@@ -366,9 +365,7 @@ async def async_process_deps_reqs(
 
     Module is a Python module of either a component or platform.
     """
-    processed = hass.data.get(DATA_DEPS_REQS)
-
-    if processed is None:
+    if (processed := hass.data.get(DATA_DEPS_REQS)) is None:
         processed = hass.data[DATA_DEPS_REQS] = set()
     elif integration.domain in processed:
         return

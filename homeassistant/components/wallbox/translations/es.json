@@ -1,8 +1,12 @@
 {
     "config": {
+        "error": {
+            "unknown": "Error inesperado"
+        },
         "step": {
             "user": {
                 "data": {
+                    "password": "Contrase\u00f1a",
                     "station": "N\u00famero de serie de la estaci\u00f3n"
                 }
             }

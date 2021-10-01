@@ -19,6 +19,7 @@ from homeassistant.const import (
     PERCENTAGE,
     POWER_WATT,
 )
+from homeassistant.util import dt
 
 DOMAIN = "solarlog"
 
@@ -28,29 +29,20 @@ DEFAULT_NAME = "solarlog"
 
 
 @dataclass
-class SolarlogRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    json_key: str
-
-
-@dataclass
-class SolarLogSensorEntityDescription(
-    SensorEntityDescription, SolarlogRequiredKeysMixin
-):
+class SolarLogSensorEntityDescription(SensorEntityDescription):
     """Describes Solarlog sensor entity."""
+
+    factor: float | None = None
 
 
 SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
     SolarLogSensorEntityDescription(
         key="time",
-        json_key="TIME",
         name="last update",
         device_class=DEVICE_CLASS_TIMESTAMP,
     ),
     SolarLogSensorEntityDescription(
         key="power_ac",
-        json_key="powerAC",
         name="power AC",
         icon="mdi:solar-power",
         native_unit_of_measurement=POWER_WATT,
@@ -58,7 +50,6 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
     ),
     SolarLogSensorEntityDescription(
         key="power_dc",
-        json_key="powerDC",
         name="power DC",
         icon="mdi:solar-power",
         native_unit_of_measurement=POWER_WATT,
@@ -66,7 +57,6 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
     ),
     SolarLogSensorEntityDescription(
         key="voltage_ac",
-        json_key="voltageAC",
         name="voltage AC",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=DEVICE_CLASS_VOLTAGE,
@@ -74,7 +64,6 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
     ),
     SolarLogSensorEntityDescription(
         key="voltage_dc",
-        json_key="voltageDC",
         name="voltage DC",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=DEVICE_CLASS_VOLTAGE,
@@ -82,43 +71,42 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
     ),
     SolarLogSensorEntityDescription(
         key="yield_day",
-        json_key="yieldDAY",
         name="yield day",
         icon="mdi:solar-power",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        factor=0.001,
     ),
     SolarLogSensorEntityDescription(
         key="yield_yesterday",
-        json_key="yieldYESTERDAY",
         name="yield yesterday",
         icon="mdi:solar-power",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        factor=0.001,
     ),
     SolarLogSensorEntityDescription(
         key="yield_month",
-        json_key="yieldMONTH",
         name="yield month",
         icon="mdi:solar-power",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        factor=0.001,
     ),
     SolarLogSensorEntityDescription(
         key="yield_year",
-        json_key="yieldYEAR",
         name="yield year",
         icon="mdi:solar-power",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        factor=0.001,
     ),
     SolarLogSensorEntityDescription(
         key="yield_total",
-        json_key="yieldTOTAL",
         name="yield total",
         icon="mdi:solar-power",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         state_class=STATE_CLASS_TOTAL_INCREASING,
+        factor=0.001,
     ),
     SolarLogSensorEntityDescription(
         key="consumption_ac",
-        json_key="consumptionAC",
         name="consumption AC",
         native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
@@ -126,43 +114,43 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
     ),
     SolarLogSensorEntityDescription(
         key="consumption_day",
-        json_key="consumptionDAY",
         name="consumption day",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
+        factor=0.001,
     ),
     SolarLogSensorEntityDescription(
         key="consumption_yesterday",
-        json_key="consumptionYESTERDAY",
         name="consumption yesterday",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
+        factor=0.001,
     ),
     SolarLogSensorEntityDescription(
         key="consumption_month",
-        json_key="consumptionMONTH",
         name="consumption month",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
+        factor=0.001,
     ),
     SolarLogSensorEntityDescription(
         key="consumption_year",
-        json_key="consumptionYEAR",
         name="consumption year",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
+        factor=0.001,
     ),
     SolarLogSensorEntityDescription(
         key="consumption_total",
-        json_key="consumptionTOTAL",
         name="consumption total",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=STATE_CLASS_MEASUREMENT,
+        last_reset=dt.utc_from_timestamp(0),
+        factor=0.001,
     ),
     SolarLogSensorEntityDescription(
         key="total_power",
-        json_key="totalPOWER",
         name="installed peak power",
         icon="mdi:solar-power",
         native_unit_of_measurement=POWER_WATT,
@@ -170,7 +158,6 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
     ),
     SolarLogSensorEntityDescription(
         key="alternator_loss",
-        json_key="alternatorLOSS",
         name="alternator loss",
         icon="mdi:solar-power",
         native_unit_of_measurement=POWER_WATT,
@@ -179,24 +166,23 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
     ),
     SolarLogSensorEntityDescription(
         key="capacity",
-        json_key="CAPACITY",
         name="capacity",
         icon="mdi:solar-power",
         native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_POWER_FACTOR,
         state_class=STATE_CLASS_MEASUREMENT,
+        factor=100,
     ),
     SolarLogSensorEntityDescription(
         key="efficiency",
-        json_key="EFFICIENCY",
         name="efficiency",
         native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_POWER_FACTOR,
         state_class=STATE_CLASS_MEASUREMENT,
+        factor=100,
     ),
     SolarLogSensorEntityDescription(
         key="power_available",
-        json_key="powerAVAILABLE",
         name="power available",
         icon="mdi:solar-power",
         native_unit_of_measurement=POWER_WATT,
@@ -205,10 +191,10 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
     ),
     SolarLogSensorEntityDescription(
         key="usage",
-        json_key="USAGE",
         name="usage",
         native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_POWER_FACTOR,
         state_class=STATE_CLASS_MEASUREMENT,
+        factor=100,
     ),
 )

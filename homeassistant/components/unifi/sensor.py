@@ -157,7 +157,7 @@ class UniFiUpTimeSensor(UniFiClient, SensorEntity):
         self.last_updated_time = self.client.uptime
 
         if not update_state:
-            return None
+            return
 
         super().async_update_callback()
 

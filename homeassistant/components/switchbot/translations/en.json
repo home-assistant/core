@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Device is already configured",
+            "no_unconfigured_devices": "No unconfigured devices found.",
+            "unknown": "Unexpected error",
+            "cannot_connect": "Failed to connect",
+            "switchbot_unsupported_type": "Unsupported Switchbot Type."
+        },
+        "error": {},
+        "flow_title": "{name}",
+        "step": {
+
+            "user": {
+                "data": {
+                    "mac": "Mac",
+                    "name": "Name",
+                    "password": "Password"
+                },
+                "title": "Setup Switchbot device"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_time": "Time between updates (seconds)",
+                    "retry_count": "Retry count",
+                    "retry_timeout": "Timeout between retries",
+                    "scan_timeout": "How long to scan for advertisement data"
+                }
+            }
+        }
+    }
+}

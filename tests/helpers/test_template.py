@@ -38,6 +38,12 @@ def _set_up_units(hass):
     )
 
 
+def render(hass, template_str, variables=None):
+    """Create render info from template."""
+    tmp = template.Template(template_str, hass)
+    return tmp.async_render(variables)
+
+
 def render_to_info(hass, template_str, variables=None):
     """Create render info from template."""
     tmp = template.Template(template_str, hass)
@@ -191,8 +197,8 @@ def test_iterating_domain_states(hass):
     assert_result_info(info, "open10", entities=[], domains=["sensor"])
 
 
-def test_float(hass):
-    """Test float."""
+def test_float_function(hass):
+    """Test float function."""
     hass.states.async_set("sensor.temperature", "12")
 
     assert (
@@ -212,6 +218,55 @@ def test_float(hass):
     assert (
         template.Template("{{ float('forgiving') }}", hass).async_render()
         == "forgiving"
+    )
+
+    assert render(hass, "{{ float('bad', 1) }}") == 1
+    assert render(hass, "{{ float('bad', default=1) }}") == 1
+
+
+def test_float_filter(hass):
+    """Test float filter."""
+    hass.states.async_set("sensor.temperature", "12")
+
+    assert render(hass, "{{ states.sensor.temperature.state | float }}") == 12.0
+    assert render(hass, "{{ states.sensor.temperature.state | float > 11 }}") is True
+    assert render(hass, "{{ 'bad' | float }}") == 0
+    assert render(hass, "{{ 'bad' | float(1) }}") == 1
+    assert render(hass, "{{ 'bad' | float(default=1) }}") == 1
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        (0, True),
+        (0.0, True),
+        ("0", True),
+        ("0.0", True),
+        (True, True),
+        (False, True),
+        ("True", False),
+        ("False", False),
+        (None, False),
+        ("None", False),
+        ("horse", False),
+        (math.pi, True),
+        (math.nan, False),
+        (math.inf, False),
+        ("nan", False),
+        ("inf", False),
+    ],
+)
+def test_isnumber(hass, value, expected):
+    """Test is_number."""
+    assert (
+        template.Template("{{ is_number(value) }}", hass).async_render({"value": value})
+        == expected
+    )
+    assert (
+        template.Template("{{ value | is_number }}", hass).async_render(
+            {"value": value}
+        )
+        == expected
     )
 
 
@@ -255,14 +310,17 @@ def test_rounding_value(hass):
     )
 
 
-def test_rounding_value_get_original_value_on_error(hass):
-    """Test rounding value get original value on error."""
+def test_rounding_value_on_error(hass):
+    """Test rounding value handling of error."""
     assert template.Template("{{ None | round }}", hass).async_render() is None
 
     assert (
         template.Template('{{ "no_number" | round }}', hass).async_render()
         == "no_number"
     )
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | round(default=1) }}") == 1
 
 
 def test_multiply(hass):
@@ -276,6 +334,10 @@ def test_multiply(hass):
             ).async_render()
             == out
         )
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | multiply(10, 1) }}") == 1
+    assert render(hass, "{{ 'no_number' | multiply(10, default=1) }}") == 1
 
 
 def test_logarithm(hass):
@@ -303,6 +365,12 @@ def test_logarithm(hass):
             == expected
         )
 
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | log(10, 1) }}") == 1
+    assert render(hass, "{{ 'no_number' | log(10, default=1) }}") == 1
+    assert render(hass, "{{ log('no_number', 10, 1) }}") == 1
+    assert render(hass, "{{ log('no_number', 10, default=1) }}") == 1
+
 
 def test_sine(hass):
     """Test sine."""
@@ -320,6 +388,13 @@ def test_sine(hass):
             template.Template("{{ %s | sin | round(3) }}" % value, hass).async_render()
             == expected
         )
+        assert render(hass, f"{{{{ sin({value}) | round(3) }}}}") == expected
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | sin(1) }}") == 1
+    assert render(hass, "{{ 'no_number' | sin(default=1) }}") == 1
+    assert render(hass, "{{ sin('no_number', 1) }}") == 1
+    assert render(hass, "{{ sin('no_number', default=1) }}") == 1
 
 
 def test_cos(hass):
@@ -338,6 +413,13 @@ def test_cos(hass):
             template.Template("{{ %s | cos | round(3) }}" % value, hass).async_render()
             == expected
         )
+        assert render(hass, f"{{{{ cos({value}) | round(3) }}}}") == expected
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | sin(1) }}") == 1
+    assert render(hass, "{{ 'no_number' | sin(default=1) }}") == 1
+    assert render(hass, "{{ sin('no_number', 1) }}") == 1
+    assert render(hass, "{{ sin('no_number', default=1) }}") == 1
 
 
 def test_tan(hass):
@@ -356,6 +438,13 @@ def test_tan(hass):
             template.Template("{{ %s | tan | round(3) }}" % value, hass).async_render()
             == expected
         )
+        assert render(hass, f"{{{{ tan({value}) | round(3) }}}}") == expected
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | tan(1) }}") == 1
+    assert render(hass, "{{ 'no_number' | tan(default=1) }}") == 1
+    assert render(hass, "{{ tan('no_number', 1) }}") == 1
+    assert render(hass, "{{ tan('no_number', default=1) }}") == 1
 
 
 def test_sqrt(hass):
@@ -374,6 +463,13 @@ def test_sqrt(hass):
             template.Template("{{ %s | sqrt | round(3) }}" % value, hass).async_render()
             == expected
         )
+        assert render(hass, f"{{{{ sqrt({value}) | round(3) }}}}") == expected
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | sqrt(1) }}") == 1
+    assert render(hass, "{{ 'no_number' | sqrt(default=1) }}") == 1
+    assert render(hass, "{{ sqrt('no_number', 1) }}") == 1
+    assert render(hass, "{{ sqrt('no_number', default=1) }}") == 1
 
 
 def test_arc_sine(hass):
@@ -394,6 +490,13 @@ def test_arc_sine(hass):
             template.Template("{{ %s | asin | round(3) }}" % value, hass).async_render()
             == expected
         )
+        assert render(hass, f"{{{{ asin({value}) | round(3) }}}}") == expected
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | asin(1) }}") == 1
+    assert render(hass, "{{ 'no_number' | asin(default=1) }}") == 1
+    assert render(hass, "{{ asin('no_number', 1) }}") == 1
+    assert render(hass, "{{ asin('no_number', default=1) }}") == 1
 
 
 def test_arc_cos(hass):
@@ -414,6 +517,13 @@ def test_arc_cos(hass):
             template.Template("{{ %s | acos | round(3) }}" % value, hass).async_render()
             == expected
         )
+        assert render(hass, f"{{{{ acos({value}) | round(3) }}}}") == expected
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | acos(1) }}") == 1
+    assert render(hass, "{{ 'no_number' | acos(default=1) }}") == 1
+    assert render(hass, "{{ acos('no_number', 1) }}") == 1
+    assert render(hass, "{{ acos('no_number', default=1) }}") == 1
 
 
 def test_arc_tan(hass):
@@ -436,6 +546,13 @@ def test_arc_tan(hass):
             template.Template("{{ %s | atan | round(3) }}" % value, hass).async_render()
             == expected
         )
+        assert render(hass, f"{{{{ atan({value}) | round(3) }}}}") == expected
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | atan(1) }}") == 1
+    assert render(hass, "{{ 'no_number' | atan(default=1) }}") == 1
+    assert render(hass, "{{ atan('no_number', 1) }}") == 1
+    assert render(hass, "{{ atan('no_number', default=1) }}") == 1
 
 
 def test_arc_tan2(hass):
@@ -470,6 +587,12 @@ def test_arc_tan2(hass):
             == expected
         )
 
+    # Test handling of default return value
+    assert render(hass, "{{ ('duck', 'goose') | atan2(1) }}") == 1
+    assert render(hass, "{{ ('duck', 'goose') | atan2(default=1) }}") == 1
+    assert render(hass, "{{ atan2('duck', 'goose', 1) }}") == 1
+    assert render(hass, "{{ atan2('duck', 'goose', default=1) }}") == 1
+
 
 def test_strptime(hass):
     """Test the parse timestamp method."""
@@ -491,6 +614,10 @@ def test_strptime(hass):
         temp = f"{{{{ strptime('{inp}', '{fmt}') }}}}"
 
         assert template.Template(temp, hass).async_render() == expected
+
+    # Test handling of default return value
+    assert render(hass, "{{ strptime('invalid', '%Y', 1) }}") == 1
+    assert render(hass, "{{ strptime('invalid', '%Y', default=1) }}") == 1
 
 
 def test_timestamp_custom(hass):
@@ -514,6 +641,10 @@ def test_timestamp_custom(hass):
 
         assert template.Template(f"{{{{ {inp} | {fil} }}}}", hass).async_render() == out
 
+    # Test handling of default return value
+    assert render(hass, "{{ None | timestamp_custom('invalid', True, 1) }}") == 1
+    assert render(hass, "{{ None | timestamp_custom(default=1) }}") == 1
+
 
 def test_timestamp_local(hass):
     """Test the timestamps to local filter."""
@@ -524,6 +655,10 @@ def test_timestamp_local(hass):
             template.Template("{{ %s | timestamp_local }}" % inp, hass).async_render()
             == out
         )
+
+    # Test handling of default return value
+    assert render(hass, "{{ None | timestamp_local(1) }}") == 1
+    assert render(hass, "{{ None | timestamp_local(default=1) }}") == 1
 
 
 @pytest.mark.parametrize(
@@ -662,6 +797,10 @@ def test_timestamp_utc(hass):
             == out
         )
 
+    # Test handling of default return value
+    assert render(hass, "{{ None | timestamp_utc(1) }}") == 1
+    assert render(hass, "{{ None | timestamp_utc(default=1) }}") == 1
+
 
 def test_as_timestamp(hass):
     """Test the as_timestamp function."""
@@ -679,6 +818,12 @@ def test_as_timestamp(hass):
         '"%Y-%m-%dT%H:%M:%S%z")) }}'
     )
     assert template.Template(tpl, hass).async_render() == 1706951424.0
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'invalid' | as_timestamp(1) }}") == 1
+    assert render(hass, "{{ 'invalid' | as_timestamp(default=1) }}") == 1
+    assert render(hass, "{{ as_timestamp('invalid', 1) }}") == 1
+    assert render(hass, "{{ as_timestamp('invalid', default=1) }}") == 1
 
 
 @patch.object(random, "choice")
@@ -1103,6 +1248,17 @@ def test_regex_replace(hass):
         hass,
     )
     assert tpl.async_render() == ["Home Assistant test"]
+
+
+def test_regex_findall(hass):
+    """Test regex_findall method."""
+    tpl = template.Template(
+        """
+{{ 'Flight from JFK to LHR' | regex_findall('([A-Z]{3})') }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() == ["JFK", "LHR"]
 
 
 def test_regex_findall_index(hass):
@@ -1594,6 +1750,7 @@ async def test_device_id(hass):
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         model="test",
+        name="test",
     )
     entity_entry = entity_registry.async_get_or_create(
         "sensor", "test", "test", suggested_object_id="test", device_id=device_entry.id
@@ -1606,13 +1763,11 @@ async def test_device_id(hass):
     assert_result_info(info, None)
     assert info.rate_limit is None
 
-    with pytest.raises(TemplateError):
-        info = render_to_info(hass, "{{ 56 | device_id }}")
-        assert_result_info(info, None)
+    info = render_to_info(hass, "{{ 56 | device_id }}")
+    assert_result_info(info, None)
 
-    with pytest.raises(TemplateError):
-        info = render_to_info(hass, "{{ 'not_a_real_entity_id' | device_id }}")
-        assert_result_info(info, None)
+    info = render_to_info(hass, "{{ 'not_a_real_entity_id' | device_id }}")
+    assert_result_info(info, None)
 
     info = render_to_info(
         hass, f"{{{{ device_id('{entity_entry_no_device.entity_id}') }}}}"
@@ -1621,6 +1776,10 @@ async def test_device_id(hass):
     assert info.rate_limit is None
 
     info = render_to_info(hass, f"{{{{ device_id('{entity_entry.entity_id}') }}}}")
+    assert_result_info(info, device_entry.id)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, "{{ device_id('test') }}")
     assert_result_info(info, device_entry.id)
     assert info.rate_limit is None
 

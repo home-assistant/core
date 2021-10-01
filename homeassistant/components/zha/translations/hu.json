@@ -1,13 +1,18 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
+            "not_zha_device": "Ez az eszk\u00f6z nem zha eszk\u00f6z",
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges.",
+            "usb_probe_failed": "Nem siker\u00fclt megvizsg\u00e1lni az USB eszk\u00f6zt"
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         },
         "flow_title": "{name}",
         "step": {
+            "confirm": {
+                "description": "Be szeretn\u00e9 \u00e1ll\u00edtani a {name}-t?"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "R\u00e1di\u00f3 t\u00edpusa"

@@ -1,7 +1,7 @@
 """The Network Configuration integration."""
 from __future__ import annotations
 
-from ipaddress import IPv4Address, IPv6Address
+from ipaddress import IPv4Address, IPv6Address, ip_interface
 import logging
 
 import voluptuous as vol
@@ -17,6 +17,7 @@ from .const import (
     ATTR_ADAPTERS,
     ATTR_CONFIGURED_ADAPTERS,
     DOMAIN,
+    IPV4_BROADCAST_ADDR,
     NETWORK_CONFIG_SCHEMA,
 )
 from .models import Adapter
@@ -73,6 +74,26 @@ def async_only_default_interface_enabled(adapters: list[Adapter]) -> bool:
     return not any(
         adapter["enabled"] and not adapter["default"] for adapter in adapters
     )
+
+
+@bind_hass
+async def async_get_ipv4_broadcast_addresses(hass: HomeAssistant) -> set[IPv4Address]:
+    """Return a set of broadcast addresses."""
+    broadcast_addresses: set[IPv4Address] = {IPv4Address(IPV4_BROADCAST_ADDR)}
+    adapters = await async_get_adapters(hass)
+    if async_only_default_interface_enabled(adapters):
+        return broadcast_addresses
+    for adapter in adapters:
+        if not adapter["enabled"]:
+            continue
+        for ip_info in adapter["ipv4"]:
+            interface = ip_interface(
+                f"{ip_info['address']}/{ip_info['network_prefix']}"
+            )
+            broadcast_addresses.add(
+                IPv4Address(interface.network.broadcast_address.exploded)
+            )
+    return broadcast_addresses
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
