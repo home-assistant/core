@@ -42,6 +42,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry, entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
 
 from .const import (
     CONF_CALLBACK_URL_OVERRIDE,
@@ -96,6 +98,30 @@ def catch_request_errors(func: Func) -> Func:
             _LOGGER.error("Error during call %s: %r", func.__name__, err)
 
     return cast(Func, wrapper)
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up DLNA media_player platform."""
+    del async_add_entities, discovery_info  # Unused
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=config,
+        )
+    )
+
+    _LOGGER.warning(
+        "Configuring dlna_dmr via yaml is deprecated; the configuration for"
+        " %s has been migrated to a config entry and can be safely removed",
+        config.get(CONF_URL),
+    )
 
 
 async def async_setup_entry(

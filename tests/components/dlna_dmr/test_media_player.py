@@ -19,12 +19,13 @@ from homeassistant.components.dlna_dmr.const import (
     CONF_CALLBACK_URL_OVERRIDE,
     CONF_LISTEN_PORT,
     CONF_POLL_AVAILABILITY,
+    DEFAULT_NAME,
     DOMAIN as DLNA_DOMAIN,
 )
 from homeassistant.components.dlna_dmr.data import EventListenAddr
 from homeassistant.components.media_player import ATTR_TO_PROPERTY, const as mp_const
 from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, CONF_PLATFORM, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import async_get as async_get_dr
 from homeassistant.helpers.entity_component import async_update_entity
@@ -32,6 +33,7 @@ from homeassistant.helpers.entity_registry import (
     async_entries_for_config_entry,
     async_get as async_get_er,
 )
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
@@ -107,6 +109,46 @@ async def mock_disconnected_entity_id(
     # Unload config entry to clean up
     assert await hass.config_entries.async_remove(config_entry_mock.entry_id) == {
         "require_restart": False
+    }
+
+
+async def test_setup_platform_import_flow_started(
+    hass: HomeAssistant, domain_data_mock: Mock
+) -> None:
+    """Test import flow of YAML config is started if there's config data."""
+    mock_config: ConfigType = {
+        MP_DOMAIN: [
+            {
+                CONF_PLATFORM: DLNA_DOMAIN,
+                CONF_URL: MOCK_DEVICE_LOCATION,
+                CONF_LISTEN_PORT: 1234,
+            }
+        ]
+    }
+
+    # Device is not available yet
+    domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpError
+
+    # Run the setup
+    await async_setup_component(hass, MP_DOMAIN, mock_config)
+    await hass.async_block_till_done()
+
+    # Check config_flow has completed
+    assert hass.config_entries.flow.async_progress(include_uninitialized=True) == []
+
+    # Check device contact attempt was made
+    domain_data_mock.upnp_factory.async_create_device.assert_awaited_once_with(
+        MOCK_DEVICE_LOCATION
+    )
+
+    # Check the device is added to the unmigrated configs
+    assert domain_data_mock.unmigrated_config == {
+        MOCK_DEVICE_LOCATION: {
+            CONF_PLATFORM: DLNA_DOMAIN,
+            CONF_URL: MOCK_DEVICE_LOCATION,
+            CONF_LISTEN_PORT: 1234,
+            CONF_NAME: DEFAULT_NAME,
+        }
     }
 
 
@@ -799,7 +841,7 @@ async def test_ssdp_byebye(
     # Device should be gone
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
-    assert mock_state.state == media_player.STATE_IDLE
+    assert mock_state.state == ha_const.STATE_UNAVAILABLE
 
     # Second byebye will do nothing
     await ssdp_callback(
