@@ -66,9 +66,7 @@ from .const import (
     FLUX_MAC,
     MODE_AUTO,
     MODE_RGB,
-    MODE_RGBCW,
     MODE_RGBW,
-    MODE_RGBWW,
     MODE_WHITE,
     TRANSITION_GRADUAL,
     TRANSITION_JUMP,
@@ -131,7 +129,7 @@ EFFECT_MAP: Final = {
 EFFECT_ID_NAME: Final = {v: k for k, v in EFFECT_MAP.items()}
 EFFECT_CUSTOM_CODE: Final = 0x60
 
-WHITE_MODES: Final = {MODE_RGBW, MODE_RGBWW, MODE_RGBCW}
+WHITE_MODES: Final = {MODE_RGBW}
 
 FLUX_EFFECT_LIST: Final = sorted(EFFECT_MAP) + [EFFECT_RANDOM]
 
@@ -428,7 +426,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
             rgb = self._bulb.getRgb()
 
         # handle RGBW mode
-        if self._mode in WHITE_MODES:
+        if self._mode == MODE_RGBW:
             self._bulb.setRgbw(*tuple(rgb), w=white, brightness=brightness)
             return
 
@@ -455,14 +453,10 @@ class FluxLight(CoordinatorEntity, LightEntity):
         await super().async_added_to_hass()
         if self._mode and self._mode != MODE_AUTO:
             return
-        if self._bulb.protocol:
-            if self._bulb.raw_state[9] == self._bulb.raw_state[11]:
-                self._mode = MODE_RGBWW
-            else:
-                self._mode = MODE_RGBCW
-        elif self._bulb.mode == "ww":
+
+        if self._bulb.mode == "ww":
             self._mode = MODE_WHITE
-        elif self._bulb.rgbwcapable and not self._bulb.rgbwprotocol:
+        elif self._bulb.rgbwcapable:
             self._mode = MODE_RGBW
         else:
             self._mode = MODE_RGB

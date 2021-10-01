@@ -30,9 +30,7 @@ from .const import (
     FLUX_MODEL,
     MODE_AUTO,
     MODE_RGB,
-    MODE_RGBCW,
     MODE_RGBW,
-    MODE_RGBWW,
     MODE_WHITE,
     TRANSITION_GRADUAL,
     TRANSITION_JUMP,
@@ -244,8 +242,6 @@ class OptionsFlow(config_entries.OptionsFlow):
                             MODE_AUTO,
                             MODE_RGBW,
                             MODE_RGB,
-                            MODE_RGBCW,
-                            MODE_RGBWW,
                             MODE_WHITE,
                         ]
                     ),
