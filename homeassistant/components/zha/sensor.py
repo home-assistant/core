@@ -241,6 +241,10 @@ class ElectricalMeasurement(Sensor):
         if self._channel.measurement_type is not None:
             attrs["measurement_type"] = self._channel.measurement_type
 
+        max_attr_name = f"{self.SENSOR_ATTR}_max"
+        if (max_v := self._channel.cluster.get(max_attr_name)) is not None:
+            attrs[max_attr_name] = str(self.formatter(max_v))
+
         return attrs
 
     def formatter(self, value: int) -> int | float:

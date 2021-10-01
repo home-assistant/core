@@ -171,6 +171,10 @@ async def async_test_electrical_measurement(hass, cluster, entity_id):
         await send_attributes_report(hass, cluster, {0: 1, 1291: 99, 10: 5000})
         assert_state(hass, entity_id, "9.9", POWER_WATT)
 
+        assert "active_power_max" not in hass.states.get(entity_id).attributes
+        await send_attributes_report(hass, cluster, {0: 1, 0x050D: 88, 10: 5000})
+        assert hass.states.get(entity_id).attributes["active_power_max"] == "8.8"
+
 
 async def async_test_powerconfiguration(hass, cluster, entity_id):
     """Test powerconfiguration/battery sensor."""
@@ -252,7 +256,7 @@ async def async_test_powerconfiguration(hass, cluster, entity_id):
             homeautomation.ElectricalMeasurement.cluster_id,
             "electrical_measurement",
             async_test_electrical_measurement,
-            1,
+            6,
             None,
             None,
         ),
