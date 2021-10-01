@@ -467,9 +467,10 @@ class FluxLight(CoordinatorEntity, LightEntity):
         else:
             self._mode = MODE_RGB
         _LOGGER.debug(
-            "Detected mode for %s (%s) with raw_state=%s is %s",
+            "Detected mode for %s (%s) with raw_state=%s rgbwcapable=%s is %s",
             self._name,
             self.unique_id,
             self._bulb.raw_state,
+            self._bulb.rgbwcapable,
             self._mode,
         )
