@@ -41,7 +41,7 @@ def purge_old_data(
             # Purge states from database
             _purge_state_ids(session, state_ids)
             # Evict eny entries in the old_states cache referring to a purged state
-            _evict_purged_state_from_old_states_cache(instance, state_ids)
+            _evict_purged_states_from_old_states_cache(instance, state_ids)
 
         if event_ids:
             _purge_event_ids(session, event_ids)
@@ -108,7 +108,7 @@ def _purge_state_ids(session: Session, state_ids: list[int]) -> None:
     _LOGGER.debug("Deleted %s states", deleted_rows)
 
 
-def _evict_purged_state_from_old_states_cache(
+def _evict_purged_states_from_old_states_cache(
     instance: Recorder, purged_state_ids: list[int]
 ) -> None:
     """Evict purged states from the old states cache."""
