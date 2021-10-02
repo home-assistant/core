@@ -52,8 +52,6 @@ def domain_data_mock(hass: HomeAssistant) -> Iterable[Mock]:
     seal(upnp_device)
     domain_data.upnp_factory.async_create_device.return_value = upnp_device
 
-    domain_data.unmigrated_config = {}
-
     with patch.dict(hass.data, {DLNA_DOMAIN: domain_data}):
         yield domain_data
 

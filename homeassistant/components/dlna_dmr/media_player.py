@@ -44,12 +44,10 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-
 from .const import (
     CONF_CALLBACK_URL_OVERRIDE,
     CONF_LISTEN_PORT,
     CONF_POLL_AVAILABILITY,
-    DEFAULT_NAME,
     DOMAIN,
     LOGGER as _LOGGER,
     MEDIA_TYPE_MAP,
@@ -71,7 +69,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Required(CONF_URL): cv.string,
             vol.Optional(CONF_LISTEN_IP): cv.string,
             vol.Optional(CONF_LISTEN_PORT): cv.port,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_CALLBACK_URL_OVERRIDE): cv.url,
         }
     ),
@@ -119,7 +117,8 @@ async def async_setup_platform(
 
     _LOGGER.warning(
         "Configuring dlna_dmr via yaml is deprecated; the configuration for"
-        " %s has been migrated to a config entry and can be safely removed",
+        " %s will be migrated to a config entry and can be safely removed when"
+        "migration is complete",
         config.get(CONF_URL),
     )
 

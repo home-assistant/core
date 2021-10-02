@@ -116,6 +116,10 @@ async def test_setup_platform_import_flow_started(
     hass: HomeAssistant, domain_data_mock: Mock
 ) -> None:
     """Test import flow of YAML config is started if there's config data."""
+    # Cause connection attempts to fail
+    domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpConnectionError
+
+    # Run the setup
     mock_config: ConfigType = {
         MP_DOMAIN: [
             {
@@ -126,30 +130,18 @@ async def test_setup_platform_import_flow_started(
         ]
     }
 
-    # Device is not available yet
-    domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpError
-
-    # Run the setup
     await async_setup_component(hass, MP_DOMAIN, mock_config)
     await hass.async_block_till_done()
 
-    # Check config_flow has completed
-    assert hass.config_entries.flow.async_progress(include_uninitialized=True) == []
+    # Check config_flow has started
+    flows = hass.config_entries.flow.async_progress(include_uninitialized=True)
+    assert len(flows) == 1
 
-    # Check device contact attempt was made
-    domain_data_mock.upnp_factory.async_create_device.assert_awaited_once_with(
-        MOCK_DEVICE_LOCATION
-    )
-
-    # Check the device is added to the unmigrated configs
-    assert domain_data_mock.unmigrated_config == {
-        MOCK_DEVICE_LOCATION: {
-            CONF_PLATFORM: DLNA_DOMAIN,
-            CONF_URL: MOCK_DEVICE_LOCATION,
-            CONF_LISTEN_PORT: 1234,
-            CONF_NAME: DEFAULT_NAME,
-        }
-    }
+    # It should be paused, waiting for the user to turn on the device
+    flow = flows[0]
+    assert flow["handler"] == "dlna_dmr"
+    assert flow["step_id"] == "import_turn_on"
+    assert flow["context"].get("unique_id") == MOCK_DEVICE_LOCATION
 
 
 async def test_setup_entry_no_options(
