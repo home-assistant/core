@@ -105,8 +105,6 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up DLNA media_player platform."""
-    del async_add_entities, discovery_info  # Unused
-
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
@@ -129,7 +127,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the DlnaDmrEntity from a config entry."""
-    del hass  # Unused
     _LOGGER.debug("media_player.async_setup_entry %s (%s)", entry.entry_id, entry.title)
 
     # Create our own device-wrapping entity
@@ -287,7 +284,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
         self, hass: HomeAssistant, entry: config_entries.ConfigEntry
     ) -> None:
         """Handle options update by modifying self in-place."""
-        del hass  # Unused
         _LOGGER.debug(
             "Updating: %s with data=%s and options=%s",
             self.name,
@@ -441,7 +437,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
         self, service: UpnpService, state_variables: Sequence[UpnpStateVariable]
     ) -> None:
         """State variable(s) changed, let home-assistant know."""
-        del service  # Unused
         if not state_variables:
             # Indicates a failure to resubscribe, check if device is still available
             self.check_available = True
