@@ -16,7 +16,7 @@ class HassReturnFormatChecker(BaseChecker):  # type: ignore[misc]
     priority = -1
     msgs = {
         "W0016": (
-            "Function annotated with return type 'None' returns value. "
+            "'%s' is annotated with return type 'None' and returns value. "
             "Consider changing function return type or removing return value.",
             "hass-return-none",
             "Used when function returns some value while annotated with '-> None'",
@@ -39,7 +39,7 @@ class HassReturnFormatChecker(BaseChecker):  # type: ignore[misc]
         if parent is None:
             return
         if isinstance(parent.returns, nodes.Const) and parent.returns.value is None:
-            self.add_message("hass-return-none", node=node)
+            self.add_message("hass-return-none", args=parent.name, node=node)
 
 
 def register(linter: PyLinter) -> None:
