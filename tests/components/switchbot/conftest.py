@@ -41,6 +41,12 @@ class MocGetSwitchbotDevices:
                 "model": "c",
                 "modelName": "WoCurtain",
             },
+            "ffffff19ffff": {
+                "mac_address": "ff:ff:ff:19:ff:ff",
+                "Flags": "06",
+                "Manufacturer": "5900ffffff19ffff",
+                "Complete 128b Services": "cba20d00-224d-11e6-9fb8-0002a5d5c51b",
+            },
         }
         self._curtain_all_services_data = {
             "mac_address": "e7:89:43:90:90:90",
