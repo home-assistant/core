@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Layanan sudah dikonfigurasi",
             "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
         },
         "error": {
@@ -21,8 +22,8 @@
                 "data": {
                     "discovery": "Aktifkan penemuan"
                 },
-                "description": "Ingin mengonfigurasi Home Assistant untuk terhubung ke broker MQTT yang disediakan oleh add-on Supervisor {addon}?",
-                "title": "MQTT Broker via add-on Supervisor"
+                "description": "Ingin mengonfigurasi Home Assistant untuk terhubung ke broker MQTT yang disediakan oleh add-on {addon}?",
+                "title": "MQTT Broker via add-on Home Assistant"
             }
         }
     },
