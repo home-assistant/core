@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 import logging
-from typing import Any, Final
+from typing import Any, Final, cast
 
 import aiotractive
 
@@ -154,7 +154,10 @@ class TractiveClient:
         self,
     ) -> list[aiotractive.trackable_object.TrackableObject]:
         """Get list of trackable objects."""
-        return await self._client.trackable_objects()
+        return cast(
+            list[aiotractive.trackable_object.TrackableObject],
+            await self._client.trackable_objects(),
+        )
 
     def tracker(self, tracker_id: str) -> aiotractive.tracker.Tracker:
         """Get tracker by id."""

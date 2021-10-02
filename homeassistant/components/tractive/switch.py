@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Any, Final, Literal
+from typing import Any, Final, Literal, cast
 
 from aiotractive.exceptions import TractiveError
 
@@ -162,12 +162,14 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
 
     async def async_set_buzzer(self, active: bool) -> dict[str, Any]:
         """Set the buzzer on/off."""
-        return await self._tracker.set_buzzer_active(active)
+        return cast(dict[str, Any], await self._tracker.set_buzzer_active(active))
 
     async def async_set_led(self, active: bool) -> dict[str, Any]:
         """Set the LED on/off."""
-        return await self._tracker.set_led_active(active)
+        return cast(dict[str, Any], await self._tracker.set_led_active(active))
 
     async def async_set_live_tracking(self, active: bool) -> dict[str, Any]:
         """Set the live tracking on/off."""
-        return await self._tracker.set_live_tracking_active(active)
+        return cast(
+            dict[str, Any], await self._tracker.set_live_tracking_active(active)
+        )
