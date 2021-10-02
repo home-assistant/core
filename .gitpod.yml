@@ -1,0 +1,41 @@
+image:
+  file: Dockerfile.dev
+
+tasks:
+  - name: Home Assistant
+    before: |
+      echo "Preparing for persistence, please wait:"
+      sudo mv -nT /usr/local /workspace/local
+      sudo rm -rf /usr/local
+      sudo ln -fs /workspace/local /usr/local
+      ln -fs /workspace ~/.cache
+    init: |
+      echo "Setting up Home Assistant, please wait:"
+      sudo chown -R gitpod:gitpod /workspace
+      PIP_USER="no" script/setup
+      PIP_USER="no" pre-commit
+      echo "http: {use_x_forwarded_for: true, trusted_proxies: [10.0.0.0/8]}" >> config/configuration.yaml
+      echo "Warming up Home Assistant, please ignore error messages:"
+      timeout 30s hass -c config || true
+    command: |
+      hass -c config
+    env: { "DEVCONTAINER": "1" }
+
+ports:
+  - port: 8123
+    onOpen: open-browser
+
+github:
+  prebuilds:
+    master: true
+    branches: true
+    pullRequests: false
+    pullRequestsFromForks: false
+    addCheck: true
+    addComment: false
+    addBadge: false
+
+vscode:
+  extensions:
+    - "redhat.vscode-yaml"
+    - "esbenp.prettier-vscode"
