@@ -311,6 +311,11 @@ DHCP = [
     },
     {
         "domain": "tplink",
+        "hostname": "ep*",
+        "macaddress": "003192*"
+    },
+    {
+        "domain": "tplink",
         "hostname": "k[lp]*",
         "macaddress": "003192*"
     },
