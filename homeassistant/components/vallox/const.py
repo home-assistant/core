@@ -7,8 +7,7 @@ from vallox_websocket_api import PROFILE as VALLOX_PROFILE
 DOMAIN = "vallox"
 DEFAULT_NAME = "Vallox"
 
-SIGNAL_VALLOX_STATE_UPDATE = "vallox_state_update"
-STATE_PROXY_SCAN_INTERVAL = timedelta(seconds=60)
+STATE_SCAN_INTERVAL = timedelta(seconds=60)
 
 # Common metric keys and (default) values.
 METRIC_KEY_MODE = "A_CYC_MODE"
