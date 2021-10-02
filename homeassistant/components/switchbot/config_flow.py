@@ -112,7 +112,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         unconfigured_devices = {
             device["mac_address"]: f"{device['mac_address']} {device['modelName']}"
             for device in self._discovered_devices.values()
-            if device["modelName"] in SUPPORTED_MODEL_TYPES
+            if device.get("modelName") in SUPPORTED_MODEL_TYPES
             and device["mac_address"] not in configured_devices
         }
 
