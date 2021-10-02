@@ -55,8 +55,6 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
     ):
         """Initialise a HomeKit number control."""
         self.entity_description = description
-        self._name = description.name
-
         super().__init__(conn, info, char)
 
     def get_characteristic_types(self):
