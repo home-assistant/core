@@ -16,28 +16,30 @@ class HassReturnFormatChecker(BaseChecker):  # type: ignore[misc]
     priority = -1
     msgs = {
         "W0016": (
-            "Remove explicit None in return",
+            "Function annotated with return type 'None' returns value. "
+            "Consider changing function return type or removing return value.",
             "hass-return-none",
-            "Used when function returns nothing but has explicit 'return None'",
+            "Used when function returns some value while annotated with '-> None'",
         ),
     }
     options = ()
 
     def visit_return(self, node: Return) -> None:
         """Called when a Return node is visited."""
-        if isinstance(node.value, Const) and node.value.value is None:
-            # Find enclosing function
-            parent = node.parent
-            while (
-                parent is not None
-                and not isinstance(parent, FunctionDef)
-                and not isinstance(parent, AsyncFunctionDef)
-            ):
-                parent = parent.parent
-            if parent is None:
-                return
-            if isinstance(parent.returns, Const) and parent.returns.value is None:
-                self.add_message("hass-return-none", node=node)
+        if node.value is None:
+            return
+        # Find enclosing function
+        parent = node.parent
+        while (
+            parent is not None
+            and not isinstance(parent, FunctionDef)
+            and not isinstance(parent, AsyncFunctionDef)
+        ):
+            parent = parent.parent
+        if parent is None:
+            return
+        if isinstance(parent.returns, Const) and parent.returns.value is None:
+            self.add_message("hass-return-none", node=node)
 
 
 def register(linter: PyLinter) -> None:
