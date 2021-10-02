@@ -228,7 +228,7 @@ class TuyaHaFan(TuyaHaEntity, FanEntity):
                 self.tuya_device.status[DPCODE_AP_FAN_SPEED_ENUM],
             )
 
-        #some type may not have the fan_speed_percent key
+        # some type may not have the fan_speed_percent key
         return self.tuya_device.status.get(DPCODE_FAN_SPEED)
 
     @property
