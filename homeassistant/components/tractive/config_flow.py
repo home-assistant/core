@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Final
 
 import aiotractive
 import voluptuous as vol
@@ -15,9 +15,9 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
-USER_DATA_SCHEMA = vol.Schema(
+USER_DATA_SCHEMA: Final = vol.Schema(
     {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
 )
 

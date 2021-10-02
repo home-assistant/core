@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Any, Literal
+from typing import Any, Final, Literal
 
 from aiotractive.exceptions import TractiveError
 
@@ -26,7 +26,7 @@ from .const import (
 )
 from .entity import TractiveEntity
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
 
 @dataclass
@@ -43,7 +43,7 @@ class TractiveSwitchEntityDescription(
     """Class describing Tractive switch entities."""
 
 
-SWITCH_TYPES: tuple[TractiveSwitchEntityDescription, ...] = (
+SWITCH_TYPES: Final[tuple[TractiveSwitchEntityDescription, ...]] = (
     TractiveSwitchEntityDescription(
         key=ATTR_BUZZER,
         name="Tracker Buzzer",
