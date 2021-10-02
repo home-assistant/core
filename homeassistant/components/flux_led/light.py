@@ -352,7 +352,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
             ATTR_MANUFACTURER: "FluxLED/Magic Home",
             ATTR_MODEL: "LED Lights",
         }
-        if self._bulb.protocol != "LEDENET_ORIGINAL":
+        if self._bulb.protocol != "LEDENET_ORIGINAL" and self._bulb.raw_state:
             device_info[ATTR_SW_VERSION] = self._bulb.raw_state[10]
         return device_info
 
