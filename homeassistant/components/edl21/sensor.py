@@ -8,7 +8,17 @@ from sml import SmlGetListResponse
 from sml.asyncio import SmlProtocol
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_VOLTAGE,
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -52,92 +62,196 @@ class EDL21:
     """EDL21 handles telegrams sent by a compatible smart meter."""
 
     # OBIS format: A-B:C.D.E*F
-    _OBIS_NAMES = {
+    _OBIS_SENSOR_ENTITY_DESCRIPTIONS = {
         # A=1: Electricity
         # C=0: General purpose objects
         # D=0: Free ID-numbers for utilities
-        "1-0:0.0.9*255": "Electricity ID",
+        "1-0:0.0.9*255": SensorEntityDescription(
+            key="Electricity ID", name="Electricity ID"
+        ),
         # D=2: Program entries
-        "1-0:0.2.0*0": "Configuration program version number",
-        "1-0:0.2.0*1": "Firmware version number",
+        "1-0:0.2.0*0": SensorEntityDescription(
+            key="Configuration program version number",
+            name="Configuration program version number",
+        ),
+        "1-0:0.2.0*1": SensorEntityDescription(
+            key="Firmware version number", name="Firmware version number"
+        ),
         # C=1: Active power +
         # D=8: Time integral 1
         # E=0: Total
-        "1-0:1.8.0*255": "Positive active energy total",
+        "1-0:1.8.0*255": SensorEntityDescription(
+            key="Positive active energy total",
+            name="Positive active energy total",
+            state_class=STATE_CLASS_TOTAL_INCREASING,
+            device_class=DEVICE_CLASS_ENERGY,
+        ),
         # E=1: Rate 1
-        "1-0:1.8.1*255": "Positive active energy in tariff T1",
+        "1-0:1.8.1*255": SensorEntityDescription(
+            key="Positive active energy in tariff T1",
+            name="Positive active energy in tariff T1",
+            state_class=STATE_CLASS_TOTAL_INCREASING,
+            device_class=DEVICE_CLASS_ENERGY,
+        ),
         # E=2: Rate 2
-        "1-0:1.8.2*255": "Positive active energy in tariff T2",
+        "1-0:1.8.2*255": SensorEntityDescription(
+            key="Positive active energy in tariff T2",
+            name="Positive active energy in tariff T2",
+            state_class=STATE_CLASS_TOTAL_INCREASING,
+            device_class=DEVICE_CLASS_ENERGY,
+        ),
         # D=17: Time integral 7
         # E=0: Total
-        "1-0:1.17.0*255": "Last signed positive active energy total",
+        "1-0:1.17.0*255": SensorEntityDescription(
+            key="Last signed positive active energy total",
+            name="Last signed positive active energy total",
+        ),
         # C=2: Active power -
         # D=8: Time integral 1
         # E=0: Total
-        "1-0:2.8.0*255": "Negative active energy total",
+        "1-0:2.8.0*255": SensorEntityDescription(
+            key="Negative active energy total",
+            name="Negative active energy total",
+            state_class=STATE_CLASS_TOTAL_INCREASING,
+            device_class=DEVICE_CLASS_ENERGY,
+        ),
         # E=1: Rate 1
-        "1-0:2.8.1*255": "Negative active energy in tariff T1",
+        "1-0:2.8.1*255": SensorEntityDescription(
+            key="Negative active energy in tariff T1",
+            name="Negative active energy in tariff T1",
+            state_class=STATE_CLASS_TOTAL_INCREASING,
+            device_class=DEVICE_CLASS_ENERGY,
+        ),
         # E=2: Rate 2
-        "1-0:2.8.2*255": "Negative active energy in tariff T2",
+        "1-0:2.8.2*255": SensorEntityDescription(
+            key="Negative active energy in tariff T2",
+            name="Negative active energy in tariff T2",
+            state_class=STATE_CLASS_TOTAL_INCREASING,
+            device_class=DEVICE_CLASS_ENERGY,
+        ),
         # C=14: Supply frequency
         # D=7: Instantaneous value
         # E=0: Total
-        "1-0:14.7.0*255": "Supply frequency",
+        "1-0:14.7.0*255": SensorEntityDescription(
+            key="Supply frequency", name="Supply frequency"
+        ),
         # C=15: Active power absolute
         # D=7: Instantaneous value
         # E=0: Total
-        "1-0:15.7.0*255": "Absolute active instantaneous power",
+        "1-0:15.7.0*255": SensorEntityDescription(
+            key="Absolute active instantaneous power",
+            name="Absolute active instantaneous power",
+            state_class=STATE_CLASS_MEASUREMENT,
+            device_class=DEVICE_CLASS_POWER,
+        ),
         # C=16: Active power sum
         # D=7: Instantaneous value
         # E=0: Total
-        "1-0:16.7.0*255": "Sum active instantaneous power",
+        "1-0:16.7.0*255": SensorEntityDescription(
+            key="Sum active instantaneous power",
+            name="Sum active instantaneous power",
+            state_class=STATE_CLASS_MEASUREMENT,
+            device_class=DEVICE_CLASS_POWER,
+        ),
         # C=31: Active amperage L1
         # D=7: Instantaneous value
         # E=0: Total
-        "1-0:31.7.0*255": "L1 active instantaneous amperage",
+        "1-0:31.7.0*255": SensorEntityDescription(
+            key="L1 active instantaneous amperage",
+            name="L1 active instantaneous amperage",
+            state_class=STATE_CLASS_MEASUREMENT,
+            device_class=DEVICE_CLASS_CURRENT,
+        ),
         # C=32: Active voltage L1
         # D=7: Instantaneous value
         # E=0: Total
-        "1-0:32.7.0*255": "L1 active instantaneous voltage",
+        "1-0:32.7.0*255": SensorEntityDescription(
+            key="L1 active instantaneous voltage",
+            name="L1 active instantaneous voltage",
+            state_class=STATE_CLASS_MEASUREMENT,
+            device_class=DEVICE_CLASS_VOLTAGE,
+        ),
         # C=36: Active power L1
         # D=7: Instantaneous value
         # E=0: Total
-        "1-0:36.7.0*255": "L1 active instantaneous power",
+        "1-0:36.7.0*255": SensorEntityDescription(
+            key="L1 active instantaneous power", name="L1 active instantaneous power"
+        ),
         # C=51: Active amperage L2
         # D=7: Instantaneous value
         # E=0: Total
-        "1-0:51.7.0*255": "L2 active instantaneous amperage",
+        "1-0:51.7.0*255": SensorEntityDescription(
+            key="L2 active instantaneous amperage",
+            name="L2 active instantaneous amperage",
+            state_class=STATE_CLASS_MEASUREMENT,
+            device_class=DEVICE_CLASS_CURRENT,
+        ),
         # C=52: Active voltage L2
         # D=7: Instantaneous value
         # E=0: Total
-        "1-0:52.7.0*255": "L2 active instantaneous voltage",
+        "1-0:52.7.0*255": SensorEntityDescription(
+            key="L2 active instantaneous voltage",
+            name="L2 active instantaneous voltage",
+            state_class=STATE_CLASS_MEASUREMENT,
+            device_class=DEVICE_CLASS_VOLTAGE,
+        ),
         # C=56: Active power L2
         # D=7: Instantaneous value
         # E=0: Total
-        "1-0:56.7.0*255": "L2 active instantaneous power",
+        "1-0:56.7.0*255": SensorEntityDescription(
+            key="L2 active instantaneous power",
+            name="L2 active instantaneous power",
+            state_class=STATE_CLASS_MEASUREMENT,
+            device_class=DEVICE_CLASS_POWER,
+        ),
         # C=71: Active amperage L3
         # D=7: Instantaneous value
         # E=0: Total
-        "1-0:71.7.0*255": "L3 active instantaneous amperage",
+        "1-0:71.7.0*255": SensorEntityDescription(
+            key="L3 active instantaneous amperage",
+            name="L3 active instantaneous amperage",
+            state_class=STATE_CLASS_MEASUREMENT,
+            device_class=DEVICE_CLASS_CURRENT,
+        ),
         # C=72: Active voltage L3
         # D=7: Instantaneous value
         # E=0: Total
-        "1-0:72.7.0*255": "L3 active instantaneous voltage",
+        "1-0:72.7.0*255": SensorEntityDescription(
+            key="L3 active instantaneous voltage",
+            name="L3 active instantaneous voltage",
+            state_class=STATE_CLASS_MEASUREMENT,
+            device_class=DEVICE_CLASS_VOLTAGE,
+        ),
         # C=76: Active power L3
         # D=7: Instantaneous value
         # E=0: Total
-        "1-0:76.7.0*255": "L3 active instantaneous power",
+        "1-0:76.7.0*255": SensorEntityDescription(
+            key="L3 active instantaneous power",
+            name="L3 active instantaneous power",
+            state_class=STATE_CLASS_MEASUREMENT,
+            device_class=DEVICE_CLASS_POWER,
+        ),
         # C=81: Angles
         # D=7: Instantaneous value
         # E=4:  U(L1) x I(L1)
         # E=15: U(L2) x I(L2)
         # E=26: U(L3) x I(L3)
-        "1-0:81.7.4*255": "U(L1)/I(L1) phase angle",
-        "1-0:81.7.15*255": "U(L2)/I(L2) phase angle",
-        "1-0:81.7.26*255": "U(L3)/I(L3) phase angle",
+        "1-0:81.7.4*255": SensorEntityDescription(
+            key="U(L1)/I(L1) phase angle", name="U(L1)/I(L1) phase angle"
+        ),
+        "1-0:81.7.15*255": SensorEntityDescription(
+            key="U(L2)/I(L2) phase angle", name="U(L2)/I(L2) phase angle"
+        ),
+        "1-0:81.7.26*255": SensorEntityDescription(
+            key="U(L3)/I(L3) phase angle", name="U(L3)/I(L3) phase angle"
+        ),
         # C=96: Electricity-related service entries
-        "1-0:96.1.0*255": "Metering point ID 1",
-        "1-0:96.5.0*255": "Internal operating status",
+        "1-0:96.1.0*255": SensorEntityDescription(
+            key="Metering point ID 1", name="Metering point ID 1"
+        ),
+        "1-0:96.5.0*255": SensorEntityDescription(
+            key="Internal operating status", name="Internal operating status"
+        ),
     }
     _OBIS_BLACKLIST = {
         # C=96: Electricity-related service entries
@@ -187,12 +301,14 @@ class EDL21:
                     self._hass, SIGNAL_EDL21_TELEGRAM, electricity_id, telegram
                 )
             else:
-                name = self._OBIS_NAMES.get(obis)
-                if name:
+                entity_description = self._OBIS_SENSOR_ENTITY_DESCRIPTIONS.get(obis)
+                if entity_description and entity_description.name:
                     if self._name:
-                        name = f"{self._name}: {name}"
+                        entity_description.name = (
+                            f"{self._name}: {entity_description.name}"
+                        )
                     new_entities.append(
-                        EDL21Entity(electricity_id, obis, name, telegram)
+                        EDL21Entity(electricity_id, obis, entity_description, telegram)
                     )
                     self._registered_obis.add((electricity_id, obis))
                 elif obis not in self._OBIS_BLACKLIST:
@@ -233,11 +349,10 @@ class EDL21:
 class EDL21Entity(SensorEntity):
     """Entity reading values from EDL21 telegram."""
 
-    def __init__(self, electricity_id, obis, name, telegram):
+    def __init__(self, electricity_id, obis, entity_description, telegram):
         """Initialize an EDL21Entity."""
         self._electricity_id = electricity_id
         self._obis = obis
-        self._name = name
         self._unique_id = f"{electricity_id}_{obis}"
         self._telegram = telegram
         self._min_time = MIN_TIME_BETWEEN_UPDATES
@@ -249,6 +364,7 @@ class EDL21Entity(SensorEntity):
             "valueSignature": "value_signature",
         }
         self._async_remove_dispatcher = None
+        self.entity_description = entity_description
 
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
@@ -294,11 +410,6 @@ class EDL21Entity(SensorEntity):
     def old_unique_id(self) -> str:
         """Return a less unique ID as used in the first version of edl21."""
         return self._obis
-
-    @property
-    def name(self) -> str | None:
-        """Return a name."""
-        return self._name
 
     @property
     def native_value(self) -> str:
