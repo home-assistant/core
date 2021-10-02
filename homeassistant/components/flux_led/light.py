@@ -28,7 +28,6 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import (
-    ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_MODE,
     ATTR_MODEL,
@@ -42,7 +41,7 @@ from homeassistant.const import (
     CONF_PROTOCOL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform
+from homeassistant.helpers import device_registry as dr, entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -272,23 +271,13 @@ class FluxLight(CoordinatorEntity, LightEntity):
         """Initialize the light."""
         super().__init__(coordinator)
         self._bulb: WifiLedBulb = coordinator.device
-        self._name = name
-        self._unique_id = unique_id
+        self._attr_name = name
+        self._attr_unique_id = unique_id
         self._ip_address = coordinator.host
         self._mode = mode
         self._custom_effect_colors = custom_effect_colors
         self._custom_effect_speed_pct = custom_effect_speed_pct
         self._custom_effect_transition = custom_effect_transition
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return the unique ID of the light."""
-        return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return self._name
 
     @property
     def is_on(self) -> bool:
@@ -345,10 +334,10 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        assert self._unique_id is not None
+        assert self.unique_id is not None
         device_info: DeviceInfo = {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._unique_id)},
-            ATTR_NAME: self._name,
+            "connections": {(dr.CONNECTION_NETWORK_MAC, self.unique_id)},
+            ATTR_NAME: self.name,
             ATTR_MANUFACTURER: "FluxLED/Magic Home",
             ATTR_MODEL: "LED Lights",
         }
@@ -468,7 +457,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
             self._mode = MODE_RGB
         _LOGGER.debug(
             "Detected mode for %s (%s) with raw_state=%s rgbwcapable=%s is %s",
-            self._name,
+            self.name,
             self.unique_id,
             self._bulb.raw_state,
             self._bulb.rgbwcapable,
