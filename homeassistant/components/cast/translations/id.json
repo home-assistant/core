@@ -9,10 +9,10 @@
         "step": {
             "config": {
                 "data": {
-                    "known_hosts": "Daftar opsional host yang diketahui jika penemuan mDNS tidak berfungsi."
+                    "known_hosts": "Host yang dikenal"
                 },
-                "description": "Masukkan konfigurasi Google Cast.",
-                "title": "Google Cast"
+                "description": "Host yang Dikenal - Daftar nama host atau alamat IP perangkat cast, dipisahkan dengan tanda koma, gunakan jika penemuan mDNS tidak berfungsi.",
+                "title": "Konfigurasi Google Cast"
             },
             "confirm": {
                 "description": "Ingin memulai penyiapan?"

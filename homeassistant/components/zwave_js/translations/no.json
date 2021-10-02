@@ -58,6 +58,15 @@
         }
     },
     "device_automation": {
+        "action_type": {
+            "clear_lock_usercode": "Fjern brukerkoden p\u00e5 {entity_name}",
+            "ping": "Ping -enhet",
+            "refresh_value": "Oppdater verdien (e) for {entity_name}",
+            "reset_meter": "Tilbakestill m\u00e5lere p\u00e5 {subtype}",
+            "set_config_parameter": "Angi verdien til konfigurasjonsparameteren {subtype}",
+            "set_lock_usercode": "Angi en brukerkode p\u00e5 {entity_name}",
+            "set_value": "Angi verdien for en Z-Wave-verdi"
+        },
         "condition_type": {
             "config_parameter": "Konfigurer parameter {subtype} verdi",
             "node_status": "Nodestatus",

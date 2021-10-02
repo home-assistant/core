@@ -38,9 +38,11 @@
         "trigger_type": {
             "double": "{subtype} diklik dua kali",
             "long": "{subtype} diklik lama",
+            "long_push": "Push lama  {subtype}",
             "long_single": "{subtype} diklik lama kemudian diklik sekali",
             "single": "{subtype} diklik sekali",
             "single_long": "{subtype} diklik sekali kemudian diklik lama",
+            "single_push": "Push tunggal {subtype}",
             "triple": "{subtype} diklik tiga kali"
         }
     }
