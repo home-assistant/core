@@ -78,9 +78,9 @@ class FreeboxRouter:
 
         try:
             await self._api.open(self._host, self._port)
-        except HttpRequestError:
+        except HttpRequestError as ex:
             _LOGGER.exception("Failed to connect to Freebox")
-            raise ConfigEntryNotReady
+            raise ConfigEntryNotReady from ex
 
         # System
         fbx_config = await self._api.system.get_config()
