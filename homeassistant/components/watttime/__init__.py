@@ -27,16 +27,13 @@ PLATFORMS: list[str] = ["sensor"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up WattTime from a config entry."""
-    hass.data.setdefault(DOMAIN, {DATA_COORDINATOR: {}})
+    hass.data.setdefault(DOMAIN, {entry.entry_id: {DATA_COORDINATOR: {}}})
 
     session = aiohttp_client.async_get_clientsession(hass)
 
     try:
         client = await Client.async_login(
-            entry.data[CONF_USERNAME],
-            entry.data[CONF_PASSWORD],
-            session=session,
-            logger=LOGGER,
+            entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD], session=session
         )
     except WattTimeError as err:
         LOGGER.error("Error while authenticating with WattTime: %s", err)
@@ -62,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     await coordinator.async_config_entry_first_refresh()
-    hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = coordinator
+    hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR] = coordinator
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -73,6 +70,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
