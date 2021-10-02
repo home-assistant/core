@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_RESOURCES,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
@@ -37,6 +38,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Network UPS Tools (NUT) from a config entry."""
+
+    # strip out the stale options CONF_RESOURCES
+    if CONF_RESOURCES in entry.options:
+        new_options = {k: v for k, v in entry.options.items() if k != CONF_RESOURCES}
+        hass.config_entries.async_update_entry(entry, options=new_options)
 
     config = entry.data
     host = config[CONF_HOST]

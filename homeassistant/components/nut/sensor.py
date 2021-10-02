@@ -42,8 +42,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     data = pynut_data[PYNUT_DATA]
     status = data.status
 
-    entities = []
-
     enabled_resources = [
         resource.lower() for resource in config_entry.data[CONF_RESOURCES]
     ]
@@ -53,21 +51,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if KEY_STATUS in resources:
         resources.append(KEY_STATUS_DISPLAY)
 
-    for sensor_type in resources:
-
-        entities.append(
-            NUTSensor(
-                coordinator,
-                data,
-                name.title(),
-                SENSOR_TYPES[sensor_type],
-                unique_id,
-                manufacturer,
-                model,
-                firmware,
-                sensor_type in enabled_resources,
-            )
+    entities = [
+        NUTSensor(
+            coordinator,
+            data,
+            name.title(),
+            SENSOR_TYPES[sensor_type],
+            unique_id,
+            manufacturer,
+            model,
+            firmware,
+            sensor_type in enabled_resources,
         )
+        for sensor_type in resources
+    ]
 
     async_add_entities(entities, True)
 
