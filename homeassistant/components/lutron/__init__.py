@@ -12,7 +12,7 @@ from homeassistant.util import slugify
 
 DOMAIN = "lutron"
 
-PLATFORMS = ["light", "cover", "switch", "scene", "binary_sensor"]
+PLATFORMS = ["light", "cover", "switch", "scene", "binary_sensor", "fan"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,6 +48,7 @@ def setup(hass, base_config):
         "switch": [],
         "scene": [],
         "binary_sensor": [],
+        "fan": [],
     }
 
     config = base_config.get(DOMAIN)
@@ -64,6 +65,8 @@ def setup(hass, base_config):
         for output in area.outputs:
             if output.type == "SYSTEM_SHADE":
                 hass.data[LUTRON_DEVICES]["cover"].append((area.name, output))
+            elif output.type == "CEILING_FAN_TYPE":
+                hass.data[LUTRON_DEVICES]["fan"].append((area.name, output))
             elif output.is_dimmable:
                 hass.data[LUTRON_DEVICES]["light"].append((area.name, output))
             else:
