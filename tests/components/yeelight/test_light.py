@@ -989,8 +989,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "xy_color": (0.421, 0.364),
         },
         {
-            "effect_list": YEELIGHT_TEMP_ONLY_EFFECT_LIST,
-            "supported_features": SUPPORT_YEELIGHT,
+            "supported_features": 0,
             "brightness": nl_br,
             "color_mode": "brightness",
             "supported_color_modes": ["brightness"],
@@ -1025,8 +1024,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "xy_color": (0.421, 0.364),
         },
         {
-            "effect_list": YEELIGHT_TEMP_ONLY_EFFECT_LIST,
-            "supported_features": SUPPORT_YEELIGHT,
+            "supported_features": 0,
             "brightness": nl_br,
             "color_mode": "brightness",
             "supported_color_modes": ["brightness"],

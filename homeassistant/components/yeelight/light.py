@@ -907,8 +907,8 @@ class YeelightWithNightLight(
 class YeelightNightLightMode(YeelightGenericLight):
     """Representation of a Yeelight when in nightlight mode."""
 
-    _attr_color_mode = COLOR_MODE_COLOR_TEMP
-    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS, COLOR_MODE_COLOR_TEMP}
+    _attr_color_mode = COLOR_MODE_BRIGHTNESS
+    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
 
     @property
     def unique_id(self) -> str:
@@ -950,20 +950,9 @@ class YeelightNightLightMode(YeelightGenericLight):
         return None
 
     @property
-    def color_temp(self) -> int:
-        """Return the color temperature.
-
-        The nightlight locks the colortemp to max mireds.
-        """
-        return self._max_mireds
-
-    @property
-    def min_mireds(self) -> int:
-        """Return the color temperature.
-
-        The nightlight locks the colortemp to max mireds.
-        """
-        return self._max_mireds
+    def supported_features(self):
+        """Flag no supported features."""
+        return 0
 
 
 class YeelightNightLightModeWithAmbientSupport(YeelightNightLightMode):
@@ -982,11 +971,6 @@ class YeelightNightLightModeWithoutBrightnessControl(YeelightNightLightMode):
 
     _attr_color_mode = COLOR_MODE_ONOFF
     _attr_supported_color_modes = {COLOR_MODE_ONOFF}
-
-    @property
-    def supported_features(self):
-        """Flag no supported features."""
-        return 0
 
 
 class YeelightWithAmbientWithoutNightlight(YeelightWhiteTempWithoutNightlightSwitch):
