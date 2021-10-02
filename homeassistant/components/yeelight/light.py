@@ -839,10 +839,8 @@ class YeelightNightLightSupport:
         return PowerMode.NORMAL
 
 
-class YeelightColorLightWithoutNightlightSwitch(
-    YeelightColorLightSupport, YeelightGenericLight
-):
-    """Representation of a Color Yeelight light."""
+class YeelightWithoutNightlightSwitchMixIn:
+    """A mix-in for yeelights without a nightlight switch."""
 
     @property
     def _brightness_property(self):
@@ -852,6 +850,23 @@ class YeelightColorLightWithoutNightlightSwitch(
         if self.device.is_nightlight_enabled:
             return "nl_br"
         return super()._brightness_property
+
+    @property
+    def color_temp(self) -> int:
+        """Return the color temperature."""
+        if self.device.is_nightlight_enabled:
+            # Enabling the nightlight locks the colortemp
+            # to max
+            return self.max_mireds
+        return super().color_temp
+
+
+class YeelightColorLightWithoutNightlightSwitch(
+    YeelightColorLightSupport,
+    YeelightWithoutNightlightSwitchMixIn,
+    YeelightGenericLight,
+):
+    """Representation of a Color Yeelight light."""
 
 
 class YeelightColorLightWithNightlightSwitch(
@@ -869,18 +884,11 @@ class YeelightColorLightWithNightlightSwitch(
 
 
 class YeelightWhiteTempWithoutNightlightSwitch(
-    YeelightWhiteTempLightSupport, YeelightGenericLight
+    YeelightWhiteTempLightSupport,
+    YeelightWithoutNightlightSwitchMixIn,
+    YeelightGenericLight,
 ):
     """White temp light, when nightlight switch is not set to light."""
-
-    @property
-    def _brightness_property(self):
-        # If the nightlight is not active, we do not
-        # want to "current_brightness" since it will check
-        # "bg_power" and main light could still be on
-        if self.device.is_nightlight_enabled:
-            return "nl_br"
-        return super()._brightness_property
 
 
 class YeelightWithNightLight(
