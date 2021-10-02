@@ -33,7 +33,6 @@ from .const import DOMAIN
 
 DEFAULT_PORT = 80
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    cv.deprecated(DOMAIN),
     {
         vol.Required(CONF_IP_ADDRESS): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
