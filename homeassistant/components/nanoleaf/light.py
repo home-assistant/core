@@ -1,6 +1,7 @@
 """Support for Nanoleaf Lights."""
 from __future__ import annotations
 
+import math
 from typing import Any
 
 from aionanoleaf import Nanoleaf, Unavailable
@@ -27,8 +28,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import color as color_util
 from homeassistant.util.color import (
+    color_temperature_kelvin_to_mired as kelvin_to_mired,
     color_temperature_mired_to_kelvin as mired_to_kelvin,
 )
 
@@ -85,8 +86,10 @@ class NanoleafLight(LightEntity):
             model=self._nanoleaf.model,
             sw_version=self._nanoleaf.firmware_version,
         )
-        self._attr_min_mireds = 154
-        self._attr_max_mireds = 833
+        self._attr_min_mireds = math.ceil(
+            1000000 / self._nanoleaf.color_temperature_max
+        )
+        self._attr_max_mireds = kelvin_to_mired(self._nanoleaf.color_temperature_min)
 
     @property
     def brightness(self) -> int:
@@ -96,9 +99,7 @@ class NanoleafLight(LightEntity):
     @property
     def color_temp(self) -> int:
         """Return the current color temperature."""
-        return color_util.color_temperature_kelvin_to_mired(
-            self._nanoleaf.color_temperature
-        )
+        return kelvin_to_mired(self._nanoleaf.color_temperature)
 
     @property
     def effect(self) -> str | None:
