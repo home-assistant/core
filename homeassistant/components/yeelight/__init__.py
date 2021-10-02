@@ -549,6 +549,17 @@ class YeelightScanner:
             self._async_stop_scan()
 
 
+def update_needs_bg_power_workaround(data):
+    """Check if a push update needs the bg_power workaround.
+
+    Some devices will push the incorrect state for bg_power.
+
+    To work around this any time we are pushed an update
+    with bg_power, we force poll state which will be correct.
+    """
+    return "bg_power" in data
+
+
 class YeelightDevice:
     """Represents single Yeelight device."""
 
@@ -695,17 +706,6 @@ class YeelightDevice:
         await self._async_update_properties()
         async_dispatcher_send(self._hass, DATA_UPDATED.format(self._host))
 
-    @callback
-    def update_needs_bg_power_workaround(self, data):
-        """Check if a push update needs the bg_power workaround.
-
-        Some devices will push the incorrect state for bg_power.
-
-        To work around this any time we are pushed an update
-        with bg_power, we force poll state which will be correct.
-        """
-        return "bg_power" in data
-
     async def _async_forced_update(self, _now):
         """Call a forced update."""
         await self.async_update(True)
@@ -715,7 +715,7 @@ class YeelightDevice:
         """Update push from device."""
         was_available = self._available
         self._available = data.get(KEY_CONNECTED, True)
-        if self.update_needs_bg_power_workaround(data) or (
+        if update_needs_bg_power_workaround(data) or (
             self._did_first_update and not was_available and self._available
         ):
             # On reconnect the properties may be out of sync
