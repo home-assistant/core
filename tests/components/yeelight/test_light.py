@@ -545,25 +545,27 @@ async def test_update_errors(hass: HomeAssistant, caplog):
 
     # Timeout usually means the bulb is overloaded with commands
     # but will still respond eventually.
-    mocked_bulb.async_get_properties = AsyncMock(side_effect=asyncio.TimeoutError)
-    await hass.services.async_call(
-        "light",
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT},
-        blocking=True,
-    )
+    mocked_bulb.async_turn_off = AsyncMock(side_effect=asyncio.TimeoutError)
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "light",
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: ENTITY_LIGHT},
+            blocking=True,
+        )
     assert hass.states.get(ENTITY_LIGHT).state == STATE_ON
 
     # socket.error usually means the bulb dropped the connection
     # or lost wifi, then came back online and forced the existing
     # connection closed with a TCP RST
-    mocked_bulb.async_get_properties = AsyncMock(side_effect=socket.error)
-    await hass.services.async_call(
-        "light",
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT},
-        blocking=True,
-    )
+    mocked_bulb.async_turn_off = AsyncMock(side_effect=socket.error)
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "light",
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: ENTITY_LIGHT},
+            blocking=True,
+        )
     assert hass.states.get(ENTITY_LIGHT).state == STATE_UNAVAILABLE
 
 
@@ -572,6 +574,7 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant):
     mocked_bulb = _mocked_bulb()
     properties = {**PROPERTIES}
     properties.pop("active_mode")
+    properties.pop("nl_br")
     properties["color_mode"] = "3"  # HSV
     mocked_bulb.last_properties = properties
     mocked_bulb.bulb_type = BulbType.Color
@@ -579,7 +582,9 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant):
         domain=DOMAIN, data={**CONFIG_ENTRY_DATA, CONF_NIGHTLIGHT_SWITCH: False}
     )
     config_entry.add_to_hass(hass)
-    with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
+    with _patch_discovery(), _patch_discovery_interval(), patch(
+        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         # We use asyncio.create_task now to avoid
@@ -623,7 +628,7 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant):
         SERVICE_TURN_ON,
         {
             ATTR_ENTITY_ID: ENTITY_LIGHT,
-            ATTR_BRIGHTNESS_PCT: PROPERTIES["current_brightness"],
+            ATTR_BRIGHTNESS_PCT: PROPERTIES["bright"],
         },
         blocking=True,
     )
@@ -708,6 +713,8 @@ async def test_device_types(hass: HomeAssistant, caplog):
         mocked_bulb.bulb_type = bulb_type
         model_specs = _MODEL_SPECS.get(model)
         type(mocked_bulb).get_model_specs = MagicMock(return_value=model_specs)
+        original_nightlight_brightness = mocked_bulb.last_properties["nl_br"]
+        mocked_bulb.last_properties["nl_br"] = "0"
         await _async_setup(config_entry)
 
         state = hass.states.get(entity_id)
@@ -715,7 +722,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
         assert state.state == "on"
         target_properties["friendly_name"] = name
         target_properties["flowing"] = False
-        target_properties["night_light"] = True
+        target_properties["night_light"] = False
         target_properties["music_mode"] = False
         assert dict(state.attributes) == target_properties
 
@@ -725,6 +732,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
         registry.async_clear_config_entry(config_entry.entry_id)
 
         # nightlight
+        mocked_bulb.last_properties["nl_br"] = original_nightlight_brightness
         if nightlight_properties is None:
             return
         config_entry = MockConfigEntry(
@@ -749,7 +757,6 @@ async def test_device_types(hass: HomeAssistant, caplog):
         await hass.async_block_till_done()
 
     bright = round(255 * int(PROPERTIES["bright"]) / 100)
-    current_brightness = round(255 * int(PROPERTIES["current_brightness"]) / 100)
     ct = color_temperature_kelvin_to_mired(int(PROPERTIES["ct"]))
     hue = int(PROPERTIES["hue"])
     sat = int(PROPERTIES["sat"])
@@ -806,7 +813,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "max_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["min"]
             ),
-            "brightness": current_brightness,
+            "brightness": bright,
             "color_temp": ct,
             "color_mode": "color_temp",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
@@ -836,7 +843,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "max_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["min"]
             ),
-            "brightness": current_brightness,
+            "brightness": bright,
             "hs_color": hs_color,
             "rgb_color": color_hs_to_RGB(*hs_color),
             "xy_color": color_hs_to_xy(*hs_color),
@@ -865,7 +872,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "max_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["min"]
             ),
-            "brightness": current_brightness,
+            "brightness": bright,
             "hs_color": color_RGB_to_hs(*rgb_color),
             "rgb_color": rgb_color,
             "xy_color": color_RGB_to_xy(*rgb_color),
@@ -895,7 +902,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "max_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["min"]
             ),
-            "brightness": current_brightness,
+            "brightness": bright,
             "color_mode": "hs",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
@@ -922,7 +929,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "max_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["min"]
             ),
-            "brightness": current_brightness,
+            "brightness": bright,
             "color_mode": "rgb",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
@@ -973,7 +980,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "max_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["min"]
             ),
-            "brightness": current_brightness,
+            "brightness": bright,
             "color_temp": ct,
             "color_mode": "color_temp",
             "supported_color_modes": ["color_temp"],
@@ -1009,7 +1016,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "max_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["min"]
             ),
-            "brightness": current_brightness,
+            "brightness": bright,
             "color_temp": ct,
             "color_mode": "color_temp",
             "supported_color_modes": ["color_temp"],
@@ -1261,62 +1268,6 @@ async def test_effects(hass: HomeAssistant):
     await _async_test_effect("not_existed", called=False)
 
 
-async def test_state_fails_to_update_triggers_update(hass: HomeAssistant):
-    """Ensure we call async_get_properties if the turn on/off fails to update the state."""
-    mocked_bulb = _mocked_bulb()
-    properties = {**PROPERTIES}
-    properties.pop("active_mode")
-    properties["color_mode"] = "3"  # HSV
-    mocked_bulb.last_properties = properties
-    mocked_bulb.bulb_type = BulbType.Color
-    config_entry = MockConfigEntry(
-        domain=DOMAIN, data={**CONFIG_ENTRY_DATA, CONF_NIGHTLIGHT_SWITCH: False}
-    )
-    config_entry.add_to_hass(hass)
-    with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        # We use asyncio.create_task now to avoid
-        # blocking starting so we need to block again
-        await hass.async_block_till_done()
-
-    mocked_bulb.last_properties["power"] = "off"
-    await hass.services.async_call(
-        "light",
-        SERVICE_TURN_ON,
-        {
-            ATTR_ENTITY_ID: ENTITY_LIGHT,
-        },
-        blocking=True,
-    )
-    assert len(mocked_bulb.async_turn_on.mock_calls) == 1
-    assert len(mocked_bulb.async_get_properties.mock_calls) == 2
-
-    mocked_bulb.last_properties["power"] = "on"
-    await hass.services.async_call(
-        "light",
-        SERVICE_TURN_OFF,
-        {
-            ATTR_ENTITY_ID: ENTITY_LIGHT,
-        },
-        blocking=True,
-    )
-    assert len(mocked_bulb.async_turn_off.mock_calls) == 1
-    assert len(mocked_bulb.async_get_properties.mock_calls) == 3
-
-    # But if the state is correct no calls
-    await hass.services.async_call(
-        "light",
-        SERVICE_TURN_ON,
-        {
-            ATTR_ENTITY_ID: ENTITY_LIGHT,
-        },
-        blocking=True,
-    )
-    assert len(mocked_bulb.async_turn_on.mock_calls) == 1
-    assert len(mocked_bulb.async_get_properties.mock_calls) == 3
-
-
 async def test_ambilight_with_nightlight_disabled(hass: HomeAssistant):
     """Test that main light on ambilights with the nightlight disabled shows the correct brightness."""
     mocked_bulb = _mocked_bulb()
@@ -1325,7 +1276,6 @@ async def test_ambilight_with_nightlight_disabled(hass: HomeAssistant):
     capabilities["model"] = "ceiling10"
     properties["color_mode"] = "3"  # HSV
     properties["bg_power"] = "off"
-    properties["current_brightness"] = 0
     properties["bg_lmode"] = "2"  # CT
     mocked_bulb.last_properties = properties
     mocked_bulb.bulb_type = BulbType.WhiteTempMood
