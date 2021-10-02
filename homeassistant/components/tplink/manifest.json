@@ -46,6 +46,10 @@
       "macaddress": "C006C3*"
     },
     {
+      "hostname": "ep*",
+      "macaddress": "003192*"
+    },
+    {
       "hostname": "k[lp]*",
       "macaddress": "003192*"
     },
