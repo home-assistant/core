@@ -859,7 +859,7 @@ pyfido==2.1.1
 pyfireservicerota==0.0.43
 
 # homeassistant.components.flume
-pyflume==0.5.5
+pyflume==0.6.5
 
 # homeassistant.components.flunearyou
 pyflunearyou==2.0.2
@@ -1368,7 +1368,7 @@ wakeonlan==2.0.1
 wallbox==0.4.4
 
 # homeassistant.components.folder_watcher
-watchdog==2.1.5
+watchdog==2.1.6
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.15.1
