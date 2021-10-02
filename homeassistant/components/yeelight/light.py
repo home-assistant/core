@@ -1,7 +1,6 @@
 """Light platform support for yeelight."""
 from __future__ import annotations
 
-import asyncio
 import logging
 import math
 
@@ -208,9 +207,6 @@ SERVICE_SCHEMA_SET_AUTO_DELAY_OFF_SCENE = {
     vol.Required(ATTR_MINUTES): vol.All(vol.Coerce(int), vol.Range(min=1, max=60)),
     vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }
-
-
-STATE_CHANGE_TIME = 0.25  # seconds
 
 
 @callback
@@ -762,11 +758,6 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         if self.config[CONF_SAVE_ON_CHANGE] and (brightness or colortemp or rgb):
             await self.async_set_default()
 
-        # Some devices (mainly nightlights) will not send back the on state so we need to force a refresh
-        await asyncio.sleep(STATE_CHANGE_TIME)
-        if not self.is_on:
-            await self.device.async_update(True)
-
     @_async_cmd
     async def _async_turn_off(self, duration) -> None:
         """Turn off with a given transition duration wrapped with _async_cmd."""
@@ -782,10 +773,6 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
         await self._async_turn_off(duration)
-        # Some devices will not send back the off state so we need to force a refresh
-        await asyncio.sleep(STATE_CHANGE_TIME)
-        if self.is_on:
-            await self.device.async_update(True)
 
     @_async_cmd
     async def async_set_mode(self, mode: str):
@@ -861,7 +848,7 @@ class YeelightColorLightWithoutNightlightSwitch(
         # want to "current_brightness" since it will check
         # "bg_power" and main light could still be on
         if self.device.is_nightlight_enabled:
-            return "current_brightness"
+            return "nl_br"
         return super()._brightness_property
 
 
@@ -890,7 +877,7 @@ class YeelightWhiteTempWithoutNightlightSwitch(
         # want to "current_brightness" since it will check
         # "bg_power" and main light could still be on
         if self.device.is_nightlight_enabled:
-            return "current_brightness"
+            return "nl_br"
         return super()._brightness_property
 
 
