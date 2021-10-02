@@ -353,7 +353,9 @@ class FluxLight(CoordinatorEntity, LightEntity):
             ATTR_MODEL: "LED Lights",
         }
         if self._bulb.protocol != "LEDENET_ORIGINAL" and self._bulb.raw_state:
-            device_info[ATTR_SW_VERSION] = self._bulb.raw_state[10]
+            device_info[ATTR_SW_VERSION] = str(self._bulb.raw_state[10])
+        else:
+            device_info[ATTR_SW_VERSION] = "1"
         return device_info
 
     async def async_turn_on(self, **kwargs: Any) -> None:
