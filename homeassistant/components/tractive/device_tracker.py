@@ -43,10 +43,10 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         """Initialize tracker entity."""
         super().__init__(user_id, item.trackable, item.tracker_details)
 
-        self._battery_level = item.hw_info["battery_level"]
-        self._latitude = item.pos_report["latlong"][0]
-        self._longitude = item.pos_report["latlong"][1]
-        self._accuracy = item.pos_report["pos_uncertainty"]
+        self._battery_level: int = item.hw_info["battery_level"]
+        self._latitude: float = item.pos_report["latlong"][0]
+        self._longitude: float = item.pos_report["latlong"][1]
+        self._accuracy: int = item.pos_report["pos_uncertainty"]
 
         self._attr_name = f"{self._tracker_id} {item.trackable['details']['name']}"
         self._attr_unique_id = item.trackable["_id"]
@@ -57,12 +57,12 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         return SOURCE_TYPE_GPS
 
     @property
-    def latitude(self) -> float | None:
+    def latitude(self) -> float:
         """Return latitude value of the device."""
         return self._latitude
 
     @property
-    def longitude(self) -> float | None:
+    def longitude(self) -> float:
         """Return longitude value of the device."""
         return self._longitude
 
@@ -72,7 +72,7 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         return self._accuracy
 
     @property
-    def battery_level(self) -> int | None:
+    def battery_level(self) -> int:
         """Return the battery level of the device."""
         return self._battery_level
 
@@ -92,10 +92,6 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
 
     @callback
     def _handle_server_unavailable(self) -> None:
-        self._latitude = None
-        self._longitude = None
-        self._accuracy = None
-        self._battery_level = None
         self._attr_available = False
         self.async_write_ha_state()
 

@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -93,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    async def cancel_listen_task(_):
+    async def cancel_listen_task(_: Event) -> None:
         await tractive.unsubscribe()
 
     entry.async_on_unload(
