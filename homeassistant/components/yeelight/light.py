@@ -940,16 +940,6 @@ class YeelightNightLightMode(YeelightGenericLight):
         return PowerMode.MOONLIGHT
 
     @property
-    def effect_list(self):
-        """Disable effects as they turn off the nightlight."""
-        return None
-
-    @property
-    def effect(self):
-        """Disable effects as they turn off the nightlight."""
-        return None
-
-    @property
     def supported_features(self):
         """Flag no supported features."""
         return 0
