@@ -248,13 +248,15 @@ def _async_cmd(func):
             # A network error happened, the bulb is likely offline now
             self.device.async_mark_unavailable()
             self.async_write_ha_state()
+            exc_message = str(ex) or type(ex)
             raise HomeAssistantError(
-                f"Error when calling {func.__name__} for bulb {self.device.name} at {self.device.host}: {ex}"
+                f"Error when calling {func.__name__} for bulb {self.device.name} at {self.device.host}: {exc_message}"
             ) from ex
         except BULB_EXCEPTIONS as ex:
             # The bulb likely responded but had an error
+            exc_message = str(ex) or type(ex)
             raise HomeAssistantError(
-                f"Error when calling {func.__name__} for bulb {self.device.name} at {self.device.host}: {ex}"
+                f"Error when calling {func.__name__} for bulb {self.device.name} at {self.device.host}: {exc_message}"
             ) from ex
 
     return _async_wrap
