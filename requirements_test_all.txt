@@ -856,7 +856,7 @@ pyfido==2.1.1
 pyfireservicerota==0.0.43
 
 # homeassistant.components.flume
-pyflume==0.5.5
+pyflume==0.6.5
 
 # homeassistant.components.flunearyou
 pyflunearyou==2.0.2
