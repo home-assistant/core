@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 import voluptuous as vol
 import yeelight
 from yeelight.aio import AsyncBulb
+from yeelight.main import get_known_models
 
 from homeassistant import config_entries, exceptions
 from homeassistant.components.dhcp import IP_ADDRESS
@@ -260,25 +261,35 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=options)
 
         options = self._config_entry.options
+        model = options[CONF_MODEL]
+        schema_dict = {}
+        known_models = get_known_models()
+        if model not in known_models:
+            schema_dict.update(
+                {
+                    vol.Optional(CONF_MODEL, default=options[CONF_MODEL]): vol.In(
+                        [model, *known_models]
+                    ),
+                }
+            )
+        schema_dict.update(
+            {
+                vol.Required(
+                    CONF_TRANSITION, default=options[CONF_TRANSITION]
+                ): cv.positive_int,
+                vol.Required(CONF_MODE_MUSIC, default=options[CONF_MODE_MUSIC]): bool,
+                vol.Required(
+                    CONF_SAVE_ON_CHANGE, default=options[CONF_SAVE_ON_CHANGE]
+                ): bool,
+                vol.Required(
+                    CONF_NIGHTLIGHT_SWITCH, default=options[CONF_NIGHTLIGHT_SWITCH]
+                ): bool,
+            }
+        )
+
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(CONF_MODEL, default=options[CONF_MODEL]): str,
-                    vol.Required(
-                        CONF_TRANSITION, default=options[CONF_TRANSITION]
-                    ): cv.positive_int,
-                    vol.Required(
-                        CONF_MODE_MUSIC, default=options[CONF_MODE_MUSIC]
-                    ): bool,
-                    vol.Required(
-                        CONF_SAVE_ON_CHANGE, default=options[CONF_SAVE_ON_CHANGE]
-                    ): bool,
-                    vol.Required(
-                        CONF_NIGHTLIGHT_SWITCH, default=options[CONF_NIGHTLIGHT_SWITCH]
-                    ): bool,
-                }
-            ),
+            data_schema=vol.Schema(schema_dict),
         )
 
 

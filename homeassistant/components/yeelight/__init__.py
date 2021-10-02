@@ -13,6 +13,7 @@ from async_upnp_client.search import SsdpSearchListener
 import voluptuous as vol
 from yeelight import BulbException
 from yeelight.aio import KEY_CONNECTED, AsyncBulb
+from yeelight.main import get_known_models
 
 from homeassistant import config_entries
 from homeassistant.components import network
@@ -218,6 +219,7 @@ async def _async_initialize(
 
     if (
         device.capabilities
+        and device.capabilities["model"] in get_known_models()
         and entry.options.get(CONF_MODEL) != device.capabilities["model"]
     ):
         hass.config_entries.async_update_entry(
