@@ -114,7 +114,7 @@ homeassistant/components/debugpy/* @frenck
 homeassistant/components/deconz/* @Kane610
 homeassistant/components/delijn/* @bollewolle @Emilv2
 homeassistant/components/demo/* @home-assistant/core
-homeassistant/components/denonavr/* @scarface-4711 @starkillerOG
+homeassistant/components/denonavr/* @ol-iver @starkillerOG
 homeassistant/components/derivative/* @afaucogney
 homeassistant/components/device_automation/* @home-assistant/core
 homeassistant/components/devolo_home_control/* @2Fake @Shutgun
