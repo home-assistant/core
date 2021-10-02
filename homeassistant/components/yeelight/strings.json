@@ -28,9 +28,8 @@
   "options": {
     "step": {
       "init": {
-        "description": "If you leave model empty, it will be automatically detected.",
         "data": {
-          "model": "Model (optional)",
+          "model": "Model",
           "transition": "Transition Time (ms)",
           "use_music_mode": "Enable Music Mode",
           "save_on_change": "Save Status On Change",
