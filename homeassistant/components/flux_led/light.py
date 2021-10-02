@@ -33,6 +33,7 @@ from homeassistant.const import (
     ATTR_MODE,
     ATTR_MODEL,
     ATTR_NAME,
+    ATTR_SW_VERSION,
     CONF_DEVICES,
     CONF_HOST,
     CONF_MAC,
@@ -345,12 +346,17 @@ class FluxLight(CoordinatorEntity, LightEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         assert self._unique_id is not None
-        return {
+        device_info: DeviceInfo = {
             ATTR_IDENTIFIERS: {(DOMAIN, self._unique_id)},
             ATTR_NAME: self._name,
             ATTR_MANUFACTURER: "FluxLED/Magic Home",
             ATTR_MODEL: "LED Lights",
         }
+        if self._bulb.protocol != "LEDENET_ORIGINAL" and self._bulb.raw_state:
+            device_info[ATTR_SW_VERSION] = str(self._bulb.raw_state[10])
+        else:
+            device_info[ATTR_SW_VERSION] = "1"
+        return device_info
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified or all lights on."""
