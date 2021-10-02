@@ -1,7 +1,7 @@
 """Plugin for checking imports."""
 from __future__ import annotations
 
-from astroid import Import, ImportFrom, Module
+from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.interfaces import IAstroidChecker
 from pylint.lint import PyLinter
@@ -27,17 +27,17 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
         super().__init__(linter)
         self.current_module: str | None = None
 
-    def visit_module(self, node: Module) -> None:
+    def visit_module(self, node: nodes.Module) -> None:
         """Called when a Import node is visited."""
         self.current_module = node.name
 
-    def visit_import(self, node: Import) -> None:
+    def visit_import(self, node: nodes.Import) -> None:
         """Called when a Import node is visited."""
         for module, _alias in node.names:
             if module.startswith(f"{self.current_module}."):
                 self.add_message("hass-relative-import", node=node)
 
-    def visit_importfrom(self, node: ImportFrom) -> None:
+    def visit_importfrom(self, node: nodes.ImportFrom) -> None:
         """Called when a ImportFrom node is visited."""
         if node.level is not None:
             return

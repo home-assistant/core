@@ -1,7 +1,7 @@
 """Plugin for return statements."""
 from __future__ import annotations
 
-from astroid import AsyncFunctionDef, Const, FunctionDef, Return
+from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.interfaces import IAstroidChecker
 from pylint.lint import PyLinter
@@ -24,7 +24,7 @@ class HassReturnFormatChecker(BaseChecker):  # type: ignore[misc]
     }
     options = ()
 
-    def visit_return(self, node: Return) -> None:
+    def visit_return(self, node: nodes.Return) -> None:
         """Called when a Return node is visited."""
         if node.value is None:
             return
@@ -32,13 +32,13 @@ class HassReturnFormatChecker(BaseChecker):  # type: ignore[misc]
         parent = node.parent
         while (
             parent is not None
-            and not isinstance(parent, FunctionDef)
-            and not isinstance(parent, AsyncFunctionDef)
+            and not isinstance(parent, nodes.FunctionDef)
+            and not isinstance(parent, nodes.AsyncFunctionDef)
         ):
             parent = parent.parent
         if parent is None:
             return
-        if isinstance(parent.returns, Const) and parent.returns.value is None:
+        if isinstance(parent.returns, nodes.Const) and parent.returns.value is None:
             self.add_message("hass-return-none", node=node)
 
 
