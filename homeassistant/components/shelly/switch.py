@@ -29,9 +29,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up switches for device."""
     if get_device_entry_gen(config_entry) == 2:
-        return await async_setup_rpc_entry(hass, config_entry, async_add_entities)
-
-    return await async_setup_block_entry(hass, config_entry, async_add_entities)
+        await async_setup_rpc_entry(hass, config_entry, async_add_entities)
+    else:
+        await async_setup_block_entry(hass, config_entry, async_add_entities)
 
 
 async def async_setup_block_entry(

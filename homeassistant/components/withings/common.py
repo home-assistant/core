@@ -657,7 +657,7 @@ class DataManager:
 
     async def async_subscribe_webhook(self) -> None:
         """Subscribe the webhook to withings data updates."""
-        return await self._do_retry(self._async_subscribe_webhook)
+        await self._do_retry(self._async_subscribe_webhook)
 
     async def _async_subscribe_webhook(self) -> None:
         _LOGGER.debug("Configuring withings webhook")
@@ -705,7 +705,7 @@ class DataManager:
 
     async def async_unsubscribe_webhook(self) -> None:
         """Unsubscribe webhook from withings data updates."""
-        return await self._do_retry(self._async_unsubscribe_webhook)
+        await self._do_retry(self._async_unsubscribe_webhook)
 
     async def _async_unsubscribe_webhook(self) -> None:
         # Get the current webhooks.

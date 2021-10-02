@@ -13,6 +13,7 @@ from homeassistant.components import ssdp
 from homeassistant.components.ssdp import SsdpChange
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONFIG_ENTRY_HOSTNAME,
@@ -287,7 +288,7 @@ class UpnpOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input: Mapping = None) -> None:
+    async def async_step_init(self, user_input: Mapping = None) -> FlowResult:
         """Manage the options."""
         if user_input is not None:
             coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id]

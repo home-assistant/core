@@ -209,7 +209,7 @@ async def async_setup_entry(
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-) -> None:
+) -> bool:
     """Shutdown and close a Firmata board for a config entry."""
     _LOGGER.debug("Closing Firmata board %s", config_entry.data[CONF_NAME])
 

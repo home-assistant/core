@@ -308,7 +308,7 @@ class SlackNotificationService(BaseNotificationService):
             else:
                 blocks = None
 
-            return await self._async_send_text_only_message(
+            await self._async_send_text_only_message(
                 targets,
                 message,
                 title,
@@ -318,8 +318,8 @@ class SlackNotificationService(BaseNotificationService):
             )
 
         # Message Type 2: A message that uploads a remote file
-        if ATTR_URL in data[ATTR_FILE]:
-            return await self._async_send_remote_file_message(
+        elif ATTR_URL in data[ATTR_FILE]:
+            await self._async_send_remote_file_message(
                 data[ATTR_FILE][ATTR_URL],
                 targets,
                 message,
@@ -329,6 +329,7 @@ class SlackNotificationService(BaseNotificationService):
             )
 
         # Message Type 3: A message that uploads a local file
-        return await self._async_send_local_file_message(
-            data[ATTR_FILE][ATTR_PATH], targets, message, title
-        )
+        else:
+            await self._async_send_local_file_message(
+                data[ATTR_FILE][ATTR_PATH], targets, message, title
+            )

@@ -198,7 +198,7 @@ class AmcrestCam(Camera):
             )
             raise CannotSnapshot
 
-    async def _async_get_image(self) -> None:
+    async def _async_get_image(self) -> bytes | None:
         try:
             # Send the request to snap a picture and return raw jpg data
             # Snapshot command needs a much longer read timeout than other commands.
@@ -211,9 +211,9 @@ class AmcrestCam(Camera):
             )
         except AmcrestError as error:
             log_update_error(_LOGGER, "get image from", self.name, "camera", error)
-            return
         finally:
             self._snapshot_task = None
+        return None
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None

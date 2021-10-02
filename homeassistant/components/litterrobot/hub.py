@@ -38,7 +38,7 @@ class LitterRobotHub:
             update_interval=timedelta(seconds=UPDATE_INTERVAL_SECONDS),
         )
 
-    async def login(self, load_robots: bool = False) -> None:
+    async def login(self, load_robots: bool = False) -> bool:
         """Login to Litter-Robot."""
         self.logged_in = False
         self.account = Account()
@@ -49,10 +49,10 @@ class LitterRobotHub:
                 load_robots=load_robots,
             )
             self.logged_in = True
-            return self.logged_in
         except LitterRobotLoginException as ex:
             _LOGGER.error("Invalid credentials")
             raise ex
         except LitterRobotException as ex:
             _LOGGER.error("Unable to connect to Litter-Robot API")
             raise ex
+        return self.logged_in

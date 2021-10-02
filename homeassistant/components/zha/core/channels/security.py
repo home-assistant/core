@@ -147,7 +147,7 @@ class IasAce(ZigbeeChannel):
             self.alarm_status = AceCluster.AlarmStatus.No_Alarm
         return zigbee_reply
 
-    def _arm_day(self, code: str) -> None:
+    def _arm_day(self, code: str):
         """Arm the panel for day / home zones."""
         return self._handle_arm(
             code,
@@ -155,7 +155,7 @@ class IasAce(ZigbeeChannel):
             AceCluster.ArmNotification.Only_Day_Home_Zones_Armed,
         )
 
-    def _arm_night(self, code: str) -> None:
+    def _arm_night(self, code: str):
         """Arm the panel for night / sleep zones."""
         return self._handle_arm(
             code,
@@ -163,7 +163,7 @@ class IasAce(ZigbeeChannel):
             AceCluster.ArmNotification.Only_Night_Sleep_Zones_Armed,
         )
 
-    def _arm_away(self, code: str) -> None:
+    def _arm_away(self, code: str):
         """Arm the panel for away mode."""
         return self._handle_arm(
             code,
@@ -176,7 +176,7 @@ class IasAce(ZigbeeChannel):
         code: str,
         panel_status: AceCluster.PanelStatus,
         armed_type: AceCluster.ArmNotification,
-    ) -> None:
+    ):
         """Arm the panel with the specified statuses."""
         if self.code_required_arm_actions and code != self.panel_code:
             self.warning("Invalid code supplied to IAS ACE")

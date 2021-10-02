@@ -156,11 +156,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors for device."""
     if get_device_entry_gen(config_entry) == 2:
-        return await async_setup_entry_rpc(
+        await async_setup_entry_rpc(
             hass, config_entry, async_add_entities, RPC_SENSORS, RpcBinarySensor
         )
-
-    if config_entry.data["sleep_period"]:
+    elif config_entry.data["sleep_period"]:
         await async_setup_entry_attribute_entities(
             hass,
             config_entry,

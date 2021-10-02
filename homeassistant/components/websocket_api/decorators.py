@@ -111,7 +111,7 @@ def ws_require_user(
                 output_error("only_inactive_user", "Not allowed as active user")
                 return
 
-            return func(hass, connection, msg)
+            func(hass, connection, msg)
 
         return check_current_user
 

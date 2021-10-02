@@ -38,11 +38,11 @@ class ScreenLogicSwitch(ScreenlogicEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs) -> None:
         """Send the ON command."""
-        return await self._async_set_circuit(ON_OFF.ON)
+        await self._async_set_circuit(ON_OFF.ON)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Send the OFF command."""
-        return await self._async_set_circuit(ON_OFF.OFF)
+        await self._async_set_circuit(ON_OFF.OFF)
 
     async def _async_set_circuit(self, circuit_value) -> None:
         async with self.coordinator.api_lock:

@@ -588,7 +588,7 @@ class ZWaveClimateSingleSetpoint(ZWaveClimateBase):
         """Initialize the Z-Wave climate device."""
         ZWaveClimateBase.__init__(self, values, temp_unit)
 
-    def _mode(self) -> None:
+    def _mode(self):
         """Return thermostat mode Z-Wave value."""
         return self.values.mode
 
@@ -604,7 +604,7 @@ class ZWaveClimateMultipleSetpoint(ZWaveClimateBase):
         """Initialize the Z-Wave climate device."""
         ZWaveClimateBase.__init__(self, values, temp_unit)
 
-    def _mode(self) -> None:
+    def _mode(self):
         """Return thermostat mode Z-Wave value."""
         return self.values.primary
 
