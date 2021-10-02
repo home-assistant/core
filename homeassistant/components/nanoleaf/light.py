@@ -1,6 +1,7 @@
 """Support for Nanoleaf Lights."""
 from __future__ import annotations
 
+import logging
 import math
 from typing import Any
 
@@ -45,6 +46,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
@@ -187,6 +190,10 @@ class NanoleafLight(LightEntity):
         try:
             await self._nanoleaf.get_info()
         except Unavailable:
+            if self.available:
+                _LOGGER.warning("Could not connect to %s", self.name)
             self._attr_available = False
             return
+        if not self.available:
+            _LOGGER.info("Fetching %s data recovered", self.name)
         self._attr_available = True
