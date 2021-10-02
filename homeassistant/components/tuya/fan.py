@@ -211,7 +211,7 @@ class TuyaHaFan(TuyaHaEntity, FanEntity):
         return self.tuya_device.status[DPCODE_MODE]
 
     @property
-    def percentage(self) -> int:
+    def percentage(self) -> int | None:
         """Return the current speed."""
         if not self.is_on:
             return 0
@@ -228,7 +228,8 @@ class TuyaHaFan(TuyaHaEntity, FanEntity):
                 self.tuya_device.status[DPCODE_AP_FAN_SPEED_ENUM],
             )
 
-        return self.tuya_device.status[DPCODE_FAN_SPEED]
+        #some type may not have the fan_speed_percent key
+        return self.tuya_device.status.get(DPCODE_FAN_SPEED)
 
     @property
     def speed_count(self) -> int:
