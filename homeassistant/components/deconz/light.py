@@ -2,7 +2,14 @@
 
 from __future__ import annotations
 
-from pydeconz.light import Light
+from pydeconz.group import DeconzGroup as Group
+from pydeconz.light import (
+    ALERT_LONG,
+    ALERT_SHORT,
+    EFFECT_COLOR_LOOP,
+    EFFECT_NONE,
+    Light,
+)
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -35,6 +42,8 @@ from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
 DECONZ_GROUP = "is_deconz_group"
+EFFECT_TO_DECONZ = {EFFECT_COLORLOOP: EFFECT_COLOR_LOOP, "None": EFFECT_NONE}
+FLASH_TO_DECONZ = {FLASH_SHORT: ALERT_SHORT, FLASH_LONG: ALERT_LONG}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -126,6 +135,7 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
 
         if device.effect is not None:
             self._attr_supported_features |= SUPPORT_EFFECT
+            self._attr_effect_list = [EFFECT_COLORLOOP]
 
     @property
     def color_mode(self) -> str:
@@ -146,11 +156,6 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         return self._device.brightness
-
-    @property
-    def effect_list(self):
-        """Return the list of supported effects."""
-        return [EFFECT_COLORLOOP]
 
     @property
     def color_temp(self):
@@ -197,19 +202,12 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
         elif "IKEA" in self._device.manufacturer:
             data["transition_time"] = 0
 
-        if ATTR_FLASH in kwargs:
-            if kwargs[ATTR_FLASH] == FLASH_SHORT:
-                data["alert"] = "select"
-                del data["on"]
-            elif kwargs[ATTR_FLASH] == FLASH_LONG:
-                data["alert"] = "lselect"
-                del data["on"]
+        if (alert := FLASH_TO_DECONZ.get(kwargs.get(ATTR_FLASH))) is not None:
+            data["alert"] = alert
+            del data["on"]
 
-        if ATTR_EFFECT in kwargs:
-            if kwargs[ATTR_EFFECT] == EFFECT_COLORLOOP:
-                data["effect"] = "colorloop"
-            else:
-                data["effect"] = "none"
+        if (effect := EFFECT_TO_DECONZ.get(kwargs.get(ATTR_EFFECT))) is not None:
+            data["effect"] = effect
 
         await self._device.set_state(**data)
 
@@ -224,20 +222,16 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
             data["brightness"] = 0
             data["transition_time"] = int(kwargs[ATTR_TRANSITION] * 10)
 
-        if ATTR_FLASH in kwargs:
-            if kwargs[ATTR_FLASH] == FLASH_SHORT:
-                data["alert"] = "select"
-                del data["on"]
-            elif kwargs[ATTR_FLASH] == FLASH_LONG:
-                data["alert"] = "lselect"
-                del data["on"]
+        if (alert := FLASH_TO_DECONZ.get(kwargs.get(ATTR_FLASH))) is not None:
+            data["alert"] = alert
+            del data["on"]
 
         await self._device.set_state(**data)
 
     @property
     def extra_state_attributes(self):
         """Return the device state attributes."""
-        return {DECONZ_GROUP: self._device.type == "LightGroup"}
+        return {DECONZ_GROUP: isinstance(self._device, Group)}
 
 
 class DeconzLight(DeconzBaseLight):
