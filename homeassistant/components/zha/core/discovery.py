@@ -63,8 +63,8 @@ class ProbeEndpoint:
     def discover_entities(self, channel_pool: zha_typing.ChannelPoolType) -> None:
         """Process an endpoint on a zigpy device."""
         self.discover_by_device_type(channel_pool)
-        self.discover_by_cluster_id(channel_pool)
         self.discover_multi_entities(channel_pool)
+        self.discover_by_cluster_id(channel_pool)
 
     @callback
     def discover_by_device_type(self, channel_pool: zha_typing.ChannelPoolType) -> None:
@@ -166,9 +166,11 @@ class ProbeEndpoint:
     def discover_multi_entities(channel_pool: zha_typing.ChannelPoolType) -> None:
         """Process an endpoint on and discover multiple entities."""
 
+        ep_profile_id = channel_pool.endpoint.profile_id
+        ep_device_type = channel_pool.endpoint.device_type
+        cmpt_by_dev_type = zha_regs.DEVICE_CLASS[ep_profile_id].get(ep_device_type)
         remaining_channels = channel_pool.unclaimed_channels()
         for channel in remaining_channels:
-            unique_id = f"{channel_pool.unique_id}-{channel.cluster.cluster_id}"
 
             matches, claimed = zha_regs.ZHA_ENTITIES.get_multi_entity(
                 channel_pool.manufacturer,
@@ -179,11 +181,25 @@ class ProbeEndpoint:
             if not claimed:
                 continue
 
+            unique_id = f"{channel_pool.unique_id}-{channel.cluster.cluster_id}"
             channel_pool.claim_channels(claimed)
             for component, ent_classes_list in matches.items():
+                if component == cmpt_by_dev_type:
+                    unique_id = channel_pool.unique_id
+                    # for well known device types, like thermostats we'll take only 1st class
+                    channel_pool.async_new_entity(
+                        component,
+                        ent_classes_list[0],
+                        channel_pool.unique_id,
+                        claimed,
+                    )
+                    continue
                 for entity_class in ent_classes_list:
                     channel_pool.async_new_entity(
-                        component, entity_class, unique_id, claimed
+                        component,
+                        entity_class,
+                        unique_id,
+                        claimed,
                     )
 
     def initialize(self, hass: HomeAssistant) -> None:

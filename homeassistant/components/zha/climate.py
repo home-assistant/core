@@ -76,6 +76,7 @@ ATTR_UNOCCP_COOL_SETPT = "unoccupied_cooling_setpoint"
 
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
+MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, DOMAIN)
 RUNNING_MODE = {0x00: HVAC_MODE_OFF, 0x03: HVAC_MODE_COOL, 0x04: HVAC_MODE_HEAT}
 
 
@@ -164,7 +165,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
 
-@STRICT_MATCH(channel_names=CHANNEL_THERMOSTAT, aux_channels=CHANNEL_FAN)
+@MULTI_MATCH(channel_names=CHANNEL_THERMOSTAT, aux_channels=CHANNEL_FAN)
 class Thermostat(ZhaEntity, ClimateEntity):
     """Representation of a ZHA Thermostat device."""
 
@@ -519,7 +520,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
         return await handler(enable)
 
 
-@STRICT_MATCH(
+@MULTI_MATCH(
     channel_names={CHANNEL_THERMOSTAT, "sinope_manufacturer_specific"},
     manufacturers="Sinope Technologies",
 )
@@ -570,7 +571,7 @@ class SinopeTechnologiesThermostat(Thermostat):
         return res
 
 
-@STRICT_MATCH(
+@MULTI_MATCH(
     channel_names=CHANNEL_THERMOSTAT,
     aux_channels=CHANNEL_FAN,
     manufacturers="Zen Within",
@@ -599,7 +600,7 @@ class ZenWithinThermostat(Thermostat):
         return CURRENT_HVAC_OFF
 
 
-@STRICT_MATCH(
+@MULTI_MATCH(
     channel_names=CHANNEL_THERMOSTAT,
     aux_channels=CHANNEL_FAN,
     manufacturers="Centralite",
