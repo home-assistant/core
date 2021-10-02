@@ -88,7 +88,7 @@ class OpenGarageCover(CoordinatorEntity, CoverEntity):
 
         self._state = None
         self._state_before_move = None
-        self._extra_state_attributes = {}
+        self._attr_extra_state_attributes = {}
         self._attr_unique_id = self._device_id = device_id
         self._device_name = None
         self._update_attr()
