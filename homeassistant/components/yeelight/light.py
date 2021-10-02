@@ -855,9 +855,8 @@ class YeelightWithoutNightlightSwitchMixIn:
     def color_temp(self) -> int:
         """Return the color temperature."""
         if self.device.is_nightlight_enabled:
-            # Enabling the nightlight locks the colortemp
-            # to max
-            return self.max_mireds
+            # Enabling the nightlight locks the colortemp to max
+            return self._max_mireds
         return super().color_temp
 
 
@@ -908,6 +907,9 @@ class YeelightWithNightLight(
 class YeelightNightLightMode(YeelightGenericLight):
     """Representation of a Yeelight when in nightlight mode."""
 
+    _attr_color_mode = COLOR_MODE_COLOR_TEMP
+    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS, COLOR_MODE_COLOR_TEMP}
+
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
@@ -938,8 +940,30 @@ class YeelightNightLightMode(YeelightGenericLight):
         return PowerMode.MOONLIGHT
 
     @property
-    def _predefined_effects(self):
-        return YEELIGHT_TEMP_ONLY_EFFECT_LIST
+    def effect_list(self):
+        """Disable effects as they turn off the nightlight."""
+        return None
+
+    @property
+    def effect(self):
+        """Disable effects as they turn off the nightlight."""
+        return None
+
+    @property
+    def color_temp(self) -> int:
+        """Return the color temperature.
+
+        The nightlight locks the colortemp to max mireds.
+        """
+        return self._max_mireds
+
+    @property
+    def min_mireds(self) -> int:
+        """Return the color temperature.
+
+        The nightlight locks the colortemp to max mireds.
+        """
+        return self._max_mireds
 
 
 class YeelightNightLightModeWithAmbientSupport(YeelightNightLightMode):
