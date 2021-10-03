@@ -19,13 +19,12 @@ from homeassistant.components.dlna_dmr.const import (
     CONF_CALLBACK_URL_OVERRIDE,
     CONF_LISTEN_PORT,
     CONF_POLL_AVAILABILITY,
-    DEFAULT_NAME,
     DOMAIN as DLNA_DOMAIN,
 )
 from homeassistant.components.dlna_dmr.data import EventListenAddr
 from homeassistant.components.media_player import ATTR_TO_PROPERTY, const as mp_const
 from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, CONF_PLATFORM, CONF_URL
+from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import async_get as async_get_dr
 from homeassistant.helpers.entity_component import async_update_entity
