@@ -85,7 +85,7 @@ class HueEvent(GenericHueDevice):
         # Fire event
         data = {
             CONF_ID: self.event_id,
-            CONF_DEVICE_ID: self.device_id,
+            CONF_DEVICE_ID: self.device_registry_id,
             CONF_UNIQUE_ID: self.unique_id,
             CONF_EVENT: state,
             CONF_LAST_UPDATED: self.sensor.lastupdated,
