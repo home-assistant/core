@@ -518,6 +518,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
 @MULTI_MATCH(
     channel_names={CHANNEL_THERMOSTAT, "sinope_manufacturer_specific"},
     manufacturers="Sinope Technologies",
+    stop_on_match=True,
 )
 class SinopeTechnologiesThermostat(Thermostat):
     """Sinope Technologies Thermostat."""
@@ -570,6 +571,7 @@ class SinopeTechnologiesThermostat(Thermostat):
     channel_names=CHANNEL_THERMOSTAT,
     aux_channels=CHANNEL_FAN,
     manufacturers="Zen Within",
+    stop_on_match=True,
 )
 class ZenWithinThermostat(Thermostat):
     """Zen Within Thermostat implementation."""
@@ -600,6 +602,7 @@ class ZenWithinThermostat(Thermostat):
     aux_channels=CHANNEL_FAN,
     manufacturers="Centralite",
     models="3157100",
+    stop_on_match=True,
 )
 class CentralitePearl(ZenWithinThermostat):
     """Centralite Pearl Thermostat implementation."""

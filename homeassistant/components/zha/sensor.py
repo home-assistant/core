@@ -560,10 +560,16 @@ class ThermostatHVACAction(Sensor):
             return CURRENT_HVAC_IDLE
         return CURRENT_HVAC_OFF
 
+    @callback
+    def async_set_state(self, *args, **kwargs) -> None:
+        """Handle state update from channel."""
+        self.async_write_ha_state()
+
 
 @MULTI_MATCH(
     channel_names=CHANNEL_THERMOSTAT,
     manufacturers="Zen Within",
+    stop_on_match=True,
 )
 class ZenHVACAction(ThermostatHVACAction):
     """Zen Within Thermostat HVAC Action."""

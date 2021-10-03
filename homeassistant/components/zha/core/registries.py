@@ -160,6 +160,8 @@ class MatchRule:
     aux_channels: Callable | set[str] | str = attr.ib(
         factory=frozenset, converter=set_or_callable
     )
+    # for multi entities, stop further processing on a match for a component
+    stop_on_match: bool = attr.ib(default=False)
 
     @property
     def weight(self) -> int:
@@ -298,6 +300,8 @@ class ZHAEntityRegistry:
                         ent_n_channels = EntityClassAndChannels(ent_class, claimed)
                         result[component].append(ent_n_channels)
                     all_claimed |= set(claimed)
+                    if match.stop_on_match:
+                        break
 
         return result, list(all_claimed)
 
@@ -338,11 +342,17 @@ class ZHAEntityRegistry:
         manufacturers: Callable | set[str] | str = None,
         models: Callable | set[str] | str = None,
         aux_channels: Callable | set[str] | str = None,
+        stop_on_match: bool = False,
     ) -> Callable[[CALLABLE_T], CALLABLE_T]:
         """Decorate a loose match rule."""
 
         rule = MatchRule(
-            channel_names, generic_ids, manufacturers, models, aux_channels
+            channel_names,
+            generic_ids,
+            manufacturers,
+            models,
+            aux_channels,
+            stop_on_match,
         )
 
         def decorator(zha_entity: CALLABLE_T) -> CALLABLE_T:
