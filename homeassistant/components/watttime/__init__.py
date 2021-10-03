@@ -27,7 +27,8 @@ PLATFORMS: list[str] = ["sensor"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up WattTime from a config entry."""
-    hass.data.setdefault(DOMAIN, {entry.entry_id: {DATA_COORDINATOR: {}}})
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {}
 
     session = aiohttp_client.async_get_clientsession(hass)
 
