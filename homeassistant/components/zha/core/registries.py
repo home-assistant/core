@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import collections
 from collections.abc import Callable
+import dataclasses
+import logging
 from typing import Dict
 
 import attr
@@ -27,6 +29,7 @@ from . import channels as zha_channels  # noqa: F401 pylint: disable=unused-impo
 from .decorators import CALLABLE_T, DictRegistry, SetRegistry
 from .typing import ChannelType
 
+_LOGGER = logging.getLogger(__name__)
 GROUP_ENTITY_DOMAINS = [LIGHT, SWITCH, FAN]
 
 PHILLIPS_REMOTE_CLUSTER = 0xFC00
@@ -234,6 +237,14 @@ class MatchRule:
         return matches
 
 
+@dataclasses.dataclass
+class EntityClassAndChannels:
+    """Container for entity class and corresponding channels."""
+
+    entity_class: CALLABLE_T
+    claimed_channel: list[ChannelType]
+
+
 RegistryDictType = Dict[str, Dict[MatchRule, CALLABLE_T]]
 
 GroupRegistryDictType = Dict[str, CALLABLE_T]
@@ -245,9 +256,9 @@ class ZHAEntityRegistry:
     def __init__(self):
         """Initialize Registry instance."""
         self._strict_registry: RegistryDictType = collections.defaultdict(dict)
-        self._multi_entity_registry: RegistryDictType = collections.defaultdict(
-            lambda: collections.defaultdict(list)
-        )
+        self._multi_entity_registry: dict[
+            str, dict[MatchRule, list[CALLABLE_T]]
+        ] = collections.defaultdict(lambda: collections.defaultdict(list))
         self._group_registry: GroupRegistryDictType = {}
 
     def get_entity(
@@ -274,19 +285,22 @@ class ZHAEntityRegistry:
         primary_channel: ChannelType,
         aux_channels: list[ChannelType],
         components: set | None = None,
-    ) -> tuple[dict[str, list[CALLABLE_T]], list[ChannelType]]:
+    ) -> tuple[dict[str, list[EntityClassAndChannels]], list[ChannelType]]:
         """Match ZHA Channels to potentially multiple ZHA Entity classes."""
-        result: dict[str, list[CALLABLE_T]] = collections.defaultdict(list)
-        claimed: set[ChannelType] = set()
+        result: dict[str, list[EntityClassAndChannels]] = collections.defaultdict(list)
+        all_claimed: set[ChannelType] = set()
         for component in components or self._multi_entity_registry:
             matches = self._multi_entity_registry[component]
-            for match in sorted(matches, key=lambda x: x.weight, reverse=True):
-                if match.strict_matched(manufacturer, model, [primary_channel]):
-                    claimed |= set(match.claim_channels(aux_channels))
-                    ent_classes = self._multi_entity_registry[component][match]
-                    result[component].extend(ent_classes)
+            sorted_matches = sorted(matches, key=lambda x: x.weight, reverse=True)
+            for match in sorted_matches:
+                if match.strict_matched(manufacturer, model, aux_channels):
+                    claimed = match.claim_channels(aux_channels)
+                    for ent_class in self._multi_entity_registry[component][match]:
+                        ent_n_channels = EntityClassAndChannels(ent_class, claimed)
+                        result[component].append(ent_n_channels)
+                    all_claimed |= set(claimed)
 
-        return result, list(claimed)
+        return result, list(all_claimed)
 
     def get_group_entity(self, component: str) -> CALLABLE_T:
         """Match a ZHA group to a ZHA Entity class."""

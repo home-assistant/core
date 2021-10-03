@@ -183,23 +183,23 @@ class ProbeEndpoint:
 
             unique_id = f"{channel_pool.unique_id}-{channel.cluster.cluster_id}"
             channel_pool.claim_channels(claimed)
-            for component, ent_classes_list in matches.items():
+            for component, ent_n_chan_list in matches.items():
                 if component == cmpt_by_dev_type:
                     unique_id = channel_pool.unique_id
                     # for well known device types, like thermostats we'll take only 1st class
                     channel_pool.async_new_entity(
                         component,
-                        ent_classes_list[0],
+                        ent_n_chan_list[0].entity_class,
                         channel_pool.unique_id,
-                        claimed,
+                        ent_n_chan_list[0].claimed_channel,
                     )
                     continue
-                for entity_class in ent_classes_list:
+                for entity_n_chann in ent_n_chan_list:
                     channel_pool.async_new_entity(
                         component,
-                        entity_class,
+                        entity_n_chann.entity_class,
                         unique_id,
-                        claimed,
+                        entity_n_chann.claimed_channel,
                     )
 
     def initialize(self, hass: HomeAssistant) -> None:

@@ -187,6 +187,7 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
 
         Return entity if it is a supported configuration, otherwise return None
         """
+        zha_device.debug("ZZZZ: creating %s entity", cls.__name__)
         return cls(unique_id, zha_device, channels, **kwargs)
 
     @property
