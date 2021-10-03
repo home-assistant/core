@@ -43,7 +43,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_platform
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -278,21 +277,15 @@ class FluxLight(CoordinatorEntity, LightEntity):
         self._custom_effect_colors = custom_effect_colors
         self._custom_effect_speed_pct = custom_effect_speed_pct
         self._custom_effect_transition = custom_effect_transition
+        old_protocol = self._bulb.protocol == "LEDENET_ORIGINAL"
         if self.unique_id:
-            device_info: DeviceInfo = {
+            self._attr_device_info = {
                 "connections": {(dr.CONNECTION_NETWORK_MAC, self.unique_id)},
+                ATTR_MODEL: f"0x{self._bulb.raw_state[1]:02X}",
+                ATTR_SW_VERSION: "1" if old_protocol else str(self._bulb.raw_state[10]),
                 ATTR_NAME: self.name,
                 ATTR_MANUFACTURER: "FluxLED/Magic Home",
             }
-            if self._bulb.raw_state:
-                device_info[ATTR_MODEL] = f"0x{self._bulb.raw_state[1]:02X}"
-            else:
-                device_info[ATTR_MODEL] = "LED Lights"
-            if self._bulb.protocol != "LEDENET_ORIGINAL" and self._bulb.raw_state:
-                device_info[ATTR_SW_VERSION] = str(self._bulb.raw_state[10])
-            else:
-                device_info[ATTR_SW_VERSION] = "1"
-            self._attr_device_info = device_info
 
     @property
     def is_on(self) -> bool:
