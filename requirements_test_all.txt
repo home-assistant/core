@@ -893,7 +893,7 @@ pyheos==0.7.2
 pyhiveapi==0.4.2
 
 # homeassistant.components.homematic
-pyhomematic==0.1.74
+pyhomematic==0.1.75
 
 # homeassistant.components.ialarm
 pyialarm==1.9.0
