@@ -5,7 +5,7 @@ import collections
 from collections.abc import Callable
 import dataclasses
 import logging
-from typing import Dict
+from typing import Dict, List
 
 import attr
 from zigpy import zcl
@@ -248,7 +248,7 @@ class EntityClassAndChannels:
 
 
 RegistryDictType = Dict[str, Dict[MatchRule, CALLABLE_T]]
-MultiRegistryDictType = dict[str, dict[MatchRule, list[CALLABLE_T]]]
+MultiRegistryDictType = Dict[str, Dict[MatchRule, List[CALLABLE_T]]]
 GroupRegistryDictType = Dict[str, CALLABLE_T]
 
 
