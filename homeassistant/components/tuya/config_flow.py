@@ -27,6 +27,7 @@ RESULT_SINGLE_INSTANCE = "single_instance_allowed"
 RESULT_AUTH_FAILED = "invalid_auth"
 TUYA_ENDPOINT_BASE = "https://openapi.tuyacn.com"
 TUYA_ENDPOINT_OTHER = "https://openapi.tuyaus.com"
+COUNTRY_CODE_CHINA = ["86", "+86", "China"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,8 +58,6 @@ DATA_SCHEMA_SMART_HOME = vol.Schema(
         vol.Required(CONF_PASSWORD): str,
     }
 )
-
-COUNTRY_CODE_CHINA = ["86", "+86", "China"]
 
 class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Tuya Config Flow."""
