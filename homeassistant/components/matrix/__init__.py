@@ -37,6 +37,7 @@ DEFAULT_CONTENT_TYPE = "application/octet-stream"
 EVENT_MATRIX_COMMAND = "matrix_command"
 
 ATTR_IMAGES = "images"  # optional images
+ATTR_VIDEOS = "videos"  # optional videos
 
 COMMAND_SCHEMA = vol.All(
     vol.Schema(
@@ -58,9 +59,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
                 vol.Required(CONF_USERNAME): cv.matches_regex("@[^:]*:.*"),
                 vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_ROOMS, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
-                ),
+                vol.Optional(CONF_ROOMS, default=[]): vol.All(cv.ensure_list, [cv.string]),
                 vol.Optional(CONF_COMMANDS, default=[]): [COMMAND_SCHEMA],
             }
         )
@@ -74,6 +73,7 @@ SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
         vol.Required(ATTR_MESSAGE): cv.string,
         vol.Optional(ATTR_DATA): {
             vol.Optional(ATTR_IMAGES): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(ATTR_VIDEOS): vol.All(cv.ensure_list, [cv.string]),
         },
         vol.Required(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
     }
@@ -242,9 +242,7 @@ class MatrixBot:
                 self._aliases_fetched_for.add(room.room_id)
 
             if room_id_or_alias in room.aliases:
-                _LOGGER.debug(
-                    "Already in room %s (known as %s)", room.room_id, room_id_or_alias
-                )
+                _LOGGER.debug("Already in room %s (known as %s)", room.room_id, room_id_or_alias)
                 return room
 
         room = self._client.join_room(room_id_or_alias)
@@ -256,9 +254,7 @@ class MatrixBot:
         for room_id in self._listening_rooms:
             try:
                 room = self._join_or_get_room(room_id)
-                room.add_listener(
-                    partial(self._handle_room_message, room_id), "m.room.message"
-                )
+                room.add_listener(partial(self._handle_room_message, room_id), "m.room.message")
 
             except MatrixRequestError as ex:
                 _LOGGER.error("Could not join room %s: %s", room_id, ex)
@@ -334,9 +330,7 @@ class MatrixBot:
 
     def _login_by_password(self):
         """Login using password authentication and return the client."""
-        _client = MatrixClient(
-            base_url=self._homeserver, valid_cert_check=self._verify_tls
-        )
+        _client = MatrixClient(base_url=self._homeserver, valid_cert_check=self._verify_tls)
 
         _client.login_with_password(self._mx_id, self._password)
 
@@ -366,6 +360,28 @@ class MatrixBot:
                     ex.content,
                 )
 
+    def _send_video(self, vid, target_rooms):
+        _LOGGER.debug("Uploading file from path, %s", vid)
+
+        if not self.hass.config.is_allowed_path(vid):
+            _LOGGER.error("Path not allowed: %s", vid)
+            return
+        with open(vid, "rb") as upfile:
+            vidfile = upfile.read()
+        content_type = mimetypes.guess_type(vid)[0]
+        mxc = self._client.upload(vidfile, content_type)
+        for target_room in target_rooms:
+            try:
+                room = self._join_or_get_room(target_room)
+                room.send_video(mxc, vid)
+            except MatrixRequestError as ex:
+                _LOGGER.error(
+                    "Unable to deliver message to room '%s': %d, %s",
+                    target_room,
+                    ex.code,
+                    ex.content,
+                )
+
     def _send_message(self, message, data, target_rooms):
         """Send the message to the Matrix server."""
         for target_room in target_rooms:
@@ -383,6 +399,8 @@ class MatrixBot:
         if data is not None:
             for img in data.get(ATTR_IMAGES, []):
                 self._send_image(img, target_rooms)
+            for vid in data.get(ATTR_VIDEOS, []):
+                self._send_video(vid, target_rooms)
 
     def handle_send_message(self, service):
         """Handle the send_message service."""
