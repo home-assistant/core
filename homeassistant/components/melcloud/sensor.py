@@ -75,6 +75,33 @@ ATW_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         value_fn=lambda x: x.device.tank_temperature,
         enabled=lambda x: True,
     ),
+    MelcloudSensorEntityDescription(
+        key="flow_temperature_boiler",
+        name="Boiler Flow Temperature",
+        icon="mdi:thermometer",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        value_fn=lambda x: x.device.flow_temperature_boiler,
+        enabled=lambda x: True,
+    ),
+    MelcloudSensorEntityDescription(
+        key="return_temperature_boiler",
+        name="Boiler Return Temperature",
+        icon="mdi:thermometer",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        value_fn=lambda x: x.device.return_temperature_boiler,
+        enabled=lambda x: True,
+    ),
+    MelcloudSensorEntityDescription(
+        key="mixing_tank_temperature",
+        name="Mixing Tank Temperature",
+        icon="mdi:thermometer",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        value_fn=lambda x: x.device.mixing_tank_temperature,
+        enabled=lambda x: True,
+    ),
 )
 ATW_ZONE_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
     MelcloudSensorEntityDescription(
