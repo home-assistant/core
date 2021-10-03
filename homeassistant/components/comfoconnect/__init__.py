@@ -14,11 +14,11 @@ from homeassistant.const import (
     CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 
-from ...exceptions import ConfigEntryNotReady
 from .const import (
     CONF_USER_AGENT,
     DEFAULT_NAME,
