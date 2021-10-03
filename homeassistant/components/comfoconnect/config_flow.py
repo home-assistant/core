@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_SENSORS, CONF_TOKEN
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from . import ComfoConnectBridge
@@ -17,7 +18,7 @@ from .const import (
     DEFAULT_USER_AGENT,
     DOMAIN,
 )
-from .sensor import ATTR_LABEL, SENSOR_TYPES
+from .sensor import SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,28 +35,20 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-STEP_SENSOR_SELECTION_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_SENSORS): cv.multi_select(
-            {k: sensor_attrs[ATTR_LABEL] for k, sensor_attrs in SENSOR_TYPES.items()}
-        )
-    }
-)
-
 
 async def validate_input(hass, input_data) -> str:
     """Validate the user input by trying to connect to the ComfoConnect bridge."""
     host = input_data[CONF_HOST]
     bridges = await hass.async_add_executor_job(Bridge.discover, host)
     if not bridges:
-        raise ConnectionError()
+        raise ConnectionError(f"No bridges found at host {host}")
     ccb = ComfoConnectBridge(
         hass,
         bridge=bridges[0],
-        name=input_data[CONF_NAME],
-        token=input_data[CONF_TOKEN],
-        friendly_name=input_data[CONF_USER_AGENT],
-        pin=input_data[CONF_PIN],
+        name=input_data.get(CONF_NAME, DEFAULT_NAME),
+        token=input_data.get(CONF_TOKEN, DEFAULT_TOKEN),
+        friendly_name=input_data.get(CONF_USER_AGENT, DEFAULT_USER_AGENT),
+        pin=input_data.get(CONF_PIN, DEFAULT_PIN),
     )
     try:
         await ccb.connect()
@@ -87,31 +80,48 @@ class ComfoConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if unique_id:
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
-                self.context["user"] = user_input
-                return await self.async_step_sensor_selection()
+                return self.async_create_entry(
+                    title=f"ComfoAir {unique_id}",
+                    data=user_input,
+                    options={CONF_SENSORS: self.context.get("import_sensors", [])},
+                )
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-        )
-
-    async def async_step_sensor_selection(self, user_input=None):
-        """Handle sensor selection step."""
-        errors = {}
-        unique_id = self.context["unique_id"]
-        if self.context["source"] == config_entries.SOURCE_IMPORT:
-            user_input = {"sensors": self.context["import_sensors"] or []}
-        if user_input is not None:
-            data = self.context["user"]
-            data["resources"] = user_input["sensors"]
-            return self.async_create_entry(
-                title=f"ComfoAir {unique_id}",
-                data=data,
-            )
-        return self.async_show_form(
-            step_id="sensor_selection",
-            data_schema=STEP_SENSOR_SELECTION_SCHEMA,
-            errors=errors,
         )
 
     async def async_step_import(self, import_config):
         """Handle a flow import."""
         return await self.async_step_user(import_config)
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle ComfoConnect options."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry):
+        """Initialize ComfoConnect options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_SENSORS,
+                        default=self.config_entry.options.get(CONF_SENSORS),
+                    ): cv.multi_select(
+                        {sensor.key: sensor.name for sensor in SENSOR_TYPES}
+                    )
+                }
+            ),
+        )

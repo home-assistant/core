@@ -11,18 +11,22 @@
           "pin": "Pin",
           "user_agent": "User Agent"
         }
-      },
-      "sensor_selection": {
-        "title": "Select sensors to observe",
-        "data": {
-          "sensors": "Sensors"
-        }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Select Sensors to observe",
+        "data": {
+          "sensors": "Sensors"
+        }
+      }
     }
   }
 }

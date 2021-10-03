@@ -10,12 +10,15 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PIN,
+    CONF_SENSORS,
     CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 
+from ...exceptions import ConfigEntryNotReady
 from .const import (
     CONF_USER_AGENT,
     DEFAULT_NAME,
@@ -52,6 +55,8 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the ComfoConnect integration."""
+    if hass.config_entries.async_entries(DOMAIN):
+        return True
     if DOMAIN in config:
         # import configuration using config flow
         sensors = None
@@ -74,16 +79,15 @@ async def async_setup_entry(
 ) -> bool:
     """Set up platform from a ConfigEntry."""
     host = entry.data[CONF_HOST]
-    name = entry.data[CONF_NAME]
-    token = entry.data[CONF_TOKEN]
-    user_agent = entry.data[CONF_USER_AGENT]
-    pin = entry.data[CONF_PIN]
+    name = entry.data.get(CONF_NAME, DEFAULT_NAME)
+    token = entry.data.get(CONF_TOKEN, DEFAULT_TOKEN)
+    user_agent = entry.data.get(CONF_USER_AGENT, DEFAULT_USER_AGENT)
+    pin = entry.data.get(CONF_PIN, DEFAULT_PIN)
 
     # Run discovery on the configured ip
     bridges = await hass.async_add_executor_job(Bridge.discover, host)
     if not bridges:
-        _LOGGER.error("Could not connect to ComfoConnect bridge on %s", host)
-        return False
+        raise ConfigEntryNotReady(f"Could not connect to ComfoConnect bridge on {host}")
     bridge = bridges[0]
     _LOGGER.info("Bridge found: %s (%s)", bridge.uuid.hex(), bridge.host)
 
@@ -99,12 +103,33 @@ async def async_setup_entry(
         await ccb.disconnect()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
+    entry.async_on_unload(entry.add_update_listener(options_update_listener))
 
     for platform in PLATFORM:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
     return True
+
+
+async def options_update_listener(
+    hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
+):
+    """Handle options update."""
+    await hass.config_entries.async_reload(config_entry.entry_id)
+
+    # remove stale entities
+    selected_sensors = {
+        f"{config_entry.unique_id}-{key}"
+        for key in config_entry.options.get(CONF_SENSORS, [])
+    }
+    registry = entity_registry.async_get(hass)
+    entities = entity_registry.async_entries_for_config_entry(
+        registry, config_entry.entry_id
+    )
+    for entity in entities:
+        if entity.unique_id not in selected_sensors:
+            registry.async_remove(entity.entity_id)
 
 
 async def async_unload_entry(hass, entry):

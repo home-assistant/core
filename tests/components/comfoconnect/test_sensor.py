@@ -1,56 +1,15 @@
 """Tests for the comfoconnect sensor platform."""
-# import json
-from unittest.mock import patch
-
 import pytest
 
-from homeassistant.components.sensor import DOMAIN
-from homeassistant.setup import async_setup_component
-
-from tests.common import assert_setup_component
-
-COMPONENT = "comfoconnect"
-VALID_CONFIG = {
-    COMPONENT: {"host": "1.2.3.4"},
-    DOMAIN: {
-        "platform": COMPONENT,
-        "resources": [
-            "current_humidity",
-            "current_temperature",
-            "supply_fan_duty",
-            "power_usage",
-            "preheater_power_total",
-        ],
-    },
-}
-
 
 @pytest.fixture
-def mock_bridge_discover():
-    """Mock the bridge discover method."""
-    with patch("pycomfoconnect.bridge.Bridge.discover") as mock_bridge_discover:
-        mock_bridge_discover.return_value[0].uuid.hex.return_value = "00"
-        yield mock_bridge_discover
-
-
-@pytest.fixture
-def mock_comfoconnect_command():
-    """Mock the ComfoConnect connect method."""
-    with patch(
-        "pycomfoconnect.comfoconnect.ComfoConnect._command"
-    ) as mock_comfoconnect_command:
-        yield mock_comfoconnect_command
-
-
-@pytest.fixture
-async def setup_sensor(hass, mock_bridge_discover, mock_comfoconnect_command):
+async def setup_sensor(mock_bridge, mock_comfoconnect_command, mock_config_entry, hass):
     """Set up demo sensor component."""
-    with assert_setup_component(1, DOMAIN):
-        await async_setup_component(hass, DOMAIN, VALID_CONFIG)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
 
-async def test_sensors(hass, setup_sensor):
+async def test_sensors(setup_sensor, hass):
     """Test the sensors."""
     state = hass.states.get("sensor.comfoairq_inside_humidity")
     assert state is not None

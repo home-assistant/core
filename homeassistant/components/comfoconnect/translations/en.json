@@ -24,5 +24,15 @@
                 "title": "Connection details"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "sensors": "Sensors"
+                },
+                "title": "Select Sensors to observe"
+            }
+        }
     }
 }

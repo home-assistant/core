@@ -37,6 +37,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONF_RESOURCES,
+    CONF_SENSORS,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_POWER,
@@ -290,7 +291,7 @@ async def async_setup_entry(
     sensors = [
         ComfoConnectSensor(ccb=ccb, description=description)
         for description in SENSOR_TYPES
-        if description.key in config_entry.data[CONF_RESOURCES]
+        if description.key in config_entry.options.get(CONF_SENSORS, [])
     ]
 
     async_add_entities(sensors, update_before_add=True)
@@ -332,6 +333,16 @@ class ComfoConnectSensor(SensorEntity):
         await self.hass.async_add_executor_job(
             self._ccb.comfoconnect.register_sensor, self.entity_description.sensor_id
         )
+
+    # async def async_will_remove_from_hass(self) -> None:
+    #     """Unregister sensor from bridge on removal."""
+    #     try:
+    #         await self.hass.async_add_executor_job(
+    #             self._ccb.comfoconnect.unregister_sensor, self.entity_description.sensor_id
+    #         )
+    #     except Exception as exc:
+    #         # No need to unregister, as we're not connected
+    #         pass
 
     def _handle_update(self, value):
         """Handle update callbacks."""
