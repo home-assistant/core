@@ -18,9 +18,10 @@ from .const import (
     CONF_PROJECT_TYPE,
     CONF_USERNAME,
     DOMAIN,
-    TUYA_APP_TYPE,
-    TUYA_ENDPOINT,
-    TUYA_PROJECT_TYPE,
+    TUYA_APP_TYPES,
+    TUYA_ENDPOINTS,
+    TUYA_PROJECT_TYPE_SMART_HOME,
+    TUYA_PROJECT_TYPES,
 )
 
 RESULT_SINGLE_INSTANCE = "single_instance_allowed"
@@ -31,13 +32,17 @@ _LOGGER = logging.getLogger(__name__)
 
 # Project Type
 DATA_SCHEMA_PROJECT_TYPE = vol.Schema(
-    {vol.Required(CONF_PROJECT_TYPE, default=0): vol.In(TUYA_PROJECT_TYPE)}
+    {
+        vol.Required(CONF_PROJECT_TYPE, default=TUYA_PROJECT_TYPE_SMART_HOME): vol.In(
+            TUYA_PROJECT_TYPES.keys()
+        )
+    }
 )
 
 # INDUSTY_SOLUTIONS Schema
 DATA_SCHEMA_INDUSTRY_SOLUTIONS = vol.Schema(
     {
-        vol.Required(CONF_ENDPOINT): vol.In(TUYA_ENDPOINT),
+        vol.Required(CONF_ENDPOINT): vol.In(TUYA_ENDPOINTS.keys()),
         vol.Required(CONF_ACCESS_ID): str,
         vol.Required(CONF_ACCESS_SECRET): str,
         vol.Required(CONF_USERNAME): str,
@@ -50,7 +55,7 @@ DATA_SCHEMA_SMART_HOME = vol.Schema(
     {
         vol.Required(CONF_ACCESS_ID): str,
         vol.Required(CONF_ACCESS_SECRET): str,
-        vol.Required(CONF_APP_TYPE): vol.In(TUYA_APP_TYPE),
+        vol.Required(CONF_APP_TYPE): vol.In(TUYA_APP_TYPES.keys()),
         vol.Required(CONF_COUNTRY_CODE): str,
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
@@ -70,7 +75,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _try_login(user_input):
         project_type = ProjectType(user_input[CONF_PROJECT_TYPE])
         api = TuyaOpenAPI(
-            user_input[CONF_ENDPOINT]
+            TUYA_ENDPOINTS[user_input[CONF_ENDPOINT]]
             if project_type == ProjectType.INDUSTY_SOLUTIONS
             else "",
             user_input[CONF_ACCESS_ID],
@@ -87,7 +92,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_USERNAME],
                 user_input[CONF_PASSWORD],
                 user_input[CONF_COUNTRY_CODE],
-                user_input[CONF_APP_TYPE],
+                TUYA_APP_TYPES[user_input[CONF_APP_TYPE]],
             )
             if response.get("success", False) and isinstance(
                 api.token_info.platform_url, str
@@ -114,7 +119,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             assert self.conf_project_type is not None
-            user_input[CONF_PROJECT_TYPE] = self.conf_project_type
+            user_input[CONF_PROJECT_TYPE] = TUYA_PROJECT_TYPES[self.conf_project_type]
 
             response = await self.hass.async_add_executor_job(
                 self._try_login, user_input
@@ -128,7 +133,10 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             errors["base"] = RESULT_AUTH_FAILED
 
-        if ProjectType(self.conf_project_type) == ProjectType.SMART_HOME:
+        if (
+            ProjectType(TUYA_PROJECT_TYPES[self.conf_project_type])
+            == ProjectType.SMART_HOME
+        ):
             return self.async_show_form(
                 step_id="login", data_schema=DATA_SCHEMA_SMART_HOME, errors=errors
             )
