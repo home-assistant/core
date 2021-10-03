@@ -60,8 +60,6 @@ from .core.const import (
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
-DEPENDENCIES = ["zha"]
-
 ATTR_SYS_MODE = "system_mode"
 ATTR_RUNNING_MODE = "running_mode"
 ATTR_SETPT_CHANGE_SRC = "setpoint_change_source"
@@ -171,9 +169,6 @@ class Thermostat(ZhaEntity, ClimateEntity):
 
     DEFAULT_MAX_TEMP = 35
     DEFAULT_MIN_TEMP = 7
-
-    _domain = DOMAIN
-    value_attribute = 0x0000
 
     def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Initialize ZHA Thermostat instance."""
