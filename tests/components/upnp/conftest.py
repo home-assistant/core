@@ -29,7 +29,6 @@ TEST_DISCOVERY = {
     ssdp.ATTR_SSDP_LOCATION: TEST_LOCATION,
     ssdp.ATTR_SSDP_ST: TEST_ST,
     ssdp.ATTR_SSDP_USN: TEST_USN,
-    ssdp.ATTR_SSDP_UDN: TEST_UDN,
     ssdp.ATTR_UPNP_UDN: TEST_UDN,
     "usn": TEST_USN,
     "location": TEST_LOCATION,
