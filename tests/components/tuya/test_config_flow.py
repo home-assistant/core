@@ -2,6 +2,7 @@
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from tuya_iot.openapi import TuyaTokenInfo
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.tuya.config_flow import RESULT_AUTH_FAILED
@@ -118,7 +119,7 @@ async def test_industry_user(hass, tuya):
     assert not result["result"].unique_id
 
 
-async def test_smart_home_user(hass, tuya):
+async def test_smart_home_user(hass, tuya, caplog):
     """Test smart home user config."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -136,6 +137,7 @@ async def test_smart_home_user(hass, tuya):
     assert result["step_id"] == "login"
 
     tuya().login = MagicMock(return_value={"success": False, "errorCode": 1024})
+    tuya().token_info = TuyaTokenInfo({"platform_url": MOCK_ENDPOINT})
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=TUYA_IMPORT_SMART_HOME_DATA
     )
@@ -149,6 +151,11 @@ async def test_smart_home_user(hass, tuya):
     )
     await hass.async_block_till_done()
 
+    assert (
+        "TuyaConfigFlow.async_step_user login success - {'success': True, 'errorCode': 1024}"
+        in caplog.text
+    )
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == MOCK_USERNAME
     assert result["data"][CONF_ACCESS_ID] == MOCK_ACCESS_ID
@@ -160,7 +167,7 @@ async def test_smart_home_user(hass, tuya):
     assert not result["result"].unique_id
 
 
-async def test_error_on_invalid_credentials(hass, tuya):
+async def test_error_on_invalid_credentials(hass, tuya, caplog):
     """Test when we have invalid credentials."""
 
     result = await hass.config_entries.flow.async_init(
@@ -183,5 +190,10 @@ async def test_error_on_invalid_credentials(hass, tuya):
         result["flow_id"], user_input=TUYA_INPUT_INDUSTRY_DATA
     )
     await hass.async_block_till_done()
+
+    assert (
+        "TuyaConfigFlow.async_step_user login failed - {'success': False, 'errorCode': 1024}"
+        in caplog.text
+    )
 
     assert result["errors"]["base"] == RESULT_AUTH_FAILED

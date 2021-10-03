@@ -95,7 +95,6 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 api.endpoint = api.token_info.platform_url
                 user_input[CONF_ENDPOINT] = api.token_info.platform_url
 
-        _LOGGER.debug("TuyaConfigFlow._try_login finish, response:, %s", response)
         return response
 
     async def async_step_user(self, user_input=None):
@@ -121,12 +120,16 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
             if response.get("success", False):
-                _LOGGER.debug("TuyaConfigFlow.async_step_user login success")
+                _LOGGER.debug(
+                    "TuyaConfigFlow.async_step_user login success - %s",
+                    response,
+                )
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME],
                     data=user_input,
                 )
             errors["base"] = RESULT_AUTH_FAILED
+            _LOGGER.error("TuyaConfigFlow.async_step_user login failed - %s", response)
 
         if ProjectType(self.conf_project_type) == ProjectType.SMART_HOME:
             return self.async_show_form(
