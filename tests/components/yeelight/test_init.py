@@ -13,6 +13,7 @@ from homeassistant.components.yeelight import (
     DATA_DEVICE,
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
+    STATE_CHANGE_TIME,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -458,6 +459,8 @@ async def test_connection_dropped_resyncs_properties(hass: HomeAssistant):
         await hass.async_block_till_done()
         assert len(mocked_bulb.async_get_properties.mock_calls) == 1
         mocked_bulb._async_callback({KEY_CONNECTED: True})
-        await hass.async_block_till_done()
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=STATE_CHANGE_TIME)
+        )
         await hass.async_block_till_done()
         assert len(mocked_bulb.async_get_properties.mock_calls) == 2
