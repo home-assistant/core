@@ -109,7 +109,6 @@ async def test_create_same_entry_twice(hass):
         )
         await hass.async_block_till_done()
 
-        breakpoint()
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {"base": "already_configured"}
 
