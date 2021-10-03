@@ -493,7 +493,7 @@ class FormaldehydeConcentration(Sensor):
 
 
 @MULTI_MATCH(channel_names=CHANNEL_THERMOSTAT)
-class ThermostatHVACAction(Sensor):
+class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
     """Thermostat HVAC action sensor."""
 
     @classmethod
