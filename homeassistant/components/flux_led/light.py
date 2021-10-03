@@ -278,6 +278,21 @@ class FluxLight(CoordinatorEntity, LightEntity):
         self._custom_effect_colors = custom_effect_colors
         self._custom_effect_speed_pct = custom_effect_speed_pct
         self._custom_effect_transition = custom_effect_transition
+        if self.unique_id:
+            device_info: DeviceInfo = {
+                "connections": {(dr.CONNECTION_NETWORK_MAC, self.unique_id)},
+                ATTR_NAME: self.name,
+                ATTR_MANUFACTURER: "FluxLED/Magic Home",
+            }
+            if self._bulb.raw_state:
+                device_info[ATTR_MODEL] = f"0x{self._bulb.raw_state[1]:02X}"
+            else:
+                device_info[ATTR_MODEL] = "LED Lights"
+            if self._bulb.protocol != "LEDENET_ORIGINAL" and self._bulb.raw_state:
+                device_info[ATTR_SW_VERSION] = str(self._bulb.raw_state[10])
+            else:
+                device_info[ATTR_SW_VERSION] = "1"
+            self._attr_device_info = device_info
 
     @property
     def is_on(self) -> bool:
@@ -330,22 +345,6 @@ class FluxLight(CoordinatorEntity, LightEntity):
         return {
             "ip_address": self._ip_address,
         }
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        assert self.unique_id is not None
-        device_info: DeviceInfo = {
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self.unique_id)},
-            ATTR_NAME: self.name,
-            ATTR_MANUFACTURER: "FluxLED/Magic Home",
-            ATTR_MODEL: "LED Lights",
-        }
-        if self._bulb.protocol != "LEDENET_ORIGINAL" and self._bulb.raw_state:
-            device_info[ATTR_SW_VERSION] = str(self._bulb.raw_state[10])
-        else:
-            device_info[ATTR_SW_VERSION] = "1"
-        return device_info
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified or all lights on."""
