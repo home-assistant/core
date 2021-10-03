@@ -1,7 +1,6 @@
 """Support for WattTime sensors."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
@@ -17,8 +16,9 @@ from homeassistant.const import (
     MASS_POUNDS,
     PERCENTAGE,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -35,40 +35,24 @@ ATTR_BALANCING_AUTHORITY = "balancing_authority"
 
 DEFAULT_ATTRIBUTION = "Pickup data provided by WattTime"
 
-SENSOR_TYPE_REALTIME_EMISSIONS_MOER = "realtime_emissions_moer"
-SENSOR_TYPE_REALTIME_EMISSIONS_PERCENT = "realtime_emissions_percent"
-
-
-@dataclass
-class RealtimeEmissionsSensorDescriptionMixin:
-    """Define an entity description mixin for realtime emissions sensors."""
-
-    data_key: str
-
-
-@dataclass
-class RealtimeEmissionsSensorEntityDescription(
-    SensorEntityDescription, RealtimeEmissionsSensorDescriptionMixin
-):
-    """Describe a realtime emissions sensor."""
+SENSOR_TYPE_REALTIME_EMISSIONS_MOER = "moer"
+SENSOR_TYPE_REALTIME_EMISSIONS_PERCENT = "percent"
 
 
 REALTIME_EMISSIONS_SENSOR_DESCRIPTIONS = (
-    RealtimeEmissionsSensorEntityDescription(
+    SensorEntityDescription(
         key=SENSOR_TYPE_REALTIME_EMISSIONS_MOER,
         name="Marginal Operating Emissions Rate",
         icon="mdi:blur",
         native_unit_of_measurement=f"{MASS_POUNDS} CO2/MWh",
         state_class=STATE_CLASS_MEASUREMENT,
-        data_key="moer",
     ),
-    RealtimeEmissionsSensorEntityDescription(
+    SensorEntityDescription(
         key=SENSOR_TYPE_REALTIME_EMISSIONS_PERCENT,
         name="Relative Marginal Emissions Intensity",
         icon="mdi:blur",
         native_unit_of_measurement=PERCENTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
-        data_key="percent",
     ),
 )
 
@@ -77,12 +61,12 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up WattTime sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id]
+    coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
     async_add_entities(
         [
             RealtimeEmissionsSensor(coordinator, description)
             for description in REALTIME_EMISSIONS_SENSOR_DESCRIPTIONS
-            if description.data_key in coordinator.data
+            if description.key in coordinator.data
         ]
     )
 
@@ -90,12 +74,10 @@ async def async_setup_entry(
 class RealtimeEmissionsSensor(CoordinatorEntity, SensorEntity):
     """Define a realtime emissions sensor."""
 
-    entity_description: RealtimeEmissionsSensorEntityDescription
-
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
-        description: RealtimeEmissionsSensorEntityDescription,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -115,20 +97,7 @@ class RealtimeEmissionsSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
         self.entity_description = description
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Respond to a DataUpdateCoordinator update."""
-        self.update_from_latest_data()
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        self.update_from_latest_data()
-
-    @callback
-    def update_from_latest_data(self) -> None:
-        """Update the state."""
-        self._attr_native_value = self.coordinator.data[
-            self.entity_description.data_key
-        ]
+    @property
+    def native_value(self) -> StateType:
+        """Return the value reported by the sensor."""
+        return self.coordinator.data[self.entity_description.key]

@@ -1,4 +1,5 @@
 """Base class for deCONZ devices."""
+
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect

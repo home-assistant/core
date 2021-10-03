@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from statistics import mean
+from typing import NamedTuple
 
 import numpy as np
 
@@ -53,12 +54,21 @@ API_CATEGORY_MAPPING = {
     TYPE_DISEASE_TODAY: TYPE_DISEASE_INDEX,
 }
 
-RATING_MAPPING = [
-    {"label": "Low", "minimum": 0.0, "maximum": 2.4},
-    {"label": "Low/Medium", "minimum": 2.5, "maximum": 4.8},
-    {"label": "Medium", "minimum": 4.9, "maximum": 7.2},
-    {"label": "Medium/High", "minimum": 7.3, "maximum": 9.6},
-    {"label": "High", "minimum": 9.7, "maximum": 12},
+
+class Rating(NamedTuple):
+    """Assign label to value range."""
+
+    label: str
+    minimum: float
+    maximum: float
+
+
+RATING_MAPPING: list[Rating] = [
+    Rating(label="Low", minimum=0.0, maximum=2.4),
+    Rating(label="Low/Medium", minimum=2.5, maximum=4.8),
+    Rating(label="Medium", minimum=4.9, maximum=7.2),
+    Rating(label="Medium/High", minimum=7.3, maximum=9.6),
+    Rating(label="High", minimum=9.7, maximum=12),
 ]
 
 
@@ -182,9 +192,7 @@ class ForecastSensor(IQVIAEntity, SensorEntity):
         indices = [p["Index"] for p in data["periods"]]
         average = round(mean(indices), 1)
         [rating] = [
-            i["label"]
-            for i in RATING_MAPPING
-            if i["minimum"] <= average <= i["maximum"]
+            i.label for i in RATING_MAPPING if i.minimum <= average <= i.maximum
         ]
 
         self._attr_native_value = average
@@ -247,9 +255,7 @@ class IndexSensor(IQVIAEntity, SensorEntity):
             return
 
         [rating] = [
-            i["label"]
-            for i in RATING_MAPPING
-            if i["minimum"] <= period["Index"] <= i["maximum"]
+            i.label for i in RATING_MAPPING if i.minimum <= period["Index"] <= i.maximum
         ]
 
         self._attr_extra_state_attributes.update(

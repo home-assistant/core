@@ -1,10 +1,10 @@
 """Support for deCONZ sensors."""
 from pydeconz.sensor import (
-    AncillaryControl,
+    AirQuality,
     Battery,
     Consumption,
     Daylight,
-    DoorLock,
+    GenericStatus,
     Humidity,
     LightLevel,
     Power,
@@ -12,6 +12,7 @@ from pydeconz.sensor import (
     Switch,
     Temperature,
     Thermostat,
+    Time,
 )
 
 from homeassistant.components.sensor import (
@@ -48,6 +49,19 @@ from .const import ATTR_DARK, ATTR_ON, NEW_SENSOR
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
+DECONZ_SENSORS = (
+    AirQuality,
+    Consumption,
+    Daylight,
+    GenericStatus,
+    Humidity,
+    LightLevel,
+    Power,
+    Pressure,
+    Temperature,
+    Time,
+)
+
 ATTR_CURRENT = "current"
 ATTR_POWER = "power"
 ATTR_DAYLIGHT = "daylight"
@@ -58,13 +72,13 @@ ENTITY_DESCRIPTIONS = {
         key="battery",
         device_class=DEVICE_CLASS_BATTERY,
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
     ),
     Consumption: SensorEntityDescription(
         key="consumption",
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
     ),
     Daylight: SensorEntityDescription(
         key="daylight",
@@ -75,30 +89,30 @@ ENTITY_DESCRIPTIONS = {
         key="humidity",
         device_class=DEVICE_CLASS_HUMIDITY,
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
     ),
     LightLevel: SensorEntityDescription(
         key="lightlevel",
         device_class=DEVICE_CLASS_ILLUMINANCE,
-        unit_of_measurement=LIGHT_LUX,
+        native_unit_of_measurement=LIGHT_LUX,
     ),
     Power: SensorEntityDescription(
         key="power",
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=POWER_WATT,
     ),
     Pressure: SensorEntityDescription(
         key="pressure",
         device_class=DEVICE_CLASS_PRESSURE,
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=PRESSURE_HPA,
     ),
     Temperature: SensorEntityDescription(
         key="temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
     ),
 }
 
@@ -136,13 +150,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 battery_handler.create_tracker(sensor)
 
             if (
-                not sensor.BINARY
-                and sensor.type
-                not in AncillaryControl.ZHATYPE
-                + Battery.ZHATYPE
-                + DoorLock.ZHATYPE
-                + Switch.ZHATYPE
-                + Thermostat.ZHATYPE
+                isinstance(sensor, DECONZ_SENSORS)
+                and not isinstance(sensor, Thermostat)
                 and sensor.unique_id not in gateway.entities[DOMAIN]
             ):
                 entities.append(DeconzSensor(sensor, gateway))
@@ -301,7 +310,7 @@ class DeconzBattery(DeconzDevice, SensorEntity):
         """Return the state attributes of the battery."""
         attr = {}
 
-        if self._device.type in Switch.ZHATYPE:
+        if isinstance(self._device, Switch):
             for event in self.gateway.events:
                 if self._device == event.device:
                     attr[ATTR_EVENT_ID] = event.event_id

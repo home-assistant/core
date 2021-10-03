@@ -1,5 +1,14 @@
 """Support for deCONZ binary sensors."""
-from pydeconz.sensor import CarbonMonoxide, Fire, OpenClose, Presence, Vibration, Water
+from pydeconz.sensor import (
+    Alarm,
+    CarbonMonoxide,
+    Fire,
+    GenericFlag,
+    OpenClose,
+    Presence,
+    Vibration,
+    Water,
+)
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_GAS,
@@ -20,6 +29,17 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import ATTR_DARK, ATTR_ON, NEW_SENSOR
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
+
+DECONZ_BINARY_SENSORS = (
+    Alarm,
+    CarbonMonoxide,
+    Fire,
+    GenericFlag,
+    OpenClose,
+    Presence,
+    Vibration,
+    Water,
+)
 
 ATTR_ORIENTATION = "orientation"
 ATTR_TILTANGLE = "tiltangle"
@@ -65,13 +85,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         for sensor in sensors:
 
+            if not gateway.option_allow_clip_sensor and sensor.type.startswith("CLIP"):
+                continue
+
             if (
-                sensor.BINARY
+                isinstance(sensor, DECONZ_BINARY_SENSORS)
                 and sensor.unique_id not in gateway.entities[DOMAIN]
-                and (
-                    gateway.option_allow_clip_sensor
-                    or not sensor.type.startswith("CLIP")
-                )
             ):
                 entities.append(DeconzBinarySensor(sensor, gateway))
 

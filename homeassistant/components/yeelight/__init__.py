@@ -36,6 +36,9 @@ from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
+STATE_CHANGE_TIME = 0.25  # seconds
+
+
 DOMAIN = "yeelight"
 DATA_YEELIGHT = DOMAIN
 DATA_UPDATED = "yeelight_{}_data_updated"
@@ -303,17 +306,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    data_config_entries = hass.data[DOMAIN][DATA_CONFIG_ENTRIES]
-    entry_data = data_config_entries[entry.entry_id]
-
-    if entry_data[DATA_PLATFORMS_LOADED]:
-        if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-            return False
-
     if entry.data.get(CONF_ID):
         # discovery
         scanner = YeelightScanner.async_get(hass)
         scanner.async_unregister_callback(entry.data[CONF_ID])
+
+    data_config_entries = hass.data[DOMAIN][DATA_CONFIG_ENTRIES]
+    if entry.entry_id not in data_config_entries:
+        # Device not online
+        return True
+
+    entry_data = data_config_entries[entry.entry_id]
+    unload_ok = True
+    if entry_data[DATA_PLATFORMS_LOADED]:
+        unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if DATA_DEVICE in entry_data:
         device = entry_data[DATA_DEVICE]
@@ -322,8 +328,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.debug("Yeelight Listener stopped")
 
     data_config_entries.pop(entry.entry_id)
-
-    return True
+    return unload_ok
 
 
 @callback
@@ -544,6 +549,17 @@ class YeelightScanner:
             self._async_stop_scan()
 
 
+def update_needs_bg_power_workaround(data):
+    """Check if a push update needs the bg_power workaround.
+
+    Some devices will push the incorrect state for bg_power.
+
+    To work around this any time we are pushed an update
+    with bg_power, we force poll state which will be correct.
+    """
+    return "bg_power" in data
+
+
 class YeelightDevice:
     """Represents single Yeelight device."""
 
@@ -690,12 +706,18 @@ class YeelightDevice:
         await self._async_update_properties()
         async_dispatcher_send(self._hass, DATA_UPDATED.format(self._host))
 
+    async def _async_forced_update(self, _now):
+        """Call a forced update."""
+        await self.async_update(True)
+
     @callback
     def async_update_callback(self, data):
         """Update push from device."""
         was_available = self._available
         self._available = data.get(KEY_CONNECTED, True)
-        if self._did_first_update and not was_available and self._available:
+        if update_needs_bg_power_workaround(data) or (
+            self._did_first_update and not was_available and self._available
+        ):
             # On reconnect the properties may be out of sync
             #
             # We need to make sure the DEVICE_INITIALIZED dispatcher is setup
@@ -706,7 +728,7 @@ class YeelightDevice:
             # to be called when async_setup_entry reaches the end of the
             # function
             #
-            asyncio.create_task(self.async_update(True))
+            async_call_later(self._hass, STATE_CHANGE_TIME, self._async_forced_update)
         async_dispatcher_send(self._hass, DATA_UPDATED.format(self._host))
 
 

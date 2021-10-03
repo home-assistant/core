@@ -9,11 +9,11 @@ from __future__ import annotations
 
 from abc import ABC, ABCMeta, abstractmethod
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 import logging
 import secrets
 import time
-from typing import Any, Callable, Dict, cast
+from typing import Any, Dict, cast
 
 from aiohttp import client, web
 import async_timeout

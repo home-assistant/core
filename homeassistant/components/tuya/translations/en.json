@@ -10,15 +10,29 @@
         },
         "flow_title": "Tuya configuration",
         "step": {
+            "login": {
+                "data": {
+                    "access_id": "Access ID",
+                    "access_secret": "Access Secret",
+                    "country_code": "Country Code",
+                    "endpoint": "Availability Zone",
+                    "password": "Password",
+                    "tuya_app_type": "Mobile App",
+                    "username": "Account"
+                },
+                "description": "Enter your Tuya credential",
+                "title": "Tuya"
+            },
             "user": {
                 "data": {
                     "country_code": "Your account country code (e.g., 1 for USA or 86 for China)",
                     "password": "Password",
                     "platform": "The app where your account is registered",
+                    "tuya_project_type": "Tuya cloud project type",
                     "username": "Username"
                 },
                 "description": "Enter your Tuya credentials.",
-                "title": "Tuya"
+                "title": "Tuya Integration"
             }
         }
     },

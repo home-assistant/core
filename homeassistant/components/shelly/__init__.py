@@ -320,9 +320,11 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
     async def _async_update_data(self) -> None:
         """Fetch data."""
-        if self.entry.data.get("sleep_period"):
+        if sleep_period := self.entry.data.get("sleep_period"):
             # Sleeping device, no point polling it, just mark it unavailable
-            raise update_coordinator.UpdateFailed("Sleeping device did not update")
+            raise update_coordinator.UpdateFailed(
+                f"Sleeping device did not update within {sleep_period} seconds interval"
+            )
 
         _LOGGER.debug("Polling Shelly Block Device - %s", self.name)
         try:

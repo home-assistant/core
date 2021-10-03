@@ -42,7 +42,7 @@ ATTR_NEW_SERIAL_NUMBER = "NewSerialNumber"
 
 MOCK_HOST = "fake_host"
 MOCK_SERIAL_NUMBER = "fake_serial_number"
-
+MOCK_FIRMWARE_INFO = [True, "1.1.1"]
 
 MOCK_USER_DATA = MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]
 MOCK_DEVICE_INFO = {
@@ -73,6 +73,9 @@ async def test_user(hass: HomeAssistant, fc_class_mock, mock_get_source_ip):
         "homeassistant.components.fritz.common.FritzConnection",
         side_effect=fc_class_mock,
     ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
+        "homeassistant.components.fritz.common.FritzBoxTools._update_device_info",
+        return_value=MOCK_FIRMWARE_INFO,
+    ), patch(
         "homeassistant.components.fritz.async_setup_entry"
     ) as mock_setup_entry, patch(
         "requests.get"
@@ -120,6 +123,9 @@ async def test_user_already_configured(
         "homeassistant.components.fritz.common.FritzConnection",
         side_effect=fc_class_mock,
     ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
+        "homeassistant.components.fritz.common.FritzBoxTools._update_device_info",
+        return_value=MOCK_FIRMWARE_INFO,
+    ), patch(
         "requests.get"
     ) as mock_request_get, patch(
         "requests.post"
@@ -225,6 +231,9 @@ async def test_reauth_successful(
         "homeassistant.components.fritz.common.FritzConnection",
         side_effect=fc_class_mock,
     ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
+        "homeassistant.components.fritz.common.FritzBoxTools._update_device_info",
+        return_value=MOCK_FIRMWARE_INFO,
+    ), patch(
         "homeassistant.components.fritz.async_setup_entry"
     ) as mock_setup_entry, patch(
         "requests.get"
@@ -397,6 +406,9 @@ async def test_ssdp(hass: HomeAssistant, fc_class_mock, mock_get_source_ip):
         "homeassistant.components.fritz.common.FritzConnection",
         side_effect=fc_class_mock,
     ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
+        "homeassistant.components.fritz.common.FritzBoxTools._update_device_info",
+        return_value=MOCK_FIRMWARE_INFO,
+    ), patch(
         "homeassistant.components.fritz.async_setup_entry"
     ) as mock_setup_entry, patch(
         "requests.get"
@@ -462,6 +474,9 @@ async def test_import(hass: HomeAssistant, fc_class_mock, mock_get_source_ip):
         "homeassistant.components.fritz.common.FritzConnection",
         side_effect=fc_class_mock,
     ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
+        "homeassistant.components.fritz.common.FritzBoxTools._update_device_info",
+        return_value=MOCK_FIRMWARE_INFO,
+    ), patch(
         "homeassistant.components.fritz.async_setup_entry"
     ) as mock_setup_entry, patch(
         "requests.get"

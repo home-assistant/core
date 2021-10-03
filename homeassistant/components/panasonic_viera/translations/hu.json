@@ -14,7 +14,7 @@
                 "data": {
                     "pin": "PIN-k\u00f3d"
                 },
-                "description": "Add meg a TV-k\u00e9sz\u00fcl\u00e9ken megjelen\u0151 PIN-k\u00f3dot",
+                "description": "Adja meg a TV-k\u00e9sz\u00fcl\u00e9ken megjelen\u0151 PIN-k\u00f3dot",
                 "title": "P\u00e1ros\u00edt\u00e1s"
             },
             "user": {
@@ -22,7 +22,7 @@
                     "host": "IP c\u00edm",
                     "name": "N\u00e9v"
                 },
-                "description": "Add meg a Panasonic Viera TV-hez tartoz\u00f3 IP c\u00edmet",
+                "description": "Adja meg a Panasonic Viera TV-hez tartoz\u00f3 IP c\u00edmet",
                 "title": "A TV be\u00e1ll\u00edt\u00e1sa"
             }
         }

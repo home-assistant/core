@@ -6,7 +6,7 @@
             "webhook_not_internet_accessible": "Tu instancia de Home Assistant debe estar accesible desde Internet para recibir mensajes webhook."
         },
         "create_entry": {
-            "default": "Para enviar eventos a Home Assistant, necesitar\u00e1s configurar la funci\u00f3n de webhook en Plaato Airlock.\n\nCompleta la siguiente informaci\u00f3n:\n\n- URL: `{webhook_url}`\n- M\u00e9todo: POST\n\nEcha un vistazo a [la documentaci\u00f3n]({docs_url}) para m\u00e1s detalles."
+            "default": "\u00a1Tu Plaato {device_type} con nombre **{device_name}** se configur\u00f3 correctamente!"
         },
         "error": {
             "invalid_webhook_device": "Has seleccionado un dispositivo que no admite el env\u00edo de datos a un webhook. Solo est\u00e1 disponible para Airlock",

@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, Callable, Final, cast
+from typing import Any, Final, cast
 
 from aioshelly.block_device import Block
 import async_timeout

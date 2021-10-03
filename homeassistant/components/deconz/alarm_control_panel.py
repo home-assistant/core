@@ -76,7 +76,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
         for sensor in sensors:
 
             if (
-                sensor.type in AncillaryControl.ZHATYPE
+                isinstance(sensor, AncillaryControl)
                 and sensor.unique_id not in gateway.entities[DOMAIN]
                 and get_alarm_system_for_unique_id(gateway, sensor.unique_id)
             ):

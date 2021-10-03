@@ -1,9 +1,10 @@
 """The Synology DSM component."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import Any, Callable
+from typing import Any
 
 import async_timeout
 from synology_dsm import SynologyDSM

@@ -15,8 +15,17 @@ from homeassistant.components.filter.sensor import (
     TimeSMAFilter,
     TimeThrottleFilter,
 )
-from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE
-from homeassistant.const import SERVICE_RELOAD, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    DEVICE_CLASS_TEMPERATURE,
+    STATE_CLASS_TOTAL_INCREASING,
+)
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    SERVICE_RELOAD,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -264,12 +273,17 @@ async def test_setup(hass):
         hass.states.async_set(
             "sensor.test_monitored",
             1,
-            {"icon": "mdi:test", "device_class": DEVICE_CLASS_TEMPERATURE},
+            {
+                "icon": "mdi:test",
+                ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+                ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+            },
         )
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test")
         assert state.attributes["icon"] == "mdi:test"
-        assert state.attributes["device_class"] == DEVICE_CLASS_TEMPERATURE
+        assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TEMPERATURE
+        assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_TOTAL_INCREASING
         assert state.state == "1.0"
 
 
