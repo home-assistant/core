@@ -1,15 +1,20 @@
 """Support for Tractive binary sensors."""
 from __future__ import annotations
 
+from typing import Any, Final
+
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY_CHARGING,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_BATTERY_CHARGING
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import Trackables
 from .const import (
     CLIENT,
     DOMAIN,
@@ -19,34 +24,36 @@ from .const import (
 )
 from .entity import TractiveEntity
 
-TRACKERS_WITH_BUILTIN_BATTERY = ("TRNJA4", "TRAXL1")
+TRACKERS_WITH_BUILTIN_BATTERY: Final = ("TRNJA4", "TRAXL1")
 
 
 class TractiveBinarySensor(TractiveEntity, BinarySensorEntity):
     """Tractive sensor."""
 
-    def __init__(self, user_id, trackable, tracker_details, unique_id, description):
+    def __init__(
+        self, user_id: str, item: Trackables, description: BinarySensorEntityDescription
+    ) -> None:
         """Initialize sensor entity."""
-        super().__init__(user_id, trackable, tracker_details)
+        super().__init__(user_id, item.trackable, item.tracker_details)
 
-        self._attr_name = f"{trackable['details']['name']} {description.name}"
-        self._attr_unique_id = unique_id
+        self._attr_name = f"{item.trackable['details']['name']} {description.name}"
+        self._attr_unique_id = f"{item.trackable['_id']}_{description.key}"
         self.entity_description = description
 
     @callback
-    def handle_server_unavailable(self):
+    def handle_server_unavailable(self) -> None:
         """Handle server unavailable."""
         self._attr_available = False
         self.async_write_ha_state()
 
     @callback
-    def handle_hardware_status_update(self, event):
+    def handle_hardware_status_update(self, event: dict[str, Any]) -> None:
         """Handle hardware status update."""
         self._attr_is_on = event[self.entity_description.key]
         self._attr_available = True
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
 
         self.async_on_remove(
@@ -66,31 +73,24 @@ class TractiveBinarySensor(TractiveEntity, BinarySensorEntity):
         )
 
 
-SENSOR_TYPE = BinarySensorEntityDescription(
+SENSOR_TYPE: Final = BinarySensorEntityDescription(
     key=ATTR_BATTERY_CHARGING,
     name="Battery Charging",
     device_class=DEVICE_CLASS_BATTERY_CHARGING,
 )
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Tractive device trackers."""
     client = hass.data[DOMAIN][entry.entry_id][CLIENT]
     trackables = hass.data[DOMAIN][entry.entry_id][TRACKABLES]
 
-    entities = []
-
-    for item in trackables:
-        if item.tracker_details["model_number"] not in TRACKERS_WITH_BUILTIN_BATTERY:
-            continue
-        entities.append(
-            TractiveBinarySensor(
-                client.user_id,
-                item.trackable,
-                item.tracker_details,
-                f"{item.trackable['_id']}_{SENSOR_TYPE.key}",
-                SENSOR_TYPE,
-            )
-        )
+    entities = [
+        TractiveBinarySensor(client.user_id, item, SENSOR_TYPE)
+        for item in trackables
+        if item.tracker_details["model_number"] in TRACKERS_WITH_BUILTIN_BATTERY
+    ]
 
     async_add_entities(entities)

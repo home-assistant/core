@@ -73,7 +73,6 @@ SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {
     zcl.clusters.general.MultistateInput.cluster_id: SENSOR,
     zcl.clusters.general.OnOff.cluster_id: SWITCH,
     zcl.clusters.general.PowerConfiguration.cluster_id: SENSOR,
-    zcl.clusters.homeautomation.ElectricalMeasurement.cluster_id: SENSOR,
     zcl.clusters.hvac.Fan.cluster_id: FAN,
     zcl.clusters.measurement.CarbonDioxideConcentration.cluster_id: SENSOR,
     zcl.clusters.measurement.CarbonMonoxideConcentration.cluster_id: SENSOR,

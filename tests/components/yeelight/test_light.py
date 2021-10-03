@@ -701,9 +701,10 @@ async def test_device_types(hass: HomeAssistant, caplog):
         bulb_type,
         model,
         target_properties,
-        nightlight_properties=None,
+        nightlight_entity_properties=None,
         name=UNIQUE_FRIENDLY_NAME,
         entity_id=ENTITY_LIGHT,
+        nightlight_mode_properties=None,
     ):
         config_entry = MockConfigEntry(
             domain=DOMAIN, data={**CONFIG_ENTRY_DATA, CONF_NIGHTLIGHT_SWITCH: False}
@@ -714,6 +715,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
         model_specs = _MODEL_SPECS.get(model)
         type(mocked_bulb).get_model_specs = MagicMock(return_value=model_specs)
         original_nightlight_brightness = mocked_bulb.last_properties["nl_br"]
+
         mocked_bulb.last_properties["nl_br"] = "0"
         await _async_setup(config_entry)
 
@@ -725,36 +727,53 @@ async def test_device_types(hass: HomeAssistant, caplog):
         target_properties["night_light"] = False
         target_properties["music_mode"] = False
         assert dict(state.attributes) == target_properties
-
         await hass.config_entries.async_unload(config_entry.entry_id)
         await config_entry.async_remove(hass)
         registry = er.async_get(hass)
         registry.async_clear_config_entry(config_entry.entry_id)
-
-        # nightlight
         mocked_bulb.last_properties["nl_br"] = original_nightlight_brightness
-        if nightlight_properties is None:
-            return
-        config_entry = MockConfigEntry(
-            domain=DOMAIN, data={**CONFIG_ENTRY_DATA, CONF_NIGHTLIGHT_SWITCH: True}
-        )
-        config_entry.add_to_hass(hass)
-        await _async_setup(config_entry)
 
-        assert hass.states.get(entity_id).state == "off"
-        state = hass.states.get(f"{entity_id}_nightlight")
-        assert state.state == "on"
-        nightlight_properties["friendly_name"] = f"{name} Nightlight"
-        nightlight_properties["icon"] = "mdi:weather-night"
-        nightlight_properties["flowing"] = False
-        nightlight_properties["night_light"] = True
-        nightlight_properties["music_mode"] = False
-        assert dict(state.attributes) == nightlight_properties
+        # nightlight as a setting of the main entity
+        if nightlight_mode_properties is not None:
+            mocked_bulb.last_properties["active_mode"] = True
+            config_entry.add_to_hass(hass)
+            await _async_setup(config_entry)
+            state = hass.states.get(entity_id)
+            assert state.state == "on"
+            nightlight_mode_properties["friendly_name"] = name
+            nightlight_mode_properties["flowing"] = False
+            nightlight_mode_properties["night_light"] = True
+            nightlight_mode_properties["music_mode"] = False
+            assert dict(state.attributes) == nightlight_mode_properties
 
-        await hass.config_entries.async_unload(config_entry.entry_id)
-        await config_entry.async_remove(hass)
-        registry.async_clear_config_entry(config_entry.entry_id)
-        await hass.async_block_till_done()
+            await hass.config_entries.async_unload(config_entry.entry_id)
+            await config_entry.async_remove(hass)
+            registry.async_clear_config_entry(config_entry.entry_id)
+            await hass.async_block_till_done()
+            mocked_bulb.last_properties.pop("active_mode")
+
+        # nightlight as a separate entity
+        if nightlight_entity_properties is not None:
+            config_entry = MockConfigEntry(
+                domain=DOMAIN, data={**CONFIG_ENTRY_DATA, CONF_NIGHTLIGHT_SWITCH: True}
+            )
+            config_entry.add_to_hass(hass)
+            await _async_setup(config_entry)
+
+            assert hass.states.get(entity_id).state == "off"
+            state = hass.states.get(f"{entity_id}_nightlight")
+            assert state.state == "on"
+            nightlight_entity_properties["friendly_name"] = f"{name} Nightlight"
+            nightlight_entity_properties["icon"] = "mdi:weather-night"
+            nightlight_entity_properties["flowing"] = False
+            nightlight_entity_properties["night_light"] = True
+            nightlight_entity_properties["music_mode"] = False
+            assert dict(state.attributes) == nightlight_entity_properties
+
+            await hass.config_entries.async_unload(config_entry.entry_id)
+            await config_entry.async_remove(hass)
+            registry.async_clear_config_entry(config_entry.entry_id)
+            await hass.async_block_till_done()
 
     bright = round(255 * int(PROPERTIES["bright"]) / 100)
     ct = color_temperature_kelvin_to_mired(int(PROPERTIES["ct"]))
@@ -821,10 +840,29 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "rgb_color": (255, 205, 166),
             "xy_color": (0.421, 0.364),
         },
-        {
+        nightlight_entity_properties={
             "supported_features": 0,
             "color_mode": "onoff",
             "supported_color_modes": ["onoff"],
+        },
+        nightlight_mode_properties={
+            "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
+            "supported_features": SUPPORT_YEELIGHT,
+            "hs_color": (28.401, 100.0),
+            "rgb_color": (255, 120, 0),
+            "xy_color": (0.621, 0.367),
+            "min_mireds": color_temperature_kelvin_to_mired(
+                model_specs["color_temp"]["max"]
+            ),
+            "max_mireds": color_temperature_kelvin_to_mired(
+                model_specs["color_temp"]["min"]
+            ),
+            "brightness": nl_br,
+            "color_mode": "color_temp",
+            "supported_color_modes": ["color_temp", "hs", "rgb"],
+            "color_temp": color_temperature_kelvin_to_mired(
+                model_specs["color_temp"]["min"]
+            ),
         },
     )
 
@@ -850,7 +888,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "color_mode": "hs",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
-        {
+        nightlight_entity_properties={
             "supported_features": 0,
             "color_mode": "onoff",
             "supported_color_modes": ["onoff"],
@@ -879,7 +917,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "color_mode": "rgb",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
-        {
+        nightlight_entity_properties={
             "supported_features": 0,
             "color_mode": "onoff",
             "supported_color_modes": ["onoff"],
@@ -906,7 +944,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "color_mode": "hs",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
-        {
+        nightlight_entity_properties={
             "supported_features": 0,
             "color_mode": "onoff",
             "supported_color_modes": ["onoff"],
@@ -933,7 +971,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "color_mode": "rgb",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
-        {
+        nightlight_entity_properties={
             "supported_features": 0,
             "color_mode": "onoff",
             "supported_color_modes": ["onoff"],
@@ -988,11 +1026,30 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "rgb_color": (255, 205, 166),
             "xy_color": (0.421, 0.364),
         },
-        {
+        nightlight_entity_properties={
             "supported_features": 0,
             "brightness": nl_br,
             "color_mode": "brightness",
             "supported_color_modes": ["brightness"],
+        },
+        nightlight_mode_properties={
+            "effect_list": YEELIGHT_TEMP_ONLY_EFFECT_LIST,
+            "supported_features": SUPPORT_YEELIGHT,
+            "min_mireds": color_temperature_kelvin_to_mired(
+                model_specs["color_temp"]["max"]
+            ),
+            "max_mireds": color_temperature_kelvin_to_mired(
+                model_specs["color_temp"]["min"]
+            ),
+            "brightness": nl_br,
+            "color_temp": color_temperature_kelvin_to_mired(
+                model_specs["color_temp"]["min"]
+            ),
+            "color_mode": "color_temp",
+            "supported_color_modes": ["color_temp"],
+            "hs_color": (28.391, 65.659),
+            "rgb_color": (255, 166, 87),
+            "xy_color": (0.526, 0.387),
         },
     )
 
@@ -1023,11 +1080,33 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "rgb_color": (255, 205, 166),
             "xy_color": (0.421, 0.364),
         },
-        {
+        nightlight_entity_properties={
             "supported_features": 0,
             "brightness": nl_br,
             "color_mode": "brightness",
             "supported_color_modes": ["brightness"],
+        },
+        nightlight_mode_properties={
+            "friendly_name": NAME,
+            "effect_list": YEELIGHT_TEMP_ONLY_EFFECT_LIST,
+            "flowing": False,
+            "night_light": True,
+            "supported_features": SUPPORT_YEELIGHT,
+            "min_mireds": color_temperature_kelvin_to_mired(
+                model_specs["color_temp"]["max"]
+            ),
+            "max_mireds": color_temperature_kelvin_to_mired(
+                model_specs["color_temp"]["min"]
+            ),
+            "brightness": nl_br,
+            "color_temp": color_temperature_kelvin_to_mired(
+                model_specs["color_temp"]["min"]
+            ),
+            "color_mode": "color_temp",
+            "supported_color_modes": ["color_temp"],
+            "hs_color": (28.391, 65.659),
+            "rgb_color": (255, 166, 87),
+            "xy_color": (0.526, 0.387),
         },
     )
     # Background light - color mode CT
