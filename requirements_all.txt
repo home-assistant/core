@@ -22,9 +22,6 @@ Mastodon.py==1.5.1
 # homeassistant.components.orangepi_gpio
 OPi.GPIO==0.4.0
 
-# homeassistant.components.essent
-PyEssent==0.14
-
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
 
