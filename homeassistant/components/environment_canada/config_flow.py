@@ -7,22 +7,12 @@ import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_LANGUAGE, CONF_STATION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def already_configured(hass, data):
-    """Check if same station and language is already configured."""
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if (
-            entry.data.get(CONF_STATION) == data[CONF_STATION]
-            and entry.data.get(CONF_LANGUAGE) == data[CONF_LANGUAGE]
-        ):
-            return True
-    return False
 
 
 async def validate_input(data):
@@ -61,12 +51,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_STATION] = info["title"]
                 user_input[CONF_NAME] = info["name"]
 
-                if not already_configured(self.hass, user_input):
-                    self._data = user_input
-                    return await self.async_step_name()
+                await self.async_set_unique_id(
+                    f"{user_input[CONF_STATION]}-{user_input[CONF_LANGUAGE]}"
+                )
+                self._abort_if_unique_id_configured()
+                self._data = user_input
+                return await self.async_step_name()
 
+            except AbortFlow:
                 errors["base"] = "already_configured"
-
             except BadStationId:
                 errors["base"] = "bad_station_id"
             except aiohttp.ClientConnectionError:
