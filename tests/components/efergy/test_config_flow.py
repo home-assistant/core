@@ -24,10 +24,7 @@ from . import (
 
 
 def _patch_setup():
-    return patch(
-        "homeassistant.components.efergy.async_setup_entry",
-        return_value=True,
-    )
+    return patch("homeassistant.components.efergy.async_setup_entry")
 
 
 async def test_flow_user(hass: HomeAssistant):
@@ -59,7 +56,7 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant):
         )
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "user"
-        assert result["errors"] == {"base": "cannot_connect"}
+        assert result["errors"]["base"] == "cannot_connect"
 
 
 async def test_flow_user_invalid_auth(hass: HomeAssistant):
@@ -71,7 +68,7 @@ async def test_flow_user_invalid_auth(hass: HomeAssistant):
         )
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "user"
-        assert result["errors"] == {"base": "invalid_auth"}
+        assert result["errors"]["base"] == "invalid_auth"
 
 
 async def test_flow_user_unknown(hass: HomeAssistant):
@@ -83,7 +80,7 @@ async def test_flow_user_unknown(hass: HomeAssistant):
         )
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "user"
-        assert result["errors"] == {"base": "unknown"}
+        assert result["errors"]["base"] == "unknown"
 
 
 async def test_flow_import(hass: HomeAssistant):
@@ -115,7 +112,7 @@ async def test_flow_reauth(hass: HomeAssistant):
     entry = create_entry(hass)
     with _patch_efergy(), _patch_setup():
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={CONF_SOURCE: SOURCE_REAUTH}, data=entry.data
+            DOMAIN, context={CONF_SOURCE: SOURCE_REAUTH}, data=CONF_DATA
         )
 
         assert result["type"] == RESULT_TYPE_FORM

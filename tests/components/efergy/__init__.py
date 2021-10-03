@@ -126,7 +126,7 @@ async def setup_platform(
     platform: str,
     token: str = TOKEN,
 ):
-    """Set up the Abode platform."""
+    """Set up the platform."""
     entry = await init_integration(hass, aioclient_mock, token=token)
 
     with patch("homeassistant.components.efergy.PLATFORMS", [platform]):

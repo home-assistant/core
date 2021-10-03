@@ -110,7 +110,7 @@ async def async_setup_platform(
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType = None,
 ) -> None:
-    """Set up the Efergy sensor."""
+    """Set up the Efergy sensor from yaml."""
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=config
@@ -123,7 +123,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: entity_platform.AddEntitiesCallback,
 ) -> None:
-    """Set up the Modem Caller ID sensor."""
+    """Set up Efergy sensors."""
     api: Efergy = hass.data[DOMAIN][entry.entry_id][DATA_KEY_API]
     sids = await api.async_get_sids()
     sensors = []
