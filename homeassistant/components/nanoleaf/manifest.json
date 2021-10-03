@@ -3,6 +3,7 @@
   "name": "Nanoleaf",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nanoleaf",
+  "dependencies": ["network"],
   "requirements": ["aionanoleaf==0.0.2"],
   "zeroconf": ["_nanoleafms._tcp.local.", "_nanoleafapi._tcp.local."],
   "homekit" : {
