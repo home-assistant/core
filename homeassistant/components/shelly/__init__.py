@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry, update_coordinator
 import homeassistant.helpers.config_validation as cv
@@ -71,6 +71,8 @@ COAP_SCHEMA: Final = vol.Schema(
 )
 CONFIG_SCHEMA: Final = vol.Schema({DOMAIN: COAP_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
+SERVICE_UPDATE_FIRMWARE = "update_firmware"
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Shelly component."""
@@ -102,6 +104,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if get_device_entry_gen(entry) == 2:
         return await async_setup_rpc_entry(hass, entry)
+
+    await async_setup_services(hass)
 
     return await async_setup_block_entry(hass, entry)
 
@@ -220,6 +224,25 @@ async def async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool
     hass.config_entries.async_setup_platforms(entry, RPC_PLATFORMS)
 
     return True
+
+
+async def async_setup_services(hass: HomeAssistant) -> None:
+    """Set up services."""
+
+    if hass.services.has_service(DOMAIN, SERVICE_UPDATE_FIRMWARE):
+        return
+
+    async def async_update_firmware(call: ServiceCall) -> None:
+        """Trigger an OTA update of the device firmware."""
+        device_id = call.data["device_id"]
+        beta = call.data["beta"]
+
+        device_wrapper = get_block_device_wrapper(hass, device_id)
+        if device_wrapper is not None:
+            result = await device_wrapper.device.trigger_ota_update(beta)
+            _LOGGER.debug("Firmware update response: %s", result)
+
+    hass.services.async_register(DOMAIN, SERVICE_UPDATE_FIRMWARE, async_update_firmware)
 
 
 class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):

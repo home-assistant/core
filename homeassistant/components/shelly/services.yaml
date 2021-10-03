@@ -1,0 +1,20 @@
+update_firmware:
+  name: Update firmware
+  description: Updates the Shelly device firmware.
+  fields:
+    device_id:
+      name: Device
+      description: The Shelly device to update
+      required: true
+      selector:
+        device:
+          integration: shelly
+    beta:
+      name: Beta
+      description: Whether to install a beta version of the firmware
+      required: true
+      example: true
+      advanced: true
+      default: false
+      selector:
+        boolean:
