@@ -39,6 +39,7 @@ DEFAULT_CONTENT_TYPE = "application/octet-stream"
 EVENT_MATRIX_COMMAND = "matrix_command"
 
 ATTR_IMAGES = "images"  # optional images
+ATTR_VIDEOS = "videos"  # optional videos
 
 COMMAND_SCHEMA = vol.All(
     vol.Schema(
@@ -76,6 +77,7 @@ SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
         vol.Required(ATTR_MESSAGE): cv.string,
         vol.Optional(ATTR_DATA): {
             vol.Optional(ATTR_IMAGES): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(ATTR_VIDEOS): vol.All(cv.ensure_list, [cv.string]),
         },
         vol.Required(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
     }
@@ -368,6 +370,28 @@ class MatrixBot:
                     ex.content,
                 )
 
+    def _send_video(self, vid, target_rooms):
+        _LOGGER.debug("Uploading file from path, %s", vid)
+
+        if not self.hass.config.is_allowed_path(vid):
+            _LOGGER.error("Path not allowed: %s", vid)
+            return
+        with open(vid, "rb") as upfile:
+            vidfile = upfile.read()
+        content_type = mimetypes.guess_type(vid)[0]
+        mxc = self._client.upload(vidfile, content_type)
+        for target_room in target_rooms:
+            try:
+                room = self._join_or_get_room(target_room)
+                room.send_video(mxc, vid)
+            except MatrixRequestError as ex:
+                _LOGGER.error(
+                    "Unable to deliver message to room '%s': %d, %s",
+                    target_room,
+                    ex.code,
+                    ex.content,
+                )
+
     def _send_message(self, message, data, target_rooms):
         """Send the message to the Matrix server."""
         for target_room in target_rooms:
@@ -385,6 +409,8 @@ class MatrixBot:
         if data is not None:
             for img in data.get(ATTR_IMAGES, []):
                 self._send_image(img, target_rooms)
+            for vid in data.get(ATTR_VIDEOS, []):
+                self._send_video(vid, target_rooms)
 
     def handle_send_message(self, service: ServiceCall) -> None:
         """Handle the send_message service."""

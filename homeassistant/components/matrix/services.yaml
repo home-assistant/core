@@ -18,7 +18,7 @@ send_message:
         text:
     data:
       name: Data
-      description: Extended information of notification. Supports list of images. Optional.
-      example: "{'images': ['/tmp/test.jpg']}"
+      description: Extended information of notification. Supports list of images, and/or a list of videos. Optional.
+      example: "{'images': ['/tmp/test.jpg'], 'videos': ['/media/capture.mp4']}"
       selector:
         object:
