@@ -514,10 +514,10 @@ class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
     @property
     def native_value(self) -> str | None:
         """Return the current HVAC action."""
-        if {
-            "pi_heating_demand",
-            "pi_cooling_demand",
-        } in self._channel.cluster.unsupported_attributes:
+        if (
+            self._channel.pi_heating_demand is None
+            and self._channel.pi_cooling_demand is None
+        ):
             return self._rm_rs_action
         return self._pi_demand_action
 
@@ -534,13 +534,13 @@ class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
         running_state = self._channel.running_state
         if running_state and running_state & (
             self._channel.RunningState.Fan_State_On
-            | self._channgel.RunningState.Fan_2nd_Stage_On
-            | self._channgel.RunningState.Fan_3rd_Stage_On
+            | self._channel.RunningState.Fan_2nd_Stage_On
+            | self._channel.RunningState.Fan_3rd_Stage_On
         ):
             return CURRENT_HVAC_FAN
         if (
             self._channel.system_mode != self._channel.SystemMode.Off
-            and running_mode == self._channel.SystemModeOff
+            and running_mode == self._channel.SystemMode.Off
         ):
             return CURRENT_HVAC_IDLE
         return CURRENT_HVAC_OFF
@@ -578,22 +578,32 @@ class ZenHVACAction(ThermostatHVACAction):
     def _rm_rs_action(self) -> str | None:
         """Return the current HVAC action based on running mode and running state."""
 
-        running_mode = self._thrm.running_mode
-        if running_mode == self._channel.RunningMode.Heat:
+        running_state = self._channel.running_state
+        if running_state is None:
+            return None
+
+        rs_heat = (
+            self._channel.RunningState.Heat_State_On
+            | self._channel.RunningState.Heat_2nd_Stage_On
+        )
+        if running_state & rs_heat:
             return CURRENT_HVAC_HEAT
-        if running_mode == self._channel.RunningMode.Cool:
+
+        rs_cool = (
+            self._channel.RunningState.Cool_State_On
+            | self._channel.RunningState.Cool_2nd_Stage_On
+        )
+        if running_state & rs_cool:
             return CURRENT_HVAC_COOL
 
-        running_state = self._thrm.running_state
+        running_state = self._channel.running_state
         if running_state and running_state & (
             self._channel.RunningState.Fan_State_On
-            | self._channgel.RunningState.Fan_2nd_Stage_On
-            | self._channgel.RunningState.Fan_3rd_Stage_On
+            | self._channel.RunningState.Fan_2nd_Stage_On
+            | self._channel.RunningState.Fan_3rd_Stage_On
         ):
             return CURRENT_HVAC_FAN
-        if (
-            self._channel.system_mode != self._channel.SystemMode.Off
-            and running_mode == self._channel.SystemModeOff
-        ):
+
+        if self._channel.system_mode != self._channel.SystemMode.Off:
             return CURRENT_HVAC_IDLE
         return CURRENT_HVAC_OFF
