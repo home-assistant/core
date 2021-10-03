@@ -1790,7 +1790,7 @@ pysesame2==1.0.1
 pysher==1.0.1
 
 # homeassistant.components.sia
-pysiaalarm==3.0.1
+pysiaalarm==3.0.2
 
 # homeassistant.components.signal_messenger
 pysignalclirestapi==0.3.4
