@@ -485,7 +485,7 @@ hole==0.5.1
 holidays==0.11.3.1
 
 # homeassistant.components.frontend
-ais-dom-frontend==20210930.0
+ais-dom-frontend==20211002.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -859,7 +859,7 @@ pyfido==2.1.1
 pyfireservicerota==0.0.43
 
 # homeassistant.components.flume
-pyflume==0.5.5
+pyflume==0.6.5
 
 # homeassistant.components.flunearyou
 pyflunearyou==2.0.2
@@ -989,7 +989,7 @@ pynuki==1.4.1
 pynut2==2.1.2
 
 # homeassistant.components.nws
-pynws==1.3.0
+pynws==1.3.1
 
 # homeassistant.components.nx584
 pynx584==0.5
@@ -1024,7 +1024,7 @@ pypck==0.7.10
 pyplaato==0.0.15
 
 # homeassistant.components.point
-pypoint==2.1.0
+pypoint==2.2.0
 
 # homeassistant.components.profiler
 pyprof2calltree==1.4.5
