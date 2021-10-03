@@ -151,10 +151,7 @@ async def test_smart_home_user(hass, tuya, caplog):
     )
     await hass.async_block_till_done()
 
-    assert (
-        "TuyaConfigFlow.async_step_user login success - {'success': True, 'errorCode': 1024}"
-        in caplog.text
-    )
+    assert "Login success: {'success': True, 'errorCode': 1024}" in caplog.text
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == MOCK_USERNAME
@@ -191,9 +188,6 @@ async def test_error_on_invalid_credentials(hass, tuya, caplog):
     )
     await hass.async_block_till_done()
 
-    assert (
-        "TuyaConfigFlow.async_step_user login failed - {'success': False, 'errorCode': 1024}"
-        in caplog.text
-    )
+    assert "Login failed: {'success': False, 'errorCode': 1024}" in caplog.text
 
     assert result["errors"]["base"] == RESULT_AUTH_FAILED
