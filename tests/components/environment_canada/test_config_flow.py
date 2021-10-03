@@ -87,6 +87,7 @@ async def test_create_same_entry_twice(hass):
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_STATION: "ON/s1234567", CONF_LANGUAGE: "English"},
+        unique_id="ON/s1234567-English",
     )
     entry.add_to_hass(hass)
 
@@ -108,6 +109,7 @@ async def test_create_same_entry_twice(hass):
         )
         await hass.async_block_till_done()
 
+        breakpoint()
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {"base": "already_configured"}
 
