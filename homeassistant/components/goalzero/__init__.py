@@ -21,6 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
@@ -34,6 +35,7 @@ from .const import (
     DATA_KEY_API,
     DATA_KEY_COORDINATOR,
     DOMAIN,
+    MANUFACTURER,
     MIN_TIME_BETWEEN_UPDATES,
 )
 
@@ -109,8 +111,11 @@ class YetiEntity(CoordinatorEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device information of the entity."""
         return {
+            "connections": {
+                (dr.CONNECTION_NETWORK_MAC, self.api.sysdata["macAddress"])
+            },
             ATTR_IDENTIFIERS: {(DOMAIN, self._server_unique_id)},
-            ATTR_MANUFACTURER: "Goal Zero",
+            ATTR_MANUFACTURER: MANUFACTURER,
             ATTR_NAME: self._name,
             ATTR_MODEL: self.api.sysdata.get(ATTR_MODEL),
             ATTR_SW_VERSION: self.api.data.get("firmwareVersion"),
