@@ -170,37 +170,38 @@ class ProbeEndpoint:
         ep_device_type = channel_pool.endpoint.device_type
         cmpt_by_dev_type = zha_regs.DEVICE_CLASS[ep_profile_id].get(ep_device_type)
         remaining_channels = channel_pool.unclaimed_channels()
-        for channel in remaining_channels:
 
-            matches, claimed = zha_regs.ZHA_ENTITIES.get_multi_entity(
-                channel_pool.manufacturer,
-                channel_pool.model,
-                channel,
-                remaining_channels,
-            )
-            if not claimed:
-                continue
+        matches, claimed = zha_regs.ZHA_ENTITIES.get_multi_entity(
+            channel_pool.manufacturer, channel_pool.model, remaining_channels
+        )
 
-            unique_id = f"{channel_pool.unique_id}-{channel.cluster.cluster_id}"
-            channel_pool.claim_channels(claimed)
-            for component, ent_n_chan_list in matches.items():
+        channel_pool.claim_channels(claimed)
+        for component, ent_n_chan_list in matches.items():
+            for entity_and_channel in ent_n_chan_list:
+                _LOGGER.debug(
+                    "'%s' component -> '%s' using %s",
+                    component,
+                    entity_and_channel.entity_class.__name__,
+                    [ch.name for ch in entity_and_channel.claimed_channel],
+                )
+        for component, ent_n_chan_list in matches.items():
+            for entity_and_channel in ent_n_chan_list:
                 if component == cmpt_by_dev_type:
-                    unique_id = channel_pool.unique_id
                     # for well known device types, like thermostats we'll take only 1st class
                     channel_pool.async_new_entity(
                         component,
-                        ent_n_chan_list[0].entity_class,
+                        entity_and_channel.entity_class,
                         channel_pool.unique_id,
-                        ent_n_chan_list[0].claimed_channel,
+                        entity_and_channel.claimed_channel,
                     )
-                    continue
-                for entity_n_chann in ent_n_chan_list:
-                    channel_pool.async_new_entity(
-                        component,
-                        entity_n_chann.entity_class,
-                        unique_id,
-                        entity_n_chann.claimed_channel,
-                    )
+                    break
+                first_ch = entity_and_channel.claimed_channel[0]
+                channel_pool.async_new_entity(
+                    component,
+                    entity_and_channel.entity_class,
+                    f"{channel_pool.unique_id}-{first_ch.cluster.cluster_id}",
+                    entity_and_channel.claimed_channel,
+                )
 
     def initialize(self, hass: HomeAssistant) -> None:
         """Update device overrides config."""
