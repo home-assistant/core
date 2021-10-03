@@ -1,0 +1,31 @@
+{
+    "config": {
+        "step": {
+            "usb_manual_config": {
+                "data": {
+                    "usb_manual_path": "Cesta k USB za\u0159\u00edzen\u00ed"
+                }
+            },
+            "user": {
+                "data": {
+                    "email": "E-mail",
+                    "password": "Heslo"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "usb_config_option": {
+                "data": {
+                    "usb_path": "Cesta k USB za\u0159\u00edzen\u00ed"
+                }
+            },
+            "usb_manual_config_option": {
+                "data": {
+                    "usb_manual_path": "Cesta k USB za\u0159\u00edzen\u00ed"
+                }
+            }
+        }
+    }
+}

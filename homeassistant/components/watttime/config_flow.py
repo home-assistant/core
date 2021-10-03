@@ -118,16 +118,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="location", data_schema=STEP_LOCATION_DATA_SCHEMA
             )
 
-        if user_input[CONF_LOCATION_TYPE] == LOCATION_TYPE_COORDINATES:
-            return self.async_show_form(
-                step_id="coordinates", data_schema=STEP_COORDINATES_DATA_SCHEMA
+        if user_input[CONF_LOCATION_TYPE] == LOCATION_TYPE_HOME:
+            return await self.async_step_coordinates(
+                {
+                    CONF_LATITUDE: self.hass.config.latitude,
+                    CONF_LONGITUDE: self.hass.config.longitude,
+                }
             )
-        return await self.async_step_coordinates(
-            {
-                CONF_LATITUDE: self.hass.config.latitude,
-                CONF_LONGITUDE: self.hass.config.longitude,
-            }
-        )
+        return await self.async_step_coordinates()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
