@@ -1,4 +1,4 @@
-"""Support for Nanoleaf Lights."""
+"""Support for Nanoleaf sensor."""
 from __future__ import annotations
 
 import logging
@@ -32,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the Nanoleaf light."""
+    """Set up the Nanoleaf sensor."""
     nanoleaf: Nanoleaf = hass.data[DOMAIN]["device"][entry.entry_id]
     async_add_entities(
         [NanoleafPanelTouchStrength(nanoleaf, panel) for panel in nanoleaf.panels]
@@ -43,18 +43,19 @@ class NanoleafPanelTouchStrength(SensorEntity):
     """Representation of a Nanoleaf panel touch strength sensor entity."""
 
     def __init__(self, nanoleaf: Nanoleaf, panel: Panel) -> None:
-        """Initialize an Nanoleaf light."""
+        """Initialize an Nanoleaf sensor."""
         self._nanoleaf = nanoleaf
         self._panel = panel
-        self._attr_unique_id = f"{self._nanoleaf.serial_no}_{self._panel.id}"
-        self._attr_name = (
-            f"{self._nanoleaf.name} {self._panel.shape.name} {self._panel.id}"
+        self._attr_unique_id = (
+            f"{self._nanoleaf.serial_no}_{self._panel.id}_touch_strength"
         )
+        self._attr_name = f"{self._nanoleaf.name} {self._panel.shape.name} {self._panel.id} Touch Strength"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._nanoleaf.serial_no)},
-            name=self._nanoleaf.name,
+            identifiers={(DOMAIN, f"{self._nanoleaf.serial_no}_{self._panel.id}")},
+            via_device=(DOMAIN, self._nanoleaf.serial_no),
+            name=f"{self._nanoleaf.name} {self._panel.shape.name} {self._panel.id}",
             manufacturer=self._nanoleaf.manufacturer,
-            model=self._nanoleaf.model,
+            model=self._panel.shape.name,
             sw_version=self._nanoleaf.firmware_version,
         )
         self._attr_native_value = 0
@@ -85,6 +86,6 @@ class NanoleafPanelTouchStrength(SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Handle entity being added to Home Assistant."""
         await super().async_added_to_hass()
-        self.hass.data[DOMAIN]["panel_entity"][self._nanoleaf.serial_no][
+        self.hass.data[DOMAIN]["panel_strength_entity"][self._nanoleaf.serial_no][
             self._panel.id
         ] = self

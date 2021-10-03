@@ -12,6 +12,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .aionanoleaf import Event, InvalidToken, Nanoleaf, TouchEvent, Unavailable
+from .binary_sensor import NanoleafPanelHover, NanoleafPanelTouch
 from .const import DOMAIN
 from .light import NanoleafLight
 from .sensor import NanoleafPanelTouchStrength
@@ -33,9 +34,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # device: [entry_id, Nanoleaf], light_entity: [serial_no, Entity], panel_entity[serial_no, [panel_id, Entity]]
     hass.data.setdefault(
-        DOMAIN, {"device": {}, "light_entity": {}, "panel_entity": {}}
+        DOMAIN,
+        {
+            "device": {},
+            "light_entity": {},
+            "panel_strength_entity": {},
+            "panel_touch_entity": {},
+            "panel_hover_entity": {},
+        },
     )["device"][entry.entry_id] = nanoleaf
-    hass.data[DOMAIN]["panel_entity"][nanoleaf.serial_no] = {}
+    hass.data[DOMAIN]["panel_strength_entity"][nanoleaf.serial_no] = {}
+    hass.data[DOMAIN]["panel_touch_entity"][nanoleaf.serial_no] = {}
+    hass.data[DOMAIN]["panel_hover_entity"][nanoleaf.serial_no] = {}
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "light")
@@ -43,6 +53,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "sensor")
+    )
+
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(entry, "binary_sensor")
     )
 
     async def state_update_callback(event: Event) -> None:
@@ -60,6 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "type": "touch",
             "panel_id": event.panel_id,
             "gesture": event.gesture,
+            "swipe_to_panel_id": None,
         }
         hass.bus.async_fire(f"{DOMAIN}_event", event_data)
 
@@ -67,21 +82,39 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         panel_id: int, gesture: str, strength: int, panel_id2: int
     ) -> None:
         """Receive touch event."""
-        event_data = {
-            "device_id": nanoleaf.serial_no,
-            "type": "advanced_touch",
-            "panel_id": panel_id,
-            "gesture": gesture,
-            "strength": strength,
-            "swipe_to_panel_id": panel_id2,
-        }
-        hass.bus.async_fire(f"{DOMAIN}_event", event_data)
-
-        panel_entity: NanoleafPanelTouchStrength | None = hass.data[DOMAIN][
-            "panel_entity"
+        panel_touch_entity: NanoleafPanelTouch | None = hass.data[DOMAIN][
+            "panel_touch_entity"
         ][nanoleaf.serial_no].get(panel_id)
-        if panel_entity is not None:
-            await panel_entity.async_set_state(strength)
+        if panel_touch_entity is not None:
+            await panel_touch_entity.async_set_state(
+                True if gesture == "Hold" else False
+            )
+
+        panel_hover_entity: NanoleafPanelHover | None = hass.data[DOMAIN][
+            "panel_hover_entity"
+        ][nanoleaf.serial_no].get(panel_id)
+        if panel_hover_entity is not None:
+            await panel_hover_entity.async_set_state(
+                True if gesture == "Hover" else False
+            )
+
+        if gesture == "Hold" or gesture == "Hover":
+
+            panel_strength_entity: NanoleafPanelTouchStrength | None = hass.data[
+                DOMAIN
+            ]["panel_strength_entity"][nanoleaf.serial_no].get(panel_id)
+            if panel_strength_entity is not None:
+                await panel_strength_entity.async_set_state(strength)
+
+        else:
+            event_data = {
+                "device_id": nanoleaf.serial_no,
+                "type": "touch",
+                "panel_id": panel_id,
+                "gesture": gesture,
+                "swipe_to_panel_id": panel_id2,
+            }
+            hass.bus.async_fire(f"{DOMAIN}_event", event_data)
 
     # Find the Home Assistant IP to open the UDP socket
     local_ip = await get_local_ip(hass, entry, nanoleaf)
