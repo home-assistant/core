@@ -89,7 +89,7 @@ class TemperatureSensor(SensorBase):
     def native_value(self) -> float:
         """Return the state of the sensor."""
         trait: TemperatureTrait = self._device.traits[TemperatureTrait.NAME]
-        return trait.ambient_temperature_celsius
+        return round(trait.ambient_temperature_celsius, 1)
 
 
 class HumiditySensor(SensorBase):
@@ -107,4 +107,4 @@ class HumiditySensor(SensorBase):
     def native_value(self) -> float:
         """Return the state of the sensor."""
         trait: HumidityTrait = self._device.traits[HumidityTrait.NAME]
-        return trait.ambient_humidity_percent
+        return round(trait.ambient_humidity_percent, 0)
