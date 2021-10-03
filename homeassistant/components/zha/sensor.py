@@ -9,6 +9,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CO,
     DEVICE_CLASS_CO2,
+    DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
@@ -24,6 +25,8 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_ENERGY,
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
@@ -129,6 +132,24 @@ class Sensor(ZhaEntity, SensorEntity):
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._channel: ChannelType = channels[0]
 
+    @classmethod
+    def create_entity(
+        cls,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: list[ChannelType],
+        **kwargs,
+    ) -> ZhaEntity | None:
+        """Entity Factory.
+
+        Return entity if it is a supported configuration, otherwise return None
+        """
+        channel = channels[0]
+        if cls.SENSOR_ATTR in channel.cluster.unsupported_attributes:
+            return None
+
+        return cls(unique_id, zha_device, channels, **kwargs)
+
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
@@ -220,7 +241,7 @@ class Battery(Sensor):
         return state_attrs
 
 
-@STRICT_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
+@MULTI_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
 class ElectricalMeasurement(Sensor):
     """Active power measurement."""
 
@@ -228,16 +249,32 @@ class ElectricalMeasurement(Sensor):
     _device_class = DEVICE_CLASS_POWER
     _state_class = STATE_CLASS_MEASUREMENT
     _unit = POWER_WATT
+    _div_mul_prefix = "ac_power"
 
     @property
     def should_poll(self) -> bool:
         """Return True if HA needs to poll for state changes."""
         return True
 
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return device state attrs for sensor."""
+        attrs = {}
+        if self._channel.measurement_type is not None:
+            attrs["measurement_type"] = self._channel.measurement_type
+
+        max_attr_name = f"{self.SENSOR_ATTR}_max"
+        if (max_v := self._channel.cluster.get(max_attr_name)) is not None:
+            attrs[max_attr_name] = str(self.formatter(max_v))
+
+        return attrs
+
     def formatter(self, value: int) -> int | float:
         """Return 'normalized' value."""
-        value = value * self._channel.multiplier / self._channel.divisor
-        if value < 100 and self._channel.divisor > 1:
+        multiplier = getattr(self._channel, f"{self._div_mul_prefix}_multiplier")
+        divisor = getattr(self._channel, f"{self._div_mul_prefix}_divisor")
+        value = float(value * multiplier) / divisor
+        if value < 100 and divisor > 1:
             return round(value, self._decimals)
         return round(value)
 
@@ -246,6 +283,36 @@ class ElectricalMeasurement(Sensor):
         if not self.available:
             return
         await super().async_update()
+
+
+@MULTI_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
+class ElectricalMeasurementRMSCurrent(ElectricalMeasurement, id_suffix="rms_current"):
+    """RMS current measurement."""
+
+    SENSOR_ATTR = "rms_current"
+    _device_class = DEVICE_CLASS_CURRENT
+    _unit = ELECTRIC_CURRENT_AMPERE
+    _div_mul_prefix = "ac_current"
+
+    @property
+    def should_poll(self) -> bool:
+        """Poll indirectly by ElectricalMeasurementSensor."""
+        return False
+
+
+@MULTI_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
+class ElectricalMeasurementRMSVoltage(ElectricalMeasurement, id_suffix="rms_voltage"):
+    """RMS Voltage measurement."""
+
+    SENSOR_ATTR = "rms_voltage"
+    _device_class = DEVICE_CLASS_CURRENT
+    _unit = ELECTRIC_POTENTIAL_VOLT
+    _div_mul_prefix = "ac_voltage"
+
+    @property
+    def should_poll(self) -> bool:
+        """Poll indirectly by ElectricalMeasurementSensor."""
+        return False
 
 
 @STRICT_MATCH(generic_ids=CHANNEL_ST_HUMIDITY_CLUSTER)
@@ -297,24 +364,6 @@ class SmartEnergyMetering(Sensor):
         0x0B: "unitless",
         0x0C: f"MJ/{TIME_SECONDS}",
     }
-
-    @classmethod
-    def create_entity(
-        cls,
-        unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
-        **kwargs,
-    ) -> ZhaEntity | None:
-        """Entity Factory.
-
-        Return entity if it is a supported configuration, otherwise return None
-        """
-        se_channel = channels[0]
-        if cls.SENSOR_ATTR in se_channel.cluster.unsupported_attributes:
-            return None
-
-        return cls(unique_id, zha_device, channels, **kwargs)
 
     def formatter(self, value: int) -> int | float:
         """Pass through channel formatter."""
