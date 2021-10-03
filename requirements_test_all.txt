@@ -618,7 +618,7 @@ netdisco==3.0.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==1.0.0
+nettigo-air-monitor==1.1.0
 
 # homeassistant.components.nexia
 nexia==0.9.11
@@ -890,7 +890,7 @@ pyheos==0.7.2
 pyhiveapi==0.4.2
 
 # homeassistant.components.homematic
-pyhomematic==0.1.74
+pyhomematic==0.1.75
 
 # homeassistant.components.ialarm
 pyialarm==1.9.0
@@ -1403,7 +1403,7 @@ yalesmartalarmclient==0.3.4
 yalexs==1.1.13
 
 # homeassistant.components.yeelight
-yeelight==0.7.5
+yeelight==0.7.6
 
 # homeassistant.components.youless
 youless-api==0.13
