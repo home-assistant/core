@@ -3,8 +3,8 @@ import logging
 
 import requests
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.const import DEVICE_CLASS_TEMPERATURE, PERCENTAGE, TEMP_CELSIUS
 
 from . import DOMAIN as COMPONENT_DOMAIN, SENSOR_TYPES
 
@@ -52,7 +52,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                         endpoint=SENSOR_TYPES[octo_type][0],
                         group=SENSOR_TYPES[octo_type][1],
                         tool=tool,
-                        device_class="measurement"
+                        device_class=DEVICE_CLASS_TEMPERATURE,
+                        state_class=STATE_CLASS_MEASUREMENT,
                     )
                     devices.append(new_sensor)
         else:
@@ -85,6 +86,7 @@ class OctoPrintSensor(SensorEntity):
         tool=None,
         icon=None,
         device_class=None,
+        state_class=None,
     ):
         """Initialize a new OctoPrint sensor."""
         self.sensor_name = sensor_name
@@ -101,6 +103,7 @@ class OctoPrintSensor(SensorEntity):
         self.api_tool = tool
         self._icon = icon
         self._attr_device_class = device_class
+        self._attr_state_class = state_class
         _LOGGER.debug("Created OctoPrint sensor %r", self)
 
     @property
