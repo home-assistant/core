@@ -246,7 +246,7 @@ class EntityClassAndChannels:
 
 
 RegistryDictType = Dict[str, Dict[MatchRule, CALLABLE_T]]
-
+MultiRegistryDictType = dict[str, dict[MatchRule, list[CALLABLE_T]]]
 GroupRegistryDictType = Dict[str, CALLABLE_T]
 
 
@@ -256,9 +256,9 @@ class ZHAEntityRegistry:
     def __init__(self):
         """Initialize Registry instance."""
         self._strict_registry: RegistryDictType = collections.defaultdict(dict)
-        self._multi_entity_registry: dict[
-            str, dict[MatchRule, list[CALLABLE_T]]
-        ] = collections.defaultdict(lambda: collections.defaultdict(list))
+        self._multi_entity_registry: MultiRegistryDictType = collections.defaultdict(
+            lambda: collections.defaultdict(list)
+        )
         self._group_registry: GroupRegistryDictType = {}
 
     def get_entity(
