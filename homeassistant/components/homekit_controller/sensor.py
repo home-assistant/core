@@ -29,9 +29,6 @@ from homeassistant.core import callback
 
 from . import KNOWN_DEVICES, CharacteristicEntity, HomeKitEntity
 
-HUMIDITY_ICON = "mdi:water-percent"
-TEMP_C_ICON = "mdi:thermometer"
-BRIGHTNESS_ICON = "mdi:brightness-6"
 CO2_ICON = "mdi:molecule-co2"
 
 
@@ -149,11 +146,6 @@ class HomeKitHumiditySensor(HomeKitEntity, SensorEntity):
         return f"{super().name} Humidity"
 
     @property
-    def icon(self):
-        """Return the sensor icon."""
-        return HUMIDITY_ICON
-
-    @property
     def native_value(self):
         """Return the current humidity."""
         return self.service.value(CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT)
@@ -175,11 +167,6 @@ class HomeKitTemperatureSensor(HomeKitEntity, SensorEntity):
         return f"{super().name} Temperature"
 
     @property
-    def icon(self):
-        """Return the sensor icon."""
-        return TEMP_C_ICON
-
-    @property
     def native_value(self):
         """Return the current temperature in Celsius."""
         return self.service.value(CharacteristicsTypes.TEMPERATURE_CURRENT)
@@ -199,11 +186,6 @@ class HomeKitLightSensor(HomeKitEntity, SensorEntity):
     def name(self):
         """Return the name of the device."""
         return f"{super().name} Light Level"
-
-    @property
-    def icon(self):
-        """Return the sensor icon."""
-        return BRIGHTNESS_ICON
 
     @property
     def native_value(self):
