@@ -218,6 +218,9 @@ class GlancesSensor(SensorEntity):
             except KeyError:
                 self._state = STATE_UNAVAILABLE
         elif self.entity_description.type == "raid":
-            for raid_device, raid in value["raid"].items():
-                if raid_device == self._sensor_name_prefix:
-                    self._state = raid[self.entity_description.key]
+            try:
+                self._state = value["raid"][self._sensor_name_prefix][
+                    self.entity_description.key
+                ]
+            except KeyError:
+                self.state = STATE_UNAVAILABLE
