@@ -44,27 +44,27 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             for tool in tools:
                 for temp_type in types:
                     new_sensor = OctoPrintSensor(
-                        octoprint_api,
-                        temp_type,
-                        temp_type,
-                        name,
-                        SENSOR_TYPES[octo_type][3],
-                        SENSOR_TYPES[octo_type][0],
-                        SENSOR_TYPES[octo_type][1],
-                        tool,
+                        api=octoprint_api,
+                        condition=temp_type,
+                        sensor_type=temp_type,
+                        sensor_name=name,
+                        unit=SENSOR_TYPES[octo_type][3],
+                        endpoint=SENSOR_TYPES[octo_type][0],
+                        group=SENSOR_TYPES[octo_type][1],
+                        tool=tool,
+                        device_class="measurement"
                     )
                     devices.append(new_sensor)
         else:
             new_sensor = OctoPrintSensor(
-                octoprint_api,
-                octo_type,
-                SENSOR_TYPES[octo_type][2],
-                name,
-                SENSOR_TYPES[octo_type][3],
-                SENSOR_TYPES[octo_type][0],
-                SENSOR_TYPES[octo_type][1],
-                None,
-                SENSOR_TYPES[octo_type][4],
+                api=octoprint_api,
+                condition=octo_type,
+                sensor_type=SENSOR_TYPES[octo_type][2],
+                sensor_name=name,
+                unit=SENSOR_TYPES[octo_type][3],
+                endpoint=SENSOR_TYPES[octo_type][0],
+                group=SENSOR_TYPES[octo_type][1],
+                icon=SENSOR_TYPES[octo_type][4],
             )
             devices.append(new_sensor)
     add_entities(devices, True)
@@ -84,6 +84,7 @@ class OctoPrintSensor(SensorEntity):
         group,
         tool=None,
         icon=None,
+        device_class=None,
     ):
         """Initialize a new OctoPrint sensor."""
         self.sensor_name = sensor_name
@@ -99,6 +100,7 @@ class OctoPrintSensor(SensorEntity):
         self.api_group = group
         self.api_tool = tool
         self._icon = icon
+        self._attr_device_class = device_class
         _LOGGER.debug("Created OctoPrint sensor %r", self)
 
     @property
