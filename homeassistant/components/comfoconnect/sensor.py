@@ -334,16 +334,6 @@ class ComfoConnectSensor(SensorEntity):
             self._ccb.comfoconnect.register_sensor, self.entity_description.sensor_id
         )
 
-    # async def async_will_remove_from_hass(self) -> None:
-    #     """Unregister sensor from bridge on removal."""
-    #     try:
-    #         await self.hass.async_add_executor_job(
-    #             self._ccb.comfoconnect.unregister_sensor, self.entity_description.sensor_id
-    #         )
-    #     except Exception as exc:
-    #         # No need to unregister, as we're not connected
-    #         pass
-
     def _handle_update(self, value):
         """Handle update callbacks."""
         _LOGGER.debug(
