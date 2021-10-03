@@ -103,6 +103,7 @@ async def test_light_firmware_old_protocol(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
     bulb.protocol = "LEDENET_ORIGINAL"
+    bulb.raw_state[1] = 0x35
     with _patch_discovery(no_device=True), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -112,6 +113,7 @@ async def test_light_firmware_old_protocol(hass: HomeAssistant) -> None:
         identifiers={}, connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)}
     )
     assert device.sw_version == "1"
+    assert device.model == "0x35"
 
 
 async def test_light_firmware_new_protocol(hass: HomeAssistant) -> None:
@@ -124,6 +126,7 @@ async def test_light_firmware_new_protocol(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
     bulb.raw_state[10] = 8
+    bulb.raw_state[1] = 0x33
     with _patch_discovery(no_device=True), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -133,6 +136,7 @@ async def test_light_firmware_new_protocol(hass: HomeAssistant) -> None:
         identifiers={}, connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)}
     )
     assert device.sw_version == "8"
+    assert device.model == "0x33"
 
 
 async def test_rgb_light(hass: HomeAssistant) -> None:
