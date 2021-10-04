@@ -3174,6 +3174,7 @@ DEVICES = [
             "sensor.sinope_technologies_th1123zb_77665544_electrical_measurement_rms_current",
             "sensor.sinope_technologies_th1123zb_77665544_electrical_measurement_rms_voltage",
             "sensor.sinope_technologies_th1123zb_77665544_temperature",
+            "sensor.sinope_technologies_th1123zb_77665544_thermostat_hvac_action",
         ],
         DEV_SIG_ENT_MAP: {
             ("climate", "00:11:22:33:44:55:66:77-1"): {
@@ -3200,6 +3201,11 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
                 DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_77665544_electrical_measurement_rms_voltage",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-513-hvac_action"): {
+                DEV_SIG_CHANNELS: ["thermostat"],
+                DEV_SIG_ENT_MAP_CLASS: "ThermostatHVACAction",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_77665544_thermostat_hvac_action",
             },
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
@@ -3231,6 +3237,7 @@ DEVICES = [
             "sensor.sinope_technologies_th1124zb_77665544_electrical_measurement_rms_current",
             "sensor.sinope_technologies_th1124zb_77665544_electrical_measurement_rms_voltage",
             "sensor.sinope_technologies_th1124zb_77665544_temperature",
+            "sensor.sinope_technologies_th1124zb_77665544_thermostat_hvac_action",
             "climate.sinope_technologies_th1124zb_77665544_thermostat",
         ],
         DEV_SIG_ENT_MAP: {
@@ -3238,6 +3245,11 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["thermostat"],
                 DEV_SIG_ENT_MAP_CLASS: "Thermostat",
                 DEV_SIG_ENT_MAP_ID: "climate.sinope_technologies_th1124zb_77665544_thermostat",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-513-hvac_action"): {
+                DEV_SIG_CHANNELS: ["thermostat"],
+                DEV_SIG_ENT_MAP_CLASS: "ThermostatHVACAction",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_77665544_thermostat_hvac_action",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1026"): {
                 DEV_SIG_CHANNELS: ["temperature"],
@@ -3454,6 +3466,7 @@ DEVICES = [
         },
         DEV_SIG_ENTITIES: [
             "climate.zen_within_zen_01_77665544_fan_thermostat",
+            "sensor.zen_within_zen_01_77665544_thermostat_hvac_action",
             "sensor.zen_within_zen_01_77665544_power",
         ],
         DEV_SIG_ENT_MAP: {
@@ -3466,6 +3479,11 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["thermostat", "fan"],
                 DEV_SIG_ENT_MAP_CLASS: "ZenWithinThermostat",
                 DEV_SIG_ENT_MAP_ID: "climate.zen_within_zen_01_77665544_fan_thermostat",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-513-hvac_action"): {
+                DEV_SIG_CHANNELS: ["thermostat"],
+                DEV_SIG_ENT_MAP_CLASS: "ZenHVACAction",
+                DEV_SIG_ENT_MAP_ID: "sensor.zen_within_zen_01_77665544_thermostat_hvac_action",
             },
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
