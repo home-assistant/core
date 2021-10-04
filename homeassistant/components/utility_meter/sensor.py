@@ -326,6 +326,13 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         if state:
             try:
                 self._state = Decimal(state.state)
+            except decimal.InvalidOperation:
+                _LOGGER.error(
+                    "Could not restore state <%s>. Resetting utility_meter.%s",
+                    state.state,
+                    self.name,
+                )
+            else:
                 self._unit_of_measurement = state.attributes.get(
                     ATTR_UNIT_OF_MEASUREMENT
                 )
@@ -340,12 +347,6 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
                 if state.attributes.get(ATTR_STATUS) == COLLECTING:
                     # Fake cancellation function to init the meter in similar state
                     self._collecting = lambda: None
-            except decimal.InvalidOperation:
-                _LOGGER.error(
-                    "Could not restore state <%s>. Resetting utility_meter.%s",
-                    state.state,
-                    self.name,
-                )
 
         @callback
         def async_source_tracking(event):
