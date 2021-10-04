@@ -44,8 +44,5 @@ def climacell_config_entry_update_fixture():
     ), patch(
         "homeassistant.components.climacell.ClimaCellV3.forecast_nowcast",
         return_value=json.loads(load_fixture("climacell/v3_forecast_nowcast.json")),
-    ), patch(
-        "homeassistant.components.climacell.ClimaCellV4.realtime_and_all_forecasts",
-        return_value=json.loads(load_fixture("climacell/v4.json")),
     ):
         yield
