@@ -447,7 +447,7 @@ class Camera(Entity):
         return self.stream
 
     async def stream_source(self) -> str | None:
-        """Return the source of the stream.
+        """Return the source of the stream..
 
         This is used by cameras with SUPPORT_STREAM and STREAM_TYPE_HLS.
         """
