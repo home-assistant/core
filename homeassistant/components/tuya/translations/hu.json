@@ -10,11 +10,25 @@
         },
         "flow_title": "Tuya konfigur\u00e1ci\u00f3",
         "step": {
+            "login": {
+                "data": {
+                    "access_id": "Hozz\u00e1f\u00e9r\u00e9si azonos\u00edt\u00f3",
+                    "access_secret": "Hozz\u00e1f\u00e9r\u00e9si token",
+                    "country_code": "Orsz\u00e1g k\u00f3d",
+                    "endpoint": "El\u00e9rhet\u0151s\u00e9gi z\u00f3na",
+                    "password": "Jelsz\u00f3",
+                    "tuya_app_type": "Mobil app",
+                    "username": "Fi\u00f3k"
+                },
+                "description": "Adja meg Tuya hiteles\u00edt\u0151 adatait.",
+                "title": "Tuya"
+            },
             "user": {
                 "data": {
                     "country_code": "A fi\u00f3k orsz\u00e1gk\u00f3dja (pl. 1 USA, 36 Magyarorsz\u00e1g, vagy 86 K\u00edna)",
                     "password": "Jelsz\u00f3",
                     "platform": "Az alkalmaz\u00e1s, ahol a fi\u00f3k regisztr\u00e1lt",
+                    "tuya_project_type": "Tuya felh\u0151 projekt t\u00edpusa",
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
                 },
                 "description": "Adja meg Tuya hiteles\u00edt\u0151 adatait.",
