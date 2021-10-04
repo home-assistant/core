@@ -55,11 +55,4 @@ class ClimaCellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input: dict[str, Any] = None) -> FlowResult:
         """Handle the initial step."""
-        if self._first_run:
-            self._first_run = False
-            return self.async_show_form(
-                step_id="user",
-                data_schema={},
-            )
-
         return self.async_abort(reason="tomorrowio")
