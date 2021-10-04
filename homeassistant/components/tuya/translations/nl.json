@@ -13,6 +13,7 @@
             "login": {
                 "data": {
                     "access_id": "Toegangs-ID",
+                    "access_secret": "Access Secret",
                     "country_code": "Landcode",
                     "endpoint": "Beschikbaarheidszone",
                     "password": "Wachtwoord",
