@@ -26,6 +26,8 @@ from .const import (
 RESULT_SINGLE_INSTANCE = "single_instance_allowed"
 RESULT_AUTH_FAILED = "invalid_auth"
 TUYA_ENDPOINT_BASE = "https://openapi.tuyacn.com"
+TUYA_ENDPOINT_OTHER = "https://openapi.tuyaus.com"
+COUNTRY_CODE_CHINA = ["86", "+86", "China"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,7 +84,11 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if project_type == ProjectType.INDUSTY_SOLUTIONS:
             response = api.login(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
         else:
-            api.endpoint = TUYA_ENDPOINT_BASE
+            if user_input[CONF_COUNTRY_CODE] in COUNTRY_CODE_CHINA:
+                api.endpoint = TUYA_ENDPOINT_BASE
+            else:
+                api.endpoint = TUYA_ENDPOINT_OTHER
+
             response = api.login(
                 user_input[CONF_USERNAME],
                 user_input[CONF_PASSWORD],
