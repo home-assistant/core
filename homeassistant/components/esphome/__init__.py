@@ -24,7 +24,7 @@ from aioesphomeapi import (
     UserServiceArgType,
 )
 import voluptuous as vol
-from zeroconf import DNSPointer, DNSRecord, RecordUpdateListener, Zeroconf
+from zeroconf import DNSPointer, RecordUpdate, RecordUpdateListener, Zeroconf
 
 from homeassistant import const
 from homeassistant.components import zeroconf
@@ -518,34 +518,40 @@ class ReconnectLogic(RecordUpdateListener):
         """Stop as an async callback function."""
         self._hass.async_create_task(self.stop())
 
-    @callback
-    def _set_reconnect(self) -> None:
-        self._reconnect_event.set()
+    def async_update_records(
+        self, zc: Zeroconf, now: float, records: list[RecordUpdate]
+    ) -> None:
+        """Listen to zeroconf updated mDNS records.
 
-    def update_record(self, zc: Zeroconf, now: float, record: DNSRecord) -> None:
-        """Listen to zeroconf updated mDNS records."""
-        if not isinstance(record, DNSPointer):
-            # We only consider PTR records and match using the alias name
-            return
-        if self._entry_data is None or self._entry_data.device_info is None:
-            # Either the entry was already teared down or we haven't received device info yet
+        This is a mDNS record from the device and could mean it just woke up.
+        """
+        # Check if already connected, no lock needed for this access and
+        # bail if either the entry was already teared down or we haven't received device info yet
+        if (
+            self._connected
+            or self._reconnect_event.is_set()
+            or self._entry_data is None
+            or self._entry_data.device_info is None
+        ):
             return
         filter_alias = f"{self._entry_data.device_info.name}._esphomelib._tcp.local."
-        if record.alias != filter_alias:
-            return
 
-        # This is a mDNS record from the device and could mean it just woke up
-        # Check if already connected, no lock needed for this access
-        if self._connected:
-            return
+        for record_update in records:
+            # We only consider PTR records and match using the alias name
+            if (
+                not isinstance(record_update.new, DNSPointer)
+                or record_update.new.alias != filter_alias
+            ):
+                continue
 
-        # Tell reconnection logic to retry connection attempt now (even before reconnect timer finishes)
-        _LOGGER.debug(
-            "%s: Triggering reconnect because of received mDNS record %s",
-            self._host,
-            record,
-        )
-        self._hass.add_job(self._set_reconnect)
+            # Tell reconnection logic to retry connection attempt now (even before reconnect timer finishes)
+            _LOGGER.debug(
+                "%s: Triggering reconnect because of received mDNS record %s",
+                self._host,
+                record_update.new,
+            )
+            self._reconnect_event.set()
+            return
 
 
 async def _async_setup_device_registry(
