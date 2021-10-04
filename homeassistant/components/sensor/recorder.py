@@ -679,7 +679,7 @@ def validate_statistics(
                             },
                         )
                     )
-            elif metadata_unit not in UNIT_CONVERSIONS[device_class]:
+            elif metadata_unit != DEVICE_CLASS_UNITS[device_class]:
                 # The unit in metadata is not supported for this device class
                 validation_result[entity_id].append(
                     statistics.ValidationIssue(
@@ -688,6 +688,7 @@ def validate_statistics(
                             "statistic_id": entity_id,
                             "device_class": device_class,
                             "metadata_unit": metadata_unit,
+                            "supported_unit": DEVICE_CLASS_UNITS[device_class],
                         },
                     )
                 )

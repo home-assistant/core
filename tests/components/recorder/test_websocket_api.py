@@ -189,6 +189,7 @@ async def test_validate_statistics_supported_device_class_2(
                     "device_class": attributes["device_class"],
                     "metadata_unit": None,
                     "statistic_id": "sensor.test",
+                    "supported_unit": unit,
                 },
                 "type": "unsupported_unit_metadata",
             }
@@ -208,6 +209,7 @@ async def test_validate_statistics_supported_device_class_2(
                     "device_class": attributes["device_class"],
                     "metadata_unit": None,
                     "statistic_id": "sensor.test",
+                    "supported_unit": unit,
                 },
                 "type": "unsupported_unit_metadata",
             },
