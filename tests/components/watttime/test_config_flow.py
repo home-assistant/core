@@ -81,7 +81,7 @@ async def test_duplicate_error(hass: HomeAssistant, client_login):
     assert result["reason"] == "already_configured"
 
 
-async def test_show_form_coordinates(hass: HomeAssistant) -> None:
+async def test_show_form_coordinates(hass: HomeAssistant, client_login) -> None:
     """Test showing the form to input custom latitude/longitude."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
