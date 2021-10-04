@@ -11,14 +11,10 @@ from pytomorrowio.exceptions import (
 )
 
 from homeassistant import data_entry_flow
-from homeassistant.components.climacell.config_flow import (
-    _get_config_schema as _get_climacell_config_schema,
-    _get_unique_id as _get_climacell_unique_id,
-)
 from homeassistant.components.climacell.const import DOMAIN as CC_DOMAIN
 from homeassistant.components.tomorrowio.config_flow import (
-    _get_config_schema as _get_tomorrowio_config_schema,
-    _get_unique_id as _get_tomorrowio_unique_id,
+    _get_config_schema,
+    _get_unique_id,
 )
 from homeassistant.components.tomorrowio.const import (
     CONF_TIMESTEP,
@@ -39,6 +35,7 @@ from homeassistant.core import HomeAssistant
 from .const import API_KEY, MIN_CONFIG
 
 from tests.common import MockConfigEntry
+from tests.components.climacell.const import API_V3_ENTRY_DATA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,9 +50,7 @@ async def test_user_flow_minimum_fields(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input=_get_tomorrowio_config_schema(hass, SOURCE_USER, MIN_CONFIG)(
-            MIN_CONFIG
-        ),
+        user_input=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -68,14 +63,12 @@ async def test_user_flow_minimum_fields(hass: HomeAssistant) -> None:
 
 async def test_user_flow_same_unique_ids(hass: HomeAssistant) -> None:
     """Test user config flow with the same unique ID as an existing entry."""
-    user_input = _get_tomorrowio_config_schema(hass, SOURCE_USER, MIN_CONFIG)(
-        MIN_CONFIG
-    )
+    user_input = _get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG)
     MockConfigEntry(
         domain=DOMAIN,
         data=user_input,
         source=SOURCE_USER,
-        unique_id=_get_tomorrowio_unique_id(hass, user_input),
+        unique_id=_get_unique_id(hass, user_input),
         version=2,
     ).add_to_hass(hass)
 
@@ -98,9 +91,7 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
-            data=_get_tomorrowio_config_schema(hass, SOURCE_USER, MIN_CONFIG)(
-                MIN_CONFIG
-            ),
+            data=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -116,9 +107,7 @@ async def test_user_flow_invalid_api(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
-            data=_get_tomorrowio_config_schema(hass, SOURCE_USER, MIN_CONFIG)(
-                MIN_CONFIG
-            ),
+            data=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -134,9 +123,7 @@ async def test_user_flow_rate_limited(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
-            data=_get_tomorrowio_config_schema(hass, SOURCE_USER, MIN_CONFIG)(
-                MIN_CONFIG
-            ),
+            data=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -152,9 +139,7 @@ async def test_user_flow_unknown_exception(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
-            data=_get_tomorrowio_config_schema(hass, SOURCE_USER, MIN_CONFIG)(
-                MIN_CONFIG
-            ),
+            data=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -163,12 +148,12 @@ async def test_user_flow_unknown_exception(hass: HomeAssistant) -> None:
 
 async def test_options_flow(hass: HomeAssistant) -> None:
     """Test options config flow for tomorrowio."""
-    user_config = _get_tomorrowio_config_schema(hass, SOURCE_USER)(MIN_CONFIG)
+    user_config = _get_config_schema(hass, SOURCE_USER)(MIN_CONFIG)
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=user_config,
         source=SOURCE_USER,
-        unique_id=_get_tomorrowio_unique_id(hass, user_config),
+        unique_id=_get_unique_id(hass, user_config),
         version=1,
     )
     entry.add_to_hass(hass)
@@ -195,12 +180,13 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
 async def test_import_flow_v4(hass: HomeAssistant) -> None:
     """Test import flow for climacell v4 config entry."""
-    user_config = _get_climacell_config_schema(hass)(MIN_CONFIG)
+    user_config = API_V3_ENTRY_DATA.copy()
+    user_config[CONF_API_VERSION] = 4
     old_entry = MockConfigEntry(
         domain=CC_DOMAIN,
         data=user_config,
         source=SOURCE_USER,
-        unique_id=_get_climacell_unique_id(hass, user_config),
+        unique_id=_get_unique_id(hass, user_config),
         version=1,
     )
     old_entry.add_to_hass(hass)
@@ -212,8 +198,8 @@ async def test_import_flow_v4(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
         CONF_API_KEY: API_KEY,
-        CONF_LATITUDE: hass.config.latitude,
-        CONF_LONGITUDE: hass.config.longitude,
+        CONF_LATITUDE: 80,
+        CONF_LONGITUDE: 80,
         CONF_NAME: "ClimaCell",
         "old_config_entry_id": old_entry.entry_id,
     }
@@ -231,23 +217,25 @@ async def test_import_flow_v3(
     climacell_config_entry_update: pytest.fixture,
 ) -> None:
     """Test import flow for climacell v3 config entry."""
-    user_config = _get_climacell_config_schema(hass)(MIN_CONFIG)
-    user_config[CONF_API_VERSION] = 3
+    user_config = API_V3_ENTRY_DATA
     old_entry = MockConfigEntry(
         domain=CC_DOMAIN,
         data=user_config,
         source=SOURCE_USER,
-        unique_id=_get_climacell_unique_id(hass, user_config),
+        unique_id=_get_unique_id(hass, user_config),
         version=1,
     )
     old_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(old_entry.entry_id)
     assert old_entry.state == ConfigEntryState.LOADED
+    _LOGGER.error(hass.config_entries.async_entries(DOMAIN))
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT, "old_config_entry_id": old_entry.entry_id},
         data=old_entry.data,
     )
+
+    _LOGGER.error(result)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -258,8 +246,8 @@ async def test_import_flow_v3(
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
         CONF_API_KEY: "this is a test",
-        CONF_LATITUDE: hass.config.latitude,
-        CONF_LONGITUDE: hass.config.longitude,
+        CONF_LATITUDE: 80,
+        CONF_LONGITUDE: 80,
         CONF_NAME: "ClimaCell",
         "old_config_entry_id": old_entry.entry_id,
     }

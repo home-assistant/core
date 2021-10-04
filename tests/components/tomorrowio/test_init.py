@@ -3,10 +3,6 @@ import logging
 
 import pytest
 
-from homeassistant.components.climacell.config_flow import (
-    _get_config_schema as _get_climacell_config_schema,
-    _get_unique_id as _get_climacell_unique_id,
-)
 from homeassistant.components.climacell.const import DOMAIN as CC_DOMAIN
 from homeassistant.components.tomorrowio.config_flow import (
     _get_config_schema,
@@ -15,13 +11,14 @@ from homeassistant.components.tomorrowio.config_flow import (
 from homeassistant.components.tomorrowio.const import DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_API_VERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import MIN_CONFIG
 
 from tests.common import MockConfigEntry
+from tests.components.climacell.const import API_V3_ENTRY_DATA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,12 +50,12 @@ async def test_climacell_migration_logic(
     climacell_config_entry_update: pytest.fixture,
 ) -> None:
     """Test that climacell config entry is properly migrated."""
-    old_data = _get_climacell_config_schema(hass)(MIN_CONFIG)
+    old_data = API_V3_ENTRY_DATA.copy()
     old_data[CONF_API_KEY] = "v3apikey"
     old_config_entry = MockConfigEntry(
         domain=CC_DOMAIN,
         data=old_data,
-        unique_id=_get_climacell_unique_id(hass, old_data),
+        unique_id=_get_unique_id(hass, old_data),
         version=1,
     )
     old_config_entry.add_to_hass(hass)
@@ -79,7 +76,7 @@ async def test_climacell_migration_logic(
     old_entity_daily = ent_reg.async_get_or_create(
         "weather",
         CC_DOMAIN,
-        f"{_get_climacell_unique_id(hass, old_data)}_daily",
+        f"{_get_unique_id(hass, old_data)}_daily",
         config_entry=old_config_entry,
         original_name="ClimaCell - Daily",
         suggested_object_id="climacell_daily",
@@ -88,7 +85,7 @@ async def test_climacell_migration_logic(
     old_entity_hourly = ent_reg.async_get_or_create(
         "weather",
         CC_DOMAIN,
-        f"{_get_climacell_unique_id(hass, old_data)}_hourly",
+        f"{_get_unique_id(hass, old_data)}_hourly",
         config_entry=old_config_entry,
         original_name="ClimaCell - Hourly",
         suggested_object_id="climacell_hourly",
@@ -98,7 +95,7 @@ async def test_climacell_migration_logic(
     old_entity_nowcast = ent_reg.async_get_or_create(
         "weather",
         CC_DOMAIN,
-        f"{_get_climacell_unique_id(hass, old_data)}_nowcast",
+        f"{_get_unique_id(hass, old_data)}_nowcast",
         config_entry=old_config_entry,
         original_name="ClimaCell - Nowcast",
         suggested_object_id="climacell_nowcast",
@@ -109,7 +106,8 @@ async def test_climacell_migration_logic(
     # Now let's create a new tomorrowio config entry that is supposedly created from a
     # climacell import and see what happens - we are also changing the API key to ensure
     # that things work as expected
-    new_data = _get_config_schema(hass, SOURCE_IMPORT)(MIN_CONFIG)
+    new_data = API_V3_ENTRY_DATA.copy()
+    new_data[CONF_API_VERSION] = 4
     new_data["old_config_entry_id"] = old_config_entry.entry_id
     config_entry = MockConfigEntry(
         domain=DOMAIN,
