@@ -15,7 +15,7 @@
                 "data": {
                     "environment": "K\u00f6rnyezet"
                 },
-                "description": "\u00c1ll\u00edtsa be a Smappee k\u00e9sz\u00fcl\u00e9ket az HomeAssistant-al val\u00f3 integr\u00e1ci\u00f3hoz."
+                "description": "Integr\u00e1lja \u00f6ssze Smappee k\u00e9sz\u00fcl\u00e9ket HomeAssistanttal."
             },
             "local": {
                 "data": {

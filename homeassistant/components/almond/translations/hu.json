@@ -8,7 +8,7 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani Home Assistant-ot az Almondhoz val\u00f3 csatlakoz\u00e1shoz, {addon} kieg\u00e9sz\u00edt\u0151 \u00e1ltal?",
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani Home Assistantot Almondhoz val\u00f3 csatlakoz\u00e1shoz, {addon} kieg\u00e9sz\u00edt\u0151 \u00e1ltal?",
                 "title": "Almond - Home Assistant kieg\u00e9sz\u00edt\u0151 \u00e1ltal"
             },
             "pick_implementation": {
