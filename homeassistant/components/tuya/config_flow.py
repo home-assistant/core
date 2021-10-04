@@ -59,6 +59,7 @@ DATA_SCHEMA_SMART_HOME = vol.Schema(
     }
 )
 
+
 class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Tuya Config Flow."""
 
