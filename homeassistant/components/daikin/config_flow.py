@@ -112,7 +112,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=self.schema)
         if user_input.get(CONF_API_KEY) and user_input.get(CONF_PASSWORD):
-            _LOGGER.warning("API & Password.")
             self.host = user_input.get(CONF_HOST)
             return self.async_show_form(
                 step_id="user",
