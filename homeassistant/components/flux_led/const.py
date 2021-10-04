@@ -24,9 +24,12 @@ CONF_DEVICES: Final = "devices"
 CONF_CUSTOM_EFFECT: Final = "custom_effect"
 CONF_MODEL: Final = "model"
 
-MODE_AUTO: Final = "auto"
-MODE_RGB: Final = "rgb"
-MODE_RGBW: Final = "rgbw"
+MODE_AUTO: Final = "AUTO"
+MODE_DIM: Final = "DIM"
+MODE_CCT: Final = "CCT"
+MODE_RGB: Final = "RGB"
+MODE_RGBW: Final = "RGBW"
+MODE_RGBWW: Final = "RGBWW"
 
 
 # This mode enables white value to be controlled by brightness.
