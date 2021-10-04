@@ -34,13 +34,14 @@ async def async_setup_entry(
 class RaspberryChargerBinarySensor(BinarySensorEntity):
     """Binary sensor representing the rpi power status."""
 
+    _attr_device_class = DEVICE_CLASS_PROBLEM
+    _attr_icon = "mdi:raspberry-pi"
+    _attr_name = "RPi Power status"
+    _attr_unique_id = "rpi_power"  # only one sensor possible
+
     def __init__(self, under_voltage: UnderVoltage) -> None:
         """Initialize the binary sensor."""
         self._under_voltage = under_voltage
-        self._attr_device_class = DEVICE_CLASS_PROBLEM
-        self._attr_icon = "mdi:raspberry-pi"
-        self._attr_name = "RPi Power status"
-        self._attr_unique_id = "rpi_power"  # only one sensor possible
 
     def update(self) -> None:
         """Update the state."""
