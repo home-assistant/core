@@ -503,16 +503,14 @@ class ReconnectLogic(RecordUpdateListener):
         """
         async with self._zc_lock:
             if not self._zc_listening:
-                await self._hass.async_add_executor_job(
-                    self._zc.add_listener, self, None
-                )
+                self._zc.async_add_listener(self, None)
                 self._zc_listening = True
 
     async def _stop_zc_listen(self) -> None:
         """Stop listening for zeroconf updates."""
         async with self._zc_lock:
             if self._zc_listening:
-                await self._hass.async_add_executor_job(self._zc.remove_listener, self)
+                self._zc.async_remove_listener(self)
                 self._zc_listening = False
 
     @callback
