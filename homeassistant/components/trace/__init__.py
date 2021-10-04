@@ -82,7 +82,7 @@ async def async_setup(hass, config):
 def async_store_trace(hass, trace, stored_traces):
     """Store a trace if its item_id is valid."""
     key = trace.key
-    if key[1]:
+    if key:
         traces = hass.data[DATA_TRACE]
         if key not in traces:
             traces[key] = LimitedSizeDict(size_limit=stored_traces)

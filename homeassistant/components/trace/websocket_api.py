@@ -97,13 +97,14 @@ def get_debug_traces(hass, key):
 )
 def websocket_trace_list(hass, connection, msg):
     """Summarize script and automation traces."""
-    domain = msg["domain"]
+    wanted_domain = msg["domain"]
     key = f"{msg['domain']}.{msg['item_id']}" if "item_id" in msg else None
 
     if not key:
         traces = []
         for key in hass.data[DATA_TRACE]:
-            if key[0] == domain:
+            domain = key.split(".", 1)[0]
+            if domain == wanted_domain:
                 traces.extend(get_debug_traces(hass, key))
     else:
         traces = get_debug_traces(hass, key)
@@ -129,8 +130,13 @@ def websocket_trace_contexts(hass, connection, msg):
     else:
         values = hass.data[DATA_TRACE]
 
+    def _context_id(run_id, key) -> dict:
+        """Make context_id for the response."""
+        domain, item_id = key.split(".", 1)
+        return {"run_id": run_id, "domain": domain, "item_id": item_id}
+
     contexts = {
-        trace.context.id: {"run_id": trace.run_id, "domain": key[0], "item_id": key[1]}
+        trace.context.id: _context_id(trace.run_id, key)
         for key, traces in values.items()
         for trace in traces.values()
     }
@@ -194,7 +200,8 @@ def websocket_breakpoint_list(hass, connection, msg):
     """List breakpoints."""
     breakpoints = breakpoint_list(hass)
     for _breakpoint in breakpoints:
-        _breakpoint["domain"], _breakpoint["item_id"] = _breakpoint.pop("key")
+        key = _breakpoint.pop("key")
+        _breakpoint["domain"], _breakpoint["item_id"] = key.split(".", 1)
 
     connection.send_result(msg["id"], breakpoints)
 
@@ -210,12 +217,13 @@ def websocket_subscribe_breakpoint_events(hass, connection, msg):
     @callback
     def breakpoint_hit(key, run_id, node):
         """Forward events to websocket."""
+        domain, item_id = key.split(".", 1)
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],
                 {
-                    "domain": key[0],
-                    "item_id": key[1],
+                    "domain": domain,
+                    "item_id": item_id,
                     "run_id": run_id,
                     "node": node,
                 },
