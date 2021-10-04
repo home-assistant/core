@@ -176,7 +176,7 @@ async def test_smart_home_user_other(hass, tuya):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "login"
-    
+
     tuya().login = MagicMock(return_value={"success": False, "errorCode": 1024})
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=TUYA_IMPORT_SMART_HOME_DATA_OTHER
