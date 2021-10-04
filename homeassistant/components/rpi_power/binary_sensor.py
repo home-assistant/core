@@ -37,19 +37,17 @@ class RaspberryChargerBinarySensor(BinarySensorEntity):
     def __init__(self, under_voltage: UnderVoltage) -> None:
         """Initialize the binary sensor."""
         self._under_voltage = under_voltage
-        self._attr_is_on = None
         self._attr_device_class = DEVICE_CLASS_PROBLEM
         self._attr_icon = "mdi:raspberry-pi"
         self._attr_name = "RPi Power status"
         self._attr_unique_id = "rpi_power"  # only one sensor possible
-        self._last_is_on = False
 
     def update(self) -> None:
         """Update the state."""
-        self.attr_is_on = self._under_voltage.get()
-        if self.attr_is_on != self._last_is_on:
-            if self.attr_is_on:
+        value = self._under_voltage.get()
+        if self._attr_is_on != value:
+            if value:
                 _LOGGER.warning(DESCRIPTION_UNDER_VOLTAGE)
             else:
                 _LOGGER.info(DESCRIPTION_NORMALIZED)
-            self._last_is_on = self.attr_is_on
+            self._attr_is_on = value
