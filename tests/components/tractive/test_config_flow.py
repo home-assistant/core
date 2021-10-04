@@ -121,7 +121,10 @@ async def test_reauthentication(hass):
     assert result["errors"] == {}
     assert result["step_id"] == "reauth_confirm"
 
-    with patch("aiotractive.api.API.user_id", return_value="USERID"):
+    with patch("aiotractive.api.API.user_id", return_value="USERID"), patch(
+        "homeassistant.components.tractive.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             USER_INPUT,
@@ -130,6 +133,7 @@ async def test_reauthentication(hass):
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "reauth_successful"
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_reauthentication_failure(hass):
