@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
-from typing import Callable, cast
+from collections.abc import Awaitable, Callable
+from typing import cast
 from uuid import UUID
 
 from simplipy import get_api

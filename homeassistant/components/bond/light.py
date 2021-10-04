@@ -26,8 +26,8 @@ from .const import (
     BPUP_SUBS,
     DOMAIN,
     HUB,
-    SERVICE_SET_LIGHT_BRIGHTNESS_BELIEF,
-    SERVICE_SET_LIGHT_POWER_BELIEF,
+    SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
+    SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
 )
 from .entity import BondEntity
 from .utils import BondDevice
@@ -103,7 +103,7 @@ async def async_setup_entry(
     ]
 
     platform.async_register_entity_service(
-        SERVICE_SET_LIGHT_BRIGHTNESS_BELIEF,
+        SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
         {
             vol.Required(ATTR_BRIGHTNESS): vol.All(
                 vol.Number(scale=0), vol.Range(0, 255)
@@ -113,7 +113,7 @@ async def async_setup_entry(
     )
 
     platform.async_register_entity_service(
-        SERVICE_SET_LIGHT_POWER_BELIEF,
+        SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
         {vol.Required(ATTR_POWER_STATE): vol.All(cv.boolean)},
         "async_set_power_belief",
     )

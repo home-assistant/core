@@ -10,15 +10,29 @@
         },
         "flow_title": "Configurazione di Tuya",
         "step": {
+            "login": {
+                "data": {
+                    "access_id": "ID di accesso",
+                    "access_secret": "Accesso segreto",
+                    "country_code": "Prefisso internazionale",
+                    "endpoint": "Zona di disponibilit\u00e0",
+                    "password": "Password",
+                    "tuya_app_type": "App per dispositivi mobili",
+                    "username": "Account"
+                },
+                "description": "Inserisci le tue credenziali Tuya",
+                "title": "Tuya"
+            },
             "user": {
                 "data": {
                     "country_code": "Prefisso internazionale del tuo account (ad es. 1 per gli Stati Uniti o 86 per la Cina)",
                     "password": "Password",
                     "platform": "L'app in cui \u00e8 registrato il tuo account",
+                    "tuya_project_type": "Tipo di progetto Tuya cloud",
                     "username": "Nome utente"
                 },
                 "description": "Inserisci le tue credenziali Tuya.",
-                "title": "Tuya"
+                "title": "Integrazione Tuya"
             }
         }
     },

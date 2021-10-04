@@ -67,9 +67,6 @@ def _mock_socket(failure_attempts: int = 0) -> MagicMock:
     attempts = 0
 
     def _simulate_bind(*_):
-        import pprint
-
-        pprint.pprint("Calling bind")
         nonlocal attempts
         attempts += 1
         if attempts <= failure_attempts:
@@ -238,7 +235,7 @@ def test_density_to_air_quality():
     assert density_to_air_quality(300) == 5
 
 
-async def test_show_setup_msg(hass, hk_driver):
+async def test_show_setup_msg(hass, hk_driver, mock_get_source_ip):
     """Test show setup message as persistence notification."""
     pincode = b"123-45-678"
 

@@ -53,11 +53,20 @@
                 "title": "De add-on Z-Wave JS wordt gestart."
             },
             "usb_confirm": {
-                "description": "Wilt u {naam} instellen met de Z-Wave JS add-on?"
+                "description": "Wilt u {name} instellen met de Z-Wave JS add-on?"
             }
         }
     },
     "device_automation": {
+        "action_type": {
+            "clear_lock_usercode": "Wis gebruikerscode van {entity_name}",
+            "ping": "Ping apparaat",
+            "refresh_value": "Ververs de waarde(s) voor {entity_name}",
+            "reset_meter": "Reset meters op {subtype}",
+            "set_config_parameter": "Stel waarde in voor configuratieparameter {subtype}",
+            "set_lock_usercode": "Stel gebruikerscode in voor {entity_name}",
+            "set_value": "Waarde van een Z-Wave waarde instellen"
+        },
         "condition_type": {
             "config_parameter": "Config parameter {subtype} waarde",
             "node_status": "Knooppuntstatus",

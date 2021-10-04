@@ -10,15 +10,29 @@
         },
         "flow_title": "Configuraci\u00f3 de Tuya",
         "step": {
+            "login": {
+                "data": {
+                    "access_id": "ID d'acc\u00e9s",
+                    "access_secret": "Secret d'acc\u00e9s",
+                    "country_code": "Codi de pa\u00eds",
+                    "endpoint": "Zona de disponibilitat",
+                    "password": "Contrasenya",
+                    "tuya_app_type": "Aplicaci\u00f3 per a m\u00f2bil",
+                    "username": "Compte"
+                },
+                "description": "Introdueix la credencial de Tuya",
+                "title": "Tuya"
+            },
             "user": {
                 "data": {
                     "country_code": "El teu codi de pa\u00eds (per exemple, 1 per l'EUA o 86 per la Xina)",
                     "password": "Contrasenya",
                     "platform": "L'aplicaci\u00f3 on es registra el teu compte",
+                    "tuya_project_type": "Tipus de projecte al n\u00favol de Tuya",
                     "username": "Nom d'usuari"
                 },
                 "description": "Introdueix les teves credencial de Tuya.",
-                "title": "Tuya"
+                "title": "Integraci\u00f3 Tuya"
             }
         }
     },

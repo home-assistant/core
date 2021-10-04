@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error",
+            "unknown_coordinates": "No data for latitude/longitude"
+        },
+        "step": {
+            "coordinates": {
+                "data": {
+                    "latitude": "Latitude",
+                    "longitude": "Longitude"
+                },
+                "description": "Input the latitude and longitude to monitor:"
+            },
+            "location": {
+                "data": {
+                    "location_type": "Location"
+                },
+                "description": "Pick a location to monitor:"
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Input your username and password:"
+            }
+        }
+    }
+}

@@ -1,9 +1,9 @@
 """Helpers for mobile_app."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import json
 import logging
-from typing import Callable
 
 from aiohttp.web import Response, json_response
 from nacl.encoding import Base64Encoder

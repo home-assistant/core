@@ -29,7 +29,7 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from .const import BPUP_SUBS, DOMAIN, HUB, SERVICE_SET_FAN_SPEED_BELIEF
+from .const import BPUP_SUBS, DOMAIN, HUB, SERVICE_SET_FAN_SPEED_TRACKED_STATE
 from .entity import BondEntity
 from .utils import BondDevice, BondHub
 
@@ -54,7 +54,7 @@ async def async_setup_entry(
     ]
 
     platform.async_register_entity_service(
-        SERVICE_SET_FAN_SPEED_BELIEF,
+        SERVICE_SET_FAN_SPEED_TRACKED_STATE,
         {vol.Required(ATTR_SPEED): vol.All(vol.Number(scale=0), vol.Range(0, 100))},
         "async_set_speed_belief",
     )
