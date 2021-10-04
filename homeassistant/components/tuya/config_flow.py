@@ -44,10 +44,10 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         data = {
             CONF_ENDPOINT: TUYA_REGIONS[user_input[CONF_REGION]],
             CONF_PROJECT_TYPE: ProjectType.INDUSTY_SOLUTIONS,
-            CONF_ACCESS_ID: user_input.get(CONF_ACCESS_ID),
-            CONF_ACCESS_SECRET: user_input.get(CONF_ACCESS_SECRET),
-            CONF_USERNAME: user_input.get(CONF_USERNAME),
-            CONF_PASSWORD: user_input.get(CONF_PASSWORD),
+            CONF_ACCESS_ID: user_input[CONF_ACCESS_ID],
+            CONF_ACCESS_SECRET: user_input[CONF_ACCESS_SECRET],
+            CONF_USERNAME: user_input[CONF_USERNAME],
+            CONF_PASSWORD: user_input[CONF_PASSWORD],
             CONF_COUNTRY_CODE: user_input[CONF_REGION],
         }
 
