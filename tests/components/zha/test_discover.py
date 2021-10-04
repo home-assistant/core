@@ -367,7 +367,6 @@ def _test_single_input_cluster_device_class(probe_mock):
         cover_ch,
         multistate_ch,
         ias_ch,
-        analog_ch,
     ]
 
     disc.ProbeEndpoint().discover_by_cluster_id(ch_pool)

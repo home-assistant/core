@@ -186,19 +186,24 @@ class Sensor(ZhaEntity, SensorEntity):
         return round(float(value * self._multiplier) / self._divisor)
 
 
-@STRICT_MATCH(
+@MULTI_MATCH(
     channel_names=CHANNEL_ANALOG_INPUT,
     manufacturers="LUMI",
     models={"lumi.plug", "lumi.plug.maus01", "lumi.plug.mmeu01"},
+    stop_on_match_group=CHANNEL_ANALOG_INPUT,
 )
-@STRICT_MATCH(channel_names=CHANNEL_ANALOG_INPUT, manufacturers="Digi")
+@MULTI_MATCH(
+    channel_names=CHANNEL_ANALOG_INPUT,
+    manufacturers="Digi",
+    stop_on_match_group=CHANNEL_ANALOG_INPUT,
+)
 class AnalogInput(Sensor):
     """Sensor that displays analog input values."""
 
     SENSOR_ATTR = "present_value"
 
 
-@STRICT_MATCH(channel_names=CHANNEL_POWER_CONFIGURATION)
+@MULTI_MATCH(channel_names=CHANNEL_POWER_CONFIGURATION)
 class Battery(Sensor):
     """Battery sensor of power configuration cluster."""
 
