@@ -1,93 +1,84 @@
 """Tests for the Tuya config flow."""
-from unittest.mock import MagicMock, Mock, patch
+from __future__ import annotations
+
+from typing import Any
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.tuya.config_flow import RESULT_AUTH_FAILED
 from homeassistant.components.tuya.const import (
     CONF_ACCESS_ID,
     CONF_ACCESS_SECRET,
     CONF_APP_TYPE,
-    CONF_COUNTRY_CODE,
     CONF_ENDPOINT,
     CONF_PASSWORD,
     CONF_PROJECT_TYPE,
+    CONF_REGION,
     CONF_USERNAME,
     DOMAIN,
+    SMARTLIFE_APP,
+    TUYA_REGIONS,
+    TUYA_SMART_APP,
 )
+from homeassistant.core import HomeAssistant
 
 MOCK_SMART_HOME_PROJECT_TYPE = 0
 MOCK_INDUSTRY_PROJECT_TYPE = 1
 
+MOCK_REGION = "Europe"
 MOCK_ACCESS_ID = "myAccessId"
 MOCK_ACCESS_SECRET = "myAccessSecret"
 MOCK_USERNAME = "myUsername"
 MOCK_PASSWORD = "myPassword"
-MOCK_COUNTRY_CODE_BASE = "86"
-MOCK_COUNTRY_CODE_OTHER = "1"
-MOCK_APP_TYPE = "smartlife"
 MOCK_ENDPOINT = "https://openapi-ueaz.tuyaus.com"
 
-TUYA_SMART_HOME_PROJECT_DATA = {
-    CONF_PROJECT_TYPE: MOCK_SMART_HOME_PROJECT_TYPE,
-}
-TUYA_INDUSTRY_PROJECT_DATA = {
-    CONF_PROJECT_TYPE: MOCK_INDUSTRY_PROJECT_TYPE,
-}
-
-TUYA_INPUT_INDUSTRY_DATA = {
-    CONF_ENDPOINT: MOCK_ENDPOINT,
+TUYA_INPUT_DATA = {
+    CONF_REGION: MOCK_REGION,
     CONF_ACCESS_ID: MOCK_ACCESS_ID,
     CONF_ACCESS_SECRET: MOCK_ACCESS_SECRET,
     CONF_USERNAME: MOCK_USERNAME,
     CONF_PASSWORD: MOCK_PASSWORD,
 }
 
-TUYA_IMPORT_SMART_HOME_DATA_BASE = {
-    CONF_ACCESS_ID: MOCK_ACCESS_ID,
-    CONF_ACCESS_SECRET: MOCK_ACCESS_SECRET,
-    CONF_USERNAME: MOCK_USERNAME,
-    CONF_PASSWORD: MOCK_PASSWORD,
-    CONF_COUNTRY_CODE: MOCK_COUNTRY_CODE_BASE,
-    CONF_APP_TYPE: MOCK_APP_TYPE,
+RESPONSE_SUCCESS = {
+    "success": True,
+    "code": 1024,
+    "result": {"platform_url": MOCK_ENDPOINT},
 }
-
-TUYA_IMPORT_SMART_HOME_DATA_OTHER = {
-    CONF_ACCESS_ID: MOCK_ACCESS_ID,
-    CONF_ACCESS_SECRET: MOCK_ACCESS_SECRET,
-    CONF_USERNAME: MOCK_USERNAME,
-    CONF_PASSWORD: MOCK_PASSWORD,
-    CONF_COUNTRY_CODE: MOCK_COUNTRY_CODE_OTHER,
-    CONF_APP_TYPE: MOCK_APP_TYPE,
-}
-
-TUYA_IMPORT_INDUSTRY_DATA = {
-    CONF_PROJECT_TYPE: MOCK_SMART_HOME_PROJECT_TYPE,
-    CONF_ENDPOINT: MOCK_ENDPOINT,
-    CONF_ACCESS_ID: MOCK_ACCESS_ID,
-    CONF_ACCESS_SECRET: MOCK_ACCESS_SECRET,
-    CONF_USERNAME: MOCK_USERNAME,
-    CONF_PASSWORD: MOCK_PASSWORD,
-}
+RESPONSE_ERROR = {"success": False, "code": 123, "msg": "Error"}
 
 
 @pytest.fixture(name="tuya")
-def tuya_fixture() -> Mock:
+def tuya_fixture() -> MagicMock:
     """Patch libraries."""
     with patch("homeassistant.components.tuya.config_flow.TuyaOpenAPI") as tuya:
         yield tuya
 
 
 @pytest.fixture(name="tuya_setup", autouse=True)
-def tuya_setup_fixture():
+def tuya_setup_fixture() -> None:
     """Mock tuya entry setup."""
     with patch("homeassistant.components.tuya.async_setup_entry", return_value=True):
         yield
 
 
-async def test_industry_user(hass, tuya):
-    """Test industry user config."""
+@pytest.mark.parametrize(
+    "app_type,side_effects, project_type",
+    [
+        ("", [RESPONSE_SUCCESS], 1),
+        (TUYA_SMART_APP, [RESPONSE_ERROR, RESPONSE_SUCCESS], 0),
+        (SMARTLIFE_APP, [RESPONSE_ERROR, RESPONSE_ERROR, RESPONSE_SUCCESS], 0),
+    ],
+)
+async def test_user_flow(
+    hass: HomeAssistant,
+    tuya: MagicMock,
+    app_type: str,
+    side_effects: list[dict[str, Any]],
+    project_type: int,
+):
+    """Test user flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -95,17 +86,9 @@ async def test_industry_user(hass, tuya):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
+    tuya().login = MagicMock(side_effect=side_effects)
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=TUYA_INDUSTRY_PROJECT_DATA
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "login"
-
-    tuya().login = MagicMock(return_value={"success": True, "errorCode": 1024})
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=TUYA_INPUT_INDUSTRY_DATA
+        result["flow_id"], user_input=TUYA_INPUT_DATA
     )
     await hass.async_block_till_done()
 
@@ -115,90 +98,10 @@ async def test_industry_user(hass, tuya):
     assert result["data"][CONF_ACCESS_SECRET] == MOCK_ACCESS_SECRET
     assert result["data"][CONF_USERNAME] == MOCK_USERNAME
     assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
-    assert not result["result"].unique_id
-
-
-async def test_smart_home_user_base(hass, tuya):
-    """Test smart home user config base."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=TUYA_SMART_HOME_PROJECT_DATA
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "login"
-
-    tuya().login = MagicMock(return_value={"success": False, "errorCode": 1024})
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=TUYA_IMPORT_SMART_HOME_DATA_BASE
-    )
-    await hass.async_block_till_done()
-
-    assert result["errors"]["base"] == RESULT_AUTH_FAILED
-
-    tuya().login = MagicMock(return_value={"success": True, "errorCode": 1024})
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=TUYA_IMPORT_SMART_HOME_DATA_BASE
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == MOCK_USERNAME
-    assert result["data"][CONF_ACCESS_ID] == MOCK_ACCESS_ID
-    assert result["data"][CONF_ACCESS_SECRET] == MOCK_ACCESS_SECRET
-    assert result["data"][CONF_USERNAME] == MOCK_USERNAME
-    assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
-    assert result["data"][CONF_COUNTRY_CODE] == MOCK_COUNTRY_CODE_BASE
-    assert result["data"][CONF_APP_TYPE] == MOCK_APP_TYPE
-    assert not result["result"].unique_id
-
-
-async def test_smart_home_user_other(hass, tuya):
-    """Test smart home user config other."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=TUYA_SMART_HOME_PROJECT_DATA
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "login"
-
-    tuya().login = MagicMock(return_value={"success": False, "errorCode": 1024})
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=TUYA_IMPORT_SMART_HOME_DATA_OTHER
-    )
-    await hass.async_block_till_done()
-
-    assert result["errors"]["base"] == RESULT_AUTH_FAILED
-
-    tuya().login = MagicMock(return_value={"success": True, "errorCode": 1024})
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=TUYA_IMPORT_SMART_HOME_DATA_OTHER
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == MOCK_USERNAME
-    assert result["data"][CONF_ACCESS_ID] == MOCK_ACCESS_ID
-    assert result["data"][CONF_ACCESS_SECRET] == MOCK_ACCESS_SECRET
-    assert result["data"][CONF_USERNAME] == MOCK_USERNAME
-    assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
-    assert result["data"][CONF_COUNTRY_CODE] == MOCK_COUNTRY_CODE_OTHER
-    assert result["data"][CONF_APP_TYPE] == MOCK_APP_TYPE
+    assert result["data"][CONF_ENDPOINT] == MOCK_ENDPOINT
+    assert result["data"][CONF_ENDPOINT] != TUYA_REGIONS[TUYA_INPUT_DATA[CONF_REGION]]
+    assert result["data"][CONF_APP_TYPE] == app_type
+    assert result["data"][CONF_PROJECT_TYPE] == project_type
     assert not result["result"].unique_id
 
 
@@ -212,18 +115,12 @@ async def test_error_on_invalid_credentials(hass, tuya):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
+    tuya().login = MagicMock(return_value=RESPONSE_ERROR)
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=TUYA_INDUSTRY_PROJECT_DATA
+        result["flow_id"], user_input=TUYA_INPUT_DATA
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "login"
-
-    tuya().login = MagicMock(return_value={"success": False, "errorCode": 1024})
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=TUYA_INPUT_INDUSTRY_DATA
-    )
-    await hass.async_block_till_done()
-
-    assert result["errors"]["base"] == RESULT_AUTH_FAILED
+    assert result["errors"]["base"] == "login_error"
+    assert result["description_placeholders"]["code"] == RESPONSE_ERROR["code"]
+    assert result["description_placeholders"]["msg"] == RESPONSE_ERROR["msg"]
