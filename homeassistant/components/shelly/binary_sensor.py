@@ -107,6 +107,12 @@ REST_SENSORS: Final = {
         device_class=DEVICE_CLASS_CONNECTIVITY,
         default_enabled=False,
     ),
+    "mqtt": RestAttributeDescription(
+        name="MQTT",
+        value=lambda status, _: status["mqtt"]["connected"],
+        device_class=DEVICE_CLASS_CONNECTIVITY,
+        default_enabled=False,
+    ),
     "fwupdate": RestAttributeDescription(
         name="Firmware Update",
         device_class=DEVICE_CLASS_UPDATE,
