@@ -12,7 +12,7 @@ from async_upnp_client.profiles.dlna import DmrDevice
 from async_upnp_client.profiles.profile import find_device_of_type
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, CONF_TYPE, CONF_URL
 from homeassistant.core import callback
@@ -184,7 +184,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     "Aborting SSDP setup because migration for %s is in progress",
                     self._location,
                 )
-                raise data_entry_flow.AbortFlow("already_in_progress")
+                return self.async_abort(reason="already_in_progress")
 
         self.context["title_placeholders"] = {"name": self._name}
 
