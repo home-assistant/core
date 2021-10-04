@@ -28,11 +28,9 @@ def mock_bridge():
 @pytest.fixture
 def mock_comfoconnect_command():
     """Mock the ComfoConnect connect method."""
-    with patch(
-        "pycomfoconnect.comfoconnect.ComfoConnect._command"
-    ) as mock_comfoconnect_command:
-        mock_comfoconnect_command.return_value = None
-        yield mock_comfoconnect_command
+    with patch("pycomfoconnect.comfoconnect.ComfoConnect._command") as mock_command:
+        mock_command.return_value = None
+        yield mock_command
 
 
 @pytest.fixture

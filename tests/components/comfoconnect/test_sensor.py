@@ -2,8 +2,10 @@
 import pytest
 
 
-@pytest.fixture
-async def setup_sensor(mock_bridge, mock_comfoconnect_command, mock_config_entry, hass):
+@pytest.fixture(name="setup_sensor")
+async def fixture_setup_sensor(
+    mock_bridge, mock_comfoconnect_command, mock_config_entry, hass
+):
     """Set up demo sensor component."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
