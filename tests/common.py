@@ -20,6 +20,7 @@ from typing import Any, Awaitable, Collection
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
+import voluptuous as vol
 
 from homeassistant import auth, config_entries, core as ha, loader
 from homeassistant.auth import (
@@ -43,7 +44,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import BLOCK_LOG_TIMEOUT, HomeAssistant, State
+from homeassistant.core import BLOCK_LOG_TIMEOUT, HomeAssistant, ServiceCall, State
 from homeassistant.helpers import (
     area_registry,
     device_registry,
@@ -55,6 +56,7 @@ from homeassistant.helpers import (
     storage,
 )
 from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.service_platform import PlatformService, ServiceDescription
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as date_util
@@ -1012,6 +1014,39 @@ class MockEntity(entity.Entity):
     def unit_of_measurement(self):
         """Info on the units the entity state is in."""
         return self._handle("unit_of_measurement")
+
+    def _handle(self, attr):
+        """Return attribute value."""
+        if attr in self._values:
+            return self._values[attr]
+        return getattr(super(), attr)
+
+
+class MockPlatformService(PlatformService):
+    """Mock PlatformService class."""
+
+    def __init__(self, **values: Any) -> None:
+        """Initialize a platform service."""
+        self._values = values
+
+    @property
+    def service_name(self) -> str:
+        """Return the name of the service, not including domain."""
+        return self._handle("service_name")
+
+    @property
+    def service_description(self) -> ServiceDescription:
+        """Return the service description."""
+        return self._handle("service_description")
+
+    @property
+    def service_schema(self) -> vol.Schema:
+        """Return the service schema."""
+        return self._handle("service_schema")
+
+    async def async_handle_service(self, service_call: ServiceCall) -> None:
+        """Handle the service call."""
+        _LOGGER.debug("Received service call: %s", service_call)
 
     def _handle(self, attr):
         """Return attribute value."""
