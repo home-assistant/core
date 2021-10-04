@@ -665,9 +665,10 @@ def validate_statistics(
                     )
                 )
 
+            metadata_unit = metadata[entity_id][1]["unit_of_measurement"]
             if device_class not in UNIT_CONVERSIONS:
-                metadata_unit = metadata[entity_id][1]["unit_of_measurement"]
                 if state_unit != metadata_unit:
+                    # The unit has changed
                     validation_result[entity_id].append(
                         statistics.ValidationIssue(
                             "units_changed",
@@ -678,15 +679,27 @@ def validate_statistics(
                             },
                         )
                     )
-                continue
+            elif metadata_unit not in UNIT_CONVERSIONS[device_class]:
+                # The unit in metadata is not supported for this device class
+                validation_result[entity_id].append(
+                    statistics.ValidationIssue(
+                        "unsupported_unit_metadata",
+                        {
+                            "statistic_id": entity_id,
+                            "device_class": device_class,
+                            "metadata_unit": metadata_unit,
+                        },
+                    )
+                )
 
         if (
             device_class in UNIT_CONVERSIONS
             and state_unit not in UNIT_CONVERSIONS[device_class]
         ):
+            # The unit in the state is not supported for this device class
             validation_result[entity_id].append(
                 statistics.ValidationIssue(
-                    "unsupported_unit",
+                    "unsupported_unit_state",
                     {
                         "statistic_id": entity_id,
                         "device_class": device_class,
