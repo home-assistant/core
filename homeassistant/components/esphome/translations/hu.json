@@ -20,7 +20,7 @@
                 "description": "K\u00e9rem, adja meg a konfigur\u00e1ci\u00f3ban {name} n\u00e9vhez be\u00e1ll\u00edtott jelsz\u00f3t."
             },
             "discovery_confirm": {
-                "description": "Szeretn\u00e9 hozz\u00e1adni `{name}` ESPHome csom\u00f3pontot Home Assistant-hoz?",
+                "description": "Szeretn\u00e9 hozz\u00e1adni `{name}` ESPHome csom\u00f3pontot Home Assistanthoz?",
                 "title": "Felfedezett ESPHome csom\u00f3pont"
             },
             "encryption_key": {
