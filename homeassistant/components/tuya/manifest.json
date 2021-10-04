@@ -2,12 +2,8 @@
   "domain": "tuya",
   "name": "Tuya",
   "documentation": "https://github.com/tuya/tuya-home-assistant",
-  "requirements": [
-    "tuya-iot-py-sdk==0.4.1"
-  ],
-  "codeowners": [
-    "@Tuya"
-  ],
+  "requirements": ["tuya-iot-py-sdk==0.4.1"],
+  "codeowners": ["@Tuya", "@zlinoliver", "@METISU"],
   "config_flow": true,
   "iot_class": "cloud_push"
 }
