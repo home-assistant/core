@@ -244,5 +244,7 @@ class TrustedNetworksLoginFlow(LoginFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema({"user": vol.In(self._available_users)}),
+            data_schema=vol.Schema(
+                {vol.Required("user"): vol.In(self._available_users)}
+            ),
         )
