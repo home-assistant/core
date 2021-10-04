@@ -85,7 +85,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except ConnectError as err:
                 errors["base"] = err.args[0]
             else:
-                return await self._async_create_entry()
+                return self._create_entry()
 
         data_schema = vol.Schema({CONF_URL: str})
         return self.async_show_form(
@@ -129,13 +129,13 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 # Device found via SSDP, it shouldn't need polling
                 self._options[CONF_POLL_AVAILABILITY] = False
                 # Discovery info has everything required to create config entry
-                self._set_info_from_discovery(discovery)
+                await self._async_set_info_from_discovery(discovery)
                 LOGGER.debug(
                     "Entry %s found via SSDP, with UDN %s",
                     self._location,
                     self._udn,
                 )
-                return await self._async_create_entry()
+                return self._create_entry()
 
         # This device will need to be polled
         self._options[CONF_POLL_AVAILABILITY] = True
@@ -149,7 +149,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_import_turn_on()
 
         LOGGER.debug("Entry %s ready for import", self._location)
-        return await self._async_create_entry()
+        return self._create_entry()
 
     async def async_step_import_turn_on(
         self, user_input: FlowInput = None
@@ -166,7 +166,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except ConnectError as err:
                 errors["base"] = err.args[0]
             else:
-                return await self._async_create_entry()
+                return self._create_entry()
 
         self._set_confirm_only()
         return self.async_show_form(step_id="import_turn_on", errors=errors)
@@ -175,14 +175,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by SSDP discovery."""
         LOGGER.debug("async_step_ssdp: discovery_info %s", pformat(discovery_info))
 
-        self._location = discovery_info[ssdp.ATTR_SSDP_LOCATION]
-        self._udn = discovery_info[ssdp.ATTR_SSDP_UDN]
-
-        # Abort if already configured, but update the last-known location
-        await self.async_set_unique_id(self._udn)
-        self._abort_if_unique_id_configured(
-            updates={CONF_URL: self._location}, reload_on_update=False
-        )
+        await self._async_set_info_from_discovery(discovery_info)
 
         # Abort if a migration flow for the device's location is in progress
         for progress in self._async_in_progress(include_uninitialized=True):
@@ -193,7 +186,6 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 raise data_entry_flow.AbortFlow("already_in_progress")
 
-        self._set_info_from_discovery(discovery_info)
         self.context["title_placeholders"] = {"name": self._name}
 
         return await self.async_step_confirm()
@@ -203,7 +195,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         LOGGER.debug("async_step_confirm: %s", user_input)
 
         if user_input is not None:
-            return await self._async_create_entry()
+            return self._create_entry()
 
         self._set_confirm_only()
         return self.async_show_form(step_id="confirm")
@@ -230,6 +222,12 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if not self._udn:
             self._udn = device.udn
+            await self.async_set_unique_id(self._udn)
+
+        # Abort if already configured, but update the last-known location
+        self._abort_if_unique_id_configured(
+            updates={CONF_URL: self._location}, reload_on_update=False
+        )
 
         if not self._device_type:
             self._device_type = device.device_type
@@ -237,7 +235,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not self._name:
             self._name = device.name
 
-    async def _async_create_entry(self) -> FlowResult:
+    def _create_entry(self) -> FlowResult:
         """Create a config entry, assuming all required information is now known."""
         LOGGER.debug(
             "_async_create_entry: location: %s, UDN: %s", self._location, self._udn
@@ -245,10 +243,6 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._location
         assert self._udn
         assert self._device_type
-
-        # Abort if already configured, but update the last-known location
-        await self.async_set_unique_id(self._udn)
-        self._abort_if_unique_id_configured(updates={CONF_URL: self._location})
 
         title = self._name or urlparse(self._location).hostname or DEFAULT_NAME
         data = {
@@ -258,11 +252,29 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         }
         return self.async_create_entry(title=title, data=data, options=self._options)
 
-    def _set_info_from_discovery(self, discovery_info: Mapping[str, Any]) -> None:
+    async def _async_set_info_from_discovery(
+        self, discovery_info: Mapping[str, Any], abort_if_configured: bool = True
+    ) -> None:
         """Set information required for a config entry from the SSDP discovery."""
-        assert self._location
+        LOGGER.debug(
+            "_async_set_info_from_discovery: location: %s, UDN: %s",
+            discovery_info[ssdp.ATTR_SSDP_LOCATION],
+            discovery_info[ssdp.ATTR_SSDP_UDN],
+        )
+
+        if not self._location:
+            self._location = discovery_info[ssdp.ATTR_SSDP_LOCATION]
+            assert isinstance(self._location, str)
 
         self._udn = discovery_info[ssdp.ATTR_SSDP_UDN]
+        await self.async_set_unique_id(self._udn)
+
+        if abort_if_configured:
+            # Abort if already configured, but update the last-known location
+            self._abort_if_unique_id_configured(
+                updates={CONF_URL: self._location}, reload_on_update=False
+            )
+
         self._device_type = (
             discovery_info.get(ssdp.ATTR_SSDP_NT) or discovery_info[ssdp.ATTR_SSDP_ST]
         )
