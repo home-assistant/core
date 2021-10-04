@@ -230,6 +230,21 @@ REST_SENSORS: Final = {
         state_class=sensor.STATE_CLASS_MEASUREMENT,
         default_enabled=False,
     ),
+    "wifi_sta": RestAttributeDescription(
+        name="Wifi",
+        value=lambda status, _: status["wifi_sta"]["ssid"],
+        default_enabled=False,
+    ),
+    "ip": RestAttributeDescription(
+        name="IP",
+        value=lambda status, _: status["wifi_sta"]["ip"],
+        default_enabled=False,
+    ),
+    "mac": RestAttributeDescription(
+        name="MAC",
+        value=lambda status, _: status["mac"],
+        default_enabled=False,
+    ),
     "uptime": RestAttributeDescription(
         name="Uptime",
         value=lambda status, last: get_device_uptime(status["uptime"], last),
