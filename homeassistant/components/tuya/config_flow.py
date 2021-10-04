@@ -6,6 +6,7 @@ from typing import Any
 
 from tuya_iot import ProjectType, TuyaOpenAPI
 import voluptuous as vol
+from voluptuous.schema_builder import UNDEFINED
 
 from homeassistant import config_entries
 
@@ -108,15 +109,30 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 TUYA_RESPONSE_MSG: response.get(TUYA_RESPONSE_MSG),
             }
 
+        def _schema_default(key: str) -> str | UNDEFINED:
+            if not user_input:
+                return UNDEFINED
+            return user_input[key]
+
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_REGION): vol.In(TUYA_REGIONS.keys()),
-                    vol.Required(CONF_ACCESS_ID): str,
-                    vol.Required(CONF_ACCESS_SECRET): str,
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    vol.Required(
+                        CONF_REGION, default=_schema_default(CONF_REGION)
+                    ): vol.In(TUYA_REGIONS.keys()),
+                    vol.Required(
+                        CONF_ACCESS_ID, default=_schema_default(CONF_ACCESS_ID)
+                    ): str,
+                    vol.Required(
+                        CONF_ACCESS_SECRET, default=_schema_default(CONF_ACCESS_SECRET)
+                    ): str,
+                    vol.Required(
+                        CONF_USERNAME, default=_schema_default(CONF_USERNAME)
+                    ): str,
+                    vol.Required(
+                        CONF_PASSWORD, default=_schema_default(CONF_PASSWORD)
+                    ): str,
                 }
             ),
             errors=errors,
