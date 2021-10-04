@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "could_not_connect": "DLNA \u88dd\u7f6e\u9023\u7dda\u5931\u6557\u3002",
+            "discovery_error": "DLNA \u88dd\u7f6e\u63a2\u7d22\u5931\u6557",
+            "incomplete_config": "\u6240\u7f3a\u5c11\u7684\u8a2d\u5b9a\u70ba\u5fc5\u9808\u8b8a\u6578",
+            "non_unique_id": "\u627e\u5230\u591a\u7d44\u88dd\u7f6e\u4f7f\u7528\u4e86\u76f8\u540c\u552f\u4e00 ID",
+            "not_dmr": "\u88dd\u7f6e\u4e26\u975e Digital Media Renderer"
+        },
+        "error": {
+            "could_not_connect": "DLNA \u88dd\u7f6e\u9023\u7dda\u5931\u6557\u3002",
+            "not_dmr": "\u88dd\u7f6e\u4e26\u975e Digital Media Renderer"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "\u662f\u5426\u8981\u958b\u59cb\u8a2d\u5b9a\uff1f"
+            },
+            "user": {
+                "data": {
+                    "url": "\u7db2\u5740"
+                },
+                "description": "\u88dd\u7f6e\u8aaa\u660e XML \u6a94\u6848\u4e4b URL",
+                "title": "DLNA Digital Media Renderer"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_url": "URL \u7121\u6548"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "callback_url_override": "\u4e8b\u4ef6\u76e3\u807d\u56de\u547c URL",
+                    "listen_port": "\u4e8b\u4ef6\u76e3\u807d\u901a\u8a0a\u57e0\uff08\u672a\u8a2d\u7f6e\u5247\u70ba\u96a8\u6a5f\uff09",
+                    "poll_availability": "\u67e5\u8a62\u88dd\u7f6e\u53ef\u7528\u6027"
+                },
+                "title": "DLNA Digital Media Renderer \u8a2d\u5b9a"
+            }
+        }
+    }
+}

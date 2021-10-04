@@ -8,6 +8,7 @@
                 "data": {
                     "name": "Nama",
                     "password": "Kata Sandi",
+                    "url": "URL",
                     "username": "Nama Pengguna"
                 }
             }

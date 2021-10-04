@@ -470,6 +470,7 @@ FREQUENCY_GIGAHERTZ: Final = "GHz"
 # Pressure units
 PRESSURE_PA: Final = "Pa"
 PRESSURE_HPA: Final = "hPa"
+PRESSURE_KPA: Final = "kPa"
 PRESSURE_BAR: Final = "bar"
 PRESSURE_MBAR: Final = "mbar"
 PRESSURE_INHG: Final = "inHg"

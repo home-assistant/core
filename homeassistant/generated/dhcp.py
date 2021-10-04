@@ -72,6 +72,21 @@ DHCP = [
         "hostname": "flume-gw-*"
     },
     {
+        "domain": "flux_led",
+        "macaddress": "18B905*",
+        "hostname": "[ba][lk]*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "249494*",
+        "hostname": "[ba][lk]*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "B4E842*",
+        "hostname": "[ba][lk]*"
+    },
+    {
         "domain": "goalzero",
         "hostname": "yeti*"
     },
@@ -266,8 +281,23 @@ DHCP = [
     },
     {
         "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "403F8C*"
+    },
+    {
+        "domain": "tplink",
         "hostname": "ep*",
         "macaddress": "E848B8*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "E848B8*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "909A4A*"
     },
     {
         "domain": "tplink",
@@ -298,6 +328,11 @@ DHCP = [
         "domain": "tplink",
         "hostname": "hs*",
         "macaddress": "C006C3*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "ep*",
+        "macaddress": "003192*"
     },
     {
         "domain": "tplink",

@@ -41,6 +41,7 @@ homeassistant.components.energy.*
 homeassistant.components.fastdotcom.*
 homeassistant.components.fitbit.*
 homeassistant.components.flunearyou.*
+homeassistant.components.flux_led.*
 homeassistant.components.forecast_solar.*
 homeassistant.components.fritzbox.*
 homeassistant.components.frontend.*
@@ -90,6 +91,7 @@ homeassistant.components.recorder.statistics
 homeassistant.components.remote.*
 homeassistant.components.renault.*
 homeassistant.components.rituals_perfume_genie.*
+homeassistant.components.rpi_power.*
 homeassistant.components.samsungtv.*
 homeassistant.components.scene.*
 homeassistant.components.select.*
@@ -111,6 +113,7 @@ homeassistant.components.tautulli.*
 homeassistant.components.tcp.*
 homeassistant.components.tile.*
 homeassistant.components.tplink.*
+homeassistant.components.tractive.*
 homeassistant.components.tradfri.*
 homeassistant.components.tts.*
 homeassistant.components.upcloud.*

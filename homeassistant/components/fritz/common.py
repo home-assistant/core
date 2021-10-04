@@ -54,7 +54,6 @@ def _is_tracked(mac: str, current_devices: ValuesView) -> bool:
 def device_filter_out_from_trackers(
     mac: str,
     device: FritzDevice,
-    pref_disable_new_entities: bool,
     current_devices: ValuesView,
 ) -> bool:
     """Check if device should be filtered out from trackers."""
@@ -63,8 +62,6 @@ def device_filter_out_from_trackers(
         reason = "Missing IP"
     elif _is_tracked(mac, current_devices):
         reason = "Already tracked"
-    elif pref_disable_new_entities:
-        reason = "Disabled System Options"
 
     if reason:
         _LOGGER.debug(

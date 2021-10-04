@@ -290,7 +290,6 @@ omit =
     homeassistant/components/esphome/select.py
     homeassistant/components/esphome/sensor.py
     homeassistant/components/esphome/switch.py
-    homeassistant/components/essent/sensor.py
     homeassistant/components/etherscan/sensor.py
     homeassistant/components/eufy/*
     homeassistant/components/everlights/light.py
@@ -343,7 +342,6 @@ omit =
     homeassistant/components/flume/sensor.py
     homeassistant/components/flunearyou/__init__.py
     homeassistant/components/flunearyou/sensor.py
-    homeassistant/components/flux_led/light.py
     homeassistant/components/folder/sensor.py
     homeassistant/components/folder_watcher/*
     homeassistant/components/foobot/sensor.py
