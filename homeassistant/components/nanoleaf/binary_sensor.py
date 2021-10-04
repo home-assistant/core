@@ -1,6 +1,8 @@
 """Support for Nanoleaf binary sensor."""
 from __future__ import annotations
 
+import asyncio
+from asyncio.tasks import Task
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
@@ -57,7 +59,9 @@ class NanoleafPanelBinarySensorEntity(BinarySensorEntity):
             model=self._panel.shape.name,
             sw_version=self._nanoleaf.firmware_version,
         )
+        self._attr_should_poll = False
         self._attr_is_on = False
+        self._reset_task: Task | None = None
 
     @property
     def icon(self) -> str:
@@ -85,6 +89,21 @@ class NanoleafPanelBinarySensorEntity(BinarySensorEntity):
     async def async_set_state(self, value: bool) -> None:
         """Set the entity state."""
         self._attr_is_on = value
+        self.async_write_ha_state()
+        if self._reset_task is not None and not self._reset_task.done():
+            self._reset_task.cancel()
+        if self.is_on:
+            self._reset_task = asyncio.create_task(self.reset_after_timeout())
+
+    async def reset_after_timeout(self) -> None:
+        """Reset entity state after timeout."""
+        # Average time between touch events is 0.25 seconds
+        # Reset strength to 0 if no touch is detected for 0.5 seconds
+        try:
+            await asyncio.sleep(0.4)
+        except asyncio.CancelledError:
+            return
+        self._attr_is_on = False
         self.async_write_ha_state()
 
 

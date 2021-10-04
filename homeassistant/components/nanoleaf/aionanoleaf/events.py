@@ -90,7 +90,7 @@ class LayoutEvent(Event):
         # Docs: https://forum.nanoleaf.me/docs/openapi#_dxks97cpzdpf
         return {
             1: "layout",
-            2: "globalOrientation",
+            2: "global_orientation",
         }[self.attribute_id]
 
 

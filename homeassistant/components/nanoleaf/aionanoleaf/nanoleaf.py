@@ -431,7 +431,7 @@ class Nanoleaf:
         if advanced_touch_callback is not None and local_ip is not None:
             loop = asyncio.get_running_loop()
             transport, protocol = await loop.create_datagram_endpoint(
-                lambda: NanoleafTouchProtocol(self.host, advanced_touch_callback),  # type: ignore[arg-type]
+                lambda: _NanoleafTouchProtocol(self.host, advanced_touch_callback),  # type: ignore[arg-type]
                 local_addr=(local_ip, 0 if local_port is None else local_port),
             )
             if local_port is None:
@@ -479,7 +479,7 @@ class Nanoleaf:
         self._effect = effects_event.effect
 
 
-class NanoleafTouchProtocol(asyncio.DatagramProtocol):
+class _NanoleafTouchProtocol(asyncio.DatagramProtocol):
     """Nanoleaf touch protocol."""
 
     def __init__(

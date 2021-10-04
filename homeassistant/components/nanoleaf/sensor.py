@@ -1,6 +1,8 @@
 """Support for Nanoleaf sensor."""
 from __future__ import annotations
 
+import asyncio
+from asyncio.tasks import Task
 import logging
 
 from homeassistant.components.sensor import SensorEntity
@@ -58,7 +60,9 @@ class NanoleafPanelTouchStrength(SensorEntity):
             model=self._panel.shape.name,
             sw_version=self._nanoleaf.firmware_version,
         )
+        self._attr_should_poll = False
         self._attr_native_value = 0
+        self._reset_task: Task | None = None
 
     @property
     def icon(self) -> str:
@@ -82,6 +86,9 @@ class NanoleafPanelTouchStrength(SensorEntity):
         """Set the entity state."""
         self._attr_native_value = value
         self.async_write_ha_state()
+        if self._reset_task is not None and not self._reset_task.done():
+            self._reset_task.cancel()
+        self._reset_task = asyncio.create_task(self.reset_after_timeout())
 
     async def async_added_to_hass(self) -> None:
         """Handle entity being added to Home Assistant."""
@@ -89,3 +96,14 @@ class NanoleafPanelTouchStrength(SensorEntity):
         self.hass.data[DOMAIN]["panel_strength_entity"][self._nanoleaf.serial_no][
             self._panel.id
         ] = self
+
+    async def reset_after_timeout(self) -> None:
+        """Reset entity state after timeout."""
+        # Average time between touch events is 0.125 seconds
+        # Reset strength to 0 if no touch is detected for 0.25 seconds
+        try:
+            await asyncio.sleep(0.25)
+        except asyncio.CancelledError:
+            return
+        self._attr_native_value = 0
+        self.async_write_ha_state()

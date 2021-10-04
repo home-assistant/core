@@ -17,6 +17,8 @@ from .const import DOMAIN
 from .light import NanoleafLight
 from .sensor import NanoleafPanelTouchStrength
 
+PLATFORMS = ["light", "sensor", "binary_sensor"]
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -32,7 +34,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except InvalidToken as err:
         raise ConfigEntryAuthFailed from err
 
-    # device: [entry_id, Nanoleaf], light_entity: [serial_no, Entity], panel_entity[serial_no, [panel_id, Entity]]
+    # hass.data[DOMAIN] = {
+    #   "device": {  # Used to setup the platforms and entities
+    #     entry_id: Nanoleaf
+    #   },
+    #   "entity": {  # Used for touch events and push updates
+    #     serial_no: {
+    #       "light": LightEntity,
+    #       "touch": BinarySensorEntity,
+    #       "hold": BinarySensorEntity,
+    #       "strength": SensorEntity
+    #     }
+    #   }
+    # }
     hass.data.setdefault(
         DOMAIN,
         {
@@ -47,19 +61,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN]["panel_touch_entity"][nanoleaf.serial_no] = {}
     hass.data[DOMAIN]["panel_hover_entity"][nanoleaf.serial_no] = {}
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "light")
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "sensor")
-    )
-
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "binary_sensor")
-    )
-
-    async def state_update_callback(event: Event) -> None:
+    async def update_light_state(event: Event) -> None:
         """Receive state and effect event."""
         light_entity: NanoleafLight | None = hass.data[DOMAIN]["light_entity"].get(
             nanoleaf.serial_no
@@ -87,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ][nanoleaf.serial_no].get(panel_id)
         if panel_touch_entity is not None:
             await panel_touch_entity.async_set_state(
-                True if gesture == "Hold" else False
+                True if gesture == "Hold" or gesture == "Down" else False
             )
 
         panel_hover_entity: NanoleafPanelHover | None = hass.data[DOMAIN][
@@ -95,36 +99,43 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ][nanoleaf.serial_no].get(panel_id)
         if panel_hover_entity is not None:
             await panel_hover_entity.async_set_state(
-                True if gesture == "Hover" else False
+                True if gesture == "Hover" or gesture == "Up" else False
             )
 
         if gesture == "Hold" or gesture == "Hover":
-
             panel_strength_entity: NanoleafPanelTouchStrength | None = hass.data[
                 DOMAIN
             ]["panel_strength_entity"][nanoleaf.serial_no].get(panel_id)
             if panel_strength_entity is not None:
                 await panel_strength_entity.async_set_state(strength)
-
-        else:
+        if gesture not in ("Hold", "Hover", "Down", "Up"):
+            # Only send an event for gestures that are not represented as entities
             event_data = {
                 "device_id": nanoleaf.serial_no,
                 "type": "touch",
                 "panel_id": panel_id,
                 "gesture": gesture,
-                "swipe_to_panel_id": panel_id2,
+                "strength": strength if gesture == "Swipe" else None,
+                "swipe_to_panel_id": panel_id2 if gesture == "Swipe" else None,
             }
             hass.bus.async_fire(f"{DOMAIN}_event", event_data)
 
     # Find the Home Assistant IP to open the UDP socket
-    local_ip = await get_local_ip(hass, entry, nanoleaf)
+    try:
+        local_ip = await get_local_ip(hass, entry, nanoleaf)
+    except ValueError:
+        _LOGGER.error(
+            "Couldn't determine your Home Assistant IP, select an IP in the integration configuration"
+        )
+        return False
 
+    # A random available port is used if port is None
     local_port: int | None = entry.options.get("local_port")
 
     asyncio.create_task(
         nanoleaf.listen_events(
-            state_callback=state_update_callback,
-            effects_callback=state_update_callback,
+            state_callback=update_light_state,
+            effects_callback=update_light_state,
             touch_callback=touch_callback,
             advanced_touch_callback=advanced_touch_callback,
             local_ip=local_ip,

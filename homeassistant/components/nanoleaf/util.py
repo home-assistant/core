@@ -59,7 +59,6 @@ async def get_local_ip(
             adapter_name, local_ip = await default_adapter_name_and_ip(adapters)
             _LOGGER.warning(
                 "Could not find adapter %s, falling back to IP %s on adapter %s for %s",
-                configured_ip,
                 configured_adapter,
                 local_ip,
                 adapter_name,
