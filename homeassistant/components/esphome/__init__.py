@@ -529,6 +529,7 @@ class ReconnectLogic(RecordUpdateListener):
         # bail if either the entry was already teared down or we haven't received device info yet
         if (
             self._connected
+            or self._reconnect_event.is_set()
             or self._entry_data is None
             or self._entry_data.device_info is None
         ):
