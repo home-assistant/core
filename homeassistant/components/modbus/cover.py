@@ -5,6 +5,7 @@ from datetime import timedelta
 from typing import Any, Callable
 
 from homeassistant.components.cover import (
+    ATTR_CURRENT_POSITION,
     ENTITY_ID_FORMAT,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
@@ -25,6 +26,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -86,6 +89,12 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
         self._status_register_type = config[CONF_STATUS_REGISTER_TYPE]
         self._max_seconds_to_complete = config.get(CONF_MAX_SECONDS_TO_COMPLETE)
         self._complete_watcher: Callable[[], None] | None = None
+        self._attr_current_cover_position = None
+        self._track_position: bool = (
+            self._status_register is None and self._max_seconds_to_complete is not None
+        )
+        self._track_position_delta = 0
+        self._track_position_watcher: None | CALLBACK_TYPE = None
 
         self._attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
         self._attr_is_closed = False
@@ -134,7 +143,11 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
     def init_update_listeners(self):
         """Initialize update listeners."""
         # override default behaviour as we register based on the verify address
-        if self._slave and self._input_type and self._scan_group is not None:
+        if (
+            self._slave is not None
+            and self._input_type
+            and self._scan_group is not None
+        ):
             # Register max address of listeners to ensure we query both coils
             max_address = max(self._address_open, self._address_close)
             if max_address is not None:
@@ -150,6 +163,15 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
         if state := await self.async_get_last_state():
+            if (
+                self._track_position
+                and state.attributes.get(ATTR_CURRENT_POSITION) is not None
+                and str(state.attributes.get(ATTR_CURRENT_POSITION)).isnumeric()
+            ):
+                self._attr_current_cover_position = int(
+                    str(state.attributes.get(ATTR_CURRENT_POSITION))
+                )
+
             convert = {
                 STATE_CLOSED: self._state_closed,
                 STATE_CLOSING: self._state_closing,
@@ -217,9 +239,34 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
                 timedelta(seconds=self._max_seconds_to_complete),
                 self.async_mark_as_opened,
             )
+        if self._track_position and self._max_seconds_to_complete is not None:
+            if self._track_position_watcher is not None:
+                self._track_position_watcher()
+            self._track_position_delta = 1
+            self._track_position_watcher = async_track_time_interval(
+                self.hass,
+                self.async_track_position,
+                timedelta(seconds=self._max_seconds_to_complete / 100),
+            )
 
         self._attr_available = result is not None
         await self.async_update()
+
+    async def async_track_position(self, *_):
+        """Track cover position."""
+        self._attr_current_cover_position = (
+            self._attr_current_cover_position or 0
+        ) + self._track_position_delta
+        if self._attr_current_cover_position > 100:
+            self._attr_current_cover_position = 100
+            if self._track_position_watcher is not None:
+                self._track_position_watcher()
+            self._track_position_watcher = None
+        if self._attr_current_cover_position < 0:
+            self._attr_current_cover_position = 0
+            if self._track_position_watcher is not None:
+                self._track_position_watcher()
+            self._track_position_watcher = None
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
@@ -251,6 +298,15 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
                 timedelta(seconds=self._max_seconds_to_complete),
                 self.async_mark_as_closed,
             )
+        if self._track_position and self._max_seconds_to_complete is not None:
+            if self._track_position_watcher is not None:
+                self._track_position_watcher()
+            self._track_position_delta = -1
+            self._track_position_watcher = async_track_time_interval(
+                self.hass,
+                self.async_track_position,
+                timedelta(seconds=self._max_seconds_to_complete / 100),
+            )
 
         self._attr_available = result is not None
         await self.async_update()
@@ -271,6 +327,11 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
             self._available = result is not None
         if self._complete_watcher is not None:
             self._complete_watcher()
+            self._complete_watcher = None
+
+        if self._track_position_watcher is not None:
+            self._track_position_watcher()
+            self._track_position_watcher = None
 
         self._attr_available = result is not None
         await self.async_update()
@@ -279,12 +340,24 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
         """Mark opening as completed."""
         # remark "now" is a dummy parameter to avoid problems with
         # async_call_later
+        if self._track_position:
+            self._attr_current_cover_position = 100
+        if self._track_position_watcher is not None:
+            self._track_position_watcher()
+            self._track_position_watcher = None
+        self.update_value(self._state_open)
         return await self.async_mark_as_opened_or_closed(True)
 
     async def async_mark_as_closed(self, now=None):
         """Mark closing as completed."""
         # remark "now" is a dummy parameter to avoid problems with
         # async_call_later
+        if self._track_position:
+            self._attr_current_cover_position = 0
+        if self._track_position_watcher is not None:
+            self._track_position_watcher()
+            self._track_position_watcher = None
+        self.update_value(self._state_closed)
         return await self.async_mark_as_opened_or_closed(False)
 
     async def async_mark_as_opened_or_closed(self, opened):
@@ -379,7 +452,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
                 elif closing:
                     self.update_value(self._state_closing)
                 else:
-                    # we assume either closed or closing based on previous statue
+                    # we assume either closed or open based on previous status
                     if self._value == self._state_opening:
                         self.update_value(self._state_open)
                     elif self._value == self._state_closing:

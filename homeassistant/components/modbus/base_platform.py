@@ -100,7 +100,7 @@ class BasePlatform(Entity):
     def init_update_listeners(self):
         """Initialize update listeners."""
         if (
-            self._slave
+            self._slave is not None
             and self._input_type
             and self._address is not None
             and self._scan_group is not None
@@ -299,16 +299,27 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
             ][0]
             self._state_on = config[CONF_VERIFY].get(CONF_STATE_ON, self.command_on)
             self._state_off = config[CONF_VERIFY].get(CONF_STATE_OFF, self._command_off)
-            if self._scan_group is not None:
-                hub.register_update_listener(
-                    self._scan_group,
-                    self._slave,
-                    self._verify_type,
-                    self._verify_address,
-                    self.update,
-                )
         else:
             self._verify_active = False
+
+    def init_update_listeners(self):
+        """Initialize update listeners."""
+        if (
+            self._verify_active is True
+            and self._slave is not None
+            and self._verify_type
+            and self._verify_address is not None
+            and self._scan_group is not None
+        ):
+            self._hub.register_update_listener(
+                self._scan_group,
+                self._slave,
+                self._verify_type,
+                self._verify_address,
+                self.update,
+            )
+        else:
+            super().init_update_listeners()
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -384,7 +395,7 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
                 slaveId,
                 input_type,
                 address,
-                result.bits,
+                result.bits[address],
             )
             self._attr_is_on = bool(result.bits[address] & 1)
         elif result.registers:

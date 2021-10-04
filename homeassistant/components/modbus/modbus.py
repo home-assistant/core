@@ -406,6 +406,11 @@ class ModbusHub:
     def start_update_listener(self):
         """Possibly start monitoring of updates."""
         for (scan_group, interval_millis) in self._scan_groups.items():
+            _LOGGER.debug(
+                "Register scan listener scan_group=%s, interval_millis=%s",
+                scan_group,
+                interval_millis,
+            )
             async_track_time_interval(
                 self.hass,
                 self.async_update_function(scan_group),
@@ -447,6 +452,12 @@ class ModbusHub:
             """Update the state of all entities in a given scan group."""
             # remark "now" is a dummy parameter to avoid problems with
             # async_track_time_interval
+            _LOGGER.debug(
+                "async_update: scan_group=%s, items=%s",
+                scan_group,
+                self._update_listeners_by_scan_group[scan_group],
+            )
+
             for (
                 (slave, input_type),
                 listeners,
@@ -457,7 +468,8 @@ class ModbusHub:
                     min_address = min(min_address, listener._address)
                     max_address = max(max_address, listener._address)
                 _LOGGER.debug(
-                    "query modbus: slave=%s, minAdress=%s, maxAdress=%s, input_type=%s",
+                    "query modbus: scan_group=%s, slave=%s, minAdress=%s, maxAdress=%s, input_type=%s",
+                    scan_group,
                     slave,
                     min_address,
                     max_address,
