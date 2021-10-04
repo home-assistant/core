@@ -4,6 +4,7 @@ import logging
 from uuid import uuid4
 
 from aiohttp import ClientError, web_exceptions
+from aiohttp.client_exceptions import ClientConnectorError
 from async_timeout import timeout
 from pydaikin.daikin_base import Appliance
 from pydaikin.discovery import Discovery
@@ -75,7 +76,8 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     uuid=uuid,
                     password=password,
                 )
-        except asyncio.TimeoutError:
+        except (asyncio.TimeoutError, ClientConnectorError):
+            self.host = None
             return self.async_show_form(
                 step_id="user",
                 data_schema=self.schema,
@@ -109,6 +111,14 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """User initiated config flow."""
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=self.schema)
+        if user_input.get(CONF_API_KEY) and user_input.get(CONF_PASSWORD):
+            _LOGGER.warning("API & Password.")
+            self.host = user_input.get(CONF_HOST)
+            return self.async_show_form(
+                step_id="user",
+                data_schema=self.schema,
+                errors={"base": "api_password"},
+            )
         return await self._create_device(
             user_input[CONF_HOST],
             user_input.get(CONF_API_KEY),
