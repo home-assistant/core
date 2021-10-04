@@ -11,7 +11,6 @@ from homeassistant.components.trace import (
     restore_traces as trace_restore_traces,
 )
 from homeassistant.components.trace.const import CONF_STORED_TRACES
-from homeassistant.core import Context
 
 from .const import DOMAIN
 
@@ -26,16 +25,9 @@ class AutomationTrace(ActionTrace):
 
     _domain = DOMAIN
 
-    def __init__(
-        self,
-        item_id: str,
-        config: dict[str, Any],
-        blueprint_inputs: dict[str, Any],
-        context: Context,
-        run_id: None | str = None,
-    ) -> None:
+    def __init__(self, item_id: str) -> None:
         """Container for automation trace."""
-        super().__init__(item_id, config, blueprint_inputs, context, run_id)
+        super().__init__(item_id)
         self._trigger_description: str | None = None
 
     def set_trigger_description(self, trigger: str) -> None:
@@ -52,9 +44,9 @@ class AutomationTrace(ActionTrace):
     def from_dict(cls, data):
         """Restore from dict."""
         automation_trace = super().from_dict(data)
-        automation_trace._trigger_description = (  # pylint: disable=protected-access
-            data["trigger"]
-        )
+        automation_trace._short_dict[  # pylint: disable=protected-access
+            "trigger"
+        ] = data["trigger"]
         return automation_trace
 
 
@@ -63,7 +55,8 @@ def trace_automation(
     hass, automation_id, config, blueprint_inputs, context, trace_config
 ):
     """Trace action execution of automation with automation_id."""
-    trace = AutomationTrace(automation_id, config, blueprint_inputs, context)
+    trace = AutomationTrace(automation_id)
+    trace.set_basic_info(config, blueprint_inputs, context)
     async_store_trace(hass, trace, trace_config[CONF_STORED_TRACES])
 
     try:

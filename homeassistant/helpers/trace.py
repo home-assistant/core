@@ -8,7 +8,6 @@ from contextvars import ContextVar
 from functools import wraps
 from typing import Any, cast
 
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import TemplateVarsType
 import homeassistant.util.dt as dt_util
 
@@ -76,25 +75,6 @@ class TraceElement:
         if self._result is not None:
             result["result"] = self._result
         return result
-
-    @staticmethod
-    # pylint: disable=protected-access
-    def from_dict(data: dict[str, Any]) -> TraceElement:
-        """Restore from dict."""
-        element = TraceElement({}, data["path"])
-        if not (timestamp := dt_util.parse_datetime(data["timestamp"])):
-            raise HomeAssistantError
-        element._timestamp = timestamp
-        if child_id := data.get("child_id"):
-            element._child_key = f"{child_id['domain']}.{child_id['item_id']}"
-            element._child_run_id = child_id["run_id"]
-        if changed_variables := data.get("changed_variables"):
-            element._variables = changed_variables
-        if error := data.get("error"):
-            element._error = error
-        if result := data.get("result"):
-            element._result = result
-        return element
 
 
 # Context variables for tracing

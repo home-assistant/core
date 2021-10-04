@@ -110,36 +110,39 @@ class ActionTrace:
     _domain: str | None = None
     _run_ids = None
 
-    def __init__(
-        self,
-        item_id: str,
-        config: dict[str, Any],
-        blueprint_inputs: dict[str, Any],
-        context: Context,
-        run_id: None | str = None,
-    ) -> None:
+    def __init__(self, item_id: str) -> None:
         """Container for script trace."""
         self._trace: dict[str, deque[TraceElement]] | None = None
-        self._config: dict[str, Any] = config
-        self._blueprint_inputs: dict[str, Any] = blueprint_inputs
-        self.context: Context = context
+        self._config: dict[str, Any] | None = None
+        self._blueprint_inputs: dict[str, Any] | None = None
+        self.context: Context | None = None
         self._error: Exception | None = None
-        self._state: str = "running"
+        self._state: str = "stopped"
         self._script_execution: str | None = None
-        if run_id is None:
-            assert self._run_ids
-            self.run_id: str = str(next(self._run_ids))
-        else:
-            self.run_id = run_id
+        self.run_id: str = "unknown"
         self._timestamp_finish: dt.datetime | None = None
-        self._timestamp_start: dt.datetime = dt_util.utcnow()
+        self._timestamp_start: dt.datetime | None = None
         self.key = f"{self._domain}.{item_id}"
+        self._dict: dict[str, Any] | None = None
+        self._short_dict: dict[str, Any] | None = None
+
+    def set_basic_info(
+        self, config: dict[str, Any], blueprint_inputs: dict[str, Any], context: Context
+    ) -> None:
+        """Set basic information for tracing, not called for restored traces."""
+        self._config = config
+        self._blueprint_inputs = blueprint_inputs
+        self.context = context
+        self._state = "running"
+        assert self._run_ids
+        self.run_id = str(next(self._run_ids))
+        self._timestamp_start = dt_util.utcnow()
         if trace_id_get():
             trace_set_child_id(self.key, self.run_id)
         trace_id_set((self.key, self.run_id))
 
     def set_trace(self, trace: dict[str, deque[TraceElement]]) -> None:
-        """Set trace."""
+        """Set action trace."""
         self._trace = trace
 
     def set_error(self, ex: Exception) -> None:
@@ -155,7 +158,10 @@ class ActionTrace:
     def as_dict(self) -> dict[str, Any]:
         """Return dictionary version of this ActionTrace."""
 
-        result = self.as_short_dict()
+        if self._dict:
+            return self._dict
+
+        result = dict(self.as_short_dict())
 
         traces = {}
         if self._trace:
@@ -171,10 +177,16 @@ class ActionTrace:
             }
         )
 
+        if self._state == "stopped":
+            # Execution has stopped, save the result
+            self._dict = result
         return result
 
     def as_short_dict(self) -> dict[str, Any]:
         """Return a brief dictionary version of this ActionTrace."""
+
+        if self._short_dict:
+            return self._short_dict
 
         last_step = None
 
@@ -197,38 +209,28 @@ class ActionTrace:
         if self._error is not None:
             result["error"] = str(self._error)
 
+        if self._state == "stopped":
+            # Execution has stopped, save the result
+            self._short_dict = result
         return result
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> ActionTrace:
         """Restore from dict."""
-        context = Context(
-            user_id=data["context"]["user_id"],
-            parent_id=data["context"]["parent_id"],
-            id=data["context"]["id"],
-        )
-        actiontrace = cls(
-            data["item_id"],
-            data["config"],
-            data["blueprint_inputs"],
-            context,
-            data["run_id"],
-        )
-        actiontrace._state = data["state"]
-        actiontrace._script_execution = data["script_execution"]
-        timestamps = data["timestamp"]
-        if not (timestamp_start := dt_util.parse_datetime(timestamps["start"])):
-            raise HomeAssistantError
-        actiontrace._timestamp_start = timestamp_start
-        if not (timestamp_finish := dt_util.parse_datetime(timestamps["finish"])):
-            raise HomeAssistantError
-        actiontrace._timestamp_finish = timestamp_finish
-        if error := data.get("error"):
-            actiontrace._error = error
-        if trace := data.get("trace"):
-            actiontrace._trace = {}
-            for key, trace_list in trace.items():
-                actiontrace._trace[key] = deque(
-                    TraceElement.from_dict(item) for item in trace_list
-                )
+        actiontrace = cls(data["item_id"])
+        actiontrace.run_id = data["run_id"]
+        actiontrace._dict = data
+        actiontrace._short_dict = {
+            "last_step": data["last_step"],
+            "run_id": data["run_id"],
+            "state": data["state"],
+            "script_execution": data["script_execution"],
+            "timestamp": data["timestamp"],
+            "domain": data["domain"],
+            "item_id": data["item_id"],
+        }
+        if "error" in data:
+            actiontrace._short_dict["error"] = data["error"]
+        if "last_step" in data:
+            actiontrace._short_dict["last_step"] = data["last_step"]
         return actiontrace
