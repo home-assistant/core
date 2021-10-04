@@ -167,7 +167,7 @@ aiopylgtv==0.4.0
 aiorecollect==1.0.8
 
 # homeassistant.components.shelly
-aioshelly==1.0.1
+aioshelly==1.0.2
 
 # homeassistant.components.switcher_kis
 aioswitcher==2.0.6
@@ -224,7 +224,7 @@ arcam-fmj==0.7.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.22.4
+async-upnp-client==0.22.5
 
 # homeassistant.components.aurora
 auroranoaa==0.0.2
@@ -802,7 +802,7 @@ pyarlo==0.2.4
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==6.0.0
+pyatmo==6.1.0
 
 # homeassistant.components.apple_tv
 pyatv==0.8.2
@@ -1406,7 +1406,7 @@ yalesmartalarmclient==0.3.4
 yalexs==1.1.13
 
 # homeassistant.components.yeelight
-yeelight==0.7.5
+yeelight==0.7.6
 
 # homeassistant.components.youless
 youless-api==0.13

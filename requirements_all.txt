@@ -243,7 +243,7 @@ aiopylgtv==0.4.0
 aiorecollect==1.0.8
 
 # homeassistant.components.shelly
-aioshelly==1.0.1
+aioshelly==1.0.2
 
 # homeassistant.components.switcher_kis
 aioswitcher==2.0.6
@@ -330,7 +330,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.22.4
+async-upnp-client==0.22.5
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -1363,7 +1363,7 @@ pyarlo==0.2.4
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==6.0.0
+pyatmo==6.1.0
 
 # homeassistant.components.atome
 pyatome==0.1.1
@@ -1384,7 +1384,7 @@ pyblackbird==0.5
 pybotvac==0.0.22
 
 # homeassistant.components.nissan_leaf
-pycarwings2==2.11
+pycarwings2==2.12
 
 # homeassistant.components.cloudflare
 pycfdns==1.2.1
@@ -2462,7 +2462,7 @@ yalesmartalarmclient==0.3.4
 yalexs==1.1.13
 
 # homeassistant.components.yeelight
-yeelight==0.7.5
+yeelight==0.7.6
 
 # homeassistant.components.yeelightsunflower
 yeelightsunflower==0.0.10
