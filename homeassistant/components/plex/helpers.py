@@ -5,7 +5,10 @@ def pretty_title(media, short_name=False):
     """Return a formatted title for the given media item."""
     year = None
     if media.type == "album":
-        title = f"{media.parentTitle} - {media.title}"
+        if short_name:
+            title = media.title
+        else:
+            title = f"{media.parentTitle} - {media.title}"
     elif media.type == "episode":
         title = f"{media.seasonEpisode.upper()} - {media.title}"
         if not short_name:
