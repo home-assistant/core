@@ -26,7 +26,7 @@ from .const import (
     DEFAULT_TOKEN,
     DEFAULT_USER_AGENT,
     DOMAIN,
-    PLATFORM,
+    PLATFORMS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -102,10 +102,12 @@ async def async_setup_entry(
     async def _shutdown(_event):
         await ccb.disconnect()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
+    )
     entry.async_on_unload(entry.add_update_listener(options_update_listener))
 
-    for platform in PLATFORM:
+    for platform in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
@@ -136,7 +138,7 @@ async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     ccb = hass.data.get(DOMAIN)
     await ccb.disconnect()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORM)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class ComfoConnectBridge:
