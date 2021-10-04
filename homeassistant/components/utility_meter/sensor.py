@@ -1,5 +1,6 @@
 """Utility meter from sensors providing raw data."""
 from datetime import date, datetime, timedelta
+import decimal
 from decimal import Decimal, DecimalException
 import logging
 
@@ -323,19 +324,29 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
 
         state = await self.async_get_last_state()
         if state:
-            self._state = Decimal(state.state)
-            self._unit_of_measurement = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            self._last_period = (
-                float(state.attributes.get(ATTR_LAST_PERIOD))
-                if state.attributes.get(ATTR_LAST_PERIOD)
-                else 0
-            )
-            self._last_reset = dt_util.as_utc(
-                dt_util.parse_datetime(state.attributes.get(ATTR_LAST_RESET))
-            )
-            if state.attributes.get(ATTR_STATUS) == COLLECTING:
-                # Fake cancellation function to init the meter in similar state
-                self._collecting = lambda: None
+            try:
+                self._state = Decimal(state.state)
+            except decimal.InvalidOperation:
+                _LOGGER.error(
+                    "Could not restore state <%s>. Resetting utility_meter.%s",
+                    state.state,
+                    self.name,
+                )
+            else:
+                self._unit_of_measurement = state.attributes.get(
+                    ATTR_UNIT_OF_MEASUREMENT
+                )
+                self._last_period = (
+                    float(state.attributes.get(ATTR_LAST_PERIOD))
+                    if state.attributes.get(ATTR_LAST_PERIOD)
+                    else 0
+                )
+                self._last_reset = dt_util.as_utc(
+                    dt_util.parse_datetime(state.attributes.get(ATTR_LAST_RESET))
+                )
+                if state.attributes.get(ATTR_STATUS) == COLLECTING:
+                    # Fake cancellation function to init the meter in similar state
+                    self._collecting = lambda: None
 
         @callback
         def async_source_tracking(event):
