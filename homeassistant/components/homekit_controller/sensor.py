@@ -85,8 +85,10 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         native_unit_of_measurement=TEMP_CELSIUS,
         # This sensor is only for temperature characteristics that are not part
         # of a temperature sensor service.
-        probe=lambda char: char.service.type
-        != ServicesTypes.get_uuid(ServicesTypes.TEMPERATURE_SENSOR),
+        probe=(
+            lambda char: char.service.type
+            != ServicesTypes.get_uuid(ServicesTypes.TEMPERATURE_SENSOR)
+        ),
     ),
     CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT,
@@ -96,8 +98,10 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         native_unit_of_measurement=PERCENTAGE,
         # This sensor is only for humidity characteristics that are not part
         # of a humidity sensor service.
-        probe=lambda char: char.service.type
-        != ServicesTypes.get_uuid(ServicesTypes.HUMIDITY_SENSOR),
+        probe=(
+            lambda char: char.service.type
+            != ServicesTypes.get_uuid(ServicesTypes.HUMIDITY_SENSOR)
+        ),
     ),
     CharacteristicsTypes.AIR_QUALITY: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.AIR_QUALITY,
