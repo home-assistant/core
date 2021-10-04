@@ -70,6 +70,20 @@ async def test_purge_old_states(
         assert states.count() == 0
         assert "test.recorder2" not in instance._old_states
 
+    # Add some more states
+    await _add_test_states(hass, instance)
+
+    # make sure we start with 6 states
+    with session_scope(hass=hass) as session:
+        states = session.query(States)
+        assert states.count() == 6
+        assert states[0].old_state_id is None
+        assert states[-1].old_state_id == states[-2].state_id
+
+        events = session.query(Events).filter(Events.event_type == "state_changed")
+        assert events.count() == 6
+        assert "test.recorder2" in instance._old_states
+
 
 async def test_purge_old_states_encouters_database_corruption(
     hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
