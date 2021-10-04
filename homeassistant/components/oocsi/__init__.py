@@ -1,6 +1,8 @@
 """The Oocsi for HomeAssistant integration."""
 from __future__ import annotations
 import asyncio
+import json
+from homeassistant.helpers import entity
 
 from oocsi import OOCSI as oocsiApi
 
@@ -12,12 +14,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import Config, HomeAssistant, callback
 
-from .const import DOMAIN, DATA_OOCSI, DEVICES, DATA_INTERVIEW
+from .const import DOMAIN, DATA_OOCSI, DEVICES, DATA_INTERVIEW, OOCSI_ENTITY
 
 # TODO List the platforms that you want to support.
 # For your initial PR, limit it to 1 platform.
-PLATFORMS = ["switch"]
-OOCSI_ENTITY = "OOCSI_ENTITY"
+PLATFORMS = []
+
 
 # Creates entities out of interviews
 
@@ -31,8 +33,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
     hass.data.setdefault(DOMAIN, {})
-    api = oocsiApi(name, host, port)
-    hass.data[DATA_OOCSI] = api
+    hass.data[DOMAIN][entry.entry_id] = oocsiApi(name, host, port)
+    api = hass.data[DOMAIN][entry.entry_id]
 
     if OOCSI_ENTITY not in hass.data:
         hass.data[OOCSI_ENTITY] = {}
@@ -41,9 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Store global variables
 
-    devices = ("Switch", "name")
     hass.async_create_task(_async_interviewer(hass, entry, api))
-    hass.data[DOMAIN][entry.entry_id] = devices
 
     return True
 
@@ -56,12 +56,25 @@ async def _async_interviewer(hass: HomeAssistant, entry: ConfigEntry, api: api) 
     def handleInterviewEvent(sender, recipient, event):
 
         # addPlatform = None
-        # print(event)
+        # print("incomingevent")
         # info = infoSent(sender=sender, event=event)
-        if event != hass.data[OOCSI_ENTITY]:
 
+        if (
+            bool(hass.data[OOCSI_ENTITY]) == False
+            or not event.items() <= hass.data[OOCSI_ENTITY].items()
+        ):
+            # messageContent = json.load(event)
             hass.data[OOCSI_ENTITY] = hass.data[OOCSI_ENTITY] | event
-            print(hass.data[OOCSI_ENTITY])
+            keys = []
+
+            for key in hass.data[OOCSI_ENTITY]["uniquePrototype"]["components"]:
+                if key not in keys:
+                    keys.append(key)
+
+                    print(keys)
+            hass.config_entries.async_setup_platforms(entry, keys)
+            # if key not in PLATFORMS:
+            #     PLATFORMS.append(key)
 
     # return api.subscribe("interviewChannel", handleInterviewEvent)
     api.subscribe("interviewChannel", handleInterviewEvent)
@@ -71,29 +84,29 @@ async def platform_starter(hass: HomeAssistant, entry: ConfigEntry, api: api):
     for key in hass.data[OOCSI_ENTITY]:
         print("yes")
         print(hass.data[OOCSI_ENTITY][key], key)
-        hass.config_entries.async_setup_platforms(hass.data[OOCSI_ENTITY][key], key)
 
 
 async def async_create_new_platform_entity(
     hass: HomeAssistant,
     entry: ConfigEntry,
     api: api,
-    typeI: entityType,
+    entityType: entityType,
+    AsyncAdd: async_add_entities,
+    platform: platform,
 ):
+    devices = []
+    entities = []
+    for key in hass.data[OOCSI_ENTITY]["uniquePrototype"]["components"][platform]:
 
-    print("here")
-    for k in eventData:
-        if eventData(k) == type(typeI).__name__:
-            entity = [typeI(device, api)]
-            async_add_entities(entity, True)
-
-
-# async def setup_platform_entry(
-#     hass: HomeAssistant,
-#     entry: ConfigEntry,
-#     platform:
-# )
-# async def async_interviewer(hass: HomeAssistant):
+        devices.append(key)
+        entities.append(
+            entityType(
+                hass,
+                key,
+                api,
+                hass.data[OOCSI_ENTITY]["uniquePrototype"]["components"][platform][key],
+            )
+        )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -104,3 +117,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await api.stop()
 
     return unload_ok
+
+    # async def async_added_to_hass(self) -> None:
+    #     def channelUpdateEvent(event):
+    #         print("message")
+    #         print(event["state"])
+
+    #         self._channelState = event["state"]
+
+    #     self._oocsi.subscribe(self._oocsichannel, channelUpdateEvent)
