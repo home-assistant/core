@@ -22,9 +22,6 @@ Mastodon.py==1.5.1
 # homeassistant.components.orangepi_gpio
 OPi.GPIO==0.4.0
 
-# homeassistant.components.essent
-PyEssent==0.14
-
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
 
@@ -164,7 +161,7 @@ aioeagle==1.1.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==9.1.2
+aioesphomeapi==9.1.4
 
 # homeassistant.components.flo
 aioflo==0.4.1
