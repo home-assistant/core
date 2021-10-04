@@ -76,6 +76,11 @@ class IssBinarySensor(BinarySensorEntity):
         self._show_on_map = show
 
     @property
+    def is_on(self) -> bool:
+        """Return true if the binary sensor is on."""
+        return self.iss_data.is_above if self.iss_data else False
+
+    @property
     def extra_state_attributes(self):
         """Return the state attributes."""
         if self.iss_data:
@@ -91,11 +96,6 @@ class IssBinarySensor(BinarySensorEntity):
                 attrs["lat"] = self.iss_data.position.get("latitude")
 
             return attrs
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if the binary sensor is on."""
-        return self.iss_data.is_above if self.iss_data else False
 
     def update(self):
         """Get the latest data from ISS API and updates the states."""
