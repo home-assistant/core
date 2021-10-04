@@ -140,3 +140,6 @@ class FluxLedUpdateCoordinator(DataUpdateCoordinator):
                 await self.hass.async_add_executor_job(self.device.update_state)
         except FLUX_LED_EXCEPTIONS as ex:
             raise UpdateFailed(ex) from ex
+
+        if not self.device.raw_state:
+            raise UpdateFailed("The device failed to update")
