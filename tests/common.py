@@ -1178,7 +1178,8 @@ def mock_platform(hass, platform_path, module=None):
         mock_integration(hass, MockModule(domain))
 
     _LOGGER.info("Adding mock integration platform: %s", platform_path)
-    module_cache[platform_path] = module or Mock()
+    platform = module_cache[platform_path] = module or Mock()
+    return platform
 
 
 def async_capture_events(hass, event_name):
