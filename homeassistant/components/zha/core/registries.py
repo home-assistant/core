@@ -4,7 +4,7 @@ from __future__ import annotations
 import collections
 from collections.abc import Callable
 import dataclasses
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import attr
 from zigpy import zcl
@@ -136,12 +136,10 @@ def set_or_callable(value):
 class MatchRule:
     """Match a ZHA Entity to a channel name or generic id."""
 
-    channel_names: Callable | set[str] | str = attr.ib(
+    channel_names: set[str] | str = attr.ib(
         factory=frozenset, converter=set_or_callable
     )
-    generic_ids: Callable | set[str] | str = attr.ib(
-        factory=frozenset, converter=set_or_callable
-    )
+    generic_ids: set[str] | str = attr.ib(factory=frozenset, converter=set_or_callable)
     manufacturers: Callable | set[str] | str = attr.ib(
         factory=frozenset, converter=set_or_callable
     )
@@ -239,7 +237,9 @@ class EntityClassAndChannels:
 
 
 RegistryDictType = Dict[str, Dict[MatchRule, CALLABLE_T]]
-MultiRegistryDictType = Dict[str, Dict[MatchRule, List[CALLABLE_T]]]
+MultiRegistryDictType = Dict[
+    str, Dict[Tuple[set, set], Dict[MatchRule, List[CALLABLE_T]]]
+]
 GroupRegistryDictType = Dict[str, CALLABLE_T]
 
 
@@ -250,7 +250,7 @@ class ZHAEntityRegistry:
         """Initialize Registry instance."""
         self._strict_registry: RegistryDictType = collections.defaultdict(dict)
         self._multi_entity_registry: MultiRegistryDictType = collections.defaultdict(
-            lambda: collections.defaultdict(list)
+            lambda: collections.defaultdict(lambda: collections.defaultdict(list))
         )
         self._group_registry: GroupRegistryDictType = {}
 
@@ -276,23 +276,24 @@ class ZHAEntityRegistry:
         manufacturer: str,
         model: str,
         channels: list[ChannelType],
-        components: set | None = None,
     ) -> tuple[dict[str, list[EntityClassAndChannels]], list[ChannelType]]:
         """Match ZHA Channels to potentially multiple ZHA Entity classes."""
         result: dict[str, list[EntityClassAndChannels]] = collections.defaultdict(list)
         all_claimed: set[ChannelType] = set()
-        for component in components or self._multi_entity_registry:
-            matches = self._multi_entity_registry[component]
-            sorted_matches = sorted(matches, key=lambda x: x.weight, reverse=True)
-            for match in sorted_matches:
-                if match.strict_matched(manufacturer, model, channels):
-                    claimed = match.claim_channels(channels)
-                    for ent_class in self._multi_entity_registry[component][match]:
-                        ent_n_channels = EntityClassAndChannels(ent_class, claimed)
-                        result[component].append(ent_n_channels)
-                    all_claimed |= set(claimed)
-                    if match.stop_on_match:
-                        break
+        for component, channel_groups in self._multi_entity_registry.items():
+            for chan_group, matches in channel_groups.items():
+                sorted_matches = sorted(matches, key=lambda x: x.weight, reverse=True)
+                for match in sorted_matches:
+                    if match.strict_matched(manufacturer, model, channels):
+                        claimed = match.claim_channels(channels)
+                        for ent_class in self._multi_entity_registry[component][
+                            chan_group
+                        ][match]:
+                            ent_n_channels = EntityClassAndChannels(ent_class, claimed)
+                            result[component].append(ent_n_channels)
+                        all_claimed |= set(claimed)
+                        if match.stop_on_match:
+                            break
 
         return result, list(all_claimed)
 
@@ -303,8 +304,8 @@ class ZHAEntityRegistry:
     def strict_match(
         self,
         component: str,
-        channel_names: Callable | set[str] | str = None,
-        generic_ids: Callable | set[str] | str = None,
+        channel_names: set[str] | str = None,
+        generic_ids: set[str] | str = None,
         manufacturers: Callable | set[str] | str = None,
         models: Callable | set[str] | str = None,
         aux_channels: Callable | set[str] | str = None,
@@ -328,8 +329,8 @@ class ZHAEntityRegistry:
     def multipass_match(
         self,
         component: str,
-        channel_names: Callable | set[str] | str = None,
-        generic_ids: Callable | set[str] | str = None,
+        channel_names: set[str] | str = None,
+        generic_ids: set[str] | str = None,
         manufacturers: Callable | set[str] | str = None,
         models: Callable | set[str] | str = None,
         aux_channels: Callable | set[str] | str = None,
@@ -351,7 +352,9 @@ class ZHAEntityRegistry:
 
             All non empty fields of a match rule must match.
             """
-            self._multi_entity_registry[component][rule].append(zha_entity)
+            # group the rules by channels
+            ch_key = (rule.channel_names, rule.generic_ids)
+            self._multi_entity_registry[component][ch_key][rule].append(zha_entity)
             return zha_entity
 
         return decorator
