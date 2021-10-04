@@ -34,7 +34,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-
 # Light(dj)
 # https://developer.tuya.com/en/docs/iot/f?id=K9i5ql3v98hn3
 DPCODE_SWITCH = "switch_led"
@@ -44,6 +43,11 @@ DPCODE_TEMP_VALUE = "temp_value"
 DPCODE_COLOUR_DATA = "colour_data"
 DPCODE_COLOUR_DATA_V2 = "colour_data_v2"
 DPCODE_LIGHT = "light"
+
+#dimmer (tgq)
+#https://developer.tuya.com/en/docs/iot/f?id=Kaof8ruxkxems
+DPCODE_SWITCH_DIMMER = "switch_led_1"
+DPCODE_BRIGHT_VALUE_DIMMER = "bright_value_1"
 
 MIREDS_MAX = 500
 MIREDS_MIN = 153
@@ -65,6 +69,11 @@ TUYA_SUPPORT_TYPE = {
     "xdd",  # Ceiling Light
     "xxj",  # Diffuser's light
     "fs",  # Fan
+    "tgq"  # Dimmer
+}
+
+TUYA_DIMMERS = {
+    "tgq"
 }
 
 DEFAULT_HSV = {
@@ -78,7 +87,6 @@ DEFAULT_HSV_V2 = {
     "s": {"min": 1, "scale": 0, "unit": "", "max": 1000, "step": 1},
     "v": {"min": 1, "scale": 0, "unit": "", "max": 1000, "step": 1},
 }
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -112,7 +120,6 @@ async def async_setup_entry(
             device_ids.append(device_id)
     async_discover_device(device_ids)
 
-
 def _setup_entities(
     hass, entry: ConfigEntry, device_ids: list[str]
 ) -> list[TuyaHaLight]:
@@ -132,7 +139,6 @@ def _setup_entities(
 
     return entities
 
-
 class TuyaHaLight(TuyaHaEntity, LightEntity):
     """Tuya light device."""
 
@@ -141,6 +147,7 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
         self.dp_code_bright = DPCODE_BRIGHT_VALUE
         self.dp_code_temp = DPCODE_TEMP_VALUE
         self.dp_code_colour = DPCODE_COLOUR_DATA
+        self.dimmer = self.is_dimmer(device.category)
 
         for key in device.function:
             if key.startswith(DPCODE_BRIGHT_VALUE):
@@ -155,7 +162,12 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
     @property
     def is_on(self) -> bool:
         """Return true if light is on."""
-        return self.tuya_device.status.get(DPCODE_SWITCH, False)
+        if self.dimmer:
+            switch_value  = DPCODE_SWITCH_DIMMER
+        else:
+            switch_value  = DPCODE_SWITCH
+
+        return self.tuya_device.status.get(switch_value, False)
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on or control the light."""
@@ -168,7 +180,10 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
         ):
             commands += [{"code": DPCODE_LIGHT, "value": True}]
         else:
-            commands += [{"code": DPCODE_SWITCH, "value": True}]
+            if self.dimmer:
+                commands += [{"code": DPCODE_SWITCH_DIMMER, "value": True}]
+            else:
+                commands += [{"code": DPCODE_SWITCH, "value": True}]
 
         if ATTR_BRIGHTNESS in kwargs:
             if self._work_mode().startswith(WORK_MODE_COLOUR):
@@ -249,7 +264,10 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
         ):
             commands = [{"code": DPCODE_LIGHT, "value": False}]
         else:
-            commands = [{"code": DPCODE_SWITCH, "value": False}]
+            if self.dimmer:
+                commands = [{"code": DPCODE_SWITCH_DIMMER, "value": False}]
+            else:
+                commands = [{"code": DPCODE_SWITCH, "value": False}]
         self._send_command(commands)
 
     @property
@@ -368,6 +386,11 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
 
     def _get_hsv(self) -> dict[str, int]:
         return json.loads(self.tuya_device.status[self.dp_code_colour])
+
+    def is_dimmer(self, category) -> bool:
+        if category in TUYA_DIMMERS:
+            return True
+        return False
 
     @property
     def supported_color_modes(self) -> set[str] | None:
