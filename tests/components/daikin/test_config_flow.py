@@ -3,7 +3,7 @@
 import asyncio
 from unittest.mock import PropertyMock, patch
 
-from aiohttp import ClientError
+from aiohttp import ClientConnectorError, ClientError
 from aiohttp.web_exceptions import HTTPForbidden
 import pytest
 
@@ -84,6 +84,7 @@ async def test_abort_if_already_setup(hass, mock_daikin):
     "s_effect,reason",
     [
         (asyncio.TimeoutError, "cannot_connect"),
+        (ClientConnectorError, "cannot_connect"),
         (HTTPForbidden, "invalid_auth"),
         (ClientError, "unknown"),
         (Exception, "unknown"),
