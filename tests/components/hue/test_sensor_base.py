@@ -467,7 +467,8 @@ async def test_hue_events(hass, mock_bridge):
     assert len(hass.states.async_all()) == 7
     assert len(events) == 1
     assert events[-1].data == {
-        "id": "hue_tap",
+        "device_id": '72ac629e89f0545fd6d78827fed81414',
+	"id": "hue_tap",
         "unique_id": "00:00:00:00:00:44:23:08-f2",
         "event": 18,
         "last_updated": "2019-12-28T22:58:03",
