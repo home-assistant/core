@@ -52,7 +52,7 @@ async def async_setup(hass, config):
     store = Store(hass, STORAGE_VERSION, STORAGE_KEY, encoder=ExtendedJSONEncoder)
     _LOGGER.debug("Loading traces")
     try:
-        restored_traces = await store.async_load()
+        restored_traces = await store.async_load() or {}
     except HomeAssistantError as exc:
         _LOGGER.error("Error loading traces", exc_info=exc)
         restored_traces = {}
@@ -62,8 +62,8 @@ async def async_setup(hass, config):
         domain = key.split(".", 1)[0]
         hass.data[DATA_RESTORED_TRACES][domain][key] = traces
         for run_id in traces:
-            max_run_id = max(int(run_id), max_run_id)
-    ActionTrace._run_ids = count(max_run_id + 1)  # pylint: disable=protected-access
+            max_run_id = max(int(run_id) + 1, max_run_id)
+    ActionTrace._run_ids = count(max_run_id)  # pylint: disable=protected-access
 
     async def _async_store_traces_at_stop(*_) -> None:
         """Save traces to storage."""
