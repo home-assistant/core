@@ -251,6 +251,11 @@ REST_SENSORS: Final = {
         device_class=sensor.DEVICE_CLASS_TIMESTAMP,
         default_enabled=False,
     ),
+    "raw_uptime": RestAttributeDescription(
+        name="Raw Uptime",
+        value=lambda status, _: status["uptime"],
+        default_enabled=False,
+    ),
 }
 
 
