@@ -35,7 +35,7 @@ GAS_USAGE_UNITS = {
     sensor.DEVICE_CLASS_GAS: (VOLUME_CUBIC_METERS, VOLUME_CUBIC_FEET),
 }
 GAS_PRICE_UNITS = tuple(
-    f"/{unit}" for units in ENERGY_USAGE_UNITS.values() for unit in units
+    f"/{unit}" for units in GAS_USAGE_UNITS.values() for unit in units
 )
 GAS_UNIT_ERROR = "entity_unexpected_unit_gas"
 GAS_PRICE_UNIT_ERROR = "entity_unexpected_unit_gas_price"
