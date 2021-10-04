@@ -1,6 +1,9 @@
 """Support for Dark Sky weather service."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
+from typing import NamedTuple
 
 import forecastio
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
@@ -384,23 +387,55 @@ SENSOR_TYPES = {
     "alerts": ["Alerts", None, None, None, None, None, "mdi:alert-circle-outline", []],
 }
 
-CONDITION_PICTURES = {
-    "clear-day": ["/static/images/darksky/weather-sunny.svg", "mdi:weather-sunny"],
-    "clear-night": ["/static/images/darksky/weather-night.svg", "mdi:weather-night"],
-    "rain": ["/static/images/darksky/weather-pouring.svg", "mdi:weather-pouring"],
-    "snow": ["/static/images/darksky/weather-snowy.svg", "mdi:weather-snowy"],
-    "sleet": ["/static/images/darksky/weather-hail.svg", "mdi:weather-snowy-rainy"],
-    "wind": ["/static/images/darksky/weather-windy.svg", "mdi:weather-windy"],
-    "fog": ["/static/images/darksky/weather-fog.svg", "mdi:weather-fog"],
-    "cloudy": ["/static/images/darksky/weather-cloudy.svg", "mdi:weather-cloudy"],
-    "partly-cloudy-day": [
-        "/static/images/darksky/weather-partlycloudy.svg",
-        "mdi:weather-partly-cloudy",
-    ],
-    "partly-cloudy-night": [
-        "/static/images/darksky/weather-cloudy.svg",
-        "mdi:weather-night-partly-cloudy",
-    ],
+
+class ConditionPicture(NamedTuple):
+    """Entity picture and icon for condition."""
+
+    entity_picture: str
+    icon: str
+
+
+CONDITION_PICTURES: dict[str, ConditionPicture] = {
+    "clear-day": ConditionPicture(
+        entity_picture="/static/images/darksky/weather-sunny.svg",
+        icon="mdi:weather-sunny",
+    ),
+    "clear-night": ConditionPicture(
+        entity_picture="/static/images/darksky/weather-night.svg",
+        icon="mdi:weather-night",
+    ),
+    "rain": ConditionPicture(
+        entity_picture="/static/images/darksky/weather-pouring.svg",
+        icon="mdi:weather-pouring",
+    ),
+    "snow": ConditionPicture(
+        entity_picture="/static/images/darksky/weather-snowy.svg",
+        icon="mdi:weather-snowy",
+    ),
+    "sleet": ConditionPicture(
+        entity_picture="/static/images/darksky/weather-hail.svg",
+        icon="mdi:weather-snowy-rainy",
+    ),
+    "wind": ConditionPicture(
+        entity_picture="/static/images/darksky/weather-windy.svg",
+        icon="mdi:weather-windy",
+    ),
+    "fog": ConditionPicture(
+        entity_picture="/static/images/darksky/weather-fog.svg",
+        icon="mdi:weather-fog",
+    ),
+    "cloudy": ConditionPicture(
+        entity_picture="/static/images/darksky/weather-cloudy.svg",
+        icon="mdi:weather-cloudy",
+    ),
+    "partly-cloudy-day": ConditionPicture(
+        entity_picture="/static/images/darksky/weather-partlycloudy.svg",
+        icon="mdi:weather-partly-cloudy",
+    ),
+    "partly-cloudy-night": ConditionPicture(
+        entity_picture="/static/images/darksky/weather-cloudy.svg",
+        icon="mdi:weather-night-partly-cloudy",
+    ),
 }
 
 # Language Supported Codes
@@ -595,7 +630,7 @@ class DarkSkySensor(SensorEntity):
             return None
 
         if self._icon in CONDITION_PICTURES:
-            return CONDITION_PICTURES[self._icon][0]
+            return CONDITION_PICTURES[self._icon].entity_picture
 
         return None
 
@@ -610,7 +645,7 @@ class DarkSkySensor(SensorEntity):
     def icon(self):
         """Icon to use in the frontend, if any."""
         if "summary" in self.type and self._icon in CONDITION_PICTURES:
-            return CONDITION_PICTURES[self._icon][1]
+            return CONDITION_PICTURES[self._icon].icon
 
         return SENSOR_TYPES[self.type][6]
 
