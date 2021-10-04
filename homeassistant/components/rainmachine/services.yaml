@@ -107,3 +107,65 @@ unpause_watering:
       selector:
         device:
           integration: rainmachine
+push_weather_data:
+  name: Push Weather Data
+  description: Push Weather Data to the device. Local Weather Push service should be enabled from Settings > Weather > Developer tab for RainMachine to consider the values being sent. Units must be sent in metric; no conversions are performed by the integraion.
+  target:
+    entity:
+      integration: rainmachine
+      domain: switch
+  fields:
+    device_id:
+      name: Controller
+      description: The controller whose watering activities should be unpaused
+      required: true
+      selector:
+        device:
+          integration: rainmachine
+    timestamp:
+      name: Timestamp
+      description: Timestamp for the Weather Data. If omitted, the device's local time at the time of the call is used.
+    mintemp:
+      name: Min Temp
+      description: Minimum Temperature
+    maxtemp:
+      name: Max Temp
+      description: Maximum Temperature
+    temperature:
+      name: Temperature
+      description: Current Temperature
+    wind:
+      name: Wind Speed
+      description: Wind Speed (m/s)
+    solarrad:
+      name: Solar Radiation
+      description: Solar Radiation
+    qpf:
+      name: Quantitative Precipitation Forecast (mm)
+      description: >-
+        Quantitative Precipitation Forecast, or QPFs, depict the amount of liquid precipitation
+        expected to fall in a defined period of time. In the case of snow or ice, QPF represents
+        the amount of liquid that will be measured when the precipitation is melted. Note: QPF values shouldn't
+        be send as cumulative values but the measured/forecasted values for each hour or day.
+        The RainMachine Mixer will sum all QPF values in the current day to have the day total QPF.
+    rain:
+      name: Measured Rainfall (mm)
+      description: >-
+        Measured Rainfail in mm. Note: RAIN values shouldn't be send as cumulative values but the
+        measured/forecasted values for each hour or day. The RainMachine Mixer will sum all RAIN values
+        in the current day to have the day total RAIN.
+    minrh:
+      name: Min Relative Humidity
+      description: Min Relative Humidity
+    maxrh:
+      name: Max Relative Humidity
+      description: Max Relative Humidity
+    condition:
+      name: Weather Condition Code
+      description: Current weather condition code (WNUM).
+    pressure:
+      name: Barametric Pressure
+      description: Barametric Pressure
+    dewpoint:
+      name: Dew Point
+      description: Dew Point

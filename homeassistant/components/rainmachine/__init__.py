@@ -34,6 +34,21 @@ from homeassistant.util.network import is_ip_address
 
 from .config_flow import get_client_controller
 from .const import (
+    CONF_CONDITION,
+    CONF_DEWPOINT,
+    CONF_MAXRH,
+    CONF_MAXTEMP,
+    CONF_MINRH,
+    CONF_MINTEMP,
+    CONF_PRESSURE,
+    CONF_QPF,
+    CONF_RAIN,
+    CONF_SECONDS,
+    CONF_SOLARRAD,
+    CONF_TEMPERATURE,
+    CONF_TIMESTAMP,
+    CONF_WEATHER,
+    CONF_WIND,
     CONF_ZONE_RUN_TIME,
     DATA_CONTROLLER,
     DATA_COORDINATOR,
@@ -45,8 +60,6 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
-
-CONF_SECONDS = "seconds"
 
 DEFAULT_ATTRIBUTION = "Data provided by Green Electronics LLC"
 DEFAULT_ICON = "mdi:water"
@@ -60,6 +73,7 @@ PLATFORMS = ["binary_sensor", "sensor", "switch"]
 SERVICE_NAME_PAUSE_WATERING = "pause_watering"
 SERVICE_NAME_STOP_ALL = "stop_all"
 SERVICE_NAME_UNPAUSE_WATERING = "unpause_watering"
+SERVICE_NAME_PUSH_WEATHER_DATA = "push_weather_data"
 
 SERVICE_SCHEMA = vol.Schema(
     {
@@ -70,6 +84,24 @@ SERVICE_SCHEMA = vol.Schema(
 SERVICE_PAUSE_WATERING_SCHEMA = SERVICE_SCHEMA.extend(
     {
         vol.Required(CONF_SECONDS): cv.positive_int,
+    }
+)
+
+SERVICE_PUSH_WEATHER_DATA_SCHEMA = SERVICE_SCHEMA.extend(
+    {
+        vol.Optional(CONF_TIMESTAMP): cv.date,
+        vol.Optional(CONF_MINTEMP): vol.Coerce(float),
+        vol.Optional(CONF_MAXTEMP): vol.Coerce(float),
+        vol.Optional(CONF_TEMPERATURE): vol.Coerce(float),
+        vol.Optional(CONF_WIND): vol.Coerce(float),
+        vol.Optional(CONF_SOLARRAD): vol.Coerce(float),
+        vol.Optional(CONF_QPF): vol.Coerce(float),
+        vol.Optional(CONF_RAIN): vol.Coerce(float),
+        vol.Optional(CONF_MINRH): vol.Coerce(float),
+        vol.Optional(CONF_MAXRH): vol.Coerce(float),
+        vol.Optional(CONF_CONDITION): cv.positive_int,
+        vol.Optional(CONF_PRESSURE): vol.Coerce(float),
+        vol.Optional(CONF_DEWPOINT): vol.Coerce(float),
     }
 )
 
@@ -213,6 +245,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await controller.watering.unpause_all()
         await async_update_programs_and_zones(hass, entry)
 
+    async def async_push_weather_data(call: ServiceCall) -> None:
+        """Push weather data to the device."""
+        controller = async_get_controller_for_service_call(hass, call)
+        payload = {
+            CONF_WEATHER: [
+                {
+                    key: value
+                    for key, value in call.data.items()
+                    if value is not None and key != CONF_DEVICE_ID
+                }
+            ]
+        }
+        await controller.parsers.post_data(payload)
+
     for service_name, schema, method in (
         (
             SERVICE_NAME_PAUSE_WATERING,
@@ -221,6 +267,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
         (SERVICE_NAME_STOP_ALL, SERVICE_SCHEMA, async_stop_all),
         (SERVICE_NAME_UNPAUSE_WATERING, SERVICE_SCHEMA, async_unpause_watering),
+        (
+            SERVICE_NAME_PUSH_WEATHER_DATA,
+            SERVICE_PUSH_WEATHER_DATA_SCHEMA,
+            async_push_weather_data,
+        ),
     ):
         if hass.services.has_service(DOMAIN, service_name):
             continue
