@@ -21,7 +21,7 @@ async def test_configuring_tplink_causes_discovery(hass):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    assert len(discover.mock_calls) == 1
+    assert discover.mock_calls
 
 
 async def test_config_entry_reload(hass):
