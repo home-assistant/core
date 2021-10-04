@@ -638,6 +638,7 @@ def validate_statistics(
     validation_result = defaultdict(list)
 
     sensor_states = hass.states.all(DOMAIN)
+    metadatas = statistics.get_metadata(hass, [i.entity_id for i in sensor_states])
 
     for state in sensor_states:
         entity_id = state.entity_id
@@ -645,8 +646,7 @@ def validate_statistics(
         state_class = state.attributes.get(ATTR_STATE_CLASS)
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
-        metadata = statistics.get_metadata(hass, (entity_id,))
-        if metadata:
+        if metadata := metadatas.get(entity_id):
             if not is_entity_recorded(hass, state.entity_id):
                 # Sensor was previously recorded, but no longer is
                 validation_result[entity_id].append(
@@ -665,7 +665,7 @@ def validate_statistics(
                     )
                 )
 
-            metadata_unit = metadata[entity_id][1]["unit_of_measurement"]
+            metadata_unit = metadata[1]["unit_of_measurement"]
             if device_class not in UNIT_CONVERSIONS:
                 if state_unit != metadata_unit:
                     # The unit has changed
