@@ -20,7 +20,7 @@ MOCK_SETTINGS = {
     "device": {"mac": "test-mac", "hostname": "test-host"},
 }
 DISCOVERY_INFO = {
-    "host": "1.1.1.1",
+    "host": ["169.1.1.1", "1.1.1.1"],
     "port": 0,
     "hostname": "shc012345.local.",
     "type": "_http._tcp.local.",
