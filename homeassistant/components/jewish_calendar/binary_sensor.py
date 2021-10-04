@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import datetime as dt
 from datetime import datetime
-from typing import Callable, cast
+from typing import cast
 
 import hdate
 from hdate.zmanim import Zmanim
@@ -86,7 +86,7 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
         self._schedule_update()
         self.async_write_ha_state()
 
-    def _schedule_update(self) -> Callable | None:
+    def _schedule_update(self) -> None:
         """Schedule the next update of the sensor."""
         now = dt_util.now()
         zmanim = self._get_zmanim()
@@ -102,4 +102,3 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
         self._update_unsub = event.async_track_point_in_time(
             self.hass, self._update, update
         )
-        return None
