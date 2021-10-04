@@ -23,6 +23,9 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_ISS_NEXT_RISE = "next_rise"
+ATTR_ISS_NUMBER_PEOPLE_SPACE = "number_of_people_in_space"
+
 DEFAULT_NAME = "ISS"
 DEFAULT_DEVICE_CLASS = "visible"
 
@@ -77,8 +80,8 @@ class IssBinarySensor(BinarySensorEntity):
         """Return the state attributes."""
         if self.iss_data:
             attrs = {
-                "number_of_people_in_space": self.iss_data.number_of_people_in_space,
-                "next_rise": self.iss_data.next_rise,
+                ATTR_ISS_NUMBER_PEOPLE_SPACE: self.iss_data.number_of_people_in_space,
+                ATTR_ISS_NEXT_RISE: self.iss_data.next_rise,
             }
             if self._show_on_map:
                 attrs[ATTR_LONGITUDE] = self.iss_data.position.get("longitude")
