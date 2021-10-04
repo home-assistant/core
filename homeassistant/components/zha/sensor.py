@@ -547,7 +547,7 @@ class FormaldehydeConcentration(Sensor):
     _unit = CONCENTRATION_PARTS_PER_MILLION
 
 
-@MULTI_MATCH(channel_names=CHANNEL_THERMOSTAT)
+@MULTI_MATCH(channel_names=CHANNEL_THERMOSTAT, stop_on_match_group=CHANNEL_THERMOSTAT)
 class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
     """Thermostat HVAC action sensor."""
 
@@ -631,7 +631,7 @@ class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
 @MULTI_MATCH(
     channel_names=CHANNEL_THERMOSTAT,
     manufacturers="Zen Within",
-    stop_on_match=True,
+    stop_on_match_group=CHANNEL_THERMOSTAT,
 )
 class ZenHVACAction(ThermostatHVACAction):
     """Zen Within Thermostat HVAC Action."""
