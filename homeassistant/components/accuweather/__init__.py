@@ -6,8 +6,13 @@ import logging
 from typing import Any, Dict
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 from accuweather import AccuWeather, ApiError, InvalidApiKeyError, InvalidCoordinatesError, RequestsExceededError
 from aiohttp import ClientSession, ClientError
+=======
+from accuweather import AccuWeather, ApiError, InvalidApiKeyError, RequestsExceededError
+from aiohttp import ClientSession
+>>>>>>> parent of 4d12009cea (update in accuweather dependencies)
 =======
 from accuweather import AccuWeather, ApiError, InvalidApiKeyError, RequestsExceededError
 from aiohttp import ClientSession
