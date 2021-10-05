@@ -33,7 +33,7 @@ API_CACHED_ATTRS = (
 )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up August from a config entry."""
 
     august_gateway = AugustGateway(hass)

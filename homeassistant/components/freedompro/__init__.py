@@ -26,7 +26,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Freedompro from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     api_key = entry.data[CONF_API_KEY]
