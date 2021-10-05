@@ -1,14 +1,17 @@
 """Test Trace websocket API."""
 import asyncio
+import json
+from typing import DefaultDict
 
 import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.trace.const import DEFAULT_STORED_TRACES
-from homeassistant.core import Context, callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Context, CoreState, callback
 from homeassistant.helpers.typing import UNDEFINED
 
-from tests.common import assert_lists_same
+from tests.common import assert_lists_same, load_fixture
 
 
 def _find_run_id(traces, trace_type, item_id):
@@ -101,6 +104,7 @@ async def _assert_contexts(client, next_id, contexts):
 )
 async def test_get_trace(
     hass,
+    hass_storage,
     hass_ws_client,
     domain,
     prefix,
@@ -339,6 +343,106 @@ async def test_get_trace(
 
     # Check contexts
     await _assert_contexts(client, next_id, contexts)
+
+    # List traces
+    await client.send_json({"id": next_id(), "type": "trace/list", "domain": domain})
+    response = await client.receive_json()
+    assert response["success"]
+    trace_list = response["result"]
+
+    # Get all traces
+    traces = DefaultDict(dict)
+    for trace in trace_list:
+        item_id = trace["item_id"]
+        run_id = trace["run_id"]
+        await client.send_json(
+            {
+                "id": next_id(),
+                "type": "trace/get",
+                "domain": domain,
+                "item_id": item_id,
+                "run_id": run_id,
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        traces[f"{domain}.{item_id}"][run_id] = response["result"]
+
+    # Fake stop
+    assert "trace.saved_traces" not in hass_storage
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    # Check that saved data is same as the serialized traces
+    assert "trace.saved_traces" in hass_storage
+    assert hass_storage["trace.saved_traces"]["data"] == traces
+
+
+@pytest.mark.parametrize("domain", ["automation", "script"])
+async def test_restore_traces(hass, hass_storage, hass_ws_client, domain):
+    """Test restored traces."""
+    hass.state = CoreState.not_running
+    id = 1
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
+    saved_traces = json.loads(load_fixture(f"trace/{domain}_saved_traces.json"))
+    hass_storage["trace.saved_traces"] = saved_traces
+    await _setup_automation_or_script(hass, domain, [])
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client()
+
+    # List traces
+    await client.send_json({"id": next_id(), "type": "trace/list", "domain": domain})
+    response = await client.receive_json()
+    assert response["success"]
+    trace_list = response["result"]
+
+    # Get all traces
+    traces = DefaultDict(dict)
+    contexts = {}
+    for trace in trace_list:
+        item_id = trace["item_id"]
+        run_id = trace["run_id"]
+        await client.send_json(
+            {
+                "id": next_id(),
+                "type": "trace/get",
+                "domain": domain,
+                "item_id": item_id,
+                "run_id": run_id,
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        trace = response["result"]
+        traces[f"{domain}.{item_id}"][run_id] = trace
+        contexts[trace["context"]["id"]] = {
+            "run_id": trace["run_id"],
+            "domain": domain,
+            "item_id": trace["item_id"],
+        }
+
+    # Check that loaded data is same as the serialized traces
+    assert hass_storage["trace.saved_traces"]["data"] == traces
+
+    # Check restored contexts
+    await _assert_contexts(client, next_id, contexts)
+
+    # Fake stop
+    hass_storage.pop("trace.saved_traces")
+    assert "trace.saved_traces" not in hass_storage
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    # Check that saved data is same as the serialized traces
+    assert "trace.saved_traces" in hass_storage
+    assert hass_storage["trace.saved_traces"] == saved_traces
 
 
 @pytest.mark.parametrize("domain", ["automation", "script"])
