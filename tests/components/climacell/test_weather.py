@@ -7,10 +7,6 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.climacell.config_flow import (
-    _get_config_schema,
-    _get_unique_id,
-)
 from homeassistant.components.climacell.const import (
     ATTR_CLOUD_COVER,
     ATTR_PRECIPITATION_TYPE,
@@ -69,11 +65,10 @@ async def _setup(hass: HomeAssistant, config: dict[str, Any]) -> State:
         "homeassistant.util.dt.utcnow",
         return_value=datetime(2021, 3, 6, 23, 59, 59, tzinfo=dt_util.UTC),
     ):
-        data = _get_config_schema(hass)(config)
         config_entry = MockConfigEntry(
             domain=DOMAIN,
-            data=data,
-            unique_id=_get_unique_id(hass, data),
+            data=config,
+            unique_id="test",
             version=1,
         )
         config_entry.add_to_hass(hass)
