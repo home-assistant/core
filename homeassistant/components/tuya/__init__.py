@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN] = {entry.entry_id: {TUYA_HA_TUYA_MAP: {}, TUYA_HA_DEVICES: set()}}
 
     # Project type has been renamed to auth type in the upstream Tuya IoT SDK.
-    # This migrartes existing config entries to reflect that name change.
+    # This migrates existing config entries to reflect that name change.
     if CONF_PROJECT_TYPE in entry.data:
         data = entry.data.copy()
         data[CONF_AUTH_TYPE] = entry.data[CONF_PROJECT_TYPE]
