@@ -110,12 +110,12 @@ class ActionTrace:
     _domain: str | None = None
     _run_ids = None
 
-    def __init__(self, item_id: str) -> None:
+    def __init__(self, item_id: str, context: Context) -> None:
         """Container for script trace."""
         self._trace: dict[str, deque[TraceElement]] | None = None
         self._config: dict[str, Any] | None = None
         self._blueprint_inputs: dict[str, Any] | None = None
-        self.context: Context | None = None
+        self.context: Context = context
         self._error: Exception | None = None
         self._state: str = "stopped"
         self._script_execution: str | None = None
@@ -127,12 +127,11 @@ class ActionTrace:
         self._short_dict: dict[str, Any] | None = None
 
     def set_basic_info(
-        self, config: dict[str, Any], blueprint_inputs: dict[str, Any], context: Context
+        self, config: dict[str, Any], blueprint_inputs: dict[str, Any]
     ) -> None:
         """Set basic information for tracing, not called for restored traces."""
         self._config = config
         self._blueprint_inputs = blueprint_inputs
-        self.context = context
         self._state = "running"
         assert self._run_ids
         self.run_id = str(next(self._run_ids))
@@ -217,7 +216,12 @@ class ActionTrace:
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> ActionTrace:
         """Restore from dict."""
-        actiontrace = cls(data["item_id"])
+        context = Context(
+            user_id=data["context"]["user_id"],
+            parent_id=data["context"]["parent_id"],
+            id=data["context"]["id"],
+        )
+        actiontrace = cls(data["item_id"], context)
         actiontrace.run_id = data["run_id"]
         actiontrace._dict = data
         actiontrace._short_dict = {
