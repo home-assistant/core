@@ -42,6 +42,7 @@ async def async_setup_entry(
 class RssiSensor(CoordinatorEntity[State], SensorEntity):
     """Sensor device."""
 
+    _attr_device_class = DEVICE_CLASS_SIGNAL_STRENGTH
     _attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 
     def __init__(
@@ -55,7 +56,6 @@ class RssiSensor(CoordinatorEntity[State], SensorEntity):
         self._attr_unique_id = f"{device.address}-signal-strength"
         self._attr_device_info = device_info
         self._attr_name = f"{device_info['name']} Signal Strength"
-        self._attr_device_class = DEVICE_CLASS_SIGNAL_STRENGTH
         self._attr_state_class = STATE_CLASS_MEASUREMENT
         self._attr_entity_registry_enabled_default = False
 
