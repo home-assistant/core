@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from tuya_iot import ProjectType, TuyaOpenAPI
+from tuya_iot import AuthType, TuyaOpenAPI
 import voluptuous as vol
 from voluptuous.schema_builder import UNDEFINED
 
@@ -44,7 +44,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         data = {
             CONF_ENDPOINT: TUYA_REGIONS[user_input[CONF_REGION]],
-            CONF_PROJECT_TYPE: ProjectType.INDUSTY_SOLUTIONS,
+            CONF_PROJECT_TYPE: AuthType.CUSTOM,
             CONF_ACCESS_ID: user_input[CONF_ACCESS_ID],
             CONF_ACCESS_SECRET: user_input[CONF_ACCESS_SECRET],
             CONF_USERNAME: user_input[CONF_USERNAME],
@@ -55,19 +55,19 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for app_type in ("", TUYA_SMART_APP, SMARTLIFE_APP):
             data[CONF_APP_TYPE] = app_type
             if data[CONF_APP_TYPE] == "":
-                data[CONF_PROJECT_TYPE] = ProjectType.INDUSTY_SOLUTIONS
+                data[CONF_PROJECT_TYPE] = AuthType.CUSTOM
             else:
-                data[CONF_PROJECT_TYPE] = ProjectType.SMART_HOME
+                data[CONF_PROJECT_TYPE] = AuthType.SMART_HOME
 
             api = TuyaOpenAPI(
                 endpoint=data[CONF_ENDPOINT],
                 access_id=data[CONF_ACCESS_ID],
                 access_secret=data[CONF_ACCESS_SECRET],
-                project_type=data[CONF_PROJECT_TYPE],
+                auth_type=data[CONF_PROJECT_TYPE],
             )
             api.set_dev_channel("hass")
 
-            response = api.login(
+            response = api.connect(
                 username=data[CONF_USERNAME],
                 password=data[CONF_PASSWORD],
                 country_code=data[CONF_COUNTRY_CODE],

@@ -4,7 +4,7 @@ import itertools
 import logging
 
 from tuya_iot import (
-    ProjectType,
+    AuthType,
     TuyaDevice,
     TuyaDeviceListener,
     TuyaDeviceManager,
@@ -50,23 +50,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    project_type = ProjectType(entry.data[CONF_PROJECT_TYPE])
+    auth_type = AuthType(entry.data[CONF_PROJECT_TYPE])
     api = TuyaOpenAPI(
-        entry.data[CONF_ENDPOINT],
-        entry.data[CONF_ACCESS_ID],
-        entry.data[CONF_ACCESS_SECRET],
-        project_type,
+        endpoint=entry.data[CONF_ENDPOINT],
+        access_id=entry.data[CONF_ACCESS_ID],
+        access_secret=entry.data[CONF_ACCESS_SECRET],
+        auth_type=auth_type,
     )
 
     api.set_dev_channel("hass")
 
-    if project_type == ProjectType.INDUSTY_SOLUTIONS:
+    if auth_type == AuthType.CUSTOM:
         response = await hass.async_add_executor_job(
-            api.login, entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
+            api.connect, entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
         )
     else:
         response = await hass.async_add_executor_job(
-            api.login,
+            api.connect,
             entry.data[CONF_USERNAME],
             entry.data[CONF_PASSWORD],
             entry.data[CONF_COUNTRY_CODE],

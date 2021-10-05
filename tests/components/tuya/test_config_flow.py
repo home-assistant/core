@@ -86,7 +86,7 @@ async def test_user_flow(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
-    tuya().login = MagicMock(side_effect=side_effects)
+    tuya().connect = MagicMock(side_effect=side_effects)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=TUYA_INPUT_DATA
     )
@@ -115,7 +115,7 @@ async def test_error_on_invalid_credentials(hass, tuya):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
-    tuya().login = MagicMock(return_value=RESPONSE_ERROR)
+    tuya().connect = MagicMock(return_value=RESPONSE_ERROR)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=TUYA_INPUT_DATA
     )
