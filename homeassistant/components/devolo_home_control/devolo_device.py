@@ -17,6 +17,8 @@ _LOGGER = logging.getLogger(__name__)
 class DevoloDeviceEntity(Entity):
     """Abstract representation of a device within devolo Home Control."""
 
+    _attr_should_poll = False
+
     def __init__(
         self, homecontrol: HomeControl, device_instance: Zwave, element_uid: str
     ) -> None:
@@ -30,7 +32,6 @@ class DevoloDeviceEntity(Entity):
         self._attr_name: str = device_instance.settings_property[
             "general_device_settings"
         ].name
-        self._attr_should_poll = False
         self._attr_unique_id = element_uid
         self._attr_device_info = {
             "identifiers": {(DOMAIN, self._device_instance.uid)},

@@ -24,6 +24,8 @@ _LOGGER = logging.getLogger(__name__)
 class SIABaseEntity(RestoreEntity):
     """Base class for SIA entities."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         entry: ConfigEntry,
@@ -44,7 +46,6 @@ class SIABaseEntity(RestoreEntity):
         self._cancel_availability_cb: CALLBACK_TYPE | None = None
 
         self._attr_extra_state_attributes = {}
-        self._attr_should_poll = False
         self._attr_name = SIA_NAME_FORMAT.format(
             self._port, self._account, self._zone, self._attr_device_class
         )

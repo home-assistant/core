@@ -14,13 +14,14 @@ TIME_MARK_DISCONNECTED = 10
 class HarmonyEntity(Entity):
     """Base entity for Harmony with connection state handling."""
 
+    _attr_should_poll = False
+
     def __init__(self, data: HarmonyData) -> None:
         """Initialize the Harmony base entity."""
         super().__init__()
         self._unsub_mark_disconnected = None
         self._name = data.name
         self._data = data
-        self._attr_should_poll = False
 
     @property
     def available(self) -> bool:

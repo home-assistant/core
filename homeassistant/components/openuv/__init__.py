@@ -175,10 +175,11 @@ class OpenUV:
 class OpenUvEntity(Entity):
     """Define a generic OpenUV entity."""
 
+    _attr_should_poll = False
+
     def __init__(self, openuv: OpenUV, description: EntityDescription) -> None:
         """Initialize."""
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        self._attr_should_poll = False
         self._attr_unique_id = (
             f"{openuv.client.latitude}_{openuv.client.longitude}_{description.key}"
         )

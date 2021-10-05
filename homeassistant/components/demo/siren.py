@@ -51,6 +51,8 @@ async def async_setup_entry(
 class DemoSiren(SirenEntity):
     """Representation of a demo siren device."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         name: str,
@@ -61,7 +63,6 @@ class DemoSiren(SirenEntity):
     ) -> None:
         """Initialize the siren device."""
         self._attr_name = name
-        self._attr_should_poll = False
         self._attr_supported_features = SUPPORT_FLAGS
         self._attr_is_on = is_on
         if available_tones is not None:

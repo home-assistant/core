@@ -66,6 +66,8 @@ _LOGGER = logging.getLogger(__name__)
 class BasePlatform(Entity):
     """Base for readonly platforms."""
 
+    _attr_should_poll = False
+
     def __init__(self, hub: ModbusHub, entry: dict[str, Any]) -> None:
         """Initialize the Modbus binary sensor."""
         self._hub = hub
@@ -83,7 +85,6 @@ class BasePlatform(Entity):
         self._cancel_call: Callable[[], None] | None = None
 
         self._attr_name = entry[CONF_NAME]
-        self._attr_should_poll = False
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
         self._attr_available = True
         self._attr_unit_of_measurement = None

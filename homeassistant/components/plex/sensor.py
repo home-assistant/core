@@ -63,11 +63,11 @@ class PlexSensor(SensorEntity):
     """Representation of a Plex now playing sensor."""
 
     _attr_icon = "mdi:plex"
+    _attr_should_poll = False
 
     def __init__(self, hass, plex_server):
         """Initialize the sensor."""
         self._attr_name = NAME_FORMAT.format(plex_server.friendly_name)
-        self._attr_should_poll = False
         self._attr_unique_id = f"sensor-{plex_server.machine_identifier}"
         self._attr_native_unit_of_measurement = "Watching"
 
@@ -120,6 +120,8 @@ class PlexSensor(SensorEntity):
 class PlexLibrarySectionSensor(SensorEntity):
     """Representation of a Plex library section sensor."""
 
+    _attr_should_poll = False
+
     def __init__(self, hass, plex_server, plex_library_section):
         """Initialize the sensor."""
         self._server = plex_server
@@ -133,7 +135,6 @@ class PlexLibrarySectionSensor(SensorEntity):
         self._attr_extra_state_attributes = {}
         self._attr_icon = LIBRARY_ICON_LOOKUP.get(self.library_type, "mdi:plex")
         self._attr_name = f"{self.server_name} Library - {plex_library_section.title}"
-        self._attr_should_poll = False
         self._attr_unique_id = f"library-{self.server_id}-{plex_library_section.uuid}"
         self._attr_native_unit_of_measurement = "Items"
 
