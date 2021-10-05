@@ -6,7 +6,8 @@
             "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
         "error": {
-            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "login_error": "Error d'inici de sessi\u00f3 ({code}): {msg}"
         },
         "flow_title": "Configuraci\u00f3 de Tuya",
         "step": {
@@ -25,13 +26,16 @@
             },
             "user": {
                 "data": {
+                    "access_id": "ID d'acc\u00e9s de Tuya IoT",
+                    "access_secret": "Secret d'acc\u00e9s de Tuya IoT",
                     "country_code": "El teu codi de pa\u00eds (per exemple, 1 per l'EUA o 86 per la Xina)",
                     "password": "Contrasenya",
                     "platform": "L'aplicaci\u00f3 on es registra el teu compte",
+                    "region": "Regi\u00f3",
                     "tuya_project_type": "Tipus de projecte al n\u00favol de Tuya",
-                    "username": "Nom d'usuari"
+                    "username": "Compte"
                 },
-                "description": "Introdueix les teves credencial de Tuya.",
+                "description": "Introdueix les teves credencial de Tuya",
                 "title": "Integraci\u00f3 Tuya"
             }
         }
