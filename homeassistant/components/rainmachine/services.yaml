@@ -6,15 +6,7 @@ disable_program:
     entity:
       integration: rainmachine
       domain: switch
-  fields:
-    program_id:
-      name: Program ID
-      description: The program to disable.
-      required: true
-      selector:
-        number:
-          min: 1
-          max: 255
+      device_class: program
 disable_zone:
   name: Disable zone
   description: Disable a zone.
@@ -22,15 +14,7 @@ disable_zone:
     entity:
       integration: rainmachine
       domain: switch
-  fields:
-    zone_id:
-      name: Zone ID
-      description: The zone to disable.
-      required: true
-      selector:
-        number:
-          min: 1
-          max: 255
+      device_class: zone
 enable_program:
   name: Enable program
   description: Enable a program.
@@ -38,15 +22,7 @@ enable_program:
     entity:
       integration: rainmachine
       domain: switch
-  fields:
-    program_id:
-      name: Program ID
-      description: The program to enable.
-      required: true
-      selector:
-        number:
-          min: 1
-          max: 255
+      device_class: program
 enable_zone:
   name: Enable zone
   description: Enable a zone.
@@ -54,22 +30,13 @@ enable_zone:
     entity:
       integration: rainmachine
       domain: switch
-  fields:
-    zone_id:
-      name: Zone ID
-      description: The zone to enable.
-      required: true
-      selector:
-        number:
-          min: 1
-          max: 255
+      device_class: zone
 pause_watering:
   name: Pause watering
   description: Pause all watering for a number of seconds.
   target:
-    entity:
+    device:
       integration: rainmachine
-      domain: switch
   fields:
     seconds:
       name: Seconds
@@ -82,20 +49,12 @@ pause_watering:
           unit_of_measurement: seconds
 start_program:
   name: Start program
-  description: Start a program.
+  description: Start a program
   target:
     entity:
       integration: rainmachine
       domain: switch
-  fields:
-    program_id:
-      name: Program ID
-      description: The program to start.
-      required: true
-      selector:
-        number:
-          min: 1
-          max: 255
+      device_class: program
 start_zone:
   name: Start zone
   description: Start a zone for a set number of seconds.
@@ -103,15 +62,8 @@ start_zone:
     entity:
       integration: rainmachine
       domain: switch
+      device_class: zone
   fields:
-    zone_id:
-      name: Zone ID
-      description: The zone to start.
-      required: true
-      selector:
-        number:
-          min: 1
-          max: 255
     zone_run_time:
       name: Zone run time
       description: The number of seconds to run the zone.
@@ -125,45 +77,27 @@ stop_all:
   name: Stop all
   description: Stop all watering activities.
   target:
-    entity:
+    device:
       integration: rainmachine
-      domain: switch
 stop_program:
   name: Stop program
-  description: Stop a program.
+  description: Start a program
   target:
     entity:
       integration: rainmachine
       domain: switch
-  fields:
-    program_id:
-      name: Program ID
-      description: The program to stop.
-      required: true
-      selector:
-        number:
-          min: 1
-          max: 255
+      device_class: program
 stop_zone:
   name: Stop zone
-  description: Stop a zone.
+  description: Stop a zone
   target:
     entity:
       integration: rainmachine
       domain: switch
-  fields:
-    zone_id:
-      name: Zone ID
-      description: The zone to stop.
-      required: true
-      selector:
-        number:
-          min: 1
-          max: 255
+      device_class: zone
 unpause_watering:
   name: Unpause watering
   description: Unpause all watering.
   target:
-    entity:
+    device:
       integration: rainmachine
-      domain: switch

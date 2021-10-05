@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 import homeassistant.helpers.device_registry as dr
@@ -43,6 +43,8 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+
+CONF_SECONDS = "seconds"
 
 DEFAULT_ATTRIBUTION = "Data provided by Green Electronics LLC"
 DEFAULT_ICON = "mdi:water"
@@ -157,6 +159,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+
+    async def async_pause_watering(call: ServiceCall) -> None:
+        """Pause watering for a set number of seconds."""
+        LOGGER.error(call.data)
+        await controller.watering.pause_all(call.data[CONF_SECONDS])
+        await async_update_programs_and_zones(hass, entry)
+
+    async def async_stop_all(_: ServiceCall) -> None:
+        """Stop all watering."""
+        await controller.watering.stop_all()
+        await async_update_programs_and_zones(hass, entry)
+
+    async def async_unpause_watering(_: ServiceCall) -> None:
+        """Unpause watering."""
+        await controller.watering.unpause_all()
+        await async_update_programs_and_zones(hass, entry)
+
+    for service_name, method in (
+        ("pause_watering", async_pause_watering),
+        ("stop_all", async_stop_all),
+        ("unpause_watering", async_unpause_watering),
+    ):
+        hass.services.async_register(DOMAIN, service_name, method)
 
     return True
 
