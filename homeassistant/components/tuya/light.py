@@ -72,7 +72,10 @@ TUYA_SUPPORT_TYPE = {
     "tgq",  # Dimmer
 }
 
-TUYA_DIMMERS = {"tgq"}
+TUYA_DIMMERS = {
+    "tgq",
+    "tgkg"
+    }
 
 DEFAULT_HSV = {
     "h": {"min": 1, "scale": 0, "unit": "", "max": 360, "step": 1},
