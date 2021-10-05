@@ -5,8 +5,13 @@ from datetime import timedelta
 import logging
 from typing import Any, Dict
 
+<<<<<<< HEAD
 from accuweather import AccuWeather, ApiError, InvalidApiKeyError, InvalidCoordinatesError, RequestsExceededError
 from aiohttp import ClientSession, ClientError
+=======
+from accuweather import AccuWeather, ApiError, InvalidApiKeyError, RequestsExceededError
+from aiohttp import ClientSession
+>>>>>>> parent of 4d12009cea (update in accuweather dependencies)
 from aiohttp.client_exceptions import ClientConnectorError
 from async_timeout import timeout
 
@@ -104,11 +109,9 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 )
         except (
             ApiError,
-            ClientError,
             ClientConnectorError,
             InvalidApiKeyError,
             RequestsExceededError,
-            InvalidCoordinatesError,
         ) as error:
             raise UpdateFailed(error) from error
         _LOGGER.debug("Requests remaining: %d", self.accuweather.requests_remaining)
