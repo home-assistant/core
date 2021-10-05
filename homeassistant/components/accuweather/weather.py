@@ -53,6 +53,7 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
     """Define an AccuWeather entity."""
 
     coordinator: AccuWeatherDataUpdateCoordinator
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self, name: str, coordinator: AccuWeatherDataUpdateCoordinator
@@ -65,7 +66,6 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
         self._attr_temperature_unit = (
             TEMP_CELSIUS if coordinator.is_metric else TEMP_FAHRENHEIT
         )
-        self._attr_attribution = ATTRIBUTION
         self._attr_device_info = {
             "identifiers": {(DOMAIN, coordinator.location_key)},
             "name": NAME,
