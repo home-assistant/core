@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable
 from datetime import timedelta
 from functools import partial
-from typing import Any
+from typing import Any, Callable
 
 from regenmaschine import Client
 from regenmaschine.controller import Controller
@@ -13,6 +14,7 @@ from regenmaschine.errors import RainMachineError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    CONF_DEVICE_ID,
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
     CONF_PORT,
@@ -54,6 +56,12 @@ DEFAULT_UPDATE_INTERVAL = timedelta(seconds=15)
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 PLATFORMS = ["binary_sensor", "sensor", "switch"]
+
+SERVICE_PAUSE_WATERING = "pause_watering"
+SERVICE_STOP_ALL = "stop_all"
+SERVICE_UNPAUSE_WATERING = "unpause_watering"
+
+SERVICES = [SERVICE_PAUSE_WATERING, SERVICE_STOP_ALL, SERVICE_UNPAUSE_WATERING]
 
 
 async def async_update_programs_and_zones(
@@ -160,27 +168,49 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
+    @callback
+    def match_call_to_entry(coro: Callable[..., Awaitable]) -> Callable[..., Awaitable]:
+        """Ensure that only service calls related to this config entry execute."""
+
+        async def decorator(call: ServiceCall) -> None:
+            """Decorate."""
+            device_registry = dr.async_get(hass)
+            tasks = []
+
+            for device_id in call.data[CONF_DEVICE_ID]:
+                if device_entry := device_registry.async_get(device_id):
+                    if entry.entry_id in device_entry.config_entries:
+                        tasks.append(coro(call))
+
+            await asyncio.gather(*tasks)
+
+        return decorator
+
+    @match_call_to_entry
     async def async_pause_watering(call: ServiceCall) -> None:
         """Pause watering for a set number of seconds."""
-        LOGGER.error(call.data)
         await controller.watering.pause_all(call.data[CONF_SECONDS])
         await async_update_programs_and_zones(hass, entry)
 
+    @match_call_to_entry
     async def async_stop_all(_: ServiceCall) -> None:
         """Stop all watering."""
         await controller.watering.stop_all()
         await async_update_programs_and_zones(hass, entry)
 
+    @match_call_to_entry
     async def async_unpause_watering(_: ServiceCall) -> None:
         """Unpause watering."""
         await controller.watering.unpause_all()
         await async_update_programs_and_zones(hass, entry)
 
     for service_name, method in (
-        ("pause_watering", async_pause_watering),
-        ("stop_all", async_stop_all),
-        ("unpause_watering", async_unpause_watering),
+        (SERVICE_PAUSE_WATERING, async_pause_watering),
+        (SERVICE_STOP_ALL, async_stop_all),
+        (SERVICE_UNPAUSE_WATERING, async_unpause_watering),
     ):
+        if hass.services.has_service(DOMAIN, service_name):
+            continue
         hass.services.async_register(DOMAIN, service_name, method)
 
     return True
@@ -191,6 +221,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
+
+    if len(hass.config_entries.async_entries(DOMAIN)) == 1:
+        # If this is the last instance of RainMachine, deregister any services defined
+        # during integration setup:
+        for service_name in SERVICES:
+            hass.services.async_remove(DOMAIN, service_name)
+
     return unload_ok
 
 

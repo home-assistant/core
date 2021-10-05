@@ -305,14 +305,10 @@ class RainMachineProgram(RainMachineSwitch):
 
     async def async_start_program(self) -> None:
         """Start a program."""
-        if not self.available:
-            return
         await self.async_turn_on()
 
     async def async_stop_program(self) -> None:
         """Stop a program."""
-        if not self.available:
-            return
         await self.async_turn_off()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -371,15 +367,11 @@ class RainMachineZone(RainMachineSwitch):
 
     async def async_start_zone(self, *, zone_run_time: int) -> None:
         """Start a particular zone for a certain amount of time."""
-        if not self.available:
-            return
         await self._controller.zones.start(self.entity_description.uid, zone_run_time)
         await async_update_programs_and_zones(self.hass, self._entry)
 
     async def async_stop_zone(self) -> None:
         """Stop a zone."""
-        if not self.available:
-            return
         await self.async_turn_off()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
