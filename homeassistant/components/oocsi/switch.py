@@ -23,8 +23,8 @@ class BasicSwitch(SwitchEntity):
         self._hass = hass
         self._oocsi = api
         self._name = entity_name
-        self._attr_unique_id = entityProperty["type"]
-        self._oocsichannel = entityProperty["type"]
+        self._attr_unique_id = entityProperty["channelName"]
+        self._oocsichannel = entityProperty["channelName"]
         self._channelState = False
 
     async def async_added_to_hass(self) -> None:

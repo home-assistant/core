@@ -1,40 +1,45 @@
 """Platform for sensor integration."""
 from __future__ import annotations
 from typing import Any
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.number import NumberEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.core import callback
 from .const import DOMAIN
 from . import async_create_new_platform_entity
+from homeassistant.components import oocsi
 
 
 async def async_setup_entry(hass, ConfigEntry, async_add_entities, discovery_info=None):
-    """Set up the Oocsi sensor platform."""
+    """Set up the Oocsi number platform."""
 
     api = hass.data[DOMAIN][ConfigEntry.entry_id]
-    platform = "binary_sensor"
+    platform = "number"
     await async_create_new_platform_entity(
-        hass, ConfigEntry, api, BasicSensor, async_add_entities, platform
+        hass, ConfigEntry, api, BasicNumber, async_add_entities, platform
     )
 
 
-class BasicSensor(BinarySensorEntity):
+class BasicNumber(NumberEntity):
     def __init__(self, hass, entity_name, api, entityProperty):
         self._hass = hass
         self._oocsi = api
         self._name = entity_name
-        self._device_class = entityProperty["type"]
-        self._attr_unique_id = entityProperty["channelName"]
         self._oocsichannel = entityProperty["channelName"]
-        self._channelState = False
 
+        self._attr_unique_id = entityProperty["channelName"]
+        self._attr_max_value = entityProperty["max"]
+        self._attr_min_value = entityProperty["min"]
+        # self._attr_step = entityProperty["step"]
+        self._channelValue = entityProperty["value"]
+        self._attr_unit_of_measurement = entityProperty["unit"]
 
     async def async_added_to_hass(self) -> None:
         @callback
         def channelUpdateEvent(sender, recipient, event):
             """executeOocsi state change."""
-            self._channelState = event["state"]
+            self._channelValue = event["value"]
             self.async_write_ha_state()
+
         self._oocsi.subscribe(self._oocsichannel, channelUpdateEvent)
 
     @property
@@ -42,22 +47,16 @@ class BasicSensor(BinarySensorEntity):
         """Return name."""
         return {"name": self._name}
 
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return self._device_class
+    # @property
+    # def icon(self) -> str:
+
+    #     return self._icon
 
     @property
-    def icon(self) -> str:
-        """Return the icon."""
-        # return self._static_info.icon
-        return "mdi:toggle-switch"
+    def value(self):
+        """Return value."""
+        return self._channelValue
 
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-
-    @property
-    def is_on(self):
-        """Return true if the switch is on."""
-        return self._channelState
+    async def async_set_value(self, value: float):
+        self._channelValue = value
+        self._oocsi.send(self._oocsichannel, {"value": self._channelValue})
