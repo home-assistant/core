@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Tuya Home Assistant Base Device Model."""
 from __future__ import annotations
 
