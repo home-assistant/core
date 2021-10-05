@@ -61,27 +61,6 @@ MOCK_DISCOVERY = {
 }
 
 
-async def cleanup_entry(
-    hass: HomeAssistant, entry: str | data_entry_flow.FlowResult
-) -> None:
-    """Clean up a config entry to ensure all resources acquired are released.
-
-    This works in conjunction with the post-conditions in domain_data_mock and
-    dmr_device_mock to find any resource leaks.
-    """
-    # Wait for platform to finish setup
-    await hass.async_block_till_done()
-
-    # Remove the config entry and device to clean up all resources
-    if isinstance(entry, dict):
-        entry_id: str = entry["result"].entry_id
-    else:
-        entry_id = entry
-    assert await hass.config_entries.async_remove(entry_id) == {
-        "require_restart": False
-    }
-
-
 async def test_user_flow(hass: HomeAssistant) -> None:
     """Test user-init'd config flow with user entering a valid URL."""
     result = await hass.config_entries.flow.async_init(
@@ -104,7 +83,14 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     }
     assert result["options"] == {CONF_POLL_AVAILABILITY: True}
 
-    await cleanup_entry(hass, result)
+    # Wait for platform to be fully setup
+    await hass.async_block_till_done()
+
+    # Remove the device to clean up all resources, completing its life cycle
+    entry_id = result["result"].entry_id
+    assert await hass.config_entries.async_remove(entry_id) == {
+        "require_restart": False
+    }
 
 
 async def test_user_flow_uncontactable(
@@ -165,7 +151,14 @@ async def test_user_flow_embedded_st(
     }
     assert result["options"] == {CONF_POLL_AVAILABILITY: True}
 
-    await cleanup_entry(hass, result)
+    # Wait for platform to be fully setup
+    await hass.async_block_till_done()
+
+    # Remove the device to clean up all resources, completing its life cycle
+    entry_id = result["result"].entry_id
+    assert await hass.config_entries.async_remove(entry_id) == {
+        "require_restart": False
+    }
 
 
 async def test_user_flow_wrong_st(hass: HomeAssistant, domain_data_mock: Mock) -> None:
@@ -247,7 +240,13 @@ async def test_import_flow_ssdp_discovered(
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
-    await cleanup_entry(hass, entry_id)
+    # Wait for platform to be fully setup
+    await hass.async_block_till_done()
+
+    # Remove the device to clean up all resources, completing its life cycle
+    assert await hass.config_entries.async_remove(entry_id) == {
+        "require_restart": False
+    }
 
 
 async def test_import_flow_direct_connect(
@@ -287,7 +286,10 @@ async def test_import_flow_direct_connect(
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
-    await cleanup_entry(hass, entry_id)
+    # Remove the device to clean up all resources, completing its life cycle
+    assert await hass.config_entries.async_remove(entry_id) == {
+        "require_restart": False
+    }
 
 
 async def test_import_flow_offline(
@@ -359,7 +361,14 @@ async def test_import_flow_offline(
         CONF_POLL_AVAILABILITY: True,
     }
 
-    await cleanup_entry(hass, result)
+    # Wait for platform to be fully setup
+    await hass.async_block_till_done()
+
+    # Remove the device to clean up all resources, completing its life cycle
+    entry_id = result["result"].entry_id
+    assert await hass.config_entries.async_remove(entry_id) == {
+        "require_restart": False
+    }
 
 
 async def test_import_flow_options(
@@ -394,7 +403,14 @@ async def test_import_flow_options(
         CONF_POLL_AVAILABILITY: True,
     }
 
-    await cleanup_entry(hass, result)
+    # Wait for platform to be fully setup
+    await hass.async_block_till_done()
+
+    # Remove the device to clean up all resources, completing its life cycle
+    entry_id = result["result"].entry_id
+    assert await hass.config_entries.async_remove(entry_id) == {
+        "require_restart": False
+    }
 
 
 async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
@@ -421,7 +437,11 @@ async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
     }
     assert result["options"] == {}
 
-    await cleanup_entry(hass, result)
+    # Remove the device to clean up all resources, completing its life cycle
+    entry_id = result["result"].entry_id
+    assert await hass.config_entries.async_remove(entry_id) == {
+        "require_restart": False
+    }
 
 
 async def test_ssdp_flow_unavailable(
@@ -456,7 +476,11 @@ async def test_ssdp_flow_unavailable(
     }
     assert result["options"] == {}
 
-    await cleanup_entry(hass, result)
+    # Remove the device to clean up all resources, completing its life cycle
+    entry_id = result["result"].entry_id
+    assert await hass.config_entries.async_remove(entry_id) == {
+        "require_restart": False
+    }
 
 
 async def test_ssdp_flow_existing(
