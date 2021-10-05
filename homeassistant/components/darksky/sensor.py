@@ -90,33 +90,33 @@ class DarkskySensorEntityDescription(SensorEntityDescription):
     forecast_mode: list[str] = field(default_factory=list)
 
 
-SENSOR_TYPES: tuple[DarkskySensorEntityDescription, ...] = (
-    DarkskySensorEntityDescription(
+SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
+    "summary": DarkskySensorEntityDescription(
         key="summary",
         name="Summary",
         forecast_mode=["currently", "hourly", "daily"],
     ),
-    DarkskySensorEntityDescription(
+    "minutely_summary": DarkskySensorEntityDescription(
         key="minutely_summary",
         name="Minutely Summary",
         forecast_mode=[],
     ),
-    DarkskySensorEntityDescription(
+    "hourly_summary": DarkskySensorEntityDescription(
         key="hourly_summary",
         name="Hourly Summary",
         forecast_mode=[],
     ),
-    DarkskySensorEntityDescription(
+    "daily_summary": DarkskySensorEntityDescription(
         key="daily_summary",
         name="Daily Summary",
         forecast_mode=[],
     ),
-    DarkskySensorEntityDescription(
+    "icon": DarkskySensorEntityDescription(
         key="icon",
         name="Icon",
         forecast_mode=["currently", "hourly", "daily"],
     ),
-    DarkskySensorEntityDescription(
+    "nearest_storm_distance": DarkskySensorEntityDescription(
         key="nearest_storm_distance",
         name="Nearest Storm Distance",
         si_unit=LENGTH_KILOMETERS,
@@ -127,7 +127,7 @@ SENSOR_TYPES: tuple[DarkskySensorEntityDescription, ...] = (
         icon="mdi:weather-lightning",
         forecast_mode=["currently"],
     ),
-    DarkskySensorEntityDescription(
+    "nearest_storm_bearing": DarkskySensorEntityDescription(
         key="nearest_storm_bearing",
         name="Nearest Storm Bearing",
         si_unit=DEGREE,
@@ -138,13 +138,13 @@ SENSOR_TYPES: tuple[DarkskySensorEntityDescription, ...] = (
         icon="mdi:weather-lightning",
         forecast_mode=["currently"],
     ),
-    DarkskySensorEntityDescription(
+    "precip_type": DarkskySensorEntityDescription(
         key="precip_type",
         name="Precip",
         icon="mdi:weather-pouring",
         forecast_mode=["currently", "minutely", "hourly", "daily"],
     ),
-    DarkskySensorEntityDescription(
+    "precip_intensity": DarkskySensorEntityDescription(
         key="precip_intensity",
         name="Precip Intensity",
         si_unit=PRECIPITATION_MILLIMETERS_PER_HOUR,
@@ -155,7 +155,7 @@ SENSOR_TYPES: tuple[DarkskySensorEntityDescription, ...] = (
         icon="mdi:weather-rainy",
         forecast_mode=["currently", "minutely", "hourly", "daily"],
     ),
-    DarkskySensorEntityDescription(
+    "precip_probability": DarkskySensorEntityDescription(
         key="precip_probability",
         name="Precip Probability",
         si_unit=PERCENTAGE,
@@ -166,7 +166,7 @@ SENSOR_TYPES: tuple[DarkskySensorEntityDescription, ...] = (
         icon="mdi:water-percent",
         forecast_mode=["currently", "minutely", "hourly", "daily"],
     ),
-    DarkskySensorEntityDescription(
+    "precip_accumulation": DarkskySensorEntityDescription(
         key="precip_accumulation",
         name="Precip Accumulation",
         si_unit=LENGTH_CENTIMETERS,
@@ -177,7 +177,7 @@ SENSOR_TYPES: tuple[DarkskySensorEntityDescription, ...] = (
         icon="mdi:weather-snowy",
         forecast_mode=["hourly", "daily"],
     ),
-    DarkskySensorEntityDescription(
+    "temperature": DarkskySensorEntityDescription(
         key="temperature",
         name="Temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
@@ -188,7 +188,7 @@ SENSOR_TYPES: tuple[DarkskySensorEntityDescription, ...] = (
         uk2_unit=TEMP_CELSIUS,
         forecast_mode=["currently", "hourly"],
     ),
-    DarkskySensorEntityDescription(
+    "apparent_temperature": DarkskySensorEntityDescription(
         key="apparent_temperature",
         name="Apparent Temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
@@ -199,7 +199,7 @@ SENSOR_TYPES: tuple[DarkskySensorEntityDescription, ...] = (
         uk2_unit=TEMP_CELSIUS,
         forecast_mode=["currently", "hourly"],
     ),
-    DarkskySensorEntityDescription(
+    "dew_point": DarkskySensorEntityDescription(
         key="dew_point",
         name="Dew Point",
         device_class=DEVICE_CLASS_TEMPERATURE,
@@ -210,7 +210,7 @@ SENSOR_TYPES: tuple[DarkskySensorEntityDescription, ...] = (
         uk2_unit=TEMP_CELSIUS,
         forecast_mode=["currently", "hourly", "daily"],
     ),
-    DarkskySensorEntityDescription(
+    "wind_speed": DarkskySensorEntityDescription(
         key="wind_speed",
         name="Wind Speed",
         si_unit=SPEED_METERS_PER_SECOND,
@@ -221,7 +221,7 @@ SENSOR_TYPES: tuple[DarkskySensorEntityDescription, ...] = (
         icon="mdi:weather-windy",
         forecast_mode=["currently", "hourly", "daily"],
     ),
-    DarkskySensorEntityDescription(
+    "wind_bearing": DarkskySensorEntityDescription(
         key="wind_bearing",
         name="Wind Bearing",
         si_unit=DEGREE,
@@ -232,7 +232,7 @@ SENSOR_TYPES: tuple[DarkskySensorEntityDescription, ...] = (
         icon="mdi:compass",
         forecast_mode=["currently", "hourly", "daily"],
     ),
-    DarkskySensorEntityDescription(
+    "wind_gust": DarkskySensorEntityDescription(
         key="wind_gust",
         name="Wind Gust",
         si_unit=SPEED_METERS_PER_SECOND,
@@ -243,7 +243,7 @@ SENSOR_TYPES: tuple[DarkskySensorEntityDescription, ...] = (
         icon="mdi:weather-windy-variant",
         forecast_mode=["currently", "hourly", "daily"],
     ),
-    DarkskySensorEntityDescription(
+    "cloud_cover": DarkskySensorEntityDescription(
         key="cloud_cover",
         name="Cloud Coverage",
         si_unit=PERCENTAGE,
@@ -254,7 +254,7 @@ SENSOR_TYPES: tuple[DarkskySensorEntityDescription, ...] = (
         icon="mdi:weather-partly-cloudy",
         forecast_mode=["currently", "hourly", "daily"],
     ),
-    DarkskySensorEntityDescription(
+    "humidity": DarkskySensorEntityDescription(
         key="humidity",
         name="Humidity",
         device_class=DEVICE_CLASS_HUMIDITY,
@@ -265,7 +265,7 @@ SENSOR_TYPES: tuple[DarkskySensorEntityDescription, ...] = (
         uk2_unit=PERCENTAGE,
         forecast_mode=["currently", "hourly", "daily"],
     ),
-    DarkskySensorEntityDescription(
+    "pressure": DarkskySensorEntityDescription(
         key="pressure",
         name="Pressure",
         device_class=DEVICE_CLASS_PRESSURE,
@@ -276,7 +276,7 @@ SENSOR_TYPES: tuple[DarkskySensorEntityDescription, ...] = (
         uk2_unit=PRESSURE_MBAR,
         forecast_mode=["currently", "hourly", "daily"],
     ),
-    DarkskySensorEntityDescription(
+    "visibility": DarkskySensorEntityDescription(
         key="visibility",
         name="Visibility",
         si_unit=LENGTH_KILOMETERS,
@@ -287,7 +287,7 @@ SENSOR_TYPES: tuple[DarkskySensorEntityDescription, ...] = (
         icon="mdi:eye",
         forecast_mode=["currently", "hourly", "daily"],
     ),
-    DarkskySensorEntityDescription(
+    "ozone": DarkskySensorEntityDescription(
         key="ozone",
         name="Ozone",
         device_class=DEVICE_CLASS_OZONE,
@@ -298,7 +298,7 @@ SENSOR_TYPES: tuple[DarkskySensorEntityDescription, ...] = (
         uk2_unit="DU",
         forecast_mode=["currently", "hourly", "daily"],
     ),
-    DarkskySensorEntityDescription(
+    "apparent_temperature_max": DarkskySensorEntityDescription(
         key="apparent_temperature_max",
         name="Daily High Apparent Temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
@@ -309,7 +309,7 @@ SENSOR_TYPES: tuple[DarkskySensorEntityDescription, ...] = (
         uk2_unit=TEMP_CELSIUS,
         forecast_mode=["daily"],
     ),
-    DarkskySensorEntityDescription(
+    "apparent_temperature_high": DarkskySensorEntityDescription(
         key="apparent_temperature_high",
         name="Daytime High Apparent Temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
@@ -320,7 +320,7 @@ SENSOR_TYPES: tuple[DarkskySensorEntityDescription, ...] = (
         uk2_unit=TEMP_CELSIUS,
         forecast_mode=["daily"],
     ),
-    DarkskySensorEntityDescription(
+    "apparent_temperature_min": DarkskySensorEntityDescription(
         key="apparent_temperature_min",
         name="Daily Low Apparent Temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
@@ -331,7 +331,7 @@ SENSOR_TYPES: tuple[DarkskySensorEntityDescription, ...] = (
         uk2_unit=TEMP_CELSIUS,
         forecast_mode=["daily"],
     ),
-    DarkskySensorEntityDescription(
+    "apparent_temperature_low": DarkskySensorEntityDescription(
         key="apparent_temperature_low",
         name="Overnight Low Apparent Temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
@@ -342,7 +342,7 @@ SENSOR_TYPES: tuple[DarkskySensorEntityDescription, ...] = (
         uk2_unit=TEMP_CELSIUS,
         forecast_mode=["daily"],
     ),
-    DarkskySensorEntityDescription(
+    "temperature_max": DarkskySensorEntityDescription(
         key="temperature_max",
         name="Daily High Temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
@@ -353,7 +353,7 @@ SENSOR_TYPES: tuple[DarkskySensorEntityDescription, ...] = (
         uk2_unit=TEMP_CELSIUS,
         forecast_mode=["daily"],
     ),
-    DarkskySensorEntityDescription(
+    "temperature_high": DarkskySensorEntityDescription(
         key="temperature_high",
         name="Daytime High Temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
@@ -364,7 +364,7 @@ SENSOR_TYPES: tuple[DarkskySensorEntityDescription, ...] = (
         uk2_unit=TEMP_CELSIUS,
         forecast_mode=["daily"],
     ),
-    DarkskySensorEntityDescription(
+    "temperature_min": DarkskySensorEntityDescription(
         key="temperature_min",
         name="Daily Low Temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
@@ -375,7 +375,7 @@ SENSOR_TYPES: tuple[DarkskySensorEntityDescription, ...] = (
         uk2_unit=TEMP_CELSIUS,
         forecast_mode=["daily"],
     ),
-    DarkskySensorEntityDescription(
+    "temperature_low": DarkskySensorEntityDescription(
         key="temperature_low",
         name="Overnight Low Temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
@@ -386,7 +386,7 @@ SENSOR_TYPES: tuple[DarkskySensorEntityDescription, ...] = (
         uk2_unit=TEMP_CELSIUS,
         forecast_mode=["daily"],
     ),
-    DarkskySensorEntityDescription(
+    "precip_intensity_max": DarkskySensorEntityDescription(
         key="precip_intensity_max",
         name="Daily Max Precip Intensity",
         si_unit=PRECIPITATION_MILLIMETERS_PER_HOUR,
@@ -397,7 +397,7 @@ SENSOR_TYPES: tuple[DarkskySensorEntityDescription, ...] = (
         icon="mdi:thermometer",
         forecast_mode=["daily"],
     ),
-    DarkskySensorEntityDescription(
+    "uv_index": DarkskySensorEntityDescription(
         key="uv_index",
         name="UV Index",
         si_unit=UV_INDEX,
@@ -408,33 +408,31 @@ SENSOR_TYPES: tuple[DarkskySensorEntityDescription, ...] = (
         icon="mdi:weather-sunny",
         forecast_mode=["currently", "hourly", "daily"],
     ),
-    DarkskySensorEntityDescription(
+    "moon_phase": DarkskySensorEntityDescription(
         key="moon_phase",
         name="Moon Phase",
         icon="mdi:weather-night",
         forecast_mode=["daily"],
     ),
-    DarkskySensorEntityDescription(
+    "sunrise_time": DarkskySensorEntityDescription(
         key="sunrise_time",
         name="Sunrise",
         icon="mdi:white-balance-sunny",
         forecast_mode=["daily"],
     ),
-    DarkskySensorEntityDescription(
+    "sunset_time": DarkskySensorEntityDescription(
         key="sunset_time",
         name="Sunset",
         icon="mdi:weather-night",
         forecast_mode=["daily"],
     ),
-    DarkskySensorEntityDescription(
+    "alerts": DarkskySensorEntityDescription(
         key="alerts",
         name="Alerts",
         icon="mdi:alert-circle-outline",
         forecast_mode=[],
     ),
-)
-
-SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
+}
 
 
 class ConditionPicture(NamedTuple):
@@ -550,7 +548,7 @@ ALERTS_ATTRS = ["time", "description", "expires", "severity", "uri", "regions", 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MONITORED_CONDITIONS): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_KEYS)]
+            cv.ensure_list, [vol.In(SENSOR_TYPES)]
         ),
         vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -610,15 +608,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         description = SENSOR_TYPES[variable]
         if not description.forecast_mode or "currently" in description.forecast_mode:
             if variable == "alerts":
-                sensors.append(DarkSkyAlertSensor(forecast_data, variable, name))
+                sensors.append(DarkSkyAlertSensor(forecast_data, description, name))
             else:
-                sensors.append(DarkSkySensor(forecast_data, variable, name))
+                sensors.append(DarkSkySensor(forecast_data, description, name))
 
         if forecast is not None and "daily" in description.forecast_mode:
             sensors.extend(
                 [
                     DarkSkySensor(
-                        forecast_data, variable, name, forecast_day=forecast_day
+                        forecast_data, description, name, forecast_day=forecast_day
                     )
                     for forecast_day in forecast
                 ]
@@ -627,7 +625,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             sensors.extend(
                 [
                     DarkSkySensor(
-                        forecast_data, variable, name, forecast_hour=forecast_h
+                        forecast_data, description, name, forecast_hour=forecast_h
                     )
                     for forecast_h in forecast_hour
                 ]
