@@ -1,6 +1,8 @@
 """Support for AirVisual air quality sensors."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
@@ -189,20 +191,18 @@ POLLUTANT_UNITS = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up AirVisual sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id]
 
     sensors: list[AirVisualGeographySensor | AirVisualNodeProSensor]
-    if config_entry.data[CONF_INTEGRATION_TYPE] in (
+    if entry.data[CONF_INTEGRATION_TYPE] in (
         INTEGRATION_TYPE_GEOGRAPHY_COORDS,
         INTEGRATION_TYPE_GEOGRAPHY_NAME,
     ):
         sensors = [
-            AirVisualGeographySensor(coordinator, config_entry, description, locale)
+            AirVisualGeographySensor(coordinator, description, locale)
             for locale in GEOGRAPHY_SENSOR_LOCALES
             for description in GEOGRAPHY_SENSOR_DESCRIPTIONS
         ]
@@ -221,23 +221,26 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
-        config_entry: ConfigEntry,
         description: SensorEntityDescription,
         locale: str,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, description)
 
+        if TYPE_CHECKING:
+            assert coordinator.config_entry
+
         self._attr_extra_state_attributes.update(
             {
-                ATTR_CITY: config_entry.data.get(CONF_CITY),
-                ATTR_STATE: config_entry.data.get(CONF_STATE),
-                ATTR_COUNTRY: config_entry.data.get(CONF_COUNTRY),
+                ATTR_CITY: coordinator.config_entry.data.get(CONF_CITY),
+                ATTR_STATE: coordinator.config_entry.data.get(CONF_STATE),
+                ATTR_COUNTRY: coordinator.config_entry.data.get(CONF_COUNTRY),
             }
         )
         self._attr_name = f"{GEOGRAPHY_SENSOR_LOCALES[locale]} {description.name}"
-        self._attr_unique_id = f"{config_entry.unique_id}_{locale}_{description.key}"
-        self._config_entry = config_entry
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}_{locale}_{description.key}"
+        )
         self._locale = locale
 
     @property
@@ -279,16 +282,19 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
         #
         # We use any coordinates in the config entry and, in the case of a geography by
         # name, we fall back to the latitude longitude provided in the coordinator data:
-        latitude = self._config_entry.data.get(
+        if TYPE_CHECKING:
+            assert self.coordinator.config_entry
+
+        latitude = self.coordinator.config_entry.data.get(
             CONF_LATITUDE,
             self.coordinator.data["location"]["coordinates"][1],
         )
-        longitude = self._config_entry.data.get(
+        longitude = self.coordinator.config_entry.data.get(
             CONF_LONGITUDE,
             self.coordinator.data["location"]["coordinates"][0],
         )
 
-        if self._config_entry.options[CONF_SHOW_ON_MAP]:
+        if self.coordinator.config_entry.options[CONF_SHOW_ON_MAP]:
             self._attr_extra_state_attributes[ATTR_LATITUDE] = latitude
             self._attr_extra_state_attributes[ATTR_LONGITUDE] = longitude
             self._attr_extra_state_attributes.pop("lati", None)
