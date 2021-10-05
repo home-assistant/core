@@ -433,7 +433,7 @@ class TuyaHaClimate(TuyaHaEntity, ClimateEntity):
         fan_speed_device_function = self.tuya_device.function.get(DPCODE_FAN_SPEED_ENUM)
         if not fan_speed_device_function:
             return []
-        return json.loads(fan_speed_device_function.values).get("range")
+        return json.loads(fan_speed_device_function.values).get("range", [])
 
     @property
     def swing_mode(self) -> str:
