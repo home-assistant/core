@@ -1306,7 +1306,7 @@ systembridge==2.1.0
 tellduslive==0.10.11
 
 # homeassistant.components.powerwall
-tesla-powerwall==0.3.10
+tesla-powerwall==0.3.11
 
 # homeassistant.components.toon
 toonapi==0.2.1
