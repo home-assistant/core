@@ -519,7 +519,7 @@ async def test_websocket_web_rtc_offer_invalid_entity(
     hass_ws_client,
     mock_camera_web_rtc,
 ):
-    """Test initiating a WebRTC stream with offer and answer."""
+    """Test WebRTC with a camera entity that does not exist."""
     client = await hass_ws_client(hass)
     await client.send_json(
         {
@@ -541,7 +541,7 @@ async def test_websocket_web_rtc_offer_missing_offer(
     hass_ws_client,
     mock_camera_web_rtc,
 ):
-    """Test initiating a WebRTC stream with offer and answer."""
+    """Test WebRTC stream with missing required fields."""
     client = await hass_ws_client(hass)
     await client.send_json(
         {
@@ -563,7 +563,7 @@ async def test_websocket_web_rtc_offer_failure(
     hass_ws_client,
     mock_camera_web_rtc,
 ):
-    """Test initiating a WebRTC stream with offer and answer."""
+    """Test WebRTC stream that fails handling the offer."""
     client = await hass_ws_client(hass)
 
     with patch(
@@ -585,3 +585,55 @@ async def test_websocket_web_rtc_offer_failure(
     assert not response["success"]
     assert response["error"]["code"] == "web_rtc_offer_failed"
     assert response["error"]["message"] == "offer failed"
+
+
+async def test_websocket_web_rtc_offer_timeout(
+    hass,
+    hass_ws_client,
+    mock_camera_web_rtc,
+):
+    """Test WebRTC stream with timeout handling the offer."""
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.camera.Camera.async_handle_web_rtc_offer",
+        side_effect=asyncio.TimeoutError(),
+    ):
+        await client.send_json(
+            {
+                "id": 9,
+                "type": "camera/web_rtc_offer",
+                "entity_id": "camera.demo_camera",
+                "offer": "v=0\r\n",
+            }
+        )
+        response = await client.receive_json()
+
+    assert response["id"] == 9
+    assert response["type"] == TYPE_RESULT
+    assert not response["success"]
+    assert response["error"]["code"] == "web_rtc_offer_failed"
+    assert response["error"]["message"] == "Timeout handling WebRTC offer"
+
+
+async def test_websocket_web_rtc_offer_invalid_stream_type(
+    hass,
+    hass_ws_client,
+    mock_camera,
+):
+    """Test WebRTC initiating for a camera with a different stream_type."""
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 9,
+            "type": "camera/web_rtc_offer",
+            "entity_id": "camera.demo_camera",
+            "offer": "v=0\r\n",
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["id"] == 9
+    assert response["type"] == TYPE_RESULT
+    assert not response["success"]
+    assert response["error"]["code"] == "web_rtc_offer_failed"
