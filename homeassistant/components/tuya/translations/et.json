@@ -6,7 +6,8 @@
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks sidumine."
         },
         "error": {
-            "invalid_auth": "Tuvastamise viga"
+            "invalid_auth": "Tuvastamise viga",
+            "login_error": "Sisenemine nurjus ( {code} ): {msg}"
         },
         "flow_title": "Tuya seaded",
         "step": {
@@ -25,9 +26,12 @@
             },
             "user": {
                 "data": {
+                    "access_id": "Tuya IoT kasutajatunnus",
+                    "access_secret": "Tuya IoT salas\u00f5na",
                     "country_code": "Konto riigikood (nt 1 USA v\u00f5i 372 Eesti)",
                     "password": "Salas\u00f5na",
                     "platform": "\u00c4pp kus konto registreeriti",
+                    "region": "Piirkond",
                     "tuya_project_type": "Tuya pilveprojekti t\u00fc\u00fcp",
                     "username": "Kasutajanimi"
                 },
