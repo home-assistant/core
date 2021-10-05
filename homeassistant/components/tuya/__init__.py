@@ -44,7 +44,10 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Async setup hass config entry."""
-    hass.data[DOMAIN] = {entry.entry_id: {TUYA_HA_TUYA_MAP: {}, TUYA_HA_DEVICES: set()}}
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        TUYA_HA_TUYA_MAP: {},
+        TUYA_HA_DEVICES: set(),
+    }
 
     # Project type has been renamed to auth type in the upstream Tuya IoT SDK.
     # This migrates existing config entries to reflect that name change.
@@ -54,6 +57,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(entry, data=data)
 
     success = await _init_tuya_sdk(hass, entry)
+
+    if not success:
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+        if not hass.data[DOMAIN]:
+            hass.data.pop(DOMAIN)
+
     return bool(success)
 
 
@@ -143,7 +153,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.data[DOMAIN][entry.entry_id][TUYA_MQTT_LISTENER]
         )
 
-        hass.data.pop(DOMAIN)
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+        if not hass.data[DOMAIN]:
+            hass.data.pop(DOMAIN)
 
     return unload
 
