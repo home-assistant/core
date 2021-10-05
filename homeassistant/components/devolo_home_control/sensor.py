@@ -120,6 +120,8 @@ class DevoloGenericMultiLevelDeviceEntity(DevoloMultiLevelDeviceEntity):
 class DevoloBatteryEntity(DevoloMultiLevelDeviceEntity):
     """Representation of a battery entity within devolo Home Control."""
 
+    _attr_native_unit_of_measurement = PERCENTAGE
+
     def __init__(
         self, homecontrol: HomeControl, device_instance: Zwave, element_uid: str
     ) -> None:
@@ -132,7 +134,6 @@ class DevoloBatteryEntity(DevoloMultiLevelDeviceEntity):
         )
 
         self._attr_device_class = DEVICE_CLASS_MAPPING.get("battery")
-        self._attr_native_unit_of_measurement = PERCENTAGE
 
         self._value = device_instance.battery_level
 
