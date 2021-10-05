@@ -47,7 +47,7 @@ def calls(hass):
 
 async def test_service_data_not_a_dict(hass, calls):
     """Test service data not dict."""
-    with assert_setup_component(0, automation.DOMAIN):
+    with assert_setup_component(1, automation.DOMAIN):
         assert await async_setup_component(
             hass,
             automation.DOMAIN,
@@ -58,6 +58,32 @@ async def test_service_data_not_a_dict(hass, calls):
                 }
             },
         )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+
+async def test_service_data_single_template(hass, calls):
+    """Test service data not dict."""
+    with assert_setup_component(1, automation.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "action": {
+                        "service": "test.automation",
+                        "data": "{{ { 'foo': 'bar' } }}",
+                    },
+                }
+            },
+        )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
 
 
 async def test_service_specify_data(hass, calls):

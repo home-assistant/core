@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable, Iterable
 import dataclasses
 from functools import partial, wraps
 import logging
-from typing import TYPE_CHECKING, Any, Dict, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
 import voluptuous as vol
 
@@ -233,7 +233,7 @@ def async_prepare_call_from_config(
         try:
             template.attach(hass, config[conf])
             render = template.render_complex(config[conf], variables)
-            if not isinstance(render, Dict):
+            if not isinstance(render, dict):
                 raise HomeAssistantError(
                     "Error rendering data template: Result is not a Dictionary"
                 )
