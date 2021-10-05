@@ -25,10 +25,9 @@ class TuyaHaEntity(Entity):
     @staticmethod
     def remap(old_value, old_min, old_max, new_min, new_max):
         """Remap old_value to new_value."""
-        new_value = ((old_value - old_min) / (old_max - old_min)) * (
+        return ((old_value - old_min) / (old_max - old_min)) * (
             new_max - new_min
         ) + new_min
-        return new_value
 
     @property
     def should_poll(self) -> bool:
@@ -48,13 +47,12 @@ class TuyaHaEntity(Entity):
     @property
     def device_info(self):
         """Return a device description for device registry."""
-        _device_info = {
+        return {
             "identifiers": {(DOMAIN, f"{self.tuya_device.id}")},
             "manufacturer": "Tuya",
             "name": self.tuya_device.name,
             "model": self.tuya_device.product_name,
         }
-        return _device_info
 
     @property
     def available(self) -> bool:
