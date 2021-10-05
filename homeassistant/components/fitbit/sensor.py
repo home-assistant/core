@@ -101,12 +101,13 @@ def request_app_setup(
         else:
             setup_platform(hass, config, add_entities, discovery_info)
 
-    start_url = f"{get_url(hass)}{FITBIT_AUTH_CALLBACK_PATH}"
+    start_url = f"{get_url(hass, require_ssl=True)}{FITBIT_AUTH_CALLBACK_PATH}"
 
     description = f"""Please create a Fitbit developer app at
                        https://dev.fitbit.com/apps/new.
                        For the OAuth 2.0 Application Type choose Personal.
                        Set the Callback URL to {start_url}.
+                       (Note: Your Home Assistant instance must be accessible via HTTPS.)
                        They will provide you a Client ID and secret.
                        These need to be saved into the file located at: {config_path}.
                        Then come back here and hit the below button.
@@ -136,7 +137,7 @@ def request_oauth_completion(hass: HomeAssistant) -> None:
     def fitbit_configuration_callback(fields: list[dict[str, str]]) -> None:
         """Handle configuration updates."""
 
-    start_url = f"{get_url(hass)}{FITBIT_AUTH_START}"
+    start_url = f"{get_url(hass, require_ssl=True)}{FITBIT_AUTH_START}"
 
     description = f"Please authorize Fitbit by visiting {start_url}"
 
@@ -236,7 +237,7 @@ def setup_platform(
             config_file.get(CONF_CLIENT_ID), config_file.get(CONF_CLIENT_SECRET)
         )
 
-        redirect_uri = f"{get_url(hass)}{FITBIT_AUTH_CALLBACK_PATH}"
+        redirect_uri = f"{get_url(hass, require_ssl=True)}{FITBIT_AUTH_CALLBACK_PATH}"
 
         fitbit_auth_start_url, _ = oauth.authorize_token_url(
             redirect_uri=redirect_uri,
