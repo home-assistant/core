@@ -14,7 +14,13 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, CONF_TYPE, CONF_URL
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_TYPE,
+    CONF_URL,
+)
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import IntegrationError
@@ -51,7 +57,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize flow."""
-        self._discoveries: list[Mapping[str, str]] = []
+        self._discoveries: dict[str, Mapping[str, Any]] = {}
         self._location: str | None = None
         self._udn: str | None = None
         self._device_type: str | None = None
@@ -67,12 +73,42 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return DlnaDmrOptionsFlowHandler(config_entry)
 
     async def async_step_user(self, user_input: FlowInput = None) -> FlowResult:
-        """Handle a flow initialized by the user: manual URL entry.
+        """Handle a flow initialized by the user.
 
-        Discovered devices will already be displayed, no need to prompt user
-        with them here.
+        Let user choose from a list of found and unconfigured devices or to
+        enter an URL manually.
         """
         LOGGER.debug("async_step_user: user_input: %s", user_input)
+
+        if user_input is not None:
+            host = user_input.get(CONF_HOST)
+            if not host:
+                # No device chosen, user might want to directly enter an URL
+                return await self.async_step_manual()
+            # User has chosen a device, ask for confirmation
+            discovery = self._discoveries[host]
+            await self._async_set_info_from_discovery(discovery)
+            return self._create_entry()
+
+        discoveries = await self._async_get_discoveries()
+        if not discoveries:
+            # Nothing found, maybe the user knows an URL to try
+            return await self.async_step_manual()
+
+        self._discoveries = {
+            discovery.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
+            or urlparse(discovery[ssdp.ATTR_SSDP_LOCATION]).hostname: discovery
+            for discovery in discoveries
+        }
+
+        data_schema = vol.Schema(
+            {vol.Optional(CONF_HOST): vol.In(self._discoveries.keys())}
+        )
+        return self.async_show_form(step_id="user", data_schema=data_schema)
+
+    async def async_step_manual(self, user_input: FlowInput = None) -> FlowResult:
+        """Manual URL entry by the user."""
+        LOGGER.debug("async_step_manual: user_input: %s", user_input)
 
         # Device setup manually, assume we don't get SSDP broadcast notifications
         self._options[CONF_POLL_AVAILABILITY] = True
@@ -89,7 +125,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema({CONF_URL: str})
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors
+            step_id="manual", data_schema=data_schema, errors=errors
         )
 
     async def async_step_import(self, import_data: FlowInput = None) -> FlowResult:
@@ -236,7 +272,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             device = await domain_data.upnp_factory.async_create_device(self._location)
         except UpnpError as err:
-            raise ConnectError("could_not_connect") from err
+            raise ConnectError("cannot_connect") from err
 
         try:
             device = find_device_of_type(device, DmrDevice.DEVICE_TYPES)
@@ -307,12 +343,12 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             or DEFAULT_NAME
         )
 
-    async def _async_get_discoveries(self) -> list[Mapping[str, str]]:
+    async def _async_get_discoveries(self) -> list[Mapping[str, Any]]:
         """Get list of unconfigured DLNA devices discovered by SSDP."""
         LOGGER.debug("_get_discoveries")
 
         # Get all compatible devices from ssdp's cache
-        discoveries: list[Mapping[str, str]] = []
+        discoveries: list[Mapping[str, Any]] = []
         for udn_st in DmrDevice.DEVICE_TYPES:
             st_discoveries = await ssdp.async_get_discovery_info_by_st(
                 self.hass, udn_st
@@ -321,7 +357,8 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Filter out devices already configured
         current_unique_ids = {
-            entry.unique_id for entry in self._async_current_entries()
+            entry.unique_id
+            for entry in self._async_current_entries(include_ignore=False)
         }
         discoveries = [
             disc

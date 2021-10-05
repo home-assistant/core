@@ -16,6 +16,7 @@ from homeassistant.components.dlna_dmr.const import (
 )
 from homeassistant.const import (
     CONF_DEVICE_ID,
+    CONF_HOST,
     CONF_NAME,
     CONF_PLATFORM,
     CONF_TYPE,
@@ -61,14 +62,14 @@ MOCK_DISCOVERY = {
 }
 
 
-async def test_user_flow(hass: HomeAssistant) -> None:
-    """Test user-init'd config flow with user entering a valid URL."""
+async def test_user_flow_undiscovered_manual(hass: HomeAssistant) -> None:
+    """Test user-init'd flow, no discovered devices, user entering a valid URL."""
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {}
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "manual"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_URL: MOCK_DEVICE_LOCATION}
@@ -87,6 +88,79 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
+async def test_user_flow_discovered_manual(
+    hass: HomeAssistant, ssdp_scanner_mock: Mock
+) -> None:
+    """Test user-init'd flow, with discovered devices, user entering a valid URL."""
+    ssdp_scanner_mock.async_get_discovery_info_by_st.side_effect = [
+        [MOCK_DISCOVERY],
+        [],
+        [],
+    ]
+
+    result = await hass.config_entries.flow.async_init(
+        DLNA_DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] is None
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {}
+    assert result["step_id"] == "manual"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_URL: MOCK_DEVICE_LOCATION}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == MOCK_DEVICE_NAME
+    assert result["data"] == {
+        CONF_URL: MOCK_DEVICE_LOCATION,
+        CONF_DEVICE_ID: MOCK_DEVICE_UDN,
+        CONF_TYPE: MOCK_DEVICE_TYPE,
+    }
+    assert result["options"] == {CONF_POLL_AVAILABILITY: True}
+
+    # Wait for platform to be fully setup
+    await hass.async_block_till_done()
+
+
+async def test_user_flow_selected(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> None:
+    """Test user-init'd flow, user selects discovered device."""
+    ssdp_scanner_mock.async_get_discovery_info_by_st.side_effect = [
+        [MOCK_DISCOVERY],
+        [],
+        [],
+    ]
+
+    result = await hass.config_entries.flow.async_init(
+        DLNA_DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] is None
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: MOCK_DEVICE_NAME}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == MOCK_DEVICE_NAME
+    assert result["data"] == {
+        CONF_URL: MOCK_DEVICE_LOCATION,
+        CONF_DEVICE_ID: MOCK_DEVICE_UDN,
+        CONF_TYPE: MOCK_DEVICE_TYPE,
+    }
+    assert result["options"] == {}
+
+    await hass.async_block_till_done()
+
+
 async def test_user_flow_uncontactable(
     hass: HomeAssistant, domain_data_mock: Mock
 ) -> None:
@@ -99,15 +173,15 @@ async def test_user_flow_uncontactable(
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {}
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "manual"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_URL: MOCK_DEVICE_LOCATION}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "could_not_connect"}
-    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["step_id"] == "manual"
 
 
 async def test_user_flow_embedded_st(
@@ -130,7 +204,7 @@ async def test_user_flow_embedded_st(
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {}
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "manual"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_URL: MOCK_DEVICE_LOCATION}
@@ -160,7 +234,7 @@ async def test_user_flow_wrong_st(hass: HomeAssistant, domain_data_mock: Mock) -
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {}
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "manual"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_URL: MOCK_DEVICE_LOCATION}
@@ -168,7 +242,7 @@ async def test_user_flow_wrong_st(hass: HomeAssistant, domain_data_mock: Mock) -
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "not_dmr"}
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "manual"
 
 
 async def test_import_flow_invalid(hass: HomeAssistant, domain_data_mock: Mock) -> None:
@@ -298,7 +372,7 @@ async def test_import_flow_offline(
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "could_not_connect"}
+    assert result["errors"] == {"base": "cannot_connect"}
     assert result["step_id"] == "import_turn_on"
 
     # Device is discovered via SSDP, new flow should not be initialized
@@ -524,7 +598,8 @@ async def test_unignore_flow(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> No
     }
     assert result["options"] == {}
 
-    await cleanup_entry(hass, result)
+    # Wait for platform to be fully setup
+    await hass.async_block_till_done()
 
 
 async def test_unignore_flow_offline(
