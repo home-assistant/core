@@ -25,6 +25,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "config_error": "Configuration invalid; check station ID or coordinates",
       "error_response": "Response from Environment Canada in error",
+      "too_many_attempts": "Connections to Environment Canada are rate limited; Try again in 60 seconds",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   }

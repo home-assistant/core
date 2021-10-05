@@ -6,6 +6,7 @@
             "cannot_connect": "Failed to connect",
             "config_error": "Configuration invalid; check station ID or coordinates",
             "error_response": "Response from Environment Canada in error",
+            "too_many_attempts": "Connections to Environment Canada are rate limited; Try again in 60 seconds",
             "unknown": "Unexpected error"
         },
         "step": {

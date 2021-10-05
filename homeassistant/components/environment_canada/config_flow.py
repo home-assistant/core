@@ -1,6 +1,6 @@
 """Config flow for Environment Canada integration."""
+from functools import partial
 import logging
-import re
 import xml.etree.ElementTree as et
 
 import aiohttp
@@ -17,32 +17,24 @@ from .const import CONF_LANGUAGE, CONF_STATION, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def validate_input(data):
+async def validate_input(hass, data):
     """Validate the user input allows us to connect."""
-    latitude = data.get(CONF_LATITUDE)
-    longitude = data.get(CONF_LONGITUDE)
+    lat = data.get(CONF_LATITUDE)
+    lon = data.get(CONF_LONGITUDE)
     station = data.get(CONF_STATION)
-    language = data.get(CONF_LANGUAGE)
+    lang = data.get(CONF_LANGUAGE)
 
-    try:
-        env_canada = ECData(
-            station_id=station,
-            coordinates=(latitude, longitude),
-            language=language.lower(),
-        )
-    except et.ParseError:
-        raise BadStationId
+    weather_init = partial(
+        ECData, station_id=station, coordinates=(lat, lon), language=lang.lower()
+    )
+    weather_data = await hass.async_add_executor_job(weather_init)
+    if weather_data.metadata.get("location") is None:
+        raise TooManyAttempts
 
-    return {"title": env_canada.station_id, "name": env_canada.metadata.get("location")}
-
-
-def validate_station(station):
-    """Check that the station ID is well-formed."""
-    if station is None:
-        return
-    if not re.fullmatch(r"[A-Z]{2}/s0000\d{3}", station):
-        raise vol.Invalid('Station ID must be of the form "XX/s0000###"')
-    return station
+    return {
+        "title": weather_data.station_id,
+        "name": weather_data.metadata.get("location"),
+    }
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -59,10 +51,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                info = await self.hass.async_add_executor_job(
-                    validate_input, user_input
-                )
-                # info = await validate_input(user_input)
+                info = await validate_input(self.hass, user_input)
                 user_input[CONF_STATION] = info["title"]
                 user_input[CONF_NAME] = info["name"]
 
@@ -73,9 +62,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._data = user_input
                 return await self.async_step_name()
 
+            except TooManyAttempts:
+                errors["base"] = "too_many_attempts"
             except AbortFlow:
                 errors["base"] = "already_configured"
-            except BadStationId:
+            except et.ParseError:
                 errors["base"] = "bad_station_id"
             except aiohttp.ClientConnectionError:
                 errors["base"] = "cannot_connect"
@@ -119,7 +110,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_NAME, default=self._data[CONF_NAME]): str,
+                vol.Optional(CONF_NAME, default=self._data[CONF_NAME]): str,
             }
         )
 
@@ -128,5 +119,5 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class BadStationId(exceptions.HomeAssistantError):
+class TooManyAttempts(exceptions.HomeAssistantError):
     """Error to indicate station ID is missing, invalid, or not in EC database."""

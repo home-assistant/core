@@ -1,5 +1,6 @@
 """Test the Environment Canada (EC) config flow."""
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
+import xml.etree.ElementTree as et
 
 import aiohttp
 import pytest
@@ -17,7 +18,12 @@ from tests.common import MockConfigEntry
 
 
 def mocked_ec(
-    station_id="ON/s1234567", lat=42.5, lon=54.2, lang="English", update=None
+    station_id="ON/s1234567",
+    lat=42.5,
+    lon=54.2,
+    lang="English",
+    update=None,
+    metadata={"location": "foo"},
 ):
     """Mock the env_canada library."""
     ec_mock = MagicMock()
@@ -25,6 +31,7 @@ def mocked_ec(
     type(ec_mock).latitude = PropertyMock(return_value=lat)
     type(ec_mock).longitude = PropertyMock(return_value=lon)
     type(ec_mock).language = PropertyMock(return_value=lang)
+    type(ec_mock).metadata = PropertyMock(return_value=metadata)
 
     if update:
         ec_mock.update = update
@@ -113,11 +120,11 @@ async def test_create_same_entry_twice(hass):
         assert result["errors"] == {"base": "already_configured"}
 
 
-async def test_bad_station_id(hass):
-    """Test duplicate station id."""
+async def test_too_many_attempts(hass):
+    """Test hitting rate limit."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    with mocked_ec(station_id=None), patch(
+    with mocked_ec(metadata={}), patch(
         "homeassistant.components.environment_canada.async_setup_entry",
         return_value=True,
     ):
@@ -130,7 +137,7 @@ async def test_bad_station_id(hass):
         )
         await hass.async_block_till_done()
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {"base": "bad_station_id"}
+        assert result["errors"] == {"base": "too_many_attempts"}
 
 
 @pytest.mark.parametrize(
@@ -139,6 +146,7 @@ async def test_bad_station_id(hass):
         (aiohttp.ClientResponseError(Mock(), (), status=404), "bad_station_id"),
         (aiohttp.ClientResponseError(Mock(), (), status=400), "error_response"),
         (aiohttp.ClientConnectionError, "cannot_connect"),
+        (et.ParseError, "bad_station_id"),
         (vol.MultipleInvalid, "config_error"),
         (ValueError, "unknown"),
     ],
@@ -148,10 +156,14 @@ async def test_exception_handling(hass, error):
     exc, base_error = error
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    with mocked_ec(update=Mock(side_effect=exc)), patch(
-        "homeassistant.components.environment_canada.async_setup_entry",
-        return_value=True,
+    with patch(
+        "homeassistant.components.environment_canada.config_flow.ECData",
+        side_effect=exc,
     ):
+        # with mocked_ec(update=Mock(side_effect=exc)), patch(
+        #     "homeassistant.components.environment_canada.async_setup_entry",
+        #     return_value=True,
+        # ):
         flow = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
