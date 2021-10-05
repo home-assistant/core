@@ -24,13 +24,21 @@ ENERGY_USAGE_DEVICE_CLASSES = (sensor.DEVICE_CLASS_ENERGY,)
 ENERGY_USAGE_UNITS = {
     sensor.DEVICE_CLASS_ENERGY: (ENERGY_KILO_WATT_HOUR, ENERGY_WATT_HOUR)
 }
+ENERGY_PRICE_UNITS = tuple(
+    f"/{unit}" for units in ENERGY_USAGE_UNITS.values() for unit in units
+)
 ENERGY_UNIT_ERROR = "entity_unexpected_unit_energy"
+ENERGY_PRICE_UNIT_ERROR = "entity_unexpected_unit_energy_price"
 GAS_USAGE_DEVICE_CLASSES = (sensor.DEVICE_CLASS_ENERGY, sensor.DEVICE_CLASS_GAS)
 GAS_USAGE_UNITS = {
     sensor.DEVICE_CLASS_ENERGY: (ENERGY_WATT_HOUR, ENERGY_KILO_WATT_HOUR),
     sensor.DEVICE_CLASS_GAS: (VOLUME_CUBIC_METERS, VOLUME_CUBIC_FEET),
 }
+GAS_PRICE_UNITS = tuple(
+    f"/{unit}" for units in GAS_USAGE_UNITS.values() for unit in units
+)
 GAS_UNIT_ERROR = "entity_unexpected_unit_gas"
+GAS_PRICE_UNIT_ERROR = "entity_unexpected_unit_gas_price"
 
 
 @dataclasses.dataclass
@@ -152,7 +160,11 @@ def _async_validate_usage_stat(
 
 @callback
 def _async_validate_price_entity(
-    hass: HomeAssistant, entity_id: str, result: list[ValidationIssue]
+    hass: HomeAssistant,
+    entity_id: str,
+    result: list[ValidationIssue],
+    allowed_units: tuple[str, ...],
+    unit_error: str,
 ) -> None:
     """Validate that the price entity is correct."""
     state = hass.states.get(entity_id)
@@ -176,10 +188,8 @@ def _async_validate_price_entity(
 
     unit = state.attributes.get("unit_of_measurement")
 
-    if unit is None or not unit.endswith(
-        (f"/{ENERGY_KILO_WATT_HOUR}", f"/{ENERGY_WATT_HOUR}")
-    ):
-        result.append(ValidationIssue("entity_unexpected_unit_price", entity_id, unit))
+    if unit is None or not unit.endswith(allowed_units):
+        result.append(ValidationIssue(unit_error, entity_id, unit))
 
 
 @callback
@@ -274,7 +284,11 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                     _async_validate_cost_stat(hass, flow["stat_cost"], source_result)
                 elif flow.get("entity_energy_price") is not None:
                     _async_validate_price_entity(
-                        hass, flow["entity_energy_price"], source_result
+                        hass,
+                        flow["entity_energy_price"],
+                        source_result,
+                        ENERGY_PRICE_UNITS,
+                        ENERGY_PRICE_UNIT_ERROR,
                     )
 
                 if (
@@ -303,7 +317,11 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                     )
                 elif flow.get("entity_energy_price") is not None:
                     _async_validate_price_entity(
-                        hass, flow["entity_energy_price"], source_result
+                        hass,
+                        flow["entity_energy_price"],
+                        source_result,
+                        ENERGY_PRICE_UNITS,
+                        ENERGY_PRICE_UNIT_ERROR,
                     )
 
                 if (
@@ -330,7 +348,11 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                 _async_validate_cost_stat(hass, source["stat_cost"], source_result)
             elif source.get("entity_energy_price") is not None:
                 _async_validate_price_entity(
-                    hass, source["entity_energy_price"], source_result
+                    hass,
+                    source["entity_energy_price"],
+                    source_result,
+                    GAS_PRICE_UNITS,
+                    GAS_PRICE_UNIT_ERROR,
                 )
 
             if (

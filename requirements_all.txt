@@ -164,7 +164,7 @@ aioeagle==1.1.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==9.1.2
+aioesphomeapi==9.1.4
 
 # homeassistant.components.flo
 aioflo==0.4.1
@@ -2507,4 +2507,4 @@ zigpy==0.38.0
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.31.1
+zwave-js-server-python==0.31.2

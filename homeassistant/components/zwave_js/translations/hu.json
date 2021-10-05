@@ -27,6 +27,10 @@
             "configure_addon": {
                 "data": {
                     "network_key": "H\u00e1l\u00f3zati kulcs",
+                    "s0_legacy_key": "S0 kulcs (r\u00e9gi)",
+                    "s2_access_control_key": "S2 Hozz\u00e1f\u00e9r\u00e9s kulcs",
+                    "s2_authenticated_key": "S2 hiteles\u00edtett kulcs",
+                    "s2_unauthenticated_key": "S2 nem hiteles\u00edtett kulcs",
                     "usb_path": "USB eszk\u00f6z el\u00e9r\u00e9si \u00fat"
                 },
                 "title": "Adja meg a Z-Wave JS kieg\u00e9sz\u00edt\u0151 konfigur\u00e1ci\u00f3j\u00e1t"
@@ -109,6 +113,10 @@
                     "emulate_hardware": "Hardver emul\u00e1ci\u00f3",
                     "log_level": "Napl\u00f3szint",
                     "network_key": "H\u00e1l\u00f3zati kulcs",
+                    "s0_legacy_key": "S0 kulcs (r\u00e9gi)",
+                    "s2_access_control_key": "S2 hozz\u00e1f\u00e9r\u00e9si ",
+                    "s2_authenticated_key": "S2 hiteles\u00edtett kulcs",
+                    "s2_unauthenticated_key": "S2 nem hiteles\u00edtett kulcs",
                     "usb_path": "USB eszk\u00f6z \u00fatvonala"
                 },
                 "title": "Adja meg a Z-Wave JS kieg\u00e9sz\u00edt\u0151 konfigur\u00e1ci\u00f3j\u00e1t"

@@ -17,7 +17,7 @@
         "flow_title": "{device}",
         "step": {
             "confirm": {
-                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani {device} k\u00e9sz\u00fcl\u00e9k\u00e9t? Ha kor\u00e1bban m\u00e9g sosem csatlakoztatta Home Assistant-hoz, akkor meg kell jelennie egy felugr\u00f3 ablaknak a TV k\u00e9perny\u0151j\u00e9n, ami j\u00f3v\u00e1hagy\u00e1sra v\u00e1r.",
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani {device} k\u00e9sz\u00fcl\u00e9k\u00e9t? Ha kor\u00e1bban m\u00e9g sosem csatlakoztatta Home Assistanthoz, akkor meg kell jelennie egy felugr\u00f3 ablaknak a TV k\u00e9perny\u0151j\u00e9n, ami j\u00f3v\u00e1hagy\u00e1sra v\u00e1r.",
                 "title": "Samsung TV"
             },
             "reauth_confirm": {
@@ -28,7 +28,7 @@
                     "host": "C\u00edm",
                     "name": "N\u00e9v"
                 },
-                "description": "\u00cdrd be a Samsung TV adatait. Ha m\u00e9g soha nem csatlakozott Home Assistant-hez, akkor meg kell jelennie egy felugr\u00f3 ablaknak a TV k\u00e9perny\u0151j\u00e9n, ahol hiteles\u00edt\u00e9st k\u00e9r."
+                "description": "\u00cdrja be a Samsung TV adatait. Ha m\u00e9g soha nem csatlakozott Home Assistanthoz, akkor meg kell jelennie egy felugr\u00f3 ablaknak a TV k\u00e9perny\u0151j\u00e9n, ahol meg kell adni az enged\u00e9lyt."
             }
         }
     }
