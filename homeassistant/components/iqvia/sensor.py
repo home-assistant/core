@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from statistics import mean
-from typing import NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 import numpy as np
 
@@ -137,7 +137,6 @@ async def async_setup_entry(
             hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
                 API_CATEGORY_MAPPING.get(description.key, description.key)
             ],
-            entry,
             description,
         )
         for description in FORECAST_SENSOR_DESCRIPTIONS
@@ -148,7 +147,6 @@ async def async_setup_entry(
                 hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
                     API_CATEGORY_MAPPING.get(description.key, description.key)
                 ],
-                entry,
                 description,
             )
             for description in INDEX_SENSOR_DESCRIPTIONS
@@ -189,6 +187,9 @@ class ForecastSensor(IQVIAEntity, SensorEntity):
         if not data.get("periods"):
             return
 
+        if TYPE_CHECKING:
+            assert self.coordinator.config_entry
+
         indices = [p["Index"] for p in data["periods"]]
         average = round(mean(indices), 1)
         [rating] = [
@@ -208,7 +209,7 @@ class ForecastSensor(IQVIAEntity, SensorEntity):
 
         if self.entity_description.key == TYPE_ALLERGY_FORECAST:
             outlook_coordinator = self.hass.data[DOMAIN][DATA_COORDINATOR][
-                self._entry.entry_id
+                self.coordinator.config_entry.entry_id
             ][TYPE_ALLERGY_OUTLOOK]
 
             if not outlook_coordinator.last_update_success:

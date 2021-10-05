@@ -5,7 +5,7 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from functools import partial
-from typing import Any, Dict, cast
+from typing import TYPE_CHECKING, Any, Dict, cast
 
 from pyiqvia import Client
 from pyiqvia.errors import IQVIAError
@@ -113,15 +113,18 @@ class IQVIAEntity(CoordinatorEntity):
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
-        entry: ConfigEntry,
         description: EntityDescription,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
 
+        if TYPE_CHECKING:
+            assert coordinator.config_entry
+
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        self._attr_unique_id = f"{entry.data[CONF_ZIP_CODE]}_{description.key}"
-        self._entry = entry
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.data[CONF_ZIP_CODE]}_{description.key}"
+        )
         self.entity_description = description
 
     @callback
@@ -137,11 +140,16 @@ class IQVIAEntity(CoordinatorEntity):
         """Register callbacks."""
         await super().async_added_to_hass()
 
+        if TYPE_CHECKING:
+            assert self.coordinator.config_entry
+
         if self.entity_description.key == TYPE_ALLERGY_FORECAST:
             self.async_on_remove(
-                self.hass.data[DOMAIN][DATA_COORDINATOR][self._entry.entry_id][
-                    TYPE_ALLERGY_OUTLOOK
-                ].async_add_listener(self._handle_coordinator_update)
+                self.hass.data[DOMAIN][DATA_COORDINATOR][
+                    self.coordinator.config_entry.entry_id
+                ][TYPE_ALLERGY_OUTLOOK].async_add_listener(
+                    self._handle_coordinator_update
+                )
             )
 
         self.update_from_latest_data()
