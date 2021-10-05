@@ -166,3 +166,22 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         if len(hass.data[DOMAIN]) == 0:
             hass.data.pop(DOMAIN)
     return unload_ok
+
+
+class NwsEntity:
+    """Base NWS Entity."""
+    def __init__(self, entry_data):
+        """Initilize with entry data."""
+        self._entry_data = entry_data
+
+    @property
+    def device_info(self):
+        """Return device registry information."""
+        latitude = self._entry_data[CONF_LATITUDE]
+        longitude = self._entry_data[CONF_LONGITUDE]
+        return {
+            "identifiers": {(DOMAIN, base_unique_id(latitude, longitude)},
+            "name": f"NWS: {latitude}, {longitude}",
+            "manufacturer": "National Weather Service",
+            "entry_type": "service",
+        }
