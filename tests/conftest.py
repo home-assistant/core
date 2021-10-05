@@ -3,6 +3,7 @@ import asyncio
 import datetime
 import functools
 import logging
+import socket
 import ssl
 import threading
 from unittest.mock import MagicMock, patch
@@ -10,6 +11,7 @@ from unittest.mock import MagicMock, patch
 from aiohttp.test_utils import make_mocked_request
 import multidict
 import pytest
+import pytest_socket
 import requests_mock as _requests_mock
 
 from homeassistant import core as ha, loader, runner, util
@@ -59,6 +61,31 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "no_fail_on_log_exception: mark test to not fail on logged exception"
     )
+
+
+def pytest_runtest_setup():
+    """Throw if tests attempt to open sockets.
+
+    allow_unix_socket is set to True because it's needed by asyncio.
+    Important: socket_allow_hosts must be called before disable_socket, otherwise all
+    destinations will be allowed.
+    """
+    pytest_socket.socket_allow_hosts(["127.0.0.1"])
+    pytest_socket.disable_socket(allow_unix_socket=True)
+
+
+@pytest.fixture
+def socket_enabled(pytestconfig):
+    """Enable socket.socket for duration of this test function.
+
+    This incorporates changes from https://github.com/miketheman/pytest-socket/pull/76
+    and hardcodes allow_unix_socket to True because it's not passed on the command line.
+    """
+    socket_was_disabled = socket.socket != pytest_socket._true_socket
+    pytest_socket.enable_socket()
+    yield
+    if socket_was_disabled:
+        pytest_socket.disable_socket(allow_unix_socket=True)
 
 
 def check_real(func):
