@@ -9,7 +9,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple, cast
 import jwt
 
 from homeassistant import data_entry_flow
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.util import dt as dt_util
 
@@ -445,6 +445,15 @@ class AuthManager:
     ) -> None:
         """Delete a refresh token."""
         await self._store.async_remove_refresh_token(refresh_token)
+
+    @callback
+    def async_register_revoke_token_callback(
+        self, refresh_token_id: str, callback: CALLBACK_TYPE
+    ) -> CALLBACK_TYPE:
+        """Register a callback to be called when the refresh token id is revoked."""
+        return self._store.async_register_revoke_token_callback(
+            refresh_token_id, callback
+        )
 
     @callback
     def async_create_access_token(
