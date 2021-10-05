@@ -182,9 +182,13 @@ class JewishCalendarSensor(SensorEntity):
         _LOGGER.debug("Now: %s Location: %r", now, self._location)
 
         today = now.date()
-        sunset = dt_util.as_local(
-            get_astral_event_date(self.hass, SUN_EVENT_SUNSET, today)  # type: ignore[arg-type]
-        )
+        event_date = get_astral_event_date(self.hass, SUN_EVENT_SUNSET, today)
+
+        if event_date is None:
+            _LOGGER.error("Can't get sunset event date for %s", today)
+            return
+
+        sunset = dt_util.as_local(event_date)
 
         _LOGGER.debug("Now: %s Sunset: %s", now, sunset)
 
