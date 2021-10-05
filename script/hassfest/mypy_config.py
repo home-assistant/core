@@ -56,7 +56,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.incomfort.*",
     "homeassistant.components.influxdb.*",
     "homeassistant.components.input_datetime.*",
-    "homeassistant.components.input_number.*",
     "homeassistant.components.ipp.*",
     "homeassistant.components.isy994.*",
     "homeassistant.components.izone.*",

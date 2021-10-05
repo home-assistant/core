@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -47,18 +48,18 @@ SERVICE_INCREMENT = "increment"
 SERVICE_DECREMENT = "decrement"
 
 
-def _cv_input_number(cfg):
+def _cv_input_number(config: dict) -> dict:
     """Configure validation helper for input number (voluptuous)."""
-    minimum = cfg.get(CONF_MIN)
-    maximum = cfg.get(CONF_MAX)
+    minimum = float(config[CONF_MIN])
+    maximum = float(config[CONF_MAX])
     if minimum >= maximum:
         raise vol.Invalid(
             f"Maximum ({minimum}) is not greater than minimum ({maximum})"
         )
-    state = cfg.get(CONF_INITIAL)
+    state = config.get(CONF_INITIAL)
     if state is not None and (state < minimum or state > maximum):
         raise vol.Invalid(f"Initial value {state} not in range {minimum}-{maximum}")
-    return cfg
+    return config
 
 
 CREATE_FIELDS = {
@@ -180,12 +181,12 @@ class NumberStorageCollection(collection.StorageCollection):
 
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
-        return self.CREATE_SCHEMA(data)
+        return cast(dict, self.CREATE_SCHEMA(data))
 
     @callback
     def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
-        return info[CONF_NAME]
+        return str(info[CONF_NAME])
 
     async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
@@ -211,52 +212,52 @@ class InputNumber(RestoreEntity):
         return input_num
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """If entity should be polled."""
         return False
 
     @property
     def _minimum(self) -> float:
         """Return minimum allowed value."""
-        return self._config[CONF_MIN]
+        return float(self._config[CONF_MIN])
 
     @property
     def _maximum(self) -> float:
         """Return maximum allowed value."""
-        return self._config[CONF_MAX]
+        return float(self._config[CONF_MAX])
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         """Return the name of the input slider."""
         return self._config.get(CONF_NAME)
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Return the icon to be used for this entity."""
         return self._config.get(CONF_ICON)
 
     @property
-    def state(self):
+    def state(self) -> float | None:
         """Return the state of the component."""
         return self._current_value
 
     @property
-    def _step(self) -> int:
+    def _step(self) -> float:
         """Return entity's increment/decrement step."""
-        return self._config[CONF_STEP]
+        return float(self._config[CONF_STEP])
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         return self._config.get(CONF_UNIT_OF_MEASUREMENT)
 
     @property
-    def unique_id(self) -> str | None:
+    def unique_id(self) -> str:
         """Return unique id of the entity."""
-        return self._config[CONF_ID]
+        return str(self._config[CONF_ID])
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
             ATTR_INITIAL: self._config.get(CONF_INITIAL),
@@ -267,22 +268,24 @@ class InputNumber(RestoreEntity):
             ATTR_MODE: self._config[CONF_MODE],
         }
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
         if self._current_value is not None:
             return
 
         state = await self.async_get_last_state()
-        value = state and float(state.state)
+        if state is not None:
+            value = float(state.state)
 
-        # Check against None because value can be 0
-        if value is not None and self._minimum <= value <= self._maximum:
-            self._current_value = value
-        else:
-            self._current_value = self._minimum
+            # Check against None because value can be 0
+            if self._minimum <= value <= self._maximum:
+                self._current_value = value
+                return
 
-    async def async_set_value(self, value):
+        self._current_value = self._minimum
+
+    async def async_set_value(self, value: float) -> None:
         """Set new value."""
         num_value = float(value)
 
@@ -294,18 +297,32 @@ class InputNumber(RestoreEntity):
         self._current_value = num_value
         self.async_write_ha_state()
 
-    async def async_increment(self):
+    async def async_increment(self) -> None:
         """Increment value."""
-        await self.async_set_value(min(self._current_value + self._step, self._maximum))
+        if self._current_value is not None:
+            await self.async_set_value(
+                min(self._current_value + self._step, self._maximum)
+            )
+        else:
+            await self.async_set_value(self._maximum)
 
-    async def async_decrement(self):
+    async def async_decrement(self) -> None:
         """Decrement value."""
-        await self.async_set_value(max(self._current_value - self._step, self._minimum))
+        if self._current_value is not None:
+            await self.async_set_value(
+                max(self._current_value - self._step, self._minimum)
+            )
+        else:
+            self._current_value = self._minimum
 
     async def async_update_config(self, config: dict) -> None:
         """Handle when the config is updated."""
         self._config = config
         # just in case min/max values changed
-        self._current_value = min(self._current_value, self._maximum)
-        self._current_value = max(self._current_value, self._minimum)
+        if self._current_value is not None:
+            self._current_value = min(self._current_value, self._maximum)
+            self._current_value = max(self._current_value, self._minimum)
+        else:
+            self._current_value = self._minimum
+
         self.async_write_ha_state()
