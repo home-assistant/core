@@ -267,6 +267,8 @@ async def async_setup_entry(
 class ZwaveSensorBase(ZWaveBaseEntity, SensorEntity):
     """Basic Representation of a Z-Wave sensor."""
 
+    _attr_force_update = True
+
     def __init__(
         self,
         config_entry: ConfigEntry,
@@ -279,7 +281,6 @@ class ZwaveSensorBase(ZWaveBaseEntity, SensorEntity):
         self.entity_description = entity_description
 
         # Entity class attributes
-        self._attr_force_update = True
         self._attr_name = self.generate_name(include_value_name=True)
 
 
