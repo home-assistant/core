@@ -110,11 +110,6 @@ class TomorrowioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize config flow."""
-        self._showed_import_message = 0
-        self._import_config: dict[str, Any] | None = None
-
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -127,10 +122,6 @@ class TomorrowioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            # Grab the API key and add it to the rest of the config before continuing
-            if self._import_config:
-                self._import_config[CONF_API_KEY] = user_input[CONF_API_KEY]
-                user_input = self._import_config.copy()
             await self.async_set_unique_id(
                 unique_id=_get_unique_id(self.hass, user_input)
             )
