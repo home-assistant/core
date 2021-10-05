@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Constants for the Tuya integration."""
 
 DOMAIN = "tuya"
