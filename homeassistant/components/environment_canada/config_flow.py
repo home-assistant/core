@@ -1,5 +1,7 @@
 """Config flow for Environment Canada integration."""
 import logging
+import re
+import xml.etree.ElementTree as et
 
 import aiohttp
 from env_canada import ECData
@@ -22,15 +24,25 @@ def validate_input(data):
     station = data.get(CONF_STATION)
     language = data.get(CONF_LANGUAGE)
 
-    env_canada = ECData(
-        station_id=station, coordinates=(latitude, longitude), language=language.lower()
-    )
-    env_canada.update()
-
-    if env_canada.station_id is None:
+    try:
+        env_canada = ECData(
+            station_id=station,
+            coordinates=(latitude, longitude),
+            language=language.lower(),
+        )
+    except et.ParseError:
         raise BadStationId
 
-    return {"title": env_canada.station_id, "name": env_canada.station_id}
+    return {"title": env_canada.station_id, "name": env_canada.metadata.get("location")}
+
+
+def validate_station(station):
+    """Check that the station ID is well-formed."""
+    if station is None:
+        return
+    if not re.fullmatch(r"[A-Z]{2}/s0000\d{3}", station):
+        raise vol.Invalid('Station ID must be of the form "XX/s0000###"')
+    return station
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

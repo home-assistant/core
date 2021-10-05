@@ -7,14 +7,9 @@ from homeassistant.components.camera import Camera
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.util import Throttle
 
-from .const import DOMAIN
+from .const import CONF_ATTRIBUTION, CONF_LANGUAGE, CONF_STATION, DOMAIN
 
 ATTR_UPDATED = "updated"
-
-CONF_ATTRIBUTION = "Data provided by Environment Canada"
-CONF_STATION = "station"
-CONF_LOOP = "loop"
-CONF_PRECIP_TYPE = "precip_type"
 
 MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=10)
 
@@ -22,9 +17,14 @@ MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=10)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a weather entity from a config_entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["radar_coordinator"]
+    config = config_entry.data
+
+    # The combination of station and language are unique for all EC weather reporting
+    unique_id = f"{config[CONF_STATION]}-{config[CONF_LANGUAGE]}-radar"
+
     async_add_entities(
         [
-            ECCamera(coordinator, config_entry.data[CONF_NAME], True),
+            ECCamera(coordinator, config.get(CONF_NAME, ""), unique_id),
         ]
     )
 
@@ -32,16 +32,21 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class ECCamera(Camera):
     """Implementation of an Environment Canada radar camera."""
 
-    def __init__(self, radar_object, camera_name, is_loop):
+    def __init__(self, radar_object, camera_name, unique_id):
         """Initialize the camera."""
         super().__init__()
 
         self.radar_object = radar_object
         self.camera_name = camera_name
-        self.is_loop = is_loop
+        self.uniqueid = unique_id
         self.content_type = "image/gif"
         self.image = None
         self.timestamp = None
+
+    @property
+    def unique_id(self):
+        """Return unique ID."""
+        return self.uniqueid
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None

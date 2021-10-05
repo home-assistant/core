@@ -24,7 +24,6 @@ async def async_setup_entry(hass, config_entry):
     )
     weather_data = await hass.async_add_executor_job(weather_init)
     coordinators["weather_coordinator"] = weather_data
-    await hass.async_add_executor_job(weather_data.update)
 
     radar_init = partial(ECRadar, coordinates=(lat, lon))
     radar_data = await hass.async_add_executor_job(radar_init)

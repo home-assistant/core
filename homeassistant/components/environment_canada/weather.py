@@ -24,7 +24,7 @@ from homeassistant.components.weather import (
 from homeassistant.const import CONF_NAME, TEMP_CELSIUS
 from homeassistant.util import dt
 
-from .const import DOMAIN
+from .const import CONF_LANGUAGE, CONF_STATION, DOMAIN
 
 CONF_FORECAST = "forecast"
 CONF_ATTRIBUTION = "Data provided by Environment Canada"
@@ -64,8 +64,15 @@ class ECWeather(WeatherEntity):
     def __init__(self, ec_data, config, hourly):
         """Initialize Environment Canada weather."""
         self.ec_data = ec_data
+        self.config = config
         self.platform_name = config.get(CONF_NAME)
         self.forecast_type = "hourly" if hourly else "daily"
+
+    @property
+    def unique_id(self):
+        """Return unique ID."""
+        # The combination of station and language are unique for all EC weather reporting
+        return f"{self.config[CONF_STATION]}-{self.config[CONF_LANGUAGE]}-{self.forecast_type}"
 
     @property
     def attribution(self):
