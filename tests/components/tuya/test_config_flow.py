@@ -11,9 +11,9 @@ from homeassistant.components.tuya.const import (
     CONF_ACCESS_ID,
     CONF_ACCESS_SECRET,
     CONF_APP_TYPE,
+    CONF_AUTH_TYPE,
     CONF_ENDPOINT,
     CONF_PASSWORD,
-    CONF_PROJECT_TYPE,
     CONF_REGION,
     CONF_USERNAME,
     DOMAIN,
@@ -101,7 +101,7 @@ async def test_user_flow(
     assert result["data"][CONF_ENDPOINT] == MOCK_ENDPOINT
     assert result["data"][CONF_ENDPOINT] != TUYA_REGIONS[TUYA_INPUT_DATA[CONF_REGION]]
     assert result["data"][CONF_APP_TYPE] == app_type
-    assert result["data"][CONF_PROJECT_TYPE] == project_type
+    assert result["data"][CONF_AUTH_TYPE] == project_type
     assert not result["result"].unique_id
 
 
