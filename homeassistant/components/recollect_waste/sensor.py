@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime, time
+from typing import TYPE_CHECKING
 
 from aiorecollect.client import PickupType
 
@@ -58,7 +59,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up ReCollect Waste sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id]
-    async_add_entities([ReCollectWasteSensor(coordinator, entry)])
+    async_add_entities([ReCollectWasteSensor(coordinator)])
 
 
 class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
@@ -66,16 +67,16 @@ class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
 
     _attr_device_class = DEVICE_CLASS_TIMESTAMP
 
-    def __init__(self, coordinator: DataUpdateCoordinator, entry: ConfigEntry) -> None:
+    def __init__(self, coordinator: DataUpdateCoordinator) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
 
+        if TYPE_CHECKING:
+            assert coordinator.config_entry
+
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._attr_name = DEFAULT_NAME
-        self._attr_unique_id = (
-            f"{entry.data[CONF_PLACE_ID]}{entry.data[CONF_SERVICE_ID]}"
-        )
-        self._entry = entry
+        self._attr_unique_id = f"{coordinator.config_entry.data[CONF_PLACE_ID]}{coordinator.config_entry.data[CONF_SERVICE_ID]}"
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -91,17 +92,20 @@ class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
+        if TYPE_CHECKING:
+            assert self.coordinator.config_entry
+
         pickup_event = self.coordinator.data[0]
         next_pickup_event = self.coordinator.data[1]
 
         self._attr_extra_state_attributes.update(
             {
                 ATTR_PICKUP_TYPES: async_get_pickup_type_names(
-                    self._entry, pickup_event.pickup_types
+                    self.coordinator.config_entry, pickup_event.pickup_types
                 ),
                 ATTR_AREA_NAME: pickup_event.area_name,
                 ATTR_NEXT_PICKUP_TYPES: async_get_pickup_type_names(
-                    self._entry, next_pickup_event.pickup_types
+                    self.coordinator.config_entry, next_pickup_event.pickup_types
                 ),
                 ATTR_NEXT_PICKUP_DATE: async_get_utc_midnight(
                     next_pickup_event.date
