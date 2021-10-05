@@ -430,10 +430,9 @@ class TuyaHaClimate(TuyaHaEntity, ClimateEntity):
     @property
     def fan_modes(self) -> list[str]:
         """Return fan modes for select."""
-        data = json.loads(
+        return json.loads(
             self.tuya_device.function.get(DPCODE_FAN_SPEED_ENUM, {}).values
         ).get("range")
-        return data
 
     @property
     def swing_mode(self) -> str:
