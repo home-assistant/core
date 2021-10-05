@@ -31,6 +31,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class EightHeatSensor(EightSleepHeatEntity, BinarySensorEntity):
     """Representation of a Eight Sleep heat-based sensor."""
 
+    _attr_device_class = DEVICE_CLASS_OCCUPANCY
+
     def __init__(self, name, eight, sensor):
         """Initialize the sensor."""
         super().__init__(eight)
@@ -44,7 +46,6 @@ class EightHeatSensor(EightSleepHeatEntity, BinarySensorEntity):
         self._usrobj = self._eight.users[self._userid]
 
         self._attr_name = f"{name} {self._mapped_name}"
-        self._attr_device_class = DEVICE_CLASS_OCCUPANCY
 
         _LOGGER.debug(
             "Presence Sensor: %s, Side: %s, User: %s",

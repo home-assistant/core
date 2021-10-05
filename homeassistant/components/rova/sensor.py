@@ -101,6 +101,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class RovaSensor(SensorEntity):
     """Representation of a Rova sensor."""
 
+    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+
     def __init__(
         self, platform_name, description: SensorEntityDescription, data_service
     ):
@@ -109,7 +111,6 @@ class RovaSensor(SensorEntity):
         self.data_service = data_service
 
         self._attr_name = f"{platform_name}_{description.name}"
-        self._attr_device_class = DEVICE_CLASS_TIMESTAMP
 
     def update(self):
         """Get the latest data from the sensor and update the state."""

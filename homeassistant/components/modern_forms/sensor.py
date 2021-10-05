@@ -59,6 +59,8 @@ class ModernFormsSensor(ModernFormsDeviceEntity, SensorEntity):
 class ModernFormsLightTimerRemainingTimeSensor(ModernFormsSensor):
     """Defines the Modern Forms Light Timer remaining time sensor."""
 
+    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+
     def __init__(
         self, entry_id: str, coordinator: ModernFormsDataUpdateCoordinator
     ) -> None:
@@ -70,7 +72,6 @@ class ModernFormsLightTimerRemainingTimeSensor(ModernFormsSensor):
             key="light_timer_remaining_time",
             name=f"{coordinator.data.info.device_name} Light Sleep Time",
         )
-        self._attr_device_class = DEVICE_CLASS_TIMESTAMP
 
     @property
     def native_value(self) -> StateType:
@@ -89,6 +90,8 @@ class ModernFormsLightTimerRemainingTimeSensor(ModernFormsSensor):
 class ModernFormsFanTimerRemainingTimeSensor(ModernFormsSensor):
     """Defines the Modern Forms Light Timer remaining time sensor."""
 
+    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+
     def __init__(
         self, entry_id: str, coordinator: ModernFormsDataUpdateCoordinator
     ) -> None:
@@ -100,7 +103,6 @@ class ModernFormsFanTimerRemainingTimeSensor(ModernFormsSensor):
             key="fan_timer_remaining_time",
             name=f"{coordinator.data.info.device_name} Fan Sleep Time",
         )
-        self._attr_device_class = DEVICE_CLASS_TIMESTAMP
 
     @property
     def native_value(self) -> StateType:

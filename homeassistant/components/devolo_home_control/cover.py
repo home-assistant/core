@@ -45,6 +45,8 @@ async def async_setup_entry(
 class DevoloCoverDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, CoverEntity):
     """Representation of a cover device within devolo Home Control."""
 
+    _attr_device_class = DEVICE_CLASS_BLIND
+
     def __init__(
         self, homecontrol: HomeControl, device_instance: Zwave, element_uid: str
     ) -> None:
@@ -55,7 +57,6 @@ class DevoloCoverDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, CoverEntity):
             element_uid=element_uid,
         )
 
-        self._attr_device_class = DEVICE_CLASS_BLIND
         self._attr_supported_features = (
             SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
         )

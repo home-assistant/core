@@ -205,6 +205,8 @@ class EnergyCostSensor(SensorEntity):
     _wrong_state_class_reported = False
     _wrong_unit_reported = False
 
+    _attr_device_class = DEVICE_CLASS_MONETARY
+
     def __init__(
         self,
         adapter: SourceAdapter,
@@ -217,7 +219,6 @@ class EnergyCostSensor(SensorEntity):
         self.entity_id = (
             f"{config[adapter.entity_energy_key]}_{adapter.entity_id_suffix}"
         )
-        self._attr_device_class = DEVICE_CLASS_MONETARY
         self._attr_state_class = STATE_CLASS_TOTAL
         self._config = config
         self._last_energy_sensor_state: State | None = None

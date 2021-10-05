@@ -256,6 +256,7 @@ class BroadlinkBG1Slot(BroadlinkSwitch):
     """Representation of a Broadlink BG1 slot."""
 
     _attr_assumed_state = False
+    _attr_device_class = DEVICE_CLASS_OUTLET
 
     def __init__(self, device, slot):
         """Initialize the switch."""
@@ -264,7 +265,6 @@ class BroadlinkBG1Slot(BroadlinkSwitch):
         self._attr_is_on = self._coordinator.data[f"pwr{slot}"]
 
         self._attr_name = f"{device.name} S{slot}"
-        self._attr_device_class = DEVICE_CLASS_OUTLET
         self._attr_unique_id = f"{device.unique_id}-s{slot}"
 
     def _update_state(self, data):

@@ -94,6 +94,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ThermoworksSmokeSensor(SensorEntity):
     """Implementation of a thermoworks smoke sensor."""
 
+    _attr_device_class = DEVICE_CLASS_TEMPERATURE
+
     def __init__(self, sensor_type, serial, mgr):
         """Initialize the sensor."""
         self._name = "{name} {sensor}".format(
@@ -106,7 +108,6 @@ class ThermoworksSmokeSensor(SensorEntity):
         self._unique_id = f"{serial}-{sensor_type}"
         self.serial = serial
         self.mgr = mgr
-        self._attr_device_class = DEVICE_CLASS_TEMPERATURE
         self.update_unit()
 
     @property
