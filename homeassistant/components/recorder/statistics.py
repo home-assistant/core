@@ -940,13 +940,15 @@ def validate_statistics(hass: HomeAssistant) -> dict[str, list[ValidationIssue]]
 
 def _statistics_id_claimed(hass: HomeAssistant, metadata: StatisticMetaData) -> bool:
     """Return True if the statistic_id is claimed by recorder or another integration."""
-    old_metadata = get_metadata(hass, metadata["statistic_id"])
-    if old_metadata and old_metadata["source"] != metadata["source"]:
+    statistic_id = metadata["statistic_id"]
+    old_metadata_dict = get_metadata(hass, statistic_id)
+    old_metadata = old_metadata_dict.get(statistic_id)
+    if old_metadata and old_metadata[1]["source"] != metadata["source"]:
         _LOGGER.warning(
             "Failed to insert statistics for %s, source %s differs from %s",
             metadata["statistic_id"],
             metadata["source"],
-            old_metadata["source"],
+            old_metadata[1]["source"],
         )
         return True
 
