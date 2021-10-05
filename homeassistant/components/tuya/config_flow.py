@@ -6,7 +6,6 @@ from typing import Any
 
 from tuya_iot import AuthType, TuyaOpenAPI
 import voluptuous as vol
-from voluptuous.schema_builder import UNDEFINED
 
 from homeassistant import config_entries
 
@@ -18,11 +17,10 @@ from .const import (
     CONF_COUNTRY_CODE,
     CONF_ENDPOINT,
     CONF_PASSWORD,
-    CONF_REGION,
     CONF_USERNAME,
     DOMAIN,
     SMARTLIFE_APP,
-    TUYA_REGIONS,
+    TUYA_COUNTRIES,
     TUYA_RESPONSE_CODE,
     TUYA_RESPONSE_MSG,
     TUYA_RESPONSE_PLATFROM_URL,
@@ -42,14 +40,20 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Try login."""
         response = {}
 
+        country = [
+            country
+            for country in TUYA_COUNTRIES
+            if country.name == user_input[CONF_COUNTRY_CODE]
+        ][0]
+
         data = {
-            CONF_ENDPOINT: TUYA_REGIONS[user_input[CONF_REGION]],
+            CONF_ENDPOINT: country.endpoint,
             CONF_AUTH_TYPE: AuthType.CUSTOM,
             CONF_ACCESS_ID: user_input[CONF_ACCESS_ID],
             CONF_ACCESS_SECRET: user_input[CONF_ACCESS_SECRET],
             CONF_USERNAME: user_input[CONF_USERNAME],
             CONF_PASSWORD: user_input[CONF_PASSWORD],
-            CONF_COUNTRY_CODE: user_input[CONF_REGION],
+            CONF_COUNTRY_CODE: country.country_code,
         }
 
         for app_type in ("", TUYA_SMART_APP, SMARTLIFE_APP):
@@ -109,29 +113,32 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 TUYA_RESPONSE_MSG: response.get(TUYA_RESPONSE_MSG),
             }
 
-        def _schema_default(key: str) -> str | UNDEFINED:
-            if not user_input:
-                return UNDEFINED
-            return user_input[key]
+        if user_input is None:
+            user_input = {}
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        CONF_REGION, default=_schema_default(CONF_REGION)
-                    ): vol.In(TUYA_REGIONS.keys()),
+                        CONF_COUNTRY_CODE,
+                        default=user_input.get(CONF_COUNTRY_CODE, "United States"),
+                    ): vol.In(
+                        # We don't pass a dict {code:name} because country codes can be duplicate.
+                        [country.name for country in TUYA_COUNTRIES]
+                    ),
                     vol.Required(
-                        CONF_ACCESS_ID, default=_schema_default(CONF_ACCESS_ID)
+                        CONF_ACCESS_ID, default=user_input.get(CONF_ACCESS_ID, "")
                     ): str,
                     vol.Required(
-                        CONF_ACCESS_SECRET, default=_schema_default(CONF_ACCESS_SECRET)
+                        CONF_ACCESS_SECRET,
+                        default=user_input.get(CONF_ACCESS_SECRET, ""),
                     ): str,
                     vol.Required(
-                        CONF_USERNAME, default=_schema_default(CONF_USERNAME)
+                        CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
                     ): str,
                     vol.Required(
-                        CONF_PASSWORD, default=_schema_default(CONF_PASSWORD)
+                        CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
                     ): str,
                 }
             ),
