@@ -698,9 +698,6 @@ jobs:
             --cov-report= \
             -o console_output_style=count \
             -p no:sugar \
-            --disable-socket \
-            --allow-unix-socket \
-            --allow-hosts="127.0.0.1" \
             tests
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v2.2.4
