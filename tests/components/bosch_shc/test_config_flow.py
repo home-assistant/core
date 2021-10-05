@@ -526,6 +526,28 @@ async def test_zeroconf_cannot_connect(hass, mock_zeroconf):
         assert result["reason"] == "cannot_connect"
 
 
+async def test_zeroconf_link_local(hass, mock_zeroconf):
+    """Test we get the form."""
+    DISCOVERY_INFO_LINK_LOCAL = {
+        "host": ["169.1.1.1"],
+        "port": 0,
+        "hostname": "shc012345.local.",
+        "type": "_http._tcp.local.",
+        "name": "Bosch SHC [test-mac]._http._tcp.local.",
+    }
+
+    with patch(
+        "boschshcpy.session.SHCSession.mdns_info", side_effect=SHCConnectionError
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DISCOVERY_INFO_LINK_LOCAL,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+        assert result["type"] == "abort"
+        assert result["reason"] == "cannot_connect"
+
+
 async def test_zeroconf_not_bosch_shc(hass, mock_zeroconf):
     """Test we filter out non-bosch_shc devices."""
     result = await hass.config_entries.flow.async_init(
