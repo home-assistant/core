@@ -1,4 +1,6 @@
-"""This component provides support for Stookalert Binary Sensor."""
+"""This integration provides support for Stookalert Binary Sensor."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 import stookalert
@@ -10,11 +12,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 SCAN_INTERVAL = timedelta(minutes=60)
 CONF_PROVINCE = "province"
-DEFAULT_DEVICE_CLASS = DEVICE_CLASS_SAFETY
 DEFAULT_NAME = "Stookalert"
 ATTRIBUTION = "Data provided by rivm.nl"
 PROVINCES = [
@@ -40,47 +44,35 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Stookalert binary sensor platform."""
-    province = config[CONF_PROVINCE]
-    name = config[CONF_NAME]
-    api_handler = stookalert.stookalert(province)
-    add_entities([StookalertBinarySensor(name, api_handler)], update_before_add=True)
+    api_handler = stookalert.stookalert(config[CONF_PROVINCE])
+    add_entities(
+        [StookalertBinarySensor(config[CONF_NAME], api_handler)], update_before_add=True
+    )
 
 
 class StookalertBinarySensor(BinarySensorEntity):
     """An implementation of RIVM Stookalert."""
 
-    def __init__(self, name, api_handler):
+    _attr_device_class = DEVICE_CLASS_SAFETY
+
+    def __init__(self, name: str, api_handler: stookalert.stookalert) -> None:
         """Initialize a Stookalert device."""
-        self._name = name
         self._api_handler = api_handler
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        self._attr_name = name
 
-    @property
-    def extra_state_attributes(self):
-        """Return the attribute(s) of the sensor."""
-        state_attr = {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-        if self._api_handler.last_updated is not None:
-            state_attr["last_updated"] = self._api_handler.last_updated.isoformat()
-
-        return state_attr
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return True if the Alert is active."""
-        return self._api_handler.state == 1
-
-    @property
-    def device_class(self):
-        """Return the device class of this binary sensor."""
-        return DEFAULT_DEVICE_CLASS
-
-    def update(self):
+    def update(self) -> None:
         """Update the data from the Stookalert handler."""
         self._api_handler.get_alerts()
+        self._attr_is_on = self._api_handler.state == 1
+        if self._api_handler.last_updated:
+            self._attr_extra_state_attributes.update(
+                last_updated=self._api_handler.last_updated.isoformat()
+            )

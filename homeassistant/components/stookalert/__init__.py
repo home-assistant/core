@@ -1,1 +1,1 @@
-"""The Stookalert component."""
+"""The Stookalert integration."""
