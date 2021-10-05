@@ -99,7 +99,6 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if endpoint := response.get(TUYA_RESPONSE_RESULT, {}).get(
                     TUYA_RESPONSE_PLATFROM_URL
                 ):
-                    print("OVERRIDE", data[CONF_ENDPOINT], endpoint)
                     data[CONF_ENDPOINT] = endpoint
 
                 data[CONF_AUTH_TYPE] = data[CONF_AUTH_TYPE].value
