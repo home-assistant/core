@@ -1,0 +1,15 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Set up Stookalert to integrate with Home Assistant.",
+        "data": {
+          "province": "Province"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  }
+}

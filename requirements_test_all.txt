@@ -1284,6 +1284,9 @@ starline==0.1.5
 # homeassistant.components.statsd
 statsd==3.2.1
 
+# homeassistant.components.stookalert
+stookalert==0.1.4
+
 # homeassistant.components.huawei_lte
 # homeassistant.components.solaredge
 # homeassistant.components.thermoworks_smoke

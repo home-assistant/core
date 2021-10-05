@@ -11,30 +11,32 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-SCAN_INTERVAL = timedelta(minutes=60)
-CONF_PROVINCE = "province"
+from .const import (
+    ATTR_ENTRY_TYPE,
+    CONF_PROVINCE,
+    DOMAIN,
+    ENTRY_TYPE_SERVICE,
+    LOGGER,
+    PROVINCES,
+)
+
 DEFAULT_NAME = "Stookalert"
 ATTRIBUTION = "Data provided by rivm.nl"
-PROVINCES = [
-    "Drenthe",
-    "Flevoland",
-    "Friesland",
-    "Gelderland",
-    "Groningen",
-    "Limburg",
-    "Noord-Brabant",
-    "Noord-Holland",
-    "Overijssel",
-    "Utrecht",
-    "Zeeland",
-    "Zuid-Holland",
-]
+SCAN_INTERVAL = timedelta(minutes=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -44,35 +46,64 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Stookalert binary sensor platform."""
-    api_handler = stookalert.stookalert(config[CONF_PROVINCE])
-    add_entities(
-        [StookalertBinarySensor(config[CONF_NAME], api_handler)], update_before_add=True
+    """Import the Stookalert platform into a config entry."""
+    LOGGER.warning(
+        "Configuration of the Stookalert platform in YAML is deprecated and will be "
+        "removed in Home Assistant 2022.1; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_PROVINCE: config[CONF_PROVINCE],
+            },
+        )
     )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up Stookalert binary sensor from a config entry."""
+    client = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities([StookalertBinarySensor(client, entry)], update_before_add=True)
+
+
 class StookalertBinarySensor(BinarySensorEntity):
-    """An implementation of RIVM Stookalert."""
+    """Defines a Stookalert binary sensor."""
 
     _attr_device_class = DEVICE_CLASS_SAFETY
 
-    def __init__(self, name: str, api_handler: stookalert.stookalert) -> None:
+    def __init__(self, client: stookalert.stookalert, entry: ConfigEntry) -> None:
         """Initialize a Stookalert device."""
-        self._api_handler = api_handler
+        self._client = client
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
-        self._attr_name = name
+        self._attr_name = f"Stookalert {entry.data[CONF_PROVINCE]}"
+        self._attr_unique_id = entry.unique_id
+        self._attr_device_info = {
+            ATTR_IDENTIFIERS: {(DOMAIN, f"{entry.entry_id}")},
+            ATTR_NAME: entry.data[CONF_PROVINCE],
+            ATTR_MANUFACTURER: "RIVM",
+            ATTR_MODEL: "Stookalert",
+            ATTR_ENTRY_TYPE: ENTRY_TYPE_SERVICE,
+        }
 
     def update(self) -> None:
         """Update the data from the Stookalert handler."""
-        self._api_handler.get_alerts()
-        self._attr_is_on = self._api_handler.state == 1
-        if self._api_handler.last_updated:
+        self._client.get_alerts()
+        self._attr_is_on = self._client.state == 1
+        if self._client.last_updated:
             self._attr_extra_state_attributes.update(
-                last_updated=self._api_handler.last_updated.isoformat()
+                last_updated=self._client.last_updated.isoformat()
             )

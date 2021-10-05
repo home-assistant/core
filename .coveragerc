@@ -1000,7 +1000,8 @@ omit =
     homeassistant/components/starlingbank/sensor.py
     homeassistant/components/steam_online/sensor.py
     homeassistant/components/stiebel_eltron/*
-    homeassistant/components/stookalert/*
+    homeassistant/components/stookalert/__init__.py
+    homeassistant/components/stookalert/binary_sensor.py
     homeassistant/components/stream/*
     homeassistant/components/streamlabswater/*
     homeassistant/components/suez_water/*
