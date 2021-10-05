@@ -478,6 +478,84 @@ async def test_ssdp_flow_upnp_udn(
     assert config_entry_mock.data[CONF_URL] == NEW_DEVICE_LOCATION
 
 
+async def test_unignore_flow(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> None:
+    """Test a config flow started by unignoring a device."""
+    # Create ignored entry
+    result = await hass.config_entries.flow.async_init(
+        DLNA_DOMAIN,
+        context={"source": config_entries.SOURCE_IGNORE},
+        data={"unique_id": MOCK_DEVICE_UDN, "title": MOCK_DEVICE_NAME},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == MOCK_DEVICE_NAME
+    assert result["data"] == {}
+
+    # Device was found via SSDP, matching the 2nd device type tried
+    ssdp_scanner_mock.async_get_discovery_info_by_udn_st.side_effect = [
+        None,
+        MOCK_DISCOVERY,
+        None,
+        None,
+        None,
+    ]
+
+    # Unignore it and expect config flow to start
+    result = await hass.config_entries.flow.async_init(
+        DLNA_DOMAIN,
+        context={"source": config_entries.SOURCE_UNIGNORE},
+        data={"unique_id": MOCK_DEVICE_UDN},
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == MOCK_DEVICE_NAME
+    assert result["data"] == {
+        CONF_URL: MOCK_DEVICE_LOCATION,
+        CONF_DEVICE_ID: MOCK_DEVICE_UDN,
+        CONF_TYPE: MOCK_DEVICE_TYPE,
+    }
+    assert result["options"] == {}
+
+    await cleanup_entry(hass, result)
+
+
+async def test_unignore_flow_offline(
+    hass: HomeAssistant, ssdp_scanner_mock: Mock
+) -> None:
+    """Test a config flow started by unignoring a device, but the device is offline."""
+    # Create ignored entry
+    result = await hass.config_entries.flow.async_init(
+        DLNA_DOMAIN,
+        context={"source": config_entries.SOURCE_IGNORE},
+        data={"unique_id": MOCK_DEVICE_UDN, "title": MOCK_DEVICE_NAME},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == MOCK_DEVICE_NAME
+    assert result["data"] == {}
+
+    # Device is not in the SSDP discoveries (perhaps HA restarted between ignore and unignore)
+    ssdp_scanner_mock.async_get_discovery_info_by_udn_st.return_value = None
+
+    # Unignore it and expect config flow to start then abort
+    result = await hass.config_entries.flow.async_init(
+        DLNA_DOMAIN,
+        context={"source": config_entries.SOURCE_UNIGNORE},
+        data={"unique_id": MOCK_DEVICE_UDN},
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "discovery_error"
+
+
 async def test_options_flow(
     hass: HomeAssistant, config_entry_mock: MockConfigEntry
 ) -> None:
