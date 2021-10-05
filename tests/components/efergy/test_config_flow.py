@@ -112,7 +112,13 @@ async def test_flow_reauth(hass: HomeAssistant):
     entry = create_entry(hass)
     with _patch_efergy(), _patch_setup():
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={CONF_SOURCE: SOURCE_REAUTH}, data=CONF_DATA
+            DOMAIN,
+            context={
+                CONF_SOURCE: SOURCE_REAUTH,
+                "entry_id": entry.entry_id,
+                "unique_id": entry.unique_id,
+            },
+            data=CONF_DATA,
         )
 
         assert result["type"] == RESULT_TYPE_FORM

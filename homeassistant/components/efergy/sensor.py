@@ -14,6 +14,9 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    CONF_CURRENCY,
+    CONF_MONITORED_VARIABLES,
+    CONF_TYPE,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_MONETARY,
     DEVICE_CLASS_POWER,
@@ -98,9 +101,28 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
+TYPES_SCHEMA = vol.In(
+    ["current_values", "instant_readings", "amount", "budget", "cost"]
+)
+
+
+SENSORS_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_TYPE): TYPES_SCHEMA,
+        vol.Optional(CONF_CURRENCY, default=""): cv.string,
+        vol.Optional("period", default="year"): cv.string,
+    }
+)
+
 # Deprecated in Home Assistant 2021.11
-PLATFORM_SCHEMA = cv.deprecated(
-    vol.All(PLATFORM_SCHEMA.extend({vol.Required(CONF_APPTOKEN): cv.string}))
+PLATFORM_SCHEMA = vol.All(
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Required(CONF_APPTOKEN): cv.string,
+            vol.Optional("utc_offset", default="0"): cv.string,
+            vol.Required(CONF_MONITORED_VARIABLES): [SENSORS_SCHEMA],
+        }
+    )
 )
 
 
@@ -162,16 +184,14 @@ class EfergySensor(EfergyEntity, SensorEntity):
         server_unique_id: str,
         period: str = None,
         currency: str = None,
-        sid: str = None,
+        sid: str = "",
     ) -> None:
         """Initialize the sensor."""
         super().__init__(api, server_unique_id)
         self.entity_description = description
         if description.key == CONF_CURRENT_VALUES:
             self._attr_name = f"{description.name}_{sid}"
-            self._attr_unique_id = f"{server_unique_id}/{description.key}/{sid}"
-        else:
-            self._attr_unique_id = f"{server_unique_id}/{description.key}"
+        self._attr_unique_id = f"{server_unique_id}/{description.key}_{sid}"
         if "cost" in description.key:
             self._attr_native_unit_of_measurement = currency
         self.sid = sid

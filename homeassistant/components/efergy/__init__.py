@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from pyefergy import Efergy, exceptions
 
-from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -22,7 +22,7 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import ATTRIBUTION, DATA_KEY_API, DEFAULT_NAME, DOMAIN
 
-PLATFORMS = [DOMAIN_SENSOR]
+PLATFORMS = [SENSOR_DOMAIN]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -60,8 +60,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class EfergyEntity(Entity):
     """Representation of a Efergy entity."""
 
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
-
     def __init__(
         self,
         api: Efergy,
@@ -70,6 +68,7 @@ class EfergyEntity(Entity):
         """Initialize an Efergy entity."""
         self.api = api
         self._server_unique_id = server_unique_id
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
     def device_info(self) -> DeviceInfo:
