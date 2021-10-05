@@ -1,7 +1,6 @@
 """Config flow for Tomorrow.io integration."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -135,19 +134,8 @@ class TomorrowioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     session=async_get_clientsession(self.hass),
                 ).realtime([CC_ATTR_TEMPERATURE])
 
-                options: Mapping[str, Any] = {}
-                # Store the old config entry ID and retrieve options to recreate the entry
-                if self.source == config_entries.SOURCE_IMPORT:
-                    old_config_entry_id = self.context["old_config_entry_id"]
-                    old_config_entry = self.hass.config_entries.async_get_entry(
-                        old_config_entry_id
-                    )
-                    assert old_config_entry
-                    options = dict(old_config_entry.options)
-                    user_input["old_config_entry_id"] = old_config_entry_id
-
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input, options=options
+                    title=user_input[CONF_NAME], data=user_input
                 )
             except CantConnectException:
                 errors["base"] = "cannot_connect"
