@@ -44,8 +44,8 @@ DPCODE_COLOUR_DATA = "colour_data"
 DPCODE_COLOUR_DATA_V2 = "colour_data_v2"
 DPCODE_LIGHT = "light"
 
-#dimmer (tgq)
-#https://developer.tuya.com/en/docs/iot/f?id=Kaof8ruxkxems
+# dimmer (tgq)
+# https://developer.tuya.com/en/docs/iot/f?id=Kaof8ruxkxems
 DPCODE_SWITCH_DIMMER = "switch_led_1"
 DPCODE_BRIGHT_VALUE_DIMMER = "bright_value_1"
 
@@ -69,12 +69,10 @@ TUYA_SUPPORT_TYPE = {
     "xdd",  # Ceiling Light
     "xxj",  # Diffuser's light
     "fs",  # Fan
-    "tgq"  # Dimmer
+    "tgq",  # Dimmer
 }
 
-TUYA_DIMMERS = {
-    "tgq"
-}
+TUYA_DIMMERS = {"tgq"}
 
 DEFAULT_HSV = {
     "h": {"min": 1, "scale": 0, "unit": "", "max": 360, "step": 1},
@@ -87,6 +85,7 @@ DEFAULT_HSV_V2 = {
     "s": {"min": 1, "scale": 0, "unit": "", "max": 1000, "step": 1},
     "v": {"min": 1, "scale": 0, "unit": "", "max": 1000, "step": 1},
 }
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -120,6 +119,7 @@ async def async_setup_entry(
             device_ids.append(device_id)
     async_discover_device(device_ids)
 
+
 def _setup_entities(
     hass, entry: ConfigEntry, device_ids: list[str]
 ) -> list[TuyaHaLight]:
@@ -138,6 +138,7 @@ def _setup_entities(
         )
 
     return entities
+
 
 class TuyaHaLight(TuyaHaEntity, LightEntity):
     """Tuya light device."""
@@ -163,9 +164,9 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
     def is_on(self) -> bool:
         """Return true if light is on."""
         if self.dimmer:
-            switch_value  = DPCODE_SWITCH_DIMMER
+            switch_value = DPCODE_SWITCH_DIMMER
         else:
-            switch_value  = DPCODE_SWITCH
+            switch_value = DPCODE_SWITCH
 
         return self.tuya_device.status.get(switch_value, False)
 
