@@ -42,7 +42,7 @@ REQUIRES = [
     "certifi>=2021.5.30",
     "ciso8601==2.2.0",
     "httpx==0.19.0",
-    "jinja2==3.0.1",
+    "jinja2==3.0.2",
     "PyJWT==2.1.0",
     # PyJWT has loose dependency. We want the latest one.
     "cryptography==3.4.8",
