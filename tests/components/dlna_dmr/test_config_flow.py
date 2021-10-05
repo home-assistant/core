@@ -59,6 +59,7 @@ MOCK_DISCOVERY = {
     ssdp.ATTR_UPNP_UDN: MOCK_ROOT_DEVICE_UDN,
     ssdp.ATTR_UPNP_DEVICE_TYPE: MOCK_ROOT_DEVICE_TYPE,
     ssdp.ATTR_UPNP_FRIENDLY_NAME: MOCK_DEVICE_NAME,
+    ssdp.ATTR_HA_MATCHING_DOMAINS: {DLNA_DOMAIN},
 }
 
 
@@ -550,6 +551,39 @@ async def test_ssdp_flow_upnp_udn(
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert config_entry_mock.data[CONF_URL] == NEW_DEVICE_LOCATION
+
+
+async def test_ssdp_ignore_device(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> None:
+    """Test SSDP discovery ignores certain devices."""
+    discovery = MOCK_DISCOVERY.copy()
+    discovery[ssdp.ATTR_HA_MATCHING_DOMAINS] = {DLNA_DOMAIN, "other_domain"}
+    result = await hass.config_entries.flow.async_init(
+        DLNA_DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=discovery,
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "alternative_integration"
+
+    discovery = MOCK_DISCOVERY.copy()
+    discovery[ssdp.ATTR_UPNP_MANUFACTURER] = "XBMC Foundation"
+    result = await hass.config_entries.flow.async_init(
+        DLNA_DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=discovery,
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "alternative_integration"
+
+    discovery = MOCK_DISCOVERY.copy()
+    discovery[ssdp.ATTR_UPNP_DEVICE_TYPE] = "urn:schemas-upnp-org:device:ZonePlayer:1"
+    result = await hass.config_entries.flow.async_init(
+        DLNA_DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=discovery,
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "alternative_integration"
 
 
 async def test_unignore_flow(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> None:
