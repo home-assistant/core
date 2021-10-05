@@ -2,6 +2,7 @@
 
 DOMAIN = "tuya"
 
+CONF_AUTH_TYPE = "auth_type"
 CONF_PROJECT_TYPE = "tuya_project_type"
 CONF_ENDPOINT = "endpoint"
 CONF_ACCESS_ID = "access_id"
