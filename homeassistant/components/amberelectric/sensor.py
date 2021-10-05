@@ -75,13 +75,13 @@ class AmberPriceSensor(AmberSensor):
     """Amber Price Sensor."""
 
     @property
-    def native_value(self) -> str | None:
+    def native_value(self) -> float | None:
         """Return the current price in $/kWh."""
         interval = self.coordinator.data[self.entity_description.key][self.channel_type]
 
         if interval.channel_type == ChannelType.FEED_IN:
-            return str(format_cents_to_dollars(interval.per_kwh) * -1)
-        return str(format_cents_to_dollars(interval.per_kwh))
+            return format_cents_to_dollars(interval.per_kwh) * -1
+        return format_cents_to_dollars(interval.per_kwh)
 
     @property
     def device_state_attributes(self) -> Mapping[str, Any] | None:
@@ -117,7 +117,7 @@ class AmberForecastSensor(AmberSensor):
     """Amber Forecast Sensor."""
 
     @property
-    def native_value(self) -> str | None:
+    def native_value(self) -> float | None:
         """Return the first forecast price in $/kWh."""
         intervals = self.coordinator.data[self.entity_description.key].get(
             self.channel_type
@@ -127,8 +127,8 @@ class AmberForecastSensor(AmberSensor):
         interval = intervals[0]
 
         if interval.channel_type == ChannelType.FEED_IN:
-            return str(format_cents_to_dollars(interval.per_kwh) * -1)
-        return str(format_cents_to_dollars(interval.per_kwh))
+            return format_cents_to_dollars(interval.per_kwh) * -1
+        return format_cents_to_dollars(interval.per_kwh)
 
     @property
     def device_state_attributes(self) -> Mapping[str, Any] | None:
