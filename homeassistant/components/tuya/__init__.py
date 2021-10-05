@@ -153,6 +153,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.data[DOMAIN][entry.entry_id][TUYA_MQTT_LISTENER]
         )
 
+        hass.data[DOMAIN].pop(entry.entry_id)
+
         if not hass.data[DOMAIN]:
             hass.data.pop(DOMAIN)
 
