@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import timedelta
 from math import ceil
-from typing import Any
+from typing import Any, Dict, cast
 
 from pyairvisual import CloudAPI, NodeSamba
 from pyairvisual.errors import (
@@ -53,8 +53,6 @@ from .const import (
 )
 
 PLATFORMS = ["sensor"]
-
-DATA_LISTENER = "listener"
 
 DEFAULT_ATTRIBUTION = "Data provided by AirVisual"
 DEFAULT_NODE_PRO_UPDATE_INTERVAL = timedelta(minutes=1)
@@ -194,7 +192,7 @@ def _standardize_node_pro_config_entry(
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up AirVisual as config entry."""
-    hass.data.setdefault(DOMAIN, {DATA_COORDINATOR: {}, DATA_LISTENER: {}})
+    hass.data.setdefault(DOMAIN, {DATA_COORDINATOR: {}})
 
     if CONF_API_KEY in config_entry.data:
         _standardize_geography_config_entry(hass, config_entry)
@@ -217,7 +215,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 )
 
             try:
-                return await api_coro
+                data = await api_coro
+                return cast(Dict[str, Any], data)
             except (InvalidKeyError, KeyExpiredError) as ex:
                 raise ConfigEntryAuthFailed from ex
             except AirVisualError as err:
@@ -236,9 +235,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         )
 
         # Only geography-based entries have options:
-        hass.data[DOMAIN][DATA_LISTENER][
-            config_entry.entry_id
-        ] = config_entry.add_update_listener(async_reload_entry)
+        config_entry.async_on_unload(
+            config_entry.add_update_listener(async_reload_entry)
+        )
     else:
         # Remove outdated air_quality entities from the entity registry if they exist:
         ent_reg = entity_registry.async_get(hass)
@@ -261,7 +260,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 async with NodeSamba(
                     config_entry.data[CONF_IP_ADDRESS], config_entry.data[CONF_PASSWORD]
                 ) as node:
-                    return await node.async_get_latest_measurements()
+                    data = await node.async_get_latest_measurements()
+                    return cast(Dict[str, Any], data)
             except NodeProError as err:
                 raise UpdateFailed(f"Error while retrieving data: {err}") from err
 
@@ -338,8 +338,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
     if unload_ok:
         hass.data[DOMAIN][DATA_COORDINATOR].pop(config_entry.entry_id)
-        remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(config_entry.entry_id)
-        remove_listener()
 
         if CONF_API_KEY in config_entry.data:
             # Re-calculate the update interval period for any remaining consumers of
