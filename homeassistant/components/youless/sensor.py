@@ -99,15 +99,15 @@ class YoulessBaseSensor(CoordinatorEntity, SensorEntity):
 class GasSensor(YoulessBaseSensor):
     """The Youless gas sensor."""
 
-    _attr_native_unit_of_measurement = VOLUME_CUBIC_METERS
     _attr_device_class = DEVICE_CLASS_GAS
+    _attr_icon = "mdi:fire"
+    _attr_native_unit_of_measurement = VOLUME_CUBIC_METERS
     _attr_state_class = STATE_CLASS_TOTAL_INCREASING
 
     def __init__(self, coordinator: DataUpdateCoordinator, device: str) -> None:
         """Instantiate a gas sensor."""
         super().__init__(coordinator, device, "gas", "Gas meter", "gas")
         self._attr_name = "Gas usage"
-        self._attr_icon = "mdi:fire"
 
     @property
     def get_sensor(self) -> YoulessSensor | None:
@@ -118,8 +118,8 @@ class GasSensor(YoulessBaseSensor):
 class CurrentPowerSensor(YoulessBaseSensor):
     """The current power usage sensor."""
 
-    _attr_native_unit_of_measurement = POWER_WATT
     _attr_device_class = DEVICE_CLASS_POWER
+    _attr_native_unit_of_measurement = POWER_WATT
     _attr_state_class = STATE_CLASS_MEASUREMENT
 
     def __init__(self, coordinator: DataUpdateCoordinator, device: str) -> None:

@@ -162,12 +162,13 @@ class FinTsAccount(SensorEntity):
     also be negative.
     """
 
+    _attr_icon = ICON
+
     def __init__(self, client: FinTsClient, account, name: str) -> None:
         """Initialize a FinTs balance account."""
         self._client = client
         self._account = account
         self._attr_name = name
-        self._attr_icon = ICON
         self._attr_extra_state_attributes = {
             ATTR_ACCOUNT: self._account.iban,
             ATTR_ACCOUNT_TYPE: "balance",
@@ -191,13 +192,14 @@ class FinTsHoldingsAccount(SensorEntity):
     instruments, e.g. stocks.
     """
 
+    _attr_icon = ICON
+
     def __init__(self, client: FinTsClient, account, name: str) -> None:
         """Initialize a FinTs holdings account."""
         self._client = client
         self._attr_name = name
         self._account = account
         self._holdings: list[Any] = []
-        self._attr_icon = ICON
         self._attr_native_unit_of_measurement = "EUR"
 
     def update(self) -> None:

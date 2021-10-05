@@ -62,9 +62,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class PlexSensor(SensorEntity):
     """Representation of a Plex now playing sensor."""
 
+    _attr_icon = "mdi:plex"
+
     def __init__(self, hass, plex_server):
         """Initialize the sensor."""
-        self._attr_icon = "mdi:plex"
         self._attr_name = NAME_FORMAT.format(plex_server.friendly_name)
         self._attr_should_poll = False
         self._attr_unique_id = f"sensor-{plex_server.machine_identifier}"

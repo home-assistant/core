@@ -132,6 +132,8 @@ def _average_pixels(data):
 class PhilipsTVLightEntity(CoordinatorEntity, LightEntity):
     """Representation of a Philips TV exposing the JointSpace API."""
 
+    _attr_icon = "mdi:television-ambient-light"
+
     def __init__(
         self,
         coordinator: PhilipsTVDataUpdateCoordinator,
@@ -153,7 +155,6 @@ class PhilipsTVLightEntity(CoordinatorEntity, LightEntity):
         )
         self._attr_name = self._system["name"]
         self._attr_unique_id = unique_id
-        self._attr_icon = "mdi:television-ambient-light"
         self._attr_device_info = {
             "name": self._system["name"],
             "identifiers": {

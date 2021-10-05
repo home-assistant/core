@@ -162,19 +162,19 @@ async def async_setup_entry(
 class WazeTravelTime(SensorEntity):
     """Representation of a Waze travel time sensor."""
 
-    _attr_native_unit_of_measurement = TIME_MINUTES
     _attr_device_info = {
         "name": "Waze",
         "identifiers": {(DOMAIN, DOMAIN)},
         "entry_type": "service",
     }
+    _attr_icon = "mdi:car"
+    _attr_native_unit_of_measurement = TIME_MINUTES
 
     def __init__(self, unique_id, name, origin, destination, waze_data):
         """Initialize the Waze travel time sensor."""
         self._attr_unique_id = unique_id
         self._waze_data = waze_data
         self._attr_name = name
-        self._attr_icon = "mdi:car"
         self._state = None
         self._origin_entity_id = None
         self._destination_entity_id = None

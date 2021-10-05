@@ -277,6 +277,8 @@ class TibberSensor(SensorEntity):
 class TibberSensorElPrice(TibberSensor):
     """Representation of a Tibber sensor for el price."""
 
+    _attr_icon = ICON
+
     def __init__(self, tibber_home):
         """Initialize the sensor."""
         super().__init__(tibber_home=tibber_home)
@@ -296,7 +298,6 @@ class TibberSensorElPrice(TibberSensor):
             "peak": None,
             "off_peak_2": None,
         }
-        self._attr_icon = ICON
         self._attr_name = f"Electricity price {self._home_name}"
         self._attr_unique_id = f"{self._tibber_home.home_id}"
         self._model = "Price Sensor"

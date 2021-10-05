@@ -954,6 +954,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class GrowattInverter(SensorEntity):
     """Representation of a Growatt Sensor."""
 
+    _attr_icon = "mdi:solar-power"
     entity_description: GrowattSensorEntityDescription
 
     def __init__(
@@ -965,7 +966,6 @@ class GrowattInverter(SensorEntity):
 
         self._attr_name = f"{name} {description.name}"
         self._attr_unique_id = unique_id
-        self._attr_icon = "mdi:solar-power"
 
     @property
     def native_value(self):
