@@ -115,14 +115,12 @@ SENSORS_SCHEMA = vol.Schema(
 )
 
 # Deprecated in Home Assistant 2021.11
-PLATFORM_SCHEMA = vol.All(
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Required(CONF_APPTOKEN): cv.string,
-            vol.Optional("utc_offset", default="0"): cv.string,
-            vol.Required(CONF_MONITORED_VARIABLES): [SENSORS_SCHEMA],
-        }
-    )
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_APPTOKEN): cv.string,
+        vol.Optional("utc_offset", default="0"): cv.string,
+        vol.Required(CONF_MONITORED_VARIABLES): [SENSORS_SCHEMA],
+    }
 )
 
 
