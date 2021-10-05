@@ -192,10 +192,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if isinstance(discovery_info["host"], list)
                 else [discovery_info["host"]]
             ):
-                if not host.startswith("169."):
-                    self.info = info = await self._get_info(host)
-                    self.host = host
+                if not host.startswith("169."):  # skip link local address
                     break
+            self.info = info = await self._get_info(host)
+            self.host = host
         except SHCConnectionError:
             return self.async_abort(reason="cannot_connect")
 
@@ -203,7 +203,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         node_name = local_name[: -len(".local")]
 
         await self.async_set_unique_id(info["unique_id"])
-        self._abort_if_unique_id_configured({CONF_HOST: self.host})
+        self._abort_if_unique_id_configured({CONF_HOST: host})
         self.context["title_placeholders"] = {"name": node_name}
         return await self.async_step_confirm_discovery()
 
