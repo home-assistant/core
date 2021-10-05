@@ -1,23 +1,19 @@
 """Support for the Environment Canada weather service."""
 from datetime import datetime, timedelta
 import logging
-import re
 
-from env_canada import ECData
-import voluptuous as vol
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LOCATION,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
     DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
 )
-import homeassistant.helpers.config_validation as cv
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
 
 SCAN_INTERVAL = timedelta(minutes=10)
 
@@ -26,43 +22,15 @@ ATTR_STATION = "station"
 ATTR_TIME = "alert time"
 
 CONF_ATTRIBUTION = "Data provided by Environment Canada"
-CONF_STATION = "station"
-CONF_LANGUAGE = "language"
 
 
-def validate_station(station):
-    """Check that the station ID is well-formed."""
-    if station is None:
-        return
-    if not re.fullmatch(r"[A-Z]{2}/s0000\d{3}", station):
-        raise vol.error.Invalid('Station ID must be of the form "XX/s0000###"')
-    return station
-
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_LANGUAGE, default="english"): vol.In(["english", "french"]),
-        vol.Optional(CONF_STATION): validate_station,
-        vol.Inclusive(CONF_LATITUDE, "latlon"): cv.latitude,
-        vol.Inclusive(CONF_LONGITUDE, "latlon"): cv.longitude,
-    }
-)
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Environment Canada sensor."""
-
-    if config.get(CONF_STATION):
-        ec_data = ECData(
-            station_id=config[CONF_STATION], language=config.get(CONF_LANGUAGE)
-        )
-    else:
-        lat = config.get(CONF_LATITUDE, hass.config.latitude)
-        lon = config.get(CONF_LONGITUDE, hass.config.longitude)
-        ec_data = ECData(coordinates=(lat, lon), language=config.get(CONF_LANGUAGE))
-
-    sensor_list = list(ec_data.conditions) + list(ec_data.alerts)
-    add_entities([ECSensor(sensor_type, ec_data) for sensor_type in sensor_list], True)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Add a weather entity from a config_entry."""
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]["weather_coordinator"]
+    sensor_list = list(coordinator.conditions) + list(coordinator.alerts)
+    async_add_entities(
+        [ECSensor(sensor_type, coordinator) for sensor_type in sensor_list], True
+    )
 
 
 class ECSensor(SensorEntity):
@@ -110,9 +78,9 @@ class ECSensor(SensorEntity):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return self._device_class
 
-    def update(self):
+    async def async_update(self):
         """Update current conditions."""
-        self.ec_data.update()
+        await self.hass.async_add_executor_job(self.ec_data.update)
         self.ec_data.conditions.update(self.ec_data.alerts)
 
         conditions = self.ec_data.conditions

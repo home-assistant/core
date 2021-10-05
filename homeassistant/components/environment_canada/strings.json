@@ -1,0 +1,31 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Environment Canada: weather location and language",
+        "description": "Either a station ID or latitude/longitude must be specified. The default latitude/longitude used are the values configured in your Home Assistant installation. The closest weather station to the coordinates will be used if specifying coordinates. If a station code is used it must follow the format: PP/code, where PP is the two-letter province and code is the station ID. The list of station IDs can be found here: https://dd.weather.gc.ca/citypage_weather/docs/site_list_towns_en.csv. Weather information can be retrieved in either English or French.",
+        "data": {
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "station": "Weather station ID",
+          "language": "Weather information language"
+        }
+      },
+      "name": {
+        "title": "Enironment Canada: name prefix",
+        "description": "All weather entities will use this value as a prefix for their name. Defaults to the weather station's name.",
+        "data": {
+          "name": "Name prefix"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "Station or station for coordinates specified is already configured",
+      "bad_station_id": "Station ID is invalid, missing, or not found in the station ID database",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "config_error": "Configuration invalid; check station ID or coordinates",
+      "error_response": "Response from Environment Canada in error",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  }
+}

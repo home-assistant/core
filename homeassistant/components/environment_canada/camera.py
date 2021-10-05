@@ -3,18 +3,11 @@ from __future__ import annotations
 
 import datetime
 
-from env_canada import ECRadar
-import voluptuous as vol
-
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.camera import Camera
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.util import Throttle
+
+from .const import DOMAIN
 
 ATTR_UPDATED = "updated"
 
@@ -25,34 +18,14 @@ CONF_PRECIP_TYPE = "precip_type"
 
 MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=10)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_LOOP, default=True): cv.boolean,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_STATION): cv.matches_regex(r"^C[A-Z]{4}$|^[A-Z]{3}$"),
-        vol.Inclusive(CONF_LATITUDE, "latlon"): cv.latitude,
-        vol.Inclusive(CONF_LONGITUDE, "latlon"): cv.longitude,
-        vol.Optional(CONF_PRECIP_TYPE): vol.In(["RAIN", "SNOW"]),
-    }
-)
 
-
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Environment Canada camera."""
-
-    if config.get(CONF_STATION):
-        radar_object = ECRadar(
-            station_id=config[CONF_STATION], precip_type=config.get(CONF_PRECIP_TYPE)
-        )
-    else:
-        lat = config.get(CONF_LATITUDE, hass.config.latitude)
-        lon = config.get(CONF_LONGITUDE, hass.config.longitude)
-        radar_object = ECRadar(
-            coordinates=(lat, lon), precip_type=config.get(CONF_PRECIP_TYPE)
-        )
-
-    add_devices(
-        [ECCamera(radar_object, config.get(CONF_NAME), config[CONF_LOOP])], True
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Add a weather entity from a config_entry."""
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]["radar_coordinator"]
+    async_add_entities(
+        [
+            ECCamera(coordinator, config_entry.data[CONF_NAME], True),
+        ]
     )
 
 
@@ -70,11 +43,11 @@ class ECCamera(Camera):
         self.image = None
         self.timestamp = None
 
-    def camera_image(
+    async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of camera image."""
-        self.update()
+        await self.async_update()
         return self.image
 
     @property
@@ -90,10 +63,7 @@ class ECCamera(Camera):
         return {ATTR_ATTRIBUTION: CONF_ATTRIBUTION, ATTR_UPDATED: self.timestamp}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    async def async_update(self):
         """Update radar image."""
-        if self.is_loop:
-            self.image = self.radar_object.get_loop()
-        else:
-            self.image = self.radar_object.get_latest_frame()
+        self.image = await self.hass.async_add_executor_job(self.radar_object.get_loop)
         self.timestamp = self.radar_object.timestamp

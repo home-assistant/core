@@ -1,9 +1,5 @@
 """Platform for retrieving meteorological data from Environment Canada."""
 import datetime
-import re
-
-from env_canada import ECData
-import voluptuous as vol
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
@@ -23,36 +19,15 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
-    PLATFORM_SCHEMA,
     WeatherEntity,
 )
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_NAME, TEMP_CELSIUS
 from homeassistant.util import dt
+
+from .const import DOMAIN
 
 CONF_FORECAST = "forecast"
 CONF_ATTRIBUTION = "Data provided by Environment Canada"
-CONF_STATION = "station"
-
-
-def validate_station(station):
-    """Check that the station ID is well-formed."""
-    if station is None:
-        return
-    if not re.fullmatch(r"[A-Z]{2}/s0000\d{3}", station):
-        raise vol.error.Invalid('Station ID must be of the form "XX/s0000###"')
-    return station
-
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_STATION): validate_station,
-        vol.Inclusive(CONF_LATITUDE, "latlon"): cv.latitude,
-        vol.Inclusive(CONF_LONGITUDE, "latlon"): cv.longitude,
-        vol.Optional(CONF_FORECAST, default="daily"): vol.In(["daily", "hourly"]),
-    }
-)
 
 # Icon codes from http://dd.weatheroffice.ec.gc.ca/citypage_weather/
 # docs/current_conditions_icon_code_descriptions_e.csv
@@ -72,26 +47,25 @@ ICON_CONDITION_MAP = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Environment Canada weather."""
-    if config.get(CONF_STATION):
-        ec_data = ECData(station_id=config[CONF_STATION])
-    else:
-        lat = config.get(CONF_LATITUDE, hass.config.latitude)
-        lon = config.get(CONF_LONGITUDE, hass.config.longitude)
-        ec_data = ECData(coordinates=(lat, lon))
-
-    add_devices([ECWeather(ec_data, config)])
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Add a weather entity from a config_entry."""
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]["weather_coordinator"]
+    async_add_entities(
+        [
+            ECWeather(coordinator, config_entry.data, False),
+            ECWeather(coordinator, config_entry.data, True),
+        ]
+    )
 
 
 class ECWeather(WeatherEntity):
     """Representation of a weather condition."""
 
-    def __init__(self, ec_data, config):
+    def __init__(self, ec_data, config, hourly):
         """Initialize Environment Canada weather."""
         self.ec_data = ec_data
         self.platform_name = config.get(CONF_NAME)
-        self.forecast_type = config[CONF_FORECAST]
+        self.forecast_type = "hourly" if hourly else "daily"
 
     @property
     def attribution(self):
@@ -173,9 +147,9 @@ class ECWeather(WeatherEntity):
         """Return the forecast array."""
         return get_forecast(self.ec_data, self.forecast_type)
 
-    def update(self):
+    async def async_update(self):
         """Get the latest data from Environment Canada."""
-        self.ec_data.update()
+        await self.hass.async_add_executor_job(self.ec_data.update)
 
 
 def get_forecast(ec_data, forecast_type):
