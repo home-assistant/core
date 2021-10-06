@@ -322,24 +322,38 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
+        raw_state = self._bulb.raw_state
+
         if self.color_mode == COLOR_MODE_RGBWW:
-            rgbww = self._bulb.getRgbww()
-            hsv = color_util.color_RGB_to_hsv(*rgbww[0:3])
+            hsv = color_util.color_RGB_to_hsv(
+                raw_state.red, raw_state.green, raw_state.blue
+            )
             color_brightness = round(hsv[2] * 2.55, 0)
-            white_brightness = round((rgbww[3] + rgbww[4]) / 2, 0)
-
+            white_brightness = round(
+                (raw_state.warm_white + raw_state.cool_white) / 2, 0
+            )
             brightness = round((color_brightness + white_brightness) / 2, 0)
-
         elif self.color_mode == COLOR_MODE_RGBW:
-            rgbw = self._bulb.getRgbw()
-            hsv = color_util.color_RGB_to_hsv(*rgbw[0:3])
+            hsv = color_util.color_RGB_to_hsv(
+                raw_state.red, raw_state.green, raw_state.blue
+            )
             color_brightness = round(hsv[2] * 2.55, 0)
-            white_brightness = rgbw[3]
-
+            white_brightness = raw_state.warm_white
             brightness = round((color_brightness + white_brightness) / 2, 0)
-
+        elif self.color_mode == COLOR_MODE_RGB:
+            hsv = color_util.color_RGB_to_hsv(
+                raw_state.red, raw_state.green, raw_state.blue
+            )
+            brightness = round(hsv[2] * 2.55, 0)
+        elif self.color_mode == COLOR_MODE_COLOR_TEMP:
+            _, brightness = self._bulb.getWhiteTemperature()
+        elif self.color_mode == COLOR_MODE_WHITE:
+            white_brightness = round(
+                (raw_state.warm_white + raw_state.cool_white) / 2, 0
+            )
+            brightness = round(white_brightness, 0)
         else:
-            brightness = self._bulb.brightness
+            brightness = raw_state.warm_white
 
         return cast(int, brightness)
 
