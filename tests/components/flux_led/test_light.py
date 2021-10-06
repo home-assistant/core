@@ -120,6 +120,7 @@ async def test_light_device_registry(
     bulb = _mocked_bulb()
     bulb.protocol = protocol
     bulb.raw_state = bulb.raw_state._replace(model_num=model, version_number=sw_version)
+    bulb.model_num = model
 
     with _patch_discovery(no_device=True), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
