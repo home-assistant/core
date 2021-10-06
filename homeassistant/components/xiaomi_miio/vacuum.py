@@ -26,6 +26,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     StateVacuumEntity,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.util.dt import as_utc
 
@@ -206,6 +207,11 @@ class MiroboVacuum(XiaomiCoordinatedMiioEntity, StateVacuumEntity):
         """Initialize the Xiaomi vacuum cleaner robot handler."""
         super().__init__(name, device, entry, unique_id, coordinator)
         self._state: str | None = None
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity is about to be added to hass."""
+        await super().async_added_to_hass()
+        self._handle_coordinator_update()
 
     @property
     def state(self):
@@ -408,11 +414,14 @@ class MiroboVacuum(XiaomiCoordinatedMiioEntity, StateVacuumEntity):
         _LOGGER.debug("Zone with repeats: %s", zone)
         try:
             await self.hass.async_add_executor_job(self._device.zoned_clean, zone)
+            await self.coordinator.async_refresh()
         except (OSError, DeviceException) as exc:
             _LOGGER.error("Unable to send zoned_clean command to the vacuum: %s", exc)
 
+    @callback
     def _handle_coordinator_update(self) -> None:
-        if int(self.coordinator.data.status.state_code) not in STATE_CODE_TO_STATE:
+        state_code = int(self.coordinator.data.status.state_code)
+        if state_code not in STATE_CODE_TO_STATE:
             _LOGGER.error(
                 "STATE not supported: %s, state_code: %s",
                 self.coordinator.data.status.state,
@@ -420,8 +429,6 @@ class MiroboVacuum(XiaomiCoordinatedMiioEntity, StateVacuumEntity):
             )
             self._state = None
         else:
-            self._state = STATE_CODE_TO_STATE[
-                int(self.coordinator.data.status.state_code)
-            ]
+            self._state = STATE_CODE_TO_STATE[state_code]
 
         super()._handle_coordinator_update()
