@@ -14,12 +14,11 @@ async def setup_integration(hass):
 
 async def test_create(hass):
     """Test creating notification without title or notification id."""
-    notifications = hass.data[pn.DOMAIN]["notifications"]
+    notifications = hass.data[pn.DOMAIN]
     assert len(hass.states.async_entity_ids(pn.DOMAIN)) == 0
     assert len(notifications) == 0
 
     pn.async_create(hass, "Hello World {{ 1 + 1 }}", title="{{ 1 + 1 }} beers")
-    await hass.async_block_till_done()
 
     entity_ids = hass.states.async_entity_ids(pn.DOMAIN)
     assert len(entity_ids) == 1
@@ -39,12 +38,11 @@ async def test_create(hass):
 
 async def test_create_notification_id(hass):
     """Ensure overwrites existing notification with same id."""
-    notifications = hass.data[pn.DOMAIN]["notifications"]
+    notifications = hass.data[pn.DOMAIN]
     assert len(hass.states.async_entity_ids(pn.DOMAIN)) == 0
     assert len(notifications) == 0
 
     pn.async_create(hass, "test", notification_id="Beer 2")
-    await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids()) == 1
     assert len(notifications) == 1
@@ -58,7 +56,6 @@ async def test_create_notification_id(hass):
     assert notification["title"] is None
 
     pn.async_create(hass, "test 2", notification_id="Beer 2")
-    await hass.async_block_till_done()
 
     # We should have overwritten old one
     assert len(hass.states.async_entity_ids()) == 1
@@ -71,12 +68,11 @@ async def test_create_notification_id(hass):
 
 async def test_create_template_error(hass):
     """Ensure we output templates if contain error."""
-    notifications = hass.data[pn.DOMAIN]["notifications"]
+    notifications = hass.data[pn.DOMAIN]
     assert len(hass.states.async_entity_ids(pn.DOMAIN)) == 0
     assert len(notifications) == 0
 
     pn.async_create(hass, "{{ message + 1 }}", "{{ title + 1 }}")
-    await hass.async_block_till_done()
 
     entity_ids = hass.states.async_entity_ids(pn.DOMAIN)
     assert len(entity_ids) == 1
@@ -93,17 +89,15 @@ async def test_create_template_error(hass):
 
 async def test_dismiss_notification(hass):
     """Ensure removal of specific notification."""
-    notifications = hass.data[pn.DOMAIN]["notifications"]
+    notifications = hass.data[pn.DOMAIN]
     assert len(hass.states.async_entity_ids(pn.DOMAIN)) == 0
     assert len(notifications) == 0
 
     pn.async_create(hass, "test", notification_id="Beer 2")
-    await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(pn.DOMAIN)) == 1
     assert len(notifications) == 1
     pn.async_dismiss(hass, notification_id="Beer 2")
-    await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(pn.DOMAIN)) == 0
     assert len(notifications) == 0
@@ -111,11 +105,15 @@ async def test_dismiss_notification(hass):
 
 async def test_mark_read(hass):
     """Ensure notification is marked as Read."""
-    notifications = hass.data[pn.DOMAIN]["notifications"]
+    notifications = hass.data[pn.DOMAIN]
     assert len(notifications) == 0
 
-    pn.async_create(hass, "test", notification_id="Beer 2")
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        pn.DOMAIN,
+        "create",
+        {"notification_id": "Beer 2", "message": "test"},
+        blocking=True,
+    )
 
     entity_id = "persistent_notification.beer_2"
     assert len(notifications) == 1
@@ -123,13 +121,20 @@ async def test_mark_read(hass):
     assert notification["status"] == pn.STATUS_UNREAD
 
     await hass.services.async_call(
-        pn.DOMAIN, pn.SERVICE_MARK_READ, {"notification_id": "Beer 2"}
+        pn.DOMAIN, "mark_read", {"notification_id": "Beer 2"}, blocking=True
     )
-    await hass.async_block_till_done()
 
     assert len(notifications) == 1
     notification = notifications.get(entity_id)
     assert notification["status"] == pn.STATUS_READ
+
+    await hass.services.async_call(
+        pn.DOMAIN,
+        "dismiss",
+        {"notification_id": "Beer 2"},
+        blocking=True,
+    )
+    assert len(notifications) == 0
 
 
 async def test_ws_get_notifications(hass, hass_ws_client):
@@ -166,7 +171,7 @@ async def test_ws_get_notifications(hass, hass_ws_client):
 
     # Mark Read
     await hass.services.async_call(
-        pn.DOMAIN, pn.SERVICE_MARK_READ, {"notification_id": "Beer 2"}
+        pn.DOMAIN, "mark_read", {"notification_id": "Beer 2"}
     )
     await client.send_json({"id": 7, "type": "persistent_notification/get"})
     msg = await client.receive_json()
