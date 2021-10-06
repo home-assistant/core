@@ -1,7 +1,6 @@
 """Support for Xiaomi Aqara sensors."""
 from __future__ import annotations
 
-from functools import cached_property
 import logging
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
@@ -154,12 +153,8 @@ class XiaomiSensor(XiaomiDevice, SensorEntity):
     def __init__(self, device, name, data_key, xiaomi_hub, config_entry):
         """Initialize the XiaomiSensor."""
         self._data_key = data_key
+        self.entity_description = SENSOR_TYPES[data_key]
         super().__init__(device, name, xiaomi_hub, config_entry)
-
-    @cached_property
-    def entity_description(self) -> SensorEntityDescription:  # type: ignore[override]
-        """Return entity_description for data_key."""
-        return SENSOR_TYPES[self._data_key]
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 import voluptuous as vol
 
@@ -46,6 +47,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_ADDRESS,
@@ -378,10 +380,10 @@ SERVICE_STOP_START_SCHEMA = vol.Schema(
 
 def get_hub(hass: HomeAssistant, name: str) -> ModbusHub:
     """Return modbus hub with name."""
-    return hass.data[DOMAIN][name]
+    return cast(ModbusHub, hass.data[DOMAIN][name])
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Modbus component."""
     return await async_modbus_setup(
         hass,

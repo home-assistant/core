@@ -309,10 +309,7 @@ class DenonDevice(MediaPlayerEntity):
     @property
     def media_content_type(self):
         """Content type of current playing media."""
-        if (
-            self._receiver.state == STATE_PLAYING
-            or self._receiver.state == STATE_PAUSED
-        ):
+        if self._receiver.state in (STATE_PLAYING, STATE_PAUSED):
             return MEDIA_TYPE_MUSIC
         return MEDIA_TYPE_CHANNEL
 

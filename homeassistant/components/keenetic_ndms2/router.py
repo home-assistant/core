@@ -1,9 +1,9 @@
 """The Keenetic Client class."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import Callable
 
 from ndms2_client import Client, ConnectionException, Device, TelnetConnection
 from ndms2_client.client import RouterInfo

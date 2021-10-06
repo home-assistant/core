@@ -172,6 +172,10 @@ class CloudClient(Interface):
         if identifier.startswith("remote_"):
             async_dispatcher_send(self._hass, DISPATCHER_REMOTE_UPDATE, data)
 
+    async def async_cloud_connect_update(self, connect: bool) -> None:
+        """Process cloud remote message to client."""
+        await self._prefs.async_update(remote_enabled=connect)
+
     async def async_alexa_message(self, payload: dict[Any, Any]) -> dict[Any, Any]:
         """Process cloud alexa message to client."""
         cloud_user = await self._prefs.get_cloud_user()

@@ -40,7 +40,7 @@ DEFAULT_CONFIG = {
 }
 
 
-async def test_run_camera_setup(hass, aiohttp_client, mqtt_mock):
+async def test_run_camera_setup(hass, hass_client_no_auth, mqtt_mock):
     """Test that it fetches the given payload."""
     topic = "test/camera"
     await async_setup_component(
@@ -54,7 +54,7 @@ async def test_run_camera_setup(hass, aiohttp_client, mqtt_mock):
 
     async_fire_mqtt_message(hass, topic, "beer")
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
     resp = await client.get(url)
     assert resp.status == 200
     body = await resp.text()

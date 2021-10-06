@@ -40,23 +40,24 @@ async def async_setup_events(gateway) -> None:
     @callback
     def async_add_sensor(sensors=gateway.api.sensors.values()):
         """Create DeconzEvent."""
+        new_events = []
+        known_events = {event.unique_id for event in gateway.events}
+
         for sensor in sensors:
 
             if not gateway.option_allow_clip_sensor and sensor.type.startswith("CLIP"):
                 continue
 
-            if (
-                sensor.type not in Switch.ZHATYPE + AncillaryControl.ZHATYPE
-                or sensor.uniqueid in {event.unique_id for event in gateway.events}
-            ):
+            if sensor.unique_id in known_events:
                 continue
 
-            if sensor.type in Switch.ZHATYPE:
-                new_event = DeconzEvent(sensor, gateway)
+            if isinstance(sensor, Switch):
+                new_events.append(DeconzEvent(sensor, gateway))
 
-            elif sensor.type in AncillaryControl.ZHATYPE:
-                new_event = DeconzAlarmEvent(sensor, gateway)
+            elif isinstance(sensor, AncillaryControl):
+                new_events.append(DeconzAlarmEvent(sensor, gateway))
 
+        for new_event in new_events:
             gateway.hass.async_create_task(new_event.async_update_device_registry())
             gateway.events.append(new_event)
 

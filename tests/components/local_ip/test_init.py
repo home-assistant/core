@@ -6,7 +6,7 @@ from homeassistant.components.zeroconf import MDNS_TARGET_IP
 from tests.common import MockConfigEntry
 
 
-async def test_basic_setup(hass):
+async def test_basic_setup(hass, mock_get_source_ip):
     """Test component setup creates entry from config."""
     entry = MockConfigEntry(domain=DOMAIN, data={})
     entry.add_to_hass(hass)
