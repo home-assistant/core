@@ -3,7 +3,6 @@
   "name": "Flux LED/MagicHome",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/flux_led",
-  "requirements": ["flux_led==0.23.1"],
   "codeowners": ["@icemanch"],
   "iot_class": "local_polling",
   "dhcp": [
@@ -18,6 +17,14 @@
   {
     "macaddress": "B4E842*",
     "hostname": "[ba][lk]*"
+  },
+  {
+    "macaddress": "2462AB*",
+    "hostname": "zengge_35*"
+  },
+  {
+    "macaddress": "C82E47*",
+    "hostname": "sta*"
   }
   ]
 }

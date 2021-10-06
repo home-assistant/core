@@ -5,26 +5,27 @@ import ast
 from functools import partial
 import logging
 import random
-from typing import Any, Final, List, Optional, Set, Union, cast
+from typing import Any, Final, cast
 
 from flux_led import WifiLedBulb
 import voluptuous as vol
-from voluptuous.util import SetTo
 
 from homeassistant import config_entries
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
-    ATTR_RGB_COLOR,
+    ATTR_HS_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
+    ATTR_WHITE,
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
+    COLOR_MODE_HS,
     COLOR_MODE_ONOFF,
-    COLOR_MODE_RGB,
     COLOR_MODE_RGBW,
     COLOR_MODE_RGBWW,
+    COLOR_MODE_WHITE,
     EFFECT_COLORLOOP,
     EFFECT_RANDOM,
     PLATFORM_SCHEMA,
@@ -33,11 +34,11 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import (
-    ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_MODE,
     ATTR_MODEL,
     ATTR_NAME,
+    ATTR_SW_VERSION,
     CONF_DEVICES,
     CONF_HOST,
     CONF_MAC,
@@ -46,9 +47,8 @@ from homeassistant.const import (
     CONF_PROTOCOL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform
+from homeassistant.helpers import device_registry as dr, entity_platform
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -80,11 +80,20 @@ from .const import (
     TRANSITION_JUMP,
     TRANSITION_STROBE,
 )
+from .util import rgbw_brightness, rgbww_brightness
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLUX_LED: Final = SUPPORT_EFFECT | SUPPORT_TRANSITION
 
+FLUX_COLOR_MODE_TO_HASS: Final = {
+    # hs color used to avoid dealing with brightness conversions
+    MODE_RGB: COLOR_MODE_HS,
+    MODE_RGBW: COLOR_MODE_RGBW,
+    MODE_RGBWW: COLOR_MODE_RGBWW,
+    MODE_CCT: COLOR_MODE_COLOR_TEMP,
+    MODE_DIM: COLOR_MODE_WHITE,
+}
 
 # Constant color temp values for 2 flux_led special modes
 # Warm-white and Cool-white modes
@@ -279,8 +288,8 @@ class FluxLight(CoordinatorEntity, LightEntity):
         """Initialize the light."""
         super().__init__(coordinator)
         self._bulb: WifiLedBulb = coordinator.device
-        self._name = name
-        self._unique_id = unique_id
+        self._attr_name = name
+        self._attr_unique_id = unique_id
         self._ip_address = coordinator.host
         self._mode = mode
         self._color_temp_mired = None
@@ -288,16 +297,15 @@ class FluxLight(CoordinatorEntity, LightEntity):
         self._custom_effect_colors = custom_effect_colors
         self._custom_effect_speed_pct = custom_effect_speed_pct
         self._custom_effect_transition = custom_effect_transition
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return the unique ID of the light."""
-        return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return self._name
+        old_protocol = self._bulb.protocol == "LEDENET_ORIGINAL"
+        if self.unique_id:
+            self._attr_device_info = {
+                "connections": {(dr.CONNECTION_NETWORK_MAC, self.unique_id)},
+                ATTR_MODEL: f"0x{self._bulb.raw_state[1]:02X}",
+                ATTR_SW_VERSION: "1" if old_protocol else str(self._bulb.raw_state[10]),
+                ATTR_NAME: self.name,
+                ATTR_MANUFACTURER: "FluxLED/Magic Home",
+            }
 
     @property
     def is_on(self) -> bool:
@@ -307,99 +315,86 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
-        if self._color_mode == COLOR_MODE_RGBWW:
-            rgbww = self._bulb.getRgbww()
-            hsv = color_util.color_RGB_to_hsv(*rgbww[0:3])
-            color_brightness = round(hsv[2] * 2.55, 0)
-            white_brightness = round((rgbww[3] + rgbww[4]) / 2, 0)
+        raw_state = self._bulb.raw_state
+        if self.color_mode == COLOR_MODE_RGBWW:
+            white_brightness = (raw_state.warm_white + raw_state.cool_white) / 2
+            brightness = (self._color_brightness + white_brightness) / 2
+        elif self.color_mode == COLOR_MODE_RGBW:
+            brightness = (self._color_brightness + raw_state.warm_white) / 2
+        elif self.color_mode == COLOR_MODE_HS:
+            brightness = self._color_brightness
+        elif self.color_mode == COLOR_MODE_COLOR_TEMP:
+            _, brightness = self._bulb.getWhiteTemperature()
+        elif self.color_mode == COLOR_MODE_WHITE:
+            brightness = raw_state.warm_white
+        return int(round(brightness, 0))
 
-            brightness = round((color_brightness + white_brightness) / 2, 0)
-
-        elif self._color_mode == COLOR_MODE_RGBW:
-            rgbw = self._bulb.getRgbw()
-            hsv = color_util.color_RGB_to_hsv(*rgbw[0:3])
-            color_brightness = round(hsv[2] * 2.55, 0)
-            white_brightness = rgbw[3]
-
-            brightness = round((color_brightness + white_brightness) / 2, 0)
-
-        else:
-            brightness = self._bulb.brightness
-
-        return cast(int, brightness)
+    @property
+    def _color_brightness(self) -> int:
+        """Get the color brightness."""
+        raw_state = self._bulb.raw_state
+        _, _, v = color_util.color_RGB_to_hsv(
+            raw_state.red, raw_state.green, raw_state.blue
+        )
+        return int(round(v * 2.55, 0))
 
     @property
     def color_temp(self) -> int:
         """Return the kelvin value of this light in mired."""
-        return color_util.color_temperature_kelvin_to_mired(self.color_temp_kelvin)
+        return color_util.color_temperature_kelvin_to_mired(self._color_temp_kelvin)
 
     @property
-    def color_temp_kelvin(self) -> int:
+    def _color_temp_kelvin(self) -> int:
         """Return the kelvin value of this light in Kelvin."""
         t, _ = self._bulb.getWhiteTemperature()
         return cast(int, t)
 
+    # hs color used to avoid dealing with brightness conversions
     @property
-    def rgb_color(self) -> tuple[int, int, int] | None:
-        """Return the rgb color value [int, int, int]."""
-        rgb_scaled = self._bulb.getRgb()
-        hs = color_util.color_RGB_to_hs(*rgb_scaled)
-        rgb = color_util.color_hs_to_RGB(*hs)
-        return cast(tuple[int, int, int], rgb)
+    def hs_color(self) -> tuple[float, float]:
+        """Return the hs color value [float, float]."""
+        raw_state = self._bulb.raw_state
+        return color_util.color_RGB_to_hs(
+            raw_state.red,
+            raw_state.green,
+            raw_state.blue,
+        )
 
     @property
-    def rgbw_color(self) -> tuple[int, int, int, int] | None:
+    def rgbw_color(self) -> tuple[int, int, int, int]:
         """Return the rgbw color value [int, int, int, int]."""
-        rgbw_color = self._bulb.getRgbw()
-        return cast(tuple[int, int, int, int], rgbw_color)
+        raw_state = self._bulb.raw_state
+        return (
+            raw_state.red,
+            raw_state.green,
+            raw_state.blue,
+            raw_state.warm_white,
+        )
 
     @property
-    def rgbww_color(self) -> tuple[int, int, int, int, int] | None:
+    def rgbww_color(self) -> tuple[int, int, int, int, int]:
         """Return the rgbww color value [int, int, int, int, int]."""
-        rgbww_color = self._bulb.getRgbww()
-        return cast(tuple[int, int, int, int, int], rgbww_color)
+        raw_state = self._bulb.raw_state
+        return (
+            raw_state.red,
+            raw_state.green,
+            raw_state.blue,
+            raw_state.warm_white,
+            raw_state.cool_white,
+        )
 
     @property
     def supported_color_modes(self) -> set[str]:
         """Flag supported color modes."""
-        mode_list = set()
-        if self._mode == MODE_RGBWW:
-            mode_list.add(COLOR_MODE_RGBWW)
-        elif self._mode == MODE_RGBW:
-            mode_list.add(COLOR_MODE_RGBW)
-        elif self._mode == MODE_RGB:
-            mode_list.add(COLOR_MODE_RGB)
-        elif self._mode == MODE_CCT:
-            mode_list.add(COLOR_MODE_COLOR_TEMP)
-            mode_list.add(COLOR_MODE_BRIGHTNESS)
-        elif self._mode == MODE_DIM:
-            mode_list.add(COLOR_MODE_BRIGHTNESS)
-        else:
-            mode_list.add(COLOR_MODE_ONOFF)
+        mode_list = {COLOR_MODE_ONOFF, COLOR_MODE_BRIGHTNESS}
+        for mode in self._bulb.color_modes:
+            mode_list.add(FLUX_COLOR_MODE_TO_HASS[mode])
         return mode_list
 
     @property
     def color_mode(self) -> str:
         """Return the color mode of the light."""
-        if self._mode == MODE_RGBWW:
-            self._color_mode = COLOR_MODE_RGBWW
-        elif self._mode == MODE_RGBW:
-            self._color_mode = COLOR_MODE_RGBW
-        elif self._mode == MODE_RGB:
-            self._color_mode = COLOR_MODE_RGB
-        elif self._mode == MODE_CCT:
-            self._color_mode = COLOR_MODE_COLOR_TEMP
-        elif self._mode == MODE_DIM:
-            self._color_mode = COLOR_MODE_BRIGHTNESS
-        else:
-            self._color_mode = COLOR_MODE_BRIGHTNESS
-
-        return self._color_mode
-
-    #    @property
-    #    def white_value(self) -> int:
-    #        """Return the white value of this light between 0..255."""
-    #        return cast(int, self._bulb.getRgbw()[3])
+        return FLUX_COLOR_MODE_TO_HASS.get(self._bulb.color_mode, COLOR_MODE_BRIGHTNESS)
 
     @property
     def effect_list(self) -> list[str]:
@@ -420,6 +415,21 @@ class FluxLight(CoordinatorEntity, LightEntity):
         """Return the attributes."""
         return {
             "ip_address": self._ip_address,
+            # Below values added for testing only, remove before merging
+            "model_num": hex(self._bulb.model_num),
+            "brightness_pct": str(round(self.brightness / 255 * 100, 0)),
+            "test_color_mode": self.color_mode,
+            "test_supported_color_modes": str(self.supported_color_modes),
+            "mode": hex(self._bulb.raw_state.mode),
+            "preset_pattern": hex(self._bulb.raw_state.preset_pattern),
+            "internal_color_modes": self._bulb.color_modes,
+            "internal_color_mode": self._bulb.color_mode,
+            "hex_color_mode": hex(self._bulb.raw_state.color_mode),
+            "red": self._bulb.raw_state.red,
+            "green": self._bulb.raw_state.green,
+            "blue": self._bulb.raw_state.blue,
+            "warm_white": self._bulb.raw_state.warm_white,
+            "cool_white": self._bulb.raw_state.cool_white,
         }
 
     @property
@@ -432,103 +442,110 @@ class FluxLight(CoordinatorEntity, LightEntity):
         """Return the warmest color_temp that this light supports."""
         return cast(int, 370)
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        assert self._unique_id is not None
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._unique_id)},
-            ATTR_NAME: self._name,
-            ATTR_MANUFACTURER: "FluxLED/Magic Home",
-            ATTR_MODEL: "LED Lights",
-        }
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified or all lights on."""
         await self.hass.async_add_executor_job(partial(self._turn_on, **kwargs))
+        self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
     def _turn_on(self, **kwargs: Any) -> None:
         """Turn the specified or all lights on."""
+        _LOGGER.warning(
+            "Calling turn_on for %s with current color mode: %s with kwargs: %s",
+            self._bulb.ipaddr,
+            self.color_mode,
+            kwargs,
+        )
         if not self.is_on:
             self._bulb.turnOn()
+            if not kwargs:
+                return
 
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is None:
             brightness = self.brightness
 
-        # Handle CCT Color Mode
-        if self._color_mode == COLOR_MODE_COLOR_TEMP:
-            if (color_temp_mired := kwargs.get(ATTR_COLOR_TEMP)) is not None:
-                color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
-                    color_temp_mired
-                )
-            else:
-                color_temp_kelvin = self.color_temp_kelvin
-
+        # Handle switch to CCT Color Mode
+        if ATTR_COLOR_TEMP in kwargs:
+            color_temp_mired = kwargs[ATTR_COLOR_TEMP]
+            color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
+                color_temp_mired
+            )
             self._bulb.setWhiteTemperature(color_temp_kelvin, brightness)
-
-        # Handle RGB Color Mode
-        if self._color_mode == COLOR_MODE_RGB:
-            if (rgb_scaled := kwargs.get(ATTR_RGB_COLOR)) is not None:
-                hsv = color_util.color_RGB_to_hsv(*rgb_scaled)
-                brightness_pct = brightness / 255 * 100
-                rgb = color_util.color_hsv_to_RGB(*hsv[0:2], brightness_pct)
+            return
+        # Handle switch to HS Color Mode
+        if ATTR_HS_COLOR in kwargs:
+            self._bulb.setRgbw(
+                *color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR]),
+                brightness=brightness,
+            )
+            return
+        # Handle switch to RGBW Color Mode
+        if ATTR_RGBW_COLOR in kwargs:
+            if ATTR_BRIGHTNESS in kwargs:
+                rgbw = rgbw_brightness(kwargs[ATTR_RGBW_COLOR], brightness)
             else:
-                rgb = self.rgb_color
-
-            self._bulb.setRgbw(*rgb, brightness=brightness)
-
-        # Handle RGBW Color Mode
-        if self._color_mode == COLOR_MODE_RGBW:
-            if (rgbw := kwargs.get(ATTR_RGBW_COLOR)) is not None:
-                _, brightness = self.RGBWW_brightness(rgbw)
-            else:
-                rgbw, brightness = self.RGBWW_brightness(self.rgbw_color, brightness)
-
+                rgbw = kwargs[ATTR_RGBW_COLOR]
             self._bulb.setRgbw(*rgbw)
-
-        # Handle RGBWW Color Mode
-        if self._color_mode == COLOR_MODE_RGBWW:
-            if (rgbww := kwargs.get(ATTR_RGBWW_COLOR)) is not None:
-                _, brightness = self.RGBWW_brightness(rgbww)
+            return
+        # Handle switch to RGBWW Color Mode
+        if ATTR_RGBWW_COLOR in kwargs:
+            if ATTR_BRIGHTNESS in kwargs:
+                rgbww = rgbww_brightness(kwargs[ATTR_RGBWW_COLOR], brightness)
             else:
-                rgbww, brightness = self.RGBWW_brightness(self.rgbww_color, brightness)
-
+                rgbww = kwargs[ATTR_RGBWW_COLOR]
             self._bulb.setRgbw(*rgbww[0:4], w2=rgbww[4])
-
-        # Handle Brightness Only Color Mode
-        if self._color_mode == COLOR_MODE_BRIGHTNESS:
-            self._bulb.setWarmWhite255(brightness)
-
-        effect = kwargs.get(ATTR_EFFECT)
-        # Show warning if effect set with rgb, brightness, or white level
-        if effect and (brightness or color_temp_mired or rgb or rgbw or rgbww):
-            _LOGGER.warning(
-                "RGB, brightness and white level are ignored when"
-                " an effect is specified for a flux bulb"
-            )
-
-        # Random color effect
-        if effect == EFFECT_RANDOM:
-            self._bulb.setRgb(
-                random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
-            )
             return
-
-        # Custom effect
-        if effect == EFFECT_CUSTOM:
-            if self._custom_effect_colors:
-                self._bulb.setCustomPattern(
-                    self._custom_effect_colors,
-                    self._custom_effect_speed_pct,
-                    self._custom_effect_transition,
+        # Handle switch to White Color Mode
+        if ATTR_WHITE in kwargs:
+            self._bulb.setWarmWhite255(kwargs[ATTR_WHITE])
+            return
+        if ATTR_EFFECT in kwargs:
+            effect = kwargs[ATTR_EFFECT]
+            # Random color effect
+            if effect == EFFECT_RANDOM:
+                self._bulb.setRgb(
+                    random.randint(0, 255),
+                    random.randint(0, 255),
+                    random.randint(0, 255),
                 )
+                return
+            # Custom effect
+            if effect == EFFECT_CUSTOM:
+                if self._custom_effect_colors:
+                    self._bulb.setCustomPattern(
+                        self._custom_effect_colors,
+                        self._custom_effect_speed_pct,
+                        self._custom_effect_transition,
+                    )
+                return
+            # Effect selection
+            if effect in EFFECT_MAP:
+                self._bulb.setPresetPattern(EFFECT_MAP[effect], DEFAULT_EFFECT_SPEED)
+                return
+            raise ValueError(f"Unknown effect {effect}")
+        # Handle brightness adjustment in CCT Color Mode
+        if self.color_mode == COLOR_MODE_COLOR_TEMP:
+            self._bulb.setWhiteTemperature(self._color_temp_kelvin, brightness)
             return
-
-        # Effect selection
-        if effect in EFFECT_MAP:
-            self._bulb.setPresetPattern(EFFECT_MAP[effect], self._effect_speed)
+        # Handle brightness adjustment in RGB Color Mode
+        if self.color_mode == COLOR_MODE_HS:
+            rgb = color_util.color_hs_to_RGB(*self.hs_color)
+            self._bulb.setRgbw(*rgb, brightness=brightness)
             return
+        # Handle brightness adjustment in RGBW Color Mode
+        if self.color_mode == COLOR_MODE_RGBW:
+            self._bulb.setRgbw(*rgbw_brightness(self.rgbw_color, brightness))
+            return
+        # Handle brightness adjustment in RGBWW Color Mode
+        if self.color_mode == COLOR_MODE_RGBWW:
+            rgbww = rgbww_brightness(self.rgbww_color, brightness)
+            self._bulb.setRgbw(*rgbww[0:4], w2=rgbww[4])
+            return
+        # Handle White Color Mode and Brightness Only Color Mode
+        if self.color_mode in (COLOR_MODE_WHITE, COLOR_MODE_BRIGHTNESS):
+            self._bulb.setWarmWhite255(brightness)
+            return
+        raise ValueError(f"Unsupported color mode {self.color_mode}")
 
     def set_custom_effect(
         self, colors: list[tuple[int, int, int]], speed_pct: int, transition: str
@@ -540,85 +557,10 @@ class FluxLight(CoordinatorEntity, LightEntity):
             transition,
         )
 
-    def RGBWW_brightness(self, RGBWW_Data, brightness_255=None) -> list(int) | int:
-
-        ww_brightness_255 = None
-        cw_brightness_255 = None
-        color_brightness_255 = None
-        current_brightness_255 = None
-        change_brightness_pct = None
-        new_brightness_255 = None
-        hsv_data = [0, 0, 0]
-        RGBWW = [0, 0, 0, 0, 0]
-
-        ww_brightness_255 = RGBWW_Data[3]
-
-        hsv_data = color_util.color_RGB_to_hsv(*RGBWW_Data[0:3])
-        color_brightness_255 = round(hsv_data[2] * 2.55)
-
-        if len(RGBWW_Data) == 5:
-            cw_brightness_255 = RGBWW_Data[4]
-            current_brightness_255 = round(
-                (ww_brightness_255 + color_brightness_255 + cw_brightness_255) / 3
-            )
-        else:
-            cw_brightness_255 = 0
-            current_brightness_255 = round(
-                (ww_brightness_255 + color_brightness_255) / 2
-            )
-
-        if brightness_255 and brightness_255 != current_brightness_255:
-
-            if brightness_255 < current_brightness_255:
-                change_brightness_pct = (
-                    current_brightness_255 - brightness_255
-                ) / current_brightness_255
-                ww_brightness_255 = round(
-                    ww_brightness_255 * (1 - change_brightness_pct)
-                )
-                color_brightness_255 = round(
-                    color_brightness_255 * (1 - change_brightness_pct)
-                )
-                cw_brightness_255 = round(
-                    cw_brightness_255 * (1 - change_brightness_pct)
-                )
-
-            else:
-                change_brightness_pct = (brightness_255 - current_brightness_255) / (
-                    255 - current_brightness_255
-                )
-                ww_brightness_255 = round(
-                    (255 - ww_brightness_255) * (change_brightness_pct)
-                    + ww_brightness_255
-                )
-                color_brightness_255 = round(
-                    (255 - color_brightness_255) * (change_brightness_pct)
-                    + color_brightness_255
-                )
-                cw_brightness_255 = round(
-                    (255 - cw_brightness_255) * (change_brightness_pct)
-                    + cw_brightness_255
-                )
-
-            hsv_data[2] = color_brightness_255 / 2.55
-            RGBWW[0:3] = list(
-                color_util.color_hsv_to_RGB(hsv_data[0], hsv_data[1], hsv_data[2])
-            )
-            RGBWW[3] = ww_brightness_255
-            if len(RGBWW_Data) == 5:
-                RGBWW[4] = cw_brightness_255
-
-            new_brightness_255 = brightness_255
-
-        else:
-            new_brightness_255 = current_brightness_255
-            RGBWW = RGBWW_Data
-
-        return (RGBWW, new_brightness_255)
-
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the specified or all lights off."""
         await self.hass.async_add_executor_job(self._bulb.turnOff)
+        self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
     async def async_added_to_hass(self) -> None:
@@ -635,7 +577,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
             self._mode = MODE_RGB
         _LOGGER.debug(
             "Detected mode for %s (%s) with raw_state=%s rgbwcapable=%s is %s",
-            self._name,
+            self.name,
             self.unique_id,
             self._bulb.raw_state,
             self._bulb.rgbwcapable,
