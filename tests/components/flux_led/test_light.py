@@ -1,7 +1,13 @@
 """Tests for light platform."""
 from datetime import timedelta
 
-from flux_led.protocol import LEDENETRawState
+from flux_led.const import (
+    COLOR_MODE_CCT as FLUX_COLOR_MODE_CCT,
+    COLOR_MODE_DIM as FLUX_COLOR_MODE_DIM,
+    COLOR_MODE_RGB as FLUX_COLOR_MODE_RGB,
+    COLOR_MODE_RGBW as FLUX_COLOR_MODE_RGBW,
+    COLOR_MODE_RGBWW as FLUX_COLOR_MODE_RGBWW,
+)
 import pytest
 
 from homeassistant.components import flux_led
@@ -113,10 +119,7 @@ async def test_light_device_registry(
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
     bulb.protocol = protocol
-    raw_state = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    raw_state[1] = model
-    raw_state[10] = sw_version
-    bulb.raw_state = LEDENETRawState(*raw_state)
+    bulb.raw_state = bulb.raw_state._replace(model_num=model, version_number=sw_version)
 
     with _patch_discovery(no_device=True), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
@@ -139,8 +142,9 @@ async def test_rgb_light(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
-    bulb.rgbwcapable = False
-    bulb.protocol = None
+    bulb.raw_state = bulb.raw_state._replace(model_num=0x33)  # RGB only model
+    bulb.color_modes = {FLUX_COLOR_MODE_RGB}
+    bulb.color_mode = FLUX_COLOR_MODE_RGB
     with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -178,8 +182,8 @@ async def test_rgb_light(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
-    bulb.setRgb.assert_called_with(255, 0, 0, brightness=100)
-    bulb.setRgb.reset_mock()
+    bulb.setRgbw.assert_called_with(255, 0, 0, brightness=100)
+    bulb.setRgbw.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -187,8 +191,8 @@ async def test_rgb_light(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_HS_COLOR: (10, 30)},
         blocking=True,
     )
-    bulb.setRgb.assert_called_with(255, 191, 178, brightness=128)
-    bulb.setRgb.reset_mock()
+    bulb.setRgbw.assert_called_with(255, 191, 178, brightness=128)
+    bulb.setRgbw.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -218,6 +222,8 @@ async def test_rgbw_light(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
+    bulb.color_modes = {FLUX_COLOR_MODE_RGBW}
+    bulb.color_mode = FLUX_COLOR_MODE_RGBW
     with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -313,10 +319,7 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
-    raw_state = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    raw_state[9] = 1
-    raw_state[11] = 2
-    bulb.raw_state = LEDENETRawState(*raw_state)
+    bulb.raw_state = bulb.raw_state._replace(warm_white=1, cool_white=2)
 
     with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
@@ -504,9 +507,7 @@ async def test_rgb_light_custom_effects(
     )
     bulb.setCustomPattern.assert_called_with([[0, 0, 255], [255, 0, 0]], 88, "jump")
     bulb.setCustomPattern.reset_mock()
-    raw_state = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    raw_state[3] = EFFECT_CUSTOM_CODE
-    bulb.raw_state = LEDENETRawState(*raw_state)
+    bulb.raw_state = bulb.raw_state._replace(preset_pattern=EFFECT_CUSTOM_CODE)
     bulb.is_on = True
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=20))
     await hass.async_block_till_done()
@@ -524,9 +525,7 @@ async def test_rgb_light_custom_effects(
     )
     bulb.setCustomPattern.assert_called_with([[0, 0, 255], [255, 0, 0]], 88, "jump")
     bulb.setCustomPattern.reset_mock()
-    raw_state = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    raw_state[3] = EFFECT_CUSTOM_CODE
-    bulb.raw_state = LEDENETRawState(*raw_state)
+    bulb.raw_state = bulb.raw_state._replace(preset_pattern=EFFECT_CUSTOM_CODE)
     bulb.is_on = True
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=20))
     await hass.async_block_till_done()

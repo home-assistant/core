@@ -304,9 +304,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
         )  # for rounding
         self._attr_max_mireds = color_temperature_kelvin_to_mired(MIN_TEMP)
         self._attr_supported_color_modes = {
-            COLOR_MODE_ONOFF,
-            COLOR_MODE_BRIGHTNESS,
-            *(FLUX_COLOR_MODE_TO_HASS[mode] for mode in self._bulb.color_modes),
+            FLUX_COLOR_MODE_TO_HASS[mode] for mode in self._bulb.color_modes
         }
         self._attr_effect_list = FLUX_EFFECT_LIST
         if custom_effect_colors:
