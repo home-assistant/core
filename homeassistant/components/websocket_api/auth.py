@@ -88,13 +88,13 @@ class AuthPhase:
             )
             if refresh_token is not None:
                 conn = await self._async_finish_auth(refresh_token.user, refresh_token)
-                unregister_token_cb = (
+                conn.subscriptions['auth'] = (
                     self._hass.auth.async_register_revoke_token_callback(
                         refresh_token.id, self._cancel_ws
                     )
                 )
 
-                return conn, unregister_token_cb
+                return conn
 
         self._send_message(auth_invalid_message("Invalid access token or password"))
         await process_wrong_login(self._request)
