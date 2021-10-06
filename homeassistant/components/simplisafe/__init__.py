@@ -313,6 +313,7 @@ class SimpliSafe:
         """Initialize."""
         self._api = api
         self._hass = hass
+        self._listener_unsub: list[Callable[..., None]] = []
         self._system_notifications: dict[int, set[SystemNotification]] = {}
         self.entry = entry
         self.systems: dict[int, SystemV2 | SystemV3] = {}
