@@ -227,11 +227,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if len(hass.config_entries.async_entries(DOMAIN)) == 1:
         # If this is the last instance of RainMachine, deregister any services defined
         # during integration setup:
-        for service_name in [
+        for service_name in (
             SERVICE_PAUSE_WATERING,
             SERVICE_STOP_ALL,
             SERVICE_UNPAUSE_WATERING,
-        ]:
+        ):
             hass.services.async_remove(DOMAIN, service_name)
 
     return unload_ok
