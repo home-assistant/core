@@ -141,7 +141,7 @@ class SeventeenTrackSummarySensor(SensorEntity):
             )
 
         if package_data:
-            self._attrs[ATTR_PACKAGES] = package_data
+            self._attr_extra_state_attributes[ATTR_PACKAGES] = package_data
 
         self._state = self._data.summary.get(self._status)
 
@@ -151,7 +151,7 @@ class SeventeenTrackPackageSensor(SensorEntity):
 
     def __init__(self, data, package):
         """Initialize."""
-        self._attrs = {
+        self._attr_extra_state_attributes = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_DESTINATION_COUNTRY: package.destination_country,
             ATTR_INFO_TEXT: package.info_text,
@@ -176,11 +176,6 @@ class SeventeenTrackPackageSensor(SensorEntity):
     def available(self):
         """Return whether the entity is available."""
         return self._data.packages.get(self._tracking_number) is not None
-
-    @property
-    def extra_state_attributes(self):
-        """Return the device state attributes."""
-        return self._attrs
 
     @property
     def name(self):
@@ -214,7 +209,7 @@ class SeventeenTrackPackageSensor(SensorEntity):
             async_call_later(self.hass, 1, self._remove)
             return
 
-        self._attrs.update(
+        self._attr_extra_state_attributes.update(
             {
                 ATTR_INFO_TEXT: package.info_text,
                 ATTR_TIMESTAMP: package.timestamp,
