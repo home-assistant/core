@@ -1,8 +1,13 @@
 """Support for Rheem EcoNet water heaters."""
 from pyeconet.equipment import EquipmentType
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+    )
 from homeassistant.const import (
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
@@ -15,22 +20,22 @@ from .const import DOMAIN, EQUIPMENT
 ENERGY_KILO_BRITISH_THERMAL_UNIT = "kBtu"
 
 TANK_HEALTH = "tank_health"
-AVAILIBLE_HOT_WATER = "availible_hot_water"
+AVAILABLE_HOT_WATER = "available_hot_water"
 COMPRESSOR_HEALTH = "compressor_health"
-OVERRIDE_STATUS = "oveerride_status"
+OVERRIDE_STATUS = "override_status"
 WATER_USAGE_TODAY = "water_usage_today"
-POWER_USAGE_TODAY = "power_usage_today"
+ENERGY_USAGE_TODAY = "energy_usage_today"
 ALERT_COUNT = "alert_count"
 WIFI_SIGNAL = "wifi_signal"
 RUNNING_STATE = "running_state"
 
 SENSOR_NAMES_TO_ATTRIBUTES = {
     TANK_HEALTH: "tank_health",
-    AVAILIBLE_HOT_WATER: "tank_hot_water_availability",
+    AVAILABLE_HOT_WATER: "tank_hot_water_availability",
     COMPRESSOR_HEALTH: "compressor_health",
     OVERRIDE_STATUS: "override_status",
     WATER_USAGE_TODAY: "todays_water_usage",
-    POWER_USAGE_TODAY: "todays_energy_usage",
+    ENERGY_USAGE_TODAY: "todays_energy_usage",
     ALERT_COUNT: "alert_count",
     WIFI_SIGNAL: "wifi_signal",
     RUNNING_STATE: "running_state",
@@ -38,16 +43,23 @@ SENSOR_NAMES_TO_ATTRIBUTES = {
 
 SENSOR_NAMES_TO_UNIT_OF_MEASUREMENT = {
     TANK_HEALTH: PERCENTAGE,
-    AVAILIBLE_HOT_WATER: PERCENTAGE,
+    AVAILABLE_HOT_WATER: PERCENTAGE,
     COMPRESSOR_HEALTH: PERCENTAGE,
-    OVERRIDE_STATUS: None,
     WATER_USAGE_TODAY: VOLUME_GALLONS,
-    POWER_USAGE_TODAY: None,  # Depends on unit type
-    ALERT_COUNT: None,
-    WIFI_SIGNAL: DEVICE_CLASS_SIGNAL_STRENGTH,
-    RUNNING_STATE: None,  # This is just a string
 }
 
+PREFIX_DEVICE_CLASS_MAPPING = [
+    (ENERGY_USAGE_TODAY, DEVICE_CLASS_ENERGY),
+    (WIFI_SIGNAL, DEVICE_CLASS_SIGNAL_STRENGTH),
+]
+
+PREFIX_STATE_CLASS_MAPPING = [
+    (AVAILABLE_HOT_WATER, STATE_CLASS_MEASUREMENT),
+    (COMPRESSOR_HEALTH, STATE_CLASS_MEASUREMENT),
+    (TANK_HEALTH, STATE_CLASS_MEASUREMENT),
+    (ENERGY_USAGE_TODAY, STATE_CLASS_TOTAL_INCREASING),
+    (WATER_USAGE_TODAY, STATE_CLASS_TOTAL_INCREASING),
+]
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up EcoNet sensor based on a config entry."""
@@ -67,7 +79,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     for water_heater in equipment[EquipmentType.WATER_HEATER]:
         # These aren't part of the device and start off as None in pyeconet so always add them
         sensors.append(EcoNetSensor(water_heater, WATER_USAGE_TODAY))
-        sensors.append(EcoNetSensor(water_heater, POWER_USAGE_TODAY))
+        sensors.append(EcoNetSensor(water_heater, ENERGY_USAGE_TODAY))
 
     async_add_entities(sensors)
 
@@ -80,6 +92,14 @@ class EcoNetSensor(EcoNetEntity, SensorEntity):
         super().__init__(econet_device)
         self._econet = econet_device
         self._device_name = device_name
+        for prefix, device_class in PREFIX_DEVICE_CLASS_MAPPING:
+            if self._device_name.startswith(prefix):
+                self._attr_device_class = device_class
+                break
+        for prefix, state_class in PREFIX_STATE_CLASS_MAPPING:
+            if self._device_name.startswith(prefix):
+                self._attr_state_class = state_class
+                break
 
     @property
     def native_value(self):
@@ -92,8 +112,11 @@ class EcoNetSensor(EcoNetEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        unit_of_measurement = SENSOR_NAMES_TO_UNIT_OF_MEASUREMENT[self._device_name]
-        if self._device_name == POWER_USAGE_TODAY:
+        for prefix, unit in SENSOR_NAMES_TO_UNIT_OF_MEASUREMENT:
+            if self._device_name.startswith(prefix):
+                unit_of_measurement = unit
+                break
+        if self._device_name == ENERGY_USAGE_TODAY:
             if self._econet.energy_type == ENERGY_KILO_BRITISH_THERMAL_UNIT.upper():
                 unit_of_measurement = ENERGY_KILO_BRITISH_THERMAL_UNIT
             else:
