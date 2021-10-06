@@ -216,9 +216,6 @@ class MiroboVacuum(XiaomiCoordinatedMiioEntity, StateVacuumEntity):
     @property
     def state(self):
         """Return the status of the vacuum cleaner."""
-        if self.coordinator.data.status is None:
-            return None
-
         # The vacuum reverts back to an idle state after erroring out.
         # We want to keep returning an error until it has been cleared.
         if self.coordinator.data.status.got_error:
@@ -229,15 +226,11 @@ class MiroboVacuum(XiaomiCoordinatedMiioEntity, StateVacuumEntity):
     @property
     def battery_level(self):
         """Return the battery level of the vacuum cleaner."""
-        if self.coordinator.data.status is None:
-            return None
         return self.coordinator.data.status.battery
 
     @property
     def fan_speed(self):
         """Return the fan speed of the vacuum cleaner."""
-        if self.coordinator.data.status is None:
-            return None
         speed = self.coordinator.data.status.fanspeed
         if speed in self.coordinator.data.fan_speeds_reverse:
             return self.coordinator.data.fan_speeds_reverse[speed]
@@ -271,14 +264,13 @@ class MiroboVacuum(XiaomiCoordinatedMiioEntity, StateVacuumEntity):
     def extra_state_attributes(self):
         """Return the specific state attributes of this vacuum cleaner."""
         attrs = {}
-        if self.coordinator.data.status is not None:
-            attrs[ATTR_STATUS] = str(self.coordinator.data.status.state)
+        attrs[ATTR_STATUS] = str(self.coordinator.data.status.state)
 
-            if self.coordinator.data.status.got_error:
-                attrs[ATTR_ERROR] = self.coordinator.data.status.error
+        if self.coordinator.data.status.got_error:
+            attrs[ATTR_ERROR] = self.coordinator.data.status.error
 
-            if self.timers:
-                attrs[ATTR_TIMERS] = self.timers
+        if self.timers:
+            attrs[ATTR_TIMERS] = self.timers
         return attrs
 
     @property
