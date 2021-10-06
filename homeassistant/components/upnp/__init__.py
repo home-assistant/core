@@ -8,6 +8,7 @@ from datetime import timedelta
 from ipaddress import ip_address
 from typing import Any
 
+from async_upnp_client.exceptions import UpnpConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -122,7 +123,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     location = discovery_info[  # pylint: disable=unsubscriptable-object
         ssdp.ATTR_SSDP_LOCATION
     ]
-    device = await Device.async_create_device(hass, location)
+    try:
+        device = await Device.async_create_device(hass, location)
+    except UpnpConnectionError as err:
+        LOGGER.debug("Error connecting to device %s", location)
+        raise ConfigEntryNotReady from err
 
     # Ensure entry has a unique_id.
     if not entry.unique_id:
