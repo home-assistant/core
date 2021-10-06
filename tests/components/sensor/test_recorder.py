@@ -337,7 +337,7 @@ def test_compile_hourly_sum_statistics_amount(
         {"statistic_id": "sensor.test1", "unit_of_measurement": display_unit}
     ]
     stats = statistics_during_period(hass, period0, period="5minute")
-    assert stats == {
+    expected_stats = {
         "sensor.test1": [
             {
                 "statistic_id": "sensor.test1",
@@ -374,6 +374,27 @@ def test_compile_hourly_sum_statistics_amount(
             },
         ]
     }
+    assert stats == expected_stats
+
+    # With an offset of 1 minute, we expect to get all periods
+    stats = statistics_during_period(
+        hass, period0 + timedelta(minutes=1), period="5minute"
+    )
+    assert stats == expected_stats
+
+    # With an offset of 5 minutes, we expect to get the 2nd and 3rd periods
+    stats = statistics_during_period(
+        hass, period0 + timedelta(minutes=5), period="5minute"
+    )
+    expected_stats["sensor.test1"] = expected_stats["sensor.test1"][1:3]
+    assert stats == expected_stats
+
+    # With an offset of 6 minutes, we expect to get the 2nd and 3rd periods
+    stats = statistics_during_period(
+        hass, period0 + timedelta(minutes=6), period="5minute"
+    )
+    assert stats == expected_stats
+
     assert "Error while processing event StatisticsTask" not in caplog.text
     assert "Detected new cycle for sensor.test1, last_reset set to" in caplog.text
     assert "Compiling initial sum statistics for sensor.test1" in caplog.text
