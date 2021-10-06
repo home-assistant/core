@@ -383,7 +383,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def color_mode(self) -> str:
         """Return the color mode of the light."""
-        return FLUX_LED_TO_COLOR_MODE.get(self._mode, COLOR_MODE_BRIGHTNESS)
+        return FLUX_LED_TO_COLOR_MODE.get(self._bulb.mode, COLOR_MODE_BRIGHTNESS)
 
     #    @property
     #    def white_value(self) -> int:
@@ -429,7 +429,12 @@ class FluxLight(CoordinatorEntity, LightEntity):
 
     def _turn_on(self, **kwargs: Any) -> None:
         """Turn the specified or all lights on."""
-        _LOGGER.debug("Calling turn_on for %s with %s", self._bulb.ipaddr, kwargs)
+        _LOGGER.debug(
+            "Calling turn_on for %s with current color mode: %s with kwargs: %s",
+            self._bulb.ipaddr,
+            self.color_mode,
+            kwargs,
+        )
         if not self.is_on:
             self._bulb.turnOn()
             if not kwargs:
@@ -451,7 +456,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
             return
 
         # Handle RGB Color Mode
-        if self.color_mode == COLOR_MODE_RGB:
+        if ATTR_RGB_COLOR in kwargs or self.color_mode == COLOR_MODE_RGB:
             if (rgb_scaled := kwargs.get(ATTR_RGB_COLOR)) is not None:
                 hsv = color_util.color_RGB_to_hsv(*rgb_scaled)
                 brightness_pct = brightness / 255 * 100
@@ -464,7 +469,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
             return
 
         # Handle RGBW Color Mode
-        if self.color_mode == COLOR_MODE_RGBW:
+        if ATTR_RGBW_COLOR in kwargs or self.color_mode == COLOR_MODE_RGBW:
             if (rgbw := kwargs.get(ATTR_RGBW_COLOR)) is not None:
                 _, brightness = self.RGBWW_brightness(rgbw)
             else:
@@ -475,7 +480,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
             return
 
         # Handle RGBWW Color Mode
-        if self.color_mode == COLOR_MODE_RGBWW:
+        if ATTR_RGBWW_COLOR in kwargs or self.color_mode == COLOR_MODE_RGBWW:
             if (rgbww := kwargs.get(ATTR_RGBWW_COLOR)) is not None:
                 _, brightness = self.RGBWW_brightness(rgbww)
             else:
@@ -485,35 +490,35 @@ class FluxLight(CoordinatorEntity, LightEntity):
             self._bulb.setRgbw(*rgbww[0:4], w2=rgbww[4])
             return
 
+        if ATTR_EFFECT in kwargs:
+            effect = kwargs[ATTR_EFFECT]
+            # Random color effect
+            if effect == EFFECT_RANDOM:
+                self._bulb.setRgb(
+                    random.randint(0, 255),
+                    random.randint(0, 255),
+                    random.randint(0, 255),
+                )
+                return
+
+            # Custom effect
+            if effect == EFFECT_CUSTOM:
+                if self._custom_effect_colors:
+                    self._bulb.setCustomPattern(
+                        self._custom_effect_colors,
+                        self._custom_effect_speed_pct,
+                        self._custom_effect_transition,
+                    )
+                return
+
+            # Effect selection
+            if effect in EFFECT_MAP:
+                self._bulb.setPresetPattern(EFFECT_MAP[effect], DEFAULT_EFFECT_SPEED)
+                return
+
         # Handle Brightness Only Color Mode
         if self.color_mode == COLOR_MODE_BRIGHTNESS:
             self._bulb.setWarmWhite255(brightness)
-            return
-
-        if ATTR_EFFECT not in kwargs:
-            return
-
-        effect = kwargs[ATTR_EFFECT]
-        # Random color effect
-        if effect == EFFECT_RANDOM:
-            self._bulb.setRgb(
-                random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
-            )
-            return
-
-        # Custom effect
-        if effect == EFFECT_CUSTOM:
-            if self._custom_effect_colors:
-                self._bulb.setCustomPattern(
-                    self._custom_effect_colors,
-                    self._custom_effect_speed_pct,
-                    self._custom_effect_transition,
-                )
-            return
-
-        # Effect selection
-        if effect in EFFECT_MAP:
-            self._bulb.setPresetPattern(EFFECT_MAP[effect], DEFAULT_EFFECT_SPEED)
             return
 
     def set_custom_effect(
