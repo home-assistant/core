@@ -480,12 +480,18 @@ class FluxLight(CoordinatorEntity, LightEntity):
             return
         # Handle switch to RGBW Color Mode
         if ATTR_RGBW_COLOR in kwargs:
-            rgbw, _ = self.RGBWW_brightness(kwargs[ATTR_RGBW_COLOR], brightness)
+            if ATTR_BRIGHTNESS in kwargs:
+                rgbw, _ = self.RGBWW_brightness(kwargs[ATTR_RGBW_COLOR], brightness)
+            else:
+                rgbw = kwargs[ATTR_RGBW_COLOR]
             self._bulb.setRgbw(*rgbw)
             return
         # Handle switch to RGBWW Color Mode
         if ATTR_RGBWW_COLOR in kwargs:
-            rgbww, _ = self.RGBWW_brightness(kwargs[ATTR_RGBWW_COLOR], brightness)
+            if ATTR_BRIGHTNESS in kwargs:
+                rgbww, _ = self.RGBWW_brightness(kwargs[ATTR_RGBWW_COLOR], brightness)
+            else:
+                rgbww = kwargs[ATTR_RGBWW_COLOR]
             self._bulb.setRgbw(*rgbww[0:4], w2=rgbww[4])
             return
         # Handle switch to White Color Mode
