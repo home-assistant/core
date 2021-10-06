@@ -98,7 +98,11 @@ async def test_light_no_unique_id(hass: HomeAssistant) -> None:
     "protocol,sw_version,model", [("LEDENET_ORIGINAL", 1, 0x35), ("LEDENET", 8, 0x33)]
 )
 async def test_light_device_registry(
-    hass: HomeAssistant, protocol: str, sw_version: int, model: int
+    hass: HomeAssistant,
+    device_reg: pytest.fixture,
+    protocol: str,
+    sw_version: int,
+    model: int,
 ) -> None:
     """Test a light device registry entry."""
     config_entry = MockConfigEntry(
@@ -113,6 +117,7 @@ async def test_light_device_registry(
     raw_state[1] = model
     raw_state[10] = sw_version
     bulb.raw_state = LEDENETRawState(*raw_state)
+
     with _patch_discovery(no_device=True), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()

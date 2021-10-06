@@ -317,7 +317,9 @@ class FluxLight(CoordinatorEntity, LightEntity):
             self._attr_device_info = {
                 "connections": {(dr.CONNECTION_NETWORK_MAC, self.unique_id)},
                 ATTR_MODEL: f"0x{self._bulb.model_num:02X}",
-                ATTR_SW_VERSION: "1" if old_protocol else str(self._bulb.version),
+                ATTR_SW_VERSION: "1"
+                if old_protocol
+                else str(self._bulb.raw_state.version_number),
                 ATTR_NAME: self.name,
                 ATTR_MANUFACTURER: "FluxLED/Magic Home",
             }
