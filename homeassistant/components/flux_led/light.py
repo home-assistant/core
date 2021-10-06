@@ -425,7 +425,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
             "model_num": hex(self._bulb.model_num),
             "brightness_pct": str(round(self.brightness / 255 * 100, 0)),
             "test_color_mode": self.color_mode,
-            "test_color_modes": self.color_modes,
+            "test_supported_color_modes": self.supported_color_modes,
             "mode": hex(self._bulb.raw_state.mode),
             "preset_pattern": hex(self._bulb.raw_state.preset_pattern),
             "internal_color_modes": self._bulb.color_modes,
