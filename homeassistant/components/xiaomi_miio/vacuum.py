@@ -210,31 +210,35 @@ class MiroboVacuum(XiaomiCoordinatedMiioEntity, StateVacuumEntity):
     @property
     def state(self):
         """Return the status of the vacuum cleaner."""
-        if self.coordinator.data.status is not None:
-            # The vacuum reverts back to an idle state after erroring out.
-            # We want to keep returning an error until it has been cleared.
-            if self.coordinator.data.status.got_error:
-                return STATE_ERROR
+        if self.coordinator.data.status is None:
+            return None
 
-            return self._state
+        # The vacuum reverts back to an idle state after erroring out.
+        # We want to keep returning an error until it has been cleared.
+        if self.coordinator.data.status.got_error:
+            return STATE_ERROR
+
+        return self._state
 
     @property
     def battery_level(self):
         """Return the battery level of the vacuum cleaner."""
-        if self.coordinator.data.status is not None:
-            return self.coordinator.data.status.battery
+        if self.coordinator.data.status is None:
+            return None
+        return self.coordinator.data.status.battery
 
     @property
     def fan_speed(self):
         """Return the fan speed of the vacuum cleaner."""
-        if self.coordinator.data.status is not None:
-            speed = self.coordinator.data.status.fanspeed
-            if speed in self.coordinator.data.fan_speeds_reverse:
-                return self.coordinator.data.fan_speeds_reverse[speed]
+        if self.coordinator.data.status is None:
+            return None
+        speed = self.coordinator.data.status.fanspeed
+        if speed in self.coordinator.data.fan_speeds_reverse:
+            return self.coordinator.data.fan_speeds_reverse[speed]
 
-            _LOGGER.debug("Unable to find reverse for %s", speed)
+        _LOGGER.debug("Unable to find reverse for %s", speed)
 
-            return speed
+        return speed
 
     @property
     def fan_speed_list(self):
