@@ -6,7 +6,7 @@ from functools import partial
 import logging
 import random
 from typing import Any, Final, cast
-from itertools import chain
+
 from flux_led import WifiLedBulb
 from flux_led.const import (
     COLOR_MODE_CCT as FLUX_COLOR_MODE_CCT,
@@ -31,7 +31,6 @@ from homeassistant.components.light import (
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_HS,
-    COLOR_MODE_ONOFF,
     COLOR_MODE_RGBW,
     COLOR_MODE_RGBWW,
     COLOR_MODE_WHITE,
@@ -100,12 +99,13 @@ SUPPORT_FLUX_LED: Final = SUPPORT_EFFECT | SUPPORT_TRANSITION
 
 FLUX_COLOR_MODE_TO_HASS: Final = {
     # hs color used to avoid dealing with brightness conversions
-    FLUX_COLOR_MODE_RGB: {COLOR_MODE_HS},
-    FLUX_COLOR_MODE_RGBW: {COLOR_MODE_RGBW, COLOR_MODE_HS, COLOR_MODE_COLOR_TEMP},
-    FLUX_COLOR_MODE_RGBWW: {COLOR_MODE_RGBWW, COLOR_MODE_HS, COLOR_MODE_COLOR_TEMP},
-    FLUX_COLOR_MODE_CCT: {COLOR_MODE_COLOR_TEMP},
-    FLUX_COLOR_MODE_DIM: {COLOR_MODE_WHITE},
+    FLUX_COLOR_MODE_RGB: COLOR_MODE_HS,
+    FLUX_COLOR_MODE_RGBW: COLOR_MODE_RGBW,
+    FLUX_COLOR_MODE_RGBWW: COLOR_MODE_RGBWW,
+    FLUX_COLOR_MODE_CCT: COLOR_MODE_COLOR_TEMP,
+    FLUX_COLOR_MODE_DIM: COLOR_MODE_WHITE,
 }
+
 
 # Constant color temp values for 2 flux_led special modes
 # Warm-white and Cool-white modes
@@ -303,9 +303,10 @@ class FluxLight(CoordinatorEntity, LightEntity):
             color_temperature_kelvin_to_mired(MAX_TEMP) + 1
         )  # for rounding
         self._attr_max_mireds = color_temperature_kelvin_to_mired(MIN_TEMP)
-        self._attr_supported_color_modes = {
-            chain.from_iterable(FLUX_COLOR_MODE_TO_HASS[mode]) for mode in self._bulb.color_modes
-        }
+        color_modes = {FLUX_COLOR_MODE_TO_HASS[mode] for mode in self._bulb.color_modes}
+        if COLOR_MODE_RGBW in color_modes or COLOR_MODE_RGBWW in color_modes:
+            color_modes.update({COLOR_MODE_HS, COLOR_MODE_COLOR_TEMP})
+        self._attr_supported_color_modes = color_modes
         self._attr_effect_list = FLUX_EFFECT_LIST
         if custom_effect_colors:
             self._attr_effect_list = [*FLUX_EFFECT_LIST, EFFECT_CUSTOM]
