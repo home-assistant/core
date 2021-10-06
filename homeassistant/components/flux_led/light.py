@@ -8,6 +8,13 @@ import random
 from typing import Any, Final, cast
 
 from flux_led import WifiLedBulb
+from flux_led.const import (
+    COLOR_MODE_CCT as FLUX_COLOR_MODE_CCT,
+    COLOR_MODE_DIM as FLUX_COLOR_MODE_DIM,
+    COLOR_MODE_RGB as FLUX_COLOR_MODE_RGB,
+    COLOR_MODE_RGBW as FLUX_COLOR_MODE_RGBW,
+    COLOR_MODE_RGBWW as FLUX_COLOR_MODE_RGBWW,
+)
 from flux_led.device import MAX_TEMP, MIN_TEMP
 from flux_led.utils import rgbw_brightness, rgbww_brightness
 import voluptuous as vol
@@ -78,11 +85,8 @@ from .const import (
     FLUX_LED_DISCOVERY,
     FLUX_MAC,
     MODE_AUTO,
-    MODE_CCT,
-    MODE_DIM,
     MODE_RGB,
     MODE_RGBW,
-    MODE_RGBWW,
     MODE_WHITE,
     TRANSITION_GRADUAL,
     TRANSITION_JUMP,
@@ -93,13 +97,14 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLUX_LED: Final = SUPPORT_EFFECT | SUPPORT_TRANSITION
 
+
 FLUX_COLOR_MODE_TO_HASS: Final = {
     # hs color used to avoid dealing with brightness conversions
-    MODE_RGB: COLOR_MODE_HS,
-    MODE_RGBW: COLOR_MODE_RGBW,
-    MODE_RGBWW: COLOR_MODE_RGBWW,
-    MODE_CCT: COLOR_MODE_COLOR_TEMP,
-    MODE_DIM: COLOR_MODE_WHITE,
+    FLUX_COLOR_MODE_RGB: COLOR_MODE_HS,
+    FLUX_COLOR_MODE_RGBW: COLOR_MODE_RGBW,
+    FLUX_COLOR_MODE_RGBWW: COLOR_MODE_RGBWW,
+    FLUX_COLOR_MODE_CCT: COLOR_MODE_COLOR_TEMP,
+    FLUX_COLOR_MODE_DIM: COLOR_MODE_WHITE,
 }
 
 # Constant color temp values for 2 flux_led special modes
@@ -152,8 +157,6 @@ EFFECT_MAP: Final = {
 }
 EFFECT_ID_NAME: Final = {v: k for k, v in EFFECT_MAP.items()}
 EFFECT_CUSTOM_CODE: Final = 0x60
-
-WHITE_MODES: Final = {MODE_RGBW}
 
 FLUX_EFFECT_LIST: Final = sorted(EFFECT_MAP) + [EFFECT_RANDOM]
 
@@ -295,7 +298,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
         self._bulb: WifiLedBulb = coordinator.device
         self._attr_name = name
         self._attr_unique_id = unique_id
-        self._attr_supported_features = SUPPORT_EFFECT
+        self._attr_supported_features = SUPPORT_FLUX_LED
         self._attr_min_mireds = (
             color_temperature_kelvin_to_mired(MAX_TEMP) + 1
         )  # for rounding
