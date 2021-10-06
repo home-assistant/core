@@ -163,13 +163,7 @@ class SeventeenTrackPackageSensor(SensorEntity):
             ATTR_TRACKING_NUMBER: package.tracking_number,
         }
         self._data = data
-
         self._friendly_name = package.friendly_name
-        if not self._friendly_name:
-            self._attr_name = self._tracking_number
-        else:
-            self._attr_name = f"Seventeentrack Package: {self._friendly_name}"
-
         self._state = package.status
         self._tracking_number = package.tracking_number
         self.entity_id = ENTITY_ID_TEMPLATE.format(self._tracking_number)
@@ -187,6 +181,14 @@ class SeventeenTrackPackageSensor(SensorEntity):
     def extra_state_attributes(self):
         """Return the device state attributes."""
         return self._attrs
+
+    @property
+    def name(self):
+        """Return the name."""
+        name = self._friendly_name
+        if not name:
+            name = self._tracking_number
+        return f"Seventeentrack Package: {name}"
 
     @property
     def native_value(self):
