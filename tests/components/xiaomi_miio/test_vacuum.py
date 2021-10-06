@@ -318,7 +318,83 @@ async def test_xiaomi_vacuum_services(hass, mock_mirobo_is_got_error):
     mock_mirobo_is_got_error.reset_mock()
 
 
-async def test_xiaomi_specific_services(hass, mock_mirobo_is_on):
+@pytest.mark.parametrize(
+    "error, status_calls",
+    [(None, STATUS_CALLS), (DeviceException("dummy exception"), [])],
+)
+@pytest.mark.parametrize(
+    "service, service_data, device_method, device_method_call",
+    [
+        (
+            SERVICE_START_REMOTE_CONTROL,
+            {ATTR_ENTITY_ID: "vacuum.test_vacuum_cleaner_2"},
+            "manual_start",
+            mock.call(),
+        ),
+        (
+            SERVICE_MOVE_REMOTE_CONTROL,
+            {
+                ATTR_ENTITY_ID: "vacuum.test_vacuum_cleaner_2",
+                "duration": 1000,
+                "rotation": -40,
+                "velocity": -0.1,
+            },
+            "manual_control",
+            mock.call(
+                **{
+                    "duration": 1000,
+                    "rotation": -40,
+                    "velocity": -0.1,
+                }
+            ),
+        ),
+        (
+            SERVICE_STOP_REMOTE_CONTROL,
+            {
+                ATTR_ENTITY_ID: "vacuum.test_vacuum_cleaner_2",
+            },
+            "manual_stop",
+            mock.call(),
+        ),
+        (
+            SERVICE_MOVE_REMOTE_CONTROL_STEP,
+            {
+                ATTR_ENTITY_ID: "vacuum.test_vacuum_cleaner_2",
+                "duration": 2000,
+                "rotation": 120,
+                "velocity": 0.1,
+            },
+            "manual_control_once",
+            mock.call(
+                **{
+                    "duration": 2000,
+                    "rotation": 120,
+                    "velocity": 0.1,
+                }
+            ),
+        ),
+        (
+            SERVICE_CLEAN_ZONE,
+            {
+                ATTR_ENTITY_ID: "vacuum.test_vacuum_cleaner_2",
+                "zone": [[123, 123, 123, 123]],
+                "repeats": 2,
+            },
+            "zoned_clean",
+            mock.call([[123, 123, 123, 123, 2]]),
+        ),
+    ],
+)
+async def test_xiaomi_specific_services(
+    hass,
+    mock_mirobo_is_on,
+    service,
+    service_data,
+    device_method,
+    device_method_call,
+    error,
+    status_calls,
+):
     """Test vacuum supported features."""
     entity_name = "test_vacuum_cleaner_2"
     entity_id = await setup_component(hass, entity_name)
@@ -343,64 +419,18 @@ async def test_xiaomi_specific_services(hass, mock_mirobo_is_on):
     ]
 
     # Xiaomi vacuum specific services:
-    await hass.services.async_call(
-        XIAOMI_DOMAIN,
-        SERVICE_START_REMOTE_CONTROL,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-
-    mock_mirobo_is_on.assert_has_calls([mock.call.manual_start()], any_order=True)
-    mock_mirobo_is_on.assert_has_calls(STATUS_CALLS, any_order=True)
-    mock_mirobo_is_on.reset_mock()
-
-    control = {"duration": 1000, "rotation": -40, "velocity": -0.1}
-    await hass.services.async_call(
-        XIAOMI_DOMAIN,
-        SERVICE_MOVE_REMOTE_CONTROL,
-        {**control, ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-    mock_mirobo_is_on.manual_control.assert_has_calls(
-        [mock.call(**control)], any_order=True
-    )
-    mock_mirobo_is_on.assert_has_calls(STATUS_CALLS, any_order=True)
-    mock_mirobo_is_on.reset_mock()
+    device_method_attr = getattr(mock_mirobo_is_on, device_method)
+    device_method_attr.side_effect = error
 
     await hass.services.async_call(
         XIAOMI_DOMAIN,
-        SERVICE_STOP_REMOTE_CONTROL,
-        {ATTR_ENTITY_ID: entity_id},
+        service,
+        service_data,
         blocking=True,
     )
-    mock_mirobo_is_on.assert_has_calls([mock.call.manual_stop()], any_order=True)
-    mock_mirobo_is_on.assert_has_calls(STATUS_CALLS, any_order=True)
-    mock_mirobo_is_on.reset_mock()
 
-    control_once = {"duration": 2000, "rotation": 120, "velocity": 0.1}
-    await hass.services.async_call(
-        XIAOMI_DOMAIN,
-        SERVICE_MOVE_REMOTE_CONTROL_STEP,
-        {**control_once, ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-    mock_mirobo_is_on.manual_control_once.assert_has_calls(
-        [mock.call(**control_once)], any_order=True
-    )
-    mock_mirobo_is_on.assert_has_calls(STATUS_CALLS, any_order=True)
-    mock_mirobo_is_on.reset_mock()
-
-    control = {"zone": [[123, 123, 123, 123]], "repeats": 2}
-    await hass.services.async_call(
-        XIAOMI_DOMAIN,
-        SERVICE_CLEAN_ZONE,
-        {**control, ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-    mock_mirobo_is_on.zoned_clean.assert_has_calls(
-        [mock.call([[123, 123, 123, 123, 2]])], any_order=True
-    )
-    mock_mirobo_is_on.assert_has_calls(STATUS_CALLS, any_order=True)
+    device_method_attr.assert_has_calls([device_method_call], any_order=True)
+    mock_mirobo_is_on.assert_has_calls(status_calls, any_order=True)
     mock_mirobo_is_on.reset_mock()
 
 
