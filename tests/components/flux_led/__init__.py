@@ -5,6 +5,10 @@ import socket
 from unittest.mock import MagicMock, patch
 
 from flux_led import WifiLedBulb
+from flux_led.const import (
+    COLOR_MODE_CCT as FLUX_COLOR_MODE_CCT,
+    COLOR_MODE_RGB as FLUX_COLOR_MODE_RGB,
+)
 from flux_led.protocol import LEDENETRawState
 
 from homeassistant.components.dhcp import (
@@ -29,14 +33,6 @@ DHCP_DISCOVERY = {
     DHCP_MAC_ADDRESS: MAC_ADDRESS,
 }
 FLUX_DISCOVERY = {FLUX_HOST: IP_ADDRESS, FLUX_MODEL: MODEL, FLUX_MAC: FLUX_MAC_ADDRESS}
-
-from flux_led.const import (
-    COLOR_MODE_CCT as FLUX_COLOR_MODE_CCT,
-    COLOR_MODE_DIM as FLUX_COLOR_MODE_DIM,
-    COLOR_MODE_RGB as FLUX_COLOR_MODE_RGB,
-    COLOR_MODE_RGBW as FLUX_COLOR_MODE_RGBW,
-    COLOR_MODE_RGBWW as FLUX_COLOR_MODE_RGBWW,
-)
 
 
 def _mocked_bulb() -> WifiLedBulb:
