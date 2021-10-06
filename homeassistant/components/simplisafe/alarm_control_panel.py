@@ -115,7 +115,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
             return
 
         try:
-            await self._system.set_off()
+            await self._system.async_set_off()
         except SimplipyError as err:
             LOGGER.error('Error while disarming "%s": %s', self._system.system_id, err)
             return
@@ -129,7 +129,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
             return
 
         try:
-            await self._system.set_home()
+            await self._system.async_set_home()
         except SimplipyError as err:
             LOGGER.error(
                 'Error while arming "%s" (home): %s', self._system.system_id, err
@@ -145,7 +145,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
             return
 
         try:
-            await self._system.set_away()
+            await self._system.async_set_away()
         except SimplipyError as err:
             LOGGER.error(
                 'Error while arming "%s" (away): %s', self._system.system_id, err

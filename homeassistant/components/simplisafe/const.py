@@ -8,6 +8,9 @@ LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "simplisafe"
 
+CONF_AUTH_CODE = "auth_code"
+CONF_USER_ID = "user_id"
+
 DATA_CLIENT = "client"
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
