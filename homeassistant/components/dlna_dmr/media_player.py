@@ -440,7 +440,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         if not state_variables:
             # Indicates a failure to resubscribe, check if device is still available
             self.check_available = True
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
     @property
     def available(self) -> bool:
