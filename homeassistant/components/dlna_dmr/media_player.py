@@ -944,3 +944,10 @@ class DlnaDmrEntity(MediaPlayerEntity):
         if not self._device:
             return None
         return self._device.media_channel_name
+
+    @property
+    def media_playlist(self) -> str | None:
+        """Title of Playlist currently playing."""
+        if not self._device:
+            return None
+        return self._device.media_playlist_title
