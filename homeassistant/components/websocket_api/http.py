@@ -161,9 +161,12 @@ class WebSocketHandler:
         # event we do not want to block for websocket responses
         self._writer_task = asyncio.create_task(self._writer())
 
-        auth = AuthPhase(self._logger, self.hass, self._send_message, request)
+        auth = AuthPhase(
+            self._logger, self.hass, self._send_message, self._cancel, request
+        )
         connection = None
         disconnect_warn = None
+        unregister_token_cb = None
 
         try:
             self._send_message(auth_required_message())
@@ -190,7 +193,7 @@ class WebSocketHandler:
                 raise Disconnect from err
 
             self._logger.debug("Received %s", msg_data)
-            connection = await auth.async_handle(msg_data)
+            connection, unregister_token_cb = await auth.async_handle(msg_data)
             self.hass.data[DATA_CONNECTIONS] = (
                 self.hass.data.get(DATA_CONNECTIONS, 0) + 1
             )
@@ -242,6 +245,9 @@ class WebSocketHandler:
                 self._writer_task.cancel()
 
             finally:
+                if unregister_token_cb is not None:
+                    unregister_token_cb()
+
                 if disconnect_warn is None:
                     self._logger.debug("Disconnected")
                 else:

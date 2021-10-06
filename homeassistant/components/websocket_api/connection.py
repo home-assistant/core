@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 
 from homeassistant.auth.models import RefreshToken, User
-from homeassistant.components.websocket_api.error import Disconnect
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 
@@ -38,16 +37,6 @@ class ActiveConnection:
         self.subscriptions: dict[Hashable, Callable[[], Any]] = {}
         self.last_id = 0
 
-        def revoke_callback() -> None:
-            self._token_revoked = True
-
-        self._token_revoked = False
-        self._unregister_revoke_callback = (
-            self.hass.auth.async_register_revoke_token_callback(
-                self.refresh_token_id, revoke_callback
-            )
-        )
-
     def context(self, msg: dict[str, Any]) -> Context:
         """Return a context."""
         return Context(user_id=self.user.id)
@@ -72,9 +61,6 @@ class ActiveConnection:
     @callback
     def async_handle(self, msg: dict[str, Any]) -> None:
         """Handle a single incoming message."""
-        if self._token_revoked:
-            raise Disconnect
-
         handlers = self.hass.data[const.DOMAIN]
 
         try:
@@ -122,8 +108,6 @@ class ActiveConnection:
         """Handle closing down connection."""
         for unsub in self.subscriptions.values():
             unsub()
-
-        self._unregister_revoke_callback()
 
     @callback
     def async_handle_exception(self, msg: dict[str, Any], err: Exception) -> None:
