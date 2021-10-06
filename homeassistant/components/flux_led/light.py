@@ -53,7 +53,13 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-import homeassistant.util.color as color_util
+from homeassistant.util.color import (
+    color_hs_to_RGB,
+    color_RGB_to_hs,
+    color_RGB_to_hsv,
+    color_temperature_kelvin_to_mired,
+    color_temperature_mired_to_kelvin,
+)
 
 from . import FluxLedUpdateCoordinator
 from .const import (
@@ -316,18 +322,18 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
-        raw_state = self._bulb.raw_state
+        raw = self._bulb.raw_state
         if self.color_mode == COLOR_MODE_RGBWW:
-            white_brightness = (raw_state.warm_white + raw_state.cool_white) / 2
+            white_brightness = (raw.warm_white + raw.cool_white) / 2
             brightness = (self._color_brightness + white_brightness) / 2
         elif self.color_mode == COLOR_MODE_RGBW:
-            brightness = (self._color_brightness + raw_state.warm_white) / 2
+            brightness = (self._color_brightness + raw.warm_white) / 2
         elif self.color_mode == COLOR_MODE_HS:
             brightness = self._color_brightness
         elif self.color_mode == COLOR_MODE_COLOR_TEMP:
             _, brightness = self._bulb.getWhiteTemperature()
         elif self.color_mode == COLOR_MODE_WHITE:
-            brightness = raw_state.warm_white
+            brightness = raw.warm_white
         else:
             brightness = 0
         return int(round(brightness, 0))
@@ -335,17 +341,13 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def _color_brightness(self) -> int:
         """Get the color brightness."""
-        raw_state = self._bulb.raw_state
-        return round(
-            color_util.color_RGB_to_hsv(raw_state.red, raw_state.green, raw_state.blue)[
-                2
-            ]
-        )
+        raw = self._bulb.raw_state
+        return round(color_RGB_to_hsv(raw.red, raw.green, raw.blue)[2] * 2.55)
 
     @property
     def color_temp(self) -> int:
         """Return the kelvin value of this light in mired."""
-        return color_util.color_temperature_kelvin_to_mired(self._color_temp_kelvin)
+        return color_temperature_kelvin_to_mired(self._color_temp_kelvin)
 
     @property
     def _color_temp_kelvin(self) -> int:
@@ -356,35 +358,20 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def hs_color(self) -> tuple[float, float]:
         """Return the hs color value [float, float]."""
-        raw_state = self._bulb.raw_state
-        return color_util.color_RGB_to_hs(
-            raw_state.red,
-            raw_state.green,
-            raw_state.blue,
-        )
+        raw = self._bulb.raw_state
+        return color_RGB_to_hs(raw.red, raw.green, raw.blue)
 
     @property
     def rgbw_color(self) -> tuple[int, int, int, int]:
         """Return the rgbw color value [int, int, int, int]."""
-        raw_state = self._bulb.raw_state
-        return (
-            raw_state.red,
-            raw_state.green,
-            raw_state.blue,
-            raw_state.warm_white,
-        )
+        raw = self._bulb.raw_state
+        return (raw.red, raw.green, raw.blue, raw.warm_white)
 
     @property
     def rgbww_color(self) -> tuple[int, int, int, int, int]:
         """Return the rgbww color value [int, int, int, int, int]."""
-        raw_state = self._bulb.raw_state
-        return (
-            raw_state.red,
-            raw_state.green,
-            raw_state.blue,
-            raw_state.warm_white,
-            raw_state.cool_white,
-        )
+        raw = self._bulb.raw_state
+        return (raw.red, raw.green, raw.blue, raw.warm_white, raw.cool_white)
 
     @property
     def supported_color_modes(self) -> set[str]:
@@ -471,16 +458,13 @@ class FluxLight(CoordinatorEntity, LightEntity):
         # Handle switch to CCT Color Mode
         if ATTR_COLOR_TEMP in kwargs:
             color_temp_mired = kwargs[ATTR_COLOR_TEMP]
-            color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
-                color_temp_mired
-            )
+            color_temp_kelvin = color_temperature_mired_to_kelvin(color_temp_mired)
             self._bulb.setWhiteTemperature(color_temp_kelvin, brightness)
             return
         # Handle switch to HS Color Mode
         if ATTR_HS_COLOR in kwargs:
             self._bulb.setRgbw(
-                *color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR]),
-                brightness=brightness,
+                *color_hs_to_RGB(*kwargs[ATTR_HS_COLOR]), brightness=brightness
             )
             return
         # Handle switch to RGBW Color Mode
@@ -533,7 +517,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
             return
         # Handle brightness adjustment in RGB Color Mode
         if self.color_mode == COLOR_MODE_HS:
-            rgb = color_util.color_hs_to_RGB(*self.hs_color)
+            rgb = color_hs_to_RGB(*self.hs_color)
             self._bulb.setRgbw(*rgb, brightness=brightness)
             return
         # Handle brightness adjustment in RGBW Color Mode
