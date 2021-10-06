@@ -11,14 +11,15 @@ from homeassistant.components.tuya.const import (
     CONF_ACCESS_ID,
     CONF_ACCESS_SECRET,
     CONF_APP_TYPE,
+    CONF_AUTH_TYPE,
+    CONF_COUNTRY_CODE,
     CONF_ENDPOINT,
     CONF_PASSWORD,
-    CONF_PROJECT_TYPE,
-    CONF_REGION,
     CONF_USERNAME,
     DOMAIN,
+    ENDPOINT_INDIA,
     SMARTLIFE_APP,
-    TUYA_REGIONS,
+    TUYA_COUNTRIES,
     TUYA_SMART_APP,
 )
 from homeassistant.core import HomeAssistant
@@ -26,15 +27,15 @@ from homeassistant.core import HomeAssistant
 MOCK_SMART_HOME_PROJECT_TYPE = 0
 MOCK_INDUSTRY_PROJECT_TYPE = 1
 
-MOCK_REGION = "Europe"
+MOCK_COUNTRY = "India"
 MOCK_ACCESS_ID = "myAccessId"
 MOCK_ACCESS_SECRET = "myAccessSecret"
 MOCK_USERNAME = "myUsername"
 MOCK_PASSWORD = "myPassword"
-MOCK_ENDPOINT = "https://openapi-ueaz.tuyaus.com"
+MOCK_ENDPOINT = ENDPOINT_INDIA
 
 TUYA_INPUT_DATA = {
-    CONF_REGION: MOCK_REGION,
+    CONF_COUNTRY_CODE: MOCK_COUNTRY,
     CONF_ACCESS_ID: MOCK_ACCESS_ID,
     CONF_ACCESS_SECRET: MOCK_ACCESS_SECRET,
     CONF_USERNAME: MOCK_USERNAME,
@@ -86,11 +87,13 @@ async def test_user_flow(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
-    tuya().login = MagicMock(side_effect=side_effects)
+    tuya().connect = MagicMock(side_effect=side_effects)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=TUYA_INPUT_DATA
     )
     await hass.async_block_till_done()
+
+    country = [country for country in TUYA_COUNTRIES if country.name == MOCK_COUNTRY][0]
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == MOCK_USERNAME
@@ -98,10 +101,10 @@ async def test_user_flow(
     assert result["data"][CONF_ACCESS_SECRET] == MOCK_ACCESS_SECRET
     assert result["data"][CONF_USERNAME] == MOCK_USERNAME
     assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
-    assert result["data"][CONF_ENDPOINT] == MOCK_ENDPOINT
-    assert result["data"][CONF_ENDPOINT] != TUYA_REGIONS[TUYA_INPUT_DATA[CONF_REGION]]
+    assert result["data"][CONF_ENDPOINT] == country.endpoint
     assert result["data"][CONF_APP_TYPE] == app_type
-    assert result["data"][CONF_PROJECT_TYPE] == project_type
+    assert result["data"][CONF_AUTH_TYPE] == project_type
+    assert result["data"][CONF_COUNTRY_CODE] == country.country_code
     assert not result["result"].unique_id
 
 
@@ -115,7 +118,7 @@ async def test_error_on_invalid_credentials(hass, tuya):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
-    tuya().login = MagicMock(return_value=RESPONSE_ERROR)
+    tuya().connect = MagicMock(return_value=RESPONSE_ERROR)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=TUYA_INPUT_DATA
     )
