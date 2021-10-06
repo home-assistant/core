@@ -80,6 +80,12 @@ async def frontend_themes(hass):
 
 
 @pytest.fixture
+def aiohttp_client(loop, aiohttp_client, socket_enabled):
+    """Return aiohttp_client and allow opening sockets."""
+    return aiohttp_client
+
+
+@pytest.fixture
 async def mock_http_client(hass, aiohttp_client, frontend):
     """Start the Home Assistant HTTP component."""
     return await aiohttp_client(hass.http.app)

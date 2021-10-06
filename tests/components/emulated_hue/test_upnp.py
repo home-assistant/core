@@ -29,6 +29,12 @@ class MockTransport:
 
 
 @pytest.fixture
+def aiohttp_client(loop, aiohttp_client, socket_enabled):
+    """Return aiohttp_client and allow opening sockets."""
+    return aiohttp_client
+
+
+@pytest.fixture
 def hue_client(aiohttp_client):
     """Return a hue API client."""
     app = web.Application()

@@ -2,14 +2,15 @@
     "config": {
         "abort": {
             "already_configured": "Perangkat sudah dikonfigurasi",
-            "already_in_progress": "Alur konfigurasi sedang berlangsung"
+            "already_in_progress": "Alur konfigurasi sedang berlangsung",
+            "reauth_successful": "Autentikasi ulang berhasil"
         },
         "error": {
             "cannot_connect": "Gagal terhubung",
             "no_device_selected": "Tidak ada perangkat yang dipilih, pilih satu perangkat.",
             "unknown_device": "Model perangkat tidak diketahui, tidak dapat menyiapkan perangkat menggunakan alur konfigurasi."
         },
-        "flow_title": "Xiaomi Miio: {name}",
+        "flow_title": "{name}",
         "step": {
             "cloud": {
                 "data": {

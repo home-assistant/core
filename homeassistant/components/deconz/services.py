@@ -5,6 +5,7 @@ import asyncio
 from pydeconz.utils import normalize_bridge_id
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity_registry import (
@@ -46,13 +47,22 @@ SERVICE_DEVICE_REFRESH = "device_refresh"
 SERVICE_REMOVE_ORPHANED_ENTRIES = "remove_orphaned_entries"
 SELECT_GATEWAY_SCHEMA = vol.All(vol.Schema({vol.Optional(CONF_BRIDGE_ID): str}))
 
+SUPPORTED_SERVICES = (
+    SERVICE_CONFIGURE_DEVICE,
+    SERVICE_DEVICE_REFRESH,
+    SERVICE_REMOVE_ORPHANED_ENTRIES,
+)
 
-async def async_setup_services(hass):
+SERVICE_TO_SCHEMA = {
+    SERVICE_CONFIGURE_DEVICE: SERVICE_CONFIGURE_DEVICE_SCHEMA,
+    SERVICE_DEVICE_REFRESH: SELECT_GATEWAY_SCHEMA,
+    SERVICE_REMOVE_ORPHANED_ENTRIES: SELECT_GATEWAY_SCHEMA,
+}
+
+
+@callback
+def async_setup_services(hass):
     """Set up services for deCONZ integration."""
-    if hass.data.get(DECONZ_SERVICES, False):
-        return
-
-    hass.data[DECONZ_SERVICES] = True
 
     async def async_call_deconz_service(service_call):
         """Call correct deCONZ service."""
@@ -83,38 +93,20 @@ async def async_setup_services(hass):
         elif service == SERVICE_REMOVE_ORPHANED_ENTRIES:
             await async_remove_orphaned_entries_service(gateway)
 
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_CONFIGURE_DEVICE,
-        async_call_deconz_service,
-        schema=SERVICE_CONFIGURE_DEVICE_SCHEMA,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_DEVICE_REFRESH,
-        async_call_deconz_service,
-        schema=SELECT_GATEWAY_SCHEMA,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_REMOVE_ORPHANED_ENTRIES,
-        async_call_deconz_service,
-        schema=SELECT_GATEWAY_SCHEMA,
-    )
+    for service in SUPPORTED_SERVICES:
+        hass.services.async_register(
+            DOMAIN,
+            service,
+            async_call_deconz_service,
+            schema=SERVICE_TO_SCHEMA[service],
+        )
 
 
-async def async_unload_services(hass):
+@callback
+def async_unload_services(hass):
     """Unload deCONZ services."""
-    if not hass.data.get(DECONZ_SERVICES):
-        return
-
-    hass.data[DECONZ_SERVICES] = False
-
-    hass.services.async_remove(DOMAIN, SERVICE_CONFIGURE_DEVICE)
-    hass.services.async_remove(DOMAIN, SERVICE_DEVICE_REFRESH)
-    hass.services.async_remove(DOMAIN, SERVICE_REMOVE_ORPHANED_ENTRIES)
+    for service in SUPPORTED_SERVICES:
+        hass.services.async_remove(DOMAIN, service)
 
 
 async def async_configure_service(gateway, data):
@@ -185,7 +177,7 @@ async def async_remove_orphaned_entries_service(gateway):
 
     # Don't remove the Gateway service entry
     gateway_service = device_registry.async_get_device(
-        identifiers={(DOMAIN, gateway.api.config.bridgeid)}, connections=set()
+        identifiers={(DOMAIN, gateway.api.config.bridge_id)}, connections=set()
     )
     if gateway_service.id in devices_to_be_removed:
         devices_to_be_removed.remove(gateway_service.id)

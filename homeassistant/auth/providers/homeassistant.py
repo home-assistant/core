@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 import base64
-from collections import OrderedDict
 from collections.abc import Mapping
 import logging
 from typing import Any, cast
@@ -82,9 +81,7 @@ class Data:
 
     async def async_load(self) -> None:
         """Load stored data."""
-        data = await self._store.async_load()
-
-        if data is None:
+        if (data := await self._store.async_load()) is None:
             data = {"users": []}
 
         seen: set[str] = set()
@@ -93,9 +90,7 @@ class Data:
             username = user["username"]
 
             # check if we have duplicates
-            folded = username.casefold()
-
-            if folded in seen:
+            if (folded := username.casefold()) in seen:
                 self.is_legacy = True
 
                 logging.getLogger(__name__).warning(
@@ -339,10 +334,13 @@ class HassLoginFlow(LoginFlow):
                 user_input.pop("password")
                 return await self.async_finish(user_input)
 
-        schema: dict[str, type] = OrderedDict()
-        schema["username"] = str
-        schema["password"] = str
-
         return self.async_show_form(
-            step_id="init", data_schema=vol.Schema(schema), errors=errors
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("username"): str,
+                    vol.Required("password"): str,
+                }
+            ),
+            errors=errors,
         )

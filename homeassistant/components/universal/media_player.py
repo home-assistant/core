@@ -87,6 +87,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import EVENT_HOMEASSISTANT_START, callback
 from homeassistant.exceptions import TemplateError
@@ -101,7 +102,7 @@ CONF_ATTRS = "attributes"
 CONF_CHILDREN = "children"
 CONF_COMMANDS = "commands"
 
-OFF_STATES = [STATE_IDLE, STATE_OFF, STATE_UNAVAILABLE]
+OFF_STATES = [STATE_IDLE, STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN]
 
 ATTRS_SCHEMA = cv.schema_with_slug_keys(cv.string)
 CMD_SCHEMA = cv.schema_with_slug_keys(cv.SERVICE_SCHEMA)

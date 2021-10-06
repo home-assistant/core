@@ -16,7 +16,7 @@
             "no_usable_service": "Perangkat ditemukan tetapi kami tidak dapat mengidentifikasi berbagai cara untuk membuat koneksi ke perangkat tersebut. Jika Anda terus melihat pesan ini, coba tentukan alamat IP-nya atau mulai ulang Apple TV Anda.",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
-        "flow_title": "Apple TV: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "description": "Anda akan menambahkan Apple TV bernama `{name}` ke Home Assistant.\n\n** Untuk menyelesaikan proses, Anda mungkin harus memasukkan kode PIN beberapa kali.**\n\nPerhatikan bahwa Anda *tidak* akan dapat mematikan Apple TV dengan integrasi ini. Hanya pemutar media di Home Assistant yang akan dimatikan!",

@@ -325,10 +325,16 @@ async def test_onboarding_integration_invalid_redirect_uri(
 
     client = await hass_client()
 
-    resp = await client.post(
-        "/api/onboarding/integration",
-        json={"client_id": CLIENT_ID, "redirect_uri": "http://invalid-redirect.uri"},
-    )
+    with patch(
+        "homeassistant.components.auth.indieauth.fetch_redirect_uris", return_value=[]
+    ):
+        resp = await client.post(
+            "/api/onboarding/integration",
+            json={
+                "client_id": CLIENT_ID,
+                "redirect_uri": "http://invalid-redirect.uri",
+            },
+        )
 
     assert resp.status == 400
 
@@ -442,3 +448,40 @@ async def test_onboarding_analytics(hass, hass_storage, hass_client, hass_admin_
 
     resp = await client.post("/api/onboarding/analytics")
     assert resp.status == 403
+
+
+async def test_onboarding_installation_type(hass, hass_storage, hass_client):
+    """Test returning installation type during onboarding."""
+    mock_storage(hass_storage, {"done": []})
+    await async_setup_component(hass, "persistent_notification", {})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    with patch(
+        "homeassistant.components.onboarding.views.async_get_system_info",
+        return_value={"installation_type": "Home Assistant Core"},
+    ):
+        resp = await client.get("/api/onboarding/installation_type")
+
+        assert resp.status == 200
+
+        resp_content = await resp.json()
+        assert resp_content["installation_type"] == "Home Assistant Core"
+
+
+async def test_onboarding_installation_type_after_done(hass, hass_storage, hass_client):
+    """Test raising for installation type after onboarding."""
+    mock_storage(hass_storage, {"done": [const.STEP_USER]})
+    await async_setup_component(hass, "persistent_notification", {})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    resp = await client.get("/api/onboarding/installation_type")
+
+    assert resp.status == 401

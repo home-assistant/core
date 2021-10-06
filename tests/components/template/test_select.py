@@ -60,6 +60,38 @@ async def test_missing_optional_config(hass, calls):
     _verify(hass, "a", ["a", "b"])
 
 
+async def test_multiple_configs(hass, calls):
+    """Test: multiple select entities get created."""
+    with assert_setup_component(1, "template"):
+        assert await setup.async_setup_component(
+            hass,
+            "template",
+            {
+                "template": {
+                    "select": [
+                        {
+                            "state": "{{ 'a' }}",
+                            "select_option": {"service": "script.select_option"},
+                            "options": "{{ ['a', 'b'] }}",
+                        },
+                        {
+                            "state": "{{ 'a' }}",
+                            "select_option": {"service": "script.select_option"},
+                            "options": "{{ ['a', 'b'] }}",
+                        },
+                    ]
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    _verify(hass, "a", ["a", "b"])
+    _verify(hass, "a", ["a", "b"], f"{_TEST_SELECT}_2")
+
+
 async def test_missing_required_keys(hass, calls):
     """Test: missing required fields will fail."""
     with assert_setup_component(0, "template"):
@@ -250,9 +282,9 @@ async def test_trigger_select(hass):
     assert events[0].event_type == "test_number_event"
 
 
-def _verify(hass, expected_current_option, expected_options):
+def _verify(hass, expected_current_option, expected_options, entity_name=_TEST_SELECT):
     """Verify select's state."""
-    state = hass.states.get(_TEST_SELECT)
+    state = hass.states.get(entity_name)
     attributes = state.attributes
     assert state.state == str(expected_current_option)
     assert attributes.get(SELECT_ATTR_OPTIONS) == expected_options

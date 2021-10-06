@@ -248,11 +248,6 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
             try_keep_current_mode = False
 
         if self._supports_color_mode and color_modes:
-            # try the color mode with the least complexity (fewest capabilities set)
-            # popcount with bin() function because it appears to be the best way: https://stackoverflow.com/a/9831671
-            color_modes.sort(key=lambda mode: bin(mode).count("1"))
-            data["color_mode"] = color_modes[0]
-        if self._supports_color_mode and color_modes:
             if (
                 try_keep_current_mode
                 and self._state is not None

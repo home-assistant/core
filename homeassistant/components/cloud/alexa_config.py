@@ -56,12 +56,6 @@ class AlexaConfig(alexa_config.AbstractConfig):
         self._alexa_sync_unsub = None
         self._endpoint = None
 
-        prefs.async_listen_updates(self._async_prefs_updated)
-        hass.bus.async_listen(
-            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
-            self._handle_entity_registry_updated,
-        )
-
     @property
     def enabled(self):
         """Return if Alexa is enabled."""
@@ -113,6 +107,12 @@ class AlexaConfig(alexa_config.AbstractConfig):
                 await async_setup_component(self.hass, ALEXA_DOMAIN, {})
 
         start.async_at_start(self.hass, hass_started)
+
+        self._prefs.async_listen_updates(self._async_prefs_updated)
+        self.hass.bus.async_listen(
+            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
+            self._handle_entity_registry_updated,
+        )
 
     def should_expose(self, entity_id):
         """If an entity should be exposed."""
@@ -171,6 +171,15 @@ class AlexaConfig(alexa_config.AbstractConfig):
 
     async def _async_prefs_updated(self, prefs):
         """Handle updated preferences."""
+        if not self._cloud.is_logged_in:
+            if self.is_reporting_states:
+                await self.async_disable_proactive_mode()
+
+            if self._alexa_sync_unsub:
+                self._alexa_sync_unsub()
+                self._alexa_sync_unsub = None
+            return
+
         if ALEXA_DOMAIN not in self.hass.config.components and self.enabled:
             await async_setup_component(self.hass, ALEXA_DOMAIN, {})
 

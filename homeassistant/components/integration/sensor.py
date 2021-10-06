@@ -60,18 +60,21 @@ ICON = "mdi:chart-histogram"
 
 DEFAULT_ROUND = 3
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
-        vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
-        vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
-        vol.Optional(CONF_UNIT_TIME, default=TIME_HOURS): vol.In(UNIT_TIME),
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-        vol.Optional(CONF_METHOD, default=TRAPEZOIDAL_METHOD): vol.In(
-            INTEGRATION_METHOD
-        ),
-    }
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated(CONF_UNIT_OF_MEASUREMENT),
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Optional(CONF_NAME): cv.string,
+            vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
+            vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
+            vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
+            vol.Optional(CONF_UNIT_TIME, default=TIME_HOURS): vol.In(UNIT_TIME),
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+            vol.Optional(CONF_METHOD, default=TRAPEZOIDAL_METHOD): vol.In(
+                INTEGRATION_METHOD
+            ),
+        }
+    ),
 )
 
 
@@ -106,7 +109,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         """Initialize the integration sensor."""
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
-        self._state = STATE_UNAVAILABLE
+        self._state = None
         self._method = integration_method
 
         self._name = name if name is not None else f"{source_entity} integral"

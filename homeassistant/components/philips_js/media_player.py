@@ -213,9 +213,12 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
     async def async_turn_off(self):
         """Turn off the device."""
-        await self._tv.sendKey("Standby")
-        self._state = STATE_OFF
-        await self._async_update_soon()
+        if self._state == STATE_ON:
+            await self._tv.sendKey("Standby")
+            self._state = STATE_OFF
+            await self._async_update_soon()
+        else:
+            _LOGGER.debug("Ignoring turn off when already in expected state")
 
     async def async_volume_up(self):
         """Send volume up command."""

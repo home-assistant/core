@@ -1,4 +1,6 @@
 """Component to integrate the Home Assistant cloud."""
+import asyncio
+
 from hass_nabucasa import Cloud
 import voluptuous as vol
 
@@ -193,13 +195,13 @@ async def async_setup(hass, config):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
+    _remote_handle_prefs_updated(cloud)
+
     async def _service_handler(service):
         """Handle service for cloud."""
         if service.service == SERVICE_REMOTE_CONNECT:
-            await cloud.remote.connect()
             await prefs.async_update(remote_enabled=True)
         elif service.service == SERVICE_REMOTE_DISCONNECT:
-            await cloud.remote.disconnect()
             await prefs.async_update(remote_enabled=False)
 
     hass.helpers.service.async_register_admin_service(
@@ -234,3 +236,28 @@ async def async_setup(hass, config):
     account_link.async_setup(hass)
 
     return True
+
+
+@callback
+def _remote_handle_prefs_updated(cloud: Cloud) -> None:
+    """Handle remote preferences updated."""
+    cur_pref = cloud.client.prefs.remote_enabled
+    lock = asyncio.Lock()
+
+    # Sync remote connection with prefs
+    async def remote_prefs_updated(prefs: CloudPreferences) -> None:
+        """Update remote status."""
+        nonlocal cur_pref
+
+        async with lock:
+            if prefs.remote_enabled == cur_pref:
+                return
+
+            cur_pref = prefs.remote_enabled
+
+            if cur_pref:
+                await cloud.remote.connect()
+            else:
+                await cloud.remote.disconnect()
+
+    cloud.client.prefs.async_listen_updates(remote_prefs_updated)
