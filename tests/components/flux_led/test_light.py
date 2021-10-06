@@ -541,9 +541,7 @@ async def test_white_light(hass: HomeAssistant) -> None:
     bulb.setWarmWhite255.reset_mock()
 
 
-async def test_rgb_light_custom_effects(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_rgb_light_custom_effects(hass: HomeAssistant) -> None:
     """Test an rgb light with a custom effect."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -602,7 +600,6 @@ async def test_rgb_light_custom_effects(
     attributes = state.attributes
     assert attributes[ATTR_EFFECT] == "custom"
 
-    caplog.clear()
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
@@ -619,7 +616,6 @@ async def test_rgb_light_custom_effects(
     assert state.state == STATE_ON
     attributes = state.attributes
     assert attributes[ATTR_EFFECT] == "custom"
-    assert "RGB, brightness and white level are ignored when" in caplog.text
 
 
 async def test_rgb_light_custom_effects_invalid_colors(hass: HomeAssistant) -> None:

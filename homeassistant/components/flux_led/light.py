@@ -380,7 +380,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def effect(self) -> str | None:
         """Return the current effect."""
-        if (current_mode := self._bulb.raw_state.mode) == EFFECT_CUSTOM_CODE:
+        if (current_mode := self._bulb.raw_state.preset_pattern) == EFFECT_CUSTOM_CODE:
             return EFFECT_CUSTOM
         return EFFECT_ID_NAME.get(current_mode)
 
