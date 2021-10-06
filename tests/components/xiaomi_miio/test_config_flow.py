@@ -8,6 +8,8 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.xiaomi_miio import const
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 
+from . import TEST_MAC
+
 from tests.common import MockConfigEntry
 
 ZEROCONF_NAME = "name"
@@ -23,7 +25,6 @@ TEST_TOKEN = "12345678901234567890123456789012"
 TEST_NAME = "Test_Gateway"
 TEST_NAME2 = "Test_Gateway_2"
 TEST_MODEL = const.MODELS_GATEWAY[0]
-TEST_MAC = "ab:cd:ef:gh:ij:kl"
 TEST_MAC2 = "mn:op:qr:st:uv:wx"
 TEST_MAC_DEVICE = "abcdefghijkl"
 TEST_MAC_DEVICE2 = "mnopqrstuvwx"
@@ -31,7 +32,6 @@ TEST_GATEWAY_ID = TEST_MAC
 TEST_HARDWARE_VERSION = "AB123"
 TEST_FIRMWARE_VERSION = "1.2.3_456"
 TEST_ZEROCONF_NAME = "lumi-gateway-v3_miio12345678._miio._udp.local."
-TEST_SUB_DEVICE_LIST = []
 TEST_CLOUD_DEVICES_1 = [
     {
         "parent_id": None,
