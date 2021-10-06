@@ -146,8 +146,9 @@ class NetgearRouter:
         self.model = self._info.get("ModelName")
         self.firmware_version = self._info.get("Firmwareversion")
 
-        if self.model in MODELS_V2:
-            self._method_version = 2
+        for model in MODELS_V2:
+            if self.model.startswith(model):
+                self._method_version = 2
 
     async def async_setup(self) -> None:
         """Set up a Netgear router."""
@@ -198,11 +199,11 @@ class NetgearRouter:
         ntg_devices = await self.async_get_attached_devices()
         now = dt_util.utcnow()
 
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("Netgear scan result: \n%s", ntg_devices)
+
         for ntg_device in ntg_devices:
             device_mac = format_mac(ntg_device.mac)
-
-            if self._method_version == 2 and not ntg_device.link_rate:
-                continue
 
             if not self.devices.get(device_mac):
                 new_device = True
