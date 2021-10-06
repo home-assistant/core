@@ -430,6 +430,8 @@ class FluxLight(CoordinatorEntity, LightEntity):
         # Values added for testing only, remove before merging
         return {
             "ip_address": self._ip_address,
+            "brightness_pct": str(self.brightness / 255),
+            "test_color_mode": self.color_mode,
             "mode": hex(self._bulb.raw_state.mode),
             "preset_pattern": hex(self._bulb.raw_state.preset_pattern),
             "internal_color_mode": hex(self._bulb.raw_state.color_mode),
