@@ -171,10 +171,10 @@ async def test_ip_bans_file_creation(hass, aiohttp_client):
         assert m_open.call_count == 1
 
         assert (
-            len(notifications := hass.states.async_all("persistent_notification")) == 3
+            len(notifications := hass.states.async_all("persistent_notification")) == 2
         )
         assert (
-            hass.states.get(notifications[0]).attributes["message"]
+            notifications[0].attributes["message"]
             == "Login attempt or request with invalid authentication from example.com (200.201.202.204). See the log for details."
         )
 

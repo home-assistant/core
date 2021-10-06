@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
 from homeassistant.bootstrap import async_setup_component
-from homeassistant.components import recorder
+from homeassistant.components import persistent_notification as pn, recorder
 from homeassistant.components.recorder import RecorderRuns, migration, models
 from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import States
@@ -25,7 +25,7 @@ import homeassistant.util.dt as dt_util
 
 from .common import async_wait_recording_done_without_instance
 
-from tests.common import async_fire_time_changed, async_mock_service
+from tests.common import async_fire_time_changed
 from tests.components.recorder import models_original
 
 
@@ -90,9 +90,6 @@ async def test_migration_in_progress(hass):
 
 async def test_database_migration_failed(hass):
     """Test we notify if the migration fails."""
-
-    create_calls = async_mock_service(hass, "persistent_notification", "create")
-    dismiss_calls = async_mock_service(hass, "persistent_notification", "dismiss")
     assert await recorder.async_migration_in_progress(hass) is False
 
     with patch(
@@ -100,7 +97,12 @@ async def test_database_migration_failed(hass):
     ), patch(
         "homeassistant.components.recorder.migration._apply_update",
         side_effect=ValueError,
-    ):
+    ), patch(
+        "homeassistant.components.persistent_notification.create", side_effect=pn.create
+    ) as mock_create, patch(
+        "homeassistant.components.persistent_notification.dismiss",
+        side_effect=pn.dismiss,
+    ) as mock_dismiss:
         await async_setup_component(
             hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
         )
@@ -111,8 +113,8 @@ async def test_database_migration_failed(hass):
         await hass.async_block_till_done()
 
     assert await recorder.async_migration_in_progress(hass) is False
-    assert len(create_calls) == 2
-    assert len(dismiss_calls) == 1
+    assert len(mock_create.mock_calls) == 2
+    assert len(mock_dismiss.mock_calls) == 1
 
 
 async def test_database_migration_encounters_corruption(hass):
@@ -145,9 +147,6 @@ async def test_database_migration_encounters_corruption(hass):
 
 async def test_database_migration_encounters_corruption_not_sqlite(hass):
     """Test we fail on database error when we cannot recover."""
-
-    create_calls = async_mock_service(hass, "persistent_notification", "create")
-    dismiss_calls = async_mock_service(hass, "persistent_notification", "dismiss")
     assert await recorder.async_migration_in_progress(hass) is False
 
     with patch(
@@ -158,7 +157,12 @@ async def test_database_migration_encounters_corruption_not_sqlite(hass):
         side_effect=DatabaseError("statement", {}, []),
     ), patch(
         "homeassistant.components.recorder.move_away_broken_database"
-    ) as move_away:
+    ) as move_away, patch(
+        "homeassistant.components.persistent_notification.create", side_effect=pn.create
+    ) as mock_create, patch(
+        "homeassistant.components.persistent_notification.dismiss",
+        side_effect=pn.dismiss,
+    ) as mock_dismiss:
         await async_setup_component(
             hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
         )
@@ -170,8 +174,8 @@ async def test_database_migration_encounters_corruption_not_sqlite(hass):
 
     assert await recorder.async_migration_in_progress(hass) is False
     assert not move_away.called
-    assert len(create_calls) == 2
-    assert len(dismiss_calls) == 1
+    assert len(mock_create.mock_calls) == 2
+    assert len(mock_dismiss.mock_calls) == 1
 
 
 async def test_events_during_migration_are_queued(hass):
