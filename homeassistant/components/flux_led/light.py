@@ -24,6 +24,7 @@ from homeassistant.components.light import (
     COLOR_MODE_RGB,
     COLOR_MODE_RGBW,
     COLOR_MODE_RGBWW,
+    COLOR_MODE_WHITE,
     EFFECT_COLORLOOP,
     EFFECT_RANDOM,
     PLATFORM_SCHEMA,
@@ -89,6 +90,16 @@ FLUX_LED_TO_COLOR_MODE: Final = {
     MODE_RGB: COLOR_MODE_RGB,
     MODE_CCT: COLOR_MODE_COLOR_TEMP,
     MODE_DIM: COLOR_MODE_BRIGHTNESS,
+}
+
+
+FLUX_COLOR_MODE_TO_HASS = {
+    MODE_RGB: COLOR_MODE_RGB,
+    MODE_RGBW: COLOR_MODE_RGBW,
+    MODE_RGBWW: COLOR_MODE_RGBWW,
+    MODE_CCT: COLOR_MODE_COLOR_TEMP,
+    MODE_DIM: COLOR_MODE_BRIGHTNESS,
+    MODE_WHITE: COLOR_MODE_WHITE,
 }
 
 # Constant color temp values for 2 flux_led special modes
@@ -346,44 +357,48 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the rgb color value [int, int, int]."""
-        rgb_scaled = self._bulb.getRgb()
-        hs = color_util.color_RGB_to_hs(*rgb_scaled)
-        return color_util.color_hs_to_RGB(*hs)
+        raw_state = self._bulb.raw_state
+        return (
+            raw_state.red,
+            raw_state.green,
+            raw_state.blue,
+        )
 
     @property
     def rgbw_color(self) -> tuple[int, int, int, int] | None:
         """Return the rgbw color value [int, int, int, int]."""
-        rgbw_color = self._bulb.getRgbw()
-        return cast(tuple[int, int, int, int], rgbw_color)
+        raw_state = self._bulb.raw_state
+        return (
+            raw_state.red,
+            raw_state.green,
+            raw_state.blue,
+            raw_state.warm_white,
+        )
 
     @property
     def rgbww_color(self) -> tuple[int, int, int, int, int] | None:
         """Return the rgbww color value [int, int, int, int, int]."""
-        rgbww_color = self._bulb.getRgbww()
-        return cast(tuple[int, int, int, int, int], rgbww_color)
+        raw_state = self._bulb.raw_state
+        return (
+            raw_state.red,
+            raw_state.green,
+            raw_state.blue,
+            raw_state.warm_white,
+            raw_state.cool_white,
+        )
 
     @property
     def supported_color_modes(self) -> set[str]:
         """Flag supported color modes."""
         mode_list = {COLOR_MODE_ONOFF, COLOR_MODE_BRIGHTNESS}
-        if self._bulb.model_num == 0x35:  # TODO: move to lib
-            mode_list.add(COLOR_MODE_RGB)
-            mode_list.add(COLOR_MODE_COLOR_TEMP)
-        elif self._mode == MODE_RGBWW:
-            mode_list.add(COLOR_MODE_RGBWW)
-            mode_list.add(COLOR_MODE_COLOR_TEMP)
-        elif self._mode == MODE_RGBW:
-            mode_list.add(COLOR_MODE_RGBW)
-        elif self._mode == MODE_RGB:
-            mode_list.add(COLOR_MODE_RGB)
-        elif self._mode == MODE_CCT:
-            mode_list.add(COLOR_MODE_COLOR_TEMP)
+        for mode in self._bulb.color_modes:
+            mode_list.add(FLUX_COLOR_MODE_TO_HASS[mode])
         return mode_list
 
     @property
     def color_mode(self) -> str:
         """Return the color mode of the light."""
-        return FLUX_LED_TO_COLOR_MODE.get(self._bulb.mode, COLOR_MODE_BRIGHTNESS)
+        return FLUX_COLOR_MODE_TO_HASS.get(self._bulb.color_mode, COLOR_MODE_BRIGHTNESS)
 
     #    @property
     #    def white_value(self) -> int:
@@ -410,9 +425,9 @@ class FluxLight(CoordinatorEntity, LightEntity):
         # Values added for testing only, remove before merging
         return {
             "ip_address": self._ip_address,
-            "mode": self._bulb.mode,
-            "preset_pattern": self._bulb.raw_state.preset_pattern,
-            "color_mode": self._bulb.raw_state.color_mode,
+            "mode": hex(self._bulb.raw_state.mode),
+            "preset_pattern": hex(self._bulb.raw_state.preset_pattern),
+            "internal_color_mode": hex(self._bulb.raw_state.color_mode),
             "red": self._bulb.raw_state.red,
             "green": self._bulb.raw_state.green,
             "blue": self._bulb.raw_state.blue,
