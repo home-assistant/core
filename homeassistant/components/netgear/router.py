@@ -146,8 +146,9 @@ class NetgearRouter:
         self.model = self._info.get("ModelName")
         self.firmware_version = self._info.get("Firmwareversion")
 
-        if self.model in MODELS_V2:
-            self._method_version = 2
+        for model in MODELS_V2:
+            if self.model.startswith(model):
+                self._method_version = 2
 
     async def async_setup(self) -> None:
         """Set up a Netgear router."""
