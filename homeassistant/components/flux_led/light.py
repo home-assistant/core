@@ -323,39 +323,30 @@ class FluxLight(CoordinatorEntity, LightEntity):
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         raw_state = self._bulb.raw_state
-
         if self.color_mode == COLOR_MODE_RGBWW:
-            hsv = color_util.color_RGB_to_hsv(
-                raw_state.red, raw_state.green, raw_state.blue
-            )
-            color_brightness = round(hsv[2] * 2.55, 0)
-            white_brightness = round(
-                (raw_state.warm_white + raw_state.cool_white) / 2, 0
-            )
-            brightness = round((color_brightness + white_brightness) / 2, 0)
+            white_brightness = (raw_state.warm_white + raw_state.cool_white) / 2
+            brightness = (self.color_brightness + white_brightness) / 2
         elif self.color_mode == COLOR_MODE_RGBW:
-            hsv = color_util.color_RGB_to_hsv(
-                raw_state.red, raw_state.green, raw_state.blue
-            )
-            color_brightness = round(hsv[2] * 2.55, 0)
-            white_brightness = raw_state.warm_white
-            brightness = round((color_brightness + white_brightness) / 2, 0)
+            brightness = (self.color_brightness + raw_state.warm_white) / 2
         elif self.color_mode == COLOR_MODE_RGB:
-            hsv = color_util.color_RGB_to_hsv(
-                raw_state.red, raw_state.green, raw_state.blue
-            )
-            brightness = round(hsv[2] * 2.55, 0)
+            brightness = self.color_brightness
         elif self.color_mode == COLOR_MODE_COLOR_TEMP:
             _, brightness = self._bulb.getWhiteTemperature()
         elif self.color_mode == COLOR_MODE_WHITE:
-            white_brightness = round(
-                (raw_state.warm_white + raw_state.cool_white) / 2, 0
-            )
-            brightness = round(white_brightness, 0)
+            brightness = (raw_state.warm_white + raw_state.cool_white) / 2
         else:
             brightness = raw_state.warm_white
 
-        return cast(int, brightness)
+        return int(round(brightness, 0))
+
+    @property
+    def color_brightness(self) -> int:
+        """Get the color brightness."""
+        raw_state = self._bulb.raw_state
+        _, _, v = color_util.color_RGB_to_hsv(
+            raw_state.red, raw_state.green, raw_state.blue
+        )
+        return int(round(v * 2.55, 0))
 
     @property
     def color_temp(self) -> int:
