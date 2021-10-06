@@ -21,24 +21,17 @@ from homeassistant.components.vacuum import (
     STATE_CLEANING,
     STATE_ERROR,
 )
-from homeassistant.components.xiaomi_miio import const
-from homeassistant.components.xiaomi_miio.const import DOMAIN as XIAOMI_DOMAIN
+from homeassistant.components.xiaomi_miio.const import (
+    CONF_DEVICE,
+    CONF_FLOW_TYPE,
+    CONF_MAC,
+    CONF_MODEL,
+    DOMAIN as XIAOMI_DOMAIN,
+    MODELS_VACUUM,
+)
 from homeassistant.components.xiaomi_miio.vacuum import (
-    ATTR_CLEANED_AREA,
-    ATTR_CLEANED_TOTAL_AREA,
-    ATTR_CLEANING_COUNT,
-    ATTR_CLEANING_TIME,
-    ATTR_CLEANING_TOTAL_TIME,
-    ATTR_DO_NOT_DISTURB,
-    ATTR_DO_NOT_DISTURB_END,
-    ATTR_DO_NOT_DISTURB_START,
     ATTR_ERROR,
-    ATTR_FILTER_LEFT,
-    ATTR_MAIN_BRUSH_LEFT,
-    ATTR_SIDE_BRUSH_LEFT,
     ATTR_TIMERS,
-    CONF_HOST,
-    CONF_TOKEN,
     SERVICE_CLEAN_SEGMENT,
     SERVICE_CLEAN_ZONE,
     SERVICE_GOTO,
@@ -50,17 +43,15 @@ from homeassistant.components.xiaomi_miio.vacuum import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    STATE_OFF,
-    STATE_ON,
+    CONF_HOST,
+    CONF_TOKEN,
     STATE_UNAVAILABLE,
 )
 from homeassistant.util import dt as dt_util
 
-from .test_config_flow import TEST_MAC
+from . import TEST_MAC
 
-from tests.common import MockConfigEntry
-
-PLATFORM = "xiaomi_miio"
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 # calls made when device status is requested
 STATUS_CALLS = [
@@ -115,7 +106,7 @@ def mirobo_is_got_error_fixture():
 
     mock_vacuum.timer.return_value = [mock_timer_1, mock_timer_2]
 
-    with patch("homeassistant.components.xiaomi_miio.vacuum.Vacuum") as mock_vacuum_cls:
+    with patch("homeassistant.components.xiaomi_miio.Vacuum") as mock_vacuum_cls:
         mock_vacuum_cls.return_value = mock_vacuum
         yield mock_vacuum
 
@@ -143,7 +134,7 @@ def mirobo_old_speeds_fixture(request):
     mock_vacuum.fan_speed_presets.return_value = request.param
     mock_vacuum.status().fanspeed = list(request.param.values())[0]
 
-    with patch("homeassistant.components.xiaomi_miio.vacuum.Vacuum") as mock_vacuum_cls:
+    with patch("homeassistant.components.xiaomi_miio.Vacuum") as mock_vacuum_cls:
         mock_vacuum_cls.return_value = mock_vacuum
         yield mock_vacuum
 
@@ -154,7 +145,8 @@ def mirobo_is_on_fixture():
     mock_vacuum = MagicMock()
     mock_vacuum.status().data = {"test": "raw"}
     mock_vacuum.status().is_on = True
-    mock_vacuum.status().fanspeed = 99
+    mock_vacuum.fan_speed_presets.return_value = new_fanspeeds
+    mock_vacuum.status().fanspeed = list(new_fanspeeds.values())[0]
     mock_vacuum.status().got_error = False
     mock_vacuum.status().battery = 32
     mock_vacuum.status().clean_area = 133.43218
@@ -176,6 +168,19 @@ def mirobo_is_on_fixture():
     mock_vacuum.status().state = "Test Xiaomi Cleaning"
     mock_vacuum.status().state_code = 5
     mock_vacuum.dnd_status().enabled = False
+    mock_vacuum.last_clean_details().start = datetime(
+        2020, 4, 1, 13, 21, 10, tzinfo=dt_util.UTC
+    )
+    mock_vacuum.last_clean_details().end = datetime(
+        2020, 4, 1, 13, 21, 10, tzinfo=dt_util.UTC
+    )
+    mock_vacuum.last_clean_details().duration = timedelta(
+        hours=11, minutes=15, seconds=34
+    )
+    mock_vacuum.last_clean_details().area = 133.43218
+    mock_vacuum.last_clean_details().error_code = 1
+    mock_vacuum.last_clean_details().error = "test_error_code"
+    mock_vacuum.last_clean_details().complete = True
 
     mock_timer_1 = MagicMock()
     mock_timer_1.enabled = True
@@ -189,12 +194,12 @@ def mirobo_is_on_fixture():
 
     mock_vacuum.timer.return_value = [mock_timer_1, mock_timer_2]
 
-    with patch("homeassistant.components.xiaomi_miio.vacuum.Vacuum") as mock_vacuum_cls:
+    with patch("homeassistant.components.xiaomi_miio.Vacuum") as mock_vacuum_cls:
         mock_vacuum_cls.return_value = mock_vacuum
         yield mock_vacuum
 
 
-async def test_xiaomi_exceptions(hass, caplog, mock_mirobo_is_on):
+async def test_xiaomi_exceptions(hass, mock_mirobo_is_on):
     """Test error logging on exceptions."""
     entity_name = "test_vacuum_cleaner_error"
     entity_id = await setup_component(hass, entity_name)
@@ -204,53 +209,39 @@ async def test_xiaomi_exceptions(hass, caplog, mock_mirobo_is_on):
         return state.state != STATE_UNAVAILABLE
 
     # The initial setup has to be done successfully
-    assert "Initializing with host 192.168.1.100 (token 12345...)" in caplog.text
-    assert "WARNING" not in caplog.text
     assert is_available()
 
     # Second update causes an exception, which should be logged
     mock_mirobo_is_on.status.side_effect = DeviceException("dummy exception")
-    await hass.helpers.entity_component.async_update_entity(entity_id)
-    assert "WARNING" in caplog.text
-    assert "Got exception while fetching the state" in caplog.text
+    future = dt_util.utcnow() + timedelta(seconds=60)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
     assert not is_available()
 
     # Third update does not get logged as the device is already unavailable,
     # so we clear the log and reset the status to test that
-    caplog.clear()
     mock_mirobo_is_on.status.reset_mock()
+    future += timedelta(seconds=60)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
 
-    await hass.helpers.entity_component.async_update_entity(entity_id)
-    assert "Got exception while fetching the state" not in caplog.text
     assert not is_available()
     assert mock_mirobo_is_on.status.call_count == 1
 
 
-async def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_got_error):
+async def test_xiaomi_vacuum_services(hass, mock_mirobo_is_got_error):
     """Test vacuum supported features."""
     entity_name = "test_vacuum_cleaner_1"
     entity_id = await setup_component(hass, entity_name)
-
-    assert "Initializing with host 192.168.1.100 (token 12345...)" in caplog.text
 
     # Check state attributes
     state = hass.states.get(entity_id)
 
     assert state.state == STATE_ERROR
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 14204
-    assert state.attributes.get(ATTR_DO_NOT_DISTURB) == STATE_ON
-    assert state.attributes.get(ATTR_DO_NOT_DISTURB_START) == "22:00:00"
-    assert state.attributes.get(ATTR_DO_NOT_DISTURB_END) == "06:00:00"
     assert state.attributes.get(ATTR_ERROR) == "Error message"
     assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-80"
-    assert state.attributes.get(ATTR_CLEANING_TIME) == 155
-    assert state.attributes.get(ATTR_CLEANED_AREA) == 123
-    assert state.attributes.get(ATTR_MAIN_BRUSH_LEFT) == 12
-    assert state.attributes.get(ATTR_SIDE_BRUSH_LEFT) == 12
-    assert state.attributes.get(ATTR_FILTER_LEFT) == 12
-    assert state.attributes.get(ATTR_CLEANING_COUNT) == 35
-    assert state.attributes.get(ATTR_CLEANED_TOTAL_AREA) == 123
-    assert state.attributes.get(ATTR_CLEANING_TOTAL_TIME) == 695
     assert state.attributes.get(ATTR_TIMERS) == [
         {
             "enabled": True,
@@ -327,28 +318,17 @@ async def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_got_error):
     mock_mirobo_is_got_error.reset_mock()
 
 
-async def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
+async def test_xiaomi_specific_services(hass, mock_mirobo_is_on):
     """Test vacuum supported features."""
     entity_name = "test_vacuum_cleaner_2"
     entity_id = await setup_component(hass, entity_name)
-
-    assert "Initializing with host 192.168.1.100 (token 12345" in caplog.text
 
     # Check state attributes
     state = hass.states.get(entity_id)
     assert state.state == STATE_CLEANING
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 14204
-    assert state.attributes.get(ATTR_DO_NOT_DISTURB) == STATE_OFF
     assert state.attributes.get(ATTR_ERROR) is None
     assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-30"
-    assert state.attributes.get(ATTR_CLEANING_TIME) == 175
-    assert state.attributes.get(ATTR_CLEANED_AREA) == 133
-    assert state.attributes.get(ATTR_MAIN_BRUSH_LEFT) == 11
-    assert state.attributes.get(ATTR_SIDE_BRUSH_LEFT) == 11
-    assert state.attributes.get(ATTR_FILTER_LEFT) == 11
-    assert state.attributes.get(ATTR_CLEANING_COUNT) == 41
-    assert state.attributes.get(ATTR_CLEANED_TOTAL_AREA) == 323
-    assert state.attributes.get(ATTR_CLEANING_TOTAL_TIME) == 675
     assert state.attributes.get(ATTR_TIMERS) == [
         {
             "enabled": True,
@@ -429,8 +409,6 @@ async def test_xiaomi_vacuum_fanspeeds(hass, caplog, mock_mirobo_fanspeeds):
     entity_name = "test_vacuum_cleaner_2"
     entity_id = await setup_component(hass, entity_name)
 
-    assert "Initializing with host 192.168.1.100 (token 12345" in caplog.text
-
     state = hass.states.get(entity_id)
     assert state.attributes.get(ATTR_FAN_SPEED) == "Silent"
     fanspeeds = state.attributes.get(ATTR_FAN_SPEED_LIST)
@@ -474,7 +452,7 @@ async def test_xiaomi_vacuum_fanspeeds(hass, caplog, mock_mirobo_fanspeeds):
     assert "Fan speed step not recognized" in caplog.text
 
 
-async def test_xiaomi_vacuum_goto_service(hass, caplog, mock_mirobo_is_on):
+async def test_xiaomi_vacuum_goto_service(hass, mock_mirobo_is_on):
     """Test vacuum supported features."""
     entity_name = "test_vacuum_cleaner_2"
     entity_id = await setup_component(hass, entity_name)
@@ -487,7 +465,7 @@ async def test_xiaomi_vacuum_goto_service(hass, caplog, mock_mirobo_is_on):
     mock_mirobo_is_on.assert_has_calls(STATUS_CALLS, any_order=True)
 
 
-async def test_xiaomi_vacuum_clean_segment_service(hass, caplog, mock_mirobo_is_on):
+async def test_xiaomi_vacuum_clean_segment_service(hass, mock_mirobo_is_on):
     """Test vacuum supported features."""
     entity_name = "test_vacuum_cleaner_2"
     entity_id = await setup_component(hass, entity_name)
@@ -503,7 +481,7 @@ async def test_xiaomi_vacuum_clean_segment_service(hass, caplog, mock_mirobo_is_
 
 
 async def test_xiaomi_vacuum_clean_segment_service_single_segment(
-    hass, caplog, mock_mirobo_is_on
+    hass, mock_mirobo_is_on
 ):
     """Test vacuum supported features."""
     entity_name = "test_vacuum_cleaner_2"
@@ -528,11 +506,11 @@ async def setup_component(hass, entity_name):
         unique_id="123456",
         title=entity_name,
         data={
-            const.CONF_FLOW_TYPE: const.CONF_DEVICE,
+            CONF_FLOW_TYPE: CONF_DEVICE,
             CONF_HOST: "192.168.1.100",
             CONF_TOKEN: "12345678901234567890123456789012",
-            const.CONF_MODEL: const.MODELS_VACUUM[0],
-            const.CONF_MAC: TEST_MAC,
+            CONF_MODEL: MODELS_VACUUM[0],
+            CONF_MAC: TEST_MAC,
         },
     )
 
