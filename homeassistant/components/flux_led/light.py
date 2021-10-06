@@ -290,6 +290,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
         self._bulb: WifiLedBulb = coordinator.device
         self._attr_name = name
         self._attr_unique_id = unique_id
+        self._attr_supported_features = SUPPORT_EFFECT
         self._ip_address = coordinator.host
         self._mode = mode
         self._color_temp_mired = None
@@ -335,10 +336,11 @@ class FluxLight(CoordinatorEntity, LightEntity):
     def _color_brightness(self) -> int:
         """Get the color brightness."""
         raw_state = self._bulb.raw_state
-        _, _, v = color_util.color_RGB_to_hsv(
-            raw_state.red, raw_state.green, raw_state.blue
+        return round(
+            color_util.color_RGB_to_hsv(raw_state.red, raw_state.green, raw_state.blue)[
+                2
+            ]
         )
-        return int(round(v * 2.55, 0))
 
     @property
     def color_temp(self) -> int:
@@ -348,8 +350,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def _color_temp_kelvin(self) -> int:
         """Return the kelvin value of this light in Kelvin."""
-        t, _ = self._bulb.getWhiteTemperature()
-        return cast(int, t)
+        return cast(int, self._bulb.getWhiteTemperature()[0])
 
     # hs color used to avoid dealing with brightness conversions
     @property
@@ -388,10 +389,11 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def supported_color_modes(self) -> set[str]:
         """Flag supported color modes."""
-        mode_list = {COLOR_MODE_ONOFF, COLOR_MODE_BRIGHTNESS}
-        for mode in self._bulb.color_modes:
-            mode_list.add(FLUX_COLOR_MODE_TO_HASS[mode])
-        return mode_list
+        return {
+            COLOR_MODE_ONOFF,
+            COLOR_MODE_BRIGHTNESS,
+            *(FLUX_COLOR_MODE_TO_HASS[mode] for mode in self._bulb.color_modes),
+        }
 
     @property
     def color_mode(self) -> str:
