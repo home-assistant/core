@@ -407,9 +407,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the attributes."""
-        return {
-            "ip_address": self._ip_address,
-        }
+        return {"ip_address": self._ip_address, "mode": self._bulb.mode}
 
     @property
     def min_mireds(self) -> int:
@@ -443,53 +441,32 @@ class FluxLight(CoordinatorEntity, LightEntity):
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is None:
             brightness = self.brightness
 
-        # Handle CCT Color Mode
-        if ATTR_COLOR_TEMP in kwargs or self.color_mode == COLOR_MODE_COLOR_TEMP:
-            if (color_temp_mired := kwargs.get(ATTR_COLOR_TEMP)) is not None:
-                color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
-                    color_temp_mired
-                )
-            else:
-                color_temp_kelvin = self.color_temp_kelvin
-
+        # Handle switch to CCT Color Mode
+        if ATTR_COLOR_TEMP in kwargs:
+            color_temp_mired = kwargs[ATTR_COLOR_TEMP]
+            color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
+                color_temp_mired
+            )
             self._bulb.setWhiteTemperature(color_temp_kelvin, brightness)
             return
-
-        # Handle RGB Color Mode
-        if ATTR_RGB_COLOR in kwargs or self.color_mode == COLOR_MODE_RGB:
-            if (rgb_scaled := kwargs.get(ATTR_RGB_COLOR)) is not None:
-                hsv = color_util.color_RGB_to_hsv(*rgb_scaled)
-                brightness_pct = brightness / 255 * 100
-                rgb = color_util.color_hsv_to_RGB(*hsv[0:2], brightness_pct)
-            else:
-                assert self.rgb_color is not None
-                rgb = self.rgb_color
-
+        # Handle switch to RGB Color Mode
+        if ATTR_RGB_COLOR in kwargs:
+            rgb_scaled = kwargs[ATTR_RGB_COLOR]
+            hsv = color_util.color_RGB_to_hsv(*rgb_scaled)
+            brightness_pct = brightness / 255 * 100
+            rgb = color_util.color_hsv_to_RGB(*hsv[0:2], brightness_pct)
             self._bulb.setRgbw(*rgb, brightness=brightness)
             return
-
-        # Handle RGBW Color Mode
-        if ATTR_RGBW_COLOR in kwargs or self.color_mode == COLOR_MODE_RGBW:
-            if (rgbw := kwargs.get(ATTR_RGBW_COLOR)) is not None:
-                _, brightness = self.RGBWW_brightness(rgbw)
-            else:
-                assert self.rgbw_color is not None
-                rgbw, brightness = self.RGBWW_brightness(self.rgbw_color, brightness)
-
+        # Handle switch to RGBW Color Mode
+        if ATTR_RGBW_COLOR in kwargs:
+            rgbw, _ = self.RGBWW_brightness(kwargs[ATTR_RGBW_COLOR], brightness)
             self._bulb.setRgbw(*rgbw)
             return
-
-        # Handle RGBWW Color Mode
-        if ATTR_RGBWW_COLOR in kwargs or self.color_mode == COLOR_MODE_RGBWW:
-            if (rgbww := kwargs.get(ATTR_RGBWW_COLOR)) is not None:
-                _, brightness = self.RGBWW_brightness(rgbww)
-            else:
-                assert self.rgbww_color is not None
-                rgbww, brightness = self.RGBWW_brightness(self.rgbww_color, brightness)
-
+        # Handle switch to RGBWW Color Mode
+        if ATTR_RGBWW_COLOR in kwargs:
+            rgbww, _ = self.RGBWW_brightness(kwargs[ATTR_RGBWW_COLOR], brightness)
             self._bulb.setRgbw(*rgbww[0:4], w2=rgbww[4])
             return
-
         if ATTR_EFFECT in kwargs:
             effect = kwargs[ATTR_EFFECT]
             # Random color effect
@@ -516,6 +493,26 @@ class FluxLight(CoordinatorEntity, LightEntity):
                 self._bulb.setPresetPattern(EFFECT_MAP[effect], DEFAULT_EFFECT_SPEED)
                 return
 
+            return
+
+        # Handle brightness adjustment in CCT Color Mode
+        if self.color_mode == COLOR_MODE_COLOR_TEMP:
+            self._bulb.setWhiteTemperature(self.color_temp_kelvin, brightness)
+            return
+        # Handle brightness adjustment in RGB Color Mode
+        if self.color_mode == COLOR_MODE_RGB:
+            self._bulb.setRgbw(*self.rgb_color, brightness=brightness)
+            return
+        # Handle brightness adjustment in RGBW Color Mode
+        if self.color_mode == COLOR_MODE_RGBW:
+            rgbw, _ = self.RGBWW_brightness(self.rgbw_color, brightness)
+            self._bulb.setRgbw(*rgbw)
+            return
+        # Handle brightness adjustment in RGBWW Color Mode
+        if self.color_mode == COLOR_MODE_RGBWW:
+            rgbww, _ = self.RGBWW_brightness(self.rgbww_color, brightness)
+            self._bulb.setRgbw(*rgbww[0:4], w2=rgbww[4])
+            return
         # Handle Brightness Only Color Mode
         if self.color_mode == COLOR_MODE_BRIGHTNESS:
             self._bulb.setWarmWhite255(brightness)
