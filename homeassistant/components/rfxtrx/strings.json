@@ -70,5 +70,15 @@
       "invalid_input_off_delay": "Invalid input for off delay",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "device_automation": {
+    "action_type": {
+      "send_status": "Send status update: {subtype}",
+      "send_command": "Send command: {subtype}"
+    },
+    "trigger_type": {
+      "status": "Received status: {subtype}",
+      "command": "Received command: {subtype}"
+    }
   }
 }

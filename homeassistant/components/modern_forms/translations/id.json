@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "cannot_connect": "Gagal terhubung"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "Ingin memulai penyiapan?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    }
+}

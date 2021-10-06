@@ -34,7 +34,7 @@ async def calls(hass, fixture):
 
 
 @pytest.fixture
-async def fixture(hass, aiohttp_client):
+async def fixture(hass, hass_client_no_auth):
     """Initialize a Home Assistant server for testing this module."""
     await async_setup_component(hass, dialogflow.DOMAIN, {"dialogflow": {}})
     await async_setup_component(
@@ -92,7 +92,7 @@ async def fixture(hass, aiohttp_client):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     webhook_id = result["result"].data["webhook_id"]
 
-    return await aiohttp_client(hass.http.app), webhook_id
+    return await hass_client_no_auth(), webhook_id
 
 
 class _Data:

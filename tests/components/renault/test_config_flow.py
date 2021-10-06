@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
 from . import get_mock_config_entry
+from .const import MOCK_CONFIG
 
 from tests.common import load_fixture
 
@@ -207,3 +208,54 @@ async def test_config_flow_duplicate(hass: HomeAssistant):
         await hass.async_block_till_done()
 
     assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_reauth(hass):
+    """Test the start of the config flow."""
+    with patch(
+        "homeassistant.components.renault.async_setup_entry",
+        return_value=True,
+    ):
+        original_entry = get_mock_config_entry()
+        original_entry.add_to_hass(hass)
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": original_entry.entry_id,
+                "unique_id": original_entry.unique_id,
+            },
+            data=MOCK_CONFIG,
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["description_placeholders"] == {CONF_USERNAME: "email@test.com"}
+        assert result["errors"] == {}
+
+        # Failed credentials
+        with patch(
+            "renault_api.renault_session.RenaultSession.login",
+            side_effect=InvalidCredentialsException(
+                403042, "invalid loginID or password"
+            ),
+        ):
+            result2 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                user_input={CONF_PASSWORD: "any"},
+            )
+
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result2["description_placeholders"] == {CONF_USERNAME: "email@test.com"}
+        assert result2["errors"] == {"base": "invalid_credentials"}
+
+        # Valid credentials
+        with patch("renault_api.renault_session.RenaultSession.login"):
+            result3 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                user_input={CONF_PASSWORD: "any"},
+            )
+
+        assert result3["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result3["reason"] == "reauth_successful"

@@ -10,6 +10,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
@@ -38,6 +39,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                         CONF_TRIGGER_TIME: datetime.timedelta(seconds=10),
                     },
                     STATE_ALARM_ARMED_NIGHT: {
+                        CONF_ARMING_TIME: datetime.timedelta(seconds=5),
+                        CONF_DELAY_TIME: datetime.timedelta(seconds=0),
+                        CONF_TRIGGER_TIME: datetime.timedelta(seconds=10),
+                    },
+                    STATE_ALARM_ARMED_VACATION: {
                         CONF_ARMING_TIME: datetime.timedelta(seconds=5),
                         CONF_DELAY_TIME: datetime.timedelta(seconds=0),
                         CONF_TRIGGER_TIME: datetime.timedelta(seconds=10),

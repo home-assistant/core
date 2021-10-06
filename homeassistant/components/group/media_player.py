@@ -1,7 +1,8 @@
 """This platform allows several media players to be grouped into one media player."""
 from __future__ import annotations
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import voluptuous as vol
 
@@ -205,7 +206,7 @@ class MediaGroup(MediaPlayerEntity):
         return False
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes for the media group."""
         return {ATTR_ENTITY_ID: self._entities}
 

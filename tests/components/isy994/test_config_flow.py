@@ -383,12 +383,7 @@ async def test_form_ssdp_existing_entry(hass: HomeAssistant):
     )
     entry.add_to_hass(hass)
 
-    with patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE), patch(
-        PATCH_ASYNC_SETUP, return_value=True
-    ) as mock_setup, patch(
-        PATCH_ASYNC_SETUP_ENTRY,
-        return_value=True,
-    ) as mock_setup_entry:
+    with patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_SSDP},
@@ -404,9 +399,6 @@ async def test_form_ssdp_existing_entry(hass: HomeAssistant):
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == f"http://3.3.3.3:80{ISY_URL_POSTFIX}"
 
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
-
 
 async def test_form_ssdp_existing_entry_with_no_port(hass: HomeAssistant):
     """Test we update the ip of an existing entry from ssdp with no port."""
@@ -418,12 +410,7 @@ async def test_form_ssdp_existing_entry_with_no_port(hass: HomeAssistant):
     )
     entry.add_to_hass(hass)
 
-    with patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE), patch(
-        PATCH_ASYNC_SETUP, return_value=True
-    ) as mock_setup, patch(
-        PATCH_ASYNC_SETUP_ENTRY,
-        return_value=True,
-    ) as mock_setup_entry:
+    with patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_SSDP},
@@ -439,9 +426,6 @@ async def test_form_ssdp_existing_entry_with_no_port(hass: HomeAssistant):
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == f"http://3.3.3.3:80/{ISY_URL_POSTFIX}"
 
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
-
 
 async def test_form_ssdp_existing_entry_with_alternate_port(hass: HomeAssistant):
     """Test we update the ip of an existing entry from ssdp with an alternate port."""
@@ -453,12 +437,7 @@ async def test_form_ssdp_existing_entry_with_alternate_port(hass: HomeAssistant)
     )
     entry.add_to_hass(hass)
 
-    with patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE), patch(
-        PATCH_ASYNC_SETUP, return_value=True
-    ) as mock_setup, patch(
-        PATCH_ASYNC_SETUP_ENTRY,
-        return_value=True,
-    ) as mock_setup_entry:
+    with patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_SSDP},
@@ -474,9 +453,6 @@ async def test_form_ssdp_existing_entry_with_alternate_port(hass: HomeAssistant)
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == f"http://3.3.3.3:1443/{ISY_URL_POSTFIX}"
 
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
-
 
 async def test_form_ssdp_existing_entry_no_port_https(hass: HomeAssistant):
     """Test we update the ip of an existing entry from ssdp with no port and https."""
@@ -488,12 +464,7 @@ async def test_form_ssdp_existing_entry_no_port_https(hass: HomeAssistant):
     )
     entry.add_to_hass(hass)
 
-    with patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE), patch(
-        PATCH_ASYNC_SETUP, return_value=True
-    ) as mock_setup, patch(
-        PATCH_ASYNC_SETUP_ENTRY,
-        return_value=True,
-    ) as mock_setup_entry:
+    with patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_SSDP},
@@ -508,9 +479,6 @@ async def test_form_ssdp_existing_entry_no_port_https(hass: HomeAssistant):
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == f"https://3.3.3.3:443/{ISY_URL_POSTFIX}"
-
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_dhcp(hass: HomeAssistant):
@@ -560,12 +528,7 @@ async def test_form_dhcp_existing_entry(hass: HomeAssistant):
     )
     entry.add_to_hass(hass)
 
-    with patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE), patch(
-        PATCH_ASYNC_SETUP, return_value=True
-    ) as mock_setup, patch(
-        PATCH_ASYNC_SETUP_ENTRY,
-        return_value=True,
-    ) as mock_setup_entry:
+    with patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_DHCP},
@@ -581,9 +544,6 @@ async def test_form_dhcp_existing_entry(hass: HomeAssistant):
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == f"http://1.2.3.4{ISY_URL_POSTFIX}"
 
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
-
 
 async def test_form_dhcp_existing_entry_preserves_port(hass: HomeAssistant):
     """Test we update the ip of an existing entry from dhcp preserves port."""
@@ -598,12 +558,7 @@ async def test_form_dhcp_existing_entry_preserves_port(hass: HomeAssistant):
     )
     entry.add_to_hass(hass)
 
-    with patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE), patch(
-        PATCH_ASYNC_SETUP, return_value=True
-    ) as mock_setup, patch(
-        PATCH_ASYNC_SETUP_ENTRY,
-        return_value=True,
-    ) as mock_setup_entry:
+    with patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_DHCP},
@@ -619,6 +574,3 @@ async def test_form_dhcp_existing_entry_preserves_port(hass: HomeAssistant):
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == f"http://1.2.3.4:1443{ISY_URL_POSTFIX}"
     assert entry.data[CONF_USERNAME] == "bob"
-
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1

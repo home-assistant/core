@@ -14,7 +14,7 @@
                     "location": "Elhelyezked\u00e9s",
                     "usercode": "Felhaszn\u00e1l\u00f3i k\u00f3d"
                 },
-                "description": "Adja meg ennek a felhaszn\u00e1l\u00f3nak a felhaszn\u00e1l\u00f3i k\u00f3dj\u00e1t a k\u00f6vetkez\u0151 helyen: {location_id}",
+                "description": "Adja meg ennek a felhaszn\u00e1l\u00f3i k\u00f3dj\u00e1t a k\u00f6vetkez\u0151 helyen: {location_id}",
                 "title": "Helyhaszn\u00e1lati k\u00f3dok"
             },
             "reauth_confirm": {

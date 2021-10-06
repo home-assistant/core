@@ -21,17 +21,19 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Avvio automatico (disabilitare se stai chiamando manualmente il servizio homekit.start)"
+                    "auto_start": "Avvio automatico (disabilitare se stai chiamando manualmente il servizio homekit.start)",
+                    "devices": "Dispositivi (Attivatori)"
                 },
-                "description": "Queste impostazioni devono essere regolate solo se HomeKit non funziona.",
+                "description": "Gli interruttori programmabili vengono creati per ogni dispositivo selezionato. Quando si attiva un trigger del dispositivo, HomeKit pu\u00f2 essere configurato per eseguire un'automazione o una scena.",
                 "title": "Configurazione Avanzata"
             },
             "cameras": {
                 "data": {
+                    "camera_audio": "Telecamere che supportano l'audio",
                     "camera_copy": "Telecamere che supportano flussi H.264 nativi"
                 },
                 "description": "Controllare tutte le telecamere che supportano i flussi H.264 nativi. Se la videocamera non emette uno stream H.264, il sistema provveder\u00e0 a transcodificare il video in H.264 per HomeKit. La transcodifica richiede una CPU performante ed \u00e8 improbabile che funzioni su computer a scheda singola.",
-                "title": "Seleziona il codec video della videocamera."
+                "title": "Configurazione della telecamera"
             },
             "include_exclude": {
                 "data": {

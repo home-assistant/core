@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components import sensor
 from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA,
     STATE_CLASSES_SCHEMA,
     SensorEntity,
@@ -42,7 +43,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_EXPIRE_AFTER = "expire_after"
 CONF_LAST_RESET_TOPIC = "last_reset_topic"
 CONF_LAST_RESET_VALUE_TEMPLATE = "last_reset_value_template"
-CONF_STATE_CLASS = "state_class"
 
 MQTT_SENSOR_ATTRIBUTES_BLOCKED = frozenset(
     {
