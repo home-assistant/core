@@ -113,16 +113,6 @@ def async_create(
             "Passing a template string to persistent_notification.async_create function is deprecated"
         )
 
-    # If exact notification already exists, and it's unread, skip it.
-    if (
-        (cur_not := notifications.get(entity_id))
-        and cur_not[ATTR_MESSAGE] == message
-        and cur_not[ATTR_NOTIFICATION_ID] == notification_id
-        and cur_not[ATTR_STATUS]
-        and cur_not[ATTR_TITLE] == title
-    ):
-        return
-
     hass.states.async_set(entity_id, STATE, attr, context=context)
 
     # Store notification and fire event

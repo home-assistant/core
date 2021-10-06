@@ -5,6 +5,8 @@ import homeassistant.components.persistent_notification as pn
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.setup import async_setup_component
 
+from tests.common import async_capture_events
+
 
 @pytest.fixture(autouse=True)
 async def setup_integration(hass):
@@ -105,6 +107,7 @@ async def test_dismiss_notification(hass):
 
 async def test_mark_read(hass):
     """Ensure notification is marked as Read."""
+    events = async_capture_events(hass, pn.EVENT_PERSISTENT_NOTIFICATIONS_UPDATED)
     notifications = hass.data[pn.DOMAIN]
     assert len(notifications) == 0
 
@@ -119,6 +122,7 @@ async def test_mark_read(hass):
     assert len(notifications) == 1
     notification = notifications.get(entity_id)
     assert notification["status"] == pn.STATUS_UNREAD
+    assert len(events) == 1
 
     await hass.services.async_call(
         pn.DOMAIN, "mark_read", {"notification_id": "Beer 2"}, blocking=True
@@ -127,6 +131,7 @@ async def test_mark_read(hass):
     assert len(notifications) == 1
     notification = notifications.get(entity_id)
     assert notification["status"] == pn.STATUS_READ
+    assert len(events) == 2
 
     await hass.services.async_call(
         pn.DOMAIN,
@@ -135,6 +140,7 @@ async def test_mark_read(hass):
         blocking=True,
     )
     assert len(notifications) == 0
+    assert len(events) == 3
 
 
 async def test_ws_get_notifications(hass, hass_ws_client):
