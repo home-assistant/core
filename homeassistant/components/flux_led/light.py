@@ -407,7 +407,18 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the attributes."""
-        return {"ip_address": self._ip_address, "mode": self._bulb.mode}
+        # Values added for testing only, remove before merging
+        return {
+            "ip_address": self._ip_address,
+            "mode": self._bulb.mode,
+            "preset_pattern": self._bulb.raw_state.preset_pattern,
+            "color_mode": self._bulb.raw_state.color_mode,
+            "red": self._bulb.raw_state.red,
+            "green": self._bulb.raw_state.green,
+            "blue": self._bulb.raw_state.blue,
+            "warm_white": self._bulb.raw_state.warm_white,
+            "cool_white": self._bulb.raw_state.cool_white,
+        }
 
     @property
     def min_mireds(self) -> int:
