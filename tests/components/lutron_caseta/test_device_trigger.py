@@ -311,7 +311,6 @@ async def test_validate_trigger_config_unknown_device(hass, calls, device_reg):
 
 async def test_validate_trigger_invalid_triggers(hass, device_reg):
     """Test for click_event with invalid triggers."""
-    notification_calls = async_mock_service(hass, "persistent_notification", "create")
     config_entry_id = await _async_setup_lutron_with_picos(hass, device_reg)
     dr_button_devices = hass.data[DOMAIN][config_entry_id][BUTTON_DEVICES]
     device_id = list(dr_button_devices)[0]
@@ -337,8 +336,10 @@ async def test_validate_trigger_invalid_triggers(hass, device_reg):
         },
     )
 
-    assert len(notification_calls) == 1
+    assert (
+        len(entity_ids := hass.states.async_entity_ids("persistent_notification")) == 1
+    )
     assert (
         "The following integrations and platforms could not be set up"
-        in notification_calls[0].data["message"]
+        in hass.states.get(entity_ids[0]).attributes["message"]
     )

@@ -25,7 +25,6 @@ from tests.common import (
     MockConfigEntry,
     assert_lists_same,
     async_get_device_automations,
-    async_mock_service,
 )
 
 
@@ -336,7 +335,6 @@ async def test_validate_trigger_rpc_device_not_ready(hass, calls, rpc_wrapper):
 async def test_validate_trigger_invalid_triggers(hass, coap_wrapper):
     """Test for click_event with invalid triggers."""
     assert coap_wrapper
-    notification_calls = async_mock_service(hass, "persistent_notification", "create")
 
     assert await async_setup_component(
         hass,
@@ -360,8 +358,8 @@ async def test_validate_trigger_invalid_triggers(hass, coap_wrapper):
         },
     )
 
-    assert len(notification_calls) == 1
+    assert len(notifications := hass.states.async_all("persistent_notification")) == 1
     assert (
         "The following integrations and platforms could not be set up"
-        in notification_calls[0].data["message"]
+        in notifications[0].attributes["message"]
     )
