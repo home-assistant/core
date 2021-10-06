@@ -8,6 +8,7 @@ import random
 from typing import Any, Final, cast
 
 from flux_led import WifiLedBulb
+from flux_led.device import MAX_TEMP, MIN_TEMP
 from flux_led.utils import rgbw_brightness, rgbww_brightness
 import voluptuous as vol
 
@@ -267,7 +268,6 @@ async def async_setup_entry(
                 coordinator,
                 entry.unique_id,
                 entry.data[CONF_NAME],
-                options.get(CONF_MODE) or MODE_AUTO,
                 list(custom_effect_colors),
                 options.get(CONF_CUSTOM_EFFECT_SPEED_PCT, DEFAULT_EFFECT_SPEED),
                 options.get(CONF_CUSTOM_EFFECT_TRANSITION, TRANSITION_GRADUAL),
@@ -286,7 +286,6 @@ class FluxLight(CoordinatorEntity, LightEntity):
         coordinator: FluxLedUpdateCoordinator,
         unique_id: str | None,
         name: str,
-        mode: str,
         custom_effect_colors: list[tuple[int, int, int]],
         custom_effect_speed_pct: int,
         custom_effect_transition: str,
@@ -297,10 +296,19 @@ class FluxLight(CoordinatorEntity, LightEntity):
         self._attr_name = name
         self._attr_unique_id = unique_id
         self._attr_supported_features = SUPPORT_EFFECT
+        self._attr_min_mireds = (
+            color_temperature_kelvin_to_mired(MAX_TEMP) + 1
+        )  # for rounding
+        self._attr_max_mireds = color_temperature_kelvin_to_mired(MIN_TEMP)
+        self._attr_supported_color_modes = {
+            COLOR_MODE_ONOFF,
+            COLOR_MODE_BRIGHTNESS,
+            *(FLUX_COLOR_MODE_TO_HASS[mode] for mode in self._bulb.color_modes),
+        }
+        self._attr_effect_list = FLUX_EFFECT_LIST
+        if custom_effect_colors:
+            self._attr_effect_list = [*FLUX_EFFECT_LIST, EFFECT_CUSTOM]
         self._ip_address = coordinator.host
-        self._mode = mode
-        self._color_temp_mired = None
-        self._rgbww = None
         self._custom_effect_colors = custom_effect_colors
         self._custom_effect_speed_pct = custom_effect_speed_pct
         self._custom_effect_transition = custom_effect_transition
@@ -308,8 +316,8 @@ class FluxLight(CoordinatorEntity, LightEntity):
         if self.unique_id:
             self._attr_device_info = {
                 "connections": {(dr.CONNECTION_NETWORK_MAC, self.unique_id)},
-                ATTR_MODEL: f"0x{self._bulb.raw_state[1]:02X}",
-                ATTR_SW_VERSION: "1" if old_protocol else str(self._bulb.raw_state[10]),
+                ATTR_MODEL: f"0x{self._bulb.model_num:02X}",
+                ATTR_SW_VERSION: "1" if old_protocol else str(self._bulb.version),
                 ATTR_NAME: self.name,
                 ATTR_MANUFACTURER: "FluxLED/Magic Home",
             }
@@ -360,64 +368,21 @@ class FluxLight(CoordinatorEntity, LightEntity):
         return (raw.red, raw.green, raw.blue, raw.warm_white, raw.cool_white)
 
     @property
-    def supported_color_modes(self) -> set[str]:
-        """Flag supported color modes."""
-        return {
-            COLOR_MODE_ONOFF,
-            COLOR_MODE_BRIGHTNESS,
-            *(FLUX_COLOR_MODE_TO_HASS[mode] for mode in self._bulb.color_modes),
-        }
-
-    @property
     def color_mode(self) -> str:
         """Return the color mode of the light."""
         return FLUX_COLOR_MODE_TO_HASS.get(self._bulb.color_mode, COLOR_MODE_BRIGHTNESS)
 
     @property
-    def effect_list(self) -> list[str]:
-        """Return the list of supported effects."""
-        if self._custom_effect_colors:
-            return FLUX_EFFECT_LIST + [EFFECT_CUSTOM]
-        return FLUX_EFFECT_LIST
-
-    @property
     def effect(self) -> str | None:
         """Return the current effect."""
-        if (current_mode := self._bulb.raw_state[3]) == EFFECT_CUSTOM_CODE:
+        if (current_mode := self._bulb.raw_state.mode) == EFFECT_CUSTOM_CODE:
             return EFFECT_CUSTOM
         return EFFECT_ID_NAME.get(current_mode)
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the attributes."""
-        return {
-            "ip_address": self._ip_address,
-            # Below values added for testing only, remove before merging
-            "model_num": hex(self._bulb.model_num),
-            "brightness_pct": str(round(self.brightness / 255 * 100, 0)),
-            "test_color_mode": self.color_mode,
-            "test_supported_color_modes": str(self.supported_color_modes),
-            "mode": hex(self._bulb.raw_state.mode),
-            "preset_pattern": hex(self._bulb.raw_state.preset_pattern),
-            "internal_color_modes": self._bulb.color_modes,
-            "internal_color_mode": self._bulb.color_mode,
-            "hex_color_mode": hex(self._bulb.raw_state.color_mode),
-            "red": self._bulb.raw_state.red,
-            "green": self._bulb.raw_state.green,
-            "blue": self._bulb.raw_state.blue,
-            "warm_white": self._bulb.raw_state.warm_white,
-            "cool_white": self._bulb.raw_state.cool_white,
-        }
-
-    @property
-    def min_mireds(self) -> int:
-        """Return the coldest color_temp that this light supports."""
-        return cast(int, 154)
-
-    @property
-    def max_mireds(self) -> int:
-        """Return the warmest color_temp that this light supports."""
-        return cast(int, 370)
+        return {"ip_address": self._bulb.ipaddr}
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified or all lights on."""
@@ -536,24 +501,3 @@ class FluxLight(CoordinatorEntity, LightEntity):
         await self.hass.async_add_executor_job(self._bulb.turnOff)
         self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        await super().async_added_to_hass()
-        if self._mode and self._mode != MODE_AUTO:
-            return
-
-        if self._bulb.mode == "ww":
-            self._mode = MODE_WHITE
-        elif self._bulb.rgbwcapable:
-            self._mode = MODE_RGBW
-        else:
-            self._mode = MODE_RGB
-        _LOGGER.debug(
-            "Detected mode for %s (%s) with raw_state=%s rgbwcapable=%s is %s",
-            self.name,
-            self.unique_id,
-            self._bulb.raw_state,
-            self._bulb.rgbwcapable,
-            self._mode,
-        )
