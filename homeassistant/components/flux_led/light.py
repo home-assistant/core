@@ -28,11 +28,11 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import (
-    ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_MODE,
     ATTR_MODEL,
     ATTR_NAME,
+    ATTR_SW_VERSION,
     CONF_DEVICES,
     CONF_HOST,
     CONF_MAC,
@@ -41,9 +41,8 @@ from homeassistant.const import (
     CONF_PROTOCOL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform
+from homeassistant.helpers import device_registry as dr, entity_platform
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -271,23 +270,22 @@ class FluxLight(CoordinatorEntity, LightEntity):
         """Initialize the light."""
         super().__init__(coordinator)
         self._bulb: WifiLedBulb = coordinator.device
-        self._name = name
-        self._unique_id = unique_id
+        self._attr_name = name
+        self._attr_unique_id = unique_id
         self._ip_address = coordinator.host
         self._mode = mode
         self._custom_effect_colors = custom_effect_colors
         self._custom_effect_speed_pct = custom_effect_speed_pct
         self._custom_effect_transition = custom_effect_transition
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return the unique ID of the light."""
-        return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return self._name
+        old_protocol = self._bulb.protocol == "LEDENET_ORIGINAL"
+        if self.unique_id:
+            self._attr_device_info = {
+                "connections": {(dr.CONNECTION_NETWORK_MAC, self.unique_id)},
+                ATTR_MODEL: f"0x{self._bulb.raw_state[1]:02X}",
+                ATTR_SW_VERSION: "1" if old_protocol else str(self._bulb.raw_state[10]),
+                ATTR_NAME: self.name,
+                ATTR_MANUFACTURER: "FluxLED/Magic Home",
+            }
 
     @property
     def is_on(self) -> bool:
@@ -339,17 +337,6 @@ class FluxLight(CoordinatorEntity, LightEntity):
         """Return the attributes."""
         return {
             "ip_address": self._ip_address,
-        }
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        assert self._unique_id is not None
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._unique_id)},
-            ATTR_NAME: self._name,
-            ATTR_MANUFACTURER: "FluxLED/Magic Home",
-            ATTR_MODEL: "LED Lights",
         }
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -464,7 +451,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
             self._mode = MODE_RGB
         _LOGGER.debug(
             "Detected mode for %s (%s) with raw_state=%s rgbwcapable=%s is %s",
-            self._name,
+            self.name,
             self.unique_id,
             self._bulb.raw_state,
             self._bulb.rgbwcapable,
