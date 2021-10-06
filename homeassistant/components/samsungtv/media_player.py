@@ -133,7 +133,7 @@ class SamsungTVDevice(MediaPlayerEntity):
 
     def update(self) -> None:
         """Update state of device."""
-        if self._auth_failed:
+        if self._auth_failed or self.hass.is_stopping:
             return
         if self._power_off_in_progress():
             self._state = STATE_OFF
