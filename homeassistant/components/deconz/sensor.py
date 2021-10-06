@@ -211,13 +211,13 @@ class DeconzSensor(DeconzDevice, SensorEntity):
         if self._device.secondary_temperature is not None:
             attr[ATTR_TEMPERATURE] = self._device.secondary_temperature
 
-        if self._device.type in Consumption.ZHATYPE:
+        if isinstance(self._device, Consumption):
             attr[ATTR_POWER] = self._device.power
 
-        elif self._device.type in Daylight.ZHATYPE:
+        elif isinstance(self._device, Daylight):
             attr[ATTR_DAYLIGHT] = self._device.daylight
 
-        elif self._device.type in LightLevel.ZHATYPE:
+        elif isinstance(self._device, LightLevel):
 
             if self._device.dark is not None:
                 attr[ATTR_DARK] = self._device.dark
@@ -225,7 +225,7 @@ class DeconzSensor(DeconzDevice, SensorEntity):
             if self._device.daylight is not None:
                 attr[ATTR_DAYLIGHT] = self._device.daylight
 
-        elif self._device.type in Power.ZHATYPE:
+        elif isinstance(self._device, Power):
             attr[ATTR_CURRENT] = self._device.current
             attr[ATTR_VOLTAGE] = self._device.voltage
 

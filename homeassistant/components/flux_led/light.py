@@ -343,8 +343,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
         """Turn the specified or all lights on."""
         await self.hass.async_add_executor_job(partial(self._turn_on, **kwargs))
         self.async_write_ha_state()
-        if kwargs:
-            await self.coordinator.async_request_refresh()
+        await self.coordinator.async_request_refresh()
 
     def _turn_on(self, **kwargs: Any) -> None:
         """Turn the specified or all lights on."""
@@ -438,6 +437,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
         """Turn the specified or all lights off."""
         await self.hass.async_add_executor_job(self._bulb.turnOff)
         self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""

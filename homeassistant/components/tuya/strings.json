@@ -4,7 +4,7 @@
       "user": {
         "description": "Enter your Tuya credentials",
         "data": {
-          "region": "Region",
+          "country_code": "Country",
           "access_id": "Tuya IoT Access ID",
           "access_secret": "Tuya IoT Access Secret",
           "username": "Account",

@@ -37,7 +37,7 @@ from homeassistant.const import (
 )
 from homeassistant.util import Throttle, dt
 
-from .const import CONF_PLANT_ID, DEFAULT_PLANT_ID, DEFAULT_URL
+from .const import CONF_PLANT_ID, DEFAULT_PLANT_ID, DEFAULT_URL, LOGIN_INVALID_AUTH_CODE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -876,7 +876,10 @@ def get_device_list(api, config):
 
     # Log in to api and fetch first plant if no plant id is defined.
     login_response = api.login(config[CONF_USERNAME], config[CONF_PASSWORD])
-    if not login_response["success"] and login_response["errCode"] == "102":
+    if (
+        not login_response["success"]
+        and login_response["msg"] == LOGIN_INVALID_AUTH_CODE
+    ):
         _LOGGER.error("Username, Password or URL may be incorrect!")
         return
     user_id = login_response["user"]["id"]

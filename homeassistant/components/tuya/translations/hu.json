@@ -6,7 +6,8 @@
             "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
         },
         "error": {
-            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s"
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "login_error": "Bejelentkez\u00e9si hiba ({code}): {msg}"
         },
         "flow_title": "Tuya konfigur\u00e1ci\u00f3",
         "step": {
@@ -25,9 +26,12 @@
             },
             "user": {
                 "data": {
+                    "access_id": "Tuya IoT azonos\u00edt\u00f3",
+                    "access_secret": "Tuya IoT hozz\u00e1f\u00e9r\u00e9s",
                     "country_code": "A fi\u00f3k orsz\u00e1gk\u00f3dja (pl. 1 USA, 36 Magyarorsz\u00e1g, vagy 86 K\u00edna)",
                     "password": "Jelsz\u00f3",
                     "platform": "Az alkalmaz\u00e1s, ahol a fi\u00f3k regisztr\u00e1lt",
+                    "region": "R\u00e9gi\u00f3",
                     "tuya_project_type": "Tuya felh\u0151 projekt t\u00edpusa",
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
                 },

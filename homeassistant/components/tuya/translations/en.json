@@ -28,7 +28,7 @@
                 "data": {
                     "access_id": "Tuya IoT Access ID",
                     "access_secret": "Tuya IoT Access Secret",
-                    "country_code": "Your account country code (e.g., 1 for USA or 86 for China)",
+                    "country_code": "Country",
                     "password": "Password",
                     "platform": "The app where your account is registered",
                     "region": "Region",
