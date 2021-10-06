@@ -2,8 +2,8 @@
 
 from unittest.mock import Mock
 
-from homeassistant.components.dlna_dmr.const import DOMAIN as DLNA_DOMAIN
 from homeassistant.components import media_player
+from homeassistant.components.dlna_dmr.const import DOMAIN as DLNA_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
