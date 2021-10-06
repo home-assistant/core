@@ -1,9 +1,10 @@
 """Support for System Bridge sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Callable, Final, cast
+from typing import Final, cast
 
 from systembridge import Bridge
 

@@ -412,7 +412,7 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        if self.state == STATE_ALARM_PENDING or self.state == STATE_ALARM_ARMING:
+        if self.state in (STATE_ALARM_PENDING, STATE_ALARM_ARMING):
             return {
                 ATTR_PREVIOUS_STATE: self._previous_state,
                 ATTR_NEXT_STATE: self._state,
@@ -430,10 +430,7 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         state = await self.async_get_last_state()
         if state:
             if (
-                (
-                    state.state == STATE_ALARM_PENDING
-                    or state.state == STATE_ALARM_ARMING
-                )
+                state.state in (STATE_ALARM_PENDING, STATE_ALARM_ARMING)
                 and hasattr(state, "attributes")
                 and state.attributes[ATTR_PREVIOUS_STATE]
             ):

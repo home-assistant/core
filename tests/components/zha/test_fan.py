@@ -476,7 +476,7 @@ async def test_fan_update_entity(
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE] == 0
     assert hass.states.get(entity_id).attributes[ATTR_PRESET_MODE] is None
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE_STEP] == 100 / 3
-    assert cluster.read_attributes.await_count == 1
+    assert cluster.read_attributes.await_count == 2
 
     await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()
@@ -486,7 +486,7 @@ async def test_fan_update_entity(
     )
     assert hass.states.get(entity_id).state == STATE_OFF
     assert hass.states.get(entity_id).attributes[ATTR_SPEED] == SPEED_OFF
-    assert cluster.read_attributes.await_count == 2
+    assert cluster.read_attributes.await_count == 3
 
     cluster.PLUGGED_ATTR_READS = {"fan_mode": 1}
     await hass.services.async_call(
@@ -497,4 +497,4 @@ async def test_fan_update_entity(
     assert hass.states.get(entity_id).attributes[ATTR_SPEED] == SPEED_LOW
     assert hass.states.get(entity_id).attributes[ATTR_PRESET_MODE] is None
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE_STEP] == 100 / 3
-    assert cluster.read_attributes.await_count == 3
+    assert cluster.read_attributes.await_count == 4

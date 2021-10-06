@@ -1,10 +1,10 @@
 """The Fjäråskupan integration."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Callable
 
 from bleak import BleakScanner
 from bleak.backends.device import BLEDevice

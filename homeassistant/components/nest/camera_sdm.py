@@ -1,9 +1,10 @@
 """Support for Google Nest SDM Cameras."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import datetime
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from google_nest_sdm.camera_traits import (
     CameraEventImageTrait,
@@ -222,6 +223,7 @@ class NestCamera(Camera):
         self, trait: EventImageGenerator
     ) -> bytes | None:
         """Return image bytes for an active event."""
+        # pylint: disable=no-self-use
         try:
             event_image = await trait.generate_active_event_image()
         except GoogleNestException as err:
