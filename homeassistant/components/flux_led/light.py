@@ -19,6 +19,7 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
+    ATTR_WHITE,
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_HS,
@@ -487,6 +488,10 @@ class FluxLight(CoordinatorEntity, LightEntity):
             rgbww, _ = self.RGBWW_brightness(kwargs[ATTR_RGBWW_COLOR], brightness)
             self._bulb.setRgbw(*rgbww[0:4], w2=rgbww[4])
             return
+        # Handle switch to White Color Mode
+        if ATTR_WHITE in kwargs:
+            self._bulb.setWarmWhite255(kwargs[ATTR_WHITE])
+            return
         if ATTR_EFFECT in kwargs:
             effect = kwargs[ATTR_EFFECT]
             # Random color effect
@@ -534,6 +539,10 @@ class FluxLight(CoordinatorEntity, LightEntity):
         if self.color_mode == COLOR_MODE_RGBWW:
             rgbww, _ = self.RGBWW_brightness(self.rgbww_color, brightness)
             self._bulb.setRgbw(*rgbww[0:4], w2=rgbww[4])
+            return
+        # Handle White Color Mode
+        if self.color_mode == COLOR_MODE_WHITE:
+            self._bulb.setWarmWhite255(brightness)
             return
         # Handle Brightness Only Color Mode
         if self.color_mode == COLOR_MODE_BRIGHTNESS:
