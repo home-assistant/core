@@ -313,7 +313,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
         return cast(bool, self._bulb.is_on)
 
     @property
-    def brightness(self) -> int | None:
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         raw_state = self._bulb.raw_state
         if self.color_mode == COLOR_MODE_RGBWW:
@@ -328,7 +328,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
         elif self.color_mode == COLOR_MODE_WHITE:
             brightness = raw_state.warm_white
         else:
-            return None
+            brightness = 0
         return int(round(brightness, 0))
 
     @property
@@ -419,7 +419,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
             "ip_address": self._ip_address,
             # Below values added for testing only, remove before merging
             "model_num": hex(self._bulb.model_num),
-            "brightness_pct": str(round((self.brightness or 0) / 255 * 100, 0)),
+            "brightness_pct": str(round(self.brightness / 255 * 100, 0)),
             "test_color_mode": self.color_mode,
             "test_supported_color_modes": str(self.supported_color_modes),
             "mode": hex(self._bulb.raw_state.mode),
