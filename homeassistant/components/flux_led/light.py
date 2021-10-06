@@ -325,10 +325,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
         elif self.color_mode == COLOR_MODE_COLOR_TEMP:
             _, brightness = self._bulb.getWhiteTemperature()
         elif self.color_mode == COLOR_MODE_WHITE:
-            brightness = (raw_state.warm_white + raw_state.cool_white) / 2
-        else:
             brightness = raw_state.warm_white
-
         return int(round(brightness, 0))
 
     @property
@@ -396,11 +393,6 @@ class FluxLight(CoordinatorEntity, LightEntity):
     def color_mode(self) -> str:
         """Return the color mode of the light."""
         return FLUX_COLOR_MODE_TO_HASS.get(self._bulb.color_mode, COLOR_MODE_BRIGHTNESS)
-
-    #    @property
-    #    def white_value(self) -> int:
-    #        """Return the white value of this light between 0..255."""
-    #        return cast(int, self._bulb.getRgbw()[3])
 
     @property
     def effect_list(self) -> list[str]:
