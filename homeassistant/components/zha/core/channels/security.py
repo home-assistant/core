@@ -7,6 +7,7 @@ https://home-assistant.io/integrations/zha/
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable
 import logging
 
 from zigpy.exceptions import ZigbeeException
@@ -116,7 +117,7 @@ class IasAce(ZigbeeChannel):
             self.async_send_signal(f"{self.unique_id}_{SIGNAL_ARMED_STATE_CHANGED}")
         self._send_panel_status_changed()
 
-    def _disarm(self, code: str):
+    def _disarm(self, code: str) -> Awaitable:
         """Test the code and disarm the panel if the code is correct."""
         if (
             code != self.panel_code
@@ -147,7 +148,7 @@ class IasAce(ZigbeeChannel):
             self.alarm_status = AceCluster.AlarmStatus.No_Alarm
         return zigbee_reply
 
-    def _arm_day(self, code: str):
+    def _arm_day(self, code: str) -> Awaitable:
         """Arm the panel for day / home zones."""
         return self._handle_arm(
             code,
@@ -155,7 +156,7 @@ class IasAce(ZigbeeChannel):
             AceCluster.ArmNotification.Only_Day_Home_Zones_Armed,
         )
 
-    def _arm_night(self, code: str):
+    def _arm_night(self, code: str) -> Awaitable:
         """Arm the panel for night / sleep zones."""
         return self._handle_arm(
             code,
@@ -163,7 +164,7 @@ class IasAce(ZigbeeChannel):
             AceCluster.ArmNotification.Only_Night_Sleep_Zones_Armed,
         )
 
-    def _arm_away(self, code: str):
+    def _arm_away(self, code: str) -> Awaitable:
         """Arm the panel for away mode."""
         return self._handle_arm(
             code,
@@ -176,7 +177,7 @@ class IasAce(ZigbeeChannel):
         code: str,
         panel_status: AceCluster.PanelStatus,
         armed_type: AceCluster.ArmNotification,
-    ):
+    ) -> Awaitable:
         """Arm the panel with the specified statuses."""
         if self.code_required_arm_actions and code != self.panel_code:
             self.warning("Invalid code supplied to IAS ACE")
