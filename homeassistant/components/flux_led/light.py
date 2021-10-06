@@ -8,6 +8,7 @@ import random
 from typing import Any, Final, cast
 
 from flux_led import WifiLedBulb
+from flux_led.utils import rgbw_brightness, rgbww_brightness
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -80,7 +81,6 @@ from .const import (
     TRANSITION_JUMP,
     TRANSITION_STROBE,
 )
-from .util import rgbw_brightness, rgbww_brightness
 
 _LOGGER = logging.getLogger(__name__)
 
