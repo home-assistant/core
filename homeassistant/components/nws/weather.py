@@ -23,9 +23,9 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.distance import convert as convert_distance
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util.dt import utcnow
 from homeassistant.util.pressure import convert as convert_pressure
 from homeassistant.util.temperature import convert as convert_temperature
