@@ -39,7 +39,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -91,6 +91,35 @@ async def test_light_no_unique_id(hass: HomeAssistant) -> None:
     assert entity_registry.async_get(entity_id) is None
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    "protocol,sw_version,model", [("LEDENET_ORIGINAL", 1, 0x35), ("LEDENET", 8, 0x33)]
+)
+async def test_light_device_registry(
+    hass: HomeAssistant, protocol: str, sw_version: int, model: int
+) -> None:
+    """Test a light device registry entry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
+        unique_id=MAC_ADDRESS,
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    bulb.protocol = protocol
+    bulb.raw_state[1] = model
+    bulb.raw_state[10] = sw_version
+    with _patch_discovery(no_device=True), _patch_wifibulb(device=bulb):
+        await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device(
+        identifiers={}, connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)}
+    )
+    assert device.sw_version == str(sw_version)
+    assert device.model == f"0x{model:02X}"
 
 
 async def test_rgb_light(hass: HomeAssistant) -> None:
@@ -276,7 +305,6 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
-    bulb.raw_state = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     bulb.raw_state[9] = 1
     bulb.raw_state[11] = 2
 
@@ -466,7 +494,7 @@ async def test_rgb_light_custom_effects(
     )
     bulb.setCustomPattern.assert_called_with([[0, 0, 255], [255, 0, 0]], 88, "jump")
     bulb.setCustomPattern.reset_mock()
-    bulb.raw_state = [0, 0, 0, EFFECT_CUSTOM_CODE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    bulb.raw_state[3] = EFFECT_CUSTOM_CODE
     bulb.is_on = True
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=20))
     await hass.async_block_till_done()
@@ -484,7 +512,7 @@ async def test_rgb_light_custom_effects(
     )
     bulb.setCustomPattern.assert_called_with([[0, 0, 255], [255, 0, 0]], 88, "jump")
     bulb.setCustomPattern.reset_mock()
-    bulb.raw_state = [0, 0, 0, EFFECT_CUSTOM_CODE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    bulb.raw_state[3] = EFFECT_CUSTOM_CODE
     bulb.is_on = True
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=20))
     await hass.async_block_till_done()
