@@ -393,6 +393,15 @@ async def test_xiaomi_vacuum_services(hass, mock_mirobo_is_got_error):
             "goto",
             mock.call(x_coord=25500, y_coord=26500),
         ),
+        (
+            SERVICE_CLEAN_SEGMENT,
+            {
+                ATTR_ENTITY_ID: "vacuum.test_vacuum_cleaner_2",
+                "segments": ["1", "2"],
+            },
+            "segment_clean",
+            mock.call(segments=[int(i) for i in ["1", "2"]]),
+        ),
     ],
 )
 async def test_xiaomi_specific_services(
@@ -490,21 +499,6 @@ async def test_xiaomi_vacuum_fanspeeds(hass, caplog, mock_mirobo_fanspeeds):
         blocking=True,
     )
     assert "Fan speed step not recognized" in caplog.text
-
-
-async def test_xiaomi_vacuum_clean_segment_service(hass, mock_mirobo_is_on):
-    """Test vacuum supported features."""
-    entity_name = "test_vacuum_cleaner_2"
-    entity_id = await setup_component(hass, entity_name)
-
-    data = {"entity_id": entity_id, "segments": ["1", "2"]}
-    await hass.services.async_call(
-        XIAOMI_DOMAIN, SERVICE_CLEAN_SEGMENT, data, blocking=True
-    )
-    mock_mirobo_is_on.segment_clean.assert_has_calls(
-        [mock.call(segments=[int(i) for i in data["segments"]])], any_order=True
-    )
-    mock_mirobo_is_on.assert_has_calls(STATUS_CALLS, any_order=True)
 
 
 async def test_xiaomi_vacuum_clean_segment_service_single_segment(
