@@ -5,6 +5,7 @@ import socket
 from unittest.mock import MagicMock, patch
 
 from flux_led import WifiLedBulb
+from flux_led.protocol import LEDENETRawState
 
 from homeassistant.components.dhcp import (
     HOSTNAME as DHCP_HOSTNAME,
@@ -35,8 +36,9 @@ def _mocked_bulb() -> WifiLedBulb:
     bulb.getRgb = MagicMock(return_value=[255, 0, 0])
     bulb.getRgbw = MagicMock(return_value=[255, 0, 0, 50])
     bulb.brightness = 128
+    bulb.model_num = 0x35
     bulb.rgbwcapable = True
-    bulb.raw_state = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    bulb.raw_state = LEDENETRawState(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
     return bulb
 
 
