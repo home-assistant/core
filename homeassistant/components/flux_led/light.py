@@ -509,7 +509,6 @@ class FluxLight(CoordinatorEntity, LightEntity):
                     random.randint(0, 255),
                 )
                 return
-
             # Custom effect
             if effect == EFFECT_CUSTOM:
                 if self._custom_effect_colors:
@@ -519,41 +518,34 @@ class FluxLight(CoordinatorEntity, LightEntity):
                         self._custom_effect_transition,
                     )
                 return
-
             # Effect selection
             if effect in EFFECT_MAP:
                 self._bulb.setPresetPattern(EFFECT_MAP[effect], DEFAULT_EFFECT_SPEED)
                 return
-
-            return
-
+            raise ValueError(f"Unknown effect {effect}")
         # Handle brightness adjustment in CCT Color Mode
         if self.color_mode == COLOR_MODE_COLOR_TEMP:
             self._bulb.setWhiteTemperature(self._color_temp_kelvin, brightness)
             return
         # Handle brightness adjustment in RGB Color Mode
         if self.color_mode == COLOR_MODE_HS:
-            h, s = self.hs_color
-            rgb = color_util.color_hs_to_RGB(h, s)
+            rgb = color_util.color_hs_to_RGB(*self.hs_color)
             self._bulb.setRgbw(*rgb, brightness=brightness)
             return
         # Handle brightness adjustment in RGBW Color Mode
         if self.color_mode == COLOR_MODE_RGBW:
-            self._bulb.setRgbw(*rgbww_brightness(self.rgbw_color, brightness))
+            self._bulb.setRgbw(*rgbw_brightness(self.rgbw_color, brightness))
             return
         # Handle brightness adjustment in RGBWW Color Mode
         if self.color_mode == COLOR_MODE_RGBWW:
             rgbww = rgbww_brightness(self.rgbww_color, brightness)
             self._bulb.setRgbw(*rgbww[0:4], w2=rgbww[4])
             return
-        # Handle White Color Mode
-        if self.color_mode == COLOR_MODE_WHITE:
+        # Handle White Color Mode and Brightness Only Color Mode
+        if self.color_mode in (COLOR_MODE_WHITE, COLOR_MODE_BRIGHTNESS):
             self._bulb.setWarmWhite255(brightness)
             return
-        # Handle Brightness Only Color Mode
-        if self.color_mode == COLOR_MODE_BRIGHTNESS:
-            self._bulb.setWarmWhite255(brightness)
-            return
+        raise ValueError(f"Unsupported color mode {self.color_mode}")
 
     def set_custom_effect(
         self, colors: list[tuple[int, int, int]], speed_pct: int, transition: str
