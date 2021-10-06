@@ -9,8 +9,16 @@ from homeassistant.components.lastfm.sensor import STATE_NOT_SCROBBLING
 from homeassistant.setup import async_setup_component
 
 
+class MockNetwork:
+    """Mock _Network object for pylast."""
+
+    def __init__(self, username: str):
+        """Initialize the mock."""
+        self.username = username
+
+
 class MockUser:
-    """Mock user object for pylast."""
+    """Mock User object for pylast."""
 
     def __init__(self, now_playing_result):
         """Initialize the mock."""
@@ -67,7 +75,7 @@ async def test_update_playing(hass, lastfm_network):
     """Test update when song playing."""
 
     lastfm_network.return_value.get_user.return_value = MockUser(
-        Track("artist", "title", None)
+        Track("artist", "title", MockNetwork("test"))
     )
 
     assert await async_setup_component(

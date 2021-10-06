@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "could_not_connect": "Mislukt om te verbinden met DNLA apparaat",
+            "discovery_error": "Kan geen overeenkomend DLNA-apparaat vinden",
+            "incomplete_config": "Configuratie mist een vereiste variabele",
+            "non_unique_id": "Meerdere apparaten gevonden met hetzelfde unieke ID",
+            "not_dmr": "Apparaat is geen Digital Media Renderer"
+        },
+        "error": {
+            "could_not_connect": "Mislukt om te verbinden met DNLA apparaat",
+            "not_dmr": "Apparaat is geen Digital Media Renderer"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "Wilt u beginnen met instellen?"
+            },
+            "user": {
+                "data": {
+                    "url": "URL"
+                },
+                "description": "URL naar een XML-bestand met apparaatbeschrijvingen",
+                "title": "DLNA Digital Media Renderer"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_url": "Ongeldige URL"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "callback_url_override": "Event listener callback URL",
+                    "listen_port": "Poort om naar gebeurtenissen te luisteren (willekeurige poort indien niet ingesteld)",
+                    "poll_availability": "Pollen voor apparaat beschikbaarheid"
+                },
+                "title": "DLNA Digital Media Renderer instellingen"
+            }
+        }
+    }
+}

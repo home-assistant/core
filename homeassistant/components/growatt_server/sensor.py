@@ -5,11 +5,11 @@ from dataclasses import dataclass
 import datetime
 import json
 import logging
-import re
 
 import growattServer
 
 from homeassistant.components.sensor import (
+    STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
@@ -19,7 +19,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_URL,
     CONF_USERNAME,
-    CURRENCY_EURO,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
@@ -38,7 +37,7 @@ from homeassistant.const import (
 )
 from homeassistant.util import Throttle, dt
 
-from .const import CONF_PLANT_ID, DEFAULT_PLANT_ID, DEFAULT_URL
+from .const import CONF_PLANT_ID, DEFAULT_PLANT_ID, DEFAULT_URL, LOGIN_INVALID_AUTH_CODE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,6 +56,7 @@ class GrowattSensorEntityDescription(SensorEntityDescription, GrowattRequiredKey
     """Describes Growatt sensor entity."""
 
     precision: int | None = None
+    currency: bool = False
 
 
 TOTAL_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
@@ -64,13 +64,13 @@ TOTAL_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="total_money_today",
         name="Total money today",
         api_key="plantMoneyText",
-        native_unit_of_measurement=CURRENCY_EURO,
+        currency=True,
     ),
     GrowattSensorEntityDescription(
         key="total_money_total",
         name="Money lifetime",
         api_key="totalMoneyText",
-        native_unit_of_measurement=CURRENCY_EURO,
+        currency=True,
     ),
     GrowattSensorEntityDescription(
         key="total_energy_today",
@@ -92,7 +92,7 @@ TOTAL_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="totalEnergy",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=STATE_CLASS_TOTAL,
     ),
     GrowattSensorEntityDescription(
         key="total_maximum_output",
@@ -119,7 +119,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         precision=1,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=STATE_CLASS_TOTAL,
     ),
     GrowattSensorEntityDescription(
         key="inverter_voltage_input_1",
@@ -273,13 +273,22 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="eacTotal",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=STATE_CLASS_TOTAL,
         precision=1,
     ),
     GrowattSensorEntityDescription(
         key="tlx_energy_total_input_1",
         name="Lifetime total energy input 1",
         api_key="epv1Total",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL,
+        precision=1,
+    ),
+    GrowattSensorEntityDescription(
+        key="tlx_energy_today_input_1",
+        name="Energy Today Input 1",
+        api_key="epv1Today",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
@@ -313,6 +322,15 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="tlx_energy_total_input_2",
         name="Lifetime total energy input 2",
         api_key="epv2Total",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL,
+        precision=1,
+    ),
+    GrowattSensorEntityDescription(
+        key="tlx_energy_today_input_2",
+        name="Energy Today Input 2",
+        api_key="epv2Today",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
@@ -429,7 +447,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="eBatDisChargeTotal",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=STATE_CLASS_TOTAL,
     ),
     GrowattSensorEntityDescription(
         key="storage_grid_discharge_today",
@@ -451,7 +469,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="eopDischrTotal",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=STATE_CLASS_TOTAL,
     ),
     GrowattSensorEntityDescription(
         key="storage_grid_charged_today",
@@ -466,7 +484,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="eChargeTotal",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=STATE_CLASS_TOTAL,
     ),
     GrowattSensorEntityDescription(
         key="storage_solar_production",
@@ -522,7 +540,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="eToUserTotal",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=STATE_CLASS_TOTAL,
     ),
     GrowattSensorEntityDescription(
         key="storage_load_consumption",
@@ -641,7 +659,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="eBatChargeTotal",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=STATE_CLASS_TOTAL,
     ),
     GrowattSensorEntityDescription(
         key="mix_battery_discharge_today",
@@ -656,7 +674,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="eBatDisChargeTotal",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=STATE_CLASS_TOTAL,
     ),
     GrowattSensorEntityDescription(
         key="mix_solar_generation_today",
@@ -671,7 +689,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="epvTotal",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=STATE_CLASS_TOTAL,
     ),
     GrowattSensorEntityDescription(
         key="mix_battery_discharge_w",
@@ -715,7 +733,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="elocalLoadTotal",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=STATE_CLASS_TOTAL,
     ),
     GrowattSensorEntityDescription(
         key="mix_export_to_grid_today",
@@ -730,7 +748,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="etogridTotal",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=STATE_CLASS_TOTAL,
     ),
     # Values from 'mix_system_status' API call
     GrowattSensorEntityDescription(
@@ -858,7 +876,10 @@ def get_device_list(api, config):
 
     # Log in to api and fetch first plant if no plant id is defined.
     login_response = api.login(config[CONF_USERNAME], config[CONF_PASSWORD])
-    if not login_response["success"] and login_response["errCode"] == "102":
+    if (
+        not login_response["success"]
+        and login_response["msg"] == LOGIN_INVALID_AUTH_CODE
+    ):
         _LOGGER.error("Username, Password or URL may be incorrect!")
         return
     user_id = login_response["user"]["id"]
@@ -957,6 +978,13 @@ class GrowattInverter(SensorEntity):
             result = round(result, self.entity_description.precision)
         return result
 
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement of the sensor, if any."""
+        if self.entity_description.currency:
+            return self.probe.get_data("currency")
+        return super().native_unit_of_measurement
+
     def update(self):
         """Get the latest data from the Growat API and updates the state."""
         self.probe.update()
@@ -985,10 +1013,10 @@ class GrowattData:
             if self.growatt_type == "total":
                 total_info = self.api.plant_info(self.device_id)
                 del total_info["deviceList"]
-                # PlantMoneyText comes in as "3.1/€" remove anything that isn't part of the number
-                total_info["plantMoneyText"] = re.sub(
-                    r"[^\d.,]", "", total_info["plantMoneyText"]
-                )
+                # PlantMoneyText comes in as "3.1/€" split between value and currency
+                plant_money_text, currency = total_info["plantMoneyText"].split("/")
+                total_info["plantMoneyText"] = plant_money_text
+                total_info["currency"] = currency
                 self.data = total_info
             elif self.growatt_type == "inverter":
                 inverter_info = self.api.inverter_detail(self.device_id)

@@ -11,11 +11,11 @@
                 "data": {
                     "discovery_prefix": "Felder\u00edt\u00e9si t\u00e9ma el\u0151tagja"
                 },
-                "description": "Add meg a Tasmota konfigur\u00e1ci\u00f3t.",
+                "description": "Adja meg a Tasmota konfigur\u00e1ci\u00f3t.",
                 "title": "Tasmota"
             },
             "confirm": {
-                "description": "Be szeretn\u00e9d \u00e1ll\u00edtani a Tasmota-t?"
+                "description": "Szeretn\u00e9 b\u00e1ll\u00edtani a Tasmota-t?"
             }
         }
     }

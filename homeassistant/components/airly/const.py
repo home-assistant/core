@@ -3,23 +3,6 @@ from __future__ import annotations
 
 from typing import Final
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT
-from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    DEVICE_CLASS_AQI,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_PM1,
-    DEVICE_CLASS_PM10,
-    DEVICE_CLASS_PM25,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
-    PERCENTAGE,
-    PRESSURE_HPA,
-    TEMP_CELSIUS,
-)
-
-from .model import AirlySensorEntityDescription
-
 ATTR_API_ADVICE: Final = "ADVICE"
 ATTR_API_CAQI: Final = "CAQI"
 ATTR_API_CAQI_DESCRIPTION: Final = "DESCRIPTION"
@@ -49,56 +32,3 @@ MANUFACTURER: Final = "Airly sp. z o.o."
 MAX_UPDATE_INTERVAL: Final = 90
 MIN_UPDATE_INTERVAL: Final = 5
 NO_AIRLY_SENSORS: Final = "There are no Airly sensors in this area yet."
-
-SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
-    AirlySensorEntityDescription(
-        key=ATTR_API_CAQI,
-        device_class=DEVICE_CLASS_AQI,
-        name=ATTR_API_CAQI,
-        native_unit_of_measurement="CAQI",
-    ),
-    AirlySensorEntityDescription(
-        key=ATTR_API_PM1,
-        device_class=DEVICE_CLASS_PM1,
-        name=ATTR_API_PM1,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=STATE_CLASS_MEASUREMENT,
-    ),
-    AirlySensorEntityDescription(
-        key=ATTR_API_PM25,
-        device_class=DEVICE_CLASS_PM25,
-        name="PM2.5",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=STATE_CLASS_MEASUREMENT,
-    ),
-    AirlySensorEntityDescription(
-        key=ATTR_API_PM10,
-        device_class=DEVICE_CLASS_PM10,
-        name=ATTR_API_PM10,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=STATE_CLASS_MEASUREMENT,
-    ),
-    AirlySensorEntityDescription(
-        key=ATTR_API_HUMIDITY,
-        device_class=DEVICE_CLASS_HUMIDITY,
-        name=ATTR_API_HUMIDITY.capitalize(),
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=STATE_CLASS_MEASUREMENT,
-        value=lambda value: round(value, 1),
-    ),
-    AirlySensorEntityDescription(
-        key=ATTR_API_PRESSURE,
-        device_class=DEVICE_CLASS_PRESSURE,
-        name=ATTR_API_PRESSURE.capitalize(),
-        native_unit_of_measurement=PRESSURE_HPA,
-        state_class=STATE_CLASS_MEASUREMENT,
-    ),
-    AirlySensorEntityDescription(
-        key=ATTR_API_TEMPERATURE,
-        device_class=DEVICE_CLASS_TEMPERATURE,
-        name=ATTR_API_TEMPERATURE.capitalize(),
-        native_unit_of_measurement=TEMP_CELSIUS,
-        state_class=STATE_CLASS_MEASUREMENT,
-        value=lambda value: round(value, 1),
-    ),
-)

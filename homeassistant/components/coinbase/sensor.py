@@ -31,7 +31,7 @@ CURRENCY_ICONS = {
     "USD": "mdi:currency-usd",
 }
 
-DEFAULT_COIN_ICON = "mdi:currency-usd-circle"
+DEFAULT_COIN_ICON = "mdi:cash"
 
 ATTRIBUTION = "Data provided by coinbase.com"
 

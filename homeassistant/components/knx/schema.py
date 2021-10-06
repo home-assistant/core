@@ -18,7 +18,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.components.climate.const import HVAC_MODE_HEAT, HVAC_MODES
 from homeassistant.components.cover import DEVICE_CLASSES as COVER_DEVICE_CLASSES
-from homeassistant.components.sensor import STATE_CLASSES_SCHEMA
+from homeassistant.components.sensor import CONF_STATE_CLASS, STATE_CLASSES_SCHEMA
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
@@ -730,7 +730,6 @@ class SensorSchema(KNXPlatformSchema):
 
     CONF_ALWAYS_CALLBACK = "always_callback"
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
-    CONF_STATE_CLASS = "state_class"
     CONF_SYNC_STATE = CONF_SYNC_STATE
     DEFAULT_NAME = "KNX Sensor"
 

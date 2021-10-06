@@ -14,6 +14,7 @@
             "is_signal_strength": "Force du signal de {entity_name}",
             "is_temperature": "Temp\u00e9rature de {entity_name}",
             "is_value": "La valeur actuelle de {entity_name}",
+            "is_volatile_organic_compounds": "Niveau actuel de concentration en compos\u00e9s organiques volatils de {entity_name}",
             "is_voltage": "Tension actuelle pour {entity_name}"
         },
         "trigger_type": {
@@ -30,6 +31,7 @@
             "signal_strength": "{entity_name} modification de la force du signal",
             "temperature": "{entity_name} modification de temp\u00e9rature",
             "value": "Changements de valeur de {entity_name}",
+            "volatile_organic_compounds": "{entity_name} changements de concentration de compos\u00e9s organiques volatils",
             "voltage": "{entity_name} changement de tension"
         }
     },

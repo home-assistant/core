@@ -1,6 +1,9 @@
 """Support for Notion binary sensors."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+from typing import Literal
+
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CONNECTIVITY,
@@ -33,56 +36,81 @@ from .const import (
     SENSOR_WINDOW_HINGED_VERTICAL,
 )
 
+
+@dataclass
+class NotionBinarySensorDescriptionMixin:
+    """Define an entity description mixin for binary and regular sensors."""
+
+    on_state: Literal["alarm", "critical", "leak", "not_missing", "open"]
+
+
+@dataclass
+class NotionBinarySensorDescription(
+    BinarySensorEntityDescription, NotionBinarySensorDescriptionMixin
+):
+    """Describe a Notion binary sensor."""
+
+
 BINARY_SENSOR_DESCRIPTIONS = (
-    BinarySensorEntityDescription(
+    NotionBinarySensorDescription(
         key=SENSOR_BATTERY,
         name="Low Battery",
         device_class=DEVICE_CLASS_BATTERY,
+        on_state="critical",
     ),
-    BinarySensorEntityDescription(
+    NotionBinarySensorDescription(
         key=SENSOR_DOOR,
         name="Door",
         device_class=DEVICE_CLASS_DOOR,
+        on_state="open",
     ),
-    BinarySensorEntityDescription(
+    NotionBinarySensorDescription(
         key=SENSOR_GARAGE_DOOR,
         name="Garage Door",
         device_class=DEVICE_CLASS_GARAGE_DOOR,
+        on_state="open",
     ),
-    BinarySensorEntityDescription(
+    NotionBinarySensorDescription(
         key=SENSOR_LEAK,
         name="Leak Detector",
         device_class=DEVICE_CLASS_MOISTURE,
+        on_state="leak",
     ),
-    BinarySensorEntityDescription(
+    NotionBinarySensorDescription(
         key=SENSOR_MISSING,
         name="Missing",
         device_class=DEVICE_CLASS_CONNECTIVITY,
+        on_state="not_missing",
     ),
-    BinarySensorEntityDescription(
+    NotionBinarySensorDescription(
         key=SENSOR_SAFE,
         name="Safe",
         device_class=DEVICE_CLASS_DOOR,
+        on_state="open",
     ),
-    BinarySensorEntityDescription(
+    NotionBinarySensorDescription(
         key=SENSOR_SLIDING,
         name="Sliding Door/Window",
         device_class=DEVICE_CLASS_DOOR,
+        on_state="open",
     ),
-    BinarySensorEntityDescription(
+    NotionBinarySensorDescription(
         key=SENSOR_SMOKE_CO,
         name="Smoke/Carbon Monoxide Detector",
         device_class=DEVICE_CLASS_SMOKE,
+        on_state="alarm",
     ),
-    BinarySensorEntityDescription(
+    NotionBinarySensorDescription(
         key=SENSOR_WINDOW_HINGED_HORIZONTAL,
         name="Hinged Window",
         device_class=DEVICE_CLASS_WINDOW,
+        on_state="open",
     ),
-    BinarySensorEntityDescription(
+    NotionBinarySensorDescription(
         key=SENSOR_WINDOW_HINGED_VERTICAL,
         name="Hinged Window",
         device_class=DEVICE_CLASS_WINDOW,
+        on_state="open",
     ),
 )
 
@@ -114,6 +142,8 @@ async def async_setup_entry(
 class NotionBinarySensor(NotionEntity, BinarySensorEntity):
     """Define a Notion sensor."""
 
+    entity_description: NotionBinarySensorDescription
+
     @callback
     def _async_update_from_latest_data(self) -> None:
         """Fetch new state data for the sensor."""
@@ -127,20 +157,4 @@ class NotionBinarySensor(NotionEntity, BinarySensorEntity):
             LOGGER.warning("Unknown data payload: %s", task["status"])
             state = None
 
-        if task["task_type"] == SENSOR_BATTERY:
-            self._attr_is_on = state == "critical"
-        elif task["task_type"] in (
-            SENSOR_DOOR,
-            SENSOR_GARAGE_DOOR,
-            SENSOR_SAFE,
-            SENSOR_SLIDING,
-            SENSOR_WINDOW_HINGED_HORIZONTAL,
-            SENSOR_WINDOW_HINGED_VERTICAL,
-        ):
-            self._attr_is_on = state != "closed"
-        elif task["task_type"] == SENSOR_LEAK:
-            self._attr_is_on = state != "no_leak"
-        elif task["task_type"] == SENSOR_MISSING:
-            self._attr_is_on = state == "not_missing"
-        elif task["task_type"] == SENSOR_SMOKE_CO:
-            self._attr_is_on = state != "no_alarm"
+        self._attr_is_on = self.entity_description.on_state == state

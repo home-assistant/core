@@ -26,7 +26,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SwitcherDeviceWrapper
+from . import SwitcherDataUpdateCoordinator
 from .const import (
     CONF_AUTO_OFF,
     CONF_TIMER_MINUTES,
@@ -69,12 +69,12 @@ async def async_setup_entry(
     )
 
     @callback
-    def async_add_switch(wrapper: SwitcherDeviceWrapper) -> None:
+    def async_add_switch(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Add switch from Switcher device."""
-        if wrapper.data.device_type.category == DeviceCategory.POWER_PLUG:
-            async_add_entities([SwitcherPowerPlugSwitchEntity(wrapper)])
-        elif wrapper.data.device_type.category == DeviceCategory.WATER_HEATER:
-            async_add_entities([SwitcherWaterHeaterSwitchEntity(wrapper)])
+        if coordinator.data.device_type.category == DeviceCategory.POWER_PLUG:
+            async_add_entities([SwitcherPowerPlugSwitchEntity(coordinator)])
+        elif coordinator.data.device_type.category == DeviceCategory.WATER_HEATER:
+            async_add_entities([SwitcherWaterHeaterSwitchEntity(coordinator)])
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_DEVICE_ADD, async_add_switch)
@@ -84,18 +84,17 @@ async def async_setup_entry(
 class SwitcherBaseSwitchEntity(CoordinatorEntity, SwitchEntity):
     """Representation of a Switcher switch entity."""
 
-    def __init__(self, wrapper: SwitcherDeviceWrapper) -> None:
+    def __init__(self, coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Initialize the entity."""
-        super().__init__(wrapper)
-        self.wrapper = wrapper
+        super().__init__(coordinator)
         self.control_result: bool | None = None
 
         # Entity class attributes
-        self._attr_name = wrapper.name
-        self._attr_unique_id = f"{wrapper.device_id}-{wrapper.mac_address}"
+        self._attr_name = coordinator.name
+        self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
         self._attr_device_info = {
             "connections": {
-                (device_registry.CONNECTION_NETWORK_MAC, wrapper.mac_address)
+                (device_registry.CONNECTION_NETWORK_MAC, coordinator.mac_address)
             }
         }
 
@@ -113,7 +112,7 @@ class SwitcherBaseSwitchEntity(CoordinatorEntity, SwitchEntity):
 
         try:
             async with SwitcherApi(
-                self.wrapper.data.ip_address, self.wrapper.device_id
+                self.coordinator.data.ip_address, self.coordinator.data.device_id
             ) as swapi:
                 response = await getattr(swapi, api)(*args)
         except (asyncio.TimeoutError, OSError, RuntimeError) as err:
@@ -127,7 +126,7 @@ class SwitcherBaseSwitchEntity(CoordinatorEntity, SwitchEntity):
                 args,
                 response or error,
             )
-            self.wrapper.last_update_success = False
+            self.coordinator.last_update_success = False
 
     @property
     def is_on(self) -> bool:
@@ -135,7 +134,7 @@ class SwitcherBaseSwitchEntity(CoordinatorEntity, SwitchEntity):
         if self.control_result is not None:
             return self.control_result
 
-        return bool(self.wrapper.data.device_state == DeviceState.ON)
+        return bool(self.coordinator.data.device_state == DeviceState.ON)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""

@@ -115,12 +115,12 @@
             "on": "Connect\u00e9"
         },
         "door": {
-            "off": "Ferm\u00e9e",
-            "on": "Ouverte"
+            "off": "Ferm\u00e9",
+            "on": "Ouvert"
         },
         "garage_door": {
-            "off": "Ferm\u00e9e",
-            "on": "Ouverte"
+            "off": "Ferm\u00e9",
+            "on": "Ouvert"
         },
         "gas": {
             "off": "Non d\u00e9tect\u00e9",
@@ -191,8 +191,8 @@
             "on": "D\u00e9tect\u00e9e"
         },
         "window": {
-            "off": "Ferm\u00e9e",
-            "on": "Ouverte"
+            "off": "Ferm\u00e9",
+            "on": "Ouvert"
         }
     },
     "title": "Capteur binaire"
