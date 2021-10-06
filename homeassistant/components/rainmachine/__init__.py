@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
 from datetime import timedelta
 from functools import partial
-from typing import Any, Callable
+from typing import Any
 
 from regenmaschine import Client
 from regenmaschine.controller import Controller
@@ -62,6 +61,23 @@ SERVICE_STOP_ALL = "stop_all"
 SERVICE_UNPAUSE_WATERING = "unpause_watering"
 
 SERVICES = [SERVICE_PAUSE_WATERING, SERVICE_STOP_ALL, SERVICE_UNPAUSE_WATERING]
+
+
+@callback
+def async_get_controllers_for_service_call(
+    hass: HomeAssistant, call: ServiceCall
+) -> list[Controller]:
+    """Get the controllers related to a service call (by device ID)."""
+    controllers = hass.data[DOMAIN][DATA_CONTROLLER]
+    device_registry = dr.async_get(hass)
+
+    return [
+        controllers[entry_id]
+        for device_id in call.data[CONF_DEVICE_ID]
+        if (device_entry := device_registry.async_get(device_id))
+        for entry_id in device_entry.config_entries
+        if entry_id in controllers
+    ]
 
 
 async def async_update_programs_and_zones(
@@ -168,40 +184,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
-    @callback
-    def match_call_to_entry(coro: Callable[..., Awaitable]) -> Callable[..., Awaitable]:
-        """Ensure that only service calls related to this config entry execute."""
-
-        async def decorator(call: ServiceCall) -> None:
-            """Decorate."""
-            device_registry = dr.async_get(hass)
-            tasks = []
-
-            for device_id in call.data[CONF_DEVICE_ID]:
-                if device_entry := device_registry.async_get(device_id):
-                    if entry.entry_id in device_entry.config_entries:
-                        tasks.append(coro(call))
-
-            await asyncio.gather(*tasks)
-
-        return decorator
-
-    @match_call_to_entry
     async def async_pause_watering(call: ServiceCall) -> None:
         """Pause watering for a set number of seconds."""
-        await controller.watering.pause_all(call.data[CONF_SECONDS])
+        controllers = async_get_controllers_for_service_call(hass, call)
+        tasks = [
+            controller.watering.pause_all(call.data[CONF_SECONDS])
+            for controller in controllers
+        ]
+        await asyncio.gather(*tasks)
         await async_update_programs_and_zones(hass, entry)
 
-    @match_call_to_entry
-    async def async_stop_all(_: ServiceCall) -> None:
+    async def async_stop_all(call: ServiceCall) -> None:
         """Stop all watering."""
-        await controller.watering.stop_all()
+        controllers = async_get_controllers_for_service_call(hass, call)
+        tasks = [controller.watering.stop_all() for controller in controllers]
+        await asyncio.gather(*tasks)
         await async_update_programs_and_zones(hass, entry)
 
-    @match_call_to_entry
-    async def async_unpause_watering(_: ServiceCall) -> None:
+    async def async_unpause_watering(call: ServiceCall) -> None:
         """Unpause watering."""
-        await controller.watering.unpause_all()
+        controllers = async_get_controllers_for_service_call(hass, call)
+        tasks = [controller.watering.unpause_all() for controller in controllers]
+        await asyncio.gather(*tasks)
         await async_update_programs_and_zones(hass, entry)
 
     for service_name, method in (
