@@ -36,7 +36,7 @@
                     "username": "Gebruikersnaam"
                 },
                 "description": "Voer uw Tuya-inloggegevens in.",
-                "title": "Tuya"
+                "title": "Tuya-integratie"
             }
         }
     },
