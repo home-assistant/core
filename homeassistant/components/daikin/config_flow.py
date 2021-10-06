@@ -3,7 +3,7 @@ import asyncio
 import logging
 from uuid import uuid4
 
-from aiohttp import ClientConnectorError, ClientError, web_exceptions
+from aiohttp import ClientError, web_exceptions
 from async_timeout import timeout
 from pydaikin.daikin_base import Appliance
 from pydaikin.discovery import Discovery
@@ -75,7 +75,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     uuid=uuid,
                     password=password,
                 )
-        except (asyncio.TimeoutError, ClientConnectorError):
+        except (asyncio.TimeoutError, ClientError):
             self.host = None
             return self.async_show_form(
                 step_id="user",
@@ -87,13 +87,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user",
                 data_schema=self.schema,
                 errors={"base": "invalid_auth"},
-            )
-        except ClientError:
-            _LOGGER.exception("ClientError")
-            return self.async_show_form(
-                step_id="user",
-                data_schema=self.schema,
-                errors={"base": "unknown"},
             )
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected error creating device")
