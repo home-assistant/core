@@ -106,11 +106,8 @@ async def async_setup_entry(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
     )
     entry.async_on_unload(entry.add_update_listener(options_update_listener))
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
     return True
 
 
