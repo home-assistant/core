@@ -327,6 +327,8 @@ class FluxLight(CoordinatorEntity, LightEntity):
             _, brightness = self._bulb.getWhiteTemperature()
         elif self.color_mode == COLOR_MODE_WHITE:
             brightness = raw_state.warm_white
+        else:
+            brightness = 0
         return int(round(brightness, 0))
 
     @property
