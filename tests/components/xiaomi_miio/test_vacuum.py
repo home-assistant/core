@@ -13,6 +13,7 @@ from homeassistant.components.vacuum import (
     DOMAIN,
     SERVICE_CLEAN_SPOT,
     SERVICE_LOCATE,
+    SERVICE_PAUSE,
     SERVICE_RETURN_TO_BASE,
     SERVICE_SEND_COMMAND,
     SERVICE_SET_FAN_SPEED,
@@ -262,6 +263,13 @@ async def test_xiaomi_vacuum_services(hass, mock_mirobo_is_got_error):
     mock_mirobo_is_got_error.assert_has_calls(
         [mock.call.resume_or_start()], any_order=True
     )
+    mock_mirobo_is_got_error.assert_has_calls(STATUS_CALLS, any_order=True)
+    mock_mirobo_is_got_error.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_PAUSE, {"entity_id": entity_id}, blocking=True
+    )
+    mock_mirobo_is_got_error.assert_has_calls([mock.call.pause()], any_order=True)
     mock_mirobo_is_got_error.assert_has_calls(STATUS_CALLS, any_order=True)
     mock_mirobo_is_got_error.reset_mock()
 
