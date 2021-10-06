@@ -7,6 +7,7 @@ from typing import Callable
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
+    DEVICE_CLASS_PLUG,
     DEVICE_CLASS_PROBLEM,
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -20,6 +21,7 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    MODEL_FAN_ZA5,
     MODELS_HUMIDIFIER_MIIO,
     MODELS_HUMIDIFIER_MIOT,
     MODELS_HUMIDIFIER_MJJSQ,
@@ -32,6 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 ATTR_NO_WATER = "no_water"
+ATTR_POWERSUPPLY_ATTACHED = "powersupply_attached"
 ATTR_WATER_TANK_DETACHED = "water_tank_detached"
 ATTR_MOP_ATTACHED = "is_water_box_carriage_attached"
 ATTR_WATER_BOX_ATTACHED = "is_water_box_attached"
@@ -59,7 +62,14 @@ BINARY_SENSOR_TYPES = (
         device_class=DEVICE_CLASS_CONNECTIVITY,
         value=lambda value: not value,
     ),
+    XiaomiMiioBinarySensorDescription(
+        key=ATTR_POWERSUPPLY_ATTACHED,
+        name="Power Supply",
+        device_class=DEVICE_CLASS_PLUG,
+    ),
 )
+
+FAN_ZA5_BINARY_SENSORS = (ATTR_POWERSUPPLY_ATTACHED,)
 
 VACUUM_SENSORS = {
     ATTR_MOP_ATTACHED: XiaomiMiioBinarySensorDescription(
@@ -124,7 +134,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
         model = config_entry.data[CONF_MODEL]
         sensors = []
-        if model in MODELS_HUMIDIFIER_MIIO:
+        if model in MODEL_FAN_ZA5:
+            sensors = FAN_ZA5_BINARY_SENSORS
+        elif model in MODELS_HUMIDIFIER_MIIO:
             sensors = HUMIDIFIER_MIIO_BINARY_SENSORS
         elif model in MODELS_HUMIDIFIER_MIOT:
             sensors = HUMIDIFIER_MIOT_BINARY_SENSORS

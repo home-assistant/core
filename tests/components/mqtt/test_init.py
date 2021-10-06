@@ -12,13 +12,13 @@ from homeassistant.components import mqtt, websocket_api
 from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.mixins import MQTT_ENTITY_DEVICE_INFO_SCHEMA
 from homeassistant.const import (
-    ATTR_DOMAIN,
-    ATTR_SERVICE,
     EVENT_CALL_SERVICE,
+    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
+from homeassistant.core import CoreState, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -97,21 +97,35 @@ async def test_publish_calls_service(hass, mqtt_mock, calls, record_calls):
     hass.bus.async_listen_once(EVENT_CALL_SERVICE, record_calls)
 
     mqtt.async_publish(hass, "test-topic", "test-payload")
-
     await hass.async_block_till_done()
 
     assert len(calls) == 1
     assert calls[0][0].data["service_data"][mqtt.ATTR_TOPIC] == "test-topic"
     assert calls[0][0].data["service_data"][mqtt.ATTR_PAYLOAD] == "test-payload"
+    assert mqtt.ATTR_QOS not in calls[0][0].data["service_data"]
+    assert mqtt.ATTR_RETAIN not in calls[0][0].data["service_data"]
+
+    hass.bus.async_listen_once(EVENT_CALL_SERVICE, record_calls)
+
+    mqtt.async_publish(hass, "test-topic", "test-payload", 2, True)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 2
+    assert calls[1][0].data["service_data"][mqtt.ATTR_TOPIC] == "test-topic"
+    assert calls[1][0].data["service_data"][mqtt.ATTR_PAYLOAD] == "test-payload"
+    assert calls[1][0].data["service_data"][mqtt.ATTR_QOS] == 2
+    assert calls[1][0].data["service_data"][mqtt.ATTR_RETAIN] is True
 
 
 async def test_service_call_without_topic_does_not_publish(hass, mqtt_mock):
     """Test the service call if topic is missing."""
-    hass.bus.fire(
-        EVENT_CALL_SERVICE,
-        {ATTR_DOMAIN: mqtt.DOMAIN, ATTR_SERVICE: mqtt.SERVICE_PUBLISH},
-    )
-    await hass.async_block_till_done()
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            mqtt.DOMAIN,
+            mqtt.SERVICE_PUBLISH,
+            {},
+            blocking=True,
+        )
     assert not mqtt_mock.async_publish.called
 
 
@@ -120,10 +134,37 @@ async def test_service_call_with_template_payload_renders_template(hass, mqtt_mo
 
     If 'payload_template' is provided and 'payload' is not, then render it.
     """
-    mqtt.async_publish_template(hass, "test/topic", "{{ 1+1 }}")
+    mqtt.publish_template(hass, "test/topic", "{{ 1+1 }}")
     await hass.async_block_till_done()
     assert mqtt_mock.async_publish.called
     assert mqtt_mock.async_publish.call_args[0][1] == "2"
+    mqtt_mock.reset_mock()
+
+    mqtt.async_publish_template(hass, "test/topic", "{{ 2+2 }}")
+    await hass.async_block_till_done()
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0][1] == "4"
+    mqtt_mock.reset_mock()
+
+    await hass.services.async_call(
+        mqtt.DOMAIN,
+        mqtt.SERVICE_PUBLISH,
+        {mqtt.ATTR_TOPIC: "test/topic", mqtt.ATTR_PAYLOAD_TEMPLATE: "{{ 4+4 }}"},
+        blocking=True,
+    )
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0][1] == "8"
+
+
+async def test_service_call_with_bad_template(hass, mqtt_mock):
+    """Test the service call with a bad template does not publish."""
+    await hass.services.async_call(
+        mqtt.DOMAIN,
+        mqtt.SERVICE_PUBLISH,
+        {mqtt.ATTR_TOPIC: "test/topic", mqtt.ATTR_PAYLOAD_TEMPLATE: "{{ 1 | bad }}"},
+        blocking=True,
+    )
+    assert not mqtt_mock.async_publish.called
 
 
 async def test_service_call_with_payload_doesnt_render_template(hass, mqtt_mock):
@@ -338,6 +379,34 @@ async def test_subscribe_topic(hass, mqtt_mock, calls, record_calls):
 
     await hass.async_block_till_done()
     assert len(calls) == 1
+
+
+async def test_subscribe_topic_non_async(hass, mqtt_mock, calls, record_calls):
+    """Test the subscription of a topic using the non-async function."""
+    unsub = await hass.async_add_executor_job(
+        mqtt.subscribe, hass, "test-topic", record_calls
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "test-topic", "test-payload")
+
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0][0].topic == "test-topic"
+    assert calls[0][0].payload == "test-payload"
+
+    await hass.async_add_executor_job(unsub)
+
+    async_fire_mqtt_message(hass, "test-topic", "test-payload")
+
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
+async def test_subscribe_bad_topic(hass, mqtt_mock, calls, record_calls):
+    """Test the subscription of a topic."""
+    with pytest.raises(HomeAssistantError):
+        await mqtt.async_subscribe(hass, 55, record_calls)
 
 
 async def test_subscribe_deprecated(hass, mqtt_mock):
@@ -831,6 +900,62 @@ async def test_no_birth_message(hass, mqtt_client_mock, mqtt_mock):
         await hass.async_block_till_done()
         await asyncio.sleep(0.2)
         mqtt_client_mock.publish.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "mqtt_config",
+    [
+        {
+            mqtt.CONF_BROKER: "mock-broker",
+            mqtt.CONF_BIRTH_MESSAGE: {
+                mqtt.ATTR_TOPIC: "homeassistant/status",
+                mqtt.ATTR_PAYLOAD: "online",
+            },
+        }
+    ],
+)
+async def test_delayed_birth_message(hass, mqtt_client_mock, mqtt_config):
+    """Test sending birth message does not happen until Home Assistant starts."""
+    hass.state = CoreState.starting
+    birth = asyncio.Event()
+
+    result = await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: mqtt_config})
+    assert result
+    await hass.async_block_till_done()
+
+    # Workaround: asynctest==0.13 fails on @functools.lru_cache
+    spec = dir(hass.data["mqtt"])
+    spec.remove("_matching_subscriptions")
+
+    mqtt_component_mock = MagicMock(
+        return_value=hass.data["mqtt"],
+        spec_set=spec,
+        wraps=hass.data["mqtt"],
+    )
+    mqtt_component_mock._mqttc = mqtt_client_mock
+
+    hass.data["mqtt"] = mqtt_component_mock
+    mqtt_mock = hass.data["mqtt"]
+    mqtt_mock.reset_mock()
+
+    async def wait_birth(topic, payload, qos):
+        """Handle birth message."""
+        birth.set()
+
+    with patch("homeassistant.components.mqtt.DISCOVERY_COOLDOWN", 0.1):
+        await mqtt.async_subscribe(hass, "homeassistant/status", wait_birth)
+        mqtt_mock._mqtt_on_connect(None, None, 0, 0)
+        await hass.async_block_till_done()
+        with pytest.raises(asyncio.TimeoutError):
+            await asyncio.wait_for(birth.wait(), 0.2)
+        assert not mqtt_client_mock.publish.called
+        assert not birth.is_set()
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await birth.wait()
+        mqtt_client_mock.publish.assert_called_with(
+            "homeassistant/status", "online", 0, False
+        )
 
 
 @pytest.mark.parametrize(

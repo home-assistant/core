@@ -30,6 +30,7 @@ from .const import (
     METRIC_KEY_PROFILE_FAN_SPEED_HOME,
     SIGNAL_VALLOX_STATE_UPDATE,
     STATE_PROXY_SCAN_INTERVAL,
+    STR_TO_VALLOX_PROFILE_SETTABLE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,25 +47,15 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PROFILE_TO_STR_SETTABLE = {
-    VALLOX_PROFILE.HOME: "Home",
-    VALLOX_PROFILE.AWAY: "Away",
-    VALLOX_PROFILE.BOOST: "Boost",
-    VALLOX_PROFILE.FIREPLACE: "Fireplace",
-}
-
-STR_TO_PROFILE = {v: k for (k, v) in PROFILE_TO_STR_SETTABLE.items()}
-
-PROFILE_TO_STR_REPORTABLE = {
-    **{VALLOX_PROFILE.NONE: "None", VALLOX_PROFILE.EXTRA: "Extra"},
-    **PROFILE_TO_STR_SETTABLE,
-}
-
 ATTR_PROFILE = "profile"
 ATTR_PROFILE_FAN_SPEED = "fan_speed"
 
 SERVICE_SCHEMA_SET_PROFILE = vol.Schema(
-    {vol.Required(ATTR_PROFILE): vol.All(cv.string, vol.In(STR_TO_PROFILE))}
+    {
+        vol.Required(ATTR_PROFILE): vol.All(
+            cv.string, vol.In(STR_TO_VALLOX_PROFILE_SETTABLE)
+        )
+    }
 )
 
 SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED = vol.Schema(
@@ -163,14 +154,14 @@ class ValloxStateProxy:
 
         return value
 
-    def get_profile(self) -> str:
+    def get_profile(self) -> VALLOX_PROFILE:
         """Return cached profile value."""
         _LOGGER.debug("Returning profile")
 
         if not self._valid:
             raise OSError("Device state out of sync.")
 
-        return PROFILE_TO_STR_REPORTABLE[self._profile]
+        return self._profile
 
     async def async_update(self, time: datetime | None = None) -> None:
         """Fetch state update."""
@@ -201,8 +192,13 @@ class ValloxServiceHandler:
         """Set the ventilation profile."""
         _LOGGER.debug("Setting ventilation profile to: %s", profile)
 
+        _LOGGER.warning(
+            "Attention: The service 'vallox.set_profile' is superseded by the 'fan.set_preset_mode' service."
+            "It will be removed in the future, please migrate to 'fan.set_preset_mode' to prevent breakage"
+        )
+
         try:
-            await self._client.set_profile(STR_TO_PROFILE[profile])
+            await self._client.set_profile(STR_TO_VALLOX_PROFILE_SETTABLE[profile])
             return True
 
         except (OSError, ValloxApiException) as err:
@@ -271,6 +267,7 @@ class ValloxServiceHandler:
 
         result = await getattr(self, method["method"])(**params)
 
-        # Force state_proxy to refresh device state, so that updates are propagated to platforms.
+        # This state change affects other entities like sensors. Force an immediate update that can
+        # be observed by all parties involved.
         if result:
             await self._state_proxy.async_update()

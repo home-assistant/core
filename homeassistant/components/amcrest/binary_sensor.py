@@ -1,11 +1,12 @@
 """Support for Amcrest IP camera binary sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from amcrest import AmcrestError
 import voluptuous as vol
@@ -169,7 +170,7 @@ class AmcrestBinarySensor(BinarySensorEntity):
         """Initialize entity."""
         self._signal_name = name
         self._api = device.api
-        self._channel = 0  # Used in unique id, reserved for future use
+        self._channel = device.channel
         self.entity_description: AmcrestSensorEntityDescription = entity_description
 
         self._attr_name = f"{name} {entity_description.name}"
@@ -194,14 +195,13 @@ class AmcrestBinarySensor(BinarySensorEntity):
             return
         _LOGGER.debug(_UPDATE_MSG, self.name)
 
-        self._update_unique_id()
-
         if self._api.available:
             # Send a command to the camera to test if we can still communicate with it.
             # Override of Http.command() in __init__.py will set self._api.available
             # accordingly.
             with suppress(AmcrestError):
                 self._api.current_time  # pylint: disable=pointless-statement
+                self._update_unique_id()
         self._attr_is_on = self._api.available
 
     def _update_others(self) -> None:
@@ -209,7 +209,11 @@ class AmcrestBinarySensor(BinarySensorEntity):
             return
         _LOGGER.debug(_UPDATE_MSG, self.name)
 
-        self._update_unique_id()
+        try:
+            self._update_unique_id()
+        except AmcrestError as error:
+            log_update_error(_LOGGER, "update", self.name, "binary sensor", error)
+            return
 
         event_code = self.entity_description.event_code
         if event_code is None:
@@ -220,6 +224,7 @@ class AmcrestBinarySensor(BinarySensorEntity):
             self._attr_is_on = len(self._api.event_channels_happened(event_code)) > 0
         except AmcrestError as error:
             log_update_error(_LOGGER, "update", self.name, "binary sensor", error)
+            return
 
     def _update_unique_id(self) -> None:
         """Set the unique id."""

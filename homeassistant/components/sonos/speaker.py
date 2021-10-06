@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
+from collections.abc import Callable, Coroutine
 import contextlib
 import datetime
 from functools import partial
 import logging
-from typing import Any, Callable
+from typing import Any
 import urllib.parse
 
 import async_timeout
@@ -177,6 +177,7 @@ class SonosSpeaker:
         # Device information
         self.mac_address = speaker_info["mac_address"]
         self.model_name = speaker_info["model_name"]
+        self.uid = speaker_info["uid"]
         self.version = speaker_info["display_version"]
         self.zone_name = speaker_info["zone_name"]
 
@@ -450,7 +451,9 @@ class SonosSpeaker:
         """Add the soco instance associated with the event to the callback."""
         if not (event_id := event.variables.get("favorites_update_id")):
             return
-        self.favorites.async_handle_event(event_id, self.soco)
+        if not (container_ids := event.variables.get("container_update_i_ds")):
+            return
+        self.favorites.async_handle_event(event_id, container_ids, self.soco)
 
     @callback
     def async_dispatch_media_update(self, event: SonosEvent) -> None:
@@ -1050,25 +1053,32 @@ class SonosSpeaker:
     def update_media_radio(self, variables: dict | None) -> None:
         """Update state when streaming radio."""
         self.media.clear_position()
+        radio_title = None
 
-        try:
-            album_art_uri = variables["current_track_meta_data"].album_art_uri
-            self.media.image_url = self.media.library.build_album_art_full_uri(
-                album_art_uri
-            )
-        except (TypeError, KeyError, AttributeError):
-            pass
+        if current_track_metadata := variables.get("current_track_meta_data"):
+            if album_art_uri := getattr(current_track_metadata, "album_art_uri", None):
+                self.media.image_url = self.media.library.build_album_art_full_uri(
+                    album_art_uri
+                )
+            if not self.media.artist:
+                self.media.artist = getattr(current_track_metadata, "creator", None)
 
-        if not self.media.artist:
-            try:
-                self.media.artist = variables["current_track_meta_data"].creator
-            except (TypeError, KeyError, AttributeError):
-                pass
+            # A missing artist implies metadata is incomplete, try a different method
+            if not self.media.artist:
+                radio_show = None
+                stream_content = None
+                if current_track_metadata.radio_show:
+                    radio_show = current_track_metadata.radio_show.split(",")[0]
+                if not current_track_metadata.stream_content.startswith(
+                    ("ZPSTR_", "TYPE=")
+                ):
+                    stream_content = current_track_metadata.stream_content
+                radio_title = " • ".join(filter(None, [radio_show, stream_content]))
 
-        # Radios without tagging can have part of the radio URI as title.
-        # In this case we try to use the radio name instead.
-        try:
-            uri_meta_data = variables["enqueued_transport_uri_meta_data"]
+        if radio_title:
+            # Prefer the radio title created above
+            self.media.title = radio_title
+        elif uri_meta_data := variables.get("enqueued_transport_uri_meta_data"):
             if isinstance(uri_meta_data, DidlAudioBroadcast) and (
                 self.soco.music_source_from_uri(self.media.title) == MUSIC_SRC_RADIO
                 or (
@@ -1080,18 +1090,23 @@ class SonosSpeaker:
                     )
                 )
             ):
+                # Fall back to the radio channel name as a last resort
                 self.media.title = uri_meta_data.title
-        except (TypeError, KeyError, AttributeError):
-            pass
 
         media_info = self.soco.get_current_media_info()
-
         self.media.channel = media_info["channel"]
 
         # Check if currently playing radio station is in favorites
-        for fav in self.favorites:
-            if fav.reference.get_uri() == media_info["uri"]:
-                self.media.source_name = fav.title
+        fav = next(
+            (
+                fav
+                for fav in self.favorites
+                if fav.reference.get_uri() == media_info["uri"]
+            ),
+            None,
+        )
+        if fav:
+            self.media.source_name = fav.title
 
     def update_media_music(self, track_info: dict) -> None:
         """Update state when playing music tracks."""
