@@ -29,9 +29,11 @@ from .const import (
     FLUX_MAC,
     FLUX_MODEL,
     MODE_AUTO,
+    MODE_CCT,
+    MODE_DIM,
     MODE_RGB,
     MODE_RGBW,
-    MODE_WHITE,
+    MODE_RGBWW,
     TRANSITION_GRADUAL,
     TRANSITION_JUMP,
     TRANSITION_STROBE,
@@ -240,9 +242,11 @@ class OptionsFlow(config_entries.OptionsFlow):
                     vol.In(
                         [
                             MODE_AUTO,
-                            MODE_RGBW,
+                            MODE_DIM,
+                            MODE_CCT,
                             MODE_RGB,
-                            MODE_WHITE,
+                            MODE_RGBW,
+                            MODE_RGBWW,
                         ]
                     ),
                 ),
