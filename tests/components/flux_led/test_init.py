@@ -11,7 +11,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from . import FLUX_DISCOVERY, IP_ADDRESS, MAC_ADDRESS, _patch_discovery, _patch_wifibulb
+from . import (
+    FLUX_DISCOVERY,
+    IP_ADDRESS,
+    MAC_ADDRESS,
+    _mocked_bulb,
+    _patch_discovery,
+    _patch_wifibulb,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -53,6 +60,20 @@ async def test_config_entry_retry(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
     with _patch_discovery(no_device=True), _patch_wifibulb(no_device=True):
+        await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
+        await hass.async_block_till_done()
+        assert config_entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_config_entry_retry_when_state_missing(hass: HomeAssistant) -> None:
+    """Test that a config entry is retried when state is missing."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    bulb.raw_state = None
+    with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
         assert config_entry.state == ConfigEntryState.SETUP_RETRY
