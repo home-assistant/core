@@ -54,6 +54,8 @@ from . import TEST_MAC
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
+# pylint: disable=consider-using-tuple
+
 # calls made when device status is requested
 STATUS_CALLS = [
     mock.call.status(),

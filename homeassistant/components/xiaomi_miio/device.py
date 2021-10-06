@@ -179,7 +179,7 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
             return value
 
         _LOGGER.warning(
-            "could not determine how to parse state value of type %s for state %s and attribute %s",
+            "Could not determine how to parse state value of type %s for state %s and attribute %s",
             type(value),
             type(state),
             attribute,
