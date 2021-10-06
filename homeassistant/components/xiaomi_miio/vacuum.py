@@ -1,7 +1,8 @@
 """Support for the Xiaomi vacuum cleaner robot."""
+from __future__ import annotations
+
 from functools import partial
 import logging
-from typing import Optional
 
 from miio import DeviceException
 import voluptuous as vol
@@ -48,21 +49,6 @@ from .device import XiaomiCoordinatedMiioEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Xiaomi Vacuum cleaner"
-
-ATTR_CLEAN_START = "clean_start"
-ATTR_CLEAN_STOP = "clean_stop"
-ATTR_CLEANING_TIME = "cleaning_time"
-ATTR_DO_NOT_DISTURB = "do_not_disturb"
-ATTR_DO_NOT_DISTURB_START = "do_not_disturb_start"
-ATTR_DO_NOT_DISTURB_END = "do_not_disturb_end"
-ATTR_MAIN_BRUSH_LEFT = "main_brush_left"
-ATTR_SIDE_BRUSH_LEFT = "side_brush_left"
-ATTR_FILTER_LEFT = "filter_left"
-ATTR_SENSOR_DIRTY_LEFT = "sensor_dirty_left"
-ATTR_CLEANING_COUNT = "cleaning_count"
-ATTR_CLEANED_TOTAL_AREA = "total_cleaned_area"
-ATTR_CLEANING_TOTAL_TIME = "total_cleaning_time"
 ATTR_ERROR = "error"
 ATTR_RC_DURATION = "duration"
 ATTR_RC_ROTATION = "rotation"
@@ -71,7 +57,6 @@ ATTR_STATUS = "status"
 ATTR_ZONE_ARRAY = "zone"
 ATTR_ZONE_REPEATER = "repeats"
 ATTR_TIMERS = "timers"
-ATTR_MOP_ATTACHED = "mop_attached"
 
 SUPPORT_XIAOMI = (
     SUPPORT_STATE
@@ -220,7 +205,7 @@ class MiroboVacuum(XiaomiCoordinatedMiioEntity, StateVacuumEntity):
     ):
         """Initialize the Xiaomi vacuum cleaner robot handler."""
         super().__init__(name, device, entry, unique_id, coordinator)
-        self._state: Optional[str] = None
+        self._state: str | None = None
 
     @property
     def state(self):
