@@ -51,18 +51,12 @@ def create(
     notification_id: str | None = None,
 ) -> None:
     """Generate a notification."""
-    _LOGGER.warn(
-        "Calling persitent_notification.create is deprecated, use async_create instead"
-    )
     hass.add_job(async_create, hass, message, title, notification_id)
 
 
 @bind_hass
 def dismiss(hass: HomeAssistant, notification_id: str) -> None:
     """Remove a notification."""
-    _LOGGER.warn(
-        "Calling persitent_notification.dismiss is deprecated, use async_create instead"
-    )
     hass.add_job(async_dismiss, hass, notification_id)
 
 
