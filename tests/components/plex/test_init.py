@@ -21,7 +21,6 @@ from homeassistant.const import (
     STATE_IDLE,
     STATE_PLAYING,
 )
-from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, PLEX_DIRECT_URL
@@ -186,7 +185,6 @@ async def test_setup_when_certificate_changed(
     plextv_shared_users,
 ):
     """Test setup component when the Plex certificate has changed."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     class WrongCertHostnameException(requests.exceptions.SSLError):
         """Mock the exception showing a mismatched hostname."""

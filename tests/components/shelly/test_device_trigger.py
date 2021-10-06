@@ -3,7 +3,6 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from homeassistant import setup
 from homeassistant.components import automation
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
@@ -187,7 +186,6 @@ async def test_get_triggers_for_invalid_device_id(hass, device_reg, coap_wrapper
 async def test_if_fires_on_click_event_block_device(hass, calls, coap_wrapper):
     """Test for click_event trigger firing for block device."""
     assert coap_wrapper
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     assert await async_setup_component(
         hass,
@@ -226,7 +224,6 @@ async def test_if_fires_on_click_event_block_device(hass, calls, coap_wrapper):
 async def test_if_fires_on_click_event_rpc_device(hass, calls, rpc_wrapper):
     """Test for click_event trigger firing for rpc device."""
     assert rpc_wrapper
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     assert await async_setup_component(
         hass,
@@ -265,7 +262,6 @@ async def test_if_fires_on_click_event_rpc_device(hass, calls, rpc_wrapper):
 async def test_validate_trigger_block_device_not_ready(hass, calls, coap_wrapper):
     """Test validate trigger config when block device is not ready."""
     assert coap_wrapper
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     assert await async_setup_component(
         hass,
@@ -303,7 +299,6 @@ async def test_validate_trigger_block_device_not_ready(hass, calls, coap_wrapper
 async def test_validate_trigger_rpc_device_not_ready(hass, calls, rpc_wrapper):
     """Test validate trigger config when RPC device is not ready."""
     assert rpc_wrapper
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     assert await async_setup_component(
         hass,

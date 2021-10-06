@@ -50,7 +50,7 @@ def create_engine_test(*args, **kwargs):
 async def test_schema_update_calls(hass):
     """Test that schema migrations occur in correct order."""
     assert await recorder.async_migration_in_progress(hass) is False
-    await async_setup_component(hass, "persistent_notification", {})
+
     with patch(
         "homeassistant.components.recorder.create_engine", new=create_engine_test
     ), patch(
@@ -74,7 +74,6 @@ async def test_schema_update_calls(hass):
 async def test_migration_in_progress(hass):
     """Test that we can check for migration in progress."""
     assert await recorder.async_migration_in_progress(hass) is False
-    await async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "homeassistant.components.recorder.create_engine", new=create_engine_test
@@ -91,7 +90,7 @@ async def test_migration_in_progress(hass):
 
 async def test_database_migration_failed(hass):
     """Test we notify if the migration fails."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     create_calls = async_mock_service(hass, "persistent_notification", "create")
     dismiss_calls = async_mock_service(hass, "persistent_notification", "dismiss")
     assert await recorder.async_migration_in_progress(hass) is False
@@ -118,7 +117,7 @@ async def test_database_migration_failed(hass):
 
 async def test_database_migration_encounters_corruption(hass):
     """Test we move away the database if its corrupt."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     assert await recorder.async_migration_in_progress(hass) is False
 
     sqlite3_exception = DatabaseError("statement", {}, [])
@@ -146,7 +145,7 @@ async def test_database_migration_encounters_corruption(hass):
 
 async def test_database_migration_encounters_corruption_not_sqlite(hass):
     """Test we fail on database error when we cannot recover."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     create_calls = async_mock_service(hass, "persistent_notification", "create")
     dismiss_calls = async_mock_service(hass, "persistent_notification", "dismiss")
     assert await recorder.async_migration_in_progress(hass) is False
@@ -179,7 +178,7 @@ async def test_events_during_migration_are_queued(hass):
     """Test that events during migration are queued."""
 
     assert await recorder.async_migration_in_progress(hass) is False
-    await async_setup_component(hass, "persistent_notification", {})
+
     with patch(
         "homeassistant.components.recorder.create_engine", new=create_engine_test
     ):
@@ -202,7 +201,7 @@ async def test_events_during_migration_are_queued(hass):
 
 async def test_events_during_migration_queue_exhausted(hass):
     """Test that events during migration takes so long the queue is exhausted."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     assert await recorder.async_migration_in_progress(hass) is False
 
     with patch(
@@ -237,8 +236,6 @@ async def test_schema_migrate(hass):
     throwing exceptions. Maintaining a set of assertions based on schema
     inspection could quickly become quite cumbersome.
     """
-
-    await async_setup_component(hass, "persistent_notification", {})
 
     def _mock_setup_run(self):
         self.run_info = RecorderRuns(

@@ -16,7 +16,6 @@ from homeassistant.components.forecast_solar.const import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
@@ -25,7 +24,6 @@ from tests.common import MockConfigEntry
 @pytest.fixture(autouse=True)
 async def mock_persistent_notification(hass: HomeAssistant) -> None:
     """Set up component for persistent notifications."""
-    await async_setup_component(hass, "persistent_notification", {})
 
 
 @pytest.fixture

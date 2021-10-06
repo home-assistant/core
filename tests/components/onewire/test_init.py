@@ -8,7 +8,6 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.setup import async_setup_component
 
 from . import (
     setup_onewire_owserver_integration,
@@ -94,7 +93,7 @@ async def test_registry_cleanup(owproxy, hass):
 
     As they would be on a clean setup: all binary-sensors and switches disabled.
     """
-    await async_setup_component(hass, "persistent_notification", {})
+
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
