@@ -9,6 +9,7 @@ from typing import Any
 from regenmaschine import Client
 from regenmaschine.controller import Controller
 from regenmaschine.errors import RainMachineError
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -56,9 +57,11 @@ CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 PLATFORMS = ["binary_sensor", "sensor", "switch"]
 
-SERVICE_PAUSE_WATERING = "pause_watering"
-SERVICE_STOP_ALL = "stop_all"
-SERVICE_UNPAUSE_WATERING = "unpause_watering"
+SERVICE_SCHEMA = vol.Schema({vol.Required(CONF_DEVICE_ID): cv.string})
+
+SERVICE_NAME_PAUSE_WATERING = "pause_watering"
+SERVICE_NAME_STOP_ALL = "stop_all"
+SERVICE_NAME_UNPAUSE_WATERING = "unpause_watering"
 
 
 @callback
@@ -207,13 +210,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await async_update_programs_and_zones(hass, entry)
 
     for service_name, method in (
-        (SERVICE_PAUSE_WATERING, async_pause_watering),
-        (SERVICE_STOP_ALL, async_stop_all),
-        (SERVICE_UNPAUSE_WATERING, async_unpause_watering),
+        (SERVICE_NAME_PAUSE_WATERING, async_pause_watering),
+        (SERVICE_NAME_STOP_ALL, async_stop_all),
+        (SERVICE_NAME_UNPAUSE_WATERING, async_unpause_watering),
     ):
         if hass.services.has_service(DOMAIN, service_name):
             continue
-        hass.services.async_register(DOMAIN, service_name, method)
+        hass.services.async_register(
+            DOMAIN, service_name, method, schema=SERVICE_SCHEMA
+        )
 
     return True
 
@@ -228,9 +233,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # If this is the last instance of RainMachine, deregister any services defined
         # during integration setup:
         for service_name in (
-            SERVICE_PAUSE_WATERING,
-            SERVICE_STOP_ALL,
-            SERVICE_UNPAUSE_WATERING,
+            SERVICE_NAME_PAUSE_WATERING,
+            SERVICE_NAME_STOP_ALL,
+            SERVICE_NAME_UNPAUSE_WATERING,
         ):
             hass.services.async_remove(DOMAIN, service_name)
 
