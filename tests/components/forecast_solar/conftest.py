@@ -21,11 +21,6 @@ from homeassistant.util import dt as dt_util
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture(autouse=True)
-async def mock_persistent_notification(hass: HomeAssistant) -> None:
-    """Set up component for persistent notifications."""
-
-
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""

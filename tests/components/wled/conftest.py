@@ -14,11 +14,6 @@ from tests.common import MockConfigEntry, load_fixture
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
-@pytest.fixture(autouse=True)
-async def mock_persistent_notification(hass: HomeAssistant) -> None:
-    """Set up component for persistent notifications."""
-
-
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
