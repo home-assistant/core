@@ -9,7 +9,7 @@ from logging import getLogger
 from typing import Any
 
 from homeassistant.auth.const import ACCESS_TOKEN_EXPIRATION
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
 from . import models
@@ -45,7 +45,6 @@ class AuthStore:
             STORAGE_VERSION, STORAGE_KEY, private=True
         )
         self._lock = asyncio.Lock()
-        self._revoke_callbacks: dict[str, list[CALLBACK_TYPE]] = {}
 
     async def async_get_groups(self) -> list[models.Group]:
         """Retrieve all users."""
@@ -244,28 +243,6 @@ class AuthStore:
             if user.refresh_tokens.pop(refresh_token.id, None):
                 self._async_schedule_save()
                 break
-
-        callbacks = self._revoke_callbacks.pop(refresh_token.id, [])
-        for c in callbacks:
-            c()
-
-    @callback
-    def async_register_revoke_token_callback(
-        self, refresh_token_id: str, c: CALLBACK_TYPE
-    ) -> CALLBACK_TYPE:
-        """Register a callback to be called when the refresh token id is revoked."""
-        if refresh_token_id not in self._revoke_callbacks:
-            self._revoke_callbacks[refresh_token_id] = []
-
-        callbacks = self._revoke_callbacks[refresh_token_id]
-        callbacks.append(c)
-
-        @callback
-        def unregister() -> None:
-            if c in callbacks:
-                callbacks.remove(c)
-
-        return unregister
 
     async def async_get_refresh_token(
         self, token_id: str

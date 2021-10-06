@@ -155,6 +155,7 @@ class AuthManager:
         self._providers = providers
         self._mfa_modules = mfa_modules
         self.login_flow = AuthManagerFlowManager(hass, self)
+        self._revoke_callbacks: dict[str, list[CALLBACK_TYPE]] = {}
 
     @property
     def auth_providers(self) -> list[AuthProvider]:
@@ -446,14 +447,27 @@ class AuthManager:
         """Delete a refresh token."""
         await self._store.async_remove_refresh_token(refresh_token)
 
+        callbacks = self._revoke_callbacks.pop(refresh_token.id, [])
+        for cb in callbacks:
+            cb()
+
     @callback
     def async_register_revoke_token_callback(
-        self, refresh_token_id: str, callback: CALLBACK_TYPE
+        self, refresh_token_id: str, cb: CALLBACK_TYPE
     ) -> CALLBACK_TYPE:
         """Register a callback to be called when the refresh token id is revoked."""
-        return self._store.async_register_revoke_token_callback(
-            refresh_token_id, callback
-        )
+        if refresh_token_id not in self._revoke_callbacks:
+            self._revoke_callbacks[refresh_token_id] = []
+
+        callbacks = self._revoke_callbacks[refresh_token_id]
+        callbacks.append(cb)
+
+        @callback
+        def unregister() -> None:
+            if cb in callbacks:
+                callbacks.remove(cb)
+
+        return unregister
 
     @callback
     def async_create_access_token(
