@@ -60,8 +60,6 @@ SERVICE_PAUSE_WATERING = "pause_watering"
 SERVICE_STOP_ALL = "stop_all"
 SERVICE_UNPAUSE_WATERING = "unpause_watering"
 
-SERVICES = [SERVICE_PAUSE_WATERING, SERVICE_STOP_ALL, SERVICE_UNPAUSE_WATERING]
-
 
 @callback
 def async_get_controllers_for_service_call(
@@ -229,7 +227,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if len(hass.config_entries.async_entries(DOMAIN)) == 1:
         # If this is the last instance of RainMachine, deregister any services defined
         # during integration setup:
-        for service_name in SERVICES:
+        for service_name in [
+            SERVICE_PAUSE_WATERING,
+            SERVICE_STOP_ALL,
+            SERVICE_UNPAUSE_WATERING,
+        ]:
             hass.services.async_remove(DOMAIN, service_name)
 
     return unload_ok
