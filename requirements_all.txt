@@ -2196,7 +2196,7 @@ solaredge==0.0.2
 solax==0.2.8
 
 # homeassistant.components.honeywell
-somecomfort==0.5.2
+somecomfort==0.7.0
 
 # homeassistant.components.somfy_mylink
 somfy-mylink-synergy==1.0.6
