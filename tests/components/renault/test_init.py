@@ -6,11 +6,12 @@ from renault_api.gigya.exceptions import InvalidCredentialsException
 
 from homeassistant.components.renault.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 
 from . import get_mock_config_entry, setup_renault_integration_simple
 
 
-async def test_setup_unload_entry(hass):
+async def test_setup_unload_entry(hass: HomeAssistant):
     """Test entry setup and unload."""
     with patch("homeassistant.components.renault.PLATFORMS", []):
         config_entry = await setup_renault_integration_simple(hass)
@@ -26,7 +27,7 @@ async def test_setup_unload_entry(hass):
     assert config_entry.entry_id not in hass.data[DOMAIN]
 
 
-async def test_setup_entry_bad_password(hass):
+async def test_setup_entry_bad_password(hass: HomeAssistant):
     """Test entry setup and unload."""
     # Create a mock entry so we don't have to go through config flow
     config_entry = get_mock_config_entry()
@@ -44,7 +45,7 @@ async def test_setup_entry_bad_password(hass):
     assert not hass.data.get(DOMAIN)
 
 
-async def test_setup_entry_exception(hass):
+async def test_setup_entry_exception(hass: HomeAssistant):
     """Test ConfigEntryNotReady when API raises an exception during entry setup."""
     config_entry = get_mock_config_entry()
     config_entry.add_to_hass(hass)

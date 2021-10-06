@@ -6,15 +6,33 @@
             "single_instance_allowed": "Al geconfigureerd. Er is maar een configuratie mogelijk."
         },
         "error": {
-            "invalid_auth": "Ongeldige authenticatie"
+            "invalid_auth": "Ongeldige authenticatie",
+            "login_error": "Aanmeldingsfout ({code}): {msg}"
         },
         "flow_title": "Tuya-configuratie",
         "step": {
+            "login": {
+                "data": {
+                    "access_id": "Toegangs-ID",
+                    "access_secret": "Access Secret",
+                    "country_code": "Landcode",
+                    "endpoint": "Beschikbaarheidszone",
+                    "password": "Wachtwoord",
+                    "tuya_app_type": "Mobiele app",
+                    "username": "Account"
+                },
+                "description": "Voer uw Tuya-inloggegevens in",
+                "title": "Tuya"
+            },
             "user": {
                 "data": {
+                    "access_id": "Tuya IoT-toegangs-ID",
+                    "access_secret": "Tuya IoT Access Secret",
                     "country_code": "De landcode van uw account (bijvoorbeeld 1 voor de VS of 86 voor China)",
                     "password": "Wachtwoord",
                     "platform": "De app waar uw account is geregistreerd",
+                    "region": "Regio",
+                    "tuya_project_type": "Tuya cloud project type",
                     "username": "Gebruikersnaam"
                 },
                 "description": "Voer uw Tuya-inloggegevens in.",

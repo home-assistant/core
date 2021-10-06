@@ -131,6 +131,11 @@ ZEROCONF = {
             "name": "shelly*"
         }
     ],
+    "_hue._tcp.local.": [
+        {
+            "domain": "hue"
+        }
+    ],
     "_ipp._tcp.local.": [
         {
             "domain": "ipp"
@@ -163,6 +168,10 @@ ZEROCONF = {
         },
         {
             "domain": "xiaomi_miio"
+        },
+        {
+            "domain": "yeelight",
+            "name": "yeelink-*"
         }
     ],
     "_nanoleafapi._tcp.local.": [

@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "unknown": "Error inesperat",
+            "unknown_coordinates": "No hi ha dades de latitud/longitud"
+        },
+        "step": {
+            "coordinates": {
+                "data": {
+                    "latitude": "Latitud",
+                    "longitude": "Longitud"
+                },
+                "description": "Introdueix la latitud i la longitud a monitoritzar:"
+            },
+            "location": {
+                "data": {
+                    "location_type": "Ubicaci\u00f3"
+                },
+                "description": "Tria una ubicaci\u00f3 a monitoritzar:"
+            },
+            "user": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                },
+                "description": "Introdueix el nom d'usuari i contrasenya:"
+            }
+        }
+    }
+}

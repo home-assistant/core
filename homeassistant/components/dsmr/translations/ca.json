@@ -28,7 +28,7 @@
             },
             "setup_serial_manual_path": {
                 "data": {
-                    "port": "Ruta del port USB del dispositiu"
+                    "port": "Ruta del dispositiu USB"
                 },
                 "title": "Ruta"
             },

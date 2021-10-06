@@ -41,7 +41,6 @@ CONF_RETRY_ON_EMPTY = "retry_on_empty"
 CONF_REVERSE_ORDER = "reverse_order"
 CONF_PRECISION = "precision"
 CONF_SCALE = "scale"
-CONF_STATE_CLASS = "state_class"
 CONF_STATE_CLOSED = "state_closed"
 CONF_STATE_CLOSING = "state_closing"
 CONF_STATE_OFF = "state_off"
@@ -107,16 +106,22 @@ CALL_TYPE_X_REGISTER_HOLDINGS = "holdings"
 # service calls
 SERVICE_WRITE_COIL = "write_coil"
 SERVICE_WRITE_REGISTER = "write_register"
+SERVICE_STOP = "stop"
+SERVICE_RESTART = "restart"
+
+# dispatcher signals
+SIGNAL_STOP_ENTITY = "modbus.stop"
+SIGNAL_START_ENTITY = "modbus.start"
 
 # integration names
 DEFAULT_HUB = "modbus_hub"
 DEFAULT_SCAN_INTERVAL = 15  # seconds
 DEFAULT_SLAVE = 1
 DEFAULT_STRUCTURE_PREFIX = ">f"
-
-
 DEFAULT_TEMP_UNIT = "C"
 MODBUS_DOMAIN = "modbus"
+
+ACTIVE_SCAN_INTERVAL = 2  # limit to force an extra update
 
 PLATFORMS = (
     (BINARY_SENSOR_DOMAIN, CONF_BINARY_SENSORS),

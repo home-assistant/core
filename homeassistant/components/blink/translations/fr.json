@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "P\u00e9riph\u00e9rique d\u00e9j\u00e0 configur\u00e9"
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
@@ -20,7 +20,7 @@
             "user": {
                 "data": {
                     "password": "Mot de passe",
-                    "username": "Identifiant"
+                    "username": "Nom d'utilisateur"
                 },
                 "title": "Connectez-vous avec un compte Blink"
             }

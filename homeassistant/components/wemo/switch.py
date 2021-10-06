@@ -76,16 +76,17 @@ class WemoSwitch(WemoEntity, SwitchEntity):
 
         if isinstance(self.wemo, Insight):
             attr["on_latest_time"] = WemoSwitch.as_uptime(
-                self.wemo.insight_params["onfor"]
+                self.wemo.insight_params.get("onfor", 0)
             )
             attr["on_today_time"] = WemoSwitch.as_uptime(
-                self.wemo.insight_params["ontoday"]
+                self.wemo.insight_params.get("ontoday", 0)
             )
             attr["on_total_time"] = WemoSwitch.as_uptime(
-                self.wemo.insight_params["ontotal"]
+                self.wemo.insight_params.get("ontotal", 0)
             )
             attr["power_threshold_w"] = (
-                convert(self.wemo.insight_params["powerthreshold"], float, 0.0) / 1000.0
+                convert(self.wemo.insight_params.get("powerthreshold"), float, 0.0)
+                / 1000.0
             )
 
         if isinstance(self.wemo, CoffeeMaker):
@@ -106,14 +107,15 @@ class WemoSwitch(WemoEntity, SwitchEntity):
         """Return the current power usage in W."""
         if isinstance(self.wemo, Insight):
             return (
-                convert(self.wemo.insight_params["currentpower"], float, 0.0) / 1000.0
+                convert(self.wemo.insight_params.get("currentpower"), float, 0.0)
+                / 1000.0
             )
 
     @property
     def today_energy_kwh(self):
         """Return the today total energy usage in kWh."""
         if isinstance(self.wemo, Insight):
-            miliwatts = convert(self.wemo.insight_params["todaymw"], float, 0.0)
+            miliwatts = convert(self.wemo.insight_params.get("todaymw"), float, 0.0)
             return round(miliwatts / (1000.0 * 1000.0 * 60), 2)
 
     @property
@@ -122,7 +124,7 @@ class WemoSwitch(WemoEntity, SwitchEntity):
         if isinstance(self.wemo, CoffeeMaker):
             return self.wemo.mode_string
         if isinstance(self.wemo, Insight):
-            standby_state = int(self.wemo.insight_params["state"])
+            standby_state = int(self.wemo.insight_params.get("state", 0))
             if standby_state == WEMO_ON:
                 return STATE_ON
             if standby_state == WEMO_OFF:

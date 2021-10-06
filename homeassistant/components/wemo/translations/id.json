@@ -9,5 +9,10 @@
                 "description": "Ingin menyiapkan Wemo?"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "long_press": "Tombol Wemo ditekan selama 2 detik"
+        }
     }
 }
