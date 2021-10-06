@@ -213,8 +213,8 @@ async def test_rgb_light(hass: HomeAssistant) -> None:
     bulb.setPresetPattern.reset_mock()
 
 
-async def test_rgbw_light(hass: HomeAssistant) -> None:
-    """Test an rgbw light."""
+async def test_rgb__cct_light(hass: HomeAssistant) -> None:
+    """Test an rgb cct light."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
@@ -222,8 +222,9 @@ async def test_rgbw_light(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
-    bulb.color_modes = {FLUX_COLOR_MODE_RGBW}
-    bulb.color_mode = FLUX_COLOR_MODE_RGBW
+    bulb.raw_state = bulb.raw_state._replace(model_num=0x35)  # RGB & CCT model
+    bulb.color_modes = {FLUX_COLOR_MODE_RGB, FLUX_COLOR_MODE_CCT}
+    bulb.color_mode = FLUX_COLOR_MODE_RGB
     with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -234,9 +235,9 @@ async def test_rgbw_light(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
-    assert attributes[ATTR_COLOR_MODE] == "rgbw"
+    assert attributes[ATTR_COLOR_MODE] == "hs"
     assert attributes[ATTR_EFFECT_LIST] == FLUX_EFFECT_LIST
-    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs", "rgbw"]
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs"]
     assert attributes[ATTR_HS_COLOR] == (0, 100)
 
     await hass.services.async_call(
@@ -261,25 +262,7 @@ async def test_rgbw_light(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
-    bulb.setRgbw.assert_called_with(255, 0, 0, w=50, brightness=100)
-    bulb.setRgbw.reset_mock()
-
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        "turn_on",
-        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 150},
-        blocking=True,
-    )
-    bulb.setRgbw.assert_called_with(w2=128)
-    bulb.setRgbw.reset_mock()
-
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        "turn_on",
-        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 290},
-        blocking=True,
-    )
-    bulb.setRgbw.assert_called_with(w=128)
+    bulb.setRgbw.assert_called_with(255, 0, 0, brightness=100)
     bulb.setRgbw.reset_mock()
 
     await hass.services.async_call(
@@ -288,7 +271,104 @@ async def test_rgbw_light(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_HS_COLOR: (10, 30)},
         blocking=True,
     )
-    bulb.setRgbw.assert_called_with(255, 191, 178, w=50, brightness=128)
+    bulb.setRgbw.assert_called_with(255, 191, 178, brightness=128)
+    bulb.setRgbw.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "random"},
+        blocking=True,
+    )
+    bulb.setRgb.assert_called_once()
+    bulb.setRgb.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "purple_fade"},
+        blocking=True,
+    )
+    bulb.setPresetPattern.assert_called_with(43, 50)
+    bulb.setPresetPattern.reset_mock()
+
+
+async def test_rgbw_light(hass: HomeAssistant) -> None:
+    """Test an rgbw light."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
+        unique_id=MAC_ADDRESS,
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    bulb.color_modes = {FLUX_COLOR_MODE_RGBW}
+    bulb.color_mode = FLUX_COLOR_MODE_RGBW
+    with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
+        await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.az120444_aabbccddeeff"
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    attributes = state.attributes
+    assert attributes[ATTR_BRIGHTNESS] == 128
+    assert attributes[ATTR_COLOR_MODE] == "rgbw"
+    assert attributes[ATTR_EFFECT_LIST] == FLUX_EFFECT_LIST
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs", "rgbw"]
+    assert attributes[ATTR_HS_COLOR] == (0.0, 83.529)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    bulb.turnOff.assert_called_once()
+
+    bulb.is_on = False
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    bulb.turnOn.assert_called_once()
+    bulb.turnOn.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
+        blocking=True,
+    )
+    bulb.setRgbw.assert_called_with(168, 0, 0, 33)
+    bulb.setRgbw.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 150},
+        blocking=True,
+    )
+    bulb.setWhiteTemperature.assert_called_with(6666, 128)
+    bulb.setWhiteTemperature.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 290},
+        blocking=True,
+    )
+    bulb.setWhiteTemperature.assert_called_with(3448, 128)
+    bulb.setWhiteTemperature.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_HS_COLOR: (10, 30)},
+        blocking=True,
+    )
+    bulb.setRgbw.assert_called_with(255, 191, 178, brightness=128)
     bulb.setRgbw.reset_mock()
 
     await hass.services.async_call(
@@ -320,7 +400,8 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
     bulb.raw_state = bulb.raw_state._replace(warm_white=1, cool_white=2)
-
+    bulb.color_modes = {FLUX_COLOR_MODE_RGBWW}
+    bulb.color_mode = FLUX_COLOR_MODE_RGBWW
     with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -331,10 +412,10 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
-    assert attributes[ATTR_COLOR_MODE] == "rgbw"
+    assert attributes[ATTR_COLOR_MODE] == "rgbww"
     assert attributes[ATTR_EFFECT_LIST] == FLUX_EFFECT_LIST
-    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs", "rgbw"]
-    assert attributes[ATTR_HS_COLOR] == (0, 100)
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs", "rgbww"]
+    assert attributes[ATTR_HS_COLOR] == (0.0, 99.608)
 
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -358,7 +439,7 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
-    bulb.setRgbw.assert_called_with(255, 0, 0, w=50, brightness=100)
+    bulb.setRgbw.assert_called_with(255, 0, 0, 22, w2=23)
     bulb.setRgbw.reset_mock()
 
     await hass.services.async_call(
@@ -367,8 +448,8 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 150},
         blocking=True,
     )
-    bulb.setRgbw.assert_called_with(w2=128)
-    bulb.setRgbw.reset_mock()
+    bulb.setWhiteTemperature.assert_called_with(6666, 128)
+    bulb.setWhiteTemperature.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -376,8 +457,8 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 290},
         blocking=True,
     )
-    bulb.setRgbw.assert_called_with(w=128)
-    bulb.setRgbw.reset_mock()
+    bulb.setWhiteTemperature.assert_called_with(3448, 128)
+    bulb.setWhiteTemperature.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -385,7 +466,7 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_HS_COLOR: (10, 30)},
         blocking=True,
     )
-    bulb.setRgbw.assert_called_with(255, 191, 178, w=50, brightness=128)
+    bulb.setRgbw.assert_called_with(255, 191, 178, brightness=128)
     bulb.setRgbw.reset_mock()
 
     await hass.services.async_call(
@@ -418,6 +499,8 @@ async def test_white_light(hass: HomeAssistant) -> None:
     bulb = _mocked_bulb()
     bulb.mode = "ww"
     bulb.protocol = None
+    bulb.color_modes = {FLUX_COLOR_MODE_DIM}
+    bulb.color_mode = FLUX_COLOR_MODE_DIM
     with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -427,9 +510,9 @@ async def test_white_light(hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
     attributes = state.attributes
-    assert attributes[ATTR_BRIGHTNESS] == 50
-    assert attributes[ATTR_COLOR_MODE] == "brightness"
-    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["brightness"]
+    assert attributes[ATTR_BRIGHTNESS] == 128
+    assert attributes[ATTR_COLOR_MODE] == "white"
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["white"]
 
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -453,8 +536,8 @@ async def test_white_light(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
-    bulb.setRgbw.assert_called_with(0, 0, 0, w=100)
-    bulb.setRgbw.reset_mock()
+    bulb.setWarmWhite255.assert_called_with(100)
+    bulb.setWarmWhite255.reset_mock()
 
 
 async def test_rgb_light_custom_effects(
@@ -474,6 +557,8 @@ async def test_rgb_light_custom_effects(
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
+    bulb.color_modes = {FLUX_COLOR_MODE_RGB}
+    bulb.color_mode = FLUX_COLOR_MODE_RGB
     with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -484,9 +569,9 @@ async def test_rgb_light_custom_effects(
     assert state.state == STATE_ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
-    assert attributes[ATTR_COLOR_MODE] == "rgbw"
+    assert attributes[ATTR_COLOR_MODE] == "hs"
     assert attributes[ATTR_EFFECT_LIST] == [*FLUX_EFFECT_LIST, "custom"]
-    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs", "rgbw"]
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["hs"]
     assert attributes[ATTR_HS_COLOR] == (0, 100)
 
     await hass.services.async_call(
@@ -551,6 +636,8 @@ async def test_rgb_light_custom_effects_invalid_colors(hass: HomeAssistant) -> N
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
+    bulb.color_modes = {FLUX_COLOR_MODE_RGB}
+    bulb.color_mode = FLUX_COLOR_MODE_RGB
     with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -561,9 +648,9 @@ async def test_rgb_light_custom_effects_invalid_colors(hass: HomeAssistant) -> N
     assert state.state == STATE_ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
-    assert attributes[ATTR_COLOR_MODE] == "rgbw"
+    assert attributes[ATTR_COLOR_MODE] == "hs"
     assert attributes[ATTR_EFFECT_LIST] == FLUX_EFFECT_LIST
-    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs", "rgbw"]
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["hs"]
     assert attributes[ATTR_HS_COLOR] == (0, 100)
 
 
@@ -578,6 +665,8 @@ async def test_rgb_light_custom_effect_via_service(
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
+    bulb.color_modes = {FLUX_COLOR_MODE_RGB}
+    bulb.color_mode = FLUX_COLOR_MODE_RGB
     with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -588,9 +677,9 @@ async def test_rgb_light_custom_effect_via_service(
     assert state.state == STATE_ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
-    assert attributes[ATTR_COLOR_MODE] == "rgbw"
+    assert attributes[ATTR_COLOR_MODE] == "hs"
     assert attributes[ATTR_EFFECT_LIST] == [*FLUX_EFFECT_LIST]
-    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs", "rgbw"]
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["hs"]
     assert attributes[ATTR_HS_COLOR] == (0, 100)
 
     await hass.services.async_call(
@@ -616,34 +705,6 @@ async def test_rgb_light_custom_effect_via_service(
     )
     bulb.setCustomPattern.assert_called_with([(0, 0, 255), (255, 0, 0)], 30, "jump")
     bulb.setCustomPattern.reset_mock()
-
-
-async def test_rgbw_detection_without_protocol(hass: HomeAssistant) -> None:
-    """Test an rgbw detection without protocol."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
-        unique_id=MAC_ADDRESS,
-    )
-    config_entry.add_to_hass(hass)
-    bulb = _mocked_bulb()
-    bulb.protocol = None
-    bulb.rgbwprotocol = None
-    bulb.rgbwcapable = True
-    with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
-        await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
-        await hass.async_block_till_done()
-
-    entity_id = "light.az120444_aabbccddeeff"
-
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
-    attributes = state.attributes
-    assert attributes[ATTR_BRIGHTNESS] == 128
-    assert attributes[ATTR_COLOR_MODE] == "rgbw"
-    assert attributes[ATTR_EFFECT_LIST] == FLUX_EFFECT_LIST
-    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs", "rgbw"]
-    assert attributes[ATTR_HS_COLOR] == (0, 100)
 
 
 async def test_migrate_from_yaml(hass: HomeAssistant) -> None:
