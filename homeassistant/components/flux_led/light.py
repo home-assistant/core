@@ -322,21 +322,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
-        raw = self._bulb.raw_state
-        if self.color_mode == COLOR_MODE_RGBWW:
-            white_brightness = (raw.warm_white + raw.cool_white) / 2
-            brightness = (self._color_brightness + white_brightness) / 2
-        elif self.color_mode == COLOR_MODE_RGBW:
-            brightness = (self._color_brightness + raw.warm_white) / 2
-        elif self.color_mode == COLOR_MODE_HS:
-            brightness = self._color_brightness
-        elif self.color_mode == COLOR_MODE_COLOR_TEMP:
-            _, brightness = self._bulb.getWhiteTemperature()
-        elif self.color_mode == COLOR_MODE_WHITE:
-            brightness = raw.warm_white
-        else:
-            brightness = 0
-        return int(round(brightness, 0))
+        return cast(int, self._bulb.brightness)
 
     @property
     def _color_brightness(self) -> int:
