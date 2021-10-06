@@ -86,22 +86,12 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLUX_LED: Final = SUPPORT_EFFECT | SUPPORT_TRANSITION
 
-FLUX_LED_TO_COLOR_MODE: Final = {
-    MODE_RGBWW: COLOR_MODE_RGBWW,
-    MODE_RGBW: COLOR_MODE_RGBW,
-    MODE_RGB: COLOR_MODE_HS,
-    MODE_CCT: COLOR_MODE_COLOR_TEMP,
-    MODE_DIM: COLOR_MODE_BRIGHTNESS,
-}
-
-
-FLUX_COLOR_MODE_TO_HASS = {
+FLUX_COLOR_MODE_TO_HASS: Final = {
     MODE_RGB: COLOR_MODE_HS,
     MODE_RGBW: COLOR_MODE_RGBW,
     MODE_RGBWW: COLOR_MODE_RGBWW,
     MODE_CCT: COLOR_MODE_COLOR_TEMP,
-    MODE_DIM: COLOR_MODE_BRIGHTNESS,
-    MODE_WHITE: COLOR_MODE_WHITE,
+    MODE_DIM: COLOR_MODE_WHITE,
 }
 
 # Constant color temp values for 2 flux_led special modes
@@ -353,7 +343,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def color_temp(self) -> int:
         """Return the kelvin value of this light in mired."""
-        return color_util.color_temperature_kelvin_to_mired(self.color_temp_kelvin)
+        return color_util.color_temperature_kelvin_to_mired(self._color_temp_kelvin)
 
     @property
     def _color_temp_kelvin(self) -> int:
@@ -362,8 +352,8 @@ class FluxLight(CoordinatorEntity, LightEntity):
         return cast(int, t)
 
     @property
-    def hs_color(self) -> tuple[int, int, int] | None:
-        """Return the hs color value [int, int]."""
+    def hs_color(self) -> tuple[float, float] | None:
+        """Return the hs color value [float, float]."""
         raw_state = self._bulb.raw_state
         return color_util.color_RGB_to_hs(
             raw_state.red,
