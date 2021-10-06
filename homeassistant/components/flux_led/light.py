@@ -429,6 +429,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
 
     def _turn_on(self, **kwargs: Any) -> None:
         """Turn the specified or all lights on."""
+        _LOGGER.debug("Calling turn_on for %s with %s", self._bulb.ipaddr, kwargs)
         if not self.is_on:
             self._bulb.turnOn()
             if not kwargs:
