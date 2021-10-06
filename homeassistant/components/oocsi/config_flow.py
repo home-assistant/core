@@ -85,7 +85,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.host = user_input[CONF_HOST]
         self.port = user_input[CONF_PORT]
         oocsiconnect = OOCSI(self.name, self.host, self.port)
-        print(oocsiconnect.handle)
         oocsiconnect.stop()
 
     # async def async_unload_entry(self) -> bool:

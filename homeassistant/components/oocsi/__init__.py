@@ -62,7 +62,6 @@ async def _async_interviewer(hass: HomeAssistant, entry: ConfigEntry, api: api) 
         ):
             # add new entries
             hass.data[OOCSI_ENTITY] = hass.data[OOCSI_ENTITY] | event
-            keys = []
 
             # Check which platforms must be started for the interviewed entities
             for key in hass.data[OOCSI_ENTITY]["uniquePrototype"]["components"]:
@@ -84,7 +83,7 @@ async def async_create_new_platform_entity(
     AsyncAdd: async_add_entities,
     platform: platform,
 ):
-
+    # Per platform get their entries and create an entity dictionary
     entities = []
     for key in hass.data[OOCSI_ENTITY]["uniquePrototype"]["components"][platform]:
 
@@ -96,6 +95,7 @@ async def async_create_new_platform_entity(
                 hass.data[OOCSI_ENTITY]["uniquePrototype"]["components"][platform][key],
             )
         )
+    # Add entities
     AsyncAdd(entities)
 
 
