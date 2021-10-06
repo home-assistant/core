@@ -426,16 +426,19 @@ class ZWaveServices:
                 property_key=property_key,
             )
             # If value has a string type but the new value is not a string, we need to
-            # convert it to one
+            # convert it to one. We use new variable `new_value_` to convert the data
+            # so we can preserve the original `new_value` for every node.
             if (
                 value_id in node.values
                 and node.values[value_id].metadata.type == "string"
                 and not isinstance(new_value, str)
             ):
-                new_value = str(new_value)
+                new_value_ = str(new_value)
+            else:
+                new_value_ = new_value
             success = await node.async_set_value(
                 value_id,
-                new_value,
+                new_value_,
                 options=options,
                 wait_for_result=wait_for_result,
             )
