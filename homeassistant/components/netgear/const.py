@@ -11,7 +11,24 @@ DEFAULT_CONSIDER_HOME = timedelta(seconds=180)
 DEFAULT_NAME = "Netgear router"
 
 # update method V2 models
-MODELS_V2 = ["Orbi"]
+MODELS_V2 = [
+    "Orbi",
+    "RBK",
+    "RBR",
+    "RBS",
+    "RBW",
+    "LBK",
+    "LBR",
+    "CBK",
+    "CBR",
+    "SRC",
+    "SRK",
+    "SRR",
+    "SRS",
+    "SXK",
+    "SXR",
+    "SXS",
+]
 
 # Icons
 DEVICE_ICONS = {
