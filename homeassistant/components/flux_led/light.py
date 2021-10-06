@@ -444,7 +444,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
             brightness = self.brightness
 
         # Handle CCT Color Mode
-        if self.color_mode == COLOR_MODE_COLOR_TEMP:
+        if ATTR_COLOR_TEMP in kwargs or self.color_mode == COLOR_MODE_COLOR_TEMP:
             if (color_temp_mired := kwargs.get(ATTR_COLOR_TEMP)) is not None:
                 color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
                     color_temp_mired
