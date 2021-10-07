@@ -342,12 +342,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def color_temp(self) -> int:
         """Return the kelvin value of this light in mired."""
-        return color_temperature_kelvin_to_mired(self._color_temp_kelvin)
-
-    @property
-    def _color_temp_kelvin(self) -> int:
-        """Return the kelvin value of this light in Kelvin."""
-        return cast(int, self._bulb.getWhiteTemperature()[0])
+        return color_temperature_kelvin_to_mired(self._bulb.getWhiteTemperature()[0])
 
     @property
     def hs_color(self) -> tuple[float, float]:
@@ -458,7 +453,9 @@ class FluxLight(CoordinatorEntity, LightEntity):
             raise ValueError(f"Unknown effect {effect}")
         # Handle brightness adjustment in CCT Color Mode
         if self.color_mode == COLOR_MODE_COLOR_TEMP:
-            self._bulb.setWhiteTemperature(self._color_temp_kelvin, brightness)
+            self._bulb.setWhiteTemperature(
+                self._bulb.getWhiteTemperature()[0], brightness
+            )
             return
         # Handle brightness adjustment in RGB Color Mode
         if self.color_mode == COLOR_MODE_HS:
