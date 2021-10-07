@@ -123,8 +123,6 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         device_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
         if device_url.hostname:
             updated_data[CONF_HOST] = device_url.hostname
-        if device_url.port:
-            updated_data[CONF_PORT] = device_url.port
         if device_url.scheme == "https":
             updated_data[CONF_SSL] = True
         else:
@@ -134,6 +132,10 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(discovery_info[ssdp.ATTR_UPNP_SERIAL])
         self._abort_if_unique_id_configured(updates=updated_data)
+
+        if device_url.port:
+            updated_data[CONF_PORT] = device_url.port
+
         self.placeholders.update(updated_data)
         self.discovered = True
 
