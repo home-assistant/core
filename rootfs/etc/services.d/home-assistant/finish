@@ -2,7 +2,19 @@
 # ==============================================================================
 # Take down the S6 supervision tree when Home Assistant fails
 # ==============================================================================
-if { s6-test ${1} -ne 100 }
-if { s6-test ${1} -ne 256 }
+define HA_RESTART_EXIT_CODE 100
+define SIGNAL_EXIT_CODE 256
+define SIGTERM 15
+
+foreground { s6-echo "[finish] process exit code ${1}" }
+
+if { s6-test ${1} -ne ${HA_RESTART_EXIT_CODE} }
+ifelse { s6-test ${1} -eq ${SIGNAL_EXIT_CODE} } {
+  # Process terminated by a signal
+  define signal ${2}
+  foreground { s6-echo "[finish] process received signal ${signal}" }
+  if { s6-test ${signal} -ne ${SIGTERM} }
+  s6-svscanctl -t /var/run/s6/services
+}
 
 s6-svscanctl -t /var/run/s6/services

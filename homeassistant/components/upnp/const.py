@@ -8,9 +8,7 @@ LOGGER = logging.getLogger(__package__)
 
 CONF_LOCAL_IP = "local_ip"
 DOMAIN = "upnp"
-DOMAIN_CONFIG = "config"
 DOMAIN_DEVICES = "devices"
-DOMAIN_LOCAL_IP = "local_ip"
 BYTES_RECEIVED = "bytes_received"
 BYTES_SENT = "bytes_sent"
 PACKETS_RECEIVED = "packets_received"
@@ -18,9 +16,9 @@ PACKETS_SENT = "packets_sent"
 TIMESTAMP = "timestamp"
 DATA_PACKETS = "packets"
 DATA_RATE_PACKETS_PER_SECOND = f"{DATA_PACKETS}/{TIME_SECONDS}"
-WANSTATUS = "wan_status"
-WANIP = "wan_ip"
-UPTIME = "uptime"
+WAN_STATUS = "wan_status"
+ROUTER_IP = "ip"
+ROUTER_UPTIME = "uptime"
 KIBIBYTE = 1024
 UPDATE_INTERVAL = timedelta(seconds=30)
 CONFIG_ENTRY_SCAN_INTERVAL = "scan_interval"

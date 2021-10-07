@@ -7,7 +7,8 @@ There are two different types of discoveries that can be fired/listened for.
 """
 from __future__ import annotations
 
-from typing import Any, Callable, TypedDict
+from collections.abc import Callable
+from typing import Any, TypedDict
 
 from homeassistant import core, setup
 from homeassistant.core import CALLBACK_TYPE

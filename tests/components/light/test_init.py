@@ -1161,6 +1161,9 @@ async def test_light_backwards_compatibility_color_mode(
     state = hass.states.get(entity2.entity_id)
     assert state.attributes["supported_color_modes"] == [light.COLOR_MODE_COLOR_TEMP]
     assert state.attributes["color_mode"] == light.COLOR_MODE_COLOR_TEMP
+    assert state.attributes["rgb_color"] == (201, 218, 255)
+    assert state.attributes["hs_color"] == (221.575, 20.9)
+    assert state.attributes["xy_color"] == (0.277, 0.287)
 
     state = hass.states.get(entity3.entity_id)
     assert state.attributes["supported_color_modes"] == [light.COLOR_MODE_HS]

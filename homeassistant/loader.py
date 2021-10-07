@@ -322,6 +322,14 @@ class Integration:
                 return integration
 
             _LOGGER.warning(CUSTOM_WARNING, integration.domain)
+            if integration.version is None:
+                _LOGGER.error(
+                    "The custom integration '%s' does not have a "
+                    "version key in the manifest file and was blocked from loading. "
+                    "See https://developers.home-assistant.io/blog/2021/01/29/custom-integration-changes#versions for more details",
+                    integration.domain,
+                )
+                return None
             try:
                 AwesomeVersion(
                     integration.version,

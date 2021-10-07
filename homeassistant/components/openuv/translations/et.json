@@ -17,5 +17,16 @@
                 "title": "Sisesta oma teave"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "from_window": "Ohutu UV indeksi algv\u00e4\u00e4rtus",
+                    "to_window": "Ohutu UV indeksi l\u00f5ppv\u00e4\u00e4rtus"
+                },
+                "title": "OpenUV seadistamine"
+            }
+        }
     }
 }

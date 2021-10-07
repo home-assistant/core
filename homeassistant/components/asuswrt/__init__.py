@@ -81,7 +81,7 @@ async def async_setup(hass, config):
     options = {}
     mode = conf.get(CONF_MODE, MODE_ROUTER)
     for name, value in conf.items():
-        if name in ([CONF_DNSMASQ, CONF_INTERFACE, CONF_REQUIRE_IP]):
+        if name in [CONF_DNSMASQ, CONF_INTERFACE, CONF_REQUIRE_IP]:
             if name == CONF_REQUIRE_IP and mode != MODE_AP:
                 continue
             options[name] = value
@@ -142,7 +142,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 

@@ -9,8 +9,16 @@ from miio import (
     AirHumidifierMiot,
     AirHumidifierMjjsq,
     AirPurifier,
+    AirPurifierMB4,
     AirPurifierMiot,
     DeviceException,
+    Fan,
+    Fan1C,
+    FanP5,
+    FanP9,
+    FanP10,
+    FanP11,
+    FanZA5,
 )
 from miio.gateway.gateway import GatewayException
 
@@ -29,8 +37,16 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    MODEL_AIRPURIFIER_3C,
+    MODEL_FAN_1C,
+    MODEL_FAN_P5,
+    MODEL_FAN_P9,
+    MODEL_FAN_P10,
+    MODEL_FAN_P11,
+    MODEL_FAN_ZA5,
     MODELS_AIR_MONITOR,
     MODELS_FAN,
+    MODELS_FAN_MIIO,
     MODELS_HUMIDIFIER,
     MODELS_HUMIDIFIER_MIIO,
     MODELS_HUMIDIFIER_MIOT,
@@ -46,7 +62,7 @@ _LOGGER = logging.getLogger(__name__)
 
 GATEWAY_PLATFORMS = ["alarm_control_panel", "light", "sensor", "switch"]
 SWITCH_PLATFORMS = ["switch"]
-FAN_PLATFORMS = ["fan", "number", "select", "sensor", "switch"]
+FAN_PLATFORMS = ["binary_sensor", "fan", "number", "select", "sensor", "switch"]
 HUMIDIFIER_PLATFORMS = [
     "binary_sensor",
     "humidifier",
@@ -58,6 +74,15 @@ HUMIDIFIER_PLATFORMS = [
 LIGHT_PLATFORMS = ["light"]
 VACUUM_PLATFORMS = ["vacuum"]
 AIR_MONITOR_PLATFORMS = ["air_quality", "sensor"]
+
+MODEL_TO_CLASS_MAP = {
+    MODEL_FAN_1C: Fan1C,
+    MODEL_FAN_P10: FanP10,
+    MODEL_FAN_P11: FanP11,
+    MODEL_FAN_P5: FanP5,
+    MODEL_FAN_P9: FanP9,
+    MODEL_FAN_ZA5: FanZA5,
+}
 
 
 async def async_setup_entry(
@@ -135,12 +160,19 @@ async def async_create_miio_device_and_coordinator(
         device = AirHumidifier(host, token, model=model)
         migrate = True
     # Airpurifiers and Airfresh
+    elif model in MODEL_AIRPURIFIER_3C:
+        device = AirPurifierMB4(host, token)
     elif model in MODELS_PURIFIER_MIOT:
         device = AirPurifierMiot(host, token)
     elif model.startswith("zhimi.airpurifier."):
         device = AirPurifier(host, token)
     elif model.startswith("zhimi.airfresh."):
         device = AirFresh(host, token)
+    # Pedestal fans
+    elif model in MODEL_TO_CLASS_MAP:
+        device = MODEL_TO_CLASS_MAP[model](host, token)
+    elif model in MODELS_FAN_MIIO:
+        device = Fan(host, token, model=model)
     else:
         _LOGGER.error(
             "Unsupported device found! Please create an issue at "
@@ -162,12 +194,23 @@ async def async_create_miio_device_and_coordinator(
 
     async def async_update_data():
         """Fetch data from the device using async_add_executor_job."""
-        try:
+
+        async def _async_fetch_data():
+            """Fetch data from the device."""
             async with async_timeout.timeout(10):
                 state = await hass.async_add_executor_job(device.status)
                 _LOGGER.debug("Got new state: %s", state)
                 return state
 
+        try:
+            return await _async_fetch_data()
+        except DeviceException as ex:
+            if getattr(ex, "code", None) != -9999:
+                raise UpdateFailed(ex) from ex
+            _LOGGER.info("Got exception while fetching the state, trying again: %s", ex)
+        # Try to fetch the data a second time after error code -9999
+        try:
+            return await _async_fetch_data()
         except DeviceException as ex:
             raise UpdateFailed(ex) from ex
 

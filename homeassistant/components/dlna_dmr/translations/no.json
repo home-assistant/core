@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "could_not_connect": "Kunne ikke koble til DLNA -enhet",
+            "discovery_error": "Kunne ikke finne en matchende DLNA -enhet",
+            "incomplete_config": "Konfigurasjonen mangler en n\u00f8dvendig variabel",
+            "non_unique_id": "Flere enheter ble funnet med samme unike ID",
+            "not_dmr": "Enheten er ikke en Digital Media Renderer"
+        },
+        "error": {
+            "could_not_connect": "Kunne ikke koble til DLNA -enhet",
+            "not_dmr": "Enheten er ikke en Digital Media Renderer"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "Vil du starte oppsettet?"
+            },
+            "user": {
+                "data": {
+                    "url": "URL"
+                },
+                "description": "URL til en enhetsbeskrivelse XML -fil",
+                "title": "DLNA Digital Media Renderer"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_url": "ugyldig URL"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "callback_url_override": "URL for tilbakeringing av hendelseslytter",
+                    "listen_port": "Hendelseslytterport (tilfeldig hvis den ikke er angitt)",
+                    "poll_availability": "Avstemning for tilgjengelighet av enheter"
+                },
+                "title": "DLNA Digital Media Renderer -konfigurasjon"
+            }
+        }
+    }
+}

@@ -9,7 +9,7 @@ from homeassistant.util import dt as dt_util
 from tests.common import async_fire_time_changed
 
 
-async def test_bad_posting(hass, aiohttp_client):
+async def test_bad_posting(hass, hass_client_no_auth):
     """Test that posting to wrong api endpoint fails."""
     await async_process_ha_core_config(
         hass,
@@ -30,7 +30,7 @@ async def test_bad_posting(hass, aiohttp_client):
     await hass.async_block_till_done()
     assert hass.states.get("camera.config_test") is not None
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     # missing file
     async with client.post("/api/webhook/camera.config_test") as resp:
@@ -40,7 +40,7 @@ async def test_bad_posting(hass, aiohttp_client):
     assert camera_state.state == "idle"  # no file supplied we are still idle
 
 
-async def test_posting_url(hass, aiohttp_client):
+async def test_posting_url(hass, hass_client_no_auth):
     """Test that posting to api endpoint works."""
     await async_process_ha_core_config(
         hass,
@@ -60,7 +60,7 @@ async def test_posting_url(hass, aiohttp_client):
     )
     await hass.async_block_till_done()
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
     files = {"image": io.BytesIO(b"fake")}
 
     # initial state

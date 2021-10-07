@@ -90,7 +90,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
         sensor
         for device in account.api.devices.values()
         for description in SENSOR_TYPES
-        if (sensor := StarlineSensor(account, device, description)).state is not None
+        if (sensor := StarlineSensor(account, device, description)).native_value
+        is not None
     ]
     async_add_entities(entities)
 

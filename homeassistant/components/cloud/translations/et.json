@@ -10,6 +10,7 @@
             "relayer_connected": "Edastaja on \u00fchendatud",
             "remote_connected": "Kaug\u00fchendus on loodud",
             "remote_enabled": "Kaug\u00fchendus on lubatud",
+            "remote_server": "Kaugserver",
             "subscription_expiration": "Tellimuse aegumine"
         }
     }

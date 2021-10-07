@@ -268,7 +268,7 @@ class ZWaveClimateBase(ZWaveDeviceEntity, ClimateEntity):
 
             # Default operation mode
             for mode in DEFAULT_HVAC_MODES:
-                if mode in self._hvac_mapping.keys():
+                if mode in self._hvac_mapping:
                     self._default_hvac_mode = mode
                     break
 
@@ -291,14 +291,14 @@ class ZWaveClimateBase(ZWaveDeviceEntity, ClimateEntity):
                 # The current mode is not a hvac mode
                 if (
                     "heat" in current_mode.lower()
-                    and HVAC_MODE_HEAT in self._hvac_mapping.keys()
+                    and HVAC_MODE_HEAT in self._hvac_mapping
                 ):
                     # The current preset modes maps to HVAC_MODE_HEAT
                     _LOGGER.debug("Mapped to HEAT")
                     self._hvac_mode = HVAC_MODE_HEAT
                 elif (
                     "cool" in current_mode.lower()
-                    and HVAC_MODE_COOL in self._hvac_mapping.keys()
+                    and HVAC_MODE_COOL in self._hvac_mapping
                 ):
                     # The current preset modes maps to HVAC_MODE_COOL
                     _LOGGER.debug("Mapped to COOL")

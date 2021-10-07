@@ -30,7 +30,8 @@
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "not_zha_device": "This device is not a zha device"
+      "not_zha_device": "This device is not a zha device",
+      "usb_probe_failed": "Failed to probe the usb device"
     }
   },
   "config_panel": {

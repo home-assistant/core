@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "not_zha_device": "\u6240\u767c\u73fe\u7684\u88dd\u7f6e\u4e26\u975e ZHA \u88dd\u7f6e",
-            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002",
+            "usb_probe_failed": "\u5075\u6e2c USB \u88dd\u7f6e\u5931\u6557"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557"

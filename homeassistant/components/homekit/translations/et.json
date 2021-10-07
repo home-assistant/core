@@ -21,17 +21,19 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Autostart (keela kui kasutad homekit.start teenust k\u00e4sitsi)"
+                    "auto_start": "Autostart (keela kui kasutad homekit.start teenust k\u00e4sitsi)",
+                    "devices": "Seadmed (p\u00e4\u00e4stikud)"
                 },
-                "description": "Neid s\u00e4tteid tuleb muuta ainult siis kui HomeKit ei t\u00f6\u00f6ta.",
+                "description": "Iga valitud seadme jaoks luuakse programmeeritavad l\u00fclitid. Seadme p\u00e4\u00e4stiku k\u00e4ivitamisel saab HomeKiti seadistada automaatiseeringu v\u00f5i stseeni k\u00e4ivitamiseks.",
                 "title": "T\u00e4psem seadistamine"
             },
             "cameras": {
                 "data": {
+                    "camera_audio": "Heliedastusega kaamerad",
                     "camera_copy": "Kaamerad, mis toetavad riistvaralist H.264 voogu"
                 },
                 "description": "Vali k\u00f5iki kaameraid, mis toetavad kohalikku H.264 voogu. Kui kaamera ei edasta H.264 voogu, kodeerib s\u00fcsteem video HomeKiti jaoks versioonile H.264. \u00dcmberkodeerimine n\u00f5uab j\u00f5udsat protsessorit ja t\u00f5en\u00e4oliselt ei t\u00f6\u00f6ta see \u00fcheplaadilistes arvutites.",
-                "title": "Vali kaamera videokoodek."
+                "title": "Kaamera s\u00e4tted"
             },
             "include_exclude": {
                 "data": {
