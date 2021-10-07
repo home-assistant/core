@@ -36,11 +36,16 @@ CONF_STEP: Final = "step"
 
 MODE_SLIDER: Final = "slider"
 MODE_BOX: Final = "box"
-ATTR_VALUE: Final = "value"
 
 SERVICE_SET_VALUE: Final = "set_value"
 SERVICE_INCREMENT: Final = "increment"
 SERVICE_DECREMENT: Final = "decrement"
+
+ATTR_INITIAL = "initial"
+ATTR_VALUE = "value"
+ATTR_MIN = "min"
+ATTR_MAX = "max"
+ATTR_STEP = "step"
 
 
 def _cv_input_number(config: dict) -> dict:
@@ -195,7 +200,7 @@ class NumberStorageCollection(collection.StorageCollection):
     @callback
     def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
-        return str(info[CONF_NAME])
+        return cast(str, info[CONF_NAME])
 
     async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
@@ -270,11 +275,11 @@ class InputNumber(RestoreEntity):
         """Return the state attributes."""
         return {
             ATTR_EDITABLE: self.editable,
-            CONF_INITIAL: self._config.get(CONF_INITIAL),
-            CONF_MAX: self._maximum,
-            CONF_MIN: self._minimum,
+            ATTR_INITIAL: self._config.get(CONF_INITIAL),
+            ATTR_MAX: self._maximum,
+            ATTR_MIN: self._minimum,
             ATTR_MODE: self._config[CONF_MODE],
-            CONF_STEP: self._step,
+            ATTR_STEP: self._step,
         }
 
     async def async_added_to_hass(self) -> None:
