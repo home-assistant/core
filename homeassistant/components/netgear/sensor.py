@@ -65,7 +65,7 @@ async def async_setup_entry(
     def generate_sensor_classes(router: NetgearRouter, device: dict):
         return [
             NetgearSensorEntity(router, device, attribute)
-            for attribute in SENSOR_TYPES.keys()
+            for attribute in SENSOR_TYPES
         ]
 
     async_setup_netgear_entry(hass, entry, async_add_entities, generate_sensor_classes)
