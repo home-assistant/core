@@ -97,6 +97,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class SeventeenTrackSummarySensor(SensorEntity):
     """Define a summary sensor."""
 
+    _attr_icon = "mdi:package"
+    _attr_native_unit_of_measurement = "packages"
+
     def __init__(self, data, status, initial_state):
         """Initialize."""
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
@@ -107,8 +110,6 @@ class SeventeenTrackSummarySensor(SensorEntity):
         self._attr_unique_id = (
             f"summary_{self._data.account_id}_{slugify(self._status)}"
         )
-        self._attr_native_unit_of_measurement = "packages"
-        self._attr_icon = "mdi:package"
 
     @property
     def available(self):
@@ -149,6 +150,8 @@ class SeventeenTrackSummarySensor(SensorEntity):
 class SeventeenTrackPackageSensor(SensorEntity):
     """Define an individual package sensor."""
 
+    _attr_icon = "mdi:package"
+
     def __init__(self, data, package):
         """Initialize."""
         self._attr_extra_state_attributes = {
@@ -170,7 +173,6 @@ class SeventeenTrackPackageSensor(SensorEntity):
         self._attr_unique_id = UNIQUE_ID_TEMPLATE.format(
             self._data.account_id, self._tracking_number
         )
-        self._attr_icon = "mdi:package"
 
     @property
     def available(self):
