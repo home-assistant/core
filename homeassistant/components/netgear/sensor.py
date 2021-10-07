@@ -36,6 +36,24 @@ SENSOR_TYPES = {
         native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
     ),
+    "ssid": SensorEntityDescription(
+        key="ssid",
+        name="ssid",
+        native_unit_of_measurement=None,
+        device_class=None,
+    ),
+    "conn_ap_mac": SensorEntityDescription(
+        key="conn_ap_mac",
+        name="acces point mac",
+        native_unit_of_measurement=None,
+        device_class=None,
+    ),
+    "allow_or_block": SensorEntityDescription(
+        key="allow_or_block",
+        name="acces",
+        native_unit_of_measurement=None,
+        device_class=None,
+    ),
 }
 
 
@@ -47,7 +65,7 @@ async def async_setup_entry(
     def generate_sensor_classes(router: NetgearRouter, device: dict):
         return [
             NetgearSensorEntity(router, device, attribute)
-            for attribute in ("type", "link_rate", "signal")
+            for attribute in SENSOR_TYPES.keys()
         ]
 
     async_setup_netgear_entry(hass, entry, async_add_entities, generate_sensor_classes)
