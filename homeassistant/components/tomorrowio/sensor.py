@@ -93,15 +93,6 @@ class TomorrowioSensorEntityDescription(SensorEntityDescription):
     device_class: str | None = None
     value_map: Any | None = None
 
-    def __post_init__(self) -> None:
-        """Post initialization."""
-        units = (self.unit_imperial, self.unit_metric)
-        if any(u is not None for u in units) and any(u is None for u in units):
-            raise RuntimeError(
-                "`unit_imperial` and `unit_metric` both need to be None or both need "
-                "to be defined."
-            )
-
 
 SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
@@ -342,14 +333,17 @@ class BaseTomorrowioSensorEntity(TomorrowioEntity, SensorEntity):
                 and self.hass.config.units.is_metric
                 == self.entity_description.is_metric_check
             )
-            or self.entity_description.unit_imperial is None
+            or (
+                self.entity_description.unit_imperial is None
+                and self.entity_description.unit_metric is not None
+            )
         ):
             conversion = self.entity_description.metric_conversion
             # When conversion is a callable, we assume it's a single input function
             if callable(conversion):
-                return round(conversion(float(state)), 4)
+                return round(conversion(float(state)), 2)
 
-            return round(float(state) * conversion, 4)
+            return round(float(state) * conversion, 2)
 
         if self.entity_description.value_map is not None and state is not None:
             return self.entity_description.value_map(state).name.lower()

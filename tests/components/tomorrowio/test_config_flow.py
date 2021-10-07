@@ -143,6 +143,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=user_config,
+        options={CONF_TIMESTEP: DEFAULT_TIMESTEP},
         source=SOURCE_USER,
         unique_id=_get_unique_id(hass, user_config),
         version=1,

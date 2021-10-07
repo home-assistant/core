@@ -14,9 +14,8 @@ from homeassistant.components.tomorrowio.config_flow import (
     _get_unique_id,
 )
 from homeassistant.components.tomorrowio.const import ATTRIBUTION, DOMAIN
-from homeassistant.components.tomorrowio.sensor import TomorrowioSensorEntityDescription
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import ATTR_ATTRIBUTION, TEMP_FAHRENHEIT
+from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.entity_registry import async_get
 from homeassistant.util import dt as dt_util
@@ -133,27 +132,18 @@ def check_sensor_state(hass: HomeAssistant, entity_name: str, value: str):
     assert state.attributes[ATTR_ATTRIBUTION] == ATTRIBUTION
 
 
-async def test_entity_description_post_init():
-    """Test post initiailization check for TomorrowioSensorEntityDescription."""
-
-    with pytest.raises(RuntimeError):
-        TomorrowioSensorEntityDescription(
-            key="a", name="b", unit_imperial=TEMP_FAHRENHEIT
-        )
-
-
 async def test_v4_sensor(
     hass: HomeAssistant,
     tomorrowio_config_entry_update: pytest.fixture,
 ) -> None:
     """Test v4 sensor data."""
     await _setup(hass, V4_FIELDS, API_V4_ENTRY_DATA)
-    check_sensor_state(hass, O3, "46.53")
+    check_sensor_state(hass, O3, "94.46")
     check_sensor_state(hass, CO, "0.63")
-    check_sensor_state(hass, NO2, "10.67")
-    check_sensor_state(hass, SO2, "1.65")
-    check_sensor_state(hass, PM25, "5.2972")
-    check_sensor_state(hass, PM10, "20.1294")
+    check_sensor_state(hass, NO2, "20.81")
+    check_sensor_state(hass, SO2, "4.47")
+    check_sensor_state(hass, PM25, "5.3")
+    check_sensor_state(hass, PM10, "20.13")
     check_sensor_state(hass, MEP_AQI, "23")
     check_sensor_state(hass, MEP_HEALTH_CONCERN, "good")
     check_sensor_state(hass, MEP_PRIMARY_POLLUTANT, "pm10")
@@ -165,11 +155,11 @@ async def test_v4_sensor(
     check_sensor_state(hass, WEED_POLLEN, "none")
     check_sensor_state(hass, TREE_POLLEN, "none")
     check_sensor_state(hass, FEELS_LIKE, "38.5")
-    check_sensor_state(hass, DEW_POINT, "22.6778")
-    check_sensor_state(hass, PRESSURE_SURFACE_LEVEL, "997.9688")
+    check_sensor_state(hass, DEW_POINT, "22.68")
+    check_sensor_state(hass, PRESSURE_SURFACE_LEVEL, "997.97")
     check_sensor_state(hass, GHI, "0.0")
-    check_sensor_state(hass, CLOUD_BASE, "1.1909")
+    check_sensor_state(hass, CLOUD_BASE, "1.19")
     check_sensor_state(hass, CLOUD_COVER, "100")
-    check_sensor_state(hass, CLOUD_CEILING, "1.1909")
-    check_sensor_state(hass, WIND_GUST, "5.6506")
+    check_sensor_state(hass, CLOUD_CEILING, "1.19")
+    check_sensor_state(hass, WIND_GUST, "5.65")
     check_sensor_state(hass, PRECIPITATION_TYPE, "rain")
