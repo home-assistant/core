@@ -44,7 +44,7 @@ SENSOR_TYPES = {
     ),
     "conn_ap_mac": SensorEntityDescription(
         key="conn_ap_mac",
-        name="acces point mac",
+        name="access point mac",
         native_unit_of_measurement=None,
         device_class=None,
     ),
