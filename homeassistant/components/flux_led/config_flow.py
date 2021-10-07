@@ -13,7 +13,6 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODE, CONF_NAME, CONF_
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import async_discover_devices, async_wifi_bulb_for_host
@@ -28,12 +27,6 @@ from .const import (
     FLUX_LED_EXCEPTIONS,
     FLUX_MAC,
     FLUX_MODEL,
-    MODE_AUTO,
-    MODE_CCT,
-    MODE_DIM,
-    MODE_RGB,
-    MODE_RGBW,
-    MODE_RGBWW,
     TRANSITION_GRADUAL,
     TRANSITION_JUMP,
     TRANSITION_STROBE,
@@ -235,21 +228,6 @@ class OptionsFlow(config_entries.OptionsFlow):
         options = self._config_entry.options
         options_schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_MODE, default=options.get(CONF_MODE, MODE_AUTO)
-                ): vol.All(
-                    cv.string,
-                    vol.In(
-                        [
-                            MODE_AUTO,
-                            MODE_DIM,
-                            MODE_CCT,
-                            MODE_RGB,
-                            MODE_RGBW,
-                            MODE_RGBWW,
-                        ]
-                    ),
-                ),
                 vol.Optional(
                     CONF_CUSTOM_EFFECT_COLORS,
                     default=options.get(CONF_CUSTOM_EFFECT_COLORS, ""),

@@ -11,7 +11,6 @@ from homeassistant.components.flux_led.const import (
     CONF_CUSTOM_EFFECT_SPEED_PCT,
     CONF_CUSTOM_EFFECT_TRANSITION,
     DOMAIN,
-    MODE_AUTO,
     MODE_RGB,
     TRANSITION_JUMP,
     TRANSITION_STROBE,
@@ -436,7 +435,6 @@ async def test_options(hass: HomeAssistant):
     assert result["step_id"] == "init"
 
     user_input = {
-        CONF_MODE: MODE_AUTO,
         CONF_CUSTOM_EFFECT_COLORS: "[0,0,255], [255,0,0]",
         CONF_CUSTOM_EFFECT_SPEED_PCT: 50,
         CONF_CUSTOM_EFFECT_TRANSITION: TRANSITION_JUMP,
