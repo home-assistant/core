@@ -38,7 +38,7 @@ async def test_owserver_binary_sensor(owproxy, hass, device_id):
     # Force enable binary sensors
     patch_device_binary_sensors = copy.deepcopy(DEVICE_BINARY_SENSORS)
     for item in patch_device_binary_sensors[device_id[0:2]]:
-        item["default_disabled"] = False
+        item.entity_registry_enabled_default = True
 
     with patch(
         "homeassistant.components.onewire.PLATFORMS", [BINARY_SENSOR_DOMAIN]

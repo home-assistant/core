@@ -21,13 +21,15 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Automatyczne uruchomienie (wy\u0142\u0105cz, je\u015bli r\u0119cznie uruchamiasz us\u0142ug\u0119 homekit.start)"
+                    "auto_start": "Automatyczne uruchomienie (wy\u0142\u0105cz, je\u015bli r\u0119cznie uruchamiasz us\u0142ug\u0119 homekit.start)",
+                    "devices": "Urz\u0105dzenia (Wyzwalacze)"
                 },
-                "description": "Te ustawienia nale\u017cy dostosowa\u0107 tylko wtedy, gdy HomeKit nie dzia\u0142a.",
+                "description": "Dla ka\u017cdego wybranego urz\u0105dzenia stworzony zostanie programowalny prze\u0142\u0105cznik. Po uruchomieniu wyzwalacza urz\u0105dzenia, HomeKit mo\u017cna skonfigurowa\u0107 do uruchamiania automatyzacji lub sceny.",
                 "title": "Konfiguracja zaawansowana"
             },
             "cameras": {
                 "data": {
+                    "camera_audio": "Kamery obs\u0142uguj\u0105ce d\u017awi\u0119k",
                     "camera_copy": "Kamery obs\u0142uguj\u0105ce kodek H.264"
                 },
                 "description": "Sprawd\u017a, czy wszystkie kamery obs\u0142uguj\u0105 kodek H.264. Je\u015bli kamera nie wysy\u0142a strumienia skompresowanego kodekiem H.264, system b\u0119dzie transkodowa\u0142 wideo do H.264 dla HomeKit. Transkodowanie wymaga wydajnego procesora i jest ma\u0142o prawdopodobne, aby dzia\u0142a\u0142o na komputerach jednop\u0142ytkowych.",

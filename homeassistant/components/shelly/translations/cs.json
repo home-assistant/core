@@ -33,7 +33,8 @@
             "button": "Tla\u010d\u00edtko",
             "button1": "Prvn\u00ed tla\u010d\u00edtko",
             "button2": "Druh\u00e9 tla\u010d\u00edtko",
-            "button3": "T\u0159et\u00ed tla\u010d\u00edtko"
+            "button3": "T\u0159et\u00ed tla\u010d\u00edtko",
+            "button4": "\u010ctvrt\u00e9 tla\u010d\u00edtko"
         },
         "trigger_type": {
             "double": "\"{subtype}\" stisknuto dvakr\u00e1t",

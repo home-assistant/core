@@ -3,7 +3,7 @@
   "name": "Uptime Robot",
   "documentation": "https://www.home-assistant.io/integrations/uptimerobot",
   "requirements": [
-    "pyuptimerobot==21.8.2"
+    "pyuptimerobot==21.9.0"
   ],
   "codeowners": [
     "@ludeeus"

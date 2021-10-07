@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 import voluptuous as vol
 
@@ -12,7 +13,9 @@ from homeassistant.components.cover import (
     DEVICE_CLASSES_SCHEMA as COVER_DEVICE_CLASSES_SCHEMA,
 )
 from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA as SENSOR_DEVICE_CLASSES_SCHEMA,
+    STATE_CLASSES_SCHEMA as SENSOR_STATE_CLASSES_SCHEMA,
 )
 from homeassistant.components.switch import (
     DEVICE_CLASSES_SCHEMA as SWITCH_DEVICE_CLASSES_SCHEMA,
@@ -44,6 +47,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_ADDRESS,
@@ -119,6 +123,7 @@ from .const import (
 from .modbus import ModbusHub, async_modbus_setup
 from .validators import (
     duplicate_entity_validator,
+    duplicate_modbus_validator,
     number_validator,
     scan_interval_validator,
     struct_validator,
@@ -269,6 +274,7 @@ SENSOR_SCHEMA = vol.All(
     BASE_STRUCT_SCHEMA.extend(
         {
             vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(CONF_REVERSE_ORDER): cv.boolean,
         }
@@ -335,6 +341,7 @@ CONFIG_SCHEMA = vol.Schema(
             cv.ensure_list,
             scan_interval_validator,
             duplicate_entity_validator,
+            duplicate_modbus_validator,
             [
                 vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA),
             ],
@@ -364,15 +371,24 @@ SERVICE_WRITE_COIL_SCHEMA = vol.Schema(
         ),
     }
 )
+SERVICE_STOP_START_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_HUB): cv.string,
+    }
+)
 
 
 def get_hub(hass: HomeAssistant, name: str) -> ModbusHub:
     """Return modbus hub with name."""
-    return hass.data[DOMAIN][name]
+    return cast(ModbusHub, hass.data[DOMAIN][name])
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Modbus component."""
     return await async_modbus_setup(
-        hass, config, SERVICE_WRITE_REGISTER_SCHEMA, SERVICE_WRITE_COIL_SCHEMA
+        hass,
+        config,
+        SERVICE_WRITE_REGISTER_SCHEMA,
+        SERVICE_WRITE_COIL_SCHEMA,
+        SERVICE_STOP_START_SCHEMA,
     )

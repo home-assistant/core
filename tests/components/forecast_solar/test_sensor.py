@@ -142,7 +142,7 @@ async def test_sensors(
     assert device_entry.manufacturer == "Forecast.Solar"
     assert device_entry.name == "Solar Production Forecast"
     assert device_entry.entry_type == ENTRY_TYPE_SERVICE
-    assert not device_entry.model
+    assert device_entry.model == "public"
     assert not device_entry.sw_version
 
 

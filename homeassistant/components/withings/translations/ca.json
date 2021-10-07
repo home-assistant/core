@@ -10,7 +10,7 @@
             "default": "Autenticaci\u00f3 exitosa amb Withings."
         },
         "error": {
-            "already_configured": "El compte ja ha estat configurat"
+            "already_configured": "El compte ja est\u00e0 configurat"
         },
         "flow_title": "{profile}",
         "step": {

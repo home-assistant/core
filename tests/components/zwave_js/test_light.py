@@ -129,7 +129,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert state.attributes[ATTR_COLOR_MODE] == "color_temp"
     assert state.attributes[ATTR_BRIGHTNESS] == 255
     assert state.attributes[ATTR_COLOR_TEMP] == 370
-    assert ATTR_RGB_COLOR not in state.attributes
+    assert ATTR_RGB_COLOR in state.attributes
 
     # Test turning on with same brightness
     await hass.services.async_call(
@@ -387,7 +387,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert state.attributes[ATTR_COLOR_MODE] == "color_temp"
     assert state.attributes[ATTR_BRIGHTNESS] == 255
     assert state.attributes[ATTR_COLOR_TEMP] == 170
-    assert ATTR_RGB_COLOR not in state.attributes
+    assert ATTR_RGB_COLOR in state.attributes
 
     # Test turning on with same color temp
     await hass.services.async_call(

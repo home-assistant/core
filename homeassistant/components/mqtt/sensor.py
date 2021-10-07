@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components import sensor
 from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA,
     STATE_CLASSES_SCHEMA,
     SensorEntity,
@@ -42,7 +43,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_EXPIRE_AFTER = "expire_after"
 CONF_LAST_RESET_TOPIC = "last_reset_topic"
 CONF_LAST_RESET_VALUE_TEMPLATE = "last_reset_value_template"
-CONF_STATE_CLASS = "state_class"
 
 MQTT_SENSOR_ATTRIBUTES_BLOCKED = frozenset(
     {
@@ -53,10 +53,34 @@ MQTT_SENSOR_ATTRIBUTES_BLOCKED = frozenset(
 
 DEFAULT_NAME = "MQTT Sensor"
 DEFAULT_FORCE_UPDATE = False
+
+
+def validate_options(conf):
+    """Validate options.
+
+    If last reset topic is present it must be same as the state topic.
+    """
+    if (
+        CONF_LAST_RESET_TOPIC in conf
+        and CONF_STATE_TOPIC in conf
+        and conf[CONF_LAST_RESET_TOPIC] != conf[CONF_STATE_TOPIC]
+    ):
+        _LOGGER.warning(
+            "'%s' must be same as '%s'", CONF_LAST_RESET_TOPIC, CONF_STATE_TOPIC
+        )
+
+    if CONF_LAST_RESET_TOPIC in conf and CONF_LAST_RESET_VALUE_TEMPLATE not in conf:
+        _LOGGER.warning(
+            "'%s' must be set if '%s' is set",
+            CONF_LAST_RESET_VALUE_TEMPLATE,
+            CONF_LAST_RESET_TOPIC,
+        )
+
+    return conf
+
+
 PLATFORM_SCHEMA = vol.All(
-    # Deprecated, remove in Home Assistant 2021.11
     cv.deprecated(CONF_LAST_RESET_TOPIC),
-    cv.deprecated(CONF_LAST_RESET_VALUE_TEMPLATE),
     mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
@@ -69,6 +93,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         }
     ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema),
+    validate_options,
 )
 
 
@@ -132,10 +157,7 @@ class MqttSensor(MqttEntity, SensorEntity):
         """(Re)Subscribe to topics."""
         topics = {}
 
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        def message_received(msg):
-            """Handle new MQTT messages."""
+        def _update_state(msg):
             payload = msg.payload
             # auto-expire enabled?
             expire_after = self._config.get(CONF_EXPIRE_AFTER)
@@ -164,18 +186,8 @@ class MqttSensor(MqttEntity, SensorEntity):
                     variables=variables,
                 )
             self._state = payload
-            self.async_write_ha_state()
 
-        topics["state_topic"] = {
-            "topic": self._config[CONF_STATE_TOPIC],
-            "msg_callback": message_received,
-            "qos": self._config[CONF_QOS],
-        }
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        def last_reset_message_received(msg):
-            """Handle new last_reset messages."""
+        def _update_last_reset(msg):
             payload = msg.payload
 
             template = self._config.get(CONF_LAST_RESET_VALUE_TEMPLATE)
@@ -198,9 +210,36 @@ class MqttSensor(MqttEntity, SensorEntity):
                 _LOGGER.warning(
                     "Invalid last_reset message '%s' from '%s'", msg.payload, msg.topic
                 )
+
+        @callback
+        @log_messages(self.hass, self.entity_id)
+        def message_received(msg):
+            """Handle new MQTT messages."""
+            _update_state(msg)
+            if CONF_LAST_RESET_VALUE_TEMPLATE in self._config and (
+                CONF_LAST_RESET_TOPIC not in self._config
+                or self._config[CONF_LAST_RESET_TOPIC] == self._config[CONF_STATE_TOPIC]
+            ):
+                _update_last_reset(msg)
             self.async_write_ha_state()
 
-        if CONF_LAST_RESET_TOPIC in self._config:
+        topics["state_topic"] = {
+            "topic": self._config[CONF_STATE_TOPIC],
+            "msg_callback": message_received,
+            "qos": self._config[CONF_QOS],
+        }
+
+        @callback
+        @log_messages(self.hass, self.entity_id)
+        def last_reset_message_received(msg):
+            """Handle new last_reset messages."""
+            _update_last_reset(msg)
+            self.async_write_ha_state()
+
+        if (
+            CONF_LAST_RESET_TOPIC in self._config
+            and self._config[CONF_LAST_RESET_TOPIC] != self._config[CONF_STATE_TOPIC]
+        ):
             topics["last_reset_topic"] = {
                 "topic": self._config[CONF_LAST_RESET_TOPIC],
                 "msg_callback": last_reset_message_received,

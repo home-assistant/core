@@ -23,6 +23,7 @@
             "is_sulphur_dioxide": "Concentraci\u00f3 actual de di\u00f2xid de sofre de {entity_name}",
             "is_temperature": "Temperatura actual de {entity_name}",
             "is_value": "Valor actual de {entity_name}",
+            "is_volatile_organic_compounds": "Concentraci\u00f3 actual de compostos org\u00e0nics vol\u00e0tils de {entity_name}",
             "is_voltage": "Voltatge actual de {entity_name}"
         },
         "trigger_type": {
@@ -48,6 +49,7 @@
             "sulphur_dioxide": "Canvia la concentraci\u00f3 de di\u00f2xid de sofre de {entity_name}",
             "temperature": "Canvia la temperatura de {entity_name}",
             "value": "Canvia el valor de {entity_name}",
+            "volatile_organic_compounds": "Canvia la concentraci\u00f3 de compostos org\u00e0nics vol\u00e0tils de {entity_name}",
             "voltage": "Canvia el voltatge de {entity_name}"
         }
     },

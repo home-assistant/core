@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "error": {
+            "invalid_auth": "Autentikasi tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "coordinates": {
+                "data": {
+                    "latitude": "Lintang",
+                    "longitude": "Bujur"
+                }
+            },
+            "country": {
+                "data": {
+                    "country_code": "Kode Negara"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "Token Akses"
+                }
+            }
+        }
+    }
+}

@@ -31,7 +31,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class DiffuserSwitch(SwitchEntity, DiffuserEntity):
+class DiffuserSwitch(DiffuserEntity, SwitchEntity):
     """Representation of a diffuser switch."""
 
     _attr_icon = "mdi:fan"

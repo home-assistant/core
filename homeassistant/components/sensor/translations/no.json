@@ -23,6 +23,7 @@
             "is_sulphur_dioxide": "Gjeldende konsentrasjonsniv\u00e5 for svoveldioksid for {entity_name}",
             "is_temperature": "Gjeldende {entity_name} temperatur",
             "is_value": "Gjeldende {entity_name} verdi",
+            "is_volatile_organic_compounds": "Gjeldende {entity_name} flyktige organiske forbindelser",
             "is_voltage": "Gjeldende {entity_name} spenning"
         },
         "trigger_type": {
@@ -48,6 +49,7 @@
             "sulphur_dioxide": "{entity_name} svoveldioksidkonsentrasjon endres",
             "temperature": "{entity_name} temperaturendringer",
             "value": "{entity_name} verdi endringer",
+            "volatile_organic_compounds": "{entity_name} konsentrasjon av flyktige organiske forbindelser",
             "voltage": "{entity_name} spenningsendringer"
         }
     },
