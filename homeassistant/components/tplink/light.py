@@ -145,7 +145,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     def color_mode(self) -> str | None:
         """Return the active color mode."""
         if self.device.is_color:
-            if self.device.color_temp:
+            if self.device.is_variable_color_temp and self.device.color_temp:
                 return COLOR_MODE_COLOR_TEMP
             return COLOR_MODE_HS
         if self.device.is_variable_color_temp:
