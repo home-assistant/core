@@ -1,4 +1,6 @@
 """Config flow to configure the Netgear integration."""
+import logging
+
 from urllib.parse import urlparse
 
 from pynetgear import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_USER
@@ -19,6 +21,8 @@ from homeassistant.data_entry_flow import FlowResult
 from .const import CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME, DEFAULT_NAME, DOMAIN
 from .errors import CannotLoginException
 from .router import get_api
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def _discovery_schema_with_defaults(discovery_info):
@@ -126,6 +130,8 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             updated_data[CONF_SSL] = True
         else:
             updated_data[CONF_SSL] = False
+
+        _LOGGER.debug("Netgear ssdp discovery info: %s", discovery_info)
 
         await self.async_set_unique_id(discovery_info[ssdp.ATTR_UPNP_SERIAL])
         self._abort_if_unique_id_configured(updates=updated_data)
