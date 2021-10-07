@@ -64,7 +64,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         if (transition := kwargs.get(ATTR_TRANSITION)) is not None:
-            transition = int(transition) * 1_000
+            transition = int(transition * 1_000)
 
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
             brightness = round((brightness * 100.0) / 255.0)
@@ -95,7 +95,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         if (transition := kwargs.get(ATTR_TRANSITION)) is not None:
-            transition = int(transition) * 1_000
+            transition = int(transition * 1_000)
         await self.device.turn_off(transition=transition)
 
     @property
