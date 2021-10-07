@@ -21,14 +21,11 @@ SENSOR_TYPES = {
     "type": SensorEntityDescription(
         key="type",
         name="link type",
-        native_unit_of_measurement=None,
-        device_class=None,
     ),
     "link_rate": SensorEntityDescription(
         key="link_rate",
         name="link rate",
         native_unit_of_measurement="Mbps",
-        device_class=None,
     ),
     "signal": SensorEntityDescription(
         key="signal",
@@ -39,20 +36,14 @@ SENSOR_TYPES = {
     "ssid": SensorEntityDescription(
         key="ssid",
         name="ssid",
-        native_unit_of_measurement=None,
-        device_class=None,
     ),
     "conn_ap_mac": SensorEntityDescription(
         key="conn_ap_mac",
         name="access point mac",
-        native_unit_of_measurement=None,
-        device_class=None,
     ),
     "allow_or_block": SensorEntityDescription(
         key="allow_or_block",
         name="access",
-        native_unit_of_measurement=None,
-        device_class=None,
     ),
 }
 
