@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any, Final, TypedDict, cast
 
 import voluptuous as vol
 
@@ -29,29 +29,24 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "input_number"
 
-CONF_INITIAL = "initial"
-CONF_MIN = "min"
-CONF_MAX = "max"
-CONF_STEP = "step"
+CONF_INITIAL: Final = "initial"
+CONF_MIN: Final = "min"
+CONF_MAX: Final = "max"
+CONF_STEP: Final = "step"
 
-MODE_SLIDER = "slider"
-MODE_BOX = "box"
+MODE_SLIDER: Final = "slider"
+MODE_BOX: Final = "box"
+ATTR_VALUE: Final = "value"
 
-ATTR_INITIAL = "initial"
-ATTR_VALUE = "value"
-ATTR_MIN = "min"
-ATTR_MAX = "max"
-ATTR_STEP = "step"
-
-SERVICE_SET_VALUE = "set_value"
-SERVICE_INCREMENT = "increment"
-SERVICE_DECREMENT = "decrement"
+SERVICE_SET_VALUE: Final = "set_value"
+SERVICE_INCREMENT: Final = "increment"
+SERVICE_DECREMENT: Final = "decrement"
 
 
 def _cv_input_number(config: dict) -> dict:
     """Configure validation helper for input number (voluptuous)."""
-    minimum = float(config[CONF_MIN])
-    maximum = float(config[CONF_MAX])
+    minimum = config[CONF_MIN]
+    maximum = config[CONF_MAX]
     if minimum >= maximum:
         raise vol.Invalid(
             f"Maximum ({minimum}) is not greater than minimum ({maximum})"
@@ -113,6 +108,20 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 
+class InputNumberConfig(TypedDict, total=False):
+    """Type for input number config."""
+
+    id: str
+    name: str | None
+    initial: float | None
+    max: float
+    min: float
+    step: float
+    icon: str | None
+    mode: str
+    unit_of_measurement: str | None
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input slider."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
@@ -122,7 +131,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
     collection.sync_entity_lifecycle(
-        hass, DOMAIN, DOMAIN, component, yaml_collection, InputNumber.from_yaml
+        hass, DOMAIN, DOMAIN, component, yaml_collection, InputNumber.from_yaml  # type: ignore[arg-type]
     )
 
     storage_collection = NumberStorageCollection(
@@ -131,7 +140,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         id_manager,
     )
     collection.sync_entity_lifecycle(
-        hass, DOMAIN, DOMAIN, component, storage_collection, InputNumber
+        hass, DOMAIN, DOMAIN, component, storage_collection, InputNumber  # type: ignore[arg-type]
     )
 
     await yaml_collection.async_load(
@@ -197,14 +206,14 @@ class NumberStorageCollection(collection.StorageCollection):
 class InputNumber(RestoreEntity):
     """Representation of a slider."""
 
-    def __init__(self, config: dict) -> None:
+    def __init__(self, config: InputNumberConfig) -> None:
         """Initialize an input number."""
         self._config = config
         self.editable = True
         self._current_value = config.get(CONF_INITIAL)
 
     @classmethod
-    def from_yaml(cls, config: dict) -> InputNumber:
+    def from_yaml(cls, config: InputNumberConfig) -> InputNumber:
         """Return entity instance initialized from yaml storage."""
         input_num = cls(config)
         input_num.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
@@ -219,12 +228,12 @@ class InputNumber(RestoreEntity):
     @property
     def _minimum(self) -> float:
         """Return minimum allowed value."""
-        return float(self._config[CONF_MIN])
+        return self._config[CONF_MIN]
 
     @property
     def _maximum(self) -> float:
         """Return maximum allowed value."""
-        return float(self._config[CONF_MAX])
+        return self._config[CONF_MAX]
 
     @property
     def name(self) -> str | None:
@@ -244,7 +253,7 @@ class InputNumber(RestoreEntity):
     @property
     def _step(self) -> float:
         """Return entity's increment/decrement step."""
-        return float(self._config[CONF_STEP])
+        return self._config[CONF_STEP]
 
     @property
     def unit_of_measurement(self) -> str | None:
@@ -254,18 +263,18 @@ class InputNumber(RestoreEntity):
     @property
     def unique_id(self) -> str:
         """Return unique id of the entity."""
-        return str(self._config[CONF_ID])
+        return self._config[CONF_ID]
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
-            ATTR_INITIAL: self._config.get(CONF_INITIAL),
             ATTR_EDITABLE: self.editable,
-            ATTR_MIN: self._minimum,
-            ATTR_MAX: self._maximum,
-            ATTR_STEP: self._step,
+            CONF_INITIAL: self._config.get(CONF_INITIAL),
+            CONF_MAX: self._maximum,
+            CONF_MIN: self._minimum,
             ATTR_MODE: self._config[CONF_MODE],
+            CONF_STEP: self._step,
         }
 
     async def async_added_to_hass(self) -> None:
@@ -315,7 +324,7 @@ class InputNumber(RestoreEntity):
         else:
             self._current_value = self._minimum
 
-    async def async_update_config(self, config: dict) -> None:
+    async def async_update_config(self, config: InputNumberConfig) -> None:
         """Handle when the config is updated."""
         self._config = config
         # just in case min/max values changed
