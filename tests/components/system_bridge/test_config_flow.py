@@ -4,7 +4,7 @@ from unittest.mock import patch
 from aiohttp.client_exceptions import ClientConnectionError
 from systembridge.exceptions import BridgeAuthenticationException
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.system_bridge.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 
@@ -279,7 +279,7 @@ async def test_zeroconf_flow(
     hass, aiohttp_client, aioclient_mock, current_request_with_host
 ) -> None:
     """Test zeroconf flow."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
@@ -314,7 +314,7 @@ async def test_zeroconf_cannot_connect(
     hass, aiohttp_client, aioclient_mock, current_request_with_host
 ) -> None:
     """Test zeroconf cannot connect flow."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
@@ -342,7 +342,7 @@ async def test_zeroconf_bad_zeroconf_info(
     hass, aiohttp_client, aioclient_mock, current_request_with_host
 ) -> None:
     """Test zeroconf cannot connect flow."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},

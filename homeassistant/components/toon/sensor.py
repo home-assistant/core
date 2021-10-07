@@ -186,7 +186,6 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         native_unit_of_measurement=VOLUME_CUBIC_METERS,
         state_class=STATE_CLASS_TOTAL_INCREASING,
         device_class=DEVICE_CLASS_GAS,
-        entity_registry_enabled_default=False,
         cls=ToonGasMeterDeviceSensor,
     ),
     ToonSensorEntityDescription(
@@ -244,7 +243,6 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
-        entity_registry_enabled_default=False,
         cls=ToonElectricityMeterDeviceSensor,
     ),
     ToonSensorEntityDescription(
@@ -255,7 +253,6 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
-        entity_registry_enabled_default=False,
         cls=ToonElectricityMeterDeviceSensor,
     ),
     ToonSensorEntityDescription(
@@ -276,7 +273,6 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
-        entity_registry_enabled_default=False,
         cls=ToonElectricityMeterDeviceSensor,
     ),
     ToonSensorEntityDescription(
@@ -287,7 +283,6 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
-        entity_registry_enabled_default=False,
         cls=ToonElectricityMeterDeviceSensor,
     ),
     ToonSensorEntityDescription(
@@ -391,6 +386,7 @@ SENSOR_ENTITIES_SOLAR: tuple[ToonSensorEntityDescription, ...] = (
         measurement="day_produced_solar",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         cls=ToonSolarDeviceSensor,
     ),
     ToonSensorEntityDescription(

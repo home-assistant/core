@@ -8,7 +8,6 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.renault.renault_entities import ATTR_LAST_UPDATE
 from homeassistant.const import ATTR_ICON, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from . import (
     check_device_registry,
@@ -25,7 +24,7 @@ from tests.common import mock_device_registry, mock_registry
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
 async def test_binary_sensors(hass: HomeAssistant, vehicle_type: str):
     """Test for Renault binary sensors."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
@@ -52,7 +51,7 @@ async def test_binary_sensors(hass: HomeAssistant, vehicle_type: str):
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
 async def test_binary_sensor_empty(hass: HomeAssistant, vehicle_type: str):
     """Test for Renault binary sensors with empty data from Renault."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
@@ -82,7 +81,7 @@ async def test_binary_sensor_empty(hass: HomeAssistant, vehicle_type: str):
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
 async def test_binary_sensor_errors(hass: HomeAssistant, vehicle_type: str):
     """Test for Renault binary sensors with temporary failure."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
@@ -118,7 +117,7 @@ async def test_binary_sensor_errors(hass: HomeAssistant, vehicle_type: str):
 
 async def test_binary_sensor_access_denied(hass):
     """Test for Renault binary sensors with access denied failure."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
@@ -142,7 +141,7 @@ async def test_binary_sensor_access_denied(hass):
 
 async def test_binary_sensor_not_supported(hass):
     """Test for Renault binary sensors with not supported failure."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
