@@ -396,9 +396,9 @@ def get_metadata_with_session(
             StatisticsMeta.statistic_id.in_(bindparam("statistic_ids"))
         )
     if statistic_type == "mean":
-        baked_query += lambda q: q.filter(StatisticsMeta.has_mean.isnot(False))
+        baked_query += lambda q: q.filter(StatisticsMeta.has_mean == True)  # noqa: E712
     elif statistic_type == "sum":
-        baked_query += lambda q: q.filter(StatisticsMeta.has_sum.isnot(False))
+        baked_query += lambda q: q.filter(StatisticsMeta.has_sum == True)  # noqa: E712
     result = execute(baked_query(session).params(statistic_ids=statistic_ids))
     if not result:
         return {}
