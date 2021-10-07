@@ -72,10 +72,7 @@ TUYA_SUPPORT_TYPE = {
     "tgq",  # Dimmer
 }
 
-TUYA_DIMMERS = {
-    "tgq",
-    "tgkg"
-    }
+TUYA_DIMMERS = {"tgq", "tgkg"}
 
 DEFAULT_HSV = {
     "h": {"min": 1, "scale": 0, "unit": "", "max": 360, "step": 1},
@@ -391,7 +388,9 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
     def _get_hsv(self) -> dict[str, int]:
         return json.loads(self.tuya_device.status[self.dp_code_colour])
 
-    def is_dimmer(self, category) -> bool:
+    @classmethod
+    def is_dimmer(cls, category: str) -> bool:
+        """Returns true if the light switch is a dimmer."""
         if category in TUYA_DIMMERS:
             return True
         return False
