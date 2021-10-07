@@ -29,27 +29,25 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import (
     ATTRIBUTION,
-    CC_ATTR_CLOUD_COVER,
-    CC_ATTR_CONDITION,
-    CC_ATTR_HUMIDITY,
-    CC_ATTR_OZONE,
-    CC_ATTR_PRECIPITATION,
-    CC_ATTR_PRECIPITATION_PROBABILITY,
-    CC_ATTR_PRECIPITATION_TYPE,
-    CC_ATTR_PRESSURE,
-    CC_ATTR_TEMPERATURE,
-    CC_ATTR_TEMPERATURE_HIGH,
-    CC_ATTR_TEMPERATURE_LOW,
-    CC_ATTR_VISIBILITY,
-    CC_ATTR_WIND_DIRECTION,
-    CC_ATTR_WIND_GUST,
-    CC_ATTR_WIND_SPEED,
-    CC_SENSOR_TYPES,
-    CONF_TIMESTEP,
-    DEFAULT_TIMESTEP,
     DOMAIN,
     MAX_REQUESTS_PER_DAY,
+    TMRW_ATTR_CLOUD_COVER,
+    TMRW_ATTR_CONDITION,
+    TMRW_ATTR_HUMIDITY,
+    TMRW_ATTR_OZONE,
+    TMRW_ATTR_PRECIPITATION,
+    TMRW_ATTR_PRECIPITATION_PROBABILITY,
+    TMRW_ATTR_PRECIPITATION_TYPE,
+    TMRW_ATTR_PRESSURE,
+    TMRW_ATTR_TEMPERATURE,
+    TMRW_ATTR_TEMPERATURE_HIGH,
+    TMRW_ATTR_TEMPERATURE_LOW,
+    TMRW_ATTR_VISIBILITY,
+    TMRW_ATTR_WIND_DIRECTION,
+    TMRW_ATTR_WIND_GUST,
+    TMRW_ATTR_WIND_SPEED,
 )
+from .sensor import SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,15 +87,6 @@ def _set_update_interval(hass: HomeAssistant, current_entry: ConfigEntry) -> tim
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Tomorrow.io API from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-
-    # If config entry options not set up, set them up
-    if not entry.options:
-        hass.config_entries.async_update_entry(
-            entry,
-            options={
-                CONF_TIMESTEP: DEFAULT_TIMESTEP,
-            },
-        )
 
     api = TomorrowioV4(
         entry.data[CONF_API_KEY],
@@ -164,27 +153,27 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             return await self._api.realtime_and_all_forecasts(
                 [
-                    CC_ATTR_TEMPERATURE,
-                    CC_ATTR_HUMIDITY,
-                    CC_ATTR_PRESSURE,
-                    CC_ATTR_WIND_SPEED,
-                    CC_ATTR_WIND_DIRECTION,
-                    CC_ATTR_CONDITION,
-                    CC_ATTR_VISIBILITY,
-                    CC_ATTR_OZONE,
-                    CC_ATTR_WIND_GUST,
-                    CC_ATTR_CLOUD_COVER,
-                    CC_ATTR_PRECIPITATION_TYPE,
-                    *(sensor_type.key for sensor_type in CC_SENSOR_TYPES),
+                    TMRW_ATTR_TEMPERATURE,
+                    TMRW_ATTR_HUMIDITY,
+                    TMRW_ATTR_PRESSURE,
+                    TMRW_ATTR_WIND_SPEED,
+                    TMRW_ATTR_WIND_DIRECTION,
+                    TMRW_ATTR_CONDITION,
+                    TMRW_ATTR_VISIBILITY,
+                    TMRW_ATTR_OZONE,
+                    TMRW_ATTR_WIND_GUST,
+                    TMRW_ATTR_CLOUD_COVER,
+                    TMRW_ATTR_PRECIPITATION_TYPE,
+                    *(sensor_type.key for sensor_type in SENSOR_TYPES),
                 ],
                 [
-                    CC_ATTR_TEMPERATURE_LOW,
-                    CC_ATTR_TEMPERATURE_HIGH,
-                    CC_ATTR_WIND_SPEED,
-                    CC_ATTR_WIND_DIRECTION,
-                    CC_ATTR_CONDITION,
-                    CC_ATTR_PRECIPITATION,
-                    CC_ATTR_PRECIPITATION_PROBABILITY,
+                    TMRW_ATTR_TEMPERATURE_LOW,
+                    TMRW_ATTR_TEMPERATURE_HIGH,
+                    TMRW_ATTR_WIND_SPEED,
+                    TMRW_ATTR_WIND_DIRECTION,
+                    TMRW_ATTR_CONDITION,
+                    TMRW_ATTR_PRECIPITATION,
+                    TMRW_ATTR_PRECIPITATION_PROBABILITY,
                 ],
             )
         except (

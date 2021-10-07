@@ -12,13 +12,7 @@ from homeassistant.components.tomorrowio.config_flow import (
     _get_config_schema,
     _get_unique_id,
 )
-from homeassistant.components.tomorrowio.const import (
-    ATTR_CLOUD_COVER,
-    ATTR_PRECIPITATION_TYPE,
-    ATTR_WIND_GUST,
-    ATTRIBUTION,
-    DOMAIN,
-)
+from homeassistant.components.tomorrowio.const import ATTRIBUTION, DOMAIN
 from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_FORECAST,
@@ -246,6 +240,3 @@ async def test_v4_weather(
     assert weather_state.attributes[ATTR_WEATHER_VISIBILITY] == 13.1162
     assert weather_state.attributes[ATTR_WEATHER_WIND_BEARING] == 315.14
     assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED] == 15.0152
-    assert weather_state.attributes[ATTR_CLOUD_COVER] == 100
-    assert weather_state.attributes[ATTR_WIND_GUST] == 20.3421
-    assert weather_state.attributes[ATTR_PRECIPITATION_TYPE] == "rain"

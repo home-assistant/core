@@ -14,8 +14,9 @@ from homeassistant.components.tomorrowio.config_flow import (
     _get_unique_id,
 )
 from homeassistant.components.tomorrowio.const import ATTRIBUTION, DOMAIN
+from homeassistant.components.tomorrowio.sensor import TomorrowioSensorEntityDescription
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.entity_registry import async_get
 from homeassistant.util import dt as dt_util
@@ -130,6 +131,15 @@ def check_sensor_state(hass: HomeAssistant, entity_name: str, value: str):
     assert state
     assert state.state == value
     assert state.attributes[ATTR_ATTRIBUTION] == ATTRIBUTION
+
+
+async def test_entity_description_post_init():
+    """Test post initiailization check for TomorrowioSensorEntityDescription."""
+
+    with pytest.raises(RuntimeError):
+        TomorrowioSensorEntityDescription(
+            key="a", name="b", unit_imperial=TEMP_FAHRENHEIT
+        )
 
 
 async def test_v4_sensor(

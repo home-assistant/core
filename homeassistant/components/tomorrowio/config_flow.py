@@ -20,11 +20,11 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
-    CC_ATTR_TEMPERATURE,
     CONF_TIMESTEP,
     DEFAULT_NAME,
     DEFAULT_TIMESTEP,
     DOMAIN,
+    TMRW_ATTR_TEMPERATURE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -132,10 +132,12 @@ class TomorrowioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     str(user_input.get(CONF_LATITUDE, self.hass.config.latitude)),
                     str(user_input.get(CONF_LONGITUDE, self.hass.config.longitude)),
                     session=async_get_clientsession(self.hass),
-                ).realtime([CC_ATTR_TEMPERATURE])
+                ).realtime([TMRW_ATTR_TEMPERATURE])
 
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
+                    title=user_input[CONF_NAME],
+                    data=user_input,
+                    options={CONF_TIMESTEP: DEFAULT_TIMESTEP},
                 )
             except CantConnectException:
                 errors["base"] = "cannot_connect"

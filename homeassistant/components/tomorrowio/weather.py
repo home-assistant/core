@@ -2,19 +2,11 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Mapping
 from datetime import datetime
 import logging
 from typing import Any
 
-from pytomorrowio.const import (
-    DAILY,
-    FORECASTS,
-    HOURLY,
-    NOWCAST,
-    PrecipitationType,
-    WeatherCode,
-)
+from pytomorrowio.const import DAILY, FORECASTS, HOURLY, NOWCAST, WeatherCode
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -47,31 +39,25 @@ from homeassistant.util.pressure import convert as pressure_convert
 
 from . import TomorrowioDataUpdateCoordinator, TomorrowioEntity
 from .const import (
-    ATTR_CLOUD_COVER,
-    ATTR_PRECIPITATION_TYPE,
-    ATTR_WIND_GUST,
-    CC_ATTR_CLOUD_COVER,
-    CC_ATTR_CONDITION,
-    CC_ATTR_HUMIDITY,
-    CC_ATTR_OZONE,
-    CC_ATTR_PRECIPITATION,
-    CC_ATTR_PRECIPITATION_PROBABILITY,
-    CC_ATTR_PRECIPITATION_TYPE,
-    CC_ATTR_PRESSURE,
-    CC_ATTR_TEMPERATURE,
-    CC_ATTR_TEMPERATURE_HIGH,
-    CC_ATTR_TEMPERATURE_LOW,
-    CC_ATTR_TIMESTAMP,
-    CC_ATTR_VISIBILITY,
-    CC_ATTR_WIND_DIRECTION,
-    CC_ATTR_WIND_GUST,
-    CC_ATTR_WIND_SPEED,
     CLEAR_CONDITIONS,
     CONDITIONS,
     CONF_TIMESTEP,
     DEFAULT_FORECAST_TYPE,
     DOMAIN,
     MAX_FORECASTS,
+    TMRW_ATTR_CONDITION,
+    TMRW_ATTR_HUMIDITY,
+    TMRW_ATTR_OZONE,
+    TMRW_ATTR_PRECIPITATION,
+    TMRW_ATTR_PRECIPITATION_PROBABILITY,
+    TMRW_ATTR_PRESSURE,
+    TMRW_ATTR_TEMPERATURE,
+    TMRW_ATTR_TEMPERATURE_HIGH,
+    TMRW_ATTR_TEMPERATURE_LOW,
+    TMRW_ATTR_TIMESTAMP,
+    TMRW_ATTR_VISIBILITY,
+    TMRW_ATTR_WIND_DIRECTION,
+    TMRW_ATTR_WIND_SPEED,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -164,36 +150,6 @@ class BaseTomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
         return {k: v for k, v in data.items() if v is not None}
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return additional state attributes."""
-        wind_gust = self.wind_gust
-        if wind_gust and self.hass.config.units.is_metric:
-            wind_gust = round(
-                distance_convert(self.wind_gust, LENGTH_MILES, LENGTH_KILOMETERS), 4
-            )
-        cloud_cover = self.cloud_cover
-        return {
-            ATTR_CLOUD_COVER: cloud_cover,
-            ATTR_WIND_GUST: wind_gust,
-            ATTR_PRECIPITATION_TYPE: self.precipitation_type,
-        }
-
-    @property
-    @abstractmethod
-    def cloud_cover(self):
-        """Return cloud cover."""
-
-    @property
-    @abstractmethod
-    def wind_gust(self):
-        """Return wind gust speed."""
-
-    @property
-    @abstractmethod
-    def precipitation_type(self):
-        """Return precipitation type."""
-
-    @property
     @abstractmethod
     def _pressure(self):
         """Return the raw pressure."""
@@ -259,63 +215,45 @@ class TomorrowioWeatherEntity(BaseTomorrowioWeatherEntity):
     @property
     def temperature(self):
         """Return the platform temperature."""
-        return self._get_current_property(CC_ATTR_TEMPERATURE)
+        return self._get_current_property(TMRW_ATTR_TEMPERATURE)
 
     @property
     def _pressure(self):
         """Return the raw pressure."""
-        return self._get_current_property(CC_ATTR_PRESSURE)
+        return self._get_current_property(TMRW_ATTR_PRESSURE)
 
     @property
     def humidity(self):
         """Return the humidity."""
-        return self._get_current_property(CC_ATTR_HUMIDITY)
-
-    @property
-    def wind_gust(self):
-        """Return the wind gust speed."""
-        return self._get_current_property(CC_ATTR_WIND_GUST)
-
-    @property
-    def cloud_cover(self):
-        """Reteurn the cloud cover."""
-        return self._get_current_property(CC_ATTR_CLOUD_COVER)
-
-    @property
-    def precipitation_type(self):
-        """Return precipitation type."""
-        precipitation_type = self._get_current_property(CC_ATTR_PRECIPITATION_TYPE)
-        if precipitation_type is None:
-            return None
-        return PrecipitationType(precipitation_type).name.lower()
+        return self._get_current_property(TMRW_ATTR_HUMIDITY)
 
     @property
     def _wind_speed(self):
         """Return the raw wind speed."""
-        return self._get_current_property(CC_ATTR_WIND_SPEED)
+        return self._get_current_property(TMRW_ATTR_WIND_SPEED)
 
     @property
     def wind_bearing(self):
         """Return the wind bearing."""
-        return self._get_current_property(CC_ATTR_WIND_DIRECTION)
+        return self._get_current_property(TMRW_ATTR_WIND_DIRECTION)
 
     @property
     def ozone(self):
         """Return the O3 (ozone) level."""
-        return self._get_current_property(CC_ATTR_OZONE)
+        return self._get_current_property(TMRW_ATTR_OZONE)
 
     @property
     def condition(self):
         """Return the condition."""
         return self._translate_condition(
-            self._get_current_property(CC_ATTR_CONDITION),
+            self._get_current_property(TMRW_ATTR_CONDITION),
             is_up(self.hass),
         )
 
     @property
     def _visibility(self):
         """Return the raw visibility."""
-        return self._get_current_property(CC_ATTR_VISIBILITY)
+        return self._get_current_property(TMRW_ATTR_VISIBILITY)
 
     @property
     def forecast(self):
@@ -332,7 +270,7 @@ class TomorrowioWeatherEntity(BaseTomorrowioWeatherEntity):
         # Set default values (in cases where keys don't exist), None will be
         # returned. Override properties per forecast type as needed
         for forecast in raw_forecasts:
-            forecast_dt = dt_util.parse_datetime(forecast[CC_ATTR_TIMESTAMP])
+            forecast_dt = dt_util.parse_datetime(forecast[TMRW_ATTR_TIMESTAMP])
 
             # Throw out past data
             if forecast_dt.date() < dt_util.utcnow().date():
@@ -341,14 +279,14 @@ class TomorrowioWeatherEntity(BaseTomorrowioWeatherEntity):
             values = forecast["values"]
             use_datetime = True
 
-            condition = values.get(CC_ATTR_CONDITION)
-            precipitation = values.get(CC_ATTR_PRECIPITATION)
-            precipitation_probability = values.get(CC_ATTR_PRECIPITATION_PROBABILITY)
+            condition = values.get(TMRW_ATTR_CONDITION)
+            precipitation = values.get(TMRW_ATTR_PRECIPITATION)
+            precipitation_probability = values.get(TMRW_ATTR_PRECIPITATION_PROBABILITY)
 
-            temp = values.get(CC_ATTR_TEMPERATURE_HIGH)
-            temp_low = values.get(CC_ATTR_TEMPERATURE_LOW)
-            wind_direction = values.get(CC_ATTR_WIND_DIRECTION)
-            wind_speed = values.get(CC_ATTR_WIND_SPEED)
+            temp = values.get(TMRW_ATTR_TEMPERATURE_HIGH)
+            temp_low = values.get(TMRW_ATTR_TEMPERATURE_LOW)
+            wind_direction = values.get(TMRW_ATTR_WIND_DIRECTION)
+            wind_speed = values.get(TMRW_ATTR_WIND_SPEED)
 
             if self.forecast_type == DAILY:
                 use_datetime = False
