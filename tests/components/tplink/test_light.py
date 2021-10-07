@@ -3,7 +3,6 @@
 from typing import Optional
 from unittest.mock import PropertyMock
 
-
 import pytest
 
 from homeassistant.components import tplink
