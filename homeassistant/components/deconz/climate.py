@@ -46,7 +46,14 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import ATTR_LOCKED, ATTR_OFFSET, ATTR_VALVE, NEW_SENSOR
+from .const import (
+    ATTR_EXTERNALSENSORTEMP, 
+    ATTR_EXTERNALWINDOWOPEN, 
+    ATTR_LOCKED, 
+    ATTR_OFFSET, 
+    ATTR_VALVE, 
+    NEW_SENSOR,
+)
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
@@ -262,5 +269,11 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
 
         if self._device.locked is not None:
             attr[ATTR_LOCKED] = self._device.locked
+
+        if "externalsensortemp" in self._device.raw["config"]:
+            attr[ATTR_EXTERNALSENSORTEMP] = self._device.raw["config"].get("externalsensortemp")
+
+        if "externalwindowopen" in self._device.raw["config"]:
+            attr[ATTR_EXTERNALWINDOWOPEN] = self._device.raw["config"].get("externalwindowopen")
 
         return attr

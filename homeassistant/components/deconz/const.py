@@ -52,6 +52,8 @@ NEW_SCENE = "scenes"
 NEW_SENSOR = "sensors"
 
 ATTR_DARK = "dark"
+ATTR_EXTERNALSENSORTEMP = "external_sensor_temperature"
+ATTR_EXTERNALWINDOWOPEN = "external_window_open"
 ATTR_LOCKED = "locked"
 ATTR_OFFSET = "offset"
 ATTR_ON = "on"
