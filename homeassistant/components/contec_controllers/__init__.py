@@ -26,8 +26,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     number_of_controllers: int = entry.data["number_of_controllers"]
-    controllers_ip: str = entry.data["ip"]
-    controllers_port: int = entry.data["port"]
+    controllers_ip: str = entry.data["controllers_ip"]
+    controllers_port: int = entry.data["controllers_port"]
     controller_manager: ControllerManager = ControllerManager(
         ContecTracer(logging.getLogger("ContecControllers")),
         ContecConectivityConfiguration(

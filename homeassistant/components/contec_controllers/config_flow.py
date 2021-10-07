@@ -23,9 +23,9 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("ip"): str,
+        vol.Required("controllers_ip"): str,
         vol.Required("number_of_controllers"): int,
-        vol.Required("port"): int,
+        vol.Required("controllers_port"): int,
     }
 )
 
@@ -37,8 +37,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     """
 
     number_of_controllers: int = data["number_of_controllers"]
-    controllers_ip: str = data["ip"]
-    controllers_port: int = data["port"]
+    controllers_ip: str = data["controllers_ip"]
+    controllers_port: int = data["controllers_port"]
     controller_manager: ControllerManager = ControllerManager(
         ContecTracer(logging.getLogger("ContecControllers")),
         ContecConectivityConfiguration(
