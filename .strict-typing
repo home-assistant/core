@@ -122,6 +122,7 @@ homeassistant.components.uptimerobot.*
 homeassistant.components.vacuum.*
 homeassistant.components.vallox.*
 homeassistant.components.water_heater.*
+homeassistant.components.watttime.*
 homeassistant.components.weather.*
 homeassistant.components.websocket_api.*
 homeassistant.components.zodiac.*
