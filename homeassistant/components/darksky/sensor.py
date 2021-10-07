@@ -656,10 +656,10 @@ class DarkSkySensor(SensorEntity):
         self._icon = None
         self._unit_of_measurement = None
 
-        if self.forecast_day is not None:
-            self._attr_name = f"{name} {description.name} {self.forecast_day}d"
-        elif self.forecast_hour is not None:
-            self._attr_name = f"{name} {description.name} {self.forecast_hour}h"
+        if forecast_day is not None:
+            self._attr_name = f"{name} {description.name} {forecast_day}d"
+        elif forecast_hour is not None:
+            self._attr_name = f"{name} {description.name} {forecast_hour}h"
         else:
             self._attr_name = f"{name} {description.name}"
 
