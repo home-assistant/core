@@ -106,10 +106,8 @@ class SeventeenTrackSummarySensor(SensorEntity):
         self._data = data
         self._state = initial_state
         self._status = status
-        self._attr_name = f"Seventeentrack Packages {self._status}"
-        self._attr_unique_id = (
-            f"summary_{self._data.account_id}_{slugify(self._status)}"
-        )
+        self._attr_name = f"Seventeentrack Packages {status}"
+        self._attr_unique_id = f"summary_{data.account_id}_{slugify(status)}"
 
     @property
     def available(self):
@@ -171,7 +169,7 @@ class SeventeenTrackPackageSensor(SensorEntity):
         self._tracking_number = package.tracking_number
         self.entity_id = ENTITY_ID_TEMPLATE.format(self._tracking_number)
         self._attr_unique_id = UNIQUE_ID_TEMPLATE.format(
-            self._data.account_id, self._tracking_number
+            data.account_id, self._tracking_number
         )
 
     @property
