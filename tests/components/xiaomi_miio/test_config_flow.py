@@ -797,7 +797,6 @@ async def test_options_flow_incomplete(hass):
 
 async def test_reauth(hass):
     """Test a reauth flow."""
-    # await setup.async_setup_component(hass, "persistent_notification", {})
     config_entry = MockConfigEntry(
         domain=const.DOMAIN,
         unique_id=TEST_GATEWAY_ID,
