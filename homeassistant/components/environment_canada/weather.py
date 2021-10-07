@@ -1,5 +1,9 @@
 """Platform for retrieving meteorological data from Environment Canada."""
 import datetime
+import re
+
+from env_canada import ECData
+import voluptuous as vol
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
@@ -19,15 +23,36 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
+    PLATFORM_SCHEMA,
     WeatherEntity,
 )
-from homeassistant.const import CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt
 
-from .const import CONF_LANGUAGE, CONF_STATION, DOMAIN
+from .const import CONF_ATTRIBUTION, CONF_LANGUAGE, CONF_STATION, DOMAIN
 
 CONF_FORECAST = "forecast"
-CONF_ATTRIBUTION = "Data provided by Environment Canada"
+
+
+def validate_station(station):
+    """Check that the station ID is well-formed."""
+    if station is None:
+        return
+    if not re.fullmatch(r"[A-Z]{2}/s0000\d{3}", station):
+        raise vol.error.Invalid('Station ID must be of the form "XX/s0000###"')
+    return station
+
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_STATION): validate_station,
+        vol.Inclusive(CONF_LATITUDE, "latlon"): cv.latitude,
+        vol.Inclusive(CONF_LONGITUDE, "latlon"): cv.longitude,
+        vol.Optional(CONF_FORECAST, default="daily"): vol.In(["daily", "hourly"]),
+    }
+)
 
 # Icon codes from http://dd.weatheroffice.ec.gc.ca/citypage_weather/
 # docs/current_conditions_icon_code_descriptions_e.csv
@@ -45,6 +70,18 @@ ICON_CONDITION_MAP = {
     ATTR_CONDITION_FOG: [20, 21, 23, 24, 44],
     ATTR_CONDITION_HAIL: [26, 27],
 }
+
+
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Set up the Environment Canada weather."""
+    if config.get(CONF_STATION):
+        ec_data = ECData(station_id=config[CONF_STATION])
+    else:
+        lat = config.get(CONF_LATITUDE, hass.config.latitude)
+        lon = config.get(CONF_LONGITUDE, hass.config.longitude)
+        ec_data = ECData(coordinates=(lat, lon))
+
+    add_devices([ECWeather(ec_data, config, config[CONF_FORECAST] == "hourly")])
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
