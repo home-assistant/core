@@ -135,6 +135,9 @@ class InverterSensor(_FroniusSensorEntity):
         super().__init__(*args, **kwargs)
         # device_info created in __init__ from a `GetInverterInfo` request
         self._attr_device_info = self.coordinator.inverter_info.device_info
+        self._attr_name = (
+            f"Fronius Inverter {self.solar_net_id} - {self.entity_description.name}"
+        )
         self._attr_unique_id = (
             f"{self.coordinator.inverter_info.unique_id}-{self.entity_description.key}"
         )
@@ -153,6 +156,7 @@ class LoggerSensor(_FroniusSensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.solar_net.solar_net_device_id)}
         )
+        self._attr_name = f"Fronius Logger - {self.entity_description.name}"
         self._attr_native_unit_of_measurement = logger_data[
             self.entity_description.key
         ].get("unit")
@@ -183,6 +187,9 @@ class MeterSensor(_FroniusSensorEntity):
             model=meter_data["model"]["value"],
             via_device=(DOMAIN, self.coordinator.solar_net.solar_net_device_id),
         )
+        self._attr_name = (
+            f"Fronius Meter {self.solar_net_id} - {self.entity_description.name}"
+        )
         self._attr_unique_id = (
             f'{meter_data["serial"]["value"]}-{self.entity_description.key}'
         )
@@ -200,6 +207,7 @@ class PowerFlowSensor(_FroniusSensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.solar_net.solar_net_device_id)}
         )
+        self._attr_name = f"Fronius power flow - {self.entity_description.name}"
         self._attr_unique_id = (
             f"{self.coordinator.solar_net.solar_net_device_id}"
             f"-power_flow-{self.entity_description.key}"
@@ -222,6 +230,9 @@ class StorageSensor(_FroniusSensorEntity):
             manufacturer=storage_data["manufacturer"]["value"],
             model=storage_data["model"]["value"],
             via_device=(DOMAIN, self.coordinator.solar_net.solar_net_device_id),
+        )
+        self._attr_name = (
+            f"Fronius Storage {self.solar_net_id} - {self.entity_description.name}"
         )
         self._attr_unique_id = (
             f'{storage_data["serial"]["value"]}-{self.entity_description.key}'
