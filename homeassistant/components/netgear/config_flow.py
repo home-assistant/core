@@ -1,6 +1,5 @@
 """Config flow to configure the Netgear integration."""
 import logging
-
 from urllib.parse import urlparse
 
 from pynetgear import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_USER
