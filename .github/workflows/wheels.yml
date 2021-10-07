@@ -89,7 +89,7 @@ jobs:
           wheels-key: ${{ secrets.WHEELS_KEY }}
           wheels-user: wheels
           env-file: true
-          apk: "build-base;cmake;git;linux-headers;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev"
+          apk: "build-base;cmake;git;linux-headers;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;cargo"
           pip: "Cython;numpy"
           skip-binary: aiohttp
           constraints: "homeassistant/package_constraints.txt"
@@ -158,7 +158,7 @@ jobs:
           wheels-key: ${{ secrets.WHEELS_KEY }}
           wheels-user: wheels
           env-file: true
-          apk: "build-base;cmake;git;linux-headers;libexecinfo-dev;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;autoconf;automake;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev"
+          apk: "build-base;cmake;git;linux-headers;libexecinfo-dev;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;autoconf;automake;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;cargo"
           pip: "Cython;numpy;scikit-build"
           skip-binary: aiohttp
           constraints: "homeassistant/package_constraints.txt"

@@ -10,7 +10,7 @@
             "invalid_auth": "Autentikasi tidak valid",
             "invalid_zone": "Zona tidak valid"
         },
-        "flow_title": "Cloudflare: {name}",
+        "flow_title": "{name}",
         "step": {
             "reauth_confirm": {
                 "data": {

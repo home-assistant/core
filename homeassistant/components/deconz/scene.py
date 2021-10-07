@@ -51,4 +51,4 @@ class DeconzScene(Scene):
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
-        await self._scene.async_set_state({})
+        await self._scene.recall()

@@ -38,6 +38,14 @@ async def setup_integration(hass):
     await hass.async_block_till_done()
 
 
+def get_statistics_for_entity(statistics_results, entity_id):
+    """Get statistics for a certain entity, or None if there is none."""
+    for statistics_result in statistics_results:
+        if statistics_result["meta"]["statistic_id"] == entity_id:
+            return statistics_result
+    return None
+
+
 async def test_cost_sensor_no_states(hass, hass_storage) -> None:
     """Test sensors are created."""
     energy_data = data.EnergyManager.default_preferences()
@@ -222,9 +230,9 @@ async def test_cost_sensor_price_entity_total_increasing(
 
     # Check generated statistics
     await async_wait_recording_done_without_instance(hass)
-    statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
-    assert cost_sensor_entity_id in statistics
-    assert statistics[cost_sensor_entity_id]["stat"]["sum"] == 19.0
+    all_statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
+    statistics = get_statistics_for_entity(all_statistics, cost_sensor_entity_id)
+    assert statistics["stat"][0]["sum"] == 19.0
 
     # Energy sensor has a small dip, no reset should be detected
     hass.states.async_set(
@@ -262,9 +270,9 @@ async def test_cost_sensor_price_entity_total_increasing(
 
     # Check generated statistics
     await async_wait_recording_done_without_instance(hass)
-    statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
-    assert cost_sensor_entity_id in statistics
-    assert statistics[cost_sensor_entity_id]["stat"]["sum"] == 38.0
+    all_statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
+    statistics = get_statistics_for_entity(all_statistics, cost_sensor_entity_id)
+    assert statistics["stat"][0]["sum"] == 38.0
 
 
 @pytest.mark.parametrize("initial_energy,initial_cost", [(0, "0.0"), (None, "unknown")])
@@ -427,9 +435,9 @@ async def test_cost_sensor_price_entity_total(
 
     # Check generated statistics
     await async_wait_recording_done_without_instance(hass)
-    statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
-    assert cost_sensor_entity_id in statistics
-    assert statistics[cost_sensor_entity_id]["stat"]["sum"] == 19.0
+    all_statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
+    statistics = get_statistics_for_entity(all_statistics, cost_sensor_entity_id)
+    assert statistics["stat"][0]["sum"] == 19.0
 
     # Energy sensor has a small dip
     hass.states.async_set(
@@ -468,9 +476,9 @@ async def test_cost_sensor_price_entity_total(
 
     # Check generated statistics
     await async_wait_recording_done_without_instance(hass)
-    statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
-    assert cost_sensor_entity_id in statistics
-    assert statistics[cost_sensor_entity_id]["stat"]["sum"] == 38.0
+    all_statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
+    statistics = get_statistics_for_entity(all_statistics, cost_sensor_entity_id)
+    assert statistics["stat"][0]["sum"] == 38.0
 
 
 @pytest.mark.parametrize("initial_energy,initial_cost", [(0, "0.0"), (None, "unknown")])
@@ -632,9 +640,9 @@ async def test_cost_sensor_price_entity_total_no_reset(
 
     # Check generated statistics
     await async_wait_recording_done_without_instance(hass)
-    statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
-    assert cost_sensor_entity_id in statistics
-    assert statistics[cost_sensor_entity_id]["stat"]["sum"] == 19.0
+    all_statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
+    statistics = get_statistics_for_entity(all_statistics, cost_sensor_entity_id)
+    assert statistics["stat"][0]["sum"] == 19.0
 
     # Energy sensor has a small dip
     hass.states.async_set(
@@ -649,9 +657,9 @@ async def test_cost_sensor_price_entity_total_no_reset(
 
     # Check generated statistics
     await async_wait_recording_done_without_instance(hass)
-    statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
-    assert cost_sensor_entity_id in statistics
-    assert statistics[cost_sensor_entity_id]["stat"]["sum"] == 18.0
+    all_statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
+    statistics = get_statistics_for_entity(all_statistics, cost_sensor_entity_id)
+    assert statistics["stat"][0]["sum"] == 18.0
 
 
 async def test_cost_sensor_handle_wh(hass, hass_storage) -> None:
