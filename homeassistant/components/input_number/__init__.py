@@ -48,7 +48,7 @@ ATTR_MAX = "max"
 ATTR_STEP = "step"
 
 
-def _cv_input_number(config: dict) -> dict:
+def _cv_input_number(config: InputNumberConfig) -> InputNumberConfig:
     """Configure validation helper for input number (voluptuous)."""
     minimum = config[CONF_MIN]
     maximum = config[CONF_MAX]
@@ -205,7 +205,7 @@ class NumberStorageCollection(collection.StorageCollection):
     async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.UPDATE_SCHEMA(update_data)
-        return _cv_input_number({**data, **update_data})
+        return _cv_input_number({**data, **update_data})  # type: ignore[return-value, misc]
 
 
 class InputNumber(RestoreEntity):
