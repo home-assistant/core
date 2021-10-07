@@ -17,6 +17,9 @@
             "confirm": {
                 "description": "Do you want to start set up?"
             },
+            "import_turn_on": {
+                "description": "Please turn on the device and click confirm to continue migration"
+            },
             "user": {
                 "data": {
                     "url": "URL"
