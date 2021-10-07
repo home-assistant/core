@@ -423,6 +423,7 @@ homeassistant/components/rainforest_eagle/* @gtdiehl @jcalbert
 homeassistant/components/rainmachine/* @bachya
 homeassistant/components/random/* @fabaff
 homeassistant/components/recollect_waste/* @bachya
+homeassistant/components/recorder/* @home-assistant/core
 homeassistant/components/rejseplanen/* @DarkFox
 homeassistant/components/renault/* @epenet
 homeassistant/components/repetier/* @MTrab
