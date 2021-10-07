@@ -2,20 +2,15 @@
 from __future__ import annotations
 
 import math
-from typing import cast
 
 from aioesphomeapi import NumberInfo, NumberState
-import voluptuous as vol
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
-
-ICON_SCHEMA = vol.Schema(cv.icon)
 
 
 async def async_setup_entry(
@@ -41,13 +36,6 @@ async def async_setup_entry(
 
 class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
     """A number implementation for esphome."""
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon."""
-        if not self._static_info.icon:
-            return None
-        return cast(str, ICON_SCHEMA(self._static_info.icon))
 
     @property
     def min_value(self) -> float:
