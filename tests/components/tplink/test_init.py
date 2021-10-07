@@ -1,27 +1,41 @@
 """Tests for the TP-Link component."""
 from __future__ import annotations
 
-from unittest.mock import patch
+from datetime import timedelta
+from unittest.mock import MagicMock, patch
 
 from homeassistant.components import tplink
 from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import IP_ADDRESS, MAC_ADDRESS, _patch_discovery, _patch_single_discovery
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_configuring_tplink_causes_discovery(hass):
     """Test that specifying empty config does discovery."""
     with patch("homeassistant.components.tplink.Discover.discover") as discover:
-        discover.return_value = {"host": 1234}
+        discover.return_value = {MagicMock(): MagicMock()}
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
+        call_count = len(discover.mock_calls)
+        assert discover.mock_calls
 
-    assert discover.mock_calls
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        assert len(discover.mock_calls) == call_count * 2
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=15))
+        await hass.async_block_till_done()
+        assert len(discover.mock_calls) == call_count * 3
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=30))
+        await hass.async_block_till_done()
+        assert len(discover.mock_calls) == call_count * 4
 
 
 async def test_config_entry_reload(hass):
