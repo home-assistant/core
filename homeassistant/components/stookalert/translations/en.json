@@ -7,8 +7,7 @@
             "user": {
                 "data": {
                     "province": "Province"
-                },
-                "description": "Set up Stookalert to integrate with Home Assistant."
+                }
             }
         }
     }

@@ -2,7 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "description": "Set up Stookalert to integrate with Home Assistant.",
         "data": {
           "province": "Province"
         }
