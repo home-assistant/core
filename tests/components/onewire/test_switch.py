@@ -7,7 +7,6 @@ import pytest
 from homeassistant.components.onewire.switch import DEVICE_SWITCHES
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TOGGLE, STATE_OFF, STATE_ON
-from homeassistant.setup import async_setup_component
 
 from . import setup_onewire_patched_owserver_integration, setup_owproxy_mock_devices
 from .const import MOCK_OWPROXY_DEVICES
@@ -28,7 +27,7 @@ async def test_owserver_switch(owproxy, hass, device_id):
 
     This test forces all entities to be enabled.
     """
-    await async_setup_component(hass, "persistent_notification", {})
+
     entity_registry = mock_registry(hass)
 
     setup_owproxy_mock_devices(owproxy, SWITCH_DOMAIN, [device_id])
