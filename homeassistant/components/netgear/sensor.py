@@ -41,10 +41,6 @@ SENSOR_TYPES = {
         key="conn_ap_mac",
         name="access point mac",
     ),
-    "allow_or_block": SensorEntityDescription(
-        key="allow_or_block",
-        name="access",
-    ),
 }
 
 
