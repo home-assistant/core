@@ -377,7 +377,6 @@ async def test_template_icon_with_trigger(hass):
             "template": {
                 "trigger": {"platform": "state", "entity_id": _OPTION_INPUT_SELECT},
                 "select": {
-                    # "name": "Hello Name",
                     "unique_id": "b",
                     "state": "{{ trigger.to_state.state }}",
                     "options": f"{{{{ state_attr('{_OPTION_INPUT_SELECT}', '{INPUT_SELECT_ATTR_OPTIONS}') }}}}",
