@@ -57,28 +57,28 @@ def async_hydrate_station_data(data: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Ambient PWS as config entry."""
     hass.data.setdefault(DOMAIN, {DATA_CLIENT: {}})
 
-    if not config_entry.unique_id:
+    if not entry.unique_id:
         hass.config_entries.async_update_entry(
-            config_entry, unique_id=config_entry.data[CONF_APP_KEY]
+            entry, unique_id=entry.data[CONF_APP_KEY]
         )
     session = aiohttp_client.async_get_clientsession(hass)
 
     try:
         ambient = AmbientStation(
             hass,
-            config_entry,
+            entry,
             Client(
-                config_entry.data[CONF_API_KEY],
-                config_entry.data[CONF_APP_KEY],
+                entry.data[CONF_API_KEY],
+                entry.data[CONF_APP_KEY],
                 session=session,
             ),
         )
         hass.loop.create_task(ambient.ws_connect())
-        hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = ambient
+        hass.data[DOMAIN][DATA_CLIENT][entry.entry_id] = ambient
     except WebsocketError as err:
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
@@ -86,7 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     async def _async_disconnect_websocket(_: Event) -> None:
         await ambient.client.websocket.disconnect()
 
-    config_entry.async_on_unload(
+    entry.async_on_unload(
         hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, _async_disconnect_websocket
         )
@@ -95,30 +95,30 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an Ambient PWS config entry."""
-    ambient = hass.data[DOMAIN][DATA_CLIENT].pop(config_entry.entry_id)
+    ambient = hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
     hass.async_create_task(ambient.ws_disconnect())
 
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-    version = config_entry.version
+    version = entry.version
 
     LOGGER.debug("Migrating from version %s", version)
 
     # 1 -> 2: Unique ID format changed, so delete and re-import:
     if version == 1:
         dev_reg = await hass.helpers.device_registry.async_get_registry()
-        dev_reg.async_clear_config_entry(config_entry)
+        dev_reg.async_clear_config_entry(entry)
 
         en_reg = await hass.helpers.entity_registry.async_get_registry()
-        en_reg.async_clear_config_entry(config_entry)
+        en_reg.async_clear_config_entry(entry)
 
-        version = config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry)
+        version = entry.version = 2
+        hass.config_entries.async_update_entry(entry)
     LOGGER.info("Migration to version %s successful", version)
 
     return True
@@ -127,11 +127,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 class AmbientStation:
     """Define a class to handle the Ambient websocket."""
 
-    def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, client: Client
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, client: Client) -> None:
         """Initialize."""
-        self._config_entry = config_entry
+        self._entry = entry
         self._entry_setup_complete = False
         self._hass = hass
         self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
@@ -193,9 +191,7 @@ class AmbientStation:
             # attempt forward setup of the config entry (because it will have
             # already been done):
             if not self._entry_setup_complete:
-                self._hass.config_entries.async_setup_platforms(
-                    self._config_entry, PLATFORMS
-                )
+                self._hass.config_entries.async_setup_platforms(self._entry, PLATFORMS)
                 self._entry_setup_complete = True
             self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
 
