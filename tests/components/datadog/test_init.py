@@ -163,3 +163,4 @@ async def test_state_changed(hass):
                 mock.MagicMock(data={"new_state": ha.State("domain.test", invalid, {})})
             )
             assert not mock_statsd.gauge.called
+            assert mock_statsd.event.called

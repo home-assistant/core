@@ -87,15 +87,24 @@ def setup(hass, config):
 
                 _LOGGER.debug("Sent metric %s: %s (tags: %s)", attribute, value, tags)
 
+        # If the state can be expressed as number, send the value as a gauge,
+        # otherwise, create a datadog event.
         try:
             value = state_helper.state_as_number(state)
+            statsd.gauge(metric, value, sample_rate=sample_rate, tags=tags)
+            _LOGGER.debug("Sent metric %s: %s (tags: %s)", metric, value, tags)
         except ValueError:
-            _LOGGER.debug("Error sending %s: %s (tags: %s)", metric, state.state, tags)
-            return
-
-        statsd.gauge(metric, value, sample_rate=sample_rate, tags=tags)
-
-        _LOGGER.debug("Sent metric %s: %s (tags: %s)", metric, value, tags)
+            statsd.event(
+                title="Home Assistant",
+                text=f"%%% \n **{metric}**: {state.state} \n %%%",
+                tags=[
+                    f"entity:{event.data.get('entity_id')}",
+                    f"domain:{state.domain}",
+                    f"metric:{metric}",
+                    f"state:{state.state}",
+                ],
+            )
+            _LOGGER.debug("Sent event %s: %s (tags: %s)", metric, state.state, tags)
 
     hass.bus.listen(EVENT_LOGBOOK_ENTRY, logbook_entry_listener)
     hass.bus.listen(EVENT_STATE_CHANGED, state_changed_listener)
