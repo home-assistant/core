@@ -375,7 +375,6 @@ async def test_template_icon_with_trigger(hass):
         "template",
         {
             "template": {
-                # "unique_id": "listening-test-event",
                 "trigger": {"platform": "state", "entity_id": _OPTION_INPUT_SELECT},
                 "select": {
                     # "name": "Hello Name",
