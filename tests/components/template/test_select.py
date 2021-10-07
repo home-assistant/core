@@ -15,7 +15,7 @@ from homeassistant.components.select.const import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION as SELECT_SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import CONF_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import ATTR_ICON, CONF_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import Context
 from homeassistant.helpers.entity_registry import async_get
 
@@ -144,7 +144,7 @@ async def test_missing_required_keys(hass, calls):
 
 
 async def test_templates_with_entities(hass, calls):
-    """Test tempalates with values from other entities."""
+    """Test templates with values from other entities."""
     with assert_setup_component(1, "input_select"):
         assert await setup.async_setup_component(
             hass,
@@ -288,3 +288,137 @@ def _verify(hass, expected_current_option, expected_options, entity_name=_TEST_S
     attributes = state.attributes
     assert state.state == str(expected_current_option)
     assert attributes.get(SELECT_ATTR_OPTIONS) == expected_options
+
+
+async def test_template_icon_with_entities(hass, calls):
+    """Test templates with values from other entities."""
+    with assert_setup_component(1, "input_select"):
+        assert await setup.async_setup_component(
+            hass,
+            "input_select",
+            {
+                "input_select": {
+                    "option": {
+                        "options": ["a", "b"],
+                        "initial": "a",
+                        "name": "Option",
+                    },
+                }
+            },
+        )
+
+    with assert_setup_component(1, "template"):
+        assert await setup.async_setup_component(
+            hass,
+            "template",
+            {
+                "template": {
+                    "unique_id": "b",
+                    "select": {
+                        "state": f"{{{{ states('{_OPTION_INPUT_SELECT}') }}}}",
+                        "options": f"{{{{ state_attr('{_OPTION_INPUT_SELECT}', '{INPUT_SELECT_ATTR_OPTIONS}') }}}}",
+                        "select_option": {
+                            "service": "input_select.select_option",
+                            "data": {
+                                "entity_id": _OPTION_INPUT_SELECT,
+                                "option": "{{ option }}",
+                            },
+                        },
+                        "optimistic": True,
+                        "unique_id": "a",
+                        "icon": f"{{% if (states('{_OPTION_INPUT_SELECT}') == 'a') %}}mdi:greater{{% else %}}mdi:less{{% endif %}}",
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_TEST_SELECT)
+    assert state.state == "a"
+    assert state.attributes[ATTR_ICON] == "mdi:greater"
+
+    await hass.services.async_call(
+        INPUT_SELECT_DOMAIN,
+        INPUT_SELECT_SERVICE_SELECT_OPTION,
+        {CONF_ENTITY_ID: _OPTION_INPUT_SELECT, INPUT_SELECT_ATTR_OPTION: "b"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_TEST_SELECT)
+    assert state.state == "b"
+    assert state.attributes[ATTR_ICON] == "mdi:less"
+
+
+async def test_template_icon_with_trigger(hass):
+    """Test trigger based template select."""
+    with assert_setup_component(1, "input_select"):
+        assert await setup.async_setup_component(
+            hass,
+            "input_select",
+            {
+                "input_select": {
+                    "option": {
+                        "options": ["a", "b"],
+                        "initial": "a",
+                        "name": "Option",
+                    },
+                }
+            },
+        )
+
+    assert await setup.async_setup_component(
+        hass,
+        "template",
+        {
+            "template": {
+                "trigger": {"platform": "state", "entity_id": _OPTION_INPUT_SELECT},
+                "select": {
+                    "unique_id": "b",
+                    "state": "{{ trigger.to_state.state }}",
+                    "options": f"{{{{ state_attr('{_OPTION_INPUT_SELECT}', '{INPUT_SELECT_ATTR_OPTIONS}') }}}}",
+                    "select_option": {
+                        "service": "input_select.select_option",
+                        "data": {
+                            "entity_id": _OPTION_INPUT_SELECT,
+                            "option": "{{ option }}",
+                        },
+                    },
+                    "optimistic": True,
+                    "icon": "{% if (trigger.to_state.state or '') == 'a' %}mdi:greater{% else %}mdi:less{% endif %}",
+                },
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        INPUT_SELECT_DOMAIN,
+        INPUT_SELECT_SERVICE_SELECT_OPTION,
+        {CONF_ENTITY_ID: _OPTION_INPUT_SELECT, INPUT_SELECT_ATTR_OPTION: "b"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_TEST_SELECT)
+    assert state is not None
+    assert state.state == "b"
+    assert state.attributes[ATTR_ICON] == "mdi:less"
+
+    await hass.services.async_call(
+        INPUT_SELECT_DOMAIN,
+        INPUT_SELECT_SERVICE_SELECT_OPTION,
+        {CONF_ENTITY_ID: _OPTION_INPUT_SELECT, INPUT_SELECT_ATTR_OPTION: "a"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_TEST_SELECT)
+    assert state.state == "a"
+    assert state.attributes[ATTR_ICON] == "mdi:greater"
