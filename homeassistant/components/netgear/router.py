@@ -272,12 +272,16 @@ class NetgearDeviceEntity(Entity):
     @property
     def device_info(self):
         """Return the device information."""
-        return {
+        device_info = {
             "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
             "name": self._device_name,
-            "model": self._device["device_model"],
             "via_device": (DOMAIN, self._router.unique_id),
         }
+
+        if self._device["device_model"] is not None:
+            device_info["model"] = self._device["device_model"]
+
+        return device_info
 
     @property
     def should_poll(self) -> bool:
