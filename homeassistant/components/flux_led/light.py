@@ -349,22 +349,21 @@ class FluxLight(CoordinatorEntity, LightEntity):
         """Return the kelvin value of this light in Kelvin."""
         return cast(int, self._bulb.getWhiteTemperature()[0])
 
-    # hs color used to avoid dealing with brightness conversions
     @property
     def hs_color(self) -> tuple[float, float]:
-        """Return the hs color value [float, float]."""
+        """Return the hs color value."""
         raw = self._bulb.raw_state
         return color_RGB_to_hs(raw.red, raw.green, raw.blue)
 
     @property
     def rgbw_color(self) -> tuple[int, int, int, int]:
-        """Return the rgbw color value [int, int, int, int]."""
+        """Return the rgbw color value."""
         raw = self._bulb.raw_state
         return (raw.red, raw.green, raw.blue, raw.warm_white)
 
     @property
     def rgbww_color(self) -> tuple[int, int, int, int, int]:
-        """Return the rgbww color value [int, int, int, int, int]."""
+        """Return the rgbww color value."""
         raw = self._bulb.raw_state
         return (raw.red, raw.green, raw.blue, raw.warm_white, raw.cool_white)
 
@@ -393,12 +392,6 @@ class FluxLight(CoordinatorEntity, LightEntity):
 
     def _turn_on(self, **kwargs: Any) -> None:
         """Turn the specified or all lights on."""
-        _LOGGER.warning(
-            "Calling turn_on for %s with current color mode: %s with kwargs: %s",
-            self._bulb.ipaddr,
-            self.color_mode,
-            kwargs,
-        )
         if not self.is_on:
             self._bulb.turnOn()
             if not kwargs:
