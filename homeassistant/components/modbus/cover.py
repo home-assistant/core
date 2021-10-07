@@ -412,7 +412,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
             self._slave, start_address, end_address - start_address, self._input_type
         )
         self._call_active = False
-        self.update(result, self._slave, self._input_type, 0)
+        await self.update(result, self._slave, self._input_type, 0)
 
     async def update(self, result, slaveId, input_type, address):
         """Update the state of the cover."""

@@ -369,7 +369,7 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
             self._slave, self._verify_address, 1, self._verify_type
         )
         self._call_active = False
-        self.update(result, self._slave, self._verify_type, 0)
+        await self.update(result, self._slave, self._verify_type, 0)
 
     async def update(self, result, slaveId, input_type, address):
         """Update the entity state."""
