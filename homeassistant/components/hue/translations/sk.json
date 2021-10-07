@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "V\u0161etky Philips Hue bridge u\u017e boli nakonfigurovan\u00e9",
+            "no_bridges": "Neboli objaven\u00fd \u017eiaden Philips Hue bridge"
+        },
+        "step": {
+            "link": {
+                "description": "Stla\u010dte tla\u010didlo na Philips Hue bridge pre registr\u00e1ciu Philips Hue s Home Assistant.\n\n![Location of button on bridge](/static/images/config_philips_hue.jpg)"
+            }
+        }
+    }
+}
