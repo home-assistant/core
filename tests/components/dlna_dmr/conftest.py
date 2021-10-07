@@ -52,20 +52,12 @@ def domain_data_mock(hass: HomeAssistant) -> Iterable[Mock]:
     seal(upnp_device)
     domain_data.upnp_factory.async_create_device.return_value = upnp_device
 
-    domain_data.unmigrated_config = {}
-
     with patch.dict(hass.data, {DLNA_DOMAIN: domain_data}):
         yield domain_data
 
-    # Make sure the event notifiers are released
-    assert (
-        domain_data.async_get_event_notifier.await_count
-        == domain_data.async_release_event_notifier.await_count
-    )
-
 
 @pytest.fixture
-def config_entry_mock() -> Iterable[MockConfigEntry]:
+def config_entry_mock() -> MockConfigEntry:
     """Mock a config entry for this platform."""
     mock_entry = MockConfigEntry(
         unique_id=MOCK_DEVICE_UDN,
@@ -78,7 +70,7 @@ def config_entry_mock() -> Iterable[MockConfigEntry]:
         title=MOCK_DEVICE_NAME,
         options={},
     )
-    yield mock_entry
+    return mock_entry
 
 
 @pytest.fixture
@@ -100,14 +92,6 @@ def dmr_device_mock(domain_data_mock: Mock) -> Iterable[Mock]:
 
         yield device
 
-        # Make sure the device is disconnected
-        assert (
-            device.async_subscribe_services.await_count
-            == device.async_unsubscribe_services.await_count
-        )
-
-        assert device.on_event is None
-
 
 @pytest.fixture(name="skip_notifications", autouse=True)
 def skip_notifications_fixture() -> Iterable[None]:
@@ -125,9 +109,6 @@ def ssdp_scanner_mock() -> Iterable[Mock]:
         reg_callback = mock_scanner.return_value.async_register_callback
         reg_callback.return_value = Mock(return_value=None)
         yield mock_scanner.return_value
-        assert (
-            reg_callback.call_count == reg_callback.return_value.call_count
-        ), "Not all callbacks unregistered"
 
 
 @pytest.fixture(autouse=True)
