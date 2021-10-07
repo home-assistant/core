@@ -1,4 +1,6 @@
 """Support for tracking which astronomical or meteorological season it is."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import logging
 
