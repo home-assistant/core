@@ -78,7 +78,7 @@ async def test_setup_legacy(hass, start_ha):
 )
 async def test_setup_invalid_sensors(hass, count, start_ha):
     """Test setup with no sensors."""
-    assert len(hass.states.async_entity_ids()) == count
+    assert len(hass.states.async_entity_ids("binary_sensor")) == count
 
 
 @pytest.mark.parametrize("count,domain", [(1, binary_sensor.DOMAIN)])
