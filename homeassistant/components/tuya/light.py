@@ -70,6 +70,7 @@ TUYA_SUPPORT_TYPE = {
     "xxj",  # Diffuser's light
     "fs",  # Fan
     "tgq",  # Dimmer
+    "tgkg",  # Dimmer
 }
 
 TUYA_DIMMERS = {"tgq", "tgkg"}
@@ -390,14 +391,14 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
 
     @classmethod
     def is_dimmer(cls, category: str) -> bool:
-        """Returns true if the light switch is a dimmer."""
+        """Return true if the light switch is a dimmer."""
         if category in TUYA_DIMMERS:
             return True
         return False
 
     @property
     def supported_color_modes(self) -> set[str] | None:
-        """Flag supported color modes."""
+        """Return the supported color modes."""
         color_modes = [COLOR_MODE_ONOFF]
         if self.dp_code_bright in self.tuya_device.status:
             color_modes.append(COLOR_MODE_BRIGHTNESS)
