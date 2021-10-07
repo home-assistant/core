@@ -1,6 +1,8 @@
 """Tests for light platform."""
 
 from typing import Optional
+from unittest.mock import PropertyMock
+
 
 import pytest
 
@@ -125,6 +127,61 @@ async def test_color_light(hass: HomeAssistant, transition: Optional[float]) -> 
         blocking=True,
     )
     bulb.set_hsv.assert_called_with(10, 30, None, transition=KASA_TRANSITION_VALUE)
+    bulb.set_hsv.reset_mock()
+
+
+async def test_color_light_no_temp(hass: HomeAssistant) -> None:
+    """Test a light."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    bulb.is_variable_color_temp = False
+    type(bulb).color_temp = PropertyMock(side_effect=Exception)
+    with _patch_discovery(device=bulb), _patch_single_discovery(device=bulb):
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_bulb"
+
+    state = hass.states.get(entity_id)
+    assert state.state == "on"
+    attributes = state.attributes
+    assert attributes[ATTR_BRIGHTNESS] == 128
+    assert attributes[ATTR_COLOR_MODE] == "hs"
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["brightness", "hs"]
+    assert attributes[ATTR_HS_COLOR] == (10, 30)
+    assert attributes[ATTR_RGB_COLOR] == (255, 191, 178)
+    assert attributes[ATTR_XY_COLOR] == (0.42, 0.336)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    bulb.turn_off.assert_called_once()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    bulb.turn_on.assert_called_once()
+    bulb.turn_on.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
+        blocking=True,
+    )
+    bulb.set_brightness.assert_called_with(39, transition=None)
+    bulb.set_brightness.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_HS_COLOR: (10, 30)},
+        blocking=True,
+    )
+    bulb.set_hsv.assert_called_with(10, 30, None, transition=None)
     bulb.set_hsv.reset_mock()
 
 
