@@ -64,7 +64,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.color import (
     color_hs_to_RGB,
     color_RGB_to_hs,
-    color_RGB_to_hsv,
     color_temperature_kelvin_to_mired,
     color_temperature_mired_to_kelvin,
 )
@@ -342,12 +341,6 @@ class FluxLight(CoordinatorEntity, LightEntity):
         return cast(int, self._bulb.brightness)
 
     @property
-    def _color_brightness(self) -> int:
-        """Get the color brightness."""
-        raw = self._bulb.raw_state
-        return round(color_RGB_to_hsv(raw.red, raw.green, raw.blue)[2] * 2.55)
-
-    @property
     def color_temp(self) -> int:
         """Return the kelvin value of this light in mired."""
         return color_temperature_kelvin_to_mired(self._color_temp_kelvin)
@@ -379,7 +372,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def color_mode(self) -> str:
         """Return the color mode of the light."""
-        return FLUX_COLOR_MODE_TO_HASS.get(self._bulb.color_mode, COLOR_MODE_BRIGHTNESS)
+        return FLUX_COLOR_MODE_TO_HASS.get(self._bulb.color_mode, COLOR_MODE_ONOFF)
 
     @property
     def effect(self) -> str | None:
