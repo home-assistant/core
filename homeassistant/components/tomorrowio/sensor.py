@@ -17,13 +17,17 @@ from homeassistant.components.sensor import SensorEntity, SensorEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_NAME,
+    DEVICE_CLASS_AQI,
     DEVICE_CLASS_CO,
+    DEVICE_CLASS_NITROGEN_DIOXIDE,
+    DEVICE_CLASS_OZONE,
+    DEVICE_CLASS_PM10,
+    DEVICE_CLASS_PM25,
     DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_SULPHUR_DIOXIDE,
     DEVICE_CLASS_TEMPERATURE,
     IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT,
     IRRADIATION_WATTS_PER_SQUARE_METER,
@@ -71,7 +75,7 @@ from .const import (
     TMRW_ATTR_PRECIPITATION_TYPE,
     TMRW_ATTR_PRESSURE_SURFACE_LEVEL,
     TMRW_ATTR_SOLAR_GHI,
-    TMRW_ATTR_SULFUR_DIOXIDE,
+    TMRW_ATTR_SULPHUR_DIOXIDE,
     TMRW_ATTR_WIND_GUST,
 )
 
@@ -121,7 +125,6 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_PRESSURE_SURFACE_LEVEL,
         name="Pressure (Surface Level)",
-        unit_imperial=PRESSURE_INHG,
         unit_metric=PRESSURE_HPA,
         metric_conversion=lambda val: pressure_convert(
             val, PRESSURE_INHG, PRESSURE_HPA
@@ -180,30 +183,34 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_OZONE,
         name="Ozone",
-        unit_imperial=CONCENTRATION_PARTS_PER_BILLION,
-        unit_metric=CONCENTRATION_PARTS_PER_BILLION,
+        unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        metric_conversion=2.03,
+        is_metric_check=True,
+        device_class=DEVICE_CLASS_OZONE,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_PARTICULATE_MATTER_25,
         name="Particulate Matter < 2.5 μm",
-        unit_imperial=CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
         unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         metric_conversion=3.2808399 ** 3,
         is_metric_check=True,
+        device_class=DEVICE_CLASS_PM25,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_PARTICULATE_MATTER_10,
         name="Particulate Matter < 10 μm",
-        unit_imperial=CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
         unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         metric_conversion=3.2808399 ** 3,
         is_metric_check=True,
+        device_class=DEVICE_CLASS_PM10,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_NITROGEN_DIOXIDE,
         name="Nitrogen Dioxide",
-        unit_imperial=CONCENTRATION_PARTS_PER_BILLION,
-        unit_metric=CONCENTRATION_PARTS_PER_BILLION,
+        unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        metric_conversion=1.95,
+        is_metric_check=True,
+        device_class=DEVICE_CLASS_NITROGEN_DIOXIDE,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CARBON_MONOXIDE,
@@ -213,14 +220,17 @@ SENSOR_TYPES = (
         device_class=DEVICE_CLASS_CO,
     ),
     TomorrowioSensorEntityDescription(
-        key=TMRW_ATTR_SULFUR_DIOXIDE,
-        name="Sulfur Dioxide",
-        unit_imperial=CONCENTRATION_PARTS_PER_BILLION,
-        unit_metric=CONCENTRATION_PARTS_PER_BILLION,
+        key=TMRW_ATTR_SULPHUR_DIOXIDE,
+        name="Sulphur Dioxide",
+        unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        metric_conversion=2.71,
+        is_metric_check=True,
+        device_class=DEVICE_CLASS_SULPHUR_DIOXIDE,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_EPA_AQI,
         name="US EPA Air Quality Index",
+        device_class=DEVICE_CLASS_AQI,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_EPA_PRIMARY_POLLUTANT,
@@ -235,6 +245,7 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CHINA_AQI,
         name="China MEP Air Quality Index",
+        device_class=DEVICE_CLASS_AQI,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CHINA_PRIMARY_POLLUTANT,
@@ -304,11 +315,13 @@ class BaseTomorrowioSensorEntity(TomorrowioEntity, SensorEntity):
             f"{self._config_entry.unique_id}_{slugify(description.name)}"
         )
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: self.attribution}
+        # Fallback to metric always in case imperial isn't defined (for metric only
+        # sensors)
         self._attr_native_unit_of_measurement = (
             description.unit_metric
             if hass.config.units.is_metric
             else description.unit_imperial
-        )
+        ) or description.unit_metric
 
     @property
     @abstractmethod
@@ -319,13 +332,17 @@ class BaseTomorrowioSensorEntity(TomorrowioEntity, SensorEntity):
     def native_value(self) -> str | int | float | None:
         """Return the state."""
         state = self._state
-        if (
-            state is not None
-            and self.entity_description.unit_imperial is not None
-            and self.entity_description.metric_conversion != 1.0
-            and self.entity_description.is_metric_check is not None
-            and self.hass.config.units.is_metric
-            == self.entity_description.is_metric_check
+
+        # If an imperial unit isn't provided, we always want to convert to metric since
+        # that is what the UI expects
+        if state is not None and (
+            (
+                self.entity_description.metric_conversion != 1.0
+                and self.entity_description.is_metric_check is not None
+                and self.hass.config.units.is_metric
+                == self.entity_description.is_metric_check
+            )
+            or self.entity_description.unit_imperial is None
         ):
             conversion = self.entity_description.metric_conversion
             # When conversion is a callable, we assume it's a single input function
