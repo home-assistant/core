@@ -93,17 +93,16 @@ def valid_initial(conf):
             return conf
         raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a datetime")
 
-    elif conf[CONF_HAS_DATE]:
+    if conf[CONF_HAS_DATE]:
         parsed_value = dt_util.parse_date(initial)
         if parsed_value is not None:
             return conf
         raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a date")
 
-    else:
-        parsed_value = dt_util.parse_time(initial)
-        if parsed_value is not None:
-            return conf
-        raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a time")
+    parsed_value = dt_util.parse_time(initial)
+    if parsed_value is not None:
+        return conf
+    raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a time")
 
 
 CONFIG_SCHEMA = vol.Schema(
