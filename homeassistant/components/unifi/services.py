@@ -15,42 +15,40 @@ SERVICE_RECONNECT_CLIENT_SCHEMA = vol.All(
     vol.Schema({vol.Required(ATTR_DEVICE_ID): str})
 )
 
+SUPPORTED_SERVICES = (SERVICE_RECONNECT_CLIENT, SERVICE_REMOVE_CLIENTS)
+
+SERVICE_TO_SCHEMA = {
+    SERVICE_RECONNECT_CLIENT: SERVICE_RECONNECT_CLIENT_SCHEMA,
+}
+
 
 @callback
 def async_setup_services(hass) -> None:
     """Set up services for UniFi integration."""
 
+    services = {
+        SERVICE_RECONNECT_CLIENT: async_reconnect_client,
+        SERVICE_REMOVE_CLIENTS: async_remove_clients,
+    }
+
     async def async_call_unifi_service(service_call) -> None:
         """Call correct UniFi service."""
-        service = service_call.service
-        service_data = service_call.data
+        await services[service_call.service](hass, service_call.data)
 
-        controllers = hass.data[UNIFI_DOMAIN].values()
-
-        if service == SERVICE_RECONNECT_CLIENT:
-            await async_reconnect_client(hass, service_data)
-
-        elif service == SERVICE_REMOVE_CLIENTS:
-            await async_remove_clients(controllers, service_data)
-
-    hass.services.async_register(
-        UNIFI_DOMAIN,
-        SERVICE_RECONNECT_CLIENT,
-        async_call_unifi_service,
-        schema=SERVICE_RECONNECT_CLIENT_SCHEMA,
-    )
-
-    hass.services.async_register(
-        UNIFI_DOMAIN,
-        SERVICE_REMOVE_CLIENTS,
-        async_call_unifi_service,
-    )
+    for service in SUPPORTED_SERVICES:
+        hass.services.async_register(
+            UNIFI_DOMAIN,
+            service,
+            async_call_unifi_service,
+            schema=SERVICE_TO_SCHEMA.get(service),
+        )
 
 
 @callback
 def async_unload_services(hass) -> None:
     """Unload UniFi services."""
-    hass.services.async_remove(UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS)
+    for service in SUPPORTED_SERVICES:
+        hass.services.async_remove(UNIFI_DOMAIN, service)
 
 
 async def async_reconnect_client(hass, data) -> None:
@@ -69,7 +67,8 @@ async def async_reconnect_client(hass, data) -> None:
 
     for controller in hass.data[UNIFI_DOMAIN].values():
         if (
-            controller.config_entry_id not in entry.config_entries
+            not controller.available
+            or controller.config_entry_id not in entry.config_entries
             or (client := controller.api.clients.get(mac)) is None
             or client.is_wired
         ):
@@ -78,14 +77,14 @@ async def async_reconnect_client(hass, data) -> None:
         await controller.api.clients.async_reconnect(mac)
 
 
-async def async_remove_clients(controllers, data) -> None:
+async def async_remove_clients(hass, data) -> None:
     """Remove select clients from controller.
 
     Validates based on:
     - Total time between first seen and last seen is less than 15 minutes.
     - Neither IP, hostname nor name is configured.
     """
-    for controller in controllers:
+    for controller in hass.data[UNIFI_DOMAIN].values():
 
         if not controller.available:
             continue

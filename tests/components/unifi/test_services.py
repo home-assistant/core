@@ -3,7 +3,10 @@
 from unittest.mock import patch
 
 from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
-from homeassistant.components.unifi.services import SERVICE_REMOVE_CLIENTS
+from homeassistant.components.unifi.services import (
+    SERVICE_REMOVE_CLIENTS,
+    SUPPORTED_SERVICES,
+)
 
 from .test_controller import setup_unifi_integration
 
@@ -11,10 +14,12 @@ from .test_controller import setup_unifi_integration
 async def test_service_setup_and_unload(hass, aioclient_mock):
     """Verify service setup works."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    assert hass.services.has_service(UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS)
+    for service in SUPPORTED_SERVICES:
+        assert hass.services.has_service(UNIFI_DOMAIN, service)
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
-    assert not hass.services.has_service(UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS)
+    for service in SUPPORTED_SERVICES:
+        assert not hass.services.has_service(UNIFI_DOMAIN, service)
 
 
 @patch("homeassistant.core.ServiceRegistry.async_remove")
@@ -33,7 +38,7 @@ async def test_service_setup_and_unload_not_called_if_multiple_integrations_dete
     assert await hass.config_entries.async_unload(config_entry_2.entry_id)
     remove_service_mock.assert_not_called()
     assert await hass.config_entries.async_unload(config_entry.entry_id)
-    remove_service_mock.assert_called_once()
+    assert remove_service_mock.call_count == 2
 
 
 async def test_remove_clients(hass, aioclient_mock):
