@@ -149,6 +149,8 @@ class XiaomiAirHumidifierSelector(XiaomiSelector):
         led_brightness = self._extract_value_from_attribute(
             self.coordinator.data, self.entity_description.key
         )
+        # Sometimes (quite rarely) the device returns None as the LED brightness so we
+        # check that the value is not None before updating the state.
         if led_brightness:
             self._current_led_brightness = led_brightness
             self.async_write_ha_state()
