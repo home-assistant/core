@@ -2070,7 +2070,7 @@ rjpl==0.3.6
 rocketchat-API==0.6.1
 
 # homeassistant.components.roku
-rokuecp==0.8.3
+rokuecp==0.8.4
 
 # homeassistant.components.roomba
 roombapy==1.6.3
