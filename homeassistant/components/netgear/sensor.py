@@ -50,7 +50,7 @@ SENSOR_TYPES = {
     ),
     "allow_or_block": SensorEntityDescription(
         key="allow_or_block",
-        name="acces",
+        name="access",
         native_unit_of_measurement=None,
         device_class=None,
     ),
