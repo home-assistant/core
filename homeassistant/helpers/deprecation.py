@@ -1,10 +1,11 @@
 """Deprecation helpers for Home Assistant."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import functools
 import inspect
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from ..helpers.frame import MissingIntegrationFrame, get_integration_frame
 

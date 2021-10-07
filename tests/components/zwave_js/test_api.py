@@ -1,9 +1,15 @@
 """Test the Z-Wave JS Websocket API."""
+from copy import deepcopy
 import json
 from unittest.mock import patch
 
 import pytest
-from zwave_js_server.const import CommandClass, InclusionStrategy, LogLevel
+from zwave_js_server.const import (
+    CommandClass,
+    InclusionStrategy,
+    LogLevel,
+    SecurityClass,
+)
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import (
     FailedCommand,
@@ -12,10 +18,12 @@ from zwave_js_server.exceptions import (
     NotFoundError,
     SetValueFailed,
 )
+from zwave_js_server.model.node import Node
 from zwave_js_server.model.value import _get_value_id_from_dict, get_value_id
 
 from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.components.zwave_js.api import (
+    CLIENT_SIDE_AUTH,
     COMMAND_CLASS_ID,
     CONFIG,
     ENABLED,
@@ -24,13 +32,15 @@ from homeassistant.components.zwave_js.api import (
     FILENAME,
     FORCE_CONSOLE,
     ID,
+    INCLUSION_STRATEGY,
     LEVEL,
     LOG_TO_FILE,
     NODE_ID,
     OPTED_IN,
+    PIN,
     PROPERTY,
     PROPERTY_KEY,
-    SECURE,
+    SECURITY_CLASSES,
     TYPE,
     VALUE,
 )
@@ -70,6 +80,51 @@ async def test_network_status(hass, integration, hass_ws_client):
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
+async def test_node_ready(
+    hass,
+    multisensor_6_state,
+    client,
+    integration,
+    hass_ws_client,
+):
+    """Test the node ready websocket command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+    node_data = deepcopy(multisensor_6_state)  # Copy to allow modification in tests.
+    node = Node(client, node_data)
+    node.data["ready"] = False
+    client.driver.controller.nodes[node.node_id] = node
+
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/node_ready",
+            ENTRY_ID: entry.entry_id,
+            "node_id": node.node_id,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    node.data["ready"] = True
+    event = Event(
+        "ready",
+        {
+            "source": "node",
+            "event": "ready",
+            "nodeId": node.node_id,
+            "nodeState": node.data,
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    msg = await ws_client.receive_json()
+
+    assert msg["event"]["event"] == "ready"
+
+
 async def test_node_status(hass, multisensor_6, integration, hass_ws_client):
     """Test the node status websocket command."""
     entry = integration
@@ -92,6 +147,8 @@ async def test_node_status(hass, multisensor_6, integration, hass_ws_client):
     assert result["is_routing"]
     assert not result["is_secure"]
     assert result["status"] == 1
+    assert result["zwave_plus_version"] == 1
+    assert result["highest_security_class"] == SecurityClass.S0_LEGACY
 
     # Test getting non-existent node fails
     await ws_client.send_json(
@@ -354,31 +411,6 @@ async def test_ping_node(
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_add_node_secure(
-    hass, nortek_thermostat_added_event, integration, client, hass_ws_client
-):
-    """Test the add_node websocket command with secure flag."""
-    entry = integration
-    ws_client = await hass_ws_client(hass)
-
-    client.async_send_command.return_value = {"success": True}
-
-    await ws_client.send_json(
-        {ID: 1, TYPE: "zwave_js/add_node", ENTRY_ID: entry.entry_id, SECURE: True}
-    )
-
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-
-    assert len(client.async_send_command.call_args_list) == 1
-    assert client.async_send_command.call_args[0][0] == {
-        "command": "controller.begin_inclusion",
-        "options": {"strategy": InclusionStrategy.SECURITY_S0},
-    }
-
-    client.async_send_command.reset_mock()
-
-
 async def test_add_node(
     hass, nortek_thermostat_added_event, integration, client, hass_ws_client
 ):
@@ -389,7 +421,12 @@ async def test_add_node(
     client.async_send_command.return_value = {"success": True}
 
     await ws_client.send_json(
-        {ID: 3, TYPE: "zwave_js/add_node", ENTRY_ID: entry.entry_id}
+        {
+            ID: 3,
+            TYPE: "zwave_js/add_node",
+            ENTRY_ID: entry.entry_id,
+            INCLUSION_STRATEGY: InclusionStrategy.DEFAULT.value,
+        }
     )
 
     msg = await ws_client.receive_json()
@@ -398,7 +435,7 @@ async def test_add_node(
     assert len(client.async_send_command.call_args_list) == 1
     assert client.async_send_command.call_args[0][0] == {
         "command": "controller.begin_inclusion",
-        "options": {"strategy": InclusionStrategy.INSECURE},
+        "options": {"strategy": InclusionStrategy.DEFAULT},
     }
 
     event = Event(
@@ -414,6 +451,37 @@ async def test_add_node(
     msg = await ws_client.receive_json()
     assert msg["event"]["event"] == "inclusion started"
 
+    event = Event(
+        type="grant security classes",
+        data={
+            "source": "controller",
+            "event": "grant security classes",
+            "requested": {"securityClasses": [0, 1, 2, 7], "clientSideAuth": False},
+        },
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "grant security classes"
+    assert msg["event"]["requested_grant"] == {
+        "securityClasses": [0, 1, 2, 7],
+        "clientSideAuth": False,
+    }
+
+    event = Event(
+        type="validate dsk and enter pin",
+        data={
+            "source": "controller",
+            "event": "validate dsk and enter pin",
+            "dsk": "test",
+        },
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "validate dsk and enter pin"
+    assert msg["event"]["dsk"] == "test"
+
     client.driver.receive_event(nortek_thermostat_added_event)
     msg = await ws_client.receive_json()
     assert msg["event"]["event"] == "node added"
@@ -421,6 +489,7 @@ async def test_add_node(
         "node_id": 67,
         "status": 0,
         "ready": False,
+        "low_security": False,
     }
     assert msg["event"]["node"] == node_details
 
@@ -496,6 +565,94 @@ async def test_add_node(
 
     await ws_client.send_json(
         {ID: 5, TYPE: "zwave_js/add_node", ENTRY_ID: entry.entry_id}
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
+async def test_grant_security_classes(hass, integration, client, hass_ws_client):
+    """Test the grant_security_classes websocket command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    client.async_send_command.return_value = {}
+
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/grant_security_classes",
+            ENTRY_ID: entry.entry_id,
+            SECURITY_CLASSES: [SecurityClass.S2_UNAUTHENTICATED],
+            CLIENT_SIDE_AUTH: False,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.grant_security_classes",
+        "inclusionGrant": {"securityClasses": [0], "clientSideAuth": False},
+    }
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 4,
+            TYPE: "zwave_js/grant_security_classes",
+            ENTRY_ID: entry.entry_id,
+            SECURITY_CLASSES: [SecurityClass.S2_UNAUTHENTICATED],
+            CLIENT_SIDE_AUTH: False,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
+async def test_validate_dsk_and_enter_pin(hass, integration, client, hass_ws_client):
+    """Test the validate_dsk_and_enter_pin websocket command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    client.async_send_command.return_value = {}
+
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/validate_dsk_and_enter_pin",
+            ENTRY_ID: entry.entry_id,
+            PIN: "test",
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.validate_dsk_and_enter_pin",
+        "pin": "test",
+    }
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 4,
+            TYPE: "zwave_js/validate_dsk_and_enter_pin",
+            ENTRY_ID: entry.entry_id,
+            PIN: "test",
+        }
     )
     msg = await ws_client.receive_json()
 
@@ -607,7 +764,6 @@ async def test_remove_node(
         data={
             "source": "controller",
             "event": "exclusion started",
-            "secure": False,
         },
     )
     client.driver.receive_event(event)
@@ -666,52 +822,6 @@ async def test_remove_node(
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_replace_failed_node_secure(
-    hass,
-    nortek_thermostat,
-    integration,
-    client,
-    hass_ws_client,
-):
-    """Test the replace_failed_node websocket command with secure flag."""
-    entry = integration
-    ws_client = await hass_ws_client(hass)
-
-    dev_reg = dr.async_get(hass)
-
-    # Create device registry entry for mock node
-    dev_reg.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, "3245146787-67")},
-        name="Node 67",
-    )
-
-    client.async_send_command.return_value = {"success": True}
-
-    await ws_client.send_json(
-        {
-            ID: 1,
-            TYPE: "zwave_js/replace_failed_node",
-            ENTRY_ID: entry.entry_id,
-            NODE_ID: 67,
-            SECURE: True,
-        }
-    )
-
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-    assert msg["result"]
-
-    assert len(client.async_send_command.call_args_list) == 1
-    assert client.async_send_command.call_args[0][0] == {
-        "command": "controller.replace_failed_node",
-        "nodeId": nortek_thermostat.node_id,
-        "options": {"strategy": InclusionStrategy.SECURITY_S0},
-    }
-
-    client.async_send_command.reset_mock()
-
-
 async def test_replace_failed_node(
     hass,
     nortek_thermostat,
@@ -744,6 +854,7 @@ async def test_replace_failed_node(
             TYPE: "zwave_js/replace_failed_node",
             ENTRY_ID: entry.entry_id,
             NODE_ID: 67,
+            INCLUSION_STRATEGY: InclusionStrategy.DEFAULT.value,
         }
     )
 
@@ -755,7 +866,7 @@ async def test_replace_failed_node(
     assert client.async_send_command.call_args[0][0] == {
         "command": "controller.replace_failed_node",
         "nodeId": nortek_thermostat.node_id,
-        "options": {"strategy": InclusionStrategy.INSECURE},
+        "options": {"strategy": InclusionStrategy.DEFAULT},
     }
 
     client.async_send_command.reset_mock()
@@ -774,11 +885,41 @@ async def test_replace_failed_node(
     assert msg["event"]["event"] == "inclusion started"
 
     event = Event(
+        type="grant security classes",
+        data={
+            "source": "controller",
+            "event": "grant security classes",
+            "requested": {"securityClasses": [0, 1, 2, 7], "clientSideAuth": False},
+        },
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "grant security classes"
+    assert msg["event"]["requested_grant"] == {
+        "securityClasses": [0, 1, 2, 7],
+        "clientSideAuth": False,
+    }
+
+    event = Event(
+        type="validate dsk and enter pin",
+        data={
+            "source": "controller",
+            "event": "validate dsk and enter pin",
+            "dsk": "test",
+        },
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "validate dsk and enter pin"
+    assert msg["event"]["dsk"] == "test"
+
+    event = Event(
         type="inclusion stopped",
         data={
             "source": "controller",
             "event": "inclusion stopped",
-            "secure": False,
         },
     )
     client.driver.receive_event(event)

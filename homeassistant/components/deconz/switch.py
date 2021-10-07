@@ -1,9 +1,12 @@
 """Support for deCONZ switches."""
+
+from pydeconz.light import Siren
+
 from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import DOMAIN as DECONZ_DOMAIN, NEW_LIGHT, POWER_PLUGS, SIRENS
+from .const import DOMAIN as DECONZ_DOMAIN, NEW_LIGHT, POWER_PLUGS
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
@@ -20,10 +23,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     # Siren platform replacing sirens in switch platform added in 2021.10
     for light in gateway.api.lights.values():
-        if light.type not in SIRENS:
-            continue
-        if entity_id := entity_registry.async_get_entity_id(
-            DOMAIN, DECONZ_DOMAIN, light.unique_id
+        if isinstance(light, Siren) and (
+            entity_id := entity_registry.async_get_entity_id(
+                DOMAIN, DECONZ_DOMAIN, light.unique_id
+            )
         ):
             entity_registry.async_remove(entity_id)
 

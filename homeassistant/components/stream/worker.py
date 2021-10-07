@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 from collections import defaultdict, deque
-from collections.abc import Generator, Iterator, Mapping
+from collections.abc import Callable, Generator, Iterator, Mapping
 import datetime
 from io import BytesIO
 import logging
 from threading import Event
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 import av
 

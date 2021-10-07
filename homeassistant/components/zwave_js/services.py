@@ -59,27 +59,6 @@ def broadcast_command(val: dict[str, Any]) -> dict[str, Any]:
     )
 
 
-# Validates that a bitmask is provided in hex form and converts it to decimal
-# int equivalent since that's what the library uses
-BITMASK_SCHEMA = vol.All(
-    cv.string,
-    vol.Lower,
-    vol.Match(
-        r"^(0x)?[0-9a-f]+$",
-        msg="Must provide an integer (e.g. 255) or a bitmask in hex form (e.g. 0xff)",
-    ),
-    lambda value: int(value, 16),
-)
-
-VALUE_SCHEMA = vol.Any(
-    bool,
-    vol.Coerce(int),
-    vol.Coerce(float),
-    BITMASK_SCHEMA,
-    cv.string,
-)
-
-
 class ZWaveServices:
     """Class that holds our services (Zwave Commands) that should be published to hass."""
 
@@ -198,10 +177,10 @@ class ZWaveServices:
                             vol.Coerce(int), cv.string
                         ),
                         vol.Optional(const.ATTR_CONFIG_PARAMETER_BITMASK): vol.Any(
-                            vol.Coerce(int), BITMASK_SCHEMA
+                            vol.Coerce(int), const.BITMASK_SCHEMA
                         ),
                         vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(
-                            vol.Coerce(int), BITMASK_SCHEMA, cv.string
+                            vol.Coerce(int), const.BITMASK_SCHEMA, cv.string
                         ),
                     },
                     cv.has_at_least_one_key(
@@ -232,8 +211,10 @@ class ZWaveServices:
                             vol.Coerce(int),
                             {
                                 vol.Any(
-                                    vol.Coerce(int), BITMASK_SCHEMA, cv.string
-                                ): vol.Any(vol.Coerce(int), BITMASK_SCHEMA, cv.string)
+                                    vol.Coerce(int), const.BITMASK_SCHEMA, cv.string
+                                ): vol.Any(
+                                    vol.Coerce(int), const.BITMASK_SCHEMA, cv.string
+                                )
                             },
                         ),
                     },
@@ -284,9 +265,11 @@ class ZWaveServices:
                             vol.Coerce(int), str
                         ),
                         vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
-                        vol.Required(const.ATTR_VALUE): VALUE_SCHEMA,
+                        vol.Required(const.ATTR_VALUE): const.VALUE_SCHEMA,
                         vol.Optional(const.ATTR_WAIT_FOR_RESULT): cv.boolean,
-                        vol.Optional(const.ATTR_OPTIONS): {cv.string: VALUE_SCHEMA},
+                        vol.Optional(const.ATTR_OPTIONS): {
+                            cv.string: const.VALUE_SCHEMA
+                        },
                     },
                     cv.has_at_least_one_key(
                         ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
@@ -319,8 +302,10 @@ class ZWaveServices:
                             vol.Coerce(int), str
                         ),
                         vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
-                        vol.Required(const.ATTR_VALUE): VALUE_SCHEMA,
-                        vol.Optional(const.ATTR_OPTIONS): {cv.string: VALUE_SCHEMA},
+                        vol.Required(const.ATTR_VALUE): const.VALUE_SCHEMA,
+                        vol.Optional(const.ATTR_OPTIONS): {
+                            cv.string: const.VALUE_SCHEMA
+                        },
                     },
                     vol.Any(
                         cv.has_at_least_one_key(
