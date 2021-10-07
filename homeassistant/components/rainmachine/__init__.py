@@ -57,7 +57,11 @@ CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 PLATFORMS = ["binary_sensor", "sensor", "switch"]
 
-SERVICE_SCHEMA = vol.Schema({vol.Required(CONF_DEVICE_ID): cv.string})
+SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_DEVICE_ID): vol.All(cv.ensure_list, cv.string),
+    }
+)
 
 SERVICE_NAME_PAUSE_WATERING = "pause_watering"
 SERVICE_NAME_STOP_ALL = "stop_all"
