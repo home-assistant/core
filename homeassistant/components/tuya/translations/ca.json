@@ -28,7 +28,7 @@
                 "data": {
                     "access_id": "ID d'acc\u00e9s de Tuya IoT",
                     "access_secret": "Secret d'acc\u00e9s de Tuya IoT",
-                    "country_code": "El teu codi de pa\u00eds (per exemple, 1 per l'EUA o 86 per la Xina)",
+                    "country_code": "Pa\u00eds",
                     "password": "Contrasenya",
                     "platform": "L'aplicaci\u00f3 on es registra el teu compte",
                     "region": "Regi\u00f3",
