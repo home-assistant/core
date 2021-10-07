@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import datetime
+import logging
 
-from env_canada import ECRadar
+# from env_canada import ECRadar
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
@@ -24,6 +25,7 @@ ATTR_UPDATED = "updated"
 
 MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=10)
 
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -40,21 +42,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Environment Canada camera."""
 
-    if config.get(CONF_STATION):
-        radar_object = ECRadar(
-            station_id=config[CONF_STATION], precip_type=config.get(CONF_PRECIP_TYPE)
-        )
-    else:
-        lat = config.get(CONF_LATITUDE, hass.config.latitude)
-        lon = config.get(CONF_LONGITUDE, hass.config.longitude)
-        radar_object = ECRadar(
-            coordinates=(lat, lon), precip_type=config.get(CONF_PRECIP_TYPE)
-        )
+    # if config.get(CONF_STATION):
+    #     radar_object = ECRadar(
+    #         station_id=config[CONF_STATION], precip_type=config.get(CONF_PRECIP_TYPE)
+    #     )
+    # else:
+    #     lat = config.get(CONF_LATITUDE, hass.config.latitude)
+    #     lon = config.get(CONF_LONGITUDE, hass.config.longitude)
+    #     radar_object = ECRadar(
+    #         coordinates=(lat, lon), precip_type=config.get(CONF_PRECIP_TYPE)
+    #     )
 
-    unique_id = f"{config[CONF_STATION]}-{config[CONF_LANGUAGE]}-radar"
-    add_devices(
-        [ECCamera(radar_object, config.get(CONF_NAME), config[CONF_LOOP], unique_id)],
-        True,
+    # unique_id = f"{config[CONF_STATION]}-{config[CONF_LANGUAGE]}-radar"
+    # add_devices(
+    #     [ECCamera(radar_object, config.get(CONF_NAME), config[CONF_LOOP], unique_id)],
+    #     True,
+    # )
+    _LOGGER.warning(
+        "Environment Canada YAML configuration is deprecated. Your YAML configuration "
+        "has been imported into the UI and can be safely removed from your YAML."
     )
 
 

@@ -1,8 +1,9 @@
 """Platform for retrieving meteorological data from Environment Canada."""
 import datetime
+import logging
 import re
 
-from env_canada import ECData
+# from env_canada import ECData
 import voluptuous as vol
 
 from homeassistant.components.weather import (
@@ -26,6 +27,7 @@ from homeassistant.components.weather import (
     PLATFORM_SCHEMA,
     WeatherEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt
@@ -33,6 +35,8 @@ from homeassistant.util import dt
 from .const import CONF_ATTRIBUTION, CONF_LANGUAGE, CONF_STATION, DOMAIN
 
 CONF_FORECAST = "forecast"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def validate_station(station):
@@ -74,14 +78,32 @@ ICON_CONDITION_MAP = {
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Environment Canada weather."""
-    if config.get(CONF_STATION):
-        ec_data = ECData(station_id=config[CONF_STATION])
-    else:
-        lat = config.get(CONF_LATITUDE, hass.config.latitude)
-        lon = config.get(CONF_LONGITUDE, hass.config.longitude)
-        ec_data = ECData(coordinates=(lat, lon))
+    # if config.get(CONF_STATION):
+    #     ec_data = ECData(station_id=config[CONF_STATION])
+    # else:
+    #     lat = config.get(CONF_LATITUDE, hass.config.latitude)
+    #     lon = config.get(CONF_LONGITUDE, hass.config.longitude)
+    #     ec_data = ECData(coordinates=(lat, lon))
 
-    add_devices([ECWeather(ec_data, config, config[CONF_FORECAST] == "hourly")])
+    # add_devices([ECWeather(ec_data, config, config[CONF_FORECAST] == "hourly")])
+    _LOGGER.warning(
+        "Environment Canada YAML configuration is deprecated. Your YAML configuration "
+        "has been imported into the UI and can be safely removed from your YAML."
+    )
+    default_config = {
+        CONF_NAME: "",
+        CONF_LATITUDE: 0,
+        CONF_LONGITUDE: 0,
+        CONF_LANGUAGE: "English",
+        CONF_STATION: "imported",
+    }
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={**default_config, **config},
+        )
+    )
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -109,7 +131,7 @@ class ECWeather(WeatherEntity):
     def unique_id(self):
         """Return unique ID."""
         # The combination of station and language are unique for all EC weather reporting
-        return f"{self.config[CONF_STATION]}-{self.config[CONF_LANGUAGE]}-{self.forecast_type}"
+        return f"{self.config[CONF_STATION]}-{self.config.get(CONF_LANGUAGE, 'English')}-{self.forecast_type}"
 
     @property
     def attribution(self):
