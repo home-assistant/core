@@ -31,6 +31,7 @@ from homeassistant.components.light import (
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_HS,
+    COLOR_MODE_ONOFF,
     COLOR_MODE_RGBW,
     COLOR_MODE_RGBWW,
     COLOR_MODE_WHITE,
@@ -303,7 +304,10 @@ class FluxLight(CoordinatorEntity, LightEntity):
             color_temperature_kelvin_to_mired(MAX_TEMP) + 1
         )  # for rounding
         self._attr_max_mireds = color_temperature_kelvin_to_mired(MIN_TEMP)
-        color_modes = {FLUX_COLOR_MODE_TO_HASS[mode] for mode in self._bulb.color_modes}
+        color_modes = {
+            FLUX_COLOR_MODE_TO_HASS.get(mode, COLOR_MODE_ONOFF)
+            for mode in self._bulb.color_modes
+        }
         if COLOR_MODE_RGBW in color_modes or COLOR_MODE_RGBWW in color_modes:
             # Backwards compat
             color_modes.update({COLOR_MODE_HS, COLOR_MODE_COLOR_TEMP})
