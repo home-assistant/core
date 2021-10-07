@@ -95,7 +95,7 @@ class TomorrowioOptionsConfigFlow(config_entries.OptionsFlow):
         options_schema = {
             vol.Required(
                 CONF_TIMESTEP,
-                default=self._config_entry.options.get(CONF_TIMESTEP, DEFAULT_TIMESTEP),
+                default=self._config_entry.options[CONF_TIMESTEP],
             ): vol.In([1, 5, 15, 30]),
         }
 
