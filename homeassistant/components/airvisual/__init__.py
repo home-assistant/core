@@ -348,12 +348,16 @@ class AirVisualEntity(CoordinatorEntity):
     """Define a generic AirVisual entity."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, description: EntityDescription
+        self,
+        coordinator: DataUpdateCoordinator,
+        entry: ConfigEntry,
+        description: EntityDescription,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
 
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._entry = entry
         self.entity_description = description
 
     async def async_added_to_hass(self) -> None:
