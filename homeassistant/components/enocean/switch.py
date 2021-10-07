@@ -1,7 +1,7 @@
 """Support for EnOcean switches."""
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA
+from homeassistant.components.switch import ENTITY_ID_FORMAT, PLATFORM_SCHEMA
 from homeassistant.const import CONF_ID, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
@@ -39,6 +39,7 @@ class EnOceanSwitch(EnOceanEntity, ToggleEntity):
         self._on_state = False
         self._on_state2 = False
         self.channel = channel
+        self.entity_id = ENTITY_ID_FORMAT.format("_".join(str(e) for e in dev_id))
 
     @property
     def is_on(self):

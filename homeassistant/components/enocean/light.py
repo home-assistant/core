@@ -5,6 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     LightEntity,
@@ -46,6 +47,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         self._on_state = False
         self._brightness = 50
         self._sender_id = sender_id
+        self.entity_id = ENTITY_ID_FORMAT.format("_".join(str(e) for e in dev_id))
 
     @property
     def name(self):

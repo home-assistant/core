@@ -23,6 +23,11 @@ class EnOceanEntity(Entity):
             )
         )
 
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return f"enocean_{self.entity_id}"
+
     def _message_received_callback(self, packet):
         """Handle incoming packets."""
 
