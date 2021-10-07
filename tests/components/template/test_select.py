@@ -382,7 +382,7 @@ async def test_template_icon_with_trigger(hass):
                     "options": f"{{{{ state_attr('{_OPTION_INPUT_SELECT}', '{INPUT_SELECT_ATTR_OPTIONS}') }}}}",
                     "select_option": {
                         "service": "input_select.select_option",
-                        "data_template": {
+                        "data": {
                             "entity_id": _OPTION_INPUT_SELECT,
                             "option": "{{ option }}",
                         },
