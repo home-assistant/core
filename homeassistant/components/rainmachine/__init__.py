@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 from functools import partial
-from typing import Any, cast
+from typing import Any
 
 from regenmaschine import Client
 from regenmaschine.controller import Controller
@@ -77,18 +77,18 @@ SERVICE_PAUSE_WATERING_SCHEMA = SERVICE_SCHEMA.extend(
 @callback
 def async_get_controller_for_service_call(
     hass: HomeAssistant, call: ServiceCall
-) -> Controller | None:
+) -> Controller:
     """Get the controller related to a service call (by device ID)."""
-    controllers = hass.data[DOMAIN][DATA_CONTROLLER]
+    controllers: dict[str, Controller] = hass.data[DOMAIN][DATA_CONTROLLER]
+    device_id = call.data[CONF_DEVICE_ID]
     device_registry = dr.async_get(hass)
 
-    if device_entry := device_registry.async_get(call.data[CONF_DEVICE_ID]):
+    if device_entry := device_registry.async_get(device_id):
         for entry_id in device_entry.config_entries:
             if entry_id in controllers:
-                return cast(Controller, controllers[entry_id])
+                return controllers[entry_id]
 
-    LOGGER.error("No controller for device ID: %s", call.data[CONF_DEVICE_ID])
-    return None
+    raise ValueError(f"No controller for device ID: {device_id}")
 
 
 async def async_update_programs_and_zones(
@@ -197,21 +197,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_pause_watering(call: ServiceCall) -> None:
         """Pause watering for a set number of seconds."""
-        if controller := async_get_controller_for_service_call(hass, call):
-            await controller.watering.pause_all(call.data[CONF_SECONDS])
-            await async_update_programs_and_zones(hass, entry)
+        controller = async_get_controller_for_service_call(hass, call)
+        await controller.watering.pause_all(call.data[CONF_SECONDS])
+        await async_update_programs_and_zones(hass, entry)
 
     async def async_stop_all(call: ServiceCall) -> None:
         """Stop all watering."""
-        if controller := async_get_controller_for_service_call(hass, call):
-            await controller.watering.stop_all()
-            await async_update_programs_and_zones(hass, entry)
+        controller = async_get_controller_for_service_call(hass, call)
+        await controller.watering.stop_all()
+        await async_update_programs_and_zones(hass, entry)
 
     async def async_unpause_watering(call: ServiceCall) -> None:
         """Unpause watering."""
-        if controller := async_get_controller_for_service_call(hass, call):
-            await controller.watering.unpause_all()
-            await async_update_programs_and_zones(hass, entry)
+        controller = async_get_controller_for_service_call(hass, call)
+        await controller.watering.unpause_all()
+        await async_update_programs_and_zones(hass, entry)
 
     for service_name, schema, method in (
         (
