@@ -11,13 +11,17 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_WHITE,
+    ATTR_RGB_COLOR,
+    ATTR_RGBW_COLOR,
+    ATTR_RGBWW_COLOR,
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_HS,
     COLOR_MODE_ONOFF,
     COLOR_MODE_WHITE,
-    COLOR_MODE_COLOR_RGBWW,
-    COLOR_MODE_COLOR_RGBW,
+    COLOR_MODE_RGBWW,
+    COLOR_MODE_RGBW,
+    COLOR_MODE_RGB,
     SUPPORT_EFFECT,
     SUPPORT_TRANSITION,
     LightEntity,
@@ -56,37 +60,41 @@ class BasicLight(LightEntity):
 
         # self._supportedFeature = entityProperty["type"]
         self._brightness = entityProperty["brightness"]
-        self._color_type = entityProperty["color_mode"]
+        self._ledType = entityProperty["ledType"]
+        self._spectrum = entityProperty["spectrum"]
         self._color_mode: str | None = None
         self._color_temp: int | None = None
         self._white_value: int | None = None
         self._rgb_color = None
         self._supported_color_modes: set[str]
-        self._hs: tuple[float, float] | None = None
+        self._rgb: tuple[int, int, int] | None = None
+        self._rgbw: tuple[int, int, int, int] | None = None
+        self._rgbww: tuple[int, int, int, int, int] | None = None
 
-    async def _color_setup(self) -> None:
+    async def _color_setup(self):
         self._supported_color_modes = set()
-        colortype = self._color_type
+        ledType = self._ledType
 
-        if colortype in ["RGB", "RGBW", "RGBCCT", "CCT", "DIM"]:
-            self._supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
-            self._color_mode = COLOR_MODE_BRIGHTNESS
-
-        if colortype in ["RGB", "RGBW", "RGBCCT"]:
-            self._supported_color_modes.add(COLOR_MODE_HS)
-            self._color_mode = COLOR_MODE_HS
-
-        if colortype in ["CCT", "RGBCCT"]:
+        if ledType in ["RGB", "RGBW", "RGBWW"]:
+            spectrum = self._spectrum
+            if "CCT" in spectrum:
+                self._supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
+            if "RGB" in spectrum:
+                if ledType == "RGBWW":
+                    self._supported_color_modes.add(COLOR_MODE_RGBWW)
+                    self._color_mode = COLOR_MODE_RGBWW
+                if ledType == "RGBW":
+                    self._supported_color_modes.add(COLOR_MODE_RGBW)
+                    self._color_mode = COLOR_MODE_RGBW
+                if ledType == "RGB":
+                    self._supported_color_modes.add(COLOR_MODE_RGB)
+                    self._color_mode = COLOR_MODE_RGB
+            if "WHITE" in spectrum:
+                self._supported_color_modes.add(COLOR_MODE_WHITE)
+        if ledType == "WHITE":
+            self._supported_color_modes.add(COLOR_MODE_WHITE)
+        if ledType == "CCT":
             self._supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
-            self._color_mode = COLOR_MODE_COLOR_TEMP
-
-        if colortype == "RGBCCT":
-            self._supported_color_modes.add(COLOR_MODE_COLOR_RGBWW)
-            self._color_mode = COLOR_MODE_COLOR_RGBWW
-
-        if colortype == "RGBW":
-            self._supported_color_modes.add(COLOR_MODE_COLOR_RGBW)
-            self._color_mode = COLOR_MODE_COLOR_RGBW
 
     async def async_added_to_hass(self) -> None:
         """Create oocsi listener"""
@@ -122,12 +130,34 @@ class BasicLight(LightEntity):
         return self._color_temp
 
     @property
-    def hs_color(self) -> tuple[float, float] | None:
+    def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the hs color value."""
-        if self._hs is None:
+        if self._rgb is None:
             return None
-        hs_color = self._hs
-        return (hs_color[0], hs_color[1])
+        rgb_color = self._rgb
+        return (rgb_color[0], rgb_color[1], rgb_color[2])
+
+    @property
+    def rgbw_color(self) -> tuple[int, int, int, int] | None:
+        """Return the hs color value."""
+        if self._rgbw is None:
+            return None
+        rgbw_color = self._rgbw
+        return (rgbw_color[0], rgbw_color[1], rgbw_color[2], rgbw_color[3])
+
+    @property
+    def rgbww_color(self) -> tuple[int, int, int, int, int] | None:
+        """Return the hs color value."""
+        if self._rgbww is None:
+            return None
+        rgbww_color = self._rgbww
+        return (
+            rgbww_color[0],
+            rgbww_color[1],
+            rgbww_color[2],
+            rgbww_color[3],
+            rgbww_color[4],
+        )
 
     @property
     def supported_color_modes(self) -> set[str] | None:
@@ -157,49 +187,54 @@ class BasicLight(LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
 
-        supported_color_modes = self._supported_color_modes or set()
+        supported_color_modes = self._supported_color_modes
 
-        attributes: dict[str, Any] = {}
+        if ATTR_RGB_COLOR in kwargs and COLOR_MODE_RGB in supported_color_modes:
+            rgb_color = kwargs.get(ATTR_RGB_COLOR)
 
-        if ATTR_HS_COLOR in kwargs and COLOR_MODE_HS in supported_color_modes:
-            hs_color = kwargs.get(ATTR_HS_COLOR, self._color_temp)
-            self._hs = hs_color
-            attributes["color_hs"] = [hs_color[0], hs_color[1]]
-            self._oocsi.send(self._oocsichannel, {"colorhs": attributes["color_hs"]})
+            self._rgb = rgb_color
 
-            rgb_color = color_util.color_hs_to_RGB(hs_color[0], hs_color[1])
-            attributes["color_rgb"] = [rgb_color[0], rgb_color[1], rgb_color[2]]
-            self._oocsi.send(self._oocsichannel, {"colorrgb": attributes["color_rgb"]})
+            self._oocsi.send(self._oocsichannel, {"colorrgb": rgb_color})
 
-        if ATTR_WHITE in kwargs and COLOR_MODE_WHITE in supported_color_modes:
-            self._white_value = kwargs.get(ATTR_WHITE, self._color_temp)
+        if ATTR_RGBW_COLOR in kwargs and COLOR_MODE_RGBW in supported_color_modes:
+            rgbw_color = kwargs.get(ATTR_RGBW_COLOR)
+            self._rgbw = rgbw_color
+            self._oocsi.send(self._oocsichannel, {"colorrgbw": rgbw_color})
 
-        if ATTR_TRANSITION in kwargs:
-            attributes["transition"] = kwargs[ATTR_TRANSITION]
+        if ATTR_RGBWW_COLOR in kwargs and COLOR_MODE_RGBWW in supported_color_modes:
+            rgbww_color = kwargs.get(ATTR_RGBWW_COLOR)
+            self._rgbww = rgbww_color
+            self._color_temp = None
+            white_switch = None
+            self._oocsi.send(self._oocsichannel, {"colorrgbww": rgbww_color})
 
         if ATTR_BRIGHTNESS in kwargs and brightness_supported(supported_color_modes):
-            self._brightness = kwargs.get(ATTR_BRIGHTNESS, self._brightness)
+            self._brightness = kwargs.get(ATTR_BRIGHTNESS)
+        if ATTR_WHITE in kwargs and COLOR_MODE_WHITE in supported_color_modes:
+            self._brightness = kwargs.get(ATTR_WHITE)
+            self._white_switch = kwargs.get(ATTR_WHITE)
 
         if ATTR_COLOR_TEMP in kwargs and COLOR_MODE_COLOR_TEMP in supported_color_modes:
-            self._color_temp = kwargs.get(ATTR_COLOR_TEMP, self._color_temp)
+            self._color_temp = kwargs.get(ATTR_COLOR_TEMP)
+            ct_switch = kwargs.get(ATTR_COLOR_TEMP)
             self._oocsi.send(self._oocsichannel, {"colorTemp": self._color_temp})
 
-        if ATTR_EFFECT in kwargs:
-            attributes["effect"] = kwargs[ATTR_EFFECT]
+        # if ATTR_EFFECT in kwargs:
+        #     attributes["effect"] = kwargs[ATTR_EFFECT]
 
-        # if all(
-        #     x in [COLOR_MODE_HS, COLOR_MODE_COLOR_TEMP] for x in supported_color_modes
-        # ):
-        #     print("both")
-        #     if self._color_temp == 0:
-        #         self._color_mode = COLOR_MODE_HS
-        #     else:
-        #         self._color_mode = COLOR_MODE_COLOR_TEMP
-        # if all(x in [COLOR_MODE_HS, COLOR_MODE_WHITE] for x in supported_color_modes):
-        #     if self._white_value == 0:
-        #         self._color_mode = COLOR_MODE_HS
-        #     else:
-        #         self._color_mode = COLOR_MODE_WHITE
+        def colormodeRGBpicker(self):
+            if COLOR_MODE_RGB in supported_color_modes:
+                self._color_mode = COLOR_MODE_RGB
+            if COLOR_MODE_RGBW in supported_color_modes:
+                self._color_mode = COLOR_MODE_RGBW
+            if COLOR_MODE_RGBWW in supported_color_modes:
+                self._color_mode = COLOR_MODE_RGBWW
+
+        if "CCT" and "RGB" in self._spectrum:
+            if self._color_temp != None:
+                self._color_mode = COLOR_MODE_COLOR_TEMP
+            else:
+                colormodeRGBpicker
 
         self._oocsi.send(self._oocsichannel, {"brightness": self._brightness})
         self._channelState = True
