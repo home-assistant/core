@@ -168,4 +168,3 @@ class EfergySensor(SensorEntity):
                 _LOGGER.error("Error getting data from Efergy: %s", ex)
             return
         self._attr_available = True
-        return
