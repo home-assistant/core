@@ -122,34 +122,28 @@ REST_SENSORS: Final = {
 RPC_SENSORS: Final = {
     "input": RpcAttributeDescription(
         key="input",
+        sub_key="state",
         name="Input",
-        value=lambda status, _: status["state"],
         device_class=DEVICE_CLASS_POWER,
         default_enabled=False,
         removal_condition=is_rpc_momentary_input,
     ),
     "cloud": RpcAttributeDescription(
         key="cloud",
+        sub_key="connected",
         name="Cloud",
-        value=lambda status, _: status["connected"],
         device_class=DEVICE_CLASS_CONNECTIVITY,
         default_enabled=False,
     ),
     "fwupdate": RpcAttributeDescription(
         key="sys",
+        sub_key="available_updates",
         name="Firmware Update",
         device_class=DEVICE_CLASS_UPDATE,
-        value=lambda status, _: status["available_updates"],
         default_enabled=False,
         extra_state_attributes=lambda status: {
-            "latest_stable_version": status["available_updates"].get(
-                "stable",
-                {"version": ""},
-            )["version"],
-            "beta_version": status["available_updates"].get(
-                "beta",
-                {"version": ""},
-            )["version"],
+            "latest_stable_version": status.get("stable", {"version": ""})["version"],
+            "beta_version": status.get("beta", {"version": ""})["version"],
         },
     ),
 }

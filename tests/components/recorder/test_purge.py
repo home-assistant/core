@@ -44,6 +44,7 @@ async def test_purge_old_states(
 
         events = session.query(Events).filter(Events.event_type == "state_changed")
         assert events.count() == 6
+        assert "test.recorder2" in instance._old_states
 
         purge_before = dt_util.utcnow() - timedelta(days=4)
 
@@ -51,6 +52,7 @@ async def test_purge_old_states(
         finished = purge_old_data(instance, purge_before, repack=False)
         assert not finished
         assert states.count() == 2
+        assert "test.recorder2" in instance._old_states
 
         states_after_purge = session.query(States)
         assert states_after_purge[1].old_state_id == states_after_purge[0].state_id
@@ -59,6 +61,28 @@ async def test_purge_old_states(
         finished = purge_old_data(instance, purge_before, repack=False)
         assert finished
         assert states.count() == 2
+        assert "test.recorder2" in instance._old_states
+
+        # run purge_old_data again
+        purge_before = dt_util.utcnow()
+        finished = purge_old_data(instance, purge_before, repack=False)
+        assert not finished
+        assert states.count() == 0
+        assert "test.recorder2" not in instance._old_states
+
+    # Add some more states
+    await _add_test_states(hass, instance)
+
+    # make sure we start with 6 states
+    with session_scope(hass=hass) as session:
+        states = session.query(States)
+        assert states.count() == 6
+        assert states[0].old_state_id is None
+        assert states[-1].old_state_id == states[-2].state_id
+
+        events = session.query(Events).filter(Events.event_type == "state_changed")
+        assert events.count() == 6
+        assert "test.recorder2" in instance._old_states
 
 
 async def test_purge_old_states_encouters_database_corruption(
@@ -872,45 +896,27 @@ async def _add_test_states(hass: HomeAssistant, instance: recorder.Recorder):
     eleven_days_ago = utcnow - timedelta(days=11)
     attributes = {"test_attr": 5, "test_attr_10": "nice"}
 
-    await hass.async_block_till_done()
-    await async_wait_recording_done(hass, instance)
+    async def set_state(entity_id, state, **kwargs):
+        """Set the state."""
+        hass.states.async_set(entity_id, state, **kwargs)
+        await hass.async_block_till_done()
+        await async_wait_recording_done(hass, instance)
 
-    with recorder.session_scope(hass=hass) as session:
-        old_state_id = None
-        for event_id in range(6):
-            if event_id < 2:
-                timestamp = eleven_days_ago
-                state = "autopurgeme"
-            elif event_id < 4:
-                timestamp = five_days_ago
-                state = "purgeme"
-            else:
-                timestamp = utcnow
-                state = "dontpurgeme"
+    for event_id in range(6):
+        if event_id < 2:
+            timestamp = eleven_days_ago
+            state = f"autopurgeme_{event_id}"
+        elif event_id < 4:
+            timestamp = five_days_ago
+            state = f"purgeme_{event_id}"
+        else:
+            timestamp = utcnow
+            state = f"dontpurgeme_{event_id}"
 
-            event = Events(
-                event_type="state_changed",
-                event_data="{}",
-                origin="LOCAL",
-                created=timestamp,
-                time_fired=timestamp,
-            )
-            session.add(event)
-            session.flush()
-            state = States(
-                entity_id="test.recorder2",
-                domain="sensor",
-                state=state,
-                attributes=json.dumps(attributes),
-                last_changed=timestamp,
-                last_updated=timestamp,
-                created=timestamp,
-                event_id=event.event_id,
-                old_state_id=old_state_id,
-            )
-            session.add(state)
-            session.flush()
-            old_state_id = state.state_id
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=timestamp
+        ):
+            await set_state("test.recorder2", state, attributes=attributes)
 
 
 async def _add_test_events(hass: HomeAssistant, instance: recorder.Recorder):

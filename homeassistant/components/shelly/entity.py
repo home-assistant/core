@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, Callable, Final, cast
+from typing import Any, Final, cast
 
 from aioshelly.block_device import Block
 import async_timeout
@@ -165,6 +166,10 @@ async def async_setup_entry_rpc(
         key_instances = get_rpc_key_instances(wrapper.device.status, description.key)
 
         for key in key_instances:
+            # Filter non-existing sensors
+            if description.sub_key not in wrapper.device.status[key]:
+                continue
+
             # Filter and remove entities that according to settings should not create an entity
             if description.removal_condition and description.removal_condition(
                 wrapper.device.config, key
@@ -239,10 +244,11 @@ class RpcAttributeDescription:
     """Class to describe a RPC sensor."""
 
     key: str
+    sub_key: str
     name: str
     icon: str | None = None
     unit: str | None = None
-    value: Callable[[dict, Any], Any] | None = None
+    value: Callable[[Any, Any], Any] | None = None
     device_class: str | None = None
     state_class: str | None = None
     default_enabled: bool = True
@@ -548,6 +554,7 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, entity.Entity):
     ) -> None:
         """Initialize sensor."""
         super().__init__(wrapper, key)
+        self.sub_key = description.sub_key
         self.attribute = attribute
         self.description = description
 
@@ -563,8 +570,11 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, entity.Entity):
         """Value of sensor."""
         if callable(self.description.value):
             self._last_value = self.description.value(
-                self.wrapper.device.status[self.key], self._last_value
+                self.wrapper.device.status[self.key][self.sub_key], self._last_value
             )
+        else:
+            self._last_value = self.wrapper.device.status[self.key][self.sub_key]
+
         return self._last_value
 
     @property
@@ -575,7 +585,9 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, entity.Entity):
         if not available or not self.description.available:
             return available
 
-        return self.description.available(self.wrapper.device.status[self.key])
+        return self.description.available(
+            self.wrapper.device.status[self.key][self.sub_key]
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -584,7 +596,7 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, entity.Entity):
             return None
 
         return self.description.extra_state_attributes(
-            self.wrapper.device.status[self.key]
+            self.wrapper.device.status[self.key][self.sub_key]
         )
 
 

@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 
 from aiohttp import ClientConnectionError, ClientResponseError
 
-from homeassistant import config_entries, core, setup
+from homeassistant import config_entries, core
 from homeassistant.components.bond.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 
@@ -24,7 +24,7 @@ from tests.common import MockConfigEntry
 
 async def test_user_form(hass: core.HomeAssistant):
     """Test we get the user initiated form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -53,7 +53,7 @@ async def test_user_form(hass: core.HomeAssistant):
 
 async def test_user_form_with_non_bridge(hass: core.HomeAssistant):
     """Test setup a smart by bond fan."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -170,8 +170,6 @@ async def test_user_form_one_entry_per_device_allowed(hass: core.HomeAssistant):
         data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
     ).add_to_hass(hass)
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -193,7 +191,7 @@ async def test_user_form_one_entry_per_device_allowed(hass: core.HomeAssistant):
 
 async def test_zeroconf_form(hass: core.HomeAssistant):
     """Test we get the discovery form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
@@ -222,7 +220,7 @@ async def test_zeroconf_form(hass: core.HomeAssistant):
 
 async def test_zeroconf_form_token_unavailable(hass: core.HomeAssistant):
     """Test we get the discovery form and we handle the token being unavailable."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     with patch_bond_version(), patch_bond_token():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -251,7 +249,7 @@ async def test_zeroconf_form_token_unavailable(hass: core.HomeAssistant):
 
 async def test_zeroconf_form_with_token_available(hass: core.HomeAssistant):
     """Test we get the discovery form when we can get the token."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     with patch_bond_version(return_value={"bondid": "test-bond-id"}), patch_bond_token(
         return_value={"token": "discovered-token"}
     ), patch_bond_bridge(
@@ -284,7 +282,6 @@ async def test_zeroconf_form_with_token_available(hass: core.HomeAssistant):
 
 async def test_zeroconf_already_configured(hass: core.HomeAssistant):
     """Test starting a flow from discovery when already configured."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry = MockConfigEntry(
         domain=DOMAIN,

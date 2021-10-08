@@ -10,7 +10,7 @@ from synology_dsm.exceptions import (
     SynologyDSMRequestException,
 )
 
-from homeassistant import data_entry_flow, setup
+from homeassistant import data_entry_flow
 from homeassistant.components import ssdp
 from homeassistant.components.synology_dsm.config_flow import CONF_OTP_CODE
 from homeassistant.components.synology_dsm.const import (
@@ -383,7 +383,6 @@ async def test_missing_data_after_login(hass: HomeAssistant, service_failed: Mag
 
 async def test_form_ssdp(hass: HomeAssistant, service: MagicMock):
     """Test we can setup from ssdp."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -419,7 +418,6 @@ async def test_form_ssdp(hass: HomeAssistant, service: MagicMock):
 
 async def test_reconfig_ssdp(hass: HomeAssistant, service: MagicMock):
     """Test re-configuration of already existing entry by ssdp."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     MockConfigEntry(
         domain=DOMAIN,
@@ -447,7 +445,6 @@ async def test_reconfig_ssdp(hass: HomeAssistant, service: MagicMock):
 
 async def test_existing_ssdp(hass: HomeAssistant, service: MagicMock):
     """Test abort of already existing entry by ssdp."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     MockConfigEntry(
         domain=DOMAIN,

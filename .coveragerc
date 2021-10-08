@@ -51,6 +51,7 @@ omit =
     homeassistant/components/alarmdecoder/sensor.py
     homeassistant/components/alpha_vantage/sensor.py
     homeassistant/components/amazon_polly/*
+    homeassistant/components/amberelectric/__init__.py
     homeassistant/components/ambiclimate/climate.py
     homeassistant/components/ambient_station/*
     homeassistant/components/amcrest/*
@@ -212,7 +213,6 @@ omit =
     homeassistant/components/dlib_face_detect/image_processing.py
     homeassistant/components/dlib_face_identify/image_processing.py
     homeassistant/components/dlink/switch.py
-    homeassistant/components/dlna_dmr/media_player.py
     homeassistant/components/dnsip/sensor.py
     homeassistant/components/dominos/*
     homeassistant/components/doods/*
@@ -290,7 +290,6 @@ omit =
     homeassistant/components/esphome/select.py
     homeassistant/components/esphome/sensor.py
     homeassistant/components/esphome/switch.py
-    homeassistant/components/essent/sensor.py
     homeassistant/components/etherscan/sensor.py
     homeassistant/components/eufy/*
     homeassistant/components/everlights/light.py
@@ -343,7 +342,6 @@ omit =
     homeassistant/components/flume/sensor.py
     homeassistant/components/flunearyou/__init__.py
     homeassistant/components/flunearyou/sensor.py
-    homeassistant/components/flux_led/light.py
     homeassistant/components/folder/sensor.py
     homeassistant/components/folder_watcher/*
     homeassistant/components/foobot/sensor.py
@@ -764,6 +762,7 @@ omit =
     homeassistant/components/opencv/*
     homeassistant/components/openevse/sensor.py
     homeassistant/components/openexchangerates/sensor.py
+    homeassistant/components/opengarage/__init__.py
     homeassistant/components/opengarage/cover.py
     homeassistant/components/openhome/__init__.py
     homeassistant/components/openhome/media_player.py
@@ -1001,7 +1000,8 @@ omit =
     homeassistant/components/starlingbank/sensor.py
     homeassistant/components/steam_online/sensor.py
     homeassistant/components/stiebel_eltron/*
-    homeassistant/components/stookalert/*
+    homeassistant/components/stookalert/__init__.py
+    homeassistant/components/stookalert/binary_sensor.py
     homeassistant/components/stream/*
     homeassistant/components/streamlabswater/*
     homeassistant/components/suez_water/*
@@ -1096,15 +1096,15 @@ omit =
     homeassistant/components/totalconnect/binary_sensor.py
     homeassistant/components/totalconnect/const.py
     homeassistant/components/touchline/climate.py
-    homeassistant/components/tplink/common.py
-    homeassistant/components/tplink/switch.py
     homeassistant/components/tplink_lte/*
     homeassistant/components/traccar/device_tracker.py
     homeassistant/components/traccar/const.py
     homeassistant/components/tractive/__init__.py
+    homeassistant/components/tractive/binary_sensor.py
     homeassistant/components/tractive/device_tracker.py
     homeassistant/components/tractive/entity.py
     homeassistant/components/tractive/sensor.py
+    homeassistant/components/tractive/switch.py
     homeassistant/components/tradfri/*
     homeassistant/components/trafikverket_train/sensor.py
     homeassistant/components/trafikverket_weatherstation/sensor.py
@@ -1114,9 +1114,9 @@ omit =
     homeassistant/components/transmission/errors.py
     homeassistant/components/travisci/sensor.py
     homeassistant/components/tuya/__init__.py
+    homeassistant/components/tuya/base.py
     homeassistant/components/tuya/climate.py
     homeassistant/components/tuya/const.py
-    homeassistant/components/tuya/cover.py
     homeassistant/components/tuya/fan.py
     homeassistant/components/tuya/light.py
     homeassistant/components/tuya/scene.py
@@ -1235,7 +1235,6 @@ omit =
     homeassistant/components/xiaomi_miio/select.py
     homeassistant/components/xiaomi_miio/sensor.py
     homeassistant/components/xiaomi_miio/switch.py
-    homeassistant/components/xiaomi_miio/vacuum.py
     homeassistant/components/xiaomi_tv/media_player.py
     homeassistant/components/xmpp/notify.py
     homeassistant/components/xs1/*

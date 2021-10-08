@@ -6,19 +6,37 @@
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks sidumine."
         },
         "error": {
-            "invalid_auth": "Tuvastamise viga"
+            "invalid_auth": "Tuvastamise viga",
+            "login_error": "Sisenemine nurjus ( {code} ): {msg}"
         },
         "flow_title": "Tuya seaded",
         "step": {
+            "login": {
+                "data": {
+                    "access_id": "Juurdep\u00e4\u00e4su ID",
+                    "access_secret": "API salas\u00f5na",
+                    "country_code": "Riigi kood",
+                    "endpoint": "Seadmete regioon",
+                    "password": "Salas\u00f5na",
+                    "tuya_app_type": "Mobiilirakendus",
+                    "username": "Konto"
+                },
+                "description": "Sisesta oma Tuya mandaat",
+                "title": "Tuya"
+            },
             "user": {
                 "data": {
-                    "country_code": "Konto riigikood (nt 1 USA v\u00f5i 372 Eesti)",
+                    "access_id": "Tuya IoT kasutajatunnus",
+                    "access_secret": "Tuya IoT salas\u00f5na",
+                    "country_code": "Riik",
                     "password": "Salas\u00f5na",
                     "platform": "\u00c4pp kus konto registreeriti",
+                    "region": "Piirkond",
+                    "tuya_project_type": "Tuya pilveprojekti t\u00fc\u00fcp",
                     "username": "Kasutajanimi"
                 },
                 "description": "Sisesta oma Tuya konto andmed.",
-                "title": ""
+                "title": "Tuya sidumine"
             }
         }
     },

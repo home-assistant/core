@@ -9,6 +9,7 @@ import pyatmo
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -143,6 +144,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         netatmo_name="Rain",
         entity_registry_enabled_default=True,
         native_unit_of_measurement=LENGTH_MILLIMETERS,
+        state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:weather-rainy",
     ),
     NetatmoSensorEntityDescription(
@@ -151,6 +153,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         netatmo_name="sum_rain_1",
         entity_registry_enabled_default=False,
         native_unit_of_measurement=LENGTH_MILLIMETERS,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         icon="mdi:weather-rainy",
     ),
     NetatmoSensorEntityDescription(
@@ -159,6 +162,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         netatmo_name="sum_rain_24",
         entity_registry_enabled_default=True,
         native_unit_of_measurement=LENGTH_MILLIMETERS,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         icon="mdi:weather-rainy",
     ),
     NetatmoSensorEntityDescription(
