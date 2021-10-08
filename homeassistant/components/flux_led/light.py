@@ -21,6 +21,7 @@ from flux_led.utils import (
     rgbcw_brightness,
     rgbcw_to_rgbwc,
     rgbw_brightness,
+    rgbww_brightness,
 )
 import voluptuous as vol
 
@@ -358,12 +359,20 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def rgbw_color(self) -> tuple[int, int, int, int]:
         """Return the rgbw color value."""
-        return cast(tuple[int, int, int, int], self._bulb.rgbw)
+        rgbw: tuple[int, int, int, int] = self._bulb.rgbw
+        return rgbw
 
     @property
     def rgbww_color(self) -> tuple[int, int, int, int, int]:
-        """Return the rgbww color value."""
-        return cast(tuple[int, int, int, int, int], self._bulb.rgbcw)
+        """Return the rgbww aka rgbcw color value."""
+        rgbcw: tuple[int, int, int, int, int] = self._bulb.rgbcw
+        return rgbcw
+
+    @property
+    def rgbwc_color(self) -> tuple[int, int, int, int, int]:
+        """Return the rgbwc color value."""
+        rgbwc: tuple[int, int, int, int, int] = self._bulb.rgbww
+        return rgbwc
 
     @property
     def color_mode(self) -> str:
@@ -409,10 +418,9 @@ class FluxLight(CoordinatorEntity, LightEntity):
             # When switching to color temp from RGBWW mode,
             # we do not want the overall brightness, we only
             # want the brightness of the white channels
-            if ATTR_BRIGHTNESS in kwargs:
-                brightness = kwargs[ATTR_BRIGHTNESS]
-            else:
-                brightness = self._bulb.getWhiteTemperature()[1]
+            brightness = kwargs.get(
+                ATTR_BRIGHTNESS, self._bulb.getWhiteTemperature()[1]
+            )
             cold, warm = color_temp_to_white_levels(color_temp_kelvin, brightness)
             self._bulb.set_levels(r=0, b=0, g=0, w=warm, w2=cold)
             return
@@ -436,8 +444,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
                 rgbcw = rgbcw_brightness(kwargs[ATTR_RGBWW_COLOR], brightness)
             else:
                 rgbcw = kwargs[ATTR_RGBWW_COLOR]
-            r, g, b, w, c = rgbcw_to_rgbwc(rgbcw)
-            self._bulb.set_levels(r=r, g=g, b=b, w=w, w2=c)
+            self._bulb.set_levels(*rgbcw_to_rgbwc(rgbcw))
             return
         # Handle switch to White Color Mode
         if ATTR_WHITE in kwargs:
@@ -484,9 +491,8 @@ class FluxLight(CoordinatorEntity, LightEntity):
             return
         # Handle brightness adjustment in RGBWW Color Mode
         if self.color_mode == COLOR_MODE_RGBWW:
-            rgbcw = self.rgbww_color
-            r, b, g, c, w = rgbcw_brightness(rgbcw, brightness)
-            self._bulb.set_levels(r=r, g=g, b=b, w=w, w2=c)
+            rgbwc = self.rgbwc_color
+            self._bulb.set_levels(*rgbww_brightness(rgbwc, brightness))
             return
         # Handle White Color Mode and Brightness Only Color Mode
         if self.color_mode in (COLOR_MODE_WHITE, COLOR_MODE_BRIGHTNESS):
