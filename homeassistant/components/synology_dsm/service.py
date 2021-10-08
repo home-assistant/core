@@ -30,9 +30,9 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_services(hass: HomeAssistant) -> None:
     """Service handler setup."""
 
-    def _send_wol(mac: str, ip: str) -> None:
+    def _send_wol(mac: str, ip_address: str) -> None:
         """Send magic packet to ip and broadcast."""
-        send_magic_packet(mac, ip_address=ip)
+        send_magic_packet(mac, ip_address=ip_address)
         send_magic_packet(mac)
 
     async def service_handler(call: ServiceCall) -> None:
