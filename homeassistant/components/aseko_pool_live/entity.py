@@ -1,6 +1,4 @@
 """Aseko entity."""
-import logging
-
 from aioaseko import Unit
 
 from homeassistant.helpers.entity import DeviceInfo
@@ -8,8 +6,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AsekoDataUpdateCoordinator
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class AsekoEntity(CoordinatorEntity):
@@ -23,11 +19,7 @@ class AsekoEntity(CoordinatorEntity):
         self._unit = unit
 
         self._device_model = f"ASIN AQUA {self._unit.type}"
-        self._device_name = (
-            self._device_model
-            if self._unit.name is None or self._unit.name == ""
-            else self._unit.name
-        )
+        self._device_name = self._unit.name if self._unit.name else self._device_model
 
         self._attr_device_info = DeviceInfo(
             name=self._device_name,

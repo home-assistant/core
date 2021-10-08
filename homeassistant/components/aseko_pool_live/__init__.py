@@ -46,8 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
@@ -59,10 +58,16 @@ class AsekoDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Variable]]):
     def __init__(self, hass: HomeAssistant, unit: Unit) -> None:
         """Initialize global Aseko unit data updater."""
         self._unit = unit
+
+        if self._unit.name:
+            name = self._unit.name
+        else:
+            name = f"{self._unit.type}-{self._unit.serial_number}"
+
         super().__init__(
             hass,
             _LOGGER,
-            name=f"{self._unit.type if self._unit.name is None else self._unit.name}-{self._unit.serial_number}",
+            name=name,
             update_interval=timedelta(minutes=2),
         )
 

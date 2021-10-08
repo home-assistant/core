@@ -65,7 +65,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=info["email"],
+                    title=info[CONF_EMAIL],
                     data={CONF_ACCESS_TOKEN: info[CONF_ACCESS_TOKEN]},
                 )
 
