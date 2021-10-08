@@ -267,12 +267,12 @@ class NestCamera(Camera):
         self._event_image_bytes = None
         self._event_image_cleanup_unsub = None
 
-    async def async_handle_web_rtc_offer(self, offer: str) -> str:
+    async def async_handle_web_rtc_offer(self, offer_sdp: str) -> str:
         """Return the source of the stream."""
         if not self.supported_features & SUPPORT_STREAM:
             raise ValueError("Camera does not support streaming")
         if self.stream_type != STREAM_TYPE_WEB_RTC:
             raise ValueError("Camera does not support Web RTC")
         trait: CameraLiveStreamTrait = self._device.traits[CameraLiveStreamTrait.NAME]
-        stream = await trait.generate_web_rtc_stream(offer)
+        stream = await trait.generate_web_rtc_stream(offer_sdp)
         return stream.answer_sdp
