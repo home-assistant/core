@@ -120,6 +120,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async_migrate_legacy_entries(
             hass, hosts_by_mac, config_entries_by_mac, legacy_entry
         )
+        # Migrate the yaml entry that was previously imported
+        async_migrate_yaml_entries(hass, legacy_entry.data)
 
     if conf is not None:
         async_migrate_yaml_entries(hass, conf)
