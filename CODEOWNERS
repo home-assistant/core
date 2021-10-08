@@ -157,7 +157,6 @@ homeassistant/components/epson/* @pszafer
 homeassistant/components/epsonworkforce/* @ThaStealth
 homeassistant/components/eq3btsmart/* @rytilahti
 homeassistant/components/esphome/* @OttoWinter @jesserockz
-homeassistant/components/essent/* @TheLastProject
 homeassistant/components/evohome/* @zxdavb
 homeassistant/components/ezviz/* @RenierM26 @baqs
 homeassistant/components/faa_delays/* @ntilley905
@@ -424,6 +423,7 @@ homeassistant/components/rainforest_eagle/* @gtdiehl @jcalbert
 homeassistant/components/rainmachine/* @bachya
 homeassistant/components/random/* @fabaff
 homeassistant/components/recollect_waste/* @bachya
+homeassistant/components/recorder/* @home-assistant/core
 homeassistant/components/rejseplanen/* @DarkFox
 homeassistant/components/renault/* @epenet
 homeassistant/components/repetier/* @MTrab
@@ -545,7 +545,7 @@ homeassistant/components/trafikverket_train/* @endor-force
 homeassistant/components/trafikverket_weatherstation/* @endor-force
 homeassistant/components/transmission/* @engrbm87 @JPHutchins
 homeassistant/components/tts/* @pvizeli
-homeassistant/components/tuya/* @Tuya
+homeassistant/components/tuya/* @Tuya @zlinoliver @METISU
 homeassistant/components/twentemilieu/* @frenck
 homeassistant/components/twinkly/* @dr1rrb
 homeassistant/components/ubus/* @noltari

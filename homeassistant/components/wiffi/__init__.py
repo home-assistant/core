@@ -63,7 +63,7 @@ async def async_update_options(hass: HomeAssistant, entry: ConfigEntry):
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     api: WiffiIntegrationApi = hass.data[DOMAIN][entry.entry_id]
     await api.server.close_server()

@@ -91,6 +91,7 @@ homeassistant.components.recorder.statistics
 homeassistant.components.remote.*
 homeassistant.components.renault.*
 homeassistant.components.rituals_perfume_genie.*
+homeassistant.components.rpi_power.*
 homeassistant.components.samsungtv.*
 homeassistant.components.scene.*
 homeassistant.components.select.*
@@ -112,6 +113,7 @@ homeassistant.components.tautulli.*
 homeassistant.components.tcp.*
 homeassistant.components.tile.*
 homeassistant.components.tplink.*
+homeassistant.components.tractive.*
 homeassistant.components.tradfri.*
 homeassistant.components.tts.*
 homeassistant.components.upcloud.*
@@ -120,6 +122,7 @@ homeassistant.components.uptimerobot.*
 homeassistant.components.vacuum.*
 homeassistant.components.vallox.*
 homeassistant.components.water_heater.*
+homeassistant.components.watttime.*
 homeassistant.components.weather.*
 homeassistant.components.websocket_api.*
 homeassistant.components.zodiac.*

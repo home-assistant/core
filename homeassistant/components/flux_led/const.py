@@ -31,7 +31,6 @@ MODE_RGB: Final = "RGB"
 MODE_RGBW: Final = "RGBW"
 MODE_RGBWW: Final = "RGBWW"
 
-
 # This mode enables white value to be controlled by brightness.
 # RGB value is ignored when this mode is specified.
 MODE_WHITE: Final = "w"

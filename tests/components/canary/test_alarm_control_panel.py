@@ -25,7 +25,6 @@ from tests.common import mock_registry
 
 async def test_alarm_control_panel(hass, canary) -> None:
     """Test the creation and values of the alarm_control_panel for Canary."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     registry = mock_registry(hass)
     online_device_at_home = mock_device(20, "Dining Room", True, "Canary Pro")
@@ -109,7 +108,6 @@ async def test_alarm_control_panel(hass, canary) -> None:
 
 async def test_alarm_control_panel_services(hass, canary) -> None:
     """Test the services of the alarm_control_panel for Canary."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     online_device_at_home = mock_device(20, "Dining Room", True, "Canary Pro")
 

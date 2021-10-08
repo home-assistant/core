@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: Final = ["light"]
 DISCOVERY_INTERVAL: Final = timedelta(minutes=15)
-REQUEST_REFRESH_DELAY: Final = 0.65
+REQUEST_REFRESH_DELAY: Final = 1.5
 
 
 async def async_wifi_bulb_for_host(hass: HomeAssistant, host: str) -> WifiLedBulb:
@@ -140,3 +140,6 @@ class FluxLedUpdateCoordinator(DataUpdateCoordinator):
                 await self.hass.async_add_executor_job(self.device.update_state)
         except FLUX_LED_EXCEPTIONS as ex:
             raise UpdateFailed(ex) from ex
+
+        if not self.device.raw_state:
+            raise UpdateFailed("The device failed to update")
