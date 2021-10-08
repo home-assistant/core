@@ -207,7 +207,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_try_connect(self, host: str) -> WifiLedBulb:
         """Try to connect."""
         self._async_abort_entries_match({CONF_HOST: host})
-        return await async_wifi_bulb_for_host(self.hass, host)
+        bulb = async_wifi_bulb_for_host(host)
+        try:
+            await bulb.async_setup()
+        finally:
+            await bulb.async_stop()
 
 
 class OptionsFlow(config_entries.OptionsFlow):
