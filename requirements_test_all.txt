@@ -7,7 +7,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.homekit
-HAP-python==4.2.1
+HAP-python==4.3.0
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
@@ -485,7 +485,7 @@ hole==0.5.1
 holidays==0.11.3.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20211006.0
+home-assistant-frontend==20211007.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -585,7 +585,7 @@ mficlient==0.3.0
 micloud==0.3
 
 # homeassistant.components.mill
-millheater==0.6.0
+millheater==0.6.1
 
 # homeassistant.components.minio
 minio==4.0.9
@@ -1403,7 +1403,7 @@ yalesmartalarmclient==0.3.4
 yalexs==1.1.13
 
 # homeassistant.components.yeelight
-yeelight==0.7.6
+yeelight==0.7.7
 
 # homeassistant.components.youless
 youless-api==0.13
