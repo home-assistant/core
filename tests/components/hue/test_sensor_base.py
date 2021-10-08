@@ -4,13 +4,24 @@ from unittest.mock import Mock
 
 import aiohue
 
+from homeassistant.components import hue
 from homeassistant.components.hue import sensor_base
 from homeassistant.components.hue.hue_event import CONF_HUE_EVENT
 from homeassistant.util import dt as dt_util
+from homeassistant.setup import async_setup_component
 
 from .conftest import create_mock_bridge, setup_bridge_for_sensors as setup_bridge
 
-from tests.common import async_capture_events, async_fire_time_changed
+from tests.common import (
+	async_capture_events, 
+	async_fire_time_changed, 
+    mock_device_registry,
+)
+    
+@pytest.fixture
+def device_reg(hass):
+    """Return an empty, loaded, registry."""
+    return mock_device_registry(hass)    
 
 PRESENCE_SENSOR_1_PRESENT = {
     "state": {"presence": True, "lastupdated": "2019-01-01T01:00:00"},
@@ -435,7 +446,7 @@ async def test_update_unauthorized(hass, mock_bridge):
     assert len(mock_bridge.handle_unauthorized_error.mock_calls) == 1
 
 
-async def test_hue_events(hass, mock_bridge):
+async def test_hue_events(hass, mock_bridge, device_reg):
     """Test that hue remotes fire events when pressed."""
     mock_bridge.mock_sensor_responses.append(SENSOR_RESPONSE)
 
@@ -446,6 +457,10 @@ async def test_hue_events(hass, mock_bridge):
     assert len(hass.states.async_all()) == 7
     assert len(events) == 0
 
+	hue_tap_device = device_reg.async_get_device(
+		{(hue.DOMAIN, "00:00:00:00:00:44:23:08")}
+	)
+	
     mock_bridge.api.sensors["7"].last_event = {"type": "button"}
     mock_bridge.api.sensors["8"].last_event = {"type": "button"}
 
@@ -456,7 +471,7 @@ async def test_hue_events(hass, mock_bridge):
         "lastupdated": "2019-12-28T22:58:03",
     }
     mock_bridge.mock_sensor_responses.append(new_sensor_response)
-
+    
     # Force updates to run again
     async_fire_time_changed(
         hass, dt_util.utcnow() + sensor_base.SensorManager.SCAN_INTERVAL
@@ -467,12 +482,16 @@ async def test_hue_events(hass, mock_bridge):
     assert len(hass.states.async_all()) == 7
     assert len(events) == 1
     assert events[-1].data == {
-        "device_id": '72ac629e89f0545fd6d78827fed81414',
-	"id": "hue_tap",
+        "device_id": hue_tap_device.id,
+        "id": "hue_tap",
         "unique_id": "00:00:00:00:00:44:23:08-f2",
         "event": 18,
         "last_updated": "2019-12-28T22:58:03",
     }
+
+    hue_dimmer_device = device_reg.async_get_device(
+    	{(hue.DOMAIN, "00:17:88:01:10:3e:3a:dc")}
+    )
 
     new_sensor_response = dict(new_sensor_response)
     new_sensor_response["8"] = dict(new_sensor_response["8"])
@@ -492,6 +511,7 @@ async def test_hue_events(hass, mock_bridge):
     assert len(hass.states.async_all()) == 7
     assert len(events) == 2
     assert events[-1].data == {
+        "device_id": hue_dimmer_device.id,
         "id": "hue_dimmer_switch_1",
         "unique_id": "00:17:88:01:10:3e:3a:dc-02-fc00",
         "event": 3002,
@@ -516,6 +536,10 @@ async def test_hue_events(hass, mock_bridge):
     assert len(mock_bridge.mock_requests) == 4
     assert len(hass.states.async_all()) == 7
     assert len(events) == 2
+    
+	hue_aurora_device = device_reg.async_get_device(
+    	{(hue.DOMAIN, "ff:ff:00:0f:e7:fd:bc:b7")}
+    )
 
     # Add a new remote. In discovery the new event is registered **but not fired**
     new_sensor_response = dict(new_sensor_response)
@@ -576,6 +600,7 @@ async def test_hue_events(hass, mock_bridge):
     assert len(hass.states.async_all()) == 8
     assert len(events) == 3
     assert events[-1].data == {
+    	"device_id": hue_aurora_device.id,
         "id": "lutron_aurora_1",
         "unique_id": "ff:ff:00:0f:e7:fd:bc:b7-01-fc00-0014",
         "event": 2,
