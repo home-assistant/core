@@ -115,7 +115,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await _migrate_old_unique_ids(hass, entry_id, powerwall_data)
     login_failed_count = 0
 
-    entry_data = hass.data[DOMAIN][entry.entry_id] = {
+    data = hass.data[DOMAIN][entry.entry_id] = {
         POWERWALL_API_CHANGED: False,
         POWERWALL_HTTP_SESSION: http_session,
     }
@@ -126,17 +126,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         http_session.close()
         http_session = requests.Session()
         power_wall = Powerwall(ip_address, http_session=http_session)
-        entry_data[POWERWALL_OBJECT] = power_wall
-        entry_data[POWERWALL_HTTP_SESSION] = http_session
+        data[POWERWALL_OBJECT] = power_wall
+        data[POWERWALL_HTTP_SESSION] = http_session
         power_wall.login("", password)
 
     async def async_update_data():
         """Fetch data from API endpoint."""
         # Check if we had an error before
         nonlocal login_failed_count
+        nonlocal data
         _LOGGER.debug("Checking if update failed")
-        if entry_data[POWERWALL_API_CHANGED]:
-            return entry_data[POWERWALL_COORDINATOR].data
+        if data[POWERWALL_API_CHANGED]:
+            return data[POWERWALL_COORDINATOR].data
 
         _LOGGER.debug("Updating data")
         try:
@@ -168,7 +169,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=timedelta(seconds=UPDATE_INTERVAL),
     )
 
-    entry_data.update(
+    data.update(
         {
             **powerwall_data,
             POWERWALL_OBJECT: power_wall,
