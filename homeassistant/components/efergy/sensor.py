@@ -163,9 +163,9 @@ class EfergySensor(SensorEntity):
                 self.entity_description.key, period=self.period, sid=self.sid
             )
             self._attr_available = True
-            return
         except (exceptions.DataError, exceptions.ConnectTimeout) as ex:
             if self._attr_available:
                 self._attr_available = False
                 _LOGGER.error("Error getting data from Efergy: %s", ex)
                 return
+        return
