@@ -389,8 +389,8 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
     def _get_hsv(self) -> dict[str, int]:
         return json.loads(self.tuya_device.status[self.dp_code_colour])
 
-    @classmethod
-    def is_dimmer(cls, category: str) -> bool:
+    @staticmethod
+    def is_dimmer(category: str) -> bool:
         """Return true if the light switch is a dimmer."""
         if category in TUYA_DIMMERS:
             return True
