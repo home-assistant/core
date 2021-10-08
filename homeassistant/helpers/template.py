@@ -1465,6 +1465,8 @@ def forgiving_float_filter(value, default=_SENTINEL):
 
 def is_number(value):
     """Try to convert value to a float."""
+    if isinstance(value, bool):
+        return False
     try:
         fvalue = float(value)
     except (ValueError, TypeError):
