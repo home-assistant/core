@@ -1,7 +1,9 @@
 """Support for Efergy sensors."""
 from __future__ import annotations
 
-from pyefergy import Efergy
+import logging
+
+from pyefergy import Efergy, exceptions
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -38,6 +40,8 @@ CONF_CURRENT_VALUES = "current_values"
 
 DEFAULT_PERIOD = "year"
 DEFAULT_UTC_OFFSET = "0"
+
+_LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     CONF_INSTANT: SensorEntityDescription(
@@ -102,9 +106,13 @@ async def async_setup_platform(
     )
 
     dev = []
-    sensors = await api.get_sids()
+    sensors = None
+    try:
+        sensors = await api.get_sids()
+    except (exceptions.DataError, exceptions.ConnectTimeout) as ex:
+        _LOGGER.error(f"Error getting data from Efergy: {ex}")
     for variable in config[CONF_MONITORED_VARIABLES]:
-        if variable[CONF_TYPE] == CONF_CURRENT_VALUES:
+        if sensors and variable[CONF_TYPE] == CONF_CURRENT_VALUES:
             for sensor in sensors:
                 dev.append(
                     EfergySensor(
