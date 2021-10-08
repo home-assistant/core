@@ -395,23 +395,27 @@ class FluxLight(CoordinatorEntity, LightEntity):
             if not kwargs:
                 return
 
+        if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is None:
+            brightness = self.brightness
+
         # Handle switch to CCT Color Mode
         if ATTR_COLOR_TEMP in kwargs:
             color_temp_mired = kwargs[ATTR_COLOR_TEMP]
             color_temp_kelvin = color_temperature_mired_to_kelvin(color_temp_mired)
+            if self.color_mode != COLOR_MODE_RGBWW:
+                self._bulb.setWhiteTemperature(color_temp_kelvin, brightness)
+                return
+
+            # When switching to color temp from RGBWW mode,
+            # we do not want the overall brightness, we only
+            # want the brightness of the white channels
             if ATTR_BRIGHTNESS in kwargs:
                 brightness = kwargs[ATTR_BRIGHTNESS]
             else:
-                # When setting color temp from RGBWW
-                # mode, we do not want the overall brightness, we only
-                # want the brightness of the white channels
                 brightness = self._bulb.getWhiteTemperature()[1]
             cold, warm = color_temp_to_white_levels(color_temp_kelvin, brightness)
             self._bulb.set_levels(r=0, b=0, g=0, w=warm, w2=cold)
             return
-
-        if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is None:
-            brightness = self.brightness
         # Handle switch to HS Color Mode
         if ATTR_HS_COLOR in kwargs:
             self._bulb.set_levels(
