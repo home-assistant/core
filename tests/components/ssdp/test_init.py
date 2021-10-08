@@ -23,9 +23,9 @@ from tests.common import async_fire_time_changed
 
 
 def _ssdp_headers(headers):
-    return CaseInsensitiveDict(
-        headers, _timestamp=datetime(2021, 1, 1, 12, 00), _udn=udn_from_headers(headers)
-    )
+    ssdp_headers = CaseInsensitiveDict(headers, _timestamp=datetime(2021, 1, 1, 12, 00))
+    ssdp_headers["_udn"] = udn_from_headers(ssdp_headers)
+    return ssdp_headers
 
 
 async def init_ssdp_component(hass: homeassistant) -> SsdpListener:
