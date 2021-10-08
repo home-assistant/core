@@ -166,3 +166,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if len(hass.data[DOMAIN]) == 0:
             hass.data.pop(DOMAIN)
     return unload_ok
+
+
+def device_info(latitude, longitude):
+    """Return device registry information."""
+    return {
+        "identifiers": {(DOMAIN, base_unique_id(latitude, longitude))},
+        "name": f"NWS: {latitude}, {longitude}",
+        "manufacturer": "National Weather Service",
+        "entry_type": "service",
+    }

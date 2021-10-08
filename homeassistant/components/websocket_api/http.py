@@ -161,7 +161,9 @@ class WebSocketHandler:
         # event we do not want to block for websocket responses
         self._writer_task = asyncio.create_task(self._writer())
 
-        auth = AuthPhase(self._logger, self.hass, self._send_message, request)
+        auth = AuthPhase(
+            self._logger, self.hass, self._send_message, self._cancel, request
+        )
         connection = None
         disconnect_warn = None
 

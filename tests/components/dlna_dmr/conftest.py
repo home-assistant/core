@@ -93,15 +93,6 @@ def dmr_device_mock(domain_data_mock: Mock) -> Iterable[Mock]:
         yield device
 
 
-@pytest.fixture(name="skip_notifications", autouse=True)
-def skip_notifications_fixture() -> Iterable[None]:
-    """Skip notification calls."""
-    with patch("homeassistant.components.persistent_notification.async_create"), patch(
-        "homeassistant.components.persistent_notification.async_dismiss"
-    ):
-        yield
-
-
 @pytest.fixture(autouse=True)
 def ssdp_scanner_mock() -> Iterable[Mock]:
     """Mock the SSDP module."""
