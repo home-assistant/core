@@ -182,8 +182,8 @@ class NanoleafLight(LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        transition = kwargs.get(ATTR_TRANSITION)
-        await self._nanoleaf.turn_off(transition)
+        transition: float | None = kwargs.get(ATTR_TRANSITION)
+        await self._nanoleaf.turn_off(None if transition is None else int(transition))
 
     async def async_update(self) -> None:
         """Fetch new state data for this light."""
