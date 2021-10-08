@@ -19,7 +19,7 @@ from flux_led.device import MAX_TEMP, MIN_TEMP
 from flux_led.utils import (
     color_temp_to_white_levels,
     rgbcw_brightness,
-    rgbcw_to_rgbww,
+    rgbcw_to_rgbwc,
     rgbw_brightness,
 )
 import voluptuous as vol
@@ -432,7 +432,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
                 rgbcw = rgbcw_brightness(kwargs[ATTR_RGBWW_COLOR], brightness)
             else:
                 rgbcw = kwargs[ATTR_RGBWW_COLOR]
-            r, g, b, w, c = rgbcw_to_rgbww(rgbcw)
+            r, g, b, w, c = rgbcw_to_rgbwc(rgbcw)
             self._bulb.setRgbw(r=r, g=g, b=b, w=w, w2=c)
             return
         # Handle switch to White Color Mode
