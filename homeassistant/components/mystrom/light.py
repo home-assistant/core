@@ -49,7 +49,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     bulb = MyStromBulb(host, mac)
     try:
         await bulb.get_state()
-        if bulb.bulb_type != "rgblamp":
+        if not (bulb.bulb_type == "rgblamp" or bulb.bulb_type == "strip") :
             _LOGGER.error("Device %s (%s) is not a myStrom bulb", host, mac)
             return
     except MyStromConnectionError as err:
@@ -153,16 +153,17 @@ class MyStromLight(LightEntity):
             await self._bulb.get_state()
             self._state = self._bulb.state
 
-            colors = self._bulb.color
-            try:
-                color_h, color_s, color_v = colors.split(";")
-            except ValueError:
-                color_s, color_v = colors.split(";")
-                color_h = 0
+            if self._bulb.bulb_type != "strip" :
+                colors = self._bulb.color
+                try:
+                    color_h, color_s, color_v = colors.split(";")
+                except ValueError:
+                    color_s, color_v = colors.split(";")
+                    color_h = 0
 
-            self._color_h = int(color_h)
-            self._color_s = int(color_s)
-            self._brightness = int(color_v) * 255 / 100
+                self._color_h = int(color_h)
+                self._color_s = int(color_s)
+                self._brightness = int(color_v) * 255 / 100
 
             self._available = True
         except MyStromConnectionError:
