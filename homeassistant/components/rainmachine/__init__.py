@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 from functools import partial
-from typing import Any
+from typing import Any, cast
 
 from regenmaschine import Client
 from regenmaschine.controller import Controller
@@ -57,32 +57,38 @@ CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 PLATFORMS = ["binary_sensor", "sensor", "switch"]
 
-SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_DEVICE_ID): vol.All(cv.ensure_list, cv.string),
-    }
-)
-
 SERVICE_NAME_PAUSE_WATERING = "pause_watering"
 SERVICE_NAME_STOP_ALL = "stop_all"
 SERVICE_NAME_UNPAUSE_WATERING = "unpause_watering"
 
+SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_DEVICE_ID): cv.string,
+    }
+)
+
+SERVICE_PAUSE_WATERING_SCHEMA = SERVICE_SCHEMA.extend(
+    {
+        vol.Required(CONF_SECONDS): cv.positive_int,
+    }
+)
+
 
 @callback
-def async_get_controllers_for_service_call(
+def async_get_controller_for_service_call(
     hass: HomeAssistant, call: ServiceCall
-) -> list[Controller]:
-    """Get the controllers related to a service call (by device ID)."""
+) -> Controller | None:
+    """Get the controller related to a service call (by device ID)."""
     controllers = hass.data[DOMAIN][DATA_CONTROLLER]
     device_registry = dr.async_get(hass)
 
-    return [
-        controllers[entry_id]
-        for device_id in call.data[CONF_DEVICE_ID]
-        if (device_entry := device_registry.async_get(device_id))
-        for entry_id in device_entry.config_entries
-        if entry_id in controllers
-    ]
+    if device_entry := device_registry.async_get(call.data[CONF_DEVICE_ID]):
+        for entry_id in device_entry.config_entries:
+            if entry_id in controllers:
+                return cast(Controller, controllers[entry_id])
+
+    LOGGER.error("No controller for device ID: %s", call.data[CONF_DEVICE_ID])
+    return None
 
 
 async def async_update_programs_and_zones(
@@ -191,38 +197,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_pause_watering(call: ServiceCall) -> None:
         """Pause watering for a set number of seconds."""
-        controllers = async_get_controllers_for_service_call(hass, call)
-        tasks = [
-            controller.watering.pause_all(call.data[CONF_SECONDS])
-            for controller in controllers
-        ]
-        await asyncio.gather(*tasks)
-        await async_update_programs_and_zones(hass, entry)
+        if controller := async_get_controller_for_service_call(hass, call):
+            await controller.watering.pause_all(call.data[CONF_SECONDS])
+            await async_update_programs_and_zones(hass, entry)
 
     async def async_stop_all(call: ServiceCall) -> None:
         """Stop all watering."""
-        controllers = async_get_controllers_for_service_call(hass, call)
-        tasks = [controller.watering.stop_all() for controller in controllers]
-        await asyncio.gather(*tasks)
-        await async_update_programs_and_zones(hass, entry)
+        if controller := async_get_controller_for_service_call(hass, call):
+            await controller.watering.stop_all()
+            await async_update_programs_and_zones(hass, entry)
 
     async def async_unpause_watering(call: ServiceCall) -> None:
         """Unpause watering."""
-        controllers = async_get_controllers_for_service_call(hass, call)
-        tasks = [controller.watering.unpause_all() for controller in controllers]
-        await asyncio.gather(*tasks)
-        await async_update_programs_and_zones(hass, entry)
+        if controller := async_get_controller_for_service_call(hass, call):
+            await controller.watering.unpause_all()
+            await async_update_programs_and_zones(hass, entry)
 
-    for service_name, method in (
-        (SERVICE_NAME_PAUSE_WATERING, async_pause_watering),
-        (SERVICE_NAME_STOP_ALL, async_stop_all),
-        (SERVICE_NAME_UNPAUSE_WATERING, async_unpause_watering),
+    for service_name, schema, method in (
+        (
+            SERVICE_NAME_PAUSE_WATERING,
+            SERVICE_PAUSE_WATERING_SCHEMA,
+            async_pause_watering,
+        ),
+        (SERVICE_NAME_STOP_ALL, SERVICE_SCHEMA, async_stop_all),
+        (SERVICE_NAME_UNPAUSE_WATERING, SERVICE_SCHEMA, async_unpause_watering),
     ):
         if hass.services.has_service(DOMAIN, service_name):
             continue
-        hass.services.async_register(
-            DOMAIN, service_name, method, schema=SERVICE_SCHEMA
-        )
+        hass.services.async_register(DOMAIN, service_name, method, schema=schema)
 
     return True
 

@@ -53,9 +53,6 @@ ATTR_ZONES = "zones"
 
 DEFAULT_ICON = "mdi:water"
 
-DEVICE_CLASS_PROGRAM = "program"
-DEVICE_CLASS_ZONE = "zone"
-
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
 RUN_STATUS_MAP = {0: "Not Running", 1: "Running", 2: "Queued"}
@@ -164,10 +161,7 @@ async def async_setup_entry(
             controller,
             entry,
             RainMachineSwitchDescription(
-                key=f"RainMachineProgram_{uid}",
-                name=program["name"],
-                device_class=DEVICE_CLASS_PROGRAM,
-                uid=uid,
+                key=f"RainMachineProgram_{uid}", name=program["name"], uid=uid
             ),
         )
         for uid, program in programs_coordinator.data.items()
@@ -179,10 +173,7 @@ async def async_setup_entry(
                 controller,
                 entry,
                 RainMachineSwitchDescription(
-                    key=f"RainMachineZone_{uid}",
-                    name=zone["name"],
-                    device_class=DEVICE_CLASS_ZONE,
-                    uid=uid,
+                    key=f"RainMachineZone_{uid}", name=zone["name"], uid=uid
                 ),
             )
             for uid, zone in zones_coordinator.data.items()
