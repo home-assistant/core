@@ -16,7 +16,12 @@ from flux_led.const import (
     COLOR_MODE_RGBWW as FLUX_COLOR_MODE_RGBWW,
 )
 from flux_led.device import MAX_TEMP, MIN_TEMP
-from flux_led.utils import rgbcw_brightness, rgbcw_to_rgbww, rgbw_brightness
+from flux_led.utils import (
+    color_temp_to_white_levels,
+    rgbcw_brightness,
+    rgbcw_to_rgbwc,
+    rgbw_brightness,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -401,14 +406,15 @@ class FluxLight(CoordinatorEntity, LightEntity):
                 # mode, we do not want the overall brightness, we only
                 # want the brightness of the white channels
                 brightness = self._bulb.getWhiteTemperature()[1]
-            self._bulb.setWhiteTemperature(color_temp_kelvin, brightness)
+            cold, warm = color_temp_to_white_levels(color_temp_kelvin, brightness)
+            self._bulb.set_levels(r=0, b=0, g=0, w=warm, w2=cold)
             return
 
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is None:
             brightness = self.brightness
         # Handle switch to HS Color Mode
         if ATTR_HS_COLOR in kwargs:
-            self._bulb.setRgbw(
+            self._bulb.set_levels(
                 *color_hs_to_RGB(*kwargs[ATTR_HS_COLOR]), brightness=brightness
             )
             return
@@ -418,7 +424,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
                 rgbw = rgbw_brightness(kwargs[ATTR_RGBW_COLOR], brightness)
             else:
                 rgbw = kwargs[ATTR_RGBW_COLOR]
-            self._bulb.setRgbw(*rgbw)
+            self._bulb.set_levels(*rgbw)
             return
         # Handle switch to RGBWW Color Mode
         if ATTR_RGBWW_COLOR in kwargs:
@@ -426,18 +432,18 @@ class FluxLight(CoordinatorEntity, LightEntity):
                 rgbcw = rgbcw_brightness(kwargs[ATTR_RGBWW_COLOR], brightness)
             else:
                 rgbcw = kwargs[ATTR_RGBWW_COLOR]
-            r, g, b, w, c = rgbcw_to_rgbww(rgbcw)
-            self._bulb.setRgbw(r=r, g=g, b=b, w=w, w2=c)
+            r, g, b, w, c = rgbcw_to_rgbwc(rgbcw)
+            self._bulb.set_levels(r=r, g=g, b=b, w=w, w2=c)
             return
         # Handle switch to White Color Mode
         if ATTR_WHITE in kwargs:
-            self._bulb.setWarmWhite255(kwargs[ATTR_WHITE])
+            self._bulb.set_levels(w=kwargs[ATTR_WHITE])
             return
         if ATTR_EFFECT in kwargs:
             effect = kwargs[ATTR_EFFECT]
             # Random color effect
             if effect == EFFECT_RANDOM:
-                self._bulb.setRgb(
+                self._bulb.set_levels(
                     random.randint(0, 255),
                     random.randint(0, 255),
                     random.randint(0, 255),
@@ -466,21 +472,21 @@ class FluxLight(CoordinatorEntity, LightEntity):
         # Handle brightness adjustment in RGB Color Mode
         if self.color_mode == COLOR_MODE_HS:
             rgb = color_hs_to_RGB(*self.hs_color)
-            self._bulb.setRgbw(*rgb, brightness=brightness)
+            self._bulb.set_levels(*rgb, brightness=brightness)
             return
         # Handle brightness adjustment in RGBW Color Mode
         if self.color_mode == COLOR_MODE_RGBW:
-            self._bulb.setRgbw(*rgbw_brightness(self.rgbw_color, brightness))
+            self._bulb.set_levels(*rgbw_brightness(self.rgbw_color, brightness))
             return
         # Handle brightness adjustment in RGBWW Color Mode
         if self.color_mode == COLOR_MODE_RGBWW:
             rgbcw = self.rgbww_color
             r, b, g, c, w = rgbcw_brightness(rgbcw, brightness)
-            self._bulb.setRgbw(r=r, g=g, b=b, w=w, w2=c)
+            self._bulb.set_levels(r=r, g=g, b=b, w=w, w2=c)
             return
         # Handle White Color Mode and Brightness Only Color Mode
         if self.color_mode in (COLOR_MODE_WHITE, COLOR_MODE_BRIGHTNESS):
-            self._bulb.setWarmWhite255(brightness)
+            self._bulb.set_levels(w=brightness)
             return
         raise ValueError(f"Unsupported color mode {self.color_mode}")
 
