@@ -116,14 +116,10 @@ push_weather_data:
     Units must be sent in metric; no conversions are performed by the integraion.
 
     See details of RainMachine API Here: https://rainmachine.docs.apiary.io/#reference/weather-services/parserdata/post
-  target:
-    entity:
-      integration: rainmachine
-      domain: switch
   fields:
     device_id:
       name: Controller
-      description: The controller whose watering activities should be unpaused
+      description: The controller for the weather data to be pushed.
       required: true
       selector:
         device:
