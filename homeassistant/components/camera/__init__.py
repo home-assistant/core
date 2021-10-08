@@ -447,7 +447,7 @@ class Camera(Entity):
         return self.stream
 
     async def stream_source(self) -> str | None:
-        """Return the source of the stream..
+        """Return the source of the stream.
 
         This is used by cameras with SUPPORT_STREAM and STREAM_TYPE_HLS.
         """
@@ -746,19 +746,18 @@ async def ws_camera_web_rtc_offer(
 
     Async friendly.
     """
+    entity_id = msg["entity_id"]
+    offer = msg["offer"]
+    camera = _get_camera_from_entity_id(hass, entity_id)
+    if camera.stream_type != STREAM_TYPE_WEB_RTC:
+        connection.send_error(
+            msg["id"],
+            "web_rtc_offer_failed",
+            f"Camera does not support WebRTC, stream_type={camera.stream_type}",
+        )
+        return
     try:
-        entity_id = msg["entity_id"]
-        offer = msg["offer"]
-        camera = _get_camera_from_entity_id(hass, entity_id)
-        if camera.stream_type != STREAM_TYPE_WEB_RTC:
-            connection.send_error(
-                msg["id"],
-                "web_rtc_offer_failed",
-                f"Camera does not support WebRTC, stream_type={camera.stream_type}",
-            )
-            return
         answer = await camera.async_handle_web_rtc_offer(offer)
-        connection.send_result(msg["id"], {"answer": answer})
     except (HomeAssistantError, ValueError) as ex:
         _LOGGER.error("Error handling WebRTC offer: %s", ex)
         connection.send_error(msg["id"], "web_rtc_offer_failed", str(ex))
@@ -767,6 +766,8 @@ async def ws_camera_web_rtc_offer(
         connection.send_error(
             msg["id"], "web_rtc_offer_failed", "Timeout handling WebRTC offer"
         )
+    else:
+        connection.send_result(msg["id"], {"answer": answer})
 
 
 @websocket_api.websocket_command(
