@@ -282,7 +282,7 @@ class CoverGroup(GroupEntity, CoverEntity):
                 self._attr_is_opening = True
                 has_valid_state = True
                 continue
-        if has_valid_state is False:
+        if not has_valid_state:
             self._attr_is_closed = None
 
         position_covers = self._covers[KEY_POSITION]
