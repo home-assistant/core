@@ -297,6 +297,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
         """Initialize the light."""
         super().__init__(coordinator)
         self._bulb: AIOWifiLedBulb = coordinator.device
+        self._responding = True
         self._attr_name = name
         self._attr_unique_id = unique_id
         self._attr_supported_features = SUPPORT_FLUX_LED
@@ -500,8 +501,9 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if not self.coordinator.last_update_success:
+        if self.coordinator.last_update_success != self._responding:
             self.async_write_ha_state()
+        self._responding = self.coordinator.last_update_success
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
