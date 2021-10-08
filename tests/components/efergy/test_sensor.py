@@ -3,9 +3,8 @@
 import asyncio
 from datetime import timedelta
 
-from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -112,20 +111,13 @@ async def test_failed_getting_sids(
     assert await async_setup_component(
         hass, SENSOR_DOMAIN, {SENSOR_DOMAIN: ONE_SENSOR_CONFIG}
     )
-    await hass.async_block_till_done()
-    await hass.services.async_call(
-        HA_DOMAIN,
-        SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: "sensor.energy_consumed"},
-        blocking=True,
-    )
-    assert hass.states.get("sensor.efergy_728386") is None
+    assert hass.states.async_all() == []
 
 
 async def test_failed_update_and_reconnection(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ):
-    """Test failed update."""
+    """Test failed update and reconnection."""
     mock_responses(aioclient_mock)
     assert await async_setup_component(
         hass, SENSOR_DOMAIN, {SENSOR_DOMAIN: ONE_SENSOR_CONFIG}
