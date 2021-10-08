@@ -78,18 +78,18 @@ ICON_CONDITION_MAP = {
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Environment Canada weather."""
+    _LOGGER.warning(
+        "Environment Canada YAML configuration is deprecated. Your YAML configuration "
+        "has been imported into the UI and can be safely removed from your YAML."
+    )
     # if config.get(CONF_STATION):
     #     ec_data = ECData(station_id=config[CONF_STATION])
+    #     pass
     # else:
     #     lat = config.get(CONF_LATITUDE, hass.config.latitude)
     #     lon = config.get(CONF_LONGITUDE, hass.config.longitude)
     #     ec_data = ECData(coordinates=(lat, lon))
 
-    # add_devices([ECWeather(ec_data, config, config[CONF_FORECAST] == "hourly")])
-    _LOGGER.warning(
-        "Environment Canada YAML configuration is deprecated. Your YAML configuration "
-        "has been imported into the UI and can be safely removed from your YAML."
-    )
     default_config = {
         CONF_NAME: "",
         CONF_LATITUDE: 0,
