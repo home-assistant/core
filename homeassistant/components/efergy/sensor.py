@@ -162,6 +162,10 @@ class EfergySensor(SensorEntity):
             self._attr_native_value = await self.api.async_get_reading(
                 self.entity_description.key, period=self.period, sid=self.sid
             )
+            self._attr_available = True
+            return
         except (exceptions.DataError, exceptions.ConnectTimeout) as ex:
-            self._attr_available = False
-            _LOGGER.error("Error getting data from Efergy: %s", ex)
+            if self._attr_available:
+                self._attr_available = False
+                _LOGGER.error("Error getting data from Efergy: %s", ex)
+                return
