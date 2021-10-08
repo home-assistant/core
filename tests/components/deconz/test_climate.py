@@ -38,7 +38,17 @@ from homeassistant.components.deconz.climate import (
     DECONZ_PRESET_HOLIDAY,
     DECONZ_PRESET_MANUAL,
 )
-from homeassistant.components.deconz.const import CONF_ALLOW_CLIP_SENSOR
+from homeassistant.components.deconz.const import (
+    CONF_ALLOW_CLIP_SENSOR,
+    ATTR_FLIP_DISPLAY,
+    ATTR_EXTERNAL_SENSOR_TEMP,
+    ATTR_EXTERNAL_WINDOW_OPEN,
+    ATTR_LOCKED,
+    ATTR_MOUNTING_MODE,
+    ATTR_OFFSET,
+    ATTR_ON,
+    ATTR_SCHEDULE_ON,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -214,6 +224,36 @@ async def test_climate_device_without_cooling_support(
     assert hass.states.get("sensor.thermostat_battery_level").state == "100"
     assert hass.states.get("climate.presence_sensor") is None
     assert hass.states.get("climate.clip_thermostat") is None
+
+    # Test attribute conversion
+
+    event_changed_sensor = {
+        "config": {
+            "displayflipped": False,
+            "externalsensortemp": 1280,
+            "externalwindowopen": True,
+            "locked": False,
+            "mountingmode": False,
+            "offset": 0,
+            "on": True,
+            "schedule_on": False,
+        },
+        "e": "changed",
+        "id": "1",
+        "r": "sensors",
+        "t": "event",
+    }
+    await mock_deconz_websocket(data=event_changed_sensor)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ATTR_FLIP_DISPLAY).state == False
+    assert hass.states.get(ATTR_EXTERNAL_SENSOR_TEMP).state == 12.8
+    assert hass.states.get(ATTR_EXTERNAL_WINDOW_OPEN).state == True
+    assert hass.states.get(ATTR_LOCKED).state == False
+    assert hass.states.get(ATTR_MOUNTING_MODE).state == False
+    assert hass.states.get(ATTR_OFFSET).state == -10
+    assert hass.states.get(ATTR_ON).state == True
+    assert hass.states.get(ATTR_SCHEDULE_ON).state == False
 
     # Event signals thermostat configured off
 
