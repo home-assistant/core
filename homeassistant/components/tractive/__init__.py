@@ -144,7 +144,6 @@ class TractiveClient:
         self._hass = hass
         self._client = client
         self._user_id = user_id
-        self._listen_task = None
         self._last_hw_time = 0
         self._last_pos_time = 0
         self._listen_task: asyncio.Task | None = None
@@ -185,7 +184,6 @@ class TractiveClient:
                     if server_was_unavailable:
                         _LOGGER.debug("Tractive is back online")
                         server_was_unavailable = False
-
                     if event["message"] == "activity_update":
                         self._send_activity_update(event)
                         continue

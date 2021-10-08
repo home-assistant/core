@@ -50,7 +50,7 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         self._latitude: float = item.pos_report["latlong"][0]
         self._longitude: float = item.pos_report["latlong"][1]
         self._accuracy: int = item.pos_report["pos_uncertainty"]
-        self._source_type: str = pos_report["sensor_used"]
+        self._source_type: str = item.pos_report["sensor_used"]
 
         self._attr_name = f"{self._tracker_id} {item.trackable['details']['name']}"
         self._attr_unique_id = item.trackable["_id"]
