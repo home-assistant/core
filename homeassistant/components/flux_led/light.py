@@ -321,7 +321,6 @@ class FluxLight(CoordinatorEntity, LightEntity):
         self._attr_effect_list = FLUX_EFFECT_LIST
         if custom_effect_colors:
             self._attr_effect_list = [*FLUX_EFFECT_LIST, EFFECT_CUSTOM]
-        self._ip_address = coordinator.host
         self._custom_effect_colors = custom_effect_colors
         self._custom_effect_speed_pct = custom_effect_speed_pct
         self._custom_effect_transition = custom_effect_transition
