@@ -64,7 +64,7 @@ async def test_ssdp_flow_dispatched_on_st(mock_get_ssdp, hass, caplog, mock_flow
     }
     assert mock_flow_init.mock_calls[0][2]["data"] == {
         ssdp.ATTR_SSDP_ST: "mock-st",
-        ssdp.ATTR_SSDP_LOCATION: None,
+        ssdp.ATTR_SSDP_LOCATION: "http://1.1.1.1",
         ssdp.ATTR_SSDP_USN: "uuid:mock-udn::mock-st",
         ssdp.ATTR_SSDP_SERVER: "mock-server",
         ssdp.ATTR_SSDP_EXT: "",
