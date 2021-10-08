@@ -22,6 +22,7 @@ from homeassistant.const import (
     POWER_WATT,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -110,7 +111,7 @@ async def async_setup_platform(
     try:
         sensors = await api.get_sids()
     except (exceptions.DataError, exceptions.ConnectTimeout) as ex:
-        _LOGGER.error(f"Error getting data from Efergy: {ex}")
+        raise PlatformNotReady(f"Error getting data from Efergy: {ex}")
     for variable in config[CONF_MONITORED_VARIABLES]:
         if sensors and variable[CONF_TYPE] == CONF_CURRENT_VALUES:
             for sensor in sensors:
@@ -158,6 +159,10 @@ class EfergySensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Get the Efergy monitor data from the web service."""
-        self._attr_native_value = await self.api.async_get_reading(
-            self.entity_description.key, period=self.period, sid=self.sid
-        )
+        try:
+            self._attr_native_value = await self.api.async_get_reading(
+                self.entity_description.key, period=self.period, sid=self.sid
+            )
+        except (exceptions.DataError, exceptions.ConnectTimeout) as ex:
+            self._attr_native_value = None
+            _LOGGER.error(f"Error getting data from Efergy: {ex}")
