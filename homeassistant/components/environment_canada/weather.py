@@ -65,7 +65,12 @@ class ECWeather(WeatherEntity):
         """Initialize Environment Canada weather."""
         self.ec_data = ec_data
         self.config = config
-        self.platform_name = config.get(CONF_NAME)
+        if config.get(CONF_NAME):
+            self.platform_name = f"{config.get(CONF_NAME)}{' Hourly' if hourly else ''}"
+        else:
+            self.platform_name = (
+                f"{ec_data.metadata.get('location')}{' Hourly' if hourly else ''}"
+            )
         self.forecast_type = "hourly" if hourly else "daily"
 
     @property
@@ -82,9 +87,7 @@ class ECWeather(WeatherEntity):
     @property
     def name(self):
         """Return the name of the weather entity."""
-        if self.platform_name:
-            return self.platform_name
-        return self.ec_data.metadata.get("location")
+        return self.platform_name
 
     @property
     def temperature(self):

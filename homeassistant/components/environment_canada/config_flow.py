@@ -110,7 +110,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema(
             {
-                vol.Optional(CONF_NAME, default=self._data[CONF_NAME]): str,
+                # vol.Optional(CONF_NAME, default=self._data[CONF_NAME]): str,
+                vol.Optional(
+                    CONF_NAME,
+                    default="",
+                    description={"suggested_value": self._data[CONF_NAME]},
+                ): str,
             }
         )
 
