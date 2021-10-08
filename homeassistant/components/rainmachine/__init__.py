@@ -36,6 +36,7 @@ from .config_flow import get_client_controller
 from .const import (
     CONF_CONDITION,
     CONF_DEWPOINT,
+    CONF_ET,
     CONF_MAXRH,
     CONF_MAXTEMP,
     CONF_MINRH,
@@ -87,21 +88,29 @@ SERVICE_PAUSE_WATERING_SCHEMA = SERVICE_SCHEMA.extend(
     }
 )
 
+CV_WX_DATA_VALID_PERCENTAGE = vol.All(vol.Coerce(int), vol.Range(min=0, max=100))
+CV_WX_DATA_VALID_TEMP_RANGE = vol.All(vol.Coerce(float), vol.Range(min=-40.0, max=40.0))
+CV_WX_DATA_VALID_RAIN_RANGE = vol.All(vol.Coerce(float), vol.Range(min=0.0, max=1000.0))
+CV_WX_DATA_VALID_WIND_SPEED = vol.All(vol.Coerce(float), vol.Range(min=0.0, max=65.0))
+CV_WX_DATA_VALID_PRESSURE = vol.All(vol.Coerce(float), vol.Range(min=60.0, max=110.0))
+CV_WX_DATA_VALID_SOLARRAD = vol.All(vol.Coerce(float), vol.Range(min=0.0, max=5.0))
+
 SERVICE_PUSH_WEATHER_DATA_SCHEMA = SERVICE_SCHEMA.extend(
     {
-        vol.Optional(CONF_TIMESTAMP): cv.date,
-        vol.Optional(CONF_MINTEMP): vol.Coerce(float),
-        vol.Optional(CONF_MAXTEMP): vol.Coerce(float),
-        vol.Optional(CONF_TEMPERATURE): vol.Coerce(float),
-        vol.Optional(CONF_WIND): vol.Coerce(float),
-        vol.Optional(CONF_SOLARRAD): vol.Coerce(float),
-        vol.Optional(CONF_QPF): vol.Coerce(float),
-        vol.Optional(CONF_RAIN): vol.Coerce(float),
-        vol.Optional(CONF_MINRH): vol.Coerce(float),
-        vol.Optional(CONF_MAXRH): vol.Coerce(float),
-        vol.Optional(CONF_CONDITION): cv.positive_int,
-        vol.Optional(CONF_PRESSURE): vol.Coerce(float),
-        vol.Optional(CONF_DEWPOINT): vol.Coerce(float),
+        vol.Optional(CONF_TIMESTAMP): cv.positive_float,
+        vol.Optional(CONF_MINTEMP): CV_WX_DATA_VALID_TEMP_RANGE,
+        vol.Optional(CONF_MAXTEMP): CV_WX_DATA_VALID_TEMP_RANGE,
+        vol.Optional(CONF_TEMPERATURE): CV_WX_DATA_VALID_TEMP_RANGE,
+        vol.Optional(CONF_WIND): CV_WX_DATA_VALID_WIND_SPEED,
+        vol.Optional(CONF_SOLARRAD): CV_WX_DATA_VALID_SOLARRAD,
+        vol.Optional(CONF_QPF): CV_WX_DATA_VALID_RAIN_RANGE,
+        vol.Optional(CONF_RAIN): CV_WX_DATA_VALID_RAIN_RANGE,
+        vol.Optional(CONF_ET): CV_WX_DATA_VALID_RAIN_RANGE,
+        vol.Optional(CONF_MINRH): CV_WX_DATA_VALID_PERCENTAGE,
+        vol.Optional(CONF_MAXRH): CV_WX_DATA_VALID_PERCENTAGE,
+        vol.Optional(CONF_CONDITION): str,
+        vol.Optional(CONF_PRESSURE): CV_WX_DATA_VALID_PRESSURE,
+        vol.Optional(CONF_DEWPOINT): CV_WX_DATA_VALID_TEMP_RANGE,
     }
 )
 

@@ -21,6 +21,7 @@ DEFAULT_ZONE_RUN = 60 * 10
 # Constants expected by the RainMachine API for Service Data
 CONF_CONDITION = "condition"
 CONF_DEWPOINT = "dewpoint"
+CONF_ET = "et"
 CONF_MAXRH = "maxrh"
 CONF_MAXTEMP = "maxtemp"
 CONF_MINRH = "minrh"
