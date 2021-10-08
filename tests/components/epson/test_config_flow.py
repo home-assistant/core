@@ -3,14 +3,14 @@ from unittest.mock import patch
 
 from epson_projector.const import PWR_OFF_STATE
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.epson.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_UNAVAILABLE
 
 
 async def test_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     with patch("homeassistant.components.epson.Projector.get_power", return_value="01"):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -21,6 +21,9 @@ async def test_form(hass):
     with patch(
         "homeassistant.components.epson.Projector.get_power",
         return_value="01",
+    ), patch(
+        "homeassistant.components.epson.Projector.get_serial_number",
+        return_value="12345",
     ), patch(
         "homeassistant.components.epson.async_setup_entry",
         return_value=True,

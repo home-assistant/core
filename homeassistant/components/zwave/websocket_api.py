@@ -2,7 +2,6 @@
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.ozw.const import DOMAIN as OZW_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.core import callback
 
@@ -59,12 +58,14 @@ def websocket_get_migration_config(hass, connection, msg):
 
 
 @websocket_api.require_admin
+@websocket_api.websocket_command(
+    {vol.Required(TYPE): "zwave/start_zwave_js_config_flow"}
+)
 @websocket_api.async_response
-@websocket_api.websocket_command({vol.Required(TYPE): "zwave/start_ozw_config_flow"})
-async def websocket_start_ozw_config_flow(hass, connection, msg):
-    """Start the ozw integration config flow (for migration wizard).
+async def websocket_start_zwave_js_config_flow(hass, connection, msg):
+    """Start the Z-Wave JS integration config flow (for migration wizard).
 
-    Return data with the flow id of the started ozw config flow.
+    Return data with the flow id of the started Z-Wave JS config flow.
     """
     config = hass.data[DATA_ZWAVE_CONFIG]
     data = {
@@ -72,7 +73,7 @@ async def websocket_start_ozw_config_flow(hass, connection, msg):
         "network_key": config[CONF_NETWORK_KEY],
     }
     result = await hass.config_entries.flow.async_init(
-        OZW_DOMAIN, context={"source": SOURCE_IMPORT}, data=data
+        "zwave_js", context={"source": SOURCE_IMPORT}, data=data
     )
     connection.send_result(
         msg[ID],
@@ -86,4 +87,4 @@ def async_load_websocket_api(hass):
     websocket_api.async_register_command(hass, websocket_network_status)
     websocket_api.async_register_command(hass, websocket_get_config)
     websocket_api.async_register_command(hass, websocket_get_migration_config)
-    websocket_api.async_register_command(hass, websocket_start_ozw_config_flow)
+    websocket_api.async_register_command(hass, websocket_start_zwave_js_config_flow)

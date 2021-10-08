@@ -6,7 +6,13 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import callback
 
-from .const import CONF_PLANT_ID, DEFAULT_URL, DOMAIN, SERVER_URLS
+from .const import (
+    CONF_PLANT_ID,
+    DEFAULT_URL,
+    DOMAIN,
+    LOGIN_INVALID_AUTH_CODE,
+    SERVER_URLS,
+)
 
 
 class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -45,9 +51,12 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.api.login, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
         )
 
-        if not login_response["success"] and login_response["errCode"] == "102":
+        if (
+            not login_response["success"]
+            and login_response["msg"] == LOGIN_INVALID_AUTH_CODE
+        ):
             return self._async_show_user_form({"base": "invalid_auth"})
-        self.user_id = login_response["userId"]
+        self.user_id = login_response["user"]["id"]
 
         self.data = user_input
         return await self.async_step_plant()

@@ -52,6 +52,7 @@ TILT_DEVICE_MAP = {
     BlindType.VenetianBlind: DEVICE_CLASS_BLIND,
     BlindType.ShangriLaBlind: DEVICE_CLASS_BLIND,
     BlindType.DoubleRoller: DEVICE_CLASS_SHADE,
+    BlindType.VerticalBlind: DEVICE_CLASS_BLIND,
 }
 
 TDBU_DEVICE_MAP = {
@@ -170,6 +171,8 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
     @property
     def is_closed(self):
         """Return if the cover is closed or not."""
+        if self._blind.position is None:
+            return None
         return self._blind.position == 100
 
     async def async_added_to_hass(self):

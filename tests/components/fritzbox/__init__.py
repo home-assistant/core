@@ -100,6 +100,7 @@ class FritzDeviceSensorMock(FritzDeviceBaseMock):
     lock = "fake_locked"
     present = True
     temperature = 1.23
+    rel_humidity = 42
 
 
 class FritzDeviceSwitchMock(FritzDeviceBaseMock):
@@ -108,6 +109,7 @@ class FritzDeviceSwitchMock(FritzDeviceBaseMock):
     battery_level = None
     device_lock = "fake_locked_device"
     energy = 1234
+    voltage = 230
     fw_version = "1.2.3"
     has_alarm = False
     has_powermeter = True

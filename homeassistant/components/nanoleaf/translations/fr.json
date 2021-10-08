@@ -15,7 +15,8 @@
         "flow_title": "{name}",
         "step": {
             "link": {
-                "description": "Appuyez sur le bouton d'alimentation de votre Nanoleaf et maintenez-le enfonc\u00e9 pendant 5 secondes jusqu'\u00e0 ce que les voyants du bouton commencent \u00e0 clignoter, puis cliquez sur **ENVOYER** dans les 30 secondes."
+                "description": "Appuyez sur le bouton d'alimentation de votre Nanoleaf et maintenez-le enfonc\u00e9 pendant 5 secondes jusqu'\u00e0 ce que les voyants du bouton commencent \u00e0 clignoter, puis cliquez sur **ENVOYER** dans les 30 secondes.",
+                "title": "Lier Nanoleaf"
             },
             "user": {
                 "data": {

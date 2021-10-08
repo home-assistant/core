@@ -75,7 +75,7 @@ async def test_setup_owserver_with_port(hass):
 @patch("homeassistant.components.onewire.onewirehub.protocol.proxy")
 async def test_sensors_on_owserver_coupler(owproxy, hass, device_id):
     """Test for 1-Wire sensors connected to DS2409 coupler."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entity_registry = mock_registry(hass)
 
     mock_coupler = MOCK_COUPLERS[device_id]
@@ -138,7 +138,7 @@ async def test_owserver_setup_valid_device(owproxy, hass, device_id, platform):
 
     As they would be on a clean setup: all binary-sensors and switches disabled.
     """
-    await async_setup_component(hass, "persistent_notification", {})
+
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
@@ -184,7 +184,7 @@ async def test_owserver_setup_valid_device(owproxy, hass, device_id, platform):
 @pytest.mark.parametrize("device_id", MOCK_SYSBUS_DEVICES.keys())
 async def test_onewiredirect_setup_valid_device(hass, device_id):
     """Test that sysbus config entry works correctly."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 

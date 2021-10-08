@@ -445,7 +445,11 @@ async def async_setup(hass, config):  # noqa: C901
                 )
 
         # If both white and brightness are specified, override white
-        if ATTR_WHITE in params and COLOR_MODE_WHITE in supported_color_modes:
+        if (
+            supported_color_modes
+            and ATTR_WHITE in params
+            and COLOR_MODE_WHITE in supported_color_modes
+        ):
             params[ATTR_WHITE] = params.pop(ATTR_BRIGHTNESS, params[ATTR_WHITE])
 
         # Remove deprecated white value if the light supports color mode

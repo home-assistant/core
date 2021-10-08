@@ -189,7 +189,7 @@ class RainMachineEntity(CoordinatorEntity):
         self._attr_device_info = {
             "identifiers": {(DOMAIN, controller.mac)},
             "connections": {(dr.CONNECTION_NETWORK_MAC, controller.mac)},
-            "name": controller.name,
+            "name": str(controller.name),
             "manufacturer": "RainMachine",
             "model": (
                 f"Version {controller.hardware_version} "

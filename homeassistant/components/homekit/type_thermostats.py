@@ -245,7 +245,7 @@ class Thermostat(HomeAccessory):
     def _set_chars(self, char_values):
         _LOGGER.debug("Thermostat _set_chars: %s", char_values)
         events = []
-        params = {}
+        params = {ATTR_ENTITY_ID: self.entity_id}
         service = None
         state = self.hass.states.get(self.entity_id)
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
@@ -285,11 +285,19 @@ class Thermostat(HomeAccessory):
                         target_hc = hc_fallback
                         break
 
-            service = SERVICE_SET_HVAC_MODE_THERMOSTAT
-            hass_value = self.hc_homekit_to_hass[target_hc]
-            params = {ATTR_HVAC_MODE: hass_value}
+            params[ATTR_HVAC_MODE] = self.hc_homekit_to_hass[target_hc]
             events.append(
                 f"{CHAR_TARGET_HEATING_COOLING} to {char_values[CHAR_TARGET_HEATING_COOLING]}"
+            )
+            # Many integrations do not actually implement `hvac_mode` for the
+            # `SERVICE_SET_TEMPERATURE_THERMOSTAT` service so we made a call to
+            # `SERVICE_SET_HVAC_MODE_THERMOSTAT` before calling `SERVICE_SET_TEMPERATURE_THERMOSTAT`
+            # to ensure the device is in the right mode before setting the temp.
+            self.async_call_service(
+                DOMAIN_CLIMATE,
+                SERVICE_SET_HVAC_MODE_THERMOSTAT,
+                params.copy(),
+                ", ".join(events),
             )
 
         if CHAR_TARGET_TEMPERATURE in char_values:
@@ -357,7 +365,6 @@ class Thermostat(HomeAccessory):
             )
 
         if service:
-            params[ATTR_ENTITY_ID] = self.entity_id
             self.async_call_service(
                 DOMAIN_CLIMATE,
                 service,

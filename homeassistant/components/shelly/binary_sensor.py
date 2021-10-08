@@ -24,13 +24,20 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .entity import (
     BlockAttributeDescription,
     RestAttributeDescription,
+    RpcAttributeDescription,
     ShellyBlockAttributeEntity,
     ShellyRestAttributeEntity,
+    ShellyRpcAttributeEntity,
     ShellySleepingBlockAttributeEntity,
     async_setup_entry_attribute_entities,
     async_setup_entry_rest,
+    async_setup_entry_rpc,
 )
-from .utils import is_momentary_input
+from .utils import (
+    get_device_entry_gen,
+    is_block_momentary_input,
+    is_rpc_momentary_input,
+)
 
 SENSORS: Final = {
     ("device", "overtemp"): BlockAttributeDescription(
@@ -48,7 +55,7 @@ SENSORS: Final = {
     ("sensor", "dwIsOpened"): BlockAttributeDescription(
         name="Door",
         device_class=DEVICE_CLASS_OPENING,
-        available=lambda block: cast(bool, block.dwIsOpened != -1),
+        available=lambda block: cast(int, block.dwIsOpened) != -1,
     ),
     ("sensor", "flood"): BlockAttributeDescription(
         name="Flood", device_class=DEVICE_CLASS_MOISTURE
@@ -69,19 +76,19 @@ SENSORS: Final = {
         name="Input",
         device_class=DEVICE_CLASS_POWER,
         default_enabled=False,
-        removal_condition=is_momentary_input,
+        removal_condition=is_block_momentary_input,
     ),
     ("relay", "input"): BlockAttributeDescription(
         name="Input",
         device_class=DEVICE_CLASS_POWER,
         default_enabled=False,
-        removal_condition=is_momentary_input,
+        removal_condition=is_block_momentary_input,
     ),
     ("device", "input"): BlockAttributeDescription(
         name="Input",
         device_class=DEVICE_CLASS_POWER,
         default_enabled=False,
-        removal_condition=is_momentary_input,
+        removal_condition=is_block_momentary_input,
     ),
     ("sensor", "extInput"): BlockAttributeDescription(
         name="External Input",
@@ -112,6 +119,35 @@ REST_SENSORS: Final = {
     ),
 }
 
+RPC_SENSORS: Final = {
+    "input": RpcAttributeDescription(
+        key="input",
+        sub_key="state",
+        name="Input",
+        device_class=DEVICE_CLASS_POWER,
+        default_enabled=False,
+        removal_condition=is_rpc_momentary_input,
+    ),
+    "cloud": RpcAttributeDescription(
+        key="cloud",
+        sub_key="connected",
+        name="Cloud",
+        device_class=DEVICE_CLASS_CONNECTIVITY,
+        default_enabled=False,
+    ),
+    "fwupdate": RpcAttributeDescription(
+        key="sys",
+        sub_key="available_updates",
+        name="Firmware Update",
+        device_class=DEVICE_CLASS_UPDATE,
+        default_enabled=False,
+        extra_state_attributes=lambda status: {
+            "latest_stable_version": status.get("stable", {"version": ""})["version"],
+            "beta_version": status.get("beta", {"version": ""})["version"],
+        },
+    ),
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -119,29 +155,34 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for device."""
+    if get_device_entry_gen(config_entry) == 2:
+        return await async_setup_entry_rpc(
+            hass, config_entry, async_add_entities, RPC_SENSORS, RpcBinarySensor
+        )
+
     if config_entry.data["sleep_period"]:
         await async_setup_entry_attribute_entities(
             hass,
             config_entry,
             async_add_entities,
             SENSORS,
-            ShellySleepingBinarySensor,
+            BlockSleepingBinarySensor,
         )
     else:
         await async_setup_entry_attribute_entities(
-            hass, config_entry, async_add_entities, SENSORS, ShellyBinarySensor
+            hass, config_entry, async_add_entities, SENSORS, BlockBinarySensor
         )
         await async_setup_entry_rest(
             hass,
             config_entry,
             async_add_entities,
             REST_SENSORS,
-            ShellyRestBinarySensor,
+            RestBinarySensor,
         )
 
 
-class ShellyBinarySensor(ShellyBlockAttributeEntity, BinarySensorEntity):
-    """Shelly binary sensor entity."""
+class BlockBinarySensor(ShellyBlockAttributeEntity, BinarySensorEntity):
+    """Represent a block binary sensor entity."""
 
     @property
     def is_on(self) -> bool:
@@ -149,8 +190,8 @@ class ShellyBinarySensor(ShellyBlockAttributeEntity, BinarySensorEntity):
         return bool(self.attribute_value)
 
 
-class ShellyRestBinarySensor(ShellyRestAttributeEntity, BinarySensorEntity):
-    """Shelly REST binary sensor entity."""
+class RestBinarySensor(ShellyRestAttributeEntity, BinarySensorEntity):
+    """Represent a REST binary sensor entity."""
 
     @property
     def is_on(self) -> bool:
@@ -158,10 +199,17 @@ class ShellyRestBinarySensor(ShellyRestAttributeEntity, BinarySensorEntity):
         return bool(self.attribute_value)
 
 
-class ShellySleepingBinarySensor(
-    ShellySleepingBlockAttributeEntity, BinarySensorEntity
-):
-    """Represent a shelly sleeping binary sensor."""
+class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
+    """Represent a RPC binary sensor entity."""
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if RPC sensor state is on."""
+        return bool(self.attribute_value)
+
+
+class BlockSleepingBinarySensor(ShellySleepingBlockAttributeEntity, BinarySensorEntity):
+    """Represent a block sleeping binary sensor."""
 
     @property
     def is_on(self) -> bool:

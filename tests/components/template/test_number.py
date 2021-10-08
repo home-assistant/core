@@ -15,7 +15,7 @@ from homeassistant.components.number.const import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE as NUMBER_SERVICE_SET_VALUE,
 )
-from homeassistant.const import CONF_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import ATTR_ICON, CONF_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import Context
 from homeassistant.helpers.entity_registry import async_get
 
@@ -34,6 +34,17 @@ _MINIMUM_INPUT_NUMBER = "input_number.minimum"
 _MAXIMUM_INPUT_NUMBER = "input_number.maximum"
 # Represent for number's step
 _STEP_INPUT_NUMBER = "input_number.step"
+
+# Config for `_VALUE_INPUT_NUMBER`
+_VALUE_INPUT_NUMBER_CONFIG = {
+    "value": {
+        "min": 0.0,
+        "max": 100.0,
+        "name": "Value",
+        "step": 1.0,
+        "mode": "slider",
+    }
+}
 
 
 @pytest.fixture
@@ -98,7 +109,7 @@ async def test_missing_required_keys(hass, calls):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert hass.states.async_all() == []
+    assert hass.states.async_all("number") == []
 
 
 async def test_all_optional_config(hass, calls):
@@ -128,20 +139,14 @@ async def test_all_optional_config(hass, calls):
 
 
 async def test_templates_with_entities(hass, calls):
-    """Test tempalates with values from other entities."""
+    """Test templates with values from other entities."""
     with assert_setup_component(4, "input_number"):
         assert await setup.async_setup_component(
             hass,
             "input_number",
             {
                 "input_number": {
-                    "value": {
-                        "min": 0.0,
-                        "max": 100.0,
-                        "name": "Value",
-                        "step": 1.0,
-                        "mode": "slider",
-                    },
+                    **_VALUE_INPUT_NUMBER_CONFIG,
                     "step": {
                         "min": 0.0,
                         "max": 100.0,
@@ -334,3 +339,118 @@ def _verify(
     assert attributes.get(ATTR_STEP) == float(expected_step)
     assert attributes.get(ATTR_MAX) == float(expected_maximum)
     assert attributes.get(ATTR_MIN) == float(expected_minimum)
+
+
+async def test_icon_template(hass):
+    """Test template numbers with icon templates."""
+    with assert_setup_component(1, "input_number"):
+        assert await setup.async_setup_component(
+            hass,
+            "input_number",
+            {"input_number": _VALUE_INPUT_NUMBER_CONFIG},
+        )
+
+    with assert_setup_component(1, "template"):
+        assert await setup.async_setup_component(
+            hass,
+            "template",
+            {
+                "template": {
+                    "unique_id": "b",
+                    "number": {
+                        "state": f"{{{{ states('{_VALUE_INPUT_NUMBER}') }}}}",
+                        "step": 1,
+                        "min": 0,
+                        "max": 100,
+                        "set_value": {
+                            "service": "input_number.set_value",
+                            "data_template": {
+                                "entity_id": _VALUE_INPUT_NUMBER,
+                                "value": "{{ value }}",
+                            },
+                        },
+                        "icon": "{% if ((states.input_number.value.state or 0) | int) > 50 %}mdi:greater{% else %}mdi:less{% endif %}",
+                    },
+                }
+            },
+        )
+
+    hass.states.async_set(_VALUE_INPUT_NUMBER, 49)
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_TEST_NUMBER)
+    assert float(state.state) == 49
+    assert state.attributes[ATTR_ICON] == "mdi:less"
+
+    await hass.services.async_call(
+        INPUT_NUMBER_DOMAIN,
+        INPUT_NUMBER_SERVICE_SET_VALUE,
+        {CONF_ENTITY_ID: _VALUE_INPUT_NUMBER, INPUT_NUMBER_ATTR_VALUE: 51},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_TEST_NUMBER)
+    assert float(state.state) == 51
+    assert state.attributes[ATTR_ICON] == "mdi:greater"
+
+
+async def test_icon_template_with_trigger(hass):
+    """Test template numbers with icon templates."""
+    with assert_setup_component(1, "input_number"):
+        assert await setup.async_setup_component(
+            hass,
+            "input_number",
+            {"input_number": _VALUE_INPUT_NUMBER_CONFIG},
+        )
+
+    with assert_setup_component(1, "template"):
+        assert await setup.async_setup_component(
+            hass,
+            "template",
+            {
+                "template": {
+                    "trigger": {"platform": "state", "entity_id": _VALUE_INPUT_NUMBER},
+                    "unique_id": "b",
+                    "number": {
+                        "state": "{{ trigger.to_state.state }}",
+                        "step": 1,
+                        "min": 0,
+                        "max": 100,
+                        "set_value": {
+                            "service": "input_number.set_value",
+                            "data_template": {
+                                "entity_id": _VALUE_INPUT_NUMBER,
+                                "value": "{{ value }}",
+                            },
+                        },
+                        "icon": "{% if ((trigger.to_state.state or 0) | int) > 50 %}mdi:greater{% else %}mdi:less{% endif %}",
+                    },
+                }
+            },
+        )
+
+    hass.states.async_set(_VALUE_INPUT_NUMBER, 49)
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_TEST_NUMBER)
+    assert float(state.state) == 49
+    assert state.attributes[ATTR_ICON] == "mdi:less"
+
+    await hass.services.async_call(
+        INPUT_NUMBER_DOMAIN,
+        INPUT_NUMBER_SERVICE_SET_VALUE,
+        {CONF_ENTITY_ID: _VALUE_INPUT_NUMBER, INPUT_NUMBER_ATTR_VALUE: 51},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_TEST_NUMBER)
+    assert float(state.state) == 51
+    assert state.attributes[ATTR_ICON] == "mdi:greater"

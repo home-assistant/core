@@ -6,12 +6,12 @@ from typing import Any
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import (
+from zwave_js_server.const import CommandClass
+from zwave_js_server.const.command_class.lock import (
     ATTR_CODE_SLOT,
     ATTR_USERCODE,
     LOCK_CMD_CLASS_TO_LOCKED_STATE_MAP,
     LOCK_CMD_CLASS_TO_PROPERTY_MAP,
-    CommandClass,
     DoorLockMode,
 )
 from zwave_js_server.model.value import Value as ZwaveValue
@@ -25,7 +25,12 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_CLIENT, DOMAIN
+from .const import (
+    DATA_CLIENT,
+    DOMAIN,
+    SERVICE_CLEAR_LOCK_USERCODE,
+    SERVICE_SET_LOCK_USERCODE,
+)
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
@@ -41,9 +46,6 @@ STATE_TO_ZWAVE_MAP: dict[int, dict[str, int | bool]] = {
         STATE_LOCKED: True,
     },
 }
-
-SERVICE_SET_LOCK_USERCODE = "set_lock_usercode"
-SERVICE_CLEAR_LOCK_USERCODE = "clear_lock_usercode"
 
 
 async def async_setup_entry(

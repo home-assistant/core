@@ -1,4 +1,7 @@
 """Support for Xiaomi Miio."""
+from __future__ import annotations
+
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -9,10 +12,23 @@ from miio import (
     AirHumidifierMiot,
     AirHumidifierMjjsq,
     AirPurifier,
+    AirPurifierMB4,
     AirPurifierMiot,
+    CleaningDetails,
+    CleaningSummary,
+    ConsumableStatus,
     DeviceException,
+    DNDStatus,
     Fan,
+    Fan1C,
     FanP5,
+    FanP9,
+    FanP10,
+    FanP11,
+    FanZA5,
+    Timer,
+    Vacuum,
+    VacuumStatus,
 )
 from miio.gateway.gateway import GatewayException
 
@@ -31,7 +47,13 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    MODEL_AIRPURIFIER_3C,
+    MODEL_FAN_1C,
     MODEL_FAN_P5,
+    MODEL_FAN_P9,
+    MODEL_FAN_P10,
+    MODEL_FAN_P11,
+    MODEL_FAN_ZA5,
     MODELS_AIR_MONITOR,
     MODELS_FAN,
     MODELS_FAN_MIIO,
@@ -50,7 +72,7 @@ _LOGGER = logging.getLogger(__name__)
 
 GATEWAY_PLATFORMS = ["alarm_control_panel", "light", "sensor", "switch"]
 SWITCH_PLATFORMS = ["switch"]
-FAN_PLATFORMS = ["fan", "number", "select", "sensor", "switch"]
+FAN_PLATFORMS = ["binary_sensor", "fan", "number", "select", "sensor", "switch"]
 HUMIDIFIER_PLATFORMS = [
     "binary_sensor",
     "humidifier",
@@ -60,8 +82,17 @@ HUMIDIFIER_PLATFORMS = [
     "switch",
 ]
 LIGHT_PLATFORMS = ["light"]
-VACUUM_PLATFORMS = ["vacuum"]
+VACUUM_PLATFORMS = ["binary_sensor", "sensor", "vacuum"]
 AIR_MONITOR_PLATFORMS = ["air_quality", "sensor"]
+
+MODEL_TO_CLASS_MAP = {
+    MODEL_FAN_1C: Fan1C,
+    MODEL_FAN_P10: FanP10,
+    MODEL_FAN_P11: FanP11,
+    MODEL_FAN_P5: FanP5,
+    MODEL_FAN_P9: FanP9,
+    MODEL_FAN_ZA5: FanZA5,
+}
 
 
 async def async_setup_entry(
@@ -112,6 +143,99 @@ def get_platforms(config_entry):
     return []
 
 
+def _async_update_data_default(hass, device):
+    async def update():
+        """Fetch data from the device using async_add_executor_job."""
+        try:
+            async with async_timeout.timeout(10):
+                state = await hass.async_add_executor_job(device.status)
+                _LOGGER.debug("Got new state: %s", state)
+                return state
+
+        except DeviceException as ex:
+            raise UpdateFailed(ex) from ex
+
+    return update
+
+
+@dataclass(frozen=True)
+class VacuumCoordinatorData:
+    """A class that holds the vacuum data retrieved by the coordinator."""
+
+    status: VacuumStatus
+    dnd_status: DNDStatus
+    last_clean_details: CleaningDetails
+    consumable_status: ConsumableStatus
+    clean_history_status: CleaningSummary
+    timers: list[Timer]
+    fan_speeds: dict[str, int]
+    fan_speeds_reverse: dict[int, str]
+
+
+@dataclass(init=False, frozen=True)
+class VacuumCoordinatorDataAttributes:
+    """
+    A class that holds attribute names for VacuumCoordinatorData.
+
+    These attributes can be used in methods like `getattr` when a generic solutions is
+    needed.
+    See homeassistant.components.xiaomi_miio.device.XiaomiCoordinatedMiioEntity
+    ._extract_value_from_attribute for
+    an example.
+    """
+
+    status: str = "status"
+    dnd_status: str = "dnd_status"
+    last_clean_details: str = "last_clean_details"
+    consumable_status: str = "consumable_status"
+    clean_history_status: str = "clean_history_status"
+    timer: str = "timer"
+    fan_speeds: str = "fan_speeds"
+    fan_speeds_reverse: str = "fan_speeds_reverse"
+
+
+def _async_update_data_vacuum(hass, device: Vacuum):
+    def update() -> VacuumCoordinatorData:
+        timer = []
+
+        # See https://github.com/home-assistant/core/issues/38285 for reason on
+        # Why timers must be fetched separately.
+        try:
+            timer = device.timer()
+        except DeviceException as ex:
+            _LOGGER.debug(
+                "Unable to fetch timers, this may happen on some devices: %s", ex
+            )
+
+        fan_speeds = device.fan_speed_presets()
+
+        data = VacuumCoordinatorData(
+            device.status(),
+            device.dnd_status(),
+            device.last_clean_details(),
+            device.consumable_status(),
+            device.clean_history(),
+            timer,
+            fan_speeds,
+            {v: k for k, v in fan_speeds.items()},
+        )
+
+        return data
+
+    async def update_async():
+        """Fetch data from the device using async_add_executor_job."""
+        try:
+            async with async_timeout.timeout(10):
+                state = await hass.async_add_executor_job(update)
+                _LOGGER.debug("Got new vacuum state: %s", state)
+                return state
+
+        except DeviceException as ex:
+            raise UpdateFailed(ex) from ex
+
+    return update_async
+
+
 async def async_create_miio_device_and_coordinator(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
@@ -122,8 +246,14 @@ async def async_create_miio_device_and_coordinator(
     name = entry.title
     device = None
     migrate = False
+    update_method = _async_update_data_default
+    coordinator_class = DataUpdateCoordinator
 
-    if model not in MODELS_HUMIDIFIER and model not in MODELS_FAN:
+    if (
+        model not in MODELS_HUMIDIFIER
+        and model not in MODELS_FAN
+        and model not in MODELS_VACUUM
+    ):
         return
 
     _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
@@ -139,15 +269,21 @@ async def async_create_miio_device_and_coordinator(
         device = AirHumidifier(host, token, model=model)
         migrate = True
     # Airpurifiers and Airfresh
+    elif model in MODEL_AIRPURIFIER_3C:
+        device = AirPurifierMB4(host, token)
     elif model in MODELS_PURIFIER_MIOT:
         device = AirPurifierMiot(host, token)
     elif model.startswith("zhimi.airpurifier."):
         device = AirPurifier(host, token)
     elif model.startswith("zhimi.airfresh."):
         device = AirFresh(host, token)
+    elif model in MODELS_VACUUM:
+        device = Vacuum(host, token)
+        update_method = _async_update_data_vacuum
+        coordinator_class = DataUpdateCoordinator[VacuumCoordinatorData]
     # Pedestal fans
-    elif model == MODEL_FAN_P5:
-        device = FanP5(host, token)
+    elif model in MODEL_TO_CLASS_MAP:
+        device = MODEL_TO_CLASS_MAP[model](host, token)
     elif model in MODELS_FAN_MIIO:
         device = Fan(host, token, model=model)
     else:
@@ -169,23 +305,12 @@ async def async_create_miio_device_and_coordinator(
                 hass.config_entries.async_update_entry(entry, title=migrate_entity_name)
             entity_registry.async_remove(entity_id)
 
-    async def async_update_data():
-        """Fetch data from the device using async_add_executor_job."""
-        try:
-            async with async_timeout.timeout(10):
-                state = await hass.async_add_executor_job(device.status)
-                _LOGGER.debug("Got new state: %s", state)
-                return state
-
-        except DeviceException as ex:
-            raise UpdateFailed(ex) from ex
-
     # Create update miio device and coordinator
-    coordinator = DataUpdateCoordinator(
+    coordinator = coordinator_class(
         hass,
         _LOGGER,
         name=name,
-        update_method=async_update_data,
+        update_method=update_method(hass, device),
         # Polling interval. Will only be polled if there are subscribers.
         update_interval=timedelta(seconds=60),
     )

@@ -17,7 +17,7 @@
             "unable_to_pair": "Gagal memasangkan, coba lagi.",
             "unknown_error": "Perangkat melaporkan kesalahan yang tidak diketahui. Pemasangan gagal."
         },
-        "flow_title": "{name} lewat HomeKit Accessory Protocol",
+        "flow_title": "{name}",
         "step": {
             "busy_error": {
                 "description": "Batalkan pemasangan di semua pengontrol, atau coba mulai ulang perangkat, lalu lanjutkan untuk melanjutkan pemasangan.",
