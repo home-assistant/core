@@ -445,7 +445,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
                 rgbcw = rgbcw_brightness(kwargs[ATTR_RGBWW_COLOR], brightness)
             else:
                 rgbcw = kwargs[ATTR_RGBWW_COLOR]
-            await self._bulb.async_set_levels(*rgbcw_to_rgbwc(rgbcw))
+            await self._bulb.async_set_levels(*rgbcw_to_rgbwc(*rgbcw))
             return
         # Handle switch to White Color Mode
         if ATTR_WHITE in kwargs:
