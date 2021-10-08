@@ -3,21 +3,29 @@
 reboot:
   name: Reboot
   description: Reboot the NAS.
-  fields:
-    serial:
-      name: Serial
-      description: serial of the NAS to reboot; required when multiple NAS are configured.
-      example: 1NDVC86409
-      selector:
-        text:
+  target:
+    device:
+      integration: synology_dsm
+      manufacturer: Synology
+    entity:
+      integration: none
 
 shutdown:
   name: Shutdown
   description: Shutdown the NAS.
-  fields:
-    serial:
-      name: Serial
-      description: serial of the NAS to shutdown; required when multiple NAS are configured.
-      example: 1NDVC86409
-      selector:
-        text:
+  target:
+    device:
+      integration: synology_dsm
+      manufacturer: Synology
+    entity:
+      integration: none
+
+poweron:
+  name: Power on
+  description: Power on the NAS by WoL.
+  target:
+    device:
+      integration: synology_dsm
+      manufacturer: Synology
+    entity:
+      integration: none

@@ -1493,6 +1493,7 @@ vsure==1.7.3
 vultr==0.1.2
 
 # homeassistant.components.samsungtv
+# homeassistant.components.synology_dsm
 # homeassistant.components.wake_on_lan
 wakeonlan==2.0.1
 

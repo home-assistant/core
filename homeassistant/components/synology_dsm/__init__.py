@@ -39,7 +39,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry
 import homeassistant.helpers.config_validation as cv
@@ -56,7 +56,6 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import (
     CONF_DEVICE_TOKEN,
-    CONF_SERIAL,
     COORDINATOR_CAMERAS,
     COORDINATOR_CENTRAL,
     COORDINATOR_SWITCHES,
@@ -66,14 +65,12 @@ from .const import (
     EXCEPTION_DETAILS,
     EXCEPTION_UNKNOWN,
     PLATFORMS,
-    SERVICE_REBOOT,
-    SERVICE_SHUTDOWN,
-    SERVICES,
     SYNO_API,
     SYSTEM_LOADED,
     UNDO_UPDATE_LISTENER,
     SynologyDSMEntityDescription,
 )
+from .service import async_setup_services
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
@@ -141,7 +138,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     # Services
-    await _async_setup_services(hass)
+    await async_setup_services(hass)
 
     # For SSDP compat
     if not entry.data.get(CONF_MAC):
@@ -247,42 +244,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
-
-
-async def _async_setup_services(hass: HomeAssistant) -> None:
-    """Service handler setup."""
-
-    async def service_handler(call: ServiceCall) -> None:
-        """Handle service call."""
-        serial = call.data.get(CONF_SERIAL)
-        dsm_devices = hass.data[DOMAIN]
-
-        if serial:
-            dsm_device = dsm_devices.get(serial)
-        elif len(dsm_devices) == 1:
-            dsm_device = next(iter(dsm_devices.values()))
-            serial = next(iter(dsm_devices))
-        else:
-            _LOGGER.error(
-                "More than one DSM configured, must specify one of serials %s",
-                sorted(dsm_devices),
-            )
-            return
-
-        if not dsm_device:
-            _LOGGER.error("DSM with specified serial %s not found", serial)
-            return
-
-        _LOGGER.debug("%s DSM with serial %s", call.service, serial)
-        dsm_api = dsm_device[SYNO_API]
-        dsm_device[SYSTEM_LOADED] = False
-        if call.service == SERVICE_REBOOT:
-            await dsm_api.async_reboot()
-        elif call.service == SERVICE_SHUTDOWN:
-            await dsm_api.async_shutdown()
-
-    for service in SERVICES:
-        hass.services.async_register(DOMAIN, service, service_handler)
 
 
 class SynoApi:
