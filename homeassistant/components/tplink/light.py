@@ -69,6 +69,14 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
             brightness = round((brightness * 100.0) / 255.0)
 
+        if self.device.is_dimmer and transition is None:
+            # This is a stopgap solution for inconsistent set_brightness handling
+            # in the upstream library, see #57265.
+            # This should be removed when the upstream has fixed the issue.
+            # The device logic is to change the settings without turning it on
+            # except when transition is defined, so we leverage that here for now.
+            transition = 1
+
         # Handle turning to temp mode
         if ATTR_COLOR_TEMP in kwargs:
             color_tmp = mired_to_kelvin(int(kwargs[ATTR_COLOR_TEMP]))
