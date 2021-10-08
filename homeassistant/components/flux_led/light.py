@@ -474,7 +474,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
         if self.color_mode == COLOR_MODE_RGBWW:
             rgbcw = self.rgbww_color
             r, b, g, c, w = rgbcw_brightness(rgbcw, brightness)
-            await self._bulb.set_levels(r=r, g=g, b=b, w=w, w2=c)
+            await self._bulb.async_set_levels(r=r, g=g, b=b, w=w, w2=c)
             return
         # Handle White Color Mode and Brightness Only Color Mode
         if self.color_mode in (COLOR_MODE_WHITE, COLOR_MODE_BRIGHTNESS):
