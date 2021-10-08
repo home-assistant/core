@@ -16,7 +16,12 @@ from flux_led.const import (
     COLOR_MODE_RGBWW as FLUX_COLOR_MODE_RGBWW,
 )
 from flux_led.device import MAX_TEMP, MIN_TEMP
-from flux_led.utils import rgbcw_brightness, rgbcw_to_rgbww, rgbw_brightness
+from flux_led.utils import (
+    color_temp_to_white_levels,
+    rgbcw_brightness,
+    rgbcw_to_rgbww,
+    rgbw_brightness,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -401,7 +406,8 @@ class FluxLight(CoordinatorEntity, LightEntity):
                 # mode, we do not want the overall brightness, we only
                 # want the brightness of the white channels
                 brightness = self._bulb.getWhiteTemperature()[1]
-            self._bulb.setWhiteTemperature(color_temp_kelvin, brightness)
+            cold, warm = color_temp_to_white_levels(color_temp_kelvin, brightness)
+            self._bulb.set_levels(r=0, b=0, g=0, w=warm, w2=cold)
             return
 
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is None:

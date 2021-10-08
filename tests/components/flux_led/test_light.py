@@ -519,20 +519,20 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
-        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 150},
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 154},
         blocking=True,
     )
-    bulb.setWhiteTemperature.assert_called_with(6666, 128)
-    bulb.setWhiteTemperature.reset_mock()
+    bulb.set_levels.assert_called_with(r=0, b=0, g=0, w=0, w2=127)
+    bulb.set_levels.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
-        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 150, ATTR_BRIGHTNESS: 255},
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 154, ATTR_BRIGHTNESS: 255},
         blocking=True,
     )
-    bulb.setWhiteTemperature.assert_called_with(6666, 255)
-    bulb.setWhiteTemperature.reset_mock()
+    bulb.set_levels.assert_called_with(r=0, b=0, g=0, w=0, w2=255)
+    bulb.set_levels.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -540,8 +540,8 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 290},
         blocking=True,
     )
-    bulb.setWhiteTemperature.assert_called_with(3448, 128)
-    bulb.setWhiteTemperature.reset_mock()
+    bulb.set_levels.assert_called_with(r=0, b=0, g=0, w=102, w2=25)
+    bulb.set_levels.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
