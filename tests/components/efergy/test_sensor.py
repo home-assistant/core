@@ -1,5 +1,7 @@
 """The tests for Efergy sensor platform."""
 
+from asyncio.exceptions import TimeoutError as timeouterr
+
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -30,9 +32,14 @@ MULTI_SENSOR_CONFIG = {
 }
 
 
-def mock_responses(aioclient_mock: AiohttpClientMocker):
+def mock_responses(aioclient_mock: AiohttpClientMocker, error: bool = False):
     """Mock responses for Efergy."""
     base_url = "https://engage.efergy.com/mobile_proxy/"
+    if error:
+        aioclient_mock.get(
+            f"{base_url}getCurrentValuesSummary?token={token}", exc=timeouterr
+        )
+        return
     aioclient_mock.get(
         f"{base_url}getInstant?token={token}",
         text=load_fixture("efergy/efergy_instant.json"),
@@ -85,3 +92,14 @@ async def test_multi_sensor_readings(
     assert hass.states.get("sensor.efergy_728386").state == "218"
     assert hass.states.get("sensor.efergy_0").state == "1808"
     assert hass.states.get("sensor.efergy_728387").state == "312"
+
+
+async def test_failed_getting_sids(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+):
+    """Test failed gettings sids."""
+    mock_responses(aioclient_mock, error=True)
+    assert await async_setup_component(hass, "sensor", {"sensor": MULTI_SENSOR_CONFIG})
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.efergy_728386") is None
