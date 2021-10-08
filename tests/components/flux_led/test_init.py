@@ -25,7 +25,9 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 async def test_configuring_flux_led_causes_discovery(hass: HomeAssistant) -> None:
     """Test that specifying empty config does discovery."""
-    with patch("homeassistant.components.flux_led.BulbScanner.scan") as discover:
+    with patch(
+        "homeassistant.components.flux_led.AIOBulbScanner.async_scan"
+    ) as discover:
         discover.return_value = [FLUX_DISCOVERY]
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()

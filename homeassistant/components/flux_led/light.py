@@ -15,7 +15,12 @@ from flux_led.const import (
     COLOR_MODE_RGBWW as FLUX_COLOR_MODE_RGBWW,
 )
 from flux_led.device import MAX_TEMP, MIN_TEMP
-from flux_led.utils import rgbw_brightness, rgbww_brightness
+from flux_led.utils import (
+    color_temp_to_white_levels,
+    rgbcw_brightness,
+    rgbcw_to_rgbwc,
+    rgbw_brightness,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -310,8 +315,9 @@ class FluxLight(CoordinatorEntity, LightEntity):
             for mode in self._bulb.color_modes
         }
         if COLOR_MODE_RGBW in color_modes or COLOR_MODE_RGBWW in color_modes:
-            # Backwards compat
-            color_modes.update({COLOR_MODE_HS, COLOR_MODE_COLOR_TEMP})
+            color_modes.add(COLOR_MODE_HS)  # Backwards compat
+        if COLOR_MODE_RGBWW in color_modes:
+            color_modes.add(COLOR_MODE_COLOR_TEMP)  # Backwards compat
         self._attr_supported_color_modes = color_modes
         self._attr_effect_list = FLUX_EFFECT_LIST
         if custom_effect_colors:
@@ -348,20 +354,17 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def hs_color(self) -> tuple[float, float]:
         """Return the hs color value."""
-        raw = self._bulb.raw_state
-        return color_RGB_to_hs(raw.red, raw.green, raw.blue)
+        return color_RGB_to_hs(*self._bulb.rgb)
 
     @property
     def rgbw_color(self) -> tuple[int, int, int, int]:
         """Return the rgbw color value."""
-        raw = self._bulb.raw_state
-        return (raw.red, raw.green, raw.blue, raw.warm_white)
+        return cast(tuple[int, int, int, int], self._bulb.rgbw)
 
     @property
     def rgbww_color(self) -> tuple[int, int, int, int, int]:
         """Return the rgbww color value."""
-        raw = self._bulb.raw_state
-        return (raw.red, raw.green, raw.blue, raw.warm_white, raw.cool_white)
+        return cast(tuple[int, int, int, int, int], self._bulb.rgbcw)
 
     @property
     def color_mode(self) -> str:
@@ -400,7 +403,19 @@ class FluxLight(CoordinatorEntity, LightEntity):
         if ATTR_COLOR_TEMP in kwargs:
             color_temp_mired = kwargs[ATTR_COLOR_TEMP]
             color_temp_kelvin = color_temperature_mired_to_kelvin(color_temp_mired)
-            await self._bulb.async_set_white_temp(color_temp_kelvin, brightness)
+            if self.color_mode != COLOR_MODE_RGBWW:
+                self._bulb.setWhiteTemperature(color_temp_kelvin, brightness)
+                return
+
+            # When switching to color temp from RGBWW mode,
+            # we do not want the overall brightness, we only
+            # want the brightness of the white channels
+            if ATTR_BRIGHTNESS in kwargs:
+                brightness = kwargs[ATTR_BRIGHTNESS]
+            else:
+                brightness = self._bulb.getWhiteTemperature()[1]
+            cold, warm = color_temp_to_white_levels(color_temp_kelvin, brightness)
+            await self._bulb.async_set_levels(r=0, b=0, g=0, w=warm, w2=cold)
             return
         # Handle switch to HS Color Mode
         if ATTR_HS_COLOR in kwargs:
@@ -419,14 +434,15 @@ class FluxLight(CoordinatorEntity, LightEntity):
         # Handle switch to RGBWW Color Mode
         if ATTR_RGBWW_COLOR in kwargs:
             if ATTR_BRIGHTNESS in kwargs:
-                rgbww = rgbww_brightness(kwargs[ATTR_RGBWW_COLOR], brightness)
+                rgbcw = rgbcw_brightness(kwargs[ATTR_RGBWW_COLOR], brightness)
             else:
-                rgbww = kwargs[ATTR_RGBWW_COLOR]
-            await self._bulb.async_set_levels(*rgbww)
+                rgbcw = kwargs[ATTR_RGBWW_COLOR]
+            r, g, b, w, c = rgbcw_to_rgbwc(rgbcw)
+            await self._bulb.async_set_levels(r=r, g=g, b=b, w=w, w2=c)
             return
         # Handle switch to White Color Mode
         if ATTR_WHITE in kwargs:
-            self._bulb.async_set_levels(w=kwargs[ATTR_WHITE])
+            await self._bulb.async_set_levels(w=kwargs[ATTR_WHITE])
             return
         if ATTR_EFFECT in kwargs:
             effect = kwargs[ATTR_EFFECT]
@@ -473,8 +489,9 @@ class FluxLight(CoordinatorEntity, LightEntity):
             return
         # Handle brightness adjustment in RGBWW Color Mode
         if self.color_mode == COLOR_MODE_RGBWW:
-            rgbww = rgbww_brightness(self.rgbww_color, brightness)
-            await self._bulb.async_set_levels(*rgbww)
+            rgbcw = self.rgbww_color
+            r, b, g, c, w = rgbcw_brightness(rgbcw, brightness)
+            await self._bulb.async_set_levels(r=r, g=g, b=b, w=w, w2=c)
             return
         # Handle White Color Mode and Brightness Only Color Mode
         if self.color_mode in (COLOR_MODE_WHITE, COLOR_MODE_BRIGHTNESS):

@@ -349,3 +349,29 @@ async def test_off_at_start_light(hass: HomeAssistant) -> None:
     assert state.state == "off"
     attributes = state.attributes
     assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["onoff"]
+
+
+async def test_dimmer_turn_on_fix(hass: HomeAssistant) -> None:
+    """Test a light."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    bulb.is_dimmer = True
+    bulb.is_on = False
+
+    with _patch_discovery(device=bulb), _patch_single_discovery(device=bulb):
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_bulb"
+
+    state = hass.states.get(entity_id)
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    bulb.turn_on.assert_called_once_with(transition=1)
+    bulb.turn_on.reset_mock()
