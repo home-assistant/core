@@ -11,9 +11,10 @@ from flux_led.aioscanner import AIOBulbScanner
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -23,8 +24,11 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     DISCOVER_SCAN_TIMEOUT,
     DOMAIN,
+    FLUX_HOST,
     FLUX_LED_DISCOVERY,
     FLUX_LED_EXCEPTIONS,
+    FLUX_MAC,
+    FLUX_MODEL,
     SIGNAL_STATE_UPDATED,
     STARTUP_SCAN_TIMEOUT,
 )
@@ -42,13 +46,41 @@ def async_wifi_bulb_for_host(host: str) -> AIOWifiLedBulb:
     return AIOWifiLedBulb(host)
 
 
+def async_update_entry_from_discovery(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry, device: dict[str, Any]
+) -> None:
+    """Update a config entry from a flux_led discovery."""
+    name = f"{device[FLUX_MODEL]} {device[FLUX_MAC]}"
+    hass.config_entries.async_update_entry(
+        entry,
+        data={**entry.data, CONF_NAME: name},
+        title=name,
+        unique_id=dr.format_mac(device[FLUX_MAC]),
+    )
+
+
 async def async_discover_devices(
-    hass: HomeAssistant, timeout: int
+    hass: HomeAssistant, timeout: int, address: str | None = None
 ) -> list[dict[str, str]]:
     """Discover flux led devices."""
     scanner = AIOBulbScanner()
-    discovered: list[dict[str, str]] = await scanner.async_scan(timeout=timeout)
+    discovered: list[dict[str, str]] = await scanner.async_scan(
+        timeout=timeout, address=address
+    )
     return discovered
+
+
+async def async_discover_device(
+    hass: HomeAssistant, host: str
+) -> dict[str, str] | None:
+    """Direct discovery at a single ip instead of broadcast."""
+    # If we are missing the unique_id we should be able to fetch it
+    # from the device by doing a directed discovery at the host only
+    devices = await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT, host)
+    for device in devices:
+        if device[FLUX_HOST] == host:
+            return device
+    return None
 
 
 @callback
@@ -92,8 +124,12 @@ async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flux LED/MagicLight from a config entry."""
+    host = entry.data[CONF_HOST]
+    if not entry.unique_id:
+        if discovery := await async_discover_device(hass, host):
+            async_update_entry_from_discovery(hass, entry, discovery)
 
-    device: AIOWifiLedBulb = async_wifi_bulb_for_host(entry.data[CONF_HOST])
+    device: AIOWifiLedBulb = async_wifi_bulb_for_host(host)
     signal = SIGNAL_STATE_UPDATED.format(device.ipaddr)
 
     @callback
