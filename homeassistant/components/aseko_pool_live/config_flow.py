@@ -15,7 +15,6 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
 )
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -33,20 +32,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         session = async_get_clientsession(self.hass)
 
         web_account = WebAccount(session, email, password)
-        try:
-            web_account_info = await web_account.login()
-        except APIUnavailable as err:
-            raise CannotConnect from err
-        except InvalidAuthCredentials as err:
-            raise InvalidAuth from err
+        web_account_info = await web_account.login()
 
         mobile_account = MobileAccount(session, email, password)
-        try:
-            await mobile_account.login()
-        except APIUnavailable as err:
-            raise CannotConnect from err
-        except InvalidAuthCredentials as err:
-            raise InvalidAuth from err
+        await mobile_account.login()
 
         return {
             CONF_ACCESS_TOKEN: mobile_account.access_token,
@@ -64,9 +53,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 info = await self.get_account_info(
                     user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
                 )
-            except CannotConnect:
+            except APIUnavailable:
                 errors["base"] = "cannot_connect"
-            except InvalidAuth:
+            except InvalidAuthCredentials:
                 errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
@@ -90,11 +79,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
