@@ -167,4 +167,6 @@ class EfergySensor(SensorEntity):
                 self._attr_available = False
                 _LOGGER.error("Error getting data from Efergy: %s", ex)
             return
-        self._attr_available = True
+        if not self._attr_available:
+            self._attr_available = True
+            _LOGGER.info("Connection to Efergy has resumed")

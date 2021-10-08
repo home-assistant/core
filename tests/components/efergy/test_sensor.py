@@ -1,14 +1,16 @@
 """The tests for Efergy sensor platform."""
 
-from asyncio.exceptions import TimeoutError as timeouterr
+import asyncio
+from datetime import timedelta
 
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
 from homeassistant.setup import async_setup_component
+import homeassistant.util.dt as dt_util
 
-from tests.common import load_fixture
+from tests.common import async_fire_time_changed, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 token = "9p6QGJ7dpZfO3fqPTBk1fyEmjV1cGoLT"
@@ -40,7 +42,7 @@ def mock_responses(aioclient_mock: AiohttpClientMocker, error: bool = False):
     base_url = "https://engage.efergy.com/mobile_proxy/"
     if error:
         aioclient_mock.get(
-            f"{base_url}getCurrentValuesSummary?token={token}", exc=timeouterr
+            f"{base_url}getCurrentValuesSummary?token={token}", exc=asyncio.TimeoutError
         )
         return
     aioclient_mock.get(
@@ -120,20 +122,23 @@ async def test_failed_getting_sids(
     assert hass.states.get("sensor.efergy_728386") is None
 
 
-async def test_failed_update(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
+async def test_failed_update_and_reconnection(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+):
     """Test failed update."""
     mock_responses(aioclient_mock)
-    await async_setup_component(hass, HA_DOMAIN, {})
     assert await async_setup_component(
         hass, SENSOR_DOMAIN, {SENSOR_DOMAIN: ONE_SENSOR_CONFIG}
     )
-    await hass.async_block_till_done()
     aioclient_mock.clear_requests()
     mock_responses(aioclient_mock, error=True)
-    await hass.services.async_call(
-        HA_DOMAIN,
-        SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: "sensor.efergy_728386"},
-        blocking=True,
-    )
+    next_update = dt_util.utcnow() + timedelta(seconds=3)
+    async_fire_time_changed(hass, next_update)
+    await hass.async_block_till_done()
     assert hass.states.get("sensor.efergy_728386").state == STATE_UNAVAILABLE
+    aioclient_mock.clear_requests()
+    mock_responses(aioclient_mock)
+    next_update = dt_util.utcnow() + timedelta(seconds=30)
+    async_fire_time_changed(hass, next_update)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.efergy_728386").state == "1628"
