@@ -285,15 +285,23 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
             attr[ATTR_VALVE] = self._device.valve
 
         if DEOCNZ_DISPLAYFLIPPED in self._device.raw[DEOCNZ_CONFIG]:
-            attr[ATTR_FLIP_DISPLAY] = self._device.raw[DEOCNZ_CONFIG].get(DEOCNZ_DISPLAYFLIPPED)
+            attr[ATTR_FLIP_DISPLAY] = self._device.raw[DEOCNZ_CONFIG].get(
+                DEOCNZ_DISPLAYFLIPPED
+            )
 
         if DEOCNZ_EXTERNALSENSORTEMP in self._device.raw[DEOCNZ_CONFIG]:
-            attr[ATTR_EXTERNAL_SENSOR_TEMP] = self._device.raw[DEOCNZ_CONFIG].get(DEOCNZ_EXTERNALSENSORTEMP) / 100
+            attr[ATTR_EXTERNAL_SENSOR_TEMP] = (
+                self._device.raw[DEOCNZ_CONFIG].get(DEOCNZ_EXTERNALSENSORTEMP) / 100
+            )
 
         if DEOCNZ_EXTERNALWINDOWOPEN in self._device.raw[DEOCNZ_CONFIG]:
-            attr[ATTR_EXTERNAL_WINDOW_OPEN] = self._device.raw[DEOCNZ_CONFIG].get(DEOCNZ_EXTERNALWINDOWOPEN)
+            attr[ATTR_EXTERNAL_WINDOW_OPEN] = self._device.raw[DEOCNZ_CONFIG].get(
+                DEOCNZ_EXTERNALWINDOWOPEN
+            )
 
         if DEOCNZ_SCHEDULE_ON in self._device.raw[DEOCNZ_CONFIG]:
-            attr[ATTR_SCHEDULE_ON] = self._device.raw[DEOCNZ_CONFIG].get(DEOCNZ_SCHEDULE_ON)
+            attr[ATTR_SCHEDULE_ON] = self._device.raw[DEOCNZ_CONFIG].get(
+                DEOCNZ_SCHEDULE_ON
+            )
 
         return attr
