@@ -448,24 +448,24 @@ class AuthManager:
         await self._store.async_remove_refresh_token(refresh_token)
 
         callbacks = self._revoke_callbacks.pop(refresh_token.id, [])
-        for cb in callbacks:
-            cb()
+        for revoke_callback in callbacks:
+            revoke_callback()
 
     @callback
     def async_register_revoke_token_callback(
-        self, refresh_token_id: str, cb: CALLBACK_TYPE
+        self, refresh_token_id: str, revoke_callback: CALLBACK_TYPE
     ) -> CALLBACK_TYPE:
         """Register a callback to be called when the refresh token id is revoked."""
         if refresh_token_id not in self._revoke_callbacks:
             self._revoke_callbacks[refresh_token_id] = []
 
         callbacks = self._revoke_callbacks[refresh_token_id]
-        callbacks.append(cb)
+        callbacks.append(revoke_callback)
 
         @callback
         def unregister() -> None:
-            if cb in callbacks:
-                callbacks.remove(cb)
+            if revoke_callback in callbacks:
+                callbacks.remove(revoke_callback)
 
         return unregister
 

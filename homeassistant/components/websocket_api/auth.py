@@ -67,9 +67,7 @@ class AuthPhase:
         self._logger = logger
         self._request = request
 
-    async def async_handle(
-        self, msg: dict[str, str]
-    ) -> tuple[ActiveConnection, CALLBACK_TYPE]:
+    async def async_handle(self, msg: dict[str, str]) -> ActiveConnection:
         """Handle authentication."""
         try:
             msg = AUTH_MESSAGE_SCHEMA(msg)
@@ -88,10 +86,10 @@ class AuthPhase:
             )
             if refresh_token is not None:
                 conn = await self._async_finish_auth(refresh_token.user, refresh_token)
-                conn.subscriptions['auth'] = (
-                    self._hass.auth.async_register_revoke_token_callback(
-                        refresh_token.id, self._cancel_ws
-                    )
+                conn.subscriptions[
+                    "auth"
+                ] = self._hass.auth.async_register_revoke_token_callback(
+                    refresh_token.id, self._cancel_ws
                 )
 
                 return conn
