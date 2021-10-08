@@ -37,7 +37,7 @@ async def validate_input(hass, data):
     }
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class EnvironmentCanadaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Environment Canada weather."""
 
     VERSION = 1
@@ -121,6 +121,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="name", data_schema=data_schema, errors=errors
+        )
+
+    async def async_step_import(self, import_data):
+        """Import entry from configuration.yaml."""
+        existing = await self.async_set_unique_id(
+            f"{import_data[CONF_STATION]}-{import_data[CONF_LANGUAGE]}"
+        )
+        if existing:
+            _LOGGER.warn(
+                "Environment Canada config is imported only for the first "
+                "Environment Canada platform in your configuration.yaml"
+            )
+            self._abort_if_unique_id_configured()
+        return self.async_create_entry(
+            title=import_data[CONF_NAME],
+            data=import_data,
         )
 
 

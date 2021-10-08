@@ -1,14 +1,23 @@
 """Support for the Environment Canada weather service."""
 from datetime import datetime, timedelta
 import logging
+import re
 
-from homeassistant.components.sensor import SensorEntity
+from env_canada import ECData
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LOCATION,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
     DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
 )
+import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
 
@@ -22,6 +31,60 @@ ATTR_STATION = "station"
 ATTR_TIME = "alert time"
 
 CONF_ATTRIBUTION = "Data provided by Environment Canada"
+CONF_STATION = "station"
+CONF_LANGUAGE = "language"
+
+
+def validate_station(station):
+    """Check that the station ID is well-formed."""
+    if station is None:
+        return
+    if not re.fullmatch(r"[A-Z]{2}/s0000\d{3}", station):
+        raise vol.error.Invalid('Station ID must be of the form "XX/s0000###"')
+    return station
+
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_LANGUAGE, default="english"): vol.In(["english", "french"]),
+        vol.Optional(CONF_STATION): validate_station,
+        vol.Inclusive(CONF_LATITUDE, "latlon"): cv.latitude,
+        vol.Inclusive(CONF_LONGITUDE, "latlon"): cv.longitude,
+    }
+)
+
+
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the Environment Canada sensor."""
+    _LOGGER.warning(
+        "Environment Canada YAML configuration is deprecated. Your YAML configuration "
+        "has been imported into the UI and can be safely removed from your YAML."
+    )
+    if config.get(CONF_STATION):
+        ec_data = ECData(station_id=config[CONF_STATION])
+        config[CONF_LATITUDE] = ec_data.lat
+        config[CONF_LONGITUDE] = ec_data.lon
+    else:
+        lat = config.get(CONF_LATITUDE, hass.config.latitude)
+        lon = config.get(CONF_LONGITUDE, hass.config.longitude)
+        ec_data = ECData(coordinates=(lat, lon))
+        config[CONF_STATION] = ec_data.station_id
+
+    name = (
+        config.get(CONF_NAME)
+        if config.get(CONF_NAME)
+        else ec_data.metadata.get("location")
+    )
+    config[CONF_NAME] = name
+    config[CONF_LANGUAGE] = "English"
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

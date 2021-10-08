@@ -15,7 +15,7 @@ async def async_setup_entry(hass, config_entry):
     lat = config_entry.data.get(CONF_LATITUDE)
     lon = config_entry.data.get(CONF_LONGITUDE)
     station = config_entry.data.get(CONF_STATION)
-    lang = config_entry.data.get(CONF_LANGUAGE)
+    lang = config_entry.data.get(CONF_LANGUAGE, "English")
 
     coordinators = {}
 
