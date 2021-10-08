@@ -119,6 +119,14 @@ class HassIO:
         return self.send_command(f"/addons/{addon}/info", method="get")
 
     @api_data
+    def get_addon_stats(self, addon):
+        """Return stats for an Add-on.
+
+        This method returns a coroutine.
+        """
+        return self.send_command(f"/addons/{addon}/stats", method="get")
+
+    @api_data
     def get_store(self):
         """Return data from the store.
 

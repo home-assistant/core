@@ -7,10 +7,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ADDONS_COORDINATOR
-from .const import ATTR_VERSION, ATTR_VERSION_LATEST, DATA_KEY_ADDONS, DATA_KEY_OS
+from .const import (
+    ATTR_CPU_PERCENT,
+    ATTR_MEMORY_PERCENT,
+    ATTR_VERSION,
+    ATTR_VERSION_LATEST,
+    DATA_KEY_ADDONS,
+    DATA_KEY_OS,
+)
 from .entity import HassioAddonEntity, HassioOSEntity
 
-ENTITY_DESCRIPTIONS = (
+COMMON_ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
         entity_registry_enabled_default=False,
         key=ATTR_VERSION,
@@ -23,6 +30,27 @@ ENTITY_DESCRIPTIONS = (
     ),
 )
 
+ADDON_ENTITY_DESCRIPTIONS = COMMON_ENTITY_DESCRIPTIONS + (
+    SensorEntityDescription(
+        entity_registry_enabled_default=False,
+        key=ATTR_CPU_PERCENT,
+        name="CPU Percent",
+        icon="mdi:cpu-64-bit",
+        native_unit_of_measurement="%",
+        state_class="measurement",
+    ),
+    SensorEntityDescription(
+        entity_registry_enabled_default=False,
+        key=ATTR_MEMORY_PERCENT,
+        name="Memory Percent",
+        icon="mdi:memory",
+        native_unit_of_measurement="%",
+        state_class="measurement",
+    ),
+)
+
+OS_ENTITY_DESCRIPTIONS = COMMON_ENTITY_DESCRIPTIONS
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -34,8 +62,8 @@ async def async_setup_entry(
 
     entities = []
 
-    for entity_description in ENTITY_DESCRIPTIONS:
-        for addon in coordinator.data[DATA_KEY_ADDONS].values():
+    for addon in coordinator.data[DATA_KEY_ADDONS].values():
+        for entity_description in ADDON_ENTITY_DESCRIPTIONS:
             entities.append(
                 HassioAddonSensor(
                     addon=addon,
@@ -44,7 +72,8 @@ async def async_setup_entry(
                 )
             )
 
-        if coordinator.is_hass_os:
+    if coordinator.is_hass_os:
+        for entity_description in OS_ENTITY_DESCRIPTIONS:
             entities.append(
                 HassioOSSensor(
                     coordinator=coordinator,
