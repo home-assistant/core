@@ -70,6 +70,9 @@ from .gateway import ConnectXiaomiGateway
 
 _LOGGER = logging.getLogger(__name__)
 
+POLLING_TIMEOUT_SEC = 5
+UPDATE_INTERVAL_SEC = 10
+
 GATEWAY_PLATFORMS = ["alarm_control_panel", "light", "sensor", "switch"]
 SWITCH_PLATFORMS = ["switch"]
 FAN_PLATFORMS = ["binary_sensor", "fan", "number", "select", "sensor", "switch"]
@@ -149,7 +152,7 @@ def _async_update_data_default(hass, device):
 
         async def _async_fetch_data():
             """Fetch data from the device."""
-            async with async_timeout.timeout(10):
+            async with async_timeout.timeout(POLLING_TIMEOUT_SEC):
                 state = await hass.async_add_executor_job(device.status)
                 _LOGGER.debug("Got new state: %s", state)
                 return state
@@ -237,7 +240,7 @@ def _async_update_data_vacuum(hass, device: Vacuum):
         """Fetch data from the device using async_add_executor_job."""
 
         async def execute_update():
-            async with async_timeout.timeout(10):
+            async with async_timeout.timeout(POLLING_TIMEOUT_SEC):
                 state = await hass.async_add_executor_job(update)
                 _LOGGER.debug("Got new vacuum state: %s", state)
                 return state
@@ -334,7 +337,7 @@ async def async_create_miio_device_and_coordinator(
         name=name,
         update_method=update_method(hass, device),
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=60),
+        update_interval=timedelta(seconds=UPDATE_INTERVAL_SEC),
     )
     hass.data[DOMAIN][entry.entry_id] = {
         KEY_DEVICE: device,
@@ -403,7 +406,7 @@ async def async_setup_gateway_entry(
         name=name,
         update_method=async_update_data,
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=10),
+        update_interval=timedelta(seconds=UPDATE_INTERVAL_SEC),
     )
 
     hass.data[DOMAIN][entry.entry_id] = {
