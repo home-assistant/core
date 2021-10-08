@@ -44,7 +44,7 @@ def validate_station(station):
     if station is None:
         return
     if not re.fullmatch(r"[A-Z]{2}/s0000\d{3}", station):
-        raise vol.error.Invalid('Station ID must be of the form "XX/s0000###"')
+        raise vol.Invalid('Station ID must be of the form "XX/s0000###"')
     return station
 
 

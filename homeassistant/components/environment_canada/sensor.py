@@ -19,20 +19,13 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
-
+from .const import ATTR_STATION, CONF_ATTRIBUTION, CONF_LANGUAGE, CONF_STATION, DOMAIN
 
 SCAN_INTERVAL = timedelta(minutes=10)
-
 ATTR_UPDATED = "updated"
-ATTR_STATION = "station"
 ATTR_TIME = "alert time"
 
-CONF_ATTRIBUTION = "Data provided by Environment Canada"
-CONF_STATION = "station"
-CONF_LANGUAGE = "language"
+_LOGGER = logging.getLogger(__name__)
 
 
 def validate_station(station):
