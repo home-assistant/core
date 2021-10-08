@@ -111,7 +111,7 @@ async def async_setup_platform(
     try:
         sensors = await api.get_sids()
     except (exceptions.DataError, exceptions.ConnectTimeout) as ex:
-        raise PlatformNotReady(f"Error getting data from Efergy: {ex}")
+        raise PlatformNotReady("Error getting data from Efergy:") from ex
     for variable in config[CONF_MONITORED_VARIABLES]:
         if sensors and variable[CONF_TYPE] == CONF_CURRENT_VALUES:
             for sensor in sensors:
@@ -165,4 +165,4 @@ class EfergySensor(SensorEntity):
             )
         except (exceptions.DataError, exceptions.ConnectTimeout) as ex:
             self._attr_native_value = None
-            _LOGGER.error(f"Error getting data from Efergy: {ex}")
+            _LOGGER.error("Error getting data from Efergy: %s", ex)
