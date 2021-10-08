@@ -125,7 +125,7 @@ async def test_setup_duplicate_config(hass: HomeAssistant, remote: Mock, caplog)
     await async_setup_component(hass, SAMSUNGTV_DOMAIN, DUPLICATE)
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID) is None
-    assert len(hass.states.async_all()) == 0
+    assert len(hass.states.async_all("media_player")) == 0
     assert "duplicate host entries found" in caplog.text
 
 
@@ -136,6 +136,6 @@ async def test_setup_duplicate_entries(
     await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID)
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all("media_player")) == 1
     await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all("media_player")) == 1

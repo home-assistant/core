@@ -9,6 +9,9 @@
           "url": "[%key:common::config_flow::data::url%]"
         }
       },
+      "import_turn_on": {
+        "description": "Please turn on the device and click submit to continue migration"
+      },
       "confirm": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
       }

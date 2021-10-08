@@ -51,8 +51,7 @@ from .const import (
     ATTR_EXTERNALWINDOWOPEN, 
     ATTR_LOCKED, 
     ATTR_OFFSET, 
-    ATTR_VALVE, 
-    NEW_SENSOR,
+    ATTR_VALVE,
 )
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
@@ -125,7 +124,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
-            hass, gateway.async_signal_new_device(NEW_SENSOR), async_add_climate
+            hass,
+            gateway.signal_new_sensor,
+            async_add_climate,
         )
     )
 
