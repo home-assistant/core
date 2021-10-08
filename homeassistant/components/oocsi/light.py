@@ -9,6 +9,9 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
+    ATTR_RGB_COLOR,
+    ATTR_RGBW_COLOR,
+    ATTR_RGBWW_COLOR,
     ATTR_TRANSITION,
     ATTR_WHITE,
     ATTR_RGB_COLOR,
@@ -103,26 +106,33 @@ class BasicLight(LightEntity):
         def channelUpdateEvent(sender, recipient, event, **kwargs: Any):
             """Handle oocsi event"""
             self._channelState = event["state"]
-            if self._channelState == True:
-                if COLOR_MODE_HS in self._supported_color_modes:
-                    self._hs = color_util.color_RGB_to_hs(
-                        event["colorrgb"][0], event["colorrgb"][1], event["colorrgb"][2]
-                    )
-                if COLOR_MODE_BRIGHTNESS in self._supported_color_modes:
-                    self._brightness = event["brightness"]
-                if COLOR_MODE_COLOR_TEMP in self._supported_color_modes:
-                    self._color_temp = event["color_temp"]
-                if COLOR_MODE_WHITE in self._supported_color_modes:
-                    self._white_value = event["white"]
+            if COLOR_MODE_RGB in self._supported_color_modes:
+                self._RGB = color_util.color_RGB_to_hs(
+                    event["colorrgb"][0], event["colorrgb"][1], event["colorrgb"][2]
+                )
+            if COLOR_MODE_BRIGHTNESS in self._supported_color_modes:
+                self._brightness = event["brightness"]
+            if COLOR_MODE_COLOR_TEMP in self._supported_color_modes:
+                self._color_temp = event["color_temp"]
+            if COLOR_MODE_WHITE in self._supported_color_modes:
+                self._white_value = event["white"]
             self.async_write_ha_state()
 
-        await self._color_setup()
+        # await self._color_setup()
+        self._color_mode = COLOR_MODE_RGBW
+        self._supported_color_modes = set()
+        # self._supported_color_modes.add(COLOR_MODE_RGBWW)
+        self._supported_color_modes.add(COLOR_MODE_RGBW)
+        # self._supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
+
+        self._supported_color_modes.add(COLOR_MODE_WHITE)
         self._oocsi.subscribe(self._oocsichannel, channelUpdateEvent)
 
     @property
     def color_mode(self) -> str | None:
         """Return the color mode of the light."""
-        return self._color_mode
+        # return self._color_mode
+        return COLOR_MODE_RGBW
 
     @property
     def color_temp(self) -> int | None:
@@ -235,11 +245,6 @@ class BasicLight(LightEntity):
                 self._color_mode = COLOR_MODE_COLOR_TEMP
             else:
                 colormodeRGBpicker
-
-        self._oocsi.send(self._oocsichannel, {"brightness": self._brightness})
-        self._channelState = True
-        self._oocsi.send(self._oocsichannel, {"state": True})
-        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
