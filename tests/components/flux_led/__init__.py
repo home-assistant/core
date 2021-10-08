@@ -1,8 +1,8 @@
 """Tests for the flux_led integration."""
 from __future__ import annotations
 
-import socket
-from unittest.mock import MagicMock, patch
+import asyncio
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from flux_led import WifiLedBulb
 from flux_led.const import (
@@ -37,6 +37,12 @@ FLUX_DISCOVERY = {FLUX_HOST: IP_ADDRESS, FLUX_MODEL: MODEL, FLUX_MAC: FLUX_MAC_A
 
 def _mocked_bulb() -> WifiLedBulb:
     bulb = MagicMock(auto_spec=WifiLedBulb)
+    bulb.async_setup = AsyncMock()
+    bulb.async_stop = AsyncMock()
+    bulb.async_update = AsyncMock()
+    bulb.async_turn_off = AsyncMock()
+    bulb.async_turn_on = AsyncMock()
+    bulb.async_set_levels = AsyncMock()
     bulb.getRgb = MagicMock(return_value=[255, 0, 0])
     bulb.getRgbw = MagicMock(return_value=[255, 0, 0, 50])
     bulb.getRgbww = MagicMock(return_value=[255, 0, 0, 50, 0])
@@ -58,18 +64,21 @@ def _mocked_bulb() -> WifiLedBulb:
 
 
 def _patch_discovery(device=None, no_device=False):
-    def _discovery(*args, **kwargs):
+    async def _discovery(*args, **kwargs):
         if no_device:
             return []
         return [FLUX_DISCOVERY]
 
-    return patch("homeassistant.components.flux_led.BulbScanner.scan", new=_discovery)
+    return patch(
+        "homeassistant.components.flux_led.AIOBulbScanner.async_scan", new=_discovery
+    )
 
 
 def _patch_wifibulb(device=None, no_device=False):
     def _wifi_led_bulb(*args, **kwargs):
+        bulb = _mocked_bulb()
         if no_device:
-            raise socket.timeout
+            bulb.async_setup = AsyncMock(side_effect=asyncio.TimeoutError)
         return device if device else _mocked_bulb()
 
-    return patch("homeassistant.components.flux_led.WifiLedBulb", new=_wifi_led_bulb)
+    return patch("homeassistant.components.flux_led.AIOWifiLedBulb", new=_wifi_led_bulb)
