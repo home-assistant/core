@@ -9,14 +9,12 @@ from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     PERCENTAGE,
     TIME_MINUTES,
-    TIME_SECONDS,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
     ATTR_DAILY_GOAL,
-    ATTR_LIVE_TRACKING_REMAINING,
     ATTR_MINUTES_ACTIVE,
     ATTR_TRACKER_STATE,
     CLIENT,
@@ -122,13 +120,6 @@ SENSOR_TYPES = (
         name="Battery Level",
         native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_BATTERY,
-        entity_class=TractiveHardwareSensor,
-    ),
-    TractiveSensorEntityDescription(
-        key=ATTR_LIVE_TRACKING_REMAINING,
-        name="Live tracking remaining time",
-        icon="mdi:clock-end",
-        native_unit_of_measurement=TIME_SECONDS,
         entity_class=TractiveHardwareSensor,
     ),
     TractiveSensorEntityDescription(

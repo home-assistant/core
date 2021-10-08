@@ -21,7 +21,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     ATTR_DAILY_GOAL,
-    ATTR_LIVE_TRACKING_REMAINING,
     ATTR_MINUTES_ACTIVE,
     ATTR_TRACKER_STATE,
     CLIENT,
@@ -203,9 +202,6 @@ class TractiveClient:
     def _send_hardware_update(self, event):
         payload = {
             ATTR_BATTERY_LEVEL: event["hardware"]["battery_level"],
-            ATTR_LIVE_TRACKING_REMAINING: event.get("live_tracking", {}).get(
-                "remaining"
-            ),
             ATTR_TRACKER_STATE: event["tracker_state"].lower(),
         }
 
