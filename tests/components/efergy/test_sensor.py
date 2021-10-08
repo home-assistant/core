@@ -99,7 +99,13 @@ async def test_failed_getting_sids(
 ):
     """Test failed gettings sids."""
     mock_responses(aioclient_mock, error=True)
-    assert await async_setup_component(hass, "sensor", {"sensor": MULTI_SENSOR_CONFIG})
+    await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "sensor", {"sensor": ONE_SENSOR_CONFIG})
     await hass.async_block_till_done()
-
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {"entity_id": "sensor.energy_consumed"},
+        blocking=True,
+    )
     assert hass.states.get("sensor.efergy_728386") is None
