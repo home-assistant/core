@@ -4,10 +4,11 @@ from __future__ import annotations
 import datetime
 import logging
 
-# from env_canada import ECRadar
+from env_canada import ECData, get_station_coords
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_LATITUDE,
@@ -41,26 +42,35 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Environment Canada camera."""
-
-    # if config.get(CONF_STATION):
-    #     radar_object = ECRadar(
-    #         station_id=config[CONF_STATION], precip_type=config.get(CONF_PRECIP_TYPE)
-    #     )
-    # else:
-    #     lat = config.get(CONF_LATITUDE, hass.config.latitude)
-    #     lon = config.get(CONF_LONGITUDE, hass.config.longitude)
-    #     radar_object = ECRadar(
-    #         coordinates=(lat, lon), precip_type=config.get(CONF_PRECIP_TYPE)
-    #     )
-
-    # unique_id = f"{config[CONF_STATION]}-{config[CONF_LANGUAGE]}-radar"
-    # add_devices(
-    #     [ECCamera(radar_object, config.get(CONF_NAME), config[CONF_LOOP], unique_id)],
-    #     True,
-    # )
     _LOGGER.warning(
         "Environment Canada YAML configuration is deprecated. Your YAML configuration "
         "has been imported into the UI and can be safely removed from your YAML."
+    )
+    if config.get(CONF_STATION):
+        lat, lon = get_station_coords(config[CONF_STATION])
+    else:
+        lat = config.get(CONF_LATITUDE, hass.config.latitude)
+        lon = config.get(CONF_LONGITUDE, hass.config.longitude)
+
+    ec_data = ECData(coordinates=(lat, lon))
+    config[CONF_STATION] = ec_data.station_id
+    config[CONF_LATITUDE] = lat
+    config[CONF_LONGITUDE] = lon
+
+    name = (
+        config.get(CONF_NAME)
+        if config.get(CONF_NAME)
+        else ec_data.metadata.get("location")
+    )
+    config[CONF_NAME] = name
+    config[CONF_LANGUAGE] = "English"
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
     )
 
 

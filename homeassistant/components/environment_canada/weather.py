@@ -3,7 +3,7 @@ import datetime
 import logging
 import re
 
-# from env_canada import ECData
+from env_canada import ECData
 import voluptuous as vol
 
 from homeassistant.components.weather import (
@@ -82,26 +82,29 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         "Environment Canada YAML configuration is deprecated. Your YAML configuration "
         "has been imported into the UI and can be safely removed from your YAML."
     )
-    # if config.get(CONF_STATION):
-    #     ec_data = ECData(station_id=config[CONF_STATION])
-    #     pass
-    # else:
-    #     lat = config.get(CONF_LATITUDE, hass.config.latitude)
-    #     lon = config.get(CONF_LONGITUDE, hass.config.longitude)
-    #     ec_data = ECData(coordinates=(lat, lon))
+    if config.get(CONF_STATION):
+        ec_data = ECData(station_id=config[CONF_STATION])
+        config[CONF_LATITUDE] = ec_data.lat
+        config[CONF_LONGITUDE] = ec_data.lon
+    else:
+        lat = config.get(CONF_LATITUDE, hass.config.latitude)
+        lon = config.get(CONF_LONGITUDE, hass.config.longitude)
+        ec_data = ECData(coordinates=(lat, lon))
+        config[CONF_STATION] = ec_data.station_id
 
-    default_config = {
-        CONF_NAME: "",
-        CONF_LATITUDE: 0,
-        CONF_LONGITUDE: 0,
-        CONF_LANGUAGE: "English",
-        CONF_STATION: "imported",
-    }
+    name = (
+        config.get(CONF_NAME)
+        if config.get(CONF_NAME)
+        else ec_data.metadata.get("location")
+    )
+    config[CONF_NAME] = name
+    config[CONF_LANGUAGE] = "English"
+
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data={**default_config, **config},
+            data=config,
         )
     )
 

@@ -106,7 +106,6 @@ class EnvironmentCanadaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             self._data[CONF_NAME] = user_input[CONF_NAME]
-            breakpoint()
             return self.async_create_entry(title=user_input[CONF_NAME], data=self._data)
 
         data_schema = vol.Schema(
@@ -121,15 +120,18 @@ class EnvironmentCanadaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data):
         """Import entry from configuration.yaml."""
+        existing = await self.async_set_unique_id(
+            f"{import_data[CONF_STATION]}-{import_data[CONF_LANGUAGE]}"
+        )
+        if existing:
+            _LOGGER.warn(
+                "Environment Canada config is imported only for the first "
+                "Environment Canada platform in your configuration.yaml"
+            )
+            self._abort_if_unique_id_configured()
         return self.async_create_entry(
             title=import_data[CONF_NAME],
-            data={
-                CONF_NAME: import_data.get(CONF_NAME),
-                CONF_LATITUDE: import_data.get(CONF_LATITUDE),
-                CONF_LONGITUDE: import_data.get(CONF_LONGITUDE),
-                CONF_LANGUAGE: import_data.get(CONF_LANGUAGE),
-                CONF_STATION: import_data.get(CONF_STATION),
-            },
+            data=import_data,
         )
 
 
