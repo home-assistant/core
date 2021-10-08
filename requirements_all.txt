@@ -219,7 +219,7 @@ aiomodernforms==0.1.8
 aiomusiccast==0.9.2
 
 # homeassistant.components.nanoleaf
-aionanoleaf==0.0.2
+aionanoleaf==0.0.3
 
 # homeassistant.components.keyboard_remote
 aionotify==0.2.0
@@ -330,7 +330,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.22.5
+async-upnp-client==0.22.8
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
