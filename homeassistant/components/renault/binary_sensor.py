@@ -1,20 +1,42 @@
 """Support for Renault binary sensors."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from renault_api.kamereon.enums import ChargeState, PlugState
+from renault_api.kamereon.models import KamereonVehicleBatteryStatusData
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY_CHARGING,
     DEVICE_CLASS_PLUG,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
-from .renault_entities import RenaultBatteryDataEntity, RenaultDataEntity
+from .renault_entities import RenaultDataEntity, RenaultEntityDescription
 from .renault_hub import RenaultHub
+
+
+@dataclass
+class RenaultBinarySensorRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    on_key: str
+    on_value: StateType
+
+
+@dataclass
+class RenaultBinarySensorEntityDescription(
+    BinarySensorEntityDescription,
+    RenaultEntityDescription,
+    RenaultBinarySensorRequiredKeysMixin,
+):
+    """Class describing Renault binary sensor entities."""
 
 
 async def async_setup_entry(
@@ -24,35 +46,46 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Renault entities from config entry."""
     proxy: RenaultHub = hass.data[DOMAIN][config_entry.entry_id]
-    entities: list[RenaultDataEntity] = []
-    for vehicle in proxy.vehicles.values():
-        if "battery" in vehicle.coordinators:
-            entities.append(RenaultPluggedInSensor(vehicle, "Plugged In"))
-            entities.append(RenaultChargingSensor(vehicle, "Charging"))
+    entities: list[RenaultBinarySensor] = [
+        RenaultBinarySensor(vehicle, description)
+        for vehicle in proxy.vehicles.values()
+        for description in BINARY_SENSOR_TYPES
+        if description.coordinator in vehicle.coordinators
+    ]
     async_add_entities(entities)
 
 
-class RenaultPluggedInSensor(RenaultBatteryDataEntity, BinarySensorEntity):
-    """Plugged In binary sensor."""
+class RenaultBinarySensor(
+    RenaultDataEntity[KamereonVehicleBatteryStatusData], BinarySensorEntity
+):
+    """Mixin for binary sensor specific attributes."""
 
-    _attr_device_class = DEVICE_CLASS_PLUG
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if the binary sensor is on."""
-        if (not self.data) or (self.data.plugStatus is None):
-            return None
-        return self.data.get_plug_status() == PlugState.PLUGGED
-
-
-class RenaultChargingSensor(RenaultBatteryDataEntity, BinarySensorEntity):
-    """Charging binary sensor."""
-
-    _attr_device_class = DEVICE_CLASS_BATTERY_CHARGING
+    entity_description: RenaultBinarySensorEntityDescription
 
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        if (not self.data) or (self.data.chargingStatus is None):
-            return None
-        return self.data.get_charging_status() == ChargeState.CHARGE_IN_PROGRESS
+        return (
+            self._get_data_attr(self.entity_description.on_key)
+            == self.entity_description.on_value
+        )
+
+
+BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = (
+    RenaultBinarySensorEntityDescription(
+        key="plugged_in",
+        coordinator="battery",
+        device_class=DEVICE_CLASS_PLUG,
+        name="Plugged In",
+        on_key="plugStatus",
+        on_value=PlugState.PLUGGED.value,
+    ),
+    RenaultBinarySensorEntityDescription(
+        key="charging",
+        coordinator="battery",
+        device_class=DEVICE_CLASS_BATTERY_CHARGING,
+        name="Charging",
+        on_key="chargingStatus",
+        on_value=ChargeState.CHARGE_IN_PROGRESS.value,
+    ),
+)

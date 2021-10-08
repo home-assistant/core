@@ -70,7 +70,7 @@ CREATE_FIELDS = {
     vol.Required(CONF_MAX): vol.Coerce(float),
     vol.Required(CONF_AREAID): vol.Coerce(int),
     vol.Optional(CONF_INITIAL): vol.Coerce(float),
-    vol.Optional(CONF_STEP, default=1): vol.All(vol.Coerce(float), vol.Range(min=1e-3)),
+    vol.Optional(CONF_STEP, default=1): vol.All(vol.Coerce(float), vol.Range(min=1e-9)),
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_MODE, default=MODE_SLIDER): vol.In([MODE_BOX, MODE_SLIDER]),
@@ -82,7 +82,7 @@ UPDATE_FIELDS = {
     vol.Optional(CONF_MAX): vol.Coerce(float),
     vol.Optional(CONF_AREAID): vol.Coerce(int),
     vol.Optional(CONF_INITIAL): vol.Coerce(float),
-    vol.Optional(CONF_STEP): vol.All(vol.Coerce(float), vol.Range(min=1e-3)),
+    vol.Optional(CONF_STEP): vol.All(vol.Coerce(float), vol.Range(min=1e-9)),
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_MODE): vol.In([MODE_BOX, MODE_SLIDER]),
@@ -99,7 +99,7 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Required(CONF_AREAID): vol.Coerce(int),
                     vol.Optional(CONF_INITIAL): vol.Coerce(float),
                     vol.Optional(CONF_STEP, default=1): vol.All(
-                        vol.Coerce(float), vol.Range(min=1e-3)
+                        vol.Coerce(float), vol.Range(min=1e-9)
                     ),
                     vol.Optional(CONF_ICON): cv.icon,
                     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,

@@ -9,6 +9,7 @@ from pyhap.const import (
     CATEGORY_SWITCH,
 )
 
+from homeassistant.components.input_select import ATTR_OPTIONS, SERVICE_SELECT_OPTION
 from homeassistant.components.switch import DOMAIN
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
@@ -33,9 +34,11 @@ from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_ACTIVE,
     CHAR_IN_USE,
+    CHAR_NAME,
     CHAR_ON,
     CHAR_OUTLET_IN_USE,
     CHAR_VALVE_TYPE,
+    MAX_NAME_LENGTH,
     SERV_OUTLET,
     SERV_SWITCH,
     SERV_VALVE,
@@ -226,3 +229,47 @@ class Valve(HomeAccessory):
         self.char_active.set_value(current_state)
         _LOGGER.debug("%s: Set in_use state to %s", self.entity_id, current_state)
         self.char_in_use.set_value(current_state)
+
+
+@TYPES.register("SelectSwitch")
+class SelectSwitch(HomeAccessory):
+    """Generate a Switch accessory that contains multiple switches."""
+
+    def __init__(self, *args):
+        """Initialize a Switch accessory object."""
+        super().__init__(*args, category=CATEGORY_SWITCH)
+        self.domain = split_entity_id(self.entity_id)[0]
+        state = self.hass.states.get(self.entity_id)
+        self.select_chars = {}
+        options = state.attributes[ATTR_OPTIONS]
+        for option in options:
+            serv_option = self.add_preload_service(
+                SERV_OUTLET, [CHAR_NAME, CHAR_IN_USE]
+            )
+            serv_option.configure_char(
+                CHAR_NAME,
+                value=f"{option}"[:MAX_NAME_LENGTH],
+            )
+            serv_option.configure_char(CHAR_IN_USE, value=False)
+            self.select_chars[option] = serv_option.configure_char(
+                CHAR_ON,
+                value=False,
+                setter_callback=lambda value, option=option: self.select_option(option),
+            )
+        self.set_primary_service(self.select_chars[options[0]])
+        # Set the state so it is in sync on initial
+        # GET to avoid an event storm after homekit startup
+        self.async_update_state(state)
+
+    def select_option(self, option):
+        """Set option from HomeKit."""
+        _LOGGER.debug("%s: Set option to %s", self.entity_id, option)
+        params = {ATTR_ENTITY_ID: self.entity_id, "option": option}
+        self.async_call_service(self.domain, SERVICE_SELECT_OPTION, params)
+
+    @callback
+    def async_update_state(self, new_state):
+        """Update switch state after state changed."""
+        current_option = new_state.state
+        for option, char in self.select_chars.items():
+            char.set_value(option == current_option)

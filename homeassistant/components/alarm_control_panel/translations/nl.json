@@ -4,7 +4,7 @@
             "arm_away": "Schakel {entity_name} in voor vertrek",
             "arm_home": "Schakel {entity_name} in voor thuis",
             "arm_night": "Schakel {entity_name} in voor 's nachts",
-            "arm_vacation": "Schakel {entity_name} in op vakantie",
+            "arm_vacation": "Schakel {entity_name} in voor vakantie",
             "disarm": "Schakel {entity_name} uit",
             "trigger": "Laat {entity_name} afgaan"
         },
@@ -12,7 +12,7 @@
             "is_armed_away": "{entity_name} ingeschakeld voor vertrek",
             "is_armed_home": "{entity_name} ingeschakeld voor thuis",
             "is_armed_night": "{entity_name} is ingeschakeld voor 's nachts",
-            "is_armed_vacation": "{entity_name} is in vakantie geschakeld",
+            "is_armed_vacation": "{entity_name} is ingeschakeld voor vakantie",
             "is_disarmed": "{entity_name} is uitgeschakeld",
             "is_triggered": "{entity_name} gaat af"
         },
@@ -20,7 +20,7 @@
             "armed_away": "{entity_name} ingeschakeld voor vertrek",
             "armed_home": "{entity_name} ingeschakeld voor thuis",
             "armed_night": "{entity_name} ingeschakeld voor 's nachts",
-            "armed_vacation": "{entity_name} schakelde vakantie in",
+            "armed_vacation": "{entity_name} schakelde in voor vakantie",
             "disarmed": "{entity_name} uitgeschakeld",
             "triggered": "{entity_name} afgegaan"
         }
@@ -40,5 +40,5 @@
             "triggered": "Gaat af"
         }
     },
-    "title": "Alarm bedieningspaneel"
+    "title": "Alarmbedieningspaneel"
 }

@@ -1,0 +1,3 @@
+remove_clients:
+  name: Remove clients from the UniFi Controller
+  description: Clean up clients that has only been associated with the controller for a short period of time.

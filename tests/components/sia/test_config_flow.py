@@ -209,6 +209,13 @@ async def test_abort_form(hass):
     assert get_abort["reason"] == "already_configured"
 
 
+@pytest.fixture(autouse=True)
+def mock_sia():
+    """Mock SIAClient."""
+    with patch("homeassistant.components.sia.hub.SIAClient", autospec=True):
+        yield
+
+
 @pytest.mark.parametrize(
     "field, value, error",
     [

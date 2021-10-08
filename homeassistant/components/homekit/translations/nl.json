@@ -21,17 +21,19 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Autostart (deactiveer als je de homekit.start service handmatig aanroept)"
+                    "auto_start": "Autostart (deactiveer als je de homekit.start service handmatig aanroept)",
+                    "devices": "Apparaten (triggers)"
                 },
                 "description": "Deze instellingen hoeven alleen te worden aangepast als HomeKit niet functioneert.",
                 "title": "Geavanceerde configuratie"
             },
             "cameras": {
                 "data": {
+                    "camera_audio": "Camera's die audio ondersteunen",
                     "camera_copy": "Camera's die native H.264-streams ondersteunen"
                 },
                 "description": "Controleer alle camera's die native H.264-streams ondersteunen. Als de camera geen H.264-stream uitvoert, transcodeert het systeem de video naar H.264 voor HomeKit. Transcodering vereist een performante CPU en het is onwaarschijnlijk dat dit werkt op computers met \u00e9\u00e9n bord.",
-                "title": "Selecteer de videocodec van de camera."
+                "title": "Cameraconfiguratie"
             },
             "include_exclude": {
                 "data": {

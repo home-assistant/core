@@ -3,7 +3,13 @@
   "name": "Logitech Harmony Hub",
   "documentation": "https://www.home-assistant.io/integrations/harmony",
   "requirements": ["aioharmony==0.2.7"],
-  "codeowners": ["@ehendrix23", "@bramkragten", "@bdraco", "@mkeesey"],
+  "codeowners": [
+    "@ehendrix23",
+    "@bramkragten",
+    "@bdraco",
+    "@mkeesey",
+    "@Aohzan"
+  ],
   "ssdp": [
     {
       "manufacturer": "Logitech",

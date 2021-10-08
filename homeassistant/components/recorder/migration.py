@@ -1,9 +1,10 @@
 """Schema migration helpers."""
+import contextlib
 from datetime import timedelta
 import logging
 
 import sqlalchemy
-from sqlalchemy import ForeignKeyConstraint, MetaData, Table, text
+from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text
 from sqlalchemy.exc import (
     InternalError,
     OperationalError,
@@ -11,8 +12,6 @@ from sqlalchemy.exc import (
     SQLAlchemyError,
 )
 from sqlalchemy.schema import AddConstraint, DropConstraint
-
-import homeassistant.util.dt as dt_util
 
 from .models import (
     SCHEMA_VERSION,
@@ -22,7 +21,10 @@ from .models import (
     Statistics,
     StatisticsMeta,
     StatisticsRuns,
+    StatisticsShortTerm,
+    process_timestamp,
 )
+from .statistics import get_metadata_with_session, get_start_time
 from .util import session_scope
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,7 +74,7 @@ def migrate_schema(instance, current_version):
         for version in range(current_version, SCHEMA_VERSION):
             new_version = version + 1
             _LOGGER.info("Upgrading recorder db schema to version %s", new_version)
-            _apply_update(instance.engine, session, new_version, current_version)
+            _apply_update(instance, session, new_version, current_version)
             session.add(SchemaChanges(schema_version=new_version))
 
             _LOGGER.info("Upgrade to version %s done", new_version)
@@ -351,8 +353,9 @@ def _drop_foreign_key_constraints(connection, engine, table, columns):
             )
 
 
-def _apply_update(engine, session, new_version, old_version):  # noqa: C901
+def _apply_update(instance, session, new_version, old_version):  # noqa: C901
     """Perform operations to bring schema up to date."""
+    engine = instance.engine
     connection = session.connection()
     if new_version == 1:
         _create_index(connection, "events", "ix_events_time_fired")
@@ -467,28 +470,28 @@ def _apply_update(engine, session, new_version, old_version):  # noqa: C901
     elif new_version == 18:
         # Recreate the statistics and statistics meta tables.
         #
-        # Order matters! Statistics has a relation with StatisticsMeta,
-        # so statistics need to be deleted before meta (or in pair depending
-        # on the SQL backend); and meta needs to be created before statistics.
-        if sqlalchemy.inspect(engine).has_table(
-            StatisticsMeta.__tablename__
-        ) or sqlalchemy.inspect(engine).has_table(Statistics.__tablename__):
-            Base.metadata.drop_all(
-                bind=engine, tables=[Statistics.__table__, StatisticsMeta.__table__]
-            )
+        # Order matters! Statistics and StatisticsShortTerm have a relation with
+        # StatisticsMeta, so statistics need to be deleted before meta (or in pair
+        # depending on the SQL backend); and meta needs to be created before statistics.
+        Base.metadata.drop_all(
+            bind=engine,
+            tables=[
+                StatisticsShortTerm.__table__,
+                Statistics.__table__,
+                StatisticsMeta.__table__,
+            ],
+        )
 
         StatisticsMeta.__table__.create(engine)
+        StatisticsShortTerm.__table__.create(engine)
         Statistics.__table__.create(engine)
     elif new_version == 19:
         # This adds the statistic runs table, insert a fake run to prevent duplicating
         # statistics.
-        now = dt_util.utcnow()
-        start = now.replace(minute=0, second=0, microsecond=0)
-        start = start - timedelta(hours=1)
-        session.add(StatisticsRuns(start=start))
+        session.add(StatisticsRuns(start=get_start_time()))
     elif new_version == 20:
         # This changed the precision of statistics from float to double
-        if engine.dialect.name in ["mysql", "oracle", "postgresql"]:
+        if engine.dialect.name in ["mysql", "postgresql"]:
             _modify_columns(
                 connection,
                 engine,
@@ -501,6 +504,81 @@ def _apply_update(engine, session, new_version, old_version):  # noqa: C901
                     "sum DOUBLE PRECISION",
                 ],
             )
+    elif new_version == 21:
+        # Try to change the character set of the statistic_meta table
+        if engine.dialect.name == "mysql":
+            for table in ("events", "states", "statistics_meta"):
+                _LOGGER.warning(
+                    "Updating character set and collation of table %s to utf8mb4. "
+                    "Note: this can take several minutes on large databases and slow "
+                    "computers. Please be patient!",
+                    table,
+                )
+                with contextlib.suppress(SQLAlchemyError):
+                    connection.execute(
+                        # Using LOCK=EXCLUSIVE to prevent the database from corrupting
+                        # https://github.com/home-assistant/core/issues/56104
+                        text(
+                            f"ALTER TABLE {table} CONVERT TO "
+                            "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci LOCK=EXCLUSIVE"
+                        )
+                    )
+    elif new_version == 22:
+        # Recreate the all statistics tables for Oracle DB with Identity columns
+        #
+        # Order matters! Statistics has a relation with StatisticsMeta,
+        # so statistics need to be deleted before meta (or in pair depending
+        # on the SQL backend); and meta needs to be created before statistics.
+        if engine.dialect.name == "oracle":
+            Base.metadata.drop_all(
+                bind=engine,
+                tables=[
+                    StatisticsShortTerm.__table__,
+                    Statistics.__table__,
+                    StatisticsMeta.__table__,
+                    StatisticsRuns.__table__,
+                ],
+            )
+
+            StatisticsRuns.__table__.create(engine)
+            StatisticsMeta.__table__.create(engine)
+            StatisticsShortTerm.__table__.create(engine)
+            Statistics.__table__.create(engine)
+
+        # Block 5-minute statistics for one hour from the last run, or it will overlap
+        # with existing hourly statistics. Don't block on a database with no existing
+        # statistics.
+        if session.query(Statistics.id).count() and (
+            last_run_string := session.query(func.max(StatisticsRuns.start)).scalar()
+        ):
+            last_run_start_time = process_timestamp(last_run_string)
+            if last_run_start_time:
+                fake_start_time = last_run_start_time + timedelta(minutes=5)
+                while fake_start_time < last_run_start_time + timedelta(hours=1):
+                    session.add(StatisticsRuns(start=fake_start_time))
+                    fake_start_time += timedelta(minutes=5)
+
+        # Copy last hourly statistic to the newly created 5-minute statistics table
+        sum_statistics = get_metadata_with_session(
+            instance.hass, session, None, statistic_type="sum"
+        )
+        for metadata_id, _ in sum_statistics.values():
+            last_statistic = (
+                session.query(Statistics)
+                .filter_by(metadata_id=metadata_id)
+                .order_by(Statistics.start.desc())
+                .first()
+            )
+            if last_statistic:
+                session.add(
+                    StatisticsShortTerm(
+                        metadata_id=last_statistic.metadata_id,
+                        start=last_statistic.start,
+                        last_reset=last_statistic.last_reset,
+                        state=last_statistic.state,
+                        sum=last_statistic.sum,
+                    )
+                )
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
@@ -520,10 +598,7 @@ def _inspect_schema_version(engine, session):
     for index in indexes:
         if index["column_names"] == ["time_fired"]:
             # Schema addition from version 1 detected. New DB.
-            now = dt_util.utcnow()
-            start = now.replace(minute=0, second=0, microsecond=0)
-            start = start - timedelta(hours=1)
-            session.add(StatisticsRuns(start=start))
+            session.add(StatisticsRuns(start=get_start_time()))
             session.add(SchemaChanges(schema_version=SCHEMA_VERSION))
             return SCHEMA_VERSION
 

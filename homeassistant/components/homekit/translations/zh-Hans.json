@@ -21,7 +21,8 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "[%key_id:43661779%]"
+                    "auto_start": "[%key_id:43661779%]",
+                    "devices": "\u8bbe\u5907 (\u89e6\u53d1\u5668)"
                 },
                 "description": "\u8fd9\u4e9b\u8bbe\u7f6e\u53ea\u6709\u5f53 HomeKit \u529f\u80fd\u4e0d\u6b63\u5e38\u65f6\u624d\u9700\u8981\u8c03\u6574\u3002",
                 "title": "\u9ad8\u7ea7\u914d\u7f6e"

@@ -23,6 +23,7 @@ from .const import (
     KEY_COORDINATOR,
     KEY_DEVICE,
     MODEL_AIRFRESH_VA2,
+    MODEL_AIRPURIFIER_3C,
     MODEL_AIRPURIFIER_M1,
     MODEL_AIRPURIFIER_M2,
     MODEL_FAN_SA1,
@@ -75,6 +76,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     model = config_entry.data[CONF_MODEL]
     device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
 
+    if model == MODEL_AIRPURIFIER_3C:
+        return
     if model in MODELS_HUMIDIFIER_MIIO:
         entity_class = XiaomiAirHumidifierSelector
     elif model in MODELS_HUMIDIFIER_MIOT:
@@ -143,10 +146,14 @@ class XiaomiAirHumidifierSelector(XiaomiSelector):
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        self._current_led_brightness = self._extract_value_from_attribute(
+        led_brightness = self._extract_value_from_attribute(
             self.coordinator.data, self.entity_description.key
         )
-        self.async_write_ha_state()
+        # Sometimes (quite rarely) the device returns None as the LED brightness so we
+        # check that the value is not None before updating the state.
+        if led_brightness:
+            self._current_led_brightness = led_brightness
+            self.async_write_ha_state()
 
     @property
     def current_option(self):

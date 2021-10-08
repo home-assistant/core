@@ -1,7 +1,7 @@
 """Helpers for config validation using voluptuous."""
 from __future__ import annotations
 
-from collections.abc import Hashable
+from collections.abc import Callable, Hashable
 from datetime import (
     date as date_sys,
     datetime as datetime_sys,
@@ -15,7 +15,7 @@ from numbers import Number
 import os
 import re
 from socket import _GLOBAL_DEFAULT_TIMEOUT  # type: ignore # private, not in typeshed
-from typing import Any, Callable, Dict, TypeVar, cast
+from typing import Any, Dict, TypeVar, cast
 from urllib.parse import urlparse
 from uuid import UUID
 

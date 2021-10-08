@@ -41,7 +41,7 @@ async def test_abort_if_no_configuration(hass):
 
 
 async def test_full_flow_implementation(
-    hass, aiohttp_client, aioclient_mock, current_request_with_host
+    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
 ):
     """Test registering an integration and finishing flow works."""
     await setup_component(hass)
@@ -75,7 +75,7 @@ async def test_full_flow_implementation(
         "&tenant_id=eneco&issuer=identity.toon.eu"
     )
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
@@ -105,7 +105,7 @@ async def test_full_flow_implementation(
 
 
 async def test_no_agreements(
-    hass, aiohttp_client, aioclient_mock, current_request_with_host
+    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
 ):
     """Test abort when there are no displays."""
     await setup_component(hass)
@@ -125,7 +125,7 @@ async def test_no_agreements(
         result["flow_id"], {"implementation": "eneco"}
     )
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
     await client.get(f"/auth/external/callback?code=abcd&state={state}")
     aioclient_mock.post(
         "https://api.toon.eu/token",
@@ -145,7 +145,7 @@ async def test_no_agreements(
 
 
 async def test_multiple_agreements(
-    hass, aiohttp_client, aioclient_mock, current_request_with_host
+    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
 ):
     """Test abort when there are no displays."""
     await setup_component(hass)
@@ -165,7 +165,7 @@ async def test_multiple_agreements(
         result["flow_id"], {"implementation": "eneco"}
     )
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
     await client.get(f"/auth/external/callback?code=abcd&state={state}")
 
     aioclient_mock.post(
@@ -195,7 +195,7 @@ async def test_multiple_agreements(
 
 
 async def test_agreement_already_set_up(
-    hass, aiohttp_client, aioclient_mock, current_request_with_host
+    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
 ):
     """Test showing display form again if display already exists."""
     await setup_component(hass)
@@ -216,7 +216,7 @@ async def test_agreement_already_set_up(
         result["flow_id"], {"implementation": "eneco"}
     )
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
     await client.get(f"/auth/external/callback?code=abcd&state={state}")
     aioclient_mock.post(
         "https://api.toon.eu/token",
@@ -236,7 +236,7 @@ async def test_agreement_already_set_up(
 
 
 async def test_toon_abort(
-    hass, aiohttp_client, aioclient_mock, current_request_with_host
+    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
 ):
     """Test we abort on Toon error."""
     await setup_component(hass)
@@ -255,7 +255,7 @@ async def test_toon_abort(
         result["flow_id"], {"implementation": "eneco"}
     )
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
     await client.get(f"/auth/external/callback?code=abcd&state={state}")
     aioclient_mock.post(
         "https://api.toon.eu/token",
@@ -289,7 +289,7 @@ async def test_import(hass, current_request_with_host):
 
 
 async def test_import_migration(
-    hass, aiohttp_client, aioclient_mock, current_request_with_host
+    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
 ):
     """Test if importing step with migration works."""
     old_entry = MockConfigEntry(domain=DOMAIN, unique_id=123, version=1)
@@ -317,7 +317,7 @@ async def test_import_migration(
         flows[0]["flow_id"], {"implementation": "eneco"}
     )
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
     await client.get(f"/auth/external/callback?code=abcd&state={state}")
     aioclient_mock.post(
         "https://api.toon.eu/token",

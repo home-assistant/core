@@ -1,9 +1,9 @@
 """Constants for the ClimaCell integration."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Callable
 
 from pyclimacell.const import (
     DAILY,
