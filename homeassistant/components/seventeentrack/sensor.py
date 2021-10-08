@@ -37,7 +37,7 @@ CONF_SHOW_DELIVERED = "show_delivered"
 DATA_PACKAGES = "package_data"
 DATA_SUMMARY = "summary_data"
 
-DEFAULT_ATTRIBUTION = "Data provided by 17track.net"
+ATTRIBUTION = "Data provided by 17track.net"
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=10)
 
 UNIQUE_ID_TEMPLATE = "package_{0}_{1}"
@@ -97,12 +97,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class SeventeenTrackSummarySensor(SensorEntity):
     """Define a summary sensor."""
 
+    _attr_icon = "mdi:package"
+    _attr_native_unit_of_measurement = "packages"
+
     def __init__(self, data, status, initial_state):
         """Initialize."""
-        self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self._data = data
         self._state = initial_state
         self._status = status
+        self._attr_name = f"Seventeentrack Packages {status}"
+        self._attr_unique_id = f"summary_{data.account_id}_{slugify(status)}"
 
     @property
     def available(self):
@@ -110,34 +115,9 @@ class SeventeenTrackSummarySensor(SensorEntity):
         return self._state is not None
 
     @property
-    def extra_state_attributes(self):
-        """Return the device state attributes."""
-        return self._attrs
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return "mdi:package"
-
-    @property
-    def name(self):
-        """Return the name."""
-        return f"Seventeentrack Packages {self._status}"
-
-    @property
     def native_value(self):
         """Return the state."""
         return self._state
-
-    @property
-    def unique_id(self):
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"summary_{self._data.account_id}_{slugify(self._status)}"
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return "packages"
 
     async def async_update(self):
         """Update the sensor."""
@@ -160,7 +140,7 @@ class SeventeenTrackSummarySensor(SensorEntity):
             )
 
         if package_data:
-            self._attrs[ATTR_PACKAGES] = package_data
+            self._attr_extra_state_attributes[ATTR_PACKAGES] = package_data
 
         self._state = self._data.summary.get(self._status)
 
@@ -168,10 +148,12 @@ class SeventeenTrackSummarySensor(SensorEntity):
 class SeventeenTrackPackageSensor(SensorEntity):
     """Define an individual package sensor."""
 
+    _attr_icon = "mdi:package"
+
     def __init__(self, data, package):
         """Initialize."""
-        self._attrs = {
-            ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION,
+        self._attr_extra_state_attributes = {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_DESTINATION_COUNTRY: package.destination_country,
             ATTR_INFO_TEXT: package.info_text,
             ATTR_TIMESTAMP: package.timestamp,
@@ -186,21 +168,14 @@ class SeventeenTrackPackageSensor(SensorEntity):
         self._state = package.status
         self._tracking_number = package.tracking_number
         self.entity_id = ENTITY_ID_TEMPLATE.format(self._tracking_number)
+        self._attr_unique_id = UNIQUE_ID_TEMPLATE.format(
+            data.account_id, self._tracking_number
+        )
 
     @property
     def available(self):
         """Return whether the entity is available."""
         return self._data.packages.get(self._tracking_number) is not None
-
-    @property
-    def extra_state_attributes(self):
-        """Return the device state attributes."""
-        return self._attrs
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return "mdi:package"
 
     @property
     def name(self):
@@ -214,11 +189,6 @@ class SeventeenTrackPackageSensor(SensorEntity):
     def native_value(self):
         """Return the state."""
         return self._state
-
-    @property
-    def unique_id(self):
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return UNIQUE_ID_TEMPLATE.format(self._data.account_id, self._tracking_number)
 
     async def async_update(self):
         """Update the sensor."""
@@ -239,7 +209,7 @@ class SeventeenTrackPackageSensor(SensorEntity):
             async_call_later(self.hass, 1, self._remove)
             return
 
-        self._attrs.update(
+        self._attr_extra_state_attributes.update(
             {
                 ATTR_INFO_TEXT: package.info_text,
                 ATTR_TIMESTAMP: package.timestamp,

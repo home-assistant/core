@@ -259,25 +259,31 @@ class CoverGroup(GroupEntity, CoverEntity):
         """Update state and attributes."""
         self._attr_assumed_state = False
 
-        self._attr_is_closed = None
+        self._attr_is_closed = True
         self._attr_is_closing = False
         self._attr_is_opening = False
+        has_valid_state = False
         for entity_id in self._entities:
             state = self.hass.states.get(entity_id)
             if not state:
                 continue
             if state.state == STATE_OPEN:
                 self._attr_is_closed = False
+                has_valid_state = True
                 continue
             if state.state == STATE_CLOSED:
-                self._attr_is_closed = True
+                has_valid_state = True
                 continue
             if state.state == STATE_CLOSING:
                 self._attr_is_closing = True
+                has_valid_state = True
                 continue
             if state.state == STATE_OPENING:
                 self._attr_is_opening = True
+                has_valid_state = True
                 continue
+        if not has_valid_state:
+            self._attr_is_closed = None
 
         position_covers = self._covers[KEY_POSITION]
         all_position_states = [self.hass.states.get(x) for x in position_covers]

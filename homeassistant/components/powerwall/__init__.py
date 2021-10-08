@@ -91,11 +91,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry_id = entry.entry_id
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN].setdefault(entry_id, {})
     http_session = requests.Session()
+    ip_address = entry.data[CONF_IP_ADDRESS]
 
     password = entry.data.get(CONF_PASSWORD)
-    power_wall = Powerwall(entry.data[CONF_IP_ADDRESS], http_session=http_session)
+    power_wall = Powerwall(ip_address, http_session=http_session)
     try:
         powerwall_data = await hass.async_add_executor_job(
             _login_and_fetch_base_info, power_wall, password
@@ -115,13 +115,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await _migrate_old_unique_ids(hass, entry_id, powerwall_data)
     login_failed_count = 0
 
+    runtime_data = hass.data[DOMAIN][entry.entry_id] = {
+        POWERWALL_API_CHANGED: False,
+        POWERWALL_HTTP_SESSION: http_session,
+    }
+
+    def _recreate_powerwall_login():
+        nonlocal http_session
+        nonlocal power_wall
+        http_session.close()
+        http_session = requests.Session()
+        power_wall = Powerwall(ip_address, http_session=http_session)
+        runtime_data[POWERWALL_OBJECT] = power_wall
+        runtime_data[POWERWALL_HTTP_SESSION] = http_session
+        power_wall.login("", password)
+
     async def async_update_data():
         """Fetch data from API endpoint."""
         # Check if we had an error before
         nonlocal login_failed_count
         _LOGGER.debug("Checking if update failed")
-        if hass.data[DOMAIN][entry.entry_id][POWERWALL_API_CHANGED]:
-            return hass.data[DOMAIN][entry.entry_id][POWERWALL_COORDINATOR].data
+        if runtime_data[POWERWALL_API_CHANGED]:
+            return runtime_data[POWERWALL_COORDINATOR].data
 
         _LOGGER.debug("Updating data")
         try:
@@ -130,9 +145,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if password is None:
                 raise ConfigEntryAuthFailed from err
 
-            # If the session expired, relogin, and try again
+            # If the session expired, recreate, relogin, and try again
             try:
-                await hass.async_add_executor_job(power_wall.login, "", password)
+                await hass.async_add_executor_job(_recreate_powerwall_login)
                 return await _async_update_powerwall_data(hass, entry, power_wall)
             except AccessDeniedError as ex:
                 login_failed_count += 1
@@ -153,13 +168,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=timedelta(seconds=UPDATE_INTERVAL),
     )
 
-    hass.data[DOMAIN][entry.entry_id] = powerwall_data
-    hass.data[DOMAIN][entry.entry_id].update(
+    runtime_data.update(
         {
+            **powerwall_data,
             POWERWALL_OBJECT: power_wall,
             POWERWALL_COORDINATOR: coordinator,
-            POWERWALL_HTTP_SESSION: http_session,
-            POWERWALL_API_CHANGED: False,
         }
     )
 

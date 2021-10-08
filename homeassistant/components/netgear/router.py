@@ -274,8 +274,8 @@ class NetgearDeviceEntity(Entity):
         """Return the device information."""
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
-            "name": self._device_name,
-            "model": self._device["device_model"],
+            "default_name": self._device_name,
+            "default_model": self._device["device_model"],
             "via_device": (DOMAIN, self._router.unique_id),
         }
 
