@@ -45,7 +45,7 @@ async def test_ssdp_flow_dispatched_on_st(mock_get_ssdp, hass, caplog, mock_flow
     mock_ssdp_search_response = _ssdp_headers(
         {
             "st": "mock-st",
-            "location": None,
+            "location": "http://1.1.1.1",
             "usn": "uuid:mock-udn::mock-st",
             "server": "mock-server",
             "ext": "",
