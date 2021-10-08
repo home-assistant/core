@@ -7,6 +7,7 @@ DOMAIN: Final = "flux_led"
 
 API: Final = "flux_api"
 
+SIGNAL_STATE_UPDATED = "flux_led_{}_state_updated"
 
 CONF_AUTOMATIC_ADD: Final = "automatic_add"
 DEFAULT_NETWORK_SCAN_INTERVAL: Final = 120
@@ -15,7 +16,7 @@ DEFAULT_EFFECT_SPEED: Final = 50
 
 FLUX_LED_DISCOVERY: Final = "flux_led_discovery"
 
-FLUX_LED_EXCEPTIONS: Final = (socket.timeout, BrokenPipeError)
+FLUX_LED_EXCEPTIONS: Final = (socket.error, RuntimeError, BrokenPipeError)
 
 STARTUP_SCAN_TIMEOUT: Final = 5
 DISCOVER_SCAN_TIMEOUT: Final = 10
