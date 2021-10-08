@@ -499,7 +499,7 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
-    bulb.set_levels.assert_called_with(r=250, g=0, b=0, w=49, w2=0)
+    bulb.set_levels.assert_called_with(250, 0, 0, 49, 0)
     bulb.set_levels.reset_mock()
     bulb.is_on = True
 
@@ -513,7 +513,7 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
         },
         blocking=True,
     )
-    bulb.set_levels.assert_called_with(r=192, g=192, b=192, w=192, w2=0)
+    bulb.set_levels.assert_called_with(192, 192, 192, 192, 0)
     bulb.set_levels.reset_mock()
 
     await hass.services.async_call(
@@ -522,7 +522,7 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_RGBWW_COLOR: (255, 255, 255, 255, 50)},
         blocking=True,
     )
-    bulb.set_levels.assert_called_with(r=255, g=255, b=255, w=50, w2=255)
+    bulb.set_levels.assert_called_with(255, 255, 255, 50, 255)
     bulb.set_levels.reset_mock()
 
     await hass.services.async_call(
