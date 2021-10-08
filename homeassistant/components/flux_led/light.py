@@ -2,12 +2,11 @@
 from __future__ import annotations
 
 import ast
-from functools import partial
 import logging
 import random
 from typing import Any, Final, cast
 
-from flux_led import WifiLedBulb
+from flux_led.aiodevice import AIOWifiLedBulb
 from flux_led.const import (
     COLOR_MODE_CCT as FLUX_COLOR_MODE_CCT,
     COLOR_MODE_DIM as FLUX_COLOR_MODE_DIM,
@@ -55,9 +54,10 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PROTOCOL,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_platform
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -87,6 +87,7 @@ from .const import (
     MODE_RGB,
     MODE_RGBW,
     MODE_WHITE,
+    SIGNAL_STATE_UPDATED,
     TRANSITION_GRADUAL,
     TRANSITION_JUMP,
     TRANSITION_STROBE,
@@ -251,7 +252,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_CUSTOM_EFFECT,
         CUSTOM_EFFECT_DICT,
-        "set_custom_effect",
+        "async_set_custom_effect",
     )
     options = entry.options
 
@@ -295,7 +296,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
     ) -> None:
         """Initialize the light."""
         super().__init__(coordinator)
-        self._bulb: WifiLedBulb = coordinator.device
+        self._bulb: AIOWifiLedBulb = coordinator.device
         self._attr_name = name
         self._attr_unique_id = unique_id
         self._attr_supported_features = SUPPORT_FLUX_LED
@@ -314,7 +315,6 @@ class FluxLight(CoordinatorEntity, LightEntity):
         self._attr_effect_list = FLUX_EFFECT_LIST
         if custom_effect_colors:
             self._attr_effect_list = [*FLUX_EFFECT_LIST, EFFECT_CUSTOM]
-        self._ip_address = coordinator.host
         self._custom_effect_colors = custom_effect_colors
         self._custom_effect_speed_pct = custom_effect_speed_pct
         self._custom_effect_transition = custom_effect_transition
@@ -381,14 +381,14 @@ class FluxLight(CoordinatorEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified or all lights on."""
-        await self.hass.async_add_executor_job(partial(self._turn_on, **kwargs))
+        await self._async_turn_on(**kwargs)
         self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
-    def _turn_on(self, **kwargs: Any) -> None:
+    async def _async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified or all lights on."""
         if not self.is_on:
-            self._bulb.turnOn()
+            await self._bulb.async_turn_on()
             if not kwargs:
                 return
 
@@ -399,11 +399,11 @@ class FluxLight(CoordinatorEntity, LightEntity):
         if ATTR_COLOR_TEMP in kwargs:
             color_temp_mired = kwargs[ATTR_COLOR_TEMP]
             color_temp_kelvin = color_temperature_mired_to_kelvin(color_temp_mired)
-            self._bulb.setWhiteTemperature(color_temp_kelvin, brightness)
+            await self._bulb.async_set_white_temp(color_temp_kelvin, brightness)
             return
         # Handle switch to HS Color Mode
         if ATTR_HS_COLOR in kwargs:
-            self._bulb.setRgbw(
+            await self._bulb.async_set_levels(
                 *color_hs_to_RGB(*kwargs[ATTR_HS_COLOR]), brightness=brightness
             )
             return
@@ -413,7 +413,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
                 rgbw = rgbw_brightness(kwargs[ATTR_RGBW_COLOR], brightness)
             else:
                 rgbw = kwargs[ATTR_RGBW_COLOR]
-            self._bulb.setRgbw(*rgbw)
+            await self._bulb.async_set_levels(*rgbw)
             return
         # Handle switch to RGBWW Color Mode
         if ATTR_RGBWW_COLOR in kwargs:
@@ -421,17 +421,17 @@ class FluxLight(CoordinatorEntity, LightEntity):
                 rgbww = rgbww_brightness(kwargs[ATTR_RGBWW_COLOR], brightness)
             else:
                 rgbww = kwargs[ATTR_RGBWW_COLOR]
-            self._bulb.setRgbw(*rgbww[0:4], w2=rgbww[4])
+            await self._bulb.async_set_levels(*rgbww)
             return
         # Handle switch to White Color Mode
         if ATTR_WHITE in kwargs:
-            self._bulb.setWarmWhite255(kwargs[ATTR_WHITE])
+            self._bulb.async_set_levels(w=kwargs[ATTR_WHITE])
             return
         if ATTR_EFFECT in kwargs:
             effect = kwargs[ATTR_EFFECT]
             # Random color effect
             if effect == EFFECT_RANDOM:
-                self._bulb.setRgb(
+                await self._bulb.async_set_levels(
                     random.randint(0, 255),
                     random.randint(0, 255),
                     random.randint(0, 255),
@@ -440,7 +440,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
             # Custom effect
             if effect == EFFECT_CUSTOM:
                 if self._custom_effect_colors:
-                    self._bulb.setCustomPattern(
+                    await self._bulb.async_set_custom_pattern(
                         self._custom_effect_colors,
                         self._custom_effect_speed_pct,
                         self._custom_effect_transition,
@@ -448,40 +448,44 @@ class FluxLight(CoordinatorEntity, LightEntity):
                 return
             # Effect selection
             if effect in EFFECT_MAP:
-                self._bulb.setPresetPattern(EFFECT_MAP[effect], DEFAULT_EFFECT_SPEED)
+                await self._bulb.async_set_preset_pattern(
+                    EFFECT_MAP[effect], DEFAULT_EFFECT_SPEED
+                )
                 return
             raise ValueError(f"Unknown effect {effect}")
         # Handle brightness adjustment in CCT Color Mode
         if self.color_mode == COLOR_MODE_COLOR_TEMP:
-            self._bulb.setWhiteTemperature(
+            await self._bulb.async_set_white_temp(
                 self._bulb.getWhiteTemperature()[0], brightness
             )
             return
         # Handle brightness adjustment in RGB Color Mode
         if self.color_mode == COLOR_MODE_HS:
             rgb = color_hs_to_RGB(*self.hs_color)
-            self._bulb.setRgbw(*rgb, brightness=brightness)
+            await self._bulb.async_set_levels(*rgb, brightness=brightness)
             return
         # Handle brightness adjustment in RGBW Color Mode
         if self.color_mode == COLOR_MODE_RGBW:
-            self._bulb.setRgbw(*rgbw_brightness(self.rgbw_color, brightness))
+            await self._bulb.async_set_levels(
+                *rgbw_brightness(self.rgbw_color, brightness)
+            )
             return
         # Handle brightness adjustment in RGBWW Color Mode
         if self.color_mode == COLOR_MODE_RGBWW:
             rgbww = rgbww_brightness(self.rgbww_color, brightness)
-            self._bulb.setRgbw(*rgbww[0:4], w2=rgbww[4])
+            await self._bulb.async_set_levels(*rgbww)
             return
         # Handle White Color Mode and Brightness Only Color Mode
         if self.color_mode in (COLOR_MODE_WHITE, COLOR_MODE_BRIGHTNESS):
-            self._bulb.setWarmWhite255(brightness)
+            await self._bulb.async_set_levels(w=brightness)
             return
         raise ValueError(f"Unsupported color mode {self.color_mode}")
 
-    def set_custom_effect(
+    async def async_set_custom_effect(
         self, colors: list[tuple[int, int, int]], speed_pct: int, transition: str
     ) -> None:
         """Set a custom effect on the bulb."""
-        self._bulb.setCustomPattern(
+        await self._bulb.async_set_custom_pattern(
             colors,
             speed_pct,
             transition,
@@ -489,6 +493,23 @@ class FluxLight(CoordinatorEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the specified or all lights off."""
-        await self.hass.async_add_executor_job(self._bulb.turnOff)
+        await self._bulb.async_turn_off()
         self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if not self.coordinator.last_update_success:
+            self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_STATE_UPDATED.format(self._bulb.ipaddr),
+                self.async_write_ha_state,
+            )
+        )
+        await super().async_added_to_hass()
