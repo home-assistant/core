@@ -6,8 +6,8 @@ from datetime import timedelta
 import logging
 from typing import Any, Final
 
-from flux_led import BulbScanner
 from flux_led.aio import AIOWifiLedBulb
+from flux_led.aioscanner import AIOBulbScanner
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
@@ -46,13 +46,9 @@ async def async_discover_devices(
     hass: HomeAssistant, timeout: int
 ) -> list[dict[str, str]]:
     """Discover flux led devices."""
-
-    def _scan_with_timeout() -> list[dict[str, str]]:
-        scanner = BulbScanner()
-        discovered: list[dict[str, str]] = scanner.scan(timeout=timeout)
-        return discovered
-
-    return await hass.async_add_executor_job(_scan_with_timeout)
+    scanner = AIOBulbScanner()
+    discovered: list[dict[str, str]] = await scanner.async_scan(timeout=timeout)
+    return discovered
 
 
 @callback
