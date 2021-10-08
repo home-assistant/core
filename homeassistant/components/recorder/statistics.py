@@ -13,6 +13,7 @@ from sqlalchemy import bindparam, func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext import baked
 from sqlalchemy.orm.scoping import scoped_session
+from sqlalchemy.sql.expression import true
 
 from homeassistant.const import (
     PRESSURE_PA,
@@ -396,9 +397,9 @@ def get_metadata_with_session(
             StatisticsMeta.statistic_id.in_(bindparam("statistic_ids"))
         )
     if statistic_type == "mean":
-        baked_query += lambda q: q.filter(StatisticsMeta.has_mean.isnot(False))
+        baked_query += lambda q: q.filter(StatisticsMeta.has_mean == true())
     elif statistic_type == "sum":
-        baked_query += lambda q: q.filter(StatisticsMeta.has_sum.isnot(False))
+        baked_query += lambda q: q.filter(StatisticsMeta.has_sum == true())
     result = execute(baked_query(session).params(statistic_ids=statistic_ids))
     if not result:
         return {}
