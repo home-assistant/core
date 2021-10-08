@@ -158,6 +158,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except FLUX_LED_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
             else:
+                if device[FLUX_MAC]:
+                    await self.async_set_unique_id(
+                        dr.format_mac(device[FLUX_MAC]), raise_on_progress=False
+                    )
+                    self._abort_if_unique_id_configured(updates={CONF_HOST: host})
                 return self._async_create_entry_from_device(device)
 
         return self.async_show_form(

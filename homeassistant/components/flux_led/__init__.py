@@ -64,10 +64,15 @@ async def async_discover_devices(
 ) -> list[dict[str, str]]:
     """Discover flux led devices."""
     scanner = AIOBulbScanner()
-    discovered: list[dict[str, str]] = await scanner.async_scan(
-        timeout=timeout, address=address
-    )
-    return discovered
+    try:
+        discovered: list[dict[str, str]] = await scanner.async_scan(
+            timeout=timeout, address=address
+        )
+    except OSError as ex:
+        _LOGGER.debug("Scanning failed with error: %s", ex)
+        return []
+    else:
+        return discovered
 
 
 async def async_discover_device(
