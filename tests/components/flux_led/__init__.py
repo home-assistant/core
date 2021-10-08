@@ -45,6 +45,7 @@ def _mocked_bulb() -> WifiLedBulb:
     bulb.rgbw = (255, 0, 0, 50)
     bulb.rgbww = (255, 0, 0, 50, 0)
     bulb.rgbcw = (255, 0, 0, 0, 50)
+    bulb.getWhiteTemperature = MagicMock(return_value=(2700, 128))
     bulb.brightness = 128
     bulb.model_num = 0x35
     bulb.rgbwcapable = True
