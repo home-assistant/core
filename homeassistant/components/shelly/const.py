@@ -21,6 +21,11 @@ LIGHT_TRANSITION_MIN_FIRMWARE_DATE: Final = 20210226
 # max light transition time in milliseconds
 MAX_TRANSITION_TIME: Final = 5000
 
+RGBW_MODELS: Final = (
+    "SHBLB-1",
+    "SHRGBW2",
+)
+
 MODELS_SUPPORTING_LIGHT_TRANSITION: Final = (
     "SHBDUO-1",
     "SHCB-1",
