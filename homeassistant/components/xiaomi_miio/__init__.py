@@ -71,7 +71,7 @@ from .gateway import ConnectXiaomiGateway
 _LOGGER = logging.getLogger(__name__)
 
 POLLING_TIMEOUT_SEC = 5
-UPDATE_INTERVAL_SEC = 10
+UPDATE_INTERVAL = timedelta(seconds=10)
 
 GATEWAY_PLATFORMS = ["alarm_control_panel", "light", "sensor", "switch"]
 SWITCH_PLATFORMS = ["switch"]
@@ -337,7 +337,7 @@ async def async_create_miio_device_and_coordinator(
         name=name,
         update_method=update_method(hass, device),
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=UPDATE_INTERVAL_SEC),
+        update_interval=UPDATE_INTERVAL,
     )
     hass.data[DOMAIN][entry.entry_id] = {
         KEY_DEVICE: device,
@@ -406,7 +406,7 @@ async def async_setup_gateway_entry(
         name=name,
         update_method=async_update_data,
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=UPDATE_INTERVAL_SEC),
+        update_interval=UPDATE_INTERVAL,
     )
 
     hass.data[DOMAIN][entry.entry_id] = {
