@@ -54,9 +54,7 @@ async def async_setup_entry(
         if router.method_version == 2:
             sensors.extend(["ssid", "conn_ap_mac"])
 
-        return [
-            NetgearSensorEntity(router, device, attribute) for attribute in sensors
-        ]
+        return [NetgearSensorEntity(router, device, attribute) for attribute in sensors]
 
     async_setup_netgear_entry(hass, entry, async_add_entities, generate_sensor_classes)
 
