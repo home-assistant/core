@@ -413,7 +413,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
             color_temp_mired = kwargs[ATTR_COLOR_TEMP]
             color_temp_kelvin = color_temperature_mired_to_kelvin(color_temp_mired)
             if self.color_mode != COLOR_MODE_RGBWW:
-                self._bulb.setWhiteTemperature(color_temp_kelvin, brightness)
+                await self._bulb.async_set_white_temp(color_temp_kelvin, brightness)
                 return
 
             # When switching to color temp from RGBWW mode,
@@ -445,7 +445,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
                 rgbcw = rgbcw_brightness(kwargs[ATTR_RGBWW_COLOR], brightness)
             else:
                 rgbcw = kwargs[ATTR_RGBWW_COLOR]
-            self._bulb.set_levels(*rgbcw_to_rgbwc(rgbcw))
+            await self._bulb.async_set_levels(*rgbcw_to_rgbwc(rgbcw))
             return
         # Handle switch to White Color Mode
         if ATTR_WHITE in kwargs:
