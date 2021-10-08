@@ -47,11 +47,14 @@ PLATFORMS = [
 ]
 
 ATTR_DARK = "dark"
-ATTR_EXTERNALSENSORTEMP = "external_sensor_temperature"
-ATTR_EXTERNALWINDOWOPEN = "external_window_open"
+ATTR_FLIP_DISPLAY = "flip_display"
+ATTR_EXTERNAL_SENSOR_TEMP = "external_sensor_temperature"
+ATTR_EXTERNAL_WINDOW_OPEN = "external_window_open"
 ATTR_LOCKED = "locked"
+ATTR_MOUNTING_MODE = "mounting_mode"
 ATTR_OFFSET = "offset"
 ATTR_ON = "on"
+ATTR_SCHEDULE_ON = "schedule_on"
 ATTR_VALVE = "valve"
 
 # Switches

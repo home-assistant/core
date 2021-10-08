@@ -47,14 +47,24 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
-    ATTR_EXTERNALSENSORTEMP, 
-    ATTR_EXTERNALWINDOWOPEN, 
-    ATTR_LOCKED, 
-    ATTR_OFFSET, 
+    ATTR_FLIP_DISPLAY,
+    ATTR_EXTERNAL_SENSOR_TEMP,
+    ATTR_EXTERNAL_WINDOW_OPEN,
+    ATTR_LOCKED,
+    ATTR_MOUNTING_MODE,
+    ATTR_OFFSET,
+    ATTR_SCHEDULE_ON,
     ATTR_VALVE,
 )
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
+
+DEOCNZ_CONFIG = "config"
+
+DEOCNZ_DISPLAYFLIPPED = "displayflipped"
+DEOCNZ_EXTERNALSENSORTEMP = "externalsensortemp"
+DEOCNZ_EXTERNALWINDOWOPEN = "externalwindowopen"
+DEOCNZ_SCHEDULE_ON = "schedule_on"
 
 DECONZ_FAN_SMART = "smart"
 
@@ -149,7 +159,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
                 HVAC_MODE_HEAT: True,
                 HVAC_MODE_OFF: False,
             }
-        elif "coolsetpoint" not in device.raw["config"]:
+        elif "coolsetpoint" not in device.raw[DEOCNZ_CONFIG]:
             self._hvac_mode_to_deconz.pop(HVAC_MODE_COOL)
         self._deconz_to_hvac_mode = {
             value: key for key, value in self._hvac_mode_to_deconz.items()
@@ -262,19 +272,28 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
         """Return the state attributes of the thermostat."""
         attr = {}
 
+        if self._device.locked is not None:
+            attr[ATTR_LOCKED] = self._device.locked
+
+        if self._device.mounting_mode is not None:
+            attr[ATTR_MOUNTING_MODE] = self._device.mounting_mode
+
         if self._device.offset:
             attr[ATTR_OFFSET] = self._device.offset
 
         if self._device.valve is not None:
             attr[ATTR_VALVE] = self._device.valve
 
-        if self._device.locked is not None:
-            attr[ATTR_LOCKED] = self._device.locked
+        if DEOCNZ_DISPLAYFLIPPED in self._device.raw[DEOCNZ_CONFIG]:
+            attr[ATTR_FLIP_DISPLAY] = self._device.raw[DEOCNZ_CONFIG].get(DEOCNZ_DISPLAYFLIPPED)
 
-        if "externalsensortemp" in self._device.raw["config"]:
-            attr[ATTR_EXTERNALSENSORTEMP] = self._device.raw["config"].get("externalsensortemp")
+        if DEOCNZ_EXTERNALSENSORTEMP in self._device.raw[DEOCNZ_CONFIG]:
+            attr[ATTR_EXTERNAL_SENSOR_TEMP] = self._device.raw[DEOCNZ_CONFIG].get(DEOCNZ_EXTERNALSENSORTEMP) / 100
 
-        if "externalwindowopen" in self._device.raw["config"]:
-            attr[ATTR_EXTERNALWINDOWOPEN] = self._device.raw["config"].get("externalwindowopen")
+        if DEOCNZ_EXTERNALWINDOWOPEN in self._device.raw[DEOCNZ_CONFIG]:
+            attr[ATTR_EXTERNAL_WINDOW_OPEN] = self._device.raw[DEOCNZ_CONFIG].get(DEOCNZ_EXTERNALWINDOWOPEN)
+
+        if DEOCNZ_SCHEDULE_ON in self._device.raw[DEOCNZ_CONFIG]:
+            attr[ATTR_SCHEDULE_ON] = self._device.raw[DEOCNZ_CONFIG].get(DEOCNZ_SCHEDULE_ON)
 
         return attr
