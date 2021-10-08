@@ -275,7 +275,7 @@ class NetgearDeviceEntity(Entity):
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
             "default_name": self._device_name,
-            "default_model": self._device["device_model"]
+            "default_model": self._device["device_model"],
             "via_device": (DOMAIN, self._router.unique_id),
         }
 
