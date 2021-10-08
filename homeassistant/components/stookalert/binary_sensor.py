@@ -103,7 +103,3 @@ class StookalertBinarySensor(BinarySensorEntity):
         """Update the data from the Stookalert handler."""
         self._client.get_alerts()
         self._attr_is_on = self._client.state == 1
-        if self._client.last_updated:
-            self._attr_extra_state_attributes.update(
-                last_updated=self._client.last_updated.isoformat()
-            )
