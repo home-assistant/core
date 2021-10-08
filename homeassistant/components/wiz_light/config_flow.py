@@ -9,19 +9,20 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.data_entry_flow import AbortFlow
 
-from .const import DEFAULT_NAME, DOMAIN  # pylint: disable=unused-import
+from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
+VERSION = 1
+STEP_USER_DATA_SCHEMA = vol.Schema( 
+        {
+            vol.Required(CONF_HOST): str,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
+        }
+)
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for WiZ Light."""
 
-    VERSION = 1
-    config = {
-        vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-    }
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -48,7 +49,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(self.config), errors=errors
+            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
     async def async_step_import(self, import_config):
