@@ -321,6 +321,15 @@ async def test_rgb_cct_light(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 370},
+        blocking=True,
+    )
+    bulb.setWhiteTemperature.assert_called_with(2702, 128)
+    bulb.setWhiteTemperature.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 255},
         blocking=True,
     )
