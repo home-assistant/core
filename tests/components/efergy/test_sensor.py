@@ -2,7 +2,10 @@
 
 from asyncio.exceptions import TimeoutError as timeouterr
 
-from homeassistant.core import HomeAssistant
+from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import load_fixture
@@ -71,7 +74,9 @@ async def test_single_sensor_readings(
 ):
     """Test for successfully setting up the Efergy platform."""
     mock_responses(aioclient_mock)
-    assert await async_setup_component(hass, "sensor", {"sensor": ONE_SENSOR_CONFIG})
+    assert await async_setup_component(
+        hass, SENSOR_DOMAIN, {SENSOR_DOMAIN: ONE_SENSOR_CONFIG}
+    )
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.energy_consumed").state == "38.21"
@@ -86,7 +91,9 @@ async def test_multi_sensor_readings(
 ):
     """Test for multiple sensors in one household."""
     mock_responses(aioclient_mock)
-    assert await async_setup_component(hass, "sensor", {"sensor": MULTI_SENSOR_CONFIG})
+    assert await async_setup_component(
+        hass, SENSOR_DOMAIN, {SENSOR_DOMAIN: MULTI_SENSOR_CONFIG}
+    )
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.efergy_728386").state == "218"
@@ -99,13 +106,34 @@ async def test_failed_getting_sids(
 ):
     """Test failed gettings sids."""
     mock_responses(aioclient_mock, error=True)
-    await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "sensor", {"sensor": ONE_SENSOR_CONFIG})
+    await async_setup_component(hass, HA_DOMAIN, {})
+    assert await async_setup_component(
+        hass, SENSOR_DOMAIN, {SENSOR_DOMAIN: ONE_SENSOR_CONFIG}
+    )
     await hass.async_block_till_done()
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
-        {"entity_id": "sensor.energy_consumed"},
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: "sensor.energy_consumed"},
         blocking=True,
     )
     assert hass.states.get("sensor.efergy_728386") is None
+
+
+async def test_failed_update(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
+    """Test failed update."""
+    mock_responses(aioclient_mock)
+    await async_setup_component(hass, HA_DOMAIN, {})
+    assert await async_setup_component(
+        hass, SENSOR_DOMAIN, {SENSOR_DOMAIN: ONE_SENSOR_CONFIG}
+    )
+    await hass.async_block_till_done()
+    aioclient_mock.clear_requests()
+    mock_responses(aioclient_mock, error=True)
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: "sensor.efergy_728386"},
+        blocking=True,
+    )
+    assert hass.states.get("sensor.efergy_728386").state == STATE_UNAVAILABLE
