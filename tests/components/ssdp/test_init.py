@@ -23,9 +23,9 @@ from tests.common import async_fire_time_changed
 
 
 def _ssdp_headers(headers):
-    return CaseInsensitiveDict(
-        headers, _timestamp=datetime(2021, 1, 1, 12, 00), _udn=udn_from_headers(headers)
-    )
+    ssdp_headers = CaseInsensitiveDict(headers, _timestamp=datetime(2021, 1, 1, 12, 00))
+    ssdp_headers["_udn"] = udn_from_headers(ssdp_headers)
+    return ssdp_headers
 
 
 async def init_ssdp_component(hass: homeassistant) -> SsdpListener:
@@ -45,7 +45,7 @@ async def test_ssdp_flow_dispatched_on_st(mock_get_ssdp, hass, caplog, mock_flow
     mock_ssdp_search_response = _ssdp_headers(
         {
             "st": "mock-st",
-            "location": None,
+            "location": "http://1.1.1.1",
             "usn": "uuid:mock-udn::mock-st",
             "server": "mock-server",
             "ext": "",
@@ -64,7 +64,7 @@ async def test_ssdp_flow_dispatched_on_st(mock_get_ssdp, hass, caplog, mock_flow
     }
     assert mock_flow_init.mock_calls[0][2]["data"] == {
         ssdp.ATTR_SSDP_ST: "mock-st",
-        ssdp.ATTR_SSDP_LOCATION: None,
+        ssdp.ATTR_SSDP_LOCATION: "http://1.1.1.1",
         ssdp.ATTR_SSDP_USN: "uuid:mock-udn::mock-st",
         ssdp.ATTR_SSDP_SERVER: "mock-server",
         ssdp.ATTR_SSDP_EXT: "",
