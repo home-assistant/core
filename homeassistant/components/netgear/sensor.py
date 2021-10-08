@@ -51,7 +51,7 @@ async def async_setup_entry(
 
     def generate_sensor_classes(router: NetgearRouter, device: dict):
         sensors = ["type", "link_rate", "signal"]
-        if router._method_version == 2:
+        if router.method_version == 2:
             sensors.extend(["ssid", "conn_ap_mac"])
 
         return [
