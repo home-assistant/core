@@ -12,9 +12,18 @@ from homeassistant.components.environment_canada.const import (
     CONF_STATION,
     DOMAIN,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 
 from tests.common import MockConfigEntry
+
+FAKE_CONFIG = {
+    CONF_NAME: "The answer",
+    CONF_STATION: "to life",
+    CONF_LANGUAGE: "and everything",
+    CONF_LATITUDE: 42.42,
+    CONF_LONGITUDE: -42.42,
+}
 
 
 def mocked_ec(
@@ -174,3 +183,22 @@ async def test_exception_handling(hass, error):
         await hass.async_block_till_done()
         assert result["type"] == "form"
         assert result["errors"] == {"base": base_error}
+
+
+async def test_async_step_import(hass):
+    """Test that the import step works."""
+    with patch(
+        "homeassistant.components.environment_canada.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=FAKE_CONFIG
+        )
+        await hass.async_block_till_done()
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["data"] == FAKE_CONFIG
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=FAKE_CONFIG
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
