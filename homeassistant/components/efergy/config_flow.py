@@ -75,7 +75,7 @@ class EfergyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         api = Efergy(api_key, async_get_clientsession(self.hass))
         try:
             await api.async_status()
-        except exceptions.ConnectError:
+        except exceptions.ConnectTimeout:
             return None, "cannot_connect"
         except exceptions.InvalidAuth:
             return None, "invalid_auth"

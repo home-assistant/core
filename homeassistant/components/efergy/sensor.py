@@ -1,9 +1,10 @@
 """Support for Efergy sensors."""
 from __future__ import annotations
 
+import logging
 from re import sub
 
-from pyefergy import Efergy
+from pyefergy import Efergy, exceptions
 import voluptuous as vol
 
 from homeassistant.components.efergy import EfergyEntity
@@ -30,6 +31,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_APPTOKEN, CONF_CURRENT_VALUES, DATA_KEY_API, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -145,7 +148,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up Efergy sensors."""
     api: Efergy = hass.data[DOMAIN][entry.entry_id][DATA_KEY_API]
-    sids = await api.async_get_sids()
     sensors = []
     for description in SENSOR_TYPES:
         if description.key != CONF_CURRENT_VALUES:
@@ -159,8 +161,8 @@ async def async_setup_entry(
                 )
             )
         else:
-            description.entity_registry_enabled_default = len(sids) != 1
-            for sid in sids:
+            description.entity_registry_enabled_default = len(api.info["sids"]) > 1
+            for sid in api.info["sids"]:
                 sensors.append(
                     EfergySensor(
                         api,

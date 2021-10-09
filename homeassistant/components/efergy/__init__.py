@@ -35,8 +35,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     try:
-        await api.async_status()
-    except (exceptions.ConnectError, exceptions.DataError) as ex:
+        await api.async_status(get_sids=True)
+    except (exceptions.ConnectTimeout, exceptions.DataError) as ex:
         raise ConfigEntryNotReady(f"Failed to connect to device: {ex}") from ex
     except exceptions.InvalidAuth as ex:
         raise ConfigEntryAuthFailed(

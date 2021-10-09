@@ -1,5 +1,7 @@
 """The tests for Efergy sensor platform."""
+
 from homeassistant.components.efergy.sensor import SENSOR_TYPES
+from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -13,6 +15,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
+from homeassistant.setup import async_setup_component
 
 from . import MULTI_SENSOR_TOKEN, setup_platform
 
@@ -85,6 +88,7 @@ async def test_multi_sensor_readings(
     """Test for multiple sensors in one household."""
     for description in SENSOR_TYPES:
         description.entity_registry_enabled_default = True
+    await async_setup_component(hass, HA_DOMAIN, {})
     await setup_platform(hass, aioclient_mock, SENSOR_DOMAIN, MULTI_SENSOR_TOKEN)
     state = hass.states.get("sensor.power_usage_728386")
     assert state.state == "218"

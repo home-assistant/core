@@ -1,7 +1,7 @@
 """Tests for Efergy integration."""
 from unittest.mock import AsyncMock, patch
 
-from pyefergy import Efergy
+from pyefergy import Efergy, exceptions
 
 from homeassistant.components.efergy import DOMAIN
 from homeassistant.const import CONF_API_KEY
@@ -34,13 +34,37 @@ def create_entry(hass: HomeAssistant, token: str = TOKEN) -> MockConfigEntry:
 
 
 async def init_integration(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, token: str = TOKEN
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    token: str = TOKEN,
+    error: bool = False,
 ) -> MockConfigEntry:
     """Set up the Efergy integration in Home Assistant."""
     entry = create_entry(hass, token=token)
+    await mock_responses(hass, aioclient_mock, token=token, error=error)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    return entry
+
+
+async def mock_responses(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    token: str = TOKEN,
+    error: bool = False,
+):
+    """Mock responses from Efergy."""
     base_url = "https://engage.efergy.com/mobile_proxy/"
     api = Efergy(token, async_get_clientsession(hass), utc_offset=hass.config.time_zone)
     offset = api._utc_offset  # pylint: disable=protected-access
+    if error:
+        aioclient_mock.get(
+            f"{base_url}getCurrentValuesSummary?token={token}",
+            exc=exceptions.ConnectTimeout,
+        )
+        return
     aioclient_mock.get(
         f"{base_url}getStatus?token={token}",
         text=load_fixture("efergy/status.json"),
@@ -95,11 +119,6 @@ async def init_integration(
             f"{base_url}getCurrentValuesSummary?token={token}",
             text=load_fixture("efergy/current_values_multi.json"),
         )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    return entry
 
 
 def _patch_efergy():
@@ -125,9 +144,10 @@ async def setup_platform(
     aioclient_mock: AiohttpClientMocker,
     platform: str,
     token: str = TOKEN,
+    error: bool = False,
 ):
     """Set up the platform."""
-    entry = await init_integration(hass, aioclient_mock, token=token)
+    entry = await init_integration(hass, aioclient_mock, token=token, error=error)
 
     with patch("homeassistant.components.efergy.PLATFORMS", [platform]):
         assert await async_setup_component(hass, DOMAIN, {})
