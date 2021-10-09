@@ -53,7 +53,7 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 import homeassistant.util.dt as dt_util
@@ -190,6 +190,11 @@ class CastDevice(MediaPlayerEntity):
                 "model": cast_info.model_name,
                 "manufacturer": str(cast_info.manufacturer),
             }
+
+            if cast_info.mac_address is not None:
+                self._attr_device_info["connections"] = {
+                    (dr.CONNECTION_NETWORK_MAC, cast_info.mac_address)
+                }
 
     async def async_added_to_hass(self):
         """Create chromecast object when added to hass."""
@@ -797,6 +802,22 @@ class DynamicCastGroup:
         """Set the cast information and set up the chromecast object."""
 
         self._cast_info = cast_info
+
+        # Cast Devices such as the Home Mini's will not always reliably
+        # return a mac_address when first discovered, or even on future
+        # discoveries. So - Every time we re-discover a device, check if
+        # we have receivced a mac_address and if so - update the device
+        # registry to include the mac connection.
+        if (
+            cast_info.model_name != "Google Cast Group"
+            and cast_info.mac_address is not None
+        ):
+            device_registry = dr.async_get(self.hass)
+
+            device_registry.async_get_or_create(
+                identifiers={(CAST_DOMAIN, str(cast_info.uuid).replace("-", ""))},
+                connections={(dr.CONNECTION_NETWORK_MAC, cast_info.mac_address)},
+            )
 
     async def async_connect_to_chromecast(self):
         """Set the cast information and set up the chromecast object."""

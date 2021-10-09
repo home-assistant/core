@@ -19,6 +19,7 @@ class ChromecastInfo:
     uuid: str | None = attr.ib(
         converter=attr.converters.optional(str), default=None
     )  # always convert UUID to string if not None
+    mac_address: str = attr.ib(default=None)
     _manufacturer = attr.ib(type=Optional[str], default=None)
     model_name: str = attr.ib(default="")
     friendly_name: str | None = attr.ib(default=None)
@@ -99,6 +100,7 @@ class ChromecastInfo:
             friendly_name=(self.friendly_name or http_device_status.friendly_name),
             manufacturer=(self.manufacturer or http_device_status.manufacturer),
             model_name=(self.model_name or http_device_status.model_name),
+            mac_address=(self.mac_address or http_device_status.mac_address),
         )
 
 
