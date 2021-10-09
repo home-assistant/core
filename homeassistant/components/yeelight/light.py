@@ -1,6 +1,7 @@
 """Light platform support for yeelight."""
 from __future__ import annotations
 
+import asyncio
 import logging
 import math
 
@@ -62,6 +63,7 @@ from . import (
     DATA_DEVICE,
     DATA_UPDATED,
     DOMAIN,
+    POWER_STATE_CHANGE_TIME,
     YEELIGHT_FLOW_TRANSITION_SCHEMA,
     YeelightEntity,
 )
@@ -760,6 +762,11 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         if self.config[CONF_SAVE_ON_CHANGE] and (brightness or colortemp or rgb):
             await self.async_set_default()
 
+        # Some devices (mainly nightlights) will not send back the on state so we need to force a refresh
+        await asyncio.sleep(POWER_STATE_CHANGE_TIME)
+        if not self.is_on:
+            await self.device.async_update(True)
+
     @_async_cmd
     async def _async_turn_off(self, duration) -> None:
         """Turn off with a given transition duration wrapped with _async_cmd."""
@@ -775,6 +782,10 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
         await self._async_turn_off(duration)
+        # Some devices will not send back the off state so we need to force a refresh
+        await asyncio.sleep(POWER_STATE_CHANGE_TIME)
+        if self.is_on:
+            await self.device.async_update(True)
 
     @_async_cmd
     async def async_set_mode(self, mode: str):
