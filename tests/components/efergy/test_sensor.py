@@ -5,7 +5,7 @@ from datetime import timedelta
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -107,11 +107,10 @@ async def test_failed_getting_sids(
 ):
     """Test failed gettings sids."""
     mock_responses(aioclient_mock, error=True)
-    await async_setup_component(hass, HA_DOMAIN, {})
     assert await async_setup_component(
         hass, SENSOR_DOMAIN, {SENSOR_DOMAIN: ONE_SENSOR_CONFIG}
     )
-    assert hass.states.async_all() == []
+    assert not hass.states.async_all("sensor")
 
 
 async def test_failed_update_and_reconnection(
