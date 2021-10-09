@@ -75,7 +75,14 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=None
     )
     config_entry.add_to_hass(hass)
-    with _patch_discovery(), _patch_wifibulb():
+
+    async def _discovery(self, *args, address=None, **kwargs):
+        # Only return discovery results when doing directed discovery
+        return [FLUX_DISCOVERY] if address == IP_ADDRESS else []
+
+    with patch(
+        "homeassistant.components.flux_led.AIOBulbScanner.async_scan", new=_discovery
+    ), _patch_wifibulb():
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
         assert config_entry.state == ConfigEntryState.LOADED
