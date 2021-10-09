@@ -33,6 +33,7 @@ def _mocked_bulb() -> SmartBulb:
     bulb.is_color = True
     bulb.is_strip = False
     bulb.is_plug = False
+    bulb.is_dimmer = False
     bulb.hsv = (10, 30, 5)
     bulb.device_id = MAC_ADDRESS
     bulb.valid_temperature_range.min = 4000

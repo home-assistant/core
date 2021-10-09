@@ -197,6 +197,15 @@ class EfergySensor(EfergyEntity, SensorEntity):
 
     async def async_update(self) -> None:
         """Get the Efergy monitor data from the web service."""
-        self._attr_native_value = await self.api.async_get_reading(
-            self.entity_description.key, period=self.period, sid=self.sid
-        )
+        try:
+            self._attr_native_value = await self.api.async_get_reading(
+                self.entity_description.key, period=self.period, sid=self.sid
+            )
+        except (exceptions.DataError, exceptions.ConnectTimeout) as ex:
+            if self._attr_available:
+                self._attr_available = False
+                _LOGGER.error("Error getting data from Efergy: %s", ex)
+            return
+        if not self._attr_available:
+            self._attr_available = True
+            _LOGGER.info("Connection to Efergy has resumed")

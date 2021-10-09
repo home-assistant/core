@@ -342,6 +342,8 @@ async def websocket_node_status(
         "status": node.status,
         "is_secure": node.is_secure,
         "ready": node.ready,
+        "zwave_plus_version": node.zwave_plus_version,
+        "highest_security_class": node.highest_security_class,
     }
     connection.send_result(
         msg[ID],

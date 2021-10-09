@@ -34,14 +34,14 @@ async def test_color_light_with_an_emeter(hass: HomeAssistant) -> None:
         voltage=None,
         current=5,
     )
-    bulb.emeter_today = 5000
+    bulb.emeter_today = 5000.0036
     with _patch_discovery(device=bulb), _patch_single_discovery(device=bulb):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
         await hass.async_block_till_done()
 
     expected = {
-        "sensor.my_bulb_today_s_consumption": 5000,
+        "sensor.my_bulb_today_s_consumption": 5000.004,
         "sensor.my_bulb_current": 5,
     }
     entity_id = "light.my_bulb"
@@ -69,10 +69,10 @@ async def test_plug_with_an_emeter(hass: HomeAssistant) -> None:
     plug.color_temp = None
     plug.has_emeter = True
     plug.emeter_realtime = Mock(
-        power=100,
-        total=30,
-        voltage=121,
-        current=5,
+        power=100.06,
+        total=30.0049,
+        voltage=121.19,
+        current=5.035,
     )
     plug.emeter_today = None
     with _patch_discovery(device=plug), _patch_single_discovery(device=plug):
@@ -81,11 +81,11 @@ async def test_plug_with_an_emeter(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     expected = {
-        "sensor.my_plug_current_consumption": 100,
-        "sensor.my_plug_total_consumption": 30,
+        "sensor.my_plug_current_consumption": 100.1,
+        "sensor.my_plug_total_consumption": 30.005,
         "sensor.my_plug_today_s_consumption": 0.0,
-        "sensor.my_plug_voltage": 121,
-        "sensor.my_plug_current": 5,
+        "sensor.my_plug_voltage": 121.2,
+        "sensor.my_plug_current": 5.04,
     }
     entity_id = "switch.my_plug"
     state = hass.states.get(entity_id)

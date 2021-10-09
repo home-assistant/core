@@ -63,9 +63,19 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        transition = kwargs.get(ATTR_TRANSITION)
+        if (transition := kwargs.get(ATTR_TRANSITION)) is not None:
+            transition = int(transition * 1_000)
+
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
             brightness = round((brightness * 100.0) / 255.0)
+
+        if self.device.is_dimmer and transition is None:
+            # This is a stopgap solution for inconsistent set_brightness handling
+            # in the upstream library, see #57265.
+            # This should be removed when the upstream has fixed the issue.
+            # The device logic is to change the settings without turning it on
+            # except when transition is defined, so we leverage that here for now.
+            transition = 1
 
         # Handle turning to temp mode
         if ATTR_COLOR_TEMP in kwargs:
@@ -92,7 +102,9 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     @async_refresh_after
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        await self.device.turn_off(transition=kwargs.get(ATTR_TRANSITION))
+        if (transition := kwargs.get(ATTR_TRANSITION)) is not None:
+            transition = int(transition * 1_000)
+        await self.device.turn_off(transition=transition)
 
     @property
     def min_mireds(self) -> int:
@@ -145,7 +157,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     def color_mode(self) -> str | None:
         """Return the active color mode."""
         if self.device.is_color:
-            if self.device.color_temp:
+            if self.device.is_variable_color_temp and self.device.color_temp:
                 return COLOR_MODE_COLOR_TEMP
             return COLOR_MODE_HS
         if self.device.is_variable_color_temp:

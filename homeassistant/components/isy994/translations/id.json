@@ -9,7 +9,7 @@
             "invalid_host": "Entri host tidak dalam format URL lengkap, misalnya, http://192.168.10.100:80",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
-        "flow_title": "Universal Devices ISY994 {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {

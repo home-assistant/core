@@ -68,7 +68,7 @@ class PicnicSensor(SensorEntity, CoordinatorEntity):
             if self.coordinator.data is not None
             else {}
         )
-        return self.entity_description.state(data_set)
+        return self.entity_description.value_fn(data_set)
 
     @property
     def available(self) -> bool:

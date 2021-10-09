@@ -54,7 +54,6 @@ def _is_tracked(mac: str, current_devices: ValuesView) -> bool:
 def device_filter_out_from_trackers(
     mac: str,
     device: FritzDevice,
-    pref_disable_new_entities: bool,
     current_devices: ValuesView,
 ) -> bool:
     """Check if device should be filtered out from trackers."""
@@ -63,8 +62,6 @@ def device_filter_out_from_trackers(
         reason = "Missing IP"
     elif _is_tracked(mac, current_devices):
         reason = "Already tracked"
-    elif pref_disable_new_entities:
-        reason = "Disabled System Options"
 
     if reason:
         _LOGGER.debug(
@@ -231,7 +228,12 @@ class FritzBoxTools:
 
     def _update_hosts_info(self) -> list[HostInfo]:
         """Retrieve latest hosts information from the FRITZ!Box."""
-        return self.fritz_hosts.get_hosts_info()  # type: ignore [no-any-return]
+        try:
+            return self.fritz_hosts.get_hosts_info()  # type: ignore [no-any-return]
+        except Exception as ex:  # pylint: disable=[broad-except]
+            if not self.hass.is_stopping:
+                raise HomeAssistantError("Error refreshing hosts info") from ex
+        return []
 
     def _update_device_info(self) -> tuple[bool, str | None]:
         """Retrieve latest device information from the FRITZ!Box."""

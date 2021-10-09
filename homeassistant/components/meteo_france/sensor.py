@@ -44,18 +44,23 @@ async def async_setup_entry(
         MeteoFranceSensor(coordinator_forecast, description)
         for description in SENSOR_TYPES
     ]
-    entities.extend(
-        [
-            MeteoFranceRainSensor(coordinator_rain, description)
-            for description in SENSOR_TYPES_RAIN
-        ]
-    )
-    entities.extend(
-        [
-            MeteoFranceAlertSensor(coordinator_alert, description)
-            for description in SENSOR_TYPES_ALERT
-        ]
-    )
+    # Add rain forecast entity only if location support this feature
+    if coordinator_rain:
+        entities.extend(
+            [
+                MeteoFranceRainSensor(coordinator_rain, description)
+                for description in SENSOR_TYPES_RAIN
+            ]
+        )
+    # Add weather alert entity only if location support this feature
+    if coordinator_alert:
+        entities.extend(
+            [
+                MeteoFranceAlertSensor(coordinator_alert, description)
+                for description in SENSOR_TYPES_ALERT
+            ]
+        )
+    # Add weather probability entities only if location support this feature
     if coordinator_forecast.data.probability_forecast:
         entities.extend(
             [
