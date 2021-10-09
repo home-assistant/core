@@ -529,6 +529,42 @@ async def test_remove_refresh_token(mock_hass):
     assert await manager.async_validate_access_token(access_token) is None
 
 
+async def test_register_revoke_token_callback(mock_hass):
+    """Test that a registered revoke token callback is called."""
+    manager = await auth.auth_manager_from_config(mock_hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    refresh_token = await manager.async_create_refresh_token(user, CLIENT_ID)
+
+    called = False
+
+    def cb():
+        nonlocal called
+        called = True
+
+    manager.async_register_revoke_token_callback(refresh_token.id, cb)
+    await manager.async_remove_refresh_token(refresh_token)
+    assert called
+
+
+async def test_unregister_revoke_token_callback(mock_hass):
+    """Test that a revoke token callback can be unregistered."""
+    manager = await auth.auth_manager_from_config(mock_hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    refresh_token = await manager.async_create_refresh_token(user, CLIENT_ID)
+
+    called = False
+
+    def cb():
+        nonlocal called
+        called = True
+
+    unregister = manager.async_register_revoke_token_callback(refresh_token.id, cb)
+    unregister()
+
+    await manager.async_remove_refresh_token(refresh_token)
+    assert not called
+
+
 async def test_create_access_token(mock_hass):
     """Test normal refresh_token's jwt_key keep same after used."""
     manager = await auth.auth_manager_from_config(mock_hass, [], [])

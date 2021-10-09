@@ -1,7 +1,9 @@
 """Support for Efergy sensors."""
 from __future__ import annotations
 
-from pyefergy import Efergy
+import logging
+
+from pyefergy import Efergy, exceptions
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -20,6 +22,7 @@ from homeassistant.const import (
     POWER_WATT,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -38,6 +41,8 @@ CONF_CURRENT_VALUES = "current_values"
 
 DEFAULT_PERIOD = "year"
 DEFAULT_UTC_OFFSET = "0"
+
+_LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     CONF_INSTANT: SensorEntityDescription(
@@ -102,7 +107,10 @@ async def async_setup_platform(
     )
 
     dev = []
-    sensors = await api.get_sids()
+    try:
+        sensors = await api.get_sids()
+    except (exceptions.DataError, exceptions.ConnectTimeout) as ex:
+        raise PlatformNotReady("Error getting data from Efergy:") from ex
     for variable in config[CONF_MONITORED_VARIABLES]:
         if variable[CONF_TYPE] == CONF_CURRENT_VALUES:
             for sensor in sensors:
@@ -150,6 +158,15 @@ class EfergySensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Get the Efergy monitor data from the web service."""
-        self._attr_native_value = await self.api.async_get_reading(
-            self.entity_description.key, period=self.period, sid=self.sid
-        )
+        try:
+            self._attr_native_value = await self.api.async_get_reading(
+                self.entity_description.key, period=self.period, sid=self.sid
+            )
+        except (exceptions.DataError, exceptions.ConnectTimeout) as ex:
+            if self._attr_available:
+                self._attr_available = False
+                _LOGGER.error("Error getting data from Efergy: %s", ex)
+            return
+        if not self._attr_available:
+            self._attr_available = True
+            _LOGGER.info("Connection to Efergy has resumed")

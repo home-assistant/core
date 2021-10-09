@@ -1,11 +1,10 @@
-#!/usr/bin/env python3
 """Support for Tuya Smart devices."""
 
 import itertools
 import logging
 
 from tuya_iot import (
-    ProjectType,
+    AuthType,
     TuyaDevice,
     TuyaDeviceListener,
     TuyaDeviceManager,
@@ -23,6 +22,7 @@ from .const import (
     CONF_ACCESS_ID,
     CONF_ACCESS_SECRET,
     CONF_APP_TYPE,
+    CONF_AUTH_TYPE,
     CONF_COUNTRY_CODE,
     CONF_ENDPOINT,
     CONF_PASSWORD,
@@ -44,36 +44,47 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Async setup hass config entry."""
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        TUYA_HA_TUYA_MAP: {},
+        TUYA_HA_DEVICES: set(),
+    }
 
-    _LOGGER.debug("tuya.__init__.async_setup_entry-->%s", entry.data)
-
-    hass.data[DOMAIN] = {entry.entry_id: {TUYA_HA_TUYA_MAP: {}, TUYA_HA_DEVICES: set()}}
+    # Project type has been renamed to auth type in the upstream Tuya IoT SDK.
+    # This migrates existing config entries to reflect that name change.
+    if CONF_PROJECT_TYPE in entry.data:
+        data = {**entry.data, CONF_AUTH_TYPE: entry.data[CONF_PROJECT_TYPE]}
+        data.pop(CONF_PROJECT_TYPE)
+        hass.config_entries.async_update_entry(entry, data=data)
 
     success = await _init_tuya_sdk(hass, entry)
-    if not success:
-        return False
 
-    return True
+    if not success:
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+        if not hass.data[DOMAIN]:
+            hass.data.pop(DOMAIN)
+
+    return bool(success)
 
 
 async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    project_type = ProjectType(entry.data[CONF_PROJECT_TYPE])
+    auth_type = AuthType(entry.data[CONF_AUTH_TYPE])
     api = TuyaOpenAPI(
-        entry.data[CONF_ENDPOINT],
-        entry.data[CONF_ACCESS_ID],
-        entry.data[CONF_ACCESS_SECRET],
-        project_type,
+        endpoint=entry.data[CONF_ENDPOINT],
+        access_id=entry.data[CONF_ACCESS_ID],
+        access_secret=entry.data[CONF_ACCESS_SECRET],
+        auth_type=auth_type,
     )
 
     api.set_dev_channel("hass")
 
-    if project_type == ProjectType.INDUSTY_SOLUTIONS:
+    if auth_type == AuthType.CUSTOM:
         response = await hass.async_add_executor_job(
-            api.login, entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
+            api.connect, entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
         )
     else:
         response = await hass.async_add_executor_job(
-            api.login,
+            api.connect,
             entry.data[CONF_USERNAME],
             entry.data[CONF_PASSWORD],
             entry.data[CONF_COUNTRY_CODE],
@@ -142,7 +153,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.data[DOMAIN][entry.entry_id][TUYA_MQTT_LISTENER]
         )
 
-        hass.data.pop(DOMAIN)
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+        if not hass.data[DOMAIN]:
+            hass.data.pop(DOMAIN)
 
     return unload
 

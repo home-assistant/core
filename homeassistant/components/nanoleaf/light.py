@@ -1,6 +1,8 @@
 """Support for Nanoleaf Lights."""
 from __future__ import annotations
 
+import logging
+import math
 from typing import Any
 
 from aionanoleaf import Nanoleaf, Unavailable
@@ -27,8 +29,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import color as color_util
 from homeassistant.util.color import (
+    color_temperature_kelvin_to_mired as kelvin_to_mired,
     color_temperature_mired_to_kelvin as mired_to_kelvin,
 )
 
@@ -44,6 +46,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
@@ -85,8 +89,10 @@ class NanoleafLight(LightEntity):
             model=self._nanoleaf.model,
             sw_version=self._nanoleaf.firmware_version,
         )
-        self._attr_min_mireds = 154
-        self._attr_max_mireds = 833
+        self._attr_min_mireds = math.ceil(
+            1000000 / self._nanoleaf.color_temperature_max
+        )
+        self._attr_max_mireds = kelvin_to_mired(self._nanoleaf.color_temperature_min)
 
     @property
     def brightness(self) -> int:
@@ -96,9 +102,7 @@ class NanoleafLight(LightEntity):
     @property
     def color_temp(self) -> int:
         """Return the current color temperature."""
-        return color_util.color_temperature_kelvin_to_mired(
-            self._nanoleaf.color_temperature
-        )
+        return kelvin_to_mired(self._nanoleaf.color_temperature)
 
     @property
     def effect(self) -> str | None:
@@ -178,14 +182,18 @@ class NanoleafLight(LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        transition = kwargs.get(ATTR_TRANSITION)
-        await self._nanoleaf.turn_off(transition)
+        transition: float | None = kwargs.get(ATTR_TRANSITION)
+        await self._nanoleaf.turn_off(None if transition is None else int(transition))
 
     async def async_update(self) -> None:
         """Fetch new state data for this light."""
         try:
             await self._nanoleaf.get_info()
         except Unavailable:
+            if self.available:
+                _LOGGER.warning("Could not connect to %s", self.name)
             self._attr_available = False
             return
+        if not self.available:
+            _LOGGER.info("Fetching %s data recovered", self.name)
         self._attr_available = True

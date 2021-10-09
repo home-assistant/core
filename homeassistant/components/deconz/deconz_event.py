@@ -20,7 +20,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import slugify
 
-from .const import CONF_ANGLE, CONF_GESTURE, LOGGER, NEW_SENSOR
+from .const import CONF_ANGLE, CONF_GESTURE, LOGGER
 from .deconz_device import DeconzBase
 
 CONF_DECONZ_EVENT = "deconz_event"
@@ -63,7 +63,9 @@ async def async_setup_events(gateway) -> None:
 
     gateway.config_entry.async_on_unload(
         async_dispatcher_connect(
-            gateway.hass, gateway.async_signal_new_device(NEW_SENSOR), async_add_sensor
+            gateway.hass,
+            gateway.signal_new_sensor,
+            async_add_sensor,
         )
     )
 
