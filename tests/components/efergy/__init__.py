@@ -61,7 +61,7 @@ async def mock_responses(
     offset = api._utc_offset  # pylint: disable=protected-access
     if error:
         aioclient_mock.get(
-            f"{base_url}getCurrentValuesSummary?token={token}",
+            f"{base_url}getInstant?token={token}",
             exc=exceptions.ConnectError,
         )
         return
