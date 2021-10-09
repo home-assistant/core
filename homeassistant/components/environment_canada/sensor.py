@@ -7,18 +7,17 @@ from env_canada import ECData
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LOCATION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_NAME,
     DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
 
+from . import trigger_import
 from .const import ATTR_STATION, CONF_ATTRIBUTION, CONF_LANGUAGE, CONF_STATION, DOMAIN
 
 SCAN_INTERVAL = timedelta(minutes=10)
@@ -50,8 +49,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Environment Canada sensor."""
     _LOGGER.warning(
-        "Environment Canada YAML configuration is deprecated. Your YAML configuration "
-        "has been imported into the UI and can be safely removed from your YAML."
+        "Environment Canada YAML configuration is deprecated; your YAML configuration "
+        "has been imported into the UI and can be safely removed"
     )
     if config.get(CONF_STATION):
         ec_data = ECData(station_id=config[CONF_STATION])
@@ -63,21 +62,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         ec_data = ECData(coordinates=(lat, lon))
         config[CONF_STATION] = ec_data.station_id
 
-    name = (
-        config.get(CONF_NAME)
-        if config.get(CONF_NAME)
-        else ec_data.metadata.get("location")
-    )
-    config[CONF_NAME] = name
-    config[CONF_LANGUAGE] = "English"
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
+    trigger_import(hass, ec_data, config)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

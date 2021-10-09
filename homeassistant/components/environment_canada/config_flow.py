@@ -129,10 +129,6 @@ class EnvironmentCanadaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             f"{import_data[CONF_STATION]}-{import_data[CONF_LANGUAGE]}"
         )
         if existing:
-            _LOGGER.warn(
-                "Environment Canada config is imported only for the first "
-                "Environment Canada platform in your configuration.yaml"
-            )
             self._abort_if_unique_id_configured()
         return self.async_create_entry(
             title=import_data[CONF_NAME],
