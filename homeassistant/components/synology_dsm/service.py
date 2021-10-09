@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.device_registry import (
     DeviceEntry,
     async_entries_for_area,
-    async_get_registry,
+    async_get,
 )
 
 from .const import (
@@ -37,7 +37,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
     async def service_handler(call: ServiceCall) -> None:
         """Handle service call."""
-        dev_reg = await async_get_registry(hass)
+        dev_reg = async_get(hass)
         devices: list[DeviceEntry] = []
         device_serials: set[str] = set()
         device_ip_macs: set[tuple[str, str]] = set()
