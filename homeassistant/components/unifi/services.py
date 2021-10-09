@@ -54,10 +54,10 @@ def async_unload_services(hass) -> None:
 async def async_reconnect_client(hass, data) -> None:
     """Try to get wireless client to reconnect to Wi-Fi."""
     device_registry = await hass.helpers.device_registry.async_get_registry()
-    entry = device_registry.async_get(data[ATTR_DEVICE_ID])
+    device_entry = device_registry.async_get(data[ATTR_DEVICE_ID])
 
     mac = ""
-    for connection in entry.connections:
+    for connection in device_entry.connections:
         if connection[0] == CONNECTION_NETWORK_MAC:
             mac = connection[1]
             break
@@ -68,8 +68,7 @@ async def async_reconnect_client(hass, data) -> None:
     for controller in hass.data[UNIFI_DOMAIN].values():
         if (
             not controller.available
-            or controller.config_entry_id not in entry.config_entries
-            or (client := controller.api.clients.get(mac)) is None
+            or (client := controller.api.clients[mac]) is None
             or client.is_wired
         ):
             continue
