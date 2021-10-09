@@ -7,6 +7,7 @@ import datetime
 import itertools
 import logging
 import math
+from typing import Any
 
 from sqlalchemy.orm.session import Session
 
@@ -362,13 +363,14 @@ def _wanted_statistics(sensor_states: list[State]) -> dict[str, set[str]]:
     return wanted_statistics
 
 
-def _last_reset_as_utc_isoformat(
-    last_reset_s: str | None, entity_id: str
-) -> str | None:
+def _last_reset_as_utc_isoformat(last_reset_s: Any, entity_id: str) -> str | None:
     """Parse last_reset and convert it to UTC."""
     if last_reset_s is None:
         return None
-    last_reset = dt_util.parse_datetime(last_reset_s)
+    if isinstance(last_reset_s, str):
+        last_reset = dt_util.parse_datetime(last_reset_s)
+    else:
+        last_reset = None
     if last_reset is None:
         _LOGGER.warning(
             "Ignoring invalid last reset '%s' for %s", last_reset_s, entity_id
