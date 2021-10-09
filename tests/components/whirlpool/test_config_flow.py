@@ -154,3 +154,4 @@ async def test_form_already_configured(hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == "abort"
+    assert result2["reason"] == "already_configured"

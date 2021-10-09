@@ -1,4 +1,6 @@
 """Config flow for Whirlpool Sixth Sense integration."""
+from __future__ import annotations
+
 import asyncio
 import logging
 
