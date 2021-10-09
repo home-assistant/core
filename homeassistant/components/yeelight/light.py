@@ -764,10 +764,10 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         if self.config[CONF_SAVE_ON_CHANGE] and (brightness or colortemp or rgb):
             await self.async_set_default()
 
-        self._async_schedule_state_change(True)
+        self._async_schedule_state_check(True)
 
     @callback
-    def _async_schedule_state_change(self, expected_power_state):
+    def _async_schedule_state_check(self, expected_power_state):
         """Schedule a poll if the change failed to get pushed back to us.
 
         Some devices (mainly nightlights) will not send back the on state
@@ -801,7 +801,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
         await self._async_turn_off(duration)
-        self._async_schedule_state_change(False)
+        self._async_schedule_state_check(False)
 
     @_async_cmd
     async def async_set_mode(self, mode: str):
