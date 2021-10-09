@@ -583,7 +583,7 @@ class MediaPlayerEntity(Entity):
 
     @property
     def source_label_mapping(self) -> dict[str, str] | None:
-        """List of available input sources."""
+        """Return a mapping for all sources of source_list to a label, which should be displayed."""
         return (
             {source: source for source in self.source_list}
             if self.source_list
