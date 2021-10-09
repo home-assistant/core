@@ -34,22 +34,6 @@ from homeassistant.util.network import is_ip_address
 
 from .config_flow import get_client_controller
 from .const import (
-    CONF_CONDITION,
-    CONF_DEWPOINT,
-    CONF_ET,
-    CONF_MAXRH,
-    CONF_MAXTEMP,
-    CONF_MINRH,
-    CONF_MINTEMP,
-    CONF_PRESSURE,
-    CONF_QPF,
-    CONF_RAIN,
-    CONF_SECONDS,
-    CONF_SOLARRAD,
-    CONF_TEMPERATURE,
-    CONF_TIMESTAMP,
-    CONF_WEATHER,
-    CONF_WIND,
     CONF_ZONE_RUN_TIME,
     DATA_CONTROLLER,
     DATA_COORDINATOR,
@@ -71,11 +55,37 @@ CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 PLATFORMS = ["binary_sensor", "sensor", "switch"]
 
+# Constants expected by the RainMachine API for Service Data
+CONF_CONDITION = "condition"
+CONF_DEWPOINT = "dewpoint"
+CONF_ET = "et"
+CONF_MAXRH = "maxrh"
+CONF_MAXTEMP = "maxtemp"
+CONF_MINRH = "minrh"
+CONF_MINTEMP = "mintemp"
+CONF_PRESSURE = "pressure"
+CONF_QPF = "qpf"
+CONF_RAIN = "rain"
+CONF_SECONDS = "seconds"
+CONF_SOLARRAD = "solarrad"
+CONF_TEMPERATURE = "temperature"
+CONF_TIMESTAMP = "timestamp"
+CONF_WEATHER = "weather"
+CONF_WIND = "wind"
+
+# Config Validators for Weather Service Data
+CV_WX_DATA_VALID_PERCENTAGE = vol.All(vol.Coerce(int), vol.Range(min=0, max=100))
+CV_WX_DATA_VALID_TEMP_RANGE = vol.All(vol.Coerce(float), vol.Range(min=-40.0, max=40.0))
+CV_WX_DATA_VALID_RAIN_RANGE = vol.All(vol.Coerce(float), vol.Range(min=0.0, max=1000.0))
+CV_WX_DATA_VALID_WIND_SPEED = vol.All(vol.Coerce(float), vol.Range(min=0.0, max=65.0))
+CV_WX_DATA_VALID_PRESSURE = vol.All(vol.Coerce(float), vol.Range(min=60.0, max=110.0))
+CV_WX_DATA_VALID_SOLARRAD = vol.All(vol.Coerce(float), vol.Range(min=0.0, max=5.0))
+
+
 SERVICE_NAME_PAUSE_WATERING = "pause_watering"
+SERVICE_NAME_PUSH_WEATHER_DATA = "push_weather_data"
 SERVICE_NAME_STOP_ALL = "stop_all"
 SERVICE_NAME_UNPAUSE_WATERING = "unpause_watering"
-SERVICE_NAME_PUSH_WEATHER_DATA = "push_weather_data"
-
 SERVICE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_DEVICE_ID): cv.string,
@@ -87,13 +97,6 @@ SERVICE_PAUSE_WATERING_SCHEMA = SERVICE_SCHEMA.extend(
         vol.Required(CONF_SECONDS): cv.positive_int,
     }
 )
-
-CV_WX_DATA_VALID_PERCENTAGE = vol.All(vol.Coerce(int), vol.Range(min=0, max=100))
-CV_WX_DATA_VALID_TEMP_RANGE = vol.All(vol.Coerce(float), vol.Range(min=-40.0, max=40.0))
-CV_WX_DATA_VALID_RAIN_RANGE = vol.All(vol.Coerce(float), vol.Range(min=0.0, max=1000.0))
-CV_WX_DATA_VALID_WIND_SPEED = vol.All(vol.Coerce(float), vol.Range(min=0.0, max=65.0))
-CV_WX_DATA_VALID_PRESSURE = vol.All(vol.Coerce(float), vol.Range(min=60.0, max=110.0))
-CV_WX_DATA_VALID_SOLARRAD = vol.All(vol.Coerce(float), vol.Range(min=0.0, max=5.0))
 
 SERVICE_PUSH_WEATHER_DATA_SCHEMA = SERVICE_SCHEMA.extend(
     {
@@ -108,7 +111,7 @@ SERVICE_PUSH_WEATHER_DATA_SCHEMA = SERVICE_SCHEMA.extend(
         vol.Optional(CONF_ET): CV_WX_DATA_VALID_RAIN_RANGE,
         vol.Optional(CONF_MINRH): CV_WX_DATA_VALID_PERCENTAGE,
         vol.Optional(CONF_MAXRH): CV_WX_DATA_VALID_PERCENTAGE,
-        vol.Optional(CONF_CONDITION): str,
+        vol.Optional(CONF_CONDITION): cv.string,
         vol.Optional(CONF_PRESSURE): CV_WX_DATA_VALID_PRESSURE,
         vol.Optional(CONF_DEWPOINT): CV_WX_DATA_VALID_TEMP_RANGE,
     }
@@ -242,6 +245,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await controller.watering.pause_all(call.data[CONF_SECONDS])
         await async_update_programs_and_zones(hass, entry)
 
+    async def async_push_weather_data(call: ServiceCall) -> None:
+        """Push weather data to the device."""
+        controller = async_get_controller_for_service_call(hass, call)
+        await controller.parsers.post_data(
+            {
+                CONF_WEATHER: [
+                    {
+                        key: value
+                        for key, value in call.data.items()
+                        if key != CONF_DEVICE_ID
+                    }
+                ]
+            }
+        )
+
     async def async_stop_all(call: ServiceCall) -> None:
         """Stop all watering."""
         controller = async_get_controller_for_service_call(hass, call)
@@ -254,33 +272,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await controller.watering.unpause_all()
         await async_update_programs_and_zones(hass, entry)
 
-    async def async_push_weather_data(call: ServiceCall) -> None:
-        """Push weather data to the device."""
-        controller = async_get_controller_for_service_call(hass, call)
-        payload = {
-            CONF_WEATHER: [
-                {
-                    key: value
-                    for key, value in call.data.items()
-                    if value is not None and key != CONF_DEVICE_ID
-                }
-            ]
-        }
-        await controller.parsers.post_data(payload)
-
     for service_name, schema, method in (
         (
             SERVICE_NAME_PAUSE_WATERING,
             SERVICE_PAUSE_WATERING_SCHEMA,
             async_pause_watering,
         ),
-        (SERVICE_NAME_STOP_ALL, SERVICE_SCHEMA, async_stop_all),
-        (SERVICE_NAME_UNPAUSE_WATERING, SERVICE_SCHEMA, async_unpause_watering),
         (
             SERVICE_NAME_PUSH_WEATHER_DATA,
             SERVICE_PUSH_WEATHER_DATA_SCHEMA,
             async_push_weather_data,
         ),
+        (SERVICE_NAME_STOP_ALL, SERVICE_SCHEMA, async_stop_all),
+        (SERVICE_NAME_UNPAUSE_WATERING, SERVICE_SCHEMA, async_unpause_watering),
     ):
         if hass.services.has_service(DOMAIN, service_name):
             continue
@@ -300,6 +304,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # during integration setup:
         for service_name in (
             SERVICE_NAME_PAUSE_WATERING,
+            SERVICE_NAME_PUSH_WEATHER_DATA,
             SERVICE_NAME_STOP_ALL,
             SERVICE_NAME_UNPAUSE_WATERING,
         ):
