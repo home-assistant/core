@@ -57,19 +57,16 @@ def trigger_import(hass, ec_data, config):
         if config.get(CONF_NAME)
         else ec_data.metadata.get("location")
     )
-    config[CONF_NAME] = name
-    config[CONF_LANGUAGE] = "English"
-
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
             data={
-                CONF_NAME: config[CONF_NAME],
+                CONF_NAME: name,
                 CONF_STATION: config[CONF_STATION],
                 CONF_LATITUDE: config[CONF_LATITUDE],
                 CONF_LONGITUDE: config[CONF_LONGITUDE],
-                CONF_LANGUAGE: config[CONF_LANGUAGE],
+                CONF_LANGUAGE: "English",
             },
         )
     )
