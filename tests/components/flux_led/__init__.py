@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from flux_led.aio import AIOWifiLedBulb
@@ -17,6 +18,7 @@ from homeassistant.components.dhcp import (
     MAC_ADDRESS as DHCP_MAC_ADDRESS,
 )
 from homeassistant.components.flux_led.const import FLUX_HOST, FLUX_MAC, FLUX_MODEL
+from homeassistant.core import HomeAssistant
 
 MODULE = "homeassistant.components.flux_led"
 MODULE_CONFIG_FLOW = "homeassistant.components.flux_led.config_flow"
@@ -37,7 +39,14 @@ FLUX_DISCOVERY = {FLUX_HOST: IP_ADDRESS, FLUX_MODEL: MODEL, FLUX_MAC: FLUX_MAC_A
 
 def _mocked_bulb() -> AIOWifiLedBulb:
     bulb = MagicMock(auto_spec=AIOWifiLedBulb)
-    bulb.async_setup = AsyncMock()
+
+    async def _save_setup_callback(callback: Callable) -> None:
+        bulb.data_receive_callback = callback
+
+    bulb.async_setup = AsyncMock(side_effect=_save_setup_callback)
+    bulb.async_set_custom_pattern = AsyncMock()
+    bulb.async_set_preset_pattern = AsyncMock()
+    bulb.async_set_white_temp = AsyncMock()
     bulb.async_stop = AsyncMock()
     bulb.async_update = AsyncMock()
     bulb.async_turn_off = AsyncMock()
@@ -63,10 +72,26 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     return bulb
 
 
+async def async_mock_bulb_turn_off(hass: HomeAssistant, bulb: AIOWifiLedBulb) -> None:
+    """Mock the bulb being off."""
+    bulb.is_on = False
+    bulb.raw_state._replace(power_state=0x24)
+    bulb.data_receive_callback()
+    await hass.async_block_till_done()
+
+
+async def async_mock_bulb_turn_on(hass: HomeAssistant, bulb: AIOWifiLedBulb) -> None:
+    """Mock the bulb being on."""
+    bulb.is_on = True
+    bulb.raw_state._replace(power_state=0x23)
+    bulb.data_receive_callback()
+    await hass.async_block_till_done()
+
+
 def _patch_discovery(device=None, no_device=False):
     async def _discovery(*args, **kwargs):
         if no_device:
-            return []
+            raise OSError
         return [FLUX_DISCOVERY]
 
     return patch(

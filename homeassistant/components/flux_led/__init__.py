@@ -1,7 +1,6 @@
 """The Flux LED/MagicLight integration."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 from typing import Any, Final
@@ -144,12 +143,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await device.async_setup(_async_state_changed)
-    except asyncio.TimeoutError as ex:
-        raise ConfigEntryNotReady(
-            f"Timed out trying to connect to {device.ipaddr}"
-        ) from ex
     except FLUX_LED_EXCEPTIONS as ex:
-        raise ConfigEntryNotReady from ex
+        raise ConfigEntryNotReady(
+            str(ex) or f"Timed out trying to connect to {device.ipaddr}"
+        ) from ex
     coordinator = FluxLedUpdateCoordinator(hass, device)
     hass.data[DOMAIN][entry.entry_id] = coordinator
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -194,6 +191,3 @@ class FluxLedUpdateCoordinator(DataUpdateCoordinator):
             await self.device.async_update()
         except FLUX_LED_EXCEPTIONS as ex:
             raise UpdateFailed(ex) from ex
-
-        if not self.device.raw_state:
-            raise UpdateFailed("The device failed to update")

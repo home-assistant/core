@@ -211,7 +211,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return device
         bulb = async_wifi_bulb_for_host(host)
         try:
-            await bulb.async_setup()
+            await bulb.async_setup(lambda: None)
         finally:
             await bulb.async_stop()
         return {FLUX_MAC: None, FLUX_MODEL: None, FLUX_HOST: host}
