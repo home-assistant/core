@@ -363,11 +363,15 @@ async def test_ws_refresh_tokens(hass, hass_ws_client, hass_access_token):
     assert token["last_used_ip"] == refresh_token.last_used_ip
 
 
-async def test_ws_delete_refresh_token(hass, hass_ws_client, hass_access_token):
+async def test_ws_delete_refresh_token(
+    hass, hass_admin_user, hass_admin_credential, hass_ws_client, hass_access_token
+):
     """Test deleting a refresh token."""
     assert await async_setup_component(hass, "auth", {"http": {}})
 
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token = await hass.auth.async_create_refresh_token(
+        hass_admin_user, CLIENT_ID, credential=hass_admin_credential
+    )
 
     ws_client = await hass_ws_client(hass, hass_access_token)
 
@@ -382,7 +386,7 @@ async def test_ws_delete_refresh_token(hass, hass_ws_client, hass_access_token):
 
     result = await ws_client.receive_json()
     assert result["success"], result
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token = await hass.auth.async_get_refresh_token(refresh_token.id)
     assert refresh_token is None
 
 

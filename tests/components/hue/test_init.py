@@ -108,7 +108,7 @@ async def test_fixing_unique_id_other_correct(hass, mock_bridge_setup):
 
 async def test_security_vuln_check(hass):
     """Test that we report security vulnerabilities."""
-    assert await async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(domain=hue.DOMAIN, data={"host": "0.0.0.0"})
     entry.add_to_hass(hass)
 

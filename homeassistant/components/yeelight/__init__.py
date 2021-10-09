@@ -181,6 +181,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DATA_CUSTOM_EFFECTS: conf.get(CONF_CUSTOM_EFFECTS, {}),
         DATA_CONFIG_ENTRIES: {},
     }
+    # Make sure the scanner is always started in case we are
+    # going to retry via ConfigEntryNotReady and the bulb has changed
+    # ip
+    scanner = YeelightScanner.async_get(hass)
+    await scanner.async_setup()
 
     # Import manually configured devices
     for host, device_config in config.get(DOMAIN, {}).get(CONF_DEVICES, {}).items():
@@ -281,11 +286,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             device = await _async_get_device(hass, entry.data[CONF_HOST], entry)
         except BULB_EXCEPTIONS as ex:
-            # If CONF_ID is not valid we cannot fallback to discovery
-            # so we must retry by raising ConfigEntryNotReady
-            if not entry.data.get(CONF_ID):
-                raise ConfigEntryNotReady from ex
-            # Otherwise fall through to discovery
+            # Always retry later since bulbs can stop responding to SSDP
+            # sometimes even though they are online. If it has changed
+            # IP we will update it via discovery to the config flow
+            raise ConfigEntryNotReady from ex
         else:
             # Since device is passed this cannot throw an exception anymore
             await _async_initialize(hass, entry, entry.data[CONF_HOST], device=device)
@@ -298,7 +302,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except BULB_EXCEPTIONS:
             _LOGGER.exception("Failed to connect to bulb at %s", host)
 
-    # discovery
     scanner = YeelightScanner.async_get(hass)
     await scanner.async_register_callback(entry.data[CONF_ID], _async_from_discovery)
     return True
@@ -501,7 +504,9 @@ class YeelightScanner:
         _LOGGER.debug("Discovered via SSDP: %s", response)
         unique_id = response["id"]
         host = urlparse(response["location"]).hostname
-        if unique_id not in self._unique_id_capabilities:
+        current_entry = self._unique_id_capabilities.get(unique_id)
+        # Make sure we handle ip changes
+        if not current_entry or host != urlparse(current_entry["location"]).hostname:
             _LOGGER.debug("Yeelight discovered with %s", response)
             self._async_discovered_by_ssdp(response)
         self._host_capabilities[host] = response
@@ -571,7 +576,7 @@ class YeelightDevice:
         self._bulb_device = bulb
         self.capabilities = {}
         self._device_type = None
-        self._available = False
+        self._available = True
         self._initialized = False
         self._did_first_update = False
         self._name = None

@@ -29,7 +29,9 @@ def mock_try_connection():
         yield mock_try
 
 
-async def test_user_connection_works(hass, mock_try_connection, mock_finish_setup):
+async def test_user_connection_works(
+    hass, mock_try_connection, mock_finish_setup, mqtt_client_mock
+):
     """Test we can finish a config flow."""
     mock_try_connection.return_value = True
 
@@ -76,7 +78,9 @@ async def test_user_connection_fails(hass, mock_try_connection, mock_finish_setu
     assert len(mock_finish_setup.mock_calls) == 0
 
 
-async def test_manual_config_set(hass, mock_try_connection, mock_finish_setup):
+async def test_manual_config_set(
+    hass, mock_try_connection, mock_finish_setup, mqtt_client_mock
+):
     """Test we ignore entry if manual config available."""
     assert await async_setup_component(hass, "mqtt", {"mqtt": {"broker": "bla"}})
     await hass.async_block_till_done()
@@ -128,7 +132,9 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
     assert result.get("reason") == "already_configured"
 
 
-async def test_hassio_confirm(hass, mock_try_connection, mock_finish_setup):
+async def test_hassio_confirm(
+    hass, mock_try_connection, mock_finish_setup, mqtt_client_mock
+):
     """Test we can finish a config flow."""
     mock_try_connection.return_value = True
 
@@ -463,6 +469,9 @@ async def test_option_flow_default_suggested_values(
         },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    # Make sure all MQTT related jobs are done before ending the test
+    await hass.async_block_till_done()
 
 
 async def test_options_user_connection_fails(hass, mock_try_connection):

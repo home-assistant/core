@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -127,7 +127,7 @@ class TractiveActivitySensor(TractiveSensor):
         )
 
 
-SENSOR_TYPES: Final[tuple[TractiveSensorEntityDescription, ...]] = (
+SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
     TractiveSensorEntityDescription(
         key=ATTR_BATTERY_LEVEL,
         name="Battery Level",

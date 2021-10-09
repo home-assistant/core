@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.elkm1.const import DOMAIN
 
 
@@ -25,7 +25,7 @@ def mock_elk(invalid_auth=None, sync_complete=None):
 
 async def test_form_user_with_secure_elk(hass):
     """Test we can setup a secure elk."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -70,9 +70,56 @@ async def test_form_user_with_secure_elk(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_user_with_tls_elk(hass):
+    """Test we can setup a secure elk."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
+
+    with patch(
+        "homeassistant.components.elkm1.config_flow.elkm1.Elk",
+        return_value=mocked_elk,
+    ), patch(
+        "homeassistant.components.elkm1.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.elkm1.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "protocol": "TLS 1.2",
+                "address": "1.2.3.4",
+                "username": "test-username",
+                "password": "test-password",
+                "temperature_unit": "°F",
+                "prefix": "",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "ElkM1"
+    assert result2["data"] == {
+        "auto_configure": True,
+        "host": "elksv1_2://1.2.3.4",
+        "password": "test-password",
+        "prefix": "",
+        "temperature_unit": "°F",
+        "username": "test-username",
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_form_user_with_non_secure_elk(hass):
     """Test we can setup a non-secure elk."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -117,7 +164,7 @@ async def test_form_user_with_non_secure_elk(hass):
 
 async def test_form_user_with_serial_elk(hass):
     """Test we can setup a serial elk."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -221,7 +268,6 @@ async def test_form_invalid_auth(hass):
 
 async def test_form_import(hass):
     """Test we get the form with import source."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
     with patch(
