@@ -55,6 +55,11 @@ class DecoraWifiPlatform:
         return [p for p in PLATFORMS if self._iot_switches[p]]
 
     @property
+    def email(self) -> str:
+        """Get the user id (email) associated with this session."""
+        return self._email
+
+    @property
     def lights(self) -> list[IotSwitch]:
         """Get the lights."""
         return self._iot_switches[LIGHT_DOMAIN]

@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .common import CommFailed, DecoraWifiPlatform, LoginFailed
-from .const import DOMAIN, PLATFORMS
+from .const import CONF_TEMPORARY, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,18 +44,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     email = conf_data[CONF_USERNAME]
     password = conf_data[CONF_PASSWORD]
 
-    # Login and store session in hass.data
-    try:
-        session = await DecoraWifiPlatform.async_setup_decora_wifi(
-            hass,
-            email,
-            password,
-        )
-    except LoginFailed as exc:
-        raise ConfigEntryAuthFailed from exc
-    except CommFailed as exc:
-        raise ConfigEntryNotReady from exc
-    hass.data[DOMAIN][entry.entry_id] = session
+    # If setup was triggered by a config flow, the session is already created by the flow and is in temp storage.
+    if (
+        hass.data[DOMAIN][CONF_TEMPORARY]
+        and hass.data[DOMAIN][CONF_TEMPORARY].email == email
+    ):
+        hass.data[DOMAIN][entry.entry_id] = hass.data[DOMAIN].pop(CONF_TEMPORARY)
+    # If setting up from an existing entry such as on hass restart, login a new session and store it in hass.data.
+    else:
+        try:
+            session = await DecoraWifiPlatform.async_setup_decora_wifi(
+                hass,
+                email,
+                password,
+            )
+        except LoginFailed as exc:
+            raise ConfigEntryAuthFailed from exc
+        except CommFailed as exc:
+            raise ConfigEntryNotReady from exc
+        hass.data[DOMAIN][entry.entry_id] = session
 
     # Forward the config entry to each platform which has devices to set up.
     active_platforms = session.active_platforms

@@ -6,6 +6,7 @@ DOMAIN = "decora_wifi"
 
 CONF_OPTIONS = "options"
 CONF_TITLE = "myLeviton Decora Wifi"
+CONF_TEMPORARY = "temporary"
 
 DEFAULT_SCAN_INTERVAL = 120
 
