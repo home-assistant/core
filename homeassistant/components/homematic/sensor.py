@@ -1,11 +1,20 @@
 """Support for HomeMatic sensors."""
+from __future__ import annotations
+
 import logging
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
     DEVICE_CLASS_CO2,
+    DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
@@ -28,6 +37,9 @@ from .const import ATTR_DISCOVER_DEVICES
 from .entity import HMDevice
 
 _LOGGER = logging.getLogger(__name__)
+
+DEVICE_CLASS = "device_class"
+STATE_CLASS = "state_class"
 
 HM_STATE_HA_CAST = {
     "IPGarage": {0: "closed", 1: "open", 2: "ventilation", 3: None},
@@ -79,17 +91,54 @@ HM_UNIT_HA_CAST = {
 }
 
 HM_DEVICE_CLASS_HA_CAST = {
-    "HUMIDITY": DEVICE_CLASS_HUMIDITY,
-    "TEMPERATURE": DEVICE_CLASS_TEMPERATURE,
-    "ACTUAL_TEMPERATURE": DEVICE_CLASS_TEMPERATURE,
-    "LUX": DEVICE_CLASS_ILLUMINANCE,
-    "CURRENT_ILLUMINATION": DEVICE_CLASS_ILLUMINANCE,
-    "AVERAGE_ILLUMINATION": DEVICE_CLASS_ILLUMINANCE,
-    "LOWEST_ILLUMINATION": DEVICE_CLASS_ILLUMINANCE,
-    "HIGHEST_ILLUMINATION": DEVICE_CLASS_ILLUMINANCE,
-    "POWER": DEVICE_CLASS_POWER,
-    "CURRENT": DEVICE_CLASS_POWER,
-    "CONCENTRATION": DEVICE_CLASS_CO2,
+    "HUMIDITY": {
+        DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
+        STATE_CLASS: STATE_CLASS_MEASUREMENT,
+    },
+    "TEMPERATURE": {
+        DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+        STATE_CLASS: STATE_CLASS_MEASUREMENT,
+    },
+    "ACTUAL_TEMPERATURE": {
+        DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+        STATE_CLASS: STATE_CLASS_MEASUREMENT,
+    },
+    "LUX": {
+        DEVICE_CLASS: DEVICE_CLASS_ILLUMINANCE,
+        STATE_CLASS: STATE_CLASS_MEASUREMENT,
+    },
+    "CURRENT_ILLUMINATION": {
+        DEVICE_CLASS: DEVICE_CLASS_ILLUMINANCE,
+        STATE_CLASS: STATE_CLASS_MEASUREMENT,
+    },
+    "AVERAGE_ILLUMINATION": {
+        DEVICE_CLASS: DEVICE_CLASS_ILLUMINANCE,
+        STATE_CLASS: STATE_CLASS_TOTAL,
+    },
+    "LOWEST_ILLUMINATION": {
+        DEVICE_CLASS: DEVICE_CLASS_ILLUMINANCE,
+        STATE_CLASS: STATE_CLASS_TOTAL,
+    },
+    "HIGHEST_ILLUMINATION": {
+        DEVICE_CLASS: DEVICE_CLASS_ILLUMINANCE,
+        STATE_CLASS: STATE_CLASS_TOTAL,
+    },
+    "POWER": {
+        DEVICE_CLASS: DEVICE_CLASS_POWER,
+        STATE_CLASS: STATE_CLASS_MEASUREMENT,
+    },
+    "CURRENT": {
+        DEVICE_CLASS: DEVICE_CLASS_CURRENT,
+        STATE_CLASS: STATE_CLASS_MEASUREMENT,
+    },
+    "CONCENTRATION": {
+        DEVICE_CLASS: DEVICE_CLASS_CO2,
+        STATE_CLASS: STATE_CLASS_MEASUREMENT,
+    },
+    "ENERGY_COUNTER": {
+        DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+        STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+    },
 }
 
 HM_ICON_HA_CAST = {"WIND_SPEED": "mdi:weather-windy", "BRIGHTNESS": "mdi:invert-colors"}
@@ -130,7 +179,14 @@ class HMSensor(HMDevice, SensorEntity):
     @property
     def device_class(self):
         """Return the device class to use in the frontend, if any."""
-        return HM_DEVICE_CLASS_HA_CAST.get(self._state)
+        ha_cast = HM_DEVICE_CLASS_HA_CAST.get(self._state, {})
+        return ha_cast.get(DEVICE_CLASS)
+
+    @property
+    def state_class(self) -> str | None:
+        """Return the state class of the sensor."""
+        ha_cast = HM_DEVICE_CLASS_HA_CAST.get(self._state, {})
+        return ha_cast.get(STATE_CLASS)
 
     @property
     def icon(self):
