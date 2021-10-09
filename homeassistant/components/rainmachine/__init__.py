@@ -81,11 +81,11 @@ CV_WX_DATA_VALID_WIND_SPEED = vol.All(vol.Coerce(float), vol.Range(min=0.0, max=
 CV_WX_DATA_VALID_PRESSURE = vol.All(vol.Coerce(float), vol.Range(min=60.0, max=110.0))
 CV_WX_DATA_VALID_SOLARRAD = vol.All(vol.Coerce(float), vol.Range(min=0.0, max=5.0))
 
-
 SERVICE_NAME_PAUSE_WATERING = "pause_watering"
 SERVICE_NAME_PUSH_WEATHER_DATA = "push_weather_data"
 SERVICE_NAME_STOP_ALL = "stop_all"
 SERVICE_NAME_UNPAUSE_WATERING = "unpause_watering"
+
 SERVICE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_DEVICE_ID): cv.string,
