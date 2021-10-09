@@ -28,7 +28,7 @@ async def test_async_setup_entry_not_ready(hass: HomeAssistant):
     """Test that it throws ConfigEntryNotReady when exception occurs during setup."""
     entry = create_entry(hass)
     with _patch_efergy_status() as efergymock:
-        efergymock.side_effect = (exceptions.ConnectTimeout, exceptions.DataError)
+        efergymock.side_effect = (exceptions.ConnectError, exceptions.DataError)
         await hass.config_entries.async_setup(entry.entry_id)
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
         assert entry.state == ConfigEntryState.SETUP_RETRY

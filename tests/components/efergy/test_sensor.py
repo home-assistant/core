@@ -1,7 +1,7 @@
 """The tests for Efergy sensor platform."""
+from datetime import timedelta
 
 from homeassistant.components.efergy.sensor import SENSOR_TYPES
-from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -11,14 +11,16 @@ from homeassistant.const import (
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
-from homeassistant.setup import async_setup_component
+import homeassistant.util.dt as dt_util
 
-from . import MULTI_SENSOR_TOKEN, setup_platform
+from . import MULTI_SENSOR_TOKEN, mock_responses, setup_platform
 
+from tests.common import async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -88,7 +90,6 @@ async def test_multi_sensor_readings(
     """Test for multiple sensors in one household."""
     for description in SENSOR_TYPES:
         description.entity_registry_enabled_default = True
-    await async_setup_component(hass, HA_DOMAIN, {})
     await setup_platform(hass, aioclient_mock, SENSOR_DOMAIN, MULTI_SENSOR_TOKEN)
     state = hass.states.get("sensor.power_usage_728386")
     assert state.state == "218"
@@ -102,3 +103,18 @@ async def test_multi_sensor_readings(
     assert state.state == "312"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+
+
+async def test_failed_update_and_reconnection(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+):
+    """Test failed update and reconnection."""
+    await setup_platform(hass, aioclient_mock, SENSOR_DOMAIN)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.power_usage").state == "1580"
+    aioclient_mock.clear_requests()
+    await mock_responses(hass, aioclient_mock, error=True)
+    next_update = dt_util.utcnow() + timedelta(seconds=30)
+    async_fire_time_changed(hass, next_update)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.power_usage").state == STATE_UNAVAILABLE

@@ -50,7 +50,7 @@ async def test_flow_user(hass: HomeAssistant):
 async def test_flow_user_cannot_connect(hass: HomeAssistant):
     """Test user initialized flow with unreachable service."""
     with _patch_efergy_status() as efergymock:
-        efergymock.side_effect = exceptions.ConnectTimeout
+        efergymock.side_effect = exceptions.ConnectError
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=CONF_DATA
         )

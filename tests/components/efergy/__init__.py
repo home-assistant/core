@@ -62,7 +62,7 @@ async def mock_responses(
     if error:
         aioclient_mock.get(
             f"{base_url}getCurrentValuesSummary?token={token}",
-            exc=exceptions.ConnectTimeout,
+            exc=exceptions.ConnectError,
         )
         return
     aioclient_mock.get(
