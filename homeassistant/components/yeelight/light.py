@@ -249,7 +249,7 @@ def _async_cmd(func):
         except BULB_NETWORK_EXCEPTIONS as ex:
             # A network error happened, the bulb is likely offline now
             self.device.async_mark_unavailable()
-            self.async_write_ha_state()
+            self.async_state_changed()
             exc_message = str(ex) or type(ex)
             raise HomeAssistantError(
                 f"Error when calling {func.__name__} for bulb {self.device.name} at {self.device.host}: {exc_message}"
@@ -423,13 +423,20 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
         self._unexpected_state_check = None
 
+    @callback
+    def async_state_changed(self):
+        """Call when the device changes state."""
+        if not self._device.available:
+            self._async_cancel_pending_state_check()
+        self.async_write_ha_state()
+
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 DATA_UPDATED.format(self._device.host),
-                self.async_write_ha_state,
+                self.async_state_changed,
             )
         )
         await super().async_added_to_hass()
@@ -767,15 +774,20 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         self._async_schedule_state_check(True)
 
     @callback
+    def _async_cancel_pending_state_check(self):
+        """Cancel a pending state check."""
+        if self._unexpected_state_check:
+            self._unexpected_state_check()
+            self._unexpected_state_check = None
+
+    @callback
     def _async_schedule_state_check(self, expected_power_state):
         """Schedule a poll if the change failed to get pushed back to us.
 
         Some devices (mainly nightlights) will not send back the on state
         so we need to force a refresh.
         """
-        if self._unexpected_state_check:
-            self._unexpected_state_check()
-            self._unexpected_state_check = None
+        self._async_cancel_pending_state_check()
 
         async def _async_update_if_state_unexpected(*_):
             self._unexpected_state_check = None
