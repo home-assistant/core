@@ -63,7 +63,7 @@ from . import (
     DATA_DEVICE,
     DATA_UPDATED,
     DOMAIN,
-    STATE_CHANGE_TIME,
+    POWER_STATE_CHANGE_TIME,
     YEELIGHT_FLOW_TRANSITION_SCHEMA,
     YeelightEntity,
 )
@@ -763,7 +763,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             await self.async_set_default()
 
         # Some devices (mainly nightlights) will not send back the on state so we need to force a refresh
-        await asyncio.sleep(STATE_CHANGE_TIME)
+        await asyncio.sleep(POWER_STATE_CHANGE_TIME)
         if not self.is_on:
             await self.device.async_update(True)
 
@@ -783,7 +783,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
         await self._async_turn_off(duration)
         # Some devices will not send back the off state so we need to force a refresh
-        await asyncio.sleep(STATE_CHANGE_TIME)
+        await asyncio.sleep(POWER_STATE_CHANGE_TIME)
         if self.is_on:
             await self.device.async_update(True)
 
