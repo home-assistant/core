@@ -1,7 +1,6 @@
 """The Flux LED/MagicLight integration."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 from typing import Any, Final
@@ -46,6 +45,7 @@ def async_wifi_bulb_for_host(host: str) -> AIOWifiLedBulb:
     return AIOWifiLedBulb(host)
 
 
+@callback
 def async_update_entry_from_discovery(
     hass: HomeAssistant, entry: config_entries.ConfigEntry, device: dict[str, Any]
 ) -> None:
@@ -81,8 +81,7 @@ async def async_discover_device(
     """Direct discovery at a single ip instead of broadcast."""
     # If we are missing the unique_id we should be able to fetch it
     # from the device by doing a directed discovery at the host only
-    devices = await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT, host)
-    for device in devices:
+    for device in await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT, host):
         if device[FLUX_HOST] == host:
             return device
     return None
@@ -144,12 +143,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await device.async_setup(_async_state_changed)
-    except asyncio.TimeoutError as ex:
-        raise ConfigEntryNotReady(
-            f"Timed out trying to connect to {device.ipaddr}"
-        ) from ex
     except FLUX_LED_EXCEPTIONS as ex:
-        raise ConfigEntryNotReady from ex
+        raise ConfigEntryNotReady(
+            str(ex) or f"Timed out trying to connect to {device.ipaddr}"
+        ) from ex
     coordinator = FluxLedUpdateCoordinator(hass, device)
     hass.data[DOMAIN][entry.entry_id] = coordinator
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -194,6 +191,3 @@ class FluxLedUpdateCoordinator(DataUpdateCoordinator):
             await self.device.async_update()
         except FLUX_LED_EXCEPTIONS as ex:
             raise UpdateFailed(ex) from ex
-
-        if not self.device.raw_state:
-            raise UpdateFailed("The device failed to update")
