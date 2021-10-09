@@ -4,9 +4,12 @@ from unittest.mock import patch
 
 from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
 from homeassistant.components.unifi.services import (
+    SERVICE_RECONNECT_CLIENT,
     SERVICE_REMOVE_CLIENTS,
     SUPPORTED_SERVICES,
 )
+from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .test_controller import setup_unifi_integration
 
@@ -39,6 +42,156 @@ async def test_service_setup_and_unload_not_called_if_multiple_integrations_dete
     remove_service_mock.assert_not_called()
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     assert remove_service_mock.call_count == 2
+
+
+async def test_reconnect_client(hass, aioclient_mock):
+    """Verify call to reconnect client is performed as expected."""
+    clients = [
+        {
+            "is_wired": False,
+            "mac": "00:00:00:00:00:01",
+        }
+    ]
+    config_entry = await setup_unifi_integration(
+        hass, aioclient_mock, clients_response=clients
+    )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(
+        f"https://{controller.host}:1234/api/s/{controller.site}/cmd/stamgr",
+    )
+
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(CONNECTION_NETWORK_MAC, clients[0]["mac"])},
+    )
+
+    await hass.services.async_call(
+        UNIFI_DOMAIN,
+        SERVICE_RECONNECT_CLIENT,
+        service_data={ATTR_DEVICE_ID: device_entry.id},
+        blocking=True,
+    )
+    assert aioclient_mock.call_count == 1
+
+
+async def test_reconnect_device_without_mac(hass, aioclient_mock):
+    """Verify no call is made if device does not have a known mac."""
+    config_entry = await setup_unifi_integration(hass, aioclient_mock)
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(
+        f"https://{controller.host}:1234/api/s/{controller.site}/cmd/stamgr",
+    )
+
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={("other connection", "not mac")},
+    )
+
+    await hass.services.async_call(
+        UNIFI_DOMAIN,
+        SERVICE_RECONNECT_CLIENT,
+        service_data={ATTR_DEVICE_ID: device_entry.id},
+        blocking=True,
+    )
+    assert aioclient_mock.call_count == 0
+
+
+async def test_reconnect_client_controller_unavailable(hass, aioclient_mock):
+    """Verify no call is made if controller is unavailable."""
+    clients = [
+        {
+            "is_wired": False,
+            "mac": "00:00:00:00:00:01",
+        }
+    ]
+    config_entry = await setup_unifi_integration(
+        hass, aioclient_mock, clients_response=clients
+    )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    controller.available = False
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(
+        f"https://{controller.host}:1234/api/s/{controller.site}/cmd/stamgr",
+    )
+
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(CONNECTION_NETWORK_MAC, clients[0]["mac"])},
+    )
+
+    await hass.services.async_call(
+        UNIFI_DOMAIN,
+        SERVICE_RECONNECT_CLIENT,
+        service_data={ATTR_DEVICE_ID: device_entry.id},
+        blocking=True,
+    )
+    assert aioclient_mock.call_count == 0
+
+
+async def test_reconnect_client_unknown_mac(hass, aioclient_mock):
+    """Verify no call is made if trying to reconnect a mac unknown to controller."""
+    config_entry = await setup_unifi_integration(hass, aioclient_mock)
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(
+        f"https://{controller.host}:1234/api/s/{controller.site}/cmd/stamgr",
+    )
+
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(CONNECTION_NETWORK_MAC, "mac unknown to controller")},
+    )
+
+    await hass.services.async_call(
+        UNIFI_DOMAIN,
+        SERVICE_RECONNECT_CLIENT,
+        service_data={ATTR_DEVICE_ID: device_entry.id},
+        blocking=True,
+    )
+    assert aioclient_mock.call_count == 0
+
+
+async def test_reconnect_wired_client(hass, aioclient_mock):
+    """Verify no call is made if client is wired."""
+    clients = [
+        {
+            "is_wired": True,
+            "mac": "00:00:00:00:00:01",
+        }
+    ]
+    config_entry = await setup_unifi_integration(
+        hass, aioclient_mock, clients_response=clients
+    )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(
+        f"https://{controller.host}:1234/api/s/{controller.site}/cmd/stamgr",
+    )
+
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(CONNECTION_NETWORK_MAC, clients[0]["mac"])},
+    )
+
+    await hass.services.async_call(
+        UNIFI_DOMAIN,
+        SERVICE_RECONNECT_CLIENT,
+        service_data={ATTR_DEVICE_ID: device_entry.id},
+        blocking=True,
+    )
+    assert aioclient_mock.call_count == 0
 
 
 async def test_remove_clients(hass, aioclient_mock):
