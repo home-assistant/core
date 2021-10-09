@@ -90,7 +90,6 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="displays_connected",
         name="Displays Connected",
-        entity_registry_enabled_default=True,
         state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:monitor",
         value=lambda bridge: len(bridge.display.displays),
