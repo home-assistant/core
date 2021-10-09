@@ -72,6 +72,7 @@ from .const import (
     ATTR_APP_NAME,
     ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
+    ATTR_INPUT_SOURCE_LABEL_MAPPING,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_ALBUM_ARTIST,
     ATTR_MEDIA_ALBUM_NAME,
@@ -581,6 +582,15 @@ class MediaPlayerEntity(Entity):
         return self._attr_source_list
 
     @property
+    def source_label_mapping(self) -> dict[str, str] | None:
+        """List of available input sources."""
+        return (
+            {source: source for source in self.source_list}
+            if self.source_list
+            else None
+        )
+
+    @property
     def sound_mode(self) -> str | None:
         """Name of the current sound mode."""
         return self._attr_sound_mode
@@ -891,6 +901,7 @@ class MediaPlayerEntity(Entity):
             source_list = self.source_list
             if source_list:
                 data[ATTR_INPUT_SOURCE_LIST] = source_list
+                data[ATTR_INPUT_SOURCE_LABEL_MAPPING] = self.source_label_mapping
 
         if supported_features & SUPPORT_SELECT_SOUND_MODE:
             sound_mode_list = self.sound_mode_list
