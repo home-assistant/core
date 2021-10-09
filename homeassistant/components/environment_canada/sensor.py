@@ -1,5 +1,6 @@
 """Support for the Environment Canada weather service."""
 from datetime import datetime, timedelta
+from functools import partial
 import logging
 import re
 
@@ -46,20 +47,22 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Environment Canada sensor."""
     _LOGGER.warning(
         "Environment Canada YAML configuration is deprecated; your YAML configuration "
         "has been imported into the UI and can be safely removed"
     )
     if config.get(CONF_STATION):
-        ec_data = ECData(station_id=config[CONF_STATION])
+        weather_init = partial(ECData, station_id=config[CONF_STATION])
+        ec_data = await hass.async_add_executor_job(weather_init)
         config[CONF_LATITUDE] = ec_data.lat
         config[CONF_LONGITUDE] = ec_data.lon
     else:
         lat = config.get(CONF_LATITUDE, hass.config.latitude)
         lon = config.get(CONF_LONGITUDE, hass.config.longitude)
-        ec_data = ECData(coordinates=(lat, lon))
+        weather_init = partial(ECData, coordinates=(lat, lon))
+        ec_data = await hass.async_add_executor_job(weather_init)
         config[CONF_STATION] = ec_data.station_id
 
     trigger_import(hass, ec_data, config)
@@ -67,10 +70,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a weather entity from a config_entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["weather_coordinator"]
-    sensor_list = list(coordinator.conditions) + list(coordinator.alerts)
+    weather_data = hass.data[DOMAIN][config_entry.entry_id]["weather_data"]
+    sensor_list = list(weather_data.conditions) + list(weather_data.alerts)
     async_add_entities(
-        [ECSensor(sensor_type, coordinator) for sensor_type in sensor_list], True
+        [ECSensor(sensor_type, weather_data) for sensor_type in sensor_list], True
     )
 
 
@@ -119,9 +122,9 @@ class ECSensor(SensorEntity):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return self._device_class
 
-    async def async_update(self):
+    def update(self):
         """Update current conditions."""
-        await self.hass.async_add_executor_job(self.ec_data.update)
+        self.ec_data.update()
         self.ec_data.conditions.update(self.ec_data.alerts)
 
         conditions = self.ec_data.conditions

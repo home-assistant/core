@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import datetime
+from functools import partial
 import logging
 
 from env_canada import ECData, get_station_coords
@@ -40,19 +41,23 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Environment Canada camera."""
     _LOGGER.warning(
         "Environment Canada YAML configuration is deprecated; your YAML configuration "
         "has been imported into the UI and can be safely removed"
     )
     if config.get(CONF_STATION):
-        lat, lon = get_station_coords(config[CONF_STATION])
+        lat, lon = await hass.async_add_executor_job(
+            get_station_coords, config[CONF_STATION]
+        )
     else:
         lat = config.get(CONF_LATITUDE, hass.config.latitude)
         lon = config.get(CONF_LONGITUDE, hass.config.longitude)
 
-    ec_data = ECData(coordinates=(lat, lon))
+    weather_init = partial(ECData, coordinates=(lat, lon))
+    ec_data = await hass.async_add_executor_job(weather_init)
+
     config[CONF_STATION] = ec_data.station_id
     config[CONF_LATITUDE] = lat
     config[CONF_LONGITUDE] = lon
@@ -62,7 +67,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a weather entity from a config_entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["radar_coordinator"]
+    radar_data = hass.data[DOMAIN][config_entry.entry_id]["radar_data"]
     config = config_entry.data
 
     # The combination of station and language are unique for all EC weather reporting
@@ -70,7 +75,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async_add_entities(
         [
-            ECCamera(coordinator, config.get(CONF_NAME, ""), False, unique_id),
+            ECCamera(radar_data, config.get(CONF_NAME, ""), False, unique_id),
         ]
     )
 
@@ -95,11 +100,11 @@ class ECCamera(Camera):
         """Return unique ID."""
         return self.uniqueid
 
-    async def async_camera_image(
+    def camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of camera image."""
-        await self.async_update()
+        self.update()
         return self.image
 
     @property
@@ -115,14 +120,10 @@ class ECCamera(Camera):
         return {ATTR_ATTRIBUTION: CONF_ATTRIBUTION, ATTR_UPDATED: self.timestamp}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self):
+    def update(self):
         """Update radar image."""
         if self.is_loop:
-            self.image = await self.hass.async_add_executor_job(
-                self.radar_object.get_loop
-            )
+            self.image = self.radar_object.get_loop()
         else:
-            self.image = await self.hass.async_add_executor_job(
-                self.radar_object.get_latest_frame
-            )
+            self.image = self.radar_object.get_latest_frame()
         self.timestamp = self.radar_object.timestamp

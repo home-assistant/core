@@ -1,5 +1,6 @@
 """Platform for retrieving meteorological data from Environment Canada."""
 import datetime
+from functools import partial
 import logging
 import re
 
@@ -76,20 +77,22 @@ ICON_CONDITION_MAP = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entries, discovery_info=None):
     """Set up the Environment Canada weather."""
     _LOGGER.warning(
         "Environment Canada YAML configuration is deprecated; your YAML configuration "
         "has been imported into the UI and can be safely removed"
     )
     if config.get(CONF_STATION):
-        ec_data = ECData(station_id=config[CONF_STATION])
+        weather_init = partial(ECData, station_id=config[CONF_STATION])
+        ec_data = await hass.async_add_executor_job(weather_init)
         config[CONF_LATITUDE] = ec_data.lat
         config[CONF_LONGITUDE] = ec_data.lon
     else:
         lat = config.get(CONF_LATITUDE, hass.config.latitude)
         lon = config.get(CONF_LONGITUDE, hass.config.longitude)
-        ec_data = ECData(coordinates=(lat, lon))
+        weather_init = partial(ECData, coordinates=(lat, lon))
+        ec_data = await hass.async_add_executor_job(weather_init)
         config[CONF_STATION] = ec_data.station_id
 
     trigger_import(hass, ec_data, config)
@@ -97,11 +100,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a weather entity from a config_entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["weather_coordinator"]
+    weather_data = hass.data[DOMAIN][config_entry.entry_id]["weather_data"]
     async_add_entities(
         [
-            ECWeather(coordinator, config_entry.data, False),
-            ECWeather(coordinator, config_entry.data, True),
+            ECWeather(weather_data, config_entry.data, False),
+            ECWeather(weather_data, config_entry.data, True),
         ]
     )
 
@@ -205,9 +208,9 @@ class ECWeather(WeatherEntity):
         """Return the forecast array."""
         return get_forecast(self.ec_data, self.forecast_type)
 
-    async def async_update(self):
+    def update(self):
         """Get the latest data from Environment Canada."""
-        await self.hass.async_add_executor_job(self.ec_data.update)
+        self.ec_data.update()
 
 
 def get_forecast(ec_data, forecast_type):

@@ -18,21 +18,21 @@ async def async_setup_entry(hass, config_entry):
     station = config_entry.data.get(CONF_STATION)
     lang = config_entry.data.get(CONF_LANGUAGE, "English")
 
-    coordinators = {}
+    weather_api = {}
 
     weather_init = partial(
         ECData, station_id=station, coordinates=(lat, lon), language=lang.lower()
     )
     weather_data = await hass.async_add_executor_job(weather_init)
-    coordinators["weather_coordinator"] = weather_data
+    weather_api["weather_data"] = weather_data
 
     radar_init = partial(ECRadar, coordinates=(lat, lon))
     radar_data = await hass.async_add_executor_job(radar_init)
-    coordinators["radar_coordinator"] = radar_data
+    weather_api["radar_data"] = radar_data
     await hass.async_add_executor_job(radar_data.get_loop)
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = coordinators
+    hass.data[DOMAIN][config_entry.entry_id] = weather_api
 
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
