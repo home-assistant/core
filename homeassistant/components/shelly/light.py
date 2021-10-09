@@ -46,6 +46,7 @@ from .const import (
     LIGHT_TRANSITION_MIN_FIRMWARE_DATE,
     MAX_TRANSITION_TIME,
     MODELS_SUPPORTING_LIGHT_TRANSITION,
+    RGBW_MODELS,
     RPC,
     SHBLB_1_RGB_EFFECTS,
     STANDARD_RGB_EFFECTS,
@@ -143,7 +144,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
 
         if hasattr(block, "red") and hasattr(block, "green") and hasattr(block, "blue"):
             self._min_kelvin = KELVIN_MIN_VALUE_COLOR
-            if hasattr(block, "white"):
+            if wrapper.model in RGBW_MODELS:
                 self._supported_color_modes.add(COLOR_MODE_RGBW)
             else:
                 self._supported_color_modes.add(COLOR_MODE_RGB)

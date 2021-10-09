@@ -24,7 +24,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.2
 
 # homeassistant.components.switchbot
-# PySwitchbot==0.11.0
+# PySwitchbot==0.12.0
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -446,7 +446,7 @@ google-nest-sdm==0.3.7
 googlemaps==2.5.1
 
 # homeassistant.components.gree
-greeclimate==0.11.8
+greeclimate==0.11.9
 
 # homeassistant.components.growatt_server
 growattServer==1.1.0
