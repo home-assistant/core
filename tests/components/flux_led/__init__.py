@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from flux_led import WifiLedBulb
+from flux_led.aio import AIOWifiLedBulb
 from flux_led.const import (
     COLOR_MODE_CCT as FLUX_COLOR_MODE_CCT,
     COLOR_MODE_RGB as FLUX_COLOR_MODE_RGB,
@@ -35,8 +35,8 @@ DHCP_DISCOVERY = {
 FLUX_DISCOVERY = {FLUX_HOST: IP_ADDRESS, FLUX_MODEL: MODEL, FLUX_MAC: FLUX_MAC_ADDRESS}
 
 
-def _mocked_bulb() -> WifiLedBulb:
-    bulb = MagicMock(auto_spec=WifiLedBulb)
+def _mocked_bulb() -> AIOWifiLedBulb:
+    bulb = MagicMock(auto_spec=AIOWifiLedBulb)
     bulb.async_setup = AsyncMock()
     bulb.async_stop = AsyncMock()
     bulb.async_update = AsyncMock()
@@ -79,6 +79,7 @@ def _patch_wifibulb(device=None, no_device=False):
         bulb = _mocked_bulb()
         if no_device:
             bulb.async_setup = AsyncMock(side_effect=asyncio.TimeoutError)
+            return bulb
         return device if device else _mocked_bulb()
 
     return patch("homeassistant.components.flux_led.AIOWifiLedBulb", new=_wifi_led_bulb)
