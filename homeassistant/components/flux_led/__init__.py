@@ -45,6 +45,7 @@ def async_wifi_bulb_for_host(host: str) -> AIOWifiLedBulb:
     return AIOWifiLedBulb(host)
 
 
+@callback
 def async_update_entry_from_discovery(
     hass: HomeAssistant, entry: config_entries.ConfigEntry, device: dict[str, Any]
 ) -> None:
@@ -80,8 +81,7 @@ async def async_discover_device(
     """Direct discovery at a single ip instead of broadcast."""
     # If we are missing the unique_id we should be able to fetch it
     # from the device by doing a directed discovery at the host only
-    devices = await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT, host)
-    for device in devices:
+    for device in await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT, host):
         if device[FLUX_HOST] == host:
             return device
     return None

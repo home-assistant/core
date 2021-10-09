@@ -6,12 +6,19 @@ from unittest.mock import patch
 from homeassistant.components import flux_led
 from homeassistant.components.flux_led.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from . import FLUX_DISCOVERY, IP_ADDRESS, MAC_ADDRESS, _patch_discovery, _patch_wifibulb
+from . import (
+    DEFAULT_ENTRY_TITLE,
+    FLUX_DISCOVERY,
+    IP_ADDRESS,
+    MAC_ADDRESS,
+    _patch_discovery,
+    _patch_wifibulb,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -58,3 +65,21 @@ async def test_config_entry_retry(hass: HomeAssistant) -> None:
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
         assert config_entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_config_entry_fills_unique_id_with_directed_discovery(
+    hass: HomeAssistant,
+) -> None:
+    """Test that the unique id is added if its missing via directed (not broadcast) discovery."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=None
+    )
+    config_entry.add_to_hass(hass)
+    with _patch_discovery(), _patch_wifibulb():
+        await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
+        await hass.async_block_till_done()
+        assert config_entry.state == ConfigEntryState.LOADED
+
+    assert config_entry.unique_id == MAC_ADDRESS
+    assert config_entry.data[CONF_NAME] == DEFAULT_ENTRY_TITLE
+    assert config_entry.title == DEFAULT_ENTRY_TITLE
