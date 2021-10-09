@@ -39,15 +39,14 @@ from homeassistant.components.deconz.climate import (
     DECONZ_PRESET_MANUAL,
 )
 from homeassistant.components.deconz.const import (
-    CONF_ALLOW_CLIP_SENSOR,
-    ATTR_FLIP_DISPLAY,
     ATTR_EXTERNAL_SENSOR_TEMP,
     ATTR_EXTERNAL_WINDOW_OPEN,
+    ATTR_FLIP_DISPLAY,
     ATTR_LOCKED,
     ATTR_MOUNTING_MODE,
     ATTR_OFFSET,
-    ATTR_ON,
     ATTR_SCHEDULE_ON,
+    CONF_ALLOW_CLIP_SENSOR,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -234,7 +233,7 @@ async def test_climate_device_without_cooling_support(
             "externalwindowopen": True,
             "locked": False,
             "mountingmode": False,
-            "offset": 0,
+            "offset": -10,
             "on": True,
             "schedule_on": False,
         },
@@ -246,14 +245,14 @@ async def test_climate_device_without_cooling_support(
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
 
-    assert hass.states.get(ATTR_FLIP_DISPLAY).state == False
-    assert hass.states.get(ATTR_EXTERNAL_SENSOR_TEMP).state == 12.8
-    assert hass.states.get(ATTR_EXTERNAL_WINDOW_OPEN).state == True
-    assert hass.states.get(ATTR_LOCKED).state == False
-    assert hass.states.get(ATTR_MOUNTING_MODE).state == False
-    assert hass.states.get(ATTR_OFFSET).state == -10
-    assert hass.states.get(ATTR_ON).state == True
-    assert hass.states.get(ATTR_SCHEDULE_ON).state == False
+    climate_thermostat = hass.states.get("climate.thermostat")
+    assert climate_thermostat.attributes[ATTR_FLIP_DISPLAY] is False
+    assert climate_thermostat.attributes[ATTR_EXTERNAL_SENSOR_TEMP] == 12.8
+    assert climate_thermostat.attributes[ATTR_EXTERNAL_WINDOW_OPEN] is True
+    assert climate_thermostat.attributes[ATTR_LOCKED] is False
+    assert climate_thermostat.attributes[ATTR_MOUNTING_MODE] is False
+    assert climate_thermostat.attributes[ATTR_OFFSET] == -10
+    assert climate_thermostat.attributes[ATTR_SCHEDULE_ON] is False
 
     # Event signals thermostat configured off
 
