@@ -63,7 +63,7 @@ def trigger_import(hass, config):
         config[CONF_LANGUAGE] = "English"
 
     data = {}
-    for key in [CONF_STATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_LANGUAGE]:
+    for key in (CONF_STATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_LANGUAGE):
         if config.get(key):
             data[key] = config[key]
 
