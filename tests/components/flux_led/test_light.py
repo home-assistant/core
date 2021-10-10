@@ -489,7 +489,7 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
     bulb.raw_state = bulb.raw_state._replace(warm_white=1, cool_white=2)
-    bulb.color_modes = {FLUX_COLOR_MODE_RGBWW}
+    bulb.color_modes = {FLUX_COLOR_MODE_RGBWW, FLUX_COLOR_MODE_CCT}
     bulb.color_mode = FLUX_COLOR_MODE_RGBWW
     with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
