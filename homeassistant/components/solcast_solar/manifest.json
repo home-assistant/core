@@ -3,8 +3,6 @@
   "name": "Solcast PV Forecast",
   "version": "1.0.8",
   "config_flow": true,
-  "documentation": "https://github.com/oziee/ha-solcast-solar",
-  "issue_tracker": "https://github.com/oziee/ha-solcast-solar/issues",
   "requirements": ["aiohttp>=3.6.2", "datetime>=4.3", "isodate>=0.6.0", "pysolcast"],
   "dependencies": [],
   "after_dependencies": ["http"],
