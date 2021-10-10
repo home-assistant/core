@@ -277,6 +277,10 @@ class DHCPWatcher(WatcherBase):
 
     async def async_start(self):
         """Start watching for dhcp packets."""
+        await self.hass.async_add_executor_job(self._start)
+
+    def _start(self):
+        """Start watching for dhcp packets."""
         # Local import because importing from scapy has side effects such as opening
         # sockets
         from scapy import (  # pylint: disable=import-outside-toplevel,unused-import  # noqa: F401
@@ -319,7 +323,7 @@ class DHCPWatcher(WatcherBase):
         conf.sniff_promisc = 0
 
         try:
-            await self.hass.async_add_executor_job(_verify_l2socket_setup, FILTER)
+            _verify_l2socket_setup(FILTER)
         except (Scapy_Exception, OSError) as ex:
             if os.geteuid() == 0:
                 _LOGGER.error("Cannot watch for dhcp packets: %s", ex)
@@ -330,7 +334,7 @@ class DHCPWatcher(WatcherBase):
             return
 
         try:
-            await self.hass.async_add_executor_job(_verify_working_pcap, FILTER)
+            _verify_working_pcap(FILTER)
         except (Scapy_Exception, ImportError) as ex:
             _LOGGER.error(
                 "Cannot watch for dhcp packets without a functional packet filter: %s",
