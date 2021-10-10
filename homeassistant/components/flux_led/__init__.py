@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: Final = ["light"]
 DISCOVERY_INTERVAL: Final = timedelta(minutes=15)
-REQUEST_REFRESH_DELAY: Final = 0.65
+REQUEST_REFRESH_DELAY: Final = 1.5
 
 
 async def async_wifi_bulb_for_host(hass: HomeAssistant, host: str) -> WifiLedBulb:
