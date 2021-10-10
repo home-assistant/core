@@ -199,7 +199,7 @@ def async_fix_dimmer_unique_id(
         LIGHT_DOMAIN, DOMAIN, original_unique_id
     )
 
-    # If they are now using the 2021.0/2021.1 rollout rollout entity id
+    # If they are now using the 2021.0/2021.1 rollout entity id
     # and have deleted the original entity id, we want to update that entity id
     # so they don't end up with another _2 entity, but only if they deleted
     # the original
