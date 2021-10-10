@@ -110,6 +110,7 @@ async def test_failed_update_and_reconnection(
 ):
     """Test failed update and reconnection."""
     await setup_platform(hass, aioclient_mock, SENSOR_DOMAIN)
+    assert hass.states.get("sensor.power_usage").state == "1580"
     aioclient_mock.clear_requests()
     await mock_responses(hass, aioclient_mock, error=True)
     next_update = dt_util.utcnow() + timedelta(seconds=30)

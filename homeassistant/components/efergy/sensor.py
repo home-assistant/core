@@ -206,8 +206,8 @@ class EfergySensor(EfergyEntity, SensorEntity):
         except (exceptions.DataError, exceptions.ConnectError) as ex:
             if self._attr_available:
                 self._attr_available = False
-                _LOGGER.error("Error getting data from Efergy %s", ex)
+                _LOGGER.error("Error getting data: %s", ex)
             return
         if not self._attr_available:
             self._attr_available = True
-            _LOGGER.info("Connection to Efergy has resumed")
+            _LOGGER.info("Connection has resumed")
