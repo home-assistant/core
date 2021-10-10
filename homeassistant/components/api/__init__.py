@@ -291,6 +291,9 @@ class APIEntityRegistryView(HomeAssistantView):
 
         er = async_get(request.app["hass"])
         entry = er.async_get(entity_id)
+        if not entry:
+            return self.json_message("Entity not found.", HTTPStatus.NOT_FOUND)
+
         return self.json(entry)
 
 
