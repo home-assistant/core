@@ -196,9 +196,9 @@ async def test_rgb_light(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
-    assert attributes[ATTR_COLOR_MODE] == "rgb"
+    assert attributes[ATTR_COLOR_MODE] == "hs"
     assert attributes[ATTR_EFFECT_LIST] == FLUX_EFFECT_LIST
-    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["rgb"]
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["hs"]
     assert attributes[ATTR_HS_COLOR] == (0, 100)
 
     await hass.services.async_call(
@@ -282,9 +282,9 @@ async def test_rgb_cct_light(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
-    assert attributes[ATTR_COLOR_MODE] == "rgb"
+    assert attributes[ATTR_COLOR_MODE] == "hs"
     assert attributes[ATTR_EFFECT_LIST] == FLUX_EFFECT_LIST
-    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "rgb"]
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs"]
     assert attributes[ATTR_HS_COLOR] == (0, 100)
 
     await hass.services.async_call(
@@ -349,7 +349,7 @@ async def test_rgb_cct_light(hass: HomeAssistant) -> None:
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
     assert attributes[ATTR_COLOR_MODE] == "color_temp"
-    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "rgb"]
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs"]
     assert attributes[ATTR_COLOR_TEMP] == 200
 
     await hass.services.async_call(
@@ -696,9 +696,9 @@ async def test_rgb_light_custom_effects(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
-    assert attributes[ATTR_COLOR_MODE] == "rgb"
+    assert attributes[ATTR_COLOR_MODE] == "hs"
     assert attributes[ATTR_EFFECT_LIST] == [*FLUX_EFFECT_LIST, "custom"]
-    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["rgb"]
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["hs"]
     assert attributes[ATTR_HS_COLOR] == (0, 100)
 
     await hass.services.async_call(
@@ -773,9 +773,9 @@ async def test_rgb_light_custom_effects_invalid_colors(hass: HomeAssistant) -> N
     assert state.state == STATE_ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
-    assert attributes[ATTR_COLOR_MODE] == "rgb"
+    assert attributes[ATTR_COLOR_MODE] == "hs"
     assert attributes[ATTR_EFFECT_LIST] == FLUX_EFFECT_LIST
-    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["rgb"]
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["hs"]
     assert attributes[ATTR_HS_COLOR] == (0, 100)
 
 
@@ -802,9 +802,9 @@ async def test_rgb_light_custom_effect_via_service(
     assert state.state == STATE_ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
-    assert attributes[ATTR_COLOR_MODE] == "rgb"
+    assert attributes[ATTR_COLOR_MODE] == "hs"
     assert attributes[ATTR_EFFECT_LIST] == [*FLUX_EFFECT_LIST]
-    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["rgb"]
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["hs"]
     assert attributes[ATTR_HS_COLOR] == (0, 100)
 
     await hass.services.async_call(
