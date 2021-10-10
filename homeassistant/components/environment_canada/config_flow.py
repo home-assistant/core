@@ -41,10 +41,6 @@ class EnvironmentCanadaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
-        """Place to store data between steps."""
-        self._data = {}
-
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
@@ -69,8 +65,9 @@ class EnvironmentCanadaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not errors:
                 user_input[CONF_STATION] = info[CONF_STATION]
 
+                # The combination of station and language are unique for all EC weather reporting
                 await self.async_set_unique_id(
-                    f"{user_input[CONF_STATION]}-{user_input[CONF_LANGUAGE]}"
+                    f"{user_input[CONF_STATION]}-{user_input[CONF_LANGUAGE].lower()}"
                 )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info[CONF_TITLE], data=user_input)
@@ -96,19 +93,13 @@ class EnvironmentCanadaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data):
         """Import entry from configuration.yaml."""
-        existing = await self.async_set_unique_id(
-            f"{import_data[CONF_STATION]}-{import_data[CONF_LANGUAGE].capitalize()}"
+        # Check if not already added to prevent extra calls to the rate limited server
+        await self.async_set_unique_id(
+            f"{import_data[CONF_STATION]}-{import_data[CONF_LANGUAGE].lower()}"
         )
-        if existing:
-            self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured()
 
-        title = import_data[CONF_TITLE]
-        del import_data[CONF_TITLE]
-
-        return self.async_create_entry(
-            title=title,
-            data=import_data,
-        )
+        return await self.async_step_user(import_data)
 
 
 class TooManyAttempts(exceptions.HomeAssistantError):

@@ -33,7 +33,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt
 
 from . import trigger_import
-from .const import CONF_ATTRIBUTION, CONF_LANGUAGE, CONF_STATION, DOMAIN
+from .const import CONF_ATTRIBUTION, CONF_STATION, DOMAIN
 
 CONF_FORECAST = "forecast"
 
@@ -101,16 +101,22 @@ async def async_setup_platform(hass, config, async_add_entries, discovery_info=N
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a weather entity from a config_entry."""
     weather_data = hass.data[DOMAIN][config_entry.entry_id]["weather_data"]
+
     async_add_entities(
         [
             ECWeather(
-                weather_data, f"{config_entry.title}", config_entry.data, "daily"
+                weather_data,
+                f"{config_entry.title}",
+                config_entry.data,
+                "daily",
+                f"{config_entry.unique_id}-daily",
             ),
             ECWeather(
                 weather_data,
                 f"{config_entry.title} Hourly",
                 config_entry.data,
                 "hourly",
+                f"{config_entry.unique_id}-hourly",
             ),
         ]
     )
@@ -119,18 +125,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class ECWeather(WeatherEntity):
     """Representation of a weather condition."""
 
-    def __init__(self, ec_data, name, config, forecast_type):
+    def __init__(self, ec_data, name, config, forecast_type, unique_id):
         """Initialize Environment Canada weather."""
         self.ec_data = ec_data
         self.config = config
-        self._name = name
+        self._attr_name = name
+        self._attr_unique_id = unique_id
         self.forecast_type = forecast_type
-
-    @property
-    def unique_id(self):
-        """Return unique ID."""
-        # The combination of station and language are unique for all EC weather reporting
-        return f"{self.config[CONF_STATION]}-{self.config.get(CONF_LANGUAGE, 'English')}-{self.forecast_type}"
 
     @property
     def attribution(self):
@@ -138,16 +139,13 @@ class ECWeather(WeatherEntity):
         return CONF_ATTRIBUTION
 
     @property
-    def name(self):
-        """Return the name of the weather entity."""
-        return self._name
-
-    @property
     def temperature(self):
         """Return the temperature."""
         if self.ec_data.conditions.get("temperature", {}).get("value"):
             return float(self.ec_data.conditions["temperature"]["value"])
-        if self.ec_data.hourly_forecasts[0].get("temperature"):
+        if self.ec_data.hourly_forecasts and self.ec_data.hourly_forecasts[0].get(
+            "temperature"
+        ):
             return float(self.ec_data.hourly_forecasts[0]["temperature"])
         return None
 
@@ -198,7 +196,9 @@ class ECWeather(WeatherEntity):
 
         if self.ec_data.conditions.get("icon_code", {}).get("value"):
             icon_code = self.ec_data.conditions["icon_code"]["value"]
-        elif self.ec_data.hourly_forecasts[0].get("icon_code"):
+        elif self.ec_data.hourly_forecasts and self.ec_data.hourly_forecasts[0].get(
+            "icon_code"
+        ):
             icon_code = self.ec_data.hourly_forecasts[0]["icon_code"]
 
         if icon_code:
@@ -221,6 +221,8 @@ def get_forecast(ec_data, forecast_type):
 
     if forecast_type == "daily":
         half_days = ec_data.daily_forecasts
+        if not half_days:
+            return None
 
         today = {
             ATTR_FORECAST_TIME: dt.now().isoformat(),

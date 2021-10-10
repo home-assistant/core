@@ -6,6 +6,7 @@ from functools import partial
 import logging
 
 from env_canada import ECData, get_station_coords
+from requests.exceptions import ConnectionError
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
@@ -19,7 +20,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
 from . import trigger_import
-from .const import CONF_ATTRIBUTION, CONF_LANGUAGE, CONF_STATION, DOMAIN
+from .const import CONF_ATTRIBUTION, CONF_STATION, DOMAIN
 
 CONF_LOOP = "loop"
 CONF_PRECIP_TYPE = "precip_type"
@@ -68,14 +69,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a weather entity from a config_entry."""
     radar_data = hass.data[DOMAIN][config_entry.entry_id]["radar_data"]
-    config = config_entry.data
-
-    # The combination of station and language are unique for all EC weather reporting
-    unique_id = f"{config[CONF_STATION]}-{config[CONF_LANGUAGE]}-radar"
 
     async_add_entities(
         [
-            ECCamera(radar_data, f"{config_entry.title} Radar", unique_id),
+            ECCamera(
+                radar_data,
+                f"{config_entry.title} Radar",
+                f"{config_entry.unique_id}-radar",
+            ),
         ]
     )
 
@@ -88,16 +89,11 @@ class ECCamera(Camera):
         super().__init__()
 
         self.radar_object = radar_object
-        self.camera_name = camera_name
-        self.uniqueid = unique_id
+        self._attr_name = camera_name
+        self._attr_unique_id = unique_id
         self.content_type = "image/gif"
         self.image = None
         self.timestamp = None
-
-    @property
-    def unique_id(self):
-        """Return unique ID."""
-        return self.uniqueid
 
     def camera_image(
         self, width: int | None = None, height: int | None = None
@@ -107,13 +103,6 @@ class ECCamera(Camera):
         return self.image
 
     @property
-    def name(self):
-        """Return the name of the camera."""
-        if self.camera_name is not None:
-            return self.camera_name
-        return "Environment Canada Radar"
-
-    @property
     def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return {ATTR_ATTRIBUTION: CONF_ATTRIBUTION, ATTR_UPDATED: self.timestamp}
@@ -121,5 +110,10 @@ class ECCamera(Camera):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update radar image."""
-        self.image = self.radar_object.get_loop()
+        try:
+            self.image = self.radar_object.get_loop()
+        except ConnectionError:
+            _LOGGER.warning("Radar data update failed due to rate limiting")
+            return
+
         self.timestamp = self.radar_object.timestamp

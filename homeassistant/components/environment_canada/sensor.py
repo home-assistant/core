@@ -72,9 +72,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a weather entity from a config_entry."""
     weather_data = hass.data[DOMAIN][config_entry.entry_id]["weather_data"]
     sensor_list = list(weather_data.conditions) + list(weather_data.alerts)
+
     async_add_entities(
         [
-            ECSensor(sensor_type, f"{config_entry.title} {sensor_type}", weather_data)
+            ECSensor(
+                sensor_type,
+                f"{config_entry.title} {sensor_type}",
+                weather_data,
+                f"{config_entry.unique_id}-{sensor_type}",
+            )
             for sensor_type in sensor_list
         ],
         True,
@@ -84,27 +90,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class ECSensor(SensorEntity):
     """Implementation of an Environment Canada sensor."""
 
-    def __init__(self, sensor_type, name, ec_data):
+    def __init__(self, sensor_type, name, ec_data, unique_id):
         """Initialize the sensor."""
         self.sensor_type = sensor_type
         self.ec_data = ec_data
 
-        self._unique_id = None
-        self._name = name
+        self._attr_unique_id = unique_id
+        self._attr_name = name
         self._state = None
         self._attr = None
         self._unit = None
         self._device_class = None
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of the sensor."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def native_value(self):
@@ -135,7 +131,6 @@ class ECSensor(SensorEntity):
         metadata = self.ec_data.metadata
         sensor_data = conditions.get(self.sensor_type)
 
-        self._unique_id = f"{metadata['location']}-{self.sensor_type}"
         self._attr = {}
         value = sensor_data.get("value")
 
@@ -148,7 +143,9 @@ class ECSensor(SensorEntity):
             self._state = str(value).capitalize()
         elif value is not None and len(value) > 255:
             self._state = value[:255]
-            _LOGGER.info("Value for %s truncated to 255 characters", self._unique_id)
+            _LOGGER.info(
+                "Value for %s truncated to 255 characters", self._attr_unique_id
+            )
         else:
             self._state = value
 
