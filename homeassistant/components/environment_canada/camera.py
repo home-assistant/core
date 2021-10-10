@@ -6,7 +6,7 @@ from functools import partial
 import logging
 
 from env_canada import ECData, get_station_coords
-from requests.exceptions import ConnectionError
+from requests.exceptions import ConnectionError as RequestsConnectionError
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
@@ -63,7 +63,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     config[CONF_LATITUDE] = lat
     config[CONF_LONGITUDE] = lon
 
-    trigger_import(hass, ec_data, config)
+    trigger_import(hass, config)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -112,7 +112,7 @@ class ECCamera(Camera):
         """Update radar image."""
         try:
             self.image = self.radar_object.get_loop()
-        except ConnectionError:
+        except RequestsConnectionError:
             _LOGGER.warning("Radar data update failed due to rate limiting")
             return
 

@@ -6,7 +6,7 @@ from env_canada import ECData, ECRadar
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 
-from .const import CONF_LANGUAGE, CONF_STATION, CONF_TITLE, DOMAIN
+from .const import CONF_LANGUAGE, CONF_STATION, DOMAIN
 
 PLATFORMS = ["camera", "sensor", "weather"]
 
@@ -50,7 +50,7 @@ async def async_unload_entry(hass, config_entry):
     return unload_ok
 
 
-def trigger_import(hass, ec_data, config):
+def trigger_import(hass, config):
     """Trigger a import of YAML config into a config_entry."""
     if not config.get(CONF_LANGUAGE):
         config[CONF_LANGUAGE] = "English"
@@ -60,7 +60,6 @@ def trigger_import(hass, ec_data, config):
             DOMAIN,
             context={"source": SOURCE_IMPORT},
             data={
-                CONF_TITLE: ec_data.metadata.get("location"),
                 CONF_STATION: config[CONF_STATION],
                 CONF_LATITUDE: config[CONF_LATITUDE],
                 CONF_LONGITUDE: config[CONF_LONGITUDE],

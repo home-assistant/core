@@ -65,7 +65,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         ec_data = await hass.async_add_executor_job(weather_init)
         config[CONF_STATION] = ec_data.station_id
 
-    trigger_import(hass, ec_data, config)
+    trigger_import(hass, config)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
