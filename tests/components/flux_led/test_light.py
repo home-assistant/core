@@ -64,8 +64,8 @@ from . import (
     _mocked_bulb,
     _patch_discovery,
     _patch_wifibulb,
-    async_mock_bulb_turn_off,
-    async_mock_bulb_turn_on,
+    async_mock_device_turn_off,
+    async_mock_device_turn_on,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -206,7 +206,7 @@ async def test_rgb_light(hass: HomeAssistant) -> None:
     )
     bulb.async_turn_off.assert_called_once()
 
-    await async_mock_bulb_turn_off(hass, bulb)
+    await async_mock_device_turn_off(hass, bulb)
     assert hass.states.get(entity_id).state == STATE_OFF
 
     await hass.services.async_call(
@@ -291,7 +291,7 @@ async def test_rgb_cct_light(hass: HomeAssistant) -> None:
         LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     bulb.async_turn_off.assert_called_once()
-    await async_mock_bulb_turn_off(hass, bulb)
+    await async_mock_device_turn_off(hass, bulb)
 
     assert hass.states.get(entity_id).state == STATE_OFF
 
@@ -343,7 +343,7 @@ async def test_rgb_cct_light(hass: HomeAssistant) -> None:
     bulb.raw_state = bulb.raw_state._replace(
         red=0, green=0, blue=0, warm_white=1, cool_white=2
     )
-    await async_mock_bulb_turn_on(hass, bulb)
+    await async_mock_device_turn_on(hass, bulb)
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
     attributes = state.attributes
@@ -410,7 +410,7 @@ async def test_rgbw_light(hass: HomeAssistant) -> None:
         LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     bulb.async_turn_off.assert_called_once()
-    await async_mock_bulb_turn_off(hass, bulb)
+    await async_mock_device_turn_off(hass, bulb)
 
     assert hass.states.get(entity_id).state == STATE_OFF
 
@@ -513,7 +513,7 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
         LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     bulb.async_turn_off.assert_called_once()
-    await async_mock_bulb_turn_off(hass, bulb)
+    await async_mock_device_turn_off(hass, bulb)
 
     assert hass.states.get(entity_id).state == STATE_OFF
 
@@ -640,7 +640,7 @@ async def test_white_light(hass: HomeAssistant) -> None:
         LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     bulb.async_turn_off.assert_called_once()
-    await async_mock_bulb_turn_off(hass, bulb)
+    await async_mock_device_turn_off(hass, bulb)
 
     assert hass.states.get(entity_id).state == STATE_OFF
 
@@ -705,7 +705,7 @@ async def test_rgb_light_custom_effects(hass: HomeAssistant) -> None:
         LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     bulb.async_turn_off.assert_called_once()
-    await async_mock_bulb_turn_off(hass, bulb)
+    await async_mock_device_turn_off(hass, bulb)
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_OFF
 
@@ -720,7 +720,7 @@ async def test_rgb_light_custom_effects(hass: HomeAssistant) -> None:
     )
     bulb.async_set_custom_pattern.reset_mock()
     bulb.preset_pattern_num = EFFECT_CUSTOM_CODE
-    await async_mock_bulb_turn_on(hass, bulb)
+    await async_mock_device_turn_on(hass, bulb)
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
@@ -738,7 +738,7 @@ async def test_rgb_light_custom_effects(hass: HomeAssistant) -> None:
     )
     bulb.async_set_custom_pattern.reset_mock()
     bulb.preset_pattern_num = EFFECT_CUSTOM_CODE
-    await async_mock_bulb_turn_on(hass, bulb)
+    await async_mock_device_turn_on(hass, bulb)
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
@@ -812,7 +812,7 @@ async def test_rgb_light_custom_effect_via_service(
     )
     bulb.async_turn_off.assert_called_once()
 
-    await async_mock_bulb_turn_off(hass, bulb)
+    await async_mock_device_turn_off(hass, bulb)
     assert hass.states.get(entity_id).state == STATE_OFF
 
     await hass.services.async_call(
@@ -911,7 +911,7 @@ async def test_addressable_light(hass: HomeAssistant) -> None:
     )
     bulb.async_turn_off.assert_called_once()
 
-    await async_mock_bulb_turn_off(hass, bulb)
+    await async_mock_device_turn_off(hass, bulb)
     assert hass.states.get(entity_id).state == STATE_OFF
 
     await hass.services.async_call(
@@ -919,7 +919,7 @@ async def test_addressable_light(hass: HomeAssistant) -> None:
     )
     bulb.async_turn_on.assert_called_once()
     bulb.async_turn_on.reset_mock()
-    await async_mock_bulb_turn_on(hass, bulb)
+    await async_mock_device_turn_on(hass, bulb)
 
     with pytest.raises(ValueError):
         await hass.services.async_call(
