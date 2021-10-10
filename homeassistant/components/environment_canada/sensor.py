@@ -137,7 +137,6 @@ class ECSensor(SensorEntity):
 
         self._unique_id = f"{metadata['location']}-{self.sensor_type}"
         self._attr = {}
-        # self._name = sensor_data.get("label")
         value = sensor_data.get("value")
 
         if isinstance(value, list):
