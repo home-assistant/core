@@ -601,3 +601,9 @@ async def test_api_get_entity_registry_entry_not_found(hass, mock_api_client):
     """Test if the endpoint returns a 404 when registry entry not exists."""
     resp = await mock_api_client.get("/api/entity_registry/does_not_exist")
     assert resp.status == const.HTTP_NOT_FOUND
+
+async def test_api_get_entity_registry_read_perm(hass, mock_api_client, hass_admin_user):
+    """Test getting a entity_registry entry requires read permission."""
+    hass_admin_user.mock_policy({})
+    resp = await mock_api_client.get("/api/entity_registry/sensor.test")
+    assert resp.status == 401
