@@ -1,5 +1,5 @@
 """Test the Environment Canada (EC) config flow."""
-from unittest.mock import MagicMock, Mock, PropertyMock, patch
+from unittest.mock import MagicMock, Mock, patch
 import xml.etree.ElementTree as et
 
 import aiohttp
@@ -35,11 +35,11 @@ def mocked_ec(
 ):
     """Mock the env_canada library."""
     ec_mock = MagicMock()
-    type(ec_mock).station_id = PropertyMock(return_value=station_id)
-    type(ec_mock).latitude = PropertyMock(return_value=lat)
-    type(ec_mock).longitude = PropertyMock(return_value=lon)
-    type(ec_mock).language = PropertyMock(return_value=lang)
-    type(ec_mock).metadata = PropertyMock(return_value=metadata)
+    ec_mock.station_id = station_id
+    ec_mock.lat = lat
+    ec_mock.lon = lon
+    ec_mock.language = lang
+    ec_mock.metadata = metadata
 
     if update:
         ec_mock.update = update
@@ -154,6 +154,23 @@ async def test_exception_handling(hass, error):
         await hass.async_block_till_done()
         assert result["type"] == "form"
         assert result["errors"] == {"base": base_error}
+
+
+async def test_lat_or_lon_not_specified(hass):
+    """Test that the import step works."""
+    with mocked_ec(), patch(
+        "homeassistant.components.environment_canada.async_setup_entry",
+        return_value=True,
+    ):
+        fake_config = dict(FAKE_CONFIG)
+        del fake_config[CONF_LATITUDE]
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=fake_config
+        )
+        await hass.async_block_till_done()
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["data"] == FAKE_CONFIG
+        assert result["title"] == FAKE_TITLE
 
 
 async def test_async_step_import(hass):
