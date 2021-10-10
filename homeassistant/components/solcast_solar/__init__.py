@@ -36,7 +36,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     coordinator = SolcastDataCoordinator(hass, entry)
-
+    coordinator.update_interval = None
+    
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
@@ -45,7 +46,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
-    async_track_utc_time_change(hass, coordinator.update_hass, minute=0,second=0, local=True)
+    #every hour
+    async_track_utc_time_change(hass, coordinator.update_hass, minute=0, second=0,local=True)
 
     return True
 
@@ -64,6 +66,20 @@ async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def options_updated_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.data[DOMAIN].async_request_refresh()
+
+async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry):
+    client = hass.data[DOMAIN][entry.unique_id]
+    conf = {}
+
+    for k in entry.data:
+        conf[k] = entry.data[k]
+
+    for k in entry.options:
+        conf[k] = entry.options[k]
+    
+    client.updateConfig(conf)
+    
+    return True 
 
 class SolcastDataCoordinator(DataUpdateCoordinator):
     """Solcast Data Coordinator."""
@@ -160,6 +176,7 @@ class SolcastDataCoordinator(DataUpdateCoordinator):
             elif timesince < time_inbetween:
                 _LOGGER.debug("%s - Last update is less than time interval set", self.logname)
                 _doData1 = False
+                _doData2 = False
             else:
                 _LOGGER.debug("%s - Greater then interval hour since last API get", self.logname)
                 _doData1 = True
@@ -226,11 +243,13 @@ class SolcastDataCoordinator(DataUpdateCoordinator):
             midnightinsevendays = datetime.datetime.astimezone(midnightinsevendays,tz=timezone.utc)
 
             if self.savedata == None:
+                #_LOGGER.warn("self.data is NOTHOING!!!!!")
                 self.savedata = dict({"forecasts": []})
+            else:
+                _LOGGER.warn("self.data is SOMETHING!!!!!")
 
             f = itemgetter('period_end')
             forecastssorted = sorted(forecasts['forecasts'], key=itemgetter('period_end'))
-
             if len(forecastssorted) > 2:
                 pd = parse_datetime(forecastssorted[0]['period_end'])
                 if pd.minute == 30:
@@ -347,7 +366,6 @@ class SolcastDataCoordinator(DataUpdateCoordinator):
         return None
 
     async def update_hass(self, *args):
-        _LOGGER.debug("%s - Solcast API poll count reset to 50", self.logname)
         try:
             return await self.hass.async_add_executor_job(self.update_data)
         except Exception as err:
@@ -355,21 +373,9 @@ class SolcastDataCoordinator(DataUpdateCoordinator):
     
     async def _async_update_data(self) -> dict[str, str]:
         """Update Solcast data."""
+        #_LOGGER.debug("%s - why is this running", self.logname)
         try:
+            
             return await self.hass.async_add_executor_job(self.update_data)
         except Exception as err:
             raise UpdateFailed(err) from err
-        
-    def async_options_updated(hass: HomeAssistant, entry: ConfigEntry):
-        client = hass.data[DOMAIN][entry.unique_id]
-        conf = {}
-
-        for k in entry.data:
-            conf[k] = entry.data[k]
-
-        for k in entry.options:
-            conf[k] = entry.options[k]
-        
-        client.updateConfig(conf)
-        
-        return True 
