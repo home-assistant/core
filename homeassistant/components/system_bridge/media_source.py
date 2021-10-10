@@ -56,10 +56,10 @@ class SystemBridgeSource(MediaSource):
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
-        path, mimeType = tuple(item.identifier.split("~~", 1))
+        path, mime_type = tuple(item.identifier.split("~~", 1))
         return PlayMedia(
             self.bridge.get_filesystem_file_data_url(path),
-            mimeType,
+            mime_type,
         )
 
     async def async_browse_media(
