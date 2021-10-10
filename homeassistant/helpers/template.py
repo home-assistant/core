@@ -1204,20 +1204,15 @@ def utcnow(hass: HomeAssistant) -> datetime:
     return dt_util.utcnow()
 
 
-def datetime_today(hass: HomeAssistant, time_of_day: str = "") -> datetime:
+def datetime_today(hass: HomeAssistant, time_str: str = "") -> datetime:
     """Record fetching now where the time has been replaced with value."""
-    this_moment = now(hass).replace(microsecond=0)
+    start = dt_util.start_of_local_day(datetime.now())
 
-    keys = ["hour", "minute", "second", "microsecond"]
-    kwargs = dict.fromkeys(keys, 0)
+    dttime = dt_util.parse_time(time_str)
+    if dttime is None:
+        dttime = start.time()
 
-    if time_of_day:
-        values = time_of_day.split(":")
-        if len(values) in [2, 3]:
-            for key, value in zip(keys, values):
-                kwargs[key] = convert(value, int)
-
-    return this_moment.replace(**kwargs)
+    return datetime.combine(start.date(), dttime, tzinfo=dt_util.DEFAULT_TIME_ZONE)
 
 
 def warn_no_default(function, value, default):
