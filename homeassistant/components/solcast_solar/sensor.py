@@ -3,20 +3,30 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.sensor import (SensorEntity,
-                                                SensorEntityDescription)
+from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (ATTR_IDENTIFIERS, ATTR_MANUFACTURER,
-                                    ATTR_MODEL, ATTR_NAME, DEVICE_CLASS_ENERGY,
-                                    DEVICE_CLASS_TIMESTAMP, ENERGY_KILO_WATT_HOUR)
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_TIMESTAMP,
+    ENERGY_KILO_WATT_HOUR,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (CoordinatorEntity,
-                                                        DataUpdateCoordinator)
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from . import SolcastDataCoordinator
-from .const import ATTR_ENTRY_TYPE, ATTRIBUTION, DOMAIN, ENTRY_TYPE_SERVICE
+from .const import ATTR_ENTRY_TYPE, DOMAIN, ENTRY_TYPE_SERVICE
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -65,9 +75,10 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="API calls remaining",
         entity_registry_enabled_default=False,
         device_class="api_count",
-        icon="mdi:cloud-download-outline"
+        icon="mdi:cloud-download-outline",
     ),
 )
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -81,8 +92,8 @@ async def async_setup_entry(
             entry_id=entry.entry_id,
             coordinator=coordinator,
             entity_description=description,
-            myIntegrationName=entry.title
-        ) 
+            myIntegrationName=entry.title,
+        )
         for description in SENSOR_TYPES
     )
 
@@ -96,7 +107,7 @@ class SolcastSensor(CoordinatorEntity, SensorEntity):
         self,
         *,
         entry_id: str,
-        coordinator: DataUpdateCoordinator, #SolcastDataCoordinator
+        coordinator: DataUpdateCoordinator,  # SolcastDataCoordinator
         entity_description: SensorEntityDescription,
         myIntegrationName: str,
     ) -> None:
@@ -108,7 +119,7 @@ class SolcastSensor(CoordinatorEntity, SensorEntity):
 
         self._attr_device_info = {
             ATTR_IDENTIFIERS: {(DOMAIN, entry_id)},
-            ATTR_NAME: myIntegrationName ,
+            ATTR_NAME: myIntegrationName,
             ATTR_MANUFACTURER: "Solcast Solar",
             ATTR_MODEL: "Solcast API",
             ATTR_ENTRY_TYPE: ENTRY_TYPE_SERVICE,
@@ -117,7 +128,7 @@ class SolcastSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self):
         """State of the sensor."""
-        
+
         state = self.coordinator.data[self.entity_description.key]
 
         if isinstance(state, datetime):
@@ -126,7 +137,6 @@ class SolcastSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-        False if entity pushes its state to HA.
-        """
+        """HA to poll or not."""
+
         return False

@@ -181,6 +181,9 @@ aioharmony==0.2.7
 # homeassistant.components.homekit_controller
 aiohomekit==0.6.3
 
+# homeassistant.components.solcast_solar
+aiohttp==3.6.2
+
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
 aiohttp_cors==0.7.0
@@ -509,6 +512,9 @@ datadog==0.15.0
 
 # homeassistant.components.metoffice
 datapoint==0.9.8
+
+# homeassistant.components.solcast_solar
+datetime==4.3
 
 # homeassistant.components.debugpy
 debugpy==1.5.0
@@ -886,6 +892,9 @@ iperf3==0.1.11
 
 # homeassistant.components.gogogate2
 ismartgate==4.0.0
+
+# homeassistant.components.solcast_solar
+isodate==0.6.0
 
 # homeassistant.components.rest
 jsonpath==0.82
@@ -1815,6 +1824,9 @@ pysml==0.0.5
 
 # homeassistant.components.snmp
 pysnmp==4.4.12
+
+# homeassistant.components.solcast_solar
+pysolcast==1.0.7
 
 # homeassistant.components.soma
 pysoma==0.0.10

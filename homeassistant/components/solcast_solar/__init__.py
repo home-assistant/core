@@ -3,21 +3,20 @@ from __future__ import annotations
 
 import base64
 import datetime
+from datetime import date, timedelta, timezone
 import json
 import logging
-import traceback
-from datetime import date, timedelta, timezone
 from operator import itemgetter
+import traceback
+
+from isodate import parse_datetime, parse_duration
+from pysolcast.exceptions import RateLimitExceeded, SiteError, ValidationError
+from pysolcast.rooftop import RooftopSite
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_utc_time_change
-from homeassistant.helpers.update_coordinator import (DataUpdateCoordinator,
-                                                        UpdateFailed)
-from isodate import parse_datetime, parse_duration
-from pysolcast.exceptions import RateLimitExceeded, SiteError, ValidationError
-from pysolcast.rooftop import RooftopSite
-from requests import get
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_APIKEY, CONF_POLL_INTERVAL, CONF_ROOFTOP, DOMAIN
 
@@ -25,11 +24,13 @@ PLATFORMS = ["sensor"]
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Reload config entry."""
     unloaded = await async_unload_entry(hass, entry)
     if unloaded:
         await async_setup_entry(hass, entry)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Solcast Solar from a config entry."""
@@ -37,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = SolcastDataCoordinator(hass, entry)
     coordinator.update_interval = None
-    
+
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
@@ -46,28 +47,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
-    #every hour
-    async_track_utc_time_change(hass, coordinator.update_hass, minute=0, second=0,local=True)
+    # every hour
+    async_track_utc_time_change(
+        hass, coordinator.update_hass, minute=0, second=0, local=True
+    )
 
     return True
+
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
-    
+
     return unload_ok
+
 
 async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update options."""
     await hass.config_entries.async_reload(entry.entry_id)
 
+
 async def options_updated_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
+    """Handle options update listener."""
     await hass.data[DOMAIN].async_request_refresh()
 
+
 async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry):
+    """Handle options update."""
     client = hass.data[DOMAIN][entry.unique_id]
     conf = {}
 
@@ -76,10 +84,11 @@ async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry):
 
     for k in entry.options:
         conf[k] = entry.options[k]
-    
+
     client.updateConfig(conf)
-    
-    return True 
+
+    return True
+
 
 class SolcastDataCoordinator(DataUpdateCoordinator):
     """Solcast Data Coordinator."""
@@ -88,11 +97,11 @@ class SolcastDataCoordinator(DataUpdateCoordinator):
         """Initialize the data object."""
         self.hass = hass
         self.entry: ConfigEntry = entry
-        self.savedata: dict | None = None
-        self.wh_days: dict[datetime.datetime, float] | None = None
-        self.wh_hours: dict[datetime.datetime, float] | None = None
-        self.api_remaining: int | None = entry.data['apiremaining']
-        self.last_update: int | None = entry.data['last_update']
+        self.savedata: dict = {}
+        self.wh_days: dict = {}
+        self.wh_hours: dict = {}
+        self.api_remaining: int = int(entry.data["apiremaining"])
+        self.last_update: int | None = entry.data["last_update"]
         self.poll_interval = entry.options[CONF_POLL_INTERVAL]
         api_key = entry.options.get(CONF_APIKEY)
         rooftop_id = entry.options.get(CONF_ROOFTOP)
@@ -114,7 +123,7 @@ class SolcastDataCoordinator(DataUpdateCoordinator):
     def energy_production_tomorrow(self) -> float:
         """Return estimated energy produced today."""
         return self.day_production(datetime.datetime.now().date() + timedelta(days=1))
-    
+
     def day_production(self, specific_date: date) -> float:
         """Return the day production."""
         for timestamp, production in self.wh_days.items():
@@ -153,182 +162,337 @@ class SolcastDataCoordinator(DataUpdateCoordinator):
                 total += wh
 
         return total
-        
+
+    def calc_which_forecast_request(self):
+        """calc_which_forecast_request."""
+        _doData1 = False
+        _doData2 = False
+        n = datetime.datetime.now()
+
+        time_inbetween = (self.poll_interval * 3600) - 10
+        timesince = (
+            int(datetime.datetime.now().strftime("%Y%m%d%H%M%S")) - self.last_update
+        )
+
+        if self.last_update == 19800413000000:
+            # never run.. default value
+            _LOGGER.debug(
+                "%s - First time this integration has been run.. setting up",
+                self.logname,
+            )
+            _doData1 = True
+            _doData2 = True
+        elif timesince < time_inbetween:
+            _LOGGER.debug(
+                "%s - Last update is less than time interval set", self.logname
+            )
+            _doData1 = False
+            _doData2 = False
+        else:
+            _LOGGER.debug(
+                "%s - Greater then interval hour since last API get", self.logname
+            )
+            _doData1 = True
+            _doData2 = True
+
+            if n.hour < 5 or n.hour > 19:
+                _LOGGER.debug(
+                    "%s - Outside of 5am till 7pm polling API time", self.logname
+                )
+                # the API is only polled between 5am and 7pm
+                _doData1 = False
+
+            if (
+                n.hour == 10
+                or n.hour == 12
+                or n.hour == 14
+                or n.hour == 16
+                or n.hour == 19
+            ):
+                _LOGGER.debug("%s - API polling for actual forecast data", self.logname)
+                _doData2 = True
+            else:
+                _doData2 = False
+
+        return _doData1, _doData2
+
+    def get_forecast_requests(self, do1: bool = False, do2: bool = False):
+        """get_forecast_requests."""
+        _dontsave = False
+        try:
+            if do1 and do2:
+                _LOGGER.debug(
+                    "%s - Polling API for both Forecasts and Actuals data",
+                    self.logname,
+                )
+                forecasts = self.client.get_forecasts()
+                actuals = self.client.get_estimated_actuals()
+                forecasts = dict(
+                    {
+                        "forecasts": (
+                            forecasts.get("forecasts")
+                            + actuals.get("estimated_actuals")
+                        )
+                    }
+                )
+            elif do1:
+                _LOGGER.debug("%s - Only polling API for Forecasts data", self.logname)
+                forecasts = self.client.get_forecasts()
+            elif do2:
+                _LOGGER.debug("%s - Only polling API for Actuals data", self.logname)
+                forecasts = dict({"forecasts": []})
+                actuals = self.client.get_estimated_actuals()
+                forecasts = dict(
+                    {
+                        "forecasts": (
+                            forecasts.get("forecasts")
+                            + actuals.get("estimated_actuals")
+                        )
+                    }
+                )
+            else:
+                _LOGGER.debug(
+                    "%s - Not polling API. Loading last saved data", self.logname
+                )
+                _dontsave = True
+
+            if self.api_remaining == 0:
+                self.api_remaining = 50
+
+        except SiteError as err:
+            _LOGGER.error("%s - SiteError: %s", self.logname, err)
+            _dontsave = True
+        except ValidationError as err:
+            _LOGGER.error("%s - ValidationError: %s", self.logname, err)
+            _dontsave = True
+        except RateLimitExceeded:
+            _LOGGER.error(
+                "%s - API rate limit exceeded. Will reset at midnight UTC",
+                self.logname,
+            )
+            _dontsave = True
+            self.api_remaining = 0
+
+        if _dontsave:
+            return True
+        else:
+            return forecasts
+
+    def clean_first_and_last_record(self, forecasts: dict):
+        """clean_first_and_last_record."""
+        forecastssorted = sorted(forecasts["forecasts"], key=itemgetter("period_end"))
+        if len(forecastssorted) > 2:
+            pd = parse_datetime(forecastssorted[0]["period_end"])
+            if pd.minute == 30:
+                del forecastssorted[0]
+            pd = parse_datetime(forecastssorted[-1]["period_end"])
+            if pd.minute == 0:
+                del forecastssorted[-1]
+
+        return dict({"forecasts": forecastssorted})
+
+    def format_forecast_data_dates_and_power(self, forecasts: dict):
+        """format_forecast_data_dates_and_power."""
+        try:
+            _lastcheck = datetime.datetime.strptime(
+                str(self.last_update), "%Y%m%d%H%M%S"
+            )
+
+            midnightsevenago = datetime.datetime(
+                _lastcheck.year, _lastcheck.month, _lastcheck.day, 0, 0, 0, 0
+            ) + timedelta(days=-6)
+            midnightsevenago = datetime.datetime.astimezone(
+                midnightsevenago, tz=timezone.utc
+            )
+
+            midnightinsevendays = datetime.datetime(
+                _lastcheck.year, _lastcheck.month, _lastcheck.day, 0, 0, 0, 0
+            ) + timedelta(days=6)
+            midnightinsevendays = datetime.datetime.astimezone(
+                midnightinsevendays, tz=timezone.utc
+            )
+
+            wattsbefore = -1.0
+            lastforecast: dict = {}
+            for forecast in forecasts["forecasts"]:
+                # Convert period_end and period. All other fields should already be the correct type
+                forecastdate = (
+                    parse_datetime(forecast["period_end"])
+                    .replace(tzinfo=timezone.utc)
+                    .astimezone(tz=None)
+                )
+                watts = float(forecast["pv_estimate"]) * 1000.0
+
+                if (
+                    forecastdate > midnightsevenago
+                    and forecastdate < midnightinsevendays
+                ) and not (watts == 0 and wattsbefore == 0):
+                    if wattsbefore == 0:
+                        # add last forecast
+                        lastforecastdate = (
+                            parse_datetime(lastforecast["period_end"])
+                            .replace(tzinfo=timezone.utc)
+                            .astimezone(tz=None)
+                        )
+                        lastforecast["pv_estimate"] = 0
+                        lastforecast["period_end"] = lastforecastdate
+                        lastforecast["period"] = parse_duration(forecast["period"])
+                        starttime = lastforecast["period_end"] - lastforecast["period"]
+                        lastforecast["period_start"] = starttime
+                        found_index = next(
+                            (
+                                index
+                                for (index, d) in enumerate(
+                                    self.savedata["forecasts"].items()
+                                )
+                                if d["period_end"] == lastforecastdate
+                            ),
+                            None,
+                        )
+                        if found_index is None:
+                            self.savedata["forecasts"].append(lastforecast)
+                        else:
+                            self.savedata["forecasts"][found_index] = lastforecast
+
+                    forecast["pv_estimate"] = watts
+                    forecast["period_end"] = forecastdate
+                    forecast["period"] = parse_duration(forecast["period"])
+                    starttime = forecast["period_end"] - forecast["period"]
+                    forecast["period_start"] = starttime
+                    found_index = next(
+                        (
+                            index
+                            for (index, d) in enumerate(
+                                self.savedata["forecasts"].items()
+                            )
+                            if d["period_end"] == forecastdate
+                        ),
+                        None,
+                    )
+                    if found_index is None:
+                        self.savedata["forecasts"].append(forecast)
+                    else:
+                        self.savedata["forecasts"][found_index] = forecast
+
+                wattsbefore = watts
+                lastforecast = forecast
+
+        except Exception:
+            _LOGGER.error(traceback.format_exc())
+
+    def update_saved_db_data(self, apicounter: int):
+        """update_saved_db_data."""
+        try:
+            self.api_remaining = self.api_remaining - apicounter
+
+            d = int(datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
+            self.last_update = d
+
+            newlist = []
+            for forecast in self.savedata["forecasts"]:
+                newlist.append(
+                    {
+                        "pv_estimate": float(forecast["pv_estimate"]) / 1000.0,
+                        "period_end": forecast["period_end"]
+                        .astimezone(timezone.utc)
+                        .isoformat(),
+                        "period": "PT30M",
+                    }
+                )
+
+            jsondata = json.dumps(newlist, indent=4, sort_keys=True, default=str)
+            encoded_forecasts = base64.urlsafe_b64encode(jsondata.encode()).decode()
+
+            data = {
+                "apiremaining": self.api_remaining,
+                "data": encoded_forecasts,
+                "last_update": d,
+            }
+            self.hass.config_entries.async_update_entry(self.entry, data=data)
+        except Exception:
+            _LOGGER.error(traceback.format_exc())
+
     def update_data(self):
         """Get the latest data from Solcast API."""
         _LOGGER.debug("%s - Executing rooftop date update", self.logname)
-        
+
         try:
             forecasts = {}
-            time_inbetween = (self.poll_interval * 3600) - 10
-            timesince = int(datetime.datetime.now().strftime("%Y%m%d%H%M%S")) - self.last_update
 
-            _doData1 = False
-            _doData2 = False
-            n = datetime.datetime.now()
-            _dontsave = False
+            _doData1, _doData2 = self.calc_which_forecast_request()
 
-            if self.last_update == 19800413000000:
-                #never run.. default value
-                _LOGGER.debug("%s - First time this integration has been run.. setting up", self.logname)
-                _doData1 = True
-                _doData2 = True
-            elif timesince < time_inbetween:
-                _LOGGER.debug("%s - Last update is less than time interval set", self.logname)
-                _doData1 = False
-                _doData2 = False
-            else:
-                _LOGGER.debug("%s - Greater then interval hour since last API get", self.logname)
-                _doData1 = True
-                _doData2 = True
-
-                if n.hour < 5 or n.hour > 19:
-                    _LOGGER.debug("%s - Outside of 5am till 7pm polling API time", self.logname)
-                    #the API is only polled between 5am and 7pm
-                    _doData1 = False
-
-                if n.hour == 10 or n.hour == 12 or n.hour == 14 or n.hour == 16 or n.hour == 19:
-                    _LOGGER.debug("%s - API polling for actual forecast data", self.logname)
-                    _doData2 = True
-                else:
-                    _doData2 = False
-
-            try:
-                if _doData1 and _doData2:
-                    _LOGGER.debug("%s - Polling API for both Forecasts and Actuals data", self.logname)
-                    forecasts = self.client.get_forecasts()
-                    actuals = self.client.get_estimated_actuals()
-                    forecasts = dict({"forecasts": (forecasts.get("forecasts") + actuals.get("estimated_actuals"))})
-                elif _doData1:
-                    _LOGGER.debug("%s - Only polling API for Forecasts data", self.logname)
-                    forecasts = self.client.get_forecasts()
-                elif _doData2:
-                    _LOGGER.debug("%s - Only polling API for Actuals data", self.logname)
-                    forecasts = dict({"forecasts": []})
-                    actuals = self.client.get_estimated_actuals()
-                    forecasts = dict({"forecasts": (forecasts.get("forecasts") + actuals.get("estimated_actuals"))})
-                else:
-                    _LOGGER.debug("%s - Not polling API. Loading last saved data", self.logname)
-                    _dontsave = True
-
-                if self.api_remaining == 0:
-                    self.api_remaining = 50
-
-            except SiteError as err:
-                _LOGGER.error("%s - SiteError: %s", self.logname, err)
-                _dontsave = True
-            except ValidationError as err:
-                _LOGGER.error("%s - ValidationError: %s", self.logname, err)
-                _dontsave = True
-            except RateLimitExceeded as err:
-                _LOGGER.error("%s - API rate limit exceeded. Will reset at midnight UTC", self.logname)
-                _dontsave = True
-                self.api_remaining = 0
+            _dontsave = self.get_forecast_requests(_doData1, _doData2)
 
             if _dontsave:
-                #possible error or just not time to get new data
+                # possible error or just not time to get new data
                 try:
-                    forecasts = json.loads(base64.urlsafe_b64decode(self.entry.data['data'].encode()).decode())
+                    forecasts = json.loads(
+                        base64.urlsafe_b64decode(
+                            self.entry.data["data"].encode()
+                        ).decode()
+                    )
                     forecasts = dict({"forecasts": forecasts})
                     _LOGGER.debug("%s - Saved data loaded", self.logname)
-                except Exception as err:
+                except Exception:
                     _LOGGER.error(traceback.format_exc())
-                
-            _lastcheck = datetime.datetime.strptime(str(self.last_update), "%Y%m%d%H%M%S")
 
-            midnightsevenago = datetime.datetime(_lastcheck.year,_lastcheck.month, _lastcheck.day, 0, 0, 0, 0) + timedelta(days=-6)
-            midnightsevenago = datetime.datetime.astimezone(midnightsevenago,tz=timezone.utc)
-
-            midnightinsevendays = datetime.datetime(_lastcheck.year, _lastcheck.month, _lastcheck.day, 0, 0, 0, 0) + timedelta(days=6)
-            midnightinsevendays = datetime.datetime.astimezone(midnightinsevendays,tz=timezone.utc)
-
-            if self.savedata == None:
-                #_LOGGER.warn("self.data is NOTHOING!!!!!")
+            if len(self.savedata.keys()) == 0:
                 self.savedata = dict({"forecasts": []})
-            else:
-                _LOGGER.warn("self.data is SOMETHING!!!!!")
 
-            f = itemgetter('period_end')
-            forecastssorted = sorted(forecasts['forecasts'], key=itemgetter('period_end'))
-            if len(forecastssorted) > 2:
-                pd = parse_datetime(forecastssorted[0]['period_end'])
-                if pd.minute == 30:
-                    del forecastssorted[0]
-                pd = parse_datetime(forecastssorted[-1]['period_end'])
-                if pd.minute == 0:
-                    del forecastssorted[-1]
-            
-            forecasts = dict({"forecasts": forecastssorted})
+            forecasts = self.clean_first_and_last_record(forecasts)
 
-            try:
-                wattsbefore = -1
-                lastforecast = None
-                for forecast in forecasts['forecasts']:
-                    # Convert period_end and period. All other fields should already be the correct type
-                    forecastdate = parse_datetime(forecast["period_end"]).replace(tzinfo=timezone.utc).astimezone(tz=None)
-                    watts = float(forecast["pv_estimate"]) * 1000.0
+            self.format_forecast_data_dates_and_power(forecasts)
 
-                    if (forecastdate > midnightsevenago and forecastdate < midnightinsevendays) and not (watts == 0 and wattsbefore == 0):
-                        if wattsbefore == 0:
-                            #add last forecast
-                            lastforecastdate = parse_datetime(lastforecast["period_end"]).replace(tzinfo=timezone.utc).astimezone(tz=None)
-                            lastforecast["pv_estimate"] = 0 
-                            lastforecast["period_end"] = lastforecastdate
-                            lastforecast["period"] = parse_duration(forecast["period"])
-                            starttime = lastforecast["period_end"] - lastforecast["period"]
-                            lastforecast["period_start"] = starttime
-                            found_index = next((index for (index, d) in enumerate(self.savedata.get("forecasts")) if d["period_end"] == lastforecastdate), None)
-                            if found_index == None:
-                                self.savedata["forecasts"].append(lastforecast)
-                            else:
-                                self.savedata["forecasts"][found_index] = lastforecast
-
-                        forecast["pv_estimate"] = watts 
-                        forecast["period_end"] = forecastdate
-                        forecast["period"] = parse_duration(forecast["period"])
-                        starttime = forecast["period_end"] - forecast["period"]
-                        forecast["period_start"] = starttime
-                        found_index = next((index for (index, d) in enumerate(self.savedata.get("forecasts")) if d["period_end"] == forecastdate), None)
-                        if found_index == None:
-                            self.savedata["forecasts"].append(forecast)
-                        else:
-                            self.savedata["forecasts"][found_index] = forecast
-
-                    wattsbefore = watts
-                    lastforecast = forecast
-
-            except Exception as err:
-                _LOGGER.error(traceback.format_exc())
-            
             self.wh_days = {}
             self.wh_hours = {}
             try:
                 for item in self.savedata["forecasts"]:
-                    timestamp = item['period_end']
+                    timestamp = item["period_end"]
                     energy = float(item["pv_estimate"]) * 0.5
-                    #wh_hours
-                    d = datetime.datetime(timestamp.year, timestamp.month, timestamp.day, timestamp.hour , 0, 0)
+                    # wh_hours
+                    d = datetime.datetime(
+                        timestamp.year,
+                        timestamp.month,
+                        timestamp.day,
+                        timestamp.hour,
+                        0,
+                        0,
+                    )
                     if d in self.wh_hours:
                         self.wh_hours[d] += round(energy, 3)
                     else:
                         self.wh_hours[d] = round(energy, 3)
-                    #wh_days
-                    d = datetime.datetime(timestamp.year, timestamp.month, timestamp.day)
+                    # wh_days
+                    d = datetime.datetime(
+                        timestamp.year, timestamp.month, timestamp.day
+                    )
                     if d in self.wh_days:
                         self.wh_days[d] += round(energy, 3)
                     else:
                         self.wh_days[d] = round(energy, 3)
-            except Exception as err:
+            except Exception:
                 _LOGGER.error(traceback.format_exc())
 
             self.savedata["wh_days"] = self.wh_days
             self.savedata["wh_hours"] = self.wh_hours
-            self.savedata["energy_production_forecast_today"] = round(self.energy_production_today/1000, 3)
-            self.savedata["sum_energy_production_remaining_today"] = round(self.sum_energy_production_remaining_today()/1000, 3)
-            self.savedata["energy_production_forecast_tomorrow"] = round(self.energy_production_tomorrow/1000, 3)
-            self.savedata["energy_this_hour"] = round(self.sum_energy_production(0)/1000, 3)
-            self.savedata["energy_next_hour"] = round(self.sum_energy_production(1)/1000, 3)
-            self.savedata["last_update"] = datetime.datetime.strptime(str(self.last_update), "%Y%m%d%H%M%S")
+            self.savedata["energy_production_forecast_today"] = round(
+                self.energy_production_today / 1000, 3
+            )
+            self.savedata["sum_energy_production_remaining_today"] = round(
+                self.sum_energy_production_remaining_today() / 1000, 3
+            )
+            self.savedata["energy_production_forecast_tomorrow"] = round(
+                self.energy_production_tomorrow / 1000, 3
+            )
+            self.savedata["energy_this_hour"] = round(
+                self.sum_energy_production(0) / 1000, 3
+            )
+            self.savedata["energy_next_hour"] = round(
+                self.sum_energy_production(1) / 1000, 3
+            )
+            self.savedata["last_update"] = datetime.datetime.strptime(
+                str(self.last_update), "%Y%m%d%H%M%S"
+            )
             self.savedata["solcast_api_poll_counter"] = bool(self.api_remaining > 0)
 
             apicounter = 0
@@ -338,44 +502,27 @@ class SolcastDataCoordinator(DataUpdateCoordinator):
                 apicounter = 1
 
             if not _dontsave:
-                try:
-                    self.api_remaining -= apicounter
-
-                    d = int(datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
-                    self.last_update = d
-
-                    newlist = []
-                    for forecast in self.savedata['forecasts']:
-                        newlist.append({"pv_estimate": float(forecast["pv_estimate"]) / 1000.0,
-                                        "period_end":forecast["period_end"].astimezone(timezone.utc).isoformat(), 
-                                        "period": "PT30M"})
-
-                    jsondata = json.dumps(newlist, indent=4, sort_keys=True, default=str)
-                    encoded_forecasts = base64.urlsafe_b64encode(jsondata.encode()).decode()
-
-                    data = {"apiremaining": self.api_remaining, "data": encoded_forecasts, "last_update": d}
-                    self.hass.config_entries.async_update_entry(self.entry, data=data)
-                except Exception as er:
-                    _LOGGER.error(traceback.format_exc())
+                self.update_saved_db_data(apicounter)
 
             return self.savedata
 
-        except Exception as err:
+        except Exception:
             _LOGGER.error(traceback.format_exc())
 
         return None
 
     async def update_hass(self, *args):
+        """Update hass."""
         try:
             return await self.hass.async_add_executor_job(self.update_data)
         except Exception as err:
             raise UpdateFailed(err) from err
-    
+
     async def _async_update_data(self) -> dict[str, str]:
         """Update Solcast data."""
-        #_LOGGER.debug("%s - why is this running", self.logname)
+        # _LOGGER.debug("%s - why is this running", self.logname)
         try:
-            
+
             return await self.hass.async_add_executor_job(self.update_data)
         except Exception as err:
             raise UpdateFailed(err) from err

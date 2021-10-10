@@ -1,9 +1,9 @@
 {
   "domain": "solcast_solar",
   "name": "Solcast PV Forecast",
-  "version": "1.0.8",
+  "documentation": "https://www.home-assistant.io/integrations/solcast_solar",
   "config_flow": true,
-  "requirements": ["aiohttp>=3.6.2", "datetime>=4.3", "isodate>=0.6.0", "pysolcast"],
+  "requirements": ["aiohttp==3.6.2", "datetime==4.3", "isodate==0.6.0", "pysolcast==1.0.7"],
   "dependencies": [],
   "after_dependencies": ["http"],
   "iot_class": "cloud_polling",
