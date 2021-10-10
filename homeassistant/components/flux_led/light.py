@@ -340,7 +340,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def color_temp(self) -> int:
         """Return the kelvin value of this light in mired."""
-        return color_temperature_kelvin_to_mired(self.color_temp)
+        return color_temperature_kelvin_to_mired(self._bulb.color_temp)
 
     @property
     def rgb_color(self) -> tuple[int, int, int]:

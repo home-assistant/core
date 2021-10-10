@@ -157,6 +157,7 @@ async def test_light_device_registry(
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
+    bulb.version_num = sw_version
     bulb.protocol = protocol
     bulb.raw_state = bulb.raw_state._replace(model_num=model, version_number=sw_version)
     bulb.model_num = model
@@ -337,6 +338,8 @@ async def test_rgb_cct_light(hass: HomeAssistant) -> None:
     bulb.async_set_preset_pattern.reset_mock()
     bulb.color_mode = FLUX_COLOR_MODE_CCT
     bulb.getWhiteTemperature = Mock(return_value=(5000, 128))
+    bulb.color_temp = 5000
+
     bulb.raw_state = bulb.raw_state._replace(
         red=0, green=0, blue=0, warm_white=1, cool_white=2
     )
@@ -716,7 +719,7 @@ async def test_rgb_light_custom_effects(hass: HomeAssistant) -> None:
         [[0, 0, 255], [255, 0, 0]], 88, "jump"
     )
     bulb.async_set_custom_pattern.reset_mock()
-    bulb.raw_state = bulb.raw_state._replace(preset_pattern=EFFECT_CUSTOM_CODE)
+    bulb.preset_pattern_num = EFFECT_CUSTOM_CODE
     await async_mock_bulb_turn_on(hass, bulb)
 
     state = hass.states.get(entity_id)
@@ -734,7 +737,7 @@ async def test_rgb_light_custom_effects(hass: HomeAssistant) -> None:
         [[0, 0, 255], [255, 0, 0]], 88, "jump"
     )
     bulb.async_set_custom_pattern.reset_mock()
-    bulb.raw_state = bulb.raw_state._replace(preset_pattern=EFFECT_CUSTOM_CODE)
+    bulb.preset_pattern_num = EFFECT_CUSTOM_CODE
     await async_mock_bulb_turn_on(hass, bulb)
 
     state = hass.states.get(entity_id)

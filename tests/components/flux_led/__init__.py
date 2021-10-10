@@ -60,9 +60,11 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     bulb.rgbw = (255, 0, 0, 50)
     bulb.rgbww = (255, 0, 0, 50, 0)
     bulb.rgbcw = (255, 0, 0, 0, 50)
+    bulb.color_temp = 2700
     bulb.getWhiteTemperature = MagicMock(return_value=(2700, 128))
     bulb.brightness = 128
     bulb.model_num = 0x35
+    bulb.version_num = 8
     bulb.rgbwcapable = True
     bulb.color_modes = {FLUX_COLOR_MODE_RGB, FLUX_COLOR_MODE_CCT}
     bulb.color_mode = FLUX_COLOR_MODE_RGB
