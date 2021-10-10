@@ -1,6 +1,5 @@
 """The tests for the Monoprice Blackbird media player platform."""
 from collections import defaultdict
-import unittest
 from unittest import mock
 
 import pytest
@@ -60,14 +59,24 @@ class MockBlackbird:
         self.zones[3].av = source_idx
 
 
-class TestBlackbirdSchema(unittest.TestCase):
+class TestBlackbirdSchema:
     """Test Blackbird schema."""
 
-    def test_valid_serial_schema(self):
+    @pytest.mark.parametrize(
+        "key_value",
+        [
+            {"port": "/dev/ttyUSB0"},
+            {"host": "192.168.1.50"},
+        ],
+        ids=[
+            "port",
+            "host",
+        ],
+    )
+    def test_valid_schema(self, key_value):
         """Test valid schema."""
         valid_schema = {
             "platform": "blackbird",
-            "port": "/dev/ttyUSB0",
             "zones": {
                 1: {"name": "a"},
                 2: {"name": "a"},
@@ -89,32 +98,14 @@ class TestBlackbirdSchema(unittest.TestCase):
                 8: {"name": "a"},
             },
         }
+
+        valid_schema.update(key_value)
+
         PLATFORM_SCHEMA(valid_schema)
 
-    def test_valid_socket_schema(self):
-        """Test valid schema."""
-        valid_schema = {
-            "platform": "blackbird",
-            "host": "192.168.1.50",
-            "zones": {
-                1: {"name": "a"},
-                2: {"name": "a"},
-                3: {"name": "a"},
-                4: {"name": "a"},
-                5: {"name": "a"},
-            },
-            "sources": {
-                1: {"name": "a"},
-                2: {"name": "a"},
-                3: {"name": "a"},
-                4: {"name": "a"},
-            },
-        }
-        PLATFORM_SCHEMA(valid_schema)
-
-    def test_invalid_schemas(self):
-        """Test invalid schemas."""
-        schemas = (
+    @pytest.mark.parametrize(
+        "schemas",
+        [
             {},  # Empty
             None,  # None
             # Port and host used concurrently
@@ -165,17 +156,33 @@ class TestBlackbirdSchema(unittest.TestCase):
                 "zones": {1: {"name": "a"}},
                 "sources": {1: {}},
             },
-        )
-        for value in schemas:
-            with pytest.raises(vol.MultipleInvalid):
-                PLATFORM_SCHEMA(value)
+        ],
+        ids=[
+            "Empty",
+            "None",
+            "Port and host used concurrently",
+            "Port or host missing",
+            "Invalid zone number",
+            "Invalid source number",
+            "Zone missing name",
+            "Source missing name",
+        ],
+    )
+    def test_invalid_schemas(
+        self,
+        schemas,
+    ):
+        """Test invalid schemas."""
+        with pytest.raises(vol.MultipleInvalid):
+            PLATFORM_SCHEMA(schemas)
 
 
-class TestBlackbirdMediaPlayer(unittest.TestCase):
+class TestBlackbirdMediaPlayer:
     """Test the media_player module."""
 
-    def setUp(self):
-        """Set up the test case."""
+    @pytest.fixture
+    def blackbird(self):
+        """Fixture for the Blackbird object."""
         self.blackbird = MockBlackbird()
         self.hass = tests.common.get_test_home_assistant()
         self.hass.start()
@@ -203,20 +210,17 @@ class TestBlackbirdMediaPlayer(unittest.TestCase):
         self.media_player = self.hass.data[DATA_BLACKBIRD]["/dev/ttyUSB0-3"]
         self.media_player.hass = self.hass
         self.media_player.entity_id = "media_player.zone_3"
-        self.addCleanup(self.tear_down_cleanup)
-
-    def tear_down_cleanup(self):
-        """Tear down the test case."""
+        yield self
         self.hass.stop()
 
-    def test_setup_platform(self, *args):
+    def test_setup_platform(self, blackbird, *args):
         """Test setting up platform."""
         # One service must be registered
         assert self.hass.services.has_service(DOMAIN, SERVICE_SETALLZONES)
         assert len(self.hass.data[DATA_BLACKBIRD]) == 1
-        assert self.hass.data[DATA_BLACKBIRD]["/dev/ttyUSB0-3"].name == "Zone name"
+        assert self.media_player.name == "Zone name"
 
-    def test_setallzones_service_call_with_entity_id(self):
+    def test_setallzones_service_call_with_entity_id(self, blackbird):
         """Test set all zone source service call with entity id."""
         self.media_player.update()
         assert self.media_player.name == "Zone name"
@@ -236,7 +240,7 @@ class TestBlackbirdMediaPlayer(unittest.TestCase):
         self.media_player.update()
         assert self.media_player.source == "three"
 
-    def test_setallzones_service_call_without_entity_id(self):
+    def test_setallzones_service_call_without_entity_id(self, blackbird):
         """Test set all zone source service call without entity id."""
         self.media_player.update()
         assert self.media_player.name == "Zone name"
@@ -253,7 +257,7 @@ class TestBlackbirdMediaPlayer(unittest.TestCase):
         self.media_player.update()
         assert self.media_player.source == "three"
 
-    def test_update(self):
+    def test_update(self, blackbird):
         """Test updating values from blackbird."""
         assert self.media_player.state is None
         assert self.media_player.source is None
@@ -263,11 +267,11 @@ class TestBlackbirdMediaPlayer(unittest.TestCase):
         assert self.media_player.state == STATE_ON
         assert self.media_player.source == "one"
 
-    def test_name(self):
+    def test_name(self, blackbird):
         """Test name property."""
         assert self.media_player.name == "Zone name"
 
-    def test_state(self):
+    def test_state(self, blackbird):
         """Test state property."""
         assert self.media_player.state is None
 
@@ -278,31 +282,31 @@ class TestBlackbirdMediaPlayer(unittest.TestCase):
         self.media_player.update()
         assert self.media_player.state == STATE_OFF
 
-    def test_supported_features(self):
+    def test_supported_features(self, blackbird):
         """Test supported features property."""
         assert (
             SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
             == self.media_player.supported_features
         )
 
-    def test_source(self):
+    def test_source(self, blackbird):
         """Test source property."""
         assert self.media_player.source is None
         self.media_player.update()
         assert self.media_player.source == "one"
 
-    def test_media_title(self):
+    def test_media_title(self, blackbird):
         """Test media title property."""
         assert self.media_player.media_title is None
         self.media_player.update()
         assert self.media_player.media_title == "one"
 
-    def test_source_list(self):
+    def test_source_list(self, blackbird):
         """Test source list property."""
         # Note, the list is sorted!
         assert self.media_player.source_list == ["one", "two", "three"]
 
-    def test_select_source(self):
+    def test_select_source(self, blackbird):
         """Test source selection methods."""
         self.media_player.update()
 
@@ -319,7 +323,7 @@ class TestBlackbirdMediaPlayer(unittest.TestCase):
         self.media_player.update()
         assert self.media_player.source == "two"
 
-    def test_turn_on(self):
+    def test_turn_on(self, blackbird):
         """Testing turning on the zone."""
         self.blackbird.zones[3].power = False
         self.media_player.update()
@@ -330,7 +334,7 @@ class TestBlackbirdMediaPlayer(unittest.TestCase):
         self.media_player.update()
         assert self.media_player.state == STATE_ON
 
-    def test_turn_off(self):
+    def test_turn_off(self, blackbird):
         """Testing turning off the zone."""
         self.blackbird.zones[3].power = True
         self.media_player.update()
