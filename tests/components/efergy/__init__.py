@@ -57,7 +57,9 @@ async def mock_responses(
 ):
     """Mock responses from Efergy."""
     base_url = "https://engage.efergy.com/mobile_proxy/"
-    api = Efergy(token, async_get_clientsession(hass), utc_offset=hass.config.time_zone)
+    api = Efergy(
+        token, session=async_get_clientsession(hass), utc_offset=hass.config.time_zone
+    )
     offset = api._utc_offset  # pylint: disable=protected-access
     if error:
         aioclient_mock.get(

@@ -29,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Efergy from a config entry."""
     api = Efergy(
         entry.data[CONF_API_KEY],
-        async_get_clientsession(hass),
+        session=async_get_clientsession(hass),
         utc_offset=hass.config.time_zone,
         currency=hass.config.currency,
     )

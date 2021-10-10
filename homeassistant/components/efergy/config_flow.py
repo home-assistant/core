@@ -72,7 +72,7 @@ class EfergyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_try_connect(self, api_key: str) -> tuple[str | None, str | None]:
         """Try connecting to Efergy servers."""
-        api = Efergy(api_key, async_get_clientsession(self.hass))
+        api = Efergy(api_key, session=async_get_clientsession(self.hass))
         try:
             await api.async_status()
         except exceptions.ConnectError:
