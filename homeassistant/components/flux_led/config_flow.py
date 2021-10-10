@@ -4,7 +4,6 @@ from __future__ import annotations
 import logging
 from typing import Any, Final
 
-from flux_led import WifiLedBulb
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -15,7 +14,12 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from . import async_discover_devices, async_wifi_bulb_for_host
+from . import (
+    async_discover_device,
+    async_discover_devices,
+    async_update_entry_from_discovery,
+    async_wifi_bulb_for_host,
+)
 from .const import (
     CONF_CUSTOM_EFFECT_COLORS,
     CONF_CUSTOM_EFFECT_SPEED_PCT,
@@ -33,7 +37,6 @@ from .const import (
 )
 
 CONF_DEVICE: Final = "device"
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,13 +107,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         for entry in self._async_current_entries(include_ignore=False):
             if entry.data[CONF_HOST] == host and not entry.unique_id:
-                name = f"{device[FLUX_MODEL]} {device[FLUX_MAC]}"
-                self.hass.config_entries.async_update_entry(
-                    entry,
-                    data={**entry.data, CONF_NAME: name},
-                    title=name,
-                    unique_id=mac,
-                )
+                async_update_entry_from_discovery(self.hass, entry, device)
                 return self.async_abort(reason="already_configured")
         self.context[CONF_HOST] = host
         for progress in self._async_in_progress():
@@ -157,13 +154,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not (host := user_input[CONF_HOST]):
                 return await self.async_step_pick_device()
             try:
-                await self._async_try_connect(host)
+                device = await self._async_try_connect(host)
             except FLUX_LED_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
             else:
-                return self._async_create_entry_from_device(
-                    {FLUX_MAC: None, FLUX_MODEL: None, FLUX_HOST: host}
-                )
+                if device[FLUX_MAC]:
+                    await self.async_set_unique_id(
+                        dr.format_mac(device[FLUX_MAC]), raise_on_progress=False
+                    )
+                    self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+                return self._async_create_entry_from_device(device)
 
         return self.async_show_form(
             step_id="user",
@@ -204,10 +204,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
         )
 
-    async def _async_try_connect(self, host: str) -> WifiLedBulb:
+    async def _async_try_connect(self, host: str) -> dict[str, Any]:
         """Try to connect."""
         self._async_abort_entries_match({CONF_HOST: host})
-        return await async_wifi_bulb_for_host(self.hass, host)
+        if device := await async_discover_device(self.hass, host):
+            return device
+        bulb = async_wifi_bulb_for_host(host)
+        try:
+            await bulb.async_setup(lambda: None)
+        finally:
+            await bulb.async_stop()
+        return {FLUX_MAC: None, FLUX_MODEL: None, FLUX_HOST: host}
 
 
 class OptionsFlow(config_entries.OptionsFlow):
