@@ -299,7 +299,7 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
         """Return the color_temp of the light."""
         new_range = self._tuya_temp_range()
         tuya_color_temp = self.tuya_device.status.get(self.dp_code_temp, 0)
-        ha_color_temp = (
+        return (
             self.max_mireds
             - self.remap(
                 tuya_color_temp,
@@ -310,7 +310,6 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
             )
             + self.min_mireds
         )
-        return ha_color_temp
 
     @property
     def min_mireds(self) -> int:

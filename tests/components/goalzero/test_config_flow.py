@@ -89,7 +89,9 @@ async def test_flow_user_unknown_error(hass: HomeAssistant):
 
 async def test_dhcp_discovery(hass: HomeAssistant):
     """Test we can process the discovery from dhcp."""
-    with _patch_config_flow_yeti(await _create_mocked_yeti()), _patch_setup():
+
+    mocked_yeti = await _create_mocked_yeti()
+    with _patch_config_flow_yeti(mocked_yeti), _patch_setup():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_DHCP},

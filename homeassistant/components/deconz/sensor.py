@@ -45,7 +45,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 
-from .const import ATTR_DARK, ATTR_ON, NEW_SENSOR
+from .const import ATTR_DARK, ATTR_ON
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
@@ -167,7 +167,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
-            hass, gateway.async_signal_new_device(NEW_SENSOR), async_add_sensor
+            hass,
+            gateway.signal_new_sensor,
+            async_add_sensor,
         )
     )
 
@@ -211,13 +213,13 @@ class DeconzSensor(DeconzDevice, SensorEntity):
         if self._device.secondary_temperature is not None:
             attr[ATTR_TEMPERATURE] = self._device.secondary_temperature
 
-        if self._device.type in Consumption.ZHATYPE:
+        if isinstance(self._device, Consumption):
             attr[ATTR_POWER] = self._device.power
 
-        elif self._device.type in Daylight.ZHATYPE:
+        elif isinstance(self._device, Daylight):
             attr[ATTR_DAYLIGHT] = self._device.daylight
 
-        elif self._device.type in LightLevel.ZHATYPE:
+        elif isinstance(self._device, LightLevel):
 
             if self._device.dark is not None:
                 attr[ATTR_DARK] = self._device.dark
@@ -225,7 +227,7 @@ class DeconzSensor(DeconzDevice, SensorEntity):
             if self._device.daylight is not None:
                 attr[ATTR_DAYLIGHT] = self._device.daylight
 
-        elif self._device.type in Power.ZHATYPE:
+        elif isinstance(self._device, Power):
             attr[ATTR_CURRENT] = self._device.current
             attr[ATTR_VOLTAGE] = self._device.voltage
 
@@ -340,7 +342,7 @@ class DeconzSensorStateTracker:
         if "battery" in self.sensor.changed_keys:
             async_dispatcher_send(
                 self.gateway.hass,
-                self.gateway.async_signal_new_device(NEW_SENSOR),
+                self.gateway.signal_new_sensor,
                 [self.sensor],
             )
 

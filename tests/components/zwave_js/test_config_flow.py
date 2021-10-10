@@ -6,7 +6,7 @@ import aiohttp
 import pytest
 from zwave_js_server.version import VersionInfo
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.zwave_js.config_flow import SERVER_VERSION_TIMEOUT, TITLE
 from homeassistant.components.zwave_js.const import DOMAIN
@@ -46,12 +46,6 @@ CP2652_ZIGBEE_DISCOVERY_INFO = {
     "description": "cp2652",
     "manufacturer": "generic",
 }
-
-
-@pytest.fixture(name="persistent_notification", autouse=True)
-async def setup_persistent_notification(hass):
-    """Set up persistent notification integration."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
 
 @pytest.fixture(name="setup_entry")
@@ -139,7 +133,7 @@ def mock_addon_setup_time():
 
 async def test_manual(hass):
     """Test we create an entry with manual step."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -251,7 +245,6 @@ async def test_manual_already_configured(hass):
     )
     entry.add_to_hass(hass)
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -278,7 +271,6 @@ async def test_supervisor_discovery(
     hass, supervisor, addon_running, addon_options, get_addon_discovery_info
 ):
     """Test flow started from Supervisor discovery."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     addon_options["device"] = "/test"
     addon_options["s0_legacy_key"] = "new123"
@@ -325,7 +317,6 @@ async def test_supervisor_discovery_cannot_connect(
     hass, supervisor, get_addon_discovery_info
 ):
     """Test Supervisor discovery and cannot connect."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -342,7 +333,6 @@ async def test_clean_discovery_on_user_create(
     hass, supervisor, addon_running, addon_options, get_addon_discovery_info
 ):
     """Test discovery flow is cleaned up when a user flow is finished."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     addon_options["device"] = "/test"
     addon_options["s0_legacy_key"] = "new123"
@@ -407,7 +397,6 @@ async def test_abort_discovery_with_existing_entry(
     hass, supervisor, addon_running, addon_options
 ):
     """Test discovery flow is aborted if an entry already exists."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry = MockConfigEntry(
         domain=DOMAIN, data={"url": "ws://localhost:3000"}, title=TITLE, unique_id=1234
@@ -635,7 +624,6 @@ async def test_discovery_addon_not_running(
 ):
     """Test discovery with add-on already installed but not running."""
     addon_options["device"] = None
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -718,7 +706,6 @@ async def test_discovery_addon_not_installed(
 ):
     """Test discovery with add-on not installed."""
     addon_installed.return_value["version"] = None
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -876,7 +863,6 @@ async def test_abort_usb_discovery_aborts_specific_devices(
 
 async def test_not_addon(hass, supervisor):
     """Test opting out of add-on on Supervisor."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -936,7 +922,6 @@ async def test_addon_running(
     addon_options["s2_access_control_key"] = "new456"
     addon_options["s2_authenticated_key"] = "new789"
     addon_options["s2_unauthenticated_key"] = "new987"
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1017,7 +1002,6 @@ async def test_addon_running_failures(
     """Test all failures when add-on is running."""
     addon_options["device"] = "/test"
     addon_options["network_key"] = "abc123"
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1060,7 +1044,6 @@ async def test_addon_running_already_configured(
     )
     entry.add_to_hass(hass)
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -1093,7 +1076,6 @@ async def test_addon_installed(
     get_addon_discovery_info,
 ):
     """Test add-on already installed but not running on Supervisor."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1179,7 +1161,6 @@ async def test_addon_installed_start_failure(
     get_addon_discovery_info,
 ):
     """Test add-on start failure when add-on is installed."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1255,7 +1236,6 @@ async def test_addon_installed_failures(
     get_addon_discovery_info,
 ):
     """Test all failures when add-on is installed."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1322,7 +1302,6 @@ async def test_addon_installed_set_options_failure(
     get_addon_discovery_info,
 ):
     """Test all failures when add-on is installed."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1396,7 +1375,6 @@ async def test_addon_installed_already_configured(
     )
     entry.add_to_hass(hass)
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -1467,7 +1445,6 @@ async def test_addon_not_installed(
 ):
     """Test add-on not installed."""
     addon_installed.return_value["version"] = None
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1553,7 +1530,6 @@ async def test_install_addon_failure(hass, supervisor, addon_installed, install_
     """Test add-on install failure."""
     addon_installed.return_value["version"] = None
     install_addon.side_effect = HassioAPIError()
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
