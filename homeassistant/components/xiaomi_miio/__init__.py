@@ -40,7 +40,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    AuthException,
     ATTR_AVAILABLE,
     CONF_DEVICE,
     CONF_FLOW_TYPE,
@@ -67,6 +66,7 @@ from .const import (
     MODELS_PURIFIER_MIOT,
     MODELS_SWITCH,
     MODELS_VACUUM,
+    AuthException,
     SetupException,
 )
 from .gateway import ConnectXiaomiGateway

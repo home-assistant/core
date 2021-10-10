@@ -13,7 +13,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
-    AuthException,
     CONF_CLOUD_COUNTRY,
     CONF_CLOUD_PASSWORD,
     CONF_CLOUD_SUBDEVICES,
@@ -30,6 +29,7 @@ from .const import (
     MODELS_ALL_DEVICES,
     MODELS_GATEWAY,
     SERVER_COUNTRY_CODES,
+    AuthException,
     SetupException,
 )
 from .device import ConnectXiaomiDevice

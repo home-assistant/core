@@ -11,13 +11,13 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    AuthException,
     ATTR_AVAILABLE,
     CONF_CLOUD_COUNTRY,
     CONF_CLOUD_PASSWORD,
     CONF_CLOUD_SUBDEVICES,
     CONF_CLOUD_USERNAME,
     DOMAIN,
+    AuthException,
     SetupException,
 )
 

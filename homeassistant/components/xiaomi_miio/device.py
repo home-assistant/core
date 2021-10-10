@@ -11,7 +11,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import AuthException, CONF_MAC, CONF_MODEL, DOMAIN, SetupException
+from .const import CONF_MAC, CONF_MODEL, DOMAIN, AuthException, SetupException
 
 _LOGGER = logging.getLogger(__name__)
 
