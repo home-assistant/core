@@ -43,7 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 def validate_station(station):
     """Check that the station ID is well-formed."""
     if station is None:
-        return
+        return None
     if not re.fullmatch(r"[A-Z]{2}/s0000\d{3}", station):
         raise vol.Invalid('Station ID must be of the form "XX/s0000###"')
     return station
@@ -103,8 +103,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     weather_data = hass.data[DOMAIN][config_entry.entry_id]["weather_data"]
     async_add_entities(
         [
-            ECWeather(weather_data, config_entry.data, False),
-            ECWeather(weather_data, config_entry.data, True),
+            ECWeather(
+                weather_data, f"{config_entry.title}", config_entry.data, "daily"
+            ),
+            ECWeather(
+                weather_data,
+                f"{config_entry.title} Hourly",
+                config_entry.data,
+                "hourly",
+            ),
         ]
     )
 
@@ -112,17 +119,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class ECWeather(WeatherEntity):
     """Representation of a weather condition."""
 
-    def __init__(self, ec_data, config, hourly):
+    def __init__(self, ec_data, name, config, forecast_type):
         """Initialize Environment Canada weather."""
         self.ec_data = ec_data
         self.config = config
-        if config.get(CONF_NAME):
-            self.platform_name = f"{config.get(CONF_NAME)}{' Hourly' if hourly else ''}"
-        else:
-            self.platform_name = (
-                f"{ec_data.metadata.get('location')}{' Hourly' if hourly else ''}"
-            )
-        self.forecast_type = "hourly" if hourly else "daily"
+        self._name = name
+        self.forecast_type = forecast_type
 
     @property
     def unique_id(self):
@@ -138,7 +140,7 @@ class ECWeather(WeatherEntity):
     @property
     def name(self):
         """Return the name of the weather entity."""
-        return self.platform_name
+        return self._name
 
     @property
     def temperature(self):

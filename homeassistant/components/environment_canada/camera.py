@@ -75,7 +75,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async_add_entities(
         [
-            ECCamera(radar_data, config.get(CONF_NAME, ""), False, unique_id),
+            ECCamera(radar_data, f"{config_entry.title} Radar", unique_id),
         ]
     )
 
@@ -83,13 +83,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class ECCamera(Camera):
     """Implementation of an Environment Canada radar camera."""
 
-    def __init__(self, radar_object, camera_name, is_loop, unique_id):
+    def __init__(self, radar_object, camera_name, unique_id):
         """Initialize the camera."""
         super().__init__()
 
         self.radar_object = radar_object
         self.camera_name = camera_name
-        self.is_loop = is_loop
         self.uniqueid = unique_id
         self.content_type = "image/gif"
         self.image = None
@@ -122,8 +121,5 @@ class ECCamera(Camera):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update radar image."""
-        if self.is_loop:
-            self.image = self.radar_object.get_loop()
-        else:
-            self.image = self.radar_object.get_latest_frame()
+        self.image = self.radar_object.get_loop()
         self.timestamp = self.radar_object.timestamp

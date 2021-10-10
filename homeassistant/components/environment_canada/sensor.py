@@ -31,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 def validate_station(station):
     """Check that the station ID is well-formed."""
     if station is None:
-        return
+        return None
     if not re.fullmatch(r"[A-Z]{2}/s0000\d{3}", station):
         raise vol.error.Invalid('Station ID must be of the form "XX/s0000###"')
     return station
@@ -73,20 +73,24 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     weather_data = hass.data[DOMAIN][config_entry.entry_id]["weather_data"]
     sensor_list = list(weather_data.conditions) + list(weather_data.alerts)
     async_add_entities(
-        [ECSensor(sensor_type, weather_data) for sensor_type in sensor_list], True
+        [
+            ECSensor(sensor_type, f"{config_entry.title} {sensor_type}", weather_data)
+            for sensor_type in sensor_list
+        ],
+        True,
     )
 
 
 class ECSensor(SensorEntity):
     """Implementation of an Environment Canada sensor."""
 
-    def __init__(self, sensor_type, ec_data):
+    def __init__(self, sensor_type, name, ec_data):
         """Initialize the sensor."""
         self.sensor_type = sensor_type
         self.ec_data = ec_data
 
         self._unique_id = None
-        self._name = None
+        self._name = name
         self._state = None
         self._attr = None
         self._unit = None
@@ -133,7 +137,7 @@ class ECSensor(SensorEntity):
 
         self._unique_id = f"{metadata['location']}-{self.sensor_type}"
         self._attr = {}
-        self._name = sensor_data.get("label")
+        # self._name = sensor_data.get("label")
         value = sensor_data.get("value")
 
         if isinstance(value, list):

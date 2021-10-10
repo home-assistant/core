@@ -4,25 +4,25 @@ import xml.etree.ElementTree as et
 
 import aiohttp
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.environment_canada.const import (
     CONF_LANGUAGE,
     CONF_STATION,
+    CONF_TITLE,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 
 from tests.common import MockConfigEntry
 
 FAKE_CONFIG = {
-    CONF_NAME: "The answer",
     CONF_STATION: "to life",
-    CONF_LANGUAGE: "and everything",
+    CONF_LANGUAGE: "And everything",
     CONF_LATITUDE: 42.42,
     CONF_LONGITUDE: -42.42,
+    CONF_TITLE: "foo",
 }
 
 
@@ -77,22 +77,14 @@ async def test_form(hass):
             },
         )
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-
-        result = await hass.config_entries.flow.async_configure(
-            flow["flow_id"],
-            {CONF_NAME: "SomePlace"},
-        )
-        await hass.async_block_till_done()
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["data"] == {
             "station": "ON/s1234567",
             "latitude": 42.5,
             "longitude": 54.2,
             "language": "English",
-            "name": "SomePlace",
         }
-        assert result["title"] == "SomePlace"
+        assert result["title"] == "foo"
         assert flow["errors"] == {}
 
 
@@ -124,9 +116,7 @@ async def test_create_same_entry_twice(hass):
             },
         )
         await hass.async_block_till_done()
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {"base": "already_configured"}
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
 async def test_too_many_attempts(hass):
@@ -156,7 +146,6 @@ async def test_too_many_attempts(hass):
         (aiohttp.ClientResponseError(Mock(), (), status=400), "error_response"),
         (aiohttp.ClientConnectionError, "cannot_connect"),
         (et.ParseError, "bad_station_id"),
-        (vol.MultipleInvalid, "config_error"),
         (ValueError, "unknown"),
     ],
 )

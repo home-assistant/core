@@ -8,11 +8,10 @@ from env_canada import ECData
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
-from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_LANGUAGE, CONF_STATION, DOMAIN
+from .const import CONF_LANGUAGE, CONF_STATION, CONF_TITLE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,8 +31,8 @@ async def validate_input(hass, data):
         raise TooManyAttempts
 
     return {
-        "title": weather_data.station_id,
-        "name": weather_data.metadata.get("location"),
+        CONF_TITLE: weather_data.metadata.get("location"),
+        CONF_STATION: weather_data.station_id,
     }
 
 
@@ -52,20 +51,8 @@ class EnvironmentCanadaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
-                user_input[CONF_STATION] = info["title"]
-                user_input[CONF_NAME] = info["name"]
-
-                await self.async_set_unique_id(
-                    f"{user_input[CONF_STATION]}-{user_input[CONF_LANGUAGE]}"
-                )
-                self._abort_if_unique_id_configured()
-                self._data = user_input
-                return await self.async_step_name()
-
             except TooManyAttempts:
                 errors["base"] = "too_many_attempts"
-            except AbortFlow:
-                errors["base"] = "already_configured"
             except et.ParseError:
                 errors["base"] = "bad_station_id"
             except aiohttp.ClientConnectionError:
@@ -74,13 +61,19 @@ class EnvironmentCanadaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if err.status == 404:
                     errors["base"] = "bad_station_id"
                 else:
-                    _LOGGER.exception("Error response from EC")
                     errors["base"] = "error_response"
-            except vol.MultipleInvalid:
-                errors["base"] = "config_error"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+
+            if not errors:
+                user_input[CONF_STATION] = info[CONF_STATION]
+
+                await self.async_set_unique_id(
+                    f"{user_input[CONF_STATION]}-{user_input[CONF_LANGUAGE]}"
+                )
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(title=info[CONF_TITLE], data=user_input)
 
         data_schema = vol.Schema(
             {
@@ -91,7 +84,7 @@ class EnvironmentCanadaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(
                     CONF_LONGITUDE, default=self.hass.config.longitude
                 ): cv.longitude,
-                vol.Optional(CONF_LANGUAGE, default="English"): vol.In(
+                vol.Required(CONF_LANGUAGE, default="English"): vol.In(
                     ["English", "French"]
                 ),
             }
@@ -101,37 +94,19 @@ class EnvironmentCanadaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=data_schema, errors=errors
         )
 
-    async def async_step_name(self, user_input=None):
-        """Handle the name step."""
-        errors = {}
-        if user_input is not None:
-            self._data[CONF_NAME] = user_input[CONF_NAME]
-            return self.async_create_entry(title=user_input[CONF_NAME], data=self._data)
-
-        data_schema = vol.Schema(
-            {
-                # vol.Optional(CONF_NAME, default=self._data[CONF_NAME]): str,
-                vol.Optional(
-                    CONF_NAME,
-                    default="",
-                    description={"suggested_value": self._data[CONF_NAME]},
-                ): str,
-            }
-        )
-
-        return self.async_show_form(
-            step_id="name", data_schema=data_schema, errors=errors
-        )
-
     async def async_step_import(self, import_data):
         """Import entry from configuration.yaml."""
         existing = await self.async_set_unique_id(
-            f"{import_data[CONF_STATION]}-{import_data[CONF_LANGUAGE]}"
+            f"{import_data[CONF_STATION]}-{import_data[CONF_LANGUAGE].capitalize()}"
         )
         if existing:
             self._abort_if_unique_id_configured()
+
+        title = import_data[CONF_TITLE]
+        del import_data[CONF_TITLE]
+
         return self.async_create_entry(
-            title=import_data[CONF_NAME],
+            title=title,
             data=import_data,
         )
 
