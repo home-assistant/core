@@ -5,6 +5,7 @@ import asyncio
 from typing import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from flux_led import DeviceType
 from flux_led.aio import AIOWifiLedBulb
 from flux_led.const import (
     COLOR_MODE_CCT as FLUX_COLOR_MODE_CCT,
@@ -43,6 +44,7 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     async def _save_setup_callback(callback: Callable) -> None:
         bulb.data_receive_callback = callback
 
+    bulb.device_type = DeviceType.Bulb
     bulb.async_setup = AsyncMock(side_effect=_save_setup_callback)
     bulb.async_set_custom_pattern = AsyncMock()
     bulb.async_set_preset_pattern = AsyncMock()
@@ -76,16 +78,36 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     return bulb
 
 
-async def async_mock_bulb_turn_off(hass: HomeAssistant, bulb: AIOWifiLedBulb) -> None:
-    """Mock the bulb being off."""
+def _mocked_switch() -> AIOWifiLedBulb:
+    switch = MagicMock(auto_spec=AIOWifiLedBulb)
+
+    async def _save_setup_callback(callback: Callable) -> None:
+        switch.data_receive_callback = callback
+
+    switch.device_type = DeviceType.Switch
+    switch.async_setup = AsyncMock(side_effect=_save_setup_callback)
+    switch.async_stop = AsyncMock()
+    switch.async_update = AsyncMock()
+    switch.async_turn_off = AsyncMock()
+    switch.async_turn_on = AsyncMock()
+    switch.model_num = 0x97
+    switch.version_num = 0x97
+    switch.raw_state = LEDENETRawState(
+        0, 0x97, 0, 0x61, 0x97, 50, 255, 0, 0, 50, 8, 0, 0, 0
+    )
+    return switch
+
+
+async def async_mock_device_turn_off(hass: HomeAssistant, bulb: AIOWifiLedBulb) -> None:
+    """Mock the device being off."""
     bulb.is_on = False
     bulb.raw_state._replace(power_state=0x24)
     bulb.data_receive_callback()
     await hass.async_block_till_done()
 
 
-async def async_mock_bulb_turn_on(hass: HomeAssistant, bulb: AIOWifiLedBulb) -> None:
-    """Mock the bulb being on."""
+async def async_mock_device_turn_on(hass: HomeAssistant, bulb: AIOWifiLedBulb) -> None:
+    """Mock the device being on."""
     bulb.is_on = True
     bulb.raw_state._replace(power_state=0x23)
     bulb.data_receive_callback()
