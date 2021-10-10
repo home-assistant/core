@@ -145,6 +145,27 @@ class RegistryEntry:
 
         hass.states.async_set(self.entity_id, STATE_UNAVAILABLE, attrs)
 
+    def as_dict(self) -> dict:
+        """Return a dict representation of the RegistryEntry."""
+
+        return {
+            "entity_id": self.entity_id,
+            "config_entry_id": self.config_entry_id,
+            "device_id": self.device_id,
+            "area_id": self.area_id,
+            "unique_id": self.unique_id,
+            "platform": self.platform,
+            "name": self.name,
+            "icon": self.icon,
+            "disabled_by": self.disabled_by,
+            "capabilities": self.capabilities,
+            "supported_features": self.supported_features,
+            "device_class": self.device_class,
+            "unit_of_measurement": self.unit_of_measurement,
+            "original_name": self.original_name,
+            "original_icon": self.original_icon,
+        }
+
 
 class EntityRegistry:
     """Class to hold a registry of entities."""
@@ -538,26 +559,7 @@ class EntityRegistry:
         """Return data of entity registry to store in a file."""
         data = {}
 
-        data["entities"] = [
-            {
-                "entity_id": entry.entity_id,
-                "config_entry_id": entry.config_entry_id,
-                "device_id": entry.device_id,
-                "area_id": entry.area_id,
-                "unique_id": entry.unique_id,
-                "platform": entry.platform,
-                "name": entry.name,
-                "icon": entry.icon,
-                "disabled_by": entry.disabled_by,
-                "capabilities": entry.capabilities,
-                "supported_features": entry.supported_features,
-                "device_class": entry.device_class,
-                "unit_of_measurement": entry.unit_of_measurement,
-                "original_name": entry.original_name,
-                "original_icon": entry.original_icon,
-            }
-            for entry in self.entities.values()
-        ]
+        data["entities"] = [entry.as_dict() for entry in self.entities.values()]
 
         return data
 

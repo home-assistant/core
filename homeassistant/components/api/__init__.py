@@ -30,6 +30,7 @@ from homeassistant.const import (
 import homeassistant.core as ha
 from homeassistant.exceptions import ServiceNotFound, TemplateError, Unauthorized
 from homeassistant.helpers import template
+from homeassistant.helpers.entity_registry import async_get
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.service import async_get_all_descriptions
 
@@ -57,6 +58,7 @@ async def async_setup(hass, config):
     hass.http.register_view(APIDiscoveryView)
     hass.http.register_view(APIStatesView)
     hass.http.register_view(APIEntityStateView)
+    hass.http.register_view(APIEntityRegistryView)
     hass.http.register_view(APIEventListenersView)
     hass.http.register_view(APIEventView)
     hass.http.register_view(APIServicesView)
@@ -271,6 +273,25 @@ class APIEntityStateView(HomeAssistantView):
         if request.app["hass"].states.async_remove(entity_id):
             return self.json_message("Entity removed.")
         return self.json_message("Entity not found.", HTTPStatus.NOT_FOUND)
+
+
+class APIEntityRegistryView(HomeAssistantView):
+    """View to handle EventListeners requests."""
+
+    url = "/api/entity_registry/{entity_id}"
+    name = "api:entity-registry"
+
+    @ha.callback
+    def get(self, request, entity_id):
+        """Get event listeners."""
+
+        user = request["hass_user"]
+        if not user.permissions.check_entity(entity_id, POLICY_READ):
+            raise Unauthorized(entity_id=entity_id)
+
+        er = async_get(request.app["hass"])
+        entry = er.async_get(entity_id)
+        return self.json(entry)
 
 
 class APIEventListenersView(HomeAssistantView):
