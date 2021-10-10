@@ -319,13 +319,11 @@ class FluxLight(CoordinatorEntity, LightEntity):
         self._custom_effect_speed_pct = custom_effect_speed_pct
         self._custom_effect_transition = custom_effect_transition
         if self.unique_id:
-            old_protocol = self._bulb.protocol == "LEDENET_ORIGINAL"
-            raw_state = self._bulb.raw_state
             self._attr_device_info = {
                 "connections": {(dr.CONNECTION_NETWORK_MAC, self.unique_id)},
                 ATTR_MODEL: f"0x{self._bulb.model_num:02X}",
                 ATTR_NAME: self.name,
-                ATTR_SW_VERSION: "1" if old_protocol else str(raw_state.version_number),
+                ATTR_SW_VERSION: str(self._bulb.version_num),
                 ATTR_MANUFACTURER: "FluxLED/Magic Home",
             }
 
@@ -342,7 +340,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def color_temp(self) -> int:
         """Return the kelvin value of this light in mired."""
-        return color_temperature_kelvin_to_mired(self._bulb.getWhiteTemperature()[0])
+        return color_temperature_kelvin_to_mired(self.color_temp)
 
     @property
     def rgb_color(self) -> tuple[int, int, int]:
@@ -376,7 +374,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def effect(self) -> str | None:
         """Return the current effect."""
-        if (current_mode := self._bulb.raw_state.preset_pattern) == EFFECT_CUSTOM_CODE:
+        if (current_mode := self._bulb.preset_pattern_num) == EFFECT_CUSTOM_CODE:
             return EFFECT_CUSTOM
         return EFFECT_ID_NAME.get(current_mode)
 
@@ -472,9 +470,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
             raise ValueError(f"Unknown effect {effect}")
         # Handle brightness adjustment in CCT Color Mode
         if self.color_mode == COLOR_MODE_COLOR_TEMP:
-            await self._bulb.async_set_white_temp(
-                self._bulb.getWhiteTemperature()[0], brightness
-            )
+            await self._bulb.async_set_white_temp(self._bulb.color_temp, brightness)
             return
         # Handle brightness adjustment in RGB Color Mode
         if self.color_mode == COLOR_MODE_RGB:
