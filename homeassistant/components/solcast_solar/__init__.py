@@ -375,6 +375,7 @@ class SolcastDataCoordinator(DataUpdateCoordinator):
                         self.savedata["forecasts"][found_index] = forecast
 
                 wattsbefore = watts
+
                 lastforecast = forecast
 
         except Exception:
