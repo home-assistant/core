@@ -10,9 +10,10 @@ import voluptuous as vol
 from homeassistant import const
 from homeassistant.bootstrap import DATA_LOGGING
 import homeassistant.core as ha
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_service
+from tests.common import async_mock_service, mock_registry
 
 
 @pytest.fixture
@@ -576,3 +577,27 @@ async def test_api_get_discovery_info(hass, mock_api_client):
         "uuid": "",
         "version": "",
     }
+
+
+async def test_api_get_entity_registry_entry(hass, mock_api_client):
+    """Test retrieving a registry entry by entity_id."""
+    registry_entry = er.RegistryEntry(
+        entity_id="sensor.test",
+        unique_id="7889fsf",
+        platform="testing",
+    )
+    mock_registry(
+        hass,
+        {"sensor.test": registry_entry},
+    )
+
+    resp = await mock_api_client.get("/api/entity_registry/sensor.test")
+    assert resp.status == 200
+    json = await resp.json()
+    assert json == registry_entry.as_dict()
+
+
+async def test_api_get_entity_registry_entry_not_found(hass, mock_api_client):
+    """Test if the endpoint returns a 404 when registry entry not exists."""
+    resp = await mock_api_client.get("/api/entity_registry/does_not_exist")
+    assert resp.status == const.HTTP_NOT_FOUND
