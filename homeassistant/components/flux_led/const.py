@@ -28,7 +28,6 @@ MODE_AUTO: Final = "auto"
 MODE_RGB: Final = "rgb"
 MODE_RGBW: Final = "rgbw"
 
-
 # This mode enables white value to be controlled by brightness.
 # RGB value is ignored when this mode is specified.
 MODE_WHITE: Final = "w"
