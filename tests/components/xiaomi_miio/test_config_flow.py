@@ -8,7 +8,6 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.xiaomi_miio import const
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
-from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from . import TEST_MAC
 
@@ -613,7 +612,7 @@ async def test_config_flow_step_device_manual_model_succes(hass):
 
     with patch(
         "homeassistant.components.xiaomi_miio.device.Device.info",
-        side_effect=ConfigEntryAuthFailed({}),
+        side_effect=const.AuthException({}),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
