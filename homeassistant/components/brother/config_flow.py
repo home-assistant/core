@@ -60,8 +60,10 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 brother = Brother(user_input[CONF_HOST], snmp_engine=snmp_engine)
                 await brother.async_update()
+
                 await self.async_set_unique_id(brother.serial.lower())
                 self._abort_if_unique_id_configured()
+
                 title = f"{brother.model} {brother.serial}"
                 return self.async_create_entry(title=title, data=user_input)
             except InvalidHost:
