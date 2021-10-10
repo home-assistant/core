@@ -2,6 +2,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import aiohttp
+import pytest
 import whirlpool
 
 from homeassistant.components.climate.const import (
@@ -271,13 +272,14 @@ async def test_service_calls(hass: HomeAssistant, mock_aircon_api: MagicMock):
     )
 
     mock_aircon_api.return_value.set_mode.reset_mock()
-    # HVAC_MODE_DRY should be ignored
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.said1", ATTR_HVAC_MODE: HVAC_MODE_DRY},
-        blocking=True,
-    )
+    # HVAC_MODE_DRY is not supported
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: "climate.said1", ATTR_HVAC_MODE: HVAC_MODE_DRY},
+            blocking=True,
+        )
     mock_aircon_api.return_value.set_mode.assert_not_called()
 
     mock_aircon_api.return_value.set_mode.reset_mock()
@@ -325,13 +327,14 @@ async def test_service_calls(hass: HomeAssistant, mock_aircon_api: MagicMock):
     )
 
     mock_aircon_api.return_value.set_fanspeed.reset_mock()
-    # FAN_MIDDLE should be ignored
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: "climate.said1", ATTR_FAN_MODE: FAN_MIDDLE},
-        blocking=True,
-    )
+    # FAN_MIDDLE is not supported
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: "climate.said1", ATTR_FAN_MODE: FAN_MIDDLE},
+            blocking=True,
+        )
     mock_aircon_api.return_value.set_fanspeed.assert_not_called()
 
     mock_aircon_api.return_value.set_fanspeed.reset_mock()
