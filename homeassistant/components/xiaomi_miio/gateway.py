@@ -7,17 +7,18 @@ from micloud.micloudexception import MiCloudAccessDenied
 from miio import DeviceException, gateway
 from miio.gateway.gateway import GATEWAY_MODEL_EU
 
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
+    AuthException,
     ATTR_AVAILABLE,
     CONF_CLOUD_COUNTRY,
     CONF_CLOUD_PASSWORD,
     CONF_CLOUD_SUBDEVICES,
     CONF_CLOUD_USERNAME,
     DOMAIN,
+    SetupException,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,9 +80,9 @@ class ConnectXiaomiGateway:
             self._gateway_info = self._gateway_device.info()
         except DeviceException as error:
             if isinstance(error.__cause__, ChecksumError):
-                raise ConfigEntryAuthFailed(error) from error
+                raise AuthException(error) from error
 
-            raise ConfigEntryNotReady(
+            raise SetupException(
                 "DeviceException during setup of xiaomi gateway with host {self._host}"
             ) from error
 
@@ -107,25 +108,25 @@ class ConnectXiaomiGateway:
                 or self._cloud_password is None
                 or self._cloud_country is None
             ):
-                raise ConfigEntryAuthFailed(
+                raise AuthException(
                     "Missing cloud credentials in Xiaomi Miio configuration"
                 )
 
             try:
                 miio_cloud = MiCloud(self._cloud_username, self._cloud_password)
                 if not miio_cloud.login():
-                    raise ConfigEntryNotReady(
+                    raise SetupException(
                         "Failed to login to Xiaomi Miio Cloud during setup of Xiaomi"
                         " gateway with host {self._host}",
                     )
                 devices_raw = miio_cloud.get_devices(self._cloud_country)
                 self._gateway_device.get_devices_from_dict(devices_raw)
             except MiCloudAccessDenied as error:
-                raise ConfigEntryAuthFailed(
+                raise AuthException(
                     "Could not login to Xiaomi Miio Cloud, check the credentials"
                 ) from error
             except DeviceException as error:
-                raise ConfigEntryNotReady(
+                raise SetupException(
                     f"DeviceException during setup of xiaomi gateway with host {self._host}"
                 ) from error
 

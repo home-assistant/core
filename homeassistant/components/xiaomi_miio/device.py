@@ -7,12 +7,11 @@ import logging
 from construct.core import ChecksumError
 from miio import Device, DeviceException
 
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_MAC, CONF_MODEL, DOMAIN
+from .const import AuthException, CONF_MAC, CONF_MODEL, DOMAIN, SetupException
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,9 +47,9 @@ class ConnectXiaomiDevice:
             )
         except DeviceException as error:
             if isinstance(error.__cause__, ChecksumError):
-                raise ConfigEntryAuthFailed(error) from error
+                raise AuthException(error) from error
 
-            raise ConfigEntryNotReady(
+            raise SetupException(
                 f"DeviceException during setup of xiaomi device with host {host}"
             ) from error
 
