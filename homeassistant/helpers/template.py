@@ -1204,17 +1204,6 @@ def utcnow(hass: HomeAssistant) -> datetime:
     return dt_util.utcnow()
 
 
-def datetime_today(hass: HomeAssistant, time_str: str = "") -> datetime:
-    """Record fetching now where the time has been replaced with value."""
-    start = dt_util.start_of_local_day(datetime.now())
-
-    dttime = dt_util.parse_time(time_str)
-    if dttime is None:
-        dttime = start.time()
-
-    return datetime.combine(start.date(), dttime, tzinfo=dt_util.DEFAULT_TIME_ZONE)
-
-
 def warn_no_default(function, value, default):
     """Log warning if no default is specified."""
     template, action = template_cv.get() or ("", "rendering or compiling")
@@ -1572,6 +1561,17 @@ def random_every_time(context, values):
     return random.choice(values)
 
 
+def datetime_today(time_str: str = "") -> datetime:
+    """Record fetching now where the time has been replaced with value."""
+    start = dt_util.start_of_local_day(datetime.now())
+
+    dttime = dt_util.parse_time(time_str)
+    if dttime is None:
+        dttime = start.time()
+
+    return datetime.combine(start.date(), dttime, tzinfo=dt_util.DEFAULT_TIME_ZONE)
+
+
 def relative_time(value):
     """
     Take a datetime and return its "age" as a string.
@@ -1720,6 +1720,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["as_datetime"] = dt_util.parse_datetime
         self.globals["as_local"] = dt_util.as_local
         self.globals["as_timestamp"] = forgiving_as_timestamp
+        self.globals["datetime_today"] = datetime_today
         self.globals["relative_time"] = relative_time
         self.globals["timedelta"] = timedelta
         self.globals["strptime"] = strptime
@@ -1781,7 +1782,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "state_attr",
                 "states",
                 "utcnow",
-                "datetime_today",
                 "now",
                 "device_attr",
                 "is_device_attr",
@@ -1807,7 +1807,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["states"] = AllStates(hass)
         self.globals["utcnow"] = hassfunction(utcnow)
         self.globals["now"] = hassfunction(now)
-        self.globals["datetime_today"] = hassfunction(datetime_today)
 
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
