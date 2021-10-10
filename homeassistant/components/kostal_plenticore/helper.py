@@ -7,7 +7,11 @@ from datetime import datetime, timedelta
 import logging
 
 from aiohttp.client_exceptions import ClientError
-from kostal.plenticore import PlenticoreApiClient, PlenticoreAuthenticationException, PlenticoreApiException
+from kostal.plenticore import (
+    PlenticoreApiClient,
+    PlenticoreAuthenticationException,
+    PlenticoreApiException,
+)
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant

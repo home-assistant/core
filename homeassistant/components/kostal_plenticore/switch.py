@@ -121,9 +121,7 @@ class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
 
     async def async_turn_on(self) -> None:
         """Turn device on."""
-        if await self.coordinator.async_write_data(
-            self.module_id, {self.data_id: "1"}
-        ):
+        if await self.coordinator.async_write_data(self.module_id, {self.data_id: "1"}):
             self._last_run_success = True
             await self.coordinator.async_request_refresh()
         else:
@@ -131,9 +129,7 @@ class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
 
     async def async_turn_off(self) -> None:
         """Turn device off."""
-        if await self.coordinator.async_write_data(
-            self.module_id, {self.data_id: "0"}
-        ):
+        if await self.coordinator.async_write_data(self.module_id, {self.data_id: "0"}):
             self._last_run_success = True
             await self.coordinator.async_request_refresh()
         else:
