@@ -29,6 +29,7 @@ MODELS_V2 = [
     "SXR",
     "SXS",
 ]
+ORBI_PORT = 80
 
 # Icons
 DEVICE_ICONS = {
