@@ -9,7 +9,6 @@ from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.environment_canada.const import (
     CONF_LANGUAGE,
     CONF_STATION,
-    CONF_TITLE,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -18,21 +17,21 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from tests.common import MockConfigEntry
 
 FAKE_CONFIG = {
-    CONF_STATION: "to life",
-    CONF_LANGUAGE: "And everything",
+    CONF_STATION: "ON/s1234567",
+    CONF_LANGUAGE: "English",
     CONF_LATITUDE: 42.42,
     CONF_LONGITUDE: -42.42,
-    CONF_TITLE: "foo",
 }
+FAKE_TITLE = "Universal title!"
 
 
 def mocked_ec(
-    station_id="ON/s1234567",
-    lat=42.5,
-    lon=54.2,
-    lang="English",
+    station_id=FAKE_CONFIG[CONF_STATION],
+    lat=FAKE_CONFIG[CONF_LATITUDE],
+    lon=FAKE_CONFIG[CONF_LONGITUDE],
+    lang=FAKE_CONFIG[CONF_LANGUAGE],
     update=None,
-    metadata={"location": "foo"},
+    metadata={"location": FAKE_TITLE},
 ):
     """Mock the env_canada library."""
     ec_mock = MagicMock()
@@ -68,23 +67,12 @@ async def test_form(hass):
         assert flow["errors"] == {}
 
         result = await hass.config_entries.flow.async_configure(
-            flow["flow_id"],
-            {
-                CONF_STATION: "ON/s1234567",
-                CONF_LATITUDE: 42.5,
-                CONF_LONGITUDE: 54.2,
-                CONF_LANGUAGE: "English",
-            },
+            flow["flow_id"], FAKE_CONFIG
         )
         await hass.async_block_till_done()
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["data"] == {
-            "station": "ON/s1234567",
-            "latitude": 42.5,
-            "longitude": 54.2,
-            "language": "English",
-        }
-        assert result["title"] == "foo"
+        assert result["data"] == FAKE_CONFIG
+        assert result["title"] == FAKE_TITLE
         assert flow["errors"] == {}
 
 
@@ -94,8 +82,8 @@ async def test_create_same_entry_twice(hass):
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_STATION: "ON/s1234567", CONF_LANGUAGE: "English"},
-        unique_id="ON/s1234567-English",
+        data=FAKE_CONFIG,
+        unique_id="ON/s1234567-english",
     )
     entry.add_to_hass(hass)
 
@@ -107,13 +95,7 @@ async def test_create_same_entry_twice(hass):
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         result = await hass.config_entries.flow.async_configure(
-            flow["flow_id"],
-            {
-                CONF_STATION: "ON/s1234567",
-                CONF_LATITUDE: 42.5,
-                CONF_LONGITUDE: 54.2,
-                CONF_LANGUAGE: "English",
-            },
+            flow["flow_id"], FAKE_CONFIG
         )
         await hass.async_block_till_done()
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -176,7 +158,7 @@ async def test_exception_handling(hass, error):
 
 async def test_async_step_import(hass):
     """Test that the import step works."""
-    with patch(
+    with mocked_ec(), patch(
         "homeassistant.components.environment_canada.async_setup_entry",
         return_value=True,
     ):
@@ -186,6 +168,7 @@ async def test_async_step_import(hass):
         await hass.async_block_till_done()
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["data"] == FAKE_CONFIG
+        assert result["title"] == FAKE_TITLE
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=FAKE_CONFIG
