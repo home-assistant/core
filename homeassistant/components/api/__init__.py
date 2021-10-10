@@ -289,8 +289,8 @@ class APIEntityRegistryView(HomeAssistantView):
         if not user.permissions.check_entity(entity_id, POLICY_READ):
             raise Unauthorized(entity_id=entity_id)
 
-        er = async_get(request.app["hass"])
-        entry = er.async_get(entity_id)
+        entity_registry = async_get(request.app["hass"])
+        entry = entity_registry.async_get(entity_id)
         if not entry:
             return self.json_message("Entity not found.", HTTPStatus.NOT_FOUND)
 
