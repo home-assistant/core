@@ -52,6 +52,8 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     bulb.async_turn_off = AsyncMock()
     bulb.async_turn_on = AsyncMock()
     bulb.async_set_levels = AsyncMock()
+    bulb.min_temp = 2700
+    bulb.max_temp = 6500
     bulb.getRgb = MagicMock(return_value=[255, 0, 0])
     bulb.getRgbw = MagicMock(return_value=[255, 0, 0, 50])
     bulb.getRgbww = MagicMock(return_value=[255, 0, 0, 50, 0])
