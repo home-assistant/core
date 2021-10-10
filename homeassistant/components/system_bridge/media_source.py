@@ -25,7 +25,7 @@ from .coordinator import SystemBridgeDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-ROOT_PATHS = [
+ROOT_PATHS: list[str] = [
     "desktop",
     "documents",
     "downloads",
@@ -64,7 +64,9 @@ class SystemBridgeSource(MediaSource):
         )
 
     async def async_browse_media(
-        self, item: MediaSourceItem, media_types: tuple[str]
+        self,
+        item: MediaSourceItem,
+        media_types: tuple[str] = ("image",),
     ) -> BrowseMediaSource:
         """Return media."""
         if not item.identifier:
@@ -143,5 +145,4 @@ def _build_media_item(path: str, file: FilesystemFile) -> BrowseMediaSource:
         title=file.name,
         can_play=file.isFile,
         can_expand=file.isDirectory,
-        # thumbnail=file.thumbnail,
     )
