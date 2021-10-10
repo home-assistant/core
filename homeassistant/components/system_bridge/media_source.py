@@ -76,8 +76,6 @@ class SystemBridgeSource(MediaSource):
 
     async def _build_media_items(self, path: str) -> BrowseMediaSource:
         """Fetch requested files."""
-        _LOGGER.debug(f"_build_media_items: {path}")
-
         files: list[FilesystemFile] = await self.bridge.async_get_filesystem_files(path)
 
         return BrowseMediaSource(
@@ -134,7 +132,6 @@ def _build_root_paths(title: str) -> BrowseMediaSource:
 def _build_media_item(path: str, file: FilesystemFile) -> BrowseMediaSource:
     """Build individual media item."""
     ext = f"~~{file.mimeType}" if file.isFile and file.mimeType is not None else ""
-    _LOGGER.debug(f"_build_media_item - {path}: {file.__dict__} - {ext}")
     return BrowseMediaSource(
         domain=DOMAIN,
         identifier=f"{path}/{file.name}{ext}",
