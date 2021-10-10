@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from pyfronius import Fronius, FroniusError, InvalidAnswerError, NotSupportedError
+from pyfronius import Fronius, FroniusError
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -205,13 +205,6 @@ class FroniusAdapter:
         """Retrieve and update latest state."""
         try:
             values = await self._update()
-        except (NotSupportedError, InvalidAnswerError) as err:
-            _LOGGER.error(
-                "Failed to update: invalid response returned. "
-                "Maybe the configured device is not supported.\n%s",
-                err,
-            )
-            return
         except FroniusError as err:
             # fronius devices are often powered by self-produced solar energy
             # and henced turned off at night.
