@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import logging
 
 from aiohttp.client_exceptions import ClientError
-from kostal.plenticore import PlenticoreApiClient, PlenticoreAuthenticationException
+from kostal.plenticore import PlenticoreApiClient, PlenticoreAuthenticationException, PlenticoreApiException
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -184,7 +184,7 @@ class SettingDataUpdateCoordinator(PlenticoreUpdateCoordinator):
         fetched_data = await client.get_setting_values(self._fetch)
         return fetched_data
 
-    async def _async_write_data(self, module_id: str, value: dict[str, str]) -> bool:
+    async def async_write_data(self, module_id: str, value: dict[str, str]) -> bool:
         client = self._plenticore.client
 
         if not self._fetch or client is None:
@@ -192,7 +192,7 @@ class SettingDataUpdateCoordinator(PlenticoreUpdateCoordinator):
 
         try:
             await client.set_setting_values(module_id, value)
-        except:
+        except PlenticoreApiException:
             return False
         else:
             return True
