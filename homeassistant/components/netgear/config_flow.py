@@ -142,9 +142,9 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         updated_data[CONF_PORT] = DEFAULT_PORT
         for model in MODELS_V2:
-            if self.model.startswith(
+            if model.startswith(
                 discovery_info.get(ssdp.ATTR_UPNP_MODEL_NUMBER)
-            ) or self.model.startswith(discovery_info.get(ssdp.ATTR_UPNP_MODEL_NAME)):
+            ) or model.startswith(discovery_info.get(ssdp.ATTR_UPNP_MODEL_NAME)):
                 updated_data[CONF_PORT] = ORBI_PORT
 
         self.placeholders.update(updated_data)
