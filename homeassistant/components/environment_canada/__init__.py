@@ -1,5 +1,6 @@
 """The Environment Canada (EC) component."""
 from functools import partial
+import logging
 
 from env_canada import ECData, ECRadar
 
@@ -9,6 +10,8 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from .const import CONF_LANGUAGE, CONF_STATION, DOMAIN
 
 PLATFORMS = ["camera", "sensor", "weather"]
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry):
@@ -52,18 +55,20 @@ async def async_unload_entry(hass, config_entry):
 
 def trigger_import(hass, config):
     """Trigger a import of YAML config into a config_entry."""
+    _LOGGER.warning(
+        "Environment Canada YAML configuration is deprecated; your YAML configuration "
+        "has been imported into the UI and can be safely removed"
+    )
     if not config.get(CONF_LANGUAGE):
         config[CONF_LANGUAGE] = "English"
 
+    data = {}
+    for key in [CONF_STATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_LANGUAGE]:
+        if config.get(key):
+            data[key] = config[key]
+
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_STATION: config[CONF_STATION],
-                CONF_LATITUDE: config[CONF_LATITUDE],
-                CONF_LONGITUDE: config[CONF_LONGITUDE],
-                CONF_LANGUAGE: config[CONF_LANGUAGE],
-            },
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=data
         )
     )

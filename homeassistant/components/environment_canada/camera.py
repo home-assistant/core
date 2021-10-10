@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 import datetime
-from functools import partial
 import logging
 
-from env_canada import ECData, get_station_coords
+from env_canada import get_station_coords
 from requests.exceptions import ConnectionError as RequestsConnectionError
 import voluptuous as vol
 
@@ -44,10 +43,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Environment Canada camera."""
-    _LOGGER.warning(
-        "Environment Canada YAML configuration is deprecated; your YAML configuration "
-        "has been imported into the UI and can be safely removed"
-    )
     if config.get(CONF_STATION):
         lat, lon = await hass.async_add_executor_job(
             get_station_coords, config[CONF_STATION]
@@ -56,10 +51,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         lat = config.get(CONF_LATITUDE, hass.config.latitude)
         lon = config.get(CONF_LONGITUDE, hass.config.longitude)
 
-    weather_init = partial(ECData, coordinates=(lat, lon))
-    ec_data = await hass.async_add_executor_job(weather_init)
-
-    config[CONF_STATION] = ec_data.station_id
     config[CONF_LATITUDE] = lat
     config[CONF_LONGITUDE] = lon
 

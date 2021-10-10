@@ -30,9 +30,15 @@ async def validate_input(hass, data):
     if weather_data.metadata.get("location") is None:
         raise TooManyAttempts
 
+    if lat is None or lon is None:
+        lat = weather_data.lat
+        lon = weather_data.lon
+
     return {
         CONF_TITLE: weather_data.metadata.get("location"),
         CONF_STATION: weather_data.station_id,
+        CONF_LATITUDE: lat,
+        CONF_LONGITUDE: lon,
     }
 
 
@@ -64,6 +70,8 @@ class EnvironmentCanadaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 user_input[CONF_STATION] = info[CONF_STATION]
+                user_input[CONF_LATITUDE] = info[CONF_LATITUDE]
+                user_input[CONF_LONGITUDE] = info[CONF_LONGITUDE]
 
                 # The combination of station and language are unique for all EC weather reporting
                 await self.async_set_unique_id(
@@ -93,12 +101,6 @@ class EnvironmentCanadaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data):
         """Import entry from configuration.yaml."""
-        # Check if not already added to prevent extra calls to the rate limited server
-        await self.async_set_unique_id(
-            f"{import_data[CONF_STATION]}-{import_data[CONF_LANGUAGE].lower()}"
-        )
-        self._abort_if_unique_id_configured()
-
         return await self.async_step_user(import_data)
 
 

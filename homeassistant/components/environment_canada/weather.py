@@ -1,10 +1,8 @@
 """Platform for retrieving meteorological data from Environment Canada."""
 import datetime
-from functools import partial
 import logging
 import re
 
-from env_canada import ECData
 import voluptuous as vol
 
 from homeassistant.components.weather import (
@@ -79,22 +77,6 @@ ICON_CONDITION_MAP = {
 
 async def async_setup_platform(hass, config, async_add_entries, discovery_info=None):
     """Set up the Environment Canada weather."""
-    _LOGGER.warning(
-        "Environment Canada YAML configuration is deprecated; your YAML configuration "
-        "has been imported into the UI and can be safely removed"
-    )
-    if config.get(CONF_STATION):
-        weather_init = partial(ECData, station_id=config[CONF_STATION])
-        ec_data = await hass.async_add_executor_job(weather_init)
-        config[CONF_LATITUDE] = ec_data.lat
-        config[CONF_LONGITUDE] = ec_data.lon
-    else:
-        lat = config.get(CONF_LATITUDE, hass.config.latitude)
-        lon = config.get(CONF_LONGITUDE, hass.config.longitude)
-        weather_init = partial(ECData, coordinates=(lat, lon))
-        ec_data = await hass.async_add_executor_job(weather_init)
-        config[CONF_STATION] = ec_data.station_id
-
     trigger_import(hass, config)
 
 
