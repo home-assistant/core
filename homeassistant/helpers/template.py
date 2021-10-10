@@ -1204,6 +1204,22 @@ def utcnow(hass: HomeAssistant) -> datetime:
     return dt_util.utcnow()
 
 
+def datetime_today(hass: HomeAssistant, time_of_day: str = "") -> datetime:
+    """Record fetching now where the time has been replaced with value."""
+    this_moment = now(hass).replace(microsecond=0)
+
+    keys = ["hour", "minute", "second", "microsecond"]
+    kwargs = dict.fromkeys(keys, 0)
+
+    if time_of_day:
+        values = time_of_day.split(":")
+        if len(values) in [2, 3]:
+            for key, value in zip(keys, values):
+                kwargs[key] = convert(value, int)
+
+    return this_moment.replace(**kwargs)
+
+
 def warn_no_default(function, value, default):
     """Log warning if no default is specified."""
     template, action = template_cv.get() or ("", "rendering or compiling")
@@ -1770,6 +1786,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "state_attr",
                 "states",
                 "utcnow",
+                "datetime_today",
                 "now",
                 "device_attr",
                 "is_device_attr",
@@ -1795,6 +1812,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["states"] = AllStates(hass)
         self.globals["utcnow"] = hassfunction(utcnow)
         self.globals["now"] = hassfunction(now)
+        self.globals["datetime_today"] = hassfunction(datetime_today)
 
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
