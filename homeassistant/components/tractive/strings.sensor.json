@@ -2,7 +2,9 @@
     "state": {
       "tractive__tracker_state": {
         "not_reporting": "Not reporting",
-        "operational": "Operational"
+        "operational": "Operational",
+        "system_shutdown_user": "System shutdown user",
+        "system_startup": "System startup"
       }
   }
 }

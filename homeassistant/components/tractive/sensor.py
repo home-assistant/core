@@ -139,6 +139,8 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         entity_class=TractiveHardwareSensor,
     ),
     TractiveSensorEntityDescription(
+        # Currently, only state operational and not_reporting are used
+        # More states are available by polling the data
         key=ATTR_TRACKER_STATE,
         name="Tracker state",
         device_class="tractive__tracker_state",
