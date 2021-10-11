@@ -16,7 +16,6 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.loader import async_get_mqtt
 
-from . import CONF_TOPIC
 from .. import mqtt
 from .abbreviations import ABBREVIATIONS, DEVICE_ABBREVIATIONS
 from .const import (
@@ -25,7 +24,6 @@ from .const import (
     ATTR_DISCOVERY_TOPIC,
     DOMAIN,
 )
-from .mixins import CONF_AVAILABILITY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,6 +55,8 @@ SUPPORTED_COMPONENTS = [
 
 ALREADY_DISCOVERED = "mqtt_discovered_components"
 PENDING_DISCOVERED = "mqtt_pending_components"
+CONF_AVAILABILITY = "availability"
+CONF_TOPIC = "topic"
 CONFIG_ENTRY_IS_SETUP = "mqtt_config_entry_is_setup"
 DATA_CONFIG_ENTRY_LOCK = "mqtt_config_entry_lock"
 DATA_CONFIG_FLOW_LOCK = "mqtt_discovery_config_flow_lock"
