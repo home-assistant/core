@@ -30,6 +30,18 @@ BSH_DOOR_STATE_CLOSED = "BSH.Common.EnumType.DoorState.Closed"
 BSH_DOOR_STATE_LOCKED = "BSH.Common.EnumType.DoorState.Locked"
 BSH_DOOR_STATE_OPEN = "BSH.Common.EnumType.DoorState.Open"
 
+FRIDGE_VACATION_MODE = "Refrigeration.Common.Setting.VacationMode"
+FRIDGE_SUPER_MODE = "Refrigeration.FridgeFreezer.Setting.SuperModeRefrigerator"
+FRIDGE_SETPOINT_TEMPERATURE = (
+    "Refrigeration.FridgeFreezer.Setting.SetpointTemperatureRefrigerator"
+)
+FRIDGE_ECO_MODE = "Refrigeration.Common.Setting.EcoMode"
+
+FREEZER_SUPER_MODE = "Refrigeration.FridgeFreezer.Setting.SuperModeFreezer"
+FREEZER_SETPOINT_TEMPERATURE = (
+    "Refrigeration.FridgeFreezer.Setting.SetpointTemperatureFreezer"
+)
+
 SIGNAL_UPDATE_ENTITIES = "home_connect.update_entities"
 
 ATTR_AMBIENT = "ambient"
@@ -40,3 +52,4 @@ ATTR_SENSOR_TYPE = "sensor_type"
 ATTR_SIGN = "sign"
 ATTR_UNIT = "unit"
 ATTR_VALUE = "value"
+ATTR_SETTING = "setting"

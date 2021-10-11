@@ -25,6 +25,7 @@ from .const import (
     ATTR_DEVICE,
     ATTR_KEY,
     ATTR_SENSOR_TYPE,
+    ATTR_SETTING,
     ATTR_SIGN,
     ATTR_UNIT,
     ATTR_VALUE,
@@ -32,6 +33,12 @@ from .const import (
     BSH_OPERATION_STATE,
     BSH_POWER_OFF,
     BSH_POWER_STANDBY,
+    FREEZER_SETPOINT_TEMPERATURE,
+    FREEZER_SUPER_MODE,
+    FRIDGE_ECO_MODE,
+    FRIDGE_SETPOINT_TEMPERATURE,
+    FRIDGE_SUPER_MODE,
+    FRIDGE_VACATION_MODE,
     SIGNAL_UPDATE_ENTITIES,
 )
 
@@ -247,6 +254,57 @@ class DeviceWithRemoteStart(HomeConnectDevice):
             ATTR_DESC: "Remote Start",
             ATTR_SENSOR_TYPE: "remote_start",
         }
+
+
+class DeviceWithSettings(HomeConnectDevice):
+    """Device with settings."""
+
+    SETTINGS = {}
+
+    def get_settings_available(self):
+        """Get the available settings."""
+        available_settings = {}
+        settings = self.appliance.get_settings()
+
+        for setting_name, setting in self.SETTINGS.items():
+            if setting_name in settings:
+                available_settings[setting_name] = setting
+
+        return available_settings
+
+    def get_setting_switches(self):
+        """Get a dictionary with info about setting switches."""
+        switches = []
+        settings = self.get_settings_available()
+        for setting_name, setting in settings.items():
+            if setting.get(ATTR_SENSOR_TYPE) == "switch":
+                switches += [
+                    {
+                        ATTR_DEVICE: self,
+                        ATTR_SETTING: setting_name,
+                        ATTR_DESC: setting.get(ATTR_DESC),
+                        ATTR_ICON: setting.get(ATTR_ICON),
+                    }
+                ]
+
+        return switches
+
+    def get_setting_number_entities(self):
+        """Get a dictionary with info about setting number entities."""
+        number_entities = []
+        settings = self.get_settings_available()
+        for setting_name, setting in settings.items():
+            if setting.get(ATTR_SENSOR_TYPE) == "number":
+                number_entities += [
+                    {
+                        ATTR_DEVICE: self,
+                        ATTR_SETTING: setting_name,
+                        ATTR_DESC: setting.get(ATTR_DESC),
+                        ATTR_ICON: setting.get(ATTR_ICON),
+                    }
+                ]
+
+        return number_entities
 
 
 class Dryer(
@@ -492,13 +550,53 @@ class Hood(
         }
 
 
-class FridgeFreezer(DeviceWithDoor):
+class FridgeFreezer(DeviceWithDoor, DeviceWithSettings):
     """Fridge/Freezer class."""
+
+    SETTINGS = {
+        FRIDGE_VACATION_MODE: {
+            ATTR_SENSOR_TYPE: "switch",
+            ATTR_DESC: "Vacation Mode",
+            ATTR_ICON: "mdi:bag-suitcase",
+        },
+        FRIDGE_SUPER_MODE: {
+            ATTR_SENSOR_TYPE: "switch",
+            ATTR_DESC: "Fridge Super Mode",
+            ATTR_ICON: "mdi:snowflake",
+        },
+        FREEZER_SUPER_MODE: {
+            ATTR_SENSOR_TYPE: "switch",
+            ATTR_DESC: "Freezer Super Mode",
+            ATTR_ICON: "mdi:snowflake",
+        },
+        FRIDGE_ECO_MODE: {
+            ATTR_SENSOR_TYPE: "switch",
+            ATTR_DESC: "Eco Mode",
+        },
+        FRIDGE_SETPOINT_TEMPERATURE: {
+            ATTR_SENSOR_TYPE: "number",
+            ATTR_DESC: "Fridge Setpoint",
+            ATTR_ICON: "mdi:thermometer",
+        },
+        FREEZER_SETPOINT_TEMPERATURE: {
+            ATTR_SENSOR_TYPE: "number",
+            ATTR_DESC: "Freezer Setpoint",
+            ATTR_ICON: "mdi:thermometer",
+        },
+    }
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
         door_entity = self.get_door_entity()
-        return {"binary_sensor": [door_entity]}
+
+        setting_switches = self.get_setting_switches()
+        setting_number_entities = self.get_setting_number_entities()
+
+        return {
+            "binary_sensor": [door_entity],
+            "switch": setting_switches,
+            "number": setting_number_entities,
+        }
 
 
 class Hob(DeviceWithOpState, DeviceWithPrograms, DeviceWithRemoteControl):

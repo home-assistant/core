@@ -7,6 +7,7 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_DEVICE, CONF_ENTITIES
 
 from .const import (
+    ATTR_SETTING,
     ATTR_VALUE,
     BSH_ACTIVE_PROGRAM,
     BSH_OPERATION_STATE,
@@ -28,7 +29,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         hc_api = hass.data[DOMAIN][config_entry.entry_id]
         for device_dict in hc_api.devices:
             entity_dicts = device_dict.get(CONF_ENTITIES, {}).get("switch", [])
-            entity_list = [HomeConnectProgramSwitch(**d) for d in entity_dicts]
+            entity_list = []
+            for d in entity_dicts:
+                if "program_name" in d:
+                    entity_list += HomeConnectProgramSwitch(**d)
+                elif ATTR_SETTING in d:
+                    entity_list += [HomeConnectSettingSwitch(**d)]
             entity_list += [HomeConnectPowerSwitch(device_dict[CONF_DEVICE])]
             entities += entity_list
         return entities
@@ -157,4 +163,65 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             self._state = False
         else:
             self._state = None
+        _LOGGER.debug("Updated, new state: %s", self._state)
+
+
+class HomeConnectSettingSwitch(HomeConnectEntity, SwitchEntity):
+    """Setting switch class for Home Connect."""
+
+    def __init__(self, device, setting, desc, icon):
+        """Initialize the entity."""
+        super().__init__(device, desc)
+        self._state = None
+        self._setting = setting
+        self._icon = icon
+
+    @property
+    def icon(self):
+        """Return the icon."""
+        return self._icon
+
+    @property
+    def is_on(self):
+        """Return true if the switch is on."""
+        return bool(self._state)
+
+    @property
+    def available(self):
+        """Return true if the entity is available."""
+        return True
+
+    async def async_turn_on(self, **kwargs):
+        """Switch on."""
+        _LOGGER.debug("Tried to switch on %s", self.name)
+        try:
+            await self.hass.async_add_executor_job(
+                self.device.appliance.set_setting, self._setting, True
+            )
+        except HomeConnectError as err:
+            _LOGGER.error("Error while trying to turn on switch: %s", err)
+            self._state = False
+        self.async_entity_update()
+
+    async def async_turn_off(self, **kwargs):
+        """Switch off."""
+        _LOGGER.debug("Tried to switch off %s", self.name)
+        try:
+            await self.hass.async_add_executor_job(
+                self.device.appliance.set_setting,
+                self._setting,
+                False,
+            )
+        except HomeConnectError as err:
+            _LOGGER.error("Error while trying to turn off switch: %s", err)
+            self._state = True
+        self.async_entity_update()
+
+    async def async_update(self):
+        """Update the switch's status."""
+        state = self.device.appliance.status.get(self._setting, {})
+        if state.get(ATTR_VALUE):
+            self._state = True
+        else:
+            self._state = False
         _LOGGER.debug("Updated, new state: %s", self._state)
