@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "invalid_auth": "Invalid authentication",
@@ -21,6 +22,13 @@
                     "location_type": "Location"
                 },
                 "description": "Pick a location to monitor:"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Please re-enter the password for {username}.",
+                "title": "Reauthenticate Integration"
             },
             "user": {
                 "data": {
