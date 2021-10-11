@@ -4,11 +4,13 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Callable, Iterable
 import dataclasses
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 from itertools import chain, groupby
 import logging
+from statistics import mean
 from typing import TYPE_CHECKING, Any, Literal
 
+from dateutil.relativedelta import relativedelta
 from sqlalchemy import bindparam, func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext import baked
@@ -108,6 +110,8 @@ QUERY_STATISTIC_META_ID = [
     StatisticsMeta.id,
     StatisticsMeta.statistic_id,
 ]
+
+START_OF_DAY = time(0, 0, 0)
 
 STATISTICS_BAKERY = "recorder_statistics_bakery"
 STATISTICS_META_BAKERY = "recorder_statistics_meta_bakery"
@@ -584,13 +588,106 @@ def _statistics_during_period_query(
     return baked_query  # type: ignore[no-any-return]
 
 
+def _reduce_statistics(
+  stats: dict[str, list[dict[str, Any]]],
+  same_period: Callable[[datetime, datetime], bool],
+  period_start_end: Callable[[datetime], tuple[datetime, datetime]],
+  period: timedelta | relativedelta,
+) -> dict[str, list[dict[str, Any]]]:
+    result: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for statistic_id, stat_list in stats.items():
+        # TODO: Is this needed?
+        """
+        if (
+            values.length > 1 &&
+            new Date(values[0].start).getDate() === new Date(values[1].start).getDate()
+        ) {
+            // add init value if the first value isn't end of previous period
+            result.push({
+            ...values[0]!,
+            start: startOfMonth(addDays(new Date(values[0].start), -1)).toISOString(),
+            });
+        }
+        """
+
+        max_values: list[float] = []
+        mean_values: list[float] = []
+        min_values: list[float] = []
+        prev_stat: dict[str, Any] = stat_list[0]
+        for statistic in chain(stat_list, ({"start": stat_list[-1]["start"] + period}, )):
+            if not same_period(prev_stat["start"], statistic["start"]):
+                start, end = period_start_end(prev_stat["start"])
+                # TODO: Test DST change
+                # TODO: Make sure tests are not in UTC
+                # Last value of the day
+                result[statistic_id].append(
+                    {
+                        "statistic_id": statistic_id,
+                        "start": start.isoformat(),
+                        "end": end.isoformat(),
+                        "mean": mean(mean_values) if mean_values else None,
+                        "min": min(min_values) if min_values else None,
+                        "max": max(max_values) if max_values else None,
+                        "last_reset": prev_stat["last_reset"],
+                        "state": prev_stat["state"],
+                        "sum": prev_stat["sum"],
+                    }
+                )
+                max_values = []
+                mean_values = []
+                min_values = []
+            if statistic.get("max") is not None:
+                max_values.append(statistic["max"])
+            if statistic.get("mean") is not None:
+                mean_values.append(statistic["mean"])
+            if statistic.get("min") is not None:
+                min_values.append(statistic["min"])
+            prev_stat = statistic
+
+    return result
+
+
+def _reduce_statistics_per_day(
+  stats: dict[str, list[dict[str, Any]]]
+) -> dict[str, list[dict[str, Any]]]:
+    def same_period(time1: datetime, time2: datetime) -> bool:
+        date1 = dt_util.as_local(time1).date()
+        date2 = dt_util.as_local(time2).date()
+        _LOGGER.error("same_period: %s, %s, %s, %s, %s", date1 == date2, time1, time2, dt_util.as_local(time1), dt_util.as_local(time2))
+        return date1 == date2
+
+    def period_start_end(time: datetime) -> tuple[datetime, datetime]:
+        start = dt_util.as_utc(dt_util.as_local(time).replace(hour=0, minute=0, second=0, microsecond=0))
+        end = start + timedelta(days=1)
+        return (start, end)
+
+    return _reduce_statistics(stats, same_period, period_start_end, timedelta(days=1))
+
+
+def _reduce_statistics_per_month(
+  stats: dict[str, list[dict[str, Any]]]
+) -> dict[str, list[dict[str, Any]]]:
+    def same_period(time1: datetime, time2: datetime) -> bool:
+        date1 = dt_util.as_local(time1).date()
+        date2 = dt_util.as_local(time2).date()
+        _LOGGER.error("same_period: %s, %s, %s, %s, %s", (date1.year, date1.month) == (date2.year, date2.month), time1, time2, dt_util.as_local(time1), dt_util.as_local(time2))
+        return (date1.year, date1.month) == (date2.year, date2.month)
+
+    def period_start_end(time: datetime) -> tuple[datetime, datetime]:
+        start = dt_util.as_utc(dt_util.as_local(time).replace(day=1, hour=0, minute=0, second=0, microsecond=0))
+        end = start + relativedelta(months=1)
+        return (start, end)
+
+    return _reduce_statistics(stats, same_period, period_start_end, relativedelta(months=1))
+
+
 def statistics_during_period(
     hass: HomeAssistant,
     start_time: datetime,
     end_time: datetime | None = None,
     statistic_ids: list[str] | None = None,
-    period: Literal["hour"] | Literal["5minute"] = "hour",
-) -> dict[str, list[dict[str, str]]]:
+    period: Literal["5minute", "day", "hour", "month"] = "hour",
+) -> dict[str, list[dict[str, Any]]]:
     """Return statistics during UTC period start_time - end_time for the statistic_ids.
 
     If end_time is omitted, returns statistics newer than or equal to start_time.
@@ -607,14 +704,14 @@ def statistics_during_period(
         if statistic_ids is not None:
             metadata_ids = [metadata_id for metadata_id, _ in metadata.values()]
 
-        if period == "hour":
-            bakery = STATISTICS_BAKERY
-            base_query = QUERY_STATISTICS
-            table = Statistics
-        else:
+        if period == "5minute":
             bakery = STATISTICS_SHORT_TERM_BAKERY
             base_query = QUERY_STATISTICS_SHORT_TERM
             table = StatisticsShortTerm
+        else:
+            bakery = STATISTICS_BAKERY
+            base_query = QUERY_STATISTICS
+            table = Statistics
 
         baked_query = _statistics_during_period_query(
             hass, end_time, statistic_ids, bakery, base_query, table
@@ -628,9 +725,24 @@ def statistics_during_period(
         if not stats:
             return {}
         # Return statistics combined with metadata
-        return _sorted_statistics_to_dict(
-            hass, session, stats, statistic_ids, metadata, True, table, start_time
+        if period not in ("day", "month"):
+            return _sorted_statistics_to_dict(
+                hass, session, stats, statistic_ids, metadata, True, table, start_time
+            )
+
+        result = _sorted_statistics_to_dict(
+            hass, session, stats, statistic_ids, metadata, True, table, start_time, True
         )
+
+        if period == "day":
+            reduced = _reduce_statistics_per_day(result)
+            _LOGGER.error("_reduce_statistics_per_day: %s", reduced)
+            return reduced
+            #return _reduce_statistics_per_day(result)
+        reduced = _reduce_statistics_per_month(result)
+        _LOGGER.error("_reduce_statistics_per_day: %s", reduced)
+        return reduced
+        #return _reduce_statistics_per_month(result)
 
 
 def get_last_statistics(
@@ -719,6 +831,7 @@ def _sorted_statistics_to_dict(
     convert_units: bool,
     table: type[Statistics | StatisticsShortTerm],
     start_time: datetime | None,
+    start_time_as_datetime: bool = False,
 ) -> dict[str, list[dict]]:
     """Convert SQL results into JSON friendly data structure."""
     result: dict = defaultdict(list)
@@ -766,7 +879,7 @@ def _sorted_statistics_to_dict(
             ent_results.append(
                 {
                     "statistic_id": statistic_id,
-                    "start": start.isoformat(),
+                    "start": start if start_time_as_datetime else start.isoformat(),
                     "end": end.isoformat(),
                     "mean": convert(db_state.mean, units),
                     "min": convert(db_state.min, units),

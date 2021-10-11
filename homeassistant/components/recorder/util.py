@@ -69,7 +69,7 @@ def session_scope(
             need_rollback = True
             session.commit()
     except Exception as err:
-        _LOGGER.error("Error executing query: %s", err)
+        _LOGGER.exception("Error executing query: %s", err)
         if need_rollback:
             session.rollback()
         raise
