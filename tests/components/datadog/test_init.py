@@ -128,7 +128,7 @@ async def test_state_changed(hass):
         for in_, out in valid.items():
             state = mock.MagicMock(
                 domain="sensor",
-                entity_id="sensor.foo.bar",
+                entity_id="foo.bar",
                 state=in_,
                 attributes=attributes,
             )
@@ -141,19 +141,23 @@ async def test_state_changed(hass):
                 mock_statsd.gauge.assert_has_calls(
                     [
                         mock.call(
-                            f"ha.sensor.{attribute}",
+                            f"ha.foo.bar.{attribute}",
                             value,
                             sample_rate=1,
-                            tags=[f"entity:{state.entity_id}"],
+                            tags=[
+                                f"entity:{state.entity_id}",
+                                f"domain:{state.domain}",
+                                f"attribute:{attribute}",
+                            ],
                         )
                     ]
                 )
 
             assert mock_statsd.gauge.call_args == mock.call(
-                "ha.sensor",
+                "ha.foo.bar",
                 out,
                 sample_rate=1,
-                tags=[f"entity:{state.entity_id}"],
+                tags=[f"entity:{state.entity_id}", f"domain:{state.domain}"],
             )
 
             mock_statsd.gauge.reset_mock()

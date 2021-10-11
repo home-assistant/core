@@ -76,16 +76,21 @@ def setup(hass, config):
             return
 
         states = dict(state.attributes)
-        metric = f"{prefix}.{state.domain}"
-        tags = [f"entity:{state.entity_id}"]
+        metric = f"{prefix}.{state.entity_id}"
+        tags = [f"entity:{state.entity_id}", f"domain:{state.domain}"]
 
         for key, value in states.items():
             if isinstance(value, (float, int)):
-                attribute = f"{metric}.{key.replace(' ', '_')}"
+                name = f"{metric}.{key.replace(' ', '_')}"
                 value = int(value) if isinstance(value, bool) else value
-                statsd.gauge(attribute, value, sample_rate=sample_rate, tags=tags)
+                statsd.gauge(
+                    name,
+                    value,
+                    sample_rate=sample_rate,
+                    tags=tags + [f"attribute:{key}"],
+                )
 
-                _LOGGER.debug("Sent metric %s: %s (tags: %s)", attribute, value, tags)
+                _LOGGER.debug("Sent metric %s: %s (tags: %s)", name, value, tags)
 
         # If the state can be expressed as number, send the value as a gauge,
         # otherwise, create a datadog event.
