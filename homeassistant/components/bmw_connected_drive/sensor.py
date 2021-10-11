@@ -391,7 +391,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         entities.append(device)
                     else:
                         device = BMWConnectedDriveSensor(
-                            account, vehicle, attribute_name, service
+                            hass, account, vehicle, attribute_name, service
                         )
                         entities.append(device)
             if service == SERVICE_ALL_TRIPS:
