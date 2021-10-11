@@ -30,7 +30,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import State
 
-from .conftest import TEST_ENTITY_NAME, ReadResult
+from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
 
 ENTITY_ID = f"{COVER_DOMAIN}.{TEST_ENTITY_NAME}"
 
@@ -109,6 +109,44 @@ async def test_config_cover(hass, mock_modbus):
 async def test_coil_cover(hass, expected, mock_do_cycle):
     """Run test for given config."""
     assert hass.states.get(ENTITY_ID).state == expected
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_COVERS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_INPUT_TYPE: CALL_TYPE_COIL,
+                    CONF_ADDRESS: 1234,
+                    CONF_SLAVE: 1,
+                    CONF_SCAN_INTERVAL: 10,
+                    CONF_LAZY_ERROR: 2,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "register_words,do_exception, start_expect,end_expect",
+    [
+        (
+            [0x00],
+            True,
+            STATE_OPEN,
+            STATE_UNAVAILABLE,
+        ),
+    ],
+)
+async def test_lazy_error_cover(hass, start_expect, end_expect, mock_do_cycle):
+    """Run test for given config."""
+    now = mock_do_cycle
+    assert hass.states.get(ENTITY_ID).state == start_expect
+    now = await do_next_cycle(hass, now, 11)
+    assert hass.states.get(ENTITY_ID).state == start_expect
+    now = await do_next_cycle(hass, now, 11)
+    assert hass.states.get(ENTITY_ID).state == end_expect
 
 
 @pytest.mark.parametrize(
