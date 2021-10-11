@@ -10,6 +10,8 @@ import voluptuous as vol
 from homeassistant.components.efergy import EfergyEntity
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -40,12 +42,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Power Usage",
         device_class=DEVICE_CLASS_POWER,
         native_unit_of_measurement=POWER_WATT,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key="energy_day",
         name="Daily Consumption",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -53,6 +57,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Weekly Consumption",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -60,12 +65,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Monthly Consumption",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="energy_year",
         name="Yearly Consumption",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -77,23 +84,27 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="cost_day",
         name="Daily Energy Cost",
         device_class=DEVICE_CLASS_MONETARY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="cost_week",
         name="Weekly Energy Cost",
         device_class=DEVICE_CLASS_MONETARY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="cost_month",
         name="Monthly Energy Cost",
         device_class=DEVICE_CLASS_MONETARY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="cost_year",
         name="Yearly Energy Cost",
         device_class=DEVICE_CLASS_MONETARY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -101,6 +112,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Power Usage",
         device_class=DEVICE_CLASS_POWER,
         native_unit_of_measurement=POWER_WATT,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
 )
 
