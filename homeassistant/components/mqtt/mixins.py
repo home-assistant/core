@@ -109,7 +109,7 @@ MQTT_AVAILABILITY_LIST_SCHEMA = vol.Schema(
             cv.ensure_list,
             [
                 {
-                    vol.Optional(CONF_TOPIC): valid_subscribe_topic,
+                    vol.Required(CONF_TOPIC): valid_subscribe_topic,
                     vol.Optional(
                         CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE
                     ): cv.string,
