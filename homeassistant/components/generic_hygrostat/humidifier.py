@@ -204,14 +204,11 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         return self._active
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the optional state attributes."""
-        data = super().state_attributes
-
         if self._saved_target_humidity:
-            data[ATTR_SAVED_HUMIDITY] = self._saved_target_humidity
-
-        return data
+            return {ATTR_SAVED_HUMIDITY: self._saved_target_humidity}
+        return None
 
     @property
     def should_poll(self):

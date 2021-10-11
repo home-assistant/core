@@ -34,6 +34,8 @@ SUFFIX_P4: Final = "_p4"
 ATTR_BME280_HUMIDITY: Final = "bme280_humidity"
 ATTR_BME280_PRESSURE: Final = "bme280_pressure"
 ATTR_BME280_TEMPERATURE: Final = "bme280_temperature"
+ATTR_BMP180_PRESSURE: Final = "bmp180_pressure"
+ATTR_BMP180_TEMPERATURE: Final = "bmp180_temperature"
 ATTR_BMP280_PRESSURE: Final = "bmp280_pressure"
 ATTR_BMP280_TEMPERATURE: Final = "bmp280_temperature"
 ATTR_DHT22_HUMIDITY: Final = "dht22_humidity"
@@ -82,6 +84,20 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
     SensorEntityDescription(
         key=ATTR_BME280_TEMPERATURE,
         name=f"{DEFAULT_NAME} BME280 Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_BMP180_PRESSURE,
+        name=f"{DEFAULT_NAME} BMP180 Pressure",
+        native_unit_of_measurement=PRESSURE_HPA,
+        device_class=DEVICE_CLASS_PRESSURE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_BMP180_TEMPERATURE,
+        name=f"{DEFAULT_NAME} BMP180 Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
