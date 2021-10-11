@@ -38,6 +38,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.event import async_call_later
 import homeassistant.util.color as color_util
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
@@ -62,6 +63,7 @@ from . import (
     DATA_DEVICE,
     DATA_UPDATED,
     DOMAIN,
+    POWER_STATE_CHANGE_TIME,
     YEELIGHT_FLOW_TRANSITION_SCHEMA,
     YeelightEntity,
 )
@@ -247,7 +249,7 @@ def _async_cmd(func):
         except BULB_NETWORK_EXCEPTIONS as ex:
             # A network error happened, the bulb is likely offline now
             self.device.async_mark_unavailable()
-            self.async_write_ha_state()
+            self.async_state_changed()
             exc_message = str(ex) or type(ex)
             raise HomeAssistantError(
                 f"Error when calling {func.__name__} for bulb {self.device.name} at {self.device.host}: {exc_message}"
@@ -419,13 +421,22 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         else:
             self._custom_effects = {}
 
+        self._unexpected_state_check = None
+
+    @callback
+    def async_state_changed(self):
+        """Call when the device changes state."""
+        if not self._device.available:
+            self._async_cancel_pending_state_check()
+        self.async_write_ha_state()
+
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 DATA_UPDATED.format(self._device.host),
-                self.async_write_ha_state,
+                self.async_state_changed,
             )
         )
         await super().async_added_to_hass()
@@ -760,6 +771,33 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         if self.config[CONF_SAVE_ON_CHANGE] and (brightness or colortemp or rgb):
             await self.async_set_default()
 
+        self._async_schedule_state_check(True)
+
+    @callback
+    def _async_cancel_pending_state_check(self):
+        """Cancel a pending state check."""
+        if self._unexpected_state_check:
+            self._unexpected_state_check()
+            self._unexpected_state_check = None
+
+    @callback
+    def _async_schedule_state_check(self, expected_power_state):
+        """Schedule a poll if the change failed to get pushed back to us.
+
+        Some devices (mainly nightlights) will not send back the on state
+        so we need to force a refresh.
+        """
+        self._async_cancel_pending_state_check()
+
+        async def _async_update_if_state_unexpected(*_):
+            self._unexpected_state_check = None
+            if self.is_on != expected_power_state:
+                await self.device.async_update(True)
+
+        self._unexpected_state_check = async_call_later(
+            self.hass, POWER_STATE_CHANGE_TIME, _async_update_if_state_unexpected
+        )
+
     @_async_cmd
     async def _async_turn_off(self, duration) -> None:
         """Turn off with a given transition duration wrapped with _async_cmd."""
@@ -775,6 +813,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
         await self._async_turn_off(duration)
+        self._async_schedule_state_check(False)
 
     @_async_cmd
     async def async_set_mode(self, mode: str):

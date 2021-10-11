@@ -275,7 +275,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
                 if block.type != "device":
                     continue
 
-                if block.wakeupEvent[0] == "button":
+                if len(block.wakeupEvent) == 1 and block.wakeupEvent[0] == "button":
                     self._last_input_events_count[1] = -1
 
                 break
