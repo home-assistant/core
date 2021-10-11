@@ -456,6 +456,31 @@ async def test_async_setup_with_missing_id(hass: HomeAssistant):
         assert config_entry.state is ConfigEntryState.LOADED
 
 
+async def test_async_setup_with_missing_unique_id(hass: HomeAssistant):
+    """Test that setting adds the missing unique_id from CONF_ID."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "127.0.0.1", CONF_ID: ID},
+        options={CONF_NAME: "Test name"},
+    )
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
+        f"{MODULE}.AsyncBulb", return_value=_mocked_bulb(cannot_connect=True)
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.state is ConfigEntryState.SETUP_RETRY
+        assert config_entry.unique_id == ID
+
+    with _patch_discovery(), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
+        f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=2))
+        await hass.async_block_till_done()
+        assert config_entry.state is ConfigEntryState.LOADED
+
+
 async def test_connection_dropped_resyncs_properties(hass: HomeAssistant):
     """Test handling a connection drop results in a property resync."""
     config_entry = MockConfigEntry(
