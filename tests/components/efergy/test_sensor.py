@@ -2,7 +2,12 @@
 from datetime import timedelta
 
 from homeassistant.components.efergy.sensor import SENSOR_TYPES
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -37,42 +42,52 @@ async def test_sensor_readings(
     assert state.state == "1580"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
     state = hass.states.get("sensor.energy_budget")
     assert state.state == "ok"
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+    assert state.attributes.get(ATTR_STATE_CLASS) is None
     state = hass.states.get("sensor.daily_consumption")
     assert state.state == "38.21"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
     state = hass.states.get("sensor.weekly_consumption")
     assert state.state == "267.47"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
     state = hass.states.get("sensor.monthly_consumption")
     assert state.state == "1069.88"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
     state = hass.states.get("sensor.yearly_consumption")
     assert state.state == "13373.50"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
     state = hass.states.get("sensor.daily_energy_cost")
     assert state.state == "5.27"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_MONETARY
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "EUR"
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
     state = hass.states.get("sensor.weekly_energy_cost")
     assert state.state == "36.89"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_MONETARY
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "EUR"
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
     state = hass.states.get("sensor.monthly_energy_cost")
     assert state.state == "147.56"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_MONETARY
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "EUR"
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
     state = hass.states.get("sensor.yearly_energy_cost")
     assert state.state == "1844.50"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_MONETARY
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "EUR"
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
     entity = ent_reg.async_get("sensor.power_usage_728386")
     assert entity.disabled_by == er.DISABLED_INTEGRATION
     ent_reg.async_update_entity(entity.entity_id, **{"disabled_by": None})
@@ -82,6 +97,7 @@ async def test_sensor_readings(
     assert state.state == "1628"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
 
 
 async def test_multi_sensor_readings(
@@ -95,14 +111,17 @@ async def test_multi_sensor_readings(
     assert state.state == "218"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
     state = hass.states.get("sensor.power_usage_0")
     assert state.state == "1808"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
     state = hass.states.get("sensor.power_usage_728387")
     assert state.state == "312"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
 
 
 async def test_failed_update_and_reconnection(
