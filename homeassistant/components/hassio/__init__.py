@@ -581,7 +581,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             stats_data = await asyncio.gather(
                 *[update_addon_stats(slug) for slug in addon_slugs]
             )
-            hass.data[DATA_ADDONS_STATS] = {slug: stats for (slug, stats) in stats_data}
+            hass.data[DATA_ADDONS_STATS] = dict(stats_data)
             if ADDONS_COORDINATOR in hass.data:
                 await hass.data[ADDONS_COORDINATOR].async_refresh()
         except HassioAPIError as err:
