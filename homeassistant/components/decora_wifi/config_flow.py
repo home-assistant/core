@@ -17,33 +17,38 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     def __init__(self):
-        """Initialize the config flow."""
+        """Initialize the config flow class."""
         self.data = {}
+        self._finish_step = None
         super().__init__()
 
     async def async_step_user(self, user_input=None) -> FlowResult:
-        """Prompt for user input to setup decora_wifi."""
-        session = None
-
-        data_schema = {
-            vol.Required(CONF_USERNAME): str,
-            vol.Required(CONF_PASSWORD): str,
-        }
-
-        if user_input is None:
-            # Show the form requesting the Username and Password for Decora Wifi
+        """Handle user-initiated setup config flow."""
+        # Begin interactive credential input
+        if not user_input:
             return self.async_show_form(
-                step_id="user", data_schema=vol.Schema(data_schema)
+                step_id="user",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(CONF_USERNAME): str,
+                        vol.Required(CONF_PASSWORD): str,
+                    }
+                ),
             )
-
-        # Update flow state
+        # Update data
         self.data.update(user_input)
-
-        # Get user from existing entry and abort if already setup.
+        # Conduct pre-validation checks
         await self.async_set_unique_id(self.data[CONF_USERNAME].lower())
         self._abort_if_unique_id_configured()
+        # Set finish_step and proceed to validation
+        self._finish_step = self.async_step_user_finish
+        return await self.async_step_validate(None)
 
-        # Attempt to log in with the credentials provided by the user.
+    async def async_step_validate(self, user_input=None) -> FlowResult:
+        """Call the myLeviton API to validate user-provided credentials."""
+        if user_input:
+            self.data.update(user_input)
+        session = None
         errors = {}
         try:
             session = await DecoraWifiPlatform.async_setup_decora_wifi(
@@ -56,68 +61,42 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except CommFailed:
             errors["base"] = "cannot_connect"
         if errors:
-            # Re-show the dialog w/ an error message.
+            # Show the form with error message and direct the flow back to the retry step configured earlier
             return self.async_show_form(
-                step_id="user", data_schema=vol.Schema(data_schema), errors=errors
+                step_id="validate",
+                data_schema=vol.Schema(
+                    {vol.Required(CONF_PASSWORD, default=self.data[CONF_PASSWORD]): str}
+                ),
+                errors=errors,
             )
-        # Use the unique user id from the API to identify the platform entity
-        self.data[CONF_ID] = self.session.unique_id
-
-        # Save the new session in temporary storage so that async_setup_entry doesn't need to re-authenticate.
+        # Login validated. Save the session in temp, then move on to the finish step.
         self.hass.data[DOMAIN][CONF_TEMPORARY] = session
-        # Normal config entry setup
+        return await self._finish_step()
+
+    async def async_step_user_finish(self) -> FlowResult:
+        """Finish the user config flow."""
         return self.async_create_entry(
             title=f"{CONF_TITLE} - {self.data[CONF_USERNAME]}", data=self.data
         )
 
-    async def async_step_reauth(self, user_input=None) -> FlowResult:
-        """Re-authenticate a user."""
-        session = None
-
-        data_schema = {
-            vol.Required(CONF_USERNAME): str,
-            vol.Required(CONF_PASSWORD): str,
-        }
-
-        if user_input is None:
-            return self.async_show_form(
-                step_id="reauth", data_schema=vol.Schema(data_schema)
-            )
-
-        self.data = {
-            CONF_USERNAME: user_input[CONF_USERNAME],
-            CONF_PASSWORD: user_input[CONF_PASSWORD],
-        }
-
-        entry = await self.async_set_unique_id(self.data[CONF_USERNAME].lower())
-        if not entry:
-            return self.async_abort(reason="reauth_failed")
-
-        # Validate the user input and re-show the dialog if there are errors.
-        errors = {}
-        try:
-            session = await DecoraWifiPlatform.async_setup_decora_wifi(
-                self.hass,
-                email=self.data[CONF_USERNAME],
-                password=self.data[CONF_PASSWORD],
-            )
-        except LoginFailed:
-            errors["base"] = "invalid_auth"
-        except CommFailed:
-            errors["base"] = "cannot_connect"
-        if errors:
-            return self.async_show_form(
-                step_id="reauth", data_schema=vol.Schema(data_schema), errors=errors
-            )
-
-        # Login validated. Save the session in temp, then update and reload the config entry.
-        self.hass.data[DOMAIN][CONF_TEMPORARY] = session
-        self.hass.config_entries.async_update_entry(
-            entry, title=f"{CONF_TITLE} - {CONF_USERNAME}", data=self.data
+    async def async_step_reauth(self, data) -> FlowResult:
+        """Begin flow to re-authenticate an existing decora_wifi config."""
+        self.data = dict(data)
+        # Set finish_step and retry_step_id and proceed to validation
+        self._finish_step = self.async_step_reauth_finish
+        return self.async_show_form(
+            step_id="validate",
+            data_schema=vol.Schema(
+                {vol.Required(CONF_PASSWORD, default=self.data[CONF_PASSWORD]): str}
+            ),
         )
-        await self.hass.config_entries.async_reload(entry.entry_id)
-        return self.async_abort(reason="reauth_successful")
 
-    async def async_step_import(self, user_input=None):
-        """Import user."""
-        return await self.async_step_user(user_input)
+    async def async_step_reauth_finish(self) -> FlowResult:
+        """Finish the reauth config flow."""
+        entry = await self.async_set_unique_id(self.data[CONF_USERNAME].lower())
+        if entry:
+            self.hass.config_entries.async_update_entry(
+                entry, title=f"{CONF_TITLE} - {CONF_USERNAME}", data=self.data
+            )
+            await self.hass.config_entries.async_reload(entry.entry_id)
+        return self.async_abort(reason="reauth_successful")

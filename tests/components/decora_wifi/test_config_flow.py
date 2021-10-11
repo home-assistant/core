@@ -21,27 +21,6 @@ SCAN_INTERVAL = 120
 UPDATED_SCAN_INTERVAL = 60
 
 
-async def test_import_flow(hass: HomeAssistant):
-    """Check import flow."""
-    with patch(
-        "homeassistant.components.decora_wifi.common.DecoraWiFiSession",
-        side_effect=FakeDecoraWiFiSession,
-    ):
-        hass.data[DOMAIN] = {}
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
-        )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == f"{CONF_TITLE} - {USERNAME}"
-    assert result["data"] == {
-        CONF_USERNAME: USERNAME,
-        CONF_PASSWORD: PASSWORD,
-    }
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-
-
 async def test_user_flow(hass: HomeAssistant):
     """Test the user flow."""
     # Test that the flow with no user input produces a form.
@@ -80,21 +59,17 @@ async def test_reauth_flow(hass: HomeAssistant):
         },
     )
     mock_config.add_to_hass(hass)
-    # Test reauth with invalid login info
-    with patch(
-        "homeassistant.components.decora_wifi.common.DecoraWiFiSession",
-        side_effect=FakeDecoraWiFiSession,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "unique_id": mock_config.unique_id,
-            },
-            data=mock_config.data,
-        )
+    # Test that the flow with no user input produces a form.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": mock_config.unique_id,
+        },
+        data=mock_config.data,
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert not result["errors"]
     # Test reauth with valid login info
     with patch(
         "homeassistant.components.decora_wifi.common.DecoraWiFiSession",
@@ -104,7 +79,6 @@ async def test_reauth_flow(hass: HomeAssistant):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_USERNAME: USERNAME,
                 CONF_PASSWORD: UPDATED_PASSWORD,
             },
         )
@@ -136,7 +110,7 @@ async def test_abort_if_existing_entry(hass: HomeAssistant):
     assert result["reason"] == "already_configured"
 
 
-async def test_user_flow_invalid_login(hass: HomeAssistant):
+async def test_validate_invalid_login(hass: HomeAssistant):
     """Test user flow with invalid username."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -150,11 +124,11 @@ async def test_user_flow_invalid_login(hass: HomeAssistant):
             {CONF_USERNAME: USERNAME, CONF_PASSWORD: INCORRECT_PASSWORD},
         )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["step_id"] == "user"
+    assert result2["step_id"] == "validate"
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_user_flow_no_internet_connection(hass: HomeAssistant):
+async def test_validate_no_internet_connection(hass: HomeAssistant):
     """Test user flow with no internet connection."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -169,35 +143,5 @@ async def test_user_flow_no_internet_connection(hass: HomeAssistant):
             {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["step_id"] == "user"
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-
-async def test_reauth_flow_no_internet_connection(hass: HomeAssistant):
-    """Test reauth flow with no internet connection."""
-    mock_config = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=USERNAME,
-        data={
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: INCORRECT_PASSWORD,
-        },
-    )
-    mock_config.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.decora_wifi.common.DecoraWiFiSession.login",
-        side_effect=CommFailed(),
-    ):
-        result2 = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "unique_id": mock_config.unique_id,
-            },
-            data=mock_config.data,
-        )
-
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["step_id"] == "reauth"
+    assert result2["step_id"] == "validate"
     assert result2["errors"] == {"base": "cannot_connect"}

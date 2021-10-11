@@ -46,6 +46,7 @@ async def test_platform_works(hass):
         )
         assert isinstance(instance, DecoraWifiPlatform)
         # Check that getdevices left platform object in expected state
+        assert len(instance.active_platforms) == 1
         assert len(instance.lights) == 6
 
         # Clear the _iot_switches dict and check that refresh_devices recreates it.
