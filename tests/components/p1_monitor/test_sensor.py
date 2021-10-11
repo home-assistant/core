@@ -159,7 +159,10 @@ async def test_settings(
     assert state.state == "0.20522"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Consumption Price - Low"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_MONETARY
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == CURRENCY_EURO
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}"
+    )
 
     state = hass.states.get("sensor.monitor_energy_production_price_low")
     entry = entity_registry.async_get("sensor.monitor_energy_production_price_low")
@@ -169,7 +172,10 @@ async def test_settings(
     assert state.state == "0.20522"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Production Price - Low"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_MONETARY
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == CURRENCY_EURO
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}"
+    )
 
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)
