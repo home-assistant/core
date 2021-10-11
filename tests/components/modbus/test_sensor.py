@@ -39,7 +39,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import State
 
-from .conftest import TEST_ENTITY_NAME, ReadResult
+from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
 
 ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}"
 
@@ -550,6 +550,44 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
 async def test_all_sensor(hass, mock_do_cycle, expected):
     """Run test for sensor."""
     assert hass.states.get(ENTITY_ID).state == expected
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_SCAN_INTERVAL: 10,
+                    CONF_LAZY_ERROR: 1,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "register_words,do_exception,start_expect,end_expect",
+    [
+        (
+            [0x8000],
+            True,
+            "17",
+            STATE_UNAVAILABLE,
+        ),
+    ],
+)
+async def test_lazy_error_sensor(hass, mock_do_cycle, start_expect, end_expect):
+    """Run test for sensor."""
+    hass.states.async_set(ENTITY_ID, 17)
+    await hass.async_block_till_done()
+    now = mock_do_cycle
+    assert hass.states.get(ENTITY_ID).state == start_expect
+    now = await do_next_cycle(hass, now, 11)
+    assert hass.states.get(ENTITY_ID).state == start_expect
+    now = await do_next_cycle(hass, now, 11)
+    assert hass.states.get(ENTITY_ID).state == end_expect
 
 
 @pytest.mark.parametrize(

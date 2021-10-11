@@ -22,7 +22,7 @@
                 "description": "Adja meg a Kodi felhaszn\u00e1l\u00f3nevet \u00e9s jelsz\u00f3t. Ezek megtal\u00e1lhat\u00f3k a Rendszer/Be\u00e1ll\u00edt\u00e1sok/H\u00e1l\u00f3zat/Szolg\u00e1ltat\u00e1sok r\u00e9szben."
             },
             "discovery_confirm": {
-                "description": "Szeretn\u00e9 hozz\u00e1adni a Kodi (`{name}`)-t Home Assistant-hoz?",
+                "description": "Szeretn\u00e9 hozz\u00e1adni a Kodi (`{name}`)-t Home Assistanthoz?",
                 "title": "Felfedezett Kodi"
             },
             "user": {

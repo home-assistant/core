@@ -5,6 +5,7 @@
             "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
         "error": {
+            "api_password": "\u9a57\u8b49\u78bc\u7121\u6548\u3001\u8acb\u4f7f\u7528 API \u5bc6\u9470\u6216\u5bc6\u78bc\u3002",
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"

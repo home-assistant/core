@@ -1,7 +1,7 @@
 """Support for WattTime sensors."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
@@ -100,4 +100,4 @@ class RealtimeEmissionsSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return self.coordinator.data[self.entity_description.key]
+        return cast(StateType, self.coordinator.data[self.entity_description.key])

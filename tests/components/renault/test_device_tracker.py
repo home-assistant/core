@@ -8,7 +8,6 @@ from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOM
 from homeassistant.components.renault.renault_entities import ATTR_LAST_UPDATE
 from homeassistant.const import ATTR_ICON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from . import (
     check_device_registry,
@@ -25,7 +24,7 @@ from tests.common import mock_device_registry, mock_registry
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
 async def test_device_trackers(hass: HomeAssistant, vehicle_type: str):
     """Test for Renault device trackers."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
@@ -52,7 +51,7 @@ async def test_device_trackers(hass: HomeAssistant, vehicle_type: str):
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
 async def test_device_tracker_empty(hass: HomeAssistant, vehicle_type: str):
     """Test for Renault device trackers with empty data from Renault."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
@@ -82,7 +81,7 @@ async def test_device_tracker_empty(hass: HomeAssistant, vehicle_type: str):
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
 async def test_device_tracker_errors(hass: HomeAssistant, vehicle_type: str):
     """Test for Renault device trackers with temporary failure."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
@@ -118,7 +117,7 @@ async def test_device_tracker_errors(hass: HomeAssistant, vehicle_type: str):
 
 async def test_device_tracker_access_denied(hass: HomeAssistant):
     """Test for Renault device trackers with access denied failure."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
@@ -142,7 +141,7 @@ async def test_device_tracker_access_denied(hass: HomeAssistant):
 
 async def test_device_tracker_not_supported(hass: HomeAssistant):
     """Test for Renault device trackers with not supported failure."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 

@@ -20,14 +20,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up tuya scenes."""
-    entities = []
-
     home_manager = hass.data[DOMAIN][entry.entry_id][TUYA_HOME_MANAGER]
     scenes = await hass.async_add_executor_job(home_manager.query_scenes)
-    for scene in scenes:
-        entities.append(TuyaHAScene(home_manager, scene))
-
-    async_add_entities(entities)
+    async_add_entities(TuyaHAScene(home_manager, scene) for scene in scenes)
 
 
 class TuyaHAScene(Scene):
