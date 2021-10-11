@@ -518,11 +518,13 @@ async def _restart_pm2_service(hass, call):
     )
     cmd_to_run = "pm2 restart " + service
     if service == "zwave":
+        await _run("su -c 'chmod 777 /dev/ttyACM*'")
         cmd_to_run = (
             "pm2 restart zwave || pm2 start /data/data/pl.sviete.dom/files/home/zwavejs2mqtt/server/bin/www.js "
             "--name zwave --output /dev/null --error /dev/null --restart-delay=120000"
         )
     elif service == "zigbee":
+        await _run("su -c 'chmod 777 /dev/ttyACM*'")
         cmd_to_run = (
             "pm2 restart zigbee || cd /data/data/pl.sviete.dom/files/home/zigbee2mqtt; pm2 start index.js "
             "--name zigbee --output /dev/null --error /dev/null --restart-delay=120000"
