@@ -6,7 +6,6 @@ import logging
 import random
 from typing import Any, Final, cast
 
-from flux_led.aiodevice import AIOWifiLedBulb
 from flux_led.const import (
     COLOR_MODE_CCT as FLUX_COLOR_MODE_CCT,
     COLOR_MODE_DIM as FLUX_COLOR_MODE_DIM,
@@ -47,11 +46,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import (
-    ATTR_MANUFACTURER,
     ATTR_MODE,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SW_VERSION,
     CONF_DEVICES,
     CONF_HOST,
     CONF_MAC,
@@ -59,10 +54,9 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PROTOCOL,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -92,11 +86,11 @@ from .const import (
     MODE_RGB,
     MODE_RGBW,
     MODE_WHITE,
-    SIGNAL_STATE_UPDATED,
     TRANSITION_GRADUAL,
     TRANSITION_JUMP,
     TRANSITION_STROBE,
 )
+from .entity import FluxEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -284,10 +278,8 @@ async def async_setup_entry(
     )
 
 
-class FluxLight(CoordinatorEntity, LightEntity):
+class FluxLight(FluxEntity, CoordinatorEntity, LightEntity):
     """Representation of a Flux light."""
-
-    coordinator: FluxLedUpdateCoordinator
 
     def __init__(
         self,
@@ -299,11 +291,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
         custom_effect_transition: str,
     ) -> None:
         """Initialize the light."""
-        super().__init__(coordinator)
-        self._device: AIOWifiLedBulb = coordinator.device
-        self._responding = True
-        self._attr_name = name
-        self._attr_unique_id = unique_id
+        super().__init__(coordinator, unique_id, name)
         self._attr_supported_features = SUPPORT_FLUX_LED
         self._attr_min_mireds = (
             color_temperature_kelvin_to_mired(self._device.max_temp) + 1
@@ -319,19 +307,6 @@ class FluxLight(CoordinatorEntity, LightEntity):
         self._custom_effect_colors = custom_effect_colors
         self._custom_effect_speed_pct = custom_effect_speed_pct
         self._custom_effect_transition = custom_effect_transition
-        if self.unique_id:
-            self._attr_device_info = {
-                "connections": {(dr.CONNECTION_NETWORK_MAC, self.unique_id)},
-                ATTR_MODEL: f"0x{self._device.model_num:02X}",
-                ATTR_NAME: self.name,
-                ATTR_SW_VERSION: str(self._device.version_num),
-                ATTR_MANUFACTURER: "FluxLED/Magic Home",
-            }
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if device is on."""
-        return cast(bool, self._device.is_on)
 
     @property
     def brightness(self) -> int:
@@ -381,17 +356,6 @@ class FluxLight(CoordinatorEntity, LightEntity):
         if (current_mode := self._device.preset_pattern_num) == EFFECT_CUSTOM_CODE:
             return EFFECT_CUSTOM
         return EFFECT_ID_NAME.get(current_mode)
-
-    @property
-    def extra_state_attributes(self) -> dict[str, str]:
-        """Return the attributes."""
-        return {"ip_address": self._device.ipaddr}
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the specified or all lights on."""
-        await self._async_turn_on(**kwargs)
-        self.async_write_ha_state()
-        await self.coordinator.async_request_refresh()
 
     async def _async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified or all lights on."""
@@ -506,27 +470,3 @@ class FluxLight(CoordinatorEntity, LightEntity):
             speed_pct,
             transition,
         )
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the specified or all lights off."""
-        await self._device.async_turn_off()
-        self.async_write_ha_state()
-        await self.coordinator.async_request_refresh()
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        if self.coordinator.last_update_success != self._responding:
-            self.async_write_ha_state()
-        self._responding = self.coordinator.last_update_success
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_STATE_UPDATED.format(self._device.ipaddr),
-                self.async_write_ha_state,
-            )
-        )
-        await super().async_added_to_hass()
