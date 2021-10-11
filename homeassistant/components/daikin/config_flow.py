@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from aiohttp import ClientError, web_exceptions
 from async_timeout import timeout
-from pydaikin.daikin_base import Appliance
+from pydaikin.daikin_base import Appliance, DaikinException
 from pydaikin.discovery import Discovery
 import voluptuous as vol
 
@@ -87,6 +87,13 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user",
                 data_schema=self.schema,
                 errors={"base": "invalid_auth"},
+            )
+        except DaikinException as daikin_exp:
+            _LOGGER.error(daikin_exp)
+            return self.async_show_form(
+                step_id="user",
+                data_schema=self.schema,
+                errors={"base": "unknown"},
             )
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected error creating device")
