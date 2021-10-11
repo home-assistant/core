@@ -27,7 +27,7 @@
             "user": {
                 "data": {
                     "access_id": "Tuya IoT azonos\u00edt\u00f3",
-                    "access_secret": "Tuya IoT hozz\u00e1f\u00e9r\u00e9s",
+                    "access_secret": "Tuya IoT hozz\u00e1f\u00e9r\u00e9si jelsz\u00f3",
                     "country_code": "A fi\u00f3k orsz\u00e1gk\u00f3dja (pl. 1 USA, 36 Magyarorsz\u00e1g, vagy 86 K\u00edna)",
                     "password": "Jelsz\u00f3",
                     "platform": "Az alkalmaz\u00e1s, ahol a fi\u00f3k regisztr\u00e1lt",

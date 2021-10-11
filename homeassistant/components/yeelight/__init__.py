@@ -36,8 +36,8 @@ from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
-STATE_CHANGE_TIME = 0.25  # seconds
-
+STATE_CHANGE_TIME = 0.40  # seconds
+POWER_STATE_CHANGE_TIME = 1  # seconds
 
 DOMAIN = "yeelight"
 DATA_YEELIGHT = DOMAIN

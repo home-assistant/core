@@ -114,13 +114,11 @@ BEACON_EXIT_CAR = {
 @pytest.fixture(autouse=True)
 def mock_dev_track(mock_device_tracker_conf):
     """Mock device tracker config loading."""
-    pass
 
 
 @pytest.fixture
 async def geofency_client(loop, hass, hass_client_no_auth):
     """Geofency mock client (unauthenticated)."""
-    assert await async_setup_component(hass, "persistent_notification", {})
 
     assert await async_setup_component(
         hass, DOMAIN, {DOMAIN: {CONF_MOBILE_BEACONS: ["Car 1"]}}

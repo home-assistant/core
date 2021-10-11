@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from apyhiveapi.helper import hive_exceptions
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.hive.const import CONF_CODE, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 
@@ -181,7 +181,6 @@ async def test_user_flow_2fa(hass):
 async def test_reauth_flow(hass):
     """Test the reauth flow."""
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         unique_id=USERNAME,

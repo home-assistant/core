@@ -39,15 +39,6 @@ def get_mock_inputs(input_list):
     return [MockInput(input) for input in input_list]
 
 
-@pytest.fixture(name="skip_notifications", autouse=True)
-def skip_notifications_fixture():
-    """Skip notification calls."""
-    with patch("homeassistant.components.persistent_notification.async_create"), patch(
-        "homeassistant.components.persistent_notification.async_dismiss"
-    ):
-        yield
-
-
 @pytest.fixture(name="vizio_get_unique_id", autouse=True)
 def vizio_get_unique_id_fixture():
     """Mock get vizio unique ID."""
