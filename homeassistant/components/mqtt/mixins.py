@@ -18,12 +18,13 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
-from . import CONF_TOPIC, DATA_MQTT, debug_info, publish, subscription
+from . import DATA_MQTT, debug_info, publish, subscription
 from .const import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_PAYLOAD,
     ATTR_DISCOVERY_TOPIC,
     CONF_QOS,
+    CONF_TOPIC,
     DEFAULT_PAYLOAD_AVAILABLE,
     DEFAULT_PAYLOAD_NOT_AVAILABLE,
     DOMAIN,
