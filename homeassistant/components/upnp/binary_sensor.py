@@ -30,14 +30,16 @@ async def async_setup_entry(
 
     LOGGER.debug("Adding binary sensor")
 
-    async_add_entities(
+    entities = [
         UpnpStatusBinarySensor(
             coordinator=coordinator,
             entity_description=entity_description,
         )
         for entity_description in BINARYSENSOR_ENTITY_DESCRIPTIONS
         if coordinator.data.get(entity_description.key) is not None
-    )
+    ]
+    LOGGER.debug("Adding entities: %s", entities)
+    async_add_entities(entities)
 
 
 class UpnpStatusBinarySensor(UpnpEntity, BinarySensorEntity):
