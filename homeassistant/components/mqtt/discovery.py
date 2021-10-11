@@ -141,18 +141,13 @@ async def async_start(  # noqa: C901
                     if value[-1] == TOPIC_BASE and key.endswith("topic"):
                         payload[key] = f"{value[:-1]}{base}"
             if payload.get(CONF_AVAILABILITY):
-                for availability_index in range(0, len(payload[CONF_AVAILABILITY])):
-                    availability_conf = payload[CONF_AVAILABILITY][availability_index]
+                for availability_conf in payload[CONF_AVAILABILITY]:
                     value = availability_conf[CONF_TOPIC]
                     if isinstance(value, str) and value:
                         if value[0] == TOPIC_BASE:
-                            payload[CONF_AVAILABILITY][availability_index][
-                                CONF_TOPIC
-                            ] = f"{base}{value[1:]}"
+                            availability_conf[CONF_TOPIC] = f"{base}{value[1:]}"
                         if value[-1] == TOPIC_BASE:
-                            payload[CONF_AVAILABILITY][availability_index][
-                                CONF_TOPIC
-                            ] = f"{value[:-1]}{base}"
+                            availability_conf[CONF_TOPIC] = f"{value[:-1]}{base}"
 
         # If present, the node_id will be included in the discovered object id
         discovery_id = " ".join((node_id, object_id)) if node_id else object_id
