@@ -1463,6 +1463,15 @@ def forgiving_float_filter(value, default=_SENTINEL):
         return default
 
 
+def forgiving_int_filter(value, default=_SENTINEL, base=10):
+    """Try to convert value to an int, and warn if it fails."""
+    result = jinja2.filters.do_int(value, default=default, base=base)
+    if result is _SENTINEL:
+        warn_no_default("int", value, 0)
+        return 0
+    return result
+
+
 def is_number(value):
     """Try to convert value to a float."""
     try:
@@ -1693,6 +1702,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["ord"] = ord
         self.filters["is_number"] = is_number
         self.filters["float"] = forgiving_float_filter
+        self.filters["int"] = forgiving_int_filter
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
