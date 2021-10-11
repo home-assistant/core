@@ -38,7 +38,6 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
-    ATTR_WHITE,
     DOMAIN as LIGHT_DOMAIN,
 )
 from homeassistant.const import (
@@ -633,8 +632,8 @@ async def test_white_light(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
-    assert attributes[ATTR_COLOR_MODE] == "white"
-    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["white"]
+    assert attributes[ATTR_COLOR_MODE] == "brightness"
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["brightness"]
 
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -654,15 +653,6 @@ async def test_white_light(hass: HomeAssistant) -> None:
         LIGHT_DOMAIN,
         "turn_on",
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
-        blocking=True,
-    )
-    bulb.async_set_levels.assert_called_with(w=100)
-    bulb.async_set_levels.reset_mock()
-
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        "turn_on",
-        {ATTR_ENTITY_ID: entity_id, ATTR_WHITE: 100},
         blocking=True,
     )
     bulb.async_set_levels.assert_called_with(w=100)
