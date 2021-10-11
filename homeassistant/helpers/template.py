@@ -1463,6 +1463,15 @@ def forgiving_float_filter(value, default=_SENTINEL):
         return default
 
 
+def forgiving_int(value, default=_SENTINEL, base=10):
+    """Try to convert value to an int, and warn if it fails."""
+    result = jinja2.filters.do_int(value, default=default, base=base)
+    if result is _SENTINEL:
+        warn_no_default("int", value, value)
+        return value
+    return result
+
+
 def forgiving_int_filter(value, default=_SENTINEL, base=10):
     """Try to convert value to an int, and warn if it fails."""
     result = jinja2.filters.do_int(value, default=default, base=base)
@@ -1726,6 +1735,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["max"] = max
         self.globals["min"] = min
         self.globals["is_number"] = is_number
+        self.globals["int"] = forgiving_int
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
 

@@ -254,6 +254,20 @@ def test_int_filter(hass):
     assert render(hass, "{{ 'bad' | int(default=1) }}") == 1
 
 
+def test_int_function(hass):
+    """Test int filter."""
+    hass.states.async_set("sensor.temperature", "12.2")
+    assert render(hass, "{{ int(states.sensor.temperature.state) }}") == 12
+    assert render(hass, "{{ int(states.sensor.temperature.state) > 11 }}") is True
+
+    hass.states.async_set("sensor.temperature", "0x10")
+    assert render(hass, "{{ int(states.sensor.temperature.state, base=16) }}") == 16
+
+    assert render(hass, "{{ int('bad') }}") == "bad"
+    assert render(hass, "{{ int('bad', 1) }}") == 1
+    assert render(hass, "{{ int('bad', default=1) }}") == 1
+
+
 @pytest.mark.parametrize(
     "value, expected",
     [
