@@ -50,24 +50,8 @@ FAKE_WEBHOOK = {
 }
 
 
-async def test_setup_component(hass):
+async def test_setup_component(hass, config_entry):
     """Test setup and teardown of the netatmo component."""
-    config_entry = MockConfigEntry(
-        domain="netatmo",
-        data={
-            "auth_implementation": "cloud",
-            "token": {
-                "refresh_token": "mock-refresh-token",
-                "access_token": "mock-access-token",
-                "type": "Bearer",
-                "expires_in": 60,
-                "expires_at": time() + 1000,
-                "scope": " ".join(ALL_SCOPES),
-            },
-        },
-    )
-    config_entry.add_to_hass(hass)
-
     with patch(
         "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
     ) as mock_auth, patch(
@@ -299,24 +283,8 @@ async def test_setup_with_cloudhook(hass):
         assert not hass.config_entries.async_entries(DOMAIN)
 
 
-async def test_setup_component_api_error(hass):
+async def test_setup_component_api_error(hass, config_entry):
     """Test error on setup of the netatmo component."""
-    config_entry = MockConfigEntry(
-        domain="netatmo",
-        data={
-            "auth_implementation": "cloud",
-            "token": {
-                "refresh_token": "mock-refresh-token",
-                "access_token": "mock-access-token",
-                "type": "Bearer",
-                "expires_in": 60,
-                "expires_at": time() + 1000,
-                "scope": " ".join(ALL_SCOPES),
-            },
-        },
-    )
-    config_entry.add_to_hass(hass)
-
     with patch(
         "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
     ) as mock_auth, patch(
@@ -338,24 +306,8 @@ async def test_setup_component_api_error(hass):
     mock_impl.assert_called_once()
 
 
-async def test_setup_component_api_timeout(hass):
+async def test_setup_component_api_timeout(hass, config_entry):
     """Test timeout on setup of the netatmo component."""
-    config_entry = MockConfigEntry(
-        domain="netatmo",
-        data={
-            "auth_implementation": "cloud",
-            "token": {
-                "refresh_token": "mock-refresh-token",
-                "access_token": "mock-access-token",
-                "type": "Bearer",
-                "expires_in": 60,
-                "expires_at": time() + 1000,
-                "scope": " ".join(ALL_SCOPES),
-            },
-        },
-    )
-    config_entry.add_to_hass(hass)
-
     with patch(
         "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
     ) as mock_auth, patch(
