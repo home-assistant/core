@@ -52,30 +52,6 @@ def mocked_ec(
     )
 
 
-async def test_form(hass):
-    """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    with mocked_ec(), patch(
-        "homeassistant.components.environment_canada.async_setup_entry",
-        return_value=True,
-    ):
-        flow = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        assert flow["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert flow["errors"] == {}
-
-        result = await hass.config_entries.flow.async_configure(
-            flow["flow_id"], FAKE_CONFIG
-        )
-        await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["data"] == FAKE_CONFIG
-        assert result["title"] == FAKE_TITLE
-        assert flow["errors"] == {}
-
-
 async def test_create_same_entry_twice(hass):
     """Test duplicate entries."""
     await setup.async_setup_component(hass, "persistent_notification", {})
@@ -99,6 +75,7 @@ async def test_create_same_entry_twice(hass):
         )
         await hass.async_block_till_done()
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "already_configured"
 
 
 async def test_too_many_attempts(hass):
@@ -140,10 +117,6 @@ async def test_exception_handling(hass, error):
         "homeassistant.components.environment_canada.config_flow.ECData",
         side_effect=exc,
     ):
-        # with mocked_ec(update=Mock(side_effect=exc)), patch(
-        #     "homeassistant.components.environment_canada.async_setup_entry",
-        #     return_value=True,
-        # ):
         flow = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
