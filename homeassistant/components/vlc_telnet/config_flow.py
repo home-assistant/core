@@ -4,8 +4,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from python_telnet_vlc import ConnectionError as ConnErr, VLCTelnet
-from python_telnet_vlc.vlctelnet import AuthError
+from aiovlc.client import Client
+from aiovlc.exceptions import AuthError, ConnectError
 import voluptuous as vol
 
 from homeassistant import core, exceptions
@@ -40,28 +40,26 @@ def user_form_schema(user_input: dict[str, Any] | None) -> vol.Schema:
 STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 
 
-def vlc_connect(vlc: VLCTelnet) -> None:
+async def vlc_connect(vlc: Client) -> None:
     """Connect to VLC."""
-    vlc.connect()
-    vlc.login()
-    vlc.disconnect()
+    await vlc.connect()
+    await vlc.login()
+    await vlc.disconnect()
 
 
 async def validate_input(
     hass: core.HomeAssistant, data: dict[str, Any]
 ) -> dict[str, str]:
     """Validate the user input allows us to connect."""
-    vlc = VLCTelnet(
-        host=data[CONF_HOST],
+    vlc = Client(
         password=data[CONF_PASSWORD],
+        host=data[CONF_HOST],
         port=data[CONF_PORT],
-        connect=False,
-        login=False,
     )
 
     try:
-        await hass.async_add_executor_job(vlc_connect, vlc)
-    except (ConnErr, EOFError) as err:
+        await vlc_connect(vlc)
+    except ConnectError as err:
         raise CannotConnect from err
     except AuthError as err:
         raise InvalidAuth from err

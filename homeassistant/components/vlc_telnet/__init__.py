@@ -1,5 +1,6 @@
 """The VLC media player Telnet integration."""
-from python_telnet_vlc import AuthError, ConnectionError as ConnErr, VLCTelnet
+from aiovlc.client import Client
+from aiovlc.exceptions import AuthError, ConnectError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
@@ -19,21 +20,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     port = config[CONF_PORT]
     password = config[CONF_PASSWORD]
 
-    vlc = VLCTelnet(host, password, port, connect=False, login=False)
+    vlc = Client(password=password, host=host, port=port)
 
     available = True
 
     try:
-        await hass.async_add_executor_job(vlc.connect)
-    except (ConnErr, EOFError) as err:
+        await vlc.connect()
+    except ConnectError as err:
         LOGGER.warning("Failed to connect to VLC: %s. Trying again", err)
         available = False
 
     if available:
         try:
-            await hass.async_add_executor_job(vlc.login)
+            await vlc.login()
         except AuthError as err:
-            await hass.async_add_executor_job(disconnect_vlc, vlc)
+            await disconnect_vlc(vlc)
             raise ConfigEntryAuthFailed() from err
 
     domain_data = hass.data.setdefault(DOMAIN, {})
@@ -57,10 +58,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-def disconnect_vlc(vlc: VLCTelnet) -> None:
+async def disconnect_vlc(vlc: Client) -> None:
     """Disconnect from VLC."""
     LOGGER.debug("Disconnecting from VLC")
     try:
-        vlc.disconnect()
-    except (ConnErr, EOFError) as err:
+        await vlc.disconnect()
+    except ConnectError as err:
         LOGGER.warning("Connection error: %s", err)
