@@ -25,8 +25,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import CommandData
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
-from .sensor import CommandSensorData
 
 DEFAULT_NAME = "Binary Command Sensor"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -37,7 +37,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_COMMAND): cv.string,
+        vol.Required(CONF_COMMAND): cv.template,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
         vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
@@ -69,7 +69,7 @@ def setup_platform(
     unique_id = config.get(CONF_UNIQUE_ID)
     if value_template is not None:
         value_template.hass = hass
-    data = CommandSensorData(hass, command, command_timeout)
+    data = CommandData(hass, command, command_timeout)
 
     add_entities(
         [
@@ -130,7 +130,7 @@ class CommandBinarySensor(BinarySensorEntity):
 
     def update(self):
         """Get the latest data and updates the state."""
-        self.data.update()
+        self.data.update(True)
         value = self.data.value
 
         if self._value_template is not None:

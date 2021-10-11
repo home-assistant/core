@@ -26,16 +26,16 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import call_shell_with_timeout, check_output_or_log
+from . import CommandData
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
 SWITCH_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_COMMAND_OFF, default="true"): cv.string,
-        vol.Optional(CONF_COMMAND_ON, default="true"): cv.string,
-        vol.Optional(CONF_COMMAND_STATE): cv.string,
+        vol.Optional(CONF_COMMAND_OFF, default="true"): cv.template,
+        vol.Optional(CONF_COMMAND_ON, default="true"): cv.template,
+        vol.Optional(CONF_COMMAND_STATE, default=None): vol.Any(cv.template, None),
         vol.Optional(CONF_FRIENDLY_NAME): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_ICON_TEMPLATE): cv.template,
@@ -115,36 +115,31 @@ class CommandSwitch(SwitchEntity):
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = friendly_name
         self._state = False
-        self._command_on = command_on
-        self._command_off = command_off
-        self._command_state = command_state
+        self._command_on = (
+            CommandData(hass, command_on, timeout) if command_on else command_on
+        )
+        self._command_off = (
+            CommandData(hass, command_off, timeout) if command_off else command_off
+        )
+        self._command_state = (
+            CommandData(hass, command_state, timeout)
+            if command_state
+            else command_state
+        )
         self._icon_template = icon_template
         self._value_template = value_template
         self._timeout = timeout
         self._attr_unique_id = unique_id
 
-    def _switch(self, command):
+    @classmethod
+    def _switch(cls, command):
         """Execute the actual commands."""
-        _LOGGER.info("Running command: %s", command)
-
-        success = call_shell_with_timeout(command, self._timeout) == 0
+        success = command.update(False) == 0
 
         if not success:
             _LOGGER.error("Command failed: %s", command)
 
         return success
-
-    def _query_state_value(self, command):
-        """Execute state command for return value."""
-        _LOGGER.info("Running state value command: %s", command)
-        return check_output_or_log(command, self._timeout)
-
-    def _query_state_code(self, command):
-        """Execute state command for return code."""
-        _LOGGER.info("Running state code command: %s", command)
-        return (
-            call_shell_with_timeout(command, self._timeout, log_return_code=False) == 0
-        )
 
     @property
     def should_poll(self):
@@ -169,8 +164,8 @@ class CommandSwitch(SwitchEntity):
     def _query_state(self):
         """Query for state."""
         if self._value_template:
-            return self._query_state_value(self._command_state)
-        return self._query_state_code(self._command_state)
+            return self._command_state.update(True)
+        return self._command_state.update(False) == 0
 
     def update(self):
         """Update device state."""

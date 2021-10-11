@@ -3,24 +3,25 @@
 import logging
 import subprocess
 
+from homeassistant.exceptions import TemplateError
+from homeassistant.helpers import template
+
 _LOGGER = logging.getLogger(__name__)
 
 
-def call_shell_with_timeout(command, timeout, *, log_return_code=True):
+def call_shell_with_returncode(command, timeout):
     """Run a shell command with a timeout.
 
     If log_return_code is set to False, it will not print an error if a non-zero
     return code is returned.
     """
     try:
-        _LOGGER.debug("Running command: %s", command)
         subprocess.check_output(
             command, shell=True, timeout=timeout  # nosec # shell by design
         )
         return 0
     except subprocess.CalledProcessError as proc_exception:
-        if log_return_code:
-            _LOGGER.error("Command failed: %s", command)
+        _LOGGER.error("Command failed: %s", command)
         return proc_exception.returncode
     except subprocess.TimeoutExpired:
         _LOGGER.error("Timeout for command: %s", command)
@@ -30,7 +31,7 @@ def call_shell_with_timeout(command, timeout, *, log_return_code=True):
         return -1
 
 
-def check_output_or_log(command, timeout):
+def call_shell_with_value(command, timeout):
     """Run a shell command with a timeout and return the output."""
     try:
         return_value = subprocess.check_output(
@@ -45,3 +46,32 @@ def check_output_or_log(command, timeout):
         _LOGGER.error("Error trying to exec command: %s", command)
 
     return None
+
+
+class CommandData:
+    """The class for handling the data retrieval."""
+
+    def __init__(self, hass, command, command_timeout):
+        """Initialize the data object."""
+        self.value = None
+        self.hass = hass
+        self.command: template.Template = command
+        if self.command and self.hass:
+            self.command.hass = self.hass
+        self.timeout = command_timeout
+
+    def update(self, with_value):
+        """Get the latest data with a shell command."""
+        try:
+            command = self.command.render()
+        except TemplateError as ex:
+            _LOGGER.exception("Error rendering command template: %s", ex)
+            return None if with_value else -1
+
+        _LOGGER.debug("Running command: %s", command)
+        if with_value:
+            self.value = call_shell_with_value(command, self.timeout)
+        else:
+            self.value = call_shell_with_returncode(command, self.timeout)
+
+        return self.value

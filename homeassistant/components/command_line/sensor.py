@@ -18,14 +18,12 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import check_output_or_log
+from . import CommandData
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,7 +36,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_COMMAND): cv.string,
+        vol.Required(CONF_COMMAND): cv.template,
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_JSON_ATTRIBUTES): cv.ensure_list_csv,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -68,7 +66,7 @@ def setup_platform(
     if value_template is not None:
         value_template.hass = hass
     json_attributes = config.get(CONF_JSON_ATTRIBUTES)
-    data = CommandSensorData(hass, command, command_timeout)
+    data = CommandData(hass, command, command_timeout)
 
     add_entities(
         [
@@ -126,8 +124,7 @@ class CommandSensor(SensorEntity):
 
     def update(self):
         """Get the latest data and updates the state."""
-        self.data.update()
-        value = self.data.value
+        value = self.data.update(True)
 
         if self._json_attributes:
             self._attributes = {}
@@ -156,45 +153,4 @@ class CommandSensor(SensorEntity):
         else:
             self._state = value
 
-
-class CommandSensorData:
-    """The class for handling the data retrieval."""
-
-    def __init__(self, hass, command, command_timeout):
-        """Initialize the data object."""
-        self.value = None
-        self.hass = hass
-        self.command = command
-        self.timeout = command_timeout
-
-    def update(self):
-        """Get the latest data with a shell command."""
-        command = self.command
-
-        if " " not in command:
-            prog = command
-            args = None
-            args_compiled = None
-        else:
-            prog, args = command.split(" ", 1)
-            args_compiled = template.Template(args, self.hass)
-
-        if args_compiled:
-            try:
-                args_to_render = {"arguments": args}
-                rendered_args = args_compiled.render(args_to_render)
-            except TemplateError as ex:
-                _LOGGER.exception("Error rendering command template: %s", ex)
-                return
-        else:
-            rendered_args = None
-
-        if rendered_args == args:
-            # No template used. default behavior
-            pass
-        else:
-            # Template used. Construct the string used in the shell
-            command = f"{prog} {rendered_args}"
-
-        _LOGGER.debug("Running command: %s", command)
-        self.value = check_output_or_log(command, self.timeout)
+        return self._state

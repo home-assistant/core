@@ -77,6 +77,20 @@ async def test_template_render(hass: HomeAssistant) -> None:
     assert entity_state.state == "template_value"
 
 
+async def test_template_render_full(hass: HomeAssistant) -> None:
+    """Ensure command with leading templates get rendered properly."""
+
+    await setup_test_entities(
+        hass,
+        {
+            "command": "VAL='{{ states.sensor.template_sensor.state }}'; echo ${VAL}",
+        },
+    )
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.state == "template_value"
+
+
 async def test_template_render_with_quote(hass: HomeAssistant) -> None:
     """Ensure command with templates and quotes get rendered properly."""
 
@@ -98,13 +112,26 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
         )
 
 
-async def test_bad_template_render(caplog: Any, hass: HomeAssistant) -> None:
+async def test_bad_template_render_1(caplog: Any, hass: HomeAssistant) -> None:
     """Test rendering a broken template."""
 
     await setup_test_entities(
         hass,
         {
             "command": "echo {{ this template doesn't parse",
+        },
+    )
+
+    assert "invalid template" in caplog.text
+
+
+async def test_bad_template_render_2(caplog: Any, hass: HomeAssistant) -> None:
+    """Test rendering a broken template."""
+
+    await setup_test_entities(
+        hass,
+        {
+            "command": "echo {{ foobar + 1 }}",
         },
     )
 
