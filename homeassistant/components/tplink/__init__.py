@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import network
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady
 from homeassistant.const import (
     CONF_HOST,
@@ -19,7 +20,11 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
@@ -158,10 +163,50 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SmartDeviceException as ex:
         raise ConfigEntryNotReady from ex
 
+    if device.is_dimmer:
+        async_fix_dimmer_unique_id(hass, entry, device)
+
     hass.data[DOMAIN][entry.entry_id] = TPLinkDataUpdateCoordinator(hass, device)
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
+
+
+@callback
+def async_fix_dimmer_unique_id(
+    hass: HomeAssistant, entry: ConfigEntry, device: SmartDevice
+) -> None:
+    """Migrate the unique id of dimmers back to the legacy one.
+
+    Dimmers used to use the switch format since pyHS100 treated them as SmartPlug but
+    the old code created them as lights
+
+    https://github.com/home-assistant/core/blob/2021.9.7/homeassistant/components/tplink/common.py#L86
+    """
+
+    # This is the unique id before 2021.0/2021.1
+    original_unique_id = legacy_device_id(device)
+
+    # This is the unique id that was used in 2021.0/2021.1 rollout
+    rollout_unique_id = device.mac.replace(":", "").upper()
+
+    entity_registry = er.async_get(hass)
+
+    rollout_entity_id = entity_registry.async_get_entity_id(
+        LIGHT_DOMAIN, DOMAIN, rollout_unique_id
+    )
+    original_entry_id = entity_registry.async_get_entity_id(
+        LIGHT_DOMAIN, DOMAIN, original_unique_id
+    )
+
+    # If they are now using the 2021.0/2021.1 rollout entity id
+    # and have deleted the original entity id, we want to update that entity id
+    # so they don't end up with another _2 entity, but only if they deleted
+    # the original
+    if rollout_entity_id and not original_entry_id:
+        entity_registry.async_update_entity(
+            rollout_entity_id, new_unique_id=original_unique_id
+        )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

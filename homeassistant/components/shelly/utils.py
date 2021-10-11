@@ -133,6 +133,10 @@ def is_block_momentary_input(settings: dict[str, Any], block: Block) -> bool:
     if settings["device"]["type"] in SHBTN_MODELS:
         return True
 
+    if settings.get("mode") == "roller":
+        button_type = settings["rollers"][0]["button_type"]
+        return button_type in ["momentary", "momentary_on_release"]
+
     button = settings.get("relays") or settings.get("lights") or settings.get("inputs")
     if button is None:
         return False
