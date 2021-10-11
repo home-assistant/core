@@ -1,10 +1,11 @@
 """Tests for the flux_led integration."""
 from __future__ import annotations
 
-import socket
-from unittest.mock import MagicMock, patch
+import asyncio
+from typing import Callable
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from flux_led import WifiLedBulb
+from flux_led.aio import AIOWifiLedBulb
 from flux_led.const import (
     COLOR_MODE_CCT as FLUX_COLOR_MODE_CCT,
     COLOR_MODE_RGB as FLUX_COLOR_MODE_RGB,
@@ -17,6 +18,7 @@ from homeassistant.components.dhcp import (
     MAC_ADDRESS as DHCP_MAC_ADDRESS,
 )
 from homeassistant.components.flux_led.const import FLUX_HOST, FLUX_MAC, FLUX_MODEL
+from homeassistant.core import HomeAssistant
 
 MODULE = "homeassistant.components.flux_led"
 MODULE_CONFIG_FLOW = "homeassistant.components.flux_led.config_flow"
@@ -35,8 +37,23 @@ DHCP_DISCOVERY = {
 FLUX_DISCOVERY = {FLUX_HOST: IP_ADDRESS, FLUX_MODEL: MODEL, FLUX_MAC: FLUX_MAC_ADDRESS}
 
 
-def _mocked_bulb() -> WifiLedBulb:
-    bulb = MagicMock(auto_spec=WifiLedBulb)
+def _mocked_bulb() -> AIOWifiLedBulb:
+    bulb = MagicMock(auto_spec=AIOWifiLedBulb)
+
+    async def _save_setup_callback(callback: Callable) -> None:
+        bulb.data_receive_callback = callback
+
+    bulb.async_setup = AsyncMock(side_effect=_save_setup_callback)
+    bulb.async_set_custom_pattern = AsyncMock()
+    bulb.async_set_preset_pattern = AsyncMock()
+    bulb.async_set_white_temp = AsyncMock()
+    bulb.async_stop = AsyncMock()
+    bulb.async_update = AsyncMock()
+    bulb.async_turn_off = AsyncMock()
+    bulb.async_turn_on = AsyncMock()
+    bulb.async_set_levels = AsyncMock()
+    bulb.min_temp = 2700
+    bulb.max_temp = 6500
     bulb.getRgb = MagicMock(return_value=[255, 0, 0])
     bulb.getRgbw = MagicMock(return_value=[255, 0, 0, 50])
     bulb.getRgbww = MagicMock(return_value=[255, 0, 0, 50, 0])
@@ -45,9 +62,11 @@ def _mocked_bulb() -> WifiLedBulb:
     bulb.rgbw = (255, 0, 0, 50)
     bulb.rgbww = (255, 0, 0, 50, 0)
     bulb.rgbcw = (255, 0, 0, 0, 50)
+    bulb.color_temp = 2700
     bulb.getWhiteTemperature = MagicMock(return_value=(2700, 128))
     bulb.brightness = 128
     bulb.model_num = 0x35
+    bulb.version_num = 8
     bulb.rgbwcapable = True
     bulb.color_modes = {FLUX_COLOR_MODE_RGB, FLUX_COLOR_MODE_CCT}
     bulb.color_mode = FLUX_COLOR_MODE_RGB
@@ -57,19 +76,39 @@ def _mocked_bulb() -> WifiLedBulb:
     return bulb
 
 
+async def async_mock_bulb_turn_off(hass: HomeAssistant, bulb: AIOWifiLedBulb) -> None:
+    """Mock the bulb being off."""
+    bulb.is_on = False
+    bulb.raw_state._replace(power_state=0x24)
+    bulb.data_receive_callback()
+    await hass.async_block_till_done()
+
+
+async def async_mock_bulb_turn_on(hass: HomeAssistant, bulb: AIOWifiLedBulb) -> None:
+    """Mock the bulb being on."""
+    bulb.is_on = True
+    bulb.raw_state._replace(power_state=0x23)
+    bulb.data_receive_callback()
+    await hass.async_block_till_done()
+
+
 def _patch_discovery(device=None, no_device=False):
-    def _discovery(*args, **kwargs):
+    async def _discovery(*args, **kwargs):
         if no_device:
-            return []
+            raise OSError
         return [FLUX_DISCOVERY]
 
-    return patch("homeassistant.components.flux_led.BulbScanner.scan", new=_discovery)
+    return patch(
+        "homeassistant.components.flux_led.AIOBulbScanner.async_scan", new=_discovery
+    )
 
 
 def _patch_wifibulb(device=None, no_device=False):
     def _wifi_led_bulb(*args, **kwargs):
+        bulb = _mocked_bulb()
         if no_device:
-            raise socket.timeout
+            bulb.async_setup = AsyncMock(side_effect=asyncio.TimeoutError)
+            return bulb
         return device if device else _mocked_bulb()
 
-    return patch("homeassistant.components.flux_led.WifiLedBulb", new=_wifi_led_bulb)
+    return patch("homeassistant.components.flux_led.AIOWifiLedBulb", new=_wifi_led_bulb)
