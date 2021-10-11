@@ -853,7 +853,7 @@ pyefergy==0.1.2
 pyeverlights==0.1.0
 
 # homeassistant.components.ezviz
-pyezviz==0.1.8.9
+pyezviz==0.1.9.4
 
 # homeassistant.components.fido
 pyfido==2.1.1
