@@ -1412,7 +1412,7 @@ yalexs==1.1.13
 yeelight==0.7.7
 
 # homeassistant.components.youless
-youless-api==0.13
+youless-api==0.14
 
 # homeassistant.components.zeroconf
 zeroconf==0.36.8
