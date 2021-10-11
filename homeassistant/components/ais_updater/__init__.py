@@ -1,8 +1,6 @@
 """
-Support to check for available updates.
+Support to check for available updates for AIS
 
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/updater/
 """
 import asyncio
 from distutils.version import StrictVersion
@@ -16,7 +14,6 @@ import sys
 
 import aiohttp
 import async_timeout
-import requests
 import voluptuous as vol
 
 from homeassistant.components.ais_dom import ais_global
@@ -38,6 +35,7 @@ CONF_REPORTING = "reporting"
 CONF_COMPONENT_REPORTING = "include_used_components"
 
 DOMAIN = "ais_updater"
+SERVICE_SET_UPDATE_STATUS = "set_update_status"
 SERVICE_CHECK_VERSION = "check_version"
 SERVICE_UPGRADE_PACKAGE = "upgrade_package"
 SERVICE_EXECUTE_UPGRADE = "execute_upgrade"
@@ -57,8 +55,6 @@ UPDATE_STATUS_RESTART = "restart"
 UPDATE_STATUS_UNKNOWN = "unknown"
 
 UPDATER_URL = "https://" + ais_global.AIS_HOST + "/ords/dom/dom/updater_new"
-UPDATER_STATUS_FILE = ".ais_update_status"
-UPDATER_DOWNLOAD_FOLDER = "ais_update"
 APT_VERSION_INFO_FILE = ".ais_apt"
 ZIGBEE2MQTT_VERSION_PACKAGE_FILE = (
     "/data/data/pl.sviete.dom/files/home/zigbee2mqtt/package.json"
@@ -82,10 +78,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 def _set_update_status(hass, status):
-    """save status in a file."""
-    with open(hass.config.path(UPDATER_STATUS_FILE), "w") as fptr:
-        fptr.write(status)
-
     state = hass.states.get(ENTITY_ID)
     attr = state.attributes
     new_attr = attr.copy()
@@ -105,17 +97,6 @@ def _set_update_status(hass, status):
         hass.services.call(
             "ais_ai_service", "say_it", {"text": "Aktualizacja. " + info}
         )
-
-
-def _get_status_from_file(hass):
-    """Load status from a file or return None."""
-    try:
-        with open(hass.config.path(UPDATER_STATUS_FILE)) as fptr:
-            status = fptr.read().replace("\n", "")
-            return status
-    except Exception as e:
-        _LOGGER.error("Error get_status_from_file " + str(e))
-        return None
 
 
 async def async_setup(hass, config):
@@ -229,8 +210,6 @@ async def async_setup(hass, config):
 
     def upgrade_package_task(package):
         _LOGGER.info("upgrade_package_task " + str(package))
-        # to install into the deps folder use
-        # pip install -U /sdcard/ais-dom-frontend-xxx.tar.gz
         env = os.environ.copy()
         args = [sys.executable, "-m", "pip", "install", "--quiet", package, "--upgrade"]
         process = Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
@@ -282,6 +261,13 @@ async def async_setup(hass, config):
         update_thread = threading.Thread(target=upgrade_package_task, args=(package,))
         update_thread.start()
 
+    def set_update_status(call):
+        _LOGGER.info("set_update_status")
+        if "status" in call.data:
+            _set_update_status(hass, call.data["status"])
+        else:
+            _set_update_status(hass, UPDATE_STATUS_UNKNOWN)
+
     def execute_upgrade(call):
         _LOGGER.info("execute_upgrade")
         _set_update_status(hass, UPDATE_STATUS_CHECKING)
@@ -302,6 +288,7 @@ async def async_setup(hass, config):
         do_applay_the_fix(hass, call)
 
     # register services
+    hass.services.async_register(DOMAIN, SERVICE_SET_UPDATE_STATUS, set_update_status)
     hass.services.async_register(DOMAIN, SERVICE_CHECK_VERSION, check_version)
     hass.services.async_register(DOMAIN, SERVICE_UPGRADE_PACKAGE, upgrade_package)
     hass.services.async_register(DOMAIN, SERVICE_EXECUTE_UPGRADE, execute_upgrade)
@@ -512,8 +499,6 @@ async def get_newest_version(hass, include_components, go_to_download):
     session = async_get_clientsession(hass)
     release_script = ""
     fix_script = ""
-    beta = False
-    force = False
 
     try:
         with async_timeout.timeout(10, loop=hass.loop):
@@ -538,8 +523,6 @@ async def get_newest_version(hass, include_components, go_to_download):
                 "reinstall_zigbee2mqtt": False,
                 "release_script": release_script,
                 "fix_script": fix_script,
-                "beta": beta,
-                "force": force,
                 ATTR_UPDATE_STATUS: UPDATE_STATUS_UPDATED,
                 ATTR_UPDATE_CHECK_TIME: get_current_dt(),
             },
@@ -595,12 +578,6 @@ async def get_newest_version(hass, include_components, go_to_download):
         if "release_script" in res:
             release_script = res["release_script"]
 
-        if "beta" in res:
-            beta = res["beta"]
-
-        if "force" in res:
-            force = res["force"]
-
         if "ais_cloud_services_host" in res:
             ais_global.AIS_HOST = res["ais_cloud_services_host"]
 
@@ -624,8 +601,6 @@ async def get_newest_version(hass, include_components, go_to_download):
                 "reinstall_zigbee2mqtt": reinstall_zigbee2mqtt,
                 "release_script": release_script,
                 "fix_script": fix_script,
-                "beta": beta,
-                "force": force,
                 ATTR_UPDATE_STATUS: system_status,
                 ATTR_UPDATE_CHECK_TIME: get_current_dt(),
                 "ais_cloud_services_host": ais_global.AIS_HOST
@@ -654,8 +629,6 @@ async def get_newest_version(hass, include_components, go_to_download):
                 "zigbee2mqtt_current_version": G_CURRENT_ZIGBEE2MQTT_V,
                 "reinstall_zigbee2mqtt": False,
                 "fix_script": fix_script,
-                "beta": beta,
-                "force": force,
                 ATTR_UPDATE_STATUS: UPDATE_STATUS_UPDATED,
                 ATTR_UPDATE_CHECK_TIME: get_current_dt(),
             },
@@ -769,13 +742,6 @@ def do_execute_upgrade(hass, call):
                 "ais_updater", "applay_the_fix", {"fix_script": fix_script}
             )
 
-        beta = False
-        if "beta" in ws_resp:
-            beta = ws_resp["beta"]
-        force = False
-        if "force" in ws_resp:
-            force = ws_resp["force"]
-
         hass.states.set(
             ENTITY_ID,
             info,
@@ -796,8 +762,6 @@ def do_execute_upgrade(hass, call):
                 "reinstall_zigbee2mqtt": reinstall_zigbee2mqtt,
                 "release_script": release_script,
                 "fix_script": fix_script,
-                "beta": beta,
-                "force": force,
                 ATTR_UPDATE_STATUS: system_status,
                 ATTR_UPDATE_CHECK_TIME: get_current_dt(),
             },
@@ -869,78 +833,32 @@ def do_download_upgrade(hass, call):
     # get the version status from sensor
     state = hass.states.get(ENTITY_ID)
     attr = state.attributes
-    reinstall_dom_app = attr.get("reinstall_dom_app", False)
     reinstall_android_app = attr.get("reinstall_android_app", False)
-    dom_app_newest_version = attr.get("dom_app_newest_version", "")
     release_script = attr.get("release_script", "")
-    reinstall_zigbee2mqtt = attr.get("reinstall_zigbee2mqtt", False)
-    beta = attr.get("beta", False)
 
     # add the grant to save on sdcard
     if reinstall_android_app:
         grant_write_to_sdcard()
 
-    # download release linux script
-    if release_script != "":
-        _LOGGER.info("We have release_script dependencies " + str(release_script))
-        try:
-            file_script = str(os.path.dirname(__file__))
-            file_script += "/scripts/release_script.sh"
-            f = open(str(file_script), "w")
-            if platform.machine() == "x86_64":
-                f.write("#!/bin/sh" + os.linesep)
-            else:
-                f.write("#!/data/data/pl.sviete.dom/files/usr/bin/sh" + os.linesep)
-            for ln in release_script.split("-#-"):
-                f.write(ln + os.linesep)
-            f.close()
-        except Exception as e:
-            _LOGGER.error("Can't download release_script, error: " + str(e))
-    else:
-        _LOGGER.info("No release_scripts this time!")
-
-    # download zigbee2mqtt packages
-    if reinstall_zigbee2mqtt:
-        # download zigbee update zip
-        try:
-            zigbee_update_url = "http://" + ais_global.AIS_HOST + "/ota/zigbee.zip"
-            if beta:
-                zigbee_update_url = (
-                    "http://" + ais_global.AIS_HOST + "/ota/zigbee_beta.zip"
-                )
-            ws_resp = requests.get(zigbee_update_url, timeout=360)
-            if ws_resp.status_code != 200:
-                _LOGGER.error(
-                    "download zigbee2mqtt update return: " + str(ws_resp.status_code)
-                )
-            else:
-                with open(ais_global.G_AIS_HOME_DIR + "/zigbee_update.zip", "wb") as f:
-                    for chunk in ws_resp.iter_content(1024):
-                        f.write(chunk)
-        except Exception as e:
-            _LOGGER.error("download zigbee2mqtt packages: " + str(e))
-
-    # assuming that all will be OK
-    l_ret = 0
-    # download pip packages
-    if reinstall_dom_app:
-        # create directory if not exists
-        update_dir = hass.config.path(UPDATER_DOWNLOAD_FOLDER)
-        if not os.path.exists(update_dir):
-            os.makedirs(update_dir)
-
-        # download
-        l_ret = run_shell_command(
-            ["pip", "download", "ais-dom==" + dom_app_newest_version, "-d", update_dir]
-        )
-
-    # go next or not
-    if l_ret == 0:
-        # call installing service
+    # download release script
+    _LOGGER.info("We have release_script dependencies " + str(release_script))
+    try:
+        file_script = str(os.path.dirname(__file__))
+        file_script += "/scripts/release_script.sh"
+        f = open(str(file_script), "w")
+        if platform.machine() == "x86_64":
+            f.write("#!/bin/sh" + os.linesep)
+        else:
+            f.write("#!/data/data/pl.sviete.dom/files/usr/bin/sh" + os.linesep)
+        for ln in release_script.split("-#-"):
+            f.write(ln + os.linesep)
+        f.close()
+        # go next - execute the upgrade
         hass.services.call("ais_updater", "install_upgrade")
-    else:
+    except Exception as e:
+        _LOGGER.error("Can't download release_script, error: " + str(e))
         hass.services.call(
-            "ais_ai_service", "say_it", {"text": "Nie udało się pobrać aktualizacji."}
+            "ais_ai_service", "say_it", {"text": "Nie udało się pobrać aktualizacji."}
         )
         _set_update_status(hass, UPDATE_STATUS_UNKNOWN)
 
@@ -954,169 +872,27 @@ def do_fix_scripts_permissions():
         )
     except Exception as e:
         _LOGGER.error("do_fix_scripts_permissions: " + str(e))
-
+        
 
 def do_install_upgrade(hass, call):
     # get the version status from sensor
     state = hass.states.get(ENTITY_ID)
     attr = state.attributes
-    reinstall_dom_app = attr.get("reinstall_dom_app", False)
-    dom_app_newest_version = attr.get("dom_app_newest_version", False)
-    reinstall_android_app = attr.get("reinstall_android_app", False)
-    reinstall_linux_apt = attr.get("reinstall_linux_apt", False)
-    reinstall_zigbee2mqtt = attr.get("reinstall_zigbee2mqtt", False)
-    zigbee2mqtt_newest_version = attr.get("zigbee2mqtt_newest_version", 0)
     release_script = attr.get("release_script", "")
-    beta = attr.get("beta", False)
-    force = attr.get("force", False)
 
     # linux
-    if reinstall_linux_apt and release_script != "":
-        _LOGGER.info("We have release_script to execute " + str(release_script))
-        try:
-            do_fix_scripts_permissions()
-            file_script = str(os.path.dirname(__file__))
-            file_script += "/scripts/release_script.sh"
-            apt_process = subprocess.Popen(
-                file_script, shell=True, stdout=None, stderr=None  # nosec
-            )
-            apt_process.wait()
-            _LOGGER.info("release_script, return: " + str(apt_process.returncode))
-        except Exception as e:
-            _LOGGER.error("Can't install release_script, error: " + str(e))
-    else:
-        _LOGGER.info("No release_script this time!")
-
-    # zigbee
-    if reinstall_zigbee2mqtt:
-        _LOGGER.info("We have zigbee2mqtt to update ")
-        # check if file exists
-        if not os.path.isfile(ais_global.G_AIS_HOME_DIR + "/zigbee_update.zip"):
-            _LOGGER.error("Can't find zigbee2mqtt update on disk ")
-            if not reinstall_dom_app and not reinstall_android_app:
-                _set_update_status(hass, UPDATE_STATUS_UNKNOWN)
-        else:
-            # cp current zigbee conf
-            ret = subprocess.check_output(
-                "cp -R "
-                + ais_global.G_AIS_HOME_DIR
-                + "/zigbee2mqtt/data "
-                + ais_global.G_AIS_HOME_DIR
-                + "/data-backup",
-                shell=True,  # nosec
-            )
-            # rm current zigbee
-            ret = subprocess.check_output(
-                "rm -rf " + ais_global.G_AIS_HOME_DIR + "/zigbee2mqtt",
-                shell=True,  # nosec
-            )  # nosec
-
-            # unzip zigbee
-            try:
-                ret = subprocess.check_output(
-                    "7z x -mmt=2 "
-                    + " -o"
-                    + ais_global.G_AIS_HOME_DIR
-                    + "/zigbee2mqtt "
-                    + ais_global.G_AIS_HOME_DIR
-                    + "/zigbee_update.zip "
-                    + "-y",
-                    shell=True,  # nosec
-                )
-                ret = subprocess.check_output(
-                    "rm -rf " + ais_global.G_AIS_HOME_DIR + "/zigbee_update.zip",
-                    shell=True,  # nosec
-                )
-            except Exception as e:
-                _LOGGER.error("Can't unzip zigbee2mqtt, error: " + str(e))
-
-            # copy zigbee config back
-            ret = subprocess.check_output(
-                "cp -R "
-                + ais_global.G_AIS_HOME_DIR
-                + "/data-backup/* "
-                + ais_global.G_AIS_HOME_DIR
-                + "/zigbee2mqtt/data",
-                shell=True,  # nosec
-            )
-
-            # delete config backup
-            ret = subprocess.check_output(
-                "rm -rf " + ais_global.G_AIS_HOME_DIR + "/data-backup",
-                shell=True,  # nosec
-            )  # nosec
-
-            # This was only Zigbee2Mqtt update
-            if not reinstall_dom_app and not reinstall_android_app:
-                # set update status
-                _set_update_status(hass, UPDATE_STATUS_RESTART)
-                # restart ais-dom
-                hass.services.call("homeassistant", "stop", {"ais_command": "restart"})
-
-    # pip
-    update_dir = hass.config.path(UPDATER_DOWNLOAD_FOLDER)
-    if reinstall_dom_app:
-        # update pip
-        run_shell_command(["pip", "install", "pip", "-U"])
-        # install via pip
-        run_shell_command(
-            [
-                "pip",
-                "install",
-                "ais-dom==" + dom_app_newest_version,
-                "--find-links",
-                update_dir,
-                "-U",
-            ]
+    _LOGGER.info("We have release_script to execute " + str(release_script))
+    try:
+        do_fix_scripts_permissions()
+        file_script = str(os.path.dirname(__file__))
+        file_script += "/scripts/release_script.sh"
+        apt_process = subprocess.Popen(
+            file_script, shell=True, stdout=None, stderr=None  # nosec
         )
-
-    # remove update dir
-    update_dir = hass.config.path(UPDATER_DOWNLOAD_FOLDER)
-    if os.path.exists(update_dir):
-        run_shell_command(["rm", update_dir, "-rf"])
-
-    # android apk
-    if reinstall_android_app:
-        # set update status
-        _set_update_status(hass, UPDATE_STATUS_RESTART)
-
-        command = "ais-dom-update"
-        if beta:
-            command = command + "-beta"
-        if force:
-            command = command + "-force"
-        l_ret = run_shell_command(
-            [
-                "am",
-                "start",
-                "-n",
-                "launcher.sviete.pl.domlauncherapp/.LauncherActivity",
-                "-e",
-                "command",
-                command,
-            ]
-        )
-        if l_ret != 0:
-            su_command = (
-                "su -c 'am start -n launcher.sviete.pl.domlauncherapp/.LauncherActivity -e command "
-                + command
-                + "'"
-            )
-            _LOGGER.info("ais_shell_command as su " + su_command)
-            hass.services.call(
-                "ais_shell_command", "execute_command", {"command": su_command}
-            )
-
-    elif reinstall_dom_app:
-        # set update status
-        _set_update_status(hass, UPDATE_STATUS_RESTART)
-        # restart ais-dom
-        hass.services.call("homeassistant", "stop", {"ais_command": "restart"})
-    elif reinstall_linux_apt:
-        # check the version again
-        hass.services.call(
-            "ais_updater", "check_version", {"autoUpdate": False, "sayIt": False}
-        )
+        apt_process.wait()
+        _LOGGER.info("release_script, return: " + str(apt_process.returncode))
+    except Exception as e:
+        _LOGGER.error("Can't install release_script, error: " + str(e))
 
 
 def do_applay_the_fix(hass, call):

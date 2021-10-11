@@ -3734,6 +3734,8 @@ def _process_command_from_frame(hass, service):
         event_data = {"event": str(service.data["payload"])}
         hass.bus.fire("ais_sip_event", event_data)
         _LOGGER.info("sip_event " + str(event_data))
+    elif service.data["topic"] == "ais/set_update_status":
+        hass.services.call("ais_updater", "set_update_status", {"status": service.data["payload"]})
     else:
         # TODO process this without mqtt
         # player_status and speech_status
