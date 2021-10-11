@@ -612,7 +612,7 @@ async def test_config_flow_step_device_manual_model_succes(hass):
 
     with patch(
         "homeassistant.components.xiaomi_miio.device.Device.info",
-        side_effect=const.AuthException({}),
+        side_effect=DeviceException({}),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
