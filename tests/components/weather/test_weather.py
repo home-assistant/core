@@ -7,7 +7,6 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
-    ATTR_WEATHER_ATTRIBUTION,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_OZONE,
     ATTR_WEATHER_PRESSURE,
@@ -15,6 +14,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED,
 )
+from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
@@ -39,7 +39,7 @@ async def test_attributes(hass):
     assert data.get(ATTR_WEATHER_WIND_SPEED) == 0.5
     assert data.get(ATTR_WEATHER_WIND_BEARING) is None
     assert data.get(ATTR_WEATHER_OZONE) is None
-    assert data.get(ATTR_WEATHER_ATTRIBUTION) == "Powered by Home Assistant"
+    assert data.get(ATTR_ATTRIBUTION) == "Powered by Home Assistant"
     assert data.get(ATTR_FORECAST)[0].get(ATTR_FORECAST_CONDITION) == "rainy"
     assert data.get(ATTR_FORECAST)[0].get(ATTR_FORECAST_PRECIPITATION) == 1
     assert data.get(ATTR_FORECAST)[0].get(ATTR_FORECAST_PRECIPITATION_PROBABILITY) == 60
