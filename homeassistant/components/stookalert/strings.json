@@ -1,0 +1,14 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "province": "Province"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  }
+}

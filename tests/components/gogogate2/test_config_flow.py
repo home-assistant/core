@@ -5,7 +5,7 @@ from ismartgate import GogoGate2Api, ISmartGateApi
 from ismartgate.common import ApiError
 from ismartgate.const import GogoGate2ApiErrorCode
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.gogogate2.const import (
     DEVICE_TYPE_GOGOGATE2,
     DEVICE_TYPE_ISMARTGATE,
@@ -102,7 +102,6 @@ async def test_auth_fail(
 
 async def test_form_homekit_unique_id_already_setup(hass):
     """Test that we abort from homekit if gogogate2 is already setup."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -134,7 +133,6 @@ async def test_form_homekit_unique_id_already_setup(hass):
 
 async def test_form_homekit_ip_address_already_setup(hass):
     """Test that we abort from homekit if gogogate2 is already setup."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -152,7 +150,6 @@ async def test_form_homekit_ip_address_already_setup(hass):
 
 async def test_form_homekit_ip_address(hass):
     """Test homekit includes the defaults ip address."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -181,7 +178,6 @@ async def test_discovered_dhcp(
     ismartgateapi_mock.return_value = api
 
     api.reset_mock()
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -227,7 +223,6 @@ async def test_discovered_dhcp(
 
 async def test_discovered_by_homekit_and_dhcp(hass):
     """Test we get the form with homekit and abort for dhcp source when we get both."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
