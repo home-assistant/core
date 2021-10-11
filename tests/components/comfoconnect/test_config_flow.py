@@ -4,7 +4,7 @@ from unittest import mock
 from pycomfoconnect import PyComfoConnectNotAllowed
 
 from homeassistant import config_entries
-from homeassistant.components.comfoconnect import CONF_USER_AGENT, DEFAULT_TOKEN
+from homeassistant.components.comfoconnect import CONF_USER_AGENT
 from homeassistant.components.comfoconnect.const import DOMAIN
 from homeassistant.components.comfoconnect.sensor import (
     ATTR_AIR_FLOW_EXHAUST,
@@ -22,6 +22,7 @@ async def test_flow_works(mock_bridge, mock_comfoconnect_command, hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
+    assert result["data_schema"].schema["host"].validators[1].container == ["1.2.3.4"]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -29,8 +30,6 @@ async def test_flow_works(mock_bridge, mock_comfoconnect_command, hass):
         data={
             CONF_HOST: "1.2.3.4",
             CONF_NAME: "foo",
-            CONF_TOKEN: DEFAULT_TOKEN,
-            CONF_USER_AGENT: "Home Assistant",
             CONF_PIN: "4711",
         },
     )
@@ -38,9 +37,21 @@ async def test_flow_works(mock_bridge, mock_comfoconnect_command, hass):
     assert result["title"] == "ComfoAir 00"
     assert result["data"][CONF_HOST] == "1.2.3.4"
     assert result["data"][CONF_NAME] == "foo"
-    assert result["data"][CONF_TOKEN] == DEFAULT_TOKEN
+    assert len(result["data"][CONF_TOKEN]) == 32
+    # check that token is a hex-encoded integer
+    assert int(result["data"][CONF_TOKEN], 16)
     assert result["data"][CONF_USER_AGENT] == "Home Assistant"
     assert result["data"][CONF_PIN] == "4711"
+
+
+async def test_flow_no_bridge_discovered(mock_bridge, mock_comfoconnect_command, hass):
+    """Test form when no bridge is discovered."""
+    mock_bridge.return_value = []
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["data_schema"].schema["host"] is str
 
 
 async def test_flow_connection_error(mock_bridge, mock_comfoconnect_command, hass):
@@ -59,7 +70,10 @@ async def test_flow_connection_error(mock_bridge, mock_comfoconnect_command, has
 async def test_flow_auth_failed(mock_bridge, mock_comfoconnect_command, hass):
     """Test authentication failure during config flow."""
     with mock.patch("pycomfoconnect.bridge.Bridge.discover") as mock_discover:
-        mock_discover.side_effect = PyComfoConnectNotAllowed()
+        mock_discover.side_effect = [
+            mock_discover.side_effect,
+            PyComfoConnectNotAllowed(),
+        ]
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
@@ -71,7 +85,7 @@ async def test_flow_auth_failed(mock_bridge, mock_comfoconnect_command, hass):
 
 async def test_flow_unknown_error(mock_bridge, mock_comfoconnect_command, hass):
     """Test handling of unknown error during config flow."""
-    mock_bridge.side_effect = Exception()
+    mock_bridge.side_effect = [mock_bridge.side_effect, Exception()]
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},

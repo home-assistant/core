@@ -148,4 +148,9 @@ class ComfoConnectFan(FanEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
-        return {"identifiers": {(DOMAIN, self._ccb.unique_id)}}
+        return {
+            "identifiers": {(DOMAIN, self._ccb.unique_id)},
+            "manufacturer": "Zehnder",
+            "model": "ComfoAir Q",
+            "name": self._ccb.name,
+        }

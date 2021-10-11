@@ -7,9 +7,7 @@
         "data": {
           "host": "Host",
           "name": "Name",
-          "token": "Token",
-          "pin": "Pin",
-          "user_agent": "User Agent"
+          "pin": "Pin"
         }
       }
     },
