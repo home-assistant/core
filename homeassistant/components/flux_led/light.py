@@ -27,14 +27,14 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
-    ATTR_HS_COLOR,
+    ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_WHITE,
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
     COLOR_MODE_ONOFF,
+    COLOR_MODE_RGB,
     COLOR_MODE_RGBW,
     COLOR_MODE_RGBWW,
     COLOR_MODE_WHITE,
@@ -98,10 +98,7 @@ SUPPORT_FLUX_LED: Final = SUPPORT_EFFECT | SUPPORT_TRANSITION
 
 
 FLUX_COLOR_MODE_TO_HASS: Final = {
-    # If the bulb is in RGB mode and does not support RGBW or RGBWW
-    # the UI will decrease the brightness every time the color is adjusted
-    # via https://github.com/home-assistant/frontend/blob/e797c017614797bb11671496d6bd65863de22063/src/dialogs/more-info/controls/more-info-light.ts#L263
-    FLUX_COLOR_MODE_RGB: COLOR_MODE_HS,
+    FLUX_COLOR_MODE_RGB: COLOR_MODE_RGB,
     FLUX_COLOR_MODE_RGBW: COLOR_MODE_RGBW,
     FLUX_COLOR_MODE_RGBWW: COLOR_MODE_RGBWW,
     FLUX_COLOR_MODE_CCT: COLOR_MODE_COLOR_TEMP,
@@ -322,9 +319,13 @@ class FluxLight(FluxEntity, CoordinatorEntity, LightEntity):
         return color_temperature_kelvin_to_mired(self._device.color_temp)
 
     @property
-    def hs_color(self) -> tuple[float, float]:
-        """Return the hs color value."""
-        return color_RGB_to_hs(*self._device.rgb)
+    def rgb_color(self) -> tuple[int, int, int]:
+        """Return the rgb color value."""
+        # Note that we call color_RGB_to_hs and not color_RGB_to_hsv
+        # to get the unscaled value since this is what the frontend wants
+        # https://github.com/home-assistant/frontend/blob/e797c017614797bb11671496d6bd65863de22063/src/dialogs/more-info/controls/more-info-light.ts#L263
+        rgb: tuple[int, int, int] = color_hs_to_RGB(*color_RGB_to_hs(*self._device.rgb))
+        return rgb
 
     @property
     def rgbw_color(self) -> tuple[int, int, int, int]:
@@ -383,10 +384,10 @@ class FluxLight(FluxEntity, CoordinatorEntity, LightEntity):
             cold, warm = color_temp_to_white_levels(color_temp_kelvin, brightness)
             await self._device.async_set_levels(r=0, b=0, g=0, w=warm, w2=cold)
             return
-        # Handle switch to HS Color Mode
-        if ATTR_HS_COLOR in kwargs:
+        # Handle switch to RGB Color Mode
+        if ATTR_RGB_COLOR in kwargs:
             await self._device.async_set_levels(
-                *color_hs_to_RGB(*kwargs[ATTR_HS_COLOR]), brightness=brightness
+                *kwargs[ATTR_RGB_COLOR], brightness=brightness
             )
             return
         # Handle switch to RGBW Color Mode
@@ -439,10 +440,9 @@ class FluxLight(FluxEntity, CoordinatorEntity, LightEntity):
         if self.color_mode == COLOR_MODE_COLOR_TEMP:
             await self._device.async_set_white_temp(self._device.color_temp, brightness)
             return
-        # Handle brightness adjustment in HS Color Mode
-        if self.color_mode == COLOR_MODE_HS:
-            rgb = color_hs_to_RGB(*self.hs_color)
-            await self._device.async_set_levels(*rgb, brightness=brightness)
+        # Handle brightness adjustment in RGB Color Mode
+        if self.color_mode == COLOR_MODE_RGB:
+            await self._device.async_set_levels(*self.rgb_color, brightness=brightness)
             return
         # Handle brightness adjustment in RGBW Color Mode
         if self.color_mode == COLOR_MODE_RGBW:
