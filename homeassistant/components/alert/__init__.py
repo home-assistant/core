@@ -211,7 +211,7 @@ class Alert(ToggleEntity):
         )
 
     @property
-    def state(self):
+    def state(self):  # pylint: disable=overridden-final-method
         """Return the alert status."""
         if self._firing:
             if self._ack:
