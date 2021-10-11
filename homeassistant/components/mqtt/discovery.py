@@ -16,6 +16,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.loader import async_get_mqtt
 
+from . import CONF_TOPIC
 from .. import mqtt
 from .abbreviations import ABBREVIATIONS, DEVICE_ABBREVIATIONS
 from .const import (
@@ -24,6 +25,7 @@ from .const import (
     ATTR_DISCOVERY_TOPIC,
     DOMAIN,
 )
+from .mixins import CONF_AVAILABILITY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -138,6 +140,19 @@ async def async_start(  # noqa: C901
                         payload[key] = f"{base}{value[1:]}"
                     if value[-1] == TOPIC_BASE and key.endswith("topic"):
                         payload[key] = f"{value[:-1]}{base}"
+            if payload.get(CONF_AVAILABILITY):
+                for availability_index in range(0, len(payload[CONF_AVAILABILITY])):
+                    availability_conf = payload[CONF_AVAILABILITY][availability_index]
+                    value = availability_conf[CONF_TOPIC]
+                    if isinstance(value, str) and value:
+                        if value[0] == TOPIC_BASE:
+                            payload[CONF_AVAILABILITY][availability_index][
+                                CONF_TOPIC
+                            ] = f"{base}{value[1:]}"
+                        if value[-1] == TOPIC_BASE:
+                            payload[CONF_AVAILABILITY][availability_index][
+                                CONF_TOPIC
+                            ] = f"{value[:-1]}{base}"
 
         # If present, the node_id will be included in the discovered object id
         discovery_id = " ".join((node_id, object_id)) if node_id else object_id
