@@ -1199,7 +1199,7 @@ roonapi==0.0.38
 rpi-bad-power==0.1.0
 
 # homeassistant.components.yamaha
-rxv==0.6.0
+rxv==0.7.0
 
 # homeassistant.components.samsungtv
 samsungctl[websocket]==0.7.1
