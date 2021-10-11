@@ -74,6 +74,7 @@ class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     entry: ConfigEntry | None = None
+    hassio_discovery: dict[str, Any] | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -153,6 +154,45 @@ class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_REAUTH_DATA_SCHEMA,
             errors=errors,
         )
+
+    async def async_step_hassio(self, discovery_info: dict[str, Any]) -> FlowResult:
+        """Handle the discovery step via hassio."""
+        self._async_abort_entries_match(
+            {CONF_HOST: discovery_info[CONF_HOST], CONF_PORT: discovery_info[CONF_PORT]}
+        )
+        await self.async_set_unique_id(
+            f"{discovery_info[CONF_HOST]}:{discovery_info[CONF_PORT]}"
+        )
+        self._abort_if_unique_id_configured()
+
+        self.hassio_discovery = discovery_info
+        return await self.async_step_hassio_confirm()
+
+    async def async_step_hassio_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm Supervisor discovery."""
+        assert self.hassio_discovery
+        if user_input is None:
+            return self.async_show_form(
+                step_id="hassio_confirm",
+                data_schema=vol.Schema({}),
+                description_placeholders={"addon": self.hassio_discovery["addon"]},
+            )
+
+        try:
+            info = await validate_input(self.hass, self.hassio_discovery)
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+        except InvalidAuth:
+            return self.async_abort(reason="invalid_auth")
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
+        else:
+            return self.async_create_entry(
+                title=info["title"], data=self.hassio_discovery
+            )
 
 
 class CannotConnect(exceptions.HomeAssistantError):
