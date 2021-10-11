@@ -295,7 +295,9 @@ def setup_connection_for_dialect(
             version = result[0][0]
             major, minor, _patch = version.split(".", 2)
             if int(major) == 3 and int(minor) < 25:
-                instance._db_supports_row_number = False
+                instance._db_supports_row_number = (  # pylint: disable=[protected-access]
+                    False
+                )
 
         # approximately 8MiB of memory
         execute_on_connection(dbapi_connection, "PRAGMA cache_size = -8192")
@@ -310,7 +312,9 @@ def setup_connection_for_dialect(
             version = result[0][0]
             major, minor, _patch = version.split(".", 2)
             if int(major) == 5 and int(minor) < 8:
-                instance._db_supports_row_number = False
+                instance._db_supports_row_number = (  # pylint: disable=[protected-access]
+                    False
+                )
 
 
 def end_incomplete_runs(session, start_time):

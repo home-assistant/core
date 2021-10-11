@@ -281,7 +281,7 @@ def compile_hourly_statistics(
             }
 
     # Get last hour's last sum
-    if instance._db_supports_row_number:
+    if instance._db_supports_row_number:  # pylint: disable=[protected-access]
         subquery = (
             session.query(*QUERY_STATISTICS_SUMMARY_SUM)
             .filter(StatisticsShortTerm.start >= bindparam("start_time"))
