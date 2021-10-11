@@ -61,7 +61,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 sensor_type,
                 f"{config_entry.title} {sensor_type}",
                 weather_data,
-                f"{config_entry.unique_id}-{sensor_type}",
+                f"{weather_data.metadata['location']}-{sensor_type}",
             )
             for sensor_type in sensor_list
         ],
