@@ -77,6 +77,7 @@ FLOWS = [
     "emulated_roku",
     "enocean",
     "enphase_envoy",
+    "environment_canada",
     "epson",
     "esphome",
     "ezviz",
