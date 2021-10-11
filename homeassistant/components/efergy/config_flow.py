@@ -60,9 +60,9 @@ class EfergyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a config entry from configuration.yaml."""
         for entry in self._async_current_entries():
             if entry.data[CONF_API_KEY] == import_config[CONF_APPTOKEN]:
-                _LOGGER.warning(
-                    "This Efergy yaml configuration has already been imported. Please remove it"
-                )
+                _part = import_config[CONF_APPTOKEN][0:4]
+                _msg = f"Efergy yaml config with partial key {_part} has been imported. Please remove it"
+                _LOGGER.warning(_msg)
                 return self.async_abort(reason="already_configured")
         return await self.async_step_user({CONF_API_KEY: import_config[CONF_APPTOKEN]})
 
