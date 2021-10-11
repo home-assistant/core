@@ -6,6 +6,9 @@ from typing import Any, TypedDict
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.util.async_ import gather_with_concurrency
+
+FLOW_INIT_LIMIT = 2
 
 
 class SSDPFlow(TypedDict):
@@ -29,11 +32,12 @@ class FlowDispatcher:
     def async_start(self, *_: Any) -> None:
         """Start processing pending flows."""
         self.started = True
-        self.hass.loop.call_soon(self._async_process_pending_flows)
+        self.hass.async_create_task(self._async_process_pending_flows())
 
-    def _async_process_pending_flows(self) -> None:
-        for flow in self.pending_flows:
-            self.hass.async_create_task(self._init_flow(flow))
+    async def _async_process_pending_flows(self) -> None:
+        await gather_with_concurrency(
+            FLOW_INIT_LIMIT, *[self._init_flow(flow) for flow in self.pending_flows]
+        )
         self.pending_flows = []
 
     def create(self, flow: SSDPFlow) -> None:

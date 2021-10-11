@@ -31,6 +31,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_homekit, async_get_zeroconf, bind_hass
+from homeassistant.util.async_ import gather_with_concurrency
 
 from .models import HaAsyncServiceBrowser, HaAsyncZeroconf, HaZeroconf
 from .usage import install_multiple_zeroconf_catcher
@@ -50,6 +51,8 @@ CONF_DEFAULT_INTERFACE = "default_interface"
 CONF_IPV6 = "ipv6"
 DEFAULT_DEFAULT_INTERFACE = True
 DEFAULT_IPV6 = True
+
+FLOW_INIT_LIMIT = 2
 
 HOMEKIT_PAIRED_STATUS_FLAG = "sf"
 HOMEKIT_MODEL = "md"
@@ -301,11 +304,12 @@ class FlowDispatcher:
     def async_start(self) -> None:
         """Start processing pending flows."""
         self.started = True
-        self.hass.loop.call_soon(self._async_process_pending_flows)
+        self.hass.async_create_task(self._async_process_pending_flows())
 
-    def _async_process_pending_flows(self) -> None:
-        for flow in self.pending_flows:
-            self.hass.async_create_task(self._init_flow(flow))
+    async def _async_process_pending_flows(self) -> None:
+        await gather_with_concurrency(
+            FLOW_INIT_LIMIT, *[self._init_flow(flow) for flow in self.pending_flows]
+        )
         self.pending_flows = []
 
     def async_create(self, flow: ZeroconfFlow) -> None:
