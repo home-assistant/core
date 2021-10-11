@@ -20,7 +20,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CURRENCY_DOLLAR, ENERGY_KILO_WATT_HOUR
+from homeassistant.const import CURRENCY_DOLLAR, ENERGY_KILO_WATT_HOUR
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -53,6 +53,8 @@ def friendly_channel_type(channel_type: str) -> str:
 
 class AmberSensor(CoordinatorEntity, SensorEntity):
     """Amber Base Sensor."""
+
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,
@@ -88,7 +90,7 @@ class AmberPriceSensor(AmberSensor):
         """Return additional pieces of information about the price."""
         interval = self.coordinator.data[self.entity_description.key][self.channel_type]
 
-        data: dict[str, Any] = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        data: dict[str, Any] = {}
         if interval is None:
             return data
 
@@ -143,7 +145,6 @@ class AmberForecastSensor(AmberSensor):
         data = {
             "forecasts": [],
             "channel_type": intervals[0].channel_type.value,
-            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
         for interval in intervals:
@@ -172,6 +173,8 @@ class AmberForecastSensor(AmberSensor):
 class AmberGridSensor(CoordinatorEntity, SensorEntity):
     """Sensor to show single grid specific values."""
 
+    _attr_attribution = ATTRIBUTION
+
     def __init__(
         self,
         coordinator: AmberUpdateCoordinator,
@@ -181,7 +184,6 @@ class AmberGridSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.site_id = coordinator.site_id
         self.entity_description = description
-        self._attr_device_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self._attr_unique_id = f"{coordinator.site_id}-{description.key}"
 
     @property
