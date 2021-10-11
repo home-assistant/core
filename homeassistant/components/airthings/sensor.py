@@ -11,15 +11,20 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_PM1,
+    DEVICE_CLASS_PM25,
     DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     PRESSURE_MBAR,
+    SIGNAL_STRENGTH_DECIBELS,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
@@ -72,6 +77,38 @@ SENSORS: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         name="VOC",
     ),
+    "light": SensorEntityDescription(
+        key="light",
+        native_unit_of_measurement=PERCENTAGE,
+        name="Light",
+    ),
+    "virusRisk": SensorEntityDescription(
+        key="virusRisk",
+        name="Virus Risk",
+    ),
+    "mold": SensorEntityDescription(
+        key="mold",
+        name="Mold",
+    ),
+    "rssi": SensorEntityDescription(
+        key="rssi",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+        name="RSSI",
+        entity_registry_enabled_default=False,
+    ),
+    "pm1": SensorEntityDescription(
+        key="pm1",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=DEVICE_CLASS_PM1,
+        name="PM1",
+    ),
+    "pm25": SensorEntityDescription(
+        key="pm25",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=DEVICE_CLASS_PM25,
+        name="PM25",
+    ),
 }
 
 
@@ -117,7 +154,7 @@ class AirthingsHeaterEnergySensor(CoordinatorEntity, SensorEntity):
         self._id = airthings_device.device_id
         self._attr_device_info = {
             "identifiers": {(DOMAIN, airthings_device.device_id)},
-            "name": self.name,
+            "name": airthings_device.name,
             "manufacturer": "Airthings",
         }
 

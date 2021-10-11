@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 import struct
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 from homeassistant.const import (
     CONF_ADDRESS,

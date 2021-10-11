@@ -277,11 +277,18 @@ class DHCPWatcher(WatcherBase):
 
     async def async_start(self):
         """Start watching for dhcp packets."""
+        await self.hass.async_add_executor_job(self._start)
+
+    def _start(self):
+        """Start watching for dhcp packets."""
         # Local import because importing from scapy has side effects such as opening
         # sockets
         from scapy import (  # pylint: disable=import-outside-toplevel,unused-import  # noqa: F401
             arch,
         )
+        from scapy.layers.dhcp import DHCP  # pylint: disable=import-outside-toplevel
+        from scapy.layers.inet import IP  # pylint: disable=import-outside-toplevel
+        from scapy.layers.l2 import Ether  # pylint: disable=import-outside-toplevel
 
         #
         # Importing scapy.sendrecv will cause a scapy resync which will
@@ -294,11 +301,29 @@ class DHCPWatcher(WatcherBase):
             AsyncSniffer,
         )
 
+        def _handle_dhcp_packet(packet):
+            """Process a dhcp packet."""
+            if DHCP not in packet:
+                return
+
+            options = packet[DHCP].options
+            request_type = _decode_dhcp_option(options, MESSAGE_TYPE)
+            if request_type != DHCP_REQUEST:
+                # Not a DHCP request
+                return
+
+            ip_address = _decode_dhcp_option(options, REQUESTED_ADDR) or packet[IP].src
+            hostname = _decode_dhcp_option(options, HOSTNAME) or ""
+            mac_address = _format_mac(packet[Ether].src)
+
+            if ip_address is not None and mac_address is not None:
+                self.process_client(ip_address, hostname, mac_address)
+
         # disable scapy promiscuous mode as we do not need it
         conf.sniff_promisc = 0
 
         try:
-            await self.hass.async_add_executor_job(_verify_l2socket_setup, FILTER)
+            _verify_l2socket_setup(FILTER)
         except (Scapy_Exception, OSError) as ex:
             if os.geteuid() == 0:
                 _LOGGER.error("Cannot watch for dhcp packets: %s", ex)
@@ -309,7 +334,7 @@ class DHCPWatcher(WatcherBase):
             return
 
         try:
-            await self.hass.async_add_executor_job(_verify_working_pcap, FILTER)
+            _verify_working_pcap(FILTER)
         except (Scapy_Exception, ImportError) as ex:
             _LOGGER.error(
                 "Cannot watch for dhcp packets without a functional packet filter: %s",
@@ -320,40 +345,13 @@ class DHCPWatcher(WatcherBase):
         self._sniffer = AsyncSniffer(
             filter=FILTER,
             started_callback=self._started.set,
-            prn=self.handle_dhcp_packet,
+            prn=_handle_dhcp_packet,
             store=0,
         )
 
         self._sniffer.start()
         if self._sniffer.thread:
             self._sniffer.thread.name = self.__class__.__name__
-
-    def handle_dhcp_packet(self, packet):
-        """Process a dhcp packet."""
-        # Local import because importing from scapy has side effects such as opening
-        # sockets
-        from scapy.layers.dhcp import DHCP  # pylint: disable=import-outside-toplevel
-        from scapy.layers.inet import IP  # pylint: disable=import-outside-toplevel
-        from scapy.layers.l2 import Ether  # pylint: disable=import-outside-toplevel
-
-        if DHCP not in packet:
-            return
-
-        options = packet[DHCP].options
-
-        request_type = _decode_dhcp_option(options, MESSAGE_TYPE)
-        if request_type != DHCP_REQUEST:
-            # DHCP request
-            return
-
-        ip_address = _decode_dhcp_option(options, REQUESTED_ADDR) or packet[IP].src
-        hostname = _decode_dhcp_option(options, HOSTNAME) or ""
-        mac_address = _format_mac(packet[Ether].src)
-
-        if ip_address is None or mac_address is None:
-            return
-
-        self.process_client(ip_address, hostname, mac_address)
 
     def create_task(self, task):
         """Pass a task to hass.add_job since we are in a thread."""

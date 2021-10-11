@@ -84,6 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             while (
                 coordinator.bridge.battery is None
                 or coordinator.bridge.cpu is None
+                or coordinator.bridge.display is None
                 or coordinator.bridge.filesystem is None
                 or coordinator.bridge.graphics is None
                 or coordinator.bridge.information is None

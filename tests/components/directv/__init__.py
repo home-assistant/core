@@ -1,12 +1,9 @@
 """Tests for the DirecTV component."""
+from http import HTTPStatus
+
 from homeassistant.components.directv.const import CONF_RECEIVER_ID, DOMAIN
 from homeassistant.components.ssdp import ATTR_SSDP_LOCATION
-from homeassistant.const import (
-    CONF_HOST,
-    CONTENT_TYPE_JSON,
-    HTTP_FORBIDDEN,
-    HTTP_INTERNAL_SERVER_ERROR,
-)
+from homeassistant.const import CONF_HOST, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
@@ -46,7 +43,7 @@ def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
     aioclient_mock.get(
         f"http://{HOST}:8080/info/mode",
         params={"clientAddr": "9XXXXXXXXXX9"},
-        status=HTTP_INTERNAL_SERVER_ERROR,
+        status=HTTPStatus.INTERNAL_SERVER_ERROR,
         text=load_fixture("directv/info-mode-error.json"),
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
@@ -86,7 +83,7 @@ def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
     aioclient_mock.get(
         f"http://{HOST}:8080/tv/getTuned",
         params={"clientAddr": "C01234567890"},
-        status=HTTP_FORBIDDEN,
+        status=HTTPStatus.FORBIDDEN,
         text=load_fixture("directv/tv-get-tuned-restricted.json"),
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
@@ -107,7 +104,8 @@ async def setup_integration(
     """Set up the DirecTV integration in Home Assistant."""
     if setup_error:
         aioclient_mock.get(
-            f"http://{HOST}:8080/info/getVersion", status=HTTP_INTERNAL_SERVER_ERROR
+            f"http://{HOST}:8080/info/getVersion",
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
         )
     else:
         mock_connection(aioclient_mock)

@@ -36,6 +36,9 @@ from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
+STATE_CHANGE_TIME = 0.40  # seconds
+POWER_STATE_CHANGE_TIME = 1  # seconds
+
 DOMAIN = "yeelight"
 DATA_YEELIGHT = DOMAIN
 DATA_UPDATED = "yeelight_{}_data_updated"
@@ -178,6 +181,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DATA_CUSTOM_EFFECTS: conf.get(CONF_CUSTOM_EFFECTS, {}),
         DATA_CONFIG_ENTRIES: {},
     }
+    # Make sure the scanner is always started in case we are
+    # going to retry via ConfigEntryNotReady and the bulb has changed
+    # ip
+    scanner = YeelightScanner.async_get(hass)
+    await scanner.async_setup()
 
     # Import manually configured devices
     for host, device_config in config.get(DOMAIN, {}).get(CONF_DEVICES, {}).items():
@@ -278,11 +286,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             device = await _async_get_device(hass, entry.data[CONF_HOST], entry)
         except BULB_EXCEPTIONS as ex:
-            # If CONF_ID is not valid we cannot fallback to discovery
-            # so we must retry by raising ConfigEntryNotReady
-            if not entry.data.get(CONF_ID):
-                raise ConfigEntryNotReady from ex
-            # Otherwise fall through to discovery
+            # Always retry later since bulbs can stop responding to SSDP
+            # sometimes even though they are online. If it has changed
+            # IP we will update it via discovery to the config flow
+            raise ConfigEntryNotReady from ex
         else:
             # Since device is passed this cannot throw an exception anymore
             await _async_initialize(hass, entry, entry.data[CONF_HOST], device=device)
@@ -295,7 +302,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except BULB_EXCEPTIONS:
             _LOGGER.exception("Failed to connect to bulb at %s", host)
 
-    # discovery
     scanner = YeelightScanner.async_get(hass)
     await scanner.async_register_callback(entry.data[CONF_ID], _async_from_discovery)
     return True
@@ -303,17 +309,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    data_config_entries = hass.data[DOMAIN][DATA_CONFIG_ENTRIES]
-    entry_data = data_config_entries[entry.entry_id]
-
-    if entry_data[DATA_PLATFORMS_LOADED]:
-        if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-            return False
-
     if entry.data.get(CONF_ID):
         # discovery
         scanner = YeelightScanner.async_get(hass)
         scanner.async_unregister_callback(entry.data[CONF_ID])
+
+    data_config_entries = hass.data[DOMAIN][DATA_CONFIG_ENTRIES]
+    if entry.entry_id not in data_config_entries:
+        # Device not online
+        return True
+
+    entry_data = data_config_entries[entry.entry_id]
+    unload_ok = True
+    if entry_data[DATA_PLATFORMS_LOADED]:
+        unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if DATA_DEVICE in entry_data:
         device = entry_data[DATA_DEVICE]
@@ -322,8 +331,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.debug("Yeelight Listener stopped")
 
     data_config_entries.pop(entry.entry_id)
-
-    return True
+    return unload_ok
 
 
 @callback
@@ -496,7 +504,9 @@ class YeelightScanner:
         _LOGGER.debug("Discovered via SSDP: %s", response)
         unique_id = response["id"]
         host = urlparse(response["location"]).hostname
-        if unique_id not in self._unique_id_capabilities:
+        current_entry = self._unique_id_capabilities.get(unique_id)
+        # Make sure we handle ip changes
+        if not current_entry or host != urlparse(current_entry["location"]).hostname:
             _LOGGER.debug("Yeelight discovered with %s", response)
             self._async_discovered_by_ssdp(response)
         self._host_capabilities[host] = response
@@ -544,6 +554,17 @@ class YeelightScanner:
             self._async_stop_scan()
 
 
+def update_needs_bg_power_workaround(data):
+    """Check if a push update needs the bg_power workaround.
+
+    Some devices will push the incorrect state for bg_power.
+
+    To work around this any time we are pushed an update
+    with bg_power, we force poll state which will be correct.
+    """
+    return "bg_power" in data
+
+
 class YeelightDevice:
     """Represents single Yeelight device."""
 
@@ -555,7 +576,7 @@ class YeelightDevice:
         self._bulb_device = bulb
         self.capabilities = {}
         self._device_type = None
-        self._available = False
+        self._available = True
         self._initialized = False
         self._did_first_update = False
         self._name = None
@@ -690,12 +711,18 @@ class YeelightDevice:
         await self._async_update_properties()
         async_dispatcher_send(self._hass, DATA_UPDATED.format(self._host))
 
+    async def _async_forced_update(self, _now):
+        """Call a forced update."""
+        await self.async_update(True)
+
     @callback
     def async_update_callback(self, data):
         """Update push from device."""
         was_available = self._available
         self._available = data.get(KEY_CONNECTED, True)
-        if self._did_first_update and not was_available and self._available:
+        if update_needs_bg_power_workaround(data) or (
+            self._did_first_update and not was_available and self._available
+        ):
             # On reconnect the properties may be out of sync
             #
             # We need to make sure the DEVICE_INITIALIZED dispatcher is setup
@@ -706,7 +733,7 @@ class YeelightDevice:
             # to be called when async_setup_entry reaches the end of the
             # function
             #
-            asyncio.create_task(self.async_update(True))
+            async_call_later(self._hass, STATE_CHANGE_TIME, self._async_forced_update)
         async_dispatcher_send(self._hass, DATA_UPDATED.format(self._host))
 
 

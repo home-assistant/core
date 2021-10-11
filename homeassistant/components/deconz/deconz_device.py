@@ -1,4 +1,5 @@
 """Base class for deCONZ devices."""
+
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -58,14 +59,6 @@ class DeconzDevice(DeconzBase, Entity):
         self.gateway.entities[self.TYPE].add(self.unique_id)
 
         self._attr_name = self._device.name
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry.
-
-        Daylight is a virtual sensor from deCONZ that should never be enabled by default.
-        """
-        return self._device.type != "Daylight"
 
     async def async_added_to_hass(self):
         """Subscribe to device events."""

@@ -169,7 +169,6 @@ async def test_functional_device_trigger(
     hass, aioclient_mock, mock_deconz_websocket, automation_calls
 ):
     """Test proper matching and attachment of device trigger automation."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     data = {
         "sensors": {

@@ -4,14 +4,14 @@ from __future__ import annotations
 from typing import Final
 
 MAJOR_VERSION: Final = 2021
-MINOR_VERSION: Final = 10
+MINOR_VERSION: Final = 11
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 8, 0)
 # Truthy date string triggers showing related deprecation warning messages.
 REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 9, 0)
-REQUIRED_NEXT_PYTHON_DATE: Final = ""
+REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = "2022.1"
 
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
@@ -470,6 +470,7 @@ FREQUENCY_GIGAHERTZ: Final = "GHz"
 # Pressure units
 PRESSURE_PA: Final = "Pa"
 PRESSURE_HPA: Final = "hPa"
+PRESSURE_KPA: Final = "kPa"
 PRESSURE_BAR: Final = "bar"
 PRESSURE_MBAR: Final = "mbar"
 PRESSURE_INHG: Final = "inHg"
