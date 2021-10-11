@@ -16,12 +16,24 @@
     "hostname": "[ba][lk]*"
   },
   {
+    "macaddress": "7CB94C*",
+    "hostname": "[ba][lk]*"
+  },
+  {
     "macaddress": "B4E842*",
     "hostname": "[ba][lk]*"
   },
   {
+    "macaddress": "8CCE4E*",
+    "hostname": "lwip*"
+  },
+  {
     "macaddress": "2462AB*",
     "hostname": "zengge_35*"
+  },
+  {
+    "macaddress": "70039F*",
+    "hostname": "zengge_0e*"
   },
   {
     "macaddress": "C82E47*",
