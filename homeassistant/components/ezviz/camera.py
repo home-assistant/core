@@ -138,7 +138,13 @@ async def async_setup_entry(
             camera_password = camera_rtsp_entry[0].data[CONF_PASSWORD]
 
             camera_rtsp_stream = f"rtsp://{camera_username}:{camera_password}@{value['local_ip']}:{local_rtsp_port}{ffmpeg_arguments}"
-            _LOGGER.debug("Camera %s source stream: %s", camera, camera_rtsp_stream)
+            _LOGGER.debug(
+                "Configuring Camera %s with ip: %s rtsp port: %s ffmpeg arguments: %s",
+                camera,
+                value["local_ip"],
+                local_rtsp_port,
+                ffmpeg_arguments,
+            )
 
         else:
 
@@ -309,7 +315,13 @@ class EzvizCamera(EzvizEntity, Camera):
             f"rtsp://{self._username}:{self._password}@"
             f"{local_ip}:{self._local_rtsp_port}{self._ffmpeg_arguments}"
         )
-        _LOGGER.debug("Camera %s source stream: %s", self._serial, self._rtsp_stream)
+        _LOGGER.debug(
+            "Configuring Camera %s with ip: %s rtsp port: %s ffmpeg arguments: %s",
+            self._serial,
+            local_ip,
+            self._local_rtsp_port,
+            self._ffmpeg_arguments,
+        )
 
         return self._rtsp_stream
 
