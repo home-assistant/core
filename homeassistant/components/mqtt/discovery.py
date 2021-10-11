@@ -55,8 +55,6 @@ SUPPORTED_COMPONENTS = [
 
 ALREADY_DISCOVERED = "mqtt_discovered_components"
 PENDING_DISCOVERED = "mqtt_pending_components"
-CONF_AVAILABILITY = "availability"
-CONF_TOPIC = "topic"
 CONFIG_ENTRY_IS_SETUP = "mqtt_config_entry_is_setup"
 DATA_CONFIG_ENTRY_LOCK = "mqtt_config_entry_lock"
 DATA_CONFIG_FLOW_LOCK = "mqtt_discovery_config_flow_lock"
@@ -67,6 +65,8 @@ MQTT_DISCOVERY_NEW = "mqtt_discovery_new_{}_{}"
 MQTT_DISCOVERY_DONE = "mqtt_discovery_done_{}"
 LAST_DISCOVERY = "mqtt_last_discovery"
 
+CONF_AVAILABILITY = "availability"
+CONF_TOPIC = "topic"
 TOPIC_BASE = "~"
 
 
