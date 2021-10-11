@@ -3,7 +3,7 @@
   "name": "DLNA Digital Media Renderer",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/dlna_dmr",
-  "requirements": ["async-upnp-client==0.22.5"],
+  "requirements": ["async-upnp-client==0.22.8"],
   "dependencies": ["network", "ssdp"],
   "codeowners": ["@StevenLooman", "@chishm"],
   "iot_class": "local_push"
