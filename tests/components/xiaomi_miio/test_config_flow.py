@@ -1,6 +1,7 @@
 """Test the Xiaomi Miio config flow."""
 from unittest.mock import Mock, patch
 
+from construct.core import ChecksumError
 from micloud.micloudexception import MiCloudAccessDenied
 from miio import DeviceException
 import pytest
@@ -610,9 +611,11 @@ async def test_config_flow_step_device_manual_model_succes(hass):
     assert result["step_id"] == "manual"
     assert result["errors"] == {}
 
+    error = DeviceException({})
+    error.__cause__ = ChecksumError({})
     with patch(
         "homeassistant.components.xiaomi_miio.device.Device.info",
-        side_effect=const.AuthException({}),
+        side_effect=error,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
