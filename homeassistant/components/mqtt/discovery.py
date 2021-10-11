@@ -143,7 +143,7 @@ async def async_start(  # noqa: C901
             if payload.get(CONF_AVAILABILITY):
                 for availability_conf in payload[CONF_AVAILABILITY]:
                     topic = availability_conf[CONF_TOPIC]
-                    if isinstance(topic, str) and topic:
+                    if topic:
                         if topic[0] == TOPIC_BASE:
                             availability_conf[CONF_TOPIC] = f"{base}{topic[1:]}"
                         if topic[-1] == TOPIC_BASE:
