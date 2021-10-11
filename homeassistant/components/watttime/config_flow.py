@@ -78,7 +78,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_validate_credentials(
         self, username: str, password: str, error_step_id: str, error_schema: vol.Schema
-    ):
+    ) -> FlowResult:
         """Validate input credentials and proceed accordingly."""
         session = aiohttp_client.async_get_clientsession(self.hass)
 
