@@ -7,7 +7,12 @@ from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_DEVICE_CLASS,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import Context, HomeAssistantError
 from homeassistant.helpers import entity, entity_registry
 
@@ -790,3 +795,17 @@ async def test_float_conversion(hass):
     state = hass.states.get("hello.world")
     assert state is not None
     assert state.state == "3.6"
+
+
+async def test_attribution_attribute(hass):
+    """Test attribution attribute."""
+    mock_entity = entity.Entity()
+    mock_entity.hass = hass
+    mock_entity.entity_id = "hello.world"
+    mock_entity._attr_attribution = "Home Assistant"
+
+    mock_entity.async_schedule_update_ha_state(True)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(mock_entity.entity_id)
+    assert state.attributes.get(ATTR_ATTRIBUTION) == "Home Assistant"

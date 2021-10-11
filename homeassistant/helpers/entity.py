@@ -16,6 +16,7 @@ from typing import Any, TypedDict, final
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
+    ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
@@ -232,6 +233,7 @@ class Entity(ABC):
 
     # Entity Properties
     _attr_assumed_state: bool = False
+    _attr_attribution: str | None = None
     _attr_available: bool = True
     _attr_context_recent_time: timedelta = timedelta(seconds=5)
     _attr_device_class: str | None
@@ -397,6 +399,11 @@ class Entity(ABC):
             return self.entity_description.entity_registry_enabled_default
         return True
 
+    @property
+    def attribution(self) -> str | None:
+        """Return the attribution."""
+        return self._attr_attribution
+
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
     # are used to perform a very specific function. Overwriting these may
@@ -519,6 +526,9 @@ class Entity(ABC):
 
         if (device_class := self.device_class) is not None:
             attr[ATTR_DEVICE_CLASS] = str(device_class)
+
+        if (attribution := self.attribution) is not None:
+            attr[ATTR_ATTRIBUTION] = attribution
 
         end = timer()
 
