@@ -142,12 +142,12 @@ async def async_start(  # noqa: C901
                         payload[key] = f"{value[:-1]}{base}"
             if payload.get(CONF_AVAILABILITY):
                 for availability_conf in payload[CONF_AVAILABILITY]:
-                    value = availability_conf[CONF_TOPIC]
-                    if isinstance(value, str) and value:
-                        if value[0] == TOPIC_BASE:
-                            availability_conf[CONF_TOPIC] = f"{base}{value[1:]}"
-                        if value[-1] == TOPIC_BASE:
-                            availability_conf[CONF_TOPIC] = f"{value[:-1]}{base}"
+                    topic = availability_conf[CONF_TOPIC]
+                    if isinstance(topic, str) and topic:
+                        if topic[0] == TOPIC_BASE:
+                            availability_conf[CONF_TOPIC] = f"{base}{topic[1:]}"
+                        if topic[-1] == TOPIC_BASE:
+                            availability_conf[CONF_TOPIC] = f"{topic[:-1]}{base}"
 
         # If present, the node_id will be included in the discovered object id
         discovery_id = " ".join((node_id, object_id)) if node_id else object_id
