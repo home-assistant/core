@@ -22,6 +22,8 @@ from .const import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_PAYLOAD,
     ATTR_DISCOVERY_TOPIC,
+    CONF_AVAILABILITY,
+    CONF_TOPIC,
     DOMAIN,
 )
 
@@ -65,8 +67,6 @@ MQTT_DISCOVERY_NEW = "mqtt_discovery_new_{}_{}"
 MQTT_DISCOVERY_DONE = "mqtt_discovery_done_{}"
 LAST_DISCOVERY = "mqtt_last_discovery"
 
-CONF_AVAILABILITY = "availability"
-CONF_TOPIC = "topic"
 TOPIC_BASE = "~"
 
 
