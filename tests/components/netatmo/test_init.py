@@ -14,6 +14,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
 from .common import (
+    ALL_SCOPES,
     FAKE_WEBHOOK_ACTIVATION,
     fake_post_request,
     selected_platforms,
@@ -61,7 +62,7 @@ async def test_setup_component(hass):
                 "type": "Bearer",
                 "expires_in": 60,
                 "expires_at": time() + 1000,
-                "scope": "read_station",
+                "scope": " ".join(ALL_SCOPES),
             },
         },
     )
@@ -248,7 +249,7 @@ async def test_setup_with_cloudhook(hass):
                 "type": "Bearer",
                 "expires_in": 60,
                 "expires_at": time() + 1000,
-                "scope": "read_station",
+                "scope": " ".join(ALL_SCOPES),
             },
         },
     )
@@ -310,7 +311,7 @@ async def test_setup_component_api_error(hass):
                 "type": "Bearer",
                 "expires_in": 60,
                 "expires_at": time() + 1000,
-                "scope": "read_station",
+                "scope": " ".join(ALL_SCOPES),
             },
         },
     )
@@ -349,7 +350,7 @@ async def test_setup_component_api_timeout(hass):
                 "type": "Bearer",
                 "expires_in": 60,
                 "expires_at": time() + 1000,
-                "scope": "read_station",
+                "scope": " ".join(ALL_SCOPES),
             },
         },
     )

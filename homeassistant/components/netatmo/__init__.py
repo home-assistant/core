@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 import secrets
 
+import aiohttp
 import pyatmo
 import voluptuous as vol
 
@@ -21,6 +22,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
@@ -45,6 +47,7 @@ from .const import (
     DATA_PERSONS,
     DATA_SCHEDULES,
     DOMAIN,
+    NETATMO_SCOPES,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
     PLATFORMS,
@@ -112,6 +115,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(entry, unique_id=DOMAIN)
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    try:
+        await session.async_ensure_token_valid()
+    except aiohttp.ClientResponseError as ex:
+        _LOGGER.debug("API error: %s (%s)", ex.code, ex.message)
+        if ex.code in (400, 401, 403):
+            raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
+        raise ConfigEntryNotReady from ex
+
+    if sorted(session.token["scope"].split(" ")) != sorted(NETATMO_SCOPES):
+        _LOGGER.debug("%s != %s", session.token["scope"].split(" "), NETATMO_SCOPES)
+        raise ConfigEntryAuthFailed("Token scope not valid, trigger renewal")
+
     hass.data[DOMAIN][entry.entry_id] = {
         AUTH: api.AsyncConfigEntryNetatmoAuth(
             aiohttp_client.async_get_clientsession(hass), session

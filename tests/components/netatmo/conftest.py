@@ -53,7 +53,7 @@ def mock_config_entry_fixture(hass):
     return mock_entry
 
 
-@pytest.fixture
+@pytest.fixture(name="netatmo_auth")
 def netatmo_auth():
     """Restrict loaded platforms to list given."""
     with patch(
