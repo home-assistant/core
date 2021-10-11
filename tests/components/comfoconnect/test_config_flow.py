@@ -33,7 +33,14 @@ async def test_flow_works(mock_bridge, mock_comfoconnect_command, hass):
             CONF_PIN: "4711",
         },
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] == "form"
+    assert result["step_id"] == "sensor_selection"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_SENSORS: [ATTR_AIR_FLOW_EXHAUST, ATTR_CURRENT_RMOT]},
+    )
+
     assert result["title"] == "ComfoAir 00"
     assert result["data"][CONF_HOST] == "1.2.3.4"
     assert result["data"][CONF_NAME] == "foo"
@@ -42,6 +49,7 @@ async def test_flow_works(mock_bridge, mock_comfoconnect_command, hass):
     assert int(result["data"][CONF_TOKEN], 16)
     assert result["data"][CONF_USER_AGENT] == "Home Assistant"
     assert result["data"][CONF_PIN] == "4711"
+    assert result["options"][CONF_SENSORS] == [ATTR_AIR_FLOW_EXHAUST, ATTR_CURRENT_RMOT]
 
 
 async def test_flow_no_bridge_discovered(mock_bridge, mock_comfoconnect_command, hass):

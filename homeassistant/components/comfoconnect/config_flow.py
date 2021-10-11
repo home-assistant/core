@@ -86,12 +86,36 @@ class ComfoConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
                 user_input[CONF_TOKEN] = secrets.token_hex(16)
                 user_input[CONF_USER_AGENT] = DEFAULT_USER_AGENT
-                return self.async_create_entry(
-                    title=f"ComfoAir {unique_id}",
-                    data=user_input,
-                    options={CONF_SENSORS: self.context.get("import_sensors", [])},
-                )
+                self.context["user"] = user_input
+                return await self.async_step_sensor_selection()
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+
+    async def async_step_sensor_selection(self, user_input=None):
+        """Handle sensor selection step."""
+        schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_SENSORS,
+                ): cv.multi_select({sensor.key: sensor.name for sensor in SENSOR_TYPES})
+            }
+        )
+        errors = {}
+        unique_id = self.context["unique_id"]
+        self._abort_if_unique_id_configured()
+        if self.context["source"] == config_entries.SOURCE_IMPORT:
+            user_input = {"sensors": self.context["import_sensors"] or []}
+        if user_input is not None:
+            data = self.context["user"]
+            return self.async_create_entry(
+                title=f"ComfoAir {unique_id}",
+                data=data,
+                options={"sensors": user_input["sensors"]},
+            )
+        return self.async_show_form(
+            step_id="sensor_selection",
+            data_schema=schema,
+            errors=errors,
+        )
 
     async def async_step_import(self, import_config):
         """Handle a flow import."""

@@ -9,6 +9,12 @@
           "name": "Name",
           "pin": "Pin"
         }
+      },
+      "sensor_selection": {
+        "title": "Select Sensors to observe",
+        "data": {
+          "sensors": "Sensors"
+        }
       }
     },
     "error": {

@@ -10,15 +10,13 @@
                 "data": {
                     "sensors": "Sensors"
                 },
-                "title": "Select sensors to observe"
+                "title": "Select Sensors to observe"
             },
             "user": {
                 "data": {
                     "host": "Host",
                     "name": "Name",
-                    "pin": "Pin",
-                    "token": "Token",
-                    "user_agent": "User Agent"
+                    "pin": "Pin"
                 },
                 "description": "Provide the IP of your ComfoConnect Lan C bridge. ",
                 "title": "Connection details"
