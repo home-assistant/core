@@ -122,6 +122,19 @@ class FlowManager(abc.ABC):
         """Entry has finished executing its first step asynchronously."""
 
     @callback
+    def async_has_matching_flow(
+        self, handler: str, context: dict[str, Any], data: Any
+    ) -> bool:
+        """Check if an existing matching flow is in progress with the same handler, context, and data."""
+        return any(
+            flow
+            for flow in self._progress.values()
+            if flow.handler == handler
+            and flow.context["source"] == context["source"]
+            and flow.init_data == data
+        )
+
+    @callback
     def async_progress(self, include_uninitialized: bool = False) -> list[FlowResult]:
         """Return the flows in progress."""
         return [
