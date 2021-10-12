@@ -53,20 +53,9 @@ class _DeviceIndex(NamedTuple):
 class DeviceEntry:
     """Device Registry Entry."""
 
+    area_id: str | None = attr.ib(default=None)
     config_entries: set[str] = attr.ib(converter=set, factory=set)
     connections: set[tuple[str, str]] = attr.ib(converter=set, factory=set)
-    identifiers: set[tuple[str, str]] = attr.ib(converter=set, factory=set)
-    manufacturer: str | None = attr.ib(default=None)
-    model: str | None = attr.ib(default=None)
-    name: str | None = attr.ib(default=None)
-    sw_version: str | None = attr.ib(default=None)
-    via_device_id: str | None = attr.ib(default=None)
-    area_id: str | None = attr.ib(default=None)
-    name_by_user: str | None = attr.ib(default=None)
-    entry_type: str | None = attr.ib(default=None)
-    id: str = attr.ib(factory=uuid_util.random_uuid_hex)
-    # This value is not stored, just used to keep track of events to fire.
-    is_new: bool = attr.ib(default=False)
     disabled_by: str | None = attr.ib(
         default=None,
         validator=attr.validators.in_(
@@ -78,7 +67,18 @@ class DeviceEntry:
             )
         ),
     )
+    entry_type: str | None = attr.ib(default=None)
+    id: str = attr.ib(factory=uuid_util.random_uuid_hex)
+    identifiers: set[tuple[str, str]] = attr.ib(converter=set, factory=set)
+    manufacturer: str | None = attr.ib(default=None)
+    model: str | None = attr.ib(default=None)
+    name_by_user: str | None = attr.ib(default=None)
+    name: str | None = attr.ib(default=None)
     suggested_area: str | None = attr.ib(default=None)
+    sw_version: str | None = attr.ib(default=None)
+    via_device_id: str | None = attr.ib(default=None)
+    # This value is not stored, just used to keep track of events to fire.
+    is_new: bool = attr.ib(default=False)
 
     @property
     def disabled(self) -> bool:
@@ -245,19 +245,19 @@ class DeviceRegistry:
         *,
         config_entry_id: str,
         connections: set[tuple[str, str]] | None = None,
+        default_manufacturer: str | None | UndefinedType = UNDEFINED,
+        default_model: str | None | UndefinedType = UNDEFINED,
+        default_name: str | None | UndefinedType = UNDEFINED,
+        # To disable a device if it gets created
+        disabled_by: str | None | UndefinedType = UNDEFINED,
+        entry_type: str | None | UndefinedType = UNDEFINED,
         identifiers: set[tuple[str, str]] | None = None,
         manufacturer: str | None | UndefinedType = UNDEFINED,
         model: str | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
-        default_manufacturer: str | None | UndefinedType = UNDEFINED,
-        default_model: str | None | UndefinedType = UNDEFINED,
-        default_name: str | None | UndefinedType = UNDEFINED,
-        sw_version: str | None | UndefinedType = UNDEFINED,
-        entry_type: str | None | UndefinedType = UNDEFINED,
-        via_device: tuple[str, str] | None = None,
-        # To disable a device if it gets created
-        disabled_by: str | None | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
+        sw_version: str | None | UndefinedType = UNDEFINED,
+        via_device: tuple[str, str] | None = None,
     ) -> DeviceEntry:
         """Get device. Create if it doesn't exist."""
         if not identifiers and not connections:
@@ -302,16 +302,16 @@ class DeviceRegistry:
         device = self._async_update_device(
             device.id,
             add_config_entry_id=config_entry_id,
-            via_device_id=via_device_id,
+            disabled_by=disabled_by,
+            entry_type=entry_type,
+            manufacturer=manufacturer,
             merge_connections=connections or UNDEFINED,
             merge_identifiers=identifiers or UNDEFINED,
-            manufacturer=manufacturer,
             model=model,
             name=name,
-            sw_version=sw_version,
-            entry_type=entry_type,
-            disabled_by=disabled_by,
             suggested_area=suggested_area,
+            sw_version=sw_version,
+            via_device_id=via_device_id,
         )
 
         # This is safe because _async_update_device will always return a device
@@ -324,34 +324,34 @@ class DeviceRegistry:
         self,
         device_id: str,
         *,
+        add_config_entry_id: str | UndefinedType = UNDEFINED,
         area_id: str | None | UndefinedType = UNDEFINED,
+        disabled_by: str | None | UndefinedType = UNDEFINED,
         manufacturer: str | None | UndefinedType = UNDEFINED,
         model: str | None | UndefinedType = UNDEFINED,
-        name: str | None | UndefinedType = UNDEFINED,
         name_by_user: str | None | UndefinedType = UNDEFINED,
+        name: str | None | UndefinedType = UNDEFINED,
         new_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
+        remove_config_entry_id: str | UndefinedType = UNDEFINED,
+        suggested_area: str | None | UndefinedType = UNDEFINED,
         sw_version: str | None | UndefinedType = UNDEFINED,
         via_device_id: str | None | UndefinedType = UNDEFINED,
-        add_config_entry_id: str | UndefinedType = UNDEFINED,
-        remove_config_entry_id: str | UndefinedType = UNDEFINED,
-        disabled_by: str | None | UndefinedType = UNDEFINED,
-        suggested_area: str | None | UndefinedType = UNDEFINED,
     ) -> DeviceEntry | None:
         """Update properties of a device."""
         return self._async_update_device(
             device_id,
+            add_config_entry_id=add_config_entry_id,
             area_id=area_id,
+            disabled_by=disabled_by,
             manufacturer=manufacturer,
             model=model,
-            name=name,
             name_by_user=name_by_user,
+            name=name,
             new_identifiers=new_identifiers,
+            remove_config_entry_id=remove_config_entry_id,
+            suggested_area=suggested_area,
             sw_version=sw_version,
             via_device_id=via_device_id,
-            add_config_entry_id=add_config_entry_id,
-            remove_config_entry_id=remove_config_entry_id,
-            disabled_by=disabled_by,
-            suggested_area=suggested_area,
         )
 
     @callback
@@ -360,20 +360,20 @@ class DeviceRegistry:
         device_id: str,
         *,
         add_config_entry_id: str | UndefinedType = UNDEFINED,
-        remove_config_entry_id: str | UndefinedType = UNDEFINED,
+        area_id: str | None | UndefinedType = UNDEFINED,
+        disabled_by: str | None | UndefinedType = UNDEFINED,
+        entry_type: str | None | UndefinedType = UNDEFINED,
+        manufacturer: str | None | UndefinedType = UNDEFINED,
         merge_connections: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         merge_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
-        new_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
-        manufacturer: str | None | UndefinedType = UNDEFINED,
         model: str | None | UndefinedType = UNDEFINED,
-        name: str | None | UndefinedType = UNDEFINED,
-        sw_version: str | None | UndefinedType = UNDEFINED,
-        entry_type: str | None | UndefinedType = UNDEFINED,
-        via_device_id: str | None | UndefinedType = UNDEFINED,
-        area_id: str | None | UndefinedType = UNDEFINED,
         name_by_user: str | None | UndefinedType = UNDEFINED,
-        disabled_by: str | None | UndefinedType = UNDEFINED,
+        name: str | None | UndefinedType = UNDEFINED,
+        new_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
+        remove_config_entry_id: str | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
+        sw_version: str | None | UndefinedType = UNDEFINED,
+        via_device_id: str | None | UndefinedType = UNDEFINED,
     ) -> DeviceEntry | None:
         """Update device attributes."""
         old = self.devices[device_id]
@@ -424,14 +424,14 @@ class DeviceRegistry:
             changes["identifiers"] = new_identifiers
 
         for attr_name, value in (
+            ("disabled_by", disabled_by),
+            ("entry_type", entry_type),
             ("manufacturer", manufacturer),
             ("model", model),
             ("name", name),
-            ("sw_version", sw_version),
-            ("entry_type", entry_type),
-            ("via_device_id", via_device_id),
-            ("disabled_by", disabled_by),
             ("suggested_area", suggested_area),
+            ("sw_version", sw_version),
+            ("via_device_id", via_device_id),
         ):
             if value is not UNDEFINED and value != getattr(old, attr_name):
                 changes[attr_name] = value
