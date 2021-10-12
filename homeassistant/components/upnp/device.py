@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 
 from async_upnp_client import UpnpDevice, UpnpFactory
 from async_upnp_client.aiohttp import AiohttpSessionRequester
+from async_upnp_client.exceptions import UpnpError
 from async_upnp_client.profiles.igd import IgdDevice
 
 from homeassistant.components import ssdp
@@ -46,7 +47,7 @@ class Device:
         """Create UPnP device."""
         # Build async_upnp_client requester.
         session = async_get_clientsession(hass)
-        requester = AiohttpSessionRequester(session, True, 10)
+        requester = AiohttpSessionRequester(session, True, 20)
 
         # Create async_upnp_client device.
         factory = UpnpFactory(requester, disable_state_variable_validation=True)
@@ -168,10 +169,29 @@ class Device:
         values = await asyncio.gather(
             self._igd_device.async_get_status_info(),
             self._igd_device.async_get_external_ip_address(),
+            return_exceptions=True,
         )
+        result = []
+        for idx, value in enumerate(values):
+            if isinstance(value, UpnpError):
+                # Not all routers support some of these items although based
+                # on defined standard they should.
+                _LOGGER.debug(
+                    "Exception occurred while trying to get status %s for device %s: %s",
+                    "status" if idx == 1 else "external IP address",
+                    self,
+                    str(value),
+                )
+                result.append(None)
+                continue
+
+            if isinstance(value, Exception):
+                raise value
+
+            result.append(value)
 
         return {
-            WAN_STATUS: values[0][0] if values[0] is not None else None,
-            ROUTER_UPTIME: values[0][2] if values[0] is not None else None,
-            ROUTER_IP: values[1],
+            WAN_STATUS: result[0][0] if result[0] is not None else None,
+            ROUTER_UPTIME: result[0][2] if result[0] is not None else None,
+            ROUTER_IP: result[1],
         }

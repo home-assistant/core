@@ -8,6 +8,7 @@ from homeassistant.const import (
     PRESSURE_BAR,
     PRESSURE_HPA,
     PRESSURE_INHG,
+    PRESSURE_KPA,
     PRESSURE_MBAR,
     PRESSURE_PA,
     PRESSURE_PSI,
@@ -17,6 +18,7 @@ from homeassistant.const import (
 VALID_UNITS: tuple[str, ...] = (
     PRESSURE_PA,
     PRESSURE_HPA,
+    PRESSURE_KPA,
     PRESSURE_BAR,
     PRESSURE_MBAR,
     PRESSURE_INHG,
@@ -26,6 +28,7 @@ VALID_UNITS: tuple[str, ...] = (
 UNIT_CONVERSION: dict[str, float] = {
     PRESSURE_PA: 1,
     PRESSURE_HPA: 1 / 100,
+    PRESSURE_KPA: 1 / 1000,
     PRESSURE_BAR: 1 / 100000,
     PRESSURE_MBAR: 1 / 100,
     PRESSURE_INHG: 1 / 3386.389,

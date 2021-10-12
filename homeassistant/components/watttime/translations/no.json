@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil",
+            "unknown_coordinates": "Ingen data for breddegrad/lengdegrad"
+        },
+        "step": {
+            "coordinates": {
+                "data": {
+                    "latitude": "Breddegrad",
+                    "longitude": "Lengdegrad"
+                },
+                "description": "Skriv inn breddegrad og lengdegrad som skal overv\u00e5kes:"
+            },
+            "location": {
+                "data": {
+                    "location_type": "Plassering"
+                },
+                "description": "Velg et sted \u00e5 overv\u00e5ke:"
+            },
+            "user": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                },
+                "description": "Skriv inn brukernavn og passord:"
+            }
+        }
+    }
+}

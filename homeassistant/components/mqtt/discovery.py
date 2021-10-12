@@ -22,6 +22,8 @@ from .const import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_PAYLOAD,
     ATTR_DISCOVERY_TOPIC,
+    CONF_AVAILABILITY,
+    CONF_TOPIC,
     DOMAIN,
 )
 
@@ -138,6 +140,14 @@ async def async_start(  # noqa: C901
                         payload[key] = f"{base}{value[1:]}"
                     if value[-1] == TOPIC_BASE and key.endswith("topic"):
                         payload[key] = f"{value[:-1]}{base}"
+            if payload.get(CONF_AVAILABILITY):
+                for availability_conf in payload[CONF_AVAILABILITY]:
+                    topic = availability_conf.get(CONF_TOPIC)
+                    if topic:
+                        if topic[0] == TOPIC_BASE:
+                            availability_conf[CONF_TOPIC] = f"{base}{topic[1:]}"
+                        if topic[-1] == TOPIC_BASE:
+                            availability_conf[CONF_TOPIC] = f"{topic[:-1]}{base}"
 
         # If present, the node_id will be included in the discovered object id
         discovery_id = " ".join((node_id, object_id)) if node_id else object_id

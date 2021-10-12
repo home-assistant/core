@@ -109,8 +109,7 @@ class ActionTrace:
                 "context": self.context,
             }
         )
-        if self._error is not None:
-            result["error"] = str(self._error)
+
         return result
 
     def as_short_dict(self) -> dict[str, Any]:
@@ -135,7 +134,5 @@ class ActionTrace:
         }
         if self._error is not None:
             result["error"] = str(self._error)
-        if last_step is not None:
-            result["last_step"] = last_step
 
         return result

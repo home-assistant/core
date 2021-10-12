@@ -42,6 +42,7 @@ HM_STATE_HA_CAST = {
         2: "allsens_armed",
         3: "alarm_blocked",
     },
+    "IPLockDLD": {0: None, 1: "locked", 2: "unlocked"},
 }
 
 HM_UNIT_HA_CAST = {

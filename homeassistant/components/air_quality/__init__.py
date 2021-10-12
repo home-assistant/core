@@ -6,10 +6,7 @@ import logging
 from typing import Final, final
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-)
+from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -41,7 +38,6 @@ SCAN_INTERVAL: Final = timedelta(seconds=30)
 
 PROP_TO_ATTR: Final[dict[str, str]] = {
     "air_quality_index": ATTR_AQI,
-    "attribution": ATTR_ATTRIBUTION,
     "carbon_dioxide": ATTR_CO2,
     "carbon_monoxide": ATTR_CO,
     "nitrogen_oxide": ATTR_N2O,
@@ -112,11 +108,6 @@ class AirQualityEntity(Entity):
     @property
     def carbon_dioxide(self) -> StateType:
         """Return the CO2 (carbon dioxide) level."""
-        return None
-
-    @property
-    def attribution(self) -> StateType:
-        """Return the attribution."""
         return None
 
     @property

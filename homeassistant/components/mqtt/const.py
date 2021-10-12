@@ -9,11 +9,13 @@ ATTR_QOS = "qos"
 ATTR_RETAIN = "retain"
 ATTR_TOPIC = "topic"
 
+CONF_AVAILABILITY = "availability"
 CONF_BROKER = "broker"
 CONF_BIRTH_MESSAGE = "birth_message"
 CONF_QOS = ATTR_QOS
 CONF_RETAIN = ATTR_RETAIN
 CONF_STATE_TOPIC = "state_topic"
+CONF_TOPIC = "topic"
 CONF_WILL_MESSAGE = "will_message"
 
 DATA_MQTT_CONFIG = "mqtt_config"

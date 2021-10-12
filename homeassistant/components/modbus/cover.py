@@ -1,6 +1,7 @@
 """Support for Modbus covers."""
 from __future__ import annotations
 
+from datetime import datetime
 import logging
 from typing import Any
 
@@ -16,6 +17,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -41,9 +43,9 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    async_add_entities,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
-):
+) -> None:
     """Read configuration and create Modbus cover."""
     if discovery_info is None:  # pragma: no cover
         return
@@ -97,7 +99,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
             self._address = self._status_register
             self._input_type = self._status_register_type
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
         state = await self.async_get_last_state()
@@ -112,7 +114,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
             }
             self._set_attr_state(convert[state.state])
 
-    def _set_attr_state(self, value):
+    def _set_attr_state(self, value: str | bool | int) -> None:
         """Convert received value to HA state."""
         self._attr_is_opening = value == self._state_opening
         self._attr_is_closing = value == self._state_closing
@@ -134,7 +136,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
         self._attr_available = result is not None
         await self.async_update()
 
-    async def async_update(self, now=None):
+    async def async_update(self, now: datetime | None = None) -> None:
         """Update the state of the cover."""
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval

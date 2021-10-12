@@ -168,6 +168,10 @@ ZEROCONF = {
         },
         {
             "domain": "xiaomi_miio"
+        },
+        {
+            "domain": "yeelight",
+            "name": "yeelink-*"
         }
     ],
     "_nanoleafapi._tcp.local.": [

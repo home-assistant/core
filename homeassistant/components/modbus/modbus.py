@@ -3,8 +3,9 @@ from __future__ import annotations
 
 import asyncio
 from collections import namedtuple
+from collections.abc import Callable
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from pymodbus.client.sync import (
     BaseModbusClient,
@@ -292,22 +293,18 @@ class ModbusHub:
             func = getattr(self._client, entry.func_name)
             self._pb_call[entry.call_type] = RunEntry(entry.attr, func)
 
-        await self.async_connect_task()
-        return True
-
-    async def async_connect_task(self) -> None:
-        """Try to connect, and retry if needed."""
         async with self._lock:
             if not await self.hass.async_add_executor_job(self._pymodbus_connect):
                 err = f"{self.name} connect failed, retry in pymodbus"
                 self._log_error(err, error_state=False)
-                return
+                return False
 
         # Start counting down to allow modbus requests.
         if self._config_delay:
             self._async_cancel_listener = async_call_later(
                 self.hass, self._config_delay, self.async_end_delay
             )
+        return True
 
     @callback
     def async_end_delay(self, args: Any) -> None:
@@ -340,10 +337,8 @@ class ModbusHub:
 
     def _pymodbus_connect(self) -> bool:
         """Connect client."""
-        if not self._client:
-            return False
         try:
-            self._client.connect()
+            self._client.connect()  # type: ignore[union-attr]
         except ModbusException as exception_error:
             self._log_error(str(exception_error), error_state=False)
             return False

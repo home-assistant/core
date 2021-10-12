@@ -151,6 +151,20 @@ SSDP = {
             "manufacturer": "konnected.io"
         }
     ],
+    "nanoleaf": [
+        {
+            "st": "Nanoleaf_aurora:light"
+        },
+        {
+            "st": "nanoleaf:nl29"
+        },
+        {
+            "st": "nanoleaf:nl42"
+        },
+        {
+            "st": "nanoleaf:nl52"
+        }
+    ],
     "netgear": [
         {
             "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
