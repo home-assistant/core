@@ -76,6 +76,7 @@ class FlowResult(TypedDict, total=False):
     result: Any
     last_step: bool | None
     options: Mapping[str, Any]
+    init_data: Any
 
 
 class FlowManager(abc.ABC):
@@ -128,6 +129,7 @@ class FlowManager(abc.ABC):
                 "flow_id": flow.flow_id,
                 "handler": flow.handler,
                 "context": flow.context,
+                "init_data": flow.init_data,
                 "step_id": flow.cur_step["step_id"] if flow.cur_step else None,
             }
             for flow in self._progress.values()
@@ -173,6 +175,7 @@ class FlowManager(abc.ABC):
         flow.handler = handler
         flow.flow_id = uuid.uuid4().hex
         flow.context = context
+        flow.init_data = data
         self._progress[flow.flow_id] = flow
         result = await self._async_handle_step(flow, flow.init_step, data, init_done)
         return flow, result
@@ -317,6 +320,9 @@ class FlowHandler:
 
     # Set by _async_create_flow callback
     init_step = "init"
+
+    # The initial data that was used to start the flow
+    init_data: Any = None
 
     # Set by developer
     VERSION = 1
