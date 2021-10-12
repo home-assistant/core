@@ -52,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     # Project type has been renamed to auth type in the upstream Tuya IoT SDK.
-    # This migrates existing config entries to reflect that name change.π
+    # This migrates existing config entries to reflect that name change.
     if CONF_PROJECT_TYPE in entry.data:
         data = {**entry.data, CONF_AUTH_TYPE: entry.data[CONF_PROJECT_TYPE]}
         data.pop(CONF_PROJECT_TYPE)
@@ -106,12 +106,11 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     listener = DeviceListener(hass, device_manager, device_ids)
     device_manager.add_device_listener(listener)
 
-    hass_data = HomeAssistantTuyaData(
+    hass.data[DOMAIN][entry.entry_id] = HomeAssistantTuyaData(
         device_listener=listener,
         device_manager=device_manager,
         home_manager=home_manager,
     )
-    hass.data[DOMAIN][entry.entry_id] = hass_data
 
     # Get devices & clean up device entities
     await hass.async_add_executor_job(home_manager.update_device_cache)
