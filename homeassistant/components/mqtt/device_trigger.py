@@ -30,9 +30,16 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from . import CONF_PAYLOAD, CONF_QOS, DOMAIN, debug_info, trigger as mqtt_trigger
+from . import debug_info, trigger as mqtt_trigger
 from .. import mqtt
-from .const import ATTR_DISCOVERY_HASH, ATTR_DISCOVERY_TOPIC, CONF_TOPIC
+from .const import (
+    ATTR_DISCOVERY_HASH,
+    ATTR_DISCOVERY_TOPIC,
+    CONF_PAYLOAD,
+    CONF_QOS,
+    CONF_TOPIC,
+    DOMAIN,
+)
 from .discovery import MQTT_DISCOVERY_DONE, MQTT_DISCOVERY_UPDATED, clear_discovery_hash
 from .mixins import (
     CONF_CONNECTIONS,
