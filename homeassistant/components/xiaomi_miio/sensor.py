@@ -135,6 +135,7 @@ class XiaomiMiioSensorDescription(SensorEntityDescription):
 
     attributes: tuple = ()
     parent_key: str | None = None
+    allow_none_as_return_value: bool = False
 
 
 SENSOR_TYPES = {
@@ -219,6 +220,9 @@ SENSOR_TYPES = {
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=DEVICE_CLASS_PM25,
         state_class=STATE_CLASS_MEASUREMENT,
+        # This attribute sometimes returns None as return value.
+        # See https://github.com/home-assistant/core/issues/57474#issuecomment-940986005
+        allow_none_as_return_value=True,
     ),
     ATTR_FILTER_LIFE_REMAINING: XiaomiMiioSensorDescription(
         key=ATTR_FILTER_LIFE_REMAINING,
@@ -227,6 +231,9 @@ SENSOR_TYPES = {
         icon="mdi:air-filter",
         state_class=STATE_CLASS_MEASUREMENT,
         attributes=("filter_type",),
+        # This attribute sometimes returns None as return value.
+        # See https://github.com/home-assistant/core/issues/57474#issuecomment-940986005
+        allow_none_as_return_value=True,
     ),
     ATTR_FILTER_USE: XiaomiMiioSensorDescription(
         key=ATTR_FILTER_HOURS_USED,
@@ -625,6 +632,17 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
             for attr in self.entity_description.attributes
             if hasattr(self.coordinator.data, attr)
         }
+
+    def _parse_none(self, state, attribute) -> None:
+        if self.entity_description.allow_none_as_return_value:
+            _LOGGER.debug(
+                "Allowed None value for state %s and attribute %s",
+                type(state),
+                attribute,
+            )
+            return None
+
+        return super()._parse_none(state, attribute)
 
 
 class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
