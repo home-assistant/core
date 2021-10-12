@@ -198,7 +198,7 @@ SENSOR_TYPES = {
         key=ATTR_USE_TIME,
         name="Use Time",
         native_unit_of_measurement="s",
-        icon="mdi:progress_clock",
+        icon="mdi:progress-clock",
         state_class=STATE_CLASS_TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
