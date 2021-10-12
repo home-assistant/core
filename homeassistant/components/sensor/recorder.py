@@ -463,9 +463,10 @@ def _compile_statistics(  # noqa: C901
                 if entity_id not in hass.data[WARN_UNSTABLE_UNIT]:
                     hass.data[WARN_UNSTABLE_UNIT].add(entity_id)
                     _LOGGER.warning(
-                        "The unit of %s (%s) does not match the unit of already "
+                        "The %sunit of %s (%s) does not match the unit of already "
                         "compiled statistics (%s). Generation of long term statistics "
                         "will be suppressed unless the unit changes back to %s",
+                        "normalized " if device_class in DEVICE_CLASS_UNITS else "",
                         entity_id,
                         unit,
                         old_metadata[1]["unit_of_measurement"],
