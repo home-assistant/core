@@ -1,5 +1,6 @@
 """Constants for the Tuya integration."""
 from dataclasses import dataclass
+from enum import Enum
 
 from tuya_iot import TuyaCloudOpenAPIEndpoint
 
@@ -52,6 +53,45 @@ TUYA_SMART_APP = "tuyaSmart"
 SMARTLIFE_APP = "smartlife"
 
 PLATFORMS = ["climate", "fan", "light", "scene", "switch"]
+
+
+class DPCode(str, Enum):
+    """Device Property Codes used by Tuya.
+
+    https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
+    """
+
+    ANION = "anion"  # Ionizer unit
+    BRIGHT_VALUE = "bright_value"  # Brightness
+    C_F = "c_f"  # Temperature unit switching
+    COLOUR_DATA = "colour_data"  # Colored light mode
+    COLOUR_DATA_V2 = "colour_data_v2"  # Colored light mode
+    FAN_DIRECTION = "fan_direction"  # Fan direction
+    FAN_SPEED_ENUM = "fan_speed_enum"  # Speed mode
+    FAN_SPEED_PERCENT = "fan_speed_percent"  # Stepless speed
+    FILTER_RESET = "filter_reset"  # Filter (cartridge) reset
+    HUMIDITY_CURRENT = "humidity_current"  # Current humidity
+    HUMIDITY_SET = "humidity_set"  # Humidity setting
+    LIGHT = "light"  # Light
+    LOCK = "lock"  # Lock / Child lock
+    MODE = "mode"  # Working mode / Mode
+    PUMP_RESET = "pump_reset"  # Water pump reset
+    SPEED = "speed"  # Speed level
+    START = "start"  # Start
+    SWITCH = "switch"  # Switch
+    SWITCH_HORIZONTAL = "switch_horizontal"  # Horizontal swing flap switch
+    SWITCH_LED = "switch_led"  # Switch
+    SWITCH_VERTICAL = "switch_vertical"  # Vertical swing flap switch
+    TEMP_CURRENT = "temp_current"  # Current temperature in °C
+    TEMP_CURRENT_F = "temp_current_f"  # Current temperature in °F
+    TEMP_SET = "temp_set"  # Set the temperature in °C
+    TEMP_SET_F = "temp_set_f"  # Set the temperature in °F
+    TEMP_UNIT_CONVERT = "temp_unit_convert"  # Temperature unit switching
+    TEMP_VALUE = "temp_value"  # Color temperature
+    UV = "uv"  # UV sterilization
+    WATER_RESET = "water_reset"  # Resetting of water usage days
+    WET = "wet"  # Humidification
+    WORK_MODE = "work_mode"  # Working mode
 
 
 @dataclass

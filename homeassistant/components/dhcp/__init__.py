@@ -17,6 +17,7 @@ from aiodiscover.discovery import (
 from scapy.config import conf
 from scapy.error import Scapy_Exception
 
+from homeassistant import config_entries
 from homeassistant.components.device_tracker.const import (
     ATTR_HOST_NAME,
     ATTR_IP,
@@ -31,6 +32,7 @@ from homeassistant.const import (
     STATE_HOME,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.event import (
     async_track_state_added_domain,
@@ -38,9 +40,8 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_dhcp
+from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.network import is_invalid, is_link_local, is_loopback
-
-from .const import DOMAIN
 
 FILTER = "udp and (port 67 or 68)"
 REQUESTED_ADDR = "requested_addr"
@@ -90,6 +91,17 @@ class WatcherBase:
 
     def process_client(self, ip_address, hostname, mac_address):
         """Process a client."""
+        return run_callback_threadsafe(
+            self._hass.loop,
+            self.async_process_client,
+            ip_address,
+            hostname,
+            mac_address,
+        ).result()
+
+    @callback
+    def async_process_client(self, ip_address, hostname, mac_address):
+        """Process a client."""
         made_ip_address = make_ip_address(ip_address)
 
         if (
@@ -111,12 +123,7 @@ class WatcherBase:
             # to process it
             return
 
-        self._address_data[ip_address] = {MAC_ADDRESS: mac_address, HOSTNAME: hostname}
-
-        self.process_updated_address_data(ip_address, self._address_data[ip_address])
-
-    def process_updated_address_data(self, ip_address, data):
-        """Process the address data update."""
+        data = {MAC_ADDRESS: mac_address, HOSTNAME: hostname}
         lowercase_hostname = data[HOSTNAME].lower()
         uppercase_mac = data[MAC_ADDRESS].upper()
 
@@ -140,16 +147,15 @@ class WatcherBase:
 
             _LOGGER.debug("Matched %s against %s", data, entry)
 
-            self.create_task(
-                self.hass.config_entries.flow.async_init(
-                    entry["domain"],
-                    context={"source": DOMAIN},
-                    data={
-                        IP_ADDRESS: ip_address,
-                        HOSTNAME: lowercase_hostname,
-                        MAC_ADDRESS: data[MAC_ADDRESS],
-                    },
-                )
+            discovery_flow.async_create_flow(
+                self.hass,
+                entry["domain"],
+                {"source": config_entries.SOURCE_DHCP},
+                {
+                    IP_ADDRESS: ip_address,
+                    HOSTNAME: lowercase_hostname,
+                    MAC_ADDRESS: data[MAC_ADDRESS],
+                },
             )
 
     @abstractmethod

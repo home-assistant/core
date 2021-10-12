@@ -1,7 +1,6 @@
 """Support for Tuya switches."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
@@ -14,10 +13,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
 from .base import TuyaHaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW
+from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 
-_LOGGER = logging.getLogger(__name__)
-
+# https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 TUYA_SUPPORT_TYPE = {
     "kg",  # Switch
     "cz",  # Socket
@@ -28,28 +26,6 @@ TUYA_SUPPORT_TYPE = {
     "kj",  # Air Purifier
     "xxj",  # Diffuser
 }
-
-# Switch(kg), Socket(cz), Power Strip(pc)
-# https://developer.tuya.com/en/docs/iot/categorykgczpc?id=Kaiuz08zj1l4y
-DPCODE_SWITCH = "switch"
-
-# Air Purifier
-# https://developer.tuya.com/en/docs/iot/categorykj?id=Kaiuz1atqo5l7
-# Pet Water Feeder
-# https://developer.tuya.com/en/docs/iot/f?id=K9gf46aewxem5
-DPCODE_ANION = "anion"  # Air Purifier - Ionizer unit
-# Air Purifier - Filter cartridge resetting; Pet Water Feeder - Filter cartridge resetting
-DPCODE_FRESET = "filter_reset"
-DPCODE_LIGHT = "light"  # Air Purifier - Light
-DPCODE_LOCK = "lock"  # Air Purifier - Child lock
-# Air Purifier - UV sterilization; Pet Water Feeder - UV sterilization
-DPCODE_UV = "uv"
-DPCODE_WET = "wet"  # Air Purifier - Humidification unit
-DPCODE_PRESET = "pump_reset"  # Pet Water Feeder - Water pump resetting
-DPCODE_WRESET = "water_reset"  # Pet Water Feeder - Resetting of water usage days
-
-
-DPCODE_START = "start"
 
 
 async def async_setup_entry(
@@ -88,12 +64,12 @@ def _setup_entities(
         for function in device.function:
             if device.category == "kj":
                 if function in [
-                    DPCODE_ANION,
-                    DPCODE_FRESET,
-                    DPCODE_LIGHT,
-                    DPCODE_LOCK,
-                    DPCODE_UV,
-                    DPCODE_WET,
+                    DPCode.ANION,
+                    DPCode.FILTER_RESET,
+                    DPCode.LIGHT,
+                    DPCode.LOCK,
+                    DPCode.UV,
+                    DPCode.WET,
                 ]:
                     entities.append(TuyaHaSwitch(device, device_manager, function))
 
@@ -101,17 +77,17 @@ def _setup_entities(
                 if (
                     function
                     in [
-                        DPCODE_FRESET,
-                        DPCODE_UV,
-                        DPCODE_PRESET,
-                        DPCODE_WRESET,
+                        DPCode.FILTER_RESET,
+                        DPCode.UV,
+                        DPCode.PUMP_RESET,
+                        DPCode.WATER_RESET,
                     ]
-                    or function.startswith(DPCODE_SWITCH)
+                    or function.startswith(DPCode.SWITCH)
                 ):
                     entities.append(TuyaHaSwitch(device, device_manager, function))
 
-            elif function.startswith(DPCODE_START) or function.startswith(
-                DPCODE_SWITCH
+            elif function.startswith(DPCode.START) or function.startswith(
+                DPCode.SWITCH
             ):
                 entities.append(TuyaHaSwitch(device, device_manager, function))
 
@@ -121,8 +97,8 @@ def _setup_entities(
 class TuyaHaSwitch(TuyaHaEntity, SwitchEntity):
     """Tuya Switch Device."""
 
-    dp_code_switch = DPCODE_SWITCH
-    dp_code_start = DPCODE_START
+    dp_code_switch = DPCode.SWITCH
+    dp_code_start = DPCode.START
 
     def __init__(
         self, device: TuyaDevice, device_manager: TuyaDeviceManager, dp_code: str = ""
@@ -132,15 +108,11 @@ class TuyaHaSwitch(TuyaHaEntity, SwitchEntity):
 
         self.dp_code = dp_code
         self.channel = (
-            dp_code.replace(DPCODE_SWITCH, "")
-            if dp_code.startswith(DPCODE_SWITCH)
+            dp_code.replace(DPCode.SWITCH, "")
+            if dp_code.startswith(DPCode.SWITCH)
             else dp_code
         )
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        return f"{super().unique_id}{self.channel}"
+        self._attr_unique_id = f"{super().unique_id}{self.channel}"
 
     @property
     def name(self) -> str | None:

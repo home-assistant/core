@@ -24,20 +24,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
 from .base import TuyaHaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW
+from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 
 _LOGGER = logging.getLogger(__name__)
-
-
-# Light(dj)
-# https://developer.tuya.com/en/docs/iot/f?id=K9i5ql3v98hn3
-DPCODE_SWITCH = "switch_led"
-DPCODE_WORK_MODE = "work_mode"
-DPCODE_BRIGHT_VALUE = "bright_value"
-DPCODE_TEMP_VALUE = "temp_value"
-DPCODE_COLOUR_DATA = "colour_data"
-DPCODE_COLOUR_DATA_V2 = "colour_data_v2"
-DPCODE_LIGHT = "light"
 
 MIREDS_MAX = 500
 MIREDS_MIN = 153
@@ -50,6 +39,7 @@ HSV_HA_SATURATION_MAX = 100
 WORK_MODE_WHITE = "white"
 WORK_MODE_COLOUR = "colour"
 
+# https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 TUYA_SUPPORT_TYPE = {
     "dj",  # Light
     "dd",  # Light strip
@@ -102,16 +92,16 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
 
     def __init__(self, device: TuyaDevice, device_manager: TuyaDeviceManager) -> None:
         """Init TuyaHaLight."""
-        self.dp_code_bright = DPCODE_BRIGHT_VALUE
-        self.dp_code_temp = DPCODE_TEMP_VALUE
-        self.dp_code_colour = DPCODE_COLOUR_DATA
+        self.dp_code_bright = DPCode.BRIGHT_VALUE
+        self.dp_code_temp = DPCode.TEMP_VALUE
+        self.dp_code_colour = DPCode.COLOUR_DATA
 
         for key in device.function:
-            if key.startswith(DPCODE_BRIGHT_VALUE):
+            if key.startswith(DPCode.BRIGHT_VALUE):
                 self.dp_code_bright = key
-            elif key.startswith(DPCODE_TEMP_VALUE):
+            elif key.startswith(DPCode.TEMP_VALUE):
                 self.dp_code_temp = key
-            elif key.startswith(DPCODE_COLOUR_DATA):
+            elif key.startswith(DPCode.COLOUR_DATA):
                 self.dp_code_colour = key
 
         super().__init__(device, device_manager)
@@ -119,7 +109,7 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
     @property
     def is_on(self) -> bool:
         """Return true if light is on."""
-        return self.tuya_device.status.get(DPCODE_SWITCH, False)
+        return self.tuya_device.status.get(DPCode.SWITCH_LED, False)
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on or control the light."""
@@ -127,12 +117,12 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
         _LOGGER.debug("light kwargs-> %s", kwargs)
 
         if (
-            DPCODE_LIGHT in self.tuya_device.status
-            and DPCODE_SWITCH not in self.tuya_device.status
+            DPCode.LIGHT in self.tuya_device.status
+            and DPCode.SWITCH_LED not in self.tuya_device.status
         ):
-            commands += [{"code": DPCODE_LIGHT, "value": True}]
+            commands += [{"code": DPCode.LIGHT, "value": True}]
         else:
-            commands += [{"code": DPCODE_SWITCH, "value": True}]
+            commands += [{"code": DPCode.SWITCH_LED, "value": True}]
 
         if ATTR_BRIGHTNESS in kwargs:
             if self._work_mode().startswith(WORK_MODE_COLOUR):
@@ -177,8 +167,8 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
             commands += [
                 {"code": self.dp_code_colour, "value": json.dumps(colour_data)}
             ]
-            if self.tuya_device.status[DPCODE_WORK_MODE] != "colour":
-                commands += [{"code": DPCODE_WORK_MODE, "value": "colour"}]
+            if self.tuya_device.status[DPCode.WORK_MODE] != "colour":
+                commands += [{"code": DPCode.WORK_MODE, "value": "colour"}]
 
         if ATTR_COLOR_TEMP in kwargs:
             # temp color
@@ -200,20 +190,20 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
             )
             commands += [{"code": self.dp_code_bright, "value": int(tuya_brightness)}]
 
-            if self.tuya_device.status[DPCODE_WORK_MODE] != "white":
-                commands += [{"code": DPCODE_WORK_MODE, "value": "white"}]
+            if self.tuya_device.status[DPCode.WORK_MODE] != "white":
+                commands += [{"code": DPCode.WORK_MODE, "value": "white"}]
 
         self._send_command(commands)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         if (
-            DPCODE_LIGHT in self.tuya_device.status
-            and DPCODE_SWITCH not in self.tuya_device.status
+            DPCode.LIGHT in self.tuya_device.status
+            and DPCode.SWITCH_LED not in self.tuya_device.status
         ):
-            commands = [{"code": DPCODE_LIGHT, "value": False}]
+            commands = [{"code": DPCode.LIGHT, "value": False}]
         else:
-            commands = [{"code": DPCODE_SWITCH, "value": False}]
+            commands = [{"code": DPCode.SWITCH_LED, "value": False}]
         self._send_command(commands)
 
     @property
@@ -319,7 +309,7 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
             return None
         colour_data = json.loads(colour_json)
         if (
-            self.dp_code_colour == DPCODE_COLOUR_DATA_V2
+            self.dp_code_colour == DPCode.COLOUR_DATA_V2
             or colour_data.get("v", 0) > 255
             or colour_data.get("s", 0) > 255
         ):
@@ -327,7 +317,7 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
         return DEFAULT_HSV
 
     def _work_mode(self) -> str:
-        return self.tuya_device.status.get(DPCODE_WORK_MODE, "")
+        return self.tuya_device.status.get(DPCode.WORK_MODE, "")
 
     def _get_hsv(self) -> dict[str, int]:
         return json.loads(self.tuya_device.status[self.dp_code_colour])
