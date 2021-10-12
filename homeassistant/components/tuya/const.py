@@ -15,12 +15,8 @@ CONF_PASSWORD = "password"
 CONF_COUNTRY_CODE = "country_code"
 CONF_APP_TYPE = "tuya_app_type"
 
-TUYA_DISCOVERY_NEW = "tuya_discovery_new_{}"
-TUYA_DEVICE_MANAGER = "tuya_device_manager"
-TUYA_HOME_MANAGER = "tuya_home_manager"
-TUYA_MQTT_LISTENER = "tuya_mqtt_listener"
-TUYA_HA_TUYA_MAP = "tuya_ha_tuya_map"
-TUYA_HA_DEVICES = "tuya_ha_devices"
+TUYA_DISCOVERY_NEW = "tuya_discovery_new"
+TUYA_HA_SIGNAL_UPDATE_ENTITY = "tuya_entry_update"
 
 TUYA_RESPONSE_CODE = "code"
 TUYA_RESPONSE_RESULT = "result"
@@ -28,7 +24,29 @@ TUYA_RESPONSE_MSG = "msg"
 TUYA_RESPONSE_SUCCESS = "success"
 TUYA_RESPONSE_PLATFROM_URL = "platform_url"
 
-TUYA_HA_SIGNAL_UPDATE_ENTITY = "tuya_entry_update"
+TUYA_SUPPORTED_PRODUCT_CATEGORIES = (
+    "bh",  # Smart Kettle
+    "cwysj",  # Pet Water Feeder
+    "cz",  # Socket
+    "dc",  # Light string
+    "dd",  # Light strip
+    "dj",  # Light
+    "dlq",  # Breaker
+    "fs",  # Fan
+    "fs",  # Fan
+    "fwl",  # Ambient light
+    "jsq",  # Humidifier's light
+    "kg",  # Switch
+    "kj",  # Air Purifier
+    "kj",  # Air Purifier
+    "kt",  # Air conditioner
+    "pc",  # Power Strip
+    "qn",  # Heater
+    "wk",  # Thermostat
+    "xdd",  # Ceiling Light
+    "xxj",  # Diffuser
+    "xxj",  # Diffuser's light
+)
 
 TUYA_SMART_APP = "tuyaSmart"
 SMARTLIFE_APP = "smartlife"
