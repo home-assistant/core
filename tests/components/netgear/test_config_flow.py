@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components import ssdp
-from homeassistant.components.netgear.const import CONF_CONSIDER_HOME, DOMAIN
+from homeassistant.components.netgear.const import CONF_CONSIDER_HOME, DOMAIN, ORBI_PORT
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
@@ -247,7 +247,7 @@ async def test_ssdp(hass, service):
     assert result["result"].unique_id == SERIAL
     assert result["title"] == TITLE
     assert result["data"].get(CONF_HOST) == HOST
-    assert result["data"].get(CONF_PORT) == PORT
+    assert result["data"].get(CONF_PORT) == ORBI_PORT
     assert result["data"].get(CONF_SSL) == SSL
     assert result["data"].get(CONF_USERNAME) == DEFAULT_USER
     assert result["data"][CONF_PASSWORD] == PASSWORD
