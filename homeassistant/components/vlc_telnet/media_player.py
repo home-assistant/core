@@ -118,6 +118,12 @@ class VlcDevice(MediaPlayerEntity):
         self._media_title: str | None = None
         config_entry_id = config_entry.entry_id
         self._attr_unique_id = config_entry_id
+        self._attr_device_info = {
+            "name": name,
+            "identifiers": {(DOMAIN, config_entry_id)},
+            "manufacturer": "VideoLAN",
+            "entry_type": "service",
+        }
 
     async def async_update(self) -> None:
         """Get the latest details from the device."""
