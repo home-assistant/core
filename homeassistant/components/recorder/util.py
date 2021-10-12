@@ -266,7 +266,18 @@ def execute_on_connection(dbapi_connection, statement):
     cursor.close()
 
 
-def setup_connection_for_dialect(dialect_name, dbapi_connection, first_connection):
+def query_on_connection(dbapi_connection, statement):
+    """Execute a single statement with a dbapi connection and return the result."""
+    cursor = dbapi_connection.cursor()
+    cursor.execute(statement)
+    result = cursor.fetchall()
+    cursor.close()
+    return result
+
+
+def setup_connection_for_dialect(
+    instance, dialect_name, dbapi_connection, first_connection
+):
     """Execute statements needed for dialect connection."""
     # Returns False if the the connection needs to be setup
     # on the next connection, returns True if the connection
@@ -280,6 +291,13 @@ def setup_connection_for_dialect(dialect_name, dbapi_connection, first_connectio
             # WAL mode only needs to be setup once
             # instead of every time we open the sqlite connection
             # as its persistent and isn't free to call every time.
+            result = query_on_connection(dbapi_connection, "SELECT sqlite_version()")
+            version = result[0][0]
+            major, minor, _patch = version.split(".", 2)
+            if int(major) == 3 and int(minor) < 25:
+                instance._db_supports_row_number = (  # pylint: disable=[protected-access]
+                    False
+                )
 
         # approximately 8MiB of memory
         execute_on_connection(dbapi_connection, "PRAGMA cache_size = -8192")
@@ -289,6 +307,14 @@ def setup_connection_for_dialect(dialect_name, dbapi_connection, first_connectio
 
     if dialect_name == "mysql":
         execute_on_connection(dbapi_connection, "SET session wait_timeout=28800")
+        if first_connection:
+            result = query_on_connection(dbapi_connection, "SELECT VERSION()")
+            version = result[0][0]
+            major, minor, _patch = version.split(".", 2)
+            if int(major) == 5 and int(minor) < 8:
+                instance._db_supports_row_number = (  # pylint: disable=[protected-access]
+                    False
+                )
 
 
 def end_incomplete_runs(session, start_time):
