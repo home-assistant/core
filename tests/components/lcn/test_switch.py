@@ -34,6 +34,16 @@ async def test_setup_lcn_switch(activate_status_request_handler, hass, entry):
     activate_status_request_handler.assert_has_awaits(calls, any_order=True)
     assert activate_status_request_handler.await_count == 4
 
+    for entity_id in (
+        "switch.switch_output1",
+        "switch.switch_output2",
+        "switch.switch_relay1",
+        "switch.switch_relay2",
+    ):
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_OFF
+
 
 async def test_entity_attributes(hass, entry):
     """Test the attributes of an entity."""
@@ -71,8 +81,7 @@ async def test_output_turn_on(dim_output, hass, entry):
     dim_output.assert_awaited_with(0, 100, 0)
 
     state = hass.states.get("switch.switch_output1")
-    assert state is not None
-    assert state.state != STATE_ON
+    assert state.state == STATE_OFF
 
     # command success
     dim_output.reset_mock(return_value=True)
@@ -88,7 +97,6 @@ async def test_output_turn_on(dim_output, hass, entry):
     dim_output.assert_awaited_with(0, 100, 0)
 
     state = hass.states.get("switch.switch_output1")
-    assert state is not None
     assert state.state == STATE_ON
 
 
@@ -113,8 +121,7 @@ async def test_output_turn_off(dim_output, hass, entry):
     dim_output.assert_awaited_with(0, 0, 0)
 
     state = hass.states.get("switch.switch_output1")
-    assert state is not None
-    assert state.state != STATE_OFF
+    assert state.state == STATE_ON
 
     # command success
     dim_output.reset_mock(return_value=True)
@@ -130,7 +137,6 @@ async def test_output_turn_off(dim_output, hass, entry):
     dim_output.assert_awaited_with(0, 0, 0)
 
     state = hass.states.get("switch.switch_output1")
-    assert state is not None
     assert state.state == STATE_OFF
 
 
@@ -155,8 +161,7 @@ async def test_relay_turn_on(control_relays, hass, entry):
     control_relays.assert_awaited_with(states)
 
     state = hass.states.get("switch.switch_relay1")
-    assert state is not None
-    assert state.state != STATE_ON
+    assert state.state == STATE_OFF
 
     # command success
     control_relays.reset_mock(return_value=True)
@@ -172,7 +177,6 @@ async def test_relay_turn_on(control_relays, hass, entry):
     control_relays.assert_awaited_with(states)
 
     state = hass.states.get("switch.switch_relay1")
-    assert state is not None
     assert state.state == STATE_ON
 
 
@@ -200,8 +204,7 @@ async def test_relay_turn_off(control_relays, hass, entry):
     control_relays.assert_awaited_with(states)
 
     state = hass.states.get("switch.switch_relay1")
-    assert state is not None
-    assert state.state != STATE_OFF
+    assert state.state == STATE_ON
 
     # command success
     control_relays.reset_mock(return_value=True)
@@ -217,7 +220,6 @@ async def test_relay_turn_off(control_relays, hass, entry):
     control_relays.assert_awaited_with(states)
 
     state = hass.states.get("switch.switch_relay1")
-    assert state is not None
     assert state.state == STATE_OFF
 
 
@@ -228,21 +230,19 @@ async def test_pushed_output_status_change(hass, entry):
     address = LcnAddr(0, 7, False)
 
     # push status "on"
-    input = ModStatusOutput(address, 0, 100)
-    await device_connection.async_process_input(input)
+    inp = ModStatusOutput(address, 0, 100)
+    await device_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.switch_output1")
-    assert state is not None
     assert state.state == STATE_ON
 
     # push status "off"
-    input = ModStatusOutput(address, 0, 0)
-    await device_connection.async_process_input(input)
+    inp = ModStatusOutput(address, 0, 0)
+    await device_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.switch_output1")
-    assert state is not None
     assert state.state == STATE_OFF
 
 
@@ -255,22 +255,20 @@ async def test_pushed_relay_status_change(hass, entry):
 
     # push status "on"
     states[0] = True
-    input = ModStatusRelays(address, states)
-    await device_connection.async_process_input(input)
+    inp = ModStatusRelays(address, states)
+    await device_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.switch_relay1")
-    assert state is not None
     assert state.state == STATE_ON
 
     # push status "off"
     states[0] = False
-    input = ModStatusRelays(address, states)
-    await device_connection.async_process_input(input)
+    inp = ModStatusRelays(address, states)
+    await device_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.switch_relay1")
-    assert state is not None
     assert state.state == STATE_OFF
 
 
