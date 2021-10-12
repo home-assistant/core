@@ -13,7 +13,6 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
@@ -83,12 +82,12 @@ async def async_setup_entry(
 class StookalertBinarySensor(BinarySensorEntity):
     """Defines a Stookalert binary sensor."""
 
+    _attr_attribution = ATTRIBUTION
     _attr_device_class = DEVICE_CLASS_SAFETY
 
     def __init__(self, client: stookalert.stookalert, entry: ConfigEntry) -> None:
         """Initialize a Stookalert device."""
         self._client = client
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self._attr_name = f"Stookalert {entry.data[CONF_PROVINCE]}"
         self._attr_unique_id = entry.unique_id
         self._attr_device_info = {
