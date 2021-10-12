@@ -23,6 +23,9 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
+    ATTR_GPS_ACCURACY,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
     ATTR_MODE,
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -285,6 +288,30 @@ class PrometheusMetrics:
         )
         value = self.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
+        if ATTR_LATITUDE in state.attributes:
+            metric_lat = self._metric(
+                "device_tracker_latitude",
+                self.prometheus_cli.Gauge,
+                "Latitude",
+            )
+            value = state.attributes[ATTR_LATITUDE]
+            metric_lat.labels(**self._labels(state)).set(value)
+        if ATTR_LONGITUDE in state.attributes:
+            metric_lon = self._metric(
+                "device_tracker_longitude",
+                self.prometheus_cli.Gauge,
+                "Longitude",
+            )
+            value = state.attributes[ATTR_LONGITUDE]
+            metric_lon.labels(**self._labels(state)).set(value)
+        if ATTR_GPS_ACCURACY in state.attributes:
+            metric_accuracy = self._metric(
+                "device_tracker_gps_accuracy",
+                self.prometheus_cli.Gauge,
+                "GPS accuracy",
+            )
+            value = state.attributes[ATTR_GPS_ACCURACY]
+            metric_accuracy.labels(**self._labels(state)).set(value)
 
     def _handle_person(self, state):
         metric = self._metric(
