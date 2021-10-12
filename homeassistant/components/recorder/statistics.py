@@ -10,7 +10,6 @@ import logging
 from statistics import mean
 from typing import TYPE_CHECKING, Any, Literal
 
-from dateutil.relativedelta import relativedelta
 from sqlalchemy import bindparam, func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext import baked
@@ -590,7 +589,7 @@ def _reduce_statistics(
     stats: dict[str, list[dict[str, Any]]],
     same_period: Callable[[datetime, datetime], bool],
     period_start_end: Callable[[datetime], tuple[datetime, datetime]],
-    period: timedelta | relativedelta,
+    period: timedelta,
 ) -> dict[str, list[dict[str, Any]]]:
     result: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for statistic_id, stat_list in stats.items():
@@ -679,12 +678,10 @@ def _reduce_statistics_per_month(
                 day=1, hour=0, minute=0, second=0, microsecond=0
             )
         )
-        end = start + relativedelta(months=1)
+        end = (start + timedelta(days=31)).replace(day=1)
         return (start, end)
 
-    return _reduce_statistics(
-        stats, same_period, period_start_end, relativedelta(months=1)
-    )
+    return _reduce_statistics(stats, same_period, period_start_end, timedelta(days=31))
 
 
 def statistics_during_period(

@@ -5,7 +5,6 @@ import math
 from statistics import mean
 from unittest.mock import patch
 
-from dateutil.relativedelta import relativedelta
 import pytest
 from pytest import approx
 
@@ -2375,8 +2374,8 @@ def test_compile_statistics_hourly_summary(
                     "sum": expected_sum,
                 }
             )
-        start += relativedelta(months=1)
-        end += relativedelta(months=1)
+        start = (start + timedelta(days=31)).replace(day=1)
+        end = (end + timedelta(days=31)).replace(day=1)
     assert stats == expected_stats
 
     assert "Error while processing event StatisticsTask" not in caplog.text
