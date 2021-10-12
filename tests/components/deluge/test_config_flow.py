@@ -2,8 +2,8 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-import pytest
 from deluge_client import FailedToReconnectException
+import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import deluge

@@ -1,8 +1,8 @@
 """Support for monitoring the Deluge BitTorrent client API."""
 from __future__ import annotations
 
-import datetime
 from contextlib import suppress
+import datetime
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_NAME, DATA_RATE_MEGABYTES_PER_SECOND, STATE_IDLE

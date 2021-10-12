@@ -35,14 +35,14 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    EVENT_STARTED_TORRENT,
-    EVENT_FINISHED_TORRENT,
     EVENT_ADDED_TORRENT,
+    EVENT_FINISHED_TORRENT,
     EVENT_REMOVED_TORRENT,
+    EVENT_STARTED_TORRENT,
     SERVICE_ADD_TORRENT,
-    SERVICE_RESUME_TORRENT,
     SERVICE_PAUSE_TORRENT,
     SERVICE_REMOVE_TORRENT,
+    SERVICE_RESUME_TORRENT,
 )
 from .errors import AuthenticationError, CannotConnect, UnknownError
 
@@ -156,15 +156,6 @@ async def get_client(hass, entry):
         return api
 
     except FailedToReconnectException as error:
-        """
-        if "401: Unauthorized" in str(error):
-            _LOGGER.error("Credentials for Deluge client are not valid")
-            raise AuthenticationError from error
-        if "111: Connection refused" in str(error):
-            _LOGGER.error("Connecting to the Deluge client %s failed", host)
-            raise CannotConnect from error
-        """
-
         _LOGGER.error(error)
         raise UnknownError from error
 
@@ -342,7 +333,7 @@ class DelugeState:
         self.config = config
         self.available: bool = True
         self._client: DelugeRPCClient = client
-        self._session: dict = None
+        self._session: dict = {}
         self._torrents: list[dict] = []
 
     @property

@@ -2,11 +2,10 @@
 
 from unittest.mock import patch
 
-import pytest
 from deluge_client import FailedToReconnectException
+import pytest
 
 from homeassistant.components import deluge
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, mock_coro
