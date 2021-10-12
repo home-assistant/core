@@ -76,7 +76,6 @@ class FlowResult(TypedDict, total=False):
     result: Any
     last_step: bool | None
     options: Mapping[str, Any]
-    init_data: Any
 
 
 class FlowManager(abc.ABC):
