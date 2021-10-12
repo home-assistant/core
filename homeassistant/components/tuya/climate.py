@@ -8,7 +8,7 @@ from typing import Any
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
-from homeassistant.components.climate import DOMAIN as DEVICE_DOMAIN, ClimateEntity
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
@@ -25,17 +25,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import HomeAssistantTuyaData
 from .base import TuyaHaEntity
-from .const import (
-    DOMAIN,
-    TUYA_DEVICE_MANAGER,
-    TUYA_DISCOVERY_NEW,
-    TUYA_HA_DEVICES,
-    TUYA_HA_TUYA_MAP,
-)
+from .const import DOMAIN, TUYA_DISCOVERY_NEW
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,49 +82,24 @@ TUYA_SUPPORT_TYPE = {
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up tuya climate dynamically through tuya discovery."""
-    _LOGGER.debug("climate init")
-
-    hass.data[DOMAIN][entry.entry_id][TUYA_HA_TUYA_MAP][
-        DEVICE_DOMAIN
-    ] = TUYA_SUPPORT_TYPE
+    """Set up Tuya climate dynamically through Tuya discovery."""
+    hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
 
     @callback
-    def async_discover_device(dev_ids: list[str]) -> None:
-        """Discover and add a discovered tuya climate."""
-        _LOGGER.debug("climate add-> %s", dev_ids)
-        if not dev_ids:
-            return
-        entities = _setup_entities(hass, entry, dev_ids)
+    def async_discover_device(device_ids: list[str]) -> None:
+        """Discover and add a discovered Tuya climate."""
+        entities: list[TuyaHaClimate] = []
+        for device_id in device_ids:
+            device = hass_data.device_manager.device_map[device_id]
+            if device and device.category in TUYA_SUPPORT_TYPE:
+                entities.append(TuyaHaClimate(device, hass_data.device_manager))
         async_add_entities(entities)
 
+    async_discover_device([*hass_data.device_manager.device_map])
+
     entry.async_on_unload(
-        async_dispatcher_connect(
-            hass, TUYA_DISCOVERY_NEW.format(DEVICE_DOMAIN), async_discover_device
-        )
+        async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
     )
-
-    device_manager = hass.data[DOMAIN][entry.entry_id][TUYA_DEVICE_MANAGER]
-    device_ids = []
-    for (device_id, device) in device_manager.device_map.items():
-        if device.category in TUYA_SUPPORT_TYPE:
-            device_ids.append(device_id)
-    async_discover_device(device_ids)
-
-
-def _setup_entities(
-    hass: HomeAssistant, entry: ConfigEntry, device_ids: list[str]
-) -> list[Entity]:
-    """Set up Tuya Climate."""
-    device_manager = hass.data[DOMAIN][entry.entry_id][TUYA_DEVICE_MANAGER]
-    entities: list[Entity] = []
-    for device_id in device_ids:
-        device = device_manager.device_map[device_id]
-        if device is None:
-            continue
-        entities.append(TuyaHaClimate(device, device_manager))
-        hass.data[DOMAIN][entry.entry_id][TUYA_HA_DEVICES].add(device_id)
-    return entities
 
 
 class TuyaHaClimate(TuyaHaEntity, ClimateEntity):
