@@ -77,6 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 and device.power <= 0
                 and device.energy <= 0
             ):
+                LOGGER.debug("Assume device %s as unavailable", device.name)
                 device.present = False
 
             data[device.ain] = device
