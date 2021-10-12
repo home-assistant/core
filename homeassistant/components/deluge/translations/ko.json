@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "invalid_auth": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "name_exists": "\uc774\ub984\uc774 \uc774\ubbf8 \uc874\uc7ac\ud569\ub2c8\ub2e4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\ud638\uc2a4\ud2b8",
+                    "name": "\uc774\ub984",
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "port": "\ud3ec\ud2b8",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
+                },
+                "title": "Transmission \ud074\ub77c\uc774\uc5b8\ud2b8 \uc124\uc815\ud558\uae30"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "limit": "\uc81c\ud55c",
+                    "order": "\uc21c\uc11c",
+                    "scan_interval": "\uc5c5\ub370\uc774\ud2b8 \ube48\ub3c4"
+                },
+                "title": "Transmission\uc5d0 \ub300\ud55c \uc635\uc158 \uad6c\uc131\ud558\uae30"
+            }
+        }
+    }
+}
