@@ -729,7 +729,7 @@ def entity_to_json(config, entity):
     """Convert an entity to its Hue bridge JSON representation."""
     entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
     color_modes = entity.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES, [])
-    unique_id = hashlib.md5(entity.entity_id.encode()).hexdigest()
+    unique_id = hashlib.sha256(entity.entity_id.encode("utf-8")).hexdigest()
     unique_id = f"00:{unique_id[0:2]}:{unique_id[2:4]}:{unique_id[4:6]}:{unique_id[6:8]}:{unique_id[8:10]}:{unique_id[10:12]}:{unique_id[12:14]}-{unique_id[14:16]}"
 
     state = get_entity_state(config, entity)
