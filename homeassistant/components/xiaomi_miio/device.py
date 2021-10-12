@@ -59,7 +59,6 @@ class ConnectXiaomiDevice:
             self._device_info.firmware_version,
             self._device_info.hardware_version,
         )
-        return True
 
 
 class XiaomiMiioEntity(Entity):

@@ -61,8 +61,7 @@ class ConnectXiaomiGateway:
         self._cloud_password = self._config_entry.data.get(CONF_CLOUD_PASSWORD)
         self._cloud_country = self._config_entry.data.get(CONF_CLOUD_COUNTRY)
 
-        if not await self._hass.async_add_executor_job(self.connect_gateway):
-            return False
+        await self._hass.async_add_executor_job(self.connect_gateway)
 
         _LOGGER.debug(
             "%s %s %s detected",
@@ -70,7 +69,6 @@ class ConnectXiaomiGateway:
             self._gateway_info.firmware_version,
             self._gateway_info.hardware_version,
         )
-        return True
 
     def connect_gateway(self):
         """Connect the gateway in a way that can called by async_add_executor_job."""
@@ -129,8 +127,6 @@ class ConnectXiaomiGateway:
                 raise SetupException(
                     f"DeviceException during setup of xiaomi gateway with host {self._host}"
                 ) from error
-
-        return True
 
 
 class XiaomiGatewayDevice(CoordinatorEntity, Entity):
