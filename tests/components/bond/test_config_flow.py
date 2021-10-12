@@ -318,6 +318,12 @@ async def test_zeroconf_already_configured_refresh_token(hass: core.HomeAssistan
         data={CONF_HOST: "stored-host", CONF_ACCESS_TOKEN: "incorrect-token"},
     )
     entry.add_to_hass(hass)
+    entry2 = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="not-the-same-bond-id",
+        data={CONF_HOST: "stored-host", CONF_ACCESS_TOKEN: "correct-token"},
+    )
+    entry2.add_to_hass(hass)
 
     with patch_bond_version(
         side_effect=ClientResponseError(MagicMock(), MagicMock(), status=401)
@@ -342,6 +348,8 @@ async def test_zeroconf_already_configured_refresh_token(hass: core.HomeAssistan
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "updated-host"
     assert entry.data[CONF_ACCESS_TOKEN] == "discovered-token"
+    # entry2 should not get changed
+    assert entry2.data[CONF_ACCESS_TOKEN] == "correct-token"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
