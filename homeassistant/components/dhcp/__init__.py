@@ -92,7 +92,7 @@ class WatcherBase:
     def process_client(self, ip_address, hostname, mac_address):
         """Process a client."""
         return run_callback_threadsafe(
-            self._hass.loop,
+            self.hass.loop,
             self.async_process_client,
             ip_address,
             hostname,
