@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Callable, Iterable
 import dataclasses
-from datetime import datetime, time, timedelta
+from datetime import datetime, timedelta
 from itertools import chain, groupby
 import logging
 from statistics import mean
@@ -110,8 +110,6 @@ QUERY_STATISTIC_META_ID = [
     StatisticsMeta.id,
     StatisticsMeta.statistic_id,
 ]
-
-START_OF_DAY = time(0, 0, 0)
 
 STATISTICS_BAKERY = "recorder_statistics_bakery"
 STATISTICS_META_BAKERY = "recorder_statistics_meta_bakery"
@@ -589,10 +587,10 @@ def _statistics_during_period_query(
 
 
 def _reduce_statistics(
-  stats: dict[str, list[dict[str, Any]]],
-  same_period: Callable[[datetime, datetime], bool],
-  period_start_end: Callable[[datetime], tuple[datetime, datetime]],
-  period: timedelta | relativedelta,
+    stats: dict[str, list[dict[str, Any]]],
+    same_period: Callable[[datetime, datetime], bool],
+    period_start_end: Callable[[datetime], tuple[datetime, datetime]],
+    period: timedelta | relativedelta,
 ) -> dict[str, list[dict[str, Any]]]:
     result: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for statistic_id, stat_list in stats.items():
@@ -614,12 +612,14 @@ def _reduce_statistics(
         mean_values: list[float] = []
         min_values: list[float] = []
         prev_stat: dict[str, Any] = stat_list[0]
-        for statistic in chain(stat_list, ({"start": stat_list[-1]["start"] + period}, )):
+        for statistic in chain(
+            stat_list, ({"start": stat_list[-1]["start"] + period},)
+        ):
             if not same_period(prev_stat["start"], statistic["start"]):
                 start, end = period_start_end(prev_stat["start"])
                 # TODO: Test DST change
                 # TODO: Make sure tests are not in UTC
-                # Last value of the day
+                # Last value of the period
                 result[statistic_id].append(
                     {
                         "statistic_id": statistic_id,
@@ -648,16 +648,17 @@ def _reduce_statistics(
 
 
 def _reduce_statistics_per_day(
-  stats: dict[str, list[dict[str, Any]]]
+    stats: dict[str, list[dict[str, Any]]]
 ) -> dict[str, list[dict[str, Any]]]:
     def same_period(time1: datetime, time2: datetime) -> bool:
         date1 = dt_util.as_local(time1).date()
         date2 = dt_util.as_local(time2).date()
-        _LOGGER.error("same_period: %s, %s, %s, %s, %s", date1 == date2, time1, time2, dt_util.as_local(time1), dt_util.as_local(time2))
         return date1 == date2
 
     def period_start_end(time: datetime) -> tuple[datetime, datetime]:
-        start = dt_util.as_utc(dt_util.as_local(time).replace(hour=0, minute=0, second=0, microsecond=0))
+        start = dt_util.as_utc(
+            dt_util.as_local(time).replace(hour=0, minute=0, second=0, microsecond=0)
+        )
         end = start + timedelta(days=1)
         return (start, end)
 
@@ -665,20 +666,25 @@ def _reduce_statistics_per_day(
 
 
 def _reduce_statistics_per_month(
-  stats: dict[str, list[dict[str, Any]]]
+    stats: dict[str, list[dict[str, Any]]]
 ) -> dict[str, list[dict[str, Any]]]:
     def same_period(time1: datetime, time2: datetime) -> bool:
         date1 = dt_util.as_local(time1).date()
         date2 = dt_util.as_local(time2).date()
-        _LOGGER.error("same_period: %s, %s, %s, %s, %s", (date1.year, date1.month) == (date2.year, date2.month), time1, time2, dt_util.as_local(time1), dt_util.as_local(time2))
         return (date1.year, date1.month) == (date2.year, date2.month)
 
     def period_start_end(time: datetime) -> tuple[datetime, datetime]:
-        start = dt_util.as_utc(dt_util.as_local(time).replace(day=1, hour=0, minute=0, second=0, microsecond=0))
+        start = dt_util.as_utc(
+            dt_util.as_local(time).replace(
+                day=1, hour=0, minute=0, second=0, microsecond=0
+            )
+        )
         end = start + relativedelta(months=1)
         return (start, end)
 
-    return _reduce_statistics(stats, same_period, period_start_end, relativedelta(months=1))
+    return _reduce_statistics(
+        stats, same_period, period_start_end, relativedelta(months=1)
+    )
 
 
 def statistics_during_period(
@@ -735,14 +741,9 @@ def statistics_during_period(
         )
 
         if period == "day":
-            reduced = _reduce_statistics_per_day(result)
-            _LOGGER.error("_reduce_statistics_per_day: %s", reduced)
-            return reduced
-            #return _reduce_statistics_per_day(result)
-        reduced = _reduce_statistics_per_month(result)
-        _LOGGER.error("_reduce_statistics_per_day: %s", reduced)
-        return reduced
-        #return _reduce_statistics_per_month(result)
+            return _reduce_statistics_per_day(result)
+
+        return _reduce_statistics_per_month(result)
 
 
 def get_last_statistics(
