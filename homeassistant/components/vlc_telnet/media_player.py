@@ -88,7 +88,8 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the vlc platform."""
-    name = entry.data[CONF_NAME]
+    # CONF_NAME is only present in imported YAML.
+    name = entry.data.get(CONF_NAME) or DEFAULT_NAME
     vlc = hass.data[DOMAIN][entry.entry_id][DATA_VLC]
     available = hass.data[DOMAIN][entry.entry_id][DATA_AVAILABLE]
 
@@ -115,6 +116,8 @@ class VlcDevice(MediaPlayerEntity):
         self._volume_bkp = 0.0
         self._media_artist: str | None = None
         self._media_title: str | None = None
+        config_entry_id = config_entry.entry_id
+        self._attr_unique_id = config_entry_id
 
     async def async_update(self) -> None:
         """Get the latest details from the device."""

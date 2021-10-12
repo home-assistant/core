@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
+from .const import DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,9 +30,6 @@ def user_form_schema(user_input: dict[str, Any] | None) -> vol.Schema:
             vol.Optional(
                 CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_PORT)
             ): int,
-            vol.Optional(
-                CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
-            ): str,
         }
     )
 
@@ -64,7 +61,8 @@ async def validate_input(
     except AuthError as err:
         raise InvalidAuth from err
 
-    return {"title": data[CONF_NAME]}
+    # CONF_NAME is only present in the imported YAML data.
+    return {"title": data.get(CONF_NAME) or data[CONF_HOST]}
 
 
 class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):

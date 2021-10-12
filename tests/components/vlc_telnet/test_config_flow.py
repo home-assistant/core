@@ -24,13 +24,11 @@ from tests.common import MockConfigEntry
                 "password": "test-password",
                 "host": "1.1.1.1",
                 "port": 8888,
-                "name": "custom name",
             },
             {
                 "password": "test-password",
                 "host": "1.1.1.1",
                 "port": 8888,
-                "name": "custom name",
             },
         ),
         (
@@ -41,7 +39,6 @@ from tests.common import MockConfigEntry
                 "password": "test-password",
                 "host": "localhost",
                 "port": 4212,
-                "name": "VLC-TELNET",
             },
         ),
     ],
@@ -71,7 +68,7 @@ async def test_user_flow(
         await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
-    assert result["title"] == entry_data["name"]
+    assert result["title"] == entry_data["host"]
     assert result["data"] == entry_data
     assert len(mock_setup_entry.mock_calls) == 1
 
