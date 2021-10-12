@@ -1806,7 +1806,13 @@ def test_compile_hourly_statistics_changing_statistics(
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
-def test_compile_statistics_hourly_summary(hass_recorder, caplog):
+@pytest.mark.parametrize(
+    "db_supports_row_number,in_log,not_in_log",
+    [(True, "row_number", None), (False, None, "row_number")],
+)
+def test_compile_statistics_hourly_summary(
+    hass_recorder, caplog, db_supports_row_number, in_log, not_in_log
+):
     """Test compiling hourly statistics."""
     zero = dt_util.utcnow()
     zero = zero.replace(minute=0, second=0, microsecond=0)
@@ -1815,6 +1821,7 @@ def test_compile_statistics_hourly_summary(hass_recorder, caplog):
     zero += timedelta(hours=1)
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
+    recorder._db_supports_row_number = db_supports_row_number
     setup_component(hass, "sensor", {})
     attributes = {
         "device_class": None,
@@ -2052,6 +2059,10 @@ def test_compile_statistics_hourly_summary(hass_recorder, caplog):
         end += timedelta(hours=1)
     assert stats == expected_stats
     assert "Error while processing event StatisticsTask" not in caplog.text
+    if in_log:
+        assert in_log in caplog.text
+    if not_in_log:
+        assert not_in_log not in caplog.text
 
 
 def record_states(hass, zero, entity_id, attributes, seq=None):

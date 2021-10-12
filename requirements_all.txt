@@ -216,7 +216,7 @@ aiolyric==1.0.7
 aiomodernforms==0.1.8
 
 # homeassistant.components.yamaha_musiccast
-aiomusiccast==0.9.2
+aiomusiccast==0.10.0
 
 # homeassistant.components.nanoleaf
 aionanoleaf==0.0.3
@@ -2465,10 +2465,10 @@ yeelight==0.7.7
 yeelightsunflower==0.0.10
 
 # homeassistant.components.youless
-youless-api==0.13
+youless-api==0.14
 
 # homeassistant.components.media_extractor
-youtube_dl==2021.04.26
+youtube_dl==2021.06.06
 
 # homeassistant.components.zengge
 zengge==0.2
