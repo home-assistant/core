@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 from simplipy.errors import InvalidCredentialsError, SimplipyError
 
-from homeassistant import data_entry_flow, setup
+from homeassistant import data_entry_flow
 from homeassistant.components.simplisafe import DOMAIN
 from homeassistant.components.simplisafe.const import CONF_AUTH_CODE, CONF_USER_ID
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
@@ -34,8 +34,6 @@ def mock_async_from_auth_fixture(api):
 
 async def test_duplicate_error(hass, mock_async_from_auth):
     """Test that errors are shown when duplicates are added."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     MockConfigEntry(
         domain=DOMAIN,
         unique_id="12345",
@@ -66,8 +64,6 @@ async def test_duplicate_error(hass, mock_async_from_auth):
 
 async def test_invalid_credentials(hass, mock_async_from_auth):
     """Test that invalid credentials show the correct error."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     mock_async_from_auth.side_effect = AsyncMock(side_effect=InvalidCredentialsError)
 
     result = await hass.config_entries.flow.async_init(
@@ -88,8 +84,6 @@ async def test_invalid_credentials(hass, mock_async_from_auth):
 
 async def test_options_flow(hass):
     """Test config flow options."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="abcde12345",
@@ -117,8 +111,6 @@ async def test_options_flow(hass):
 
 async def test_step_reauth_old_format(hass, mock_async_from_auth):
     """Test the re-auth step with "old" config entries (those with user IDs)."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     MockConfigEntry(
         domain=DOMAIN,
         unique_id="user@email.com",
@@ -154,8 +146,6 @@ async def test_step_reauth_old_format(hass, mock_async_from_auth):
 
 async def test_step_reauth_new_format(hass, mock_async_from_auth):
     """Test the re-auth step with "new" config entries (those with user IDs)."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     MockConfigEntry(
         domain=DOMAIN,
         unique_id="12345",
@@ -191,8 +181,6 @@ async def test_step_reauth_new_format(hass, mock_async_from_auth):
 
 async def test_step_user(hass, mock_async_from_auth):
     """Test the user step."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -216,8 +204,6 @@ async def test_step_user(hass, mock_async_from_auth):
 
 async def test_unknown_error(hass, mock_async_from_auth):
     """Test that an unknown error shows ohe correct error."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     mock_async_from_auth.side_effect = AsyncMock(side_effect=SimplipyError)
 
     result = await hass.config_entries.flow.async_init(
