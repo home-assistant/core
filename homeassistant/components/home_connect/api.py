@@ -30,12 +30,14 @@ from .const import (
     ATTR_UNIT,
     ATTR_VALUE,
     BSH_ACTIVE_PROGRAM,
+    BSH_CHILD_LOCK,
     BSH_OPERATION_STATE,
     BSH_POWER_OFF,
     BSH_POWER_STANDBY,
     FREEZER_SETPOINT_TEMPERATURE,
     FREEZER_SUPER_MODE,
     FRIDGE_ECO_MODE,
+    FRIDGE_FRESH_MODE,
     FRIDGE_SETPOINT_TEMPERATURE,
     FRIDGE_SUPER_MODE,
     FRIDGE_VACATION_MODE,
@@ -313,8 +315,17 @@ class Dryer(
     DeviceWithPrograms,
     DeviceWithRemoteControl,
     DeviceWithRemoteStart,
+    DeviceWithSettings,
 ):
     """Dryer class."""
+
+    SETTINGS = {
+        BSH_CHILD_LOCK: {
+            ATTR_SENSOR_TYPE: "switch",
+            ATTR_DESC: "Child Lock",
+            ATTR_ICON: "mdi:lock",
+        },
+    }
 
     PROGRAMS = [
         {"name": "LaundryCare.Dryer.Program.Cotton"},
@@ -357,8 +368,17 @@ class Dishwasher(
     DeviceWithPrograms,
     DeviceWithRemoteControl,
     DeviceWithRemoteStart,
+    DeviceWithSettings,
 ):
     """Dishwasher class."""
+
+    SETTINGS = {
+        BSH_CHILD_LOCK: {
+            ATTR_SENSOR_TYPE: "switch",
+            ATTR_DESC: "Child Lock",
+            ATTR_ICON: "mdi:lock",
+        },
+    }
 
     PROGRAMS = [
         {"name": "Dishcare.Dishwasher.Program.Auto1"},
@@ -406,8 +426,17 @@ class Oven(
     DeviceWithPrograms,
     DeviceWithRemoteControl,
     DeviceWithRemoteStart,
+    DeviceWithSettings,
 ):
     """Oven class."""
+
+    SETTINGS = {
+        BSH_CHILD_LOCK: {
+            ATTR_SENSOR_TYPE: "switch",
+            ATTR_DESC: "Child Lock",
+            ATTR_ICON: "mdi:lock",
+        },
+    }
 
     PROGRAMS = [
         {"name": "Cooking.Oven.Program.HeatingMode.PreHeating"},
@@ -440,8 +469,17 @@ class Washer(
     DeviceWithPrograms,
     DeviceWithRemoteControl,
     DeviceWithRemoteStart,
+    DeviceWithSettings,
 ):
     """Washer class."""
+
+    SETTINGS = {
+        BSH_CHILD_LOCK: {
+            ATTR_SENSOR_TYPE: "switch",
+            ATTR_DESC: "Child Lock",
+            ATTR_ICON: "mdi:lock",
+        },
+    }
 
     PROGRAMS = [
         {"name": "LaundryCare.Washer.Program.Cotton"},
@@ -482,8 +520,18 @@ class Washer(
         }
 
 
-class CoffeeMaker(DeviceWithOpState, DeviceWithPrograms, DeviceWithRemoteStart):
+class CoffeeMaker(
+    DeviceWithOpState, DeviceWithPrograms, DeviceWithRemoteStart, DeviceWithSettings
+):
     """Coffee maker class."""
+
+    SETTINGS = {
+        BSH_CHILD_LOCK: {
+            ATTR_SENSOR_TYPE: "switch",
+            ATTR_DESC: "Child Lock",
+            ATTR_ICON: "mdi:lock",
+        },
+    }
 
     PROGRAMS = [
         {"name": "ConsumerProducts.CoffeeMaker.Program.Beverage.Espresso"},
@@ -572,6 +620,15 @@ class FridgeFreezer(DeviceWithDoor, DeviceWithSettings):
         FRIDGE_ECO_MODE: {
             ATTR_SENSOR_TYPE: "switch",
             ATTR_DESC: "Eco Mode",
+        },
+        FRIDGE_FRESH_MODE: {
+            ATTR_SENSOR_TYPE: "switch",
+            ATTR_DESC: "Fresh Mode",
+        },
+        BSH_CHILD_LOCK: {
+            ATTR_SENSOR_TYPE: "switch",
+            ATTR_DESC: "Child Lock",
+            ATTR_ICON: "mdi:lock",
         },
         FRIDGE_SETPOINT_TEMPERATURE: {
             ATTR_SENSOR_TYPE: "number",

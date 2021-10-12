@@ -30,12 +30,15 @@ BSH_DOOR_STATE_CLOSED = "BSH.Common.EnumType.DoorState.Closed"
 BSH_DOOR_STATE_LOCKED = "BSH.Common.EnumType.DoorState.Locked"
 BSH_DOOR_STATE_OPEN = "BSH.Common.EnumType.DoorState.Open"
 
+BSH_CHILD_LOCK = "BSH.Common.Setting.ChildLock"
+
 FRIDGE_VACATION_MODE = "Refrigeration.Common.Setting.VacationMode"
 FRIDGE_SUPER_MODE = "Refrigeration.FridgeFreezer.Setting.SuperModeRefrigerator"
 FRIDGE_SETPOINT_TEMPERATURE = (
     "Refrigeration.FridgeFreezer.Setting.SetpointTemperatureRefrigerator"
 )
 FRIDGE_ECO_MODE = "Refrigeration.Common.Setting.EcoMode"
+FRIDGE_FRESH_MODE = "Refrigeration.Common.Setting.FreshMode"
 
 FREEZER_SUPER_MODE = "Refrigeration.FridgeFreezer.Setting.SuperModeFreezer"
 FREEZER_SETPOINT_TEMPERATURE = (
