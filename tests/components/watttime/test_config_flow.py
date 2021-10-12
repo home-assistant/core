@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 from aiowatttime.errors import CoordinatesNotFoundError, InvalidCredentialsError
 import pytest
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.watttime.config_flow import (
     CONF_LOCATION_TYPE,
     LOCATION_TYPE_COORDINATES,
@@ -13,6 +13,7 @@ from homeassistant.components.watttime.config_flow import (
 from homeassistant.components.watttime.const import (
     CONF_BALANCING_AUTHORITY,
     CONF_BALANCING_AUTHORITY_ABBREV,
+    CONF_SHOW_ON_MAP,
     DOMAIN,
 )
 from homeassistant.const import (
@@ -80,6 +81,37 @@ async def test_duplicate_error(hass: HomeAssistant, client_login):
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_options_flow(hass):
+    """Test config flow options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="32.87336, -117.22743",
+        data={
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "password",
+            CONF_LATITUDE: 32.87336,
+            CONF_LONGITUDE: -117.22743,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.watttime.async_setup_entry", return_value=True
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_SHOW_ON_MAP: False}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert entry.options == {CONF_SHOW_ON_MAP: False}
 
 
 async def test_show_form_coordinates(hass: HomeAssistant, client_login) -> None:
