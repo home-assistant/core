@@ -2017,8 +2017,12 @@ def test_compile_statistics_hourly_summary(
     """Test compiling hourly statistics."""
     zero = dt_util.utcnow()
     # August 31st, 23:00 local time
-    zero = zero.replace(year=2021, month=9, day=1, hour=5, minute=0, second=0, microsecond=0)
-    with patch("homeassistant.components.recorder.models.dt_util.utcnow", return_value=zero):
+    zero = zero.replace(
+        year=2021, month=9, day=1, hour=5, minute=0, second=0, microsecond=0
+    )
+    with patch(
+        "homeassistant.components.recorder.models.dt_util.utcnow", return_value=zero
+    ):
         hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     recorder._db_supports_row_number = db_supports_row_number
