@@ -6,7 +6,6 @@ import contextlib
 from datetime import timedelta
 from ipaddress import IPv4Address, IPv6Address
 import logging
-import socket
 from urllib.parse import urlparse
 
 from async_upnp_client.search import SsdpSearchListener
@@ -163,9 +162,6 @@ UPDATE_REQUEST_PROPERTIES = [
     "active_mode",
 ]
 
-BULB_NETWORK_EXCEPTIONS = (socket.error,)
-BULB_EXCEPTIONS = (BulbException, asyncio.TimeoutError, *BULB_NETWORK_EXCEPTIONS)
-
 
 PLATFORMS = ["binary_sensor", "light"]
 
@@ -270,7 +266,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         device = await _async_get_device(hass, entry.data[CONF_HOST], entry)
         await _async_initialize(hass, entry, device)
-    except BULB_EXCEPTIONS as ex:
+    except (asyncio.TimeoutError, OSError, BulbException) as ex:
         raise ConfigEntryNotReady from ex
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -594,13 +590,20 @@ class YeelightDevice:
             self._available = True
             if not self._initialized:
                 self._initialized = True
-        except BULB_NETWORK_EXCEPTIONS as ex:
+        except OSError as ex:
             if self._available:  # just inform once
                 _LOGGER.error(
                     "Unable to update device %s, %s: %s", self._host, self.name, ex
                 )
             self._available = False
-        except BULB_EXCEPTIONS as ex:
+        except asyncio.TimeoutError as ex:
+            _LOGGER.debug(
+                "timed out while trying to update device %s, %s: %s",
+                self._host,
+                self.name,
+                ex,
+            )
+        except BulbException as ex:
             _LOGGER.debug(
                 "Unable to update device %s, %s: %s", self._host, self.name, ex
             )
