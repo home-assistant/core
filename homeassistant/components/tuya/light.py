@@ -15,7 +15,6 @@ from homeassistant.components.light import (
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_HS,
     COLOR_MODE_ONOFF,
-    DOMAIN as DEVICE_DOMAIN,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -23,14 +22,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import HomeAssistantTuyaData
 from .base import TuyaHaEntity
-from .const import (
-    DOMAIN,
-    TUYA_DEVICE_MANAGER,
-    TUYA_DISCOVERY_NEW,
-    TUYA_HA_DEVICES,
-    TUYA_HA_TUYA_MAP,
-)
+from .const import DOMAIN, TUYA_DISCOVERY_NEW
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,53 +78,23 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up tuya light dynamically through tuya discovery."""
-    _LOGGER.debug("light init")
-
-    hass.data[DOMAIN][entry.entry_id][TUYA_HA_TUYA_MAP][
-        DEVICE_DOMAIN
-    ] = TUYA_SUPPORT_TYPE
+    hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
 
     @callback
-    def async_discover_device(dev_ids: list[str]):
+    def async_discover_device(device_ids: list[str]):
         """Discover and add a discovered tuya light."""
-        _LOGGER.debug("light add-> %s", dev_ids)
-        if not dev_ids:
-            return
-        entities = _setup_entities(hass, entry, dev_ids)
+        entities: list[TuyaHaLight] = []
+        for device_id in device_ids:
+            device = hass_data.device_manager.device_map[device_id]
+            if device and device.category in TUYA_SUPPORT_TYPE:
+                entities.append(TuyaHaLight(device, hass_data.device_manager))
         async_add_entities(entities)
 
+    async_discover_device([*hass_data.device_manager.device_map])
+
     entry.async_on_unload(
-        async_dispatcher_connect(
-            hass, TUYA_DISCOVERY_NEW.format(DEVICE_DOMAIN), async_discover_device
-        )
+        async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
     )
-
-    device_manager = hass.data[DOMAIN][entry.entry_id][TUYA_DEVICE_MANAGER]
-    device_ids = []
-    for (device_id, device) in device_manager.device_map.items():
-        if device.category in TUYA_SUPPORT_TYPE:
-            device_ids.append(device_id)
-    async_discover_device(device_ids)
-
-
-def _setup_entities(
-    hass, entry: ConfigEntry, device_ids: list[str]
-) -> list[TuyaHaLight]:
-    """Set up Tuya Light device."""
-    device_manager = hass.data[DOMAIN][entry.entry_id][TUYA_DEVICE_MANAGER]
-    entities = []
-    for device_id in device_ids:
-        device = device_manager.device_map[device_id]
-        if device is None:
-            continue
-
-        tuya_ha_light = TuyaHaLight(device, device_manager)
-        entities.append(tuya_ha_light)
-        hass.data[DOMAIN][entry.entry_id][TUYA_HA_DEVICES].add(
-            tuya_ha_light.tuya_device.id
-        )
-
-    return entities
 
 
 class TuyaHaLight(TuyaHaEntity, LightEntity):
