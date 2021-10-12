@@ -99,7 +99,6 @@ CONF_TLS_INSECURE = "tls_insecure"
 CONF_TLS_VERSION = "tls_version"
 
 CONF_COMMAND_TOPIC = "command_topic"
-CONF_TOPIC = "topic"
 
 PROTOCOL_31 = "3.1"
 

@@ -15,10 +15,10 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import CONF_QOS, DOMAIN, PLATFORMS, subscription
 from .. import mqtt
+from .const import CONF_TOPIC
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
-CONF_TOPIC = "topic"
 DEFAULT_NAME = "MQTT Camera"
 
 MQTT_CAMERA_ATTRIBUTES_BLOCKED = frozenset(
