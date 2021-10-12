@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
@@ -66,7 +66,7 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
     async_add_entities(
         [
-            RealtimeEmissionsSensor(coordinator, description)
+            RealtimeEmissionsSensor(coordinator, entry, description)
             for description in REALTIME_EMISSIONS_SENSOR_DESCRIPTIONS
             if description.key in coordinator.data
         ]
@@ -79,41 +79,37 @@ class RealtimeEmissionsSensor(CoordinatorEntity, SensorEntity):
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
+        entry: ConfigEntry,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
 
-        if TYPE_CHECKING:
-            assert coordinator.config_entry
-
-        self._attr_name = f"{description.name} ({coordinator.config_entry.data[CONF_BALANCING_AUTHORITY_ABBREV]})"
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
+        self._attr_name = (
+            f"{description.name} ({entry.data[CONF_BALANCING_AUTHORITY_ABBREV]})"
+        )
+        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
+        self._entry = entry
         self.entity_description = description
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes."""
-        if TYPE_CHECKING:
-            assert self.coordinator.config_entry
-
         attrs = {
             ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION,
-            ATTR_BALANCING_AUTHORITY: self.coordinator.config_entry.data[
-                CONF_BALANCING_AUTHORITY
-            ],
+            ATTR_BALANCING_AUTHORITY: self._entry.data[CONF_BALANCING_AUTHORITY],
         }
 
         # Displaying the geography on the map relies upon putting the latitude/longitude
         # in the entity attributes with "latitude" and "longitude" as the keys.
         # Conversely, we can hide the location on the map by using other keys, like
         # "lati" and "long".
-        if self.coordinator.config_entry.options.get(CONF_SHOW_ON_MAP) is not False:
-            attrs[ATTR_LATITUDE] = self.coordinator.config_entry.data[ATTR_LATITUDE]
-            attrs[ATTR_LONGITUDE] = self.coordinator.config_entry.data[ATTR_LONGITUDE]
+        if self._entry.options.get(CONF_SHOW_ON_MAP) is not False:
+            attrs[ATTR_LATITUDE] = self._entry.data[ATTR_LATITUDE]
+            attrs[ATTR_LONGITUDE] = self._entry.data[ATTR_LONGITUDE]
         else:
-            attrs["lati"] = self.coordinator.config_entry.data[ATTR_LATITUDE]
-            attrs["long"] = self.coordinator.config_entry.data[ATTR_LONGITUDE]
+            attrs["lati"] = self._entry.data[ATTR_LATITUDE]
+            attrs["long"] = self._entry.data[ATTR_LONGITUDE]
 
         return attrs
 
