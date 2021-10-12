@@ -11,7 +11,7 @@ from vallox_websocket_api.constants import vlxDevConstants
 from vallox_websocket_api.exceptions import ValloxApiException
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -146,20 +146,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         update_method=async_update_data,
     )
 
-    # The vallox hardware expects quite strict timings for websocket requests. Timings that machines
-    # with less processing power, like a Raspberry Pi, cannot live up to during the busy start phase
-    # of Home Asssistant. Hence, "async_add_entities()" for any platform code will be called with
-    # "update_before_add=False" to intentionally delay the first request, increasing chance that it
-    # is issued only when the machine is less busy again.
-    #
-    # For the same reason, don't call "coordinator.async_refresh()" here. Instead, set
-    # "coordinator.last_update_success" to "False", so that Home Assistant does not try to update
-    # the state of entities whose code assumes that "coordinator.data" is never "None".
-    #
-    # In summary, this will cause the first websocket requests to the Vallox client to go out after
-    # one "coordinator.update_interval" has passed.
-    coordinator.last_update_success = False
-
     service_handler = ValloxServiceHandler(client, coordinator)
     for vallox_service, method in SERVICE_TO_METHOD.items():
         schema = method["schema"]
@@ -169,8 +155,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[DOMAIN] = {"client": client, "coordinator": coordinator, "name": name}
 
-    hass.async_create_task(async_load_platform(hass, "sensor", DOMAIN, {}, config))
-    hass.async_create_task(async_load_platform(hass, "fan", DOMAIN, {}, config))
+    async def _async_load_platform_delayed(*_: Any) -> None:
+        await coordinator.async_refresh()
+        hass.async_create_task(async_load_platform(hass, "sensor", DOMAIN, {}, config))
+        hass.async_create_task(async_load_platform(hass, "fan", DOMAIN, {}, config))
+
+    # The Vallox hardware expects quite strict timings for websocket requests. Timings that machines
+    # with less processing power, like a Raspberry Pi, cannot live up to during the busy start phase
+    # of Home Asssistant.
+    #
+    # Hence, wait for the started event before doing a first data refresh and loading the platforms,
+    # because it usually means the system is less busy after the event and can now meet the
+    # websocket timing requirements.
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STARTED, _async_load_platform_delayed
+    )
 
     return True
 

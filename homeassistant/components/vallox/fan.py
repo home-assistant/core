@@ -67,7 +67,7 @@ async def async_setup_platform(
         hass.data[DOMAIN]["name"], client, hass.data[DOMAIN]["coordinator"]
     )
 
-    async_add_entities([device], update_before_add=False)
+    async_add_entities([device])
 
 
 class ValloxFan(CoordinatorEntity[ValloxState], FanEntity):

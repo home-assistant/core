@@ -215,6 +215,5 @@ async def async_setup_platform(
         [
             description.sensor_type(name, coordinator, description)
             for description in SENSORS
-        ],
-        update_before_add=False,
+        ]
     )
