@@ -501,6 +501,7 @@ class EntityPlatform:
                 unit_of_measurement=entity.unit_of_measurement,
                 original_name=entity.name,
                 original_icon=entity.icon,
+                is_config_entity=entity.is_config_entity,
             )
 
             entity.registry_entry = entry

@@ -179,6 +179,7 @@ class EntityDescription:
     # This is the key identifier for this entity
     key: str
 
+    is_config_entity: bool = False
     device_class: str | None = None
     entity_registry_enabled_default: bool = True
     force_update: bool = False
@@ -243,6 +244,7 @@ class Entity(ABC):
     _attr_extra_state_attributes: MutableMapping[str, Any]
     _attr_force_update: bool
     _attr_icon: str | None
+    _attr_is_config_entity: bool
     _attr_name: str | None
     _attr_should_poll: bool = True
     _attr_state: StateType = STATE_UNKNOWN
@@ -403,6 +405,15 @@ class Entity(ABC):
     def attribution(self) -> str | None:
         """Return the attribution."""
         return self._attr_attribution
+
+    @property
+    def is_config_entity(self) -> bool:
+        """Return if the entity exposes some device configuration."""
+        if hasattr(self, "_attr_is_config_entity"):
+            return self._attr_is_config_entity
+        if hasattr(self, "entity_description"):
+            return self.entity_description.is_config_entity
+        return False
 
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
