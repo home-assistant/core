@@ -10,7 +10,6 @@ from tuya_iot import TuyaDevice, TuyaDeviceManager
 from homeassistant.components.fan import (
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
-    DOMAIN as DEVICE_DOMAIN,
     SUPPORT_DIRECTION,
     SUPPORT_OSCILLATE,
     SUPPORT_PRESET_MODE,
@@ -26,14 +25,9 @@ from homeassistant.util.percentage import (
     percentage_to_ordered_list_item,
 )
 
+from . import HomeAssistantTuyaData
 from .base import TuyaHaEntity
-from .const import (
-    DOMAIN,
-    TUYA_DEVICE_MANAGER,
-    TUYA_DISCOVERY_NEW,
-    TUYA_HA_DEVICES,
-    TUYA_HA_TUYA_MAP,
-)
+from .const import DOMAIN, TUYA_DISCOVERY_NEW
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,48 +55,23 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ):
     """Set up tuya fan dynamically through tuya discovery."""
-    _LOGGER.debug("fan init")
-
-    hass.data[DOMAIN][entry.entry_id][TUYA_HA_TUYA_MAP][
-        DEVICE_DOMAIN
-    ] = TUYA_SUPPORT_TYPE
+    hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
 
     @callback
-    def async_discover_device(dev_ids: list[str]) -> None:
+    def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered tuya fan."""
-        _LOGGER.debug("fan add-> %s", dev_ids)
-        if not dev_ids:
-            return
-        entities = _setup_entities(hass, entry, dev_ids)
+        entities: list[TuyaHaFan] = []
+        for device_id in device_ids:
+            device = hass_data.device_manager.device_map[device_id]
+            if device and device.category in TUYA_SUPPORT_TYPE:
+                entities.append(TuyaHaFan(device, hass_data.device_manager))
         async_add_entities(entities)
 
+    async_discover_device([*hass_data.device_manager.device_map])
+
     entry.async_on_unload(
-        async_dispatcher_connect(
-            hass, TUYA_DISCOVERY_NEW.format(DEVICE_DOMAIN), async_discover_device
-        )
+        async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
     )
-
-    device_manager = hass.data[DOMAIN][entry.entry_id][TUYA_DEVICE_MANAGER]
-    device_ids = []
-    for (device_id, device) in device_manager.device_map.items():
-        if device.category in TUYA_SUPPORT_TYPE:
-            device_ids.append(device_id)
-    async_discover_device(device_ids)
-
-
-def _setup_entities(
-    hass: HomeAssistant, entry: ConfigEntry, device_ids: list[str]
-) -> list[TuyaHaFan]:
-    """Set up Tuya Fan."""
-    device_manager = hass.data[DOMAIN][entry.entry_id][TUYA_DEVICE_MANAGER]
-    entities = []
-    for device_id in device_ids:
-        device = device_manager.device_map[device_id]
-        if device is None:
-            continue
-        entities.append(TuyaHaFan(device, device_manager))
-        hass.data[DOMAIN][entry.entry_id][TUYA_HA_DEVICES].add(device_id)
-    return entities
 
 
 class TuyaHaFan(TuyaHaEntity, FanEntity):

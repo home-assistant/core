@@ -7,7 +7,7 @@ from google_nest_sdm.device import Device
 from google_nest_sdm.device_traits import HumidityTrait, TemperatureTrait
 from google_nest_sdm.exceptions import GoogleNestException
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
@@ -17,7 +17,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_SUBSCRIBER, DOMAIN
@@ -58,26 +57,15 @@ async def async_setup_sdm_entry(
 class SensorBase(SensorEntity):
     """Representation of a dynamically updated Sensor."""
 
+    _attr_shoud_poll = False
+    _attr_state_class = STATE_CLASS_MEASUREMENT
+
     def __init__(self, device: Device) -> None:
         """Initialize the sensor."""
         self._device = device
         self._device_info = NestDeviceInfo(device)
-
-    @property
-    def should_poll(self) -> bool:
-        """Disable polling since entities have state pushed via pubsub."""
-        return False
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        # The API "name" field is a unique device identifier.
-        return f"{self._device.name}-{self.device_class}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device specific attributes."""
-        return self._device_info.device_info
+        self._attr_unique_id = f"{device.name}-{self.device_class}"
+        self._attr_device_info = self._device_info.device_info
 
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to register update signal handler."""
@@ -88,6 +76,9 @@ class SensorBase(SensorEntity):
 
 class TemperatureSensor(SensorBase):
     """Representation of a Temperature Sensor."""
+
+    _attr_device_class = DEVICE_CLASS_TEMPERATURE
+    _attr_native_unit_of_measurement = TEMP_CELSIUS
 
     @property
     def name(self) -> str:
@@ -100,25 +91,12 @@ class TemperatureSensor(SensorBase):
         trait: TemperatureTrait = self._device.traits[TemperatureTrait.NAME]
         return trait.ambient_temperature_celsius
 
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of this device."""
-        return DEVICE_CLASS_TEMPERATURE
-
 
 class HumiditySensor(SensorBase):
     """Representation of a Humidity Sensor."""
 
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        # The API returns the identifier under the name field.
-        return f"{self._device.name}-humidity"
+    _attr_device_class = DEVICE_CLASS_HUMIDITY
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     @property
     def name(self) -> str:
@@ -130,13 +108,3 @@ class HumiditySensor(SensorBase):
         """Return the state of the sensor."""
         trait: HumidityTrait = self._device.traits[HumidityTrait.NAME]
         return trait.ambient_humidity_percent
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Return the unit of measurement."""
-        return PERCENTAGE
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of this device."""
-        return DEVICE_CLASS_HUMIDITY

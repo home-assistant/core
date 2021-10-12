@@ -48,7 +48,7 @@ WazeRouteCalculator==0.13
 abodepy==1.2.0
 
 # homeassistant.components.accuweather
-accuweather==0.2.0
+accuweather==0.3.0
 
 # homeassistant.components.adax
 adax==0.1.1
@@ -591,7 +591,7 @@ mficlient==0.3.0
 micloud==0.3
 
 # homeassistant.components.mill
-millheater==0.6.1
+millheater==0.6.2
 
 # homeassistant.components.minio
 minio==4.0.9
@@ -1139,7 +1139,7 @@ pytile==5.2.3
 pytraccar==0.9.0
 
 # homeassistant.components.tradfri
-pytradfri[async]==7.0.6
+pytradfri[async]==7.0.7
 
 # homeassistant.components.usb
 pyudev==0.22.0
@@ -1175,7 +1175,7 @@ pyzerproc==0.4.8
 rachiopy==1.0.3
 
 # homeassistant.components.rainmachine
-regenmaschine==3.1.5
+regenmaschine==3.2.0
 
 # homeassistant.components.renault
 renault-api==0.1.4
