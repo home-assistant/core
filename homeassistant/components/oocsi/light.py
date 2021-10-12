@@ -48,6 +48,8 @@ async def async_setup_entry(hass, ConfigEntry, async_add_entities):
 
 
 class BasicLight(LightEntity):
+    """variable oocsi lamp object"""
+
     # Import & configure entity
     def __init__(self, hass, entity_name, api, entityProperty):
         # Basic variables
@@ -59,11 +61,11 @@ class BasicLight(LightEntity):
         # Set properties
         self._attr_unique_id = entityProperty["channelName"]
         self._oocsichannel = entityProperty["channelName"]
-        self._channelState = entityProperty["state"]
+        self._channel_state = entityProperty["state"]
 
         # self._supportedFeature = entityProperty["type"]
         self._brightness = entityProperty["brightness"]
-        self._ledType = entityProperty["ledType"]
+        self._led_type = entityProperty["ledType"]
         self._spectrum = entityProperty["spectrum"]
         self._color_mode: str | None = None
         self._color_temp: int | None = None
@@ -77,46 +79,47 @@ class BasicLight(LightEntity):
         if entityProperty.get("effect"):
             self._attr_supported_features |= SUPPORT_EFFECT
             self._effect: str | None = None
-            self._effectList = entityProperty["effect"]
+            self._effect_list = entityProperty["effect"]
 
     async def _color_setup(self):
+        """Picks the right config for the specified lamp"""
         self._supported_color_modes = set()
-        ledType = self._ledType
+        led_type = self._led_type
 
-        if ledType in ["RGB", "RGBW", "RGBWW"]:
+        if led_type in ["RGB", "RGBW", "RGBWW"]:
             spectrum = self._spectrum
             if "CCT" in spectrum:
                 self._supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
             if "RGB" in spectrum:
-                if ledType == "RGBWW":
+                if led_type == "RGBWW":
                     self._supported_color_modes.add(COLOR_MODE_RGBWW)
                     self._color_mode = COLOR_MODE_RGBWW
-                if ledType == "RGBW":
+                if led_type == "RGBW":
                     self._supported_color_modes.add(COLOR_MODE_RGBW)
                     self._color_mode = COLOR_MODE_RGBW
-                if ledType == "RGB":
+                if led_type == "RGB":
                     self._supported_color_modes.add(COLOR_MODE_RGB)
                     self._color_mode = COLOR_MODE_RGB
             if "WHITE" in spectrum:
                 self._supported_color_modes.add(COLOR_MODE_WHITE)
-        if ledType == "WHITE":
+        if led_type == "WHITE":
             self._supported_color_modes.add(COLOR_MODE_WHITE)
-        if ledType == "CCT":
+        if led_type == "CCT":
             self._supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
 
     async def async_added_to_hass(self) -> None:
         """Create oocsi listener"""
 
         @callback
-        def channelUpdateEvent(sender, recipient, event, **kwargs: Any):
+        def channel_update_event(sender, recipient, event, **kwargs: Any):
             """Handle oocsi event"""
-            self._channelState = event["state"]
+            self._channel_state = event["state"]
             if COLOR_MODE_RGB in self._supported_color_modes:
-                self._RGB = event["colorrgb"]
+                self._rgb = event["colorrgb"]
             if COLOR_MODE_RGBW in self._supported_color_modes:
-                self._RGBW = event["colorrgbw"]
+                self._rgbw = event["colorrgbw"]
             if COLOR_MODE_RGBWW in self._supported_color_modes:
-                self._RGBWW = event["colorrgbww"]
+                self._rgbww = event["colorrgbww"]
             if brightness_supported(self._supported_color_modes):
                 self._brightness = event["brightness"]
             if COLOR_MODE_COLOR_TEMP in self._supported_color_modes:
@@ -127,7 +130,7 @@ class BasicLight(LightEntity):
             self.async_write_ha_state()
 
         await self._color_setup()
-        self._oocsi.subscribe(self._oocsichannel, channelUpdateEvent)
+        self._oocsi.subscribe(self._oocsichannel, channel_update_event)
 
     @property
     def color_mode(self) -> str | None:
@@ -197,7 +200,7 @@ class BasicLight(LightEntity):
     @property
     def effect_list(self) -> list[str] | None:
         """Return the list of supported effects."""
-        return self._effectList
+        return self._effect_list
 
     @property
     def supported_features(self) -> int:
@@ -207,11 +210,11 @@ class BasicLight(LightEntity):
     @property
     def is_on(self):
         """Return true if the switch is on."""
-        return self._channelState
+        return self._channel_state
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        self._channelState = True
+        self._channel_state = True
         self._oocsi.send(self._oocsichannel, {"state": True})
         supported_color_modes = self._supported_color_modes
 
@@ -243,7 +246,6 @@ class BasicLight(LightEntity):
         if ATTR_WHITE in kwargs and COLOR_MODE_WHITE in supported_color_modes:
             self._color_mode = COLOR_MODE_WHITE
             self._brightness = kwargs.get(ATTR_WHITE)
-            self._white_switch = kwargs.get(ATTR_WHITE)
             self._oocsi.send(self._oocsichannel, {"brightnessWhite": self._brightness})
 
         if ATTR_COLOR_TEMP in kwargs and COLOR_MODE_COLOR_TEMP in supported_color_modes:
@@ -251,34 +253,19 @@ class BasicLight(LightEntity):
             self._color_mode = COLOR_MODE_COLOR_TEMP
             self._color_temp = kwargs.get(ATTR_COLOR_TEMP)
 
-            if self._ledType in ["RGB", "RGBW"]:
-                CTinRGB = color_util.color_temperature_to_rgb(self._color_temp)
-                self._oocsi.send(self._oocsichannel, {"colorTempInRGB": CTinRGB})
-            elif self._ledType in ["CCT", "RGBWW"]:
+            if self._led_type in ["RGB", "RGBW"]:
+                ct_in_rgb = color_util.color_temperature_to_rgb(self._color_temp)
+                self._oocsi.send(self._oocsichannel, {"colorTempInRGB": ct_in_rgb})
+            elif self._led_type in ["CCT", "RGBWW"]:
                 self._oocsi.send(self._oocsichannel, {"colorTemp": self._color_temp})
 
         if ATTR_EFFECT in kwargs:
             self._effect = kwargs[ATTR_EFFECT]
             self._oocsi.send(self._oocsichannel, {"effect": self._effect})
 
-        # def colormodeRGBpicker(self):
-        #     if COLOR_MODE_RGB in supported_color_modes:
-        #         self._color_mode = COLOR_MODE_RGB
-        #     if COLOR_MODE_RGBW in supported_color_modes:
-        #         self._color_mode = COLOR_MODE_RGBW
-        #     if COLOR_MODE_RGBWW in supported_color_modes:
-        #         self._color_mode = COLOR_MODE_RGBWW
-
-        # if "CCT" and "RGB" in self._spectrum:
-        #     if self._color_temp != None:
-        #         self._color_mode = COLOR_MODE_COLOR_TEMP
-        #     else:
-
-        #         colormodeRGBpicker
-
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         self._oocsi.send(self._oocsichannel, {"state": False})
-        self._channelState = False
+        self._channel_state = False

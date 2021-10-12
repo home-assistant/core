@@ -64,8 +64,13 @@ async def _async_interviewer(hass: HomeAssistant, entry: ConfigEntry, api: api) 
             hass.data[OOCSI_ENTITY] = hass.data[OOCSI_ENTITY] | event
 
             # Check which platforms must be started for the interviewed entities
-            for key in hass.data[OOCSI_ENTITY]["uniquePrototype"]["components"]:
-                if key not in PLATFORMS:
+            for key in hass.data[OOCSI_ENTITY]["uniquePrototype"]["components"][key]:
+                if (
+                    hass.data[OOCSI_ENTITY]["uniquePrototype"]["components"][key][
+                        "type"
+                    ]
+                    not in PLATFORMS
+                ):
                     PLATFORMS.append(key)
             # Start platforms
             hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -85,22 +90,26 @@ async def async_create_new_platform_entity(
 ):
     # Per platform get their entries and create an entity dictionary
     entities = []
-    for key in hass.data[OOCSI_ENTITY]["uniquePrototype"]["components"][platform]:
 
-        entities.append(
-            entityType(
-                hass,
-                key,
-                api,
-                hass.data[OOCSI_ENTITY]["uniquePrototype"]["components"][platform][key],
+    for key in hass.data[OOCSI_ENTITY]["uniquePrototype"]["components"]:
+        if hass.data[OOCSI_ENTITY]["uniquePrototype"]["components"][key]["type"] == [
+            platform
+        ]:
+            entities.append(
+                entityType(
+                    hass,
+                    key,
+                    api,
+                    hass.data[OOCSI_ENTITY]["uniquePrototype"]["components"][key],
+                )
             )
-        )
     # Add entities
     AsyncAdd(entities)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         api = hass.data.pop(DATA_OOCSI)

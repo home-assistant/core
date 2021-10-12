@@ -1106,7 +1106,7 @@ onkyo-eiscp==1.2.7
 onvif-zeep-async==1.2.0
 
 # homeassistant.components.oocsi
-oocsi == 0.4.1
+oocsi == 0.4.2
 
 # homeassistant.components.opengarage
 open-garage==0.1.5
