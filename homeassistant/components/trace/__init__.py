@@ -91,7 +91,7 @@ def async_store_trace(hass, trace, stored_traces):
         traces[key][trace.run_id] = trace
 
 
-def restore_traces(hass, cls, domain):
+def async_restore_traces(hass, cls, domain):
     """Restore saved traces."""
     restored_traces = hass.data[DATA_RESTORED_TRACES].pop(domain, {})
     for traces in restored_traces.values():

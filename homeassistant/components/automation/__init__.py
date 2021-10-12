@@ -82,7 +82,7 @@ from .const import (
     LOGGER,
 )
 from .helpers import async_get_blueprints
-from .trace import restore_traces, trace_automation
+from .trace import async_restore_traces, trace_automation
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
@@ -228,7 +228,7 @@ def areas_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
 
 async def async_setup(hass, config):
     """Set up all automations."""
-    restore_traces(hass)
+    async_restore_traces(hass)
 
     hass.data[DOMAIN] = component = EntityComponent(LOGGER, DOMAIN, hass)
 

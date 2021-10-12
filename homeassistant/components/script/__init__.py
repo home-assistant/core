@@ -58,7 +58,7 @@ from .const import (
     LOGGER,
 )
 from .helpers import async_get_blueprints
-from .trace import restore_traces, trace_script
+from .trace import async_restore_traces, trace_script
 
 SCRIPT_SERVICE_SCHEMA = vol.Schema(dict)
 SCRIPT_TURN_ONOFF_SCHEMA = make_entity_service_schema(
@@ -168,7 +168,7 @@ def areas_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
 
 async def async_setup(hass, config):
     """Load the scripts from the configuration."""
-    restore_traces(hass)
+    async_restore_traces(hass)
 
     hass.data[DOMAIN] = component = EntityComponent(LOGGER, DOMAIN, hass)
 

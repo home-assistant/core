@@ -8,8 +8,8 @@ from typing import Any
 
 from homeassistant.components.trace import (
     ActionTrace,
+    async_restore_traces as trace_restore_traces,
     async_store_trace,
-    restore_traces as trace_restore_traces,
 )
 from homeassistant.components.trace.const import CONF_STORED_TRACES
 from homeassistant.core import Context, HomeAssistant
@@ -50,6 +50,6 @@ def trace_script(
             trace.finished()
 
 
-def restore_traces(hass):
+def async_restore_traces(hass):
     """Restore saved traces."""
     trace_restore_traces(hass, ScriptTrace, DOMAIN)
