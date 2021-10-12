@@ -450,7 +450,7 @@ class FluxLight(FluxEntity, CoordinatorEntity, LightEntity):
             await self._device.async_set_levels(*rgbww_brightness(rgbwc, brightness))
             return
         # Handle Brightness Only Color Mode
-        if self.color_mode in COLOR_MODE_BRIGHTNESS:
+        if self.color_mode == COLOR_MODE_BRIGHTNESS:
             await self._device.async_set_levels(w=brightness)
             return
         raise ValueError(f"Unsupported color mode {self.color_mode}")
