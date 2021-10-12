@@ -2,7 +2,6 @@
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY_CHARGING,
     DEVICE_CLASS_CONNECTIVITY,
-    DOMAIN as BINARY_SENSOR_DOMAIN,
 )
 from homeassistant.components.goalzero.const import DEFAULT_NAME
 from homeassistant.const import (
@@ -13,14 +12,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import setup_platform
+from . import async_init_integration
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_binary_sensors(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
     """Test we get sensor data."""
-    await setup_platform(hass, aioclient_mock, BINARY_SENSOR_DOMAIN)
+    await async_init_integration(hass, aioclient_mock)
 
     state = hass.states.get(f"binary_sensor.{DEFAULT_NAME}_backlight")
     assert state.state == STATE_ON

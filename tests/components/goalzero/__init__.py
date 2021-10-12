@@ -4,15 +4,9 @@ from unittest.mock import AsyncMock, patch
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 from homeassistant.components.goalzero import DOMAIN
 from homeassistant.components.goalzero.const import DEFAULT_NAME
-from homeassistant.components.homeassistant import (
-    DOMAIN as HA_DOMAIN,
-    SERVICE_UPDATE_ENTITY,
-)
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -40,19 +34,6 @@ def create_entry(hass: HomeAssistant):
         unique_id=MAC,
     )
     entry.add_to_hass(hass)
-    return entry
-
-
-async def setup_platform(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    platform: str,
-):
-    """Set up platform."""
-    with patch("homeassistant.components.goalzero.PLATFORMS", [platform]):
-        entry = await async_init_integration(hass, aioclient_mock)
-        assert await async_setup_component(hass, DOMAIN, {})
-
     return entry
 
 
@@ -99,26 +80,3 @@ async def async_init_integration(
         await hass.async_block_till_done()
 
     return entry
-
-
-async def refresh_data(
-    hass: HomeAssistant, config_entry: ConfigEntry, aioclient_mock: AiohttpClientMocker
-):
-    """Request a DataUpdateCoordinator refresh."""
-    base_url = f"http://{HOST}/"
-    aioclient_mock.get(
-        f"{base_url}state",
-        text=load_fixture("goalzero/state_data.json"),
-    )
-    aioclient_mock.get(
-        f"{base_url}sysinfo",
-        text=load_fixture("goalzero/info_data.json"),
-    )
-    await async_setup_component(hass, HA_DOMAIN, {})
-    await hass.services.async_call(
-        HA_DOMAIN,
-        SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: f"sensor.{DEFAULT_NAME}_watts_in"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()

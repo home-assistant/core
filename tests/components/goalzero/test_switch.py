@@ -10,7 +10,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import setup_platform
+from . import async_init_integration
 
 from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -24,7 +24,7 @@ async def test_switches_states(
         "http://1.2.3.4/state",
         text=load_fixture("goalzero/state_data.json"),
     )
-    await setup_platform(hass, aioclient_mock, SWITCH_DOMAIN)
+    await async_init_integration(hass, aioclient_mock)
 
     entity_id = f"switch.{DEFAULT_NAME}_12v_port_status"
     state = hass.states.get(entity_id)

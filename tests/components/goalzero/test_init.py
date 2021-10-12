@@ -1,21 +1,20 @@
 """Test Goal Zero integration."""
+from datetime import timedelta
 from unittest.mock import patch
 
 from goalzero import exceptions
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.goalzero.const import (
     DATA_KEY_COORDINATOR,
     DEFAULT_NAME,
     DOMAIN,
     MANUFACTURER,
 )
-from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.setup import async_setup_component
+import homeassistant.util.dt as dt_util
 
 from . import (
     CONF_DATA,
@@ -23,9 +22,9 @@ from . import (
     _patch_init_yeti,
     async_init_integration,
     create_entry,
-    setup_platform,
 )
 
+from tests.common import async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -63,7 +62,6 @@ async def test_update_failed(
 ) -> None:
     """Test data update failure."""
     entry = await async_init_integration(hass, aioclient_mock)
-    await async_setup_component(hass, HA_DOMAIN, {})
     coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         DATA_KEY_COORDINATOR
     ]
@@ -71,7 +69,8 @@ async def test_update_failed(
         "homeassistant.components.goalzero.Yeti.get_state",
         side_effect=exceptions.ConnectError,
     ) as updater:
-        await coordinator.async_refresh()
+        next_update = dt_util.utcnow() + timedelta(seconds=30)
+        async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done()
         updater.assert_called_once()
         assert not coordinator.last_update_success
@@ -79,7 +78,7 @@ async def test_update_failed(
 
 async def test_device_info(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
     """Test device info."""
-    entry = await setup_platform(hass, aioclient_mock, BINARY_SENSOR_DOMAIN)
+    entry = await async_init_integration(hass, aioclient_mock)
     device_registry = await dr.async_get_registry(hass)
 
     device = device_registry.async_get_device({(DOMAIN, entry.entry_id)})
