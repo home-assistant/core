@@ -10,12 +10,11 @@ from homeassistant.core import HassJob, callback
 from homeassistant.helpers import config_validation as cv, template
 
 from .. import mqtt
+from .const import CONF_QOS, CONF_TOPIC
 
 # mypy: allow-untyped-defs
 
 CONF_ENCODING = "encoding"
-CONF_QOS = "qos"
-CONF_TOPIC = "topic"
 DEFAULT_ENCODING = "utf-8"
 DEFAULT_QOS = 0
 
