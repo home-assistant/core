@@ -1063,9 +1063,13 @@ class Script:
         if self._referenced_areas is not None:
             return self._referenced_areas
 
-        referenced: set[str] = set()
+        self._referenced_areas: set[str] = set()
+        Script._find_referenced_areas(self._referenced_areas, self.sequence)
+        return self._referenced_areas
 
-        for step in self.sequence:
+    @staticmethod
+    def _find_referenced_areas(referenced, sequence):
+        for step in sequence:
             action = cv.determine_script_action(step)
 
             if action == cv.SCRIPT_ACTION_CALL_SERVICE:
@@ -1076,8 +1080,11 @@ class Script:
                 ):
                     _referenced_extract_ids(data, ATTR_AREA_ID, referenced)
 
-        self._referenced_areas = referenced
-        return referenced
+            elif action == cv.SCRIPT_ACTION_CHOOSE:
+                for choice in step[CONF_CHOOSE]:
+                    Script._find_referenced_areas(referenced, choice[CONF_SEQUENCE])
+                if CONF_DEFAULT in step:
+                    Script._find_referenced_areas(referenced, step[CONF_DEFAULT])
 
     @property
     def referenced_devices(self):
@@ -1085,9 +1092,13 @@ class Script:
         if self._referenced_devices is not None:
             return self._referenced_devices
 
-        referenced: set[str] = set()
+        self._referenced_devices: set[str] = set()
+        Script._find_referenced_devices(self._referenced_devices, self.sequence)
+        return self._referenced_devices
 
-        for step in self.sequence:
+    @staticmethod
+    def _find_referenced_devices(referenced, sequence):
+        for step in sequence:
             action = cv.determine_script_action(step)
 
             if action == cv.SCRIPT_ACTION_CALL_SERVICE:
@@ -1104,8 +1115,13 @@ class Script:
             elif action == cv.SCRIPT_ACTION_DEVICE_AUTOMATION:
                 referenced.add(step[CONF_DEVICE_ID])
 
-        self._referenced_devices = referenced
-        return referenced
+            elif action == cv.SCRIPT_ACTION_CHOOSE:
+                for choice in step[CONF_CHOOSE]:
+                    for cond in choice[CONF_CONDITIONS]:
+                        referenced |= condition.async_extract_devices(cond)
+                    Script._find_referenced_devices(referenced, choice[CONF_SEQUENCE])
+                if CONF_DEFAULT in step:
+                    Script._find_referenced_devices(referenced, step[CONF_DEFAULT])
 
     @property
     def referenced_entities(self):
@@ -1113,9 +1129,13 @@ class Script:
         if self._referenced_entities is not None:
             return self._referenced_entities
 
-        referenced: set[str] = set()
+        self._referenced_entities: set[str] = set()
+        Script._find_referenced_entities(self._referenced_entities, self.sequence)
+        return self._referenced_entities
 
-        for step in self.sequence:
+    @staticmethod
+    def _find_referenced_entities(referenced, sequence):
+        for step in sequence:
             action = cv.determine_script_action(step)
 
             if action == cv.SCRIPT_ACTION_CALL_SERVICE:
@@ -1133,8 +1153,14 @@ class Script:
             elif action == cv.SCRIPT_ACTION_ACTIVATE_SCENE:
                 referenced.add(step[CONF_SCENE])
 
-        self._referenced_entities = referenced
-        return referenced
+            elif action == cv.SCRIPT_ACTION_CHOOSE:
+                for choice in step[CONF_CHOOSE]:
+                    for cond in choice[CONF_CONDITIONS]:
+                        _LOGGER.error("Extracting entities from: %s", cond)
+                        referenced |= condition.async_extract_entities(cond)
+                    Script._find_referenced_entities(referenced, choice[CONF_SEQUENCE])
+                if CONF_DEFAULT in step:
+                    Script._find_referenced_entities(referenced, step[CONF_DEFAULT])
 
     def run(
         self, variables: _VarsType | None = None, context: Context | None = None
