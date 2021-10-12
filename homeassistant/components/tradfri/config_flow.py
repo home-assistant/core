@@ -183,7 +183,7 @@ async def authenticate(
     finally:
         await api_factory.shutdown()
     if key is None:
-        raise AuthError("Cannot authenticate, is Gateway paired with another server?")
+        raise AuthError("cannot_authenticate")
     return await get_gateway_info(hass, host, identity, key)
 
 
