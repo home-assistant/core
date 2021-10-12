@@ -22,13 +22,6 @@ class TuyaHaEntity(Entity):
         self.tuya_device = device
         self.tuya_device_manager = device_manager
 
-    @staticmethod
-    def remap(old_value, old_min, old_max, new_min, new_max):
-        """Remap old_value to new_value."""
-        return ((old_value - old_min) / (old_max - old_min)) * (
-            new_max - new_min
-        ) + new_min
-
     @property
     def name(self) -> str | None:
         """Return Tuya device name."""
