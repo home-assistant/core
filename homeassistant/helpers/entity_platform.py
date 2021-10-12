@@ -460,6 +460,7 @@ class EntityPlatform:
             if config_entry_id is not None and device_info is not None:
                 processed_dev_info = {"config_entry_id": config_entry_id}
                 for key in (
+                    "configuration_url",
                     "connections",
                     "default_manufacturer",
                     "default_model",
