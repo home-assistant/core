@@ -57,14 +57,14 @@ async def async_setup_sdm_entry(
 class SensorBase(SensorEntity):
     """Representation of a dynamically updated Sensor."""
 
+    _attr_shoud_poll = False
     _attr_state_class = STATE_CLASS_MEASUREMENT
 
     def __init__(self, device: Device) -> None:
         """Initialize the sensor."""
         self._device = device
         self._device_info = NestDeviceInfo(device)
-        self._attr_should_poll = False
-        self._attr_unique_id = f"{self._device.name}-{self.device_class}"
+        self._attr_unique_id = f"{device.name}-{self.device_class}"
         self._attr_device_info = self._device_info.device_info
 
     async def async_added_to_hass(self) -> None:
