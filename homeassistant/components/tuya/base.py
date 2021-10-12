@@ -14,10 +14,11 @@ from .const import DOMAIN, TUYA_HA_SIGNAL_UPDATE_ENTITY
 class TuyaHaEntity(Entity):
     """Tuya base device."""
 
+    _attr_should_poll = False
+
     def __init__(self, device: TuyaDevice, device_manager: TuyaDeviceManager) -> None:
         """Init TuyaHaEntity."""
-        super().__init__()
-
+        self._attr_unique_id = f"tuya.{device.id}"
         self.tuya_device = device
         self.tuya_device_manager = device_manager
 
@@ -27,16 +28,6 @@ class TuyaHaEntity(Entity):
         return ((old_value - old_min) / (old_max - old_min)) * (
             new_max - new_min
         ) + new_min
-
-    @property
-    def should_poll(self) -> bool:
-        """Hass should not poll."""
-        return False
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        return f"tuya.{self.tuya_device.id}"
 
     @property
     def name(self) -> str | None:
