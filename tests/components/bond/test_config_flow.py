@@ -311,19 +311,18 @@ async def test_zeroconf_already_configured(hass: core.HomeAssistant):
 
 async def test_zeroconf_already_configured_refresh_token(hass: core.HomeAssistant):
     """Test starting a flow from zeroconf when already configured and the token is out of date."""
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="already-registered-bond-id",
-        data={CONF_HOST: "stored-host", CONF_ACCESS_TOKEN: "incorrect-token"},
-    )
-    entry.add_to_hass(hass)
     entry2 = MockConfigEntry(
         domain=DOMAIN,
         unique_id="not-the-same-bond-id",
         data={CONF_HOST: "stored-host", CONF_ACCESS_TOKEN: "correct-token"},
     )
     entry2.add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="already-registered-bond-id",
+        data={CONF_HOST: "stored-host", CONF_ACCESS_TOKEN: "incorrect-token"},
+    )
+    entry.add_to_hass(hass)
 
     with patch_bond_version(
         side_effect=ClientResponseError(MagicMock(), MagicMock(), status=401)
