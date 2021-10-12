@@ -8,6 +8,7 @@ from aiohttp import ClientConnectionError, ClientResponseError
 
 from homeassistant import config_entries, core
 from homeassistant.components.bond.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 
 from .common import (
@@ -303,6 +304,41 @@ async def test_zeroconf_already_configured(hass: core.HomeAssistant):
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "updated-host"
+
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_zeroconf_already_configured_refresh_token(hass: core.HomeAssistant):
+    """Test starting a flow from zeroconf when already configured and the token is out of date."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="already-registered-bond-id",
+        data={CONF_HOST: "stored-host", CONF_ACCESS_TOKEN: "incorrect-token"},
+    )
+    entry.add_to_hass(hass)
+
+    with patch_bond_version(side_effect=ClientResponseError(None, None, status=401)):
+        await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+    with _patch_async_setup_entry() as mock_setup_entry, patch_bond_token(
+        return_value={"token": "discovered-token"}
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data={
+                "name": "already-registered-bond-id.some-other-tail-info",
+                "host": "updated-host",
+            },
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert entry.data["host"] == "updated-host"
+    assert entry.data[CONF_ACCESS_TOKEN] == "discovered-token"
 
     await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 0

@@ -1,8 +1,10 @@
 """Tests for the Bond module."""
+import asyncio
 from unittest.mock import Mock
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from bond_api import DeviceType
+import pytest
 
 from homeassistant.components.bond.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -33,7 +35,8 @@ async def test_async_setup_no_domain_config(hass: HomeAssistant):
     assert result is True
 
 
-async def test_async_setup_raises_entry_not_ready(hass: HomeAssistant):
+@pytest.mark.parametrize("exc", [ClientConnectionError, asyncio.TimeoutError, OSError])
+async def test_async_setup_raises_entry_not_ready(hass: HomeAssistant, exc: Exception):
     """Test that it throws ConfigEntryNotReady when exception occurs during setup."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -41,7 +44,7 @@ async def test_async_setup_raises_entry_not_ready(hass: HomeAssistant):
     )
     config_entry.add_to_hass(hass)
 
-    with patch_bond_version(side_effect=ClientConnectionError()):
+    with patch_bond_version(side_effect=exc):
         await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
