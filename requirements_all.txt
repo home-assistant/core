@@ -88,7 +88,7 @@ WazeRouteCalculator==0.13
 abodepy==1.2.0
 
 # homeassistant.components.accuweather
-accuweather==0.2.0
+accuweather==0.3.0
 
 # homeassistant.components.bmp280
 adafruit-circuitpython-bmp280==3.1.1
