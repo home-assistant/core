@@ -176,6 +176,10 @@ async def authenticate(
     try:
         with async_timeout.timeout(5):
             key = await api_factory.generate_psk(security_code)
+            if key is None:
+                raise AuthError(
+                    "Cannot authenticate, is Gateway paired with another server?"
+                )
     except RequestError as err:
         raise AuthError("invalid_security_code") from err
     except asyncio.TimeoutError as err:
