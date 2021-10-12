@@ -59,7 +59,7 @@ async def test_list_entities(hass, client):
             "name": "Hello World",
             "icon": None,
             "platform": "test_platform",
-            "is_config_entity": None,
+            "entity_category": None,
         },
         {
             "config_entry_id": None,
@@ -70,7 +70,7 @@ async def test_list_entities(hass, client):
             "name": None,
             "icon": None,
             "platform": "test_platform",
-            "is_config_entity": None,
+            "entity_category": None,
         },
     ]
 
@@ -112,7 +112,7 @@ async def test_get_entity(hass, client):
         "original_icon": None,
         "capabilities": None,
         "unique_id": "1234",
-        "is_config_entity": None,
+        "entity_category": None,
     }
 
     await client.send_json(
@@ -137,7 +137,7 @@ async def test_get_entity(hass, client):
         "original_icon": None,
         "capabilities": None,
         "unique_id": "6789",
-        "is_config_entity": None,
+        "entity_category": None,
     }
 
 
@@ -193,7 +193,7 @@ async def test_update_entity(hass, client):
             "original_icon": None,
             "capabilities": None,
             "unique_id": "1234",
-            "is_config_entity": False,  # Set by async_add_entities
+            "entity_category": None,
         }
     }
 
@@ -242,7 +242,7 @@ async def test_update_entity(hass, client):
             "original_icon": None,
             "capabilities": None,
             "unique_id": "1234",
-            "is_config_entity": False,  # Set by async_add_entities
+            "entity_category": None,
         },
         "reload_delay": 30,
     }
@@ -297,7 +297,7 @@ async def test_update_entity_require_restart(hass, client):
             "original_icon": None,
             "capabilities": None,
             "unique_id": "1234",
-            "is_config_entity": False,  # Set by async_add_entities
+            "entity_category": None,
         },
         "require_restart": True,
     }
@@ -399,7 +399,7 @@ async def test_update_entity_no_changes(hass, client):
             "original_icon": None,
             "capabilities": None,
             "unique_id": "1234",
-            "is_config_entity": False,  # Set by async_add_entities
+            "entity_category": None,
         }
     }
 
@@ -480,7 +480,7 @@ async def test_update_entity_id(hass, client):
             "original_icon": None,
             "capabilities": None,
             "unique_id": "1234",
-            "is_config_entity": False,  # Set by async_add_entities
+            "entity_category": None,
         }
     }
 

@@ -11,7 +11,7 @@ import logging
 import math
 import sys
 from timeit import default_timer as timer
-from typing import Any, TypedDict, final
+from typing import Any, Literal, TypedDict, final
 
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
@@ -179,8 +179,8 @@ class EntityDescription:
     # This is the key identifier for this entity
     key: str
 
-    is_config_entity: bool = False
     device_class: str | None = None
+    entity_category: Literal["config"] | None = None
     entity_registry_enabled_default: bool = True
     force_update: bool = False
     icon: str | None = None
@@ -239,12 +239,12 @@ class Entity(ABC):
     _attr_context_recent_time: timedelta = timedelta(seconds=5)
     _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
+    _attr_entity_category: str | None
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
     _attr_extra_state_attributes: MutableMapping[str, Any]
     _attr_force_update: bool
     _attr_icon: str | None
-    _attr_is_config_entity: bool
     _attr_name: str | None
     _attr_should_poll: bool = True
     _attr_state: StateType = STATE_UNKNOWN
@@ -407,13 +407,13 @@ class Entity(ABC):
         return self._attr_attribution
 
     @property
-    def is_config_entity(self) -> bool:
-        """Return if the entity exposes some device configuration."""
-        if hasattr(self, "_attr_is_config_entity"):
-            return self._attr_is_config_entity
+    def entity_category(self) -> str | None:
+        """Return the category of the entity, if any."""
+        if hasattr(self, "_attr_entity_category"):
+            return self._attr_entity_category
         if hasattr(self, "entity_description"):
-            return self.entity_description.is_config_entity
-        return False
+            return self.entity_description.entity_category
+        return None
 
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they

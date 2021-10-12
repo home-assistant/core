@@ -177,7 +177,7 @@ def _entry_dict(entry):
         "name": entry.name,
         "icon": entry.icon,
         "platform": entry.platform,
-        "is_config_entity": entry.is_config_entity,
+        "entity_category": entry.entity_category,
     }
 
 
