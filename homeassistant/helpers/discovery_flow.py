@@ -76,16 +76,8 @@ class FlowDispatcher:
         # as ones in progress as it may cause additional device probing
         # which can overload devices since zeroconf/ssdp updates can happen
         # multiple times in the same minute
-        for existing_flow in self.hass.config_entries.flow.async_progress(
-            include_uninitialized=True
-        ):
-            if (
-                existing_flow["handler"] == domain
-                and existing_flow["context"]["source"] == context["source"]
-                and existing_flow["init_data"] == data
-            ):
-                return None
-
+        if self.hass.config_entries.flow.async_has_matching_flow(domain, context, data):
+            return None
         return self.hass.config_entries.flow.async_init(
             domain, context=context, data=data
         )
