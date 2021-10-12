@@ -1,6 +1,7 @@
 {
   "domain": "deluge",
   "name": "Deluge",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/deluge",
   "requirements": ["deluge-client==1.7.1"],
   "codeowners": [],

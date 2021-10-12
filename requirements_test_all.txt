@@ -323,6 +323,9 @@ debugpy==1.5.0
 # homeassistant.components.ohmconnect
 defusedxml==0.7.1
 
+# homeassistant.components.deluge
+deluge-client==1.7.1
+
 # homeassistant.components.denonavr
 denonavr==0.10.9
 
