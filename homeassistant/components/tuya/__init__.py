@@ -111,7 +111,7 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id][TUYA_DEVICE_MANAGER] = device_manager
 
     # Clean up device entities
-    await cleanup_device_registry(hass, entry)
+    await cleanup_device_registry(hass, device_manager)
 
     _LOGGER.debug("init support type->%s", PLATFORMS)
 
@@ -120,12 +120,11 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def cleanup_device_registry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def cleanup_device_registry(
+    hass: HomeAssistant, device_manager: TuyaDeviceManager
+) -> None:
     """Remove deleted device registry entry if there are no remaining entities."""
-
     device_registry_object = device_registry.async_get(hass)
-    device_manager = hass.data[DOMAIN][entry.entry_id][TUYA_DEVICE_MANAGER]
-
     for dev_id, device_entry in list(device_registry_object.devices.items()):
         for item in device_entry.identifiers:
             if DOMAIN == item[0] and item[1] not in device_manager.device_map:
@@ -171,7 +170,6 @@ class DeviceListener(TuyaDeviceListener):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Init DeviceListener."""
-
         self.hass = hass
         self.entry = entry
 
