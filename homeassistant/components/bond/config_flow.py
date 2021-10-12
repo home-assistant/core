@@ -106,9 +106,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if entry.unique_id != bond_id:
                 continue
             updates = {CONF_HOST: host}
-            if entry.state == ConfigEntryState.SETUP_ERROR:
-                if token := await async_get_token(self.hass, host):
-                    updates[CONF_ACCESS_TOKEN] = token
+            if entry.state == ConfigEntryState.SETUP_ERROR and (
+                token := await async_get_token(self.hass, host)
+            ):
+                updates[CONF_ACCESS_TOKEN] = token
             self.hass.config_entries.async_update_entry(
                 entry, data={**entry.data, **updates}
             )
