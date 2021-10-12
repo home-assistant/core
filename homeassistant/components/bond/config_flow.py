@@ -17,7 +17,7 @@ from homeassistant.const import (
     HTTP_UNAUTHORIZED,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
 
@@ -109,7 +109,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if entry.state == ConfigEntryState.SETUP_ERROR:
                 if token := await async_get_token(self.hass, host):
                     updates[CONF_ACCESS_TOKEN] = token
-            self._abort_if_unique_id_configured(updates)
+            self.hass.config_entries.async_update_entry(
+                entry, data={**entry.data, **updates}
+            )
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(entry.entry_id)
+            )
+            raise AbortFlow("already_configured")
 
         self._discovered = {CONF_HOST: host, CONF_NAME: bond_id}
         await self._async_try_automatic_configure()

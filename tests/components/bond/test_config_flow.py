@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from aiohttp import ClientConnectionError, ClientResponseError
 
@@ -319,7 +319,9 @@ async def test_zeroconf_already_configured_refresh_token(hass: core.HomeAssistan
     )
     entry.add_to_hass(hass)
 
-    with patch_bond_version(side_effect=ClientResponseError(None, None, status=401)):
+    with patch_bond_version(
+        side_effect=ClientResponseError(MagicMock(), MagicMock(), status=401)
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
@@ -334,14 +336,13 @@ async def test_zeroconf_already_configured_refresh_token(hass: core.HomeAssistan
                 "host": "updated-host",
             },
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "updated-host"
     assert entry.data[CONF_ACCESS_TOKEN] == "discovered-token"
-
-    await hass.async_block_till_done()
-    assert len(mock_setup_entry.mock_calls) == 0
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_zeroconf_form_unexpected_error(hass: core.HomeAssistant):
