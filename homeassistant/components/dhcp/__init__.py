@@ -17,6 +17,7 @@ from aiodiscover.discovery import (
 from scapy.config import conf
 from scapy.error import Scapy_Exception
 
+from homeassistant import config_entries
 from homeassistant.components.device_tracker.const import (
     ATTR_HOST_NAME,
     ATTR_IP,
@@ -41,8 +42,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_dhcp
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.network import is_invalid, is_link_local, is_loopback
-
-from .const import DOMAIN
 
 FILTER = "udp and (port 67 or 68)"
 REQUESTED_ADDR = "requested_addr"
@@ -151,7 +150,7 @@ class WatcherBase:
             discovery_flow.async_create_flow(
                 self.hass,
                 entry["domain"],
-                {"source": DOMAIN},
+                {"source": config_entries.SOURCE_DHCP},
                 {
                     IP_ADDRESS: ip_address,
                     HOSTNAME: lowercase_hostname,
