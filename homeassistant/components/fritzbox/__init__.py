@@ -66,9 +66,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             devices = fritz.get_devices()
 
         data = {}
+        fritz.update_devices()
         for device in devices:
-            device.update()
-
             # assume device as unavailable, see #55799
             if (
                 device.has_powermeter
