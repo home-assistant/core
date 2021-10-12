@@ -134,12 +134,17 @@ async def cleanup_device_registry(hass: HomeAssistant, entry: ConfigEntry) -> No
 
 
 @callback
-def async_remove_hass_device(hass: HomeAssistant, device_id: str) -> None:
+def async_remove_hass_device(
+    hass: HomeAssistant, entry: ConfigEntry, device_id: str
+) -> None:
     """Remove device from hass cache."""
     device_registry_object = device_registry.async_get(hass)
-    for device_entry in list(device_registry_object.devices.values()):
-        if device_id in list(device_entry.identifiers)[0]:
-            device_registry_object.async_remove_device(device_entry.id)
+    device_entry = device_registry_object.async_get_device(
+        identifiers={(DOMAIN, device_id)}
+    )
+    if device_entry is not None:
+        device_registry_object.async_remove_device(device_entry.id)
+        hass.data[DOMAIN][entry.entry_id][TUYA_HA_DEVICES].discard(device_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -188,7 +193,9 @@ class DeviceListener(TuyaDeviceListener):
             *self.hass.data[DOMAIN][self.entry.entry_id][TUYA_HA_TUYA_MAP].values()
         ):
             ha_tuya_map = self.hass.data[DOMAIN][self.entry.entry_id][TUYA_HA_TUYA_MAP]
-            self.hass.add_job(async_remove_hass_device, self.hass, device.id)
+            self.hass.add_job(
+                async_remove_hass_device, self.hass, self.entry, device.id
+            )
 
             for domain, tuya_list in ha_tuya_map.items():
                 if device.category in tuya_list:
@@ -219,4 +226,4 @@ class DeviceListener(TuyaDeviceListener):
     def remove_device(self, device_id: str) -> None:
         """Add device removed listener."""
         _LOGGER.debug("tuya remove device:%s", device_id)
-        self.hass.add_job(async_remove_hass_device, self.hass, device_id)
+        self.hass.add_job(async_remove_hass_device, self.hass, self.entry, device_id)
