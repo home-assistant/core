@@ -143,10 +143,14 @@ async def test_light_no_unique_id(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "protocol,sw_version,model", [("LEDENET_ORIGINAL", 1, 0x35), ("LEDENET", 8, 0x33)]
+    "protocol,sw_version,model_num,model",
+    [
+        ("LEDENET_ORIGINAL", 1, 0x01, "Original LEDEDNET (0x35)"),
+        ("LEDENET", 8, 0x33, "Magic Home Branded RGB Controller (0x33)"),
+    ],
 )
 async def test_light_device_registry(
-    hass: HomeAssistant, protocol: str, sw_version: int, model: int
+    hass: HomeAssistant, protocol: str, sw_version: int, model_num: int, model: str
 ) -> None:
     """Test a light device registry entry."""
     config_entry = MockConfigEntry(
@@ -158,8 +162,8 @@ async def test_light_device_registry(
     bulb = _mocked_bulb()
     bulb.version_num = sw_version
     bulb.protocol = protocol
-    bulb.raw_state = bulb.raw_state._replace(model_num=model, version_number=sw_version)
-    bulb.model_num = model
+    bulb.model_num = model_num
+    bulb.model = model
 
     with _patch_discovery(no_device=True), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
@@ -170,7 +174,7 @@ async def test_light_device_registry(
         identifiers={}, connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)}
     )
     assert device.sw_version == str(sw_version)
-    assert device.model == f"0x{model:02X}"
+    assert device.model == model
 
 
 async def test_rgb_light(hass: HomeAssistant) -> None:
