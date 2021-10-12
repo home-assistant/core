@@ -38,7 +38,7 @@ SERVER_COUNTRY_CODES = ["cn", "de", "i2", "ru", "sg", "us"]
 DEFAULT_CLOUD_COUNTRY = "cn"
 
 
-# Excptions
+# Exceptions
 class AuthException(Exception):
     """Exception indicating an authentication error."""
 
