@@ -1,6 +1,7 @@
 """Light platform support for yeelight."""
 from __future__ import annotations
 
+import asyncio
 import logging
 import math
 
@@ -8,6 +9,7 @@ import voluptuous as vol
 import yeelight
 from yeelight import Bulb, Flow, RGBTransition, SleepTransition, flows
 from yeelight.enums import BulbType, LightType, PowerMode, SceneClass
+from yeelight.main import BulbException
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -51,8 +53,6 @@ from . import (
     ATTR_COUNT,
     ATTR_MODE_MUSIC,
     ATTR_TRANSITIONS,
-    BULB_EXCEPTIONS,
-    BULB_NETWORK_EXCEPTIONS,
     CONF_FLOW_PARAMS,
     CONF_MODE_MUSIC,
     CONF_NIGHTLIGHT_SWITCH,
@@ -243,23 +243,33 @@ def _async_cmd(func):
     """Define a wrapper to catch exceptions from the bulb."""
 
     async def _async_wrap(self, *args, **kwargs):
-        try:
-            _LOGGER.debug("Calling %s with %s %s", func, args, kwargs)
-            return await func(self, *args, **kwargs)
-        except BULB_NETWORK_EXCEPTIONS as ex:
-            # A network error happened, the bulb is likely offline now
-            self.device.async_mark_unavailable()
-            self.async_state_changed()
-            exc_message = str(ex) or type(ex)
-            raise HomeAssistantError(
-                f"Error when calling {func.__name__} for bulb {self.device.name} at {self.device.host}: {exc_message}"
-            ) from ex
-        except BULB_EXCEPTIONS as ex:
-            # The bulb likely responded but had an error
-            exc_message = str(ex) or type(ex)
-            raise HomeAssistantError(
-                f"Error when calling {func.__name__} for bulb {self.device.name} at {self.device.host}: {exc_message}"
-            ) from ex
+        for attempts in range(2):
+            try:
+                _LOGGER.debug("Calling %s with %s %s", func, args, kwargs)
+                return await func(self, *args, **kwargs)
+            except asyncio.TimeoutError as ex:
+                # The wifi likely dropped, so we want to retry once since
+                # python-yeelight will auto reconnect
+                exc_message = str(ex) or type(ex)
+                if attempts == 0:
+                    continue
+                raise HomeAssistantError(
+                    f"Timed out when calling {func.__name__} for bulb {self.device.name} at {self.device.host}: {exc_message}"
+                ) from ex
+            except OSError as ex:
+                # A network error happened, the bulb is likely offline now
+                self.device.async_mark_unavailable()
+                self.async_state_changed()
+                exc_message = str(ex) or type(ex)
+                raise HomeAssistantError(
+                    f"Error when calling {func.__name__} for bulb {self.device.name} at {self.device.host}: {exc_message}"
+                ) from ex
+            except BulbException as ex:
+                # The bulb likely responded but had an error
+                exc_message = str(ex) or type(ex)
+                raise HomeAssistantError(
+                    f"Error when calling {func.__name__} for bulb {self.device.name} at {self.device.host}: {exc_message}"
+                ) from ex
 
     return _async_wrap
 
