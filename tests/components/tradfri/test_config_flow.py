@@ -27,11 +27,11 @@ async def test_already_paired(hass, mock_entry_setup):
         mx = AsyncMock()
         mx.generate_psk.return_value = None
         mock_lib.init.return_value = mx
-        flow = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(
             "tradfri", context={"source": config_entries.SOURCE_USER}
         )
         result = await hass.config_entries.flow.async_configure(
-            flow["flow_id"], {"host": "123.123.123.123", "security_code": "abcd"}
+            result["flow_id"], {"host": "123.123.123.123", "security_code": "abcd"}
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
