@@ -104,6 +104,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )  # pylint: disable=protected-access
         except aiohttp.ClientError:
             return self.async_abort(reason="cannot_connect")
+        finally:
+            if connector._aiohttp_session:  # pylint: disable=protected-access
+                await connector._aiohttp_session.close()  # pylint: disable=protected-access
 
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(
