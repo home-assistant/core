@@ -170,9 +170,9 @@ class DeviceListener(TuyaDeviceListener):
         """Update device status."""
         if device.id in self.device_ids:
             _LOGGER.debug(
-                "_update-->%s;->>%s",
-                self,
+                "Received update for device %s: %s",
                 device.id,
+                self.device_manager.device_map[device.id].status,
             )
             dispatcher_send(self.hass, f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{device.id}")
 
