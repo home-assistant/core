@@ -98,6 +98,73 @@ async def test_symo_logger(hass, aioclient_mock):
     )
 
 
+async def test_symo_meter(hass, aioclient_mock):
+    """Test Fronius Symo meter entities."""
+
+    def assert_state(entity_id, expected_state):
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == str(expected_state)
+
+    aioclient_mock.get(
+        url=symo.APIVersion.url,
+        json=symo.APIVersion.json,
+    )
+    aioclient_mock.get(
+        url=symo.MeterDevice.url,
+        json=symo.MeterDevice.json,
+    )
+    await setup_fronius_integration(hass, aioclient_mock, [symo.MeterDevice.config])
+
+    assert len(hass.states.async_all()) == 39
+    # ignored entities:
+    # manufacturer, model, serial, enable, timestamp, visible, meter_location
+    #
+    # states are rounded to 2 decimals
+    assert_state("sensor.current_ac_phase_1_fronius_meter_0_http_fronius", 7.75)
+    assert_state("sensor.current_ac_phase_2_fronius_meter_0_http_fronius", 6.68)
+    assert_state("sensor.current_ac_phase_3_fronius_meter_0_http_fronius", 10.1)
+    assert_state(
+        "sensor.energy_reactive_ac_consumed_fronius_meter_0_http_fronius", 59960790
+    )
+    assert_state(
+        "sensor.energy_reactive_ac_produced_fronius_meter_0_http_fronius", 723160
+    )
+    assert_state("sensor.energy_real_ac_minus_fronius_meter_0_http_fronius", 35623065)
+    assert_state("sensor.energy_real_ac_plus_fronius_meter_0_http_fronius", 15303334)
+    assert_state("sensor.energy_real_consumed_fronius_meter_0_http_fronius", 15303334)
+    assert_state("sensor.energy_real_produced_fronius_meter_0_http_fronius", 35623065)
+    assert_state("sensor.frequency_phase_average_fronius_meter_0_http_fronius", 50)
+    assert_state("sensor.power_apparent_phase_1_fronius_meter_0_http_fronius", 1772.79)
+    assert_state("sensor.power_apparent_phase_2_fronius_meter_0_http_fronius", 1527.05)
+    assert_state("sensor.power_apparent_phase_3_fronius_meter_0_http_fronius", 2333.56)
+    assert_state("sensor.power_apparent_fronius_meter_0_http_fronius", 5592.57)
+    assert_state("sensor.power_factor_phase_1_fronius_meter_0_http_fronius", -0.99)
+    assert_state("sensor.power_factor_phase_2_fronius_meter_0_http_fronius", -0.99)
+    assert_state("sensor.power_factor_phase_3_fronius_meter_0_http_fronius", 0.99)
+    assert_state("sensor.power_factor_fronius_meter_0_http_fronius", 1)
+    assert_state("sensor.power_reactive_phase_1_fronius_meter_0_http_fronius", 51.48)
+    assert_state("sensor.power_reactive_phase_2_fronius_meter_0_http_fronius", 115.63)
+    assert_state("sensor.power_reactive_phase_3_fronius_meter_0_http_fronius", -164.24)
+    assert_state("sensor.power_reactive_fronius_meter_0_http_fronius", 2.87)
+    assert_state("sensor.power_real_phase_1_fronius_meter_0_http_fronius", 1765.55)
+    assert_state("sensor.power_real_phase_2_fronius_meter_0_http_fronius", 1515.8)
+    assert_state("sensor.power_real_phase_3_fronius_meter_0_http_fronius", 2311.22)
+    assert_state("sensor.power_real_fronius_meter_0_http_fronius", 5592.57)
+    assert_state("sensor.voltage_ac_phase_1_fronius_meter_0_http_fronius", 228.6)
+    assert_state("sensor.voltage_ac_phase_2_fronius_meter_0_http_fronius", 228.6)
+    assert_state("sensor.voltage_ac_phase_3_fronius_meter_0_http_fronius", 231)
+    assert_state(
+        "sensor.voltage_ac_phase_to_phase_12_fronius_meter_0_http_fronius", 395.9
+    )
+    assert_state(
+        "sensor.voltage_ac_phase_to_phase_23_fronius_meter_0_http_fronius", 398
+    )
+    assert_state(
+        "sensor.voltage_ac_phase_to_phase_31_fronius_meter_0_http_fronius", 398
+    )
+
+
 async def test_symo_power_flow(hass, aioclient_mock):
     """Test Fronius Symo power flow entities."""
     async_fire_time_changed(hass, dt.utcnow())
