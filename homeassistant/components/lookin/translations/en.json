@@ -1,38 +1,32 @@
 {
-  "config": {
-    "step": {
-      "user": {
-        "data": {
-          "ip_address": "controller IP address"
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "cannot_connect": "Failed to connect",
+            "no_devices_found": "No devices found on the network",
+            "no_uid": "LOOKin instance does not have a unique id. You can configure the integration manually."
         },
-        "description": "LOOKin controller IP address",
-        "title": "LOOKin controller"
-      },
-      "device_name": {
-        "data": {
-          "name": "Enter device name"
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "no_devices_found": "No devices found on the network",
+            "unknown": "Unexpected error"
         },
-        "description": "Enter name for device or it location",
-        "title": "LOOKin device name"
-      },
-      "discovery_confirm": {
-        "description": "Do you want to add LOOKin (`{name}`) to Home Assistant?",
-        "title": "Confirm adding LOOKin"
-      }
-    },
-    "error": {
-      "no_devices_found": "No devices found on the network",
-      "already_configured": "Device is already configured",
-      "no_usable_service": "A device was found but could not a connection to it.",
-      "unknown": "Unexpected error"
-    },
-    "abort": {
-      "no_devices_found": "No devices found on the network",
-      "already_configured": "Device is already configured",
-      "no_usable_service": "A device was found but could not a connection to it.",
-      "already_in_progress": "Configuration flow is already in progress",
-      "no_uid": "LOOKin instance does not have a unique id. You can configure the integration manually.",
-      "unknown": "Unexpected error"
+        "flow_title": "{name} ({host})",
+        "step": {
+            "device_name": {
+                "data": {
+                    "name": "Name"
+                }
+            },
+            "discovery_confirm": {
+                "description": "Do you want to setup {name} ({host})?"
+            },
+            "user": {
+                "data": {
+                    "ip_address": "IP Address"
+                }
+            }
+        }
     }
-  }
 }
