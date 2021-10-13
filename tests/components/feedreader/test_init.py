@@ -77,10 +77,37 @@ def fixture_events(hass):
 
 async def test_feed(hass, events, feed_storage):
     """Test simple feed with valid data."""
-    feed_data = load_fixture("feedreader.xml")
-    max_entries = DEFAULT_MAX_ENTRIES
+    mock_feed = {
+        "bozo": False,
+        "entries": [
+            {"type": "text/plain", "language": None, "base": "", "value": "Title 1"}
+        ],
+        "summary": "Description 1",
+        "summary_detail": {
+            "type": "text/html",
+            "language": None,
+            "base": "",
+            "value": "Description 1",
+        },
+        "links": [
+            {
+                "rel": "alternate",
+                "type": "text/html",
+                "href": "http://www.example.com/link/1",
+            }
+        ],
+        "link": "http://www.example.com/link/1",
+        "id": "GUID 1",
+        "guidislink": False,
+        "published": "Mon, 30 Apr 2018 15:10:00 +1000",
+        "published_parsed": time.strptime("30 Apr 18 5:10", "%d %b %y %H:%M"),
+    }
 
-    FeedManager(feed_data, DEFAULT_SCAN_INTERVAL, max_entries, hass, feed_storage)
+    with patch(
+        "feedparser.parse",
+        return_value=mock_feed,
+    ):
+        assert await async_setup_component(hass, feedreader.DOMAIN, VALID_CONFIG_2)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
