@@ -8,7 +8,6 @@ from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.components.climate import ClimateEntity, ClimateEntityDescription
 from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
@@ -36,7 +35,7 @@ from .base import EnumTypeData, IntegerTypeData, TuyaHaEntity
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 
 TUYA_HVAC_TO_HA = {
-    "auto": HVAC_MODE_AUTO,
+    "auto": HVAC_MODE_HEAT_COOL,
     "cold": HVAC_MODE_COOL,
     "heat": HVAC_MODE_HEAT,
     "hot": HVAC_MODE_HEAT,
