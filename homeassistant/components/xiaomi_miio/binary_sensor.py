@@ -174,9 +174,7 @@ class XiaomiGenericBinarySensor(XiaomiCoordinatedMiioEntity, BinarySensorEntity)
             description.entity_registry_enabled_default
         )
 
-    @property
-    def is_on(self):
-        """Return true if the binary sensor is on."""
+    def _native_value(self):
         if self.entity_description.parent_key is not None:
             return self._extract_value_from_attribute(
                 getattr(self.coordinator.data, self.entity_description.parent_key),
@@ -190,3 +188,20 @@ class XiaomiGenericBinarySensor(XiaomiCoordinatedMiioEntity, BinarySensorEntity)
             return self.entity_description.value(state)
 
         return state
+
+    @property
+    def available(self) -> bool:
+        """
+        Return if entity is available.
+
+        The entity will be marked as unavailable if its value is None
+        """
+        if self._native_value() is None:
+            return False
+
+        return super().available
+
+    @property
+    def is_on(self):
+        """Return true if the binary sensor is on."""
+        return self._native_value()

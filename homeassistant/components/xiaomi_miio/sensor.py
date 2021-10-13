@@ -627,9 +627,6 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        if not self.available:
-            return None
-
         return {
             attr: self._extract_value_from_attribute(self.coordinator.data, attr)
             for attr in self.entity_description.attributes

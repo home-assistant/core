@@ -424,3 +424,15 @@ class MiroboVacuum(XiaomiCoordinatedMiioEntity, StateVacuumEntity):
             self._state = STATE_CODE_TO_STATE[state_code]
 
         super()._handle_coordinator_update()
+
+    @property
+    def available(self) -> bool:
+        """
+        Return if entity is available.
+
+        The entity will be marked as unavailable if its value is None
+        """
+        if self._state is None:
+            return False
+
+        return super().available
