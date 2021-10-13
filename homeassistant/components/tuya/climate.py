@@ -183,7 +183,7 @@ class TuyaClimateEntity(TuyaHaEntity, ClimateEntity):
             self._set_temperature_dpcode
             and self._set_temperature_dpcode in device.status_range
         ):
-            type_data = IntegerTypeData.parse_raw(
+            type_data = IntegerTypeData.from_json(
                 device.status_range[self._set_temperature_dpcode].values
             )
             self._attr_supported_features |= SUPPORT_TARGET_TEMPERATURE
@@ -212,14 +212,14 @@ class TuyaClimateEntity(TuyaHaEntity, ClimateEntity):
             self._current_temperature_dpcode
             and self._current_temperature_dpcode in device.status_range
         ):
-            self._current_temperature_type = IntegerTypeData.parse_raw(
+            self._current_temperature_type = IntegerTypeData.from_json(
                 device.status_range[self._current_temperature_dpcode].values
             )
 
         # Determine HVAC modes
         self._attr_hvac_modes = []
         if DPCode.MODE in device.function:
-            data_type = EnumTypeData.parse_raw(device.function[DPCode.MODE].values)
+            data_type = EnumTypeData.from_json(device.function[DPCode.MODE].values)
             self._attr_hvac_modes = [HVAC_MODE_OFF]
             for tuya_mode, ha_mode in TUYA_HVAC_TO_HA.items():
                 if tuya_mode in data_type.range:
@@ -237,7 +237,7 @@ class TuyaClimateEntity(TuyaHaEntity, ClimateEntity):
         ):
             self._attr_supported_features |= SUPPORT_TARGET_HUMIDITY
             self._set_humidity_dpcode = DPCode.HUMIDITY_SET
-            type_data = IntegerTypeData.parse_raw(
+            type_data = IntegerTypeData.from_json(
                 device.status_range[DPCode.HUMIDITY_SET].values
             )
             self._set_humidity_type = type_data
@@ -250,7 +250,7 @@ class TuyaClimateEntity(TuyaHaEntity, ClimateEntity):
             and DPCode.HUMIDITY_CURRENT in device.status_range
         ):
             self._current_humidity_dpcode = DPCode.HUMIDITY_CURRENT
-            self._current_humidity_type = IntegerTypeData.parse_raw(
+            self._current_humidity_type = IntegerTypeData.from_json(
                 self.tuya_device.status_range[DPCode.HUMIDITY_CURRENT].values
             )
 
@@ -260,7 +260,7 @@ class TuyaClimateEntity(TuyaHaEntity, ClimateEntity):
             and DPCode.HUMIDITY_CURRENT in device.status_range
         ):
             self._current_humidity_dpcode = DPCode.HUMIDITY_CURRENT
-            self._current_humidity_type = IntegerTypeData.parse_raw(
+            self._current_humidity_type = IntegerTypeData.from_json(
                 self.tuya_device.status_range[DPCode.HUMIDITY_CURRENT].values
             )
 
@@ -270,7 +270,7 @@ class TuyaClimateEntity(TuyaHaEntity, ClimateEntity):
             and DPCode.FAN_SPEED_ENUM in device.function
         ):
             self._attr_supported_features |= SUPPORT_FAN_MODE
-            self._attr_fan_modes = EnumTypeData.parse_raw(
+            self._attr_fan_modes = EnumTypeData.from_json(
                 self.tuya_device.status_range[DPCode.FAN_SPEED_ENUM].values
             ).range
 

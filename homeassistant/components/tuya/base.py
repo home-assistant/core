@@ -1,10 +1,11 @@
 """Tuya Home Assistant Base Device Model."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+import json
 import logging
 from typing import Any
 
-from pydantic import BaseModel
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -15,7 +16,8 @@ from .const import DOMAIN, TUYA_HA_SIGNAL_UPDATE_ENTITY
 _LOGGER = logging.getLogger(__name__)
 
 
-class IntegerTypeData(BaseModel):
+@dataclass
+class IntegerTypeData:
     """Integer Type Data."""
 
     min: int
@@ -24,11 +26,22 @@ class IntegerTypeData(BaseModel):
     scale: float
     step: float
 
+    @staticmethod
+    def from_json(data: str) -> IntegerTypeData:
+        """Load JSON string and return a IntegerTypeData object."""
+        return IntegerTypeData(**json.loads(data))
 
-class EnumTypeData(BaseModel):
+
+@dataclass
+class EnumTypeData:
     """Enum Type Data."""
 
     range: list[str]
+
+    @staticmethod
+    def from_json(data: str) -> EnumTypeData:
+        """Load JSON string and return a EnumTypeData object."""
+        return EnumTypeData(**json.loads(data))
 
 
 class TuyaHaEntity(Entity):

@@ -834,9 +834,6 @@ pycoolmasternet-async==0.1.2
 # homeassistant.components.daikin
 pydaikin==2.6.0
 
-# homeassistant.components.tuya
-pydantic==1.8.2
-
 # homeassistant.components.deconz
 pydeconz==84
 
