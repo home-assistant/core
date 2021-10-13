@@ -41,13 +41,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     accounts = await client.async_get_accounts()
 
-    async def async_update_data() -> dict[str, list[RidwellPickupEvent]]:
+    async def async_update_data() -> dict[str, RidwellPickupEvent]:
         """Get the latest pickup events."""
         data = {}
 
         async def async_get_pickups(account: RidwellAccount) -> None:
             """Get the latest pickups for an account."""
-            data[account.account_id] = await account.async_get_pickup_events()
+            data[account.account_id] = await account.async_get_next_pickup_event()
 
         tasks = [async_get_pickups(account) for account in accounts.values()]
         results = await asyncio.gather(*tasks, return_exceptions=True)

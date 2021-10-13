@@ -5,7 +5,7 @@ from collections.abc import Mapping
 from datetime import date, datetime
 from typing import Any
 
-from aioridwell.client import RidwellAccount, RidwellPickup
+from aioridwell.client import RidwellAccount
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -19,48 +19,11 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.util.dt import as_utc
 
-from .const import DATA_ACCOUNT, DATA_COORDINATOR, DOMAIN, LOGGER
+from .const import DATA_ACCOUNT, DATA_COORDINATOR, DOMAIN
 
 ATTR_PICKUP_TYPES = "pickup_types"
-ATTR_ROTATING_CATEGORY = "rotating_category"
 
 DEFAULT_ATTRIBUTION = "Pickup data provided by Ridwell"
-
-
-@callback
-def async_calculate_quantities(pickups: list[RidwellPickup]) -> dict[str, int]:
-    """Calculate the total quanity of pickups in an attr-friendly dict.
-
-    Since Ridwell's API can return distinct pickups for the same category
-    (e.g., multiple "Latex Paint" pickups), this is intended to sum them up.
-    """
-    pickup_types: dict[str, int] = {}
-
-    for pickup in pickups:
-        if pickup.category in pickup_types:
-            pickup_types[pickup.category] += pickup.quantity
-        else:
-            pickup_types[pickup.category] = pickup.quantity
-
-    return pickup_types
-
-
-@callback
-def async_get_rotating_category_name(pickups: list[RidwellPickup]) -> str | None:
-    """Get the rotating category name from a list of pickups."""
-    rotating_category = [pickup.category for pickup in pickups if pickup.rotating]
-
-    if not rotating_category:
-        LOGGER.warning("No rotating pickup types found")
-        return None
-
-    if len(rotating_category) > 1:
-        LOGGER.warning(
-            "Multiple candidates for rotating category found (%s); selecting the first",
-            rotating_category,
-        )
-
-    return rotating_category[0]
 
 
 @callback
@@ -98,20 +61,25 @@ class RidwellSensor(CoordinatorEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return entity specific state attributes."""
-        next_event = self.coordinator.data[self._account.account_id][0]
-
-        attrs = {
+        attrs: dict[str, Any] = {
             ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION,
-            ATTR_PICKUP_TYPES: async_calculate_quantities(next_event.pickups),
-            ATTR_ROTATING_CATEGORY: async_get_rotating_category_name(
-                next_event.pickups
-            ),
+            ATTR_PICKUP_TYPES: {},
         }
+        event = self.coordinator.data[self._account.account_id]
+
+        for pickup in event.pickups:
+            if pickup.name not in attrs[ATTR_PICKUP_TYPES]:
+                attrs[ATTR_PICKUP_TYPES][pickup.name] = {
+                    "category": pickup.category,
+                    "quantity": pickup.quantity,
+                }
+            else:
+                attrs[ATTR_PICKUP_TYPES][pickup.name]["quantity"] += pickup.quantity
 
         return attrs
 
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        next_event = self.coordinator.data[self._account.account_id][0]
-        return async_get_utc_midnight(next_event.pickup_date).isoformat()
+        event = self.coordinator.data[self._account.account_id]
+        return async_get_utc_midnight(event.pickup_date).isoformat()
