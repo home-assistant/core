@@ -249,7 +249,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             icon="mdi:spray",
         ),
         SwitchEntityDescription(
-            key=DPCode.SWITCH_SPRAY,
+            key=DPCode.SWITCH_VOICE,
             name="Voice",
             icon="mdi:account-voice",
             entity_registry_enabled_default=False,
