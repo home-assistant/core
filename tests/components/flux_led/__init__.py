@@ -68,6 +68,7 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     bulb.getWhiteTemperature = MagicMock(return_value=(2700, 128))
     bulb.brightness = 128
     bulb.model_num = 0x35
+    bulb.model = "Smart Bulb (0x35)"
     bulb.version_num = 8
     bulb.rgbwcapable = True
     bulb.color_modes = {FLUX_COLOR_MODE_RGB, FLUX_COLOR_MODE_CCT}
@@ -91,6 +92,7 @@ def _mocked_switch() -> AIOWifiLedBulb:
     switch.async_turn_off = AsyncMock()
     switch.async_turn_on = AsyncMock()
     switch.model_num = 0x97
+    switch.model = "Smart Switch (0x97)"
     switch.version_num = 0x97
     switch.raw_state = LEDENETRawState(
         0, 0x97, 0, 0x61, 0x97, 50, 255, 0, 0, 50, 8, 0, 0, 0
