@@ -293,62 +293,6 @@ class DHCPWatcher(WatcherBase):
         from scapy.sendrecv import (  # pylint: disable=import-outside-toplevel
             AsyncSniffer,
         )
-        from scapy.layers.dhcp import DHCP  # pylint: disable=import-outside-toplevel
-        from scapy.layers.inet import IP  # pylint: disable=import-outside-toplevel
-        from scapy.layers.l2 import Ether  # pylint: disable=import-outside-toplevel
-
-        def _handle_dhcp_packet(packet):
-            """Process a dhcp packet."""
-            _LOGGER.debug("Handle incoming packet: %s -- %s", packet, DHCP in packet)
-            if DHCP not in packet:
-                return
-
-            options = packet[DHCP].options
-            _LOGGER.debug("Handle incoming packet options: %s -- %s", packet, options)
-
-            request_type = _decode_dhcp_option(options, MESSAGE_TYPE)
-
-            _LOGGER.debug(
-                "Handle incoming packet request_type: %s -- %s", packet, request_type
-            )
-            if request_type != DHCP_REQUEST:
-                # DHCP request
-                return
-
-            ip_address = _decode_dhcp_option(options, REQUESTED_ADDR) or packet[IP].src
-            hostname = _decode_dhcp_option(options, HOSTNAME) or ""
-            mac_address = _format_mac(packet[Ether].src)
-
-            _LOGGER.debug(
-                "Handle incoming packet ip_address, hostname, mac_address: %s %s %s %s",
-                packet,
-                ip_address,
-                hostname,
-                mac_address,
-            )
-
-            if ip_address is None or mac_address is None:
-                return
-
-            self.process_client(ip_address, hostname, mac_address)
-
-        def _handle_dhcp_packet(packet):
-            """Process a dhcp packet."""
-            if DHCP not in packet:
-                return
-
-            options = packet[DHCP].options
-            request_type = _decode_dhcp_option(options, MESSAGE_TYPE)
-            if request_type != DHCP_REQUEST:
-                # DHCP request
-                return
-
-            ip_address = _decode_dhcp_option(options, REQUESTED_ADDR) or packet[IP].src
-            hostname = _decode_dhcp_option(options, HOSTNAME) or ""
-            mac_address = _format_mac(packet[Ether].src)
-
-            if ip_address is not None and mac_address is not None:
-                self.process_client(ip_address, hostname, mac_address)
 
         def _handle_dhcp_packet(packet):
             """Process a dhcp packet."""
