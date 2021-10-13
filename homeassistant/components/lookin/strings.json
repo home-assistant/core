@@ -1,0 +1,38 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "ip_address": "[%key:common::config_flow::step::user::data::ip_address%]"
+        },
+        "description": "[%key:common::config_flow::step::user::description%]",
+        "title": "[%key:common::config_flow::step::user::title%]"
+      },
+      "device_name": {
+        "data": {
+          "name": "[%key:common::config_flow::step::device_name::data::name%]"
+        },
+        "description": "[%key:common::config_flow::step::device_name::description%]",
+        "title": "[%key:common::config_flow::step::device_name::title%]"
+      },
+      "discovery_confirm": {
+        "description": "[%key:common::config_flow::step::discovery_confirm::description%]",
+        "title": "[%key:common::config_flow::step::discovery_confirm::title%]"
+      }
+    },
+    "error": {
+      "no_devices_found": "[%key:common::config_flow::error::no_devices_found%]",
+      "already_configured": "[%key:common::config_flow::error::already_configured%]",
+      "no_usable_service": "[%key:common::config_flow::error::no_usable_service%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured%]",
+      "no_usable_service": "[%key:common::config_flow::abort::no_usable_service%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "no_uid": "[%key:common::config_flow::abort::no_uid%]",
+      "unknown": "[%key:common::config_flow::abort::unknown%]"
+    }
+  }
+}
