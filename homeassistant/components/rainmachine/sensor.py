@@ -46,7 +46,7 @@ class RainMachineSensorEntityDescription(
 SENSOR_DESCRIPTIONS = (
     RainMachineSensorEntityDescription(
         key=TYPE_FLOW_SENSOR_CLICK_M3,
-        name="Flow Sensor Clicks",
+        name="Flow Sensor Clicks per Cubic Meter",
         icon="mdi:water-pump",
         native_unit_of_measurement=f"clicks/{VOLUME_CUBIC_METERS}",
         entity_registry_enabled_default=False,
@@ -72,7 +72,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     RainMachineSensorEntityDescription(
         key=TYPE_FLOW_SENSOR_WATERING_CLICKS,
-        name="Flow Sensor Clicks",
+        name="Flow Sensor Watering Clicks",
         icon="mdi:water-pump",
         native_unit_of_measurement="clicks",
         entity_registry_enabled_default=False,

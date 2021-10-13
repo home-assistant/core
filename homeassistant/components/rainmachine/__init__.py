@@ -344,6 +344,7 @@ class RainMachineEntity(CoordinatorEntity):
             "sw_version": controller.software_version,
         }
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._attr_name = f"{controller.name} {description.name}"
         # The colons are removed from the device MAC simply because that value
         # (unnecessarily) makes up the existing unique ID formula and we want to avoid
         # a breaking change:
