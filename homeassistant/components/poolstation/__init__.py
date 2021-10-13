@@ -23,7 +23,7 @@ UPDATE_INTERVAL = timedelta(seconds=30)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Poolstation from a config entry."""
-    session = async_create_clientsession(hass, cookie_jar=aiohttp.DummyCookieJar)
+    session = async_create_clientsession(hass, cookie_jar=aiohttp.DummyCookieJar())
     account = Account(session, token=entry.data[CONF_TOKEN])
 
     try:

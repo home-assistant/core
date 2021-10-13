@@ -40,7 +40,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
         errors = {}
-        session = async_create_clientsession(self.hass, cookie_jar=DummyCookieJar)
+        session = async_create_clientsession(self.hass, cookie_jar=DummyCookieJar())
         account = Account(
             session, username=user_input[CONF_EMAIL], password=user_input[CONF_PASSWORD]
         )
