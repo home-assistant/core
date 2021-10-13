@@ -1191,7 +1191,6 @@ omit =
     homeassistant/components/webostv/*
     homeassistant/components/whois/sensor.py
     homeassistant/components/wiffi/*
-    homeassistant/components/wink/*
     homeassistant/components/wirelesstag/*
     homeassistant/components/wolflink/__init__.py
     homeassistant/components/wolflink/sensor.py
