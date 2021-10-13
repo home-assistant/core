@@ -50,14 +50,13 @@ MOCK_CONFIG_IMPORT_DATA = {
 }
 
 MOCK_ROOT_DEVICE_UDN = "ROOT_DEVICE"
-MOCK_ROOT_DEVICE_TYPE = "ROOT_DEVICE_TYPE"
 
 MOCK_DISCOVERY = {
     ssdp.ATTR_SSDP_LOCATION: MOCK_DEVICE_LOCATION,
     ssdp.ATTR_SSDP_UDN: MOCK_DEVICE_UDN,
     ssdp.ATTR_SSDP_ST: MOCK_DEVICE_TYPE,
     ssdp.ATTR_UPNP_UDN: MOCK_ROOT_DEVICE_UDN,
-    ssdp.ATTR_UPNP_DEVICE_TYPE: MOCK_ROOT_DEVICE_TYPE,
+    ssdp.ATTR_UPNP_DEVICE_TYPE: MOCK_DEVICE_TYPE,
     ssdp.ATTR_UPNP_FRIENDLY_NAME: MOCK_DEVICE_NAME,
     ssdp.ATTR_HA_MATCHING_DOMAINS: {DLNA_DOMAIN},
 }
@@ -192,7 +191,7 @@ async def test_user_flow_embedded_st(
     # Device is the wrong type
     upnp_device = domain_data_mock.upnp_factory.async_create_device.return_value
     upnp_device.udn = MOCK_ROOT_DEVICE_UDN
-    upnp_device.device_type = MOCK_ROOT_DEVICE_TYPE
+    upnp_device.device_type = "ROOT_DEVICE_TYPE"
     upnp_device.name = "ROOT_DEVICE_NAME"
     embedded_device = Mock(spec=UpnpDevice)
     embedded_device.udn = MOCK_DEVICE_UDN
@@ -544,7 +543,7 @@ async def test_ssdp_flow_upnp_udn(
             ssdp.ATTR_SSDP_UDN: MOCK_DEVICE_UDN,
             ssdp.ATTR_SSDP_ST: MOCK_DEVICE_TYPE,
             ssdp.ATTR_UPNP_UDN: "DIFFERENT_ROOT_DEVICE",
-            ssdp.ATTR_UPNP_DEVICE_TYPE: "DIFFERENT_ROOT_DEVICE_TYPE",
+            ssdp.ATTR_UPNP_DEVICE_TYPE: MOCK_DEVICE_TYPE,
             ssdp.ATTR_UPNP_FRIENDLY_NAME: MOCK_DEVICE_NAME,
         },
     )
@@ -553,20 +552,10 @@ async def test_ssdp_flow_upnp_udn(
     assert config_entry_mock.data[CONF_URL] == NEW_DEVICE_LOCATION
 
 
-async def test_ssdp_ignore_device(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> None:
+async def test_ssdp_ignore_device(hass: HomeAssistant) -> None:
     """Test SSDP discovery ignores certain devices."""
     discovery = MOCK_DISCOVERY.copy()
     discovery[ssdp.ATTR_HA_MATCHING_DOMAINS] = {DLNA_DOMAIN, "other_domain"}
-    result = await hass.config_entries.flow.async_init(
-        DLNA_DOMAIN,
-        context={"source": config_entries.SOURCE_SSDP},
-        data=discovery,
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "alternative_integration"
-
-    discovery = MOCK_DISCOVERY.copy()
-    discovery[ssdp.ATTR_UPNP_MANUFACTURER] = "XBMC Foundation"
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},

@@ -444,7 +444,8 @@ def _is_ignored_device(discovery_info: Mapping[str, Any]) -> bool:
     """Return True if this device should be ignored for discovery.
 
     These devices are supported better by other integrations, so don't bug
-    the user about them.
+    the user about them. The user can add them if desired by via the user config
+    flow, which will list all discovered but unconfigured devices.
     """
     # Did the discovery trigger more than just this flow?
     if len(discovery_info.get(ssdp.ATTR_HA_MATCHING_DOMAINS, set())) > 1:
@@ -454,17 +455,8 @@ def _is_ignored_device(discovery_info: Mapping[str, Any]) -> bool:
         )
         return True
 
-    # Kodi gets discovered via mDNS
-    if discovery_info.get(ssdp.ATTR_UPNP_MANUFACTURER) == "XBMC Foundation":
-        LOGGER.debug("Ignoring device supported by Kodi integration")
-        return True
-
-    # Sonos gets discovered by a different SSDP message that doesn't get seen here
-    if (
-        discovery_info.get(ssdp.ATTR_UPNP_DEVICE_TYPE)
-        == "urn:schemas-upnp-org:device:ZonePlayer:1"
-    ):
-        LOGGER.debug("Ignoring device supported by Sonos integration")
+    # Is the root device not a DMR?
+    if discovery_info.get(ssdp.ATTR_UPNP_DEVICE_TYPE) not in DmrDevice.DEVICE_TYPES:
         return True
 
     return False
