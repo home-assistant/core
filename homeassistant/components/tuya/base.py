@@ -44,7 +44,7 @@ class EnumTypeData:
         return cls(**json.loads(data))
 
 
-class TuyaHaEntity(Entity):
+class TuyaEntity(Entity):
     """Tuya base device."""
 
     _attr_should_poll = False
