@@ -276,6 +276,12 @@ class AuthManager:
         self, user: models.User, credentials: models.Credentials
     ) -> None:
         """Link credentials to an existing user."""
+        linked_user = await self.async_get_user_by_credentials(credentials)
+        if linked_user == user:
+            return
+        if linked_user is not None:
+            raise ValueError("Credential is already linked to a user")
+
         await self._store.async_link_user(user, credentials)
 
     async def async_remove_user(self, user: models.User) -> None:
