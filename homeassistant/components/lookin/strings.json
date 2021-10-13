@@ -1,38 +1,32 @@
 {
   "config": {
+    "flow_title": "{name} ({host})",
     "step": {
       "user": {
         "data": {
-          "ip_address": "[%key:common::config_flow::step::user::data::ip_address%]"
-        },
-        "description": "[%key:common::config_flow::step::user::description%]",
-        "title": "[%key:common::config_flow::step::user::title%]"
+          "ip_address": "[%key:common::config_flow::data::ip%]"
+        }
       },
       "device_name": {
         "data": {
-          "name": "[%key:common::config_flow::step::device_name::data::name%]"
-        },
-        "description": "[%key:common::config_flow::step::device_name::description%]",
-        "title": "[%key:common::config_flow::step::device_name::title%]"
+          "name": "[%key:common::config_flow::data::name%]"
+        }
       },
       "discovery_confirm": {
-        "description": "[%key:common::config_flow::step::discovery_confirm::description%]",
-        "title": "[%key:common::config_flow::step::discovery_confirm::title%]"
+        "description": "Do you want to setup {name} ({host})?"
       }
     },
     "error": {
-      "no_devices_found": "[%key:common::config_flow::error::no_devices_found%]",
-      "already_configured": "[%key:common::config_flow::error::already_configured%]",
-      "no_usable_service": "[%key:common::config_flow::error::no_usable_service%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "already_configured": "[%key:common::config_flow::abort::already_configured%]",
-      "no_usable_service": "[%key:common::config_flow::abort::no_usable_service%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "no_uid": "[%key:common::config_flow::abort::no_uid%]",
-      "unknown": "[%key:common::config_flow::abort::unknown%]"
+      "no_uid": "LOOKin instance does not have a unique id. You can configure the integration manually."
     }
   }
 }
