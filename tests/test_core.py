@@ -507,6 +507,40 @@ async def test_eventbus_listen_once_event_with_thread(hass):
     assert len(runs) == 1
 
 
+async def test_eventbus_listen_once_remove_multiple(hass, caplog):
+    """Test removing an listen_once_event multiple times."""
+    runs = []
+
+    class SomeIntergration:
+        def bound_integration_method(self, event):
+            runs.append(event)
+
+    integration = SomeIntergration()
+
+    remove = hass.bus.async_listen_once(
+        "test_event", integration.bound_integration_method
+    )
+
+    hass.bus.async_fire("test_event")
+    assert "Unable to remove unknown job listener" not in caplog.text
+    # Second time it should not increase runs
+    hass.bus.async_fire("test_event")
+    assert "Unable to remove unknown job listener" not in caplog.text
+
+    await hass.async_block_till_done()
+    assert len(runs) == 1
+
+    remove()
+    assert "Unable to remove unknown job listener" in caplog.text
+    assert "SomeIntergration" in caplog.text
+    assert "bound_integration_method" in caplog.text
+    assert "test_eventbus_listen_once_remove_multiple" in caplog.text
+
+    caplog.clear()
+    remove()
+    assert "Unable to remove unknown job listener" in caplog.text
+
+
 async def test_eventbus_thread_event_listener(hass):
     """Test thread event listener."""
     thread_calls = []

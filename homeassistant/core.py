@@ -192,6 +192,37 @@ def _get_callable_job_type(target: Callable) -> HassJobType:
     return HassJobType.Executor
 
 
+@callback
+class OneTimeListener:
+    """A one time listener."""
+
+    __slots__ = ("_hass", "_run", "_listener", "_on_run")
+
+    def __init__(self, hass: HomeAssistant, listener: Callable) -> None:
+        """Init the one time listener."""
+        self._hass = hass
+        self._run = False
+        self._listener = listener
+        self._on_run: Callable | None = None
+
+    def __call__(self, event: Event) -> None:
+        """Call the listener."""
+        if self._run:
+            return
+        self._run = True
+        assert self._on_run is not None
+        self._on_run()
+        self._hass.async_run_job(self._listener, event)
+
+    def set_run_callback(self, func: Callable) -> None:
+        """Register a callback to run before running the job."""
+        self._on_run = func
+
+    def __repr__(self) -> str:
+        """Representation of the listener."""
+        return f"<OneTimeListener: {repr(self._listener)}>"
+
+
 class CoreState(enum.Enum):
     """Represent the current state of Home Assistant."""
 
@@ -816,26 +847,11 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        filterable_job: tuple[HassJob, Callable | None] | None = None
-
-        @callback
-        def _onetime_listener(event: Event) -> None:
-            """Remove listener from event bus and then fire listener."""
-            nonlocal filterable_job
-            if hasattr(_onetime_listener, "run"):
-                return
-            # Set variable so that we will never run twice.
-            # Because the event bus loop might have async_fire queued multiple
-            # times, its possible this listener may already be lined up
-            # multiple times as well.
-            # This will make sure the second time it does nothing.
-            setattr(_onetime_listener, "run", True)
-            assert filterable_job is not None
-            self._async_remove_listener(event_type, filterable_job)
-            self._hass.async_run_job(listener, event)
-
-        filterable_job = (HassJob(_onetime_listener), None)
-
+        onetime = OneTimeListener(self._hass, listener)
+        filterable_job = (HassJob(onetime), None)
+        onetime.set_run_callback(
+            functools.partial(self._async_remove_listener, event_type, filterable_job)
+        )
         return self._async_listen_filterable_job(event_type, filterable_job)
 
     @callback
