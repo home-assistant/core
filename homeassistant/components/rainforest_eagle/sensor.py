@@ -1,11 +1,8 @@
 """Support for the Rainforest Eagle energy monitor."""
 from __future__ import annotations
 
-import voluptuous as vol
-
 from homeassistant.components.sensor import (
     DEVICE_CLASS_ENERGY,
-    PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
@@ -14,18 +11,16 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_IP_ADDRESS,
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
     POWER_KILO_WATT,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_CLOUD_ID, CONF_INSTALL_CODE, DOMAIN
+from .const import DOMAIN
 from .data import EagleDataCoordinator
 
 SENSORS = (
@@ -51,14 +46,6 @@ SENSORS = (
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
-)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_IP_ADDRESS): cv.string,
-        vol.Required(CONF_CLOUD_ID): cv.string,
-        vol.Required(CONF_INSTALL_CODE): cv.string,
-    }
 )
 
 
