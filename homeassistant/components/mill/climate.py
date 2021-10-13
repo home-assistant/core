@@ -1,4 +1,5 @@
 """Support for mill wifi-enabled home heaters."""
+import mill
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateEntity
@@ -45,10 +46,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     mill_data_coordinator = hass.data[DOMAIN]
 
-    dev = []
-    for heater in mill_data_coordinator.data.values():
-        dev.append(MillHeater(mill_data_coordinator, heater))
-    async_add_entities(dev)
+    entities = [
+        MillHeater(mill_data_coordinator, device)
+        for device in mill_data_coordinator.data.values()
+        if isinstance(device, mill.Heater)
+    ]
+    async_add_entities(entities)
 
     async def set_room_temp(service):
         """Set room temp."""
