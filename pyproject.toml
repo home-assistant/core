@@ -39,6 +39,7 @@ extension-pkg-allow-list = [
     "av.stream",
     "ciso8601",
     "cv2",
+    "pydantic",
 ]
 
 [tool.pylint.BASIC]

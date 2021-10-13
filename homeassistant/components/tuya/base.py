@@ -1,14 +1,34 @@
 """Tuya Home Assistant Base Device Model."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
+from pydantic import BaseModel
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN, TUYA_HA_SIGNAL_UPDATE_ENTITY
+
+_LOGGER = logging.getLogger(__name__)
+
+
+class IntegerTypeData(BaseModel):
+    """Integer Type Data."""
+
+    min: int
+    max: int
+    unit: str
+    scale: float
+    step: float
+
+
+class EnumTypeData(BaseModel):
+    """Enum Type Data."""
+
+    range: list[str]
 
 
 class TuyaHaEntity(Entity):
@@ -54,4 +74,12 @@ class TuyaHaEntity(Entity):
 
     def _send_command(self, commands: list[dict[str, Any]]) -> None:
         """Send command to the device."""
+        _LOGGER.debug(
+            "Sending commands for device %s: %s", self.tuya_device.id, commands
+        )
         self.tuya_device_manager.send_commands(self.tuya_device.id, commands)
+
+    @staticmethod
+    def scale(value: float | int, scale: float | int) -> float:
+        """Scale a value."""
+        return value * 1.0 / (10 ** scale)
