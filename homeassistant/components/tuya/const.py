@@ -76,8 +76,10 @@ class DPCode(str, Enum):
     LOCK = "lock"  # Lock / Child lock
     MODE = "mode"  # Working mode / Mode
     PUMP_RESET = "pump_reset"  # Water pump reset
+    SHAKE = "shake"  # Oscillating
     SPEED = "speed"  # Speed level
     START = "start"  # Start
+    SWING = "swing"  # Swing mode
     SWITCH = "switch"  # Switch
     SWITCH_HORIZONTAL = "switch_horizontal"  # Horizontal swing flap switch
     SWITCH_LED = "switch_led"  # Switch
