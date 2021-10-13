@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.event import async_track_time_interval
 
 _LOGGER = getLogger(__name__)
 
@@ -70,7 +70,7 @@ class FeedManager:
         self._has_published_parsed = False
         self._event_type = EVENT_FEEDREADER
         self._feed_id = url
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_START, lambda _: self._update())
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, lambda _: self._update())
         self._init_regular_updates(hass)
 
     def _log_no_entries(self):
@@ -79,7 +79,7 @@ class FeedManager:
 
     def _init_regular_updates(self, hass):
         """Schedule regular updates at the top of the clock."""
-        track_time_interval(hass, lambda now: self._update(), self._scan_interval)
+        async_track_time_interval(hass, lambda now: self._update(), self._scan_interval)
 
     @property
     def last_update_successful(self):
