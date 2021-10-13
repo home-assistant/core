@@ -8,7 +8,7 @@ from aiohue.sensors import (
     TYPE_ZLL_SWITCH,
 )
 
-from homeassistant.const import CONF_EVENT, CONF_ID, CONF_UNIQUE_ID
+from homeassistant.const import CONF_DEVICE_ID, CONF_EVENT, CONF_ID, CONF_UNIQUE_ID
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util, slugify
 
@@ -85,6 +85,7 @@ class HueEvent(GenericHueDevice):
         # Fire event
         data = {
             CONF_ID: self.event_id,
+            CONF_DEVICE_ID: self.device_registry_id,
             CONF_UNIQUE_ID: self.unique_id,
             CONF_EVENT: state,
             CONF_LAST_UPDATED: self.sensor.lastupdated,
