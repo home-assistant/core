@@ -3,7 +3,7 @@ import json
 
 import voluptuous as vol
 
-from homeassistant.components import websocket_api
+from homeassistant.components import trace, websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import (
@@ -23,8 +23,6 @@ from homeassistant.helpers.script import (
     debug_step,
     debug_stop,
 )
-
-from .const import DATA_TRACE
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
@@ -62,28 +60,18 @@ def websocket_trace_get(hass, connection, msg):
     run_id = msg["run_id"]
 
     try:
-        trace = hass.data[DATA_TRACE][key][run_id]
+        requested_trace = trace.async_get_trace(hass, key, run_id)
     except KeyError:
         connection.send_error(
             msg["id"], websocket_api.ERR_NOT_FOUND, "The trace could not be found"
         )
         return
 
-    message = websocket_api.messages.result_message(msg["id"], trace)
+    message = websocket_api.messages.result_message(msg["id"], requested_trace)
 
     connection.send_message(
         json.dumps(message, cls=ExtendedJSONEncoder, allow_nan=False)
     )
-
-
-def get_debug_traces(hass, key):
-    """Return a serializable list of debug traces for a script or automation."""
-    traces = []
-
-    for trace in hass.data[DATA_TRACE].get(key, {}).values():
-        traces.append(trace.as_short_dict())
-
-    return traces
 
 
 @callback
@@ -100,14 +88,7 @@ def websocket_trace_list(hass, connection, msg):
     wanted_domain = msg["domain"]
     key = f"{msg['domain']}.{msg['item_id']}" if "item_id" in msg else None
 
-    if not key:
-        traces = []
-        for key in hass.data[DATA_TRACE]:
-            domain = key.split(".", 1)[0]
-            if domain == wanted_domain:
-                traces.extend(get_debug_traces(hass, key))
-    else:
-        traces = get_debug_traces(hass, key)
+    traces = trace.async_list_traces(hass, wanted_domain, key)
 
     connection.send_result(msg["id"], traces)
 
@@ -125,21 +106,7 @@ def websocket_trace_contexts(hass, connection, msg):
     """Retrieve contexts we have traces for."""
     key = f"{msg['domain']}.{msg['item_id']}" if "item_id" in msg else None
 
-    if key is not None:
-        values = {key: hass.data[DATA_TRACE].get(key, {})}
-    else:
-        values = hass.data[DATA_TRACE]
-
-    def _context_id(run_id, key) -> dict:
-        """Make context_id for the response."""
-        domain, item_id = key.split(".", 1)
-        return {"run_id": run_id, "domain": domain, "item_id": item_id}
-
-    contexts = {
-        trace.context.id: _context_id(trace.run_id, key)
-        for key, traces in values.items()
-        for trace in traces.values()
-    }
+    contexts = trace.async_list_contexts(hass, key)
 
     connection.send_result(msg["id"], contexts)
 

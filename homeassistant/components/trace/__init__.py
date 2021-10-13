@@ -79,6 +79,54 @@ async def async_setup(hass, config):
     return True
 
 
+def async_get_trace(hass, key, run_id):
+    """Return the requested trace."""
+    return hass.data[DATA_TRACE][key][run_id]
+
+
+def async_list_contexts(hass, key):
+    """List contexts for which we have traces."""
+    if key is not None:
+        values = {key: hass.data[DATA_TRACE].get(key, {})}
+    else:
+        values = hass.data[DATA_TRACE]
+
+    def _trace_id(run_id, key) -> dict:
+        """Make trace_id for the response."""
+        domain, item_id = key.split(".", 1)
+        return {"run_id": run_id, "domain": domain, "item_id": item_id}
+
+    return {
+        trace.context.id: _trace_id(trace.run_id, key)
+        for key, traces in values.items()
+        for trace in traces.values()
+    }
+
+
+def _get_debug_traces(hass, key):
+    """Return a serializable list of debug traces for a script or automation."""
+    traces = []
+
+    for trace in hass.data[DATA_TRACE].get(key, {}).values():
+        traces.append(trace.as_short_dict())
+
+    return traces
+
+
+def async_list_traces(hass, wanted_domain, key):
+    """List traces for a domain."""
+    if not key:
+        traces = []
+        for key in hass.data[DATA_TRACE]:
+            domain = key.split(".", 1)[0]
+            if domain == wanted_domain:
+                traces.extend(_get_debug_traces(hass, key))
+    else:
+        traces = _get_debug_traces(hass, key)
+
+    return traces
+
+
 def async_store_trace(hass, trace, stored_traces):
     """Store a trace if its item_id is valid."""
     key = trace.key
