@@ -101,7 +101,7 @@ class SteamSensor(SensorEntity):
     @property
     def unique_id(self):
         """Return the unique ID."""
-        return f"sensor.steam_{self._account}"
+        return self._account
 
     @property
     def native_value(self):
