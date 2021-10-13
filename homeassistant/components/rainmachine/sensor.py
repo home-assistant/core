@@ -4,6 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from functools import partial
 
+from regenmaschine.controller import Controller
+
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
@@ -18,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import RainMachineEntity
 from .const import (
@@ -122,6 +125,21 @@ async def async_setup_entry(
 
 class ProvisionSettingsSensor(RainMachineEntity, SensorEntity):
     """Define a sensor that handles provisioning data."""
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        controller: Controller,
+        description: RainMachineSensorEntityDescription,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator, controller, description)
+
+        # Since we have two entities with the same name, we influence their entity IDs:
+        if description.key == TYPE_FLOW_SENSOR_CLICK_M3:
+            self.entity_id = "sensor.flow_sensor_clicks_m3"
+        elif description.key == TYPE_FLOW_SENSOR_WATERING_CLICKS:
+            self.entity_id = "sensor.flow_sensor_clicks"
 
     @callback
     def update_from_latest_data(self) -> None:
