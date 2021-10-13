@@ -18,18 +18,13 @@ from async_upnp_client.utils import CaseInsensitiveDict
 
 from homeassistant import config_entries
 from homeassistant.components import network
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STARTED,
-    EVENT_HOMEASSISTANT_STOP,
-    MATCH_ALL,
-)
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, MATCH_ALL
 from homeassistant.core import HomeAssistant, callback as core_callback
+from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_ssdp, bind_hass
-
-from .flow import FlowDispatcher, SSDPFlow
 
 DOMAIN = "ssdp"
 SCAN_INTERVAL = timedelta(seconds=60)
@@ -222,7 +217,6 @@ class Scanner:
         self._cancel_scan: Callable[[], None] | None = None
         self._ssdp_listeners: list[SsdpListener] = []
         self._callbacks: list[tuple[SsdpCallback, dict[str, str]]] = []
-        self._flow_dispatcher: FlowDispatcher | None = None
         self._description_cache: DescriptionCache | None = None
         self.integration_matchers = integration_matchers
 
@@ -327,14 +321,10 @@ class Scanner:
         session = async_get_clientsession(self.hass)
         requester = AiohttpSessionRequester(session, True, 10)
         self._description_cache = DescriptionCache(requester)
-        self._flow_dispatcher = FlowDispatcher(self.hass)
 
         await self._async_start_ssdp_listeners()
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STARTED, self._flow_dispatcher.async_start
-        )
         self._cancel_scan = async_track_time_interval(
             self.hass, self.async_scan, SCAN_INTERVAL
         )
@@ -417,13 +407,12 @@ class Scanner:
 
         for domain in matching_domains:
             _LOGGER.debug("Discovered %s at %s", domain, location)
-            flow: SSDPFlow = {
-                "domain": domain,
-                "context": {"source": config_entries.SOURCE_SSDP},
-                "data": discovery_info,
-            }
-            assert self._flow_dispatcher is not None
-            self._flow_dispatcher.create(flow)
+            discovery_flow.async_create_flow(
+                self.hass,
+                domain,
+                {"source": config_entries.SOURCE_SSDP},
+                discovery_info,
+            )
 
     async def _async_get_description_dict(
         self, location: str | None
