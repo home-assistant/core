@@ -174,7 +174,12 @@ class XiaomiGenericBinarySensor(XiaomiCoordinatedMiioEntity, BinarySensorEntity)
             description.entity_registry_enabled_default
         )
 
-    def _native_value(self):
+    def _handle_coordinator_update(self) -> None:
+        self._native_value = self._determine_native_value()
+
+        super()._handle_coordinator_update()
+
+    def _determine_native_value(self):
         if self.entity_description.parent_key is not None:
             return self._extract_value_from_attribute(
                 getattr(self.coordinator.data, self.entity_description.parent_key),
@@ -196,7 +201,7 @@ class XiaomiGenericBinarySensor(XiaomiCoordinatedMiioEntity, BinarySensorEntity)
 
         The entity will be marked as unavailable if its value is None
         """
-        if self._native_value() is None:
+        if self._native_value is None:
             return False
 
         return super().available
@@ -204,4 +209,4 @@ class XiaomiGenericBinarySensor(XiaomiCoordinatedMiioEntity, BinarySensorEntity)
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return self._native_value()
+        return self._native_value
