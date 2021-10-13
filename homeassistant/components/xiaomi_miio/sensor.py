@@ -197,7 +197,7 @@ SENSOR_TYPES = {
     ATTR_USE_TIME: XiaomiMiioSensorDescription(
         key=ATTR_USE_TIME,
         name="Use Time",
-        native_unit_of_measurement="s",
+        native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:progress-clock",
         state_class=STATE_CLASS_TOTAL_INCREASING,
         entity_registry_enabled_default=False,
