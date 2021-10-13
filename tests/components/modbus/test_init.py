@@ -155,6 +155,13 @@ async def test_number_validator():
             CONF_DATA_TYPE: DATA_TYPE_INT,
             CONF_SWAP: CONF_SWAP_BYTE,
         },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_COUNT: 2,
+            CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+            CONF_STRUCTURE: ">i",
+            CONF_SWAP: CONF_SWAP_BYTE,
+        },
     ],
 )
 async def test_ok_struct_validator(do_config):
@@ -194,6 +201,13 @@ async def test_ok_struct_validator(do_config):
             CONF_NAME: TEST_ENTITY_NAME,
             CONF_COUNT: 1,
             CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+            CONF_STRUCTURE: ">f",
+            CONF_SWAP: CONF_SWAP_WORD,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_COUNT: 1,
+            CONF_DATA_TYPE: DATA_TYPE_STRING,
             CONF_STRUCTURE: ">f",
             CONF_SWAP: CONF_SWAP_WORD,
         },
@@ -634,6 +648,34 @@ async def test_pymodbus_close_fail(hass, caplog, mock_pymodbus):
     assert await async_setup_component(hass, DOMAIN, config) is True
     await hass.async_block_till_done()
     # Close() is called as part of teardown
+
+
+async def test_pymodbus_connect_fail(hass, caplog):
+    """Run test for failing pymodbus constructor."""
+    config = {
+        DOMAIN: [
+            {
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+            }
+        ]
+    }
+    with mock.patch(
+        "homeassistant.components.modbus.modbus.ModbusTcpClient", autospec=True
+    ) as mock_pb:
+        caplog.set_level(logging.ERROR)
+        ExceptionMessage = "test connect exception"
+        mock_pb.connect.side_effect = ModbusException(ExceptionMessage)
+
+        assert await async_setup_component(hass, DOMAIN, config) is True
+
+
+#        await hass.async_block_till_done()
+#        await hass.async_block_till_done()
+#        assert mock_pb.connect.called
+#        assert ExceptionMessage in caplog.text
 
 
 async def test_delay(hass, mock_pymodbus):
