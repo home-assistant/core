@@ -54,11 +54,6 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             name="Power",
         ),
         SwitchEntityDescription(
-            key=DPCode.UV,
-            name="UV sterilization",
-            icon="mdi:lightbulb-fluorescent-tube",
-        ),
-        SwitchEntityDescription(
             key=DPCode.WATER_RESET,
             name="Reset of water usage days",
             icon="mdi:water-sync",
@@ -167,11 +162,6 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         SwitchEntityDescription(
             key=DPCode.SWITCH,
             name="Power",
-        ),
-        SwitchEntityDescription(
-            key=DPCode.UV,
-            name="UV sterilization",
-            icon="mdi:lightbulb-fluorescent-tube",
         ),
         SwitchEntityDescription(
             key=DPCode.WET,
