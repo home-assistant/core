@@ -286,7 +286,7 @@ class AuthManager:
         ]
 
         if tasks:
-            await asyncio.wait(tasks)
+            await asyncio.gather(*tasks)
 
         await self._store.async_remove_user(user)
 
