@@ -17,7 +17,13 @@ from homeassistant.auth.const import MFA_SESSION_EXPIRATION
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 
-from tests.common import CLIENT_ID, MockUser, ensure_auth_manager_loaded, flush_store
+from tests.common import (
+    CLIENT_ID,
+    MockUser,
+    async_capture_events,
+    ensure_auth_manager_loaded,
+    flush_store,
+)
 
 
 @pytest.fixture
@@ -931,14 +937,7 @@ async def test_enable_mfa_for_user(hass, hass_storage):
 
 async def test_async_remove_user(hass):
     """Test removing a user."""
-    events = []
-
-    @callback
-    def user_removed(event):
-        events.append(event)
-
-    hass.bus.async_listen("user_removed", user_removed)
-
+    events = async_capture_events(hass, "user_removed")
     manager = await auth.auth_manager_from_config(
         hass,
         [
@@ -981,6 +980,18 @@ async def test_async_remove_user(hass):
     await hass.async_block_till_done()
     assert len(events) == 1
     assert events[0].data["user_id"] == user.id
+
+
+async def test_async_remove_user_fail_if_remove_credential_fails(
+    hass, hass_admin_user, hass_admin_credential
+):
+    """Test removing a user."""
+    await hass.auth.async_link_user(hass_admin_user, hass_admin_credential)
+
+    with patch.object(
+        hass.auth, "async_remove_credentials", side_effect=ValueError
+    ), pytest.raises(ValueError):
+        await hass.auth.async_remove_user(hass_admin_user)
 
 
 async def test_new_users(mock_hass):
