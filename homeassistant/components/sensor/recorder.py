@@ -560,8 +560,8 @@ def _compile_statistics(  # noqa: C901
                         ):
                             reset = True
                             _LOGGER.info(
-                                "Detected new cycle for %s, value dropped from %s to %s. "
-                                "Triggered by state with last_updated set to %s.",
+                                "Detected new cycle for %s, value dropped from %s to %s, "
+                                "triggered by state with last_updated set to %s",
                                 entity_id,
                                 new_state,
                                 state.last_updated.isoformat(),
