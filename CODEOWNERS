@@ -528,6 +528,7 @@ homeassistant/components/tellduslive/* @fredrike
 homeassistant/components/template/* @PhracturedBlue @tetienne @home-assistant/core
 homeassistant/components/tfiac/* @fredrike @mellado
 homeassistant/components/thethingsnetwork/* @fabaff
+homeassistant/components/thingbits/* @thingbits
 homeassistant/components/threshold/* @fabaff
 homeassistant/components/tibber/* @danielhiversen
 homeassistant/components/tile/* @bachya
