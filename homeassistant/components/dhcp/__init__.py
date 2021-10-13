@@ -113,7 +113,6 @@ class WatcherBase:
             return
 
         data = self._address_data.get(ip_address)
-
         if (
             data
             and data[MAC_ADDRESS] == mac_address
@@ -124,6 +123,8 @@ class WatcherBase:
             return
 
         data = {MAC_ADDRESS: mac_address, HOSTNAME: hostname}
+        self._address_data[ip_address] = data
+
         lowercase_hostname = data[HOSTNAME].lower()
         uppercase_mac = data[MAC_ADDRESS].upper()
 
@@ -146,7 +147,6 @@ class WatcherBase:
                 continue
 
             _LOGGER.debug("Matched %s against %s", data, entry)
-
             discovery_flow.async_create_flow(
                 self.hass,
                 entry["domain"],
@@ -200,7 +200,7 @@ class NetworkWatcher(WatcherBase):
     async def async_discover(self):
         """Process discovery."""
         for host in await self._discover_hosts.async_discover():
-            self.process_client(
+            self.async_process_client(
                 host[DISCOVERY_IP_ADDRESS],
                 host[DISCOVERY_HOSTNAME],
                 _format_mac(host[DISCOVERY_MAC_ADDRESS]),
@@ -256,7 +256,7 @@ class DeviceTrackerWatcher(WatcherBase):
         if ip_address is None or mac_address is None:
             return
 
-        self.process_client(ip_address, hostname, _format_mac(mac_address))
+        self.async_process_client(ip_address, hostname, _format_mac(mac_address))
 
     def create_task(self, task):
         """Pass a task to async_create_task since we are in async context."""
