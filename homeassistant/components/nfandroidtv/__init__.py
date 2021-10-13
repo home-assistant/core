@@ -2,32 +2,15 @@
 from notifications_android_tv.notifications import ConnectError, Notifications
 
 from homeassistant.components.notify import DOMAIN as NOTIFY
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PLATFORM
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
 PLATFORMS = [NOTIFY]
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the NFAndroidTV component."""
-    hass.data.setdefault(DOMAIN, {})
-    # Iterate all entries for notify to only get nfandroidtv
-    if NOTIFY in config:
-        for entry in config[NOTIFY]:
-            if entry[CONF_PLATFORM] == DOMAIN:
-                hass.async_create_task(
-                    hass.config_entries.flow.async_init(
-                        DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
-                    )
-                )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

@@ -10,10 +10,9 @@ from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import ATTR_ICON, CONF_HOST, CONF_TIMEOUT
+from homeassistant.const import ATTR_ICON, CONF_HOST
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
@@ -31,36 +30,10 @@ from .const import (
     ATTR_INTERRUPT,
     ATTR_POSITION,
     ATTR_TRANSPARENCY,
-    CONF_COLOR,
-    CONF_DURATION,
-    CONF_FONTSIZE,
-    CONF_INTERRUPT,
-    CONF_POSITION,
-    CONF_TRANSPARENCY,
     DEFAULT_TIMEOUT,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-# Deprecated in Home Assistant 2021.8
-PLATFORM_SCHEMA = cv.deprecated(
-    vol.All(
-        PLATFORM_SCHEMA.extend(
-            {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Optional(CONF_DURATION): vol.Coerce(int),
-                vol.Optional(CONF_FONTSIZE): vol.In(Notifications.FONTSIZES.keys()),
-                vol.Optional(CONF_POSITION): vol.In(Notifications.POSITIONS.keys()),
-                vol.Optional(CONF_TRANSPARENCY): vol.In(
-                    Notifications.TRANSPARENCIES.keys()
-                ),
-                vol.Optional(CONF_COLOR): vol.In(Notifications.BKG_COLORS.keys()),
-                vol.Optional(CONF_TIMEOUT): vol.Coerce(int),
-                vol.Optional(CONF_INTERRUPT): cv.boolean,
-            }
-        ),
-    )
-)
 
 
 async def async_get_service(hass: HomeAssistant, config, discovery_info=None):

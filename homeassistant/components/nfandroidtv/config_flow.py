@@ -50,19 +50,6 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_config):
-        """Import a config entry from configuration.yaml."""
-        for entry in self._async_current_entries():
-            if entry.data[CONF_HOST] == import_config[CONF_HOST]:
-                _LOGGER.warning(
-                    "Already configured. This yaml configuration has already been imported. Please remove it"
-                )
-                return self.async_abort(reason="already_configured")
-        if CONF_NAME not in import_config:
-            import_config[CONF_NAME] = f"{DEFAULT_NAME} {import_config[CONF_HOST]}"
-
-        return await self.async_step_user(import_config)
-
     async def _async_try_connect(self, host):
         """Try connecting to Android TV / Fire TV."""
         try:
