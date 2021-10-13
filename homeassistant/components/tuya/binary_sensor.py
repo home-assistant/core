@@ -14,7 +14,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
-from .base import TuyaHaEntity
+from .base import TuyaEntity
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 
 # All descriptions can be found here. Mostly the Boolean data types in the
@@ -71,7 +71,7 @@ async def async_setup_entry(
     )
 
 
-class TuyaBinarySensorEntity(TuyaHaEntity, BinarySensorEntity):
+class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
     """Tuya Binary Sensor Entity."""
 
     def __init__(

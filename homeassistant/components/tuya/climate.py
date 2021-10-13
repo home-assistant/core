@@ -31,7 +31,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
-from .base import EnumTypeData, IntegerTypeData, TuyaHaEntity
+from .base import EnumTypeData, IntegerTypeData, TuyaEntity
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 
 TUYA_HVAC_TO_HA = {
@@ -110,7 +110,7 @@ async def async_setup_entry(
     )
 
 
-class TuyaClimateEntity(TuyaHaEntity, ClimateEntity):
+class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     """Tuya Climate Device."""
 
     _current_humidity_dpcode: DPCode | None = None
