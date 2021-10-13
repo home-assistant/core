@@ -78,26 +78,20 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     mill_data_coordinator = hass.data[DOMAIN]
 
-    entities = []
-    for mill_device in mill_data_coordinator.data.values():
-        if isinstance(mill_device, mill.Heater):
-            for entity_description in HEATER_SENSOR_TYPES:
-                entities.append(
-                    MillSensor(
-                        mill_data_coordinator,
-                        entity_description,
-                        mill_device,
-                    )
-                )
-        elif isinstance(mill_device, mill.Sensor):
-            for entity_description in SENSOR_TYPES:
-                entities.append(
-                    MillSensor(
-                        mill_data_coordinator,
-                        entity_description,
-                        mill_device,
-                    )
-                )
+    entities = [
+        MillSensor(
+            mill_data_coordinator,
+            entity_description,
+            mill_device,
+        )
+        for mill_device in mill_data_coordinator.data.values()
+        for entity_description in (
+            HEATER_SENSOR_TYPES
+            if isinstance(mill_device, mill.Heater)
+            else SENSOR_TYPES
+        )
+    ]
+
     async_add_entities(entities)
 
 
@@ -119,9 +113,9 @@ class MillSensor(CoordinatorEntity, SensorEntity):
             "manufacturer": MANUFACTURER,
         }
         if isinstance(mill_device, mill.Heater):
-            self._attr_device_info[
-                "model"
-            ] = f"generation {1 if mill_device.is_gen1 else 2}"
+            self._attr_device_info["model"] = f"generation {mill_device.generation}"
+        elif isinstance(mill_device, mill.Sensor):
+            self._attr_device_info["model"] = "Mill Sense Air"
         self._update_attr(mill_device)
 
     @callback

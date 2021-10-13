@@ -47,9 +47,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
     mill_data_coordinator = hass.data[DOMAIN]
 
     entities = [
-        MillHeater(mill_data_coordinator, device)
-        for device in mill_data_coordinator.data.values()
-        if isinstance(device, mill.Heater)
+        MillHeater(mill_data_coordinator, mill_device)
+        for mill_device in mill_data_coordinator.data.values()
+        if isinstance(mill_device, mill.Heater)
     ]
     async_add_entities(entities)
 
