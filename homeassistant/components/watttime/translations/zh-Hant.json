@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
         },
         "error": {
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
@@ -21,6 +22,13 @@
                     "location_type": "\u5ea7\u6a19"
                 },
                 "description": "\u9078\u64c7\u6240\u8981\u76e3\u63a7\u7684\u4f4d\u7f6e\uff1a"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "\u5bc6\u78bc"
+                },
+                "description": "\u8acb\u91cd\u65b0\u8f38\u5165 {username} \u5bc6\u78bc\uff1a",
+                "title": "\u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
             },
             "user": {
                 "data": {
