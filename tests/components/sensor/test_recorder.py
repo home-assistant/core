@@ -707,8 +707,10 @@ def test_compile_hourly_sum_statistics_negative_state(
     seq = [15, 16, 15, 16, 20, -20, 20, 10]
 
     states = {entity_id: []}
+    offending_state = 5
     if state := hass.states.get(entity_id):
         states[entity_id].append(state)
+        offending_state = 6
     one = zero
     for i in range(len(seq)):
         one = one + timedelta(seconds=5)
@@ -745,8 +747,11 @@ def test_compile_hourly_sum_statistics_negative_state(
         },
     ]
     assert "Error while processing event StatisticsTask" not in caplog.text
+    state = states[entity_id][offending_state].state
+    last_updated = states[entity_id][offending_state].last_updated.isoformat()
     assert (
-        f"Entity {entity_id} {warning_1}has state class total_increasing, but its state is negative"
+        f"Entity {entity_id} {warning_1}has state class total_increasing, but its state "
+        f"is negative. Triggered by state {state} with last_updated set to {last_updated}."
         in caplog.text
     )
     assert warning_2 in caplog.text
@@ -965,15 +970,17 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     wait_recording_done(hass)
     assert (
         "Entity sensor.test1 has state class total_increasing, but its state is not "
-        "strictly increasing. Please create a bug report at https://github.com/"
-        "home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
+        "strictly increasing."
     ) not in caplog.text
     recorder.do_adhoc_statistics(start=period2)
     wait_recording_done(hass)
+    state = states["sensor.test1"][6].state
+    last_updated = states["sensor.test1"][6].last_updated.isoformat()
     assert (
         "Entity sensor.test1 has state class total_increasing, but its state is not "
-        "strictly increasing. Please create a bug report at https://github.com/"
-        "home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
+        f"strictly increasing. Triggered by state {state} with last_updated set to "
+        f"{last_updated}. Please create a bug report at https://github.com/home-assistant"
+        "/core/issues?q=is%3Aopen+is%3Aissue"
     ) in caplog.text
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
