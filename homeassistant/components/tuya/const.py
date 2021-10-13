@@ -41,6 +41,7 @@ TUYA_SUPPORTED_PRODUCT_CATEGORIES = (
     "kj",  # Air Purifier
     "kj",  # Air Purifier
     "kt",  # Air conditioner
+    "mcs",  # Door Window Sensor
     "pc",  # Power Strip
     "qn",  # Heater
     "wk",  # Thermostat
@@ -52,7 +53,7 @@ TUYA_SUPPORTED_PRODUCT_CATEGORIES = (
 TUYA_SMART_APP = "tuyaSmart"
 SMARTLIFE_APP = "smartlife"
 
-PLATFORMS = ["climate", "fan", "light", "scene", "switch"]
+PLATFORMS = ["binary_sensor", "climate", "fan", "light", "scene", "switch"]
 
 
 class DPCode(str, Enum):
@@ -67,6 +68,7 @@ class DPCode(str, Enum):
     CHILD_LOCK = "child_lock"  # Child lock
     COLOUR_DATA = "colour_data"  # Colored light mode
     COLOUR_DATA_V2 = "colour_data_v2"  # Colored light mode
+    DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
     FAN_DIRECTION = "fan_direction"  # Fan direction
     FAN_SPEED_ENUM = "fan_speed_enum"  # Speed mode
     FAN_SPEED_PERCENT = "fan_speed_percent"  # Stepless speed
@@ -106,6 +108,7 @@ class DPCode(str, Enum):
     TEMP_SET_F = "temp_set_f"  # Set the temperature in °F
     TEMP_UNIT_CONVERT = "temp_unit_convert"  # Temperature unit switching
     TEMP_VALUE = "temp_value"  # Color temperature
+    TEMPER_ALARM = "temper_alarm"  # Tamper alarm
     UV = "uv"  # UV sterilization
     WARM = "warm"  # Heat preservation
     WATER_RESET = "water_reset"  # Resetting of water usage days
