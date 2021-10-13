@@ -30,14 +30,12 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
-    ATTR_WHITE,
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_ONOFF,
     COLOR_MODE_RGB,
     COLOR_MODE_RGBW,
     COLOR_MODE_RGBWW,
-    COLOR_MODE_WHITE,
     EFFECT_COLORLOOP,
     EFFECT_RANDOM,
     PLATFORM_SCHEMA,
@@ -102,7 +100,7 @@ FLUX_COLOR_MODE_TO_HASS: Final = {
     FLUX_COLOR_MODE_RGBW: COLOR_MODE_RGBW,
     FLUX_COLOR_MODE_RGBWW: COLOR_MODE_RGBWW,
     FLUX_COLOR_MODE_CCT: COLOR_MODE_COLOR_TEMP,
-    FLUX_COLOR_MODE_DIM: COLOR_MODE_WHITE,
+    FLUX_COLOR_MODE_DIM: COLOR_MODE_BRIGHTNESS,
 }
 
 
@@ -406,10 +404,6 @@ class FluxLight(FluxEntity, CoordinatorEntity, LightEntity):
                 rgbcw = kwargs[ATTR_RGBWW_COLOR]
             await self._device.async_set_levels(*rgbcw_to_rgbwc(rgbcw))
             return
-        # Handle switch to White Color Mode
-        if ATTR_WHITE in kwargs:
-            await self._device.async_set_levels(w=kwargs[ATTR_WHITE])
-            return
         if ATTR_EFFECT in kwargs:
             effect = kwargs[ATTR_EFFECT]
             # Random color effect
@@ -455,8 +449,8 @@ class FluxLight(FluxEntity, CoordinatorEntity, LightEntity):
             rgbwc = self.rgbwc_color
             await self._device.async_set_levels(*rgbww_brightness(rgbwc, brightness))
             return
-        # Handle White Color Mode and Brightness Only Color Mode
-        if self.color_mode in (COLOR_MODE_WHITE, COLOR_MODE_BRIGHTNESS):
+        # Handle Brightness Only Color Mode
+        if self.color_mode == COLOR_MODE_BRIGHTNESS:
             await self._device.async_set_levels(w=brightness)
             return
         raise ValueError(f"Unsupported color mode {self.color_mode}")
