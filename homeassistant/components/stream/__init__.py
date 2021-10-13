@@ -107,9 +107,24 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up stream."""
-    # Set log level to error for libav
-    logging.getLogger("libav").setLevel(logging.ERROR)
-    logging.getLogger("libav.mp4").setLevel(logging.ERROR)
+
+    # Lower libav messages to debug
+    def drop_to_debug(record: logging.LogRecord) -> bool:
+        if record.levelno > logging.DEBUG:
+            record.levelname = "DEBUG"
+            record.levelno = logging.DEBUG
+        return True
+
+    for logging_namespace in (
+        "libav.mp4",
+        "libav.h264",
+        "libav.hevc",
+        "libav.rtsp",
+        "libav.tcp",
+        "libav.tls",
+        "libav.NULL",
+    ):
+        logging.getLogger(logging_namespace).addFilter(drop_to_debug)
 
     # Keep import here so that we can import stream integration without installing reqs
     # pylint: disable=import-outside-toplevel
