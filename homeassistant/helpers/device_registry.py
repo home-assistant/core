@@ -521,6 +521,7 @@ class DeviceRegistry:
                     name_by_user=device.get("name_by_user"),
                     # Introduced in 0.119
                     disabled_by=device.get("disabled_by"),
+                    # Introduced in 2021.11
                     configuration_url=device.get("configuration_url"),
                 )
             # Introduced in 0.111
