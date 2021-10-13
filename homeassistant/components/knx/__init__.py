@@ -9,7 +9,7 @@ import voluptuous as vol
 from xknx import XKNX
 from xknx.core.telegram_queue import TelegramQueue
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
-from xknx.exceptions import XKNXException
+from xknx.exceptions import ConversionError, XKNXException
 from xknx.io import ConnectionConfig, ConnectionType
 from xknx.telegram import AddressFilter, Telegram
 from xknx.telegram.address import (
@@ -361,16 +361,28 @@ class KNXModule:
             )
         ):
             data = telegram.payload.value.value
+
             if isinstance(data, tuple):
-                if transcoder := self._group_address_transcoder.get(
-                    telegram.destination_address
+                if transcoder := (
+                    self._group_address_transcoder.get(telegram.destination_address)
+                    or next(
+                        (
+                            _transcoder
+                            for _filter, _transcoder in self._address_filter_transcoder.items()
+                            if _filter.match(telegram.destination_address)
+                        ),
+                        None,
+                    )
                 ):
-                    value = transcoder.from_knx(data)
-                else:
-                    for _filter, transcoder in self._address_filter_transcoder.items():
-                        if _filter.match(telegram.destination_address):
-                            value = transcoder.from_knx(data)
-                            break
+                    try:
+                        value = transcoder.from_knx(data)
+                    except ConversionError as err:
+                        _LOGGER.warning(
+                            "Error in `knx_event` at decoding type '%s' from telegram %s\n%s",
+                            transcoder.__name__,
+                            telegram,
+                            err,
+                        )
 
         self.hass.bus.async_fire(
             "knx_event",
