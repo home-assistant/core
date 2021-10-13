@@ -3,12 +3,12 @@ import asyncio
 from unittest.mock import Mock
 
 import aiohue
+import pytest
 
 from homeassistant.components import hue
 from homeassistant.components.hue import sensor_base
 from homeassistant.components.hue.hue_event import CONF_HUE_EVENT
 from homeassistant.util import dt as dt_util
-from homeassistant.setup import async_setup_component
 
 from .conftest import create_mock_bridge, setup_bridge_for_sensors as setup_bridge
 
