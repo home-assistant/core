@@ -1,6 +1,5 @@
 """The dhcp integration."""
 
-from abc import abstractmethod
 from datetime import timedelta
 import fnmatch
 from ipaddress import ip_address as make_ip_address
@@ -158,10 +157,6 @@ class WatcherBase:
                 },
             )
 
-    @abstractmethod
-    def create_task(self, task):
-        """Pass a task to async_add_task based on which context we are in."""
-
 
 class NetworkWatcher(WatcherBase):
     """Class to query ptr records routers."""
@@ -195,7 +190,7 @@ class NetworkWatcher(WatcherBase):
         """Start a new discovery task if one is not running."""
         if self._discover_task and not self._discover_task.done():
             return
-        self._discover_task = self.create_task(self.async_discover())
+        self._discover_task = self.hass.async_create_task(self.async_discover())
 
     async def async_discover(self):
         """Process discovery."""
@@ -205,10 +200,6 @@ class NetworkWatcher(WatcherBase):
                 host[DISCOVERY_HOSTNAME],
                 _format_mac(host[DISCOVERY_MAC_ADDRESS]),
             )
-
-    def create_task(self, task):
-        """Pass a task to async_create_task since we are in async context."""
-        return self.hass.async_create_task(task)
 
 
 class DeviceTrackerWatcher(WatcherBase):
@@ -257,10 +248,6 @@ class DeviceTrackerWatcher(WatcherBase):
             return
 
         self.async_process_client(ip_address, hostname, _format_mac(mac_address))
-
-    def create_task(self, task):
-        """Pass a task to async_create_task since we are in async context."""
-        return self.hass.async_create_task(task)
 
 
 class DHCPWatcher(WatcherBase):
@@ -414,10 +401,6 @@ class DHCPWatcher(WatcherBase):
         self._sniffer.start()
         if self._sniffer.thread:
             self._sniffer.thread.name = self.__class__.__name__
-
-    def create_task(self, task):
-        """Pass a task to hass.add_job since we are in a thread."""
-        return self.hass.add_job(task)
 
 
 def _decode_dhcp_option(dhcp_options, key):
