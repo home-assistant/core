@@ -2245,6 +2245,82 @@ async def test_propagate_error_service_exception(hass):
     assert_action_trace(expected_trace, expected_script_execution="error")
 
 
+async def test_referenced_areas(hass):
+    """Test referenced areas."""
+    script_obj = script.Script(
+        hass,
+        cv.SCRIPT_SCHEMA(
+            [
+                {
+                    "service": "test.script",
+                    "data": {"area_id": "area_service_not_list"},
+                },
+                {
+                    "service": "test.script",
+                    "data": {"area_id": ["area_service_list"]},
+                },
+                {
+                    "service": "test.script",
+                    "data": {"area_id": "{{ 'area_service_template' }}"},
+                },
+                {
+                    "service": "test.script",
+                    "target": {"area_id": "area_in_target"},
+                },
+                {
+                    "service": "test.script",
+                    "data_template": {"area_id": "area_in_data_template"},
+                },
+                {"service": "test.script", "data": {"without": "area_id"}},
+                {
+                    "choose": [
+                        {
+                            "conditions": "{{ true == false }}",
+                            "sequence": [
+                                {
+                                    "service": "test.script",
+                                    "data": {"area_id": "area_choice_1_seq"},
+                                }
+                            ],
+                        },
+                        {
+                            "conditions": "{{ true == false }}",
+                            "sequence": [
+                                {
+                                    "service": "test.script",
+                                    "data": {"area_id": "area_choice_2_seq"},
+                                }
+                            ],
+                        },
+                    ],
+                    "default": [
+                        {
+                            "service": "test.script",
+                            "data": {"area_id": "area_default_seq"},
+                        }
+                    ],
+                },
+                {"event": "test_event"},
+                {"delay": "{{ delay_period }}"},
+            ]
+        ),
+        "Test Name",
+        "test_domain",
+    )
+    assert script_obj.referenced_areas == {
+        "area_choice_1_seq",
+        "area_choice_2_seq",
+        "area_default_seq",
+        "area_in_data_template",
+        "area_in_target",
+        "area_service_list",
+        "area_service_not_list",
+        # 'area_service_template',  # no area extraction from template
+    }
+    # Test we cache results.
+    assert script_obj.referenced_areas is script_obj.referenced_areas
+
+
 async def test_referenced_entities(hass):
     """Test referenced entities."""
     script_obj = script.Script(
@@ -2332,6 +2408,7 @@ async def test_referenced_entities(hass):
         "light.entity_in_target",
         "light.service_list",
         "light.service_not_list",
+        # "light.service_template",  # no entity extraction from template
         "scene.hello",
         "sensor.condition",
     }
