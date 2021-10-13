@@ -539,10 +539,6 @@ async def test_hue_events(hass, mock_bridge, device_reg):
     assert len(hass.states.async_all()) == 7
     assert len(events) == 2
 
-    hue_aurora_device = device_reg.async_get_device(
-        {(hue.DOMAIN, "ff:ff:00:0f:e7:fd:bc:b7")}
-    )
-
     # Add a new remote. In discovery the new event is registered **but not fired**
     new_sensor_response = dict(new_sensor_response)
     new_sensor_response["21"] = {
@@ -597,6 +593,10 @@ async def test_hue_events(hass, mock_bridge, device_reg):
         hass, dt_util.utcnow() + sensor_base.SensorManager.SCAN_INTERVAL
     )
     await hass.async_block_till_done()
+
+    hue_aurora_device = device_reg.async_get_device(
+        {(hue.DOMAIN, "ff:ff:00:0f:e7:fd:bc:b7")}
+    )
 
     assert len(mock_bridge.mock_requests) == 6
     assert len(hass.states.async_all()) == 8
