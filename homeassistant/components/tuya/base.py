@@ -26,10 +26,10 @@ class IntegerTypeData:
     scale: float
     step: float
 
-    @staticmethod
-    def from_json(data: str) -> IntegerTypeData:
+    @classmethod
+    def from_json(cls, data: str) -> IntegerTypeData:
         """Load JSON string and return a IntegerTypeData object."""
-        return IntegerTypeData(**json.loads(data))
+        return cls(**json.loads(data))
 
 
 @dataclass
@@ -38,10 +38,10 @@ class EnumTypeData:
 
     range: list[str]
 
-    @staticmethod
-    def from_json(data: str) -> EnumTypeData:
+    @classmethod
+    def from_json(cls, data: str) -> EnumTypeData:
         """Load JSON string and return a EnumTypeData object."""
-        return EnumTypeData(**json.loads(data))
+        return cls(**json.loads(data))
 
 
 class TuyaHaEntity(Entity):
