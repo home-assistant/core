@@ -45,6 +45,13 @@ event_register:
       example: "1/1/0"
       selector:
         object:
+    type:
+      name: "Value type"
+      description: "If set, the payload will be decoded as given DPT in the event data `value` key. Knx sensor types are valid values (see https://www.home-assistant.io/integrations/sensor.knx)."
+      required: false
+      example: "2byte_float"
+      selector:
+        text:
     remove:
       name: "Remove event registration"
       description: "If `True` the group address(es) will be removed."

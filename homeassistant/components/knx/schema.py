@@ -22,6 +22,7 @@ from homeassistant.components.sensor import CONF_STATE_CLASS, STATE_CLASSES_SCHE
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
+    CONF_EVENT,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
@@ -197,6 +198,28 @@ class ConnectionSchema:
         vol.Optional(CONF_KNX_RATE_LIMIT, default=20): vol.All(
             vol.Coerce(int), vol.Range(min=1, max=100)
         ),
+    }
+
+
+#########
+# EVENT
+#########
+
+
+class EventSchema:
+    """Voluptuous schema for KNX events."""
+
+    KNX_EVENT_FILTER_SCHEMA = vol.Schema(
+        {
+            vol.Required(KNX_ADDRESS): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(CONF_TYPE): sensor_type_validator,
+        }
+    )
+
+    SCHEMA = {
+        vol.Optional(CONF_EVENT, default=[]): vol.All(
+            cv.ensure_list, [KNX_EVENT_FILTER_SCHEMA]
+        )
     }
 
 
