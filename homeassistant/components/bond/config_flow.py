@@ -9,6 +9,7 @@ from bond_api import Bond
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_HOST,
@@ -16,7 +17,7 @@ from homeassistant.const import (
     HTTP_UNAUTHORIZED,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
 
@@ -31,6 +32,16 @@ USER_SCHEMA = vol.Schema(
 )
 DISCOVERY_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
 TOKEN_SCHEMA = vol.Schema({})
+
+
+async def async_get_token(hass: HomeAssistant, host: str) -> str | None:
+    """Try to fetch the token from the bond device."""
+    bond = Bond(host, "", session=async_get_clientsession(hass))
+    try:
+        response: dict[str, str] = await bond.token()
+    except ClientConnectionError:
+        return None
+    return response.get("token")
 
 
 async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> tuple[str, str]:
@@ -75,16 +86,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         online longer then the allowed setup period, and we will
         instead ask them to manually enter the token.
         """
-        bond = Bond(
-            self._discovered[CONF_HOST], "", session=async_get_clientsession(self.hass)
-        )
-        try:
-            response = await bond.token()
-        except ClientConnectionError:
-            return
-
-        token = response.get("token")
-        if token is None:
+        host = self._discovered[CONF_HOST]
+        if not (token := await async_get_token(self.hass, host)):
             return
 
         self._discovered[CONF_ACCESS_TOKEN] = token
@@ -99,7 +102,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         host: str = discovery_info[CONF_HOST]
         bond_id = name.partition(".")[0]
         await self.async_set_unique_id(bond_id)
-        self._abort_if_unique_id_configured({CONF_HOST: host})
+        for entry in self._async_current_entries():
+            if entry.unique_id != bond_id:
+                continue
+            updates = {CONF_HOST: host}
+            if entry.state == ConfigEntryState.SETUP_ERROR and (
+                token := await async_get_token(self.hass, host)
+            ):
+                updates[CONF_ACCESS_TOKEN] = token
+            self.hass.config_entries.async_update_entry(
+                entry, data={**entry.data, **updates}
+            )
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(entry.entry_id)
+            )
+            raise AbortFlow("already_configured")
 
         self._discovered = {CONF_HOST: host, CONF_NAME: bond_id}
         await self._async_try_automatic_configure()
