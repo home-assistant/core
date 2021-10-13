@@ -426,13 +426,9 @@ class MiroboVacuum(XiaomiCoordinatedMiioEntity, StateVacuumEntity):
         super()._handle_coordinator_update()
 
     @property
-    def available(self) -> bool:
-        """
-        Return if entity is available.
-
-        The entity will be marked as unavailable if its value is None
-        """
+    def state_attributes(self):
+        """Return the state attributes of the vacuum cleaner."""
         if self._state is None:
-            return False
+            return None
 
-        return super().available
+        return super().state_attributes

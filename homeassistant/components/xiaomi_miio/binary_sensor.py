@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Callable
+from typing import Any, Callable, Mapping
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
@@ -179,6 +179,15 @@ class XiaomiGenericBinarySensor(XiaomiCoordinatedMiioEntity, BinarySensorEntity)
 
         super()._handle_coordinator_update()
 
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return entity specific state attributes."""
+
+        if self._native_value is None:
+            return None
+
+        return super().extra_state_attributes
+
     def _determine_native_value(self):
         if self.entity_description.parent_key is not None:
             return self._extract_value_from_attribute(
@@ -193,18 +202,6 @@ class XiaomiGenericBinarySensor(XiaomiCoordinatedMiioEntity, BinarySensorEntity)
             return self.entity_description.value(state)
 
         return state
-
-    @property
-    def available(self) -> bool:
-        """
-        Return if entity is available.
-
-        The entity will be marked as unavailable if its value is None
-        """
-        if self._native_value is None:
-            return False
-
-        return super().available
 
     @property
     def is_on(self):

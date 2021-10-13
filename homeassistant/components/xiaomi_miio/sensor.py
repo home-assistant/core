@@ -611,39 +611,30 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         self._attr_unique_id = unique_id
         self.entity_description: XiaomiMiioSensorDescription = description
 
-    @property
-    def native_value(self):
-        """Return the state of the device."""
+    def _handle_coordinator_update(self) -> None:
         if self.entity_description.parent_key is not None:
-            return self._extract_value_from_attribute(
+            self._attr_native_value = self._extract_value_from_attribute(
                 getattr(self.coordinator.data, self.entity_description.parent_key),
                 self.entity_description.key,
             )
+        else:
+            self._attr_native_value = self._extract_value_from_attribute(
+                self.coordinator.data, self.entity_description.key
+            )
 
-        return self._extract_value_from_attribute(
-            self.coordinator.data, self.entity_description.key
-        )
+        super()._handle_coordinator_update()
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
+        if self._attr_native_value is None:
+            return None
+
         return {
             attr: self._extract_value_from_attribute(self.coordinator.data, attr)
             for attr in self.entity_description.attributes
             if hasattr(self.coordinator.data, attr)
         }
-
-    @property
-    def available(self) -> bool:
-        """
-        Return if entity is available.
-
-        The entity will be marked as unavailable if its value is None
-        """
-        if self.native_value is None:
-            return False
-
-        return super().available
 
     def _parse_none(self, state, attribute) -> None:
         if self.entity_description.allow_none_as_return_value:
