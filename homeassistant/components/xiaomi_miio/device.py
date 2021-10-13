@@ -217,5 +217,3 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
             type(state),
             attribute,
         )
-
-        return None

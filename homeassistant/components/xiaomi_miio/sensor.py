@@ -633,6 +633,23 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
             if hasattr(self.coordinator.data, attr)
         }
 
+    def _handle_coordinator_update(self) -> None:
+        if self.native_value is None:
+            self._attr_available = False
+        else:
+            self._attr_available = self.coordinator.last_update_success
+
+        super()._handle_coordinator_update()
+
+    @property
+    def available(self) -> bool:
+        """
+        Return if entity is available.
+
+        The entity will be marked as unavailable if its value is None
+        """
+        return self._attr_available
+
     def _parse_none(self, state, attribute) -> None:
         if self.entity_description.allow_none_as_return_value:
             _LOGGER.debug(
