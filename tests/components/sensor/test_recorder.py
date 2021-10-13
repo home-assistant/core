@@ -2010,10 +2010,10 @@ def test_compile_hourly_statistics_changing_statistics(
     "db_supports_row_number,in_log,not_in_log",
     [(True, "row_number", None), (False, None, "row_number")],
 )
-def test_compile_statistics_hourly_summary(
+def test_compile_statistics_hourly_daily_monthly_summary(
     hass_recorder, caplog, db_supports_row_number, in_log, not_in_log
 ):
-    """Test compiling hourly statistics."""
+    """Test compiling hourly statistics + monthly and daily summary."""
     zero = dt_util.utcnow()
     # August 31st, 23:00 local time
     zero = zero.replace(

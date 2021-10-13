@@ -593,20 +593,6 @@ def _reduce_statistics(
 ) -> dict[str, list[dict[str, Any]]]:
     result: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for statistic_id, stat_list in stats.items():
-        # TODO: Is this needed?
-        """
-        if (
-            values.length > 1 &&
-            new Date(values[0].start).getDate() === new Date(values[1].start).getDate()
-        ) {
-            // add init value if the first value isn't end of previous period
-            result.push({
-            ...values[0]!,
-            start: startOfMonth(addDays(new Date(values[0].start), -1)).toISOString(),
-            });
-        }
-        """
-
         max_values: list[float] = []
         mean_values: list[float] = []
         min_values: list[float] = []
@@ -617,7 +603,6 @@ def _reduce_statistics(
             if not same_period(prev_stat["start"], statistic["start"]):
                 start, end = period_start_end(prev_stat["start"])
                 # TODO: Test DST change
-                # TODO: Make sure tests are not in UTC
                 # Last value of the period
                 result[statistic_id].append(
                     {
