@@ -627,19 +627,14 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
+        if not self.available:
+            return None
+
         return {
             attr: self._extract_value_from_attribute(self.coordinator.data, attr)
             for attr in self.entity_description.attributes
             if hasattr(self.coordinator.data, attr)
         }
-
-    def _handle_coordinator_update(self) -> None:
-        if self.native_value is None:
-            self._attr_available = False
-        else:
-            self._attr_available = self.coordinator.last_update_success
-
-        super()._handle_coordinator_update()
 
     @property
     def available(self) -> bool:
@@ -648,7 +643,10 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
 
         The entity will be marked as unavailable if its value is None
         """
-        return self._attr_available
+        if self.native_value is None:
+            return False
+
+        return super().available
 
     def _parse_none(self, state, attribute) -> None:
         if self.entity_description.allow_none_as_return_value:
