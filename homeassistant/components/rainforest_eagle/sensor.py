@@ -1,9 +1,6 @@
 """Support for the Rainforest Eagle energy monitor."""
 from __future__ import annotations
 
-import logging
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -15,9 +12,8 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     StateType,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_HOST,
     CONF_IP_ADDRESS,
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
@@ -27,13 +23,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_CLOUD_ID, CONF_INSTALL_CODE, DOMAIN
 from .data import EagleDataCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 SENSORS = (
     SensorEntityDescription(
@@ -67,32 +60,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_INSTALL_CODE): cv.string,
     }
 )
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: dict[str, Any] | None = None,
-):
-    """Import config as config entry."""
-    _LOGGER.warning(
-        "Configuration of the rainforest_eagle platform in YAML is deprecated "
-        "and will be removed in Home Assistant 2021.11; Your existing configuration "
-        "has been imported into the UI automatically and can be safely removed "
-        "from your configuration.yaml file"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_HOST: config[CONF_IP_ADDRESS],
-                CONF_CLOUD_ID: config[CONF_CLOUD_ID],
-                CONF_INSTALL_CODE: config[CONF_INSTALL_CODE],
-            },
-        )
-    )
 
 
 async def async_setup_entry(
