@@ -1211,7 +1211,7 @@ def warn_no_default(function, value, default):
         (
             "Template warning: '%s' got invalid input '%s' when %s template '%s' "
             "but no default was specified. Currently '%s' will return '%s', however this template will fail "
-            "to render in Home Assistant core 2021.12"
+            "to render in Home Assistant core 2022.1"
         ),
         function,
         value,
@@ -1463,6 +1463,24 @@ def forgiving_float_filter(value, default=_SENTINEL):
         return default
 
 
+def forgiving_int(value, default=_SENTINEL, base=10):
+    """Try to convert value to an int, and warn if it fails."""
+    result = jinja2.filters.do_int(value, default=default, base=base)
+    if result is _SENTINEL:
+        warn_no_default("int", value, value)
+        return value
+    return result
+
+
+def forgiving_int_filter(value, default=_SENTINEL, base=10):
+    """Try to convert value to an int, and warn if it fails."""
+    result = jinja2.filters.do_int(value, default=default, base=base)
+    if result is _SENTINEL:
+        warn_no_default("int", value, 0)
+        return 0
+    return result
+
+
 def is_number(value):
     """Try to convert value to a float."""
     try:
@@ -1693,6 +1711,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["ord"] = ord
         self.filters["is_number"] = is_number
         self.filters["float"] = forgiving_float_filter
+        self.filters["int"] = forgiving_int_filter
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -1716,6 +1735,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["max"] = max
         self.globals["min"] = min
         self.globals["is_number"] = is_number
+        self.globals["int"] = forgiving_int
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
 

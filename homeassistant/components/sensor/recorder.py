@@ -7,6 +7,7 @@ import datetime
 import itertools
 import logging
 import math
+from typing import Any
 
 from sqlalchemy.orm.session import Session
 
@@ -362,13 +363,14 @@ def _wanted_statistics(sensor_states: list[State]) -> dict[str, set[str]]:
     return wanted_statistics
 
 
-def _last_reset_as_utc_isoformat(
-    last_reset_s: str | None, entity_id: str
-) -> str | None:
+def _last_reset_as_utc_isoformat(last_reset_s: Any, entity_id: str) -> str | None:
     """Parse last_reset and convert it to UTC."""
     if last_reset_s is None:
         return None
-    last_reset = dt_util.parse_datetime(last_reset_s)
+    if isinstance(last_reset_s, str):
+        last_reset = dt_util.parse_datetime(last_reset_s)
+    else:
+        last_reset = None
     if last_reset is None:
         _LOGGER.warning(
             "Ignoring invalid last reset '%s' for %s", last_reset_s, entity_id
@@ -461,9 +463,10 @@ def _compile_statistics(  # noqa: C901
                 if entity_id not in hass.data[WARN_UNSTABLE_UNIT]:
                     hass.data[WARN_UNSTABLE_UNIT].add(entity_id)
                     _LOGGER.warning(
-                        "The unit of %s (%s) does not match the unit of already "
+                        "The %sunit of %s (%s) does not match the unit of already "
                         "compiled statistics (%s). Generation of long term statistics "
                         "will be suppressed unless the unit changes back to %s",
+                        "normalized " if device_class in DEVICE_CLASS_UNITS else "",
                         entity_id,
                         unit,
                         old_metadata[1]["unit_of_measurement"],

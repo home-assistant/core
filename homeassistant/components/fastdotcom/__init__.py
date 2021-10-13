@@ -1,7 +1,7 @@
 """Support for testing internet speed via Fast.com."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import Any
 
@@ -67,7 +67,7 @@ class SpeedtestData:
         self.data: dict[str, Any] | None = None
         self._hass = hass
 
-    def update(self) -> None:
+    def update(self, now: datetime | None = None) -> None:
         """Get the latest data from fast.com."""
 
         _LOGGER.debug("Executing fast.com speedtest")

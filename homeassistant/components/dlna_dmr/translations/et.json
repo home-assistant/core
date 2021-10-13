@@ -17,6 +17,9 @@
             "confirm": {
                 "description": "Kas alustada seadistamist?"
             },
+            "import_turn_on": {
+                "description": "L\u00fclita seade sisse ja kl\u00f5psa migreerimise j\u00e4tkamiseks nuppu Edasta"
+            },
             "user": {
                 "data": {
                     "url": "URL"

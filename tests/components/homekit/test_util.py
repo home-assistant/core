@@ -39,11 +39,7 @@ from homeassistant.components.homekit.util import (
     validate_entity_config as vec,
     validate_media_player_features,
 )
-from homeassistant.components.persistent_notification import (
-    ATTR_MESSAGE,
-    ATTR_NOTIFICATION_ID,
-    DOMAIN as PERSISTENT_NOTIFICATION_DOMAIN,
-)
+from homeassistant.components.persistent_notification import create, dismiss
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_SUPPORTED_FEATURES,
@@ -58,7 +54,7 @@ from homeassistant.core import State
 
 from .util import async_init_integration
 
-from tests.common import MockConfigEntry, async_mock_service
+from tests.common import MockConfigEntry
 
 
 def _mock_socket(failure_attempts: int = 0) -> MagicMock:
@@ -242,33 +238,31 @@ async def test_show_setup_msg(hass, hk_driver, mock_get_source_ip):
     entry = await async_init_integration(hass)
     assert entry
 
-    call_create_notification = async_mock_service(
-        hass, PERSISTENT_NOTIFICATION_DOMAIN, "create"
-    )
-
-    await hass.async_add_executor_job(
-        show_setup_message, hass, entry.entry_id, "bridge_name", pincode, "X-HM://0"
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.persistent_notification.create", side_effect=create
+    ) as mock_create:
+        await hass.async_add_executor_job(
+            show_setup_message, hass, entry.entry_id, "bridge_name", pincode, "X-HM://0"
+        )
+        await hass.async_block_till_done()
     assert hass.data[DOMAIN][entry.entry_id][HOMEKIT_PAIRING_QR_SECRET]
     assert hass.data[DOMAIN][entry.entry_id][HOMEKIT_PAIRING_QR]
 
-    assert call_create_notification
-    assert call_create_notification[0].data[ATTR_NOTIFICATION_ID] == entry.entry_id
-    assert pincode.decode() in call_create_notification[0].data[ATTR_MESSAGE]
+    assert len(mock_create.mock_calls) == 1
+    assert mock_create.mock_calls[0][1][3] == entry.entry_id
+    assert pincode.decode() in mock_create.mock_calls[0][1][1]
 
 
 async def test_dismiss_setup_msg(hass):
     """Test dismiss setup message."""
-    call_dismiss_notification = async_mock_service(
-        hass, PERSISTENT_NOTIFICATION_DOMAIN, "dismiss"
-    )
+    with patch(
+        "homeassistant.components.persistent_notification.dismiss", side_effect=dismiss
+    ) as mock_dismiss:
+        await hass.async_add_executor_job(dismiss_setup_message, hass, "entry_id")
+        await hass.async_block_till_done()
 
-    await hass.async_add_executor_job(dismiss_setup_message, hass, "entry_id")
-    await hass.async_block_till_done()
-
-    assert call_dismiss_notification
-    assert call_dismiss_notification[0].data[ATTR_NOTIFICATION_ID] == "entry_id"
+    assert len(mock_dismiss.mock_calls) == 1
+    assert mock_dismiss.mock_calls[0][1][1] == "entry_id"
 
 
 async def test_port_is_available(hass):

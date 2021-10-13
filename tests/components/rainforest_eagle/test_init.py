@@ -1,7 +1,7 @@
 """Tests for the Rainforest Eagle integration."""
 from unittest.mock import patch
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.rainforest_eagle.const import (
     CONF_CLOUD_ID,
     CONF_HARDWARE_ADDRESS,
@@ -17,7 +17,6 @@ from homeassistant.setup import async_setup_component
 
 async def test_import(hass: HomeAssistant) -> None:
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "homeassistant.components.rainforest_eagle.data.async_get_type",

@@ -18,12 +18,14 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
-from . import CONF_TOPIC, DATA_MQTT, debug_info, publish, subscription
+from . import DATA_MQTT, debug_info, publish, subscription
 from .const import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_PAYLOAD,
     ATTR_DISCOVERY_TOPIC,
+    CONF_AVAILABILITY,
     CONF_QOS,
+    CONF_TOPIC,
     DEFAULT_PAYLOAD_AVAILABLE,
     DEFAULT_PAYLOAD_NOT_AVAILABLE,
     DOMAIN,
@@ -50,7 +52,6 @@ AVAILABILITY_LATEST = "latest"
 
 AVAILABILITY_MODES = [AVAILABILITY_ALL, AVAILABILITY_ANY, AVAILABILITY_LATEST]
 
-CONF_AVAILABILITY = "availability"
 CONF_AVAILABILITY_MODE = "availability_mode"
 CONF_AVAILABILITY_TOPIC = "availability_topic"
 CONF_ENABLED_BY_DEFAULT = "enabled_by_default"
@@ -108,7 +109,7 @@ MQTT_AVAILABILITY_LIST_SCHEMA = vol.Schema(
             cv.ensure_list,
             [
                 {
-                    vol.Optional(CONF_TOPIC): valid_subscribe_topic,
+                    vol.Required(CONF_TOPIC): valid_subscribe_topic,
                     vol.Optional(
                         CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE
                     ): cv.string,
