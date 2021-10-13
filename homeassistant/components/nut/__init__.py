@@ -39,6 +39,11 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Network UPS Tools (NUT) from a config entry."""
 
+    # strip out the stale options CONF_RESOURCES
+    if CONF_RESOURCES in entry.options:
+        new_options = {k: v for k, v in entry.options.items() if k != CONF_RESOURCES}
+        hass.config_entries.async_update_entry(entry, options=new_options)
+
     config = entry.data
     host = config[CONF_HOST]
     port = config[CONF_PORT]
@@ -154,13 +159,6 @@ def _unique_id_from_status(status):
     if serial:
         unique_id_group.append(serial)
     return "_".join(unique_id_group)
-
-
-def find_resources_in_config_entry(config_entry):
-    """Find the configured resources in the config entry."""
-    if CONF_RESOURCES in config_entry.options:
-        return config_entry.options[CONF_RESOURCES]
-    return config_entry.data[CONF_RESOURCES]
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

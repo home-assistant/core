@@ -35,16 +35,10 @@
   "options": {
     "step": {
       "init": {
-        "description": "Choose Sensor Resources.",
         "data": {
-          "resources": "Resources",
           "scan_interval": "Scan Interval (seconds)"
         }
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   }
 }
