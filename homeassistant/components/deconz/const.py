@@ -46,11 +46,6 @@ PLATFORMS = [
     SWITCH_DOMAIN,
 ]
 
-NEW_GROUP = "groups"
-NEW_LIGHT = "lights"
-NEW_SCENE = "scenes"
-NEW_SENSOR = "sensors"
-
 ATTR_DARK = "dark"
 ATTR_LOCKED = "locked"
 ATTR_OFFSET = "offset"

@@ -1,5 +1,5 @@
 """Test the Tradfri config flow."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -16,6 +16,26 @@ def mock_auth():
         "homeassistant.components.tradfri.config_flow.authenticate"
     ) as mock_auth:
         yield mock_auth
+
+
+async def test_already_paired(hass, mock_entry_setup):
+    """Test Gateway already paired."""
+    with patch(
+        "homeassistant.components.tradfri.config_flow.APIFactory",
+        autospec=True,
+    ) as mock_lib:
+        mx = AsyncMock()
+        mx.generate_psk.return_value = None
+        mock_lib.init.return_value = mx
+        result = await hass.config_entries.flow.async_init(
+            "tradfri", context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "123.123.123.123", "security_code": "abcd"}
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "cannot_authenticate"}
 
 
 async def test_user_connection_successful(hass, mock_auth, mock_entry_setup):

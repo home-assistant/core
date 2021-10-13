@@ -109,7 +109,7 @@ async def test_missing_required_keys(hass, calls):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert hass.states.async_all() == []
+    assert hass.states.async_all("number") == []
 
 
 async def test_all_optional_config(hass, calls):

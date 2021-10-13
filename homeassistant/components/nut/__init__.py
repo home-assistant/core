@@ -163,7 +163,7 @@ def find_resources_in_config_entry(config_entry):
     return config_entry.data[CONF_RESOURCES]
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 

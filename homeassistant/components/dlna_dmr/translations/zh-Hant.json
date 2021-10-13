@@ -17,6 +17,9 @@
             "confirm": {
                 "description": "\u662f\u5426\u8981\u958b\u59cb\u8a2d\u5b9a\uff1f"
             },
+            "import_turn_on": {
+                "description": "\u8acb\u958b\u555f\u88dd\u7f6e\u4e26\u9ede\u9078\u50b3\u9001\u4ee5\u7e7c\u7e8c\u9077\u79fb"
+            },
             "user": {
                 "data": {
                     "url": "\u7db2\u5740"

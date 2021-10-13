@@ -7,6 +7,7 @@ import datetime
 import itertools
 import logging
 import math
+from typing import Any
 
 from sqlalchemy.orm.session import Session
 
@@ -362,13 +363,14 @@ def _wanted_statistics(sensor_states: list[State]) -> dict[str, set[str]]:
     return wanted_statistics
 
 
-def _last_reset_as_utc_isoformat(
-    last_reset_s: str | None, entity_id: str
-) -> str | None:
+def _last_reset_as_utc_isoformat(last_reset_s: Any, entity_id: str) -> str | None:
     """Parse last_reset and convert it to UTC."""
     if last_reset_s is None:
         return None
-    last_reset = dt_util.parse_datetime(last_reset_s)
+    if isinstance(last_reset_s, str):
+        last_reset = dt_util.parse_datetime(last_reset_s)
+    else:
+        last_reset = None
     if last_reset is None:
         _LOGGER.warning(
             "Ignoring invalid last reset '%s' for %s", last_reset_s, entity_id
@@ -461,9 +463,10 @@ def _compile_statistics(  # noqa: C901
                 if entity_id not in hass.data[WARN_UNSTABLE_UNIT]:
                     hass.data[WARN_UNSTABLE_UNIT].add(entity_id)
                     _LOGGER.warning(
-                        "The unit of %s (%s) does not match the unit of already "
+                        "The %sunit of %s (%s) does not match the unit of already "
                         "compiled statistics (%s). Generation of long term statistics "
                         "will be suppressed unless the unit changes back to %s",
+                        "normalized " if device_class in DEVICE_CLASS_UNITS else "",
                         entity_id,
                         unit,
                         old_metadata[1]["unit_of_measurement"],
@@ -637,35 +640,70 @@ def validate_statistics(
     """Validate statistics."""
     validation_result = defaultdict(list)
 
-    sensor_states = _get_sensor_states(hass)
+    sensor_states = hass.states.all(DOMAIN)
+    metadatas = statistics.get_metadata(hass, [i.entity_id for i in sensor_states])
 
     for state in sensor_states:
         entity_id = state.entity_id
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+        state_class = state.attributes.get(ATTR_STATE_CLASS)
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
-        if device_class not in UNIT_CONVERSIONS:
-            metadata = statistics.get_metadata(hass, (entity_id,))
-            if not metadata:
-                continue
-            metadata_unit = metadata[entity_id][1]["unit_of_measurement"]
-            if state_unit != metadata_unit:
+        if metadata := metadatas.get(entity_id):
+            if not is_entity_recorded(hass, state.entity_id):
+                # Sensor was previously recorded, but no longer is
                 validation_result[entity_id].append(
                     statistics.ValidationIssue(
-                        "units_changed",
+                        "entity_not_recorded",
+                        {"statistic_id": entity_id},
+                    )
+                )
+
+            if state_class not in STATE_CLASSES:
+                # Sensor no longer has a valid state class
+                validation_result[entity_id].append(
+                    statistics.ValidationIssue(
+                        "unsupported_state_class",
+                        {"statistic_id": entity_id, "state_class": state_class},
+                    )
+                )
+
+            metadata_unit = metadata[1]["unit_of_measurement"]
+            if device_class not in UNIT_CONVERSIONS:
+                if state_unit != metadata_unit:
+                    # The unit has changed
+                    validation_result[entity_id].append(
+                        statistics.ValidationIssue(
+                            "units_changed",
+                            {
+                                "statistic_id": entity_id,
+                                "state_unit": state_unit,
+                                "metadata_unit": metadata_unit,
+                            },
+                        )
+                    )
+            elif metadata_unit != DEVICE_CLASS_UNITS[device_class]:
+                # The unit in metadata is not supported for this device class
+                validation_result[entity_id].append(
+                    statistics.ValidationIssue(
+                        "unsupported_unit_metadata",
                         {
                             "statistic_id": entity_id,
-                            "state_unit": state_unit,
+                            "device_class": device_class,
                             "metadata_unit": metadata_unit,
+                            "supported_unit": DEVICE_CLASS_UNITS[device_class],
                         },
                     )
                 )
-            continue
 
-        if state_unit not in UNIT_CONVERSIONS[device_class]:
+        if (
+            device_class in UNIT_CONVERSIONS
+            and state_unit not in UNIT_CONVERSIONS[device_class]
+        ):
+            # The unit in the state is not supported for this device class
             validation_result[entity_id].append(
                 statistics.ValidationIssue(
-                    "unsupported_unit",
+                    "unsupported_unit_state",
                     {
                         "statistic_id": entity_id,
                         "device_class": device_class,

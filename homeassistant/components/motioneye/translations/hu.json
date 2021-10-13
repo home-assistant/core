@@ -12,7 +12,7 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani Home Assistant-ot, hogy csatlakozzon {addon} kieg\u00e9sz\u00edt\u0151 \u00e1ltal biztos\u00edtott motionEye szolg\u00e1ltat\u00e1shoz?",
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani Home Assistantot motionEyehez val\u00f3 csatlakoz\u00e1shoz, {addon} kieg\u00e9sz\u00edt\u0151 \u00e1ltal?",
                 "title": "motionEye a Home Assistant kieg\u00e9sz\u00edt\u0151 seg\u00edts\u00e9g\u00e9vel"
             },
             "user": {

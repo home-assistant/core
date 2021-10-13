@@ -48,6 +48,18 @@ AIRCON_FANSPEED_MAP = {
 
 FAN_MODE_TO_AIRCON_FANSPEED = {v: k for k, v in AIRCON_FANSPEED_MAP.items()}
 
+SUPPORTED_FAN_MODES = [FAN_AUTO, FAN_HIGH, FAN_MEDIUM, FAN_LOW, FAN_OFF]
+SUPPORTED_HVAC_MODES = [
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_OFF,
+]
+SUPPORTED_MAX_TEMP = 30
+SUPPORTED_MIN_TEMP = 16
+SUPPORTED_SWING_MODES = [SWING_HORIZONTAL, SWING_OFF]
+SUPPORTED_TARGET_TEMPERATURE_STEP = 1
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up entry."""
@@ -66,20 +78,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AirConEntity(ClimateEntity):
     """Representation of an air conditioner."""
 
-    _attr_fan_modes = [FAN_AUTO, FAN_HIGH, FAN_MEDIUM, FAN_LOW, FAN_OFF]
-    _attr_hvac_modes = [
-        HVAC_MODE_COOL,
-        HVAC_MODE_HEAT,
-        HVAC_MODE_FAN_ONLY,
-        HVAC_MODE_OFF,
-    ]
-    _attr_max_temp = 30
-    _attr_min_temp = 16
+    _attr_fan_modes = SUPPORTED_FAN_MODES
+    _attr_hvac_modes = SUPPORTED_HVAC_MODES
+    _attr_max_temp = SUPPORTED_MAX_TEMP
+    _attr_min_temp = SUPPORTED_MIN_TEMP
     _attr_supported_features = (
         SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_SWING_MODE
     )
-    _attr_swing_modes = [SWING_HORIZONTAL, SWING_OFF]
-    _attr_target_temperature_step = 1
+    _attr_swing_modes = SUPPORTED_SWING_MODES
+    _attr_target_temperature_step = SUPPORTED_TARGET_TEMPERATURE_STEP
     _attr_temperature_unit = TEMP_CELSIUS
     _attr_should_poll = False
 
@@ -141,7 +148,7 @@ class AirConEntity(ClimateEntity):
             return HVAC_MODE_OFF
 
         mode: AirconMode = self._aircon.get_mode()
-        return AIRCON_MODE_MAP.get(mode, None)
+        return AIRCON_MODE_MAP.get(mode)
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set HVAC mode."""
@@ -151,8 +158,7 @@ class AirConEntity(ClimateEntity):
 
         mode = HVAC_MODE_TO_AIRCON_MODE.get(hvac_mode)
         if not mode:
-            _LOGGER.warning("Unexpected hvac mode: %s", hvac_mode)
-            return
+            raise ValueError(f"Invalid hvac mode {hvac_mode}")
 
         await self._aircon.set_mode(mode)
         if not self._aircon.get_power_on():
@@ -168,7 +174,7 @@ class AirConEntity(ClimateEntity):
         """Set fan mode."""
         fanspeed = FAN_MODE_TO_AIRCON_FANSPEED.get(fan_mode)
         if not fanspeed:
-            return
+            raise ValueError(f"Invalid fan mode {fan_mode}")
         await self._aircon.set_fanspeed(fanspeed)
 
     @property

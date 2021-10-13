@@ -24,7 +24,7 @@ from homeassistant.components.dlna_dmr.const import (
 from homeassistant.components.dlna_dmr.data import EventListenAddr
 from homeassistant.components.media_player import ATTR_TO_PROPERTY, const as mp_const
 from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import async_get as async_get_dr
 from homeassistant.helpers.entity_component import async_update_entity
@@ -32,6 +32,7 @@ from homeassistant.helpers.entity_registry import (
     async_entries_for_config_entry,
     async_get as async_get_er,
 )
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
@@ -65,7 +66,9 @@ async def setup_mock_component(hass: HomeAssistant, mock_entry: MockConfigEntry)
 @pytest.fixture
 async def mock_entity_id(
     hass: HomeAssistant,
+    domain_data_mock: Mock,
     config_entry_mock: MockConfigEntry,
+    ssdp_scanner_mock: Mock,
     dmr_device_mock: Mock,
 ) -> AsyncIterable[str]:
     """Fixture to set up a mock DlnaDmrEntity in a connected state.
@@ -74,8 +77,17 @@ async def mock_entity_id(
     """
     entity_id = await setup_mock_component(hass, config_entry_mock)
 
+    # Check the entity has registered all needed listeners
+    assert len(config_entry_mock.update_listeners) == 1
+    assert domain_data_mock.async_get_event_notifier.await_count == 1
+    assert domain_data_mock.async_release_event_notifier.await_count == 0
+    assert ssdp_scanner_mock.async_register_callback.await_count == 2
+    assert ssdp_scanner_mock.async_register_callback.return_value.call_count == 0
     assert dmr_device_mock.async_subscribe_services.await_count == 1
+    assert dmr_device_mock.async_unsubscribe_services.await_count == 0
+    assert dmr_device_mock.on_event is not None
 
+    # Run the test
     yield entity_id
 
     # Unload config entry to clean up
@@ -83,12 +95,29 @@ async def mock_entity_id(
         "require_restart": False
     }
 
+    # Check entity has cleaned up its resources
+    assert not config_entry_mock.update_listeners
+    assert (
+        domain_data_mock.async_get_event_notifier.await_count
+        == domain_data_mock.async_release_event_notifier.await_count
+    )
+    assert (
+        ssdp_scanner_mock.async_register_callback.await_count
+        == ssdp_scanner_mock.async_register_callback.return_value.call_count
+    )
+    assert (
+        dmr_device_mock.async_subscribe_services.await_count
+        == dmr_device_mock.async_unsubscribe_services.await_count
+    )
+    assert dmr_device_mock.on_event is None
+
 
 @pytest.fixture
 async def mock_disconnected_entity_id(
     hass: HomeAssistant,
     domain_data_mock: Mock,
     config_entry_mock: MockConfigEntry,
+    ssdp_scanner_mock: Mock,
     dmr_device_mock: Mock,
 ) -> AsyncIterable[str]:
     """Fixture to set up a mock DlnaDmrEntity in a disconnected state.
@@ -100,14 +129,73 @@ async def mock_disconnected_entity_id(
 
     entity_id = await setup_mock_component(hass, config_entry_mock)
 
-    assert dmr_device_mock.async_subscribe_services.await_count == 0
+    # Check the entity has registered all needed listeners
+    assert len(config_entry_mock.update_listeners) == 1
+    assert ssdp_scanner_mock.async_register_callback.await_count == 2
+    assert ssdp_scanner_mock.async_register_callback.return_value.call_count == 0
 
+    # The DmrDevice hasn't been instantiated yet
+    assert domain_data_mock.async_get_event_notifier.await_count == 0
+    assert domain_data_mock.async_release_event_notifier.await_count == 0
+    assert dmr_device_mock.async_subscribe_services.await_count == 0
+    assert dmr_device_mock.async_unsubscribe_services.await_count == 0
+    assert dmr_device_mock.on_event is None
+
+    # Run the test
     yield entity_id
 
     # Unload config entry to clean up
     assert await hass.config_entries.async_remove(config_entry_mock.entry_id) == {
         "require_restart": False
     }
+
+    # Check entity has cleaned up its resources
+    assert not config_entry_mock.update_listeners
+    assert (
+        domain_data_mock.async_get_event_notifier.await_count
+        == domain_data_mock.async_release_event_notifier.await_count
+    )
+    assert (
+        ssdp_scanner_mock.async_register_callback.await_count
+        == ssdp_scanner_mock.async_register_callback.return_value.call_count
+    )
+    assert (
+        dmr_device_mock.async_subscribe_services.await_count
+        == dmr_device_mock.async_unsubscribe_services.await_count
+    )
+    assert dmr_device_mock.on_event is None
+
+
+async def test_setup_platform_import_flow_started(
+    hass: HomeAssistant, domain_data_mock: Mock
+) -> None:
+    """Test import flow of YAML config is started if there's config data."""
+    # Cause connection attempts to fail
+    domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpConnectionError
+
+    # Run the setup
+    mock_config: ConfigType = {
+        MP_DOMAIN: [
+            {
+                CONF_PLATFORM: DLNA_DOMAIN,
+                CONF_URL: MOCK_DEVICE_LOCATION,
+                CONF_LISTEN_PORT: 1234,
+            }
+        ]
+    }
+
+    await async_setup_component(hass, MP_DOMAIN, mock_config)
+    await hass.async_block_till_done()
+
+    # Check config_flow has started
+    flows = hass.config_entries.flow.async_progress(include_uninitialized=True)
+    assert len(flows) == 1
+
+    # It should be paused, waiting for the user to turn on the device
+    flow = flows[0]
+    assert flow["handler"] == "dlna_dmr"
+    assert flow["step_id"] == "import_turn_on"
+    assert flow["context"].get("unique_id") == MOCK_DEVICE_LOCATION
 
 
 async def test_setup_entry_no_options(
@@ -799,7 +887,7 @@ async def test_ssdp_byebye(
     # Device should be gone
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
-    assert mock_state.state == media_player.STATE_IDLE
+    assert mock_state.state == ha_const.STATE_UNAVAILABLE
 
     # Second byebye will do nothing
     await ssdp_callback(

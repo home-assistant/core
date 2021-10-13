@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Tuya Home Assistant Base Device Model."""
 from __future__ import annotations
 
@@ -7,7 +6,7 @@ from typing import Any
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN, TUYA_HA_SIGNAL_UPDATE_ENTITY
 
@@ -15,30 +14,13 @@ from .const import DOMAIN, TUYA_HA_SIGNAL_UPDATE_ENTITY
 class TuyaHaEntity(Entity):
     """Tuya base device."""
 
+    _attr_should_poll = False
+
     def __init__(self, device: TuyaDevice, device_manager: TuyaDeviceManager) -> None:
         """Init TuyaHaEntity."""
-        super().__init__()
-
+        self._attr_unique_id = f"tuya.{device.id}"
         self.tuya_device = device
         self.tuya_device_manager = device_manager
-
-    @staticmethod
-    def remap(old_value, old_min, old_max, new_min, new_max):
-        """Remap old_value to new_value."""
-        new_value = ((old_value - old_min) / (old_max - old_min)) * (
-            new_max - new_min
-        ) + new_min
-        return new_value
-
-    @property
-    def should_poll(self) -> bool:
-        """Hass should not poll."""
-        return False
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        return f"tuya.{self.tuya_device.id}"
 
     @property
     def name(self) -> str | None:
@@ -46,22 +28,21 @@ class TuyaHaEntity(Entity):
         return self.tuya_device.name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
-        _device_info = {
-            "identifiers": {(DOMAIN, f"{self.tuya_device.id}")},
-            "manufacturer": "Tuya",
-            "name": self.tuya_device.name,
-            "model": self.tuya_device.product_name,
-        }
-        return _device_info
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.tuya_device.id)},
+            manufacturer="Tuya",
+            name=self.tuya_device.name,
+            model=self.tuya_device.product_name,
+        )
 
     @property
     def available(self) -> bool:
         """Return if the device is available."""
         return self.tuya_device.online
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self.async_on_remove(
             async_dispatcher_connect(

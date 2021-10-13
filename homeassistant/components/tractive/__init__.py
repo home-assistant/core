@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 import logging
-from typing import Any, Final, List, cast
+from typing import Any, List, cast
 
 import aiotractive
 
@@ -37,10 +37,10 @@ from .const import (
     TRACKER_POSITION_UPDATED,
 )
 
-PLATFORMS: Final = ["binary_sensor", "device_tracker", "sensor", "switch"]
+PLATFORMS = ["binary_sensor", "device_tracker", "sensor", "switch"]
 
 
-_LOGGER: Final = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass

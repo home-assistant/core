@@ -8,7 +8,7 @@
 -c homeassistant/package_constraints.txt
 -r requirements_test_pre_commit.txt
 codecov==2.1.12
-coverage==5.5
+coverage==6.0.2
 jsonpickle==1.4.1
 mock-open==1.4.0
 mypy==0.910
@@ -18,6 +18,7 @@ pipdeptree==2.1.0
 pylint-strict-informational==0.1
 pytest-aiohttp==0.3.0
 pytest-cov==2.12.1
+pytest-socket==0.4.1
 pytest-test-groups==1.0.3
 pytest-sugar==0.9.4
 pytest-timeout==1.4.2

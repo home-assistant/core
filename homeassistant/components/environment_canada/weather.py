@@ -1,8 +1,8 @@
 """Platform for retrieving meteorological data from Environment Canada."""
 import datetime
+import logging
 import re
 
-from env_canada import ECData
 import voluptuous as vol
 
 from homeassistant.components.weather import (
@@ -30,17 +30,20 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_C
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt
 
+from . import trigger_import
+from .const import CONF_ATTRIBUTION, CONF_STATION, DOMAIN
+
 CONF_FORECAST = "forecast"
-CONF_ATTRIBUTION = "Data provided by Environment Canada"
-CONF_STATION = "station"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def validate_station(station):
     """Check that the station ID is well-formed."""
     if station is None:
-        return
+        return None
     if not re.fullmatch(r"[A-Z]{2}/s0000\d{3}", station):
-        raise vol.error.Invalid('Station ID must be of the form "XX/s0000###"')
+        raise vol.Invalid('Station ID must be of the form "XX/s0000###"')
     return station
 
 
@@ -72,26 +75,45 @@ ICON_CONDITION_MAP = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entries, discovery_info=None):
     """Set up the Environment Canada weather."""
-    if config.get(CONF_STATION):
-        ec_data = ECData(station_id=config[CONF_STATION])
-    else:
-        lat = config.get(CONF_LATITUDE, hass.config.latitude)
-        lon = config.get(CONF_LONGITUDE, hass.config.longitude)
-        ec_data = ECData(coordinates=(lat, lon))
+    trigger_import(hass, config)
 
-    add_devices([ECWeather(ec_data, config)])
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Add a weather entity from a config_entry."""
+    weather_data = hass.data[DOMAIN][config_entry.entry_id]["weather_data"]
+
+    async_add_entities(
+        [
+            ECWeather(
+                weather_data,
+                f"{config_entry.title}",
+                config_entry.data,
+                "daily",
+                f"{config_entry.unique_id}-daily",
+            ),
+            ECWeather(
+                weather_data,
+                f"{config_entry.title} Hourly",
+                config_entry.data,
+                "hourly",
+                f"{config_entry.unique_id}-hourly",
+            ),
+        ]
+    )
 
 
 class ECWeather(WeatherEntity):
     """Representation of a weather condition."""
 
-    def __init__(self, ec_data, config):
+    def __init__(self, ec_data, name, config, forecast_type, unique_id):
         """Initialize Environment Canada weather."""
         self.ec_data = ec_data
-        self.platform_name = config.get(CONF_NAME)
-        self.forecast_type = config[CONF_FORECAST]
+        self.config = config
+        self._attr_name = name
+        self._attr_unique_id = unique_id
+        self.forecast_type = forecast_type
 
     @property
     def attribution(self):
@@ -99,18 +121,13 @@ class ECWeather(WeatherEntity):
         return CONF_ATTRIBUTION
 
     @property
-    def name(self):
-        """Return the name of the weather entity."""
-        if self.platform_name:
-            return self.platform_name
-        return self.ec_data.metadata.get("location")
-
-    @property
     def temperature(self):
         """Return the temperature."""
         if self.ec_data.conditions.get("temperature", {}).get("value"):
             return float(self.ec_data.conditions["temperature"]["value"])
-        if self.ec_data.hourly_forecasts[0].get("temperature"):
+        if self.ec_data.hourly_forecasts and self.ec_data.hourly_forecasts[0].get(
+            "temperature"
+        ):
             return float(self.ec_data.hourly_forecasts[0]["temperature"])
         return None
 
@@ -161,7 +178,9 @@ class ECWeather(WeatherEntity):
 
         if self.ec_data.conditions.get("icon_code", {}).get("value"):
             icon_code = self.ec_data.conditions["icon_code"]["value"]
-        elif self.ec_data.hourly_forecasts[0].get("icon_code"):
+        elif self.ec_data.hourly_forecasts and self.ec_data.hourly_forecasts[0].get(
+            "icon_code"
+        ):
             icon_code = self.ec_data.hourly_forecasts[0]["icon_code"]
 
         if icon_code:
@@ -184,6 +203,8 @@ def get_forecast(ec_data, forecast_type):
 
     if forecast_type == "daily":
         half_days = ec_data.daily_forecasts
+        if not half_days:
+            return None
 
         today = {
             ATTR_FORECAST_TIME: dt.now().isoformat(),

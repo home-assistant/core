@@ -151,13 +151,12 @@ homeassistant/components/enigma2/* @fbradyirl
 homeassistant/components/enocean/* @bdurrer
 homeassistant/components/enphase_envoy/* @gtdiehl
 homeassistant/components/entur_public_transport/* @hfurubotten
-homeassistant/components/environment_canada/* @michaeldavie
+homeassistant/components/environment_canada/* @gwww @michaeldavie
 homeassistant/components/ephember/* @ttroy50
 homeassistant/components/epson/* @pszafer
 homeassistant/components/epsonworkforce/* @ThaStealth
 homeassistant/components/eq3btsmart/* @rytilahti
 homeassistant/components/esphome/* @OttoWinter @jesserockz
-homeassistant/components/essent/* @TheLastProject
 homeassistant/components/evohome/* @zxdavb
 homeassistant/components/ezviz/* @RenierM26 @baqs
 homeassistant/components/faa_delays/* @ntilley905
@@ -424,6 +423,7 @@ homeassistant/components/rainforest_eagle/* @gtdiehl @jcalbert
 homeassistant/components/rainmachine/* @bachya
 homeassistant/components/random/* @fabaff
 homeassistant/components/recollect_waste/* @bachya
+homeassistant/components/recorder/* @home-assistant/core
 homeassistant/components/rejseplanen/* @DarkFox
 homeassistant/components/renault/* @epenet
 homeassistant/components/repetier/* @MTrab
@@ -498,7 +498,7 @@ homeassistant/components/srp_energy/* @briglx
 homeassistant/components/starline/* @anonym-tsk
 homeassistant/components/statistics/* @fabaff
 homeassistant/components/stiebel_eltron/* @fucm
-homeassistant/components/stookalert/* @fwestenberg
+homeassistant/components/stookalert/* @fwestenberg @frenck
 homeassistant/components/stream/* @hunterjm @uvjustin @allenporter
 homeassistant/components/stt/* @pvizeli
 homeassistant/components/subaru/* @G-Two
@@ -545,7 +545,7 @@ homeassistant/components/trafikverket_train/* @endor-force
 homeassistant/components/trafikverket_weatherstation/* @endor-force
 homeassistant/components/transmission/* @engrbm87 @JPHutchins
 homeassistant/components/tts/* @pvizeli
-homeassistant/components/tuya/* @Tuya
+homeassistant/components/tuya/* @Tuya @zlinoliver @METISU
 homeassistant/components/twentemilieu/* @frenck
 homeassistant/components/twinkly/* @dr1rrb
 homeassistant/components/ubus/* @noltari
