@@ -1,6 +1,9 @@
 """Tuya Home Assistant Base Device Model."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+import json
+import logging
 from typing import Any
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
@@ -9,6 +12,36 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN, TUYA_HA_SIGNAL_UPDATE_ENTITY
+
+_LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class IntegerTypeData:
+    """Integer Type Data."""
+
+    min: int
+    max: int
+    unit: str
+    scale: float
+    step: float
+
+    @staticmethod
+    def from_json(data: str) -> IntegerTypeData:
+        """Load JSON string and return a IntegerTypeData object."""
+        return IntegerTypeData(**json.loads(data))
+
+
+@dataclass
+class EnumTypeData:
+    """Enum Type Data."""
+
+    range: list[str]
+
+    @staticmethod
+    def from_json(data: str) -> EnumTypeData:
+        """Load JSON string and return a EnumTypeData object."""
+        return EnumTypeData(**json.loads(data))
 
 
 class TuyaHaEntity(Entity):
@@ -54,4 +87,12 @@ class TuyaHaEntity(Entity):
 
     def _send_command(self, commands: list[dict[str, Any]]) -> None:
         """Send command to the device."""
+        _LOGGER.debug(
+            "Sending commands for device %s: %s", self.tuya_device.id, commands
+        )
         self.tuya_device_manager.send_commands(self.tuya_device.id, commands)
+
+    @staticmethod
+    def scale(value: float | int, scale: float | int) -> float:
+        """Scale a value."""
+        return value * 1.0 / (10 ** scale)

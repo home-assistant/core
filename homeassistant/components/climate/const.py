@@ -70,6 +70,7 @@ FAN_DIFFUSE = "diffuse"
 
 
 # Possible swing state
+SWING_ON = "on"
 SWING_OFF = "off"
 SWING_BOTH = "both"
 SWING_VERTICAL = "vertical"
