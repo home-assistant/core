@@ -288,6 +288,16 @@ async def test_linking_user_to_two_auth_providers(hass, hass_storage):
     await manager.async_link_user(user, new_credential)
     assert len(user.credentials) == 2
 
+    # Linking it again to same user is a no-op
+    await manager.async_link_user(user, new_credential)
+    assert len(user.credentials) == 2
+
+    # Linking a credential to a user while the credential is already linked to another user should raise
+    user_2 = await manager.async_create_user("User 2")
+    with pytest.raises(ValueError):
+        await manager.async_link_user(user_2, new_credential)
+    assert len(user_2.credentials) == 0
+
 
 async def test_saving_loading(hass, hass_storage):
     """Test storing and saving data.
