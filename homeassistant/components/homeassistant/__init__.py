@@ -61,7 +61,7 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
 
     async def async_handle_turn_service(service):
         """Handle calls to homeassistant.turn_on/off."""
-        referenced = await async_extract_referenced_entity_ids(hass, service)
+        referenced = async_extract_referenced_entity_ids(hass, service)
         all_referenced = referenced.referenced | referenced.indirectly_referenced
 
         # Generic turn on/off method requires entity id
