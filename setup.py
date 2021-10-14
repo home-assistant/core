@@ -48,7 +48,7 @@ REQUIRES = [
     "cryptography==3.4.8",
     "pip>=8.0.3,<20.3",
     "python-slugify==4.0.1",
-    "pyyaml==5.4.1",
+    "pyyaml==6.0",
     "requests==2.26.0",
     "voluptuous==0.12.2",
     "voluptuous-serialize==2.4.0",

@@ -25,7 +25,7 @@ pip>=8.0.3,<20.3
 pyserial==3.5
 python-slugify==4.0.1
 pyudev==0.22.0
-pyyaml==5.4.1
+pyyaml==6.0
 requests==2.26.0
 scapy==2.4.5
 sqlalchemy==1.4.23
