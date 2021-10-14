@@ -70,10 +70,10 @@ class LookinSensor(CoordinatorEntity, Entity):
         self._attr_native_value = getattr(self.coordinator.data, description.key)
         self._attr_unique_id = f"{lookin_device.id}-{description.key}"
 
-    def _handle_coordinator_update(self, data):
+    def _handle_coordinator_update(self):
         """Update the state of the entity."""
-        self._attr_native_value = getattr(data, self.entity_description.key)
-        super()._handle_coordinator_update(data)
+        self._attr_native_value = getattr(self.coordinator.data, self.entity_description.key)
+        super()._handle_coordinator_update()
 
     @property
     def device_info(self) -> DeviceInfo:
