@@ -20,6 +20,7 @@ class LookinEntity(Entity):
         """Init the base entity."""
         self._device = device
         self._uuid = uuid
+        self.coordinator = lookin_data.meteo_coordinator
         self._lookin_device = lookin_data.lookin_device
         self._lookin_protocol = lookin_data.lookin_protocol
         self._lookin_udp_subs = lookin_data.lookin_udp_subs
@@ -29,6 +30,11 @@ class LookinEntity(Entity):
     def name(self) -> str:
         """Return the name of the device."""
         return self._device.name
+
+    @property
+    def available(self) -> bool:
+        """Return true if the device is polling successfully."""
+        return self.coordinator.last_update_success
 
     @property
     def device_info(self) -> DeviceInfo:
