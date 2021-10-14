@@ -1,8 +1,6 @@
 """The lookin integration sensor platform."""
 from __future__ import annotations
 
-from aiolookin import Device
-
 from homeassistant.components.sensor import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
@@ -20,6 +18,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
+from .aiolookin import Device
 from .const import DOMAIN, LOOKIN_DEVICE, METEO_COORDINATOR
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
