@@ -5,6 +5,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     STATE_CLASS_MEASUREMENT,
+    SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -56,7 +57,7 @@ async def async_setup_entry(
     )
 
 
-class LookinSensorEntity(CoordinatorEntity, Entity):
+class LookinSensorEntity(CoordinatorEntity, SensorEntity, Entity):
     """A lookin device sensor entity."""
 
     _attr_should_poll = False
