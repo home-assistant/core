@@ -1,0 +1,13 @@
+{
+  "domain": "bluecurrent",
+  "name": "BlueCurrent",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/bluecurrent",
+  "requirements": ["bluecurrent-api==1.0.1"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@Floris272", "@gleeuwen"],
+  "iot_class": "cloud_push"
+}

@@ -1,0 +1,18 @@
+{
+    "state": {
+        "bluecurrent__activity": {
+            "available": "Beschikbaar",
+            "charging": "Aan het laden",
+            "error": "Error",
+            "offline": "Offline",
+            "unavailable": "Onbeschikbaar"
+        },
+        "bluecurrent__vehicle_status": {
+            "no_power": "Geen power",
+            "ready": "Ready",
+            "standby": "Standby",
+            "vehicle_detected": "Gedetecteerd",
+            "vehicle_error": "Error"
+        }
+    }
+}

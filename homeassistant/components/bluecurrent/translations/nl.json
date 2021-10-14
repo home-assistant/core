@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "limit_reached": "Request limiet bereikt",
+            "already_connected": "IP is al verbonden",
+            "invalid_token": "Ongeldig token",
+            "no_cards_found": "Geen laadpassen gevonden",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_token": "API Token"
+                },
+                "description": "Vul je Blue Current api token in",
+                "title": "Authenticatie"
+            }
+        }
+    }
+}
