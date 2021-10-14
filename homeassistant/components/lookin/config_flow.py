@@ -7,7 +7,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_IP_ADDRESS, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
@@ -15,7 +15,6 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 from .aiolookin import Device, DeviceNotFound, LookInHttpProtocol, NoUsableService
 from .const import DOMAIN
 
-ADD_NEW_DEVICE_SCHEMA = vol.Schema({vol.Required(CONF_IP_ADDRESS): str})
 LOGGER = logging.getLogger(__name__)
 
 
@@ -26,28 +25,24 @@ class LookinFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Init the lookin flow."""
         self._host: str | None = None
         self._name: str | None = None
-        self._device_id: str | None = None
 
     async def async_step_zeroconf(
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Start a discovery flow from zeroconf."""
         uid: str = discovery_info["hostname"][: -len(".local.")]
-        self._host = discovery_info["host"]
+        host: str = discovery_info["host"]
+        self._host = host
 
         if not uid:
             return self.async_abort(reason="no_uid")
 
         await self.async_set_unique_id(uid.upper())
-        self._abort_if_unique_id_configured(
-            updates={
-                CONF_HOST: self._host,
-            }
-        )
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         assert self._host is not None
         try:
-            device: Device = await self._validate_device(host=self._host)
+            device: Device = await self._validate_device(host=host)
         except (DeviceNotFound, NoUsableService):
             return self.async_abort(reason="cannot_connect")
         except Exception:  # pylint: disable=broad-except
@@ -78,26 +73,21 @@ class LookinFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 self._name = device.name
                 self._host = host
-                self._device_id = device.id
-                await self.async_set_unique_id(
-                    device.id.upper(), raise_on_progress=False
-                )
-                self._abort_if_unique_id_configured(
-                    updates={
-                        CONF_HOST: self._host,
-                    }
-                )
+                device_id = device.id.upper()
+                await self.async_set_unique_id(device_id, raise_on_progress=False)
+                self._abort_if_unique_id_configured(updates={CONF_HOST: host})
                 return await self.async_step_discovery_confirm()
 
         return self.async_show_form(
-            step_id="user", data_schema=ADD_NEW_DEVICE_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=vol.Schema({vol.Required(CONF_IP_ADDRESS): str}),
+            errors=errors,
         )
 
     async def _validate_device(self, host: str) -> Device:
         """Validate we can connect to the device."""
-        lookin_protocol = LookInHttpProtocol(
-            host=host, session=async_get_clientsession(self.hass)
-        )
+        session = async_get_clientsession(self.hass)
+        lookin_protocol = LookInHttpProtocol(host, session)
         return await lookin_protocol.get_info()
 
     async def async_step_discovery_confirm(
@@ -118,8 +108,6 @@ class LookinFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=self._name,
             data={
-                CONF_NAME: self._name,
                 CONF_HOST: self._host,
-                CONF_DEVICE_ID: self._device_id,
             },
         )
