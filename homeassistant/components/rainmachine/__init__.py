@@ -323,6 +323,7 @@ class RainMachineEntity(CoordinatorEntity):
 
     def __init__(
         self,
+        entry: ConfigEntry,
         coordinator: DataUpdateCoordinator,
         controller: Controller,
         description: EntityDescription,
@@ -332,6 +333,7 @@ class RainMachineEntity(CoordinatorEntity):
 
         self._attr_device_info = {
             "identifiers": {(DOMAIN, controller.mac)},
+            "configuration_url": f"https://{entry.data[CONF_IP_ADDRESS]}:{entry.data[CONF_PORT]}",
             "connections": {(dr.CONNECTION_NETWORK_MAC, controller.mac)},
             "name": str(controller.name),
             "manufacturer": "RainMachine",
@@ -347,6 +349,7 @@ class RainMachineEntity(CoordinatorEntity):
         # a breaking change:
         self._attr_unique_id = f"{controller.mac.replace(':', '')}_{description.key}"
         self._controller = controller
+        self._entry = entry
         self.entity_description = description
 
     @callback
