@@ -1213,3 +1213,23 @@ async def help_test_entity_disabled_by_default(hass, mqtt_mock, domain, config):
     assert not ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique1")
     assert not ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique2")
     assert not dev_registry.async_get_device({("mqtt", "helloworld")})
+
+
+async def help_test_entity_category(hass, mqtt_mock, domain, config):
+    """Test device registry remove."""
+    # Add device settings to config
+    config = copy.deepcopy(config[domain])
+    config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
+    config["entity_category"] = "config"
+    config["unique_id"] = "veryunique1"
+
+    ent_registry = er.async_get(hass)
+
+    # Discover an entity with entity category set to "config"
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla1/config", data)
+    await hass.async_block_till_done()
+    entity_id = ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique1")
+    assert hass.states.get(entity_id)
+    entry = ent_registry.async_get(entity_id)
+    assert entry.entity_category == "config"

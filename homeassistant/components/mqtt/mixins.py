@@ -8,14 +8,20 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICE, CONF_ICON, CONF_NAME, CONF_UNIQUE_ID
+from homeassistant.const import (
+    CONF_DEVICE,
+    CONF_ENTITY_CATEGORY,
+    CONF_ICON,
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA, Entity
 from homeassistant.helpers.typing import ConfigType
 
 from . import DATA_MQTT, debug_info, publish, subscription
@@ -75,6 +81,7 @@ MQTT_ATTRIBUTES_BLOCKED = {
     "context_recent_time",
     "device_class",
     "device_info",
+    "entity_category",
     "entity_picture",
     "entity_registry_enabled_default",
     "extra_state_attributes",
@@ -163,6 +170,7 @@ MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
         vol.Optional(CONF_ENABLED_BY_DEFAULT, default=True): cv.boolean,
+        vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
         vol.Optional(CONF_ICON): cv.icon,
         vol.Optional(CONF_JSON_ATTRS_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_JSON_ATTRS_TEMPLATE): cv.template,
@@ -624,6 +632,11 @@ class MqttEntity(
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._config[CONF_ENABLED_BY_DEFAULT]
+
+    @property
+    def entity_category(self) -> str | None:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._config.get(CONF_ENTITY_CATEGORY)
 
     @property
     def icon(self):
