@@ -25,8 +25,7 @@
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "no_uid": "LOOKin instance does not have a unique id. You can configure the integration manually."
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
     }
   }
 }
