@@ -1,6 +1,7 @@
 """The lookin integration climate platform."""
 from __future__ import annotations
 
+import logging
 from typing import Any, Final, cast
 
 from homeassistant.components.climate import ClimateEntity
@@ -23,7 +24,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .aiolookin import Climate
@@ -54,6 +55,7 @@ STATE_TO_SWING_MODE: dict[str, int] = {SWING_OFF: 0, SWING_BOTH: 1}
 MIN_TEMP: Final = 16
 MAX_TEMP: Final = 30
 TEMP_OFFSET: Final = 16
+LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -186,3 +188,19 @@ class ConditionerEntity(LookinEntity, ClimateEntity):
             f"{self._climate.fan_mode}"
             f"{self._climate.swing_mode}"
         )
+
+    @callback
+    def _async_push_update(self, msg):
+        """Process an update pushed via UDP."""
+        if msg["sensor_id"] == "87":
+            LOGGER.debug("Saw IR signal message: %s, triggering update", msg)
+            self.hass.async_create_task(self.async_update())
+
+    async def async_added_to_hass(self) -> None:
+        """Called when the entity is added to hass."""
+        self.async_on_remove(
+            self._lookin_udp_subs.subscribe(
+                self._lookin_device.id, self._async_push_update
+            )
+        )
+        return await super().async_added_to_hass()

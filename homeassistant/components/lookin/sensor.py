@@ -87,9 +87,7 @@ class LookinSensorEntity(CoordinatorEntity, SensorEntity, Entity):
     @callback
     def _async_push_update(self, msg):
         """Process an update pushed via UDP."""
-        import pprint
-
-        pprint.pprint([self, msg])
+        # Process the temp/humidity here
 
     async def async_added_to_hass(self) -> None:
         """Called when the entity is added to hass."""
