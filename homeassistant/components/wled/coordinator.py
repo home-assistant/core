@@ -48,11 +48,6 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         )
 
     @property
-    def host(self) -> str:
-        """Return the WLED host."""
-        return self.config_entry.data[CONF_HOST]
-
-    @property
     def has_master_light(self) -> bool:
         """Return if the coordinated device has an master light."""
         return self.keep_master_light or (
