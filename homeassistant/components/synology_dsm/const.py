@@ -26,6 +26,8 @@ from homeassistant.const import (
     DATA_TERABYTES,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
+    ENTITY_CATEGORY_CONFIG,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -108,6 +110,7 @@ UPGRADE_BINARY_SENSORS: tuple[SynologyDSMBinarySensorEntityDescription, ...] = (
         key="update_available",
         name="Update available",
         device_class=DEVICE_CLASS_UPDATE,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 )
 
@@ -126,12 +129,14 @@ STORAGE_DISK_BINARY_SENSORS: tuple[SynologyDSMBinarySensorEntityDescription, ...
         key="disk_exceed_bad_sector_thr",
         name="Exceeded Max Bad Sectors",
         device_class=DEVICE_CLASS_SAFETY,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SynologyDSMBinarySensorEntityDescription(
         api_key=SynoStorage.API_KEY,
         key="disk_below_remain_life_thr",
         name="Below Min Remaining Life",
         device_class=DEVICE_CLASS_SAFETY,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 )
 
@@ -305,6 +310,7 @@ STORAGE_VOL_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         name="Average Disk Temp",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoStorage.API_KEY,
@@ -313,6 +319,7 @@ STORAGE_VOL_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
         entity_registry_enabled_default=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 )
 STORAGE_DISK_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
@@ -322,12 +329,14 @@ STORAGE_DISK_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         name="Status (Smart)",
         icon="mdi:checkbox-marked-circle-outline",
         entity_registry_enabled_default=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoStorage.API_KEY,
         key="disk_status",
         name="Status",
         icon="mdi:checkbox-marked-circle-outline",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoStorage.API_KEY,
@@ -336,6 +345,7 @@ STORAGE_DISK_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 )
 
@@ -347,6 +357,7 @@ INFORMATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoDSMInformation.API_KEY,
@@ -354,6 +365,7 @@ INFORMATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         name="last boot",
         device_class=DEVICE_CLASS_TIMESTAMP,
         entity_registry_enabled_default=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 )
 
@@ -364,5 +376,6 @@ SURVEILLANCE_SWITCH: tuple[SynologyDSMSwitchEntityDescription, ...] = (
         key="home_mode",
         name="home mode",
         icon="mdi:home-account",
+        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
 )
