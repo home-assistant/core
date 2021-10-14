@@ -516,6 +516,7 @@ VACUUM_SENSORS = {
         parent_key=VacuumCoordinatorDataAttributes.consumable_status,
         name="Sensor Dirty Left",
         entity_registry_enabled_default=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 }
 
