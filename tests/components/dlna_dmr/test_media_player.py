@@ -8,6 +8,7 @@ from types import MappingProxyType
 from typing import Any
 from unittest.mock import ANY, DEFAULT, Mock, patch
 
+from async_upnp_client import UpnpService, UpnpStateVariable
 from async_upnp_client.exceptions import UpnpConnectionError, UpnpError
 from async_upnp_client.profiles.dlna import PlayMode, TransportState
 import pytest
@@ -341,9 +342,7 @@ async def test_setup_entry_with_options(
 
 
 async def test_event_subscribe_failure(
-    hass: HomeAssistant,
-    config_entry_mock: MockConfigEntry,
-    dmr_device_mock: Mock,
+    hass: HomeAssistant, config_entry_mock: MockConfigEntry, dmr_device_mock: Mock
 ) -> None:
     """Test _device_connect aborts when async_subscribe_services fails."""
     dmr_device_mock.async_subscribe_services.side_effect = UpnpError
@@ -368,9 +367,7 @@ async def test_event_subscribe_failure(
 
 
 async def test_available_device(
-    hass: HomeAssistant,
-    dmr_device_mock: Mock,
-    mock_entity_id: str,
+    hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
 ) -> None:
     """Test a DlnaDmrEntity with a connected DmrDevice."""
     # Check hass device information is filled in
@@ -408,19 +405,63 @@ async def test_available_device(
     assert entity_state is not None
     assert entity_state.state == ha_const.STATE_UNAVAILABLE
 
-    dmr_device_mock.profile_device.available = True
-    await async_update_entity(hass, mock_entity_id)
 
+async def test_feature_flags(
+    hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
+) -> None:
+    """Test feature flags of a connected DlnaDmrEntity."""
+    # Check supported feature flags, one at a time.
+    FEATURE_FLAGS: list[tuple[str, int]] = [
+        ("has_volume_level", mp_const.SUPPORT_VOLUME_SET),
+        ("has_volume_mute", mp_const.SUPPORT_VOLUME_MUTE),
+        ("can_play", mp_const.SUPPORT_PLAY),
+        ("can_pause", mp_const.SUPPORT_PAUSE),
+        ("can_stop", mp_const.SUPPORT_STOP),
+        ("can_previous", mp_const.SUPPORT_PREVIOUS_TRACK),
+        ("can_next", mp_const.SUPPORT_NEXT_TRACK),
+        ("has_play_media", mp_const.SUPPORT_PLAY_MEDIA),
+        ("can_seek_rel_time", mp_const.SUPPORT_SEEK),
+        ("has_presets", mp_const.SUPPORT_SELECT_SOUND_MODE),
+    ]
+
+    # Clear all feature properties
+    dmr_device_mock.valid_play_modes = set()
+    for feat_prop, _ in FEATURE_FLAGS:
+        setattr(dmr_device_mock, feat_prop, False)
+    attrs = await get_attrs(hass, mock_entity_id)
+    assert attrs[ha_const.ATTR_SUPPORTED_FEATURES] == 0
+
+    # Test the properties cumulatively
+    expected_features = 0
+    for feat_prop, flag in FEATURE_FLAGS:
+        setattr(dmr_device_mock, feat_prop, True)
+        expected_features |= flag
+        attrs = await get_attrs(hass, mock_entity_id)
+        assert attrs[ha_const.ATTR_SUPPORTED_FEATURES] == expected_features
+
+    # shuffle and repeat features depend on the available play modes
+    PLAY_MODE_FEATURE_FLAGS: list[tuple[PlayMode, int]] = [
+        (PlayMode.NORMAL, 0),
+        (PlayMode.SHUFFLE, mp_const.SUPPORT_SHUFFLE_SET),
+        (PlayMode.REPEAT_ONE, mp_const.SUPPORT_REPEAT_SET),
+        (PlayMode.REPEAT_ALL, mp_const.SUPPORT_REPEAT_SET),
+        (PlayMode.RANDOM, mp_const.SUPPORT_SHUFFLE_SET),
+        (PlayMode.DIRECT_1, 0),
+        (PlayMode.INTRO, 0),
+        (PlayMode.VENDOR_DEFINED, 0),
+    ]
+    for play_modes, flag in PLAY_MODE_FEATURE_FLAGS:
+        dmr_device_mock.valid_play_modes = {play_modes}
+        attrs = await get_attrs(hass, mock_entity_id)
+        assert attrs[ha_const.ATTR_SUPPORTED_FEATURES] == expected_features | flag
+
+
+async def test_attributes(
+    hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
+) -> None:
+    """Test attributes of a connected DlnaDmrEntity."""
     # Check attributes come directly from the device
-    async def get_attrs() -> Mapping[str, Any]:
-        await async_update_entity(hass, mock_entity_id)
-        entity_state = hass.states.get(mock_entity_id)
-        assert entity_state is not None
-        attrs = entity_state.attributes
-        assert attrs is not None
-        return attrs
-
-    attrs = await get_attrs()
+    attrs = await get_attrs(hass, mock_entity_id)
     assert attrs[mp_const.ATTR_MEDIA_VOLUME_LEVEL] is dmr_device_mock.volume_level
     assert attrs[mp_const.ATTR_MEDIA_VOLUME_MUTED] is dmr_device_mock.is_volume_muted
     assert attrs[mp_const.ATTR_MEDIA_DURATION] is dmr_device_mock.media_duration
@@ -492,41 +533,11 @@ async def test_available_device(
         assert mp_const.ATTR_MEDIA_SHUFFLE not in attrs
         assert mp_const.ATTR_MEDIA_REPEAT not in attrs
 
-    # Check supported feature flags, one at a time.
-    # tuple(async_upnp_client feature check property, HA feature flag)
-    FEATURE_FLAGS: list[tuple[str, int]] = [
-        ("has_volume_level", mp_const.SUPPORT_VOLUME_SET),
-        ("has_volume_mute", mp_const.SUPPORT_VOLUME_MUTE),
-        ("can_play", mp_const.SUPPORT_PLAY),
-        ("can_pause", mp_const.SUPPORT_PAUSE),
-        ("can_stop", mp_const.SUPPORT_STOP),
-        ("can_previous", mp_const.SUPPORT_PREVIOUS_TRACK),
-        ("can_next", mp_const.SUPPORT_NEXT_TRACK),
-        ("has_play_media", mp_const.SUPPORT_PLAY_MEDIA),
-        ("can_seek_rel_time", mp_const.SUPPORT_SEEK),
-        ("has_play_mode", mp_const.SUPPORT_SHUFFLE_SET | mp_const.SUPPORT_REPEAT_SET),
-        ("has_presets", mp_const.SUPPORT_SELECT_SOUND_MODE),
-    ]
-    # Clear all feature properties
-    for feat_prop, _ in FEATURE_FLAGS:
-        setattr(dmr_device_mock, feat_prop, False)
-    await async_update_entity(hass, mock_entity_id)
-    entity_state = hass.states.get(mock_entity_id)
-    assert entity_state is not None
-    assert entity_state.attributes[ha_const.ATTR_SUPPORTED_FEATURES] == 0
-    # Test the properties cumulatively
-    expected_features = 0
-    for feat_prop, flag in FEATURE_FLAGS:
-        setattr(dmr_device_mock, feat_prop, True)
-        expected_features |= flag
-        await async_update_entity(hass, mock_entity_id)
-        entity_state = hass.states.get(mock_entity_id)
-        assert entity_state is not None
-        assert (
-            entity_state.attributes[ha_const.ATTR_SUPPORTED_FEATURES]
-            == expected_features
-        )
 
+async def test_services(
+    hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
+) -> None:
+    """Test service calls of a connected DlnaDmrEntity."""
     # Check interface methods interact directly with the device
     await hass.services.async_call(
         MP_DOMAIN,
@@ -585,6 +596,11 @@ async def test_available_device(
     )
     dmr_device_mock.async_seek_rel_time.assert_awaited_once_with(timedelta(seconds=33))
 
+
+async def test_play_media_service(
+    hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
+) -> None:
+    """Test play_media service call."""
     # play_media performs a few calls to the device for setup and play
     # Start from stopped, and device can stop too
     dmr_device_mock.can_stop = True
@@ -644,6 +660,11 @@ async def test_available_device(
     )
     dmr_device_mock.async_select_preset.assert_awaited_once_with("Default")
 
+
+async def test_shuffle_repeat_modes(
+    hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
+) -> None:
+    """Test setting repeat and shuffle modes."""
     # Test shuffle with all variations of existing play mode
     dmr_device_mock.valid_play_modes = {mode.value for mode in PlayMode}
     for init_mode, shuffle_set, expect_mode in [
@@ -722,6 +743,41 @@ async def test_available_device(
         blocking=True,
     )
     dmr_device_mock.async_set_play_mode.assert_not_awaited()
+
+
+async def test_playback_update_state(
+    hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
+) -> None:
+    """Test starting or pausing playback causes the state to be refreshed.
+
+    This is necessary for responsive updates of the current track position and
+    total track time.
+    """
+    on_event = dmr_device_mock.on_event
+    mock_service = Mock(UpnpService)
+    mock_service.service_id = "urn:upnp-org:serviceId:AVTransport"
+    mock_state_variable = Mock(UpnpStateVariable)
+    mock_state_variable.name = "TransportState"
+
+    # Event update that device has started playing, device should get polled
+    mock_state_variable.value = TransportState.PLAYING
+    on_event(mock_service, [mock_state_variable])
+    await hass.async_block_till_done()
+    dmr_device_mock.async_update.assert_awaited_once_with(do_ping=False)
+
+    # Event update that device has paused playing, device should get polled
+    dmr_device_mock.async_update.reset_mock()
+    mock_state_variable.value = TransportState.PAUSED_PLAYBACK
+    on_event(mock_service, [mock_state_variable])
+    await hass.async_block_till_done()
+    dmr_device_mock.async_update.assert_awaited_once_with(do_ping=False)
+
+    # Different service shouldn't do anything
+    dmr_device_mock.async_update.reset_mock()
+    mock_service.service_id = "urn:upnp-org:serviceId:RenderingControl"
+    on_event(mock_service, [mock_state_variable])
+    await hass.async_block_till_done()
+    dmr_device_mock.async_update.assert_not_awaited()
 
 
 async def test_unavailable_device(
@@ -1438,7 +1494,8 @@ async def test_resubscribe_failure(
     dmr_device_mock.async_update.reset_mock()
 
     on_event = dmr_device_mock.on_event
-    on_event(None, [])
+    mock_service = Mock(UpnpService)
+    on_event(mock_service, [])
     await hass.async_block_till_done()
 
     await async_update_entity(hass, mock_entity_id)
