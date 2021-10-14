@@ -5,6 +5,7 @@ from typing import Any, cast
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -29,6 +30,7 @@ async def async_setup_entry(
 ) -> None:
     """Add Brother entities from a config_entry."""
     coordinator = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id]
+    host = dict(entry.data)[CONF_HOST]
 
     sensors = []
 
@@ -38,6 +40,7 @@ async def async_setup_entry(
         "manufacturer": ATTR_MANUFACTURER,
         "model": coordinator.data.model,
         "sw_version": getattr(coordinator.data, "firmware", None),
+        "configuration_url": f"http://{host}/",
     }
 
     for description in SENSOR_TYPES:
