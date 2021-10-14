@@ -8,7 +8,7 @@ from .const import CODE_TO_NAME
 
 __all__ = ("Device", "MeteoSensor", "Climate", "Remote")
 
-STATUS_UNKNOWN = "0000"
+STATUS_OFF = "0000"
 
 
 @dataclass
@@ -111,7 +111,14 @@ class Climate(Remote):
 
     def __post_init__(self, _data: dict[str, Any]) -> None:
         self.extra = _data["Extra"]
-        status = _data.get("Status", _data.get("LastStatus", STATUS_UNKNOWN))
+        if "Status" in _data:
+            status = _data["Status"]
+        if "LastStatus" in _data:
+            # Device is off, but we still
+            # want to keep the temp/fan/swing settings
+            status = f"0{_data['LastStatus'][1:]}"
+        else:
+            status = STATUS_OFF
         self.update_from_status(status)
         super().__post_init__(_data)
 
