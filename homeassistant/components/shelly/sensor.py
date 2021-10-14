@@ -54,6 +54,7 @@ SENSORS: Final = {
         device_class=sensor.DEVICE_CLASS_TEMPERATURE,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
         default_enabled=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     ("emeter", "current"): BlockAttributeDescription(
         name="Current",
@@ -364,11 +365,6 @@ class RestSensor(ShellyRestAttributeEntity, SensorEntity):
         """Return unit of sensor."""
         return self.description.unit
 
-    @property
-    def entity_category(self) -> str | None:
-        """Return category of entity."""
-        return self.description.entity_category
-
 
 class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
     """Represent a RPC sensor."""
@@ -387,11 +383,6 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
     def native_unit_of_measurement(self) -> str | None:
         """Return unit of sensor."""
         return self.description.unit
-
-    @property
-    def entity_category(self) -> str | None:
-        """Return category of entity."""
-        return self.description.entity_category
 
 
 class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
