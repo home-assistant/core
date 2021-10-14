@@ -47,7 +47,7 @@ async def async_setup_entry(
 
 
 class LookinVacuum(LookinPowerEntity, VacuumEntity):
-    _attr_should_poll = False
+
     _attr_supported_features = SUPPORT_FLAGS
     _attr_assumed_state = True
 
