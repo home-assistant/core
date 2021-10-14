@@ -1,6 +1,4 @@
 """Base classes for SmartTub entities."""
-import logging
-
 import smarttub
 
 from homeassistant.helpers.entity import DeviceInfo
@@ -11,8 +9,6 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import DOMAIN
 from .helpers import get_spa_name
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class SmartTubEntity(CoordinatorEntity):

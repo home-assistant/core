@@ -1,6 +1,5 @@
 """Test the motionEye camera web hooks."""
 import copy
-import logging
 from typing import Any
 from unittest.mock import AsyncMock, call, patch
 
@@ -49,9 +48,6 @@ from . import (
 )
 
 from tests.common import async_capture_events
-
-_LOGGER = logging.getLogger(__name__)
-
 
 WEB_HOOK_MOTION_DETECTED_QUERY_STRING = (
     "camera_id=%t&changed_pixels=%D&despeckle_labels=%Q&event=%v&fps=%{fps}"

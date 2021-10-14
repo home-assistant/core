@@ -21,8 +21,6 @@ TEST_MODBUS_HOST = "modbusHost"
 TEST_PORT_TCP = 5501
 TEST_PORT_SERIAL = "usb01"
 
-_LOGGER = logging.getLogger(__name__)
-
 
 @dataclass
 class ReadResult:
