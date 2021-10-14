@@ -60,6 +60,10 @@ class MeteoSensor:
         self.temperature = float(_data["Temperature"])
         self.updated = int(_data["Updated"])
 
+    def update_from_value(self, value: str) -> None:
+        self.temperature = float(int(value[:4], 16)) / 10
+        self.humidity = float(int(value[-4:], 16)) / 10
+
 
 @dataclass
 class Functions:
