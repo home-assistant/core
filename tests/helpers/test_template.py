@@ -250,7 +250,7 @@ def test_int_filter(hass):
     assert render(hass, "{{ states.sensor.temperature.state | int(base=16) }}") == 16
 
     assert render(hass, "{{ 'bad' | int }}") == 0
-    assert render(hass, "{{ 'bad' | int(1) }}") == 1
+    assert render(hass, "{{ 'bad' | int(10, 1) }}") == 1
     assert render(hass, "{{ 'bad' | int(default=1) }}") == 1
 
 
@@ -264,7 +264,7 @@ def test_int_function(hass):
     assert render(hass, "{{ int(states.sensor.temperature.state, base=16) }}") == 16
 
     assert render(hass, "{{ int('bad') }}") == "bad"
-    assert render(hass, "{{ int('bad', 1) }}") == 1
+    assert render(hass, "{{ int('bad', 10, 1) }}") == 1
     assert render(hass, "{{ int('bad', default=1) }}") == 1
 
 
