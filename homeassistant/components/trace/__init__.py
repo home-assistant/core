@@ -109,17 +109,17 @@ def _get_debug_traces(hass, key):
     return traces
 
 
-async def async_list_traces(hass, wanted_domain, key):
+async def async_list_traces(hass, wanted_domain, wanted_key):
     """List traces for a domain."""
     await async_restore_traces(hass)
-    if not key:
+    if not wanted_key:
         traces = []
         for key in hass.data[DATA_TRACE]:
             domain = key.split(".", 1)[0]
             if domain == wanted_domain:
                 traces.extend(_get_debug_traces(hass, key))
     else:
-        traces = _get_debug_traces(hass, key)
+        traces = _get_debug_traces(hass, wanted_key)
 
     return traces
 
