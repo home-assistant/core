@@ -472,12 +472,11 @@ class FibaroDevice(Entity):
     @property
     def current_power_w(self):
         """Return the current power usage in W."""
-        if "power" in self.fibaro_device.properties:
-            power = self.fibaro_device.properties.power
-            if power:
-                return convert(power, float, 0.0)
-        else:
-            return None
+        if "power" in self.fibaro_device.properties and (
+            power := self.fibaro_device.properties.power
+        ):
+            return convert(power, float, 0.0)
+        return None
 
     @property
     def current_binary_state(self):

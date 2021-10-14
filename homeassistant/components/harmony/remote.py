@@ -212,8 +212,7 @@ class HarmonyRemote(HarmonyEntity, remote.RemoteEntity, RestoreEntity):
             if self._last_activity:
                 activity = self._last_activity
             else:
-                all_activities = self._data.activity_names
-                if all_activities:
+                if all_activities := self._data.activity_names:
                     activity = all_activities[0]
 
         if activity:

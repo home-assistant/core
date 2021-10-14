@@ -307,8 +307,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         if (master_state == STATE_OFF) or (self._state_template is not None):
             return master_state
 
-        active_child = self._child_state
-        if active_child:
+        if active_child := self._child_state:
             return active_child.state
 
         return master_state if master_state else STATE_OFF

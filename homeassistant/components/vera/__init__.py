@@ -279,12 +279,10 @@ class VeraDevice(Generic[DeviceType], Entity):
             tripped = self.vera_device.is_tripped
             attr[ATTR_TRIPPED] = "True" if tripped else "False"
 
-        power = self.vera_device.power
-        if power:
+        if power := self.vera_device.power:
             attr[ATTR_CURRENT_POWER_W] = convert(power, float, 0.0)
 
-        energy = self.vera_device.energy
-        if energy:
+        if energy := self.vera_device.energy:
             attr[ATTR_CURRENT_ENERGY_KWH] = convert(energy, float, 0.0)
 
         attr["Vera Device Id"] = self.vera_device.vera_device_id

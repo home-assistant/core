@@ -375,9 +375,7 @@ class ArcamFmj(MediaPlayerEntity):
         if source is None:
             return None
 
-        channel = self.media_channel
-
-        if channel:
+        if channel := self.media_channel:
             value = f"{source.name} - {channel}"
         else:
             value = source.name

@@ -114,9 +114,9 @@ class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
     @property
     def current_power_w(self) -> float | None:
         """Return the current power usage in W."""
-        power = self.vera_device.power
-        if power:
+        if power := self.vera_device.power:
             return convert(power, float, 0.0)
+        return None
 
     @property
     def temperature_unit(self) -> str:

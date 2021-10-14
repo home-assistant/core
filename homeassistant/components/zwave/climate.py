@@ -248,8 +248,7 @@ class ZWaveClimateBase(ZWaveDeviceEntity, ClimateEntity):
             self._preset_list = []
             self._preset_mapping = {}
 
-            mode_list = self._mode().data_items
-            if mode_list:
+            if mode_list := self._mode().data_items:
                 for mode in mode_list:
                     ha_mode = HVAC_STATE_MAPPINGS.get(str(mode).lower())
                     ha_preset = PRESET_MAPPINGS.get(str(mode).lower())
@@ -342,8 +341,7 @@ class ZWaveClimateBase(ZWaveDeviceEntity, ClimateEntity):
         """Update fan mode."""
         if self.values.fan_mode:
             self._current_fan_mode = self.values.fan_mode.data
-            fan_modes = self.values.fan_mode.data_items
-            if fan_modes:
+            if fan_modes := self.values.fan_mode.data_items:
                 self._fan_modes = list(fan_modes)
 
         _LOGGER.debug("self._fan_modes=%s", self._fan_modes)
