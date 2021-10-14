@@ -809,3 +809,23 @@ async def test_attribution_attribute(hass):
 
     state = hass.states.get(mock_entity.entity_id)
     assert state.attributes.get(ATTR_ATTRIBUTION) == "Home Assistant"
+
+
+async def test_entity_category_property(hass):
+    """Test entity category property."""
+    mock_entity1 = entity.Entity()
+    mock_entity1.hass = hass
+    mock_entity1.entity_description = entity.EntityDescription(
+        key="abc", entity_category="ignore_me"
+    )
+    mock_entity1.entity_id = "hello.world"
+    mock_entity1._attr_entity_category = "config"
+    assert mock_entity1.entity_category == "config"
+
+    mock_entity2 = entity.Entity()
+    mock_entity2.hass = hass
+    mock_entity2.entity_description = entity.EntityDescription(
+        key="abc", entity_category="config"
+    )
+    mock_entity2.entity_id = "hello.world"
+    assert mock_entity2.entity_category == "config"

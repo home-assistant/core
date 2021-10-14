@@ -11,7 +11,7 @@ import logging
 import math
 import sys
 from timeit import default_timer as timer
-from typing import Any, TypedDict, final
+from typing import Any, Literal, TypedDict, final
 
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
@@ -180,6 +180,7 @@ class EntityDescription:
     key: str
 
     device_class: str | None = None
+    entity_category: Literal["config", "diagnostic"] | None = None
     entity_registry_enabled_default: bool = True
     force_update: bool = False
     icon: str | None = None
@@ -238,6 +239,7 @@ class Entity(ABC):
     _attr_context_recent_time: timedelta = timedelta(seconds=5)
     _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
+    _attr_entity_category: str | None
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
     _attr_extra_state_attributes: MutableMapping[str, Any]
@@ -403,6 +405,15 @@ class Entity(ABC):
     def attribution(self) -> str | None:
         """Return the attribution."""
         return self._attr_attribution
+
+    @property
+    def entity_category(self) -> str | None:
+        """Return the category of the entity, if any."""
+        if hasattr(self, "_attr_entity_category"):
+            return self._attr_entity_category
+        if hasattr(self, "entity_description"):
+            return self.entity_description.entity_category
+        return None
 
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
