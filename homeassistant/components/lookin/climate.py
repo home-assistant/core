@@ -62,7 +62,7 @@ MIN_TEMP: Final = 16
 MAX_TEMP: Final = 30
 TEMP_OFFSET: Final = 16
 LOGGER = logging.getLogger(__name__)
-REQUEST_REFRESH_DELAY = 1
+REQUEST_REFRESH_DELAY = 0.5
 
 
 async def async_setup_entry(
