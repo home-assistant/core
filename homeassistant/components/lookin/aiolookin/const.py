@@ -14,6 +14,7 @@ SEND_IR_COMMAND: Final = "http://{host}/commands/ir/localremote/{uuid}{command}{
 LOGGER = logging.getLogger(__name__)
 
 IR_SENSOR_ID = "87"
+METEO_SENSOR_ID = "FE"
 
 DEVICE_TO_CODE: Final = {
     "tv": "1",
