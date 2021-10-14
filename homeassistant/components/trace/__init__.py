@@ -204,31 +204,27 @@ class ActionTrace(BaseTrace):
 
     _domain: str | None = None
 
-    def __init__(self, item_id: str, context: Context) -> None:
+    def __init__(
+        self,
+        item_id: str,
+        config: dict[str, Any],
+        blueprint_inputs: dict[str, Any],
+        context: Context,
+    ) -> None:
         """Container for script trace."""
         self._trace: dict[str, deque[TraceElement]] | None = None
-        self._config: dict[str, Any] | None = None
-        self._blueprint_inputs: dict[str, Any] | None = None
+        self._config: dict[str, Any] = config
+        self._blueprint_inputs: dict[str, Any] = blueprint_inputs
         self.context: Context = context
         self._error: Exception | None = None
-        self._state: str = "stopped"
+        self._state: str = "running"
         self._script_execution: str | None = None
-        self.run_id: str = "unknown"
+        self.run_id: str = uuid_util.random_uuid_hex()
         self._timestamp_finish: dt.datetime | None = None
-        self._timestamp_start: dt.datetime | None = None
+        self._timestamp_start: dt.datetime = dt_util.utcnow()
         self.key = f"{self._domain}.{item_id}"
         self._dict: dict[str, Any] | None = None
         self._short_dict: dict[str, Any] | None = None
-
-    def set_basic_info(
-        self, config: dict[str, Any], blueprint_inputs: dict[str, Any]
-    ) -> None:
-        """Set basic information for tracing, not called for restored traces."""
-        self._config = config
-        self._blueprint_inputs = blueprint_inputs
-        self._state = "running"
-        self.run_id = uuid_util.random_uuid_hex()
-        self._timestamp_start = dt_util.utcnow()
         if trace_id_get():
             trace_set_child_id(self.key, self.run_id)
         trace_id_set((self.key, self.run_id))

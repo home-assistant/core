@@ -31,8 +31,7 @@ def trace_script(
     trace_config: dict[str, Any],
 ) -> Iterator[ScriptTrace]:
     """Trace execution of a script."""
-    trace = ScriptTrace(item_id, context)
-    trace.set_basic_info(config, blueprint_inputs)
+    trace = ScriptTrace(item_id, config, blueprint_inputs, context)
     async_store_trace(hass, trace, trace_config[CONF_STORED_TRACES])
 
     try:
