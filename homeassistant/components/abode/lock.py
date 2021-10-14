@@ -1,4 +1,6 @@
 """Support for the Abode Security System locks."""
+from typing import Any
+
 from abodepy.devices.lock import AbodeLock as AbodeLK
 import abodepy.helpers.constants as CONST
 
@@ -30,15 +32,15 @@ class AbodeLock(AbodeDevice, LockEntity):
 
     _device: AbodeLK
 
-    def lock(self, **kwargs) -> None:
+    def lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         self._device.lock()
 
-    def unlock(self, **kwargs) -> None:
+    def unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         self._device.unlock()
 
     @property
     def is_locked(self) -> bool:
         """Return true if device is on."""
-        return self._device.is_locked
+        return bool(self._device.is_locked)

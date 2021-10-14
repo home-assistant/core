@@ -1,4 +1,6 @@
 """Support for Abode Security System switches."""
+from typing import Any
+
 from abodepy.devices.switch import AbodeSwitch as AbodeSW
 import abodepy.helpers.constants as CONST
 
@@ -39,18 +41,18 @@ class AbodeSwitch(AbodeDevice, SwitchEntity):
 
     _device: AbodeSW
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
         self._device.switch_on()
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
         self._device.switch_off()
 
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
-        return self._device.is_on
+        return bool(self._device.is_on)
 
 
 class AbodeAutomationSwitch(AbodeAutomation, SwitchEntity):
@@ -65,12 +67,12 @@ class AbodeAutomationSwitch(AbodeAutomation, SwitchEntity):
         signal = f"abode_trigger_automation_{self.entity_id}"
         self.async_on_remove(async_dispatcher_connect(self.hass, signal, self.trigger))
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Enable the automation."""
         if self._automation.enable(True):
             self.schedule_update_ha_state()
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Disable the automation."""
         if self._automation.enable(False):
             self.schedule_update_ha_state()
@@ -82,4 +84,4 @@ class AbodeAutomationSwitch(AbodeAutomation, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return True if the automation is enabled."""
-        return self._automation.is_enabled
+        return bool(self._automation.is_enabled)

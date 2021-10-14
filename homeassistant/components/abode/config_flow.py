@@ -115,7 +115,9 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=self._username, data=config_data)
 
-    async def async_step_user(self, user_input: dict = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -130,7 +132,9 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self._async_abode_login(step_id="user")
 
-    async def async_step_mfa(self, user_input: dict = None) -> FlowResult:
+    async def async_step_mfa(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a multi-factor authentication (MFA) flow."""
         if user_input is None:
             return self.async_show_form(
@@ -147,7 +151,9 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(self, user_input: dict = None) -> FlowResult:
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle reauthorization flow."""
         if user_input is None:
             return self.async_show_form(

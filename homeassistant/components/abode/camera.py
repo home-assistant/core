@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 
 from abodepy.devices import AbodeDevice as AbodeDev
 from abodepy.devices.camera import AbodeCamera as AbodeCam
@@ -61,7 +62,7 @@ class AbodeCamera(AbodeDevice, Camera):
         signal = f"abode_camera_capture_{self.entity_id}"
         self.async_on_remove(async_dispatcher_connect(self.hass, signal, self.capture))
 
-    def capture(self) -> None:
+    def capture(self) -> Any:
         """Request a new image capture."""
         return self._device.capture()
 
@@ -103,7 +104,7 @@ class AbodeCamera(AbodeDevice, Camera):
         """Turn off camera."""
         self._device.privacy_mode(True)
 
-    def _capture_callback(self, capture) -> None:
+    def _capture_callback(self, capture: Any) -> None:
         """Update the image with the device then refresh device."""
         self._device.update_image_location(capture)
         self.get_image()
@@ -112,4 +113,4 @@ class AbodeCamera(AbodeDevice, Camera):
     @property
     def is_on(self) -> bool:
         """Return true if on."""
-        return self._device.is_on
+        return bool(self._device.is_on)

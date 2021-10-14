@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from math import ceil
+from typing import Any
 
 from abodepy.devices.light import AbodeLight as AbodeLT
 import abodepy.helpers.constants as CONST
@@ -46,7 +47,7 @@ class AbodeLight(AbodeDevice, LightEntity):
 
     _device: AbodeLT
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         if ATTR_COLOR_TEMP in kwargs and self._device.is_color_capable:
             self._device.set_color_temp(
@@ -66,14 +67,14 @@ class AbodeLight(AbodeDevice, LightEntity):
 
         self._device.switch_on()
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         self._device.switch_off()
 
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
-        return self._device.is_on
+        return bool(self._device.is_on)
 
     @property
     def brightness(self) -> int | None:
@@ -95,9 +96,10 @@ class AbodeLight(AbodeDevice, LightEntity):
     @property
     def hs_color(self) -> tuple[float, float] | None:
         """Return the color of the light."""
+        _hs = None
         if self._device.has_color:
-            return self._device.color
-        return None
+            _hs = self._device.color
+        return _hs
 
     @property
     def supported_features(self) -> int:

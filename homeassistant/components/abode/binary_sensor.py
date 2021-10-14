@@ -41,11 +41,11 @@ class AbodeBinarySensor(AbodeDevice, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return True if the binary sensor is on."""
-        return self._device.is_on
+        return bool(self._device.is_on)
 
     @property
     def device_class(self) -> str:
         """Return the class of the binary sensor."""
         if self._device.get_value("is_window") == "1":
             return DEVICE_CLASS_WINDOW
-        return self._device.generic_type
+        return str(self._device.generic_type)

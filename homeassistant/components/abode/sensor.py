@@ -84,9 +84,9 @@ class AbodeSensor(AbodeDevice, SensorEntity):
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
         if self.entity_description.key == CONST.TEMP_STATUS_KEY:
-            return self._device.temp
+            return str(self._device.temp)
         if self.entity_description.key == CONST.HUMI_STATUS_KEY:
-            return self._device.humidity
+            return str(self._device.humidity)
         if self.entity_description.key == CONST.LUX_STATUS_KEY:
-            return self._device.lux
+            return str(self._device.lux)
         return None
