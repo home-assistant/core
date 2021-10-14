@@ -21,6 +21,7 @@ from homeassistant.util.dt import as_utc
 
 from .const import DATA_ACCOUNT, DATA_COORDINATOR, DOMAIN
 
+ATTR_PICKUP_STATE = "pickup_state"
 ATTR_PICKUP_TYPES = "pickup_types"
 
 DEFAULT_ATTRIBUTION = "Pickup data provided by Ridwell"
@@ -61,11 +62,13 @@ class RidwellSensor(CoordinatorEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return entity specific state attributes."""
+        event = self.coordinator.data[self._account.account_id]
+
         attrs: dict[str, Any] = {
             ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION,
             ATTR_PICKUP_TYPES: {},
+            ATTR_PICKUP_STATE: event.state,
         }
-        event = self.coordinator.data[self._account.account_id]
 
         for pickup in event.pickups:
             if pickup.name not in attrs[ATTR_PICKUP_TYPES]:
