@@ -11,10 +11,12 @@ DEVICE_INFO_URL: Final = "http://{host}/data/{uuid}"
 UPDATE_CLIMATE_URL: Final = "http://{host}/commands/ir/ac/{extra}{status}"
 SEND_IR_COMMAND: Final = "http://{host}/commands/ir/localremote/{uuid}{command}{signal}"
 
+TEMP_OFFSET: Final = 16
+STATUS_OFF: Final = "0000"
+
+
 LOGGER = logging.getLogger(__name__)
 
-IR_SENSOR_ID = "87"
-METEO_SENSOR_ID = "FE"
 
 DEVICE_TO_CODE: Final = {
     "tv": "1",

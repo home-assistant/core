@@ -23,6 +23,7 @@ from homeassistant.components.climate.const import (
     SWING_BOTH,
     SWING_OFF,
 )
+from homeassistant.components.lookin.aiolookin.models import MeteoSensor
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
@@ -32,7 +33,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .aiolookin import IR_SENSOR_ID, Climate
+from .aiolookin import Climate, SensorID
 from .const import DOMAIN
 from .entity import LookinEntity
 from .models import LookinData
@@ -63,7 +64,6 @@ HASS_TO_LOOKIN_SWING_MODE: dict[str, int] = {
 
 MIN_TEMP: Final = 16
 MAX_TEMP: Final = 30
-TEMP_OFFSET: Final = 16
 LOGGER = logging.getLogger(__name__)
 
 
@@ -127,107 +127,75 @@ class ConditionerEntity(LookinEntity, CoordinatorEntity, ClimateEntity):
         coordinator: DataUpdateCoordinator,
     ) -> None:
         """Init the ConditionerEntity."""
-        super().__init__(uuid, device, lookin_data)
         CoordinatorEntity.__init__(self, coordinator)
+        super().__init__(uuid, device, lookin_data)
+        self._async_update_from_data()
 
     @property
     def _climate(self) -> Climate:
         return cast(Climate, self.coordinator.data)
-
-    @property
-    def current_temperature(self) -> int | None:
-        """Return the current temperature."""
-        return self._climate.temperature + TEMP_OFFSET
-
-    @property
-    def target_temperature(self) -> int | None:
-        """Return the temperature we try to reach."""
-        return self._climate.temperature + TEMP_OFFSET
-
-    @property
-    def fan_mode(self) -> str | None:
-        """Return the fan setting."""
-        return LOOKIN_FAN_MODE_IDX_TO_HASS[self._climate.fan_mode]
-
-    @property
-    def swing_mode(self) -> str | None:
-        """Return the swing setting."""
-        return LOOKIN_SWING_MODE_IDX_TO_HASS[self._climate.swing_mode]
-
-    @property
-    def hvac_mode(self) -> str:
-        """Return the current running hvac operation."""
-        return LOOKIN_HVAC_MODE_IDX_TO_HASS[self._climate.hvac_mode]
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set the hvac mode of the device."""
         if (mode := HASS_TO_LOOKIN_HVAC_MODE.get(hvac_mode)) is None:
             return
         self._climate.hvac_mode = mode
-        self.coordinator.async_set_updated_data(self._climate)
-        await self._lookin_protocol.update_conditioner(
-            extra=self._climate.extra, status=self._make_status()
-        )
+        await self._async_update_conditioner()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the temperature of the device."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
-        self._climate.temperature = int(temperature - TEMP_OFFSET)
-        self.coordinator.async_set_updated_data(self._climate)
-        await self._lookin_protocol.update_conditioner(
-            extra=self._climate.extra, status=self._make_status()
-        )
+        self._climate.temp_celsius = int(temperature)
+        await self._async_update_conditioner()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the fan mode of the device."""
         if (mode := HASS_TO_LOOKIN_FAN_MODE.get(fan_mode)) is None:
             return
         self._climate.fan_mode = mode
-        self.coordinator.async_set_updated_data(self._climate)
-        await self._lookin_protocol.update_conditioner(
-            extra=self._climate.extra, status=self._make_status()
-        )
+        await self._async_update_conditioner()
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set the swing mode of the device."""
         if (mode := HASS_TO_LOOKIN_SWING_MODE.get(swing_mode)) is None:
             return
         self._climate.swing_mode = mode
+        await self._async_update_conditioner()
+
+    async def _async_update_conditioner(self):
+        """Update the conditioner state from the climate data."""
         self.coordinator.async_set_updated_data(self._climate)
-        await self._lookin_protocol.update_conditioner(
-            extra=self._climate.extra, status=self._make_status()
-        )
+        await self._lookin_protocol.update_conditioner(climate=self._climate)
 
-    @staticmethod
-    def _int_to_hex(i: int) -> str:
-        return f"{i + TEMP_OFFSET:X}"[1]
+    def _async_update_from_data(self) -> None:
+        """Update attrs from data."""
+        meteo_data: MeteoSensor = self._meteo_coordinator.data
+        self._attr_current_temperature = meteo_data.temperature
+        self._attr_current_humidity = int(meteo_data.humidity)
+        self._attr_target_temperature = self._climate.temp_celsius
+        self._attr_fan_mode = LOOKIN_FAN_MODE_IDX_TO_HASS[self._climate.fan_mode]
+        self._attr_swing_mode = LOOKIN_SWING_MODE_IDX_TO_HASS[self._climate.swing_mode]
+        self._attr_hvac_mode = LOOKIN_HVAC_MODE_IDX_TO_HASS[self._climate.hvac_mode]
 
-    def _make_status(self) -> str:
-        return (
-            f"{self._climate.hvac_mode}"
-            f"{self._int_to_hex(self._climate.temperature)}"
-            f"{self._climate.fan_mode}"
-            f"{self._climate.swing_mode}"
-        )
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._async_update_from_data()
+        super()._handle_coordinator_update()
 
     @callback
     def _async_push_update(self, msg):
         """Process an update pushed via UDP."""
-        if msg["sensor_id"] != IR_SENSOR_ID:
-            return
-        ir_uuid = msg["value"][:4]
-        if ir_uuid != self._uuid:
-            return
         LOGGER.debug("Processing push message for %s: %s", self.entity_id, msg)
-        self._climate.update_from_status(msg["value"][-4:])
+        self._climate.update_from_status(msg["value"])
         self.coordinator.async_set_updated_data(self._climate)
 
     async def async_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
         self.async_on_remove(
-            self._lookin_udp_subs.subscribe(
-                self._lookin_device.id, self._async_push_update
+            self._lookin_udp_subs.subscribe_sensor(
+                self._lookin_device.id, SensorID.IR, self._uuid, self._async_push_update
             )
         )
         return await super().async_added_to_hass()

@@ -13,11 +13,11 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .aiolookin import METEO_SENSOR_ID, MeteoSensor
+from .aiolookin import MeteoSensor, SensorID
 from .const import DOMAIN
 from .models import LookinData
 
@@ -71,29 +71,25 @@ class LookinSensorEntity(CoordinatorEntity, SensorEntity, Entity):
         self._attr_name = f"{self._lookin_device.name} {description.name}"
         self._attr_native_value = getattr(self.coordinator.data, description.key)
         self._attr_unique_id = f"{self._lookin_device.id}-{description.key}"
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, self._lookin_device.id)},
+            "name": self._lookin_device.name,
+            "manufacturer": "LOOKin",
+            "model": "LOOKin 2",
+            "sw_version": self._lookin_device.firmware,
+        }
 
-    def _handle_coordinator_update(self):
+    def _handle_coordinator_update(self) -> None:
         """Update the state of the entity."""
         self._attr_native_value = getattr(
             self.coordinator.data, self.entity_description.key
         )
         super()._handle_coordinator_update()
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Device info for the onboard sensor."""
-        return {
-            "identifiers": {(DOMAIN, self._lookin_device.id)},
-            "name": self._lookin_device.name,
-            "manufacturer": "LOOK.in",
-            "model": "LOOK.in 2",
-            "sw_version": self._lookin_device.firmware,
-        }
-
     @callback
-    def _async_push_update(self, msg):
+    def _async_push_update(self, msg: dict[str, str]) -> None:
         """Process an update pushed via UDP."""
-        if msg["sensor_id"] != METEO_SENSOR_ID or int(msg["event_id"]):
+        if int(msg["event_id"]):
             return
         LOGGER.debug("Processing push message for meteo sensor: %s", msg)
         meteo: MeteoSensor = self.coordinator.data
@@ -103,8 +99,8 @@ class LookinSensorEntity(CoordinatorEntity, SensorEntity, Entity):
     async def async_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
         self.async_on_remove(
-            self._lookin_udp_subs.subscribe(
-                self._lookin_device.id, self._async_push_update
+            self._lookin_udp_subs.subscribe_sensor(
+                self._lookin_device.id, SensorID.Meteo, None, self._async_push_update
             )
         )
         return await super().async_added_to_hass()

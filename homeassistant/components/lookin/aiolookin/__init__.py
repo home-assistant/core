@@ -1,9 +1,14 @@
 """The Look.in api."""
 
-from .const import IR_SENSOR_ID, METEO_SENSOR_ID, POWER_CMD, POWER_OFF_CMD, POWER_ON_CMD
+from .const import POWER_CMD, POWER_OFF_CMD, POWER_ON_CMD
 from .error import NoUsableService
 from .models import Climate, Device, MeteoSensor, Remote
-from .protocol import LookInHttpProtocol, LookinUDPSubscriptions, start_lookin_udp
+from .protocol import (
+    LookInHttpProtocol,
+    LookinUDPSubscriptions,
+    SensorID,
+    start_lookin_udp,
+)
 
 __all__ = [
     "NoUsableService",
@@ -12,8 +17,7 @@ __all__ = [
     "Climate",
     "Remote",
     "LookInHttpProtocol",
-    "IR_SENSOR_ID",
-    "METEO_SENSOR_ID",
+    "SensorID",
     "POWER_CMD",
     "POWER_OFF_CMD",
     "POWER_ON_CMD",

@@ -2,13 +2,17 @@
 from __future__ import annotations
 
 from dataclasses import InitVar, dataclass, field
+from enum import Enum
 from typing import Any
 
-from .const import CODE_TO_NAME
+from .const import CODE_TO_NAME, STATUS_OFF, TEMP_OFFSET
 
 __all__ = ("Device", "MeteoSensor", "Climate", "Remote")
 
-STATUS_OFF = "0000"
+
+class SensorID(Enum):
+    IR = "87"
+    Meteo = "FE"
 
 
 @dataclass
@@ -113,7 +117,7 @@ class Climate(Remote):
         self.extra = _data["Extra"]
         if "Status" in _data:
             status = _data["Status"]
-        if "LastStatus" in _data:
+        elif "LastStatus" in _data:
             # Device is off, but we still want to keep the temp/fan/swing settings
             status = f"0{_data['LastStatus'][1:]}"
         else:
@@ -121,7 +125,32 @@ class Climate(Remote):
         self.update_from_status(status)
         super().__post_init__(_data)
 
+    @staticmethod
+    def _int_to_hex(i: int) -> str:
+        return f"{i + TEMP_OFFSET:X}"[1]
+
+    @property
+    def temp_celsius(self) -> int:
+        """Get the temperature in celsius."""
+        return self.temperature + TEMP_OFFSET
+
+    @temp_celsius.setter
+    def temp_celsius(self, value: int) -> None:
+        """Set the temperature in celsius."""
+        self.temperature = value + TEMP_OFFSET
+
+    @property
+    def to_status(self) -> str:
+        """Convert climate to status."""
+        return (
+            f"{self.hvac_mode}"
+            f"{self._int_to_hex(self.temperature)}"
+            f"{self.fan_mode}"
+            f"{self.swing_mode}"
+        )
+
     def update_from_status(self, status: str) -> None:
+        """Update climate state values from status."""
         if status == STATUS_OFF and (
             (hasattr(self, "temperature") and self.temperature)
             or (hasattr(self, "fan_mode") and self.fan_mode)
