@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from contextlib import contextmanager
-import logging
 from typing import Any
 
 from homeassistant.components.trace import ActionTrace, async_store_trace
@@ -11,8 +10,6 @@ from homeassistant.components.trace.const import CONF_STORED_TRACES
 from homeassistant.core import Context, HomeAssistant
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class ScriptTrace(ActionTrace):

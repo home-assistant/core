@@ -65,7 +65,7 @@ async def async_setup(hass, config):
                 }
             )
         except HomeAssistantError as exc:
-            _LOGGER.error("Error saving traces", exc_info=exc)
+            _LOGGER.error("Error storing traces", exc_info=exc)
 
     # Store traces when stopping hass
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_store_traces_at_stop)
@@ -75,13 +75,17 @@ async def async_setup(hass, config):
 
 async def async_get_trace(hass, key, run_id):
     """Return the requested trace."""
+    # Restore saved traces if not done
     await async_restore_traces(hass)
+
     return hass.data[DATA_TRACE][key][run_id].as_extended_dict()
 
 
 async def async_list_contexts(hass, key):
     """List contexts for which we have traces."""
+    # Restore saved traces if not done
     await async_restore_traces(hass)
+
     if key is not None:
         values = {key: hass.data[DATA_TRACE].get(key, {})}
     else:
@@ -111,7 +115,9 @@ def _get_debug_traces(hass, key):
 
 async def async_list_traces(hass, wanted_domain, wanted_key):
     """List traces for a domain."""
+    # Restore saved traces if not done already
     await async_restore_traces(hass)
+
     if not wanted_key:
         traces = []
         for key in hass.data[DATA_TRACE]:
@@ -137,7 +143,7 @@ def async_store_trace(hass, trace, stored_traces):
 
 
 def async_store_restored_trace(hass, trace):
-    """Store a restored trace and move it to the end."""
+    """Store a restored trace and move it to the end of the LimitedSizeDict."""
     key = trace.key
     traces = hass.data[DATA_TRACE]
     if key not in traces:
@@ -161,7 +167,8 @@ async def async_restore_traces(hass):
         restored_traces = {}
 
     for key, traces in restored_traces.items():
-        for json_trace in traces:
+        # Add stored traces in reversed order to priorize the newest traces
+        for json_trace in reversed(traces):
             if (
                 (stored_traces := hass.data[DATA_TRACE].get(key))
                 and stored_traces.size_limit is not None
@@ -171,7 +178,7 @@ async def async_restore_traces(hass):
 
             try:
                 trace = RestoredTrace(json_trace)
-                async_store_trace(hass, trace, None)
+                async_store_restored_trace(hass, trace)
             # Catch any exception to not blow up if the stored trace is invalid
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Failed to restore trace")
