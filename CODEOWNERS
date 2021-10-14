@@ -361,7 +361,7 @@ homeassistant/components/nsw_rural_fire_service_feed/* @exxamalte
 homeassistant/components/nuki/* @pschmitt @pvizeli @pree
 homeassistant/components/numato/* @clssn
 homeassistant/components/number/* @home-assistant/core @Shulyaka
-homeassistant/components/nut/* @bdraco
+homeassistant/components/nut/* @bdraco @ollo69
 homeassistant/components/nws/* @MatthewFlamm
 homeassistant/components/nzbget/* @chriscla
 homeassistant/components/obihai/* @dshokouhi
