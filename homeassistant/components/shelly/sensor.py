@@ -12,6 +12,7 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
@@ -45,6 +46,7 @@ SENSORS: Final = {
         state_class=sensor.STATE_CLASS_MEASUREMENT,
         removal_condition=lambda settings, _: settings.get("external_power") == 1,
         available=lambda block: cast(int, block.battery) != -1,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     ("device", "deviceTemp"): BlockAttributeDescription(
         name="Device Temperature",
@@ -53,6 +55,7 @@ SENSORS: Final = {
         device_class=sensor.DEVICE_CLASS_TEMPERATURE,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
         default_enabled=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     ("emeter", "current"): BlockAttributeDescription(
         name="Current",
@@ -205,6 +208,7 @@ SENSORS: Final = {
         extra_state_attributes=lambda block: {
             "Operational hours": round(cast(int, block.totalWorkTime) / 3600, 1)
         },
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     ("adc", "adc"): BlockAttributeDescription(
         name="ADC",
@@ -229,12 +233,14 @@ REST_SENSORS: Final = {
         device_class=sensor.DEVICE_CLASS_SIGNAL_STRENGTH,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
         default_enabled=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     "uptime": RestAttributeDescription(
         name="Uptime",
         value=lambda status, last: get_device_uptime(status["uptime"], last),
         device_class=sensor.DEVICE_CLASS_TIMESTAMP,
         default_enabled=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 }
 
@@ -286,6 +292,7 @@ RPC_SENSORS: Final = {
         device_class=sensor.DEVICE_CLASS_SIGNAL_STRENGTH,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
         default_enabled=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     "uptime": RpcAttributeDescription(
         key="sys",
@@ -294,6 +301,7 @@ RPC_SENSORS: Final = {
         value=get_device_uptime,
         device_class=sensor.DEVICE_CLASS_TIMESTAMP,
         default_enabled=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 }
 
