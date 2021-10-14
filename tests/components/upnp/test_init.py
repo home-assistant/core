@@ -28,7 +28,7 @@ async def test_async_setup_entry_default(hass: HomeAssistant):
         },
     )
 
-    # Initialisation of component, no device discovered.
+    # Initialisation of component.
     await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
