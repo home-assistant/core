@@ -1561,7 +1561,7 @@ def random_every_time(context, values):
     return random.choice(values)
 
 
-def datetime_today(time_str: str = "") -> datetime:
+def today_at(time_str: str = "") -> datetime:
     """Record fetching now where the time has been replaced with value."""
     start = dt_util.start_of_local_day(datetime.now())
 
@@ -1681,6 +1681,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["sqrt"] = square_root
         self.filters["as_datetime"] = dt_util.parse_datetime
         self.filters["as_timestamp"] = forgiving_as_timestamp
+        self.filters["today_at"] = today_at
         self.filters["as_local"] = dt_util.as_local
         self.filters["timestamp_custom"] = timestamp_custom
         self.filters["timestamp_local"] = timestamp_local
@@ -1720,7 +1721,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["as_datetime"] = dt_util.parse_datetime
         self.globals["as_local"] = dt_util.as_local
         self.globals["as_timestamp"] = forgiving_as_timestamp
-        self.globals["datetime_today"] = datetime_today
+        self.globals["today_at"] = today_at
         self.globals["relative_time"] = relative_time
         self.globals["timedelta"] = timedelta
         self.globals["strptime"] = strptime

@@ -1056,26 +1056,32 @@ def test_utcnow(mock_is_safe, hass):
     "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
     return_value=True,
 )
-def test_datetime_today(mock_is_safe, hass):
-    """Test datetime_today method."""
+def test_today_at(mock_is_safe, hass):
+    """Test today_at method."""
     now = dt_util.now()
     with patch("homeassistant.util.dt.now", return_value=now):
         now = now.replace(hour=10, minute=0, second=0, microsecond=0)
         result = template.Template(
-            "{{ datetime_today('10:00').isoformat() }}",
+            "{{ today_at('10:00').isoformat() }}",
             hass,
         ).async_render()
         assert result == now.isoformat()
 
         result = template.Template(
-            "{{ datetime_today('10:00:00').isoformat() }}",
+            "{{ today_at('10:00:00').isoformat() }}",
+            hass,
+        ).async_render()
+        assert result == now.isoformat()
+
+        result = template.Template(
+            "{{ ('10:00:00' | today_at).isoformat() }}",
             hass,
         ).async_render()
         assert result == now.isoformat()
 
         now = now.replace(hour=0)
         result = template.Template(
-            "{{ datetime_today().isoformat() }}",
+            "{{ today_at().isoformat() }}",
             hass,
         ).async_render()
         assert result == now.isoformat()
