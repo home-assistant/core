@@ -15,10 +15,10 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import FritzBoxEntity
-from .const import CONF_COORDINATOR, DATA_DEVICES, DOMAIN as FRITZBOX_DOMAIN
+from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
+from .coordinator import FritzboxDataUpdateCoordinator
 from .model import FritzEntityDescriptionMixinBase
 
 
@@ -56,7 +56,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             FritzboxBinarySensor(coordinator, ain, description)
-            for ain, device in coordinator.data[DATA_DEVICES].items()
+            for ain, device in coordinator.data.items()
             for description in BINARY_SENSOR_TYPES
             if description.suitable(device)
         ]
@@ -70,7 +70,7 @@ class FritzboxBinarySensor(FritzBoxEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[dict[str, FritzhomeDevice]],
+        coordinator: FritzboxDataUpdateCoordinator,
         ain: str,
         entity_description: FritzBinarySensorEntityDescription,
     ) -> None:

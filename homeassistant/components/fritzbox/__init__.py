@@ -1,10 +1,7 @@
 """Support for AVM FRITZ!SmartHome devices."""
 from __future__ import annotations
 
-from datetime import timedelta
-
 from pyfritzhome import Fritzhome, FritzhomeDevice, LoginError
-import requests
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -18,22 +15,18 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_STATE_DEVICE_LOCKED,
     ATTR_STATE_LOCKED,
     CONF_CONNECTIONS,
     CONF_COORDINATOR,
-    DATA_CONFIGURATION_URL,
-    DATA_DEVICES,
     DOMAIN,
     LOGGER,
     PLATFORMS,
 )
+from .coordinator import FritzboxDataUpdateCoordinator
 from .model import FritzExtraAttributes
 
 
@@ -55,48 +48,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_CONNECTIONS: fritz,
     }
 
-    def _update_fritz_devices() -> dict[str, FritzhomeDevice]:
-        """Update all fritzbox device data."""
-        try:
-            devices = fritz.get_devices()
-        except requests.exceptions.HTTPError:
-            # If the device rebooted, login again
-            try:
-                fritz.login()
-            except requests.exceptions.HTTPError as ex:
-                raise ConfigEntryAuthFailed from ex
-            devices = fritz.get_devices()
-
-        data = {DATA_CONFIGURATION_URL: fritz.get_prefixed_host(), DATA_DEVICES: {}}
-        for device in devices:
-            # assume device as unavailable, see #55799
-            if (
-                device.has_powermeter
-                and device.present
-                and hasattr(device, "voltage")
-                and device.voltage <= 0
-                and device.power <= 0
-                and device.energy <= 0
-            ):
-                LOGGER.debug("Assume device %s as unavailable", device.name)
-                device.present = False
-
-            data[DATA_DEVICES][device.ain] = device
-        return data
-
-    async def async_update_coordinator() -> dict[str, FritzhomeDevice]:
-        """Fetch all device data."""
-        return await hass.async_add_executor_job(_update_fritz_devices)
-
     hass.data[DOMAIN][entry.entry_id][
         CONF_COORDINATOR
-    ] = coordinator = DataUpdateCoordinator(
-        hass,
-        LOGGER,
-        name=f"{entry.entry_id}",
-        update_method=async_update_coordinator,
-        update_interval=timedelta(seconds=30),
-    )
+    ] = coordinator = FritzboxDataUpdateCoordinator(hass, entry)
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -143,9 +97,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class FritzBoxEntity(CoordinatorEntity):
     """Basis FritzBox entity."""
 
+    coordinator: FritzboxDataUpdateCoordinator
+
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[dict[str, FritzhomeDevice]],
+        coordinator: FritzboxDataUpdateCoordinator,
         ain: str,
         entity_description: EntityDescription | None = None,
     ) -> None:
@@ -169,7 +125,7 @@ class FritzBoxEntity(CoordinatorEntity):
     @property
     def device(self) -> FritzhomeDevice:
         """Return device object from coordinator."""
-        return self.coordinator.data[DATA_DEVICES][self.ain]
+        return self.coordinator.data[self.ain]
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -180,7 +136,7 @@ class FritzBoxEntity(CoordinatorEntity):
             manufacturer=self.device.manufacturer,
             model=self.device.productname,
             sw_version=self.device.fw_version,
-            configuration_url=self.coordinator.data[DATA_CONFIGURATION_URL],
+            configuration_url=self.coordinator.configuration_url,
         )
 
     @property

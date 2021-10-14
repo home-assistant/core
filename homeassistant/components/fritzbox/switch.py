@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzBoxEntity
-from .const import CONF_COORDINATOR, DATA_DEVICES, DOMAIN as FRITZBOX_DOMAIN
+from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
 
 
 async def async_setup_entry(
@@ -21,7 +21,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             FritzboxSwitch(coordinator, ain)
-            for ain, device in coordinator.data[DATA_DEVICES].items()
+            for ain, device in coordinator.data.items()
             if device.has_switch
         ]
     )
