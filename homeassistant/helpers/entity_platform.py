@@ -473,6 +473,17 @@ class EntityPlatform:
                     if key in device_info:
                         processed_dev_info[key] = device_info[key]  # type: ignore[misc]
 
+                if "configuration_url" in device_info:
+                    try:
+                        processed_dev_info["configuration_url"] = cv.url(
+                            device_info["configuration_url"]
+                        )
+                    except vol.Invalid:
+                        _LOGGER.warning(
+                            "Ignoring invalid device configuration_url '%s'",
+                            device_info["configuration_url"],
+                        )
+
                 try:
                     device = device_registry.async_get_or_create(**processed_dev_info)  # type: ignore[arg-type]
                     device_id = device.id
