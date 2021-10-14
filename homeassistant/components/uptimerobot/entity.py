@@ -23,14 +23,14 @@ class UptimeRobotEntity(CoordinatorEntity):
         description: EntityDescription,
         monitor: UptimeRobotMonitor,
     ) -> None:
-        """Initialize Uptime Robot entities."""
+        """Initialize UptimeRobot entities."""
         super().__init__(coordinator)
         self.entity_description = description
         self._monitor = monitor
         self._attr_device_info = {
             "identifiers": {(DOMAIN, str(self.monitor.id))},
             "name": self.monitor.friendly_name,
-            "manufacturer": "Uptime Robot Team",
+            "manufacturer": "UptimeRobot Team",
             "entry_type": "service",
             "model": self.monitor.type.name,
             "configuration_url": f"https://uptimerobot.com/dashboard#{self.monitor.id}",
