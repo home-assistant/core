@@ -839,6 +839,7 @@ async def test_entity_disabled_by_default(hass, mqtt_mock):
     )
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_entity_category(hass, mqtt_mock):
     """Test entity category."""
     await help_test_entity_category(hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG)
