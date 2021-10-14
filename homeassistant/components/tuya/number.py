@@ -129,14 +129,11 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
 
         # Raw value
         value = self.tuya_device.status.get(self.entity_description.key)
-        if value is None:
-            return None
 
         # Scale integer/float value
         if value and isinstance(self._type_data, IntegerTypeData):
             return self.scale(value, self._type_data.scale)
 
-        # Valid string or enum value
         return None
 
     def set_value(self, value: float) -> None:
