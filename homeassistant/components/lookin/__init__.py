@@ -28,13 +28,13 @@ from .models import Climate, Device, Remote
 from .protocol import LookInHttpProtocol  # TODO: move protocol into a PyPI package
 
 
-async def async_setup_entry(hass: "HomeAssistant", entry: "ConfigEntry") -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up lookin from a config entry."""
+
     LOGGER.warning("Lookin service started")
     LOGGER.warning("config_entry.data - <%s>", entry.data)
-
     LOGGER.warning("Lookin service CONF_DEVICE_ID <%s>", entry.data[CONF_DEVICE_ID])
     LOGGER.warning("Lookin service CONF_HOST <%s>", entry.data[CONF_HOST])
-
     LOGGER.warning("Lookin service entry.entry_id <%s>", entry.entry_id)
 
     lookin_protocol = LookInHttpProtocol(
@@ -54,6 +54,7 @@ async def async_setup_entry(hass: "HomeAssistant", entry: "ConfigEntry") -> bool
         update_method=lookin_protocol.get_meteo_sensor,
         update_interval=timedelta(seconds=15),
     )
+    await meteo_coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         CONF_HOST: entry.data[CONF_HOST],
@@ -89,10 +90,12 @@ class LookinEntity(Entity):
 
     @property
     def name(self) -> str:
+        """Return the name of the device."""
         return self._device.name
 
     @property
     def device_info(self) -> DeviceInfo:
+        """Return device info for the remote."""
         return {
             "identifiers": {(DOMAIN, self._uuid)},
             "name": self._device.name,
