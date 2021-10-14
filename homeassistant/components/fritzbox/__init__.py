@@ -28,6 +28,8 @@ from .const import (
     ATTR_STATE_LOCKED,
     CONF_CONNECTIONS,
     CONF_COORDINATOR,
+    DATA_CONFIGURATION_URL,
+    DATA_DEVICES,
     DOMAIN,
     LOGGER,
     PLATFORMS,
@@ -65,8 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 raise ConfigEntryAuthFailed from ex
             devices = fritz.get_devices()
 
-        data = {}
-        fritz.update_devices()
+        data = {DATA_CONFIGURATION_URL: fritz.get_prefixed_host(), DATA_DEVICES: {}}
         for device in devices:
             # assume device as unavailable, see #55799
             if (
@@ -80,7 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 LOGGER.debug("Assume device %s as unavailable", device.name)
                 device.present = False
 
-            data[device.ain] = device
+            data[DATA_DEVICES][device.ain] = device
         return data
 
     async def async_update_coordinator() -> dict[str, FritzhomeDevice]:
@@ -168,18 +169,19 @@ class FritzBoxEntity(CoordinatorEntity):
     @property
     def device(self) -> FritzhomeDevice:
         """Return device object from coordinator."""
-        return self.coordinator.data[self.ain]
+        return self.coordinator.data[DATA_DEVICES][self.ain]
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
-        return {
-            "name": self.device.name,
-            "identifiers": {(DOMAIN, self.ain)},
-            "manufacturer": self.device.manufacturer,
-            "model": self.device.productname,
-            "sw_version": self.device.fw_version,
-        }
+        return DeviceInfo(
+            name=self.device.name,
+            identifiers={(DOMAIN, self.ain)},
+            manufacturer=self.device.manufacturer,
+            model=self.device.productname,
+            sw_version=self.device.fw_version,
+            configuration_url=self.coordinator.data[DATA_CONFIGURATION_URL],
+        )
 
     @property
     def extra_state_attributes(self) -> FritzExtraAttributes:

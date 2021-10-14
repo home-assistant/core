@@ -29,7 +29,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzBoxEntity
-from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
+from .const import CONF_COORDINATOR, DATA_DEVICES, DOMAIN as FRITZBOX_DOMAIN
 from .model import FritzEntityDescriptionMixinBase
 
 
@@ -106,7 +106,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             FritzBoxSensor(coordinator, ain, description)
-            for ain, device in coordinator.data.items()
+            for ain, device in coordinator.data[DATA_DEVICES].items()
             for description in SENSOR_TYPES
             if description.suitable(device)
         ]

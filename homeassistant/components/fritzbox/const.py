@@ -14,6 +14,9 @@ ATTR_STATE_WINDOW_OPEN: Final = "window_open"
 CONF_CONNECTIONS: Final = "connections"
 CONF_COORDINATOR: Final = "coordinator"
 
+DATA_DEVICES: Final = "devices"
+DATA_CONFIGURATION_URL: Final = "configuration_url"
+
 DEFAULT_HOST: Final = "fritz.box"
 DEFAULT_USERNAME: Final = "admin"
 

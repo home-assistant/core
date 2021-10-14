@@ -32,6 +32,7 @@ from .const import (
     ATTR_STATE_SUMMER_MODE,
     ATTR_STATE_WINDOW_OPEN,
     CONF_COORDINATOR,
+    DATA_DEVICES,
     DOMAIN as FRITZBOX_DOMAIN,
 )
 from .model import ClimateExtraAttributes
@@ -61,7 +62,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             FritzboxThermostat(coordinator, ain)
-            for ain, device in coordinator.data.items()
+            for ain, device in coordinator.data[DATA_DEVICES].items()
             if device.has_thermostat
         ]
     )
