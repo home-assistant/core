@@ -112,6 +112,7 @@ ATTR_POWER = "power"
 ATTR_PRESSURE = "pressure"
 ATTR_PURIFY_VOLUME = "purify_volume"
 ATTR_SENSOR_STATE = "sensor_state"
+ATTR_USE_TIME = "use_time"
 ATTR_WATER_LEVEL = "water_level"
 ATTR_DND_START = "start"
 ATTR_DND_END = "end"
@@ -193,6 +194,14 @@ SENSOR_TYPES = {
         icon="mdi:fast-forward",
         state_class=STATE_CLASS_MEASUREMENT,
     ),
+    ATTR_USE_TIME: XiaomiMiioSensorDescription(
+        key=ATTR_USE_TIME,
+        name="Use Time",
+        native_unit_of_measurement=TIME_SECONDS,
+        icon="mdi:progress-clock",
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
     ATTR_ILLUMINANCE: XiaomiMiioSensorDescription(
         key=ATTR_ILLUMINANCE,
         name="Illuminance",
@@ -259,20 +268,27 @@ SENSOR_TYPES = {
     ),
 }
 
-HUMIDIFIER_MIIO_SENSORS = (ATTR_HUMIDITY, ATTR_TEMPERATURE, ATTR_WATER_LEVEL)
+HUMIDIFIER_MIIO_SENSORS = (
+    ATTR_HUMIDITY,
+    ATTR_TEMPERATURE,
+    ATTR_USE_TIME,
+    ATTR_WATER_LEVEL,
+)
 HUMIDIFIER_CA1_CB1_SENSORS = (
     ATTR_HUMIDITY,
     ATTR_TEMPERATURE,
     ATTR_MOTOR_SPEED,
+    ATTR_USE_TIME,
     ATTR_WATER_LEVEL,
 )
 HUMIDIFIER_MIOT_SENSORS = (
     ATTR_ACTUAL_SPEED,
     ATTR_HUMIDITY,
     ATTR_TEMPERATURE,
+    ATTR_USE_TIME,
     ATTR_WATER_LEVEL,
 )
-HUMIDIFIER_MJJSQ_SENSORS = (ATTR_HUMIDITY, ATTR_TEMPERATURE)
+HUMIDIFIER_MJJSQ_SENSORS = (ATTR_HUMIDITY, ATTR_TEMPERATURE, ATTR_USE_TIME)
 
 PURIFIER_MIIO_SENSORS = (
     ATTR_FILTER_LIFE_REMAINING,

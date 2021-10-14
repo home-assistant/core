@@ -26,8 +26,9 @@ from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from .. import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, subscription
+from .. import subscription
 from ... import mqtt
+from ..const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
 from .const import MQTT_VACUUM_ATTRIBUTES_BLOCKED

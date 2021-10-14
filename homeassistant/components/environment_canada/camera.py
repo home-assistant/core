@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import datetime
+import logging
 
-from env_canada import ECRadar
+from env_canada import get_station_coords
+from requests.exceptions import ConnectionError as RequestsConnectionError
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
@@ -16,14 +18,16 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-ATTR_UPDATED = "updated"
+from . import trigger_import
+from .const import CONF_ATTRIBUTION, CONF_STATION, DOMAIN
 
-CONF_ATTRIBUTION = "Data provided by Environment Canada"
-CONF_STATION = "station"
 CONF_LOOP = "loop"
 CONF_PRECIP_TYPE = "precip_type"
+ATTR_UPDATED = "updated"
 
 MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=10)
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -37,35 +41,47 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Environment Canada camera."""
-
     if config.get(CONF_STATION):
-        radar_object = ECRadar(
-            station_id=config[CONF_STATION], precip_type=config.get(CONF_PRECIP_TYPE)
+        lat, lon = await hass.async_add_executor_job(
+            get_station_coords, config[CONF_STATION]
         )
     else:
         lat = config.get(CONF_LATITUDE, hass.config.latitude)
         lon = config.get(CONF_LONGITUDE, hass.config.longitude)
-        radar_object = ECRadar(
-            coordinates=(lat, lon), precip_type=config.get(CONF_PRECIP_TYPE)
-        )
 
-    add_devices(
-        [ECCamera(radar_object, config.get(CONF_NAME), config[CONF_LOOP])], True
+    config[CONF_LATITUDE] = lat
+    config[CONF_LONGITUDE] = lon
+
+    trigger_import(hass, config)
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Add a weather entity from a config_entry."""
+    radar_data = hass.data[DOMAIN][config_entry.entry_id]["radar_data"]
+
+    async_add_entities(
+        [
+            ECCamera(
+                radar_data,
+                f"{config_entry.title} Radar",
+                f"{config_entry.unique_id}-radar",
+            ),
+        ]
     )
 
 
 class ECCamera(Camera):
     """Implementation of an Environment Canada radar camera."""
 
-    def __init__(self, radar_object, camera_name, is_loop):
+    def __init__(self, radar_object, camera_name, unique_id):
         """Initialize the camera."""
         super().__init__()
 
         self.radar_object = radar_object
-        self.camera_name = camera_name
-        self.is_loop = is_loop
+        self._attr_name = camera_name
+        self._attr_unique_id = unique_id
         self.content_type = "image/gif"
         self.image = None
         self.timestamp = None
@@ -78,13 +94,6 @@ class ECCamera(Camera):
         return self.image
 
     @property
-    def name(self):
-        """Return the name of the camera."""
-        if self.camera_name is not None:
-            return self.camera_name
-        return "Environment Canada Radar"
-
-    @property
     def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return {ATTR_ATTRIBUTION: CONF_ATTRIBUTION, ATTR_UPDATED: self.timestamp}
@@ -92,8 +101,10 @@ class ECCamera(Camera):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update radar image."""
-        if self.is_loop:
+        try:
             self.image = self.radar_object.get_loop()
-        else:
-            self.image = self.radar_object.get_latest_frame()
+        except RequestsConnectionError:
+            _LOGGER.warning("Radar data update failed due to rate limiting")
+            return
+
         self.timestamp = self.radar_object.timestamp

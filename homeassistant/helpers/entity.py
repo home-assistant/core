@@ -11,11 +11,12 @@ import logging
 import math
 import sys
 from timeit import default_timer as timer
-from typing import Any, TypedDict, final
+from typing import Any, Literal, TypedDict, final
 
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
+    ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
@@ -157,18 +158,18 @@ def get_unit_of_measurement(hass: HomeAssistant, entity_id: str) -> str | None:
 class DeviceInfo(TypedDict, total=False):
     """Entity device information for device registry."""
 
-    name: str | None
     connections: set[tuple[str, str]]
+    default_manufacturer: str
+    default_model: str
+    default_name: str
+    entry_type: str | None
     identifiers: set[tuple[str, str]]
     manufacturer: str | None
     model: str | None
+    name: str | None
     suggested_area: str | None
     sw_version: str | None
     via_device: tuple[str, str]
-    entry_type: str | None
-    default_name: str
-    default_manufacturer: str
-    default_model: str
 
 
 @dataclass
@@ -179,6 +180,7 @@ class EntityDescription:
     key: str
 
     device_class: str | None = None
+    entity_category: Literal["config", "diagnostic"] | None = None
     entity_registry_enabled_default: bool = True
     force_update: bool = False
     icon: str | None = None
@@ -232,10 +234,12 @@ class Entity(ABC):
 
     # Entity Properties
     _attr_assumed_state: bool = False
+    _attr_attribution: str | None = None
     _attr_available: bool = True
     _attr_context_recent_time: timedelta = timedelta(seconds=5)
     _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
+    _attr_entity_category: str | None
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
     _attr_extra_state_attributes: MutableMapping[str, Any]
@@ -397,6 +401,20 @@ class Entity(ABC):
             return self.entity_description.entity_registry_enabled_default
         return True
 
+    @property
+    def attribution(self) -> str | None:
+        """Return the attribution."""
+        return self._attr_attribution
+
+    @property
+    def entity_category(self) -> str | None:
+        """Return the category of the entity, if any."""
+        if hasattr(self, "_attr_entity_category"):
+            return self._attr_entity_category
+        if hasattr(self, "entity_description"):
+            return self.entity_description.entity_category
+        return None
+
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
     # are used to perform a very specific function. Overwriting these may
@@ -519,6 +537,9 @@ class Entity(ABC):
 
         if (device_class := self.device_class) is not None:
             attr[ATTR_DEVICE_CLASS] = str(device_class)
+
+        if (attribution := self.attribution) is not None:
+            attr[ATTR_ATTRIBUTION] = attribution
 
         end = timer()
 

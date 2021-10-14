@@ -6,6 +6,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.core import HomeAssistant
 from homeassistant.util.decorator import Registry
 
 from tests.common import async_capture_events
@@ -397,3 +398,54 @@ async def test_init_unknown_flow(manager):
         manager, "async_create_flow", return_value=None
     ):
         await manager.async_init("test")
+
+
+async def test_async_has_matching_flow(
+    hass: HomeAssistant, manager: data_entry_flow.FlowManager
+):
+    """Test we can check for matching flows."""
+    manager.hass = hass
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 5
+
+        async def async_step_init(self, user_input=None):
+            return self.async_show_progress(
+                step_id="init",
+                progress_action="task_one",
+            )
+
+    result = await manager.async_init(
+        "test",
+        context={"source": config_entries.SOURCE_HOMEKIT},
+        data={"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_SHOW_PROGRESS
+    assert result["progress_action"] == "task_one"
+    assert len(manager.async_progress()) == 1
+
+    assert (
+        manager.async_has_matching_flow(
+            "test",
+            {"source": config_entries.SOURCE_HOMEKIT},
+            {"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+        )
+        is True
+    )
+    assert (
+        manager.async_has_matching_flow(
+            "test",
+            {"source": config_entries.SOURCE_SSDP},
+            {"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+        )
+        is False
+    )
+    assert (
+        manager.async_has_matching_flow(
+            "other",
+            {"source": config_entries.SOURCE_HOMEKIT},
+            {"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+        )
+        is False
+    )

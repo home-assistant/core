@@ -17,6 +17,9 @@
             "confirm": {
                 "description": "Kezd\u0151dhet a be\u00e1ll\u00edt\u00e1s?"
             },
+            "import_turn_on": {
+                "description": "Kapcsolja be az eszk\u00f6zt, \u00e9s kattintson a K\u00fcld\u00e9s gombra a migr\u00e1ci\u00f3 folytat\u00e1s\u00e1hoz"
+            },
             "user": {
                 "data": {
                     "url": "URL"

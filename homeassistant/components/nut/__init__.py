@@ -16,7 +16,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -28,7 +27,6 @@ from .const import (
     PYNUT_FIRMWARE,
     PYNUT_MANUFACTURER,
     PYNUT_MODEL,
-    PYNUT_NAME,
     PYNUT_UNIQUE_ID,
     UNDO_UPDATE_LISTENER,
 )
@@ -38,6 +36,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Network UPS Tools (NUT) from a config entry."""
+
+    # strip out the stale options CONF_RESOURCES
+    if CONF_RESOURCES in entry.options:
+        new_options = {k: v for k, v in entry.options.items() if k != CONF_RESOURCES}
+        hass.config_entries.async_update_entry(entry, options=new_options)
 
     config = entry.data
     host = config[CONF_HOST]
@@ -56,6 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await hass.async_add_executor_job(data.update)
             if not data.status:
                 raise UpdateFailed("Error fetching UPS state")
+            return data.status
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -67,11 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
-    status = data.status
-
-    if not status:
-        _LOGGER.error("NUT Sensor has no data, unable to set up")
-        raise ConfigEntryNotReady
+    status = coordinator.data
 
     _LOGGER.debug("NUT Sensors Available: %s", status)
 
@@ -90,7 +90,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         PYNUT_MANUFACTURER: _manufacturer_from_status(status),
         PYNUT_MODEL: _model_from_status(status),
         PYNUT_FIRMWARE: _firmware_from_status(status),
-        PYNUT_NAME: data.name,
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
@@ -154,13 +153,6 @@ def _unique_id_from_status(status):
     if serial:
         unique_id_group.append(serial)
     return "_".join(unique_id_group)
-
-
-def find_resources_in_config_entry(config_entry):
-    """Find the configured resources in the config entry."""
-    if CONF_RESOURCES in config_entry.options:
-        return config_entry.options[CONF_RESOURCES]
-    return config_entry.data[CONF_RESOURCES]
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

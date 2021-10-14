@@ -151,7 +151,7 @@ homeassistant/components/enigma2/* @fbradyirl
 homeassistant/components/enocean/* @bdurrer
 homeassistant/components/enphase_envoy/* @gtdiehl
 homeassistant/components/entur_public_transport/* @hfurubotten
-homeassistant/components/environment_canada/* @michaeldavie
+homeassistant/components/environment_canada/* @gwww @michaeldavie
 homeassistant/components/ephember/* @ttroy50
 homeassistant/components/epson/* @pszafer
 homeassistant/components/epsonworkforce/* @ThaStealth
@@ -361,7 +361,7 @@ homeassistant/components/nsw_rural_fire_service_feed/* @exxamalte
 homeassistant/components/nuki/* @pschmitt @pvizeli @pree
 homeassistant/components/numato/* @clssn
 homeassistant/components/number/* @home-assistant/core @Shulyaka
-homeassistant/components/nut/* @bdraco
+homeassistant/components/nut/* @bdraco @ollo69
 homeassistant/components/nws/* @MatthewFlamm
 homeassistant/components/nzbget/* @chriscla
 homeassistant/components/obihai/* @dshokouhi
@@ -498,7 +498,7 @@ homeassistant/components/srp_energy/* @briglx
 homeassistant/components/starline/* @anonym-tsk
 homeassistant/components/statistics/* @fabaff
 homeassistant/components/stiebel_eltron/* @fucm
-homeassistant/components/stookalert/* @fwestenberg
+homeassistant/components/stookalert/* @fwestenberg @frenck
 homeassistant/components/stream/* @hunterjm @uvjustin @allenporter
 homeassistant/components/stt/* @pvizeli
 homeassistant/components/subaru/* @G-Two
@@ -534,7 +534,6 @@ homeassistant/components/tile/* @bachya
 homeassistant/components/time_date/* @fabaff
 homeassistant/components/tmb/* @alemuro
 homeassistant/components/todoist/* @boralyl
-homeassistant/components/toon/* @frenck
 homeassistant/components/totalconnect/* @austinmroczek
 homeassistant/components/tplink/* @rytilahti @thegardenmonkey
 homeassistant/components/traccar/* @ludeeus

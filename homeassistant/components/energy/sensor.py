@@ -330,6 +330,7 @@ class EnergyCostSensor(SensorEntity):
             cast(str, self._config[self._adapter.entity_energy_key]),
             energy,
             float(self._last_energy_sensor_state.state),
+            self._last_energy_sensor_state,
         ):
             # Energy meter was reset, reset cost sensor too
             energy_state_copy = copy.copy(energy_state)

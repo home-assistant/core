@@ -83,13 +83,28 @@ DHCP = [
     },
     {
         "domain": "flux_led",
+        "macaddress": "7CB94C*",
+        "hostname": "[ba][lk]*"
+    },
+    {
+        "domain": "flux_led",
         "macaddress": "B4E842*",
         "hostname": "[ba][lk]*"
     },
     {
         "domain": "flux_led",
+        "macaddress": "8CCE4E*",
+        "hostname": "lwip*"
+    },
+    {
+        "domain": "flux_led",
         "macaddress": "2462AB*",
         "hostname": "zengge_35*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "70039F*",
+        "hostname": "zengge_0e*"
     },
     {
         "domain": "flux_led",
@@ -288,6 +303,11 @@ DHCP = [
         "domain": "toon",
         "hostname": "eneco-*",
         "macaddress": "74C63B*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "1027F5*"
     },
     {
         "domain": "tplink",

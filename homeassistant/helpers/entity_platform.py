@@ -461,17 +461,17 @@ class EntityPlatform:
                 processed_dev_info = {"config_entry_id": config_entry_id}
                 for key in (
                     "connections",
+                    "default_manufacturer",
+                    "default_model",
+                    "default_name",
+                    "entry_type",
                     "identifiers",
                     "manufacturer",
                     "model",
                     "name",
-                    "default_manufacturer",
-                    "default_model",
-                    "default_name",
-                    "sw_version",
-                    "entry_type",
-                    "via_device",
                     "suggested_area",
+                    "sw_version",
+                    "via_device",
                 ):
                     if key in device_info:
                         processed_dev_info[key] = device_info[key]  # type: ignore[misc]
@@ -501,6 +501,7 @@ class EntityPlatform:
                 unit_of_measurement=entity.unit_of_measurement,
                 original_name=entity.name,
                 original_icon=entity.icon,
+                entity_category=entity.entity_category,
             )
 
             entity.registry_entry = entry

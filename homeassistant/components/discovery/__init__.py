@@ -38,7 +38,6 @@ SERVICE_SAMSUNG_PRINTER = "samsung_printer"
 SERVICE_TELLDUSLIVE = "tellstick"
 SERVICE_YEELIGHT = "yeelight"
 SERVICE_WEMO = "belkin_wemo"
-SERVICE_WINK = "wink"
 SERVICE_XIAOMI_GW = "xiaomi_gw"
 
 # These have custom protocols
@@ -94,7 +93,6 @@ MIGRATED_SERVICE_HANDLERS = [
     "sonos",
     "songpal",
     SERVICE_WEMO,
-    SERVICE_WINK,
     SERVICE_XIAOMI_GW,
     "volumio",
     SERVICE_YEELIGHT,

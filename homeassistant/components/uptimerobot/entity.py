@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from pyuptimerobot import UptimeRobotMonitor
 
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -15,6 +14,8 @@ from .const import ATTR_TARGET, ATTRIBUTION, DOMAIN
 
 class UptimeRobotEntity(CoordinatorEntity):
     """Base UptimeRobot entity."""
+
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,
@@ -34,7 +35,6 @@ class UptimeRobotEntity(CoordinatorEntity):
             "model": self.monitor.type.name,
         }
         self._attr_extra_state_attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_TARGET: self.monitor.url,
         }
         self._attr_unique_id = str(self.monitor.id)
