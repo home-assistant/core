@@ -1,6 +1,4 @@
 """Config flow for SONOS."""
-import logging
-
 import soco
 
 from homeassistant import config_entries
@@ -12,8 +10,6 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DATA_SONOS_DISCOVERY_MANAGER, DOMAIN
 from .helpers import hostname_to_uid
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def _async_has_devices(hass: HomeAssistant) -> bool:

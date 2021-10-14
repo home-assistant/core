@@ -4,7 +4,6 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Mapping
 from datetime import datetime
-import logging
 from typing import Any
 
 from pyclimacell.const import (
@@ -93,8 +92,6 @@ from .const import (
     DOMAIN,
     MAX_FORECASTS,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

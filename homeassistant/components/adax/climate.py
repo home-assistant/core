@@ -1,7 +1,6 @@
 """Support for Adax wifi-enabled home heaters."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from adax import Adax
@@ -24,8 +23,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ACCOUNT_ID
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
