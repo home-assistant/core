@@ -11,6 +11,8 @@ from .models import LookinData
 class LookinEntity(Entity):
     """A base class for lookin entities."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         uuid: str,

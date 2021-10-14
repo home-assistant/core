@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -71,6 +71,13 @@ class LookinSensorEntity(CoordinatorEntity, SensorEntity, Entity):
         self._attr_name = f"{self._lookin_device.name} {description.name}"
         self._attr_native_value = getattr(self.coordinator.data, description.key)
         self._attr_unique_id = f"{self._lookin_device.id}-{description.key}"
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, self._lookin_device.id)},
+            "name": self._lookin_device.name,
+            "manufacturer": "LOOKin",
+            "model": "LOOKin 2",
+            "sw_version": self._lookin_device.firmware,
+        }
 
     def _handle_coordinator_update(self) -> None:
         """Update the state of the entity."""
@@ -78,17 +85,6 @@ class LookinSensorEntity(CoordinatorEntity, SensorEntity, Entity):
             self.coordinator.data, self.entity_description.key
         )
         super()._handle_coordinator_update()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Device info for the onboard sensor."""
-        return {
-            "identifiers": {(DOMAIN, self._lookin_device.id)},
-            "name": self._lookin_device.name,
-            "manufacturer": "LOOKin",
-            "model": "LOOKin 2",
-            "sw_version": self._lookin_device.firmware,
-        }
 
     @callback
     def _async_push_update(self, msg: dict[str, str]) -> None:

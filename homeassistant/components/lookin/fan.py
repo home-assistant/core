@@ -40,8 +40,6 @@ async def async_setup_entry(
 
 
 class LookinFanBase(LookinPowerEntity, FanEntity):
-    _attr_should_poll = False
-
     def __init__(
         self,
         uuid: str,
