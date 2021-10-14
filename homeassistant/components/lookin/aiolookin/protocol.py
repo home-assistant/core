@@ -5,11 +5,12 @@ import asyncio
 import contextlib
 import json
 import socket
-from typing import Any, Final
+from typing import Any, Callable, Final
 
 from aiohttp import ClientError, ClientResponse, ClientSession
 
 from .const import (
+    COMMAND_TO_CODE,
     DEVICE_INFO_URL,
     DEVICES_INFO_URL,
     INFO_URL,
@@ -20,36 +21,7 @@ from .const import (
 from .error import DeviceNotFound, NoUsableService
 from .models import Climate, Device, MeteoSensor, Remote
 
-LOOKIN_PORT = 61201
-
-DEVICE_TO_CODE: Final = {
-    "tv": "1",
-    "media": "2",
-    "light": "3",
-    "humidifier": "4",
-    "air_purifier": "5",
-    "vacuum": "6",
-    "fan": "7",
-    "climate_control": "EF",
-}
-
-CODE_TO_NAME: Final = {v: k for k, v in DEVICE_TO_CODE.items()}
-
-COMMAND_TO_CODE: Final = {
-    "power": "01",
-    "poweron": "02",
-    "poweroff": "03",
-    "mode": "04",
-    "mute": "05",
-    "volup": "06",
-    "voldown": "07",
-    "chup": "08",
-    "chdown": "09",
-    "swing": "0A",
-    "speed": "0B",
-    "cursor": "0C",
-    "menu": "0D",
-}
+LOOKIN_PORT: Final = 61201
 
 
 async def validate_response(response: ClientResponse) -> None:
@@ -60,20 +32,20 @@ async def validate_response(response: ClientResponse) -> None:
 class LookinUDPSubscriptions:
     """Store Lookin subscriptions."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Init and store callbacks."""
-        self._callbacks = {}
-        self.last_message_time = 0
+        self._callbacks: dict[str, list[Callable]] = {}
 
-    def subscribe(self, device_id, callback):
+    def subscribe(self, device_id: str, callback: Callable) -> Callable:
         """Subscribe to lookin updates."""
         self._callbacks.setdefault(device_id, []).append(callback)
 
-    def unsubscribe(self, device_id, callback):
-        """Unsubscribe from lookin updates."""
-        self._callbacks[device_id].remove(callback)
+        def _remove_call(*_):
+            self._callbacks[device_id].remove(callback)
 
-    def notify(self, msg):
+        return _remove_call
+
+    def notify(self, msg: dict[str, Any]) -> None:
         """Notify subscribers of an update."""
         device_id = msg["device_id"]
         for callback in self._callbacks.get(device_id, []):
@@ -83,18 +55,19 @@ class LookinUDPSubscriptions:
 class LookinUDPProtocol:
     """Implements Lookin UDP Protocol."""
 
-    def __init__(self, loop, subscriptions):
+    def __init__(
+        self, loop: asyncio.AbstractEventLoop, subscriptions: LookinUDPSubscriptions
+    ) -> None:
         """Create Lookin UDP Protocol."""
         self.loop = loop
         self.subscriptions = subscriptions
-        self.transport = None
-        self.keep_alive = None
+        self.transport: asyncio.DatagramTransport | None = None
 
     def connection_made(self, transport):
         """Connect or reconnect to the device."""
         self.transport = transport
 
-    def datagram_received(self, data, addr):
+    def datagram_received(self, data: bytes, addr: Any) -> None:
         """Process incoming state changes."""
         # LOOK.in:Updated!{device id}:{sensor id}:{event id}:{value}
         # LOOK.in:Updated!{device id}:{service name}:{value}
@@ -124,21 +97,21 @@ class LookinUDPProtocol:
         except (KeyError, ValueError, UnicodeDecodeError):
             pass
 
-    def error_received(self, exc):
+    def error_received(self, exc: Exception) -> None:
         """Ignore errors."""
         return
 
-    def connection_lost(self, exc):
+    def connection_lost(self, exc: Exception) -> None:
         """Ignore connection lost."""
         return
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop the client."""
         if self.transport:
             self.transport.close()
 
 
-def _create_udp_socket():
+def _create_udp_socket() -> socket.socket:
     """Create a udp listener socket."""
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
@@ -146,18 +119,18 @@ def _create_udp_socket():
     with contextlib.suppress(Exception):
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
     sock.bind(("", LOOKIN_PORT))
-    sock.setblocking(0)
+    sock.setblocking(False)
     return sock
 
 
-async def start_lookin_udp(subscriptions):
+async def start_lookin_udp(subscriptions: LookinUDPSubscriptions) -> Callable:
     """Create the socket and protocol."""
     loop = asyncio.get_event_loop()
     _, protocol = await loop.create_datagram_endpoint(
-        lambda: LookinUDPProtocol(loop, subscriptions),
+        lambda: LookinUDPProtocol(loop, subscriptions),  # type: ignore
         sock=_create_udp_socket(),
     )
-    return protocol.stop
+    return protocol.stop  # type: ignore
 
 
 class LookInHttpProtocol:
