@@ -98,7 +98,7 @@ class LookinSensorEntity(CoordinatorEntity, SensorEntity, Entity):
         LOGGER.debug("Processing push message for meteo sensor: %s", msg)
         meteo: MeteoSensor = self.coordinator.data
         meteo.update_from_value(msg["value"])
-        self.async_write_ha_state()
+        self.coordinator.async_set_updated_data(meteo)
 
     async def async_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
