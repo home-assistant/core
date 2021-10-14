@@ -1,5 +1,4 @@
 """Test the sia config flow."""
-import logging
 from unittest.mock import patch
 
 import pytest
@@ -20,9 +19,6 @@ from homeassistant.const import CONF_PORT, CONF_PROTOCOL
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
-
 
 BASIS_CONFIG_ENTRY_ID = 1
 BASIC_CONFIG = {

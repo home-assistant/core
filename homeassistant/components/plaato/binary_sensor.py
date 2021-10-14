@@ -1,7 +1,5 @@
 """Support for Plaato Airlock sensors."""
 
-import logging
-
 from pyplaato.plaato import PlaatoKeg
 
 from homeassistant.components.binary_sensor import (
@@ -12,8 +10,6 @@ from homeassistant.components.binary_sensor import (
 
 from .const import CONF_USE_WEBHOOK, COORDINATOR, DOMAIN
 from .entity import PlaatoEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

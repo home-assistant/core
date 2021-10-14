@@ -7,7 +7,6 @@ from collections.abc import Container, Generator
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 import functools as ft
-import logging
 import re
 import sys
 from typing import Any, Callable, cast
@@ -73,8 +72,6 @@ from .trace import (
 
 FROM_CONFIG_FORMAT = "{}_from_config"
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
-
-_LOGGER = logging.getLogger(__name__)
 
 INPUT_ENTITY_ID = re.compile(
     r"^input_(?:select|text|number|boolean|datetime)\.(?!.+__)(?!_)[\da-z_]+(?<!_)$"

@@ -1,6 +1,4 @@
 """Support for Meteoclimatic sensor."""
-import logging
-
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
@@ -11,8 +9,6 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import ATTRIBUTION, DOMAIN, MANUFACTURER, MODEL, SENSOR_TYPES
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

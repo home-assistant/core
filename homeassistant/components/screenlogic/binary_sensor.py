@@ -1,6 +1,4 @@
 """Support for a ScreenLogic Binary Sensor."""
-import logging
-
 from screenlogicpy.const import DATA as SL_DATA, DEVICE_TYPE, EQUIPMENT, ON_OFF
 
 from homeassistant.components.binary_sensor import (
@@ -10,8 +8,6 @@ from homeassistant.components.binary_sensor import (
 
 from . import ScreenlogicEntity
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS = {DEVICE_TYPE.ALARM: DEVICE_CLASS_PROBLEM}
 

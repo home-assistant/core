@@ -1,13 +1,10 @@
 """Support for Velbus switches."""
-import logging
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 
 from . import VelbusEntity
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):

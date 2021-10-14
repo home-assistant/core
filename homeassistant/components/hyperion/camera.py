@@ -8,7 +8,6 @@ import binascii
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 import functools
-import logging
 from typing import Any
 
 from aiohttp import web
@@ -49,8 +48,6 @@ from .const import (
     SIGNAL_ENTITY_REMOVE,
     TYPE_HYPERION_CAMERA,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 IMAGE_STREAM_JPG_SENTINEL = "data:image/jpg;base64,"
 
