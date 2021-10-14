@@ -602,7 +602,6 @@ def _reduce_statistics(
         ):
             if not same_period(prev_stat["start"], statistic["start"]):
                 start, end = period_start_end(prev_stat["start"])
-                # TODO: Test DST change
                 # Last value of the period
                 result[statistic_id].append(
                     {
