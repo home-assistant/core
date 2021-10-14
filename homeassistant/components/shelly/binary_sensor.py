@@ -153,8 +153,9 @@ RPC_SENSORS: Final = {
         name="Firmware Update",
         device_class=DEVICE_CLASS_UPDATE,
         default_enabled=False,
-        extra_state_attributes=lambda status: {
+        extra_state_attributes=lambda status, shelly: {
             "latest_stable_version": status.get("stable", {"version": ""})["version"],
+            "installed_version": shelly["ver"],
             "beta_version": status.get("beta", {"version": ""})["version"],
         },
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
