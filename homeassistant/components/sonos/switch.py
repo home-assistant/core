@@ -7,7 +7,7 @@ import logging
 from soco.exceptions import SoCoException, SoCoUPnPException
 
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
-from homeassistant.const import ATTR_TIME
+from homeassistant.const import ATTR_TIME, ENTITY_CATEGORY_CONFIG
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -121,6 +121,7 @@ class SonosSwitchEntity(SonosEntity, SwitchEntity):
         """Initialize the switch."""
         super().__init__(speaker)
         self.feature_type = feature_type
+        self._attr_entity_category = ENTITY_CATEGORY_CONFIG
         self._attr_name = f"Sonos {speaker.zone_name} {FRIENDLY_NAMES[feature_type]}"
         self._attr_unique_id = f"{speaker.soco.uid}-{feature_type}"
         self._attr_icon = FEATURE_ICONS.get(feature_type)
