@@ -19,9 +19,10 @@ from homeassistant.const import STATE_PLAYING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LookinData, LookinPowerEntity
 from .aiolookin import Remote
 from .const import DOMAIN
+from .entity import LookinPowerEntity
+from .models import LookinData
 
 _TYPE_TO_DEVICE_CLASS = {"01": DEVICE_CLASS_TV, "02": DEVICE_CLASS_RECEIVER}
 
