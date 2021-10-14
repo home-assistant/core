@@ -281,8 +281,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
     def color_mode(self) -> str | None:
         """Return the color mode of the light."""
         if not self._supports_color_mode:
-            supported = self.supported_color_modes
-            if not supported:
+            if not (supported := self.supported_color_modes):
                 return None
             return next(iter(supported))
 

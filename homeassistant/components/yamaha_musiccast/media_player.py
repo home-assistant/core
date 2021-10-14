@@ -664,8 +664,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         """Return all media players of the current group, if the media player is server."""
         if self.is_client:
             # If we are a client we can still share group information, but we will take them from the server.
-            server = self.group_server
-            if server != self:
+            if (server := self.group_server) != self:
                 return server.musiccast_group
 
             return [self]

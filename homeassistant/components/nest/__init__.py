@@ -115,8 +115,7 @@ class SignalUpdateCallback:
         if not event_message.resource_update_name:
             return
         device_id = event_message.resource_update_name
-        events = event_message.resource_update_events
-        if not events:
+        if not (events := event_message.resource_update_events):
             return
         _LOGGER.debug("Event Update %s", events.keys())
         device_registry = await self._hass.helpers.device_registry.async_get_registry()

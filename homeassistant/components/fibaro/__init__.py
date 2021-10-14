@@ -307,8 +307,7 @@ class FibaroController:
                     device.device_config = self._device_config.get(device.ha_id, {})
                 else:
                     device.mapped_type = None
-                dtype = device.mapped_type
-                if dtype is None:
+                if (dtype := device.mapped_type) is None:
                     continue
                 device.unique_id_str = f"{self.hub_serial}.{device.id}"
                 self._device_map[device.id] = device

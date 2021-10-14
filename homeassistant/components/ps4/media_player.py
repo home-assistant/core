@@ -160,9 +160,7 @@ class PS4Device(MediaPlayerEntity):
 
     def _parse_status(self):
         """Parse status."""
-        status = self._ps4.status
-
-        if status is not None:
+        if (status := self._ps4.status) is not None:
             self._games = load_games(self.hass, self._unique_id)
             if self._games:
                 self.get_source_list()
@@ -384,13 +382,15 @@ class PS4Device(MediaPlayerEntity):
     @property
     def entity_picture(self):
         """Return picture."""
-        if self._state == STATE_PLAYING and self._media_content_id is not None:
-            image_hash = self.media_image_hash
-            if image_hash is not None:
-                return (
-                    f"/api/media_player_proxy/{self.entity_id}?"
-                    f"token={self.access_token}&cache={image_hash}"
-                )
+        if (
+            self._state == STATE_PLAYING
+            and self._media_content_id is not None
+            and (image_hash := self.media_image_hash) is not None
+        ):
+            return (
+                f"/api/media_player_proxy/{self.entity_id}?"
+                f"token={self.access_token}&cache={image_hash}"
+            )
         return MEDIA_IMAGE_DEFAULT
 
     @property

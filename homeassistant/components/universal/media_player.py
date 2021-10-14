@@ -256,8 +256,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
             )
             return
 
-        active_child = self._child_state
-        if active_child is None:
+        if (active_child := self._child_state) is None:
             # No child to call service on
             return
 

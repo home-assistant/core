@@ -215,8 +215,7 @@ class AmcrestBinarySensor(BinarySensorEntity):
             log_update_error(_LOGGER, "update", self.name, "binary sensor", error)
             return
 
-        event_code = self.entity_description.event_code
-        if event_code is None:
+        if (event_code := self.entity_description.event_code) is None:
             _LOGGER.error("Binary sensor %s event code not set", self.name)
             return
 

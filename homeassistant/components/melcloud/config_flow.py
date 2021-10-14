@@ -48,8 +48,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             with timeout(10):
-                acquired_token = token
-                if acquired_token is None:
+                if (acquired_token := token) is None:
                     acquired_token = await pymelcloud.login(
                         username,
                         password,

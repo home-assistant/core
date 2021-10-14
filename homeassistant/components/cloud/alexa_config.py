@@ -128,10 +128,8 @@ class AlexaConfig(alexa_config.AbstractConfig):
         if entity_expose is not None:
             return entity_expose
 
-        default_expose = self._prefs.alexa_default_expose
-
         # Backwards compat
-        if default_expose is None:
+        if (default_expose := self._prefs.alexa_default_expose) is None:
             return True
 
         return split_entity_id(entity_id)[0] in default_expose

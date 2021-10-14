@@ -182,8 +182,7 @@ class AlexaCapability:
         """Serialize according to the Discovery API."""
         result = {"type": "AlexaInterface", "interface": self.name(), "version": "3"}
 
-        instance = self.instance
-        if instance is not None:
+        if (instance := self.instance) is not None:
             result["instance"] = instance
 
         properties_supported = self.properties_supported()
@@ -264,8 +263,7 @@ class AlexaCapability:
                 "timeOfSample": dt_util.utcnow().strftime(DATE_FORMAT),
                 "uncertaintyInMilliseconds": 0,
             }
-            instance = self.instance
-            if instance is not None:
+            if (instance := self.instance) is not None:
                 result["instance"] = instance
 
             yield result

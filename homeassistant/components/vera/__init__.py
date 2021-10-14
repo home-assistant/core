@@ -270,8 +270,7 @@ class VeraDevice(Generic[DeviceType], Entity):
             attr[ATTR_ARMED] = "True" if armed else "False"
 
         if self.vera_device.is_trippable:
-            last_tripped = self.vera_device.last_trip
-            if last_tripped is not None:
+            if (last_tripped := self.vera_device.last_trip) is not None:
                 utc_time = utc_from_timestamp(int(last_tripped))
                 attr[ATTR_LAST_TRIP_TIME] = utc_time.isoformat()
             else:

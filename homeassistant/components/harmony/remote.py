@@ -256,8 +256,7 @@ class HarmonyRemote(HarmonyEntity, remote.RemoteEntity, RestoreEntity):
         _LOGGER.debug(
             "%s: Writing hub configuration to file: %s", self.name, self._config_path
         )
-        json_config = self._data.json_config
-        if json_config is None:
+        if (json_config := self._data.json_config) is None:
             _LOGGER.warning("%s: No configuration received from hub", self.name)
             return
 

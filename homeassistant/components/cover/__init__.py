@@ -212,9 +212,7 @@ class CoverEntity(Entity):
         if self.is_closing:
             return STATE_CLOSING
 
-        closed = self.is_closed
-
-        if closed is None:
+        if (closed := self.is_closed) is None:
             return None
 
         return STATE_CLOSED if closed else STATE_OPEN
@@ -225,13 +223,11 @@ class CoverEntity(Entity):
         """Return the state attributes."""
         data = {}
 
-        current = self.current_cover_position
-        if current is not None:
-            data[ATTR_CURRENT_POSITION] = self.current_cover_position
+        if (current := self.current_cover_position) is not None:
+            data[ATTR_CURRENT_POSITION] = current
 
-        current_tilt = self.current_cover_tilt_position
-        if current_tilt is not None:
-            data[ATTR_CURRENT_TILT_POSITION] = self.current_cover_tilt_position
+        if (current_tilt := self.current_cover_tilt_position) is not None:
+            data[ATTR_CURRENT_TILT_POSITION] = current_tilt
 
         return data
 

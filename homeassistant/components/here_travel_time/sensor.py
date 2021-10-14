@@ -416,11 +416,9 @@ class HERETravelTimeData:
             # Convert location to HERE friendly location
             destination = self.destination.split(",")
             origin = self.origin.split(",")
-            arrival = self.arrival
-            if arrival is not None:
+            if (arrival := self.arrival) is not None:
                 arrival = convert_time_to_isodate(arrival)
-            departure = self.departure
-            if departure is not None:
+            if (departure := self.departure) is not None:
                 departure = convert_time_to_isodate(departure)
 
             if departure is None and arrival is None:

@@ -461,8 +461,7 @@ class FanEntity(ToggleEntity):
         if self._implemented_preset_mode and (preset_mode := self.preset_mode):
             return preset_mode
         if self._implemented_percentage:
-            percentage = self.percentage
-            if percentage is None:
+            if (percentage := self.percentage) is None:
                 return None
             return self.percentage_to_speed(percentage)
         return None

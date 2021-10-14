@@ -609,8 +609,7 @@ class WaterHeater(HomeAccessory):
             self.char_display_units.set_value(unit)
 
         # Update target operation mode
-        operation_mode = new_state.state
-        if operation_mode:
+        if new_state.state:
             self.char_target_heat_cool.set_value(1)  # Heat
 
 

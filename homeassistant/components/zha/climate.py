@@ -580,8 +580,7 @@ class ZenWithinThermostat(Thermostat):
     def _rm_rs_action(self) -> str | None:
         """Return the current HVAC action based on running mode and running state."""
 
-        running_state = self._thrm.running_state
-        if running_state is None:
+        if (running_state := self._thrm.running_state) is None:
             return None
         if running_state & (RunningState.HEAT | RunningState.HEAT_STAGE_2):
             return CURRENT_HVAC_HEAT

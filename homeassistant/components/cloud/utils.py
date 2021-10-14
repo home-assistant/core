@@ -8,9 +8,7 @@ from aiohttp import payload, web
 
 def aiohttp_serialize_response(response: web.Response) -> dict[str, Any]:
     """Serialize an aiohttp response to a dictionary."""
-    body = response.body
-
-    if body is None:
+    if (body := response.body) is None:
         pass
     elif isinstance(body, payload.StringPayload):
         # pylint: disable=protected-access
