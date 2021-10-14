@@ -72,7 +72,9 @@ class LookinSensor(CoordinatorEntity, Entity):
 
     def _handle_coordinator_update(self):
         """Update the state of the entity."""
-        self._attr_native_value = getattr(self.coordinator.data, self.entity_description.key)
+        self._attr_native_value = getattr(
+            self.coordinator.data, self.entity_description.key
+        )
         super()._handle_coordinator_update()
 
     @property
