@@ -32,7 +32,6 @@ class LookinFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Start a discovery flow from zeroconf."""
         uid: str = discovery_info["hostname"][: -len(".local.")]
         host: str = discovery_info["host"]
-        self._host = host
 
         if not uid:
             return self.async_abort(reason="no_uid")
@@ -40,7 +39,6 @@ class LookinFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(uid.upper())
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
-        assert self._host is not None
         try:
             device: Device = await self._validate_device(host=host)
         except (DeviceNotFound, NoUsableService):
@@ -51,8 +49,9 @@ class LookinFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             self._name = device.name
 
+        self._host = host
         self._set_confirm_only()
-        self.context["title_placeholders"] = {"name": self._name, "host": self._host}
+        self.context["title_placeholders"] = {"name": self._name, "host": host}
         return await self.async_step_discovery_confirm()
 
     async def async_step_user(
@@ -71,15 +70,12 @@ class LookinFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                self._name = device.name
-                self._host = host
                 device_id = device.id.upper()
                 await self.async_set_unique_id(device_id, raise_on_progress=False)
                 self._abort_if_unique_id_configured(updates={CONF_HOST: host})
-                assert self._name is not None
                 return self.async_create_entry(
-                    title=self._name,
-                    data={CONF_HOST: self._host},
+                    title=device.name or host,
+                    data={CONF_HOST: host},
                 )
 
         return self.async_show_form(
@@ -98,6 +94,7 @@ class LookinFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm the discover flow."""
+        assert self._host is not None
         if user_input is None:
             self.context["title_placeholders"] = {
                 "name": self._name,
@@ -108,8 +105,7 @@ class LookinFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders={"name": self._name, "host": self._host},
             )
 
-        assert self._name is not None
         return self.async_create_entry(
-            title=self._name,
+            title=self._name or self._host,
             data={CONF_HOST: self._host},
         )
