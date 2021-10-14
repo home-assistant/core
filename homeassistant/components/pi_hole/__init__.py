@@ -173,17 +173,18 @@ class PiHoleEntity(CoordinatorEntity):
         self.api = api
         self._name = name
         self._server_unique_id = server_unique_id
-        if api.tls:
-            self.config_url = f"https://{self.api.host}/{self.api.location}"
-        else:
-            self.config_url = f"http://{self.api.host}/{self.api.location}"
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information of the entity."""
+        if self.api.tls:
+            config_url = f"https://{self.api.host}/{self.api.location}"
+        else:
+            config_url = f"http://{self.api.host}/{self.api.location}"
+
         return DeviceInfo(
             identifiers={(DOMAIN, self._server_unique_id)},
             name=self._name,
             manufacturer="Pi-hole",
-            configuration_url=self.config_url,
+            configuration_url=config_url,
         )
