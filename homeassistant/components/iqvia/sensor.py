@@ -130,7 +130,7 @@ INDEX_SENSOR_DESCRIPTIONS = (
         key=TYPE_DISEASE_TODAY,
         name="Cold & Flu Index: Today",
         icon="mdi:pill",
-        native_unit_of_measurement="index",
+        native_unit_of_measurement=" ",
         state_class=STATE_CLASS_MEASUREMENT,
     ),
 )
