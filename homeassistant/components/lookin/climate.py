@@ -26,6 +26,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -61,6 +62,7 @@ MIN_TEMP: Final = 16
 MAX_TEMP: Final = 30
 TEMP_OFFSET: Final = 16
 LOGGER = logging.getLogger(__name__)
+REQUEST_REFRESH_DELAY = 1
 
 
 async def async_setup_entry(
@@ -68,6 +70,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
+    """Set up the climate platform for lookin from a config entry."""
     lookin_data: LookinData = hass.data[DOMAIN][config_entry.entry_id]
     entities = []
 
@@ -85,6 +88,9 @@ async def async_setup_entry(
             name=f"{config_entry.title} {uuid}",
             update_method=_async_update,
             update_interval=timedelta(seconds=15),
+            request_refresh_debouncer=Debouncer(
+                hass, LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=True
+            ),
         )
         await coordinator.async_refresh()
         device: Climate = coordinator.data
@@ -101,6 +107,8 @@ async def async_setup_entry(
 
 
 class ConditionerEntity(LookinEntity, CoordinatorEntity, ClimateEntity):
+    """An aircon or heat pump."""
+
     _attr_supported_features: int = SUPPORT_FLAGS
     _attr_fan_modes: list[str] = [FAN_AUTO, FAN_LOW, FAN_MIDDLE, FAN_HIGH]
     _attr_swing_modes: list[str] = [SWING_OFF, SWING_BOTH]
@@ -120,6 +128,7 @@ class ConditionerEntity(LookinEntity, CoordinatorEntity, ClimateEntity):
         lookin_data: LookinData,
         coordinator: DataUpdateCoordinator,
     ) -> None:
+        """Init the ConditionerEntity."""
         super().__init__(uuid, device, lookin_data)
         CoordinatorEntity.__init__(self, coordinator)
         self._attr_temperature_unit = TEMP_CELSIUS
@@ -128,27 +137,32 @@ class ConditionerEntity(LookinEntity, CoordinatorEntity, ClimateEntity):
         self._attr_target_temperature_step = PRECISION_WHOLE
 
     @property
-    def _climate(self):
-        return cast(Climate, self._device)
+    def _climate(self) -> Climate:
+        return cast(Climate, self.coordinator.data)
 
     @property
     def current_temperature(self) -> int | None:
+        """Return the current temperature."""
         return self._climate.temperature + TEMP_OFFSET
 
     @property
     def target_temperature(self) -> int | None:
+        """Return the temperature we try to reach."""
         return self._climate.temperature + TEMP_OFFSET
 
     @property
     def fan_mode(self) -> str | None:
+        """Return the fan setting."""
         return self._attr_fan_modes[self._climate.fan_mode]
 
     @property
     def swing_mode(self) -> str | None:
+        """Return the swing setting."""
         return self._attr_swing_modes[self._climate.swing_mode]
 
     @property
     def hvac_mode(self) -> str:
+        """Return the current running hvac operation."""
         return self._attr_hvac_modes[self._climate.hvac_mode]
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
@@ -211,7 +225,7 @@ class ConditionerEntity(LookinEntity, CoordinatorEntity, ClimateEntity):
             self.hass.async_create_task(self.coordinator.async_request_refresh())
 
     async def async_added_to_hass(self) -> None:
-        """Called when the entity is added to hass."""
+        """Call when the entity is added to hass."""
         self.async_on_remove(
             self._lookin_udp_subs.subscribe(
                 self._lookin_device.id, self._async_push_update
