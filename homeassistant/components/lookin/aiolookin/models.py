@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import InitVar, dataclass, field
+from enum import Enum
 from typing import Any
 
 from .const import CODE_TO_NAME
@@ -9,6 +10,11 @@ from .const import CODE_TO_NAME
 __all__ = ("Device", "MeteoSensor", "Climate", "Remote")
 
 STATUS_OFF = "0000"
+
+
+class SensorID(Enum):
+    IR = "87"
+    Meteo = "FE"
 
 
 @dataclass

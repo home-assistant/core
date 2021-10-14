@@ -17,7 +17,7 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .aiolookin import METEO_SENSOR_ID, MeteoSensor
+from .aiolookin import MeteoSensor, SensorID
 from .const import DOMAIN
 from .models import LookinData
 
@@ -93,7 +93,7 @@ class LookinSensorEntity(CoordinatorEntity, SensorEntity, Entity):
     @callback
     def _async_push_update(self, msg: dict[str, str]) -> None:
         """Process an update pushed via UDP."""
-        if msg["sensor_id"] != METEO_SENSOR_ID or int(msg["event_id"]):
+        if int(msg["event_id"]):
             return
         LOGGER.debug("Processing push message for meteo sensor: %s", msg)
         meteo: MeteoSensor = self.coordinator.data
@@ -103,8 +103,8 @@ class LookinSensorEntity(CoordinatorEntity, SensorEntity, Entity):
     async def async_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
         self.async_on_remove(
-            self._lookin_udp_subs.subscribe(
-                self._lookin_device.id, self._async_push_update
+            self._lookin_udp_subs.subscribe_sensor(
+                self._lookin_device.id, SensorID.Meteo, None, self._async_push_update
             )
         )
         return await super().async_added_to_hass()

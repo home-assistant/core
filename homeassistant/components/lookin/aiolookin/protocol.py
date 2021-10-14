@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+from enum import Enum
 import json
+import logging
 import socket
 from typing import Any, Callable, Final
 
@@ -25,6 +27,13 @@ LOOKIN_PORT: Final = 61201
 
 CLIENT_TIMEOUTS: Final = ClientTimeout(total=9, connect=8, sock_connect=7, sock_read=7)
 
+LOGGER = logging.getLogger(__name__)
+
+
+class SensorID(Enum):
+    IR = "87"
+    Meteo = "FE"
+
 
 async def validate_response(response: ClientResponse) -> None:
     if response.status not in (200, 201, 204):
@@ -36,21 +45,50 @@ class LookinUDPSubscriptions:
 
     def __init__(self) -> None:
         """Init and store callbacks."""
-        self._callbacks: dict[str, list[Callable]] = {}
+        self._sensor_callbacks: dict[tuple[str, str, str | None], list[Callable]] = {}
+        self._service_callbacks: dict[tuple[str, str], list[Callable]] = {}
 
-    def subscribe(self, device_id: str, callback: Callable) -> Callable:
-        """Subscribe to lookin updates."""
-        self._callbacks.setdefault(device_id, []).append(callback)
+    def subscribe_sensor(
+        self, device_id: str, sensor_id: SensorID, uuid: str | None, callback: Callable
+    ) -> Callable:
+        """Subscribe to lookin sensor updates."""
+        self._sensor_callbacks.setdefault(
+            (device_id, sensor_id.value, uuid), []
+        ).append(callback)
 
-        def _remove_call(*_: Any) -> None:
-            self._callbacks[device_id].remove(callback)
+        def _remove_call(*_: Any):
+            self._sensor_callbacks[(device_id, sensor_id.value, uuid)].remove(callback)
 
         return _remove_call
 
-    def notify(self, msg: dict[str, Any]) -> None:
-        """Notify subscribers of an update."""
-        device_id = msg["device_id"]
-        for callback in self._callbacks.get(device_id, []):
+    def notify_sensor(self, msg: dict[str, Any]) -> None:
+        """Notify subscribers of a sensor update."""
+        device_id: str = msg["device_id"]
+        sensor_id: str = msg["sensor_id"]
+        uuid: str | None = msg.get("uuid")
+        LOGGER.debug("Received sensor push updates: %s", msg)
+        for callback in self._sensor_callbacks.get((device_id, sensor_id, uuid), []):
+            callback(msg)
+
+    def subscribe_service(
+        self, device_id: str, service_name: str, callback: Callable
+    ) -> Callable:
+        """Subscribe to lookin service updates."""
+        self._service_callbacks.setdefault((device_id, service_name), []).append(
+            callback
+        )
+
+        def _remove_call(*_: Any):
+            self._service_callbacks[(device_id, service_name)].remove(callback)
+
+        return _remove_call
+
+    def notify_service(self, msg: dict[str, Any]) -> None:
+        """Notify subscribers of a service update."""
+        LOGGER.debug("Received service push updates: %s", msg)
+        device_id: str = msg["device_id"]
+        service_name: str = msg["service_name"]
+        for callback in self._service_callbacks.get((device_id, service_name), []):
             callback(msg)
 
 
@@ -71,33 +109,27 @@ class LookinUDPProtocol:
 
     def datagram_received(self, data: bytes, addr: Any) -> None:
         """Process incoming state changes."""
-        # LOOKin:Updated!{device id}:{sensor id}:{event id}:{value}
-        # LOOKin:Updated!{device id}:{service name}:{value}
-        try:
-            content = data.decode()
-            if not content.startswith("LOOK.in:Updated!"):
-                return
-            _, msg = content.split("!")
-            contents = msg.split(":")
-            if len(contents) == 4:
-                self.subscriptions.notify(
-                    {
-                        "device_id": contents[0],
-                        "sensor_id": contents[1],
-                        "event_id": contents[2],
-                        "value": contents[3],
-                    }
-                )
-                return
-            self.subscriptions.notify(
-                {
-                    "device_id": contents[0],
-                    "service_name": contents[1],
-                    "value": contents[2],
-                }
-            )
-        except (KeyError, ValueError, UnicodeDecodeError):
-            pass
+        content = data.decode()
+        if not content.startswith("LOOK.in:Updated!"):
+            return
+        _, msg = content.split("!")
+        contents = msg.split(":")
+        update: dict[str, str] = {"device_id": contents[0]}
+        if len(contents) == 3:
+            # LOOK.in:Updated!{device id}:{service name}:{value}
+            update["service_name"] = contents[1]
+            update["value"] = contents[2]
+            self.subscriptions.notify_service(update)
+            return
+        # LOOK.in:Updated!{device id}:{sensor id}:{event id}:{value}
+        sensor_id = update["sensor_id"] = contents[1]
+        update["event_id"] = contents[2]
+        if sensor_id == SensorID.IR.value:
+            update["uuid"] = contents[3][:4]
+            update["value"] = contents[3][4:]
+        else:
+            update["value"] = contents[3]
+        self.subscriptions.notify_sensor(update)
 
     def error_received(self, exc: Exception) -> None:
         """Ignore errors."""
