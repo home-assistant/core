@@ -25,6 +25,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
     """Class to manage fetching WLED data from single endpoint."""
 
     keep_master_light: bool
+    config_entry: ConfigEntry
 
     def __init__(
         self,
