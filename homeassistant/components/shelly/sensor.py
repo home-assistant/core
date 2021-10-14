@@ -46,6 +46,7 @@ SENSORS: Final = {
         state_class=sensor.STATE_CLASS_MEASUREMENT,
         removal_condition=lambda settings, _: settings.get("external_power") == 1,
         available=lambda block: cast(int, block.battery) != -1,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     ("device", "deviceTemp"): BlockAttributeDescription(
         name="Device Temperature",
@@ -207,6 +208,7 @@ SENSORS: Final = {
         extra_state_attributes=lambda block: {
             "Operational hours": round(cast(int, block.totalWorkTime) / 3600, 1)
         },
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     ("adc", "adc"): BlockAttributeDescription(
         name="ADC",
