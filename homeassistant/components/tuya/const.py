@@ -54,7 +54,16 @@ TUYA_SUPPORTED_PRODUCT_CATEGORIES = (
 TUYA_SMART_APP = "tuyaSmart"
 SMARTLIFE_APP = "smartlife"
 
-PLATFORMS = ["binary_sensor", "climate", "fan", "light", "scene", "select", "switch"]
+PLATFORMS = [
+    "binary_sensor",
+    "climate",
+    "fan",
+    "light",
+    "scene",
+    "select",
+    "sensor",
+    "switch",
+]
 
 
 class DPCode(str, Enum):
@@ -64,6 +73,8 @@ class DPCode(str, Enum):
     """
 
     ANION = "anion"  # Ionizer unit
+    BATTERY_PERCENTAGE = "battery_percentage"  # Battery percentage
+    BATTERY_STATE = "battery_state"  # Battery state
     BRIGHT_VALUE = "bright_value"  # Brightness
     C_F = "c_f"  # Temperature unit switching
     CHILD_LOCK = "child_lock"  # Child lock
@@ -71,6 +82,9 @@ class DPCode(str, Enum):
     COLOUR_DATA_V2 = "colour_data_v2"  # Colored light mode
     CONCENTRATION_SET = "concentration_set"  # Concentration setting
     CUP_NUMBER = "cup_number"  # NUmber of cups
+    CUR_CURRENT = "cur_current"  # Actual current
+    CUR_POWER = "cur_power"  # Actual power
+    CUR_VOLTAGE = "cur_voltage"  # Actual voltage
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
     FAN_DIRECTION = "fan_direction"  # Fan direction
     FAN_SPEED_ENUM = "fan_speed_enum"  # Speed mode
