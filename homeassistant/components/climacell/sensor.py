@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-import logging
 
 from pyclimacell.const import CURRENT
 
@@ -20,8 +19,6 @@ from .const import (
     DOMAIN,
     ClimaCellSensorEntityDescription,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

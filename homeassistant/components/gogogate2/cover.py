@@ -1,8 +1,6 @@
 """Support for Gogogate2 garage Doors."""
 from __future__ import annotations
 
-import logging
-
 from ismartgate.common import (
     AbstractDoor,
     DoorStatus,
@@ -27,8 +25,6 @@ from .common import (
     cover_unique_id,
     get_data_update_coordinator,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

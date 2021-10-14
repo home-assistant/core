@@ -4,7 +4,6 @@ Support for controlling power supply of clients which are powered over Ethernet 
 Support for controlling network access of clients selected in option flow.
 Support for controlling deep packet inspection (DPI) restriction groups.
 """
-import logging
 from typing import Any
 
 from aiounifi.api import SOURCE_EVENT
@@ -25,8 +24,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
 from .unifi_client import UniFiClient
 from .unifi_entity_base import UniFiBase
-
-_LOGGER = logging.getLogger(__name__)
 
 BLOCK_SWITCH = "block"
 DPI_SWITCH = "dpi"
