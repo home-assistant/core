@@ -94,11 +94,11 @@ class LookinSensorEntity(CoordinatorEntity, SensorEntity, Entity):
     def _async_push_update(self, msg):
         """Process an update pushed via UDP."""
         LOGGER.debug("Saw push message: %s", msg)
-        if msg["sensor_id"] != "EF" or msg["event_id"] != "0":
+        if msg["sensor_id"] != "FE" or msg["event_id"] not in ("00", "0"):
             return
         data: MeteoSensor = self.coordinator.data
-        data.temperature = int(msg["value"][:4], 16)
-        data.humidity = int(msg["value"][-4:], 16)
+        data.temperature = float(int(msg["value"][:4], 16)) / 10
+        data.humidity = float(int(msg["value"][-4:], 16)) / 10
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
