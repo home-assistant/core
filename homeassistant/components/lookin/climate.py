@@ -40,23 +40,27 @@ from .models import LookinData
 
 SUPPORT_FLAGS: int = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_SWING_MODE
 
-STATE_TO_HVAC_MODE: dict[str, int] = {
-    HVAC_MODE_OFF: 0,
-    HVAC_MODE_AUTO: 1,
-    HVAC_MODE_COOL: 2,
-    HVAC_MODE_HEAT: 3,
-    HVAC_MODE_DRY: 4,
-    HVAC_MODE_FAN_ONLY: 5,
+LOOKIN_FAN_MODE_IDX_TO_HASS: Final = [FAN_AUTO, FAN_LOW, FAN_MIDDLE, FAN_HIGH]
+LOOKIN_SWING_MODE_IDX_TO_HASS: Final = [SWING_OFF, SWING_BOTH]
+LOOKIN_HVAC_MODE_IDX_TO_HASS: Final = [
+    HVAC_MODE_OFF,
+    HVAC_MODE_AUTO,
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_DRY,
+    HVAC_MODE_FAN_ONLY,
+]
+
+HASS_TO_LOOKIN_HVAC_MODE: dict[str, int] = {
+    mode: idx for idx, mode in enumerate(LOOKIN_HVAC_MODE_IDX_TO_HASS)
+}
+HASS_TO_LOOKIN_FAN_MODE: dict[str, int] = {
+    mode: idx for idx, mode in enumerate(LOOKIN_FAN_MODE_IDX_TO_HASS)
+}
+HASS_TO_LOOKIN_SWING_MODE: dict[str, int] = {
+    mode: idx for idx, mode in enumerate(LOOKIN_SWING_MODE_IDX_TO_HASS)
 }
 
-STATE_TO_FAN_MODE: dict[str, int] = {
-    FAN_AUTO: 0,
-    FAN_LOW: 1,
-    FAN_MIDDLE: 2,
-    FAN_HIGH: 3,
-}
-
-STATE_TO_SWING_MODE: dict[str, int] = {SWING_OFF: 0, SWING_BOTH: 1}
 
 LOOKIN_FAN_MODE_IDX_TO_HASS: Final = [FAN_AUTO, FAN_LOW, FAN_MIDDLE, FAN_HIGH]
 LOOKIN_SWING_MODE_IDX_TO_HASS: Final = [SWING_OFF, SWING_BOTH]
@@ -171,7 +175,7 @@ class ConditionerEntity(LookinEntity, CoordinatorEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set the hvac mode of the device."""
-        if (mode := STATE_TO_HVAC_MODE.get(hvac_mode)) is None:
+        if (mode := HASS_TO_LOOKIN_HVAC_MODE.get(hvac_mode)) is None:
             return
         await self._lookin_protocol.update_conditioner(
             extra=self._climate.extra, status=self._make_status()
@@ -191,7 +195,7 @@ class ConditionerEntity(LookinEntity, CoordinatorEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the fan mode of the device."""
-        if (mode := STATE_TO_FAN_MODE.get(fan_mode)) is None:
+        if (mode := HASS_TO_LOOKIN_FAN_MODE.get(fan_mode)) is None:
             return
         await self._lookin_protocol.update_conditioner(
             extra=self._climate.extra, status=self._make_status()
@@ -201,7 +205,7 @@ class ConditionerEntity(LookinEntity, CoordinatorEntity, ClimateEntity):
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set the swing mode of the device."""
-        if (mode := STATE_TO_SWING_MODE.get(swing_mode)) is None:
+        if (mode := HASS_TO_LOOKIN_SWING_MODE.get(swing_mode)) is None:
             return
         await self._lookin_protocol.update_conditioner(
             extra=self._climate.extra, status=self._make_status()
