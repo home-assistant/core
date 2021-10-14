@@ -117,7 +117,6 @@ INDEX_SENSOR_DESCRIPTIONS = (
         key=TYPE_ASTHMA_TOMORROW,
         name="Asthma Index: Tomorrow",
         icon="mdi:flower",
-        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_DISEASE_TODAY,
