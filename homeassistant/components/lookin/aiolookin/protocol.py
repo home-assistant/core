@@ -42,7 +42,7 @@ class LookinUDPSubscriptions:
         """Subscribe to lookin updates."""
         self._callbacks.setdefault(device_id, []).append(callback)
 
-        def _remove_call(*_):
+        def _remove_call(*_: Any) -> None:
             self._callbacks[device_id].remove(callback)
 
         return _remove_call
@@ -65,14 +65,14 @@ class LookinUDPProtocol:
         self.subscriptions = subscriptions
         self.transport: asyncio.DatagramTransport | None = None
 
-    def connection_made(self, transport):
+    def connection_made(self, transport: asyncio.DatagramTransport) -> None:
         """Connect or reconnect to the device."""
         self.transport = transport
 
     def datagram_received(self, data: bytes, addr: Any) -> None:
         """Process incoming state changes."""
-        # LOOK.in:Updated!{device id}:{sensor id}:{event id}:{value}
-        # LOOK.in:Updated!{device id}:{service name}:{value}
+        # LOOKin:Updated!{device id}:{sensor id}:{event id}:{value}
+        # LOOKin:Updated!{device id}:{service name}:{value}
         try:
             content = data.decode()
             if not content.startswith("LOOK.in:Updated!"):
