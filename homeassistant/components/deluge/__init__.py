@@ -13,7 +13,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -41,9 +40,6 @@ DELUGE_SCHEMA = vol.All(
             vol.Required(CONF_USERNAME): cv.string,
             vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(
-                CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-            ): cv.time_period,
         }
     )
 )
@@ -158,27 +154,11 @@ class DelugeClient:
 
         await self.hass.async_add_executor_job(self._deluge_state.init_torrents)
         await self.hass.async_add_executor_job(self._deluge_state.update)
-        self.add_options()
-        self.set_scan_interval(self.config_entry.options[CONF_SCAN_INTERVAL])
+        self.set_scan_interval(DEFAULT_SCAN_INTERVAL)
 
         self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
 
-        self.config_entry.add_update_listener(self.async_options_updated)
-
         return True
-
-    def add_options(self):
-        """Add options for entry."""
-        if self.config_entry.options:
-            return
-        scan_interval = self.config_entry.data.get(
-            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-        )
-        options = {
-            CONF_SCAN_INTERVAL: scan_interval,
-        }
-
-        self.hass.config_entries.async_update_entry(self.config_entry, options=options)
 
     def set_scan_interval(self, scan_interval):
         """Update scan interval."""
@@ -192,13 +172,6 @@ class DelugeClient:
         self.unsub_timer = async_track_time_interval(
             self.hass, refresh, timedelta(seconds=scan_interval)
         )
-
-    @staticmethod
-    async def async_options_updated(hass, entry):
-        """Triggered by config entry options updates."""
-        deluge_client = hass.data[DOMAIN][entry.entry_id]
-        deluge_client.set_scan_interval(entry.options[CONF_SCAN_INTERVAL])
-        await hass.async_add_executor_job(deluge_client.api.update)
 
 
 class DelugeState:
