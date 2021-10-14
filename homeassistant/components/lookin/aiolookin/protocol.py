@@ -242,8 +242,11 @@ class LookInHttpProtocol:
             timeout=CLIENT_TIMEOUTS,
         )
 
-    async def update_conditioner(self, extra: str, status: str) -> None:
+    async def update_conditioner(self, climate: Climate) -> None:
+        """Update the conditioner from a Climate object."""
         await self._session.get(
-            url=UPDATE_CLIMATE_URL.format(host=self._host, extra=extra, status=status),
+            url=UPDATE_CLIMATE_URL.format(
+                host=self._host, extra=climate.extra, status=climate.to_status
+            ),
             timeout=CLIENT_TIMEOUTS,
         )
