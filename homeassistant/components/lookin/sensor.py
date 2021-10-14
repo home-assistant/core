@@ -15,8 +15,8 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import LookinData
 from .const import DOMAIN
+from .models import LookinData
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -89,7 +89,7 @@ class LookinSensorEntity(CoordinatorEntity, SensorEntity, Entity):
         """Process an update pushed via UDP."""
         import pprint
 
-        pprint.print([self, msg])
+        pprint.pprint([self, msg])
 
     async def async_added_to_hass(self) -> None:
         """Called when the entity is added to hass."""

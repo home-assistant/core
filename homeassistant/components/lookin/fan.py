@@ -8,9 +8,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LookinData, LookinPowerEntity
 from .aiolookin import Remote
 from .const import DOMAIN
+from .entity import LookinPowerEntity
+from .models import LookinData
 
 FAN_SUPPORT_FLAGS: Final = SUPPORT_OSCILLATE
 
