@@ -1,4 +1,4 @@
-"""Config flow for Uptime Robot integration."""
+"""Config flow for UptimeRobot integration."""
 from __future__ import annotations
 
 from pyuptimerobot import (
@@ -23,7 +23,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Uptime Robot."""
+    """Handle a config flow for UptimeRobot."""
 
     VERSION = 1
 

@@ -1,4 +1,4 @@
-"""Test Uptime Robot binary_sensor."""
+"""Test UptimeRobot binary_sensor."""
 
 from unittest.mock import patch
 
@@ -53,7 +53,7 @@ async def test_config_import(hass: HomeAssistant) -> None:
 
 
 async def test_presentation(hass: HomeAssistant) -> None:
-    """Test the presenstation of Uptime Robot binary_sensors."""
+    """Test the presenstation of UptimeRobot binary_sensors."""
     await setup_uptimerobot_integration(hass)
 
     entity = hass.states.get(UPTIMEROBOT_TEST_ENTITY)
