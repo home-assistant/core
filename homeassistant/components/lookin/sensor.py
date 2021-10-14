@@ -1,6 +1,8 @@
 """The lookin integration sensor platform."""
 from __future__ import annotations
 
+import logging
+
 from homeassistant.components.sensor import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
@@ -15,8 +17,12 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .aiolookin import MeteoSensor
 from .const import DOMAIN
 from .models import LookinData
+
+LOGGER = logging.getLogger(__name__)
+
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -87,10 +93,16 @@ class LookinSensorEntity(CoordinatorEntity, SensorEntity, Entity):
     @callback
     def _async_push_update(self, msg):
         """Process an update pushed via UDP."""
-        # Process the temp/humidity here
+        LOGGER.debug("Saw push message: %s", msg)
+        if msg["sensor_id"] != "EF" or msg["event_id"] != "0":
+            return
+        data: MeteoSensor = self.coordinator.data
+        data.temperature = int(msg["value"][:4], 16)
+        data.humidity = int(msg["value"][-4:], 16)
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
-        """Called when the entity is added to hass."""
+        """Call when the entity is added to hass."""
         self.async_on_remove(
             self._lookin_udp_subs.subscribe(
                 self._lookin_device.id, self._async_push_update

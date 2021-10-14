@@ -108,8 +108,11 @@ class Climate(Remote):
     def __post_init__(self, _data: dict[str, Any]) -> None:
         self.extra = _data["Extra"]
         status = _data.get("Status", _data.get("LastStatus", STATUS_UNKNOWN))
+        self.update_from_status(status)
+        super().__post_init__(_data)
+
+    def update_from_status(self, status: str) -> None:
         self.hvac_mode = int(status[0])
         self.temperature = int(status[1], 16)
         self.fan_mode = int(status[2])
         self.swing_mode = int(status[3])
-        super().__post_init__(_data)
