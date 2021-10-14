@@ -26,7 +26,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -66,7 +65,6 @@ MIN_TEMP: Final = 16
 MAX_TEMP: Final = 30
 TEMP_OFFSET: Final = 16
 LOGGER = logging.getLogger(__name__)
-REQUEST_REFRESH_DELAY = 0.5
 
 
 async def async_setup_entry(
@@ -94,9 +92,6 @@ async def async_setup_entry(
             update_interval=timedelta(
                 seconds=60
             ),  # Updates are pushed (fallback is polling)
-            request_refresh_debouncer=Debouncer(
-                hass, LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=True
-            ),
         )
         await coordinator.async_refresh()
         device: Climate = coordinator.data
