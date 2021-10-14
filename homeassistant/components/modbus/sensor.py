@@ -67,9 +67,13 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
         """Update the state of the sensor."""
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
+        if self._call_active:
+            return
+        self._call_active = True
         result = await self._hub.async_pymodbus_call(
             self._slave, self._address, self._count, self._input_type
         )
+        self._call_active = False
         await self.async_update_from_result(result, self._slave, self._input_type, 0)
 
     async def async_update_from_result(

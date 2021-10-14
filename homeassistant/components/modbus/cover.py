@@ -201,6 +201,9 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
+        if self._call_active:
+            return
+        self._call_active = True
         if (
             self._write_type == CALL_TYPE_WRITE_COIL
             and self._write_address_close != self._write_address_open
@@ -221,6 +224,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
                 self._state_open,
                 self._write_type,
             )
+        self._call_active = False
         if self._status_register is None and self._max_seconds_to_complete is not None:
             if self._complete_watcher is not None:
                 self._complete_watcher()
@@ -262,6 +266,9 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
+        if self._call_active:
+            return
+        self._call_active = True
         if (
             self._write_type == CALL_TYPE_WRITE_COIL
             and self._write_address_close != self._write_address_open
@@ -282,6 +289,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
                 self._state_closed,
                 self._write_type,
             )
+        self._call_active = False
         if self._status_register is None and self._max_seconds_to_complete is not None:
             if self._complete_watcher is not None:
                 self._complete_watcher()
@@ -310,13 +318,16 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
             and self._write_address_close != self._write_address_open
         ):
             # Stop is only possible if cover is configured with two coil addresses
+            if self._call_active:
+                return
+            self._call_active = True
             await self._hub.async_pymodbus_call(
                 self._slave, self._write_address_open, False, self._write_type
             )
             result = await self._hub.async_pymodbus_call(
                 self._slave, self._write_address_close, False, self._write_type
             )
-            self._available = result is not None
+            self._call_active = False
         if self._complete_watcher is not None:
             self._complete_watcher()
             self._complete_watcher = None
@@ -361,6 +372,9 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
             self._address,
             opened,
         )
+        if self._call_active:
+            return
+        self._call_active = True
         if (
             self._write_type == CALL_TYPE_WRITE_COIL
             and self._write_address_close != self._write_address_open
@@ -388,7 +402,8 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
                     self._state_closed,
                     self._write_type,
                 )
-        self._available = result is not None
+        self._call_active = False
+        self._attr_available = result is not None
         await self.async_update()
 
     async def async_update(self, now: datetime | None = None) -> None:

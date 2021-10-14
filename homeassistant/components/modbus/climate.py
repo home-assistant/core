@@ -133,12 +133,16 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             for i in range(0, len(as_bytes), 2)
         ]
         registers = self._swap_registers(raw_regs)
+        if self._call_active:
+            return
+        self._call_active = True
         result = await self._hub.async_pymodbus_call(
             self._slave,
             self._target_temperature_register,
             registers,
             CALL_TYPE_WRITE_REGISTERS,
         )
+        self._call_active = False
         self._attr_available = result is not None
         await self.async_update()
 
@@ -157,6 +161,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._count,
             CALL_TYPE_REGISTER_HOLDING,
         )
+        self._call_active = False
 
         new_target_temperature = await self._async_read_register(result, 0)
         if new_target_temperature != self._attr_target_temperature:
@@ -177,7 +182,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
     ) -> None:
         """Update Target & Current Temperature."""
         if result is None:
-            self._available = False
+            self._attr_available = False
             return
         if input_type == CALL_TYPE_REGISTER_HOLDING:
             new_value = await self._async_read_register(result, address)
@@ -189,7 +194,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             if new_value != self._attr_current_temperature:
                 self._attr_current_temperature = new_value
                 self.async_write_ha_state()
-        self._available = True
+        self._attr_available = True
 
     async def _async_read_register(
         self, result: ModbusResponse, address: int

@@ -323,9 +323,14 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
 
     async def async_turn(self, command: int) -> None:
         """Evaluate switch result."""
+        if self._call_active:
+            return
+        self._call_active = True
         result = await self._hub.async_pymodbus_call(
             self._slave, self._address, command, self._write_type
         )
+        self._call_active = False
+
         if result is None:
             self._attr_available = False
             self.async_write_ha_state()
