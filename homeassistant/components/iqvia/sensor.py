@@ -88,7 +88,7 @@ FORECAST_SENSOR_DESCRIPTIONS = (
         key=TYPE_ASTHMA_FORECAST,
         name="Asthma Index: Forecasted Average",
         icon="mdi:flower",
-        native_unit_of_measurement="index",
+        native_unit_of_measurement=" ",
     ),
     SensorEntityDescription(
         key=TYPE_DISEASE_FORECAST,
