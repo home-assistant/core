@@ -17,7 +17,7 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .aiolookin import MeteoSensor
+from .aiolookin import METEO_SENSOR_ID, MeteoSensor
 from .const import DOMAIN
 from .models import LookinData
 
@@ -93,9 +93,9 @@ class LookinSensorEntity(CoordinatorEntity, SensorEntity, Entity):
     @callback
     def _async_push_update(self, msg):
         """Process an update pushed via UDP."""
-        LOGGER.debug("Saw push message: %s", msg)
-        if msg["sensor_id"] != "FE" or msg["event_id"] not in ("00", "0"):
+        if msg["sensor_id"] != METEO_SENSOR_ID or int(msg["event_id"]):
             return
+        LOGGER.debug("Processing push message for meteo sensor: %s", msg)
         meteo: MeteoSensor = self.coordinator.data
         meteo.update_from_value(msg["value"])
         self.async_write_ha_state()
