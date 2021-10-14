@@ -94,7 +94,7 @@ FORECAST_SENSOR_DESCRIPTIONS = (
         key=TYPE_DISEASE_FORECAST,
         name="Cold & Flu: Forecasted Average",
         icon="mdi:snowflake",
-        native_unit_of_measurement="index",
+        native_unit_of_measurement=" ",
     ),
 )
 
