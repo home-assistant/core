@@ -114,8 +114,7 @@ class Climate(Remote):
         if "Status" in _data:
             status = _data["Status"]
         if "LastStatus" in _data:
-            # Device is off, but we still
-            # want to keep the temp/fan/swing settings
+            # Device is off, but we still want to keep the temp/fan/swing settings
             status = f"0{_data['LastStatus'][1:]}"
         else:
             status = STATUS_OFF
@@ -123,6 +122,12 @@ class Climate(Remote):
         super().__post_init__(_data)
 
     def update_from_status(self, status: str) -> None:
+        if status == STATUS_OFF and (
+            self.temperature or self.fan_mode or self.swing_mode
+        ):
+            # Device is off, but we still want to keep the temp/fan/swing settings
+            self.hvac_mode = 0
+            return
         self.hvac_mode = int(status[0])
         self.temperature = int(status[1], 16)
         self.fan_mode = int(status[2])
