@@ -123,7 +123,9 @@ class Climate(Remote):
 
     def update_from_status(self, status: str) -> None:
         if status == STATUS_OFF and (
-            self.temperature or self.fan_mode or self.swing_mode
+            (hasattr(self, "temperature") and self.temperature)
+            or (hasattr(self, "fan_mode") and self.fan_mode)
+            or (hasattr(self, "swing_mode") and self.swing_mode)
         ):
             # Device is off, but we still want to keep the temp/fan/swing settings
             self.hvac_mode = 0
