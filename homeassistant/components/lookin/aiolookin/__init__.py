@@ -6,6 +6,7 @@ from .models import Climate, Device, MeteoSensor, Remote
 from .protocol import LookInHttpProtocol, LookinUDPSubscriptions, start_lookin_udp
 
 __all__ = [
+    "CODE_TO_NAME",
     "NoUsableService",
     "DeviceNotFound",
     "Device",
