@@ -33,6 +33,7 @@ class UptimeRobotEntity(CoordinatorEntity):
             "manufacturer": "Uptime Robot Team",
             "entry_type": "service",
             "model": self.monitor.type.name,
+            "configuration_url": f"https://uptimerobot.com/dashboard#{self.monitor.id}",
         }
         self._attr_extra_state_attributes = {
             ATTR_TARGET: self.monitor.url,
