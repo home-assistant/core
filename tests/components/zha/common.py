@@ -56,6 +56,18 @@ def patch_cluster(cluster):
         cluster.add = AsyncMock(return_value=[0])
 
 
+def update_attribute_cache(cluster):
+    """Update attribute cache based on plugged attributes."""
+    if cluster.PLUGGED_ATTR_READS:
+        attrs = [
+            make_attribute(cluster.attridx.get(attr, attr), value)
+            for attr, value in cluster.PLUGGED_ATTR_READS.items()
+        ]
+        hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
+        hdr.frame_control.disable_default_response = True
+        cluster.handle_message(hdr, [attrs])
+
+
 def get_zha_gateway(hass):
     """Return ZHA gateway from hass.data."""
     try:
@@ -100,16 +112,29 @@ async def find_entity_id(domain, zha_device, hass):
     This is used to get the entity id in order to get the state from the state
     machine so that we can test state changes.
     """
+    entities = await find_entity_ids(domain, zha_device, hass)
+    if not entities:
+        return None
+    return entities[0]
+
+
+async def find_entity_ids(domain, zha_device, hass):
+    """Find the entity ids under the testing.
+
+    This is used to get the entity id in order to get the state from the state
+    machine so that we can test state changes.
+    """
     ieeetail = "".join([f"{o:02x}" for o in zha_device.ieee[:4]])
     head = f"{domain}.{slugify(f'{zha_device.name} {ieeetail}')}"
 
     enitiy_ids = hass.states.async_entity_ids(domain)
     await hass.async_block_till_done()
 
+    res = []
     for entity_id in enitiy_ids:
         if entity_id.startswith(head):
-            return entity_id
-    return None
+            res.append(entity_id)
+    return res
 
 
 def async_find_group_entity_id(hass, domain, group):

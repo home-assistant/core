@@ -5,7 +5,6 @@ from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
@@ -41,8 +40,8 @@ async def async_setup_entry(
 class PicnicSensor(SensorEntity, CoordinatorEntity):
     """The CoordinatorEntity subclass representing Picnic sensors."""
 
+    _attr_attribution = ATTRIBUTION
     entity_description: PicnicSensorEntityDescription
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     def __init__(
         self,
@@ -68,7 +67,7 @@ class PicnicSensor(SensorEntity, CoordinatorEntity):
             if self.coordinator.data is not None
             else {}
         )
-        return self.entity_description.state(data_set)
+        return self.entity_description.value_fn(data_set)
 
     @property
     def available(self) -> bool:

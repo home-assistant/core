@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "authorize_url_timeout": "Id\u0151t\u00fall\u00e9p\u00e9s a hiteles\u00edt\u00e9si URL gener\u00e1l\u00e1sa sor\u00e1n.",
-            "missing_configuration": "A komponens nincs konfigur\u00e1lva. K\u00e9rlek, k\u00f6vesd a dokument\u00e1ci\u00f3t.",
+            "missing_configuration": "A komponens nincs konfigur\u00e1lva. K\u00e9rem, k\u00f6vesse a dokument\u00e1ci\u00f3t.",
             "no_url_available": "Nincs el\u00e9rhet\u0151 URL. A hib\u00e1r\u00f3l tov\u00e1bbi inform\u00e1ci\u00f3t [a s\u00fag\u00f3ban]({docs_url}) tal\u00e1lsz.",
             "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
         },
@@ -42,10 +42,10 @@
             "public_weather": {
                 "data": {
                     "area_name": "A ter\u00fclet neve",
-                    "lat_ne": "Sz\u00e9less\u00e9g \u00c9szakkeleti sarok",
-                    "lat_sw": "Sz\u00e9less\u00e9g D\u00e9lnyugati sarok",
-                    "lon_ne": "Hossz\u00fas\u00e1g \u00c9szakkeleti sarok",
-                    "lon_sw": "Hossz\u00fas\u00e1g D\u00e9lnyugati sarok",
+                    "lat_ne": "\u00c9szakkeleti sarok sz\u00e9less\u00e9go fok",
+                    "lat_sw": "D\u00e9lnyugati sarok sz\u00e9lees\u00e9gi fok",
+                    "lon_ne": "\u00c9szakkeleti sarok hossz\u00fas\u00e1gi fok",
+                    "lon_sw": "D\u00e9lnyugati sarok hossz\u00fas\u00e1ggi fok",
                     "mode": "Sz\u00e1m\u00edt\u00e1s",
                     "show_on_map": "Mutasd a t\u00e9rk\u00e9pen"
                 },

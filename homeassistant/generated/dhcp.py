@@ -72,6 +72,46 @@ DHCP = [
         "hostname": "flume-gw-*"
     },
     {
+        "domain": "flux_led",
+        "macaddress": "18B905*",
+        "hostname": "[ba][lk]*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "249494*",
+        "hostname": "[ba][lk]*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "7CB94C*",
+        "hostname": "[ba][lk]*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "B4E842*",
+        "hostname": "[ba][lk]*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "8CCE4E*",
+        "hostname": "lwip*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "2462AB*",
+        "hostname": "zengge_35*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "70039F*",
+        "hostname": "zengge_0e*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "C82E47*",
+        "hostname": "sta*"
+    },
+    {
         "domain": "goalzero",
         "hostname": "yeti*"
     },
@@ -266,6 +306,31 @@ DHCP = [
     },
     {
         "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "1027F5*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "403F8C*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "ep*",
+        "macaddress": "E848B8*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "E848B8*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "909A4A*"
+    },
+    {
+        "domain": "tplink",
         "hostname": "hs*",
         "macaddress": "1C3BF3*"
     },
@@ -291,6 +356,21 @@ DHCP = [
     },
     {
         "domain": "tplink",
+        "hostname": "hs*",
+        "macaddress": "C006C3*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "ep*",
+        "macaddress": "003192*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "003192*"
+    },
+    {
+        "domain": "tplink",
         "hostname": "k[lp]*",
         "macaddress": "1C3BF3*"
     },
@@ -316,6 +396,11 @@ DHCP = [
     },
     {
         "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "C006C3*"
+    },
+    {
+        "domain": "tplink",
         "hostname": "lb*",
         "macaddress": "1C3BF3*"
     },
@@ -338,30 +423,6 @@ DHCP = [
         "domain": "tplink",
         "hostname": "lb*",
         "macaddress": "B09575*"
-    },
-    {
-        "domain": "tuya",
-        "macaddress": "508A06*"
-    },
-    {
-        "domain": "tuya",
-        "macaddress": "7CF666*"
-    },
-    {
-        "domain": "tuya",
-        "macaddress": "10D561*"
-    },
-    {
-        "domain": "tuya",
-        "macaddress": "D4A651*"
-    },
-    {
-        "domain": "tuya",
-        "macaddress": "68572D*"
-    },
-    {
-        "domain": "tuya",
-        "macaddress": "1869D8*"
     },
     {
         "domain": "verisure",

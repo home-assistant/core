@@ -8,6 +8,7 @@ from datetime import timedelta
 from ipaddress import ip_address
 from typing import Any
 
+from async_upnp_client.exceptions import UpnpConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -122,7 +123,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     location = discovery_info[  # pylint: disable=unsubscriptable-object
         ssdp.ATTR_SSDP_LOCATION
     ]
-    device = await Device.async_create_device(hass, location)
+    try:
+        device = await Device.async_create_device(hass, location)
+    except UpnpConnectionError as err:
+        LOGGER.debug("Error connecting to device %s", location)
+        raise ConfigEntryNotReady from err
 
     # Ensure entry has a unique_id.
     if not entry.unique_id:
@@ -193,6 +198,7 @@ class UpnpBinarySensorEntityDescription(BinarySensorEntityDescription):
     """A class that describes UPnP entities."""
 
     format: str = "s"
+    unique_id: str | None = None
 
 
 @dataclass
@@ -200,6 +206,7 @@ class UpnpSensorEntityDescription(SensorEntityDescription):
     """A class that describes a sensor UPnP entities."""
 
     format: str = "s"
+    unique_id: str | None = None
 
 
 class UpnpDataUpdateCoordinator(DataUpdateCoordinator):
@@ -245,7 +252,7 @@ class UpnpEntity(CoordinatorEntity):
         self._device = coordinator.device
         self.entity_description = entity_description
         self._attr_name = f"{coordinator.device.name} {entity_description.name}"
-        self._attr_unique_id = f"{coordinator.device.udn}_{entity_description.key}"
+        self._attr_unique_id = f"{coordinator.device.udn}_{entity_description.unique_id or entity_description.key}"
         self._attr_device_info = {
             "connections": {(dr.CONNECTION_UPNP, coordinator.device.udn)},
             "name": coordinator.device.name,

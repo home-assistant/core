@@ -1,5 +1,6 @@
 """Tests for the HTTP API for the cloud component."""
 import asyncio
+from http import HTTPStatus
 from ipaddress import ip_network
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
@@ -412,7 +413,7 @@ async def test_websocket_subscription_fail(
     hass, hass_ws_client, aioclient_mock, mock_auth, mock_cloud_login
 ):
     """Test querying the status."""
-    aioclient_mock.get(SUBSCRIPTION_INFO_URL, status=HTTP_INTERNAL_SERVER_ERROR)
+    aioclient_mock.get(SUBSCRIPTION_INFO_URL, status=HTTPStatus.INTERNAL_SERVER_ERROR)
     client = await hass_ws_client(hass)
     await client.send_json({"id": 5, "type": "cloud/subscription"})
     response = await client.receive_json()
@@ -549,14 +550,8 @@ async def test_enabling_remote(hass, hass_ws_client, setup_api, mock_cloud_login
 
     assert len(mock_connect.mock_calls) == 1
 
-
-async def test_disabling_remote(hass, hass_ws_client, setup_api, mock_cloud_login):
-    """Test we call right code to disable remote UI."""
-    client = await hass_ws_client(hass)
-    cloud = hass.data[DOMAIN]
-
     with patch("hass_nabucasa.remote.RemoteUI.disconnect") as mock_disconnect:
-        await client.send_json({"id": 5, "type": "cloud/remote/disconnect"})
+        await client.send_json({"id": 6, "type": "cloud/remote/disconnect"})
         response = await client.receive_json()
     assert response["success"]
     assert not cloud.client.remote_autostart

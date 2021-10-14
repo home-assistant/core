@@ -5,18 +5,18 @@
       "user": {
         "title": "Setup Switchbot device",
         "data": {
+          "mac": "Device MAC address",
           "name": "[%key:common::config_flow::data::name%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "mac": "Device MAC address"
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
-    },
+    "error": {},
     "abort": {
       "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_unconfigured_devices": "No unconfigured devices found.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "switchbot_unsupported_type": "Unsupported Switchbot Type."
     }
   },

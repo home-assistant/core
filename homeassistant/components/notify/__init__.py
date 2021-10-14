@@ -273,21 +273,17 @@ async def async_setup(hass, config):
 
     async def persistent_notification(service: ServiceCall) -> None:
         """Send notification via the built-in persistsent_notify integration."""
-        payload = {}
         message = service.data[ATTR_MESSAGE]
         message.hass = hass
         _check_templates_warn(hass, message)
-        payload[ATTR_MESSAGE] = message.async_render(parse_result=False)
 
-        title = service.data.get(ATTR_TITLE)
-        if title:
-            _check_templates_warn(hass, title)
-            title.hass = hass
-            payload[ATTR_TITLE] = title.async_render(parse_result=False)
+        title = None
+        if title_tpl := service.data.get(ATTR_TITLE):
+            _check_templates_warn(hass, title_tpl)
+            title_tpl.hass = hass
+            title = title_tpl.async_render(parse_result=False)
 
-        await hass.services.async_call(
-            pn.DOMAIN, pn.SERVICE_CREATE, payload, blocking=True
-        )
+        pn.async_create(hass, message.async_render(parse_result=False), title)
 
     async def async_setup_platform(
         integration_name, p_config=None, discovery_info=None

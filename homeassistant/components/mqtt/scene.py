@@ -11,8 +11,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType
 
-from . import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, DOMAIN, PLATFORMS
+from . import PLATFORMS
 from .. import mqtt
+from .const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, DOMAIN
 from .mixins import (
     MQTT_AVAILABILITY_SCHEMA,
     MqttAvailability,
