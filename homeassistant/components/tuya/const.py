@@ -37,8 +37,8 @@ TUYA_SUPPORTED_PRODUCT_CATEGORIES = (
     "fs",  # Fan
     "fwl",  # Ambient light
     "jsq",  # Humidifier's light
+    "kfj",  # Coffee Maker
     "kg",  # Switch
-    "kj",  # Air Purifier
     "kj",  # Air Purifier
     "kfj",  # Coffee maker
     "kt",  # Air conditioner
@@ -48,7 +48,6 @@ TUYA_SUPPORTED_PRODUCT_CATEGORIES = (
     "wk",  # Thermostat
     "xdd",  # Ceiling Light
     "xxj",  # Diffuser
-    "xxj",  # Diffuser's light
 )
 
 TUYA_SMART_APP = "tuyaSmart"
@@ -59,6 +58,7 @@ PLATFORMS = [
     "climate",
     "fan",
     "light",
+    "number",
     "scene",
     "select",
     "sensor",
@@ -96,6 +96,7 @@ class DPCode(str, Enum):
     LOCK = "lock"  # Lock / Child lock
     MATERIAL = "material"  # Material
     MODE = "mode"  # Working mode / Mode
+    POWDER_SET = "powder_set"  # Powder
     PUMP_RESET = "pump_reset"  # Water pump reset
     SHAKE = "shake"  # Oscillating
     SPEED = "speed"  # Speed level
@@ -129,7 +130,9 @@ class DPCode(str, Enum):
     TEMPER_ALARM = "temper_alarm"  # Tamper alarm
     UV = "uv"  # UV sterilization
     WARM = "warm"  # Heat preservation
+    WARM_TIME = "warm_time"  # Heat preservation time
     WATER_RESET = "water_reset"  # Resetting of water usage days
+    WATER_SET = "water_set"  # Water level
     WET = "wet"  # Humidification
     WORK_MODE = "work_mode"  # Working mode
 
