@@ -72,7 +72,7 @@ class LookinSensorEntity(CoordinatorEntity, SensorEntity, Entity):
         self._attr_native_value = getattr(self.coordinator.data, description.key)
         self._attr_unique_id = f"{self._lookin_device.id}-{description.key}"
 
-    def _handle_coordinator_update(self):
+    def _handle_coordinator_update(self) -> None:
         """Update the state of the entity."""
         self._attr_native_value = getattr(
             self.coordinator.data, self.entity_description.key
@@ -85,13 +85,13 @@ class LookinSensorEntity(CoordinatorEntity, SensorEntity, Entity):
         return {
             "identifiers": {(DOMAIN, self._lookin_device.id)},
             "name": self._lookin_device.name,
-            "manufacturer": "LOOK.in",
-            "model": "LOOK.in 2",
+            "manufacturer": "LOOKin",
+            "model": "LOOKin 2",
             "sw_version": self._lookin_device.firmware,
         }
 
     @callback
-    def _async_push_update(self, msg):
+    def _async_push_update(self, msg: dict[str, str]) -> None:
         """Process an update pushed via UDP."""
         if msg["sensor_id"] != METEO_SENSOR_ID or int(msg["event_id"]):
             return
