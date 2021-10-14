@@ -1,0 +1,9 @@
+{
+  "domain": "lookin",
+  "name": "LOOK.in",
+  "documentation": "https://www.home-assistant.io/integrations/",
+  "codeowners": ["@ANMalko"],
+  "zeroconf": ["_lookin._tcp.local."],
+  "config_flow": true,
+  "iot_class": "local_polling"
+}
