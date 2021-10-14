@@ -180,7 +180,7 @@ class EntityDescription:
     key: str
 
     device_class: str | None = None
-    entity_category: Literal["config"] | None = None
+    entity_category: Literal["config", "diagnostic"] | None = None
     entity_registry_enabled_default: bool = True
     force_update: bool = False
     icon: str | None = None
