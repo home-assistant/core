@@ -105,19 +105,13 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up stream."""
+def filter_libav_logging() -> None:
+    """Filter libav logging to only log when the stream logger is at DEBUG."""
 
-    # Lower libav messages to debug/drop them if stream logging DEBUG is not enabled
-    stream_debug_disabled = not logging.getLogger(__name__).isEnabledFor(logging.DEBUG)
+    stream_debug_enabled = logging.getLogger(__name__).isEnabledFor(logging.DEBUG)
 
-    def drop_to_debug(record: logging.LogRecord) -> bool:
-        if stream_debug_disabled:
-            return False
-        if record.levelno > logging.DEBUG:
-            record.levelname = "DEBUG"
-            record.levelno = logging.DEBUG
-        return True
+    def libav_filter(record: logging.LogRecord) -> bool:
+        return stream_debug_enabled
 
     for logging_namespace in (
         "libav.mp4",
@@ -128,7 +122,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "libav.tls",
         "libav.NULL",
     ):
-        logging.getLogger(logging_namespace).addFilter(drop_to_debug)
+        logging.getLogger(logging_namespace).addFilter(libav_filter)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up stream."""
+
+    # Drop libav log messages if stream logging is above DEBUG
+    filter_libav_logging()
 
     # Keep import here so that we can import stream integration without installing reqs
     # pylint: disable=import-outside-toplevel
