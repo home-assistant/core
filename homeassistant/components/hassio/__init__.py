@@ -120,11 +120,9 @@ SCHEMA_RESTORE_FULL = vol.Schema(
 
 SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend(
     {
-        vol.Required(ATTR_SLUG): cv.slug,
         vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
         vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_PASSWORD): cv.string,
     }
 )
 
