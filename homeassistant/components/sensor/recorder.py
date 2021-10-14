@@ -287,7 +287,7 @@ def _suggest_report_issue(hass: HomeAssistant, entity_id: str) -> str:
     return report_issue
 
 
-def warn_dip(hass: HomeAssistant, entity_id: str) -> None:
+def warn_dip(hass: HomeAssistant, entity_id: str, state: State) -> None:
     """Log a warning once if a sensor with state_class_total has a decreasing value.
 
     The log will be suppressed until two dips have been seen to prevent warning due to
@@ -308,14 +308,17 @@ def warn_dip(hass: HomeAssistant, entity_id: str) -> None:
             return
         _LOGGER.warning(
             "Entity %s %shas state class total_increasing, but its state is "
-            "not strictly increasing. Please %s",
+            "not strictly increasing. Triggered by state %s with last_updated set to %s. "
+            "Please %s",
             entity_id,
             f"from integration {domain} " if domain else "",
+            state.state,
+            state.last_updated.isoformat(),
             _suggest_report_issue(hass, entity_id),
         )
 
 
-def warn_negative(hass: HomeAssistant, entity_id: str) -> None:
+def warn_negative(hass: HomeAssistant, entity_id: str, state: State) -> None:
     """Log a warning once if a sensor with state_class_total has a negative value."""
     if WARN_NEGATIVE not in hass.data:
         hass.data[WARN_NEGATIVE] = set()
@@ -324,28 +327,34 @@ def warn_negative(hass: HomeAssistant, entity_id: str) -> None:
         domain = entity_sources(hass).get(entity_id, {}).get("domain")
         _LOGGER.warning(
             "Entity %s %shas state class total_increasing, but its state is "
-            "negative. Please %s",
+            "negative. Triggered by state %s with last_updated set to %s. Please %s",
             entity_id,
             f"from integration {domain} " if domain else "",
+            state.state,
+            state.last_updated.isoformat(),
             _suggest_report_issue(hass, entity_id),
         )
 
 
 def reset_detected(
-    hass: HomeAssistant, entity_id: str, state: float, previous_state: float | None
+    hass: HomeAssistant,
+    entity_id: str,
+    fstate: float,
+    previous_fstate: float | None,
+    state: State,
 ) -> bool:
     """Test if a total_increasing sensor has been reset."""
-    if previous_state is None:
+    if previous_fstate is None:
         return False
 
-    if 0.9 * previous_state <= state < previous_state:
-        warn_dip(hass, entity_id)
+    if 0.9 * previous_fstate <= fstate < previous_fstate:
+        warn_dip(hass, entity_id, state)
 
-    if state < 0:
-        warn_negative(hass, entity_id)
+    if fstate < 0:
+        warn_negative(hass, entity_id, state)
         raise HomeAssistantError
 
-    return state < 0.9 * previous_state
+    return fstate < 0.9 * previous_fstate
 
 
 def _wanted_statistics(sensor_states: list[State]) -> dict[str, set[str]]:
@@ -547,13 +556,15 @@ def _compile_statistics(  # noqa: C901
                 elif state_class == STATE_CLASS_TOTAL_INCREASING:
                     try:
                         if old_state is None or reset_detected(
-                            hass, entity_id, fstate, new_state
+                            hass, entity_id, fstate, new_state, state
                         ):
                             reset = True
                             _LOGGER.info(
-                                "Detected new cycle for %s, value dropped from %s to %s",
+                                "Detected new cycle for %s, value dropped from %s to %s, "
+                                "triggered by state with last_updated set to %s",
                                 entity_id,
                                 new_state,
+                                state.last_updated.isoformat(),
                                 fstate,
                             )
                     except HomeAssistantError:

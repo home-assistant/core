@@ -45,7 +45,6 @@ PYNUT_UNIQUE_ID = "unique_id"
 PYNUT_MANUFACTURER = "manufacturer"
 PYNUT_MODEL = "model"
 PYNUT_FIRMWARE = "firmware"
-PYNUT_NAME = "name"
 
 SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
     "ups.status.display": SensorEntityDescription(

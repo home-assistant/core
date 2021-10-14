@@ -651,10 +651,8 @@ omit =
     homeassistant/components/mitemp_bt/sensor.py
     homeassistant/components/mjpeg/camera.py
     homeassistant/components/mochad/*
-    homeassistant/components/modbus/base_platform.py
     homeassistant/components/modbus/climate.py
     homeassistant/components/modbus/modbus.py
-    homeassistant/components/modbus/validators.py
     homeassistant/components/modem_callerid/sensor.py
     homeassistant/components/motion_blinds/__init__.py
     homeassistant/components/motion_blinds/const.py
@@ -733,7 +731,6 @@ omit =
     homeassistant/components/nuki/const.py
     homeassistant/components/nuki/binary_sensor.py
     homeassistant/components/nuki/lock.py
-    homeassistant/components/nut/sensor.py
     homeassistant/components/nx584/alarm_control_panel.py
     homeassistant/components/nzbget/coordinator.py
     homeassistant/components/obihai/*
@@ -1115,6 +1112,7 @@ omit =
     homeassistant/components/travisci/sensor.py
     homeassistant/components/tuya/__init__.py
     homeassistant/components/tuya/base.py
+    homeassistant/components/tuya/binary_sensor.py
     homeassistant/components/tuya/climate.py
     homeassistant/components/tuya/const.py
     homeassistant/components/tuya/fan.py
@@ -1192,7 +1190,6 @@ omit =
     homeassistant/components/webostv/*
     homeassistant/components/whois/sensor.py
     homeassistant/components/wiffi/*
-    homeassistant/components/wink/*
     homeassistant/components/wirelesstag/*
     homeassistant/components/wolflink/__init__.py
     homeassistant/components/wolflink/sensor.py

@@ -41,6 +41,7 @@ TUYA_SUPPORTED_PRODUCT_CATEGORIES = (
     "kj",  # Air Purifier
     "kj",  # Air Purifier
     "kt",  # Air conditioner
+    "mcs",  # Door Window Sensor
     "pc",  # Power Strip
     "qn",  # Heater
     "wk",  # Thermostat
@@ -52,7 +53,7 @@ TUYA_SUPPORTED_PRODUCT_CATEGORIES = (
 TUYA_SMART_APP = "tuyaSmart"
 SMARTLIFE_APP = "smartlife"
 
-PLATFORMS = ["climate", "fan", "light", "scene", "switch"]
+PLATFORMS = ["binary_sensor", "climate", "fan", "light", "scene", "switch"]
 
 
 class DPCode(str, Enum):
@@ -64,8 +65,10 @@ class DPCode(str, Enum):
     ANION = "anion"  # Ionizer unit
     BRIGHT_VALUE = "bright_value"  # Brightness
     C_F = "c_f"  # Temperature unit switching
+    CHILD_LOCK = "child_lock"  # Child lock
     COLOUR_DATA = "colour_data"  # Colored light mode
     COLOUR_DATA_V2 = "colour_data_v2"  # Colored light mode
+    DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
     FAN_DIRECTION = "fan_direction"  # Fan direction
     FAN_SPEED_ENUM = "fan_speed_enum"  # Speed mode
     FAN_SPEED_PERCENT = "fan_speed_percent"  # Stepless speed
@@ -76,19 +79,38 @@ class DPCode(str, Enum):
     LOCK = "lock"  # Lock / Child lock
     MODE = "mode"  # Working mode / Mode
     PUMP_RESET = "pump_reset"  # Water pump reset
+    SHAKE = "shake"  # Oscillating
     SPEED = "speed"  # Speed level
     START = "start"  # Start
+    SWING = "swing"  # Swing mode
     SWITCH = "switch"  # Switch
+    SWITCH_1 = "switch_1"  # Switch 1
+    SWITCH_2 = "switch_2"  # Switch 2
+    SWITCH_3 = "switch_3"  # Switch 3
+    SWITCH_4 = "switch_4"  # Switch 4
+    SWITCH_5 = "switch_5"  # Switch 5
+    SWITCH_6 = "switch_6"  # Switch 6
+    SWITCH_BACKLIGHT = "switch_backlight"  # Backlight switch
     SWITCH_HORIZONTAL = "switch_horizontal"  # Horizontal swing flap switch
     SWITCH_LED = "switch_led"  # Switch
+    SWITCH_SPRAY = "switch_spray"  # Spraying switch
+    SWITCH_USB1 = "switch_usb1"  # USB 1
+    SWITCH_USB2 = "switch_usb2"  # USB 2
+    SWITCH_USB3 = "switch_usb3"  # USB 3
+    SWITCH_USB4 = "switch_usb4"  # USB 4
+    SWITCH_USB5 = "switch_usb5"  # USB 5
+    SWITCH_USB6 = "switch_usb6"  # USB 6
     SWITCH_VERTICAL = "switch_vertical"  # Vertical swing flap switch
+    SWITCH_VOICE = "switch_voice"  # Voice switch
     TEMP_CURRENT = "temp_current"  # Current temperature in °C
     TEMP_CURRENT_F = "temp_current_f"  # Current temperature in °F
     TEMP_SET = "temp_set"  # Set the temperature in °C
     TEMP_SET_F = "temp_set_f"  # Set the temperature in °F
     TEMP_UNIT_CONVERT = "temp_unit_convert"  # Temperature unit switching
     TEMP_VALUE = "temp_value"  # Color temperature
+    TEMPER_ALARM = "temper_alarm"  # Tamper alarm
     UV = "uv"  # UV sterilization
+    WARM = "warm"  # Heat preservation
     WATER_RESET = "water_reset"  # Resetting of water usage days
     WET = "wet"  # Humidification
     WORK_MODE = "work_mode"  # Working mode

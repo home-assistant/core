@@ -161,7 +161,7 @@ aioeagle==1.1.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==9.1.5
+aioesphomeapi==10.0.0
 
 # homeassistant.components.flo
 aioflo==0.4.1
@@ -1259,9 +1259,6 @@ proxmoxer==1.1.1
 # homeassistant.components.systemmonitor
 psutil==5.8.0
 
-# homeassistant.components.wink
-pubnubsub-handler==1.0.9
-
 # homeassistant.components.pulseaudio_loopback
 pulsectl==20.2.4
 
@@ -1948,9 +1945,6 @@ python-vlc==1.1.2
 # homeassistant.components.whois
 python-whois==0.7.3
 
-# homeassistant.components.wink
-python-wink==1.10.5
-
 # homeassistant.components.awair
 python_awair==0.2.1
 
@@ -2366,7 +2360,7 @@ uvcclient==0.11.0
 vallox-websocket-api==2.8.1
 
 # homeassistant.components.velbus
-velbus-aio==2021.9.4
+velbus-aio==2021.10.1
 
 # homeassistant.components.venstar
 venstarcolortouch==0.14

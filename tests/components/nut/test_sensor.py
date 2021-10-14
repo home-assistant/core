@@ -1,9 +1,20 @@
 """The sensor tests for the nut platform."""
 
-from homeassistant.const import PERCENTAGE
+from unittest.mock import patch
+
+from homeassistant.components.nut.const import DOMAIN
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
+    CONF_RESOURCES,
+    PERCENTAGE,
+    STATE_UNKNOWN,
+)
 from homeassistant.helpers import entity_registry as er
 
-from .util import async_init_integration
+from .util import _get_mock_pynutclient, async_init_integration
+
+from tests.common import MockConfigEntry
 
 
 async def test_pr3000rt2u(hass):
@@ -202,6 +213,64 @@ async def test_blazer_usb(hass):
     assert all(
         state.attributes[key] == expected_attributes[key] for key in expected_attributes
     )
+
+
+async def test_state_sensors(hass):
+    """Test creation of status display sensors."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "mock",
+            CONF_PORT: "mock",
+            CONF_RESOURCES: ["ups.status", "ups.status.display"],
+        },
+    )
+    entry.add_to_hass(hass)
+
+    mock_pynut = _get_mock_pynutclient(
+        list_ups={"ups1": "UPS 1"}, list_vars={"ups.status": "OL"}
+    )
+
+    with patch(
+        "homeassistant.components.nut.PyNUTClient",
+        return_value=mock_pynut,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        state1 = hass.states.get("sensor.ups1_status")
+        state2 = hass.states.get("sensor.ups1_status_data")
+        assert state1.state == "Online"
+        assert state2.state == "OL"
+
+
+async def test_unknown_state_sensors(hass):
+    """Test creation of unknown status display sensors."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "mock",
+            CONF_PORT: "mock",
+            CONF_RESOURCES: ["ups.status", "ups.status.display"],
+        },
+    )
+    entry.add_to_hass(hass)
+
+    mock_pynut = _get_mock_pynutclient(
+        list_ups={"ups1": "UPS 1"}, list_vars={"ups.status": "OQ"}
+    )
+
+    with patch(
+        "homeassistant.components.nut.PyNUTClient",
+        return_value=mock_pynut,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        state1 = hass.states.get("sensor.ups1_status")
+        state2 = hass.states.get("sensor.ups1_status_data")
+        assert state1.state == STATE_UNKNOWN
+        assert state2.state == "OQ"
 
 
 async def test_stale_options(hass):

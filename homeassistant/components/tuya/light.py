@@ -23,7 +23,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
-from .base import TuyaHaEntity
+from .base import TuyaEntity
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,11 +73,11 @@ async def async_setup_entry(
     @callback
     def async_discover_device(device_ids: list[str]):
         """Discover and add a discovered tuya light."""
-        entities: list[TuyaHaLight] = []
+        entities: list[TuyaLightEntity] = []
         for device_id in device_ids:
             device = hass_data.device_manager.device_map[device_id]
             if device and device.category in TUYA_SUPPORT_TYPE:
-                entities.append(TuyaHaLight(device, hass_data.device_manager))
+                entities.append(TuyaLightEntity(device, hass_data.device_manager))
         async_add_entities(entities)
 
     async_discover_device([*hass_data.device_manager.device_map])
@@ -87,7 +87,7 @@ async def async_setup_entry(
     )
 
 
-class TuyaHaLight(TuyaHaEntity, LightEntity):
+class TuyaLightEntity(TuyaEntity, LightEntity):
     """Tuya light device."""
 
     def __init__(self, device: TuyaDevice, device_manager: TuyaDeviceManager) -> None:

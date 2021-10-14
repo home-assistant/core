@@ -25,7 +25,7 @@ from homeassistant.util.percentage import (
 )
 
 from . import HomeAssistantTuyaData
-from .base import TuyaHaEntity
+from .base import TuyaEntity
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 
 TUYA_SUPPORT_TYPE = {
@@ -43,11 +43,11 @@ async def async_setup_entry(
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered tuya fan."""
-        entities: list[TuyaHaFan] = []
+        entities: list[TuyaFanEntity] = []
         for device_id in device_ids:
             device = hass_data.device_manager.device_map[device_id]
             if device and device.category in TUYA_SUPPORT_TYPE:
-                entities.append(TuyaHaFan(device, hass_data.device_manager))
+                entities.append(TuyaFanEntity(device, hass_data.device_manager))
         async_add_entities(entities)
 
     async_discover_device([*hass_data.device_manager.device_map])
@@ -57,7 +57,7 @@ async def async_setup_entry(
     )
 
 
-class TuyaHaFan(TuyaHaEntity, FanEntity):
+class TuyaFanEntity(TuyaEntity, FanEntity):
     """Tuya Fan Device."""
 
     def __init__(self, device: TuyaDevice, device_manager: TuyaDeviceManager) -> None:
