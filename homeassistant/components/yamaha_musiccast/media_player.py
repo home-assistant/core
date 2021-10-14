@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any, Mapping
 
 from aiomusiccast import MusicCastGroupException, MusicCastMediaContent
 from aiomusiccast.features import ZoneFeature
@@ -45,6 +46,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -55,6 +57,7 @@ from . import MusicCastDataUpdateCoordinator, MusicCastDeviceEntity
 from .const import (
     ATTR_MAIN_SYNC,
     ATTR_MC_LINK,
+    ATTR_SLEEP_TIME,
     DEFAULT_ZONE,
     DOMAIN,
     HA_REPEAT_MODE_TO_MC_MAPPING,
@@ -62,6 +65,8 @@ from .const import (
     MC_REPEAT_MODE_TO_HA_MAPPING,
     MEDIA_CLASS_MAPPING,
     NULL_GROUP,
+    SERVICE_CLEAR_TIMER,
+    SERVICE_SET_TIMER,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -132,6 +137,24 @@ async def async_setup_entry(
         )
 
     async_add_entities(media_players)
+
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        SERVICE_SET_TIMER,
+        {
+            vol.Required(ATTR_SLEEP_TIME): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=86399)
+            )
+        },
+        "set_sleep_timer",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_CLEAR_TIMER,
+        {},
+        "clear_sleep_timer",
+    )
 
 
 class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
@@ -913,3 +936,27 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     def async_schedule_check_client_list(self):
         """Schedule async_check_client_list."""
         self.hass.create_task(self.async_check_client_list())
+
+    async def set_sleep_timer(self, sleep_time):
+        """Set the sleep timer to the given value."""
+        if ZoneFeature.SLEEP not in self.coordinator.data.zones[self._zone_id].features:
+            raise HomeAssistantError("This device does not support sleep timers")
+        await self.coordinator.musiccast.set_sleep_timer(self._zone_id, sleep_time)
+        print(self.coordinator.data.zones[self._zone_id].features)
+        print(self.coordinator.data.zones[self._zone_id].__dict__)
+
+    async def clear_sleep_timer(self):
+        """Disable the sleep timer."""
+        await self.set_sleep_timer(0)
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return the currently defined sleep time as state attribute."""
+        attrs = {}
+
+        if ZoneFeature.SLEEP in self.coordinator.data.zones[self._zone_id].features:
+            attrs[ATTR_SLEEP_TIME] = self.coordinator.data.zones[
+                self._zone_id
+            ].sleep_time
+
+        return attrs

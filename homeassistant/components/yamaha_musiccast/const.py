@@ -18,6 +18,7 @@ ATTR_PRESET = "preset"
 ATTR_MC_LINK = "mc_link"
 ATTR_MAIN_SYNC = "main_sync"
 ATTR_MC_LINK_SOURCES = [ATTR_MC_LINK, ATTR_MAIN_SYNC]
+ATTR_SLEEP_TIME = "sleep_time"
 
 CONF_UPNP_DESC = "upnp_description"
 CONF_SERIAL = "serial"
@@ -42,3 +43,6 @@ MEDIA_CLASS_MAPPING = {
     "directory": MEDIA_CLASS_DIRECTORY,
     "categories": MEDIA_CLASS_DIRECTORY,
 }
+
+SERVICE_SET_TIMER = "set_sleep_timer"
+SERVICE_CLEAR_TIMER = "clear_sleep_timer"
