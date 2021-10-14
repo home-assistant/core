@@ -168,40 +168,40 @@ class ConditionerEntity(LookinEntity, CoordinatorEntity, ClimateEntity):
         """Set the hvac mode of the device."""
         if (mode := HASS_TO_LOOKIN_HVAC_MODE.get(hvac_mode)) is None:
             return
+        self._climate.hvac_mode = mode
         await self._lookin_protocol.update_conditioner(
             extra=self._climate.extra, status=self._make_status()
         )
-        self._climate.hvac_mode = mode
         self.async_write_ha_state()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the temperature of the device."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
+        self._climate.temperature = int(temperature - TEMP_OFFSET)
         await self._lookin_protocol.update_conditioner(
             extra=self._climate.extra, status=self._make_status()
         )
-        self._climate.temperature = int(temperature - TEMP_OFFSET)
         self.async_write_ha_state()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the fan mode of the device."""
         if (mode := HASS_TO_LOOKIN_FAN_MODE.get(fan_mode)) is None:
             return
+        self._climate.fan_mode = mode
         await self._lookin_protocol.update_conditioner(
             extra=self._climate.extra, status=self._make_status()
         )
-        self._climate.fan_mode = mode
         self.async_write_ha_state()
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set the swing mode of the device."""
         if (mode := HASS_TO_LOOKIN_SWING_MODE.get(swing_mode)) is None:
             return
+        self._climate.swing_mode = mode
         await self._lookin_protocol.update_conditioner(
             extra=self._climate.extra, status=self._make_status()
         )
-        self._climate.swing_mode = mode
         self.async_write_ha_state()
 
     @staticmethod
