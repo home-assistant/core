@@ -359,15 +359,8 @@ class KNXModule:
     async def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
         """Call invoked after a KNX connection state change was received."""
         self.connected = state == XknxConnectionState.CONNECTED
-        if tasks := [*device.after_update() for device in self.xknx.devices]:
+        if tasks := [device.after_update() for device in self.xknx.devices]:
             await asyncio.gather(*tasks)
-
-        self.hass.bus.async_fire(
-            "knx_connection_state_change",
-            {
-                "connection_state": state.name,
-            },
-        )
 
     def register_callback(self) -> TelegramQueue.Callback:
         """Register callback within XKNX TelegramQueue."""
