@@ -27,6 +27,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
+    """Set up the lookin vacuums."""
     lookin_data: LookinData = hass.data[DOMAIN][config_entry.entry_id]
     entities = []
 
@@ -47,9 +48,7 @@ async def async_setup_entry(
 
 
 class LookinVacuum(LookinPowerEntity, VacuumEntity):
-
-    _attr_supported_features = SUPPORT_FLAGS
-    _attr_assumed_state = True
+    """Representation of a lookin vacuum."""
 
     def __init__(
         self,
@@ -57,18 +56,32 @@ class LookinVacuum(LookinPowerEntity, VacuumEntity):
         device: Remote,
         lookin_data: LookinData,
     ) -> None:
+        """Initialize the vacuum."""
         super().__init__(uuid, device, lookin_data)
         self._status = SERVICE_STOP
 
     @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    @property
+    def supported_features(self) -> int | None:
+        """Flag supported features."""
+        return SUPPORT_FLAGS
+
+    @property
     def is_on(self) -> bool:
+        """Return true if vacuum is on."""
         return self._status != SERVICE_STOP
 
     @property
     def status(self) -> str:
+        """Return the status of the vacuum."""
         return self._status
 
     async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the vacuum."""
         await self._lookin_protocol.send_command(
             uuid=self._uuid, command=self._power_on_command, signal="FF"
         )
@@ -76,6 +89,7 @@ class LookinVacuum(LookinPowerEntity, VacuumEntity):
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the vacuum."""
         await self._lookin_protocol.send_command(
             uuid=self._uuid, command=self._power_off_command, signal="FF"
         )
