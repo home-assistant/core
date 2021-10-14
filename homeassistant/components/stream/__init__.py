@@ -108,8 +108,12 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up stream."""
 
-    # Lower libav messages to debug
+    # Lower libav messages to debug/drop them if stream logging DEBUG is not enabled
+    stream_debug_disabled = not logging.getLogger(__name__).isEnabledFor(logging.DEBUG)
+
     def drop_to_debug(record: logging.LogRecord) -> bool:
+        if stream_debug_disabled:
+            return False
         if record.levelno > logging.DEBUG:
             record.levelname = "DEBUG"
             record.levelno = logging.DEBUG
