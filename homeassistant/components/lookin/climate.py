@@ -1,6 +1,7 @@
 """The lookin integration climate platform."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any, Final, cast
 
@@ -106,6 +107,7 @@ class ConditionerEntity(LookinEntity, ClimateEntity):
         self._attr_min_temp = MIN_TEMP
         self._attr_max_temp = MAX_TEMP
         self._attr_target_temperature_step = PRECISION_WHOLE
+        self._update_lock = asyncio.Lock()
 
     @property
     def _climate(self):
@@ -142,9 +144,8 @@ class ConditionerEntity(LookinEntity, ClimateEntity):
         return self._attr_hvac_modes[self._climate.hvac_mode]
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-
-        if temperature is None:
+        """Set the async_set_temperature of the device."""
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
 
         self._climate.temperature = int(temperature - TEMP_OFFSET)
@@ -154,7 +155,7 @@ class ConditionerEntity(LookinEntity, ClimateEntity):
         )
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
-
+        """Set the fan mode of the device."""
         if (mode := STATE_TO_FAN_MODE.get(fan_mode)) is None:
             return
 
@@ -165,6 +166,7 @@ class ConditionerEntity(LookinEntity, ClimateEntity):
         )
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
+        """Set the swing mode of the device."""
         if (mode := STATE_TO_SWING_MODE.get(swing_mode)) is None:
             return
 
@@ -175,7 +177,8 @@ class ConditionerEntity(LookinEntity, ClimateEntity):
         )
 
     async def async_update(self) -> None:
-        self._device = await self._lookin_protocol.get_conditioner(self._uuid)
+        """Update the state of the entity."""
+        await self._async_update_from_device()
 
     @staticmethod
     def _int_to_hex(i: int) -> str:
@@ -189,12 +192,22 @@ class ConditionerEntity(LookinEntity, ClimateEntity):
             f"{self._climate.swing_mode}"
         )
 
+    async def _async_update_from_device(self):
+        """Update the state from the lookin device."""
+        async with self._update_lock:
+            self._device = await self._lookin_protocol.get_conditioner(self._uuid)
+
+    async def _async_update_from_ir(self):
+        """Called when an ir signal is received by the device."""
+        await self._async_update_from_device()
+        self.async_write_ha_state()
+
     @callback
     def _async_push_update(self, msg):
         """Process an update pushed via UDP."""
         if msg["sensor_id"] == "87":
             LOGGER.debug("Saw IR signal message: %s, triggering update", msg)
-            self.hass.async_create_task(self.async_update())
+            self.hass.async_create_task(self._async_update_from_ir())
 
     async def async_added_to_hass(self) -> None:
         """Called when the entity is added to hass."""
