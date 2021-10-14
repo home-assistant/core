@@ -35,6 +35,7 @@ from .const import (
     CONF_TARGET_TEMP,
     AttrType,
     DataType,
+    AttrType,
 )
 from .modbus import ModbusHub
 

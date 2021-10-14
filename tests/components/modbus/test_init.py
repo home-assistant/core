@@ -53,6 +53,7 @@ from homeassistant.components.modbus.const import (
     UDP,
     AttrType,
     DataType,
+    AttrType,
 )
 from homeassistant.components.modbus.validators import (
     duplicate_entity_validator,

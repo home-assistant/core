@@ -101,6 +101,7 @@ from .const import (
     UDP,
     AttrType,
     DataType,
+    AttrType,
 )
 from .modbus import ModbusHub, async_modbus_setup
 from .validators import (
