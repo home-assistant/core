@@ -51,6 +51,7 @@ HEATER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Day consumption",
     ),
 )
+
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=TEMPERATURE,
@@ -62,7 +63,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=HUMIDITY,
         device_class=DEVICE_CLASS_HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
-        name="Humidiaty",
+        name="Humidity",
     ),
     SensorEntityDescription(
         key=BATTERY,
@@ -120,7 +121,7 @@ class MillSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{mill_device.device_id}_{entity_description.key}"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, mill_device.device_id)},
-            "name": self.name,
+            "name": mill_device.name,
             "manufacturer": MANUFACTURER,
         }
         if isinstance(mill_device, mill.Heater):
