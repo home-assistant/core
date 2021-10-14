@@ -224,7 +224,7 @@ class ConditionerEntity(LookinEntity, CoordinatorEntity, ClimateEntity):
         ir_uuid = msg["value"][:4]
         if ir_uuid != self._uuid:
             return
-        LOGGER.debug("Saw IR signal message: %s", msg)
+        LOGGER.debug("Processing push message for %s: %s", self.entity_id, msg)
         self._climate.update_from_status(msg["value"][-4:])
         self.async_write_ha_state()
 
