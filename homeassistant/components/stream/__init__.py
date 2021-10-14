@@ -124,6 +124,9 @@ def filter_libav_logging() -> None:
     ):
         logging.getLogger(logging_namespace).addFilter(libav_filter)
 
+    # Set log level to error for libav.mp4
+    logging.getLogger("libav.mp4").setLevel(logging.ERROR)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up stream."""
