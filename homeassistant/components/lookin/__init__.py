@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         LOGGER,
         name=entry.title,
         update_method=lookin_protocol.get_meteo_sensor,
-        update_interval=timedelta(seconds=15),
+        update_interval=timedelta(minutes=5),
     )
     await meteo_coordinator.async_config_entry_first_refresh()
 
