@@ -43,19 +43,24 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
+    """Set up lookin sensors from the config entry."""
     data = hass.data[DOMAIN][config_entry.entry_id]
     lookin_device = data[LOOKIN_DEVICE]
     meteo_coordinator = data[METEO_COORDINATOR]
 
     async_add_entities(
         [
-            LookinSensor(meteo_coordinator, lookin_device, description)
+            LookinSensorEntity(meteo_coordinator, lookin_device, description)
             for description in SENSOR_TYPES
         ]
     )
 
 
-class LookinSensor(CoordinatorEntity, Entity):
+class LookinSensorEntity(CoordinatorEntity, Entity):
+    """A lookin device sensor entity."""
+
+    _attr_should_poll = False
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
@@ -79,10 +84,11 @@ class LookinSensor(CoordinatorEntity, Entity):
 
     @property
     def device_info(self) -> DeviceInfo:
+        """Device info for the onboard sensor."""
         return {
             "identifiers": {(DOMAIN, self._lookin_device.id)},
             "name": self._lookin_device.name,
-            "manufacturer": "LOOKin",
-            "model": "LOOKin 2",
+            "manufacturer": "LOOK.in",
+            "model": "LOOK.in 2",
             "sw_version": self._lookin_device.firmware,
         }
