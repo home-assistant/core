@@ -103,7 +103,7 @@ INDEX_SENSOR_DESCRIPTIONS = (
         key=TYPE_ALLERGY_TODAY,
         name="Allergy Index: Today",
         icon="mdi:flower",
-        native_unit_of_measurement="index",
+        native_unit_of_measurement=" ",
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
