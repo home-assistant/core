@@ -1,11 +1,28 @@
 {
     "config": {
+        "abort": {
+            "no_plants": "Ve vašem účtu nebyla nalezena žádná elektrárna"
+        },
+        "error": {
+            "invalid_auth": "Neplatné přihlášení"
+        },
         "step": {
+            "plant": {
+                "data": {
+                    "plant_id": "Elektrárna"
+                },
+                "title": "Vyberte svou elektrárnu"
+            },
             "user": {
                 "data": {
-                    "url": "URL"
-                }
+                    "name": "Jméno",
+                    "password": "Heslo",
+                    "url": "URL",
+                    "username": "Uživatelské jméno"
+                },
+                "title": "Zadejte údaje o své Growatt"
             }
         }
-    }
+    },
+    "title": "Growatt Server"
 }
