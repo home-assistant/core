@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from aiolookin import Device, LookInHttpProtocol, Remote
+
 from homeassistant.components.light import COLOR_MODE_ONOFF, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -10,8 +12,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LookinPowerEntity
 from .const import DEVICES, DOMAIN, LOOKIN_DEVICE, PROTOCOL
-from .models import Device, Remote
-from .protocol import LookInHttpProtocol
 
 
 async def async_setup_entry(
@@ -31,7 +31,7 @@ async def async_setup_entry(
             uuid = remote["UUID"]
             device = await lookin_protocol.get_remote(uuid)
             entities.append(
-                LookinLight(
+                LookinLightEntity(
                     uuid=uuid,
                     lookin_protocol=lookin_protocol,
                     device=device,
@@ -42,10 +42,11 @@ async def async_setup_entry(
     async_add_entities(entities, update_before_add=True)
 
 
-class LookinLight(LookinPowerEntity, LightEntity):
+class LookinLightEntity(LookinPowerEntity, LightEntity):
 
     _attr_supported_color_modes = {COLOR_MODE_ONOFF}
     _attr_color_mode = COLOR_MODE_ONOFF
+    _attr_assumed_state = True
     _attr_should_poll = False
 
     def __init__(

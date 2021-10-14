@@ -3,6 +3,17 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from aiolookin import (
+    POWER_CMD,
+    POWER_OFF_CMD,
+    POWER_ON_CMD,
+    Climate,
+    Device,
+    DeviceNotFound,
+    LookInHttpProtocol,
+    Remote,
+)
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -18,14 +29,8 @@ from .const import (
     LOOKIN_DEVICE,
     METEO_COORDINATOR,
     PLATFORMS,
-    POWER_CMD,
-    POWER_OFF_CMD,
-    POWER_ON_CMD,
     PROTOCOL,
 )
-from .error import DeviceNotFound
-from .models import Climate, Device, Remote
-from .protocol import LookInHttpProtocol  # TODO: move protocol into a PyPI package
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
