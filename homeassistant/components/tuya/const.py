@@ -40,6 +40,7 @@ TUYA_SUPPORTED_PRODUCT_CATEGORIES = (
     "kg",  # Switch
     "kj",  # Air Purifier
     "kj",  # Air Purifier
+    "kfj",  # Coffee maker
     "kt",  # Air conditioner
     "mcs",  # Door Window Sensor
     "pc",  # Power Strip
@@ -53,7 +54,7 @@ TUYA_SUPPORTED_PRODUCT_CATEGORIES = (
 TUYA_SMART_APP = "tuyaSmart"
 SMARTLIFE_APP = "smartlife"
 
-PLATFORMS = ["binary_sensor", "climate", "fan", "light", "scene", "switch"]
+PLATFORMS = ["binary_sensor", "climate", "fan", "light", "scene", "select", "switch"]
 
 
 class DPCode(str, Enum):
@@ -68,6 +69,8 @@ class DPCode(str, Enum):
     CHILD_LOCK = "child_lock"  # Child lock
     COLOUR_DATA = "colour_data"  # Colored light mode
     COLOUR_DATA_V2 = "colour_data_v2"  # Colored light mode
+    CONCENTRATION_SET = "concentration_set"  # Concentration setting
+    CUP_NUMBER = "cup_number"  # NUmber of cups
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
     FAN_DIRECTION = "fan_direction"  # Fan direction
     FAN_SPEED_ENUM = "fan_speed_enum"  # Speed mode
@@ -77,6 +80,7 @@ class DPCode(str, Enum):
     HUMIDITY_SET = "humidity_set"  # Humidity setting
     LIGHT = "light"  # Light
     LOCK = "lock"  # Lock / Child lock
+    MATERIAL = "material"  # Material
     MODE = "mode"  # Working mode / Mode
     PUMP_RESET = "pump_reset"  # Water pump reset
     SHAKE = "shake"  # Oscillating
