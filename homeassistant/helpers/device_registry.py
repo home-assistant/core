@@ -55,6 +55,7 @@ class DeviceEntry:
 
     area_id: str | None = attr.ib(default=None)
     config_entries: set[str] = attr.ib(converter=set, factory=set)
+    configuration_url: str | None = attr.ib(default=None)
     connections: set[tuple[str, str]] = attr.ib(converter=set, factory=set)
     disabled_by: str | None = attr.ib(
         default=None,
@@ -244,6 +245,7 @@ class DeviceRegistry:
         self,
         *,
         config_entry_id: str,
+        configuration_url: str | None | UndefinedType = UNDEFINED,
         connections: set[tuple[str, str]] | None = None,
         default_manufacturer: str | None | UndefinedType = UNDEFINED,
         default_model: str | None | UndefinedType = UNDEFINED,
@@ -302,6 +304,7 @@ class DeviceRegistry:
         device = self._async_update_device(
             device.id,
             add_config_entry_id=config_entry_id,
+            configuration_url=configuration_url,
             disabled_by=disabled_by,
             entry_type=entry_type,
             manufacturer=manufacturer,
@@ -326,6 +329,7 @@ class DeviceRegistry:
         *,
         add_config_entry_id: str | UndefinedType = UNDEFINED,
         area_id: str | None | UndefinedType = UNDEFINED,
+        configuration_url: str | None | UndefinedType = UNDEFINED,
         disabled_by: str | None | UndefinedType = UNDEFINED,
         manufacturer: str | None | UndefinedType = UNDEFINED,
         model: str | None | UndefinedType = UNDEFINED,
@@ -342,6 +346,7 @@ class DeviceRegistry:
             device_id,
             add_config_entry_id=add_config_entry_id,
             area_id=area_id,
+            configuration_url=configuration_url,
             disabled_by=disabled_by,
             manufacturer=manufacturer,
             model=model,
@@ -361,6 +366,7 @@ class DeviceRegistry:
         *,
         add_config_entry_id: str | UndefinedType = UNDEFINED,
         area_id: str | None | UndefinedType = UNDEFINED,
+        configuration_url: str | None | UndefinedType = UNDEFINED,
         disabled_by: str | None | UndefinedType = UNDEFINED,
         entry_type: str | None | UndefinedType = UNDEFINED,
         manufacturer: str | None | UndefinedType = UNDEFINED,
@@ -424,6 +430,7 @@ class DeviceRegistry:
             changes["identifiers"] = new_identifiers
 
         for attr_name, value in (
+            ("configuration_url", configuration_url),
             ("disabled_by", disabled_by),
             ("entry_type", entry_type),
             ("manufacturer", manufacturer),
@@ -514,6 +521,8 @@ class DeviceRegistry:
                     name_by_user=device.get("name_by_user"),
                     # Introduced in 0.119
                     disabled_by=device.get("disabled_by"),
+                    # Introduced in 2021.11
+                    configuration_url=device.get("configuration_url"),
                 )
             # Introduced in 0.111
             for device in data.get("deleted_devices", []):
@@ -556,6 +565,7 @@ class DeviceRegistry:
                 "area_id": entry.area_id,
                 "name_by_user": entry.name_by_user,
                 "disabled_by": entry.disabled_by,
+                "configuration_url": entry.configuration_url,
             }
             for entry in self.devices.values()
         ]
