@@ -30,57 +30,44 @@ from .const import (
     CONF_SWAP_BYTE,
     CONF_SWAP_NONE,
     CONF_WRITE_TYPE,
-    DATA_TYPE_CUSTOM,
-    DATA_TYPE_FLOAT,
-    DATA_TYPE_FLOAT16,
-    DATA_TYPE_FLOAT32,
-    DATA_TYPE_FLOAT64,
-    DATA_TYPE_INT,
-    DATA_TYPE_INT16,
-    DATA_TYPE_INT32,
-    DATA_TYPE_INT64,
-    DATA_TYPE_STRING,
-    DATA_TYPE_UINT,
-    DATA_TYPE_UINT16,
-    DATA_TYPE_UINT32,
-    DATA_TYPE_UINT64,
     DEFAULT_HUB,
     DEFAULT_SCAN_INTERVAL,
     PLATFORMS,
     SERIAL,
+    DataType,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 OLD_DATA_TYPES = {
-    DATA_TYPE_INT: {
-        1: DATA_TYPE_INT16,
-        2: DATA_TYPE_INT32,
-        4: DATA_TYPE_INT64,
+    DataType.INT: {
+        1: DataType.INT16,
+        2: DataType.INT32,
+        4: DataType.INT64,
     },
-    DATA_TYPE_UINT: {
-        1: DATA_TYPE_UINT16,
-        2: DATA_TYPE_UINT32,
-        4: DATA_TYPE_UINT64,
+    DataType.UINT: {
+        1: DataType.UINT16,
+        2: DataType.UINT32,
+        4: DataType.UINT64,
     },
-    DATA_TYPE_FLOAT: {
-        1: DATA_TYPE_FLOAT16,
-        2: DATA_TYPE_FLOAT32,
-        4: DATA_TYPE_FLOAT64,
+    DataType.FLOAT: {
+        1: DataType.FLOAT16,
+        2: DataType.FLOAT32,
+        4: DataType.FLOAT64,
     },
 }
 ENTRY = namedtuple("ENTRY", ["struct_id", "register_count"])
 DEFAULT_STRUCT_FORMAT = {
-    DATA_TYPE_INT16: ENTRY("h", 1),
-    DATA_TYPE_INT32: ENTRY("i", 2),
-    DATA_TYPE_INT64: ENTRY("q", 4),
-    DATA_TYPE_UINT16: ENTRY("H", 1),
-    DATA_TYPE_UINT32: ENTRY("I", 2),
-    DATA_TYPE_UINT64: ENTRY("Q", 4),
-    DATA_TYPE_FLOAT16: ENTRY("e", 1),
-    DATA_TYPE_FLOAT32: ENTRY("f", 2),
-    DATA_TYPE_FLOAT64: ENTRY("d", 4),
-    DATA_TYPE_STRING: ENTRY("s", 1),
+    DataType.INT16: ENTRY("h", 1),
+    DataType.INT32: ENTRY("i", 2),
+    DataType.INT64: ENTRY("q", 4),
+    DataType.UINT16: ENTRY("H", 1),
+    DataType.UINT32: ENTRY("I", 2),
+    DataType.UINT64: ENTRY("Q", 4),
+    DataType.FLOAT16: ENTRY("e", 1),
+    DataType.FLOAT32: ENTRY("f", 2),
+    DataType.FLOAT64: ENTRY("d", 4),
+    DataType.STRING: ENTRY("s", 1),
 }
 
 
@@ -92,7 +79,7 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
     name = config[CONF_NAME]
     structure = config.get(CONF_STRUCTURE)
     swap_type = config.get(CONF_SWAP)
-    if data_type in (DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT):
+    if data_type in (DataType.INT, DataType.UINT, DataType.FLOAT):
         error = f"{name}  with {data_type} is not valid, trying to convert"
         _LOGGER.warning(error)
         try:
@@ -101,7 +88,7 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
         except KeyError as exp:
             error = f"{name}  cannot convert automatically {data_type}"
             raise vol.Invalid(error) from exp
-    if config[CONF_DATA_TYPE] != DATA_TYPE_CUSTOM:
+    if config[CONF_DATA_TYPE] != DataType.CUSTOM:
         if structure:
             error = f"{name}  structure: cannot be mixed with {data_type}"
             raise vol.Invalid(error)

@@ -1,4 +1,6 @@
 """Constants used in modbus integration."""
+from enum import Enum
+
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate.const import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
@@ -75,21 +77,26 @@ ATTR_VALUE = "value"
 ATTR_STATE = "state"
 ATTR_TEMPERATURE = "temperature"
 
+
 # data types
-DATA_TYPE_CUSTOM = "custom"
-DATA_TYPE_FLOAT = "float"
-DATA_TYPE_INT = "int"
-DATA_TYPE_UINT = "uint"
-DATA_TYPE_STRING = "string"
-DATA_TYPE_INT16 = "int16"
-DATA_TYPE_INT32 = "int32"
-DATA_TYPE_INT64 = "int64"
-DATA_TYPE_UINT16 = "uint16"
-DATA_TYPE_UINT32 = "uint32"
-DATA_TYPE_UINT64 = "uint64"
-DATA_TYPE_FLOAT16 = "float16"
-DATA_TYPE_FLOAT32 = "float32"
-DATA_TYPE_FLOAT64 = "float64"
+class DataType(str, Enum):
+    """Data types used by sensor etc."""
+
+    CUSTOM = "custom"
+    FLOAT = "float"  # deprecated
+    INT = "int"  # deprecated
+    UINT = "uint"  # deprecated
+    STRING = "string"
+    INT16 = "int16"
+    INT32 = "int32"
+    INT64 = "int64"
+    UINT16 = "uint16"
+    UINT32 = "uint32"
+    UINT64 = "uint64"
+    FLOAT16 = "float16"
+    FLOAT32 = "float32"
+    FLOAT64 = "float64"
+
 
 # call types
 CALL_TYPE_COIL = "coil"
