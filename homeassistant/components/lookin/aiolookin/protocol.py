@@ -7,7 +7,7 @@ import json
 import socket
 from typing import Any, Callable, Final
 
-from aiohttp import ClientError, ClientResponse, ClientSession
+from aiohttp import ClientResponse, ClientSession, ClientTimeout
 
 from .const import (
     COMMAND_TO_CODE,
@@ -18,10 +18,12 @@ from .const import (
     SEND_IR_COMMAND,
     UPDATE_CLIMATE_URL,
 )
-from .error import DeviceNotFound, NoUsableService
+from .error import NoUsableService
 from .models import Climate, Device, MeteoSensor, Remote
 
 LOOKIN_PORT: Final = 61201
+
+CLIENT_TIMEOUTS: Final = ClientTimeout(total=9, connect=8, sock_connect=7, sock_read=7)
 
 
 async def validate_response(response: ClientResponse) -> None:
@@ -139,11 +141,9 @@ class LookInHttpProtocol:
         self._session = session
 
     async def get_info(self) -> Device:
-        try:
-            response = await self._session.get(url=INFO_URL.format(host=self._host))
-        except ClientError:
-            raise DeviceNotFound
-
+        response = await self._session.get(
+            url=INFO_URL.format(host=self._host), timeout=CLIENT_TIMEOUTS
+        )
         async with response:
             await validate_response(response)
             payload = await response.json()
@@ -151,23 +151,16 @@ class LookInHttpProtocol:
         return Device(_data=payload)
 
     async def update_device_name(self, name: str) -> None:
-        try:
-            response = await self._session.post(
-                url=INFO_URL.format(host=self._host), data=json.dumps({"name": name})
-            )
-        except ClientError:
-            raise DeviceNotFound
-
+        response = await self._session.post(
+            url=INFO_URL.format(host=self._host), data=json.dumps({"name": name})
+        )
         async with response:
             await validate_response(response)
 
     async def get_meteo_sensor(self) -> MeteoSensor:
-        try:
-            response = await self._session.get(
-                url=METEO_SENSOR_URL.format(host=self._host)
-            )
-        except ClientError:
-            raise DeviceNotFound
+        response = await self._session.get(
+            url=METEO_SENSOR_URL.format(host=self._host), timeout=CLIENT_TIMEOUTS
+        )
 
         async with response:
             await validate_response(response)
@@ -176,12 +169,9 @@ class LookInHttpProtocol:
         return MeteoSensor(_data=payload)
 
     async def get_devices(self) -> list[dict[str, Any]]:
-        try:
-            response = await self._session.get(
-                url=DEVICES_INFO_URL.format(host=self._host)
-            )
-        except ClientError:
-            raise DeviceNotFound
+        response = await self._session.get(
+            url=DEVICES_INFO_URL.format(host=self._host), timeout=CLIENT_TIMEOUTS
+        )
 
         async with response:
             await validate_response(response)
@@ -190,12 +180,10 @@ class LookInHttpProtocol:
         return payload
 
     async def get_device(self, uuid: str) -> dict[str, Any]:
-        try:
-            response = await self._session.get(
-                url=DEVICE_INFO_URL.format(host=self._host, uuid=uuid)
-            )
-        except ClientError:
-            raise DeviceNotFound
+        response = await self._session.get(
+            url=DEVICE_INFO_URL.format(host=self._host, uuid=uuid),
+            timeout=CLIENT_TIMEOUTS,
+        )
 
         async with response:
             await validate_response(response)
@@ -215,23 +203,15 @@ class LookInHttpProtocol:
         if not (code := COMMAND_TO_CODE.get(command)):
             return
 
-        try:
-            await self._session.get(
-                url=SEND_IR_COMMAND.format(
-                    host=self._host, uuid=uuid, command=code, signal=signal
-                )
-            )
-        except ClientError:
-            raise DeviceNotFound
+        await self._session.get(
+            url=SEND_IR_COMMAND.format(
+                host=self._host, uuid=uuid, command=code, signal=signal
+            ),
+            timeout=CLIENT_TIMEOUTS,
+        )
 
     async def update_conditioner(self, extra: str, status: str) -> None:
-        try:
-            await self._session.get(
-                url=UPDATE_CLIMATE_URL.format(
-                    host=self._host, extra=extra, status=status
-                )
-            )
-        except ClientError:
-            raise DeviceNotFound
-
-        await asyncio.sleep(1)
+        await self._session.get(
+            url=UPDATE_CLIMATE_URL.format(host=self._host, extra=extra, status=status),
+            timeout=CLIENT_TIMEOUTS,
+        )

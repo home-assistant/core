@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import aiohttp
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -12,7 +13,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .aiolookin import Device, DeviceNotFound, LookInHttpProtocol, NoUsableService
+from .aiolookin import Device, LookInHttpProtocol, NoUsableService
 from .const import DOMAIN
 
 LOGGER = logging.getLogger(__name__)
@@ -41,7 +42,7 @@ class LookinFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             device: Device = await self._validate_device(host=host)
-        except (DeviceNotFound, NoUsableService):
+        except (aiohttp.ClientError, NoUsableService):
             return self.async_abort(reason="cannot_connect")
         except Exception:  # pylint: disable=broad-except
             LOGGER.exception("Unexpected exception")
@@ -64,7 +65,7 @@ class LookinFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_IP_ADDRESS]
             try:
                 device = await self._validate_device(host=host)
-            except (DeviceNotFound, NoUsableService):
+            except (aiohttp.ClientError, NoUsableService):
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 LOGGER.exception("Unexpected exception")
