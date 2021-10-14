@@ -672,12 +672,6 @@ async def test_pymodbus_connect_fail(hass, caplog):
         assert await async_setup_component(hass, DOMAIN, config) is True
 
 
-#        await hass.async_block_till_done()
-#        await hass.async_block_till_done()
-#        assert mock_pb.connect.called
-#        assert ExceptionMessage in caplog.text
-
-
 async def test_delay(hass, mock_pymodbus):
     """Run test for startup delay."""
 
