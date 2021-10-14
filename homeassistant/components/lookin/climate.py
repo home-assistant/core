@@ -33,7 +33,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .aiolookin import Climate
+from .aiolookin import IR_SENSOR_ID, Climate
 from .const import DOMAIN
 from .entity import LookinEntity
 from .models import LookinData
@@ -57,6 +57,17 @@ STATE_TO_FAN_MODE: dict[str, int] = {
 }
 
 STATE_TO_SWING_MODE: dict[str, int] = {SWING_OFF: 0, SWING_BOTH: 1}
+
+LOOKIN_FAN_MODE_IDX_TO_HASS: Final = [FAN_AUTO, FAN_LOW, FAN_MIDDLE, FAN_HIGH]
+LOOKIN_SWING_MODE_IDX_TO_HASS: Final = [SWING_OFF, SWING_BOTH]
+LOOKIN_HVAC_MODE_IDX_TO_HASS: Final = [
+    HVAC_MODE_OFF,
+    HVAC_MODE_AUTO,
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_DRY,
+    HVAC_MODE_FAN_ONLY,
+]
 
 MIN_TEMP: Final = 16
 MAX_TEMP: Final = 30
@@ -110,16 +121,9 @@ class ConditionerEntity(LookinEntity, CoordinatorEntity, ClimateEntity):
     """An aircon or heat pump."""
 
     _attr_supported_features: int = SUPPORT_FLAGS
-    _attr_fan_modes: list[str] = [FAN_AUTO, FAN_LOW, FAN_MIDDLE, FAN_HIGH]
-    _attr_swing_modes: list[str] = [SWING_OFF, SWING_BOTH]
-    _attr_hvac_modes: list[str] = [
-        HVAC_MODE_OFF,
-        HVAC_MODE_AUTO,
-        HVAC_MODE_COOL,
-        HVAC_MODE_HEAT,
-        HVAC_MODE_DRY,
-        HVAC_MODE_FAN_ONLY,
-    ]
+    _attr_fan_modes: list[str] = LOOKIN_FAN_MODE_IDX_TO_HASS
+    _attr_swing_modes: list[str] = LOOKIN_SWING_MODE_IDX_TO_HASS
+    _attr_hvac_modes: list[str] = LOOKIN_HVAC_MODE_IDX_TO_HASS
 
     def __init__(
         self,
@@ -153,17 +157,17 @@ class ConditionerEntity(LookinEntity, CoordinatorEntity, ClimateEntity):
     @property
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
-        return self._attr_fan_modes[self._climate.fan_mode]
+        return LOOKIN_FAN_MODE_IDX_TO_HASS[self._climate.fan_mode]
 
     @property
     def swing_mode(self) -> str | None:
         """Return the swing setting."""
-        return self._attr_swing_modes[self._climate.swing_mode]
+        return LOOKIN_SWING_MODE_IDX_TO_HASS[self._climate.swing_mode]
 
     @property
     def hvac_mode(self) -> str:
         """Return the current running hvac operation."""
-        return self._attr_hvac_modes[self._climate.hvac_mode]
+        return LOOKIN_HVAC_MODE_IDX_TO_HASS[self._climate.hvac_mode]
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set the hvac mode of the device."""
@@ -220,7 +224,7 @@ class ConditionerEntity(LookinEntity, CoordinatorEntity, ClimateEntity):
     @callback
     def _async_push_update(self, msg):
         """Process an update pushed via UDP."""
-        if msg["sensor_id"] == "87":
+        if msg["sensor_id"] == IR_SENSOR_ID:
             LOGGER.debug("Saw IR signal message: %s, triggering update", msg)
             self.hass.async_create_task(self.coordinator.async_request_refresh())
 
