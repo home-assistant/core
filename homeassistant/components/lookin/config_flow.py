@@ -8,7 +8,7 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS
+from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
@@ -33,10 +33,6 @@ class LookinFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Start a discovery flow from zeroconf."""
         uid: str = discovery_info["hostname"][: -len(".local.")]
         host: str = discovery_info["host"]
-
-        if not uid:
-            return self.async_abort(reason="no_uid")
-
         await self.async_set_unique_id(uid.upper())
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
@@ -62,11 +58,11 @@ class LookinFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            host = user_input[CONF_IP_ADDRESS]
+            host = user_input[CONF_HOST]
             try:
                 device = await self._validate_device(host=host)
             except (aiohttp.ClientError, NoUsableService):
-                errors["base"] = "cannot_connect"
+                errors[CONF_HOST] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -81,7 +77,7 @@ class LookinFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_IP_ADDRESS): str}),
+            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
             errors=errors,
         )
 
