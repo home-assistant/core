@@ -137,7 +137,7 @@ class Climate(Remote):
     @temp_celsius.setter
     def temp_celsius(self, value: int) -> None:
         """Set the temperature in celsius."""
-        self.temperature = value + TEMP_OFFSET
+        self.temperature = value - TEMP_OFFSET
 
     @property
     def to_status(self) -> str:
