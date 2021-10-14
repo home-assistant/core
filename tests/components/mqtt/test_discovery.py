@@ -12,7 +12,12 @@ from homeassistant.components.mqtt.abbreviations import (
     DEVICE_ABBREVIATIONS,
 )
 from homeassistant.components.mqtt.discovery import ALREADY_DISCOVERED, async_start
-from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    EVENT_STATE_CHANGED,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 import homeassistant.core as ha
 
 from tests.common import (
@@ -449,6 +454,18 @@ async def test_discovery_expansion(hass, mqtt_mock, caplog):
         '  "name": "DiscoveryExpansionTest1",'
         '  "stat_t": "test_topic/~",'
         '  "cmd_t": "~/test_topic",'
+        '  "availability": ['
+        "    {"
+        '      "topic":"~/avail_item1",'
+        '      "payload_available": "available",'
+        '      "payload_not_available": "not_available"'
+        "    },"
+        "    {"
+        '      "topic":"avail_item2/~",'
+        '      "payload_available": "available",'
+        '      "payload_not_available": "not_available"'
+        "    }"
+        "  ],"
         '  "dev":{'
         '    "ids":["5706DF"],'
         '    "name":"DiscoveryExpansionTest1 Device",'
@@ -464,6 +481,12 @@ async def test_discovery_expansion(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.DiscoveryExpansionTest1")
+    assert state.state == STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(hass, "avail_item2/some/base/topic", "available")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.DiscoveryExpansionTest1")
     assert state is not None
     assert state.name == "DiscoveryExpansionTest1"
     assert ("switch", "bla") in hass.data[ALREADY_DISCOVERED]
@@ -473,6 +496,12 @@ async def test_discovery_expansion(hass, mqtt_mock, caplog):
 
     state = hass.states.get("switch.DiscoveryExpansionTest1")
     assert state.state == STATE_ON
+
+    async_fire_mqtt_message(hass, "some/base/topic/avail_item1", "not_available")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.DiscoveryExpansionTest1")
+    assert state.state == STATE_UNAVAILABLE
 
 
 ABBREVIATIONS_WHITE_LIST = [

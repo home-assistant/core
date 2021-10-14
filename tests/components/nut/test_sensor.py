@@ -202,3 +202,16 @@ async def test_blazer_usb(hass):
     assert all(
         state.attributes[key] == expected_attributes[key] for key in expected_attributes
     )
+
+
+async def test_stale_options(hass):
+    """Test creation of sensors with stale options to remove."""
+
+    config_entry = await async_init_integration(
+        hass, "blazer_usb", ["battery.charge"], True
+    )
+    registry = er.async_get(hass)
+    entry = registry.async_get("sensor.ups1_battery_charge")
+    assert entry
+    assert entry.unique_id == f"{config_entry.entry_id}_battery.charge"
+    assert config_entry.options == {}

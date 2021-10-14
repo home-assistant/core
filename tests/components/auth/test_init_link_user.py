@@ -1,4 +1,6 @@
 """Tests for the link user flow."""
+from unittest.mock import patch
+
 from . import async_setup_auth
 
 from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI
@@ -122,3 +124,48 @@ async def test_link_user_invalid_auth(hass, aiohttp_client):
 
     assert resp.status == 401
     assert len(info["user"].credentials) == 0
+
+
+async def test_link_user_already_linked_same_user(hass, aiohttp_client):
+    """Test linking a user to a credential it's already linked to."""
+    info = await async_get_code(hass, aiohttp_client)
+    client = info["client"]
+    code = info["code"]
+
+    # Link user
+    with patch.object(
+        hass.auth, "async_get_user_by_credentials", return_value=info["user"]
+    ):
+        resp = await client.post(
+            "/auth/link_user",
+            json={"client_id": CLIENT_ID, "code": code},
+            headers={"authorization": f"Bearer {info['access_token']}"},
+        )
+
+    assert resp.status == 200
+    # The credential was not added because it saw that it was already linked
+    assert len(info["user"].credentials) == 0
+
+
+async def test_link_user_already_linked_other_user(hass, aiohttp_client):
+    """Test linking a user to a credential already linked to other user."""
+    info = await async_get_code(hass, aiohttp_client)
+    client = info["client"]
+    code = info["code"]
+
+    another_user = await hass.auth.async_create_user(name="Another")
+
+    # Link user
+    with patch.object(
+        hass.auth, "async_get_user_by_credentials", return_value=another_user
+    ):
+        resp = await client.post(
+            "/auth/link_user",
+            json={"client_id": CLIENT_ID, "code": code},
+            headers={"authorization": f"Bearer {info['access_token']}"},
+        )
+
+    assert resp.status == 400
+    # The credential was not added because it saw that it was already linked
+    assert len(info["user"].credentials) == 0
+    assert len(another_user.credentials) == 0

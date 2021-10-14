@@ -2245,6 +2245,82 @@ async def test_propagate_error_service_exception(hass):
     assert_action_trace(expected_trace, expected_script_execution="error")
 
 
+async def test_referenced_areas(hass):
+    """Test referenced areas."""
+    script_obj = script.Script(
+        hass,
+        cv.SCRIPT_SCHEMA(
+            [
+                {
+                    "service": "test.script",
+                    "data": {"area_id": "area_service_not_list"},
+                },
+                {
+                    "service": "test.script",
+                    "data": {"area_id": ["area_service_list"]},
+                },
+                {
+                    "service": "test.script",
+                    "data": {"area_id": "{{ 'area_service_template' }}"},
+                },
+                {
+                    "service": "test.script",
+                    "target": {"area_id": "area_in_target"},
+                },
+                {
+                    "service": "test.script",
+                    "data_template": {"area_id": "area_in_data_template"},
+                },
+                {"service": "test.script", "data": {"without": "area_id"}},
+                {
+                    "choose": [
+                        {
+                            "conditions": "{{ true == false }}",
+                            "sequence": [
+                                {
+                                    "service": "test.script",
+                                    "data": {"area_id": "area_choice_1_seq"},
+                                }
+                            ],
+                        },
+                        {
+                            "conditions": "{{ true == false }}",
+                            "sequence": [
+                                {
+                                    "service": "test.script",
+                                    "data": {"area_id": "area_choice_2_seq"},
+                                }
+                            ],
+                        },
+                    ],
+                    "default": [
+                        {
+                            "service": "test.script",
+                            "data": {"area_id": "area_default_seq"},
+                        }
+                    ],
+                },
+                {"event": "test_event"},
+                {"delay": "{{ delay_period }}"},
+            ]
+        ),
+        "Test Name",
+        "test_domain",
+    )
+    assert script_obj.referenced_areas == {
+        "area_choice_1_seq",
+        "area_choice_2_seq",
+        "area_default_seq",
+        "area_in_data_template",
+        "area_in_target",
+        "area_service_list",
+        "area_service_not_list",
+        # 'area_service_template',  # no area extraction from template
+    }
+    # Test we cache results.
+    assert script_obj.referenced_areas is script_obj.referenced_areas
+
+
 async def test_referenced_entities(hass):
     """Test referenced entities."""
     script_obj = script.Script(
@@ -2282,6 +2358,38 @@ async def test_referenced_entities(hass):
                 },
                 {"service": "test.script", "data": {"without": "entity_id"}},
                 {"scene": "scene.hello"},
+                {
+                    "choose": [
+                        {
+                            "conditions": "{{ states.light.choice_1_cond == 'on' }}",
+                            "sequence": [
+                                {
+                                    "service": "test.script",
+                                    "data": {"entity_id": "light.choice_1_seq"},
+                                }
+                            ],
+                        },
+                        {
+                            "conditions": {
+                                "condition": "state",
+                                "entity_id": "light.choice_2_cond",
+                                "state": "on",
+                            },
+                            "sequence": [
+                                {
+                                    "service": "test.script",
+                                    "data": {"entity_id": "light.choice_2_seq"},
+                                }
+                            ],
+                        },
+                    ],
+                    "default": [
+                        {
+                            "service": "test.script",
+                            "data": {"entity_id": "light.default_seq"},
+                        }
+                    ],
+                },
                 {"event": "test_event"},
                 {"delay": "{{ delay_period }}"},
             ]
@@ -2290,13 +2398,19 @@ async def test_referenced_entities(hass):
         "test_domain",
     )
     assert script_obj.referenced_entities == {
-        "light.service_not_list",
-        "light.service_list",
-        "sensor.condition",
-        "scene.hello",
+        # "light.choice_1_cond",  # no entity extraction from template conditions
+        "light.choice_1_seq",
+        "light.choice_2_cond",
+        "light.choice_2_seq",
+        "light.default_seq",
         "light.direct_entity_referenced",
-        "light.entity_in_target",
         "light.entity_in_data_template",
+        "light.entity_in_target",
+        "light.service_list",
+        "light.service_not_list",
+        # "light.service_template",  # no entity extraction from template
+        "scene.hello",
+        "sensor.condition",
     }
     # Test we cache results.
     assert script_obj.referenced_entities is script_obj.referenced_entities
@@ -2330,19 +2444,60 @@ async def test_referenced_devices(hass):
                     "service": "test.script",
                     "target": {"device_id": ["target-list-id-1", "target-list-id-2"]},
                 },
+                {
+                    "choose": [
+                        {
+                            "conditions": "{{ is_device_attr('choice-2-cond-dev-id', 'model', 'blah') }}",
+                            "sequence": [
+                                {
+                                    "service": "test.script",
+                                    "target": {
+                                        "device_id": "choice-1-seq-device-target"
+                                    },
+                                }
+                            ],
+                        },
+                        {
+                            "conditions": {
+                                "condition": "device",
+                                "device_id": "choice-2-cond-dev-id",
+                                "domain": "switch",
+                            },
+                            "sequence": [
+                                {
+                                    "service": "test.script",
+                                    "target": {
+                                        "device_id": "choice-2-seq-device-target"
+                                    },
+                                }
+                            ],
+                        },
+                    ],
+                    "default": [
+                        {
+                            "service": "test.script",
+                            "target": {"device_id": "default-device-target"},
+                        }
+                    ],
+                },
             ]
         ),
         "Test Name",
         "test_domain",
     )
     assert script_obj.referenced_devices == {
-        "script-dev-id",
+        # 'choice-1-cond-dev-id',  # no device extraction from template conditions
+        "choice-1-seq-device-target",
+        "choice-2-cond-dev-id",
+        "choice-2-seq-device-target",
         "condition-dev-id",
         "data-string-id",
         "data-template-string-id",
-        "target-string-id",
+        "default-device-target",
+        "script-dev-id",
         "target-list-id-1",
         "target-list-id-2",
+        "target-string-id",
     }
     # Test we cache results.
     assert script_obj.referenced_devices is script_obj.referenced_devices

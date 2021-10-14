@@ -146,12 +146,23 @@ def get_platforms(config_entry):
 def _async_update_data_default(hass, device):
     async def update():
         """Fetch data from the device using async_add_executor_job."""
-        try:
+
+        async def _async_fetch_data():
+            """Fetch data from the device."""
             async with async_timeout.timeout(10):
                 state = await hass.async_add_executor_job(device.status)
                 _LOGGER.debug("Got new state: %s", state)
                 return state
 
+        try:
+            return await _async_fetch_data()
+        except DeviceException as ex:
+            if getattr(ex, "code", None) != -9999:
+                raise UpdateFailed(ex) from ex
+            _LOGGER.info("Got exception while fetching the state, trying again: %s", ex)
+        # Try to fetch the data a second time after error code -9999
+        try:
+            return await _async_fetch_data()
         except DeviceException as ex:
             raise UpdateFailed(ex) from ex
 
@@ -224,12 +235,23 @@ def _async_update_data_vacuum(hass, device: Vacuum):
 
     async def update_async():
         """Fetch data from the device using async_add_executor_job."""
-        try:
+
+        async def execute_update():
             async with async_timeout.timeout(10):
                 state = await hass.async_add_executor_job(update)
                 _LOGGER.debug("Got new vacuum state: %s", state)
                 return state
 
+        try:
+            return await execute_update()
+        except DeviceException as ex:
+            if getattr(ex, "code", None) != -9999:
+                raise UpdateFailed(ex) from ex
+            _LOGGER.info("Got exception while fetching the state, trying again: %s", ex)
+
+        # Try to fetch the data a second time after error code -9999
+        try:
+            return await execute_update()
         except DeviceException as ex:
             raise UpdateFailed(ex) from ex
 
