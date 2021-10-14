@@ -10,7 +10,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import gather_with_concurrency
 
-FLOW_INIT_LIMIT = 2
+FLOW_INIT_LIMIT = 20
 DISCOVERY_FLOW_DISPATCHER = "discovery_flow_disptacher"
 
 
