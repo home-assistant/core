@@ -91,7 +91,9 @@ async def async_setup_entry(
             LOGGER,
             name=f"{config_entry.title} {uuid}",
             update_method=_async_update,
-            update_interval=timedelta(seconds=15),
+            update_interval=timedelta(
+                seconds=60
+            ),  # Updates are pushed (fallback is polling)
             request_refresh_debouncer=Debouncer(
                 hass, LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=True
             ),
@@ -113,10 +115,14 @@ async def async_setup_entry(
 class ConditionerEntity(LookinEntity, CoordinatorEntity, ClimateEntity):
     """An aircon or heat pump."""
 
+    _attr_temperature_unit = TEMP_CELSIUS
     _attr_supported_features: int = SUPPORT_FLAGS
     _attr_fan_modes: list[str] = LOOKIN_FAN_MODE_IDX_TO_HASS
     _attr_swing_modes: list[str] = LOOKIN_SWING_MODE_IDX_TO_HASS
     _attr_hvac_modes: list[str] = LOOKIN_HVAC_MODE_IDX_TO_HASS
+    _attr_min_temp = MIN_TEMP
+    _attr_max_temp = MAX_TEMP
+    _attr_target_temperature_step = PRECISION_WHOLE
 
     def __init__(
         self,
@@ -128,10 +134,6 @@ class ConditionerEntity(LookinEntity, CoordinatorEntity, ClimateEntity):
         """Init the ConditionerEntity."""
         super().__init__(uuid, device, lookin_data)
         CoordinatorEntity.__init__(self, coordinator)
-        self._attr_temperature_unit = TEMP_CELSIUS
-        self._attr_min_temp = MIN_TEMP
-        self._attr_max_temp = MAX_TEMP
-        self._attr_target_temperature_step = PRECISION_WHOLE
 
     @property
     def _climate(self) -> Climate:
