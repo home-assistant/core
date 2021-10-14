@@ -164,40 +164,40 @@ class ConditionerEntity(LookinEntity, CoordinatorEntity, ClimateEntity):
         if (mode := HASS_TO_LOOKIN_HVAC_MODE.get(hvac_mode)) is None:
             return
         self._climate.hvac_mode = mode
+        self.coordinator.async_set_updated_data(self._climate)
         await self._lookin_protocol.update_conditioner(
             extra=self._climate.extra, status=self._make_status()
         )
-        self.async_write_ha_state()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the temperature of the device."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         self._climate.temperature = int(temperature - TEMP_OFFSET)
+        self.coordinator.async_set_updated_data(self._climate)
         await self._lookin_protocol.update_conditioner(
             extra=self._climate.extra, status=self._make_status()
         )
-        self.async_write_ha_state()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the fan mode of the device."""
         if (mode := HASS_TO_LOOKIN_FAN_MODE.get(fan_mode)) is None:
             return
         self._climate.fan_mode = mode
+        self.coordinator.async_set_updated_data(self._climate)
         await self._lookin_protocol.update_conditioner(
             extra=self._climate.extra, status=self._make_status()
         )
-        self.async_write_ha_state()
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set the swing mode of the device."""
         if (mode := HASS_TO_LOOKIN_SWING_MODE.get(swing_mode)) is None:
             return
         self._climate.swing_mode = mode
+        self.coordinator.async_set_updated_data(self._climate)
         await self._lookin_protocol.update_conditioner(
             extra=self._climate.extra, status=self._make_status()
         )
-        self.async_write_ha_state()
 
     @staticmethod
     def _int_to_hex(i: int) -> str:
@@ -221,7 +221,7 @@ class ConditionerEntity(LookinEntity, CoordinatorEntity, ClimateEntity):
             return
         LOGGER.debug("Processing push message for %s: %s", self.entity_id, msg)
         self._climate.update_from_status(msg["value"][-4:])
-        self.async_write_ha_state()
+        self.coordinator.async_set_updated_data(self._climate)
 
     async def async_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
