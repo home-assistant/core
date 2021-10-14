@@ -125,7 +125,8 @@ async def test_last_run_was_recently_clean(hass):
 @pytest.mark.parametrize(
     "mysql_version, db_supports_row_number",
     [
-        ("10.0.0", True),
+        ("10.2.0", True),
+        ("10.1.0", False),
         ("5.8.0", True),
         ("5.7.0", False),
     ],
