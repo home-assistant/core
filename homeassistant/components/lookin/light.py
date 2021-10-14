@@ -51,10 +51,12 @@ class LookinLightEntity(LookinPowerEntity, LightEntity):
         device: Remote,
         lookin_data: LookinData,
     ) -> None:
+        """Init the light."""
         super().__init__(uuid, device, lookin_data)
         self._attr_is_on = False
 
     async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the light."""
         await self._lookin_protocol.send_command(
             uuid=self._uuid, command=self._power_on_command, signal="FF"
         )
@@ -62,6 +64,7 @@ class LookinLightEntity(LookinPowerEntity, LightEntity):
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the light."""
         await self._lookin_protocol.send_command(
             uuid=self._uuid, command=self._power_off_command, signal="FF"
         )
