@@ -18,6 +18,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -41,16 +42,24 @@ from .utils import (
 
 SENSORS: Final = {
     ("device", "overtemp"): BlockAttributeDescription(
-        name="Overheating", device_class=DEVICE_CLASS_PROBLEM
+        name="Overheating",
+        device_class=DEVICE_CLASS_PROBLEM,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     ("device", "overpower"): BlockAttributeDescription(
-        name="Overpowering", device_class=DEVICE_CLASS_PROBLEM
+        name="Overpowering",
+        device_class=DEVICE_CLASS_PROBLEM,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     ("light", "overpower"): BlockAttributeDescription(
-        name="Overpowering", device_class=DEVICE_CLASS_PROBLEM
+        name="Overpowering",
+        device_class=DEVICE_CLASS_PROBLEM,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     ("relay", "overpower"): BlockAttributeDescription(
-        name="Overpowering", device_class=DEVICE_CLASS_PROBLEM
+        name="Overpowering",
+        device_class=DEVICE_CLASS_PROBLEM,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     ("sensor", "dwIsOpened"): BlockAttributeDescription(
         name="Door",
@@ -106,6 +115,7 @@ REST_SENSORS: Final = {
         value=lambda status, _: status["cloud"]["connected"],
         device_class=DEVICE_CLASS_CONNECTIVITY,
         default_enabled=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     "fwupdate": RestAttributeDescription(
         name="Firmware Update",
@@ -116,6 +126,7 @@ REST_SENSORS: Final = {
             "latest_stable_version": status["update"]["new_version"],
             "installed_version": status["update"]["old_version"],
         },
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 }
 
@@ -134,6 +145,7 @@ RPC_SENSORS: Final = {
         name="Cloud",
         device_class=DEVICE_CLASS_CONNECTIVITY,
         default_enabled=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     "fwupdate": RpcAttributeDescription(
         key="sys",
@@ -145,6 +157,7 @@ RPC_SENSORS: Final = {
             "latest_stable_version": status.get("stable", {"version": ""})["version"],
             "beta_version": status.get("beta", {"version": ""})["version"],
         },
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 }
 

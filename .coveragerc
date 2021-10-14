@@ -601,7 +601,6 @@ omit =
     homeassistant/components/lutron_caseta/scene.py
     homeassistant/components/lutron_caseta/switch.py
     homeassistant/components/lw12wifi/light.py
-    homeassistant/components/lyft/sensor.py
     homeassistant/components/lyric/__init__.py
     homeassistant/components/lyric/api.py
     homeassistant/components/lyric/climate.py
@@ -1117,7 +1116,10 @@ omit =
     homeassistant/components/tuya/const.py
     homeassistant/components/tuya/fan.py
     homeassistant/components/tuya/light.py
+    homeassistant/components/tuya/number.py
     homeassistant/components/tuya/scene.py
+    homeassistant/components/tuya/select.py
+    homeassistant/components/tuya/sensor.py
     homeassistant/components/tuya/switch.py
     homeassistant/components/twentemilieu/const.py
     homeassistant/components/twentemilieu/sensor.py

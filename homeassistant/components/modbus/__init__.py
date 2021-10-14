@@ -1,7 +1,6 @@
 """Support for Modbus."""
 from __future__ import annotations
 
-import logging
 from typing import cast
 
 import voluptuous as vol
@@ -128,8 +127,6 @@ from .validators import (
     scan_interval_validator,
     struct_validator,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 BASE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string})
 

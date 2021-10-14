@@ -1,6 +1,8 @@
 """Support for Goal Zero Yeti Sensors."""
 from __future__ import annotations
 
+from typing import cast
+
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
@@ -170,4 +172,4 @@ class YetiSensor(YetiEntity, SensorEntity):
     @property
     def native_value(self) -> str:
         """Return the state."""
-        return self.api.data.get(self.entity_description.key)
+        return cast(str, self.api.data.get(self.entity_description.key))

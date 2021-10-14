@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import logging
 from typing import Callable
 
 from homeassistant.components.binary_sensor import (
@@ -29,9 +28,6 @@ from .const import (
     MODELS_VACUUM_WITH_MOP,
 )
 from .device import XiaomiCoordinatedMiioEntity
-
-_LOGGER = logging.getLogger(__name__)
-
 
 ATTR_NO_WATER = "no_water"
 ATTR_POWERSUPPLY_ATTACHED = "powersupply_attached"

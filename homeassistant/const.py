@@ -704,3 +704,6 @@ CLOUD_NEVER_EXPOSED_ENTITIES: Final[list[str]] = ["group.all_locks"]
 
 # The ID of the Home Assistant Cast App
 CAST_APP_ID_HOMEASSISTANT: Final = "B12CE3CA"
+
+ENTITY_CATEGORY_CONFIG: Final = "config"
+ENTITY_CATEGORY_DIAGNOSTIC: Final = "diagnostic"

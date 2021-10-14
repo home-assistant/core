@@ -68,6 +68,7 @@ def _entry_dict(entry):
     """Convert entry to API format."""
     return {
         "area_id": entry.area_id,
+        "configuration_url": entry.configuration_url,
         "config_entries": list(entry.config_entries),
         "connections": list(entry.connections),
         "disabled_by": entry.disabled_by,

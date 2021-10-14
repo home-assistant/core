@@ -1,4 +1,4 @@
-"""Test the Uptime Robot config flow."""
+"""Test the UptimeRobot config flow."""
 from unittest.mock import patch
 
 import pytest
@@ -196,7 +196,7 @@ async def test_user_unique_id_already_exists(
 async def test_reauthentication(
     hass: HomeAssistant,
 ) -> None:
-    """Test Uptime Robot reauthentication."""
+    """Test UptimeRobot reauthentication."""
     old_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
     old_entry.add_to_hass(hass)
 
@@ -235,7 +235,7 @@ async def test_reauthentication(
 async def test_reauthentication_failure(
     hass: HomeAssistant,
 ) -> None:
-    """Test Uptime Robot reauthentication failure."""
+    """Test UptimeRobot reauthentication failure."""
     old_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
     old_entry.add_to_hass(hass)
 
@@ -275,7 +275,7 @@ async def test_reauthentication_failure(
 async def test_reauthentication_failure_no_existing_entry(
     hass: HomeAssistant,
 ) -> None:
-    """Test Uptime Robot reauthentication with no existing entry."""
+    """Test UptimeRobot reauthentication with no existing entry."""
     old_entry = MockConfigEntry(
         **{**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA, "unique_id": None}
     )
@@ -316,7 +316,7 @@ async def test_reauthentication_failure_no_existing_entry(
 async def test_reauthentication_failure_account_not_matching(
     hass: HomeAssistant,
 ) -> None:
-    """Test Uptime Robot reauthentication failure when using another account."""
+    """Test UptimeRobot reauthentication failure when using another account."""
     old_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
     old_entry.add_to_hass(hass)
 

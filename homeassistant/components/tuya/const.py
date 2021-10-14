@@ -23,7 +23,7 @@ TUYA_RESPONSE_CODE = "code"
 TUYA_RESPONSE_RESULT = "result"
 TUYA_RESPONSE_MSG = "msg"
 TUYA_RESPONSE_SUCCESS = "success"
-TUYA_RESPONSE_PLATFROM_URL = "platform_url"
+TUYA_RESPONSE_PLATFORM_URL = "platform_url"
 
 TUYA_SUPPORTED_PRODUCT_CATEGORIES = (
     "bh",  # Smart Kettle
@@ -37,9 +37,10 @@ TUYA_SUPPORTED_PRODUCT_CATEGORIES = (
     "fs",  # Fan
     "fwl",  # Ambient light
     "jsq",  # Humidifier's light
+    "kfj",  # Coffee Maker
     "kg",  # Switch
     "kj",  # Air Purifier
-    "kj",  # Air Purifier
+    "kfj",  # Coffee maker
     "kt",  # Air conditioner
     "mcs",  # Door Window Sensor
     "pc",  # Power Strip
@@ -47,13 +48,22 @@ TUYA_SUPPORTED_PRODUCT_CATEGORIES = (
     "wk",  # Thermostat
     "xdd",  # Ceiling Light
     "xxj",  # Diffuser
-    "xxj",  # Diffuser's light
 )
 
 TUYA_SMART_APP = "tuyaSmart"
 SMARTLIFE_APP = "smartlife"
 
-PLATFORMS = ["binary_sensor", "climate", "fan", "light", "scene", "switch"]
+PLATFORMS = [
+    "binary_sensor",
+    "climate",
+    "fan",
+    "light",
+    "number",
+    "scene",
+    "select",
+    "sensor",
+    "switch",
+]
 
 
 class DPCode(str, Enum):
@@ -63,11 +73,18 @@ class DPCode(str, Enum):
     """
 
     ANION = "anion"  # Ionizer unit
+    BATTERY_PERCENTAGE = "battery_percentage"  # Battery percentage
+    BATTERY_STATE = "battery_state"  # Battery state
     BRIGHT_VALUE = "bright_value"  # Brightness
     C_F = "c_f"  # Temperature unit switching
     CHILD_LOCK = "child_lock"  # Child lock
     COLOUR_DATA = "colour_data"  # Colored light mode
     COLOUR_DATA_V2 = "colour_data_v2"  # Colored light mode
+    CONCENTRATION_SET = "concentration_set"  # Concentration setting
+    CUP_NUMBER = "cup_number"  # NUmber of cups
+    CUR_CURRENT = "cur_current"  # Actual current
+    CUR_POWER = "cur_power"  # Actual power
+    CUR_VOLTAGE = "cur_voltage"  # Actual voltage
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
     FAN_DIRECTION = "fan_direction"  # Fan direction
     FAN_SPEED_ENUM = "fan_speed_enum"  # Speed mode
@@ -77,7 +94,9 @@ class DPCode(str, Enum):
     HUMIDITY_SET = "humidity_set"  # Humidity setting
     LIGHT = "light"  # Light
     LOCK = "lock"  # Lock / Child lock
+    MATERIAL = "material"  # Material
     MODE = "mode"  # Working mode / Mode
+    POWDER_SET = "powder_set"  # Powder
     PUMP_RESET = "pump_reset"  # Water pump reset
     SHAKE = "shake"  # Oscillating
     SPEED = "speed"  # Speed level
@@ -111,7 +130,9 @@ class DPCode(str, Enum):
     TEMPER_ALARM = "temper_alarm"  # Tamper alarm
     UV = "uv"  # UV sterilization
     WARM = "warm"  # Heat preservation
+    WARM_TIME = "warm_time"  # Heat preservation time
     WATER_RESET = "water_reset"  # Resetting of water usage days
+    WATER_SET = "water_set"  # Water level
     WET = "wet"  # Humidification
     WORK_MODE = "work_mode"  # Working mode
 

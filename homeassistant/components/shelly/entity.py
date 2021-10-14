@@ -237,6 +237,7 @@ class BlockAttributeDescription:
     # Callable (settings, block), return true if entity should be removed
     removal_condition: Callable[[dict, Block], bool] | None = None
     extra_state_attributes: Callable[[Block], dict | None] | None = None
+    entity_category: str | None = None
 
 
 @dataclass
@@ -255,6 +256,7 @@ class RpcAttributeDescription:
     available: Callable[[dict], bool] | None = None
     removal_condition: Callable[[dict, str], bool] | None = None
     extra_state_attributes: Callable[[dict], dict | None] | None = None
+    entity_category: str | None = None
 
 
 @dataclass
@@ -269,6 +271,7 @@ class RestAttributeDescription:
     state_class: str | None = None
     default_enabled: bool = True
     extra_state_attributes: Callable[[dict], dict | None] | None = None
+    entity_category: str | None = None
 
 
 class ShellyBlockEntity(entity.Entity):
@@ -469,6 +472,11 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
 
         return self.description.extra_state_attributes(self.block)
 
+    @property
+    def entity_category(self) -> str | None:
+        """Return category of entity."""
+        return self.description.entity_category
+
 
 class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
     """Class to load info from REST."""
@@ -541,6 +549,11 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
 
         return self.description.extra_state_attributes(self.wrapper.device.status)
 
+    @property
+    def entity_category(self) -> str | None:
+        """Return category of entity."""
+        return self.description.entity_category
+
 
 class ShellyRpcAttributeEntity(ShellyRpcEntity, entity.Entity):
     """Helper class to represent a rpc attribute."""
@@ -598,6 +611,11 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, entity.Entity):
         return self.description.extra_state_attributes(
             self.wrapper.device.status[self.key][self.sub_key]
         )
+
+    @property
+    def entity_category(self) -> str | None:
+        """Return category of entity."""
+        return self.description.entity_category
 
 
 class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEntity):
