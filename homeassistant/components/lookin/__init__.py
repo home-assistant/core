@@ -34,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except aiohttp.ClientError as ex:
         raise ConfigEntryNotReady from ex
 
-    meteo_coordinator: DataUpdateCoordinator = DataUpdateCoordinator(
+    meteo_coordinator = DataUpdateCoordinator(
         hass,
         LOGGER,
         name=entry.title,
