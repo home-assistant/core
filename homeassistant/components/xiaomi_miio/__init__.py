@@ -103,10 +103,9 @@ async def async_setup_entry(
 ):
     """Set up the Xiaomi Miio components from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-    if entry.data[
-        CONF_FLOW_TYPE
-    ] == CONF_GATEWAY and not await async_setup_gateway_entry(hass, entry):
-        return False
+    if entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
+        await async_setup_gateway_entry(hass, entry)
+        return True
 
     return bool(
         entry.data[CONF_FLOW_TYPE] != CONF_DEVICE
@@ -422,8 +421,6 @@ async def async_setup_gateway_entry(
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
-
-    return True
 
 
 async def async_setup_device_entry(
