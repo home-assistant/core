@@ -1,6 +1,8 @@
 """The lookin integration light platform."""
 from __future__ import annotations
 
+from aiolookin import Device, LookInHttpProtocol, Remote
+
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
@@ -17,8 +19,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LookinPowerEntity
 from .const import DEVICES, DOMAIN, LOOKIN_DEVICE, PROTOCOL
-from .models import Device, Remote
-from .protocol import LookInHttpProtocol
 
 
 async def async_setup_entry(
