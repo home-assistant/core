@@ -1,4 +1,5 @@
 """Test KNX binary sensor."""
+import asyncio
 from datetime import timedelta
 
 from homeassistant.components.knx.const import CONF_STATE_ADDRESS, CONF_SYNC_STATE
@@ -36,6 +37,7 @@ async def test_binary_sensor(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_read("2/2/2")
     await knx.receive_response("1/1/1", True)
     await knx.receive_response("2/2/2", False)
+    await hass.async_block_till_done()
     state_normal = hass.states.get("binary_sensor.test_normal")
     state_invert = hass.states.get("binary_sensor.test_invert")
     assert state_normal.state is STATE_ON
@@ -44,6 +46,7 @@ async def test_binary_sensor(hass: HomeAssistant, knx: KNXTestKit):
     # receive OFF telegram
     await knx.receive_write("1/1/1", False)
     await knx.receive_write("2/2/2", True)
+    await hass.async_block_till_done()
     state_normal = hass.states.get("binary_sensor.test_normal")
     state_invert = hass.states.get("binary_sensor.test_invert")
     assert state_normal.state is STATE_OFF
@@ -52,6 +55,7 @@ async def test_binary_sensor(hass: HomeAssistant, knx: KNXTestKit):
     # receive ON telegram
     await knx.receive_write("1/1/1", True)
     await knx.receive_write("2/2/2", False)
+    await hass.async_block_till_done()
     state_normal = hass.states.get("binary_sensor.test_normal")
     state_invert = hass.states.get("binary_sensor.test_invert")
     assert state_normal.state is STATE_ON
@@ -126,7 +130,7 @@ async def test_binary_sensor_counter(hass: HomeAssistant, knx: KNXTestKit):
                 {
                     CONF_NAME: "test",
                     CONF_STATE_ADDRESS: "2/2/2",
-                    BinarySensorSchema.CONF_CONTEXT_TIMEOUT: 1,
+                    BinarySensorSchema.CONF_CONTEXT_TIMEOUT: 0.1,
                     CONF_SYNC_STATE: False,
                 },
             ]
@@ -144,13 +148,15 @@ async def test_binary_sensor_counter(hass: HomeAssistant, knx: KNXTestKit):
     state = hass.states.get("binary_sensor.test")
     assert state.state is STATE_OFF
     assert state.attributes.get("counter") == 0
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
+    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=0.1))
     await hass.async_block_till_done()
+    await asyncio.sleep(0.2)
     # state changed twice after context timeout - once to ON with counter 1 and once to counter 0
     state = hass.states.get("binary_sensor.test")
     assert state.state is STATE_ON
     assert state.attributes.get("counter") == 0
     # additional async_block_till_done needed event capture
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert len(events) == 2
     assert events.pop(0).data.get("new_state").attributes.get("counter") == 1
@@ -170,9 +176,11 @@ async def test_binary_sensor_counter(hass: HomeAssistant, knx: KNXTestKit):
     assert state.state is STATE_ON
     assert state.attributes.get("counter") == 0
     await hass.async_block_till_done()
-    assert len(events) == 2
-    assert events.pop(0).data.get("new_state").attributes.get("counter") == 2
-    assert events.pop(0).data.get("new_state").attributes.get("counter") == 0
+    await hass.async_block_till_done()
+    assert len(events) == 1
+    event = events.pop(0).data
+    assert event.get("new_state").attributes.get("counter") == 2
+    assert event.get("old_state").attributes.get("counter") == 0
 
 
 async def test_binary_sensor_reset(hass: HomeAssistant, knx: KNXTestKit):
@@ -199,6 +207,7 @@ async def test_binary_sensor_reset(hass: HomeAssistant, knx: KNXTestKit):
     state = hass.states.get("binary_sensor.test")
     assert state.state is STATE_ON
     async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
     # state reset after after timeout
     state = hass.states.get("binary_sensor.test")
