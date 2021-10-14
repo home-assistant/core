@@ -20,6 +20,8 @@ ADD_NEW_DEVICE_SCHEMA = vol.Schema({vol.Required(CONF_IP_ADDRESS): str})
 
 
 class LookinFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for lookin."""
+
     def __init__(self) -> None:
         """Init the lookin flow."""
         self._host: str | None = None
@@ -55,6 +57,7 @@ class LookinFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._name = device.name
 
         self._set_confirm_only()
+        self.context["title_placeholders"] = {"name": self._name, "host": self._host}
         return await self.async_step_discovery_confirm()
 
     async def async_step_user(
@@ -102,6 +105,10 @@ class LookinFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Confirm the discover flow."""
         if user_input is None:
+            self.context["title_placeholders"] = {
+                "name": self._name,
+                "host": self._host,
+            }
             return self.async_show_form(
                 step_id="discovery_confirm",
                 description_placeholders={"name": self._name, "host": self._host},
