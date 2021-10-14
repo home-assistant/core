@@ -96,9 +96,8 @@ class LookinSensorEntity(CoordinatorEntity, SensorEntity, Entity):
         LOGGER.debug("Saw push message: %s", msg)
         if msg["sensor_id"] != "FE" or msg["event_id"] not in ("00", "0"):
             return
-        data: MeteoSensor = self.coordinator.data
-        data.temperature = float(int(msg["value"][:4], 16)) / 10
-        data.humidity = float(int(msg["value"][-4:], 16)) / 10
+        meteo: MeteoSensor = self.coordinator.data
+        meteo.update_from_value(msg["value"])
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
