@@ -116,7 +116,7 @@ INDEX_SENSOR_DESCRIPTIONS = (
         key=TYPE_ASTHMA_TODAY,
         name="Asthma Index: Today",
         icon="mdi:flower",
-        native_unit_of_measurement="index",
+        native_unit_of_measurement=" ",
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
