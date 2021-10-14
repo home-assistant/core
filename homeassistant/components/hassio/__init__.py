@@ -79,8 +79,7 @@ DATA_INFO = "hassio_info"
 DATA_OS_INFO = "hassio_os_info"
 DATA_SUPERVISOR_INFO = "hassio_supervisor_info"
 DATA_ADDONS_STATS = "hassio_addons_stats"
-HASSIO_UPDATE_INTERVAL = timedelta(minutes=55)
-STATS_UPDATE_INTERVAL = timedelta(minutes=5)
+HASSIO_UPDATE_INTERVAL = timedelta(minutes=5)
 
 ADDONS_COORDINATOR = "hassio_addons_coordinator"
 
@@ -545,27 +544,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     async def update_info_data(now):
         """Update last available supervisor information."""
-        try:
-            hass.data[DATA_INFO] = await hassio.get_info()
-            hass.data[DATA_HOST_INFO] = await hassio.get_host_info()
-            hass.data[DATA_STORE] = await hassio.get_store()
-            hass.data[DATA_CORE_INFO] = await hassio.get_core_info()
-            hass.data[DATA_SUPERVISOR_INFO] = await hassio.get_supervisor_info()
-            hass.data[DATA_OS_INFO] = await hassio.get_os_info()
-            if ADDONS_COORDINATOR in hass.data:
-                await hass.data[ADDONS_COORDINATOR].async_refresh()
-        except HassioAPIError as err:
-            _LOGGER.warning("Can't read last version: %s", err)
-
-        hass.helpers.event.async_track_point_in_utc_time(
-            update_info_data, utcnow() + HASSIO_UPDATE_INTERVAL
-        )
-
-    # Fetch last version
-    await update_info_data(None)
-
-    async def update_addons_stats(now):
-        """Update addons stats."""
 
         async def update_addon_stats(slug):
             """Update single addon stats."""
@@ -573,7 +551,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             return (slug, stats)
 
         try:
-            hass.data[DATA_SUPERVISOR_INFO] = await hassio.get_supervisor_info()
+            (
+                hass.data[DATA_INFO],
+                hass.data[DATA_HOST_INFO],
+                hass.data[DATA_STORE],
+                hass.data[DATA_CORE_INFO],
+                hass.data[DATA_SUPERVISOR_INFO],
+                hass.data[DATA_OS_INFO],
+            ) = await asyncio.gather(
+                hassio.get_info(),
+                hassio.get_host_info(),
+                hassio.get_store(),
+                hassio.get_core_info(),
+                hassio.get_supervisor_info(),
+                hassio.get_os_info(),
+            )
+
             addon_slugs = [
                 addon[ATTR_SLUG]
                 for addon in hass.data[DATA_SUPERVISOR_INFO].get("addons", [])
@@ -582,16 +575,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 *[update_addon_stats(slug) for slug in addon_slugs]
             )
             hass.data[DATA_ADDONS_STATS] = dict(stats_data)
+
             if ADDONS_COORDINATOR in hass.data:
                 await hass.data[ADDONS_COORDINATOR].async_refresh()
         except HassioAPIError as err:
-            _LOGGER.warning("Can't read last version: %s", err)
+            _LOGGER.warning("Can't read Supervisor data: %s", err)
 
         hass.helpers.event.async_track_point_in_utc_time(
-            update_addons_stats, utcnow() + STATS_UPDATE_INTERVAL
+            update_info_data, utcnow() + HASSIO_UPDATE_INTERVAL
         )
 
-    await update_addons_stats(None)
+    # Fetch data
+    await update_info_data(None)
 
     async def async_handle_core_service(call):
         """Service handler for handling core services."""
@@ -759,7 +754,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         new_data[DATA_KEY_ADDONS] = {
             addon[ATTR_SLUG]: {
                 **addon,
-                **(addons_stats.get(addon[ATTR_SLUG], {})),
+                **((addons_stats or {}).get(addon[ATTR_SLUG], {})),
                 ATTR_REPOSITORY: repositories.get(
                     addon.get(ATTR_REPOSITORY), addon.get(ATTR_REPOSITORY, "")
                 ),

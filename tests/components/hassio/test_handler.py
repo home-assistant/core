@@ -177,6 +177,18 @@ async def test_api_addon_info(hassio_handler, aioclient_mock):
     assert aioclient_mock.call_count == 1
 
 
+async def test_api_addon_stats(hassio_handler, aioclient_mock):
+    """Test setup with API Add-on stats."""
+    aioclient_mock.get(
+        "http://127.0.0.1/addons/test/stats",
+        json={"result": "ok", "data": {"memory_percent": 0.01}},
+    )
+
+    data = await hassio_handler.get_addon_stats("test")
+    assert data["memory_percent"] == 0.01
+    assert aioclient_mock.call_count == 1
+
+
 async def test_api_discovery_message(hassio_handler, aioclient_mock):
     """Test setup with API discovery message."""
     aioclient_mock.get(
