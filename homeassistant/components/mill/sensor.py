@@ -126,6 +126,8 @@ class MillSensor(CoordinatorEntity, SensorEntity):
 
     @callback
     def _update_attr(self, device):
+        self._attr_available = device.available
+
         if self.entity_description.key == CONSUMPTION_TODAY:
             self._attr_native_value = device.day_consumption
         elif self.entity_description.key == CONSUMPTION_YEAR:
