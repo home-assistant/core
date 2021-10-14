@@ -217,9 +217,14 @@ class ConditionerEntity(LookinEntity, CoordinatorEntity, ClimateEntity):
     @callback
     def _async_push_update(self, msg):
         """Process an update pushed via UDP."""
-        if msg["sensor_id"] == IR_SENSOR_ID:
-            LOGGER.debug("Saw IR signal message: %s, triggering update", msg)
-            self.hass.async_create_task(self.coordinator.async_request_refresh())
+        if msg["sensor_id"] != IR_SENSOR_ID:
+            return
+        ir_uuid = msg["value"][:4]
+        if ir_uuid != self._uuid:
+            return
+        LOGGER.debug("Saw IR signal message: %s", msg)
+        self._climate.update_from_status(msg["value"][-4:])
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
