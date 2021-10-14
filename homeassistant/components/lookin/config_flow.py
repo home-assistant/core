@@ -76,7 +76,11 @@ class LookinFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 device_id = device.id.upper()
                 await self.async_set_unique_id(device_id, raise_on_progress=False)
                 self._abort_if_unique_id_configured(updates={CONF_HOST: host})
-                return await self.async_step_discovery_confirm()
+                assert self._name is not None
+                return self.async_create_entry(
+                    title=self._name,
+                    data={CONF_HOST: self._host},
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -107,7 +111,5 @@ class LookinFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._name is not None
         return self.async_create_entry(
             title=self._name,
-            data={
-                CONF_HOST: self._host,
-            },
+            data={CONF_HOST: self._host},
         )
