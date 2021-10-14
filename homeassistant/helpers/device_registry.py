@@ -43,8 +43,6 @@ DISABLED_USER = "user"
 
 ORPHANED_DEVICE_KEEP_SECONDS = 86400 * 30
 
-ATTR_CONFIGURATION_URL = "configuration_url"
-
 
 class _DeviceIndex(NamedTuple):
     identifiers: dict[tuple[str, str], str]
