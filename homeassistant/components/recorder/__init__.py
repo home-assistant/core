@@ -478,6 +478,7 @@ class Recorder(threading.Thread):
         self.async_migration_event = asyncio.Event()
         self.migration_in_progress = False
         self._queue_watcher = None
+        self._db_supports_row_number = True
 
         self.enabled = True
 
@@ -1037,6 +1038,7 @@ class Recorder(threading.Thread):
         def setup_recorder_connection(dbapi_connection, connection_record):
             """Dbapi specific connection settings."""
             setup_connection_for_dialect(
+                self,
                 self.engine.dialect.name,
                 dbapi_connection,
                 not self._completed_first_database_setup,
