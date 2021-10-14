@@ -12,6 +12,7 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
@@ -229,12 +230,14 @@ REST_SENSORS: Final = {
         device_class=sensor.DEVICE_CLASS_SIGNAL_STRENGTH,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
         default_enabled=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     "uptime": RestAttributeDescription(
         name="Uptime",
         value=lambda status, last: get_device_uptime(status["uptime"], last),
         device_class=sensor.DEVICE_CLASS_TIMESTAMP,
         default_enabled=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 }
 
@@ -286,6 +289,7 @@ RPC_SENSORS: Final = {
         device_class=sensor.DEVICE_CLASS_SIGNAL_STRENGTH,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
         default_enabled=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     "uptime": RpcAttributeDescription(
         key="sys",
@@ -294,6 +298,7 @@ RPC_SENSORS: Final = {
         value=get_device_uptime,
         device_class=sensor.DEVICE_CLASS_TIMESTAMP,
         default_enabled=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 }
 
@@ -359,6 +364,11 @@ class RestSensor(ShellyRestAttributeEntity, SensorEntity):
         """Return unit of sensor."""
         return self.description.unit
 
+    @property
+    def entity_category(self) -> str | None:
+        """Return category of entity."""
+        return self.description.entity_category
+
 
 class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
     """Represent a RPC sensor."""
@@ -377,6 +387,11 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
     def native_unit_of_measurement(self) -> str | None:
         """Return unit of sensor."""
         return self.description.unit
+
+    @property
+    def entity_category(self) -> str | None:
+        """Return category of entity."""
+        return self.description.entity_category
 
 
 class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):

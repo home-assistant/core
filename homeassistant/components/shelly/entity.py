@@ -255,6 +255,7 @@ class RpcAttributeDescription:
     available: Callable[[dict], bool] | None = None
     removal_condition: Callable[[dict, str], bool] | None = None
     extra_state_attributes: Callable[[dict], dict | None] | None = None
+    entity_category: str | None = None
 
 
 @dataclass
@@ -269,6 +270,7 @@ class RestAttributeDescription:
     state_class: str | None = None
     default_enabled: bool = True
     extra_state_attributes: Callable[[dict], dict | None] | None = None
+    entity_category: str | None = None
 
 
 class ShellyBlockEntity(entity.Entity):
