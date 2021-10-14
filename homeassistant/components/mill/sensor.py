@@ -23,7 +23,17 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONSUMPTION_TODAY, CONSUMPTION_YEAR, DOMAIN, MANUFACTURER
+from .const import (
+    BATTERY,
+    CONSUMPTION_TODAY,
+    CONSUMPTION_YEAR,
+    DOMAIN,
+    ECO2,
+    HUMIDITY,
+    MANUFACTURER,
+    TEMPERATURE,
+    TVOC,
+)
 
 HEATER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -43,31 +53,31 @@ HEATER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 )
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
-        key="temperature",
+        key=TEMPERATURE,
         device_class=DEVICE_CLASS_TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
         name="Temperature",
     ),
     SensorEntityDescription(
-        key="humidity",
+        key=HUMIDITY,
         device_class=DEVICE_CLASS_HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
-        name="Humidity",
+        name="Humidiaty",
     ),
     SensorEntityDescription(
-        key="battery",
+        key=BATTERY,
         device_class=DEVICE_CLASS_BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         name="Battery",
     ),
     SensorEntityDescription(
-        key="eco2",
+        key=ECO2,
         device_class=DEVICE_CLASS_CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         name="Estimated CO2",
     ),
     SensorEntityDescription(
-        key="tvoc",
+        key=TVOC,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         name="TVOC",
     ),
@@ -133,13 +143,13 @@ class MillSensor(CoordinatorEntity, SensorEntity):
             self._attr_native_value = device.day_consumption
         elif self.entity_description.key == CONSUMPTION_YEAR:
             self._attr_native_value = device.year_consumption
-        elif self.entity_description.key == "temperature":
+        elif self.entity_description.key == TEMPERATURE:
             self._attr_native_value = device.current_temp
-        elif self.entity_description.key == "humidity":
+        elif self.entity_description.key == HUMIDITY:
             self._attr_native_value = device.humidity
-        elif self.entity_description.key == "battery":
+        elif self.entity_description.key == BATTERY:
             self._attr_native_value = device.battery
-        elif self.entity_description.key == "eco2":
+        elif self.entity_description.key == ECO2:
             self._attr_native_value = device.eco2
-        elif self.entity_description.key == "tvoc":
+        elif self.entity_description.key == TVOC:
             self._attr_native_value = device.tvoc
