@@ -110,7 +110,7 @@ INDEX_SENSOR_DESCRIPTIONS = (
         key=TYPE_ALLERGY_TOMORROW,
         name="Allergy Index: Tomorrow",
         icon="mdi:flower",
-        native_unit_of_measurement="index",
+        native_unit_of_measurement=" ",
     ),
     SensorEntityDescription(
         key=TYPE_ASTHMA_TODAY,
