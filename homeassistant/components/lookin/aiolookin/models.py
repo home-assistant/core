@@ -6,6 +6,8 @@ from typing import Any
 
 __all__ = ("Device", "MeteoSensor", "Climate", "Remote")
 
+STATUS_UNKNOWN = "0000"
+
 
 @dataclass
 class Device:
@@ -99,7 +101,7 @@ class Climate(Remote):
 
     def __post_init__(self, _data: dict[str, Any]) -> None:
         self.extra = _data["Extra"]
-        status = _data.get("Status", _data.get("LastStatus"))
+        status = _data.get("Status", _data.get("LastStatus", STATUS_UNKNOWN))
         self.hvac_mode = int(status[0])
         self.temperature = int(status[1], 16)
         self.fan_mode = int(status[2])

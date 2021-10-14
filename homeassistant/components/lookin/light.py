@@ -3,14 +3,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from aiolookin import Device, LookInHttpProtocol, Remote
-
 from homeassistant.components.light import COLOR_MODE_ONOFF, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LookinPowerEntity
+from .aiolookin import Device, LookInHttpProtocol, Remote
 from .const import DEVICES, DOMAIN, LOOKIN_DEVICE, PROTOCOL
 
 

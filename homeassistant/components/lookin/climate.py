@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from typing import Any, Final, cast
 
-from aiolookin import Climate, Device, LookInHttpProtocol
-
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
@@ -29,6 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LookinEntity
+from .aiolookin import Climate, Device, LookInHttpProtocol
 from .const import DEVICES, DOMAIN, LOOKIN_DEVICE, PROTOCOL
 
 SUPPORT_FLAGS: int = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_SWING_MODE
