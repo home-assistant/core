@@ -3,6 +3,7 @@ import logging
 from re import search
 
 from micloud import MiCloud
+from micloud.micloudexception import MiCloudAccessDenied
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -28,6 +29,8 @@ from .const import (
     MODELS_ALL_DEVICES,
     MODELS_GATEWAY,
     SERVER_COUNTRY_CODES,
+    AuthException,
+    SetupException,
 )
 from .device import ConnectXiaomiDevice
 
@@ -230,8 +233,13 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
             miio_cloud = MiCloud(cloud_username, cloud_password)
-            if not await self.hass.async_add_executor_job(miio_cloud.login):
+            try:
+                if not await self.hass.async_add_executor_job(miio_cloud.login):
+                    errors["base"] = "cloud_login_error"
+            except MiCloudAccessDenied:
                 errors["base"] = "cloud_login_error"
+
+            if errors:
                 return self.async_show_form(
                     step_id="cloud", data_schema=DEVICE_CLOUD_CONFIG, errors=errors
                 )
@@ -320,14 +328,24 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Try to connect to a Xiaomi Device.
         connect_device_class = ConnectXiaomiDevice(self.hass)
-        await connect_device_class.async_connect_device(self.host, self.token)
+        try:
+            await connect_device_class.async_connect_device(self.host, self.token)
+        except AuthException:
+            if self.model is None:
+                errors["base"] = "wrong_token"
+        except SetupException:
+            if self.model is None:
+                errors["base"] = "cannot_connect"
+
         device_info = connect_device_class.device_info
 
         if self.model is None and device_info is not None:
             self.model = device_info.model
 
-        if self.model is None:
+        if self.model is None and not errors:
             errors["base"] = "cannot_connect"
+
+        if errors:
             return self.async_show_form(
                 step_id="connect", data_schema=DEVICE_MODEL_CONFIG, errors=errors
             )
