@@ -10,16 +10,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .aiolookin import Device
-from .const import DOMAIN, LOOKIN_DEVICE, METEO_COORDINATOR
+from . import LookinData
+from .const import DOMAIN
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -45,15 +42,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up lookin sensors from the config entry."""
-    data = hass.data[DOMAIN][config_entry.entry_id]
-    lookin_device = data[LOOKIN_DEVICE]
-    meteo_coordinator = data[METEO_COORDINATOR]
+    lookin_data: LookinData = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
-        [
-            LookinSensorEntity(meteo_coordinator, lookin_device, description)
-            for description in SENSOR_TYPES
-        ]
+        [LookinSensorEntity(description, lookin_data) for description in SENSOR_TYPES]
     )
 
 
@@ -63,18 +55,16 @@ class LookinSensorEntity(CoordinatorEntity, SensorEntity, Entity):
     _attr_should_poll = False
 
     def __init__(
-        self,
-        coordinator: DataUpdateCoordinator,
-        lookin_device: Device,
-        description: SensorEntityDescription,
+        self, description: SensorEntityDescription, lookin_data: LookinData
     ) -> None:
         """Init the lookin sensor entity."""
-        super().__init__(coordinator)
+        super().__init__(lookin_data.meteo_coordinator)
         self.entity_description = description
-        self._lookin_device = lookin_device
-        self._attr_name = f"{lookin_device.name} {description.name}"
+        self._lookin_device = lookin_data.lookin_device
+        self._lookin_udp_subs = lookin_data.lookin_udp_subs
+        self._attr_name = f"{self._lookin_device.name} {description.name}"
         self._attr_native_value = getattr(self.coordinator.data, description.key)
-        self._attr_unique_id = f"{lookin_device.id}-{description.key}"
+        self._attr_unique_id = f"{self._lookin_device.id}-{description.key}"
 
     def _handle_coordinator_update(self):
         """Update the state of the entity."""
@@ -93,3 +83,19 @@ class LookinSensorEntity(CoordinatorEntity, SensorEntity, Entity):
             "model": "LOOK.in 2",
             "sw_version": self._lookin_device.firmware,
         }
+
+    @callback
+    def _async_push_update(self, msg):
+        """Process an update pushed via UDP."""
+        import pprint
+
+        pprint.print([self, msg])
+
+    async def async_added_to_hass(self) -> None:
+        """Called when the entity is added to hass."""
+        self.async_on_remove(
+            self._lookin_udp_subs.subscribe(
+                self._lookin_device.id, self._async_push_update
+            )
+        )
+        return await super().async_added_to_hass()

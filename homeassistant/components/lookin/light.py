@@ -8,9 +8,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LookinPowerEntity
-from .aiolookin import Device, LookInHttpProtocol, Remote
-from .const import DEVICES, DOMAIN, LOOKIN_DEVICE, PROTOCOL
+from . import LookinData, LookinPowerEntity
+from .aiolookin import Remote
+from .const import DOMAIN
 
 
 async def async_setup_entry(
@@ -18,25 +18,21 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    data = hass.data[DOMAIN][config_entry.entry_id]
-    lookin_device = data[LOOKIN_DEVICE]
-    lookin_protocol = data[PROTOCOL]
-    devices = data[DEVICES]
-
+    lookin_data: LookinData = hass.data[DOMAIN][config_entry.entry_id]
     entities = []
 
-    for remote in devices:
-        if remote["Type"] == "03":
-            uuid = remote["UUID"]
-            device = await lookin_protocol.get_remote(uuid)
-            entities.append(
-                LookinLightEntity(
-                    uuid=uuid,
-                    lookin_protocol=lookin_protocol,
-                    device=device,
-                    lookin_device=lookin_device,
-                )
+    for remote in lookin_data.devices:
+        if remote["Type"] != "03":
+            continue
+        uuid = remote["UUID"]
+        device = await lookin_data.lookin_protocol.get_remote(uuid)
+        entities.append(
+            LookinLightEntity(
+                uuid=uuid,
+                device=device,
+                lookin_data=lookin_data,
             )
+        )
 
     async_add_entities(entities, update_before_add=True)
 
@@ -51,11 +47,10 @@ class LookinLightEntity(LookinPowerEntity, LightEntity):
     def __init__(
         self,
         uuid: str,
-        lookin_protocol: LookInHttpProtocol,
         device: Remote,
-        lookin_device: Device,
+        lookin_data: LookinData,
     ) -> None:
-        super().__init__(uuid, lookin_protocol, device, lookin_device)
+        super().__init__(uuid, device, lookin_data)
         self._attr_is_on = False
 
     async def async_turn_on(self, **kwargs: Any) -> None:
