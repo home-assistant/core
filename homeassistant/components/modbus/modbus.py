@@ -36,11 +36,6 @@ from homeassistant.helpers.event import Event, async_call_later
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    ATTR_ADDRESS,
-    ATTR_HUB,
-    ATTR_STATE,
-    ATTR_UNIT,
-    ATTR_VALUE,
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
@@ -70,6 +65,7 @@ from .const import (
     SIGNAL_STOP_ENTITY,
     TCP,
     UDP,
+    AttrType,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -158,11 +154,11 @@ async def async_modbus_setup(
 
     async def async_write_register(service: ServiceCall) -> None:
         """Write Modbus registers."""
-        unit = int(float(service.data[ATTR_UNIT]))
-        address = int(float(service.data[ATTR_ADDRESS]))
-        value = service.data[ATTR_VALUE]
+        unit = int(float(service.data[AttrType.UNIT]))
+        address = int(float(service.data[AttrType.ADDRESS]))
+        value = service.data[AttrType.VALUE]
         hub = hub_collect[
-            service.data[ATTR_HUB] if ATTR_HUB in service.data else DEFAULT_HUB
+            service.data[AttrType.HUB] if AttrType.HUB in service.data else DEFAULT_HUB
         ]
         if isinstance(value, list):
             await hub.async_pymodbus_call(
@@ -182,11 +178,11 @@ async def async_modbus_setup(
 
     async def async_write_coil(service: ServiceCall) -> None:
         """Write Modbus coil."""
-        unit = service.data[ATTR_UNIT]
-        address = service.data[ATTR_ADDRESS]
-        state = service.data[ATTR_STATE]
+        unit = service.data[AttrType.UNIT]
+        address = service.data[AttrType.ADDRESS]
+        state = service.data[AttrType.STATE]
         hub = hub_collect[
-            service.data[ATTR_HUB] if ATTR_HUB in service.data else DEFAULT_HUB
+            service.data[AttrType.HUB] if AttrType.HUB in service.data else DEFAULT_HUB
         ]
         if isinstance(state, list):
             await hub.async_pymodbus_call(unit, address, state, CALL_TYPE_WRITE_COILS)
@@ -200,7 +196,7 @@ async def async_modbus_setup(
     async def async_stop_hub(service: ServiceCall) -> None:
         """Stop Modbus hub."""
         async_dispatcher_send(hass, SIGNAL_STOP_ENTITY)
-        hub = hub_collect[service.data[ATTR_HUB]]
+        hub = hub_collect[service.data[AttrType.HUB]]
         await hub.async_close()
 
     hass.services.async_register(
@@ -210,7 +206,7 @@ async def async_modbus_setup(
     async def async_restart_hub(service: ServiceCall) -> None:
         """Restart Modbus hub."""
         async_dispatcher_send(hass, SIGNAL_START_ENTITY)
-        hub = hub_collect[service.data[ATTR_HUB]]
+        hub = hub_collect[service.data[AttrType.HUB]]
         await hub.async_restart()
 
     hass.services.async_register(

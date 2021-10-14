@@ -1,4 +1,6 @@
 """Constants used in modbus integration."""
+from enum import Enum
+
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate.const import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
@@ -67,13 +69,18 @@ SERIAL = "serial"
 TCP = "tcp"
 UDP = "udp"
 
+
 # service call attributes
-ATTR_ADDRESS = "address"
-ATTR_HUB = "hub"
-ATTR_UNIT = "unit"
-ATTR_VALUE = "value"
-ATTR_STATE = "state"
-ATTR_TEMPERATURE = "temperature"
+class AttrType(str, Enum):
+    """Attr types used by sensor etc."""
+
+    ADDRESS = "address"
+    HUB = "hub"
+    UNIT = "unit"
+    VALUE = "value"
+    STATE = "state"
+    TEMPERATURE = "temperature"
+
 
 # data types
 DATA_TYPE_CUSTOM = "custom"

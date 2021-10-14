@@ -26,7 +26,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import get_hub
 from .base_platform import BaseStructPlatform
 from .const import (
-    ATTR_TEMPERATURE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_WRITE_REGISTERS,
     CONF_CLIMATES,
@@ -40,6 +39,7 @@ from .const import (
     DATA_TYPE_UINT16,
     DATA_TYPE_UINT32,
     DATA_TYPE_UINT64,
+    AttrType,
 )
 from .modbus import ModbusHub
 
@@ -97,8 +97,10 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
         state = await self.async_get_last_state()
-        if state and state.attributes.get(ATTR_TEMPERATURE):
-            self._attr_target_temperature = float(state.attributes[ATTR_TEMPERATURE])
+        if state and state.attributes.get(AttrType.TEMPERATURE):
+            self._attr_target_temperature = float(
+                state.attributes[AttrType.TEMPERATURE]
+            )
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
@@ -107,10 +109,10 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if ATTR_TEMPERATURE not in kwargs:
+        if AttrType.TEMPERATURE not in kwargs:
             return
         target_temperature = (
-            float(kwargs[ATTR_TEMPERATURE]) - self._offset
+            float(kwargs[AttrType.TEMPERATURE]) - self._offset
         ) / self._scale
         if self._data_type in (
             DATA_TYPE_INT16,

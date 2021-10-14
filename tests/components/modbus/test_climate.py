@@ -14,12 +14,12 @@ from homeassistant.components.modbus.const import (
     DATA_TYPE_INT32,
 )
 from homeassistant.const import (
-    ATTR_TEMPERATURE,
     CONF_ADDRESS,
     CONF_COUNT,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
+    AttrType,
 )
 from homeassistant.core import State
 
@@ -190,14 +190,14 @@ async def test_service_climate_set_temperature(
         "set_temperature",
         {
             "entity_id": ENTITY_ID,
-            ATTR_TEMPERATURE: temperature,
+            AttrType.TEMPERATURE: temperature,
         },
         blocking=True,
     )
 
 
 test_value = State(ENTITY_ID, 35)
-test_value.attributes = {ATTR_TEMPERATURE: 37}
+test_value.attributes = {AttrType.TEMPERATURE: 37}
 
 
 @pytest.mark.parametrize(
@@ -224,4 +224,4 @@ async def test_restore_state_climate(hass, mock_test_state, mock_modbus):
     """Run test for sensor restore state."""
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVAC_MODE_AUTO
-    assert state.attributes[ATTR_TEMPERATURE] == 37
+    assert state.attributes[AttrType.TEMPERATURE] == 37

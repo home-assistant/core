@@ -23,11 +23,6 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.modbus.const import (
-    ATTR_ADDRESS,
-    ATTR_HUB,
-    ATTR_STATE,
-    ATTR_UNIT,
-    ATTR_VALUE,
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
@@ -59,6 +54,7 @@ from homeassistant.components.modbus.const import (
     SERVICE_WRITE_REGISTER,
     TCP,
     UDP,
+    AttrType,
 )
 from homeassistant.components.modbus.validators import (
     duplicate_entity_validator,
@@ -446,25 +442,25 @@ SERVICE = "service"
     "do_write",
     [
         {
-            DATA: ATTR_VALUE,
+            DATA: AttrType.VALUE,
             VALUE: 15,
             SERVICE: SERVICE_WRITE_REGISTER,
             FUNC: CALL_TYPE_WRITE_REGISTER,
         },
         {
-            DATA: ATTR_VALUE,
+            DATA: AttrType.VALUE,
             VALUE: [1, 2, 3],
             SERVICE: SERVICE_WRITE_REGISTER,
             FUNC: CALL_TYPE_WRITE_REGISTERS,
         },
         {
-            DATA: ATTR_STATE,
+            DATA: AttrType.STATE,
             VALUE: False,
             SERVICE: SERVICE_WRITE_COIL,
             FUNC: CALL_TYPE_WRITE_COIL,
         },
         {
-            DATA: ATTR_STATE,
+            DATA: AttrType.STATE,
             VALUE: [True, False, True],
             SERVICE: SERVICE_WRITE_COIL,
             FUNC: CALL_TYPE_WRITE_COILS,
@@ -493,9 +489,9 @@ async def test_pb_service_write(
     }
 
     data = {
-        ATTR_HUB: TEST_MODBUS_NAME,
-        ATTR_UNIT: 17,
-        ATTR_ADDRESS: 16,
+        AttrType.HUB: TEST_MODBUS_NAME,
+        AttrType.UNIT: 17,
+        AttrType.ADDRESS: 16,
         do_write[DATA]: do_write[VALUE],
     }
     mock_modbus_with_pymodbus.reset_mock()
@@ -505,7 +501,7 @@ async def test_pb_service_write(
     await hass.services.async_call(DOMAIN, do_write[SERVICE], data, blocking=True)
     assert func_name[do_write[FUNC]].called
     assert func_name[do_write[FUNC]].call_args[0] == (
-        data[ATTR_ADDRESS],
+        data[AttrType.ADDRESS],
         data[do_write[DATA]],
     )
     if do_return[DATA]:
@@ -781,7 +777,7 @@ async def test_stop_restart(hass, caplog, mock_modbus):
     mock_modbus.reset_mock()
     caplog.clear()
     data = {
-        ATTR_HUB: TEST_MODBUS_NAME,
+        AttrType.HUB: TEST_MODBUS_NAME,
     }
     await hass.services.async_call(DOMAIN, SERVICE_STOP, data, blocking=True)
     await hass.async_block_till_done()

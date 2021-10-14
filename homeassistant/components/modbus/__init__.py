@@ -49,11 +49,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    ATTR_ADDRESS,
-    ATTR_HUB,
-    ATTR_STATE,
-    ATTR_UNIT,
-    ATTR_VALUE,
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
@@ -118,6 +113,7 @@ from .const import (
     SERIAL,
     TCP,
     UDP,
+    AttrType,
 )
 from .modbus import ModbusHub, async_modbus_setup
 from .validators import (
@@ -349,10 +345,10 @@ CONFIG_SCHEMA = vol.Schema(
 
 SERVICE_WRITE_REGISTER_SCHEMA = vol.Schema(
     {
-        vol.Optional(ATTR_HUB, default=DEFAULT_HUB): cv.string,
-        vol.Required(ATTR_UNIT): cv.positive_int,
-        vol.Required(ATTR_ADDRESS): cv.positive_int,
-        vol.Required(ATTR_VALUE): vol.Any(
+        vol.Optional(AttrType.HUB, default=DEFAULT_HUB): cv.string,
+        vol.Required(AttrType.UNIT): cv.positive_int,
+        vol.Required(AttrType.ADDRESS): cv.positive_int,
+        vol.Required(AttrType.VALUE): vol.Any(
             cv.positive_int, vol.All(cv.ensure_list, [cv.positive_int])
         ),
     }
@@ -360,17 +356,17 @@ SERVICE_WRITE_REGISTER_SCHEMA = vol.Schema(
 
 SERVICE_WRITE_COIL_SCHEMA = vol.Schema(
     {
-        vol.Optional(ATTR_HUB, default=DEFAULT_HUB): cv.string,
-        vol.Required(ATTR_UNIT): cv.positive_int,
-        vol.Required(ATTR_ADDRESS): cv.positive_int,
-        vol.Required(ATTR_STATE): vol.Any(
+        vol.Optional(AttrType.HUB, default=DEFAULT_HUB): cv.string,
+        vol.Required(AttrType.UNIT): cv.positive_int,
+        vol.Required(AttrType.ADDRESS): cv.positive_int,
+        vol.Required(AttrType.STATE): vol.Any(
             cv.boolean, vol.All(cv.ensure_list, [cv.boolean])
         ),
     }
 )
 SERVICE_STOP_START_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_HUB): cv.string,
+        vol.Required(AttrType.HUB): cv.string,
     }
 )
 
