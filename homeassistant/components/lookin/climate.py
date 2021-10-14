@@ -32,7 +32,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .aiolookin import IR_SENSOR_ID, Climate
+from .aiolookin import Climate, SensorID
 from .const import DOMAIN
 from .entity import LookinEntity
 from .models import LookinData
@@ -214,20 +214,15 @@ class ConditionerEntity(LookinEntity, CoordinatorEntity, ClimateEntity):
     @callback
     def _async_push_update(self, msg):
         """Process an update pushed via UDP."""
-        if msg["sensor_id"] != IR_SENSOR_ID:
-            return
-        ir_uuid = msg["value"][:4]
-        if ir_uuid != self._uuid:
-            return
         LOGGER.debug("Processing push message for %s: %s", self.entity_id, msg)
-        self._climate.update_from_status(msg["value"][-4:])
+        self._climate.update_from_status(msg["value"])
         self.coordinator.async_set_updated_data(self._climate)
 
     async def async_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
         self.async_on_remove(
-            self._lookin_udp_subs.subscribe(
-                self._lookin_device.id, self._async_push_update
+            self._lookin_udp_subs.subscribe_sensor(
+                self._lookin_device.id, SensorID.IR, self._uuid, self._async_push_update
             )
         )
         return await super().async_added_to_hass()
