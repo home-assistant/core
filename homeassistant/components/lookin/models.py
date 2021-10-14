@@ -101,7 +101,7 @@ class Climate(Remote):
         self.extra = _data["Extra"]
         status = _data.get("Status", _data.get("LastStatus"))
         self.hvac_mode = int(status[0])
-        self.temperature = int(status, 16)
+        self.temperature = int(status[1], 16)
         self.fan_mode = int(status[2])
         self.swing_mode = int(status[3])
         super().__post_init__(_data)
