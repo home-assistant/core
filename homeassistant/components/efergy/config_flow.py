@@ -56,7 +56,7 @@ class EfergyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_config: ConfigType):
+    async def async_step_import(self, import_config: ConfigType) -> FlowResult:
         """Import a config entry from configuration.yaml."""
         for entry in self._async_current_entries():
             if entry.data[CONF_API_KEY] == import_config[CONF_APPTOKEN]:
