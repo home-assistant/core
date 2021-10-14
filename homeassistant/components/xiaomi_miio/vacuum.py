@@ -31,6 +31,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.util.dt import as_utc
 
 from . import VacuumCoordinatorData
+from ...const import STATE_UNKNOWN
 from ...helpers.update_coordinator import DataUpdateCoordinator
 from .const import (
     CONF_DEVICE,
@@ -419,7 +420,7 @@ class MiroboVacuum(XiaomiCoordinatedMiioEntity, StateVacuumEntity):
                 self.coordinator.data.status.state,
                 self.coordinator.data.status.state_code,
             )
-            self._state = None
+            self._state = STATE_UNKNOWN
         else:
             self._state = STATE_CODE_TO_STATE[state_code]
 

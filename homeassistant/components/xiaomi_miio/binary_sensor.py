@@ -173,9 +173,10 @@ class XiaomiGenericBinarySensor(XiaomiCoordinatedMiioEntity, BinarySensorEntity)
         self._attr_entity_registry_enabled_default = (
             description.entity_registry_enabled_default
         )
+        self._attr_is_on = self._determine_native_value()
 
     def _handle_coordinator_update(self) -> None:
-        self._native_value = self._determine_native_value()
+        self._attr_is_on = self._determine_native_value()
 
         super()._handle_coordinator_update()
 
@@ -183,7 +184,7 @@ class XiaomiGenericBinarySensor(XiaomiCoordinatedMiioEntity, BinarySensorEntity)
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes."""
 
-        if self._native_value is None:
+        if self._attr_is_on is None:
             return None
 
         return super().extra_state_attributes
@@ -202,8 +203,3 @@ class XiaomiGenericBinarySensor(XiaomiCoordinatedMiioEntity, BinarySensorEntity)
             return self.entity_description.value(state)
 
         return state
-
-    @property
-    def is_on(self):
-        """Return true if the binary sensor is on."""
-        return self._native_value
