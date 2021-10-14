@@ -8,6 +8,8 @@ import logging
 import struct
 from typing import Any, cast
 
+from pymodbus.pdu import ModbusResponse
+
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_COMMAND_OFF,
@@ -77,7 +79,6 @@ class BasePlatform(Entity):
         # see issue #657 and PR #660 in riptideio/pymodbus
         self._slave = entry.get(CONF_SLAVE, 0)
         self._id = entry[CONF_ID]
-        self._name = entry[CONF_NAME]
         self._address = int(entry[CONF_ADDRESS])
         self._input_type = entry[CONF_INPUT_TYPE]
         self._value: str | None = None
@@ -95,9 +96,11 @@ class BasePlatform(Entity):
         self._lazy_errors = self._lazy_error_count
 
         self._scan_group = entry.get(CONF_SCAN_GROUP)
-        self._unique_id = f"modbus_{hub._config_name}_{self._slave}_{self._input_type}_{self._address}"
+        self._unique_id = (
+            f"modbus_{hub.name}_{self._slave}_{self._input_type}_{self._address}"
+        )
 
-    def init_update_listeners(self):
+    def init_update_listeners(self) -> None:
         """Initialize update listeners."""
         if (
             self._slave is not None
@@ -110,11 +113,13 @@ class BasePlatform(Entity):
                 self._slave,
                 self._input_type,
                 self._address,
-                self.update,
+                self.async_update_from_result,
             )
 
     @abstractmethod
-    async def update(self, result, slaveId, input_type, address):
+    async def async_update_from_result(
+        self, result: ModbusResponse | None, slaveId: int, input_type: str, address: int
+    ) -> None:
         """Virtual function to be overwritten."""
 
     @abstractmethod
@@ -125,22 +130,15 @@ class BasePlatform(Entity):
     def async_run(self) -> None:
         """Remote start entity."""
         self.async_hold(update=False)
+        self.init_update_listeners()
         if self._scan_interval == 0 or self._scan_interval > ACTIVE_SCAN_INTERVAL:
             self._cancel_call = async_call_later(self.hass, 1, self.async_update)
-        if self._scan_interval > 0:
+        if self._scan_interval > 0 and self._scan_group is None:
             self._cancel_timer = async_track_time_interval(
                 self.hass, self.async_update, timedelta(seconds=self._scan_interval)
             )
         self._attr_available = True
         self.async_write_ha_state()
-    
-    async def async_base_added_to_hass(self):
-        """Handle entity which will be added."""
-        self.init_update_listeners()
-        if self._scan_interval > 0 and self._scan_group is None:
-            async_track_time_interval(
-                self.hass, self.async_update, timedelta(seconds=self._scan_interval)
-            )
 
     @callback
     def async_hold(self, update: bool = True) -> None:
@@ -154,15 +152,11 @@ class BasePlatform(Entity):
         if update:
             self._attr_available = False
             self.async_write_ha_state()
+
     @property
     def unique_id(self) -> str | None:
         """Return a unique ID."""
         return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     async def async_base_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -204,7 +198,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             registers.reverse()
         return registers
 
-    def update_value(self, new_value):
+    def update_value(self, new_value: Any) -> None:
         """Update value and write state if value changed."""
         self._attr_available = True
         if new_value != self._value:
@@ -302,7 +296,7 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
         else:
             self._verify_active = False
 
-    def init_update_listeners(self):
+    def init_update_listeners(self) -> None:
         """Initialize update listeners."""
         if (
             self._verify_active is True
@@ -316,7 +310,7 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
                 self._slave,
                 self._verify_type,
                 self._verify_address,
-                self.update,
+                self.async_update_from_result,
             )
         else:
             super().init_update_listeners()
@@ -369,9 +363,11 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
             self._slave, self._verify_address, 1, self._verify_type
         )
         self._call_active = False
-        await self.update(result, self._slave, self._verify_type, 0)
+        await self.async_update_from_result(result, self._slave, self._verify_type, 0)
 
-    async def update(self, result, slaveId, input_type, address):
+    async def async_update_from_result(
+        self, result: ModbusResponse | None, slaveId: int, input_type: str, address: int
+    ) -> None:
         """Update the entity state."""
         if not self._verify_active:
             self._attr_available = True

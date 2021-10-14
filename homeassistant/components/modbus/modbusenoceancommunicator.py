@@ -1,17 +1,18 @@
 """Support for Enocean commucation through modbus."""
 # mypy: allow-untyped-defs
 import asyncio
+from collections.abc import Callable
 import logging
 import time
 
-from enocean.communicators.communicator import Communicator, ESP_Version
+from enocean.communicators.communicator import Communicator, ESP_Version, Packet
 
 from homeassistant.core import HomeAssistant
 
 from .modbusenoceanadapter import ModbusEnoceanAdapter
 
 
-class ModbusEnoceanCommunicator(Communicator):
+class ModbusEnoceanCommunicator(Communicator):  # type: ignore
     """Serial port communicator class for EnOcean radio."""
 
     logger = logging.getLogger("enocean.communicators.ModbusEnoceanCommunicator")
@@ -21,7 +22,7 @@ class ModbusEnoceanCommunicator(Communicator):
         hass: HomeAssistant,
         adapter: ModbusEnoceanAdapter,
         esp_version: int,
-        callback=None,
+        callback: Callable[[Packet], None],
     ):
         """Initialize modbus enocean communcator."""
         super().__init__(version=esp_version, callback=callback)
