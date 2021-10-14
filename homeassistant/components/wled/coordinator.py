@@ -25,6 +25,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
     """Class to manage fetching WLED data from single endpoint."""
 
     keep_master_light: bool
+    config_entry: ConfigEntry
 
     def __init__(
         self,
@@ -45,6 +46,11 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
+
+    @property
+    def host(self) -> str:
+        """Return the WLED host."""
+        return self.config_entry.data[CONF_HOST]
 
     @property
     def has_master_light(self) -> bool:

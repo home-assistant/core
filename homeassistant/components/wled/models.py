@@ -6,6 +6,7 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_SW_VERSION,
 )
+from homeassistant.helpers.device_registry import ATTR_CONFIGURATION_URL
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -27,4 +28,5 @@ class WLEDEntity(CoordinatorEntity):
             ATTR_MANUFACTURER: self.coordinator.data.info.brand,
             ATTR_MODEL: self.coordinator.data.info.product,
             ATTR_SW_VERSION: self.coordinator.data.info.version,
+            ATTR_CONFIGURATION_URL: f"http://{self.coordinator.host}",
         }
