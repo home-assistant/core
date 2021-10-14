@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from aiolookin import Device, DeviceNotFound, LookInHttpProtocol, NoUsableService
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -12,6 +11,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
 
+from .aiolookin import Device, DeviceNotFound, LookInHttpProtocol, NoUsableService
 from .const import DOMAIN, LOGGER
 
 ADD_NEW_DEVICE_SCHEMA = vol.Schema({vol.Required(CONF_IP_ADDRESS): str})
