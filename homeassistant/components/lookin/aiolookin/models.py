@@ -85,7 +85,9 @@ class Remote:
 
     def __post_init__(self, _data: dict[str, Any]) -> None:
         self.type = _data["Type"]
-        self.device_type = CODE_TO_NAME.get(_data["Type"], "Unknown")
+        self.device_type = (
+            CODE_TO_NAME.get(_data["Type"], "Unknown").replace("_", " ").title()
+        )
         self.name = _data["Name"]
         self.updated = int(_data["Updated"])
         self.status = _data.get("Status")
