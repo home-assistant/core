@@ -1441,6 +1441,28 @@ def fail_when_undefined(value):
     return value
 
 
+def average(*args: Any) -> float:
+    """
+    Filter and function to calculate the mean of a set.
+
+    The parameters may be passed as an iterable or as separate arguments.
+    """
+
+    def avg(*items: Any) -> float:
+        return sum(float(item) for item in items) / len(items)
+
+    if len(args) == 0:
+        raise TypeError("average expected at least 1 argument, got 0")
+
+    if len(args) == 1:
+        if isinstance(args[0], (list, tuple)):
+            return avg(*args[0])
+
+        raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
+
+    return avg(*args)
+
+
 def forgiving_float(value, default=_SENTINEL):
     """Try to convert value to a float."""
     try:
@@ -1695,6 +1717,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["to_json"] = to_json
         self.filters["from_json"] = from_json
         self.filters["is_defined"] = fail_when_undefined
+        self.filters["average"] = average
         self.filters["max"] = max
         self.filters["min"] = min
         self.filters["random"] = random_every_time
@@ -1732,6 +1755,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["timedelta"] = timedelta
         self.globals["strptime"] = strptime
         self.globals["urlencode"] = urlencode
+        self.globals["average"] = average
         self.globals["max"] = max
         self.globals["min"] = min
         self.globals["is_number"] = is_number
