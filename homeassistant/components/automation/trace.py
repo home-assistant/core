@@ -5,11 +5,7 @@ from contextlib import contextmanager
 import logging
 from typing import Any
 
-from homeassistant.components.trace import (
-    ActionTrace,
-    async_restore_traces as trace_restore_traces,
-    async_store_trace,
-)
+from homeassistant.components.trace import ActionTrace, async_store_trace
 from homeassistant.components.trace.const import CONF_STORED_TRACES
 from homeassistant.core import Context
 
@@ -37,18 +33,12 @@ class AutomationTrace(ActionTrace):
 
     def as_short_dict(self) -> dict[str, Any]:
         """Return a brief dictionary version of this AutomationTrace."""
+        if self._short_dict:
+            return self._short_dict
+
         result = super().as_short_dict()
         result["trigger"] = self._trigger_description
         return result
-
-    @classmethod
-    def from_dict(cls, data):
-        """Restore from dict."""
-        automation_trace = super().from_dict(data)
-        automation_trace._short_dict[  # pylint: disable=protected-access
-            "trigger"
-        ] = data["trigger"]
-        return automation_trace
 
 
 @contextmanager
@@ -69,8 +59,3 @@ def trace_automation(
     finally:
         if automation_id:
             trace.finished()
-
-
-def async_restore_traces(hass):
-    """Restore saved traces."""
-    trace_restore_traces(hass, AutomationTrace, DOMAIN)

@@ -2,6 +2,7 @@
 import asyncio
 import json
 from typing import DefaultDict
+from unittest.mock import patch
 
 import pytest
 
@@ -10,6 +11,7 @@ from homeassistant.components.trace.const import DEFAULT_STORED_TRACES
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Context, CoreState, callback
 from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.util.uuid import random_uuid_hex
 
 from tests.common import assert_lists_same, load_fixture
 
@@ -350,8 +352,8 @@ async def test_get_trace(
     assert response["success"]
     trace_list = response["result"]
 
-    # Get all traces
-    traces = DefaultDict(dict)
+    # Get all traces and generate expected stored traces
+    traces = DefaultDict(list)
     for trace in trace_list:
         item_id = trace["item_id"]
         run_id = trace["run_id"]
@@ -366,7 +368,9 @@ async def test_get_trace(
         )
         response = await client.receive_json()
         assert response["success"]
-        traces[f"{domain}.{item_id}"][run_id] = response["result"]
+        traces[f"{domain}.{item_id}"].append(
+            {"short_dict": trace, "extended_dict": response["result"]}
+        )
 
     # Fake stop
     assert "trace.saved_traces" not in hass_storage
@@ -403,8 +407,8 @@ async def test_restore_traces(hass, hass_storage, hass_ws_client, domain):
     assert response["success"]
     trace_list = response["result"]
 
-    # Get all traces
-    traces = DefaultDict(dict)
+    # Get all traces and generate expected stored traces
+    traces = DefaultDict(list)
     contexts = {}
     for trace in trace_list:
         item_id = trace["item_id"]
@@ -420,9 +424,10 @@ async def test_restore_traces(hass, hass_storage, hass_ws_client, domain):
         )
         response = await client.receive_json()
         assert response["success"]
-        trace = response["result"]
-        traces[f"{domain}.{item_id}"][run_id] = trace
-        contexts[trace["context"]["id"]] = {
+        traces[f"{domain}.{item_id}"].append(
+            {"short_dict": trace, "extended_dict": response["result"]}
+        )
+        contexts[response["result"]["context"]["id"]] = {
             "run_id": trace["run_id"],
             "domain": domain,
             "item_id": trace["item_id"],
@@ -472,6 +477,13 @@ async def test_trace_overflow(hass, hass_ws_client, domain, stored_traces):
     """Test the number of stored traces per script or automation is limited."""
     id = 1
 
+    trace_uuids = []
+
+    def mock_random_uuid_hex():
+        nonlocal trace_uuids
+        trace_uuids.append(random_uuid_hex())
+        return trace_uuids[-1]
+
     def next_id():
         nonlocal id
         id += 1
@@ -508,13 +520,16 @@ async def test_trace_overflow(hass, hass_ws_client, domain, stored_traces):
     response = await client.receive_json()
     assert response["success"]
     assert len(_find_traces(response["result"], domain, "moon")) == 1
-    moon_run_id = _find_run_id(response["result"], domain, "moon")
     assert len(_find_traces(response["result"], domain, "sun")) == 1
 
     # Trigger "moon" enough times to overflow the max number of stored traces
-    for _ in range(stored_traces or DEFAULT_STORED_TRACES):
-        await _run_automation_or_script(hass, domain, moon_config, "test_event2")
-        await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.trace.uuid_util.random_uuid_hex",
+        wraps=mock_random_uuid_hex,
+    ):
+        for _ in range(stored_traces or DEFAULT_STORED_TRACES):
+            await _run_automation_or_script(hass, domain, moon_config, "test_event2")
+            await hass.async_block_till_done()
 
     await client.send_json({"id": next_id(), "type": "trace/list", "domain": domain})
     response = await client.receive_json()
@@ -522,10 +537,8 @@ async def test_trace_overflow(hass, hass_ws_client, domain, stored_traces):
     moon_traces = _find_traces(response["result"], domain, "moon")
     assert len(moon_traces) == stored_traces or DEFAULT_STORED_TRACES
     assert moon_traces[0]
-    assert int(moon_traces[0]["run_id"]) == int(moon_run_id) + 1
-    assert int(moon_traces[-1]["run_id"]) == int(moon_run_id) + (
-        stored_traces or DEFAULT_STORED_TRACES
-    )
+    assert moon_traces[0]["run_id"] == trace_uuids[0]
+    assert moon_traces[-1]["run_id"] == trace_uuids[-1]
     assert len(_find_traces(response["result"], domain, "sun")) == 1
 
 

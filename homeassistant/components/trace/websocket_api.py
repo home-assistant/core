@@ -44,7 +44,6 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_subscribe_breakpoint_events)
 
 
-@callback
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
@@ -54,13 +53,14 @@ def async_setup(hass: HomeAssistant) -> None:
         vol.Required("run_id"): str,
     }
 )
-def websocket_trace_get(hass, connection, msg):
+@websocket_api.async_response
+async def websocket_trace_get(hass, connection, msg):
     """Get a script or automation trace."""
     key = f"{msg['domain']}.{msg['item_id']}"
     run_id = msg["run_id"]
 
     try:
-        requested_trace = trace.async_get_trace(hass, key, run_id)
+        requested_trace = await trace.async_get_trace(hass, key, run_id)
     except KeyError:
         connection.send_error(
             msg["id"], websocket_api.ERR_NOT_FOUND, "The trace could not be found"
@@ -74,7 +74,6 @@ def websocket_trace_get(hass, connection, msg):
     )
 
 
-@callback
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
@@ -83,17 +82,17 @@ def websocket_trace_get(hass, connection, msg):
         vol.Optional("item_id", "id"): str,
     }
 )
-def websocket_trace_list(hass, connection, msg):
+@websocket_api.async_response
+async def websocket_trace_list(hass, connection, msg):
     """Summarize script and automation traces."""
     wanted_domain = msg["domain"]
     key = f"{msg['domain']}.{msg['item_id']}" if "item_id" in msg else None
 
-    traces = trace.async_list_traces(hass, wanted_domain, key)
+    traces = await trace.async_list_traces(hass, wanted_domain, key)
 
     connection.send_result(msg["id"], traces)
 
 
-@callback
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
@@ -102,11 +101,12 @@ def websocket_trace_list(hass, connection, msg):
         vol.Inclusive("item_id", "id"): str,
     }
 )
-def websocket_trace_contexts(hass, connection, msg):
+@websocket_api.async_response
+async def websocket_trace_contexts(hass, connection, msg):
     """Retrieve contexts we have traces for."""
     key = f"{msg['domain']}.{msg['item_id']}" if "item_id" in msg else None
 
-    contexts = trace.async_list_contexts(hass, key)
+    contexts = await trace.async_list_contexts(hass, key)
 
     connection.send_result(msg["id"], contexts)
 

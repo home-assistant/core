@@ -1,9 +1,9 @@
 """Support for script and automation tracing and debugging."""
 from __future__ import annotations
 
-from collections import defaultdict, deque
+import abc
+from collections import deque
 import datetime as dt
-from itertools import count
 import logging
 from typing import Any
 
@@ -23,12 +23,14 @@ from homeassistant.helpers.trace import (
     trace_set_child_id,
 )
 import homeassistant.util.dt as dt_util
+import homeassistant.util.uuid as uuid_util
 
 from . import websocket_api
 from .const import (
     CONF_STORED_TRACES,
-    DATA_RESTORED_TRACES,
     DATA_TRACE,
+    DATA_TRACE_STORE,
+    DATA_TRACES_RESTORED,
     DEFAULT_STORED_TRACES,
 )
 from .utils import LimitedSizeDict
@@ -50,26 +52,18 @@ async def async_setup(hass, config):
     hass.data[DATA_TRACE] = {}
     websocket_api.async_setup(hass)
     store = Store(hass, STORAGE_VERSION, STORAGE_KEY, encoder=ExtendedJSONEncoder)
-    _LOGGER.debug("Loading traces")
-    try:
-        restored_traces = await store.async_load() or {}
-    except HomeAssistantError as exc:
-        _LOGGER.error("Error loading traces", exc_info=exc)
-        restored_traces = {}
-    max_run_id = 0
-    hass.data[DATA_RESTORED_TRACES] = defaultdict(dict)
-    for key, traces in restored_traces.items():
-        domain = key.split(".", 1)[0]
-        hass.data[DATA_RESTORED_TRACES][domain][key] = traces
-        for run_id in traces:
-            max_run_id = max(int(run_id) + 1, max_run_id)
-    ActionTrace._run_ids = count(max_run_id)  # pylint: disable=protected-access
+    hass.data[DATA_TRACE_STORE] = store
 
     async def _async_store_traces_at_stop(*_) -> None:
         """Save traces to storage."""
         _LOGGER.debug("Storing traces")
         try:
-            await store.async_save(hass.data[DATA_TRACE])
+            await store.async_save(
+                {
+                    key: list(traces.values())
+                    for key, traces in hass.data[DATA_TRACE].items()
+                }
+            )
         except HomeAssistantError as exc:
             _LOGGER.error("Error saving traces", exc_info=exc)
 
@@ -79,13 +73,15 @@ async def async_setup(hass, config):
     return True
 
 
-def async_get_trace(hass, key, run_id):
+async def async_get_trace(hass, key, run_id):
     """Return the requested trace."""
-    return hass.data[DATA_TRACE][key][run_id]
+    await async_restore_traces(hass)
+    return hass.data[DATA_TRACE][key][run_id].as_extended_dict()
 
 
-def async_list_contexts(hass, key):
+async def async_list_contexts(hass, key):
     """List contexts for which we have traces."""
+    await async_restore_traces(hass)
     if key is not None:
         values = {key: hass.data[DATA_TRACE].get(key, {})}
     else:
@@ -113,8 +109,9 @@ def _get_debug_traces(hass, key):
     return traces
 
 
-def async_list_traces(hass, wanted_domain, key):
+async def async_list_traces(hass, wanted_domain, key):
     """List traces for a domain."""
+    await async_restore_traces(hass)
     if not key:
         traces = []
         for key in hass.data[DATA_TRACE]:
@@ -128,7 +125,7 @@ def async_list_traces(hass, wanted_domain, key):
 
 
 def async_store_trace(hass, trace, stored_traces):
-    """Store a trace if its item_id is valid."""
+    """Store a trace if its key is valid."""
     key = trace.key
     if key:
         traces = hass.data[DATA_TRACE]
@@ -139,24 +136,73 @@ def async_store_trace(hass, trace, stored_traces):
         traces[key][trace.run_id] = trace
 
 
-def async_restore_traces(hass, cls, domain):
+def async_store_restored_trace(hass, trace):
+    """Store a restored trace and move it to the end."""
+    key = trace.key
+    traces = hass.data[DATA_TRACE]
+    if key not in traces:
+        traces[key] = LimitedSizeDict()
+    traces[key][trace.run_id] = trace
+    traces[key].move_to_end(trace.run_id, last=False)
+
+
+async def async_restore_traces(hass):
     """Restore saved traces."""
-    restored_traces = hass.data[DATA_RESTORED_TRACES].pop(domain, {})
-    for traces in restored_traces.values():
-        for json_trace in traces.values():
+    if DATA_TRACES_RESTORED in hass.data:
+        return
+
+    hass.data[DATA_TRACES_RESTORED] = True
+
+    store = hass.data[DATA_TRACE_STORE]
+    try:
+        restored_traces = await store.async_load() or {}
+    except HomeAssistantError as exc:
+        _LOGGER.error("Error loading traces", exc_info=exc)
+        restored_traces = {}
+
+    for key, traces in restored_traces.items():
+        for json_trace in traces:
+            if (
+                (stored_traces := hass.data[DATA_TRACE].get(key))
+                and stored_traces.size_limit is not None
+                and len(stored_traces) >= stored_traces.size_limit
+            ):
+                continue
+
             try:
-                trace = cls.from_dict(json_trace)
+                trace = RestoredTrace(json_trace)
                 async_store_trace(hass, trace, None)
             # Catch any exception to not blow up if the stored trace is invalid
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Failed to restore trace")
 
 
-class ActionTrace:
+class BaseTrace(abc.ABC):
+    """Base container for a script or automation trace."""
+
+    context: Context
+    key: str
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return an dictionary version of this ActionTrace for saving."""
+        return {
+            "extended_dict": self.as_extended_dict(),
+            "short_dict": self.as_short_dict(),
+        }
+
+    @abc.abstractmethod
+    def as_extended_dict(self) -> dict[str, Any]:
+        """Return an extended dictionary version of this ActionTrace."""
+
+    @abc.abstractmethod
+    def as_short_dict(self) -> dict[str, Any]:
+        """Return a brief dictionary version of this ActionTrace."""
+
+
+class ActionTrace(BaseTrace):
     """Base container for a script or automation trace."""
 
     _domain: str | None = None
-    _run_ids = None
 
     def __init__(self, item_id: str, context: Context) -> None:
         """Container for script trace."""
@@ -181,8 +227,7 @@ class ActionTrace:
         self._config = config
         self._blueprint_inputs = blueprint_inputs
         self._state = "running"
-        assert self._run_ids
-        self.run_id = str(next(self._run_ids))
+        self.run_id = uuid_util.random_uuid_hex()
         self._timestamp_start = dt_util.utcnow()
         if trace_id_get():
             trace_set_child_id(self.key, self.run_id)
@@ -202,9 +247,8 @@ class ActionTrace:
         self._state = "stopped"
         self._script_execution = script_execution_get()
 
-    def as_dict(self) -> dict[str, Any]:
-        """Return dictionary version of this ActionTrace."""
-
+    def as_extended_dict(self) -> dict[str, Any]:
+        """Return an extended dictionary version of this ActionTrace."""
         if self._dict:
             return self._dict
 
@@ -231,7 +275,6 @@ class ActionTrace:
 
     def as_short_dict(self) -> dict[str, Any]:
         """Return a brief dictionary version of this ActionTrace."""
-
         if self._short_dict:
             return self._short_dict
 
@@ -261,28 +304,29 @@ class ActionTrace:
             self._short_dict = result
         return result
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> ActionTrace:
+
+class RestoredTrace(BaseTrace):
+    """Container for a restored script or automation trace."""
+
+    def __init__(self, data: dict[str, Any]) -> None:
         """Restore from dict."""
+        extended_dict = data["extended_dict"]
+        short_dict = data["short_dict"]
         context = Context(
-            user_id=data["context"]["user_id"],
-            parent_id=data["context"]["parent_id"],
-            id=data["context"]["id"],
+            user_id=extended_dict["context"]["user_id"],
+            parent_id=extended_dict["context"]["parent_id"],
+            id=extended_dict["context"]["id"],
         )
-        actiontrace = cls(data["item_id"], context)
-        actiontrace.run_id = data["run_id"]
-        actiontrace._dict = data
-        actiontrace._short_dict = {
-            "last_step": data["last_step"],
-            "run_id": data["run_id"],
-            "state": data["state"],
-            "script_execution": data["script_execution"],
-            "timestamp": data["timestamp"],
-            "domain": data["domain"],
-            "item_id": data["item_id"],
-        }
-        if "error" in data:
-            actiontrace._short_dict["error"] = data["error"]
-        if "last_step" in data:
-            actiontrace._short_dict["last_step"] = data["last_step"]
-        return actiontrace
+        self.context = context
+        self.key = f"{extended_dict['domain']}.{extended_dict['item_id']}"
+        self.run_id = extended_dict["run_id"]
+        self._dict = extended_dict
+        self._short_dict = short_dict
+
+    def as_extended_dict(self) -> dict[str, Any]:
+        """Return an extended dictionary version of this RestoredTrace."""
+        return self._dict
+
+    def as_short_dict(self) -> dict[str, Any]:
+        """Return a brief dictionary version of this RestoredTrace."""
+        return self._short_dict

@@ -6,11 +6,7 @@ from contextlib import contextmanager
 import logging
 from typing import Any
 
-from homeassistant.components.trace import (
-    ActionTrace,
-    async_restore_traces as trace_restore_traces,
-    async_store_trace,
-)
+from homeassistant.components.trace import ActionTrace, async_store_trace
 from homeassistant.components.trace.const import CONF_STORED_TRACES
 from homeassistant.core import Context, HomeAssistant
 
@@ -48,8 +44,3 @@ def trace_script(
     finally:
         if item_id:
             trace.finished()
-
-
-def async_restore_traces(hass):
-    """Restore saved traces."""
-    trace_restore_traces(hass, ScriptTrace, DOMAIN)
