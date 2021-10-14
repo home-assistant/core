@@ -1,4 +1,4 @@
-"""A platform that to monitor Uptime Robot monitors."""
+"""UptimeRobot binary_sensor platform."""
 from __future__ import annotations
 
 import voluptuous as vol
@@ -31,7 +31,7 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Uptime Robot binary_sensor platform."""
+    """Set up the UptimeRobot binary_sensor platform."""
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=config
@@ -42,7 +42,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the Uptime Robot binary_sensors."""
+    """Set up the UptimeRobot binary_sensors."""
     coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [
@@ -61,7 +61,7 @@ async def async_setup_entry(
 
 
 class UptimeRobotBinarySensor(UptimeRobotEntity, BinarySensorEntity):
-    """Representation of a Uptime Robot binary sensor."""
+    """Representation of a UptimeRobot binary sensor."""
 
     @property
     def is_on(self) -> bool:
