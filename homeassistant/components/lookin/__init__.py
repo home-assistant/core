@@ -99,6 +99,7 @@ class LookinEntity(Entity):
         return {
             "identifiers": {(DOMAIN, self._uuid)},
             "name": self._device.name,
+            "model": self._device.type,
             "via_device": (DOMAIN, self._lookin_device.id),
         }
 
