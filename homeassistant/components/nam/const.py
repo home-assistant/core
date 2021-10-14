@@ -214,11 +214,13 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         entity_registry_enabled_default=False,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category="diagnostic",
     ),
     SensorEntityDescription(
         key=ATTR_UPTIME,
         name=f"{DEFAULT_NAME} Uptime",
         device_class=DEVICE_CLASS_TIMESTAMP,
         entity_registry_enabled_default=False,
+        entity_category="diagnostic",
     ),
 )
