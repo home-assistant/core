@@ -1,11 +1,13 @@
 """The lookin integration."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -19,30 +21,30 @@ from .aiolookin import (
     Device,
     DeviceNotFound,
     LookInHttpProtocol,
+    LookinUDPSubscriptions,
     Remote,
+    start_lookin_udp,
 )
-from .const import (
-    DEVICES,
-    DOMAIN,
-    LOGGER,
-    LOOKIN_DEVICE,
-    METEO_COORDINATOR,
-    PLATFORMS,
-    PROTOCOL,
-)
+from .const import DOMAIN, LOGGER, PLATFORMS
+
+
+@dataclass
+class LookinData:
+    """Data for the lookin integration."""
+
+    lookin_udp_subs: LookinUDPSubscriptions
+    lookin_device: Device
+    meteo_coordinator: DataUpdateCoordinator
+    devices: list[dict[str, Any]]
+    lookin_protocol: LookInHttpProtocol
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up lookin from a config entry."""
 
-    LOGGER.warning("Lookin service started")
-    LOGGER.warning("config_entry.data - <%s>", entry.data)
-    LOGGER.warning("Lookin service CONF_DEVICE_ID <%s>", entry.data[CONF_DEVICE_ID])
-    LOGGER.warning("Lookin service CONF_HOST <%s>", entry.data[CONF_HOST])
-    LOGGER.warning("Lookin service entry.entry_id <%s>", entry.entry_id)
-
+    host = entry.data[CONF_HOST]
     lookin_protocol = LookInHttpProtocol(
-        host=entry.data[CONF_HOST], session=async_get_clientsession(hass)
+        host=host, session=async_get_clientsession(hass)
     )
 
     try:
@@ -60,15 +62,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     await meteo_coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        CONF_HOST: entry.data[CONF_HOST],
-        CONF_DEVICE_ID: entry.data[CONF_DEVICE_ID],
-        CONF_NAME: entry.data[CONF_NAME],
-        LOOKIN_DEVICE: lookin_device,
-        METEO_COORDINATOR: meteo_coordinator,
-        DEVICES: devices,
-        PROTOCOL: lookin_protocol,
-    }
+    lookin_udp_subs = LookinUDPSubscriptions()
+    entry.async_on_unload(await start_lookin_udp(lookin_udp_subs))
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = LookinData(
+        lookin_udp_subs=lookin_udp_subs,
+        lookin_device=lookin_device,
+        meteo_coordinator=meteo_coordinator,
+        devices=devices,
+        lookin_protocol=lookin_protocol,
+    )
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -81,15 +84,15 @@ class LookinEntity(Entity):
     def __init__(
         self,
         uuid: str,
-        lookin_protocol: LookInHttpProtocol,
         device: Remote | Climate,
-        lookin_device: Device,
+        lookin_data: LookinData,
     ) -> None:
         """Init the base entity."""
         self._device = device
         self._uuid = uuid
-        self._lookin_device = lookin_device
-        self._lookin_protocol = lookin_protocol
+        self._lookin_device = lookin_data.lookin_device
+        self._lookin_protocol = lookin_data.lookin_protocol
+        self._lookin_udp_subs = lookin_data.lookin_udp_subs
         self._attr_unique_id = uuid
 
     @property
@@ -103,9 +106,25 @@ class LookinEntity(Entity):
         return {
             "identifiers": {(DOMAIN, self._uuid)},
             "name": self._device.name,
-            "model": self._device.type,
+            "model": self._device.device_type,
             "via_device": (DOMAIN, self._lookin_device.id),
         }
+
+    @callback
+    def _async_push_update(self, msg):
+        """Process an update pushed via UDP."""
+        import pprint
+
+        pprint.print([self, msg])
+
+    async def async_added_to_hass(self) -> None:
+        """Called when the entity is added to hass."""
+        self.async_on_remove(
+            self._lookin_udp_subs.subscribe(
+                self._lookin_device.id, self._async_push_update
+            )
+        )
+        return await super().async_added_to_hass()
 
 
 class LookinPowerEntity(LookinEntity):
@@ -114,12 +133,11 @@ class LookinPowerEntity(LookinEntity):
     def __init__(
         self,
         uuid: str,
-        lookin_protocol: LookInHttpProtocol,
         device: Remote | Climate,
-        lookin_device: Device,
+        lookin_data: LookinData,
     ) -> None:
         """Init the power entity."""
-        super().__init__(uuid, lookin_protocol, device, lookin_device)
+        super().__init__(uuid, device, lookin_data)
         self._power_on_command: str = POWER_CMD
         self._power_off_command: str = POWER_CMD
         function_names = {function.name for function in self._device.functions}

@@ -4,6 +4,8 @@ from __future__ import annotations
 from dataclasses import InitVar, dataclass, field
 from typing import Any
 
+from .const import CODE_TO_NAME
+
 __all__ = ("Device", "MeteoSensor", "Climate", "Remote")
 
 STATUS_UNKNOWN = "0000"
@@ -73,6 +75,7 @@ class Functions:
 @dataclass
 class Remote:
     type: str = field(init=False)
+    device_type: str = field(init=False)
     name: str = field(init=False)
     updated: int = field(init=False)
     status: str | None = field(init=False)
@@ -82,6 +85,7 @@ class Remote:
 
     def __post_init__(self, _data: dict[str, Any]) -> None:
         self.type = _data["Type"]
+        self.device_type = CODE_TO_NAME.get(_data["Type"], "Unknown")
         self.name = _data["Name"]
         self.updated = int(_data["Updated"])
         self.status = _data.get("Status")

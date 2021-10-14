@@ -26,9 +26,9 @@ from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LookinEntity
-from .aiolookin import Climate, Device, LookInHttpProtocol
-from .const import DEVICES, DOMAIN, LOOKIN_DEVICE, PROTOCOL
+from . import LookinData, LookinEntity
+from .aiolookin import Climate
+from .const import DOMAIN
 
 SUPPORT_FLAGS: int = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_SWING_MODE
 
@@ -60,25 +60,21 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    data = hass.data[DOMAIN][config_entry.entry_id]
-    lookin_device = data[LOOKIN_DEVICE]
-    lookin_protocol = data[PROTOCOL]
-    devices = data[DEVICES]
-
+    lookin_data: LookinData = hass.data[DOMAIN][config_entry.entry_id]
     entities = []
 
-    for remote in devices:
-        if remote["Type"] == "EF":
-            uuid = remote["UUID"]
-            device = await lookin_protocol.get_conditioner(uuid)
-            entities.append(
-                ConditionerEntity(
-                    uuid=uuid,
-                    lookin_protocol=lookin_protocol,
-                    device=device,
-                    lookin_device=lookin_device,
-                )
+    for remote in lookin_data.devices:
+        if remote["Type"] != "EF":
+            continue
+        uuid = remote["UUID"]
+        device = await lookin_data.lookin_protocol.get_conditioner(uuid)
+        entities.append(
+            ConditionerEntity(
+                uuid=uuid,
+                device=device,
+                lookin_data=lookin_data,
             )
+        )
 
     async_add_entities(entities)
 
@@ -99,11 +95,10 @@ class ConditionerEntity(LookinEntity, ClimateEntity):
     def __init__(
         self,
         uuid: str,
-        lookin_protocol: LookInHttpProtocol,
         device: Climate,
-        lookin_device: Device,
+        lookin_data: LookinData,
     ) -> None:
-        super().__init__(uuid, lookin_protocol, device, lookin_device)
+        super().__init__(uuid, device, lookin_data)
         self._attr_temperature_unit = TEMP_CELSIUS
         self._attr_min_temp = MIN_TEMP
         self._attr_max_temp = MAX_TEMP
