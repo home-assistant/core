@@ -1,4 +1,6 @@
 """Config flow for Honeywell Lyric."""
+import logging
+
 import voluptuous as vol
 
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -12,6 +14,11 @@ class OAuth2FlowHandler(
     """Config flow to handle Honeywell Lyric OAuth2 authentication."""
 
     DOMAIN = DOMAIN
+
+    @property
+    def logger(self) -> logging.Logger:
+        """Return logger."""
+        return logging.getLogger(__name__)
 
     async def async_step_reauth(self, user_input=None):
         """Perform reauth upon an API authentication error."""
