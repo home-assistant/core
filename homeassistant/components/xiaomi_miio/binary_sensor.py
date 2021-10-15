@@ -11,6 +11,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 
 from . import VacuumCoordinatorDataAttributes
 from .const import (
@@ -50,6 +51,7 @@ BINARY_SENSOR_TYPES = (
         key=ATTR_NO_WATER,
         name="Water Tank Empty",
         icon="mdi:water-off-outline",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     XiaomiMiioBinarySensorDescription(
         key=ATTR_WATER_TANK_DETACHED,
@@ -57,11 +59,13 @@ BINARY_SENSOR_TYPES = (
         icon="mdi:car-coolant-level",
         device_class=DEVICE_CLASS_CONNECTIVITY,
         value=lambda value: not value,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     XiaomiMiioBinarySensorDescription(
         key=ATTR_POWERSUPPLY_ATTACHED,
         name="Power Supply",
         device_class=DEVICE_CLASS_PLUG,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 )
 
@@ -75,6 +79,7 @@ VACUUM_SENSORS = {
         parent_key=VacuumCoordinatorDataAttributes.status,
         entity_registry_enabled_default=True,
         device_class=DEVICE_CLASS_CONNECTIVITY,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     ATTR_WATER_BOX_ATTACHED: XiaomiMiioBinarySensorDescription(
         key=ATTR_WATER_BOX_ATTACHED,
@@ -83,6 +88,7 @@ VACUUM_SENSORS = {
         parent_key=VacuumCoordinatorDataAttributes.status,
         entity_registry_enabled_default=True,
         device_class=DEVICE_CLASS_CONNECTIVITY,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     ATTR_WATER_SHORTAGE: XiaomiMiioBinarySensorDescription(
         key=ATTR_WATER_SHORTAGE,
@@ -91,6 +97,7 @@ VACUUM_SENSORS = {
         parent_key=VacuumCoordinatorDataAttributes.status,
         entity_registry_enabled_default=True,
         device_class=DEVICE_CLASS_PROBLEM,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 }
 
