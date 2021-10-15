@@ -1,6 +1,7 @@
 """Platform for retrieving meteorological data from Environment Canada."""
+from __future__ import annotations
+
 import datetime
-import logging
 import re
 
 import voluptuous as vol
@@ -34,8 +35,6 @@ from . import trigger_import
 from .const import CONF_ATTRIBUTION, CONF_STATION, DOMAIN
 
 CONF_FORECAST = "forecast"
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def validate_station(station):
@@ -82,19 +81,18 @@ async def async_setup_platform(hass, config, async_add_entries, discovery_info=N
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a weather entity from a config_entry."""
-    weather_data = hass.data[DOMAIN][config_entry.entry_id]["weather_data"]
-
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]["weather_coordinator"]
     async_add_entities(
         [
             ECWeather(
-                weather_data,
+                coordinator,
                 f"{config_entry.title}",
                 config_entry.data,
                 "daily",
                 f"{config_entry.unique_id}-daily",
             ),
             ECWeather(
-                weather_data,
+                coordinator,
                 f"{config_entry.title} Hourly",
                 config_entry.data,
                 "hourly",
@@ -107,9 +105,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class ECWeather(WeatherEntity):
     """Representation of a weather condition."""
 
-    def __init__(self, ec_data, name, config, forecast_type, unique_id):
+    def __init__(self, coordinator, name, config, forecast_type, unique_id):
         """Initialize Environment Canada weather."""
-        self.ec_data = ec_data
+        self.ec_data = coordinator.ec_data
         self.config = config
         self._attr_name = name
         self._attr_unique_id = unique_id
@@ -192,10 +190,6 @@ class ECWeather(WeatherEntity):
         """Return the forecast array."""
         return get_forecast(self.ec_data, self.forecast_type)
 
-    def update(self):
-        """Get the latest data from Environment Canada."""
-        self.ec_data.update()
-
 
 def get_forecast(ec_data, forecast_type):
     """Build the forecast array."""
@@ -255,11 +249,7 @@ def get_forecast(ec_data, forecast_type):
         for hour in ec_data.hourly_forecasts:
             forecast_array.append(
                 {
-                    ATTR_FORECAST_TIME: datetime.datetime.strptime(
-                        hour["period"], "%Y%m%d%H%M%S"
-                    )
-                    .replace(tzinfo=dt.UTC)
-                    .isoformat(),
+                    ATTR_FORECAST_TIME: hour["period"],
                     ATTR_FORECAST_TEMP: int(hour["temperature"]),
                     ATTR_FORECAST_CONDITION: icon_code_to_condition(
                         int(hour["icon_code"])
