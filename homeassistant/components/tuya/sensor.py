@@ -167,7 +167,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
 
         # Scale integer/float value
         if isinstance(self._type_data, IntegerTypeData):
-            return self.scale(value, self._type_data.scale)
+            return self._type_data.scale_value(value)
 
         # Unexpected enum value
         if (
