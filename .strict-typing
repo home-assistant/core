@@ -75,6 +75,7 @@ homeassistant.components.neato.*
 homeassistant.components.nest.*
 homeassistant.components.netatmo.*
 homeassistant.components.network.*
+homeassistant.components.nfandroidtv.*
 homeassistant.components.no_ip.*
 homeassistant.components.notify.*
 homeassistant.components.notion.*
