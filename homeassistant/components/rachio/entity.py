@@ -38,4 +38,5 @@ class RachioDevice(Entity):
             "name": self._controller.name,
             "model": self._controller.model,
             "manufacturer": DEFAULT_NAME,
+            "configuration_url": "https://app.rach.io",
         }
