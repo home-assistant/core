@@ -8,6 +8,7 @@ from tuya_iot.device import TuyaDeviceStatusRange
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -45,6 +46,15 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             key=DPCode.POWDER_SET,
             name="Powder",
             entity_registry_enabled_default=False,
+        ),
+    ),
+    # Siren Alarm
+    # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
+    "sgbj": (
+        NumberEntityDescription(
+            key=DPCode.ALARM_TIME,
+            name="Time",
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
 }
