@@ -66,7 +66,7 @@ class AlexaConfig(AbstractConfig):
 
     def should_expose(self, entity_id):
         """If an entity should be exposed."""
-        if self._config[CONF_FILTER].customized:
+        if not self._config[CONF_FILTER].empty_filter:
             return self._config[CONF_FILTER](entity_id)
 
         entity_registry = er.async_get(self.hass)
