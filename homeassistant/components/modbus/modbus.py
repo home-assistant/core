@@ -184,21 +184,21 @@ async def async_modbus_setup(
         else:
             await hub.async_pymodbus_call(unit, address, state, CALL_TYPE_WRITE_COIL)
 
-    for Wx in (
+    for x in (
         (SERVICE_WRITE_REGISTER, async_write_register, ATTR_VALUE, cv.positive_int),
         (SERVICE_WRITE_COIL, async_write_coil, ATTR_STATE, cv.boolean),
     ):
         hass.services.async_register(
             DOMAIN,
-            Wx[0],
-            Wx[1],
+            x[0],
+            x[1],
             schema=vol.Schema(
                 {
                     vol.Optional(ATTR_HUB, default=DEFAULT_HUB): cv.string,
                     vol.Required(ATTR_UNIT): cv.positive_int,
                     vol.Required(ATTR_ADDRESS): cv.positive_int,
-                    vol.Required(Wx[2]): vol.Any(
-                        cv.positive_int, vol.All(cv.ensure_list, [Wx[3]])
+                    vol.Required(x[2]): vol.Any(
+                        cv.positive_int, vol.All(cv.ensure_list, [x[3]])
                     ),
                 }
             ),
@@ -216,14 +216,14 @@ async def async_modbus_setup(
         hub = hub_collect[service.data[ATTR_HUB]]
         await hub.async_restart()
 
-    for Tx in (
+    for y in (
         (SERVICE_STOP, async_stop_hub),
         (SERVICE_RESTART, async_restart_hub),
     ):
         hass.services.async_register(
             DOMAIN,
-            Tx[0],
-            Tx[1],
+            y[0],
+            y[1],
             schema=vol.Schema({vol.Required(ATTR_HUB): cv.string}),
         )
     return True
