@@ -188,7 +188,32 @@ class SettingDataUpdateCoordinator(PlenticoreUpdateCoordinator):
         fetched_data = await client.get_setting_values(self._fetch)
         return fetched_data
 
+    async def get_currentoption(self, module_id, options) -> str:
+        """Get current option."""
+        for all_option in options:
+            if all_option != 'None':
+                val = await self.async_read_data(module_id, all_option)
+                if val:
+                    return val
+
+        return 'None'
+
+    async def async_read_data(self, module_id: str, data_id: str) -> [str, bool]:
+        """Writes settings back to Plenticore."""
+        client = self._plenticore.client
+
+        if not self._fetch or client is None:
+            return False
+
+        try:
+            val = await client.get_setting_values(module_id, data_id)
+        except PlenticoreApiException:
+            return False
+        else:
+            return val
+
     async def async_write_data(self, module_id: str, value: dict[str, str]) -> bool:
+        """Writes settings back to Plenticore."""
         client = self._plenticore.client
 
         if not self._fetch or client is None:

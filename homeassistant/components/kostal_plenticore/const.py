@@ -642,3 +642,11 @@ SWITCH_SETTINGS_DATA = [
         "1",
     ),
 ]
+SELECT_SETTINGS_DATA = [
+    (
+        "devices:local",
+        "Battery Charging / Usage mode",
+        {"None", "Battery:SmartBatteryControl:Enable", "Battery:TimeControl:Enable"},
+        "1",
+    )
+]
