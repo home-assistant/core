@@ -121,7 +121,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
             return None
 
         # Raw value
-        value = self.tuya_device.status.get(self.entity_description.key)
+        value = self.device.status.get(self.entity_description.key)
 
         # Scale integer/float value
         if value and isinstance(self._type_data, IntegerTypeData):
