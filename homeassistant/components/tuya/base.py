@@ -58,6 +58,11 @@ class TuyaEntity(Entity):
     @property
     def name(self) -> str | None:
         """Return Tuya device name."""
+        if (
+            hasattr(self, "entity_description")
+            and self.entity_description.name is not None
+        ):
+            return f"{self.tuya_device.name} {self.entity_description.name}"
         return self.tuya_device.name
 
     @property
