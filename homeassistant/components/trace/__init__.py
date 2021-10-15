@@ -142,7 +142,7 @@ def async_store_trace(hass, trace, stored_traces):
         traces[key][trace.run_id] = trace
 
 
-def async_store_restored_trace(hass, trace):
+def _async_store_restored_trace(hass, trace):
     """Store a restored trace and move it to the end of the LimitedSizeDict."""
     key = trace.key
     traces = hass.data[DATA_TRACE]
@@ -178,10 +178,11 @@ async def async_restore_traces(hass):
 
             try:
                 trace = RestoredTrace(json_trace)
-                async_store_restored_trace(hass, trace)
             # Catch any exception to not blow up if the stored trace is invalid
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Failed to restore trace")
+                continue
+            _async_store_restored_trace(hass, trace)
 
 
 class BaseTrace(abc.ABC):
