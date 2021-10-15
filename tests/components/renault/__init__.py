@@ -1,6 +1,7 @@
 """Tests for the Renault integration."""
 from __future__ import annotations
 
+import contextlib
 from types import MappingProxyType
 from typing import Any
 from unittest.mock import patch
@@ -97,11 +98,11 @@ async def setup_renault_integration_simple(hass: HomeAssistant):
     return config_entry
 
 
-async def setup_renault_integration_vehicle(hass: HomeAssistant, vehicle_type: str):
-    """Create the Renault integration."""
-    config_entry = get_mock_config_entry()
-    config_entry.add_to_hass(hass)
-
+@contextlib.contextmanager
+def patch_fixtures(
+    hass: HomeAssistant, config_entry: MockConfigEntry, vehicle_type: str
+):
+    """Mock fixtures."""
     renault_account = RenaultAccount(
         config_entry.unique_id,
         websession=aiohttp_client.async_get_clientsession(hass),
@@ -141,19 +142,26 @@ async def setup_renault_integration_vehicle(hass: HomeAssistant, vehicle_type: s
         "renault_api.renault_vehicle.RenaultVehicle.get_location",
         return_value=mock_fixtures["location"],
     ):
+        yield
+
+
+async def setup_renault_integration_vehicle(hass: HomeAssistant, vehicle_type: str):
+    """Create the Renault integration."""
+    config_entry = get_mock_config_entry()
+    config_entry.add_to_hass(hass)
+
+    with patch_fixtures(hass, config_entry, vehicle_type):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     return config_entry
 
 
-async def setup_renault_integration_vehicle_with_no_data(
-    hass: HomeAssistant, vehicle_type: str
+@contextlib.contextmanager
+def patch_fixtures_with_no_data(
+    hass: HomeAssistant, config_entry: MockConfigEntry, vehicle_type: str
 ):
-    """Create the Renault integration."""
-    config_entry = get_mock_config_entry()
-    config_entry.add_to_hass(hass)
-
+    """Mock fixtures."""
     renault_account = RenaultAccount(
         config_entry.unique_id,
         websession=aiohttp_client.async_get_clientsession(hass),
@@ -193,19 +201,31 @@ async def setup_renault_integration_vehicle_with_no_data(
         "renault_api.renault_vehicle.RenaultVehicle.get_location",
         return_value=mock_fixtures["location"],
     ):
+        yield
+
+
+async def setup_renault_integration_vehicle_with_no_data(
+    hass: HomeAssistant, vehicle_type: str
+):
+    """Create the Renault integration."""
+    config_entry = get_mock_config_entry()
+    config_entry.add_to_hass(hass)
+
+    with patch_fixtures_with_no_data(hass, config_entry, vehicle_type):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     return config_entry
 
 
-async def setup_renault_integration_vehicle_with_side_effect(
-    hass: HomeAssistant, vehicle_type: str, side_effect: Any
+@contextlib.contextmanager
+def patch_fixtures_with_side_effect(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    vehicle_type: str,
+    side_effect: Any,
 ):
-    """Create the Renault integration."""
-    config_entry = get_mock_config_entry()
-    config_entry.add_to_hass(hass)
-
+    """Mock fixtures."""
     renault_account = RenaultAccount(
         config_entry.unique_id,
         websession=aiohttp_client.async_get_clientsession(hass),
@@ -244,6 +264,17 @@ async def setup_renault_integration_vehicle_with_side_effect(
         "renault_api.renault_vehicle.RenaultVehicle.get_location",
         side_effect=side_effect,
     ):
+        yield
+
+
+async def setup_renault_integration_vehicle_with_side_effect(
+    hass: HomeAssistant, vehicle_type: str, side_effect: Any
+):
+    """Create the Renault integration."""
+    config_entry = get_mock_config_entry()
+    config_entry.add_to_hass(hass)
+
+    with patch_fixtures_with_side_effect(hass, config_entry, vehicle_type, side_effect):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
