@@ -541,6 +541,17 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
             False,
             str(int(0x04030201)),
         ),
+        (
+            {
+                CONF_COUNT: 2,
+                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
+                CONF_DATA_TYPE: DataType.FLOAT32,
+                CONF_PRECISION: 2,
+            },
+            [16286, 1617],
+            False,
+            "1.23",
+        ),
     ],
 )
 async def test_all_sensor(hass, mock_do_cycle, expected):
