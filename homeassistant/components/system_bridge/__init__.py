@@ -46,29 +46,9 @@ CONF_TEXT = "text"
 CONF_WAIT = "wait"
 
 SERVICE_SEND_COMMAND = "send_command"
-SERVICE_SEND_COMMAND_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_BRIDGE): cv.string,
-        vol.Required(CONF_COMMAND): cv.string,
-        vol.Optional(CONF_ARGUMENTS, []): cv.string,
-    }
-)
 SERVICE_OPEN = "open"
-SERVICE_OPEN_SCHEMA = vol.Schema(
-    {vol.Required(CONF_BRIDGE): cv.string, vol.Required(CONF_PATH): cv.string}
-)
 SERVICE_SEND_KEYPRESS = "send_keypress"
-SERVICE_SEND_KEYPRESS_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_BRIDGE): cv.string,
-        vol.Required(CONF_KEY): cv.string,
-        vol.Optional(CONF_MODIFIERS): cv.string,
-    }
-)
 SERVICE_SEND_TEXT = "send_text"
-SERVICE_SEND_TEXT_SCHEMA = vol.Schema(
-    {vol.Required(CONF_BRIDGE): cv.string, vol.Required(CONF_TEXT): cv.string}
-)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -129,25 +109,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if hass.services.has_service(DOMAIN, SERVICE_SEND_COMMAND):
         return True
 
+    def valid_device(device: str):
+        """Check device is valid."""
+        device_registry = dr.async_get(hass)
+        device_entry = device_registry.async_get(device)
+        if device_entry is not None:
+            return next(
+                entry.entry_id
+                for entry in hass.config_entries.async_entries(DOMAIN)
+                if entry.entry_id in device_entry.config_entries
+            )
+        raise vol.Invalid(f"Device {device} does not exist")
+
     async def handle_send_command(call):
         """Handle the send_command service call."""
-        device_registry = dr.async_get(hass)
-        device_id = call.data[CONF_BRIDGE]
-        device_entry = device_registry.async_get(device_id)
-        if device_entry is None:
-            _LOGGER.warning("Missing device: %s", device_id)
-            return
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
+            call.data[CONF_BRIDGE]
+        ]
+        bridge: Bridge = coordinator.bridge
 
         command = call.data[CONF_COMMAND]
         arguments = shlex.split(call.data.get(CONF_ARGUMENTS, ""))
-
-        entry_id = next(
-            entry.entry_id
-            for entry in hass.config_entries.async_entries(DOMAIN)
-            if entry.entry_id in device_entry.config_entries
-        )
-        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][entry_id]
-        bridge: Bridge = coordinator.bridge
 
         _LOGGER.debug(
             "Command payload: %s",
@@ -170,22 +152,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def handle_open(call):
         """Handle the open service call."""
-        device_registry = dr.async_get(hass)
-        device_id = call.data[CONF_BRIDGE]
-        device_entry = device_registry.async_get(device_id)
-        if device_entry is None:
-            _LOGGER.warning("Missing device: %s", device_id)
-            return
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
+            call.data[CONF_BRIDGE]
+        ]
+        bridge: Bridge = coordinator.bridge
 
         path = call.data[CONF_PATH]
-
-        entry_id = next(
-            entry.entry_id
-            for entry in hass.config_entries.async_entries(DOMAIN)
-            if entry.entry_id in device_entry.config_entries
-        )
-        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][entry_id]
-        bridge: Bridge = coordinator.bridge
 
         _LOGGER.debug("Open payload: %s", {CONF_PATH: path})
         try:
@@ -196,19 +168,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def handle_send_keypress(call):
         """Handle the send_keypress service call."""
-        device_registry = dr.async_get(hass)
-        device_id = call.data[CONF_BRIDGE]
-        device_entry = device_registry.async_get(device_id)
-        if device_entry is None:
-            _LOGGER.warning("Missing device: %s", device_id)
-            return
-
-        entry_id = next(
-            entry.entry_id
-            for entry in hass.config_entries.async_entries(DOMAIN)
-            if entry.entry_id in device_entry.config_entries
-        )
-        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][entry_id]
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
+            call.data[CONF_BRIDGE]
+        ]
         bridge: Bridge = coordinator.data
 
         keyboard_payload: KeyboardPayload = {
@@ -225,19 +187,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def handle_send_text(call):
         """Handle the send_keypress service call."""
-        device_registry = dr.async_get(hass)
-        device_id = call.data[CONF_BRIDGE]
-        device_entry = device_registry.async_get(device_id)
-        if device_entry is None:
-            _LOGGER.warning("Missing device: %s", device_id)
-            return
-
-        entry_id = next(
-            entry.entry_id
-            for entry in hass.config_entries.async_entries(DOMAIN)
-            if entry.entry_id in device_entry.config_entries
-        )
-        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][entry_id]
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
+            call.data[CONF_BRIDGE]
+        ]
         bridge: Bridge = coordinator.data
 
         keyboard_payload: KeyboardPayload = {CONF_TEXT: call.data[CONF_TEXT]}
@@ -253,28 +205,50 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DOMAIN,
         SERVICE_SEND_COMMAND,
         handle_send_command,
-        schema=SERVICE_SEND_COMMAND_SCHEMA,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_COMMAND): cv.string,
+                vol.Optional(CONF_ARGUMENTS, []): cv.string,
+            },
+        ),
     )
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_OPEN,
         handle_open,
-        schema=SERVICE_OPEN_SCHEMA,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_PATH): cv.string,
+            },
+        ),
     )
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_SEND_KEYPRESS,
         handle_send_keypress,
-        schema=SERVICE_SEND_KEYPRESS_SCHEMA,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_KEY): cv.string,
+                vol.Optional(CONF_MODIFIERS): cv.string,
+            },
+        ),
     )
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_SEND_TEXT,
         handle_send_text,
-        schema=SERVICE_SEND_TEXT_SCHEMA,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_TEXT): cv.string,
+            },
+        ),
     )
 
     # Reload entry when its updated.
