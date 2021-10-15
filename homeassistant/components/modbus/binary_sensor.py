@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import CONF_BINARY_SENSORS, CONF_NAME, STATE_ON
@@ -15,7 +14,6 @@ from . import get_hub
 from .base_platform import BasePlatform
 
 PARALLEL_UPDATES = 1
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(

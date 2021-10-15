@@ -1,6 +1,4 @@
 """Remote control support for Panasonic Viera TV."""
-import logging
-
 from homeassistant.components.remote import RemoteEntity
 from homeassistant.const import CONF_NAME, STATE_ON
 
@@ -14,8 +12,6 @@ from .const import (
     DEFAULT_MODEL_NUMBER,
     DOMAIN,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

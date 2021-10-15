@@ -57,6 +57,7 @@ class NexiaThermostatEntity(NexiaEntity):
             "model": self._thermostat.get_model(),
             "sw_version": self._thermostat.get_firmware(),
             "manufacturer": MANUFACTURER,
+            "configuration_url": self.coordinator.nexia_home.root_url,
         }
 
     async def async_added_to_hass(self):

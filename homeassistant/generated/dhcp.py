@@ -98,13 +98,15 @@ DHCP = [
     },
     {
         "domain": "flux_led",
-        "macaddress": "2462AB*",
-        "hostname": "zengge_35*"
+        "hostname": "zengge_35_*"
     },
     {
         "domain": "flux_led",
-        "macaddress": "70039F*",
-        "hostname": "zengge_0e*"
+        "hostname": "zengge_0e_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_00_*"
     },
     {
         "domain": "flux_led",

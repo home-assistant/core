@@ -21,10 +21,12 @@ async def async_setup_entry(
     """Set up Tuya scenes."""
     hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
     scenes = await hass.async_add_executor_job(hass_data.home_manager.query_scenes)
-    async_add_entities(TuyaHAScene(hass_data.home_manager, scene) for scene in scenes)
+    async_add_entities(
+        TuyaSceneEntity(hass_data.home_manager, scene) for scene in scenes
+    )
 
 
-class TuyaHAScene(Scene):
+class TuyaSceneEntity(Scene):
     """Tuya Scene Remote."""
 
     _should_poll = False

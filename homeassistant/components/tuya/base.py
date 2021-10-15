@@ -1,6 +1,9 @@
 """Tuya Home Assistant Base Device Model."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+import json
+import logging
 from typing import Any
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
@@ -10,8 +13,57 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN, TUYA_HA_SIGNAL_UPDATE_ENTITY
 
+_LOGGER = logging.getLogger(__name__)
 
-class TuyaHaEntity(Entity):
+
+@dataclass
+class IntegerTypeData:
+    """Integer Type Data."""
+
+    min: int
+    max: int
+    unit: str
+    scale: float
+    step: float
+
+    @property
+    def max_scaled(self) -> float:
+        """Return the max scaled."""
+        return self.scale_value(self.max)
+
+    @property
+    def min_scaled(self) -> float:
+        """Return the min scaled."""
+        return self.scale_value(self.min)
+
+    @property
+    def step_scaled(self) -> float:
+        """Return the step scaled."""
+        return self.scale_value(self.step)
+
+    def scale_value(self, value: float | int) -> float:
+        """Scale a value."""
+        return value * 1.0 / (10 ** self.scale)
+
+    @classmethod
+    def from_json(cls, data: str) -> IntegerTypeData:
+        """Load JSON string and return a IntegerTypeData object."""
+        return cls(**json.loads(data))
+
+
+@dataclass
+class EnumTypeData:
+    """Enum Type Data."""
+
+    range: list[str]
+
+    @classmethod
+    def from_json(cls, data: str) -> EnumTypeData:
+        """Load JSON string and return a EnumTypeData object."""
+        return cls(**json.loads(data))
+
+
+class TuyaEntity(Entity):
     """Tuya base device."""
 
     _attr_should_poll = False
@@ -25,6 +77,11 @@ class TuyaHaEntity(Entity):
     @property
     def name(self) -> str | None:
         """Return Tuya device name."""
+        if (
+            hasattr(self, "entity_description")
+            and self.entity_description.name is not None
+        ):
+            return f"{self.tuya_device.name} {self.entity_description.name}"
         return self.tuya_device.name
 
     @property
@@ -54,4 +111,7 @@ class TuyaHaEntity(Entity):
 
     def _send_command(self, commands: list[dict[str, Any]]) -> None:
         """Send command to the device."""
+        _LOGGER.debug(
+            "Sending commands for device %s: %s", self.tuya_device.id, commands
+        )
         self.tuya_device_manager.send_commands(self.tuya_device.id, commands)

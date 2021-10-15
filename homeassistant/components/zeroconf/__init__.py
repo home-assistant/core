@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
 from contextlib import suppress
 import fnmatch
 from ipaddress import IPv4Address, IPv6Address, ip_address
@@ -21,12 +20,11 @@ from homeassistant.components.network import async_get_source_ip
 from homeassistant.components.network.models import Adapter
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     __version__,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import discovery_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
@@ -89,14 +87,6 @@ class HaServiceInfo(TypedDict):
     type: str
     name: str
     properties: dict[str, Any]
-
-
-class ZeroconfFlow(TypedDict):
-    """A queued zeroconf discovery flow."""
-
-    domain: str
-    context: dict[str, Any]
-    data: HaServiceInfo
 
 
 @bind_hass
@@ -192,17 +182,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         uuid = await hass.helpers.instance_id.async_get()
         await _async_register_hass_zc_service(hass, aio_zc, uuid)
 
-    @callback
-    def _async_start_discovery(_event: Event) -> None:
-        """Start processing flows."""
-        discovery.async_start()
-
     async def _async_zeroconf_hass_stop(_event: Event) -> None:
         await discovery.async_stop()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_zeroconf_hass_stop)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_zeroconf_hass_start)
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_start_discovery)
 
     return True
 
@@ -288,40 +272,6 @@ async def _async_register_hass_zc_service(
     await aio_zc.async_register_service(info, allow_name_change=True)
 
 
-class FlowDispatcher:
-    """Dispatch discovery flows."""
-
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Init the discovery dispatcher."""
-        self.hass = hass
-        self.pending_flows: list[ZeroconfFlow] = []
-        self.started = False
-
-    @callback
-    def async_start(self) -> None:
-        """Start processing pending flows."""
-        self.started = True
-        self.hass.loop.call_soon(self._async_process_pending_flows)
-
-    def _async_process_pending_flows(self) -> None:
-        for flow in self.pending_flows:
-            self.hass.async_create_task(self._init_flow(flow))
-        self.pending_flows = []
-
-    def async_create(self, flow: ZeroconfFlow) -> None:
-        """Create and add or queue a flow."""
-        if self.started:
-            self.hass.async_create_task(self._init_flow(flow))
-        else:
-            self.pending_flows.append(flow)
-
-    def _init_flow(self, flow: ZeroconfFlow) -> Coroutine[None, None, FlowResult]:
-        """Create a flow."""
-        return self.hass.config_entries.flow.async_init(
-            flow["domain"], context=flow["context"], data=flow["data"]
-        )
-
-
 class ZeroconfDiscovery:
     """Discovery via zeroconf."""
 
@@ -340,12 +290,10 @@ class ZeroconfDiscovery:
         self.homekit_models = homekit_models
         self.ipv6 = ipv6
 
-        self.flow_dispatcher: FlowDispatcher | None = None
         self.async_service_browser: HaAsyncServiceBrowser | None = None
 
     async def async_setup(self) -> None:
         """Start discovery."""
-        self.flow_dispatcher = FlowDispatcher(self.hass)
         types = list(self.zeroconf_types)
         # We want to make sure we know about other HomeAssistant
         # instances as soon as possible to avoid name conflicts
@@ -362,12 +310,6 @@ class ZeroconfDiscovery:
         """Cancel the service browser and stop processing the queue."""
         if self.async_service_browser:
             await self.async_service_browser.async_cancel()
-
-    @callback
-    def async_start(self) -> None:
-        """Start processing discovery flows."""
-        assert self.flow_dispatcher is not None
-        self.flow_dispatcher.async_start()
 
     @callback
     def async_service_update(
@@ -404,12 +346,14 @@ class ZeroconfDiscovery:
             return
 
         _LOGGER.debug("Discovered new device %s %s", name, info)
-        assert self.flow_dispatcher is not None
 
         # If we can handle it as a HomeKit discovery, we do that here.
         if service_type in HOMEKIT_TYPES:
-            if pending_flow := handle_homekit(self.hass, self.homekit_models, info):
-                self.flow_dispatcher.async_create(pending_flow)
+            props = info["properties"]
+            if domain := async_get_homekit_discovery_domain(self.homekit_models, props):
+                discovery_flow.async_create_flow(
+                    self.hass, domain, {"source": config_entries.SOURCE_HOMEKIT}, info
+                )
             # Continue on here as homekit_controller
             # still needs to get updates on devices
             # so it can see when the 'c#' field is updated.
@@ -417,10 +361,10 @@ class ZeroconfDiscovery:
             # We only send updates to homekit_controller
             # if the device is already paired in order to avoid
             # offering a second discovery for the same device
-            if pending_flow and HOMEKIT_PAIRED_STATUS_FLAG in info["properties"]:
+            if domain and HOMEKIT_PAIRED_STATUS_FLAG in props:
                 try:
                     # 0 means paired and not discoverable by iOS clients)
-                    if int(info["properties"][HOMEKIT_PAIRED_STATUS_FLAG]):
+                    if int(props[HOMEKIT_PAIRED_STATUS_FLAG]):
                         return
                 except ValueError:
                     # HomeKit pairing status unknown
@@ -466,24 +410,22 @@ class ZeroconfDiscovery:
                 ):
                     continue
 
-            flow: ZeroconfFlow = {
-                "domain": matcher["domain"],
-                "context": {"source": config_entries.SOURCE_ZEROCONF},
-                "data": info,
-            }
-            self.flow_dispatcher.async_create(flow)
+            discovery_flow.async_create_flow(
+                self.hass,
+                matcher["domain"],
+                {"source": config_entries.SOURCE_ZEROCONF},
+                info,
+            )
 
 
-def handle_homekit(
-    hass: HomeAssistant, homekit_models: dict[str, str], info: HaServiceInfo
-) -> ZeroconfFlow | None:
+def async_get_homekit_discovery_domain(
+    homekit_models: dict[str, str], props: dict[str, Any]
+) -> str | None:
     """Handle a HomeKit discovery.
 
-    Return if discovery was forwarded.
+    Return the domain to forward the discovery data to
     """
     model = None
-    props = info["properties"]
-
     for key in props:
         if key.lower() == HOMEKIT_MODEL:
             model = props[key]
@@ -500,11 +442,7 @@ def handle_homekit(
         ):
             continue
 
-        return {
-            "domain": homekit_models[test_model],
-            "context": {"source": config_entries.SOURCE_HOMEKIT},
-            "data": info,
-        }
+        return homekit_models[test_model]
 
     return None
 

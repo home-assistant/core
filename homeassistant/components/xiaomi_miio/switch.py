@@ -21,6 +21,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
     CONF_TOKEN,
+    ENTITY_CATEGORY_CONFIG,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -205,6 +206,7 @@ SWITCH_TYPES = (
         icon="mdi:volume-high",
         method_on="async_set_buzzer_on",
         method_off="async_set_buzzer_off",
+        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
     XiaomiMiioSwitchDescription(
         key=ATTR_CHILD_LOCK,
@@ -213,6 +215,7 @@ SWITCH_TYPES = (
         icon="mdi:lock",
         method_on="async_set_child_lock_on",
         method_off="async_set_child_lock_off",
+        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
     XiaomiMiioSwitchDescription(
         key=ATTR_DRY,
@@ -221,6 +224,7 @@ SWITCH_TYPES = (
         icon="mdi:hair-dryer",
         method_on="async_set_dry_on",
         method_off="async_set_dry_off",
+        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
     XiaomiMiioSwitchDescription(
         key=ATTR_CLEAN,
@@ -230,6 +234,7 @@ SWITCH_TYPES = (
         method_on="async_set_clean_on",
         method_off="async_set_clean_off",
         available_with_device_off=False,
+        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
     XiaomiMiioSwitchDescription(
         key=ATTR_LED,
@@ -238,6 +243,7 @@ SWITCH_TYPES = (
         icon="mdi:led-outline",
         method_on="async_set_led_on",
         method_off="async_set_led_off",
+        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
     XiaomiMiioSwitchDescription(
         key=ATTR_LEARN_MODE,
@@ -246,6 +252,7 @@ SWITCH_TYPES = (
         icon="mdi:school-outline",
         method_on="async_set_learn_mode_on",
         method_off="async_set_learn_mode_off",
+        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
     XiaomiMiioSwitchDescription(
         key=ATTR_AUTO_DETECT,
@@ -253,6 +260,7 @@ SWITCH_TYPES = (
         name="Auto Detect",
         method_on="async_set_auto_detect_on",
         method_off="async_set_auto_detect_off",
+        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
     XiaomiMiioSwitchDescription(
         key=ATTR_IONIZER,
@@ -261,6 +269,7 @@ SWITCH_TYPES = (
         icon="mdi:shimmer",
         method_on="async_set_ionizer_on",
         method_off="async_set_ionizer_off",
+        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
 )
 
