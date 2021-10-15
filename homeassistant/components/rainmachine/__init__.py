@@ -349,7 +349,6 @@ class RainMachineEntity(CoordinatorEntity):
         # a breaking change:
         self._attr_unique_id = f"{controller.mac.replace(':', '')}_{description.key}"
         self._controller = controller
-        self._entry = entry
         self.entity_description = description
 
     @callback
