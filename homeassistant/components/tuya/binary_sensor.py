@@ -88,4 +88,4 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if sensor is on."""
-        return self.tuya_device.status.get(self.entity_description.key, False)
+        return self.device.status.get(self.entity_description.key, False)
