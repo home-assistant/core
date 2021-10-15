@@ -43,7 +43,6 @@ from homeassistant.const import (
     PERCENTAGE,
     POWER_WATT,
     PRESSURE_HPA,
-    STATE_UNKNOWN,
     TEMP_CELSIUS,
     TIME_HOURS,
     TIME_SECONDS,
@@ -663,14 +662,17 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
                 self.coordinator.data, self.entity_description.key
             )
 
-        if self._attr_native_value is None:
-            self._attr_native_value = STATE_UNKNOWN
-
         super()._handle_coordinator_update()
 
     @property
     def extra_state_attributes(self):
-        """Return the state attributes."""
+        """
+        Return the state attributes.
+
+        If _attr_native_value is None, that means that `_extract_value_from_attribute`
+        returned None. We exit early if `_extract_value_from_attribute` returned None
+        here to prevent uncaught exceptions due to the value being None.
+        """
         if self._attr_native_value is None:
             return None
 
@@ -680,14 +682,14 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
             if hasattr(self.coordinator.data, attr)
         }
 
-    def _parse_none(self, state, attribute) -> str:
+    def _parse_none(self, state, attribute) -> None:
         if self.entity_description.allow_none_as_return_value:
             _LOGGER.debug(
                 "Allowed None value for state %s and attribute %s",
                 type(state),
                 attribute,
             )
-            return STATE_UNKNOWN
+            return None
 
         return super()._parse_none(state, attribute)
 

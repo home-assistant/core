@@ -31,7 +31,6 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.util.dt import as_utc
 
 from . import VacuumCoordinatorData
-from ...const import STATE_UNKNOWN
 from ...helpers.update_coordinator import DataUpdateCoordinator
 from .const import (
     CONF_DEVICE,
@@ -264,10 +263,6 @@ class MiroboVacuum(XiaomiCoordinatedMiioEntity, StateVacuumEntity):
     @property
     def extra_state_attributes(self):
         """Return the specific state attributes of this vacuum cleaner."""
-
-        if self._state is None:
-            return None
-
         attrs = {}
         attrs[ATTR_STATUS] = str(self.coordinator.data.status.state)
 
@@ -424,7 +419,7 @@ class MiroboVacuum(XiaomiCoordinatedMiioEntity, StateVacuumEntity):
                 self.coordinator.data.status.state,
                 self.coordinator.data.status.state_code,
             )
-            self._state = STATE_UNKNOWN
+            self._state = None
         else:
             self._state = STATE_CODE_TO_STATE[state_code]
 

@@ -11,7 +11,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from ...const import STATE_UNKNOWN
 from .const import CONF_MAC, CONF_MODEL, DOMAIN, AuthException, SetupException
 
 _LOGGER = logging.getLogger(__name__)
@@ -207,11 +206,11 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
     def _parse_datetime_timedelta(time: datetime.timedelta) -> int:
         return time.seconds
 
-    def _parse_none(self, state, attribute) -> str:
+    def _parse_none(self, state, attribute) -> None:
         _LOGGER.warning(
             "Attribute %s returned None for state of type %s, this was unexpected",
             type(state),
             attribute,
         )
 
-        return STATE_UNKNOWN
+        return None
