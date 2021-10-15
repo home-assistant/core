@@ -83,8 +83,7 @@ def has_date_or_time(conf):
 
 def valid_initial(conf):
     """Check the initial value is valid."""
-    initial = conf.get(CONF_INITIAL)
-    if not initial:
+    if not (initial := conf.get(CONF_INITIAL)):
         return conf
 
     if conf[CONF_HAS_DATE] and conf[CONF_HAS_TIME]:
@@ -226,8 +225,7 @@ class InputDatetime(RestoreEntity):
         self.editable = True
         self._current_datetime = None
 
-        initial = config.get(CONF_INITIAL)
-        if not initial:
+        if not (initial := config.get(CONF_INITIAL)):
             return
 
         if self.has_date and self.has_time:

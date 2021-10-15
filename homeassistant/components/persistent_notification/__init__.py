@@ -71,8 +71,7 @@ def async_create(
     context: Context | None = None,
 ) -> None:
     """Generate a notification."""
-    notifications = hass.data.get(DOMAIN)
-    if notifications is None:
+    if (notifications := hass.data.get(DOMAIN)) is None:
         notifications = hass.data[DOMAIN] = {}
 
     if notification_id is not None:
@@ -134,8 +133,7 @@ def async_dismiss(
     hass: HomeAssistant, notification_id: str, *, context: Context | None = None
 ) -> None:
     """Remove a notification."""
-    notifications = hass.data.get(DOMAIN)
-    if notifications is None:
+    if (notifications := hass.data.get(DOMAIN)) is None:
         notifications = hass.data[DOMAIN] = {}
 
     entity_id = ENTITY_ID_FORMAT.format(slugify(notification_id))
