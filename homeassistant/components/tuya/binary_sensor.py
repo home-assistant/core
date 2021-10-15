@@ -45,7 +45,16 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         TuyaBinarySensorEntityDescription(
             key=DPCode.TEMPER_ALARM,
             name="Tamper",
-            entity_registry_enabled_default=False,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+    ),
+    # Luminance Sensor
+    # https://developer.tuya.com/en/docs/iot/categoryldcg?id=Kaiuz3n7u69l8
+    "ldcg": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.TEMPER_ALARM,
+            name="Tamper",
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         ),
     ),
     # PIR Detector

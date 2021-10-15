@@ -41,6 +41,7 @@ TUYA_SUPPORTED_PRODUCT_CATEGORIES = (
     "kg",  # Switch
     "kj",  # Air Purifier
     "kt",  # Air conditioner
+    "ldcg",  # Luminance Sensor
     "mcs",  # Door Window Sensor
     "pc",  # Power Strip
     "pir",  # PIR Detector
@@ -81,10 +82,11 @@ class DPCode(str, Enum):
     ANION = "anion"  # Ionizer unit
     BATTERY_PERCENTAGE = "battery_percentage"  # Battery percentage
     BATTERY_STATE = "battery_state"  # Battery state
-    BRIGHT_STATE = "Brightness"  # Brightness
+    BRIGHT_STATE = "bright_state"  # Brightness status
     BRIGHT_VALUE = "bright_value"  # Brightness
     C_F = "c_f"  # Temperature unit switching
     CHILD_LOCK = "child_lock"  # Child lock
+    CO2_VALUE = "co2_value"  # CO2 concentration
     COLOUR_DATA = "colour_data"  # Colored light mode
     COLOUR_DATA_V2 = "colour_data_v2"  # Colored light mode
     CONCENTRATION_SET = "concentration_set"  # Concentration setting
@@ -99,12 +101,13 @@ class DPCode(str, Enum):
     FILTER_RESET = "filter_reset"  # Filter (cartridge) reset
     HUMIDITY_CURRENT = "humidity_current"  # Current humidity
     HUMIDITY_SET = "humidity_set"  # Humidity setting
+    HUMIDITY_VALUE = "humidity_value"  # Humidity
     LIGHT = "light"  # Light
     LOCK = "lock"  # Lock / Child lock
     MATERIAL = "material"  # Material
     MODE = "mode"  # Working mode / Mode
-    PIR = "pir"  # Motion sensor
     MUFFLING = "muffling"  # Muffling
+    PIR = "pir"  # Motion sensor
     POWDER_SET = "powder_set"  # Powder
     PUMP_RESET = "pump_reset"  # Water pump reset
     SHAKE = "shake"  # Oscillating
