@@ -37,14 +37,17 @@ TUYA_SUPPORTED_PRODUCT_CATEGORIES = (
     "fs",  # Fan
     "fwl",  # Ambient light
     "jsq",  # Humidifier's light
-    "kfj",  # Coffee Maker
+    "kfj",  # Coffee maker
     "kg",  # Switch
     "kj",  # Air Purifier
-    "kfj",  # Coffee maker
     "kt",  # Air conditioner
+    "ldcg",  # Luminance Sensor
     "mcs",  # Door Window Sensor
     "pc",  # Power Strip
+    "pir",  # PIR Detector
     "qn",  # Heater
+    "sos",  # SOS Button
+    "sgbj",  # Siren Alarm
     "wk",  # Thermostat
     "xdd",  # Ceiling Light
     "xxj",  # Diffuser
@@ -62,6 +65,7 @@ PLATFORMS = [
     "scene",
     "select",
     "sensor",
+    "siren",
     "switch",
 ]
 
@@ -72,12 +76,17 @@ class DPCode(str, Enum):
     https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
     """
 
+    ALARM_SWITCH = "alarm_switch"  # Alarm switch
+    ALARM_TIME = "alarm_time"  # Alarm time
+    ALARM_VOLUME = "alarm_volume"  # Alarm volume
     ANION = "anion"  # Ionizer unit
     BATTERY_PERCENTAGE = "battery_percentage"  # Battery percentage
     BATTERY_STATE = "battery_state"  # Battery state
+    BRIGHT_STATE = "bright_state"  # Brightness status
     BRIGHT_VALUE = "bright_value"  # Brightness
     C_F = "c_f"  # Temperature unit switching
     CHILD_LOCK = "child_lock"  # Child lock
+    CO2_VALUE = "co2_value"  # CO2 concentration
     COLOUR_DATA = "colour_data"  # Colored light mode
     COLOUR_DATA_V2 = "colour_data_v2"  # Colored light mode
     CONCENTRATION_SET = "concentration_set"  # Concentration setting
@@ -92,13 +101,18 @@ class DPCode(str, Enum):
     FILTER_RESET = "filter_reset"  # Filter (cartridge) reset
     HUMIDITY_CURRENT = "humidity_current"  # Current humidity
     HUMIDITY_SET = "humidity_set"  # Humidity setting
+    HUMIDITY_VALUE = "humidity_value"  # Humidity
     LIGHT = "light"  # Light
     LOCK = "lock"  # Lock / Child lock
     MATERIAL = "material"  # Material
     MODE = "mode"  # Working mode / Mode
+    MUFFLING = "muffling"  # Muffling
+    PIR = "pir"  # Motion sensor
     POWDER_SET = "powder_set"  # Powder
     PUMP_RESET = "pump_reset"  # Water pump reset
     SHAKE = "shake"  # Oscillating
+    SOS = "sos"  # Emergency State
+    SOS_STATE = "sos_state"  # Emergency mode
     SPEED = "speed"  # Speed level
     START = "start"  # Start
     SWING = "swing"  # Swing mode

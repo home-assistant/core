@@ -5,7 +5,6 @@ import pytest
 from renault_api.kamereon import exceptions
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
-from homeassistant.components.renault.renault_entities import ATTR_LAST_UPDATE
 from homeassistant.const import ATTR_ICON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
@@ -75,7 +74,6 @@ async def test_device_tracker_empty(hass: HomeAssistant, vehicle_type: str):
             assert state.attributes.get(attr) == expected_entity.get(attr)
         # Check dynamic attributes:
         assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)
-        assert ATTR_LAST_UPDATE not in state.attributes
 
 
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
@@ -112,7 +110,6 @@ async def test_device_tracker_errors(hass: HomeAssistant, vehicle_type: str):
             assert state.attributes.get(attr) == expected_entity.get(attr)
         # Check dynamic attributes:
         assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)
-        assert ATTR_LAST_UPDATE not in state.attributes
 
 
 async def test_device_tracker_access_denied(hass: HomeAssistant):

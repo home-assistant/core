@@ -14,9 +14,14 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_VOLTAGE,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -72,6 +77,87 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
             device_class=DEVICE_CLASS_VOLTAGE,
             state_class=STATE_CLASS_MEASUREMENT,
             entity_registry_enabled_default=False,
+        ),
+    ),
+    # Luminance Sensor
+    # https://developer.tuya.com/en/docs/iot/categoryldcg?id=Kaiuz3n7u69l8
+    "ldcg": (
+        SensorEntityDescription(
+            key=DPCode.BRIGHT_STATE,
+            name="Luminosity",
+            icon="mdi:brightness-6",
+        ),
+        SensorEntityDescription(
+            key=DPCode.BRIGHT_VALUE,
+            name="Luminosity",
+            device_class=DEVICE_CLASS_ILLUMINANCE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.TEMP_CURRENT,
+            name="Temperature",
+            device_class=DEVICE_CLASS_TEMPERATURE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.HUMIDITY_VALUE,
+            name="Humidity",
+            device_class=DEVICE_CLASS_HUMIDITY,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.CO2_VALUE,
+            name="Carbon Dioxide (CO2)",
+            device_class=DEVICE_CLASS_CO2,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.BATTERY_PERCENTAGE,
+            name="Battery",
+            native_unit_of_measurement=PERCENTAGE,
+            device_class=DEVICE_CLASS_BATTERY,
+            state_class=STATE_CLASS_MEASUREMENT,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        SensorEntityDescription(
+            key=DPCode.BATTERY_STATE,
+            name="Battery State",
+            icon="mdi:battery",
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+    ),
+    # PIR Detector
+    # https://developer.tuya.com/en/docs/iot/categorypir?id=Kaiuz3ss11b80
+    "pir": (
+        SensorEntityDescription(
+            key=DPCode.BATTERY_PERCENTAGE,
+            name="Battery",
+            native_unit_of_measurement=PERCENTAGE,
+            device_class=DEVICE_CLASS_BATTERY,
+            state_class=STATE_CLASS_MEASUREMENT,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        SensorEntityDescription(
+            key=DPCode.BATTERY_STATE,
+            name="Battery State",
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+    ),
+    # Emergency Button
+    # https://developer.tuya.com/en/docs/iot/categorysos?id=Kaiuz3oi6agjy
+    "sos": (
+        SensorEntityDescription(
+            key=DPCode.BATTERY_PERCENTAGE,
+            name="Battery",
+            native_unit_of_measurement=PERCENTAGE,
+            device_class=DEVICE_CLASS_BATTERY,
+            state_class=STATE_CLASS_MEASUREMENT,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        SensorEntityDescription(
+            key=DPCode.BATTERY_STATE,
+            name="Battery State",
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         ),
     ),
 }
@@ -161,7 +247,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             return None
 
         # Raw value
-        value = self.tuya_device.status.get(self.entity_description.key)
+        value = self.device.status.get(self.entity_description.key)
         if value is None:
             return None
 

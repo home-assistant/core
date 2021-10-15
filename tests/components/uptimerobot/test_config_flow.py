@@ -102,66 +102,6 @@ async def test_form_api_error(hass: HomeAssistant, caplog: LogCaptureFixture) ->
     assert "test error from API." in caplog.text
 
 
-async def test_flow_import(
-    hass: HomeAssistant,
-) -> None:
-    """Test an import flow."""
-    with patch(
-        "pyuptimerobot.UptimeRobot.async_get_account_details",
-        return_value=mock_uptimerobot_api_response(key=MockApiResponseKey.ACCOUNT),
-    ), patch(
-        "homeassistant.components.uptimerobot.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={"platform": DOMAIN, CONF_API_KEY: MOCK_UPTIMEROBOT_API_KEY},
-        )
-        await hass.async_block_till_done()
-
-        assert len(mock_setup_entry.mock_calls) == 1
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["data"] == {CONF_API_KEY: MOCK_UPTIMEROBOT_API_KEY}
-
-    with patch(
-        "pyuptimerobot.UptimeRobot.async_get_account_details",
-        return_value=mock_uptimerobot_api_response(key=MockApiResponseKey.ACCOUNT),
-    ), patch(
-        "homeassistant.components.uptimerobot.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={"platform": DOMAIN, CONF_API_KEY: MOCK_UPTIMEROBOT_API_KEY},
-        )
-        await hass.async_block_till_done()
-
-        assert len(mock_setup_entry.mock_calls) == 0
-        assert result["type"] == RESULT_TYPE_ABORT
-        assert result["reason"] == "already_configured"
-
-    with patch(
-        "pyuptimerobot.UptimeRobot.async_get_account_details",
-        return_value=mock_uptimerobot_api_response(
-            key=MockApiResponseKey.ACCOUNT, data={}
-        ),
-    ), patch(
-        "homeassistant.components.uptimerobot.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={"platform": DOMAIN, CONF_API_KEY: "12345"},
-        )
-        await hass.async_block_till_done()
-
-        assert result["type"] == RESULT_TYPE_ABORT
-        assert result["reason"] == "unknown"
-
-
 async def test_user_unique_id_already_exists(
     hass: HomeAssistant,
 ) -> None:

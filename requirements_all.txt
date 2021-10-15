@@ -254,6 +254,9 @@ aiotractive==0.5.2
 # homeassistant.components.unifi
 aiounifi==27
 
+# homeassistant.components.vlc_telnet
+aiovlc==0.1.0
+
 # homeassistant.components.watttime
 aiowatttime==0.1.1
 
@@ -1929,9 +1932,6 @@ python-tado==0.12.0
 
 # homeassistant.components.telegram_bot
 python-telegram-bot==13.1
-
-# homeassistant.components.vlc_telnet
-python-telnet-vlc==2.0.1
 
 # homeassistant.components.twitch
 python-twitch-client==0.6.0
