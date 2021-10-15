@@ -404,8 +404,8 @@ class DlnaDmrEntity(MediaPlayerEntity):
         try:
             do_ping = self.poll_availability or self.check_available
             await self._device.async_update(do_ping=do_ping)
-        except UpnpError:
-            _LOGGER.debug("Device unavailable")
+        except UpnpError as err:
+            _LOGGER.debug("Device unavailable: %r", err)
             await self._device_disconnect()
             return
         finally:
