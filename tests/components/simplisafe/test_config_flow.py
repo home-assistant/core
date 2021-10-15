@@ -6,7 +6,8 @@ from simplipy.errors import InvalidCredentialsError, SimplipyError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.simplisafe import DOMAIN
-from homeassistant.components.simplisafe.const import CONF_AUTH_CODE, CONF_USER_ID
+from homeassistant.components.simplisafe.config_flow import CONF_AUTH_CODE
+from homeassistant.components.simplisafe.const import CONF_USER_ID
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 

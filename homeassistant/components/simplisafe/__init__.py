@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable
+from datetime import timedelta
 from typing import TYPE_CHECKING, cast
 
 from simplipy import API
@@ -15,7 +16,13 @@ from simplipy.errors import (
 )
 from simplipy.system import SystemNotification
 from simplipy.system.v2 import SystemV2
-from simplipy.system.v3 import SystemV3
+from simplipy.system.v3 import (
+    VOLUME_HIGH,
+    VOLUME_LOW,
+    VOLUME_MEDIUM,
+    VOLUME_OFF,
+    SystemV3,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -49,14 +56,13 @@ from .const import (
     ATTR_VOICE_PROMPT_VOLUME,
     CONF_USER_ID,
     DATA_CLIENT,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     LOGGER,
-    VOLUMES,
 )
 
 EVENT_SIMPLISAFE_NOTIFICATION = "SIMPLISAFE_NOTIFICATION"
 
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 DEFAULT_SOCKET_MIN_RETRY = 15
 
 PLATFORMS = (
@@ -73,6 +79,8 @@ ATTR_PIN_LABEL_OR_VALUE = "label_or_pin"
 ATTR_PIN_VALUE = "pin"
 ATTR_SYSTEM_ID = "system_id"
 ATTR_TIMESTAMP = "timestamp"
+
+VOLUMES = [VOLUME_OFF, VOLUME_LOW, VOLUME_MEDIUM, VOLUME_HIGH]
 
 SERVICE_BASE_SCHEMA = vol.Schema({vol.Required(ATTR_SYSTEM_ID): cv.positive_int})
 
@@ -160,13 +168,12 @@ async def async_register_base_station(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SimpliSafe as config entry."""
-    hass.data.setdefault(DOMAIN, {DATA_CLIENT: {}})
-    hass.data[DOMAIN][DATA_CLIENT][entry.entry_id] = []
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {}
 
     _async_standardize_config_entry(hass, entry)
 
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
-
     websession = aiohttp_client.async_get_clientsession(hass)
 
     try:
@@ -186,7 +193,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SimplipyError as err:
         raise ConfigEntryNotReady from err
 
-    hass.data[DOMAIN][DATA_CLIENT][entry.entry_id] = simplisafe
+    hass.data[DOMAIN][entry.entry_id][DATA_CLIENT] = simplisafe
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     @callback
@@ -289,8 +296,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a SimpliSafe config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        simplisafe = hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
-        simplisafe.async_teardown()
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 
@@ -307,7 +313,6 @@ class SimpliSafe:
         """Initialize."""
         self._api = api
         self._hass = hass
-        self._listener_unsub: list[Callable[..., None]] = []
         self._system_notifications: dict[int, set[SystemNotification]] = {}
         self.entry = entry
         self.systems: dict[int, SystemV2 | SystemV3] = {}
@@ -380,7 +385,7 @@ class SimpliSafe:
             )
 
         # Every time simplisafe-python receives a new refresh token, save it:
-        self._listener_unsub.append(
+        self.entry.async_on_unload(
             self._api.add_refresh_token_listener(async_save_refresh_token)
         )
 
@@ -388,12 +393,6 @@ class SimpliSafe:
         if TYPE_CHECKING:
             assert self._api.refresh_token
         async_save_refresh_token(self._api.refresh_token)
-
-    @callback
-    def async_teardown(self) -> None:
-        """Tear down the data class."""
-        for remove in self._listener_unsub:
-            remove()
 
     async def async_update(self) -> None:
         """Get updated data from SimpliSafe."""

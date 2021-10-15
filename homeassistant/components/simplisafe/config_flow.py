@@ -20,7 +20,9 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_AUTH_CODE, CONF_USER_ID, DOMAIN, LOGGER
+from .const import CONF_USER_ID, DOMAIN, LOGGER
+
+CONF_AUTH_CODE = "auth_code"
 
 STEP_INPUT_AUTH_CODE_SCHEMA = vol.Schema(
     {

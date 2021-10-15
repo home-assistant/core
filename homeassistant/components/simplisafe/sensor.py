@@ -18,7 +18,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up SimpliSafe freeze sensors based on a config entry."""
-    simplisafe = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
+    simplisafe = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
     sensors = []
 
     for system in simplisafe.systems.values():
