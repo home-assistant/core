@@ -12,6 +12,7 @@ class LookinEntity(Entity):
     """A base class for lookin entities."""
 
     _attr_should_poll = False
+    _attr_assumed_state = True
 
     def __init__(
         self,

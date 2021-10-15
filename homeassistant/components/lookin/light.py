@@ -44,7 +44,6 @@ class LookinLightEntity(LookinPowerEntity, LightEntity):
 
     _attr_supported_color_modes = {COLOR_MODE_ONOFF}
     _attr_color_mode = COLOR_MODE_ONOFF
-    _attr_assumed_state = True
 
     def __init__(
         self,
