@@ -117,8 +117,7 @@ async def async_api_accept_grant(hass, config, directive, context):
 async def async_api_turn_on(hass, config, directive, context):
     """Process a turn on request."""
     entity = directive.entity
-    domain = entity.domain
-    if domain == group.DOMAIN:
+    if (domain := entity.domain) == group.DOMAIN:
         domain = ha.DOMAIN
 
     service = SERVICE_TURN_ON
