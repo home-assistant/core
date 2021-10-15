@@ -396,7 +396,7 @@ def _async_register_events_and_services(hass: HomeAssistant):
 
     async def async_handle_homekit_unpair(service):
         """Handle unpair HomeKit service call."""
-        referenced = await async_extract_referenced_entity_ids(hass, service)
+        referenced = async_extract_referenced_entity_ids(hass, service)
         dev_reg = device_registry.async_get(hass)
         for device_id in referenced.referenced_devices:
             dev_reg_ent = dev_reg.async_get(device_id)
