@@ -21,8 +21,10 @@ from homeassistant.util.dt import as_utc
 
 from .const import DATA_ACCOUNT, DATA_COORDINATOR, DOMAIN
 
+ATTR_CATEGORY = "category"
 ATTR_PICKUP_STATE = "pickup_state"
 ATTR_PICKUP_TYPES = "pickup_types"
+ATTR_QUANTITY = "quantity"
 
 DEFAULT_ATTRIBUTION = "Pickup data provided by Ridwell"
 
@@ -73,8 +75,8 @@ class RidwellSensor(CoordinatorEntity, SensorEntity):
         for pickup in event.pickups:
             if pickup.name not in attrs[ATTR_PICKUP_TYPES]:
                 attrs[ATTR_PICKUP_TYPES][pickup.name] = {
-                    "category": pickup.category,
-                    "quantity": pickup.quantity,
+                    ATTR_CATEGORY: pickup.category,
+                    ATTR_QUANTITY: pickup.quantity,
                 }
             else:
                 # Ridwell's API will return distinct objects, even if they have the
