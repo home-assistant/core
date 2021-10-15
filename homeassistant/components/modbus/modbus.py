@@ -269,11 +269,13 @@ class ModbusHub:
                     "parity": client_config[CONF_PARITY],
                 }
             )
+            self.unique_id = f"{client_config[CONF_PORT]}"
         else:
             # network configuration
             self._pb_params["host"] = client_config[CONF_HOST]
             if self._config_type == RTUOVERTCP:
                 self._pb_params["framer"] = ModbusRtuFramer
+            self.unique_id = f"{client_config[CONF_HOST]}-{client_config[CONF_PORT]}"
 
         Defaults.Timeout = client_config[CONF_TIMEOUT]
         if CONF_MSG_WAIT in client_config:

@@ -86,6 +86,9 @@ class BasePlatform(Entity):
         self._attr_should_poll = False
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
         self._attr_available = True
+        self._attr_unique_id = (
+            f"{hub.unique_id}-{self._input_type}-{self._slave}-{self._address}"
+        )
         self._attr_unit_of_measurement = None
         self._lazy_error_count = entry[CONF_LAZY_ERROR]
         self._lazy_errors = self._lazy_error_count
