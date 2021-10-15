@@ -24,6 +24,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,6 +83,7 @@ class EQ3BTSmartThermostat(ClimateEntity):
         """Initialize the thermostat."""
         # We want to avoid name clash with this module.
         self._name = _name
+        self._mac = _mac
         self._thermostat = eq3.Thermostat(_mac)
 
     @property
@@ -182,6 +184,11 @@ class EQ3BTSmartThermostat(ClimateEntity):
         Requires SUPPORT_PRESET_MODE.
         """
         return list(HA_TO_EQ_PRESET)
+
+    @property
+    def unique_id(self) -> str:
+        """Return the MAC address of the thermostat."""
+        return format_mac(self._mac)
 
     def set_preset_mode(self, preset_mode):
         """Set new preset mode."""

@@ -27,7 +27,7 @@
                 "data": {
                     "password": "Password"
                 },
-                "description": "Please re-enter the password for {username}.",
+                "description": "Please re-enter the password for {username}:",
                 "title": "Reauthenticate Integration"
             },
             "user": {

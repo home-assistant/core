@@ -12,6 +12,7 @@ from google_nest_sdm.camera_traits import (
     CameraLiveStreamTrait,
     EventImageGenerator,
     RtspStream,
+    StreamingProtocol,
 )
 from google_nest_sdm.device import Device
 from google_nest_sdm.event import ImageEventBase
@@ -19,6 +20,7 @@ from google_nest_sdm.exceptions import GoogleNestException
 from haffmpeg.tools import IMAGE_JPEG
 
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
+from homeassistant.components.camera.const import STREAM_TYPE_HLS, STREAM_TYPE_WEB_RTC
 from homeassistant.components.ffmpeg import async_get_image
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -114,9 +116,21 @@ class NestCamera(Camera):
             supported_features |= SUPPORT_STREAM
         return supported_features
 
+    @property
+    def stream_type(self) -> str | None:
+        """Return the type of stream supported by this camera."""
+        if CameraLiveStreamTrait.NAME not in self._device.traits:
+            return None
+        trait = self._device.traits[CameraLiveStreamTrait.NAME]
+        if StreamingProtocol.WEB_RTC in trait.supported_protocols:
+            return STREAM_TYPE_WEB_RTC
+        return STREAM_TYPE_HLS
+
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
-        if CameraLiveStreamTrait.NAME not in self._device.traits:
+        if not self.supported_features & SUPPORT_STREAM:
+            return None
+        if self.stream_type != STREAM_TYPE_HLS:
             return None
         trait = self._device.traits[CameraLiveStreamTrait.NAME]
         if not self._stream:
@@ -252,3 +266,9 @@ class NestCamera(Camera):
         self._event_id = None
         self._event_image_bytes = None
         self._event_image_cleanup_unsub = None
+
+    async def async_handle_web_rtc_offer(self, offer_sdp: str) -> str:
+        """Return the source of the stream."""
+        trait: CameraLiveStreamTrait = self._device.traits[CameraLiveStreamTrait.NAME]
+        stream = await trait.generate_web_rtc_stream(offer_sdp)
+        return stream.answer_sdp

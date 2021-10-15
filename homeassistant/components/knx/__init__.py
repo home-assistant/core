@@ -7,6 +7,7 @@ from typing import Final
 
 import voluptuous as vol
 from xknx import XKNX
+from xknx.core import XknxConnectionState
 from xknx.core.telegram_queue import TelegramQueue
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.exceptions import ConversionError, XKNXException
@@ -281,6 +282,9 @@ class KNXModule:
         self.service_exposures: dict[str, KNXExposeSensor | KNXExposeTime] = {}
 
         self.init_xknx()
+        self.xknx.connection_manager.register_connection_state_changed_cb(
+            self.connection_state_changed_cb
+        )
 
         self._address_filter_transcoder: dict[AddressFilter, type[DPTBase]] = {}
         self._group_address_transcoder: dict[DeviceGroupAddress, type[DPTBase]] = {}
@@ -347,6 +351,12 @@ class KNXModule:
             route_back=route_back,
             auto_reconnect=True,
         )
+
+    async def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
+        """Call invoked after a KNX connection state change was received."""
+        self.connected = state == XknxConnectionState.CONNECTED
+        if tasks := [device.after_update() for device in self.xknx.devices]:
+            await asyncio.gather(*tasks)
 
     async def telegram_received_cb(self, telegram: Telegram) -> None:
         """Call invoked after a KNX telegram was received."""

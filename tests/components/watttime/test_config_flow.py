@@ -179,7 +179,6 @@ async def test_step_reauth(hass: HomeAssistant, client_login) -> None:
         },
     ).add_to_hass(hass)
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     with patch(
         "homeassistant.components.watttime.async_setup_entry",
         return_value=True,
@@ -222,7 +221,6 @@ async def test_step_reauth_invalid_credentials(hass: HomeAssistant) -> None:
         },
     ).add_to_hass(hass)
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     with patch(
         "homeassistant.components.watttime.config_flow.Client.async_login",
         AsyncMock(side_effect=InvalidCredentialsError),

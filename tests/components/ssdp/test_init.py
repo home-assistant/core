@@ -431,7 +431,9 @@ async def test_scan_with_registered_callback(
     "homeassistant.components.ssdp.async_get_ssdp",
     return_value={"mock-domain": [{"st": "mock-st"}]},
 )
-async def test_getting_existing_headers(mock_get_ssdp, hass, aioclient_mock):
+async def test_getting_existing_headers(
+    mock_get_ssdp, hass, aioclient_mock, mock_flow_init
+):
     """Test getting existing/previously scanned headers."""
     aioclient_mock.get(
         "http://1.1.1.1",

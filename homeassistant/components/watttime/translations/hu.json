@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt"
         },
         "error": {
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
@@ -21,6 +22,13 @@
                     "location_type": "Elhelyezked\u00e9s"
                 },
                 "description": "V\u00e1lasszon egy helyet a monitoroz\u00e1shoz:"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Jelsz\u00f3"
+                },
+                "description": "K\u00e9rem, adja meg \u00fajra a jelsz\u00f3t {username} r\u00e9sz\u00e9re:",
+                "title": "Integr\u00e1ci\u00f3 \u00fajrahiteles\u00edt\u00e9se"
             },
             "user": {
                 "data": {

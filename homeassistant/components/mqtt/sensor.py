@@ -28,8 +28,9 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from . import CONF_QOS, CONF_STATE_TOPIC, DOMAIN, PLATFORMS, subscription
+from . import PLATFORMS, subscription
 from .. import mqtt
+from .const import CONF_QOS, CONF_STATE_TOPIC, DOMAIN
 from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,

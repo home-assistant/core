@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
@@ -21,6 +22,13 @@
                     "location_type": "Standort"
                 },
                 "description": "W\u00e4hle einen Standort f\u00fcr die \u00dcberwachung:"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passwort"
+                },
+                "description": "Bitte gib das Passwort f\u00fcr {ame} erneut ein:",
+                "title": "Integration erneut authentifizieren"
             },
             "user": {
                 "data": {

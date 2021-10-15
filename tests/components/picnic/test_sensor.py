@@ -138,6 +138,8 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         if unit:
             assert sensor.attributes["unit_of_measurement"] == unit
 
+        assert sensor.attributes["attribution"] == "Data provided by Picnic"
+
     async def _setup_platform(
         self, use_default_responses=False, enable_all_sensors=True
     ):

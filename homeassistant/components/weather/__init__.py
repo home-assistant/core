@@ -47,7 +47,6 @@ ATTR_FORECAST_TEMP_LOW: Final = "templow"
 ATTR_FORECAST_TIME: Final = "datetime"
 ATTR_FORECAST_WIND_BEARING: Final = "wind_bearing"
 ATTR_FORECAST_WIND_SPEED: Final = "wind_speed"
-ATTR_WEATHER_ATTRIBUTION = "attribution"
 ATTR_WEATHER_HUMIDITY = "humidity"
 ATTR_WEATHER_OZONE = "ozone"
 ATTR_WEATHER_PRESSURE = "pressure"
@@ -107,7 +106,6 @@ class WeatherEntity(Entity):
     """ABC for weather data."""
 
     entity_description: WeatherEntityDescription
-    _attr_attribution: str | None = None
     _attr_condition: str | None
     _attr_forecast: list[Forecast] | None = None
     _attr_humidity: float | None = None
@@ -155,11 +153,6 @@ class WeatherEntity(Entity):
     def ozone(self) -> float | None:
         """Return the ozone level."""
         return self._attr_ozone
-
-    @property
-    def attribution(self) -> str | None:
-        """Return the attribution."""
-        return self._attr_attribution
 
     @property
     def visibility(self) -> float | None:
@@ -215,10 +208,6 @@ class WeatherEntity(Entity):
         visibility = self.visibility
         if visibility is not None:
             data[ATTR_WEATHER_VISIBILITY] = visibility
-
-        attribution = self.attribution
-        if attribution is not None:
-            data[ATTR_WEATHER_ATTRIBUTION] = attribution
 
         if self.forecast is not None:
             forecast = []
