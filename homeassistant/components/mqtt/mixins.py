@@ -635,7 +635,7 @@ class MqttEntity(
 
     @property
     def entity_category(self) -> str | None:
-        """Return if the entity should be enabled when first added to the entity registry."""
+        """Return the entity category if any."""
         return self._config.get(CONF_ENTITY_CATEGORY)
 
     @property
