@@ -819,7 +819,6 @@ class EventBus:
         filterable_job: tuple[HassJob, Callable | None] | None = None
 
         @callback
-        @functools.wraps(listener)
         def _onetime_listener(event: Event) -> None:
             """Remove listener from event bus and then fire listener."""
             nonlocal filterable_job
@@ -834,6 +833,10 @@ class EventBus:
             assert filterable_job is not None
             self._async_remove_listener(event_type, filterable_job)
             self._hass.async_run_job(listener, event)
+
+        functools.update_wrapper(
+            _onetime_listener, listener, ("__name__", "__qualname__", "__module__"), []
+        )
 
         filterable_job = (HassJob(_onetime_listener), None)
 
