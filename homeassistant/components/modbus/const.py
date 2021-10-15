@@ -69,6 +69,7 @@ SERIAL = "serial"
 TCP = "tcp"
 UDP = "udp"
 
+
 # service call attributes
 ATTR_ADDRESS = "address"
 ATTR_HUB = "hub"
@@ -78,7 +79,6 @@ ATTR_STATE = "state"
 ATTR_TEMPERATURE = "temperature"
 
 
-# data types
 class DataType(str, Enum):
     """Data types used by sensor etc."""
 
