@@ -15,9 +15,14 @@ from homeassistant.components.alexa import (
     errors as alexa_errors,
     state_report as alexa_state_report,
 )
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, HTTP_BAD_REQUEST
+from homeassistant.const import (
+    CLOUD_NEVER_EXPOSED_ENTITIES,
+    ENTITY_CATEGORY_CONFIG,
+    ENTITY_CATEGORY_DIAGNOSTIC,
+    HTTP_BAD_REQUEST,
+)
 from homeassistant.core import HomeAssistant, callback, split_entity_id
-from homeassistant.helpers import entity_registry, start
+from homeassistant.helpers import entity_registry as er, start
 from homeassistant.helpers.event import async_call_later
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -110,7 +115,7 @@ class AlexaConfig(alexa_config.AbstractConfig):
 
         self._prefs.async_listen_updates(self._async_prefs_updated)
         self.hass.bus.async_listen(
-            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
             self._handle_entity_registry_updated,
         )
 
@@ -128,13 +133,23 @@ class AlexaConfig(alexa_config.AbstractConfig):
         if entity_expose is not None:
             return entity_expose
 
+        entity_registry = er.async_get(self.hass)
+        registry_entry = entity_registry.async_get(entity_id)
+        if registry_entry:
+            auxiliary_entity = registry_entry.entity_category in (
+                ENTITY_CATEGORY_CONFIG,
+                ENTITY_CATEGORY_DIAGNOSTIC,
+            )
+        else:
+            auxiliary_entity = False
+
         default_expose = self._prefs.alexa_default_expose
 
         # Backwards compat
         if default_expose is None:
-            return True
+            return not auxiliary_entity
 
-        return split_entity_id(entity_id)[0] in default_expose
+        return not auxiliary_entity and split_entity_id(entity_id)[0] in default_expose
 
     @callback
     def async_invalidate_access_token(self):
@@ -340,7 +355,7 @@ class AlexaConfig(alexa_config.AbstractConfig):
         elif action == "remove":
             to_remove.append(entity_id)
         elif action == "update" and bool(
-            set(event.data["changes"]) & entity_registry.ENTITY_DESCRIBING_ATTRIBUTES
+            set(event.data["changes"]) & er.ENTITY_DESCRIBING_ATTRIBUTES
         ):
             to_update.append(entity_id)
             if "old_entity_id" in event.data:
