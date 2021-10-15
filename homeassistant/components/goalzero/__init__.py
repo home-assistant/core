@@ -113,6 +113,6 @@ class YetiEntity(CoordinatorEntity):
             ATTR_IDENTIFIERS: {(DOMAIN, self._server_unique_id)},
             ATTR_MANUFACTURER: "Goal Zero",
             ATTR_NAME: self._name,
-            ATTR_MODEL: self.api.sysdata.get(ATTR_MODEL),
-            ATTR_SW_VERSION: self.api.data.get("firmwareVersion"),
+            ATTR_MODEL: self.api.sysdata[ATTR_MODEL],
+            ATTR_SW_VERSION: self.api.data["firmwareVersion"],
         }
