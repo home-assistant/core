@@ -281,6 +281,7 @@ class SenseTrendsSensor(CoordinatorEntity, SensorEntity):
             self._attr_state_class = None
             self._attr_device_class = None
         self._attr_device_info = {
+            "name": f"Sense {sense_monitor_id}",
             "identifiers": {(DOMAIN, sense_monitor_id)},
             "model": "Sense",
             "manufacturer": "Sense Labs, Inc.",
