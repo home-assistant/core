@@ -118,6 +118,7 @@ restore_full:
   fields:
     slug:
       name: Slug
+      required: true
       description: Slug of backup to restore from.
       selector:
         text:
@@ -134,6 +135,7 @@ restore_partial:
   fields:
     slug:
       name: Slug
+      required: true
       description: Slug of backup to restore from.
       selector:
         text:
