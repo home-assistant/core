@@ -133,7 +133,7 @@ async def async_setup_entry(
     """Set up IQVIA sensors based on a config entry."""
     sensors: list[ForecastSensor | IndexSensor] = [
         ForecastSensor(
-            hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
+            hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR][
                 API_CATEGORY_MAPPING.get(description.key, description.key)
             ],
             entry,
@@ -144,7 +144,7 @@ async def async_setup_entry(
     sensors.extend(
         [
             IndexSensor(
-                hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
+                hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR][
                     API_CATEGORY_MAPPING.get(description.key, description.key)
                 ],
                 entry,
@@ -206,8 +206,8 @@ class ForecastSensor(IQVIAEntity, SensorEntity):
         )
 
         if self.entity_description.key == TYPE_ALLERGY_FORECAST:
-            outlook_coordinator = self.hass.data[DOMAIN][DATA_COORDINATOR][
-                self._entry.entry_id
+            outlook_coordinator = self.hass.data[DOMAIN][self._entry.entry_id][
+                DATA_COORDINATOR
             ][TYPE_ALLERGY_OUTLOOK]
 
             if not outlook_coordinator.last_update_success:
