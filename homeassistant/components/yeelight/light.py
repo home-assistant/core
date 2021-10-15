@@ -622,7 +622,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         if not hs_color or COLOR_MODE_HS not in self.supported_color_modes:
             return
         if (
-            not self.effect
+            not self.device.is_color_flow_enabled
             and self.color_mode == COLOR_MODE_HS
             and self.hs_color == hs_color
         ):
@@ -643,7 +643,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         if not rgb or COLOR_MODE_RGB not in self.supported_color_modes:
             return
         if (
-            not self.effect
+            not self.device.is_color_flow_enabled
             and self.color_mode == COLOR_MODE_RGB
             and self.rgb_color == rgb
         ):
@@ -666,7 +666,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         temp_in_k = mired_to_kelvin(colortemp)
 
         if (
-            not self.effect
+            not self.device.is_color_flow_enabled
             and self.color_mode == COLOR_MODE_COLOR_TEMP
             and self.color_temp == colortemp
         ):
