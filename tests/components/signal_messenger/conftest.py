@@ -14,6 +14,9 @@ def signal_notification_service():
 
 
 SIGNAL_SEND_PATH_SUFIX = "/v2/send"
+MESSAGE = "Testing Signal Messenger platform :)"
+NUMBER_FROM = "+43443434343"
+NUMBERS_TO = ["+435565656565"]
 
 
 @pytest.fixture
