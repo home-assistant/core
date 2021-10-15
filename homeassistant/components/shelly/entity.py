@@ -255,7 +255,7 @@ class RpcAttributeDescription:
     default_enabled: bool = True
     available: Callable[[dict], bool] | None = None
     removal_condition: Callable[[dict, str], bool] | None = None
-    extra_state_attributes: Callable[[dict], dict | None] | None = None
+    extra_state_attributes: Callable[[dict, dict], dict | None] | None = None
     entity_category: str | None = None
 
 
@@ -608,8 +608,11 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, entity.Entity):
         if self.description.extra_state_attributes is None:
             return None
 
+        assert self.wrapper.device.shelly
+
         return self.description.extra_state_attributes(
-            self.wrapper.device.status[self.key][self.sub_key]
+            self.wrapper.device.status[self.key][self.sub_key],
+            self.wrapper.device.shelly,
         )
 
     @property
