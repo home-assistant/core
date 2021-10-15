@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except InvalidCredentialsError as err:
         raise ConfigEntryAuthFailed("Invalid username/password") from err
     except RidwellError as err:
-        LOGGER.error("Error while authenticating with WattTime: %s", err)
+        LOGGER.error("Error while authenticating with Ridwell: %s", err)
         return False
 
     accounts = await client.async_get_accounts()
