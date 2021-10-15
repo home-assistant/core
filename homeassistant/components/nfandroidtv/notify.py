@@ -162,7 +162,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
             if filedata is not None:
                 if ATTR_ICON in filedata:
                     icon = self.load_file(
-                        url=filedata.get(ATTR_ICON),
+                        url=filedata[ATTR_ICON],
                         local_path=filedata.get(ATTR_FILE_PATH),
                         username=filedata.get(ATTR_FILE_USERNAME),
                         password=filedata.get(ATTR_FILE_PASSWORD),
