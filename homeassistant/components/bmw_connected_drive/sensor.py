@@ -1,6 +1,7 @@
 """Support for reading vehicle status from BMW connected drive portal."""
 from __future__ import annotations
 
+from copy import copy
 from dataclasses import dataclass
 import logging
 
@@ -351,6 +352,12 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
 }
 
 
+DEFAULT_BMW_DESCRIPTION = BMWSensorEntityDescription(
+    key="",
+    entity_registry_enabled_default=True,
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -451,7 +458,10 @@ async def async_setup_entry(
                                     for attr in ("user_total",)
                                 ]
                             )
-                    elif description := SENSOR_TYPES.get(attribute_name):
+                    else:
+                        if (description := SENSOR_TYPES.get(attribute_name)) is None:
+                            description = copy(DEFAULT_BMW_DESCRIPTION)
+                            description.key = attribute_name
                         entities.append(
                             BMWConnectedDriveSensor(
                                 hass,
