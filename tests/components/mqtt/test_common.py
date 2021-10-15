@@ -22,6 +22,7 @@ DEFAULT_CONFIG_DEVICE_INFO_ID = {
     "model": "Glass",
     "sw_version": "0.1-beta",
     "suggested_area": "default_area",
+    "configuration_url": "http://example.com",
 }
 
 DEFAULT_CONFIG_DEVICE_INFO_MAC = {
@@ -31,6 +32,7 @@ DEFAULT_CONFIG_DEVICE_INFO_MAC = {
     "model": "Glass",
     "sw_version": "0.1-beta",
     "suggested_area": "default_area",
+    "configuration_url": "http://example.com",
 }
 
 
@@ -771,6 +773,7 @@ async def help_test_entity_device_info_with_identifier(hass, mqtt_mock, domain, 
     assert device.model == "Glass"
     assert device.sw_version == "0.1-beta"
     assert device.suggested_area == "default_area"
+    assert device.configuration_url == "http://example.com"
 
 
 async def help_test_entity_device_info_with_connection(hass, mqtt_mock, domain, config):
@@ -799,6 +802,7 @@ async def help_test_entity_device_info_with_connection(hass, mqtt_mock, domain, 
     assert device.model == "Glass"
     assert device.sw_version == "0.1-beta"
     assert device.suggested_area == "default_area"
+    assert device.configuration_url == "http://example.com"
 
 
 async def help_test_entity_device_info_remove(hass, mqtt_mock, domain, config):

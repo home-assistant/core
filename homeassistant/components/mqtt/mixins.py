@@ -68,6 +68,7 @@ CONF_SW_VERSION = "sw_version"
 CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
 CONF_SUGGESTED_AREA = "suggested_area"
+CONF_CONFIGURATION_URL = "configuration_url"
 
 MQTT_ATTRIBUTES_BLOCKED = {
     "assumed_state",
@@ -154,6 +155,7 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
             vol.Optional(CONF_SW_VERSION): cv.string,
             vol.Optional(CONF_VIA_DEVICE): cv.string,
             vol.Optional(CONF_SUGGESTED_AREA): cv.string,
+            vol.Optional(CONF_CONFIGURATION_URL): cv.url,
         }
     ),
     validate_device_has_at_least_one_identifier,
@@ -530,6 +532,9 @@ def device_info_from_config(config):
 
     if CONF_SUGGESTED_AREA in config:
         info["suggested_area"] = config[CONF_SUGGESTED_AREA]
+
+    if CONF_CONFIGURATION_URL in config:
+        info["configuration_url"] = config[CONF_CONFIGURATION_URL]
 
     return info
 
