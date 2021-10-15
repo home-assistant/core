@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from homeassistant.components.upnp.const import (
+    DOMAIN,
     ROUTER_IP,
     ROUTER_UPTIME,
     UPDATE_INTERVAL,
@@ -13,14 +14,14 @@ import homeassistant.util.dt as dt_util
 
 from .conftest import MockDevice
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_upnp_binary_sensors(
-    hass: HomeAssistant, initialed_integration: MockDevice
+    hass: HomeAssistant, setup_integration: MockConfigEntry
 ):
     """Test normal sensors."""
-    mock_device = initialed_integration
+    mock_device: MockDevice = hass.data[DOMAIN][setup_integration.entry_id].device
 
     # First poll.
     wan_status_state = hass.states.get("binary_sensor.mock_name_wan_status")

@@ -20,7 +20,6 @@ from homeassistant.components.upnp.const import (
     WAN_STATUS,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
 from tests.common import MockConfigEntry
@@ -194,7 +193,7 @@ async def ssdp_no_discovery():
 
 
 @pytest.fixture
-async def initialed_integration(
+async def setup_integration(
     hass: HomeAssistant, mock_get_source_ip, ssdp_instant_discovery, mock_upnp_device
 ):
     """Create an initialized integration."""
@@ -206,13 +205,9 @@ async def initialed_integration(
         },
     )
 
-    # Initialization of component.
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-
     # Load config_entry.
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    yield mock_upnp_device
+    yield entry

@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 from homeassistant.components.upnp.const import (
     BYTES_RECEIVED,
     BYTES_SENT,
+    DOMAIN,
     PACKETS_RECEIVED,
     PACKETS_SENT,
     ROUTER_IP,
@@ -18,12 +19,12 @@ import homeassistant.util.dt as dt_util
 
 from .conftest import MockDevice
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_upnp_sensors(hass: HomeAssistant, initialed_integration: MockDevice):
+async def test_upnp_sensors(hass: HomeAssistant, setup_integration: MockConfigEntry):
     """Test normal sensors."""
-    mock_device = initialed_integration
+    mock_device: MockDevice = hass.data[DOMAIN][setup_integration.entry_id].device
 
     # First poll.
     b_received_state = hass.states.get("sensor.mock_name_b_received")
@@ -74,10 +75,10 @@ async def test_upnp_sensors(hass: HomeAssistant, initialed_integration: MockDevi
 
 
 async def test_derived_upnp_sensors(
-    hass: HomeAssistant, initialed_integration: MockDevice
+    hass: HomeAssistant, setup_integration: MockConfigEntry
 ):
     """Test derived sensors."""
-    mock_device = initialed_integration
+    mock_device: MockDevice = hass.data[DOMAIN][setup_integration.entry_id].device
 
     # First poll.
     kib_s_received_state = hass.states.get("sensor.mock_name_kib_s_received")
