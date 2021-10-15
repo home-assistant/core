@@ -3,29 +3,35 @@
 reboot:
   name: Reboot
   description: Reboot the NAS.
-  target:
-    device:
-      integration: synology_dsm
-      manufacturer: Synology
-    entity:
-      integration: none
+  fields:
+    device_id:
+      name: Synology DSM
+      description: Select the Synology DSM to reboot
+      required: true
+      selector:
+        device:
+          integration: synology_dsm
 
 shutdown:
   name: Shutdown
   description: Shutdown the NAS.
-  target:
-    device:
-      integration: synology_dsm
-      manufacturer: Synology
-    entity:
-      integration: none
+  fields:
+    device_id:
+      name: Synology DSM
+      description: Select the Synology DSM to shutdown
+      required: true
+      selector:
+        device:
+          integration: synology_dsm
 
 poweron:
   name: Power on
   description: Power on the NAS by WoL.
-  target:
-    device:
-      integration: synology_dsm
-      manufacturer: Synology
-    entity:
-      integration: none
+  fields:
+    device_id:
+      name: Synology DSM
+      description: Select the Synology DSM to poweron
+      required: true
+      selector:
+        device:
+          integration: synology_dsm

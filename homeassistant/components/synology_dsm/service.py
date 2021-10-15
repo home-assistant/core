@@ -6,14 +6,11 @@ import logging
 from synology_dsm.exceptions import SynologyDSMException
 from wakeonlan import send_magic_packet
 
-from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, CONF_HOST, CONF_MAC
+from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers.device_registry import (
-    DeviceEntry,
-    async_entries_for_area,
-    async_get,
-)
+from homeassistant.helpers.device_registry import async_get
 
+from .common import SynoApi
 from .const import (
     DOMAIN,
     SERVICE_POWERON,
@@ -24,7 +21,7 @@ from .const import (
     SYSTEM_LOADED,
 )
 
-_LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_services(hass: HomeAssistant) -> None:
@@ -38,68 +35,64 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     async def service_handler(call: ServiceCall) -> None:
         """Handle service call."""
         dev_reg = async_get(hass)
-        devices: list[DeviceEntry] = []
-        device_serials: set[str] = set()
+
+        device_id = call.data.get("device_id")
+        if not device_id:
+            LOGGER.error(
+                "Error during service call %s - device_id not given", call.service
+            )
+            return
+
+        if not isinstance(device_id, str):
+            LOGGER.error(
+                "Error during service call %s - device_id is not a string", call.service
+            )
+            return
+
+        serial = None
         device_ip_macs: set[tuple[str, str]] = set()
-
-        if area_ids := call.data.get(ATTR_AREA_ID):
-            for area_id in area_ids:
-                devices.extend(
-                    [
-                        device
-                        for device in async_entries_for_area(dev_reg, area_id)
-                        if DOMAIN in [x[0] for x in device.identifiers]
-                    ]
-                )
-
-        if device_ids := call.data.get(ATTR_DEVICE_ID):
-            for device_id in device_ids:
-                if dev := dev_reg.async_get(device_id):
-                    devices.append(dev)
-
-        for device in devices:
-            if via_device_id := device.via_device_id:
-                if dev := dev_reg.async_get(via_device_id):
-                    device = dev
-            for identifier in device.identifiers:
-                if DOMAIN not in identifier[0]:
-                    continue
-                device_serials.add(identifier[1])
-                for config_entry in device.config_entries:
-                    if entry := hass.config_entries.async_get_entry(config_entry):
-                        device_ip_macs.update(
-                            [
-                                (entry.data[CONF_HOST], mac)
-                                for mac in entry.data.get(CONF_MAC, [])
-                            ]
-                        )
-
-        if call.service in [SERVICE_REBOOT, SERVICE_SHUTDOWN]:
-            dsm_devices = hass.data[DOMAIN]
-            for serial in device_serials:
-                dsm_device = dsm_devices.get(serial)
-                if not dsm_device:
-                    _LOGGER.error("DSM with specified serial %s not found", serial)
-                    continue
-                _LOGGER.debug("%s DSM with serial %s", call.service, serial)
-                dsm_api = dsm_device[SYNO_API]
-                try:
-                    if call.service == SERVICE_REBOOT:
-                        await dsm_api.async_reboot()
-                    elif call.service == SERVICE_SHUTDOWN:
-                        await dsm_api.async_shutdown()
-                    dsm_device[SYSTEM_LOADED] = False
-                except SynologyDSMException as ex:
-                    _LOGGER.error(
-                        "%s of DSM with serial %s not possible, because of %s",
-                        call.service,
-                        serial,
-                        ex,
+        if device := dev_reg.async_get(device_id):
+            for entry_id in device.config_entries:
+                entry = hass.config_entries.async_get_entry(entry_id)
+                if entry and entry.domain == DOMAIN:
+                    serial = entry.unique_id
+                    device_ip_macs.update(
+                        [
+                            (entry.data[CONF_HOST], mac)
+                            for mac in entry.data.get(CONF_MAC, [])
+                        ]
                     )
 
+        if not serial:
+            LOGGER.error(
+                "Error during service call %s - no suitable device found", call.service
+            )
+            return
+
+        if call.service in [SERVICE_REBOOT, SERVICE_SHUTDOWN]:
+            dsm_device = hass.data[DOMAIN].get(serial)
+            if not dsm_device:
+                LOGGER.error("DSM with specified serial %s not found", serial)
+                return
+            LOGGER.debug("%s DSM with serial %s", call.service, serial)
+            dsm_api: SynoApi = dsm_device[SYNO_API]
+            try:
+                if call.service == SERVICE_REBOOT:
+                    await dsm_api.async_reboot()
+                elif call.service == SERVICE_SHUTDOWN:
+                    await dsm_api.async_shutdown()
+                dsm_device[SYSTEM_LOADED] = False
+            except SynologyDSMException as ex:
+                LOGGER.error(
+                    "%s of DSM with serial %s not possible, because of %s",
+                    call.service,
+                    serial,
+                    ex,
+                )
+                return
         elif call.service == SERVICE_POWERON:
             for ip_mac in device_ip_macs:
-                _LOGGER.debug(
+                LOGGER.debug(
                     "Send magic packet to DSM at %s with mac %s", ip_mac[0], ip_mac[1]
                 )
                 await hass.async_add_executor_job(_send_wol, ip_mac[1], ip_mac[0])
