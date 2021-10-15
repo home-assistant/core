@@ -150,13 +150,6 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
                 self._type_data = EnumTypeData.from_json(self._status_range.values)
 
     @property
-    def name(self) -> str | None:
-        """Return Tuya device name."""
-        if self.entity_description.name is not None:
-            return f"{self.tuya_device.name} {self.entity_description.name}"
-        return self.tuya_device.name
-
-    @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         # Unknown or unsupported data type
