@@ -819,6 +819,7 @@ class EventBus:
         filterable_job: tuple[HassJob, Callable | None] | None = None
 
         @callback
+        @functools.wraps(listener)
         def _onetime_listener(event: Event) -> None:
             """Remove listener from event bus and then fire listener."""
             nonlocal filterable_job
