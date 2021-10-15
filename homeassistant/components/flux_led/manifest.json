@@ -28,12 +28,13 @@
     "hostname": "lwip*"
   },
   {
-    "macaddress": "2462AB*",
-    "hostname": "zengge_35*"
+    "hostname": "zengge_35_*"
   },
   {
-    "macaddress": "70039F*",
-    "hostname": "zengge_0e*"
+    "hostname": "zengge_0e_*"
+  },
+  {
+    "hostname": "zengge_00_*"
   },
   {
     "macaddress": "C82E47*",
