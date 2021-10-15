@@ -223,3 +223,30 @@ async def test_update_with_unnecessary_json_attrs(caplog, hass: HomeAssistant) -
     assert entity_state.attributes["key"] == "some_json_value"
     assert entity_state.attributes["another_key"] == "another_json_value"
     assert "key_three" not in entity_state.attributes
+
+
+async def test_update_with_json_attrs_with_json_attrs_path(hass: HomeAssistant) -> None:
+    """Test attributes get extracted from a JSON result with a path to those attributes."""
+
+    await setup_test_entities(
+        hass,
+        {
+            "command": 'echo \
+                {\
+                    \\"top_level\\": {\
+                        \\"second_level\\": {\
+                            \\"key\\": \\"some_json_value\\",\
+                            \\"another_key\\": \\"another_json_value\\",\
+                            \\"key_three\\": \\"value_three\\"\
+                        }\
+                    }\
+                }',
+            "json_attributes": ["key", "another_key", "key_three"],
+            "json_attributes_path": "$.top_level.second_level",
+        },
+    )
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.attributes["key"] == "some_json_value"
+    assert entity_state.attributes["another_key"] == "another_json_value"
+    assert entity_state.attributes["key_three"] == "value_three"

@@ -887,6 +887,7 @@ iperf3==0.1.11
 # homeassistant.components.gogogate2
 ismartgate==4.0.0
 
+# homeassistant.components.command_line
 # homeassistant.components.rest
 jsonpath==0.82
 

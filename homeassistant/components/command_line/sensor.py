@@ -4,6 +4,7 @@ from datetime import timedelta
 import json
 import logging
 
+from jsonpath import jsonpath
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -20,11 +21,16 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import setup_reload_service
 
 from . import check_output_or_log
-from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
+from .const import (
+    CONF_COMMAND_TIMEOUT,
+    CONF_JSON_ATTRIBUTES,
+    CONF_JSON_ATTRIBUTES_PATH,
+    DEFAULT_TIMEOUT,
+    DOMAIN,
+    PLATFORMS,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_JSON_ATTRIBUTES = "json_attributes"
 
 DEFAULT_NAME = "Command Sensor"
 
@@ -35,6 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_COMMAND): cv.string,
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_JSON_ATTRIBUTES): cv.ensure_list_csv,
+        vol.Optional(CONF_JSON_ATTRIBUTES_PATH): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
@@ -55,10 +62,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if value_template is not None:
         value_template.hass = hass
     json_attributes = config.get(CONF_JSON_ATTRIBUTES)
+    json_attributes_path = config.get(CONF_JSON_ATTRIBUTES_PATH)
     data = CommandSensorData(hass, command, command_timeout)
 
     add_entities(
-        [CommandSensor(hass, data, name, unit, value_template, json_attributes)], True
+        [
+            CommandSensor(
+                hass,
+                data,
+                name,
+                unit,
+                value_template,
+                json_attributes,
+                json_attributes_path,
+            )
+        ],
+        True,
     )
 
 
@@ -66,13 +85,21 @@ class CommandSensor(SensorEntity):
     """Representation of a sensor that is using shell commands."""
 
     def __init__(
-        self, hass, data, name, unit_of_measurement, value_template, json_attributes
+        self,
+        hass,
+        data,
+        name,
+        unit_of_measurement,
+        value_template,
+        json_attributes,
+        json_attributes_path,
     ):
         """Initialize the sensor."""
         self._hass = hass
         self.data = data
         self._attributes = None
         self._json_attributes = json_attributes
+        self._json_attributes_path = json_attributes_path
         self._name = name
         self._state = None
         self._unit_of_measurement = unit_of_measurement
@@ -108,6 +135,13 @@ class CommandSensor(SensorEntity):
             if value:
                 try:
                     json_dict = json.loads(value)
+                    if self._json_attributes_path is not None:
+                        json_dict = jsonpath(json_dict, self._json_attributes_path)
+                    # jsonpath will always store the result in json_dict[0]
+                    # so the next line happens to work exactly as needed to
+                    # find the result
+                    if isinstance(json_dict, list):
+                        json_dict = json_dict[0]
                     if isinstance(json_dict, Mapping):
                         self._attributes = {
                             k: json_dict[k]
