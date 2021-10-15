@@ -571,7 +571,7 @@ homeassistant/components/vicare/* @oischinger
 homeassistant/components/vilfo/* @ManneW
 homeassistant/components/vivotek/* @HarlemSquirrel
 homeassistant/components/vizio/* @raman325
-homeassistant/components/vlc_telnet/* @rodripf @dmcc
+homeassistant/components/vlc_telnet/* @rodripf @dmcc @MartinHjelmare
 homeassistant/components/volkszaehler/* @fabaff
 homeassistant/components/volumio/* @OnFreund
 homeassistant/components/wake_on_lan/* @ntilley905
