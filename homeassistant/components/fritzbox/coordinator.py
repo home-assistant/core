@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from pyfritzhome import Fritzhome, FritzhomeDevice
+from pyfritzhome import Fritzhome, FritzhomeDevice, LoginError
 import requests
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_CONNECTIONS, DOMAIN, LOGGER
@@ -27,7 +27,7 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             LOGGER,
-            name=f"{entry.entry_id}",
+            name=entry.entry_id,
             update_interval=timedelta(seconds=30),
         )
 
@@ -35,11 +35,13 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator):
         """Update all fritzbox device data."""
         try:
             devices = self.fritz.get_devices()
+        except requests.exceptions.ConnectionError as ex:
+            raise ConfigEntryNotReady from ex
         except requests.exceptions.HTTPError:
             # If the device rebooted, login again
             try:
                 self.fritz.login()
-            except requests.exceptions.HTTPError as ex:
+            except LoginError as ex:
                 raise ConfigEntryAuthFailed from ex
             devices = self.fritz.get_devices()
 

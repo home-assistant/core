@@ -4,7 +4,7 @@ from __future__ import annotations
 from unittest.mock import Mock, call, patch
 
 from pyfritzhome import LoginError
-from requests.exceptions import HTTPError
+from requests.exceptions import ConnectionError, HTTPError
 
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -120,11 +120,25 @@ async def test_coordinator_update_after_password_change(
     )
     entry.add_to_hass(hass)
     fritz().get_devices.side_effect = HTTPError()
-    fritz().login.side_effect = ["", HTTPError()]
+    fritz().login.side_effect = ["", LoginError("some_user")]
 
     assert not await hass.config_entries.async_setup(entry.entry_id)
     assert fritz().get_devices.call_count == 1
     assert fritz().login.call_count == 2
+
+
+async def test_coordinator_update_when_unreachable(hass: HomeAssistant, fritz: Mock):
+    """Test coordinator after reboot."""
+    entry = MockConfigEntry(
+        domain=FB_DOMAIN,
+        data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
+        unique_id="any",
+    )
+    entry.add_to_hass(hass)
+    fritz().get_devices.side_effect = [ConnectionError(), ""]
+
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_remove(hass: HomeAssistant, fritz: Mock):
