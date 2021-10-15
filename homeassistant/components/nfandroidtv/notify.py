@@ -8,7 +8,6 @@ from notifications_android_tv import Notifications
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
-from voluptuous.schema_builder import Object
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -45,7 +44,6 @@ from .const import (
     DEFAULT_TIMEOUT,
 )
 
-#
 _LOGGER = logging.getLogger(__name__)
 
 # Deprecated in Home Assistant 2021.8
@@ -73,7 +71,7 @@ async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> Object:
+) -> NFAndroidTVNotificationService:
     """Get the NFAndroidTV notification service."""
     if discovery_info is not None:
         notify = await hass.async_add_executor_job(
@@ -102,7 +100,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
         self.notify = notify
         self.is_allowed_path = is_allowed_path
 
-    def send_message(self, message: str = "", **kwargs: Any) -> None:
+    def send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message to a Android TV device."""
         data: dict | None = kwargs.get(ATTR_DATA)
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
@@ -160,7 +158,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                     _LOGGER.warning(
                         "Invalid interrupt-value: %s", str(data.get(ATTR_INTERRUPT))
                     )
-            filedata: dict | None = data.get(ATTR_FILE) if data else None
+            filedata = data.get(ATTR_FILE) if data else None
             if filedata is not None:
                 if ATTR_ICON in filedata:
                     icon = self.load_file(
