@@ -7,12 +7,16 @@ import aiohttp
 import voluptuous as vol
 from waqiasync import WaqiClient
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_TEMPERATURE,
     ATTR_TIME,
     CONF_TOKEN,
+    DEVICE_CLASS_AQI,
 )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -149,6 +153,16 @@ class WaqiSensor(SensorEntity):
     def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return "AQI"
+
+    @property
+    def device_class(self):
+        """Return the device class of this entity, if any."""
+        return DEVICE_CLASS_AQI
+
+    @property
+    def state_class(self):
+        """Return the state class of this entity, if any."""
+        return STATE_CLASS_MEASUREMENT
 
     @property
     def extra_state_attributes(self):
