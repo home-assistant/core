@@ -23,7 +23,6 @@ from homeassistant.components.climate.const import (
     SWING_BOTH,
     SWING_OFF,
 )
-from homeassistant.components.lookin.aiolookin.models import MeteoSensor
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
@@ -33,7 +32,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .aiolookin import Climate, SensorID
+from .aiolookin import Climate, MeteoSensor, SensorID
 from .const import DOMAIN
 from .entity import LookinEntity
 from .models import LookinData
@@ -81,7 +80,7 @@ async def async_setup_entry(
             continue
         uuid = remote["UUID"]
 
-        async def _async_update():
+        async def _async_update() -> Climate:
             return await lookin_data.lookin_protocol.get_conditioner(uuid)
 
         coordinator = DataUpdateCoordinator(
@@ -163,7 +162,7 @@ class ConditionerEntity(LookinEntity, CoordinatorEntity, ClimateEntity):
         self._climate.swing_mode = mode
         await self._async_update_conditioner()
 
-    async def _async_update_conditioner(self):
+    async def _async_update_conditioner(self) -> None:
         """Update the conditioner state from the climate data."""
         self.coordinator.async_set_updated_data(self._climate)
         await self._lookin_protocol.update_conditioner(climate=self._climate)
@@ -185,7 +184,7 @@ class ConditionerEntity(LookinEntity, CoordinatorEntity, ClimateEntity):
         super()._handle_coordinator_update()
 
     @callback
-    def _async_push_update(self, msg):
+    def _async_push_update(self, msg: dict[str, str]) -> None:
         """Process an update pushed via UDP."""
         LOGGER.debug("Processing push message for %s: %s", self.entity_id, msg)
         self._climate.update_from_status(msg["value"])
