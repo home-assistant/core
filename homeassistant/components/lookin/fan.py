@@ -21,12 +21,13 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
+    """Set up the fan platform for lookin from a config entry."""
     lookin_data: LookinData = hass.data[DOMAIN][config_entry.entry_id]
     entities = []
 
     _type_class_map = {
-        "04": LookinHumidifier,
-        "05": LookinPurifier,
+        "04": LookinHumidifierFan,
+        "05": LookinPurifierFan,
         "07": LookinFan,
     }
     for remote in lookin_data.devices:
@@ -40,12 +41,15 @@ async def async_setup_entry(
 
 
 class LookinFanBase(LookinPowerEntity, FanEntity):
+    """A base class for lookin fan entities."""
+
     def __init__(
         self,
         uuid: str,
         device: Remote,
         lookin_data: LookinData,
     ) -> None:
+        """Init the lookin fan base class."""
         super().__init__(uuid, device, lookin_data)
         self._attr_is_on = False
 
@@ -56,16 +60,14 @@ class LookinFanBase(LookinPowerEntity, FanEntity):
         preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
-        await self._lookin_protocol.send_command(
-            uuid=self._uuid, command=self._power_on_command, signal="FF"
-        )
+        """Turn on the fan."""
+        await self._async_send_command(self._power_on_command)
         self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        await self._lookin_protocol.send_command(
-            uuid=self._uuid, command=self._power_off_command, signal="FF"
-        )
+        """Turn off the fan."""
+        await self._async_send_command(self._power_off_command)
         self._attr_is_on = True
         self.async_write_ha_state()
 
@@ -79,38 +81,40 @@ class LookinFan(LookinFanBase):
         device: Remote,
         lookin_data: LookinData,
     ) -> None:
+        """IR controlled fan."""
         super().__init__(uuid, device, lookin_data)
-        self._supported_features = FAN_SUPPORT_FLAGS
         self._oscillating: bool = False
 
     @property
     def supported_features(self) -> int:
-        return self._supported_features
+        """Flag supported features."""
+        return FAN_SUPPORT_FLAGS
 
     @property
     def oscillating(self) -> bool:
+        """Return whether or not the fan is currently oscillating."""
         return self._oscillating
 
     async def async_oscillate(self, oscillating: bool) -> None:
-        await self._lookin_protocol.send_command(
-            uuid=self._uuid, command="swing", signal="FF"
-        )
-
+        """Set fan oscillation."""
+        await self._async_send_command("swing")
         self._oscillating = oscillating
         self.async_write_ha_state()
 
 
-class LookinHumidifier(LookinFanBase):
-    """A lookin humidifer."""
+class LookinHumidifierFan(LookinFanBase):
+    """A lookin humidifer fan."""
 
     @property
     def icon(self) -> str:
+        """Icon for a lookin humidifer fan."""
         return "mdi:water-percent"
 
 
-class LookinPurifier(LookinFanBase):
-    """A lookin air purifier."""
+class LookinPurifierFan(LookinFanBase):
+    """A lookin air purifier fan."""
 
     @property
     def icon(self) -> str:
+        """Icon for a lookin purifier fan."""
         return "mdi:water"

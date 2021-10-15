@@ -19,6 +19,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
+    """Set up the light platform for lookin from a config entry."""
     lookin_data: LookinData = hass.data[DOMAIN][config_entry.entry_id]
     entities = []
 
@@ -35,15 +36,15 @@ async def async_setup_entry(
             )
         )
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities)
 
 
 class LookinLightEntity(LookinPowerEntity, LightEntity):
+    """A lookin IR controlled light."""
 
     _attr_supported_color_modes = {COLOR_MODE_ONOFF}
     _attr_color_mode = COLOR_MODE_ONOFF
     _attr_assumed_state = True
-    _attr_should_poll = False
 
     def __init__(
         self,
@@ -57,16 +58,12 @@ class LookinLightEntity(LookinPowerEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        await self._lookin_protocol.send_command(
-            uuid=self._uuid, command=self._power_on_command, signal="FF"
-        )
+        await self._async_send_command(self._power_on_command)
         self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
-        await self._lookin_protocol.send_command(
-            uuid=self._uuid, command=self._power_off_command, signal="FF"
-        )
+        await self._async_send_command(self._power_off_command)
         self._attr_is_on = False
         self.async_write_ha_state()
