@@ -1,0 +1,31 @@
+{
+    "config": {
+        "flow_title": "OctoPrint Printer: {host}",
+        "abort": {
+            "already_configured": "Device is already configured",
+            "unknown": "[%key:common::config_flow::error::unknown%]",
+            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+            "auth_failed": "Failed to retrieve application api key"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "auth_failed": "Failed to retrieve application api key",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "path": "Application Path",
+                    "port": "Port Number",
+                    "username": "Username",
+                    "ssl": "Use SSL"
+                }
+            }
+        },
+        "progress": {
+            "get_api_key": "Open the OctoPrint UI and click 'Allow' on the Access Request for 'Home Assistant'."
+        }
+    },
+    "title": "OctoPrint"
+}
