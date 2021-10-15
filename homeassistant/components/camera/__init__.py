@@ -272,9 +272,7 @@ async def async_get_still_stream(
 
 def _get_camera_from_entity_id(hass: HomeAssistant, entity_id: str) -> Camera:
     """Get camera component from entity_id."""
-    component = hass.data.get(DOMAIN)
-
-    if component is None:
+    if (component := hass.data.get(DOMAIN)) is None:
         raise HomeAssistantError("Camera integration not set up")
 
     camera = component.get_entity(entity_id)
@@ -653,8 +651,7 @@ class CameraMjpegStream(CameraView):
 
     async def handle(self, request: web.Request, camera: Camera) -> web.StreamResponse:
         """Serve camera stream, possibly with interval."""
-        interval_str = request.query.get("interval")
-        if interval_str is None:
+        if (interval_str := request.query.get("interval")) is None:
             stream = await camera.handle_async_mjpeg_stream(request)
             if stream is None:
                 raise web.HTTPBadGateway()
