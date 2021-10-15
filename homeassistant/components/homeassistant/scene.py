@@ -311,8 +311,7 @@ class HomeAssistantScene(Scene):
     def extra_state_attributes(self):
         """Return the scene state attributes."""
         attributes = {ATTR_ENTITY_ID: list(self.scene_config.states)}
-        unique_id = self.unique_id
-        if unique_id is not None:
+        if (unique_id := self.unique_id) is not None:
             attributes[CONF_ID] = unique_id
         return attributes
 
