@@ -107,8 +107,8 @@ class ModemCalleridSensor(SensorEntity):
     def _async_incoming_call(self, new_state) -> None:
         """Handle new states."""
         self._attr_extra_state_attributes = {
-            CID.CID_NUMBER: self.api.cid_number,
             CID.CID_NAME: self.api.cid_name,
+            CID.CID_NUMBER: self.api.cid_number,
             CID.CID_TIME: self.api.cid_time,
         }
         self._attr_native_value = self.api.state
