@@ -20,6 +20,8 @@ from homeassistant.const import (
     CONF_SERVICE_DATA,
     CONF_SERVICE_TEMPLATE,
     CONF_TARGET,
+    ENTITY_CATEGORY_CONFIG,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
 )
@@ -279,9 +281,7 @@ async def async_extract_entities(
     if data_ent_id == ENTITY_MATCH_ALL:
         return [entity for entity in entities if entity.available]
 
-    referenced = await async_extract_referenced_entity_ids(
-        hass, service_call, expand_group
-    )
+    referenced = async_extract_referenced_entity_ids(hass, service_call, expand_group)
     combined = referenced.referenced | referenced.indirectly_referenced
 
     found = []
@@ -310,9 +310,7 @@ async def async_extract_entity_ids(
 
     Will convert group entity ids to the entity ids it represents.
     """
-    referenced = await async_extract_referenced_entity_ids(
-        hass, service_call, expand_group
-    )
+    referenced = async_extract_referenced_entity_ids(hass, service_call, expand_group)
     return referenced.referenced | referenced.indirectly_referenced
 
 
@@ -322,7 +320,7 @@ def _has_match(ids: str | list | None) -> bool:
 
 
 @bind_hass
-async def async_extract_referenced_entity_ids(
+def async_extract_referenced_entity_ids(
     hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
 ) -> SelectedEntities:
     """Extract referenced entity IDs from a service call."""
@@ -363,6 +361,13 @@ async def async_extract_referenced_entity_ids(
         return selected
 
     for ent_entry in ent_reg.entities.values():
+        # Do not add config or diagnostic entities referenced by areas or devices
+        if ent_entry.entity_category in (
+            ENTITY_CATEGORY_CONFIG,
+            ENTITY_CATEGORY_DIAGNOSTIC,
+        ):
+            continue
+
         if (
             # when area matches the target area
             ent_entry.area_id in selector.area_ids
@@ -384,9 +389,7 @@ async def async_extract_config_entry_ids(
     hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
 ) -> set:
     """Extract referenced config entry ids from a service call."""
-    referenced = await async_extract_referenced_entity_ids(
-        hass, service_call, expand_group
-    )
+    referenced = async_extract_referenced_entity_ids(hass, service_call, expand_group)
     ent_reg = entity_registry.async_get(hass)
     dev_reg = device_registry.async_get(hass)
     config_entry_ids: set[str] = set()
@@ -545,7 +548,7 @@ async def entity_service_call(
         all_referenced: set[str] | None = None
     else:
         # A set of entities we're trying to target.
-        referenced = await async_extract_referenced_entity_ids(hass, call, True)
+        referenced = async_extract_referenced_entity_ids(hass, call, True)
         all_referenced = referenced.referenced | referenced.indirectly_referenced
 
     # If the service function is a string, we'll pass it the service call data
