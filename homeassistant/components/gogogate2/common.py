@@ -18,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -95,13 +96,18 @@ class GoGoGate2Entity(CoordinatorEntity):
     def device_info(self):
         """Device info for the controller."""
         data = self.coordinator.data
-        return {
+        info: DeviceInfo = {
             "identifiers": {(DOMAIN, self._config_entry.unique_id)},
             "name": self._config_entry.title,
             "manufacturer": MANUFACTURER,
             "model": data.model,
             "sw_version": data.firmwareversion,
         }
+        if data.model.startswith("ismartgate"):
+            info[
+                "configuration_url"
+            ] = f"https://{self._config_entry.unique_id}.isgaccess.com"
+        return info
 
 
 def get_data_update_coordinator(
