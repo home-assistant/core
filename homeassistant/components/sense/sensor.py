@@ -268,7 +268,7 @@ class SenseTrendsSensor(CoordinatorEntity, SensorEntity):
         sense_monitor_id,
     ):
         """Initialize the Sense sensor."""
-        super.__init__(trends_coordinator)
+        super().__init__(trends_coordinator)
         self._attr_name = f"{name} {variant_name}"
         self._attr_unique_id = unique_id
         self._data = data
