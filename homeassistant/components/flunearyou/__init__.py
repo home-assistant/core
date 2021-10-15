@@ -57,11 +57,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         return data
 
+    coordinators = {}
     data_init_tasks = []
+
     for api_category in (CATEGORY_CDC_REPORT, CATEGORY_USER_REPORT):
-        coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR][
-            api_category
-        ] = DataUpdateCoordinator(
+        coordinator = coordinators[api_category] = DataUpdateCoordinator(
             hass,
             LOGGER,
             name=f"{api_category} ({latitude}, {longitude})",
@@ -71,6 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data_init_tasks.append(coordinator.async_refresh())
 
     await asyncio.gather(*data_init_tasks)
+    hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR] = coordinators
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
