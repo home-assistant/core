@@ -125,7 +125,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
 
         # Scale integer/float value
         if value and isinstance(self._type_data, IntegerTypeData):
-            return self.scale(value, self._type_data.scale)
+            return self._type_data.scale_value(value)
 
         return None
 
@@ -138,7 +138,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
             [
                 {
                     "code": self.entity_description.key,
-                    "value": int(self.scale(value, self._type_data.scale)),
+                    "value": self._type_data.scale_value(value),
                 }
             ]
         )
