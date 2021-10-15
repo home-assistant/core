@@ -90,7 +90,6 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
             key=DPCode.BATTERY_STATE,
             name="Battery State",
             entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-            entity_registry_enabled_default=False,
         ),
     ),
 }
