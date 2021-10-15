@@ -92,6 +92,23 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
             entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         ),
     ),
+    # Emergency Button
+    # https://developer.tuya.com/en/docs/iot/categorysos?id=Kaiuz3oi6agjy
+    "sos": (
+        SensorEntityDescription(
+            key=DPCode.BATTERY_PERCENTAGE,
+            name="Battery",
+            native_unit_of_measurement=PERCENTAGE,
+            device_class=DEVICE_CLASS_BATTERY,
+            state_class=STATE_CLASS_MEASUREMENT,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        SensorEntityDescription(
+            key=DPCode.BATTERY_STATE,
+            name="Battery State",
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)

@@ -45,6 +45,7 @@ TUYA_SUPPORTED_PRODUCT_CATEGORIES = (
     "pc",  # Power Strip
     "pir",  # PIR Detector
     "qn",  # Heater
+    "sos",  # SOS Button
     "wk",  # Thermostat
     "xdd",  # Ceiling Light
     "xxj",  # Diffuser
@@ -100,6 +101,8 @@ class DPCode(str, Enum):
     POWDER_SET = "powder_set"  # Powder
     PUMP_RESET = "pump_reset"  # Water pump reset
     SHAKE = "shake"  # Oscillating
+    SOS = "sos"  # Emergency State
+    SOS_STATE = "sos_state"  # Emergency mode
     SPEED = "speed"  # Speed level
     START = "start"  # Start
     SWING = "swing"  # Swing mode
