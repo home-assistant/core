@@ -656,6 +656,57 @@ MOCK_OWPROXY_DEVICES = {
             },
         ],
     },
+    "3A.111111111111": {
+        "inject_reads": [
+            b"DS2413",  # read device type
+        ],
+        "device_info": {
+            ATTR_IDENTIFIERS: {(DOMAIN, "3A.111111111111")},
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MODEL: "DS2413",
+            ATTR_NAME: "3A.111111111111",
+        },
+        BINARY_SENSOR_DOMAIN: [
+            {
+                "entity_id": "binary_sensor.3a_111111111111_sensed_a",
+                "unique_id": "/3A.111111111111/sensed.A",
+                "injected_value": b"    1",
+                "result": STATE_ON,
+                ATTR_UNIT_OF_MEASUREMENT: None,
+                ATTR_DEVICE_CLASS: None,
+                "disabled": True,
+            },
+            {
+                "entity_id": "binary_sensor.3a_111111111111_sensed_b",
+                "unique_id": "/3A.111111111111/sensed.B",
+                "injected_value": b"    0",
+                "result": STATE_OFF,
+                ATTR_UNIT_OF_MEASUREMENT: None,
+                ATTR_DEVICE_CLASS: None,
+                "disabled": True,
+            },
+        ],
+        SWITCH_DOMAIN: [
+            {
+                "entity_id": "switch.3a_111111111111_pio_a",
+                "unique_id": "/3A.111111111111/PIO.A",
+                "injected_value": b"    1",
+                "result": STATE_ON,
+                ATTR_UNIT_OF_MEASUREMENT: None,
+                ATTR_DEVICE_CLASS: None,
+                "disabled": True,
+            },
+            {
+                "entity_id": "switch.3a_111111111111_pio_b",
+                "unique_id": "/3A.111111111111/PIO.B",
+                "injected_value": b"    0",
+                "result": STATE_OFF,
+                ATTR_UNIT_OF_MEASUREMENT: None,
+                ATTR_DEVICE_CLASS: None,
+                "disabled": True,
+            },
+        ],
+    },
     "3B.111111111111": {
         "inject_reads": [
             b"DS1825",  # read device type
@@ -940,6 +991,7 @@ MOCK_SYSBUS_DEVICES = {
         ],
     },
     "29-111111111111": {SENSOR_DOMAIN: []},
+    "3A-111111111111": {SENSOR_DOMAIN: []},
     "3B-111111111111": {
         "device_info": {
             ATTR_IDENTIFIERS: {(DOMAIN, "3B-111111111111")},
