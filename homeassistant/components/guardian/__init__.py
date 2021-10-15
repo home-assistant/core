@@ -29,7 +29,6 @@ from .const import (
     DATA_COORDINATOR,
     DATA_COORDINATOR_PAIRED_SENSOR,
     DATA_PAIRED_SENSOR_MANAGER,
-    DATA_UNSUB_DISPATCHER_CONNECT,
     DOMAIN,
     LOGGER,
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
@@ -41,22 +40,13 @@ PLATFORMS = ["binary_sensor", "sensor", "switch"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Elexa Guardian from a config entry."""
-    hass.data.setdefault(
-        DOMAIN,
-        {
-            DATA_CLIENT: {},
-            DATA_COORDINATOR: {},
-            DATA_COORDINATOR_PAIRED_SENSOR: {},
-            DATA_PAIRED_SENSOR_MANAGER: {},
-            DATA_UNSUB_DISPATCHER_CONNECT: {},
-        },
-    )
-    client = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id] = Client(
-        entry.data[CONF_IP_ADDRESS], port=entry.data[CONF_PORT]
-    )
-    hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = {}
-    hass.data[DOMAIN][DATA_COORDINATOR_PAIRED_SENSOR][entry.entry_id] = {}
-    hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECT][entry.entry_id] = []
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_COORDINATOR: {},
+        DATA_COORDINATOR_PAIRED_SENSOR: {},
+    }
+
+    client = Client(entry.data[CONF_IP_ADDRESS], port=entry.data[CONF_PORT])
 
     # The valve controller's UDP-based API can't handle concurrent requests very well,
     # so we use a lock to ensure that only one API request is reaching it at a time:
@@ -71,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         (API_VALVE_STATUS, client.valve.status),
         (API_WIFI_STATUS, client.wifi.status),
     ):
-        coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
+        coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR][
             api
         ] = GuardianDataUpdateCoordinator(
             hass,
@@ -84,11 +74,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         init_valve_controller_tasks.append(coordinator.async_refresh())
 
     await asyncio.gather(*init_valve_controller_tasks)
+    hass.data[DOMAIN][entry.entry_id][DATA_CLIENT] = client
 
     # Set up an object to evaluate each batch of paired sensor UIDs and add/remove
     # devices as appropriate:
-    paired_sensor_manager = hass.data[DOMAIN][DATA_PAIRED_SENSOR_MANAGER][
-        entry.entry_id
+    paired_sensor_manager = hass.data[DOMAIN][entry.entry_id][
+        DATA_PAIRED_SENSOR_MANAGER
     ] = PairedSensorManager(hass, entry, client, api_lock)
     await paired_sensor_manager.async_process_latest_paired_sensor_uids()
 
@@ -99,7 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             paired_sensor_manager.async_process_latest_paired_sensor_uids()
         )
 
-    hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
+    hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR][
         API_SENSOR_PAIR_DUMP
     ].async_add_listener(async_process_paired_sensor_uids)
 
@@ -113,12 +104,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
-        hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
-        hass.data[DOMAIN][DATA_COORDINATOR_PAIRED_SENSOR].pop(entry.entry_id)
-        for unsub in hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECT][entry.entry_id]:
-            unsub()
-        hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECT].pop(entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 
@@ -146,8 +132,8 @@ class PairedSensorManager:
 
         self._paired_uids.add(uid)
 
-        coordinator = self._hass.data[DOMAIN][DATA_COORDINATOR_PAIRED_SENSOR][
-            self._entry.entry_id
+        coordinator = self._hass.data[DOMAIN][self._entry.entry_id][
+            DATA_COORDINATOR_PAIRED_SENSOR
         ][uid] = GuardianDataUpdateCoordinator(
             self._hass,
             client=self._client,
@@ -170,7 +156,7 @@ class PairedSensorManager:
         """Process a list of new UIDs."""
         try:
             uids = set(
-                self._hass.data[DOMAIN][DATA_COORDINATOR][self._entry.entry_id][
+                self._hass.data[DOMAIN][self._entry.entry_id][DATA_COORDINATOR][
                     API_SENSOR_PAIR_DUMP
                 ].data["paired_uids"]
             )
@@ -197,8 +183,8 @@ class PairedSensorManager:
 
         # Clear out objects related to this paired sensor:
         self._paired_uids.remove(uid)
-        self._hass.data[DOMAIN][DATA_COORDINATOR_PAIRED_SENSOR][
-            self._entry.entry_id
+        self._hass.data[DOMAIN][self._entry.entry_id][
+            DATA_COORDINATOR_PAIRED_SENSOR
         ].pop(uid)
 
         # Remove the paired sensor device from the device registry (which will
