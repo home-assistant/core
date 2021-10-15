@@ -764,6 +764,18 @@ def test_average(hass):
     assert template.Template("{{ average([1, 2, 3]) }}", hass).async_render() == 2
     assert template.Template("{{ average(1, 2, 3) }}", hass).async_render() == 2
 
+    with pytest.raises(TemplateError):
+        template.Template("{{ 1 | average }}", hass).async_render()
+        template.Template("{{ average() }}", hass).async_render()
+
+
+def test_average_errors(hass, caplog):
+    template.Template("{{ 1 | average }}", hass).async_render()
+    assert "object is not iterable" in caplog.text
+
+    template.Template("{{ average() }}", hass).async_render()
+    assert "average expected at least 1 argument, got 0" in caplog.text
+
 
 def test_min(hass):
     """Test the min filter."""
