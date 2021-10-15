@@ -8,6 +8,7 @@ from tuya_iot import TuyaDevice, TuyaDeviceManager
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_DOOR,
     DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_SAFETY,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -54,6 +55,19 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             key=DPCode.PIR,
             device_class=DEVICE_CLASS_MOTION,
             on_value="pir",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.TEMPER_ALARM,
+            name="Tamper",
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+    ),
+    # Emergency Button
+    # https://developer.tuya.com/en/docs/iot/categorysos?id=Kaiuz3oi6agjy
+    "sos": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.SOS_STATE,
+            device_class=DEVICE_CLASS_SAFETY,
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.TEMPER_ALARM,
