@@ -71,9 +71,7 @@ class ValloxSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Fetch state from the ventilation unit."""
-        metric_key = self.entity_description.metric_key
-
-        if metric_key is None:
+        if (metric_key := self.entity_description.metric_key) is None:
             self._attr_available = False
             _LOGGER.error("Error updating sensor. Empty metric key")
             return
