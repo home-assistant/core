@@ -32,8 +32,8 @@ PLATFORMS = ["sensor"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flu Near You as config entry."""
-    hass.data.setdefault(DOMAIN, {DATA_COORDINATOR: {}})
-    hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = {}
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {DATA_COORDINATOR: {}}
 
     websession = aiohttp_client.async_get_clientsession(hass)
     client = Client(session=websession)
@@ -59,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     data_init_tasks = []
     for api_category in (CATEGORY_CDC_REPORT, CATEGORY_USER_REPORT):
-        coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
+        coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR][
             api_category
         ] = DataUpdateCoordinator(
             hass,
@@ -81,6 +81,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an Flu Near You config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

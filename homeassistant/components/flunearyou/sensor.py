@@ -122,7 +122,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Flu Near You sensors based on a config entry."""
-    coordinators = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id]
+    coordinators = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
 
     sensors: list[CdcSensor | UserSensor] = [
         CdcSensor(coordinators[CATEGORY_CDC_REPORT], entry, description)
