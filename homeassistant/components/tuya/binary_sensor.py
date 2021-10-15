@@ -86,13 +86,6 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         self._attr_unique_id = f"{super().unique_id}{description.key}"
 
     @property
-    def name(self) -> str | None:
-        """Return Tuya device name."""
-        if self.entity_description.name is not None:
-            return f"{self.tuya_device.name} {self.entity_description.name}"
-        return self.tuya_device.name
-
-    @property
     def is_on(self) -> bool:
         """Return true if sensor is on."""
         return self.tuya_device.status.get(self.entity_description.key, False)

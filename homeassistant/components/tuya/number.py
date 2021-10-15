@@ -114,13 +114,6 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
                     self._attr_unit_of_measurement = self._type_data.unit
 
     @property
-    def name(self) -> str | None:
-        """Return Tuya device name."""
-        if self.entity_description.name is not None:
-            return f"{self.tuya_device.name} {self.entity_description.name}"
-        return self.tuya_device.name
-
-    @property
     def value(self) -> float | None:
         """Return the entity value to represent the entity state."""
         # Unknown or unsupported data type
@@ -132,7 +125,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
 
         # Scale integer/float value
         if value and isinstance(self._type_data, IntegerTypeData):
-            return self.scale(value, self._type_data.scale)
+            return self._type_data.scale_value(value)
 
         return None
 
@@ -145,7 +138,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
             [
                 {
                     "code": self.entity_description.key,
-                    "value": int(self.scale(value, self._type_data.scale)),
+                    "value": self._type_data.scale_value(value),
                 }
             ]
         )

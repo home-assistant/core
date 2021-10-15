@@ -26,6 +26,25 @@ class IntegerTypeData:
     scale: float
     step: float
 
+    @property
+    def max_scaled(self) -> float:
+        """Return the max scaled."""
+        return self.scale_value(self.max)
+
+    @property
+    def min_scaled(self) -> float:
+        """Return the min scaled."""
+        return self.scale_value(self.min)
+
+    @property
+    def step_scaled(self) -> float:
+        """Return the step scaled."""
+        return self.scale_value(self.step)
+
+    def scale_value(self, value: float | int) -> float:
+        """Scale a value."""
+        return value * 1.0 / (10 ** self.scale)
+
     @classmethod
     def from_json(cls, data: str) -> IntegerTypeData:
         """Load JSON string and return a IntegerTypeData object."""
@@ -58,6 +77,11 @@ class TuyaEntity(Entity):
     @property
     def name(self) -> str | None:
         """Return Tuya device name."""
+        if (
+            hasattr(self, "entity_description")
+            and self.entity_description.name is not None
+        ):
+            return f"{self.tuya_device.name} {self.entity_description.name}"
         return self.tuya_device.name
 
     @property
@@ -91,8 +115,3 @@ class TuyaEntity(Entity):
             "Sending commands for device %s: %s", self.tuya_device.id, commands
         )
         self.tuya_device_manager.send_commands(self.tuya_device.id, commands)
-
-    @staticmethod
-    def scale(value: float | int, scale: float | int) -> float:
-        """Scale a value."""
-        return value * 1.0 / (10 ** scale)

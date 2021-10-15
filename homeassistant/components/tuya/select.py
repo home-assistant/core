@@ -102,13 +102,6 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
                 self._attr_options = type_data.range
 
     @property
-    def name(self) -> str | None:
-        """Return Tuya device name."""
-        if self.entity_description.name is not None:
-            return f"{self.tuya_device.name} {self.entity_description.name}"
-        return self.tuya_device.name
-
-    @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         # Raw value

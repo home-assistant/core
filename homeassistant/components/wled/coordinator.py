@@ -92,6 +92,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
 
         async def close_websocket(_) -> None:
             """Close WebSocket connection."""
+            self.unsub = None
             await self.wled.disconnect()
 
         # Clean disconnect WebSocket on Home Assistant shutdown
