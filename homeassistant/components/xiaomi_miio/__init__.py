@@ -35,6 +35,7 @@ from miio.gateway.gateway import GatewayException
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -65,6 +66,8 @@ from .const import (
     MODELS_PURIFIER_MIOT,
     MODELS_SWITCH,
     MODELS_VACUUM,
+    AuthException,
+    SetupException,
 )
 from .gateway import ConnectXiaomiGateway
 
@@ -100,10 +103,9 @@ async def async_setup_entry(
 ):
     """Set up the Xiaomi Miio components from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-    if entry.data[
-        CONF_FLOW_TYPE
-    ] == CONF_GATEWAY and not await async_setup_gateway_entry(hass, entry):
-        return False
+    if entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
+        await async_setup_gateway_entry(hass, entry)
+        return True
 
     return bool(
         entry.data[CONF_FLOW_TYPE] != CONF_DEVICE
@@ -362,8 +364,12 @@ async def async_setup_gateway_entry(
 
     # Connect to gateway
     gateway = ConnectXiaomiGateway(hass, entry)
-    if not await gateway.async_connect_gateway(host, token):
-        return False
+    try:
+        await gateway.async_connect_gateway(host, token)
+    except AuthException as error:
+        raise ConfigEntryAuthFailed() from error
+    except SetupException as error:
+        raise ConfigEntryNotReady() from error
     gateway_info = gateway.gateway_info
 
     gateway_model = f"{gateway_info.model}-{gateway_info.hardware_version}"
@@ -415,8 +421,6 @@ async def async_setup_gateway_entry(
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
-
-    return True
 
 
 async def async_setup_device_entry(
