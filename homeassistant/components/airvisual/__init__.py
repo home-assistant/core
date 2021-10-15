@@ -329,6 +329,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
         if CONF_API_KEY in entry.data:
             # Re-calculate the update interval period for any remaining consumers of
             # this API key:
