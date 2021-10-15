@@ -609,7 +609,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Ambient PWS sensors based on a config entry."""
-    ambient = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
+    ambient = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
 
     async_add_entities(
         [
