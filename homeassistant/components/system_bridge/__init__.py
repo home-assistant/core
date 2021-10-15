@@ -145,10 +145,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
             if not response.success:
                 raise HomeAssistantError(
-                    "Error sending command. Response message was: %s", response.message
+                    f"Error sending command. Response message was: {response.message}"
                 )
         except (BridgeAuthenticationException, *BRIDGE_CONNECTION_ERRORS) as exception:
-            raise HomeAssistantError("Error sending command. Error was: %s", exception)
+            raise HomeAssistantError("Error sending command") from exception
         _LOGGER.debug("Sent command. Response message was: %s", response.message)
 
     async def handle_open(call):
@@ -164,7 +164,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             await bridge.async_open({CONF_PATH: path})
         except (BridgeAuthenticationException, *BRIDGE_CONNECTION_ERRORS) as exception:
-            raise HomeAssistantError("Error sending. Error was: %s", exception)
+            raise HomeAssistantError("Error sending") from exception
         _LOGGER.debug("Sent open request")
 
     async def handle_send_keypress(call):
@@ -183,7 +183,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             await bridge.async_send_keypress(keyboard_payload)
         except (BridgeAuthenticationException, *BRIDGE_CONNECTION_ERRORS) as exception:
-            raise HomeAssistantError("Error sending. Error was: %s", exception)
+            raise HomeAssistantError("Error sending") from exception
         _LOGGER.debug("Sent keypress request")
 
     async def handle_send_text(call):
@@ -199,7 +199,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             await bridge.async_send_keypress(keyboard_payload)
         except (BridgeAuthenticationException, *BRIDGE_CONNECTION_ERRORS) as exception:
-            raise HomeAssistantError("Error sending. Error was: %s", exception)
+            raise HomeAssistantError("Error sending") from exception
         _LOGGER.debug("Sent text request")
 
     hass.services.async_register(
