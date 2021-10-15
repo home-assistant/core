@@ -326,12 +326,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an AirVisual config entry."""
-    re_level_api = CONF_API_KEY in entry.data
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-        if re_level_api:
+        if CONF_API_KEY in entry.data:
             # Re-calculate the update interval period for any remaining consumers of
             # this API key:
             async_sync_geo_coordinator_update_intervals(hass, entry.data[CONF_API_KEY])
