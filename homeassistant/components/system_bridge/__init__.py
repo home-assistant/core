@@ -22,7 +22,11 @@ from homeassistant.const import (
     CONF_PORT,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
@@ -139,16 +143,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             response: CommandResponse = await bridge.async_send_command(
                 {CONF_COMMAND: command, CONF_ARGUMENTS: arguments, CONF_WAIT: False}
             )
-            if response.success:
-                _LOGGER.debug(
-                    "Sent command. Response message was: %s", response.message
-                )
-            else:
-                _LOGGER.warning(
+            if not response.success:
+                raise HomeAssistantError(
                     "Error sending command. Response message was: %s", response.message
                 )
         except (BridgeAuthenticationException, *BRIDGE_CONNECTION_ERRORS) as exception:
-            _LOGGER.warning("Error sending command. Error was: %s", exception)
+            raise HomeAssistantError("Error sending command. Error was: %s", exception)
+        _LOGGER.debug("Sent command. Response message was: %s", response.message)
 
     async def handle_open(call):
         """Handle the open service call."""
@@ -162,9 +163,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.debug("Open payload: %s", {CONF_PATH: path})
         try:
             await bridge.async_open({CONF_PATH: path})
-            _LOGGER.debug("Sent open request")
         except (BridgeAuthenticationException, *BRIDGE_CONNECTION_ERRORS) as exception:
-            _LOGGER.warning("Error sending. Error was: %s", exception)
+            raise HomeAssistantError("Error sending. Error was: %s", exception)
+        _LOGGER.debug("Sent open request")
 
     async def handle_send_keypress(call):
         """Handle the send_keypress service call."""
@@ -181,9 +182,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.debug("Keypress payload: %s", keyboard_payload)
         try:
             await bridge.async_send_keypress(keyboard_payload)
-            _LOGGER.debug("Sent keypress request")
         except (BridgeAuthenticationException, *BRIDGE_CONNECTION_ERRORS) as exception:
-            _LOGGER.warning("Error sending. Error was: %s", exception)
+            raise HomeAssistantError("Error sending. Error was: %s", exception)
+        _LOGGER.debug("Sent keypress request")
 
     async def handle_send_text(call):
         """Handle the send_keypress service call."""
@@ -197,9 +198,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.debug("Text payload: %s", keyboard_payload)
         try:
             await bridge.async_send_keypress(keyboard_payload)
-            _LOGGER.debug("Sent text request")
         except (BridgeAuthenticationException, *BRIDGE_CONNECTION_ERRORS) as exception:
-            _LOGGER.warning("Error sending. Error was: %s", exception)
+            raise HomeAssistantError("Error sending. Error was: %s", exception)
+        _LOGGER.debug("Sent text request")
 
     hass.services.async_register(
         DOMAIN,
