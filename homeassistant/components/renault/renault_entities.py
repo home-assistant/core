@@ -24,9 +24,6 @@ class RenaultEntityDescription(EntityDescription, RenaultRequiredKeysMixin):
     """Class describing Renault entities."""
 
 
-ATTR_LAST_UPDATE = "last_update"
-
-
 class RenaultDataEntity(CoordinatorEntity[Optional[T]], Entity):
     """Implementation of a Renault entity with a data coordinator."""
 
