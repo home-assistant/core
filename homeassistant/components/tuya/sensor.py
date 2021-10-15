@@ -161,7 +161,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             return None
 
         # Raw value
-        value = self.tuya_device.status.get(self.entity_description.key)
+        value = self.device.status.get(self.entity_description.key)
         if value is None:
             return None
 
