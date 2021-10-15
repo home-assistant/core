@@ -185,7 +185,7 @@ SENSORS: Final = {
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_HUMIDITY,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
-        available=lambda block: cast(int, block.extTemp) != 999,
+        available=lambda block: cast(int, block.humidity) != 999,
     ),
     ("sensor", "luminosity"): BlockAttributeDescription(
         name="Luminosity",
