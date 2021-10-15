@@ -11,8 +11,6 @@ BASE_COMPONENT = "notify"
 
 
 async def test_signal_messenger_init(hass):
-    """Test that service loads successfully."""
-
     config = {
         BASE_COMPONENT: {
             "name": "test",
@@ -30,47 +28,21 @@ async def test_signal_messenger_init(hass):
         assert hass.services.has_service(BASE_COMPONENT, "test")
 
 
-def test_send_message(signal_notification_service, requests_mock, caplog):
-    """Test send message."""
-
+def test_send_message(signal_notification_service, signal_requests_mock, caplog):
     message = "Testing Signal Messenger platform :)"
-    requests_mock.register_uri(
-        "POST",
-        "http://127.0.0.1:8080/v2/send",
-        status_code=201,
-    )
-    requests_mock.register_uri(
-        "GET",
-        "http://127.0.0.1:8080/v1/about",
-        status_code=200,
-        json={"versions": ["v1", "v2"]},
-    )
     with caplog.at_level(
         logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
     ):
         signal_notification_service.send_message(message)
     assert "Sending signal message" in caplog.text
-    assert requests_mock.called
-    assert requests_mock.call_count == 2
+    assert signal_requests_mock.called
+    assert signal_requests_mock.call_count == 2
 
 
 def test_send_message_should_show_deprecation_warning(
-    signal_notification_service, requests_mock, caplog
+    signal_notification_service, signal_requests_mock, caplog
 ):
-    """Test send message."""
-
     message = "Testing Signal Messenger platform with attachment :)"
-    requests_mock.register_uri(
-        "POST",
-        "http://127.0.0.1:8080/v2/send",
-        status_code=201,
-    )
-    requests_mock.register_uri(
-        "GET",
-        "http://127.0.0.1:8080/v1/about",
-        status_code=200,
-        json={"versions": ["v1", "v2"]},
-    )
     with caplog.at_level(
         logging.WARNING, logger="homeassistant.components.signal_messenger.notify"
     ):
@@ -83,27 +55,14 @@ def test_send_message_should_show_deprecation_warning(
         "The 'attachment' option is deprecated, please replace it with 'attachments'. This option will become invalid in version 0.108"
         in caplog.text
     )
-    assert requests_mock.called
-    assert requests_mock.call_count == 2
+    assert signal_requests_mock.called
+    assert signal_requests_mock.call_count == 2
 
 
 def test_send_message_with_attachment(
-    signal_notification_service, requests_mock, caplog
+    signal_notification_service, signal_requests_mock, caplog
 ):
-    """Test send message."""
-
     message = "Testing Signal Messenger platform :)"
-    requests_mock.register_uri(
-        "POST",
-        "http://127.0.0.1:8080/v2/send",
-        status_code=201,
-    )
-    requests_mock.register_uri(
-        "GET",
-        "http://127.0.0.1:8080/v1/about",
-        status_code=200,
-        json={"versions": ["v1", "v2"]},
-    )
     with caplog.at_level(
         logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
     ):
@@ -113,5 +72,5 @@ def test_send_message_with_attachment(
             data = {"data": {"attachments": [tf.name]}}
             signal_notification_service.send_message(message, **data)
     assert "Sending signal message" in caplog.text
-    assert requests_mock.called
-    assert requests_mock.call_count == 2
+    assert signal_requests_mock.called
+    assert signal_requests_mock.call_count == 2

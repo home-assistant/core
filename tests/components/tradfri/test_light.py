@@ -10,7 +10,7 @@ from pytradfri.device.light_control import LightControl
 
 from homeassistant.components import tradfri
 
-from . import MOCK_GATEWAY_ID
+MOCK_GATEWAY_ID = "mock-gateway-id"
 
 from tests.common import MockConfigEntry
 
@@ -223,13 +223,13 @@ def create_all_turn_on_cases():
 
 @pytest.mark.parametrize(*create_all_turn_on_cases())
 async def test_turn_on(
-    hass,
-    mock_gateway,
-    api_factory,
-    test_features,
-    test_data,
-    expected_result,
-    device_id,
+        hass,
+        mock_gateway,
+        api_factory,
+        test_features,
+        test_data,
+        expected_result,
+        device_id,
 ):
     """Test turning on a light."""
     # Note pytradfri style, not hass. Values not really important.
