@@ -26,14 +26,24 @@ from .models import LookinData
 
 _TYPE_TO_DEVICE_CLASS = {"01": DEVICE_CLASS_TV, "02": DEVICE_CLASS_RECEIVER}
 
+_FUNCTION_NAME_TO_FEATURE = {
+    "power": SUPPORT_TURN_OFF,
+    "poweron": SUPPORT_TURN_ON,
+    "poweroff": SUPPORT_TURN_OFF,
+    "mute": SUPPORT_VOLUME_MUTE,
+    "volup": SUPPORT_VOLUME_STEP,
+    "chup": SUPPORT_NEXT_TRACK,
+    "chdown": SUPPORT_PREVIOUS_TRACK,
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
+    """Set up the media_player platform for lookin from a config entry."""
     lookin_data: LookinData = hass.data[DOMAIN][config_entry.entry_id]
-
     entities = []
 
     for remote in lookin_data.devices:
@@ -50,10 +60,12 @@ async def async_setup_entry(
             )
         )
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities)
 
 
 class LookinMedia(LookinPowerEntity, MediaPlayerEntity):
+    """A lookin media player."""
+
     _attr_should_poll = False
 
     def __init__(
@@ -63,61 +75,44 @@ class LookinMedia(LookinPowerEntity, MediaPlayerEntity):
         lookin_data: LookinData,
         device_class: str,
     ) -> None:
+        """Init the lookin media player."""
         super().__init__(uuid, device, lookin_data)
         self._attr_device_class = device_class
-        self._supported_features: int = 0
+        self._attr_supported_features: int = 0
         self._state: str = STATE_PLAYING
-        for function in self._device.functions:
-            if function.name == "power":
-                self._attr_supported_features |= SUPPORT_TURN_OFF
-            elif function.name == "poweron":
-                self._attr_supported_features |= SUPPORT_TURN_ON
-            elif function.name == "poweroff":
-                self._attr_supported_features |= SUPPORT_TURN_OFF
-            elif function.name == "mute":
-                self._attr_supported_features |= SUPPORT_VOLUME_MUTE
-            elif function.name == "volup":
-                self._attr_supported_features |= SUPPORT_VOLUME_STEP
-            elif function.name == "chup":
-                self._attr_supported_features |= SUPPORT_NEXT_TRACK
-            elif function.name == "chdown":
-                self._attr_supported_features |= SUPPORT_PREVIOUS_TRACK
+        for function_name, feature in _FUNCTION_NAME_TO_FEATURE.items():
+            if function_name in self._function_names:
+                self._attr_supported_features |= feature
 
     @property
     def state(self) -> str:
+        """State of the player."""
         return self._state
 
     async def async_volume_up(self) -> None:
-        await self._lookin_protocol.send_command(
-            uuid=self._uuid, command="volup", signal="FF"
-        )
+        """Turn volume up for media player."""
+        await self._async_send_command("volup")
 
     async def async_volume_down(self) -> None:
-        await self._lookin_protocol.send_command(
-            uuid=self._uuid, command="voldown", signal="FF"
-        )
+        """Turn volume down for media player."""
+        await self._async_send_command("voldown")
 
     async def async_media_previous_track(self) -> None:
-        await self._lookin_protocol.send_command(
-            uuid=self._uuid, command="chdown", signal="FF"
-        )
+        """Send previous track command."""
+        await self._async_send_command("chdown")
 
     async def async_media_next_track(self) -> None:
-        await self._lookin_protocol.send_command(
-            uuid=self._uuid, command="chup", signal="FF"
-        )
+        """Send next track command."""
+        await self._async_send_command("chup")
 
     async def async_mute_volume(self, mute: bool) -> None:
-        await self._lookin_protocol.send_command(
-            uuid=self._uuid, command="mute", signal="FF"
-        )
+        """Mute the volume."""
+        await self._async_send_command("mute")
 
     async def async_turn_off(self) -> None:
-        await self._lookin_protocol.send_command(
-            uuid=self._uuid, command=self._power_off_command, signal="FF"
-        )
+        """Turn the media player off."""
+        await self._async_send_command(self._power_off_command)
 
     async def async_turn_on(self) -> None:
-        await self._lookin_protocol.send_command(
-            uuid=self._uuid, command=self._power_on_command, signal="FF"
-        )
+        """Turn the media player on."""
+        await self._async_send_command(self._power_on_command)

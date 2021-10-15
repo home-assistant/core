@@ -44,7 +44,7 @@ async def async_setup_entry(
             )
         )
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities)
 
 
 class LookinVacuum(LookinPowerEntity, VacuumEntity):
@@ -82,16 +82,12 @@ class LookinVacuum(LookinPowerEntity, VacuumEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the vacuum."""
-        await self._lookin_protocol.send_command(
-            uuid=self._uuid, command=self._power_on_command, signal="FF"
-        )
+        await self._async_send_command(self._power_on_command)
         self._status = SERVICE_START
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the vacuum."""
-        await self._lookin_protocol.send_command(
-            uuid=self._uuid, command=self._power_off_command, signal="FF"
-        )
+        await self._async_send_command(self._power_off_command)
         self._status = SERVICE_STOP
         self.async_write_ha_state()
