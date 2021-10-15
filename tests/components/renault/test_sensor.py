@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 from renault_api.kamereon import exceptions
 
+from homeassistant.components.renault.sensor import SENSOR_TYPES
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_ICON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -22,10 +23,17 @@ from tests.common import mock_device_registry, mock_registry
 
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
 async def test_sensors(hass: HomeAssistant, vehicle_type: str):
-    """Test for Renault sensors."""
+    """Test for Renault sensors.
+
+    This test forces all entities to be enabled.
+    """
 
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
+
+    # Force enable sensors
+    for description in SENSOR_TYPES:
+        description.entity_registry_enabled_default = True
 
     with patch("homeassistant.components.renault.PLATFORMS", [SENSOR_DOMAIN]):
         await setup_renault_integration_vehicle(hass, vehicle_type)
@@ -49,10 +57,17 @@ async def test_sensors(hass: HomeAssistant, vehicle_type: str):
 
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
 async def test_sensor_empty(hass: HomeAssistant, vehicle_type: str):
-    """Test for Renault sensors with empty data from Renault."""
+    """Test for Renault sensors with empty data from Renault.
+
+    This test forces all entities to be enabled.
+    """
 
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
+
+    # Force enable sensors
+    for description in SENSOR_TYPES:
+        description.entity_registry_enabled_default = True
 
     with patch("homeassistant.components.renault.PLATFORMS", [SENSOR_DOMAIN]):
         await setup_renault_integration_vehicle_with_no_data(hass, vehicle_type)
