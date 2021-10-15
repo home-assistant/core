@@ -4,7 +4,6 @@ from unittest.mock import patch
 import pytest
 from renault_api.kamereon import exceptions
 
-from homeassistant.components.renault.sensor import SENSOR_TYPES
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_ICON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -12,6 +11,9 @@ from homeassistant.core import HomeAssistant
 from . import (
     check_device_registry,
     get_no_data_icon,
+    patch_fixtures,
+    patch_fixtures_with_no_data,
+    patch_fixtures_with_side_effect,
     setup_renault_integration_vehicle,
     setup_renault_integration_vehicle_with_no_data,
     setup_renault_integration_vehicle_with_side_effect,
@@ -23,20 +25,13 @@ from tests.common import mock_device_registry, mock_registry
 
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
 async def test_sensors(hass: HomeAssistant, vehicle_type: str):
-    """Test for Renault sensors.
-
-    This test forces all entities to be enabled.
-    """
+    """Test for Renault sensors."""
 
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
-    # Force enable sensors
-    for description in SENSOR_TYPES:
-        description.entity_registry_enabled_default = True
-
     with patch("homeassistant.components.renault.PLATFORMS", [SENSOR_DOMAIN]):
-        await setup_renault_integration_vehicle(hass, vehicle_type)
+        config_entry = await setup_renault_integration_vehicle(hass, vehicle_type)
         await hass.async_block_till_done()
 
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
@@ -44,6 +39,21 @@ async def test_sensors(hass: HomeAssistant, vehicle_type: str):
 
     expected_entities = mock_vehicle[SENSOR_DOMAIN]
     assert len(entity_registry.entities) == len(expected_entities)
+
+    # Ensure all entities are enabled
+    for expected_entity in expected_entities:
+        if expected_entity.get("default_disabled"):
+            entity_id = expected_entity["entity_id"]
+            registry_entry = entity_registry.entities.get(entity_id)
+            assert registry_entry.disabled
+            assert registry_entry.disabled_by == "integration"
+            entity_registry.async_update_entity(entity_id, **{"disabled_by": None})
+    with patch(
+        "homeassistant.components.renault.PLATFORMS", [SENSOR_DOMAIN]
+    ), patch_fixtures(hass, config_entry, vehicle_type):
+        await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
     for expected_entity in expected_entities:
         entity_id = expected_entity["entity_id"]
         registry_entry = entity_registry.entities.get(entity_id)
@@ -57,20 +67,15 @@ async def test_sensors(hass: HomeAssistant, vehicle_type: str):
 
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
 async def test_sensor_empty(hass: HomeAssistant, vehicle_type: str):
-    """Test for Renault sensors with empty data from Renault.
-
-    This test forces all entities to be enabled.
-    """
+    """Test for Renault sensors with empty data from Renault."""
 
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
-    # Force enable sensors
-    for description in SENSOR_TYPES:
-        description.entity_registry_enabled_default = True
-
     with patch("homeassistant.components.renault.PLATFORMS", [SENSOR_DOMAIN]):
-        await setup_renault_integration_vehicle_with_no_data(hass, vehicle_type)
+        config_entry = await setup_renault_integration_vehicle_with_no_data(
+            hass, vehicle_type
+        )
         await hass.async_block_till_done()
 
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
@@ -78,6 +83,21 @@ async def test_sensor_empty(hass: HomeAssistant, vehicle_type: str):
 
     expected_entities = mock_vehicle[SENSOR_DOMAIN]
     assert len(entity_registry.entities) == len(expected_entities)
+
+    # Ensure all entities are enabled
+    for expected_entity in expected_entities:
+        if expected_entity.get("default_disabled"):
+            entity_id = expected_entity["entity_id"]
+            registry_entry = entity_registry.entities.get(entity_id)
+            assert registry_entry.disabled
+            assert registry_entry.disabled_by == "integration"
+            entity_registry.async_update_entity(entity_id, **{"disabled_by": None})
+    with patch(
+        "homeassistant.components.renault.PLATFORMS", [SENSOR_DOMAIN]
+    ), patch_fixtures_with_no_data(hass, config_entry, vehicle_type):
+        await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
     for expected_entity in expected_entities:
         entity_id = expected_entity["entity_id"]
         registry_entry = entity_registry.entities.get(entity_id)
@@ -104,7 +124,7 @@ async def test_sensor_errors(hass: HomeAssistant, vehicle_type: str):
     )
 
     with patch("homeassistant.components.renault.PLATFORMS", [SENSOR_DOMAIN]):
-        await setup_renault_integration_vehicle_with_side_effect(
+        config_entry = await setup_renault_integration_vehicle_with_side_effect(
             hass, vehicle_type, invalid_upstream_exception
         )
         await hass.async_block_till_done()
@@ -114,6 +134,23 @@ async def test_sensor_errors(hass: HomeAssistant, vehicle_type: str):
 
     expected_entities = mock_vehicle[SENSOR_DOMAIN]
     assert len(entity_registry.entities) == len(expected_entities)
+
+    # Ensure all entities are enabled
+    for expected_entity in expected_entities:
+        if expected_entity.get("default_disabled"):
+            entity_id = expected_entity["entity_id"]
+            registry_entry = entity_registry.entities.get(entity_id)
+            assert registry_entry.disabled
+            assert registry_entry.disabled_by == "integration"
+            entity_registry.async_update_entity(entity_id, **{"disabled_by": None})
+    with patch(
+        "homeassistant.components.renault.PLATFORMS", [SENSOR_DOMAIN]
+    ), patch_fixtures_with_side_effect(
+        hass, config_entry, vehicle_type, invalid_upstream_exception
+    ):
+        await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
     for expected_entity in expected_entities:
         entity_id = expected_entity["entity_id"]
         registry_entry = entity_registry.entities.get(entity_id)
