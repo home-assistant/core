@@ -208,7 +208,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         code = self._config.get(CONF_CODE)
         if code is None:
             return None
-        if code == REMOTE_CODE or isinstance(code, str) and re.search("^\\d+$", code):
+        if code == REMOTE_CODE or (isinstance(code, str) and re.search("^\\d+$", code)):
             return alarm.FORMAT_NUMBER
         return alarm.FORMAT_TEXT
 
