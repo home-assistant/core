@@ -638,6 +638,7 @@ async def test_white_light(hass: HomeAssistant) -> None:
     assert attributes[ATTR_BRIGHTNESS] == 128
     assert attributes[ATTR_COLOR_MODE] == "brightness"
     assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["brightness"]
+    assert ATTR_EFFECT_LIST not in attributes  # single channel does not support effects
 
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -897,7 +898,9 @@ async def test_addressable_light(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
     attributes = state.attributes
     assert attributes[ATTR_COLOR_MODE] == "onoff"
-    assert attributes[ATTR_EFFECT_LIST] == FLUX_EFFECT_LIST
+    assert (
+        ATTR_EFFECT_LIST not in attributes
+    )  # no support for effects with addressable yet
     assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["onoff"]
 
     await hass.services.async_call(
