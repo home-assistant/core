@@ -1,8 +1,6 @@
 """Support for Goal Zero Yeti Sensors."""
 from __future__ import annotations
 
-from typing import cast
-
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY_CHARGING,
     DEVICE_CLASS_CONNECTIVITY,
@@ -83,4 +81,4 @@ class YetiBinarySensor(YetiEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return if the service is on."""
-        return cast(bool, self.api.data.get(self.entity_description.key) == 1)
+        return bool(self.api.data[self.entity_description.key] == 1)
