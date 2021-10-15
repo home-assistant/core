@@ -46,6 +46,7 @@ TUYA_SUPPORTED_PRODUCT_CATEGORIES = (
     "pir",  # PIR Detector
     "qn",  # Heater
     "sos",  # SOS Button
+    "sgbj",  # Siren Alarm
     "wk",  # Thermostat
     "xdd",  # Ceiling Light
     "xxj",  # Diffuser
@@ -63,6 +64,7 @@ PLATFORMS = [
     "scene",
     "select",
     "sensor",
+    "siren",
     "switch",
 ]
 
@@ -73,9 +75,13 @@ class DPCode(str, Enum):
     https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
     """
 
+    ALARM_SWITCH = "alarm_switch"  # Alarm switch
+    ALARM_TIME = "alarm_time"  # Alarm time
+    ALARM_VOLUME = "alarm_volume"  # Alarm volume
     ANION = "anion"  # Ionizer unit
     BATTERY_PERCENTAGE = "battery_percentage"  # Battery percentage
     BATTERY_STATE = "battery_state"  # Battery state
+    BRIGHT_STATE = "Brightness"  # Brightness
     BRIGHT_VALUE = "bright_value"  # Brightness
     C_F = "c_f"  # Temperature unit switching
     CHILD_LOCK = "child_lock"  # Child lock
@@ -98,6 +104,7 @@ class DPCode(str, Enum):
     MATERIAL = "material"  # Material
     MODE = "mode"  # Working mode / Mode
     PIR = "pir"  # Motion sensor
+    MUFFLING = "muffling"  # Muffling
     POWDER_SET = "powder_set"  # Powder
     PUMP_RESET = "pump_reset"  # Water pump reset
     SHAKE = "shake"  # Oscillating

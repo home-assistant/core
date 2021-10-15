@@ -8,6 +8,7 @@ from tuya_iot.device import TuyaDeviceStatusRange
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -40,6 +41,20 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
         SelectEntityDescription(
             key=DPCode.MODE,
             name="Mode",
+        ),
+    ),
+    # Siren Alarm
+    # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
+    "sgbj": (
+        SelectEntityDescription(
+            key=DPCode.ALARM_VOLUME,
+            name="Volume",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.BRIGHT_STATE,
+            name="Brightness",
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
 }
