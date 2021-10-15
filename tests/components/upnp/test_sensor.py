@@ -1,5 +1,6 @@
 """Tests for UPnP/IGD sensor."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from homeassistant.components.upnp.const import (
@@ -43,7 +44,7 @@ async def test_upnp_sensors(hass: HomeAssistant, setup_integration: MockConfigEn
     # Second poll.
     mock_device.async_get_traffic_data = AsyncMock(
         return_value={
-            TIMESTAMP: dt_util.utcnow() + 2 * UPDATE_INTERVAL,
+            TIMESTAMP: dt_util.utcnow() + UPDATE_INTERVAL,
             BYTES_RECEIVED: 10240,
             BYTES_SENT: 20480,
             PACKETS_RECEIVED: 30,
@@ -57,7 +58,7 @@ async def test_upnp_sensors(hass: HomeAssistant, setup_integration: MockConfigEn
             ROUTER_IP: "",
         }
     )
-    async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=31))
     await hass.async_block_till_done()
 
     b_received_state = hass.states.get("sensor.mock_name_b_received")
@@ -100,7 +101,7 @@ async def test_derived_upnp_sensors(
             PACKETS_SENT: int(40 * UPDATE_INTERVAL.total_seconds()),
         }
     )
-    async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=31))
     await hass.async_block_till_done()
 
     kib_s_received_state = hass.states.get("sensor.mock_name_kib_s_received")

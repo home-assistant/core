@@ -1,12 +1,12 @@
 """Tests for UPnP/IGD binary_sensor."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from homeassistant.components.upnp.const import (
     DOMAIN,
     ROUTER_IP,
     ROUTER_UPTIME,
-    UPDATE_INTERVAL,
     WAN_STATUS,
 )
 from homeassistant.core import HomeAssistant
@@ -35,7 +35,7 @@ async def test_upnp_binary_sensors(
             ROUTER_IP: "",
         }
     )
-    async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=31))
     await hass.async_block_till_done()
 
     wan_status_state = hass.states.get("binary_sensor.mock_name_wan_status")
