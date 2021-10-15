@@ -954,16 +954,14 @@ class TemperatureSettingTrait(_Trait):
                     1,
                 )
             else:
-                target_temp = attrs.get(ATTR_TEMPERATURE)
-                if target_temp is not None:
+                if (target_temp := attrs.get(ATTR_TEMPERATURE)) is not None:
                     target_temp = round(
                         temp_util.convert(target_temp, unit, TEMP_CELSIUS), 1
                     )
                     response["thermostatTemperatureSetpointHigh"] = target_temp
                     response["thermostatTemperatureSetpointLow"] = target_temp
         else:
-            target_temp = attrs.get(ATTR_TEMPERATURE)
-            if target_temp is not None:
+            if (target_temp := attrs.get(ATTR_TEMPERATURE)) is not None:
                 response["thermostatTemperatureSetpoint"] = round(
                     temp_util.convert(target_temp, unit, TEMP_CELSIUS), 1
                 )
@@ -1306,11 +1304,9 @@ class ArmDisArmTrait(_Trait):
     async def execute(self, command, data, params, challenge):
         """Execute an ArmDisarm command."""
         if params["arm"] and not params.get("cancel"):
-            arm_level = params.get("armLevel")
-
             # If no arm level given, we can only arm it if there is
             # only one supported arm type. We never default to triggered.
-            if not arm_level:
+            if not (arm_level := params.get("armLevel")):
                 states = self._supported_states()
 
                 if STATE_ALARM_TRIGGERED in states:
@@ -1554,9 +1550,7 @@ class ModesTrait(_Trait):
             if self.state.domain != domain:
                 continue
 
-            items = self.state.attributes.get(attr)
-
-            if items is not None:
+            if (items := self.state.attributes.get(attr)) is not None:
                 modes.append(self._generate(name, items))
 
             # Shortcut since all domains are currently unique
@@ -1668,19 +1662,19 @@ class ModesTrait(_Trait):
             )
             return
 
-        if self.state.domain == media_player.DOMAIN:
-            sound_mode = settings.get("sound mode")
-            if sound_mode:
-                await self.hass.services.async_call(
-                    media_player.DOMAIN,
-                    media_player.SERVICE_SELECT_SOUND_MODE,
-                    {
-                        ATTR_ENTITY_ID: self.state.entity_id,
-                        media_player.ATTR_SOUND_MODE: sound_mode,
-                    },
-                    blocking=True,
-                    context=data.context,
-                )
+        if self.state.domain == media_player.DOMAIN and (
+            sound_mode := settings.get("sound mode")
+        ):
+            await self.hass.services.async_call(
+                media_player.DOMAIN,
+                media_player.SERVICE_SELECT_SOUND_MODE,
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    media_player.ATTR_SOUND_MODE: sound_mode,
+                },
+                blocking=True,
+                context=data.context,
+            )
 
         _LOGGER.info(
             "Received an Options command for unrecognised domain %s",
@@ -2042,9 +2036,7 @@ def _verify_pin_challenge(data, state, challenge):
     if not challenge:
         raise ChallengeNeeded(CHALLENGE_PIN_NEEDED)
 
-    pin = challenge.get("pin")
-
-    if pin != data.config.secure_devices_pin:
+    if challenge.get("pin") != data.config.secure_devices_pin:
         raise ChallengeNeeded(CHALLENGE_FAILED_PIN_NEEDED)
 
 
@@ -2320,8 +2312,7 @@ class SensorStateTrait(_Trait):
     def sync_attributes(self):
         """Return attributes for a sync request."""
         device_class = self.state.attributes.get(ATTR_DEVICE_CLASS)
-        data = self.sensor_types.get(device_class)
-        if data is not None:
+        if (data := self.sensor_types.get(device_class)) is not None:
             return {
                 "sensorStatesSupported": {
                     "name": data[0],
@@ -2332,8 +2323,7 @@ class SensorStateTrait(_Trait):
     def query_attributes(self):
         """Return the attributes of this trait for this entity."""
         device_class = self.state.attributes.get(ATTR_DEVICE_CLASS)
-        data = self.sensor_types.get(device_class)
-        if data is not None:
+        if (data := self.sensor_types.get(device_class)) is not None:
             return {
                 "currentSensorStateData": [
                     {"name": data[0], "rawValue": self.state.state}
