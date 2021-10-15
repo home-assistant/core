@@ -1,13 +1,11 @@
 """Provide functionality to interact with the vlc telnet interface."""
-import logging
+from __future__ import annotations
 
-from python_telnet_vlc import (
-    CommandError,
-    ConnectionError as ConnErr,
-    LuaError,
-    ParseError,
-    VLCTelnet,
-)
+from datetime import datetime
+from typing import Any
+
+from aiovlc.client import Client
+from aiovlc.exceptions import AuthError, CommandError, ConnectError
 import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
@@ -25,6 +23,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -33,17 +32,15 @@ from homeassistant.const import (
     STATE_IDLE,
     STATE_PAUSED,
     STATE_PLAYING,
-    STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DATA_AVAILABLE, DATA_VLC, DEFAULT_NAME, DEFAULT_PORT, DOMAIN, LOGGER
 
-DOMAIN = "vlc_telnet"
-
-DEFAULT_NAME = "VLC-TELNET"
-DEFAULT_PORT = 4212
 MAX_VOLUME = 500
 
 SUPPORT_VLC = (
@@ -69,106 +66,129 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the vlc platform."""
-    add_entities(
-        [
-            VlcDevice(
-                config.get(CONF_NAME),
-                config.get(CONF_HOST),
-                config.get(CONF_PORT),
-                config.get(CONF_PASSWORD),
-            )
-        ],
-        True,
+    LOGGER.warning(
+        "Loading VLC media player Telnet integration via platform setup is deprecated; "
+        "Please remove it from your configuration"
     )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the vlc platform."""
+    # CONF_NAME is only present in imported YAML.
+    name = entry.data.get(CONF_NAME) or DEFAULT_NAME
+    vlc = hass.data[DOMAIN][entry.entry_id][DATA_VLC]
+    available = hass.data[DOMAIN][entry.entry_id][DATA_AVAILABLE]
+
+    async_add_entities([VlcDevice(entry, vlc, name, available)], True)
 
 
 class VlcDevice(MediaPlayerEntity):
     """Representation of a vlc player."""
 
-    def __init__(self, name, host, port, passwd):
+    def __init__(
+        self, config_entry: ConfigEntry, vlc: Client, name: str, available: bool
+    ) -> None:
         """Initialize the vlc device."""
+        self._config_entry = config_entry
         self._name = name
-        self._volume = None
-        self._muted = None
-        self._state = STATE_UNAVAILABLE
-        self._media_position_updated_at = None
-        self._media_position = None
-        self._media_duration = None
-        self._host = host
-        self._port = port
-        self._password = passwd
-        self._vlc = None
-        self._available = True
-        self._volume_bkp = 0
-        self._media_artist = ""
-        self._media_title = ""
+        self._volume: float | None = None
+        self._muted: bool | None = None
+        self._state: str | None = None
+        self._media_position_updated_at: datetime | None = None
+        self._media_position: int | None = None
+        self._media_duration: int | None = None
+        self._vlc = vlc
+        self._available = available
+        self._volume_bkp = 0.0
+        self._media_artist: str | None = None
+        self._media_title: str | None = None
+        config_entry_id = config_entry.entry_id
+        self._attr_unique_id = config_entry_id
+        self._attr_device_info = {
+            "name": name,
+            "identifiers": {(DOMAIN, config_entry_id)},
+            "manufacturer": "VideoLAN",
+            "entry_type": "service",
+        }
 
-    def update(self):
+    async def async_update(self) -> None:
         """Get the latest details from the device."""
-        if self._vlc is None:
+        if not self._available:
             try:
-                self._vlc = VLCTelnet(self._host, self._password, self._port)
-            except (ConnErr, EOFError) as err:
-                if self._available:
-                    _LOGGER.error("Connection error: %s", err)
-                    self._available = False
-                self._vlc = None
+                await self._vlc.connect()
+            except ConnectError as err:
+                LOGGER.debug("Connection error: %s", err)
+                return
+
+            try:
+                await self._vlc.login()
+            except AuthError:
+                LOGGER.debug("Failed to login to VLC")
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(self._config_entry.entry_id)
+                )
                 return
 
             self._state = STATE_IDLE
             self._available = True
+            LOGGER.info("Connected to vlc host: %s", self._vlc.host)
 
         try:
-            status = self._vlc.status()
-            _LOGGER.debug("Status: %s", status)
+            status = await self._vlc.status()
+            LOGGER.debug("Status: %s", status)
 
-            if status:
-                if "volume" in status:
-                    self._volume = status["volume"] / MAX_VOLUME
-                else:
-                    self._volume = None
-                if "state" in status:
-                    state = status["state"]
-                    if state == "playing":
-                        self._state = STATE_PLAYING
-                    elif state == "paused":
-                        self._state = STATE_PAUSED
-                    else:
-                        self._state = STATE_IDLE
-                else:
-                    self._state = STATE_IDLE
+            self._volume = status.audio_volume / MAX_VOLUME
+            state = status.state
+            if state == "playing":
+                self._state = STATE_PLAYING
+            elif state == "paused":
+                self._state = STATE_PAUSED
+            else:
+                self._state = STATE_IDLE
 
             if self._state != STATE_IDLE:
-                self._media_duration = self._vlc.get_length()
-                vlc_position = self._vlc.get_time()
+                self._media_duration = (await self._vlc.get_length()).length
+                time_output = await self._vlc.get_time()
+                vlc_position = time_output.time
 
                 # Check if current position is stale.
                 if vlc_position != self._media_position:
                     self._media_position_updated_at = dt_util.utcnow()
                     self._media_position = vlc_position
 
-            info = self._vlc.info()
-            _LOGGER.debug("Info: %s", info)
+            info = await self._vlc.info()
+            data = info.data
+            LOGGER.debug("Info data: %s", data)
 
-            if info:
-                self._media_artist = info.get(0, {}).get("artist")
-                self._media_title = info.get(0, {}).get("title")
+            self._media_artist = data.get(0, {}).get("artist")
+            self._media_title = data.get(0, {}).get("title")
 
-                if not self._media_title:
-                    # Fall back to filename.
-                    data_info = info.get("data")
-                    if data_info:
-                        self._media_title = data_info["filename"]
+            if not self._media_title:
+                # Fall back to filename.
+                data_info = data.get("data")
+                if data_info:
+                    self._media_title = data_info["filename"]
 
-        except (CommandError, LuaError, ParseError) as err:
-            _LOGGER.error("Command error: %s", err)
-        except (ConnErr, EOFError) as err:
+        except CommandError as err:
+            LOGGER.error("Command error: %s", err)
+        except ConnectError as err:
             if self._available:
-                _LOGGER.error("Connection error: %s", err)
+                LOGGER.error("Connection error: %s", err)
                 self._available = False
-            self._vlc = None
 
     @property
     def name(self):
@@ -186,7 +206,7 @@ class VlcDevice(MediaPlayerEntity):
         return self._available
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         return self._volume
 
@@ -230,72 +250,79 @@ class VlcDevice(MediaPlayerEntity):
         """Artist of current playing media, music track only."""
         return self._media_artist
 
-    def media_seek(self, position):
+    async def async_media_seek(self, position: float) -> None:
         """Seek the media to a specific location."""
-        self._vlc.seek(int(position))
+        await self._vlc.seek(round(position))
 
-    def mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
+        assert self._volume is not None
         if mute:
             self._volume_bkp = self._volume
-            self.set_volume_level(0)
+            await self.async_set_volume_level(0)
         else:
-            self.set_volume_level(self._volume_bkp)
+            await self.async_set_volume_level(self._volume_bkp)
 
         self._muted = mute
 
-    def set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        self._vlc.set_volume(volume * MAX_VOLUME)
+        await self._vlc.set_volume(round(volume * MAX_VOLUME))
         self._volume = volume
 
         if self._muted and self._volume > 0:
             # This can happen if we were muted and then see a volume_up.
             self._muted = False
 
-    def media_play(self):
+    async def async_media_play(self) -> None:
         """Send play command."""
-        self._vlc.play()
+        await self._vlc.play()
         self._state = STATE_PLAYING
 
-    def media_pause(self):
+    async def async_media_pause(self) -> None:
         """Send pause command."""
-        current_state = self._vlc.status().get("state")
+        status = await self._vlc.status()
+        current_state = status.state
         if current_state != "paused":
             # Make sure we're not already paused since VLCTelnet.pause() toggles
             # pause.
-            self._vlc.pause()
+            await self._vlc.pause()
+
         self._state = STATE_PAUSED
 
-    def media_stop(self):
+    async def async_media_stop(self) -> None:
         """Send stop command."""
-        self._vlc.stop()
+        await self._vlc.stop()
         self._state = STATE_IDLE
 
-    def play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play media from a URL or file."""
         if media_type != MEDIA_TYPE_MUSIC:
-            _LOGGER.error(
+            LOGGER.error(
                 "Invalid media type %s. Only %s is supported",
                 media_type,
                 MEDIA_TYPE_MUSIC,
             )
             return
-        self._vlc.add(media_id)
+
+        await self._vlc.add(media_id)
         self._state = STATE_PLAYING
 
-    def media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Send previous track command."""
-        self._vlc.prev()
+        await self._vlc.prev()
 
-    def media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Send next track command."""
-        self._vlc.next()
+        await self._vlc.next()
 
-    def clear_playlist(self):
+    async def async_clear_playlist(self) -> None:
         """Clear players playlist."""
-        self._vlc.clear()
+        await self._vlc.clear()
 
-    def set_shuffle(self, shuffle):
+    async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
-        self._vlc.random(shuffle)
+        shuffle_command = "on" if shuffle else "off"
+        await self._vlc.random(shuffle_command)
