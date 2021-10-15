@@ -12,6 +12,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DOMAIN
 
 PLATFORMS = [NOTIFY]
+#
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
