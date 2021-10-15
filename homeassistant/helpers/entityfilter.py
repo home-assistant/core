@@ -75,6 +75,7 @@ def convert_include_exclude_filter(
         }
     )
     setattr(filt, "config", config)
+    setattr(filt, "customized", any(include.values()) or any(exclude.values()))
     return filt
 
 
