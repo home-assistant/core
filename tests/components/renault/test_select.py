@@ -4,7 +4,6 @@ from unittest.mock import patch
 import pytest
 from renault_api.kamereon import exceptions, schemas
 
-from homeassistant.components.renault.renault_entities import ATTR_LAST_UPDATE
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.select.const import ATTR_OPTION, SERVICE_SELECT_OPTION
 from homeassistant.const import (
@@ -81,7 +80,6 @@ async def test_select_empty(hass: HomeAssistant, vehicle_type: str):
             assert state.attributes.get(attr) == expected_entity.get(attr)
         # Check dynamic attributes:
         assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)
-        assert ATTR_LAST_UPDATE not in state.attributes
 
 
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
@@ -118,7 +116,6 @@ async def test_select_errors(hass: HomeAssistant, vehicle_type: str):
             assert state.attributes.get(attr) == expected_entity.get(attr)
         # Check dynamic attributes:
         assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)
-        assert ATTR_LAST_UPDATE not in state.attributes
 
 
 async def test_select_access_denied(hass: HomeAssistant):
