@@ -48,11 +48,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_CONNECTIONS: fritz,
     }
 
-    hass.data[DOMAIN][entry.entry_id][
-        CONF_COORDINATOR
-    ] = coordinator = FritzboxDataUpdateCoordinator(hass, entry)
+    coordinator = FritzboxDataUpdateCoordinator(hass, entry)
 
     await coordinator.async_config_entry_first_refresh()
+
+    hass.data[DOMAIN][entry.entry_id][CONF_COORDINATOR] = coordinator
 
     def _update_unique_id(entry: RegistryEntry) -> dict[str, str] | None:
         """Update unique ID of entity entry."""
