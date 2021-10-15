@@ -766,6 +766,8 @@ def test_average(hass):
 
     with pytest.raises(TemplateError):
         template.Template("{{ 1 | average }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
         template.Template("{{ average() }}", hass).async_render()
 
 
