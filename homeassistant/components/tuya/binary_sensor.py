@@ -1,14 +1,18 @@
 """Support for Tuya binary sensors."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_DOOR,
+    DEVICE_CLASS_MOTION,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -17,22 +21,44 @@ from . import HomeAssistantTuyaData
 from .base import TuyaEntity
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 
+
+@dataclass
+class TuyaBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes a Tuya binary sensor."""
+
+    on_value: bool | float | int | str = True
+
+
 # All descriptions can be found here. Mostly the Boolean data types in the
 # default status set of each category (that don't have a set instruction)
 # end up being a binary sensor.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
-BINARY_SENSORS: dict[str, tuple[BinarySensorEntityDescription, ...]] = {
+BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     # Door Window Sensor
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48hm02l8m
     "mcs": (
-        BinarySensorEntityDescription(
+        TuyaBinarySensorEntityDescription(
             key=DPCode.DOORCONTACT_STATE,
             device_class=DEVICE_CLASS_DOOR,
         ),
-        BinarySensorEntityDescription(
+        TuyaBinarySensorEntityDescription(
             key=DPCode.TEMPER_ALARM,
             name="Tamper",
             entity_registry_enabled_default=False,
+        ),
+    ),
+    # PIR Detector
+    # https://developer.tuya.com/en/docs/iot/categorypir?id=Kaiuz3ss11b80
+    "pir": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.PIR,
+            device_class=DEVICE_CLASS_MOTION,
+            on_value="pir",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.TEMPER_ALARM,
+            name="Tamper",
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         ),
     ),
 }
@@ -74,11 +100,13 @@ async def async_setup_entry(
 class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
     """Tuya Binary Sensor Entity."""
 
+    entity_description: TuyaBinarySensorEntityDescription
+
     def __init__(
         self,
         device: TuyaDevice,
         device_manager: TuyaDeviceManager,
-        description: BinarySensorEntityDescription,
+        description: TuyaBinarySensorEntityDescription,
     ) -> None:
         """Init Tuya binary sensor."""
         super().__init__(device, device_manager)
@@ -88,4 +116,9 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if sensor is on."""
-        return self.device.status.get(self.entity_description.key, False)
+        if self.entity_description.key not in self.device.status:
+            return False
+        return (
+            self.device.status[self.entity_description.key]
+            == self.entity_description.on_value
+        )

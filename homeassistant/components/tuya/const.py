@@ -37,13 +37,13 @@ TUYA_SUPPORTED_PRODUCT_CATEGORIES = (
     "fs",  # Fan
     "fwl",  # Ambient light
     "jsq",  # Humidifier's light
-    "kfj",  # Coffee Maker
+    "kfj",  # Coffee maker
     "kg",  # Switch
     "kj",  # Air Purifier
-    "kfj",  # Coffee maker
     "kt",  # Air conditioner
     "mcs",  # Door Window Sensor
     "pc",  # Power Strip
+    "pir",  # PIR Detector
     "qn",  # Heater
     "wk",  # Thermostat
     "xdd",  # Ceiling Light
@@ -96,6 +96,7 @@ class DPCode(str, Enum):
     LOCK = "lock"  # Lock / Child lock
     MATERIAL = "material"  # Material
     MODE = "mode"  # Working mode / Mode
+    PIR = "pir"  # Motion sensor
     POWDER_SET = "powder_set"  # Powder
     PUMP_RESET = "pump_reset"  # Water pump reset
     SHAKE = "shake"  # Oscillating
