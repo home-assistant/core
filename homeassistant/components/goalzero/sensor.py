@@ -31,6 +31,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import Yeti, YetiEntity
@@ -170,6 +171,6 @@ class YetiSensor(YetiEntity, SensorEntity):
         self._attr_unique_id = f"{server_unique_id}/{description.key}"
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> StateType:
         """Return the state."""
-        return cast(str, self.api.data.get(self.entity_description.key))
+        return cast(StateType, self.api.data[self.entity_description.key])
