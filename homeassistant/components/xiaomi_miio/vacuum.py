@@ -264,6 +264,10 @@ class MiroboVacuum(XiaomiCoordinatedMiioEntity, StateVacuumEntity):
     @property
     def extra_state_attributes(self):
         """Return the specific state attributes of this vacuum cleaner."""
+
+        if self._state is None:
+            return None
+
         attrs = {}
         attrs[ATTR_STATUS] = str(self.coordinator.data.status.state)
 
@@ -425,11 +429,3 @@ class MiroboVacuum(XiaomiCoordinatedMiioEntity, StateVacuumEntity):
             self._state = STATE_CODE_TO_STATE[state_code]
 
         super()._handle_coordinator_update()
-
-    @property
-    def state_attributes(self):
-        """Return the state attributes of the vacuum cleaner."""
-        if self._state is None:
-            return None
-
-        return super().state_attributes
