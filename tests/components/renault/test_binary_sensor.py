@@ -5,7 +5,6 @@ import pytest
 from renault_api.kamereon import exceptions
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.renault.renault_entities import ATTR_LAST_UPDATE
 from homeassistant.const import ATTR_ICON, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
@@ -75,7 +74,6 @@ async def test_binary_sensor_empty(hass: HomeAssistant, vehicle_type: str):
             assert state.attributes.get(attr) == expected_entity.get(attr)
         # Check dynamic attributes:
         assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)
-        assert ATTR_LAST_UPDATE not in state.attributes
 
 
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
@@ -112,7 +110,6 @@ async def test_binary_sensor_errors(hass: HomeAssistant, vehicle_type: str):
             assert state.attributes.get(attr) == expected_entity.get(attr)
         # Check dynamic attributes:
         assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)
-        assert ATTR_LAST_UPDATE not in state.attributes
 
 
 async def test_binary_sensor_access_denied(hass):
