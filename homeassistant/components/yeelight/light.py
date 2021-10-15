@@ -1,6 +1,7 @@
 """Light platform support for yeelight."""
 from __future__ import annotations
 
+import asyncio
 import logging
 import math
 
@@ -8,6 +9,7 @@ import voluptuous as vol
 import yeelight
 from yeelight import Bulb, Flow, RGBTransition, SleepTransition, flows
 from yeelight.enums import BulbType, LightType, PowerMode, SceneClass
+from yeelight.main import BulbException
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -51,8 +53,6 @@ from . import (
     ATTR_COUNT,
     ATTR_MODE_MUSIC,
     ATTR_TRANSITIONS,
-    BULB_EXCEPTIONS,
-    BULB_NETWORK_EXCEPTIONS,
     CONF_FLOW_PARAMS,
     CONF_MODE_MUSIC,
     CONF_NIGHTLIGHT_SWITCH,
@@ -243,23 +243,33 @@ def _async_cmd(func):
     """Define a wrapper to catch exceptions from the bulb."""
 
     async def _async_wrap(self, *args, **kwargs):
-        try:
-            _LOGGER.debug("Calling %s with %s %s", func, args, kwargs)
-            return await func(self, *args, **kwargs)
-        except BULB_NETWORK_EXCEPTIONS as ex:
-            # A network error happened, the bulb is likely offline now
-            self.device.async_mark_unavailable()
-            self.async_state_changed()
-            exc_message = str(ex) or type(ex)
-            raise HomeAssistantError(
-                f"Error when calling {func.__name__} for bulb {self.device.name} at {self.device.host}: {exc_message}"
-            ) from ex
-        except BULB_EXCEPTIONS as ex:
-            # The bulb likely responded but had an error
-            exc_message = str(ex) or type(ex)
-            raise HomeAssistantError(
-                f"Error when calling {func.__name__} for bulb {self.device.name} at {self.device.host}: {exc_message}"
-            ) from ex
+        for attempts in range(2):
+            try:
+                _LOGGER.debug("Calling %s with %s %s", func, args, kwargs)
+                return await func(self, *args, **kwargs)
+            except asyncio.TimeoutError as ex:
+                # The wifi likely dropped, so we want to retry once since
+                # python-yeelight will auto reconnect
+                exc_message = str(ex) or type(ex)
+                if attempts == 0:
+                    continue
+                raise HomeAssistantError(
+                    f"Timed out when calling {func.__name__} for bulb {self.device.name} at {self.device.host}: {exc_message}"
+                ) from ex
+            except OSError as ex:
+                # A network error happened, the bulb is likely offline now
+                self.device.async_mark_unavailable()
+                self.async_state_changed()
+                exc_message = str(ex) or type(ex)
+                raise HomeAssistantError(
+                    f"Error when calling {func.__name__} for bulb {self.device.name} at {self.device.host}: {exc_message}"
+                ) from ex
+            except BulbException as ex:
+                # The bulb likely responded but had an error
+                exc_message = str(ex) or type(ex)
+                raise HomeAssistantError(
+                    f"Error when calling {func.__name__} for bulb {self.device.name} at {self.device.host}: {exc_message}"
+                ) from ex
 
     return _async_wrap
 
@@ -621,7 +631,11 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         """Set bulb's color."""
         if not hs_color or COLOR_MODE_HS not in self.supported_color_modes:
             return
-        if self.color_mode == COLOR_MODE_HS and self.hs_color == hs_color:
+        if (
+            not self.device.is_color_flow_enabled
+            and self.color_mode == COLOR_MODE_HS
+            and self.hs_color == hs_color
+        ):
             _LOGGER.debug("HS already set to: %s", hs_color)
             # Already set, and since we get pushed updates
             # we avoid setting it again to ensure we do not
@@ -638,7 +652,11 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         """Set bulb's color."""
         if not rgb or COLOR_MODE_RGB not in self.supported_color_modes:
             return
-        if self.color_mode == COLOR_MODE_RGB and self.rgb_color == rgb:
+        if (
+            not self.device.is_color_flow_enabled
+            and self.color_mode == COLOR_MODE_RGB
+            and self.rgb_color == rgb
+        ):
             _LOGGER.debug("RGB already set to: %s", rgb)
             # Already set, and since we get pushed updates
             # we avoid setting it again to ensure we do not
@@ -657,7 +675,11 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             return
         temp_in_k = mired_to_kelvin(colortemp)
 
-        if self.color_mode == COLOR_MODE_COLOR_TEMP and self.color_temp == colortemp:
+        if (
+            not self.device.is_color_flow_enabled
+            and self.color_mode == COLOR_MODE_COLOR_TEMP
+            and self.color_temp == colortemp
+        ):
             _LOGGER.debug("Color temp already set to: %s", temp_in_k)
             # Already set, and since we get pushed updates
             # we avoid setting it again to ensure we do not

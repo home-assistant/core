@@ -151,7 +151,7 @@ class NotionEntity(CoordinatorEntity):
             "identifiers": {(DOMAIN, sensor["hardware_id"])},
             "manufacturer": "Silicon Labs",
             "model": sensor["hardware_revision"],
-            "name": sensor["name"],
+            "name": str(sensor["name"]),
             "sw_version": sensor["firmware_version"],
             "via_device": (DOMAIN, bridge.get("hardware_id")),
         }
