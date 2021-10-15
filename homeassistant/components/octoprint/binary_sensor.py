@@ -6,35 +6,30 @@ from typing import Optional
 from pyoctoprintapi import OctoprintPrinterInfo
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from . import DOMAIN as COMPONENT_DOMAIN
+from .const import DOMAIN as COMPONENT_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+):
     """Set up the available OctoPrint binary sensors."""
+    coordinator = hass.data[COMPONENT_DOMAIN][config_entry.entry_id]["coordinator"]
 
-    if discovery_info is None:
-        return
+    entities = [
+        OctoPrintPrintingBinarySensor(coordinator, config_entry.unique_id),
+        OctoPrintPrintingErrorBinarySensor(coordinator, config_entry.unique_id),
+    ]
 
-    name = discovery_info["name"]
-    base_url = discovery_info["base_url"]
-    monitored_conditions = discovery_info["sensors"]
-    coordinator: DataUpdateCoordinator = hass.data[COMPONENT_DOMAIN][base_url]
-
-    entities = []
-    if "Printing" in monitored_conditions:
-        entities.append(OctoPrintPrintingBinarySensor(coordinator, name))
-
-    if "Printing Error" in monitored_conditions:
-        entities.append(OctoPrintPrintingErrorBinarySensor(coordinator, name))
-
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class OctoPrintBinarySensorBase(CoordinatorEntity, BinarySensorEntity):
@@ -43,15 +38,28 @@ class OctoPrintBinarySensorBase(CoordinatorEntity, BinarySensorEntity):
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
-        sensor_name: str,
         sensor_type: str,
+        device_id: str,
     ):
         """Initialize a new OctoPrint sensor."""
         super().__init__(coordinator)
-        self.sensor_name = sensor_name
-        self._name = f"{sensor_name} {sensor_type}"
+        self._name = f"Octoprint {sensor_type}"
         self.sensor_type = sensor_type
-        _LOGGER.debug("Created OctoPrint binary sensor %r", self)
+        self._device_id = device_id
+
+    @property
+    def device_info(self):
+        """Device info."""
+        return {
+            "identifiers": {(COMPONENT_DOMAIN, self._device_id)},
+            "manufacturer": "Octoprint",
+            "name": "Octoprint",
+        }
+
+    @property
+    def unique_id(self):
+        """Return a unique id."""
+        return f"{self.sensor_type}-{self._device_id}"
 
     @property
     def name(self):
@@ -75,9 +83,9 @@ class OctoPrintBinarySensorBase(CoordinatorEntity, BinarySensorEntity):
 class OctoPrintPrintingBinarySensor(OctoPrintBinarySensorBase):
     """Representation an OctoPrint binary sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, sensor_name: str):
+    def __init__(self, coordinator: DataUpdateCoordinator, device_id: str):
         """Initialize a new OctoPrint sensor."""
-        super().__init__(coordinator, sensor_name, "Printing")
+        super().__init__(coordinator, "Printing", device_id)
 
     def _get_flag_state(self, printer_info: OctoprintPrinterInfo) -> Optional[bool]:
         return bool(printer_info.state.flags.printing)
@@ -86,9 +94,9 @@ class OctoPrintPrintingBinarySensor(OctoPrintBinarySensorBase):
 class OctoPrintPrintingErrorBinarySensor(OctoPrintBinarySensorBase):
     """Representation an OctoPrint binary sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, sensor_name: str):
+    def __init__(self, coordinator: DataUpdateCoordinator, device_id: str):
         """Initialize a new OctoPrint sensor."""
-        super().__init__(coordinator, sensor_name, "Printing Error")
+        super().__init__(coordinator, "Printing Error", device_id)
 
     def _get_flag_state(self, printer_info: OctoprintPrinterInfo) -> Optional[bool]:
         return bool(printer_info.state.flags.error)

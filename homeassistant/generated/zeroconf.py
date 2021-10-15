@@ -189,6 +189,11 @@ ZEROCONF = {
             "domain": "nut"
         }
     ],
+    "_octoprint._tcp.local.": [
+        {
+            "domain": "octoprint"
+        }
+    ],
     "_plexmediasvr._tcp.local.": [
         {
             "domain": "plex"
