@@ -1,7 +1,5 @@
 """The tests for the feedreader component."""
 from datetime import timedelta
-from os import remove
-from os.path import exists
 from unittest import mock
 from unittest.mock import patch
 
@@ -13,7 +11,6 @@ from homeassistant.components.feedreader import (
     CONF_URLS,
     DEFAULT_SCAN_INTERVAL,
     EVENT_FEEDREADER,
-    StoredData,
 )
 from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
 from homeassistant.setup import async_setup_component
@@ -33,18 +30,6 @@ def load_fixture_bytes(src):
     feed_data = load_fixture(src)
     raw = bytes(feed_data, "utf-8")
     return raw
-
-
-@pytest.fixture(name="feed_storage")
-def fixture_feed_storage(hass):
-    """Create storage account for feedreader."""
-    data_file = hass.config.path(f"{feedreader.DOMAIN}.pickle")
-    storage = StoredData(data_file)
-
-    yield storage
-
-    if exists(data_file):
-        remove(data_file)
 
 
 @pytest.fixture(name="events")
@@ -81,7 +66,7 @@ async def test_setup_max_entries(hass):
     await hass.async_block_till_done()
 
 
-async def test_feed(hass, events, feed_storage):
+async def test_feed(hass, events):
     """Test simple feed with valid data."""
     with patch(
         "feedparser.http.get", return_value=load_fixture_bytes("feedreader.xml")
@@ -103,7 +88,7 @@ async def test_feed(hass, events, feed_storage):
     assert events[0].data.published_parsed.tm_min == 10
 
 
-async def test_feed_updates(hass, events, feed_storage):
+async def test_feed_updates(hass, events):
     """Test feed updates."""
     side_effect = [
         load_fixture_bytes("feedreader.xml"),
@@ -134,7 +119,7 @@ async def test_feed_updates(hass, events, feed_storage):
         assert len(events) == 2
 
 
-async def test_feed_default_max_length(hass, events, feed_storage):
+async def test_feed_default_max_length(hass, events):
     """Test long feed beyond the default 20 entry limit."""
     with patch(
         "feedparser.http.get", return_value=load_fixture_bytes("feedreader2.xml")
@@ -147,7 +132,7 @@ async def test_feed_default_max_length(hass, events, feed_storage):
     assert len(events) == 20
 
 
-async def test_feed_max_length(hass, events, feed_storage):
+async def test_feed_max_length(hass, events):
     """Test long feed beyond a configured 5 entry limit."""
     with patch(
         "feedparser.http.get", return_value=load_fixture_bytes("feedreader2.xml")
@@ -173,7 +158,7 @@ async def test_feed_without_publication_date_and_title(hass, events):
     assert len(events) == 3
 
 
-async def test_feed_with_unrecognized_publication_date(hass, events, feed_storage):
+async def test_feed_with_unrecognized_publication_date(hass, events):
     """Test simple feed with entry with unrecognized publication date."""
     with patch(
         "feedparser.http.get", return_value=load_fixture_bytes("feedreader4.xml")
@@ -186,7 +171,7 @@ async def test_feed_with_unrecognized_publication_date(hass, events, feed_storag
     assert len(events) == 1
 
 
-async def test_feed_invalid_data(hass, events, feed_storage):
+async def test_feed_invalid_data(hass, events):
     """Test feed with invalid data."""
     invalid_data = bytes("INVALID DATA", "utf-8")
     with patch("feedparser.http.get", return_value=invalid_data):
