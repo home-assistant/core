@@ -17,6 +17,7 @@ from homeassistant.const import (
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_VOLTAGE,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -72,6 +73,23 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
             device_class=DEVICE_CLASS_VOLTAGE,
             state_class=STATE_CLASS_MEASUREMENT,
             entity_registry_enabled_default=False,
+        ),
+    ),
+    # PIR Detector
+    # https://developer.tuya.com/en/docs/iot/categorypir?id=Kaiuz3ss11b80
+    "pir": (
+        SensorEntityDescription(
+            key=DPCode.BATTERY_PERCENTAGE,
+            name="Battery",
+            native_unit_of_measurement=PERCENTAGE,
+            device_class=DEVICE_CLASS_BATTERY,
+            state_class=STATE_CLASS_MEASUREMENT,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        SensorEntityDescription(
+            key=DPCode.BATTERY_STATE,
+            name="Battery State",
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         ),
     ),
 }
