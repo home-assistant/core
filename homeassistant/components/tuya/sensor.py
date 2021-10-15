@@ -112,10 +112,6 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
             state_class=STATE_CLASS_MEASUREMENT,
         ),
         SensorEntityDescription(
-            key=DPCode.BRIGHT_VALUE,
-            icon="mdi:brightness-6",
-        ),
-        SensorEntityDescription(
             key=DPCode.BATTERY_PERCENTAGE,
             name="Battery",
             native_unit_of_measurement=PERCENTAGE,
