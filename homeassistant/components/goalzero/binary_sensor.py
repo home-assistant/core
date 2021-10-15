@@ -83,4 +83,4 @@ class YetiBinarySensor(YetiEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return True if the service is on."""
-        return cast(bool, self.api.data.get(self.entity_description.key) == 1)
+        return cast(bool, self.api.data[self.entity_description.key] == 1)

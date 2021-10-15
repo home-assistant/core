@@ -170,4 +170,4 @@ class YetiSensor(YetiEntity, SensorEntity):
     @property
     def native_value(self) -> str:
         """Return the state."""
-        return str(self.api.data.get(self.entity_description.key))
+        return str(self.api.data[self.entity_description.key])
