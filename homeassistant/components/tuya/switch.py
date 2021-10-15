@@ -312,7 +312,7 @@ class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
-        return self.tuya_device.status.get(self.entity_description.key, False)
+        return self.device.status.get(self.entity_description.key, False)
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
