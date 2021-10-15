@@ -6,8 +6,10 @@ import logging
 
 from bimmer_connected.const import SERVICE_ALL_TRIPS, SERVICE_LAST_TRIP, SERVICE_STATUS
 from bimmer_connected.state import ChargingState
+from bimmer_connected.vehicle import ConnectedDriveVehicle
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
     DEVICE_CLASS_TIMESTAMP,
@@ -22,10 +24,16 @@ from homeassistant.const import (
     VOLUME_GALLONS,
     VOLUME_LITERS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 import homeassistant.util.dt as dt_util
 
-from . import DOMAIN as BMW_DOMAIN, BMWConnectedDriveBaseEntity
+from . import (
+    DOMAIN as BMW_DOMAIN,
+    BMWConnectedDriveAccount,
+    BMWConnectedDriveBaseEntity,
+)
 from .const import CONF_ACCOUNT, DATA_ENTRIES
 
 _LOGGER = logging.getLogger(__name__)
@@ -343,11 +351,17 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the BMW ConnectedDrive sensors from config entry."""
     # pylint: disable=too-many-nested-blocks
-    account = hass.data[BMW_DOMAIN][DATA_ENTRIES][config_entry.entry_id][CONF_ACCOUNT]
-    entities = []
+    account: BMWConnectedDriveAccount = hass.data[BMW_DOMAIN][DATA_ENTRIES][
+        config_entry.entry_id
+    ][CONF_ACCOUNT]
+    entities: list[BMWConnectedDriveSensor] = []
 
     for vehicle in account.account.vehicles:
         for service in vehicle.available_state_services:
@@ -458,12 +472,12 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
 
     def __init__(
         self,
-        hass,
-        account,
-        vehicle,
+        hass: HomeAssistant,
+        account: BMWConnectedDriveAccount,
+        vehicle: ConnectedDriveVehicle,
         description: BMWSensorEntityDescription,
-        service=None,
-    ):
+        service: str | None = None,
+    ) -> None:
         """Initialize BMW vehicle sensor."""
         super().__init__(account, vehicle)
         self.entity_description = description
