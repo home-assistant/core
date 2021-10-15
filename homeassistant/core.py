@@ -834,6 +834,10 @@ class EventBus:
             self._async_remove_listener(event_type, filterable_job)
             self._hass.async_run_job(listener, event)
 
+        functools.update_wrapper(
+            _onetime_listener, listener, ("__name__", "__qualname__", "__module__"), []
+        )
+
         filterable_job = (HassJob(_onetime_listener), None)
 
         return self._async_listen_filterable_job(event_type, filterable_job)
