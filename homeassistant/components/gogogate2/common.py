@@ -104,7 +104,9 @@ class GoGoGate2Entity(CoordinatorEntity):
             "sw_version": data.firmwareversion,
         }
         if data.model.startswith("ismartgate"):
-            info["configuration_url"] = f"https://{self._unique_id}.isgaccess.com"
+            info[
+                "configuration_url"
+            ] = f"https://{self._config_entry.unique_id}.isgaccess.com"
         return info
 
 
