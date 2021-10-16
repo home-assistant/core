@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import ATTRIBUTION, DATA_KEY_API, DEFAULT_NAME, DOMAIN
 
@@ -69,8 +69,8 @@ class EfergyEntity(Entity):
         self.api = api
         self._server_unique_id = server_unique_id
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
-        self._attr_device_info = DeviceInfo(
-            configuration_url="https://engage.efergy.com/user/login",
+        self._attr_device_info: DeviceInfo = {
+            "configuration_url": "https://engage.efergy.com/user/login",
             "connections": {(dr.CONNECTION_NETWORK_MAC, self.api.info["mac"])},
             ATTR_IDENTIFIERS: {(DOMAIN, self._server_unique_id)},
             ATTR_MANUFACTURER: DEFAULT_NAME,
