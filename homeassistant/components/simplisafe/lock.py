@@ -6,7 +6,12 @@ from typing import Any
 from simplipy.device.lock import Lock, LockStates
 from simplipy.errors import SimplipyError
 from simplipy.system.v3 import SystemV3
-from simplipy.websocket import EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED, WebsocketEvent
+from simplipy.websocket import (
+    EVENT_LOCK_ERROR,
+    EVENT_LOCK_LOCKED,
+    EVENT_LOCK_UNLOCKED,
+    WebsocketEvent,
+)
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
@@ -88,6 +93,11 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
     @callback
     def async_update_from_websocket_event(self, event: WebsocketEvent) -> None:
         """Update the entity when new data comes from the websocket."""
+        if event.event_type == EVENT_LOCK_ERROR:
+            self._attr_is_jammed = True
+        else:
+            self._attr_is_jammed = False
+
         if event.event_type == EVENT_LOCK_LOCKED:
             self._attr_is_locked = True
         else:
