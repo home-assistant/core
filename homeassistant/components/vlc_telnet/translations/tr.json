@@ -1,0 +1,23 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Ba\u011flant\u0131 ba\u015far\u0131s\u0131z"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "\u015eifre"
+                },
+                "description": "L\u00fctfen sunucunun do\u011fru \u015fifresini giriniz: {host}"
+            },
+            "user": {
+                "data": {
+                    "host": "Sunucu",
+                    "name": "\u0130sim",
+                    "password": "\u015eifre",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}
