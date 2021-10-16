@@ -171,12 +171,16 @@ def gather_recursive_requirements(domain, seen=None):
     """Recursively gather requirements from a module."""
     if seen is None:
         seen = set()
+    elif domain in seen:
+        return set()
 
     seen.add(domain)
     integration = Integration(Path(f"homeassistant/components/{domain}"))
     integration.load_manifest()
     reqs = set(integration.requirements)
     for dep_domain in integration.dependencies:
+        reqs.update(gather_recursive_requirements(dep_domain, seen))
+    for dep_domain in integration.after_dependencies:
         reqs.update(gather_recursive_requirements(dep_domain, seen))
     return reqs
 
