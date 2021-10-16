@@ -13,7 +13,8 @@
             "cloud_login_error": "Nem siker\u00fclt bejelentkezni a Xioami Miio Cloud szolg\u00e1ltat\u00e1sba, ellen\u0151rizze a hiteles\u00edt\u0151 adatokat.",
             "cloud_no_devices": "Nincs eszk\u00f6z ebben a Xiaomi Miio felh\u0151fi\u00f3kban.",
             "no_device_selected": "Nincs kiv\u00e1lasztva eszk\u00f6z, k\u00e9rj\u00fck, v\u00e1lasszon egyet.",
-            "unknown_device": "Az eszk\u00f6z modell nem ismert, nem tudja be\u00e1ll\u00edtani az eszk\u00f6zt a konfigur\u00e1ci\u00f3s folyamat seg\u00edts\u00e9g\u00e9vel."
+            "unknown_device": "Az eszk\u00f6z modell nem ismert, nem tudja be\u00e1ll\u00edtani az eszk\u00f6zt a konfigur\u00e1ci\u00f3s folyamat seg\u00edts\u00e9g\u00e9vel.",
+            "wrong_token": "Ellen\u0151rz\u0151\u00f6sszeg-hiba, hib\u00e1s token"
         },
         "flow_title": "{name}",
         "step": {

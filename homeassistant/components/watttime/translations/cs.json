@@ -19,6 +19,12 @@
                     "location_type": "Um\u00edst\u011bn\u00ed"
                 }
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Heslo"
+                },
+                "description": "Zadejte pros\u00edm znovu heslo pro {username}:"
+            },
             "user": {
                 "data": {
                     "password": "Heslo",
