@@ -99,14 +99,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         connector = HubConnector(parsed_url.hostname, asyncio.Queue())
         try:
-            unique_id = (
-                await connector._get_remote_id()
-            )  # pylint: disable=protected-access
+            unique_id = await connector.get_remote_id()
         except aiohttp.ClientError:
             return self.async_abort(reason="cannot_connect")
         finally:
-            if connector._aiohttp_session:  # pylint: disable=protected-access
-                await connector._aiohttp_session.close()  # pylint: disable=protected-access
+            await connector.async_close_session()
 
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(
