@@ -15,7 +15,7 @@
         "flow_title": "{host}",
         "step": {
             "hassio_confirm": {
-                "description": "Do you want to add a VLC telnet media player provided by the add-on: {addon}?"
+                "description": "Do you want to connect to add-on {addon}?"
             },
             "reauth_confirm": {
                 "data": {
