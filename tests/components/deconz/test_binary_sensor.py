@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_PROBLEM,
+    DEVICE_CLASS_TAMPER,
     DEVICE_CLASS_VIBRATION,
 )
 from homeassistant.components.deconz.const import (
@@ -136,7 +136,7 @@ async def test_tampering_sensor(hass, aioclient_mock, mock_deconz_websocket):
     assert len(hass.states.async_all()) == 3
     presence_tamper = hass.states.get("binary_sensor.presence_sensor_tampered")
     assert presence_tamper.state == STATE_OFF
-    assert presence_tamper.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_PROBLEM
+    assert presence_tamper.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TAMPER
 
     event_changed_sensor = {
         "t": "event",
