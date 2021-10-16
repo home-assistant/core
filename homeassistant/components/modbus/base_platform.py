@@ -170,9 +170,9 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
 
         try:
             val = struct.unpack(self._structure, byte_string)
-        except struct.error as e:
+        except struct.error as err:
             recv_size = len(registers) * 2
-            msg = f"Received {recv_size} bytes, unpack error {e}"
+            msg = f"Received {recv_size} bytes, unpack error {err}"
             _LOGGER.error(msg)
             return None
         # Issue: https://github.com/home-assistant/core/issues/41944
