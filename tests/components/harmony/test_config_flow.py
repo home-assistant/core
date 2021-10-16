@@ -52,7 +52,7 @@ async def test_form_ssdp(hass):
     """Test we get the form with ssdp source."""
 
     with patch(
-        "homeassistant.components.harmony.config_flow.HubConnector._get_remote_id",
+        "homeassistant.components.harmony.config_flow.HubConnector.get_remote_id",
         return_value=1234,
     ):
         result = await hass.config_entries.flow.async_init(
