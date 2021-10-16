@@ -58,6 +58,7 @@ async def test_user_flow_same_unique_ids(hass: HomeAssistant) -> None:
     MockConfigEntry(
         domain=DOMAIN,
         data=user_input,
+        options={CONF_TIMESTEP: DEFAULT_TIMESTEP},
         source=SOURCE_USER,
         unique_id=_get_unique_id(hass, user_input),
         version=2,

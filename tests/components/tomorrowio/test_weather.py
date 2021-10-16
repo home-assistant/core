@@ -12,7 +12,12 @@ from homeassistant.components.tomorrowio.config_flow import (
     _get_config_schema,
     _get_unique_id,
 )
-from homeassistant.components.tomorrowio.const import ATTRIBUTION, DOMAIN
+from homeassistant.components.tomorrowio.const import (
+    ATTRIBUTION,
+    CONF_TIMESTEP,
+    DEFAULT_TIMESTEP,
+    DOMAIN,
+)
 from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_FORECAST,
@@ -68,6 +73,7 @@ async def _setup(hass: HomeAssistant, config: dict[str, Any]) -> State:
         config_entry = MockConfigEntry(
             domain=DOMAIN,
             data=data,
+            options={CONF_TIMESTEP: DEFAULT_TIMESTEP},
             unique_id=_get_unique_id(hass, data),
             version=1,
         )
