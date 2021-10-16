@@ -290,7 +290,7 @@ class PrometheusMetrics:
         metric.labels(**self._labels(state)).set(value)
         if ATTR_LATITUDE in state.attributes:
             metric_lat = self._metric(
-                "device_tracker_latitude",
+                "device_tracker_latitude_degrees",
                 self.prometheus_cli.Gauge,
                 "Latitude",
             )
@@ -298,7 +298,7 @@ class PrometheusMetrics:
             metric_lat.labels(**self._labels(state)).set(value)
         if ATTR_LONGITUDE in state.attributes:
             metric_lon = self._metric(
-                "device_tracker_longitude",
+                "device_tracker_longitude_degrees",
                 self.prometheus_cli.Gauge,
                 "Longitude",
             )
@@ -306,7 +306,7 @@ class PrometheusMetrics:
             metric_lon.labels(**self._labels(state)).set(value)
         if ATTR_GPS_ACCURACY in state.attributes:
             metric_accuracy = self._metric(
-                "device_tracker_gps_accuracy",
+                "device_tracker_gps_accuracy_meters",
                 self.prometheus_cli.Gauge,
                 "GPS accuracy",
             )
