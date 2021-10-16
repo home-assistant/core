@@ -98,6 +98,7 @@ FLOWS = [
     "fritz",
     "fritzbox",
     "fritzbox_callmonitor",
+    "fronius",
     "garages_amsterdam",
     "gdacs",
     "geofency",
