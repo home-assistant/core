@@ -260,11 +260,5 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
             EVENT_HOME_EXIT_DELAY,
         ):
             self._attr_state = STATE_ALARM_ARMING
-        else:
-            LOGGER.error(
-                "Unknown websocket event triggered alarm_control_panel state change: %s",
-                event.event_type,
-            )
-            self._attr_state = None
 
         self._attr_changed_by = event.changed_by

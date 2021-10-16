@@ -102,9 +102,3 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
             self._attr_is_locked = True
         elif event.event_type == EVENT_LOCK_UNLOCKED:
             self._attr_is_locked = False
-        else:
-            LOGGER.error(
-                "Unknown websocket event triggered lock state change: %s",
-                event.event_type,
-            )
-            self._attr_is_locked = None
