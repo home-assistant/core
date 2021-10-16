@@ -1961,7 +1961,7 @@ pytouchline==0.7
 pytraccar==0.9.0
 
 # homeassistant.components.tradfri
-pytradfri[async]==7.0.7
+pytradfri[async]==7.1.0
 
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
