@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+import logging
 from typing import Any, Callable
 
 from pymodbus.pdu import ModbusResponse
@@ -365,7 +366,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
 
     async def async_mark_as_opened_or_closed(self, opened: bool) -> None:
         """Mark opening or closing of cover as completed."""
-        _LOGGER.debug(
+        logging.debug(
             "mark cover as opened or closed: slave=%s, input_type=%s, address=%s, state=%s",
             self._slave,
             self._input_type,
@@ -445,7 +446,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
                 closing = bool(
                     result.bits[address + (self._address_close - start_address)] & 1
                 )
-                _LOGGER.debug(
+                logging.debug(
                     "update cover slave=%s, input_type=%s, address=%s, address_open=%s, address_close=%s -> result=%s, opening=%s, closing=%s",
                     slaveId,
                     input_type,
@@ -467,7 +468,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
                     elif self._value == self._state_closing:
                         self._set_attr_state(self._state_closed)
             else:
-                _LOGGER.debug(
+                logging.debug(
                     "update cover slave=%s, input_type=%s, address=%s -> result=%s",
                     slaveId,
                     input_type,
@@ -476,7 +477,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
                 )
                 self._set_attr_state(bool(result.bits[address] & 1))
         else:
-            _LOGGER.debug(
+            logging.debug(
                 "update cover slave=%s, input_type=%s, address=%s -> result=%s",
                 slaveId,
                 input_type,

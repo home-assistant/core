@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+import logging
 from typing import Any
 
 from pymodbus.pdu import ModbusResponse
@@ -84,7 +85,7 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
             return
 
         self._lazy_errors = self._lazy_error_count
-        _LOGGER.debug(
+        logging.debug(
             "update binary_sensor slave=%s, input_type=%s, address=%s -> result=%s",
             slaveId,
             input_type,
