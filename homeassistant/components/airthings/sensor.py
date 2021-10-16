@@ -22,6 +22,7 @@ from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
     PRESSURE_MBAR,
     SIGNAL_STRENGTH_DECIBELS,
@@ -96,6 +97,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         name="RSSI",
         entity_registry_enabled_default=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     "pm1": SensorEntityDescription(
         key="pm1",
