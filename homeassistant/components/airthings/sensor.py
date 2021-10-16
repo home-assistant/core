@@ -65,6 +65,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="battery",
         device_class=DEVICE_CLASS_BATTERY,
         native_unit_of_measurement=PERCENTAGE,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         name="Battery",
     ),
     "co2": SensorEntityDescription(
