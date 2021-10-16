@@ -21,7 +21,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SimpliSafe, SimpliSafeBaseSensor
+from . import SimpliSafe, SimpliSafeEntity
 from .const import DATA_CLIENT, DOMAIN, LOGGER
 
 SUPPORTED_BATTERY_SENSOR_TYPES = [
@@ -76,7 +76,7 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class TriggeredBinarySensor(SimpliSafeBaseSensor, BinarySensorEntity):
+class TriggeredBinarySensor(SimpliSafeEntity, BinarySensorEntity):
     """Define a binary sensor related to whether an entity has been triggered."""
 
     def __init__(
@@ -87,17 +87,18 @@ class TriggeredBinarySensor(SimpliSafeBaseSensor, BinarySensorEntity):
         device_class: str,
     ) -> None:
         """Initialize."""
-        super().__init__(simplisafe, system, sensor)
+        super().__init__(simplisafe, system, device=sensor)
 
         self._attr_device_class = device_class
+        self._device: SensorV2 | SensorV3
 
     @callback
     def async_update_from_rest_api(self) -> None:
         """Update the entity with the provided REST API data."""
-        self._attr_is_on = self._sensor.triggered
+        self._attr_is_on = self._device.triggered
 
 
-class BatteryBinarySensor(SimpliSafeBaseSensor, BinarySensorEntity):
+class BatteryBinarySensor(SimpliSafeEntity, BinarySensorEntity):
     """Define a SimpliSafe battery binary sensor entity."""
 
     _attr_device_class = DEVICE_CLASS_BATTERY
@@ -109,11 +110,12 @@ class BatteryBinarySensor(SimpliSafeBaseSensor, BinarySensorEntity):
         sensor: SensorV2 | SensorV3,
     ) -> None:
         """Initialize."""
-        super().__init__(simplisafe, system, sensor)
+        super().__init__(simplisafe, system, device=sensor)
 
         self._attr_unique_id = f"{super().unique_id}-battery"
+        self._device: SensorV2 | SensorV3
 
     @callback
     def async_update_from_rest_api(self) -> None:
         """Update the entity with the provided REST API data."""
-        self._attr_is_on = self._sensor.low_battery
+        self._attr_is_on = self._device.low_battery
