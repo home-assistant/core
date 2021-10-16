@@ -12,8 +12,16 @@ from homeassistant.components.device_tracker import (
     SOURCE_TYPE_ROUTER,
 )
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
+from homeassistant.components.device_tracker.const import ATTR_IP, ATTR_MAC
+from homeassistant.components.device_tracker.legacy import EVENT_NEW_DEVICE
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_NAME,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -80,7 +88,7 @@ async def async_setup_entry(
     @callback
     def update_router() -> None:
         """Update the values of the router."""
-        _async_add_entities(router, async_add_entities, data_fritz)
+        _async_add_entities(hass, router, async_add_entities, data_fritz)
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, router.signal_device_new, update_router)
@@ -91,6 +99,7 @@ async def async_setup_entry(
 
 @callback
 def _async_add_entities(
+    hass: HomeAssistant,
     router: FritzBoxTools,
     async_add_entities: AddEntitiesCallback,
     data_fritz: FritzData,
@@ -107,6 +116,16 @@ def _async_add_entities(
 
         new_tracked.append(FritzBoxTracker(router, device))
         data_fritz.tracked[router.unique_id].add(mac)
+
+        hass.bus.async_fire(
+            f"{DOMAIN}.{EVENT_NEW_DEVICE}",
+            {
+                ATTR_ENTITY_ID: f"{DOMAIN}.{device.hostname}",
+                ATTR_NAME: device.hostname,
+                ATTR_IP: device.ip_address,
+                ATTR_MAC: device.mac_address,
+            },
+        )
 
     if new_tracked:
         async_add_entities(new_tracked)
