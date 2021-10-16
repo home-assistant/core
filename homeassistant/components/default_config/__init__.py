@@ -4,14 +4,79 @@ try:
 except ImportError:
     av = None
 
+import asyncio
+
+import voluptuous as vol
+
+from homeassistant.const import CONF_EXCLUDE
+import homeassistant.helpers.config_validation as cv
 from homeassistant.setup import async_setup_component
 
 DOMAIN = "default_config"
 
+INTEGRATION_LIST = [
+    "automation",
+    "cloud",
+    "counter",
+    "dhcp",
+    "energy",
+    "frontend",
+    "history",
+    "input_boolean",
+    "input_datetime",
+    "input_number",
+    "input_select",
+    "input_text",
+    "logbook",
+    "map",
+    "media_source",
+    "mobile_app",
+    "my",
+    "network",
+    "person",
+    "scene",
+    "script",
+    "ssdp",
+    "sun",
+    "system_health",
+    "tag",
+    "timer",
+    "usb",
+    "updater",
+    "webhook",
+    "zeroconf",
+    "zone",
+]
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_EXCLUDE, default=[]): vol.All(
+                    cv.ensure_list, [vol.In(INTEGRATION_LIST)]
+                ),
+            },
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
 
 async def async_setup(hass, config):
     """Initialize default configuration."""
-    if av is None:
-        return True
+    conf = config.get(DOMAIN, {})
+    exclude = conf.get(CONF_EXCLUDE, [])
+    integration_list = INTEGRATION_LIST.copy()
 
-    return await async_setup_component(hass, "stream", config)
+    if av is not None:
+        integration_list.append("stream")
+
+    done, _ = await asyncio.wait(
+        [
+            async_setup_component(hass, integration, config)
+            for integration in integration_list
+            if integration not in exclude
+        ]
+    )
+
+    return all(done)
