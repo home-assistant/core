@@ -361,8 +361,14 @@ class SimpliSafeWebsocketManager:
     def __init__(self, hass: HomeAssistant, api: API) -> None:
         """Initialize."""
         self._api = api
-        self._event_listener_unsub: Callable | None = None
+        self._event_listener_unsub: list[Callable] = []
         self._hass = hass
+
+    async def _async_on_connect(self) -> None:
+        """Define a callback for connecting to the websocket."""
+        if TYPE_CHECKING:
+            assert self._api.websocket
+        await self._api.websocket.async_listen()
 
     @callback
     def _async_on_event(self, event: WebsocketEvent) -> None:
@@ -398,20 +404,22 @@ class SimpliSafeWebsocketManager:
     @callback
     def async_cleanup(self) -> None:
         """Clean up listener unsub handlers."""
-        if self._event_listener_unsub:
-            self._event_listener_unsub()
-            self._event_listener_unsub = None
+        for cancel in self._event_listener_unsub:
+            cancel()
 
     async def async_connect(self) -> None:
         """Register callbacks and connect to the SimpliSafe websocket."""
         if TYPE_CHECKING:
             assert self._api.websocket
-        self._event_listener_unsub = self._api.websocket.add_event_listener(
-            self._async_on_event
+
+        self._event_listener_unsub.append(
+            self._api.websocket.add_connect_listener(self._async_on_connect)
+        )
+        self._event_listener_unsub.append(
+            self._api.websocket.add_event_listener(self._async_on_event)
         )
 
         await self._api.websocket.async_connect()
-        await self._api.websocket.async_listen()
 
     async def async_disconnect(self) -> None:
         """Disconnect from the SimpliSafe websocket."""
