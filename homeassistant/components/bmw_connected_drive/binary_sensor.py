@@ -21,6 +21,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import LENGTH_KILOMETERS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.unit_system import UnitSystem
 
 from . import (
     DOMAIN as BMW_DOMAIN,
@@ -70,11 +71,13 @@ def _are_parking_lights_on(
 
 
 def _are_problems_detected(
-    vehicle_state: VehicleStatus, extra_attributes: dict[str, Any], hass: HomeAssistant
+    vehicle_state: VehicleStatus,
+    extra_attributes: dict[str, Any],
+    unit_system: UnitSystem,
 ) -> bool:
     # device class problem: On means problem detected, Off means no problem
     for report in vehicle_state.condition_based_services:
-        extra_attributes.update(_format_cbs_report(hass, report))
+        extra_attributes.update(_format_cbs_report(report, unit_system))
     return not vehicle_state.are_all_cbs_ok
 
 
@@ -116,7 +119,7 @@ def _is_vehicle_plugged_in(
 
 
 def _format_cbs_report(
-    hass: HomeAssistant, report: ConditionBasedServiceReport
+    report: ConditionBasedServiceReport, unit_system: UnitSystem
 ) -> dict[str, Any]:
     result: dict[str, Any] = {}
     service_type = report.service_type.lower().replace("_", " ")
@@ -124,12 +127,8 @@ def _format_cbs_report(
     if report.due_date is not None:
         result[f"{service_type} date"] = report.due_date.strftime("%Y-%m-%d")
     if report.due_distance is not None:
-        distance = round(
-            hass.config.units.length(report.due_distance, LENGTH_KILOMETERS)
-        )
-        result[
-            f"{service_type} distance"
-        ] = f"{distance} {hass.config.units.length_unit}"
+        distance = round(unit_system.length(report.due_distance, LENGTH_KILOMETERS))
+        result[f"{service_type} distance"] = f"{distance} {unit_system.length_unit}"
     return result
 
 
@@ -137,7 +136,7 @@ def _format_cbs_report(
 class BMWRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[VehicleStatus, dict[str, Any], HomeAssistant], bool]
+    value_fn: Callable[[VehicleStatus, dict[str, Any], UnitSystem], bool]
 
 
 @dataclass
@@ -219,7 +218,7 @@ async def async_setup_entry(
     ][CONF_ACCOUNT]
 
     entities = [
-        BMWConnectedDriveSensor(account, vehicle, description)
+        BMWConnectedDriveSensor(account, vehicle, description, hass.config.units)
         for vehicle in account.account.vehicles
         for description in SENSOR_TYPES
         if description.key in vehicle.available_attributes
@@ -237,10 +236,12 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, BinarySensorEntity):
         account: BMWConnectedDriveAccount,
         vehicle: ConnectedDriveVehicle,
         description: BMWBinarySensorEntityDescription,
+        unit_system: UnitSystem,
     ) -> None:
         """Initialize sensor."""
         super().__init__(account, vehicle)
         self.entity_description = description
+        self._unit_system = unit_system
 
         self._attr_name = f"{vehicle.name} {description.key}"
         self._attr_unique_id = f"{vehicle.vin}-{description.key}"
@@ -251,6 +252,6 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, BinarySensorEntity):
         result = self._attrs.copy()
 
         self._attr_is_on = self.entity_description.value_fn(
-            vehicle_state, result, self.hass
+            vehicle_state, result, self._unit_system
         )
         self._attr_extra_state_attributes = result
