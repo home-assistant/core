@@ -58,10 +58,10 @@ class AdaxDevice(ClimateEntity):
 
     def __init__(self, heater_data: dict[str, Any], adax_data_handler: Adax) -> None:
         """Initialize the heater."""
+        self._device_id = heater_data["id"]
         self._adax_data_handler = adax_data_handler
 
         self._attr_unique_id = f"{heater_data['homeId']}_{heater_data['id']}"
-        self._device_id = heater_data["id"]
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set hvac mode."""
