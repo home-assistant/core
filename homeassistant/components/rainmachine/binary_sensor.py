@@ -131,7 +131,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            async_get_sensor(description.api_category)(controller, description)
+            async_get_sensor(description.api_category)(entry, controller, description)
             for description in BINARY_SENSOR_DESCRIPTIONS
         ]
     )
