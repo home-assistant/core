@@ -98,6 +98,7 @@ class KNXTestKit:
         apci_type: type[APCI],
     ) -> None:
         """Assert outgoing telegram. One by one in timely order."""
+        await self.xknx.telegrams.join()
         await self.hass.async_block_till_done()
         try:
             telegram = self._outgoing_telegrams.get_nowait()
