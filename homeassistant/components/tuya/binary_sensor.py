@@ -9,6 +9,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_DOOR,
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_SAFETY,
+    DEVICE_CLASS_VIBRATION,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -27,6 +28,10 @@ from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 class TuyaBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes a Tuya binary sensor."""
 
+    # DPCode, to use. If None, the key will be used as DPCode
+    dpcode: DPCode | None = None
+
+    # Value to consider binary sensor to be "on"
     on_value: bool | float | int | str = True
 
 
@@ -84,6 +89,31 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         ),
     ),
+    # Vibration Sensor
+    # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
+    "zd": (
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.SHOCK_STATE}_vibration",
+            dpcode=DPCode.SHOCK_STATE,
+            name="Vibration",
+            device_class=DEVICE_CLASS_VIBRATION,
+            on_value="vibration",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.SHOCK_STATE}_drop",
+            dpcode=DPCode.SHOCK_STATE,
+            name="Drop",
+            device_class=DEVICE_CLASS_VIBRATION,
+            on_value="drop",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.SHOCK_STATE}_tilt",
+            dpcode=DPCode.SHOCK_STATE,
+            name="Tilt",
+            device_class=DEVICE_CLASS_VIBRATION,
+            on_value="tilt",
+        ),
+    ),
 }
 
 
@@ -101,10 +131,8 @@ async def async_setup_entry(
             device = hass_data.device_manager.device_map[device_id]
             if descriptions := BINARY_SENSORS.get(device.category):
                 for description in descriptions:
-                    if (
-                        description.key in device.function
-                        or description.key in device.status
-                    ):
+                    dpcode = description.dpcode or description.key
+                    if dpcode in device.status:
                         entities.append(
                             TuyaBinarySensorEntity(
                                 device, hass_data.device_manager, description
@@ -139,9 +167,7 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if sensor is on."""
-        if self.entity_description.key not in self.device.status:
+        dpcode = self.entity_description.dpcode or self.entity_description.key
+        if dpcode not in self.device.status:
             return False
-        return (
-            self.device.status[self.entity_description.key]
-            == self.entity_description.on_value
-        )
+        return self.device.status[dpcode] == self.entity_description.on_value

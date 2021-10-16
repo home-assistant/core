@@ -156,10 +156,6 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
     # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
     "zd": (
         SensorEntityDescription(
-            key=DPCode.SHOCK_STATE,
-            icon="mdi:vibrate",
-        ),
-        SensorEntityDescription(
             key=DPCode.BATTERY_PERCENTAGE,
             name="Battery",
             native_unit_of_measurement=PERCENTAGE,
