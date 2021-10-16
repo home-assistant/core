@@ -262,7 +262,8 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
             self._attr_state = STATE_ALARM_ARMING
         else:
             LOGGER.error(
-                "Unknown websocket event triggered state change: %s", event.event_type
+                "Unknown websocket event triggered alarm_control_panel state change: %s",
+                event.event_type,
             )
             self._attr_state = None
 

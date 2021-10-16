@@ -94,11 +94,16 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
     def async_update_from_websocket_event(self, event: WebsocketEvent) -> None:
         """Update the entity when new data comes from the websocket."""
         if event.event_type == EVENT_LOCK_ERROR:
-            self._attr_is_jammed = True
-        else:
-            self._attr_is_jammed = False
-
-        if event.event_type == EVENT_LOCK_LOCKED:
+            # Unfortunately, the websocket doesn't give insight into *what* type of
+            # error we have (the lock could be jammed, the batteries could be dead,
+            # etc.) – so, if we get this event, we settle for setting the state as None:
+            self._attr_is_locked = None
+        elif event.event_type == EVENT_LOCK_LOCKED:
             self._attr_is_locked = True
-        else:
+        elif event.event_type == EVENT_LOCK_UNLOCKED:
             self._attr_is_locked = False
+            LOGGER.error(
+                "Unknown websocket event triggered lock state change: %s",
+                event.event_type,
+            )
+            self._attr_is_locked = None
