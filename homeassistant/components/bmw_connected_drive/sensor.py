@@ -382,7 +382,7 @@ async def async_setup_entry(
                         )
                         for attribute_name in vehicle.drive_train_attributes
                         if attribute_name in vehicle.available_attributes
-                        if (description := SENSOR_TYPES.get(attribute_name))
+                        and (description := SENSOR_TYPES.get(attribute_name))
                     ]
                 )
             if service == SERVICE_LAST_TRIP:
@@ -393,7 +393,7 @@ async def async_setup_entry(
                         )
                         for attribute_name in vehicle.state.last_trip.available_attributes
                         if attribute_name != "date"
-                        if (description := SENSOR_TYPES.get(attribute_name))
+                        and (description := SENSOR_TYPES.get(attribute_name))
                     ]
                 )
                 if "date" in vehicle.state.last_trip.available_attributes:
