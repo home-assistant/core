@@ -9,8 +9,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.components.jewish_calendar.erev_shabbt_hag_binary_sensor import ErevShabbtHagBinarySensor
-from homeassistant.components.jewish_calendar.motzei_shabbt_hag_binary_sensor import MotzeiShabbtHagBinarySensor
+from homeassistant.components.jewish_calendar.erev_shabbt_hag_binary_sensor import (
+    ErevShabbtHagBinarySensor,
+)
+from homeassistant.components.jewish_calendar.motzei_shabbt_hag_binary_sensor import (
+    MotzeiShabbtHagBinarySensor,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import event
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -49,8 +53,12 @@ async def async_setup_platform(
         return
 
     async_add_entities([JewishCalendarBinarySensor(hass.data[DOMAIN], BINARY_SENSOR)])
-    async_add_entities([MotzeiShabbtHagBinarySensor(hass.data[DOMAIN], MOTZEI_BINARY_SENSOR)])
-    async_add_entities([ErevShabbtHagBinarySensor(hass.data[DOMAIN], EREV_BINARY_SENSOR)])
+    async_add_entities(
+        [MotzeiShabbtHagBinarySensor(hass.data[DOMAIN], MOTZEI_BINARY_SENSOR)]
+    )
+    async_add_entities(
+        [ErevShabbtHagBinarySensor(hass.data[DOMAIN], EREV_BINARY_SENSOR)]
+    )
 
 
 class JewishCalendarBinarySensor(BinarySensorEntity):
