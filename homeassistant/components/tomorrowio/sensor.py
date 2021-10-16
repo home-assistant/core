@@ -90,7 +90,6 @@ class TomorrowioSensorEntityDescription(SensorEntityDescription):
     unit_metric: str | None = None
     metric_conversion: Callable[[float], float] | float = 1.0
     is_metric_check: bool | None = None
-    device_class: str | None = None
     value_map: Any | None = None
 
 
