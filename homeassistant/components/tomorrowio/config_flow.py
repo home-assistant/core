@@ -53,26 +53,22 @@ def _get_config_schema(
         vol.Required(CONF_API_KEY, default=input_dict.get(CONF_API_KEY)): str,
     }
 
-    if source == config_entries.SOURCE_USER:
-        return vol.Schema(
-            {
-                **api_key_schema,
-                vol.Required(
-                    CONF_LATITUDE,
-                    "location",
-                    default=input_dict.get(CONF_LATITUDE, hass.config.latitude),
-                ): cv.latitude,
-                vol.Required(
-                    CONF_LONGITUDE,
-                    "location",
-                    default=input_dict.get(CONF_LONGITUDE, hass.config.longitude),
-                ): cv.longitude,
-            },
-            extra=vol.REMOVE_EXTRA,
-        )
-
-    # For imports we just need to ask for the API key
-    return vol.Schema(api_key_schema, extra=vol.REMOVE_EXTRA)
+    return vol.Schema(
+        {
+            **api_key_schema,
+            vol.Required(
+                CONF_LATITUDE,
+                "location",
+                default=input_dict.get(CONF_LATITUDE, hass.config.latitude),
+            ): cv.latitude,
+            vol.Required(
+                CONF_LONGITUDE,
+                "location",
+                default=input_dict.get(CONF_LONGITUDE, hass.config.longitude),
+            ): cv.longitude,
+        },
+        extra=vol.REMOVE_EXTRA,
+    )
 
 
 def _get_unique_id(hass: HomeAssistant, input_dict: dict[str, Any]):
