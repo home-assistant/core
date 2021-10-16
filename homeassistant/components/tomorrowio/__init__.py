@@ -29,6 +29,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import (
     ATTRIBUTION,
+    CONF_TIMESTEP,
     DOMAIN,
     MAX_REQUESTS_PER_DAY,
     TMRW_ATTR_CARBON_MONOXIDE,
@@ -221,6 +222,7 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
                     TMRW_ATTR_PRECIPITATION,
                     TMRW_ATTR_PRECIPITATION_PROBABILITY,
                 ],
+                nowcast_timestep=self._config_entry.options[CONF_TIMESTEP],
             )
         except (
             CantConnectException,
