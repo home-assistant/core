@@ -124,7 +124,7 @@ class HarmonyData(HarmonySubscriberMixin):
             await self._client.close()
             raise ConfigEntryNotReady(
                 f"{self._name}: Error {err} while connected HUB at: {self._address}:8088"
-            )
+            ) from err
         if not connected:
             await self._client.close()
             raise ConfigEntryNotReady(
