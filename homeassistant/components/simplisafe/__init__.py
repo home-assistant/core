@@ -61,6 +61,8 @@ from .const import (
 
 EVENT_SIMPLISAFE_NOTIFICATION = "SIMPLISAFE_NOTIFICATION"
 
+DEFAULT_ENTITY_MODEL = "alarm_control_panel"
+DEFAULT_ENTITY_NAME = "Alarm Control Panel"
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 DEFAULT_SOCKET_MIN_RETRY = 15
 
@@ -435,8 +437,8 @@ class SimpliSafeEntity(CoordinatorEntity):
             name = " ".join([w.title() for w in device.type.name.split("_")])
             serial = device.serial
         else:
-            model = "alarm_control_panel"
-            name = "Alarm Control Panel"
+            model = DEFAULT_ENTITY_MODEL
+            name = DEFAULT_ENTITY_NAME
             serial = system.serial
 
         self._attr_extra_state_attributes = {ATTR_SYSTEM_ID: system.system_id}
