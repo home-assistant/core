@@ -172,6 +172,8 @@ class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
                 description_placeholders={"addon": self.hassio_discovery["addon"]},
             )
 
+        self.hassio_discovery.pop("addon")
+
         try:
             info = await validate_input(self.hass, self.hassio_discovery)
         except CannotConnect:
