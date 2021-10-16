@@ -1,7 +1,10 @@
 """The Netio switch component."""
+from __future__ import annotations
+
 from collections import namedtuple
 from datetime import timedelta
 import logging
+from typing import Any
 
 from pynetio import Netio
 import voluptuous as vol
@@ -29,8 +32,8 @@ CONF_OUTLETS = "outlets"
 
 DEFAULT_PORT = 1234
 DEFAULT_USERNAME = "admin"
-Device = namedtuple("device", ["netio", "entities"])
-DEVICES = {}
+Device = namedtuple("Device", ["netio", "entities"])
+DEVICES: dict[str, Any] = {}
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 

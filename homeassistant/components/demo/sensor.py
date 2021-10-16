@@ -120,10 +120,10 @@ class DemoSensor(SensorEntity):
         """Initialize the sensor."""
         self._attr_device_class = device_class
         self._attr_name = name
-        self._attr_state = state
+        self._attr_native_unit_of_measurement = unit_of_measurement
+        self._attr_native_value = state
         self._attr_state_class = state_class
         self._attr_unique_id = unique_id
-        self._attr_unit_of_measurement = unit_of_measurement
 
         self._attr_device_info = {
             "identifiers": {(DOMAIN, unique_id)},

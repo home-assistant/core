@@ -110,7 +110,7 @@ class VasttrafikDepartureSensor(SensorEntity):
         return self._attributes
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the next departure time."""
         return self._state
 

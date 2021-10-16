@@ -13,6 +13,7 @@ from homeassistant.components.zha.core.group import GroupMember
 from homeassistant.components.zha.core.store import TOMBSTONE_LIFETIME
 
 from .common import async_enable_traffic, async_find_group_entity_id, get_zha_gateway
+from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
 IEEE_GROUPABLE_DEVICE2 = "02:2d:6f:00:0a:90:69:e8"
@@ -24,9 +25,10 @@ def zigpy_dev_basic(zigpy_device_mock):
     return zigpy_device_mock(
         {
             1: {
-                "in_clusters": [general.Basic.cluster_id],
-                "out_clusters": [],
-                "device_type": zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_INPUT: [general.Basic.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_PROFILE: zha.PROFILE_ID,
             }
         }
     )
@@ -47,9 +49,10 @@ async def coordinator(hass, zigpy_device_mock, zha_device_joined):
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                "in_clusters": [],
-                "out_clusters": [],
-                "device_type": zha.DeviceType.COLOR_DIMMABLE_LIGHT,
+                SIG_EP_INPUT: [],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zha.DeviceType.COLOR_DIMMABLE_LIGHT,
+                SIG_EP_PROFILE: zha.PROFILE_ID,
             }
         },
         ieee="00:15:8d:00:02:32:4f:32",
@@ -68,14 +71,15 @@ async def device_light_1(hass, zigpy_device_mock, zha_device_joined):
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                "in_clusters": [
+                SIG_EP_INPUT: [
                     general.OnOff.cluster_id,
                     general.LevelControl.cluster_id,
                     lighting.Color.cluster_id,
                     general.Groups.cluster_id,
                 ],
-                "out_clusters": [],
-                "device_type": zha.DeviceType.COLOR_DIMMABLE_LIGHT,
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zha.DeviceType.COLOR_DIMMABLE_LIGHT,
+                SIG_EP_PROFILE: zha.PROFILE_ID,
             }
         },
         ieee=IEEE_GROUPABLE_DEVICE,
@@ -92,14 +96,15 @@ async def device_light_2(hass, zigpy_device_mock, zha_device_joined):
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                "in_clusters": [
+                SIG_EP_INPUT: [
                     general.OnOff.cluster_id,
                     general.LevelControl.cluster_id,
                     lighting.Color.cluster_id,
                     general.Groups.cluster_id,
                 ],
-                "out_clusters": [],
-                "device_type": zha.DeviceType.COLOR_DIMMABLE_LIGHT,
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zha.DeviceType.COLOR_DIMMABLE_LIGHT,
+                SIG_EP_PROFILE: zha.PROFILE_ID,
             }
         },
         ieee=IEEE_GROUPABLE_DEVICE2,

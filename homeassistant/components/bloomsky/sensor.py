@@ -86,9 +86,13 @@ class BloomSkySensor(SensorEntity):
         self._sensor_name = sensor_name
         self._attr_name = f"{device['DeviceName']} {sensor_name}"
         self._attr_unique_id = f"{self._device_id}-{sensor_name}"
-        self._attr_unit_of_measurement = SENSOR_UNITS_IMPERIAL.get(sensor_name, None)
+        self._attr_native_unit_of_measurement = SENSOR_UNITS_IMPERIAL.get(
+            sensor_name, None
+        )
         if self._bloomsky.is_metric:
-            self._attr_unit_of_measurement = SENSOR_UNITS_METRIC.get(sensor_name, None)
+            self._attr_native_unit_of_measurement = SENSOR_UNITS_METRIC.get(
+                sensor_name, None
+            )
 
     @property
     def device_class(self):
@@ -99,6 +103,6 @@ class BloomSkySensor(SensorEntity):
         """Request an update from the BloomSky API."""
         self._bloomsky.refresh_devices()
         state = self._bloomsky.devices[self._device_id]["Data"][self._sensor_name]
-        self._attr_state = (
+        self._attr_native_value = (
             f"{state:.2f}" if self._sensor_name in FORMAT_NUMBERS else state
         )

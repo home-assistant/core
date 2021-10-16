@@ -112,7 +112,7 @@ class DeLijnPublicTransportSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 

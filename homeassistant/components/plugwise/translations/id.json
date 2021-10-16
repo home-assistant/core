@@ -8,7 +8,7 @@
             "invalid_auth": "Autentikasi tidak valid",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
-        "flow_title": "Smile: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

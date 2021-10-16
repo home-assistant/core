@@ -1,4 +1,6 @@
 """Support for Netgear Arlo IP cameras."""
+from __future__ import annotations
+
 import logging
 
 from haffmpeg.camera import CameraMjpeg
@@ -62,7 +64,9 @@ class ArloCam(Camera):
         self._last_refresh = None
         self.attrs = {}
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         return self._camera.last_image_from_cache
 

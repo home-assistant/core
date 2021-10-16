@@ -1,6 +1,5 @@
 """Test the motionEye camera web hooks."""
 import copy
-import logging
 from typing import Any
 from unittest.mock import AsyncMock, call, patch
 
@@ -32,11 +31,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.setup import async_setup_component
 
 from . import (
     TEST_CAMERA,
     TEST_CAMERA_DEVICE_IDENTIFIER,
+    TEST_CAMERA_ENTITY_ID,
     TEST_CAMERA_ID,
     TEST_CAMERA_NAME,
     TEST_CAMERAS,
@@ -47,9 +48,6 @@ from . import (
 )
 
 from tests.common import async_capture_events
-
-_LOGGER = logging.getLogger(__name__)
-
 
 WEB_HOOK_MOTION_DETECTED_QUERY_STRING = (
     "camera_id=%t&changed_pixels=%D&despeckle_labels=%Q&event=%v&fps=%{fps}"
@@ -251,7 +249,36 @@ async def test_setup_camera_with_correct_webhook(
     assert not client.async_set_camera.called
 
 
-async def test_good_query(hass: HomeAssistant, aiohttp_client: Any) -> None:
+async def test_setup_camera_with_no_home_assistant_urls(
+    hass: HomeAssistant,
+    caplog: Any,
+) -> None:
+    """Verify setup works without Home Assistant internal/external URLs."""
+
+    client = create_mock_motioneye_client()
+    config_entry = create_mock_motioneye_config_entry(hass, data={CONF_URL: TEST_URL})
+
+    with patch(
+        "homeassistant.components.motioneye.get_url", side_effect=NoURLAvailableError
+    ):
+        await setup_mock_motioneye_config_entry(
+            hass,
+            config_entry=config_entry,
+            client=client,
+        )
+
+    # Should log a warning ...
+    assert "Unable to get Home Assistant URL" in caplog.text
+
+    # ... should not set callbacks in the camera ...
+    assert not client.async_set_camera.called
+
+    # ... but camera should still be present.
+    entity_state = hass.states.get(TEST_CAMERA_ENTITY_ID)
+    assert entity_state
+
+
+async def test_good_query(hass: HomeAssistant, hass_client_no_auth: Any) -> None:
     """Test good callbacks."""
     await async_setup_component(hass, "http", {"http": {}})
 
@@ -269,7 +296,7 @@ async def test_good_query(hass: HomeAssistant, aiohttp_client: Any) -> None:
         "two": "2",
         ATTR_DEVICE_ID: device.id,
     }
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     for event in (EVENT_MOTION_DETECTED, EVENT_FILE_STORED):
         events = async_capture_events(hass, f"{DOMAIN}.{event}")
@@ -294,13 +321,13 @@ async def test_good_query(hass: HomeAssistant, aiohttp_client: Any) -> None:
 
 
 async def test_bad_query_missing_parameters(
-    hass: HomeAssistant, aiohttp_client: Any
+    hass: HomeAssistant, hass_client_no_auth: Any
 ) -> None:
     """Test a query with missing parameters."""
     await async_setup_component(hass, "http", {"http": {}})
     config_entry = await setup_mock_motioneye_config_entry(hass)
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     resp = await client.post(
         URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID]), json={}
@@ -309,13 +336,13 @@ async def test_bad_query_missing_parameters(
 
 
 async def test_bad_query_no_such_device(
-    hass: HomeAssistant, aiohttp_client: Any
+    hass: HomeAssistant, hass_client_no_auth: Any
 ) -> None:
     """Test a correct query with incorrect device."""
     await async_setup_component(hass, "http", {"http": {}})
     config_entry = await setup_mock_motioneye_config_entry(hass)
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     resp = await client.post(
         URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID]),
@@ -328,13 +355,13 @@ async def test_bad_query_no_such_device(
 
 
 async def test_bad_query_cannot_decode(
-    hass: HomeAssistant, aiohttp_client: Any
+    hass: HomeAssistant, hass_client_no_auth: Any
 ) -> None:
     """Test a correct query with incorrect device."""
     await async_setup_component(hass, "http", {"http": {}})
     config_entry = await setup_mock_motioneye_config_entry(hass)
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     motion_events = async_capture_events(hass, f"{DOMAIN}.{EVENT_MOTION_DETECTED}")
     storage_events = async_capture_events(hass, f"{DOMAIN}.{EVENT_FILE_STORED}")

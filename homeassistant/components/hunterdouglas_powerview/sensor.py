@@ -50,7 +50,7 @@ class PowerViewShadeBatterySensor(ShadeEntity, SensorEntity):
     """Representation of an shade battery charge sensor."""
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return PERCENTAGE
 
@@ -70,7 +70,7 @@ class PowerViewShadeBatterySensor(ShadeEntity, SensorEntity):
         return f"{self._unique_id}_charge"
 
     @property
-    def state(self):
+    def native_value(self):
         """Get the current value in percentage."""
         return round(
             self._shade.raw_data[SHADE_BATTERY_LEVEL] / SHADE_BATTERY_LEVEL_MAX * 100

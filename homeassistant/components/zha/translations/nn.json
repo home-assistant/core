@@ -1,6 +1,9 @@
 {
     "config": {
         "step": {
+            "port_config": {
+                "title": "Innstillinger"
+            },
             "user": {
                 "title": "ZHA"
             }

@@ -113,7 +113,6 @@ class CanarySensor(CoordinatorEntity, SensorEntity):
             canary_sensor_type = SensorType.BATTERY
 
         self._canary_type = canary_sensor_type
-        self._attr_state = self.reading
         self._attr_unique_id = f"{device.device_id}_{sensor_type[0]}"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, str(device.device_id))},
@@ -121,7 +120,7 @@ class CanarySensor(CoordinatorEntity, SensorEntity):
             "model": device.device_type["name"],
             "manufacturer": MANUFACTURER,
         }
-        self._attr_unit_of_measurement = sensor_type[1]
+        self._attr_native_unit_of_measurement = sensor_type[1]
         self._attr_device_class = sensor_type[3]
         self._attr_icon = sensor_type[2]
 
@@ -143,6 +142,11 @@ class CanarySensor(CoordinatorEntity, SensorEntity):
             return round(float(value), SENSOR_VALUE_PRECISION)
 
         return None
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the state of the sensor."""
+        return self.reading
 
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:

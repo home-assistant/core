@@ -18,6 +18,11 @@ DHCP = [
     },
     {
         "domain": "august",
+        "hostname": "connect",
+        "macaddress": "2C9FFB*"
+    },
+    {
+        "domain": "august",
         "hostname": "august*",
         "macaddress": "E076D0*"
     },
@@ -65,6 +70,48 @@ DHCP = [
     {
         "domain": "flume",
         "hostname": "flume-gw-*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "18B905*",
+        "hostname": "[ba][lk]*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "249494*",
+        "hostname": "[ba][lk]*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "7CB94C*",
+        "hostname": "[ba][lk]*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "B4E842*",
+        "hostname": "[ba][lk]*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "8CCE4E*",
+        "hostname": "lwip*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_35_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_0e_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_00_*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "C82E47*",
+        "hostname": "sta*"
     },
     {
         "domain": "goalzero",
@@ -161,6 +208,10 @@ DHCP = [
         "macaddress": "74C63B*"
     },
     {
+        "domain": "rainforest_eagle",
+        "macaddress": "D8D5B9*"
+    },
+    {
         "domain": "ring",
         "hostname": "ring*",
         "macaddress": "0CAE7D*"
@@ -255,27 +306,37 @@ DHCP = [
         "hostname": "tado*"
     },
     {
-        "domain": "tesla",
-        "hostname": "tesla_*",
-        "macaddress": "4CFCAA*"
-    },
-    {
-        "domain": "tesla",
-        "hostname": "tesla_*",
-        "macaddress": "044EAF*"
-    },
-    {
-        "domain": "tesla",
-        "hostname": "tesla_*",
-        "macaddress": "98ED5C*"
-    },
-    {
         "domain": "toon",
         "hostname": "eneco-*",
         "macaddress": "74C63B*"
     },
     {
         "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "1027F5*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "403F8C*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "ep*",
+        "macaddress": "E848B8*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "E848B8*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "909A4A*"
+    },
+    {
+        "domain": "tplink",
         "hostname": "hs*",
         "macaddress": "1C3BF3*"
     },
@@ -301,6 +362,21 @@ DHCP = [
     },
     {
         "domain": "tplink",
+        "hostname": "hs*",
+        "macaddress": "C006C3*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "ep*",
+        "macaddress": "003192*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "003192*"
+    },
+    {
+        "domain": "tplink",
         "hostname": "k[lp]*",
         "macaddress": "1C3BF3*"
     },
@@ -326,6 +402,11 @@ DHCP = [
     },
     {
         "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "C006C3*"
+    },
+    {
+        "domain": "tplink",
         "hostname": "lb*",
         "macaddress": "1C3BF3*"
     },
@@ -348,30 +429,6 @@ DHCP = [
         "domain": "tplink",
         "hostname": "lb*",
         "macaddress": "B09575*"
-    },
-    {
-        "domain": "tuya",
-        "macaddress": "508A06*"
-    },
-    {
-        "domain": "tuya",
-        "macaddress": "7CF666*"
-    },
-    {
-        "domain": "tuya",
-        "macaddress": "10D561*"
-    },
-    {
-        "domain": "tuya",
-        "macaddress": "D4A651*"
-    },
-    {
-        "domain": "tuya",
-        "macaddress": "68572D*"
-    },
-    {
-        "domain": "tuya",
-        "macaddress": "1869D8*"
     },
     {
         "domain": "verisure",

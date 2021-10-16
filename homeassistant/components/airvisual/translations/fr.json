@@ -13,7 +13,7 @@
         "step": {
             "geography_by_coords": {
                 "data": {
-                    "api_key": "Clef d'API",
+                    "api_key": "Cl\u00e9 d'API",
                     "latitude": "Latitude",
                     "longitude": "Longitude"
                 },
@@ -22,7 +22,7 @@
             },
             "geography_by_name": {
                 "data": {
-                    "api_key": "Clef d'API",
+                    "api_key": "Cl\u00e9 d'API",
                     "city": "Ville",
                     "country": "Pays",
                     "state": "Etat"

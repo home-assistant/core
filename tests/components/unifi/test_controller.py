@@ -166,6 +166,7 @@ async def setup_unifi_integration(
     known_wireless_clients=None,
     controllers=None,
     unique_id="1",
+    config_entry_id=DEFAULT_CONFIG_ENTRY_ID,
 ):
     """Create the UniFi controller."""
     assert await async_setup_component(hass, UNIFI_DOMAIN, {})
@@ -175,7 +176,7 @@ async def setup_unifi_integration(
         data=deepcopy(config),
         options=deepcopy(options),
         unique_id=unique_id,
-        entry_id=DEFAULT_CONFIG_ENTRY_ID,
+        entry_id=config_entry_id,
         version=1,
     )
     config_entry.add_to_hass(hass)

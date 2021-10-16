@@ -9,6 +9,7 @@ from dataclasses import dataclass
 import datetime as dt
 import functools as ft
 import hashlib
+from http import HTTPStatus
 import logging
 import secrets
 from typing import final
@@ -30,7 +31,6 @@ from homeassistant.components.websocket_api.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    HTTP_INTERNAL_SERVER_ERROR,
     HTTP_NOT_FOUND,
     HTTP_OK,
     HTTP_UNAUTHORIZED,
@@ -507,6 +507,7 @@ class MediaPlayerEntity(Entity):
 
         Must be implemented by integration.
         """
+        # pylint: disable=no-self-use
         return None, None
 
     @property
@@ -813,7 +814,6 @@ class MediaPlayerEntity(Entity):
     async def async_toggle(self):
         """Toggle the power on the media player."""
         if hasattr(self, "toggle"):
-            # pylint: disable=no-member
             await self.hass.async_add_executor_job(self.toggle)
             return
 
@@ -828,7 +828,6 @@ class MediaPlayerEntity(Entity):
         This method is a coroutine.
         """
         if hasattr(self, "volume_up"):
-            # pylint: disable=no-member
             await self.hass.async_add_executor_job(self.volume_up)
             return
 
@@ -841,7 +840,6 @@ class MediaPlayerEntity(Entity):
         This method is a coroutine.
         """
         if hasattr(self, "volume_down"):
-            # pylint: disable=no-member
             await self.hass.async_add_executor_job(self.volume_down)
             return
 
@@ -851,7 +849,6 @@ class MediaPlayerEntity(Entity):
     async def async_media_play_pause(self):
         """Play or pause the media player."""
         if hasattr(self, "media_play_pause"):
-            # pylint: disable=no-member
             await self.hass.async_add_executor_job(self.media_play_pause)
             return
 
@@ -1048,7 +1045,7 @@ class MediaPlayerImageView(HomeAssistantView):
         )
 
         if not authenticated:
-            return web.Response(status=HTTP_UNAUTHORIZED)
+            return web.Response(status=HTTPStatus.UNAUTHORIZED)
 
         if media_content_type and media_content_id:
             media_image_id = request.query.get("media_image_id")
@@ -1059,7 +1056,7 @@ class MediaPlayerImageView(HomeAssistantView):
             data, content_type = await player.async_get_media_image()
 
         if data is None:
-            return web.Response(status=HTTP_INTERNAL_SERVER_ERROR)
+            return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
         headers: LooseHeaders = {CACHE_CONTROL: "max-age=3600"}
         return web.Response(body=data, content_type=content_type, headers=headers)

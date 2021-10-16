@@ -10,6 +10,7 @@
             "relayer_connected": "Relayer pod\u0142\u0105czony",
             "remote_connected": "Zdalny dost\u0119p pod\u0142\u0105czony",
             "remote_enabled": "Zdalny dost\u0119p w\u0142\u0105czony",
+            "remote_server": "Zdalny serwer",
             "subscription_expiration": "Wyga\u015bni\u0119cie subskrypcji"
         }
     }

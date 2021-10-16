@@ -1,10 +1,11 @@
 """Models for SQLAlchemy."""
 from __future__ import annotations
 
-from datetime import datetime
+from collections.abc import Iterable
+from datetime import datetime, timedelta
 import json
 import logging
-from typing import TypedDict
+from typing import TypedDict, overload
 
 from sqlalchemy import (
     Boolean,
@@ -19,9 +20,9 @@ from sqlalchemy import (
     Text,
     distinct,
 )
-from sqlalchemy.dialects import mysql
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.dialects import mysql, oracle, postgresql
+from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.orm.session import Session
 
 from homeassistant.const import (
@@ -40,7 +41,7 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 18
+SCHEMA_VERSION = 22
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,6 +53,8 @@ TABLE_RECORDER_RUNS = "recorder_runs"
 TABLE_SCHEMA_CHANGES = "schema_changes"
 TABLE_STATISTICS = "statistics"
 TABLE_STATISTICS_META = "statistics_meta"
+TABLE_STATISTICS_RUNS = "statistics_runs"
+TABLE_STATISTICS_SHORT_TERM = "statistics_short_term"
 
 ALL_TABLES = [
     TABLE_STATES,
@@ -60,10 +63,18 @@ ALL_TABLES = [
     TABLE_SCHEMA_CHANGES,
     TABLE_STATISTICS,
     TABLE_STATISTICS_META,
+    TABLE_STATISTICS_RUNS,
+    TABLE_STATISTICS_SHORT_TERM,
 ]
 
 DATETIME_TYPE = DateTime(timezone=True).with_variant(
     mysql.DATETIME(timezone=True, fsp=6), "mysql"
+)
+DOUBLE_TYPE = (
+    Float()
+    .with_variant(mysql.DOUBLE(asdecimal=False), "mysql")
+    .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
+    .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
 
 
@@ -111,7 +122,7 @@ class Events(Base):  # type: ignore
         )
 
     def to_native(self, validate_entity_id=True):
-        """Convert to a natve HA Event."""
+        """Convert to a native HA Event."""
         context = Context(
             id=self.context_id,
             user_id=self.context_user_id,
@@ -213,7 +224,23 @@ class States(Base):  # type: ignore
             return None
 
 
-class StatisticData(TypedDict, total=False):
+class StatisticResult(TypedDict):
+    """Statistic result data class.
+
+    Allows multiple datapoints for the same statistic_id.
+    """
+
+    meta: StatisticMetaData
+    stat: Iterable[StatisticData]
+
+
+class StatisticDataBase(TypedDict):
+    """Mandatory fields for statistic data class."""
+
+    start: datetime
+
+
+class StatisticData(StatisticDataBase, total=False):
     """Statistic data class."""
 
     mean: float
@@ -224,42 +251,66 @@ class StatisticData(TypedDict, total=False):
     sum: float
 
 
-class Statistics(Base):  # type: ignore
-    """Statistics."""
+class StatisticsBase:
+    """Statistics base class."""
+
+    id = Column(Integer, Identity(), primary_key=True)
+    created = Column(DATETIME_TYPE, default=dt_util.utcnow)
+
+    @declared_attr
+    def metadata_id(self):
+        """Define the metadata_id column for sub classes."""
+        return Column(
+            Integer,
+            ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"),
+            index=True,
+        )
+
+    start = Column(DATETIME_TYPE, index=True)
+    mean = Column(DOUBLE_TYPE)
+    min = Column(DOUBLE_TYPE)
+    max = Column(DOUBLE_TYPE)
+    last_reset = Column(DATETIME_TYPE)
+    state = Column(DOUBLE_TYPE)
+    sum = Column(DOUBLE_TYPE)
+
+    @classmethod
+    def from_stats(cls, metadata_id: int, stats: StatisticData):
+        """Create object from a statistics."""
+        return cls(  # type: ignore
+            metadata_id=metadata_id,
+            **stats,
+        )
+
+
+class Statistics(Base, StatisticsBase):  # type: ignore
+    """Long term statistics."""
+
+    duration = timedelta(hours=1)
 
     __table_args__ = (
         # Used for fetching statistics for a certain entity at a specific time
         Index("ix_statistics_statistic_id_start", "metadata_id", "start"),
     )
     __tablename__ = TABLE_STATISTICS
-    id = Column(Integer, primary_key=True)
-    created = Column(DATETIME_TYPE, default=dt_util.utcnow)
-    metadata_id = Column(
-        Integer,
-        ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"),
-        index=True,
+
+
+class StatisticsShortTerm(Base, StatisticsBase):  # type: ignore
+    """Short term statistics."""
+
+    duration = timedelta(minutes=5)
+
+    __table_args__ = (
+        # Used for fetching statistics for a certain entity at a specific time
+        Index("ix_statistics_short_term_statistic_id_start", "metadata_id", "start"),
     )
-    start = Column(DATETIME_TYPE, index=True)
-    mean = Column(Float())
-    min = Column(Float())
-    max = Column(Float())
-    last_reset = Column(DATETIME_TYPE)
-    state = Column(Float())
-    sum = Column(Float())
-
-    @staticmethod
-    def from_stats(metadata_id: str, start: datetime, stats: StatisticData):
-        """Create object from a statistics."""
-        return Statistics(
-            metadata_id=metadata_id,
-            start=start,
-            **stats,
-        )
+    __tablename__ = TABLE_STATISTICS_SHORT_TERM
 
 
-class StatisticMetaData(TypedDict, total=False):
+class StatisticMetaData(TypedDict):
     """Statistic meta data class."""
 
+    statistic_id: str
     unit_of_measurement: str | None
     has_mean: bool
     has_sum: bool
@@ -268,8 +319,11 @@ class StatisticMetaData(TypedDict, total=False):
 class StatisticsMeta(Base):  # type: ignore
     """Statistics meta data."""
 
+    __table_args__ = (
+        {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
+    )
     __tablename__ = TABLE_STATISTICS_META
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, Identity(), primary_key=True)
     statistic_id = Column(String(255), index=True)
     source = Column(String(32))
     unit_of_measurement = Column(String(255))
@@ -362,7 +416,33 @@ class SchemaChanges(Base):  # type: ignore
         )
 
 
-def process_timestamp(ts):
+class StatisticsRuns(Base):  # type: ignore
+    """Representation of statistics run."""
+
+    __tablename__ = TABLE_STATISTICS_RUNS
+    run_id = Column(Integer, Identity(), primary_key=True)
+    start = Column(DateTime(timezone=True))
+
+    def __repr__(self) -> str:
+        """Return string representation of instance for debugging."""
+        return (
+            f"<recorder.StatisticsRuns("
+            f"id={self.run_id}, start='{self.start.isoformat(sep=' ', timespec='seconds')}', "
+            f")>"
+        )
+
+
+@overload
+def process_timestamp(ts: None) -> None:
+    ...
+
+
+@overload
+def process_timestamp(ts: datetime) -> datetime:
+    ...
+
+
+def process_timestamp(ts: datetime | None) -> datetime | None:
     """Process a timestamp into datetime object."""
     if ts is None:
         return None
@@ -370,6 +450,16 @@ def process_timestamp(ts):
         return ts.replace(tzinfo=dt_util.UTC)
 
     return dt_util.as_utc(ts)
+
+
+@overload
+def process_timestamp_to_utc_isoformat(ts: None) -> None:
+    ...
+
+
+@overload
+def process_timestamp_to_utc_isoformat(ts: datetime) -> str:
+    ...
 
 
 def process_timestamp_to_utc_isoformat(ts: datetime | None) -> str | None:

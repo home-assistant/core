@@ -681,3 +681,57 @@ def _get_schema_default(schema, key_name):
         if schema_key == key_name:
             return schema_key.default()
     raise KeyError(f"{key_name} not found in schema")
+
+
+async def test_bridge_zeroconf(hass):
+    """Test a bridge being discovered."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data={
+            "host": "192.168.1.217",
+            "port": 443,
+            "hostname": "Philips-hue.local.",
+            "type": "_hue._tcp.local.",
+            "name": "Philips Hue - ABCABC._hue._tcp.local.",
+            "properties": {
+                "_raw": {"bridgeid": b"ecb5fafffeabcabc", "modelid": b"BSB002"},
+                "bridgeid": "ecb5fafffeabcabc",
+                "modelid": "BSB002",
+            },
+        },
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "link"
+
+
+async def test_bridge_zeroconf_already_exists(hass):
+    """Test a bridge being discovered by zeroconf already exists."""
+    entry = MockConfigEntry(
+        domain="hue",
+        source=config_entries.SOURCE_SSDP,
+        data={"host": "0.0.0.0"},
+        unique_id="ecb5faabcabc",
+    )
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data={
+            "host": "192.168.1.217",
+            "port": 443,
+            "hostname": "Philips-hue.local.",
+            "type": "_hue._tcp.local.",
+            "name": "Philips Hue - ABCABC._hue._tcp.local.",
+            "properties": {
+                "_raw": {"bridgeid": b"ecb5faabcabc", "modelid": b"BSB002"},
+                "bridgeid": "ecb5faabcabc",
+                "modelid": "BSB002",
+            },
+        },
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert entry.data["host"] == "192.168.1.217"

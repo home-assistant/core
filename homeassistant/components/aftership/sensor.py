@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME, HTTP_OK
+from homeassistant.const import CONF_API_KEY, CONF_NAME, HTTP_OK
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -109,7 +109,8 @@ async def async_setup_platform(
 class AfterShipSensor(SensorEntity):
     """Representation of a AfterShip sensor."""
 
-    _attr_unit_of_measurement: str = "packages"
+    _attr_attribution = ATTRIBUTION
+    _attr_native_unit_of_measurement: str = "packages"
     _attr_icon: str = ICON
 
     def __init__(self, aftership: Tracking, name: str) -> None:
@@ -120,7 +121,7 @@ class AfterShipSensor(SensorEntity):
         self._attr_name = name
 
     @property
-    def state(self) -> int | None:
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
         return self._state
 
@@ -191,7 +192,6 @@ class AfterShipSensor(SensorEntity):
                 _LOGGER.debug("Ignoring %s as it has status: %s", name, status)
 
         self._attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             **status_counts,
             ATTR_TRACKINGS: trackings,
         }

@@ -75,7 +75,7 @@ class NAMSensor(CoordinatorEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the state."""
         return cast(
             StateType, getattr(self.coordinator.data, self.entity_description.key)
@@ -99,7 +99,7 @@ class NAMSensorUptime(NAMSensor):
     """Define an Nettigo Air Monitor uptime sensor."""
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state."""
         uptime_sec = getattr(self.coordinator.data, self.entity_description.key)
         return (

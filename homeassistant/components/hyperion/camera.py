@@ -8,7 +8,6 @@ import binascii
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 import functools
-import logging
 from typing import Any
 
 from aiohttp import web
@@ -49,8 +48,6 @@ from .const import (
     SIGNAL_ENTITY_REMOVE,
     TYPE_HYPERION_CAMERA,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 IMAGE_STREAM_JPG_SENTINEL = "data:image/jpg;base64,"
 
@@ -210,7 +207,9 @@ class HyperionCamera(Camera):
         finally:
             await self._stop_image_streaming_for_client()
 
-    async def async_camera_image(self) -> bytes | None:
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return single camera image bytes."""
         async with self._image_streaming() as is_streaming:
             if is_streaming:

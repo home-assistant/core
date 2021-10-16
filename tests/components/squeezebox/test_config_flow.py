@@ -178,7 +178,7 @@ async def test_discovery(hass):
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DISCOVERY},
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data={CONF_HOST: HOST, CONF_PORT: PORT, "uuid": UUID},
         )
         assert result["type"] == RESULT_TYPE_FORM
@@ -190,7 +190,7 @@ async def test_discovery_no_uuid(hass):
     with patch("pysqueezebox.Server.async_query", new=patch_async_query_unauthorized):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DISCOVERY},
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data={CONF_HOST: HOST, CONF_PORT: PORT},
         )
         assert result["type"] == RESULT_TYPE_FORM
@@ -199,9 +199,8 @@ async def test_discovery_no_uuid(hass):
 
 async def test_dhcp_discovery(hass):
     """Test we can process discovery from dhcp."""
-    with patch(
-        "pysqueezebox.Server.async_query",
-        return_value={"uuid": UUID},
+    with patch("pysqueezebox.Server.async_query", return_value={"uuid": UUID},), patch(
+        "homeassistant.components.squeezebox.config_flow.async_discover", mock_discover
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -216,9 +215,12 @@ async def test_dhcp_discovery(hass):
         assert result["step_id"] == "edit"
 
 
-async def test_dhcp_discovery_no_connection(hass):
-    """Test we can process discovery from dhcp without connecting to squeezebox server."""
-    with patch("pysqueezebox.Server.async_query", new=patch_async_query_unauthorized):
+async def test_dhcp_discovery_no_server_found(hass):
+    """Test we can handle dhcp discovery when no server is found."""
+    with patch(
+        "homeassistant.components.squeezebox.config_flow.async_discover",
+        mock_failed_discover,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
@@ -229,7 +231,25 @@ async def test_dhcp_discovery_no_connection(hass):
             },
         )
         assert result["type"] == RESULT_TYPE_FORM
-        assert result["step_id"] == "edit"
+        assert result["step_id"] == "user"
+
+
+async def test_dhcp_discovery_existing_player(hass):
+    """Test that we properly ignore known players during dhcp discover."""
+    with patch(
+        "homeassistant.helpers.entity_registry.EntityRegistry.async_get_entity_id",
+        return_value="test_entity",
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data={
+                IP_ADDRESS: "1.1.1.1",
+                MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
+                HOSTNAME: "any",
+            },
+        )
+        assert result["type"] == RESULT_TYPE_ABORT
 
 
 async def test_import(hass):

@@ -83,6 +83,7 @@ class UniFiBase(Entity):
         Remove entity if no entry in entity registry exist.
         Remove entity registry entry if no entry in device registry exist.
         Remove device registry entry if there is only one linked entity (this entity).
+        Remove config entry reference from device registry entry if there is more than one config entry.
         Remove entity registry entry if there are more than one entity linked to the device registry entry.
         """
         if self.key not in keys:
@@ -102,16 +103,32 @@ class UniFiBase(Entity):
 
         if (
             len(
-                async_entries_for_device(
+                entries_for_device := async_entries_for_device(
                     entity_registry,
                     entity_entry.device_id,
                     include_disabled_entities=True,
                 )
             )
-            == 1
-        ):
+        ) == 1:
             device_registry.async_remove_device(device_entry.id)
             return
+
+        if (
+            len(
+                entries_for_device_from_this_config_entry := [
+                    entry_for_device
+                    for entry_for_device in entries_for_device
+                    if entry_for_device.config_entry_id
+                    == self.controller.config_entry.entry_id
+                ]
+            )
+            != len(entries_for_device)
+            and len(entries_for_device_from_this_config_entry) == 1
+        ):
+            device_registry.async_update_device(
+                entity_entry.device_id,
+                remove_config_entry_id=self.controller.config_entry.entry_id,
+            )
 
         entity_registry.async_remove(self.entity_id)
 

@@ -47,12 +47,12 @@ class IotaBalanceSensor(IotaDevice, SensorEntity):
         return f"{self._name} Balance"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return "IOTA"
 
@@ -81,7 +81,7 @@ class IotaNodeSensor(IotaDevice, SensorEntity):
         return "IOTA Node"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 

@@ -92,6 +92,9 @@ DEVICE_CLASS_SMOKE = "smoke"
 # On means sound detected, Off means no sound (clear)
 DEVICE_CLASS_SOUND = "sound"
 
+# On means update available, Off means up-to-date
+DEVICE_CLASS_UPDATE = "update"
+
 # On means vibration detected, Off means no vibration
 DEVICE_CLASS_VIBRATION = "vibration"
 
@@ -121,6 +124,7 @@ DEVICE_CLASSES = [
     DEVICE_CLASS_SAFETY,
     DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_SOUND,
+    DEVICE_CLASS_UPDATE,
     DEVICE_CLASS_VIBRATION,
     DEVICE_CLASS_WINDOW,
 ]

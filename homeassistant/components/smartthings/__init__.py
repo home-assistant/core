@@ -57,7 +57,7 @@ from .smartapp import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the SmartThings platform."""
     await setup_smartapp_endpoint(hass)
     return True
@@ -209,7 +209,7 @@ async def async_get_entry_scenes(entry: ConfigEntry, api):
     return []
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     broker = hass.data[DOMAIN][DATA_BROKERS].pop(entry.entry_id, None)
     if broker:

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Awaitable, Callable, Dict, cast
+from typing import Any, Awaitable, Callable, Dict, TypedDict, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -71,9 +71,6 @@ from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime
 
 from .config import AutomationConfig, async_validate_config_item
-
-# Not used except by packages to check config structure
-from .config import PLATFORM_SCHEMA  # noqa: F401
 from .const import (
     CONF_ACTION,
     CONF_INITIAL_STATE,
@@ -107,6 +104,23 @@ SERVICE_TRIGGER = "trigger"
 
 _LOGGER = logging.getLogger(__name__)
 AutomationActionType = Callable[[HomeAssistant, TemplateVarsType], Awaitable[None]]
+
+
+class AutomationTriggerData(TypedDict):
+    """Automation trigger data."""
+
+    id: str
+    idx: str
+
+
+class AutomationTriggerInfo(TypedDict):
+    """Information about automation trigger."""
+
+    domain: str
+    name: str
+    home_assistant_start: bool
+    variables: TemplateVarsType
+    trigger_data: AutomationTriggerData
 
 
 @bind_hass

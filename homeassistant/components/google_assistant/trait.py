@@ -28,6 +28,7 @@ from homeassistant.components.lock import STATE_JAMMED, STATE_UNLOCKING
 from homeassistant.components.media_player.const import MEDIA_TYPE_CHANNEL
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
+    ATTR_BATTERY_LEVEL,
     ATTR_CODE,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -74,6 +75,7 @@ from .const import (
     ERR_ALREADY_DISARMED,
     ERR_ALREADY_STOPPED,
     ERR_CHALLENGE_NOT_SETUP,
+    ERR_FUNCTION_NOT_SUPPORTED,
     ERR_NO_AVAILABLE_CHANNEL,
     ERR_NOT_SUPPORTED,
     ERR_UNSUPPORTED_INPUT,
@@ -104,6 +106,9 @@ TRAIT_HUMIDITY_SETTING = f"{PREFIX_TRAITS}HumiditySetting"
 TRAIT_TRANSPORT_CONTROL = f"{PREFIX_TRAITS}TransportControl"
 TRAIT_MEDIA_STATE = f"{PREFIX_TRAITS}MediaState"
 TRAIT_CHANNEL = f"{PREFIX_TRAITS}Channel"
+TRAIT_LOCATOR = f"{PREFIX_TRAITS}Locator"
+TRAIT_ENERGYSTORAGE = f"{PREFIX_TRAITS}EnergyStorage"
+TRAIT_SENSOR_STATE = f"{PREFIX_TRAITS}SensorState"
 
 PREFIX_COMMANDS = "action.devices.commands."
 COMMAND_ONOFF = f"{PREFIX_COMMANDS}OnOff"
@@ -145,6 +150,8 @@ COMMAND_MEDIA_STOP = f"{PREFIX_COMMANDS}mediaStop"
 COMMAND_REVERSE = f"{PREFIX_COMMANDS}Reverse"
 COMMAND_SET_HUMIDITY = f"{PREFIX_COMMANDS}SetHumidity"
 COMMAND_SELECT_CHANNEL = f"{PREFIX_COMMANDS}selectChannel"
+COMMAND_LOCATE = f"{PREFIX_COMMANDS}Locate"
+COMMAND_CHARGE = f"{PREFIX_COMMANDS}Charge"
 
 TRAITS = []
 
@@ -406,10 +413,11 @@ class ColorSettingTrait(_Trait):
 
     def query_attributes(self):
         """Return color temperature query attributes."""
-        color_modes = self.state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES)
+        color_mode = self.state.attributes.get(light.ATTR_COLOR_MODE)
+
         color = {}
 
-        if light.color_supported(color_modes):
+        if light.color_supported([color_mode]):
             color_hs = self.state.attributes.get(light.ATTR_HS_COLOR)
             brightness = self.state.attributes.get(light.ATTR_BRIGHTNESS, 1)
             if color_hs is not None:
@@ -419,7 +427,7 @@ class ColorSettingTrait(_Trait):
                     "value": brightness / 255,
                 }
 
-        if light.color_temp_supported(color_modes):
+        if light.color_temp_supported([color_mode]):
             temp = self.state.attributes.get(light.ATTR_COLOR_TEMP)
             # Some faulty integrations might put 0 in here, raising exception.
             if temp == 0:
@@ -563,6 +571,99 @@ class DockTrait(_Trait):
             {ATTR_ENTITY_ID: self.state.entity_id},
             blocking=True,
             context=data.context,
+        )
+
+
+@register_trait
+class LocatorTrait(_Trait):
+    """Trait to offer locate functionality.
+
+    https://developers.google.com/actions/smarthome/traits/locator
+    """
+
+    name = TRAIT_LOCATOR
+    commands = [COMMAND_LOCATE]
+
+    @staticmethod
+    def supported(domain, features, device_class, _):
+        """Test if state is supported."""
+        return domain == vacuum.DOMAIN and features & vacuum.SUPPORT_LOCATE
+
+    def sync_attributes(self):
+        """Return locator attributes for a sync request."""
+        return {}
+
+    def query_attributes(self):
+        """Return locator query attributes."""
+        return {}
+
+    async def execute(self, command, data, params, challenge):
+        """Execute a locate command."""
+        if params.get("silence", False):
+            raise SmartHomeError(
+                ERR_FUNCTION_NOT_SUPPORTED,
+                "Silencing a Locate request is not yet supported",
+            )
+
+        await self.hass.services.async_call(
+            self.state.domain,
+            vacuum.SERVICE_LOCATE,
+            {ATTR_ENTITY_ID: self.state.entity_id},
+            blocking=True,
+            context=data.context,
+        )
+
+
+@register_trait
+class EnergyStorageTrait(_Trait):
+    """Trait to offer EnergyStorage functionality.
+
+    https://developers.google.com/actions/smarthome/traits/energystorage
+    """
+
+    name = TRAIT_ENERGYSTORAGE
+    commands = [COMMAND_CHARGE]
+
+    @staticmethod
+    def supported(domain, features, device_class, _):
+        """Test if state is supported."""
+        return domain == vacuum.DOMAIN and features & vacuum.SUPPORT_BATTERY
+
+    def sync_attributes(self):
+        """Return EnergyStorage attributes for a sync request."""
+        return {
+            "isRechargeable": True,
+            "queryOnlyEnergyStorage": True,
+        }
+
+    def query_attributes(self):
+        """Return EnergyStorage query attributes."""
+        battery_level = self.state.attributes.get(ATTR_BATTERY_LEVEL)
+        if battery_level == 100:
+            descriptive_capacity_remaining = "FULL"
+        elif 75 <= battery_level < 100:
+            descriptive_capacity_remaining = "HIGH"
+        elif 50 <= battery_level < 75:
+            descriptive_capacity_remaining = "MEDIUM"
+        elif 25 <= battery_level < 50:
+            descriptive_capacity_remaining = "LOW"
+        elif 0 <= battery_level < 25:
+            descriptive_capacity_remaining = "CRITICALLY_LOW"
+        return {
+            "descriptiveCapacityRemaining": descriptive_capacity_remaining,
+            "capacityRemaining": [{"rawValue": battery_level, "unit": "PERCENTAGE"}],
+            "capacityUntilFull": [
+                {"rawValue": 100 - battery_level, "unit": "PERCENTAGE"}
+            ],
+            "isCharging": self.state.state == vacuum.STATE_DOCKED,
+            "isPluggedIn": self.state.state == vacuum.STATE_DOCKED,
+        }
+
+    async def execute(self, command, data, params, challenge):
+        """Execute a dock command."""
+        raise SmartHomeError(
+            ERR_FUNCTION_NOT_SUPPORTED,
+            "Controlling charging of a vacuum is not yet supported",
         )
 
 
@@ -853,16 +954,14 @@ class TemperatureSettingTrait(_Trait):
                     1,
                 )
             else:
-                target_temp = attrs.get(ATTR_TEMPERATURE)
-                if target_temp is not None:
+                if (target_temp := attrs.get(ATTR_TEMPERATURE)) is not None:
                     target_temp = round(
                         temp_util.convert(target_temp, unit, TEMP_CELSIUS), 1
                     )
                     response["thermostatTemperatureSetpointHigh"] = target_temp
                     response["thermostatTemperatureSetpointLow"] = target_temp
         else:
-            target_temp = attrs.get(ATTR_TEMPERATURE)
-            if target_temp is not None:
+            if (target_temp := attrs.get(ATTR_TEMPERATURE)) is not None:
                 response["thermostatTemperatureSetpoint"] = round(
                     temp_util.convert(target_temp, unit, TEMP_CELSIUS), 1
                 )
@@ -1205,11 +1304,9 @@ class ArmDisArmTrait(_Trait):
     async def execute(self, command, data, params, challenge):
         """Execute an ArmDisarm command."""
         if params["arm"] and not params.get("cancel"):
-            arm_level = params.get("armLevel")
-
             # If no arm level given, we can only arm it if there is
             # only one supported arm type. We never default to triggered.
-            if not arm_level:
+            if not (arm_level := params.get("armLevel")):
                 states = self._supported_states()
 
                 if STATE_ALARM_TRIGGERED in states:
@@ -1290,7 +1387,7 @@ class FanSpeedTrait(_Trait):
             )
 
         elif domain == climate.DOMAIN:
-            modes = self.state.attributes.get(climate.ATTR_FAN_MODES, [])
+            modes = self.state.attributes.get(climate.ATTR_FAN_MODES) or []
             for mode in modes:
                 speed = {
                     "speed_name": mode,
@@ -1453,9 +1550,7 @@ class ModesTrait(_Trait):
             if self.state.domain != domain:
                 continue
 
-            items = self.state.attributes.get(attr)
-
-            if items is not None:
+            if (items := self.state.attributes.get(attr)) is not None:
                 modes.append(self._generate(name, items))
 
             # Shortcut since all domains are currently unique
@@ -1567,19 +1662,19 @@ class ModesTrait(_Trait):
             )
             return
 
-        if self.state.domain == media_player.DOMAIN:
-            sound_mode = settings.get("sound mode")
-            if sound_mode:
-                await self.hass.services.async_call(
-                    media_player.DOMAIN,
-                    media_player.SERVICE_SELECT_SOUND_MODE,
-                    {
-                        ATTR_ENTITY_ID: self.state.entity_id,
-                        media_player.ATTR_SOUND_MODE: sound_mode,
-                    },
-                    blocking=True,
-                    context=data.context,
-                )
+        if self.state.domain == media_player.DOMAIN and (
+            sound_mode := settings.get("sound mode")
+        ):
+            await self.hass.services.async_call(
+                media_player.DOMAIN,
+                media_player.SERVICE_SELECT_SOUND_MODE,
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    media_player.ATTR_SOUND_MODE: sound_mode,
+                },
+                blocking=True,
+                context=data.context,
+            )
 
         _LOGGER.info(
             "Received an Options command for unrecognised domain %s",
@@ -1941,9 +2036,7 @@ def _verify_pin_challenge(data, state, challenge):
     if not challenge:
         raise ChallengeNeeded(CHALLENGE_PIN_NEEDED)
 
-    pin = challenge.get("pin")
-
-    if pin != data.config.secure_devices_pin:
+    if challenge.get("pin") != data.config.secure_devices_pin:
         raise ChallengeNeeded(CHALLENGE_FAILED_PIN_NEEDED)
 
 
@@ -2187,3 +2280,52 @@ class ChannelTrait(_Trait):
             blocking=True,
             context=data.context,
         )
+
+
+@register_trait
+class SensorStateTrait(_Trait):
+    """Trait to get sensor state.
+
+    https://developers.google.com/actions/smarthome/traits/sensorstate
+    """
+
+    sensor_types = {
+        sensor.DEVICE_CLASS_AQI: ("AirQuality", "AQI"),
+        sensor.DEVICE_CLASS_CO: ("CarbonDioxideLevel", "PARTS_PER_MILLION"),
+        sensor.DEVICE_CLASS_CO2: ("CarbonMonoxideLevel", "PARTS_PER_MILLION"),
+        sensor.DEVICE_CLASS_PM25: ("PM2.5", "MICROGRAMS_PER_CUBIC_METER"),
+        sensor.DEVICE_CLASS_PM10: ("PM10", "MICROGRAMS_PER_CUBIC_METER"),
+        sensor.DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS: (
+            "VolatileOrganicCompounds",
+            "PARTS_PER_MILLION",
+        ),
+    }
+
+    name = TRAIT_SENSOR_STATE
+    commands = []
+
+    @classmethod
+    def supported(cls, domain, features, device_class, _):
+        """Test if state is supported."""
+        return domain == sensor.DOMAIN and device_class in cls.sensor_types
+
+    def sync_attributes(self):
+        """Return attributes for a sync request."""
+        device_class = self.state.attributes.get(ATTR_DEVICE_CLASS)
+        if (data := self.sensor_types.get(device_class)) is not None:
+            return {
+                "sensorStatesSupported": {
+                    "name": data[0],
+                    "numericCapabilities": {"rawValueUnit": data[1]},
+                }
+            }
+
+    def query_attributes(self):
+        """Return the attributes of this trait for this entity."""
+        device_class = self.state.attributes.get(ATTR_DEVICE_CLASS)
+        if (data := self.sensor_types.get(device_class)) is not None:
+            return {
+                "currentSensorStateData": [
+                    {"name": data[0], "rawValue": self.state.state}
+                ]
+            }

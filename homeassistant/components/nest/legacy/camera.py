@@ -1,4 +1,6 @@
 """Support for Nest Cameras."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -131,7 +133,9 @@ class NestCamera(Camera):
     def _ready_for_snapshot(self, now):
         return self._next_snapshot_at is None or now > self._next_snapshot_at
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         now = utcnow()
         if self._ready_for_snapshot(now):

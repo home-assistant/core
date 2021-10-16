@@ -14,7 +14,7 @@
                 "data": {
                     "country_code": "Kode negara akun Anda (mis., 1 untuk AS atau 86 untuk China)",
                     "password": "Kata Sandi",
-                    "platform": "Aplikasi tempat akun Anda mendaftar",
+                    "platform": "Aplikasi tempat akun Anda terdaftar",
                     "username": "Nama Pengguna"
                 },
                 "description": "Masukkan kredensial Tuya Anda.",

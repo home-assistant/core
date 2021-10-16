@@ -1,0 +1,22 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "port": "Port (Opcjonalnie)",
+                    "username": "Nazwa u\u017cytkownika (Opcjonalnie)"
+                },
+                "title": "Netgear"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "description": "Okre\u015bl opcjonalne ustawienia",
+                "title": "Netgear"
+            }
+        }
+    }
+}

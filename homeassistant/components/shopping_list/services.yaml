@@ -40,3 +40,7 @@ complete_all:
 incomplete_all:
   name: Incomplete all
   description: Marks all items as incomplete in the shopping list.
+
+clear_completed_items:
+  name: Clear completed items
+  description: Clear completed items from the shopping list.

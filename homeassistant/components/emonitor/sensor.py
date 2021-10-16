@@ -38,7 +38,7 @@ class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
     """Representation of an Emonitor power sensor entity."""
 
     _attr_device_class = DEVICE_CLASS_POWER
-    _attr_unit_of_measurement = POWER_WATT
+    _attr_native_unit_of_measurement = POWER_WATT
 
     def __init__(self, coordinator: DataUpdateCoordinator, channel_number: int) -> None:
         """Initialize the channel sensor."""
@@ -73,7 +73,7 @@ class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
         return attr_val
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """State of the sensor."""
         return self._paired_attr("inst_power")
 

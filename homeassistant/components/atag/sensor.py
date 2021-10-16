@@ -49,10 +49,12 @@ class AtagSensor(AtagEntity, SensorEntity):
             PERCENTAGE,
             TIME_HOURS,
         ):
-            self._attr_unit_of_measurement = coordinator.data.report[self._id].measure
+            self._attr_native_unit_of_measurement = coordinator.data.report[
+                self._id
+            ].measure
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self.coordinator.data.report[self._id].state
 

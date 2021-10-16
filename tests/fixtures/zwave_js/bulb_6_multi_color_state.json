@@ -267,8 +267,7 @@
                 "min": 0,
                 "max": 255,
                 "label": "Target value (Warm White)",
-                "description": "The target value of the Warm White color.",
-                "valueChangeOptions": ["transitionDuration"]
+                "description": "The target value of the Warm White color."
             }
         },
         {
@@ -286,8 +285,7 @@
                 "min": 0,
                 "max": 255,
                 "label": "Target value (Cold White)",
-                "description": "The target value of the Cold White color.",
-                "valueChangeOptions": ["transitionDuration"]
+                "description": "The target value of the Cold White color."
             }
         },
         {
@@ -305,8 +303,7 @@
                 "min": 0,
                 "max": 255,
                 "label": "Target value (Red)",
-                "description": "The target value of the Red color.",
-                "valueChangeOptions": ["transitionDuration"]
+                "description": "The target value of the Red color."
             }
         },
         {
@@ -324,8 +321,7 @@
                 "min": 0,
                 "max": 255,
                 "label": "Target value (Green)",
-                "description": "The target value of the Green color.",
-                "valueChangeOptions": ["transitionDuration"]
+                "description": "The target value of the Green color."
             }
         },
         {
@@ -343,8 +339,7 @@
                 "min": 0,
                 "max": 255,
                 "label": "Target value (Blue)",
-                "description": "The target value of the Blue color.",
-                "valueChangeOptions": ["transitionDuration"]
+                "description": "The target value of the Blue color."
             }
         },
         {

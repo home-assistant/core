@@ -1,8 +1,14 @@
 {
   "domain": "rainforest_eagle",
-  "name": "Rainforest Eagle-200",
+  "name": "Rainforest Eagle",
   "documentation": "https://www.home-assistant.io/integrations/rainforest_eagle",
-  "requirements": ["eagle200_reader==0.2.4", "uEagle==0.0.2"],
+  "requirements": ["aioeagle==1.1.0", "uEagle==0.0.2"],
   "codeowners": ["@gtdiehl", "@jcalbert"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "config_flow": true,
+  "dhcp": [
+    {
+      "macaddress": "D8D5B9*"
+    }
+  ]
 }

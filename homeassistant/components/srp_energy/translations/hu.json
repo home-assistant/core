@@ -13,6 +13,7 @@
             "user": {
                 "data": {
                     "id": "A fi\u00f3k azonos\u00edt\u00f3ja",
+                    "is_tou": "A haszn\u00e1lati id\u0151 terv",
                     "password": "Jelsz\u00f3",
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
                 }

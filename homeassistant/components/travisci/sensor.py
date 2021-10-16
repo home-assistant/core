@@ -1,4 +1,6 @@
 """This component provides HA sensor support for Travis CI framework."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -6,7 +8,11 @@ from travispy import TravisPy
 from travispy.errors import TravisError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
@@ -27,15 +33,41 @@ DEFAULT_BRANCH_NAME = "master"
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
-# sensor_type [ description, unit, icon ]
-SENSOR_TYPES = {
-    "last_build_id": ["Last Build ID", "", "mdi:card-account-details"],
-    "last_build_duration": ["Last Build Duration", TIME_SECONDS, "mdi:timelapse"],
-    "last_build_finished_at": ["Last Build Finished At", "", "mdi:timetable"],
-    "last_build_started_at": ["Last Build Started At", "", "mdi:timetable"],
-    "last_build_state": ["Last Build State", "", "mdi:github"],
-    "state": ["State", "", "mdi:github"],
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="last_build_id",
+        name="Last Build ID",
+        icon="mdi:card-account-details",
+    ),
+    SensorEntityDescription(
+        key="last_build_duration",
+        name="Last Build Duration",
+        native_unit_of_measurement=TIME_SECONDS,
+        icon="mdi:timelapse",
+    ),
+    SensorEntityDescription(
+        key="last_build_finished_at",
+        name="Last Build Finished At",
+        icon="mdi:timetable",
+    ),
+    SensorEntityDescription(
+        key="last_build_started_at",
+        name="Last Build Started At",
+        icon="mdi:timetable",
+    ),
+    SensorEntityDescription(
+        key="last_build_state",
+        name="Last Build State",
+        icon="mdi:github",
+    ),
+    SensorEntityDescription(
+        key="state",
+        name="State",
+        icon="mdi:github",
+    ),
+)
+
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 NOTIFICATION_ID = "travisci"
 NOTIFICATION_TITLE = "Travis CI Sensor Setup"
@@ -43,8 +75,8 @@ NOTIFICATION_TITLE = "Travis CI Sensor Setup"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+        vol.Required(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_KEYS)]
         ),
         vol.Required(CONF_BRANCH, default=DEFAULT_BRANCH_NAME): cv.string,
         vol.Optional(CONF_REPOSITORY, default=[]): vol.All(cv.ensure_list, [cv.string]),
@@ -56,9 +88,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Travis CI sensor."""
 
-    token = config.get(CONF_API_KEY)
-    repositories = config.get(CONF_REPOSITORY)
-    branch = config.get(CONF_BRANCH)
+    token = config[CONF_API_KEY]
+    repositories = config[CONF_REPOSITORY]
+    branch = config[CONF_BRANCH]
 
     try:
         travis = TravisPy.github_auth(token)
@@ -75,52 +107,43 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         )
         return False
 
-    sensors = []
-
     # non specific repository selected, then show all associated
     if not repositories:
         all_repos = travis.repos(member=user.login)
         repositories = [repo.slug for repo in all_repos]
 
+    entities = []
+    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
     for repo in repositories:
         if "/" not in repo:
             repo = f"{user.login}/{repo}"
 
-        for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-            sensors.append(TravisCISensor(travis, repo, user, branch, sensor_type))
+        entities.extend(
+            [
+                TravisCISensor(travis, repo, user, branch, description)
+                for description in SENSOR_TYPES
+                if description.key in monitored_conditions
+            ]
+        )
 
-    add_entities(sensors, True)
-    return True
+    add_entities(entities, True)
 
 
 class TravisCISensor(SensorEntity):
     """Representation of a Travis CI sensor."""
 
-    def __init__(self, data, repo_name, user, branch, sensor_type):
+    def __init__(
+        self, data, repo_name, user, branch, description: SensorEntityDescription
+    ):
         """Initialize the sensor."""
+        self.entity_description = description
         self._build = None
-        self._sensor_type = sensor_type
         self._data = data
         self._repo_name = repo_name
         self._user = user
         self._branch = branch
-        self._state = None
-        self._name = f"{self._repo_name} {SENSOR_TYPES[self._sensor_type][0]}"
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return SENSOR_TYPES[self._sensor_type][1]
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
+        self._attr_name = f"{repo_name} {description.name}"
 
     @property
     def extra_state_attributes(self):
@@ -128,8 +151,8 @@ class TravisCISensor(SensorEntity):
         attrs = {}
         attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
 
-        if self._build and self._state is not None:
-            if self._user and self._sensor_type == "state":
+        if self._build and self._attr_native_value is not None:
+            if self._user and self.entity_description.key == "state":
                 attrs["Owner Name"] = self._user.name
                 attrs["Owner Email"] = self._user.email
             else:
@@ -141,23 +164,19 @@ class TravisCISensor(SensorEntity):
 
         return attrs
 
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return SENSOR_TYPES[self._sensor_type][2]
-
     def update(self):
         """Get the latest data and updates the states."""
-        _LOGGER.debug("Updating sensor %s", self._name)
+        _LOGGER.debug("Updating sensor %s", self.name)
 
         repo = self._data.repo(self._repo_name)
         self._build = self._data.build(repo.last_build_id)
 
         if self._build:
-            if self._sensor_type == "state":
+            sensor_type = self.entity_description.key
+            if sensor_type == "state":
                 branch_stats = self._data.branch(self._branch, self._repo_name)
-                self._state = branch_stats.state
+                self._attr_native_value = branch_stats.state
 
             else:
-                param = self._sensor_type.replace("last_build_", "")
-                self._state = getattr(self._build, param)
+                param = sensor_type.replace("last_build_", "")
+                self._attr_native_value = getattr(self._build, param)

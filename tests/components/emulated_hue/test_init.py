@@ -14,7 +14,7 @@ from tests.common import async_fire_time_changed
 
 async def test_config_google_home_entity_id_to_number(hass, hass_storage):
     """Test config adheres to the type."""
-    conf = Config(hass, {"type": "google_home"})
+    conf = Config(hass, {"type": "google_home"}, "127.0.0.1")
     hass_storage[DATA_KEY] = {
         "version": DATA_VERSION,
         "key": DATA_KEY,
@@ -45,7 +45,7 @@ async def test_config_google_home_entity_id_to_number(hass, hass_storage):
 
 async def test_config_google_home_entity_id_to_number_altered(hass, hass_storage):
     """Test config adheres to the type."""
-    conf = Config(hass, {"type": "google_home"})
+    conf = Config(hass, {"type": "google_home"}, "127.0.0.1")
     hass_storage[DATA_KEY] = {
         "version": DATA_VERSION,
         "key": DATA_KEY,
@@ -76,7 +76,7 @@ async def test_config_google_home_entity_id_to_number_altered(hass, hass_storage
 
 async def test_config_google_home_entity_id_to_number_empty(hass, hass_storage):
     """Test config adheres to the type."""
-    conf = Config(hass, {"type": "google_home"})
+    conf = Config(hass, {"type": "google_home"}, "127.0.0.1")
     hass_storage[DATA_KEY] = {"version": DATA_VERSION, "key": DATA_KEY, "data": {}}
 
     await conf.async_setup()
@@ -100,7 +100,7 @@ async def test_config_google_home_entity_id_to_number_empty(hass, hass_storage):
 
 def test_config_alexa_entity_id_to_number():
     """Test config adheres to the type."""
-    conf = Config(None, {"type": "alexa"})
+    conf = Config(None, {"type": "alexa"}, "127.0.0.1")
 
     number = conf.entity_id_to_number("light.test")
     assert number == "light.test"

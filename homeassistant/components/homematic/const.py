@@ -59,9 +59,11 @@ HM_DEVICE_TYPES = {
         "IPMultiIO",
         "IPWSwitch",
         "IOSwitchWireless",
+        "IPSwitchRssiDevice",
         "IPWIODevice",
         "IPSwitchBattery",
         "IPMultiIOPCB",
+        "IPGarageSwitch",
     ],
     DISCOVER_LIGHTS: [
         "Dimmer",
@@ -125,6 +127,7 @@ HM_DEVICE_TYPES = {
         "TempModuleSTE2",
         "IPMultiIOPCB",
         "ValveBoxW",
+        "CO2SensorIP",
     ],
     DISCOVER_CLIMATE: [
         "Thermostat",
@@ -143,9 +146,11 @@ HM_DEVICE_TYPES = {
         "ShutterContact",
         "Smoke",
         "SmokeV2",
+        "SmokeV2Team",
         "Motion",
         "MotionV2",
         "MotionIP",
+        "MotionIPContactSabotage",
         "RemoteMotion",
         "WeatherSensor",
         "TiltSensor",
@@ -172,6 +177,7 @@ HM_DEVICE_TYPES = {
         "IPRainSensor",
         "IPLanRouter",
         "IPMultiIOPCB",
+        "IPLockDLD",
     ],
     DISCOVER_COVER: [
         "Blind",
@@ -219,6 +225,10 @@ HM_ATTRIBUTE_SUPPORT = {
     "OPERATING_VOLTAGE": ["voltage", {}],
     "WORKING": ["working", {0: "No", 1: "Yes"}],
     "STATE_UNCERTAIN": ["state_uncertain", {}],
+    "SENDERID": ["last_senderid", {}],
+    "SENDERADDRESS": ["last_senderaddress", {}],
+    "ERROR_ALARM_TEST": ["error_alarm_test", {0: "No", 1: "Yes"}],
+    "ERROR_SMOKE_CHAMBER": ["error_smoke_chamber", {0: "No", 1: "Yes"}],
 }
 
 HM_PRESS_EVENTS = [

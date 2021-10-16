@@ -143,7 +143,9 @@ class BuienradarCam(Camera):
             _LOGGER.error("Failed to fetch image, %s", type(err))
             return False
 
-    async def async_camera_image(self) -> bytes | None:
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """
         Return a still image response from the camera.
 

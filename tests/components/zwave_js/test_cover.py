@@ -23,7 +23,7 @@ from homeassistant.const import (
 WINDOW_COVER_ENTITY = "cover.zws_12"
 GDC_COVER_ENTITY = "cover.aeon_labs_garage_door_controller_gen5"
 BLIND_COVER_ENTITY = "cover.window_blind_controller"
-SHUTTER_COVER_ENTITY = "cover.flush_shutter_dc"
+SHUTTER_COVER_ENTITY = "cover.flush_shutter"
 AEOTEC_SHUTTER_COVER_ENTITY = "cover.nano_shutter_v_3"
 
 

@@ -46,7 +46,7 @@ def _async_setup_entities(devices, async_add_entities):
     for dev in devices:
         if DEV_TYPE_TO_HA.get(dev.device_type) in ("walldimmer", "bulb-dimmable"):
             entities.append(VeSyncDimmableLightHA(dev))
-        elif DEV_TYPE_TO_HA.get(dev.device_type) in ("bulb-tunable-white"):
+        elif DEV_TYPE_TO_HA.get(dev.device_type) in ("bulb-tunable-white",):
             entities.append(VeSyncTunableWhiteLightHA(dev))
         else:
             _LOGGER.debug(
@@ -82,7 +82,7 @@ class VeSyncBaseLight(VeSyncDevice, LightEntity):
         """Turn the device on."""
         attribute_adjustment_only = False
         # set white temperature
-        if self.color_mode in (COLOR_MODE_COLOR_TEMP) and ATTR_COLOR_TEMP in kwargs:
+        if self.color_mode in (COLOR_MODE_COLOR_TEMP,) and ATTR_COLOR_TEMP in kwargs:
             # get white temperature from HA data
             color_temp = int(kwargs[ATTR_COLOR_TEMP])
             # ensure value between min-max supported Mireds

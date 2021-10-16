@@ -1,7 +1,7 @@
 """Exposures to KNX bus."""
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 from xknx import XKNX
 from xknx.devices import DateTime, ExposeSensor

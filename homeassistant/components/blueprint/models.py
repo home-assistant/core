@@ -316,7 +316,7 @@ class DomainBlueprints:
             raise FileAlreadyExists(self.domain, blueprint_path)
 
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(blueprint.yaml())
+        path.write_text(blueprint.yaml(), encoding="utf-8")
 
     async def async_add_blueprint(
         self, blueprint: Blueprint, blueprint_path: str

@@ -293,7 +293,7 @@ The following persons point at invalid users:
     return filtered
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the person component."""
     entity_component = EntityComponent(_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()

@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 from collections import deque
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import wraps
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 from homeassistant.helpers.typing import TemplateVarsType
 import homeassistant.util.dt as dt_util
@@ -21,7 +21,7 @@ class TraceElement:
         self._child_run_id: str | None = None
         self._error: Exception | None = None
         self.path: str = path
-        self._result: dict | None = None
+        self._result: dict[str, Any] | None = None
         self.reuse_by_child = False
         self._timestamp = dt_util.utcnow()
 

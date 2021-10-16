@@ -181,6 +181,17 @@ async def test_allow_clip_sensor(hass, aioclient_mock):
                 "config": {},
                 "uniqueid": "00:00:00:00:00:00:00:02-00",
             },
+            "3": {
+                "config": {"on": True, "reachable": True},
+                "etag": "fda064fca03f17389d0799d7cb1883ee",
+                "manufacturername": "Philips",
+                "modelid": "CLIPGenericFlag",
+                "name": "Clip Flag Boot Time",
+                "state": {"flag": True, "lastupdated": "2021-09-30T07:09:06.281"},
+                "swversion": "1.0",
+                "type": "CLIPGenericFlag",
+                "uniqueid": "/sensors/3",
+            },
         }
     }
 
@@ -189,9 +200,10 @@ async def test_allow_clip_sensor(hass, aioclient_mock):
             hass, aioclient_mock, options={CONF_ALLOW_CLIP_SENSOR: True}
         )
 
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 3
     assert hass.states.get("binary_sensor.presence_sensor").state == STATE_OFF
     assert hass.states.get("binary_sensor.clip_presence_sensor").state == STATE_OFF
+    assert hass.states.get("binary_sensor.clip_flag_boot_time").state == STATE_ON
 
     # Disallow clip sensors
 
@@ -202,6 +214,7 @@ async def test_allow_clip_sensor(hass, aioclient_mock):
 
     assert len(hass.states.async_all()) == 1
     assert not hass.states.get("binary_sensor.clip_presence_sensor")
+    assert not hass.states.get("binary_sensor.clip_flag_boot_time")
 
     # Allow clip sensors
 
@@ -210,8 +223,9 @@ async def test_allow_clip_sensor(hass, aioclient_mock):
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 3
     assert hass.states.get("binary_sensor.clip_presence_sensor").state == STATE_OFF
+    assert hass.states.get("binary_sensor.clip_flag_boot_time").state == STATE_ON
 
 
 async def test_add_new_binary_sensor(hass, aioclient_mock, mock_deconz_websocket):

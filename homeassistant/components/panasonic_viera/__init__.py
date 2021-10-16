@@ -1,7 +1,7 @@
 """The Panasonic Viera integration."""
 from functools import partial
 import logging
-from urllib.request import HTTPError, URLError
+from urllib.error import HTTPError, URLError
 
 from panasonic_viera import EncryptionRequired, Keys, RemoteControl, SOAPError
 import voluptuous as vol

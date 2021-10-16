@@ -1,0 +1,13 @@
+{
+  "domain": "whirlpool",
+  "name": "Whirlpool Sixth Sense",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/whirlpool",
+  "requirements": [
+    "whirlpool-sixth-sense==0.15.1"
+  ],
+  "codeowners": [
+    "@abmantis"
+  ],
+  "iot_class": "cloud_push"
+}

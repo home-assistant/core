@@ -149,7 +149,7 @@ class SigfoxDevice(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the payload of the last message."""
         return self._state
 

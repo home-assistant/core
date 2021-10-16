@@ -1,15 +1,16 @@
 """SQLAlchemy util functions."""
 from __future__ import annotations
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from datetime import timedelta
 import functools
 import logging
 import os
 import time
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
+from sqlalchemy import text
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm.session import Session
 
@@ -23,6 +24,8 @@ from .models import (
     TABLE_SCHEMA_CHANGES,
     TABLE_STATISTICS,
     TABLE_STATISTICS_META,
+    TABLE_STATISTICS_RUNS,
+    TABLE_STATISTICS_SHORT_TERM,
     RecorderRuns,
     process_timestamp,
 )
@@ -182,7 +185,13 @@ def basic_sanity_check(cursor):
     """Check tables to make sure select does not fail."""
 
     for table in ALL_TABLES:
-        if table in [TABLE_STATISTICS, TABLE_STATISTICS_META]:
+        # The statistics tables may not be present in old databases
+        if table in [
+            TABLE_STATISTICS,
+            TABLE_STATISTICS_META,
+            TABLE_STATISTICS_RUNS,
+            TABLE_STATISTICS_SHORT_TERM,
+        ]:
             continue
         if table in (TABLE_RECORDER_RUNS, TABLE_SCHEMA_CHANGES):
             cursor.execute(f"SELECT * FROM {table};")  # nosec # not injection
@@ -257,7 +266,18 @@ def execute_on_connection(dbapi_connection, statement):
     cursor.close()
 
 
-def setup_connection_for_dialect(dialect_name, dbapi_connection, first_connection):
+def query_on_connection(dbapi_connection, statement):
+    """Execute a single statement with a dbapi connection and return the result."""
+    cursor = dbapi_connection.cursor()
+    cursor.execute(statement)
+    result = cursor.fetchall()
+    cursor.close()
+    return result
+
+
+def setup_connection_for_dialect(
+    instance, dialect_name, dbapi_connection, first_connection
+):
     """Execute statements needed for dialect connection."""
     # Returns False if the the connection needs to be setup
     # on the next connection, returns True if the connection
@@ -271,12 +291,32 @@ def setup_connection_for_dialect(dialect_name, dbapi_connection, first_connectio
             # WAL mode only needs to be setup once
             # instead of every time we open the sqlite connection
             # as its persistent and isn't free to call every time.
+            result = query_on_connection(dbapi_connection, "SELECT sqlite_version()")
+            version = result[0][0]
+            major, minor, _patch = version.split(".", 2)
+            if int(major) == 3 and int(minor) < 25:
+                instance._db_supports_row_number = (  # pylint: disable=[protected-access]
+                    False
+                )
 
         # approximately 8MiB of memory
         execute_on_connection(dbapi_connection, "PRAGMA cache_size = -8192")
 
+        # enable support for foreign keys
+        execute_on_connection(dbapi_connection, "PRAGMA foreign_keys=ON")
+
     if dialect_name == "mysql":
         execute_on_connection(dbapi_connection, "SET session wait_timeout=28800")
+        if first_connection:
+            result = query_on_connection(dbapi_connection, "SELECT VERSION()")
+            version = result[0][0]
+            major, minor, _patch = version.split(".", 2)
+            if (int(major) == 5 and int(minor) < 8) or (
+                int(major) == 10 and int(minor) < 2
+            ):
+                instance._db_supports_row_number = (  # pylint: disable=[protected-access]
+                    False
+                )
 
 
 def end_incomplete_runs(session, start_time):
@@ -332,4 +372,5 @@ def perodic_db_cleanups(instance: Recorder):
     if instance.engine.dialect.name == "sqlite":
         # Execute sqlite to create a wal checkpoint and free up disk space
         _LOGGER.debug("WAL checkpoint")
-        instance.engine.execute("PRAGMA wal_checkpoint(TRUNCATE);")
+        with instance.engine.connect() as connection:
+            connection.execute(text("PRAGMA wal_checkpoint(TRUNCATE);"))

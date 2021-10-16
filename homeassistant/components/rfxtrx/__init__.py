@@ -1,7 +1,6 @@
 """Support for RFXtrx devices."""
 import asyncio
 import binascii
-from collections import OrderedDict
 import copy
 import functools
 import logging
@@ -11,31 +10,14 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
     ATTR_DEVICE_ID,
-    CONF_COMMAND_OFF,
-    CONF_COMMAND_ON,
     CONF_DEVICE,
-    CONF_DEVICE_CLASS,
     CONF_DEVICE_ID,
     CONF_DEVICES,
     CONF_HOST,
     CONF_PORT,
-    DEGREE,
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
     EVENT_HOMEASSISTANT_STOP,
-    LENGTH_MILLIMETERS,
-    PERCENTAGE,
-    POWER_WATT,
-    PRECIPITATION_MILLIMETERS_PER_HOUR,
-    PRESSURE_HPA,
-    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    SPEED_METERS_PER_SECOND,
-    TEMP_CELSIUS,
-    UV_INDEX,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -47,11 +29,8 @@ from .const import (
     COMMAND_GROUP_LIST,
     CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
-    CONF_DEBUG,
     CONF_FIRE_EVENT,
-    CONF_OFF_DELAY,
     CONF_REMOVE_DEVICE,
-    CONF_SIGNAL_REPETITIONS,
     DATA_CLEANUP_CALLBACKS,
     DATA_LISTENER,
     DATA_RFXOBJECT,
@@ -66,38 +45,6 @@ DEFAULT_SIGNAL_REPETITIONS = 1
 
 SIGNAL_EVENT = f"{DOMAIN}_event"
 
-DATA_TYPES = OrderedDict(
-    [
-        ("Temperature", TEMP_CELSIUS),
-        ("Temperature2", TEMP_CELSIUS),
-        ("Humidity", PERCENTAGE),
-        ("Barometer", PRESSURE_HPA),
-        ("Wind direction", DEGREE),
-        ("Rain rate", PRECIPITATION_MILLIMETERS_PER_HOUR),
-        ("Energy usage", POWER_WATT),
-        ("Total usage", ENERGY_KILO_WATT_HOUR),
-        ("Sound", None),
-        ("Sensor Status", None),
-        ("Counter value", "count"),
-        ("UV", UV_INDEX),
-        ("Humidity status", None),
-        ("Forecast", None),
-        ("Forecast numeric", None),
-        ("Rain total", LENGTH_MILLIMETERS),
-        ("Wind average speed", SPEED_METERS_PER_SECOND),
-        ("Wind gust", SPEED_METERS_PER_SECOND),
-        ("Chill", TEMP_CELSIUS),
-        ("Count", "count"),
-        ("Current Ch. 1", ELECTRIC_CURRENT_AMPERE),
-        ("Current Ch. 2", ELECTRIC_CURRENT_AMPERE),
-        ("Current Ch. 3", ELECTRIC_CURRENT_AMPERE),
-        ("Voltage", ELECTRIC_POTENTIAL_VOLT),
-        ("Current", ELECTRIC_CURRENT_AMPERE),
-        ("Battery numeric", PERCENTAGE),
-        ("Rssi numeric", SIGNAL_STRENGTH_DECIBELS_MILLIWATT),
-    ]
-)
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -111,81 +58,9 @@ def _bytearray_string(data):
         ) from err
 
 
-def _ensure_device(value):
-    if value is None:
-        return DEVICE_DATA_SCHEMA({})
-    return DEVICE_DATA_SCHEMA(value)
-
-
 SERVICE_SEND_SCHEMA = vol.Schema({ATTR_EVENT: _bytearray_string})
 
-DEVICE_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-        vol.Optional(CONF_OFF_DELAY): vol.All(
-            cv.time_period, cv.positive_timedelta, lambda value: value.total_seconds()
-        ),
-        vol.Optional(CONF_DATA_BITS): cv.positive_int,
-        vol.Optional(CONF_COMMAND_ON): cv.byte,
-        vol.Optional(CONF_COMMAND_OFF): cv.byte,
-        vol.Optional(CONF_SIGNAL_REPETITIONS, default=1): cv.positive_int,
-    }
-)
-
-BASE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_DEBUG): cv.boolean,
-        vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
-        vol.Optional(CONF_DEVICES, default={}): {cv.string: _ensure_device},
-    },
-)
-
-DEVICE_SCHEMA = BASE_SCHEMA.extend({vol.Required(CONF_DEVICE): cv.string})
-
-PORT_SCHEMA = BASE_SCHEMA.extend(
-    {vol.Required(CONF_PORT): cv.port, vol.Optional(CONF_HOST): cv.string}
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.deprecated(CONF_DEBUG), vol.Any(DEVICE_SCHEMA, PORT_SCHEMA))},
-    extra=vol.ALLOW_EXTRA,
-)
-
 PLATFORMS = ["switch", "sensor", "light", "binary_sensor", "cover"]
-
-
-async def async_setup(hass, config):
-    """Set up the RFXtrx component."""
-    if DOMAIN not in config:
-        return True
-
-    data = {
-        CONF_HOST: config[DOMAIN].get(CONF_HOST),
-        CONF_PORT: config[DOMAIN].get(CONF_PORT),
-        CONF_DEVICE: config[DOMAIN].get(CONF_DEVICE),
-        CONF_AUTOMATIC_ADD: config[DOMAIN].get(CONF_AUTOMATIC_ADD),
-        CONF_DEVICES: config[DOMAIN][CONF_DEVICES],
-    }
-
-    # Read device_id from the event code add to the data that will end up in the ConfigEntry
-    for event_code, event_config in data[CONF_DEVICES].items():
-        event = get_rfx_object(event_code)
-        if event is None:
-            continue
-        device_id = get_device_id(
-            event.device, data_bits=event_config.get(CONF_DATA_BITS)
-        )
-        event_config[CONF_DEVICE_ID] = device_id
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=data,
-        )
-    )
-    return True
 
 
 async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
@@ -318,7 +193,7 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
     @callback
     def _add_device(event, device_id):
         """Add a device to config entry."""
-        config = DEVICE_DATA_SCHEMA({})
+        config = {}
         config[CONF_DEVICE_ID] = device_id
 
         data = entry.data.copy()

@@ -1,0 +1,11 @@
+{
+  "data": {
+    "type": "Car",
+    "id": "VF1AAAAA555777999",
+    "attributes": {
+      "gpsLatitude": 48.1234567,
+      "gpsLongitude": 11.1234567,
+      "lastUpdateTime": "2020-02-18T16:58:38Z"
+    }
+  }
+}

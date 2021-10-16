@@ -79,12 +79,12 @@ class GeniusBattery(GeniusDevice, SensorEntity):
         return DEVICE_CLASS_BATTERY
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return the unit of measurement of the sensor."""
         return PERCENTAGE
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         level = self._device.data["state"][self._state_attr]
         return level if level != 255 else 0
@@ -105,7 +105,7 @@ class GeniusIssue(GeniusEntity, SensorEntity):
         self._issues = []
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the number of issues."""
         return len(self._issues)
 

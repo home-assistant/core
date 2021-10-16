@@ -99,37 +99,10 @@ class OVOEnergyEntity(CoordinatorEntity):
         self,
         coordinator: DataUpdateCoordinator,
         client: OVOEnergy,
-        key: str,
-        name: str,
-        icon: str,
     ) -> None:
         """Initialize the OVO Energy entity."""
         super().__init__(coordinator)
         self._client = client
-        self._key = key
-        self._name = name
-        self._icon = icon
-        self._available = True
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        return self._key
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def icon(self) -> str:
-        """Return the mdi icon of the entity."""
-        return self._icon
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success and self._available
 
 
 class OVOEnergyDeviceEntity(OVOEnergyEntity):

@@ -402,7 +402,7 @@ async def test_unload_entry(hass, mock_panel):
     assert hass.data[konnected.DOMAIN]["devices"] == {}
 
 
-async def test_api(hass, aiohttp_client, mock_panel):
+async def test_api(hass, hass_client_no_auth, mock_panel):
     """Test callback view."""
     await async_setup_component(hass, "http", {"http": {}})
 
@@ -470,7 +470,7 @@ async def test_api(hass, aiohttp_client, mock_panel):
         is True
     )
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     # Test the get endpoint for switch status polling
     resp = await client.get("/api/konnected")
@@ -569,7 +569,7 @@ async def test_api(hass, aiohttp_client, mock_panel):
     assert result == {"message": "ok"}
 
 
-async def test_state_updates_zone(hass, aiohttp_client, mock_panel):
+async def test_state_updates_zone(hass, hass_client_no_auth, mock_panel):
     """Test callback view."""
     await async_process_ha_core_config(
         hass,
@@ -642,7 +642,7 @@ async def test_state_updates_zone(hass, aiohttp_client, mock_panel):
         is True
     )
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     # Test updating a binary sensor
     resp = await client.post(
@@ -720,7 +720,7 @@ async def test_state_updates_zone(hass, aiohttp_client, mock_panel):
     assert hass.states.get("sensor.temper_temperature").state == "42.0"
 
 
-async def test_state_updates_pin(hass, aiohttp_client, mock_panel):
+async def test_state_updates_pin(hass, hass_client_no_auth, mock_panel):
     """Test callback view."""
     await async_process_ha_core_config(
         hass,
@@ -797,7 +797,7 @@ async def test_state_updates_pin(hass, aiohttp_client, mock_panel):
         is True
     )
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     # Test updating a binary sensor
     resp = await client.post(

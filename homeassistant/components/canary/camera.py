@@ -1,7 +1,6 @@
 """Support for Canary camera."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 from typing import Final
 
@@ -9,9 +8,9 @@ from aiohttp.web import Request, StreamResponse
 from canary.api import Device, Location
 from canary.live_stream_api import LiveStreamSession
 from haffmpeg.camera import CameraMjpeg
-from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 import voluptuous as vol
 
+from homeassistant.components import ffmpeg
 from homeassistant.components.camera import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     Camera,
@@ -123,22 +122,21 @@ class CanaryCamera(CoordinatorEntity, Camera):
         """Return the camera motion detection status."""
         return not self.location.is_recording
 
-    async def async_camera_image(self) -> bytes | None:
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         await self.hass.async_add_executor_job(self.renew_live_stream_session)
         live_stream_url = await self.hass.async_add_executor_job(
             getattr, self._live_stream_session, "live_stream_url"
         )
-
-        ffmpeg = ImageFrame(self._ffmpeg.binary)
-        image: bytes | None = await asyncio.shield(
-            ffmpeg.get_image(
-                live_stream_url,
-                output_format=IMAGE_JPEG,
-                extra_cmd=self._ffmpeg_arguments,
-            )
+        return await ffmpeg.async_get_image(
+            self.hass,
+            live_stream_url,
+            extra_cmd=self._ffmpeg_arguments,
+            width=width,
+            height=height,
         )
-        return image
 
     async def handle_async_mjpeg_stream(
         self, request: Request

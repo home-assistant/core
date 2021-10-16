@@ -15,6 +15,7 @@ import pytest
 
 from homeassistant.components import camera
 from homeassistant.components.camera import STATE_IDLE
+from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -603,3 +604,85 @@ async def test_multiple_event_images(hass, auth):
 
     image = await async_get_image(hass)
     assert image.content == b"updated image bytes"
+
+
+async def test_camera_web_rtc(hass, auth, hass_ws_client):
+    """Test a basic camera that supports web rtc."""
+    expiration = utcnow() + datetime.timedelta(seconds=100)
+    auth.responses = [
+        aiohttp.web.json_response(
+            {
+                "results": {
+                    "answerSdp": "v=0\r\ns=-\r\n",
+                    "mediaSessionId": "yP2grqz0Y1V_wgiX9KEbMWHoLd...",
+                    "expiresAt": expiration.isoformat(timespec="seconds"),
+                },
+            }
+        )
+    ]
+    device_traits = {
+        "sdm.devices.traits.Info": {
+            "customName": "My Camera",
+        },
+        "sdm.devices.traits.CameraLiveStream": {
+            "maxVideoResolution": {
+                "width": 640,
+                "height": 480,
+            },
+            "videoCodecs": ["H264"],
+            "audioCodecs": ["AAC"],
+            "supportedProtocols": ["WEB_RTC"],
+        },
+    }
+    await async_setup_camera(hass, device_traits, auth=auth)
+
+    assert len(hass.states.async_all()) == 1
+    cam = hass.states.get("camera.my_camera")
+    assert cam is not None
+    assert cam.state == STATE_IDLE
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "camera/web_rtc_offer",
+            "entity_id": "camera.my_camera",
+            "offer": "a=recvonly",
+        }
+    )
+
+    msg = await client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"]["answer"] == "v=0\r\ns=-\r\n"
+
+    # Nest WebRTC cameras do not support a still image
+    with pytest.raises(HomeAssistantError):
+        await async_get_image(hass)
+
+
+async def test_camera_web_rtc_unsupported(hass, auth, hass_ws_client):
+    """Test a basic camera that supports web rtc."""
+    await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
+
+    assert len(hass.states.async_all()) == 1
+    cam = hass.states.get("camera.my_camera")
+    assert cam is not None
+    assert cam.state == STATE_IDLE
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "camera/web_rtc_offer",
+            "entity_id": "camera.my_camera",
+            "offer": "a=recvonly",
+        }
+    )
+
+    msg = await client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"]["code"] == "web_rtc_offer_failed"

@@ -179,8 +179,8 @@ class FinTsAccount(SensorEntity):
         """Get the current balance and currency for the account."""
         bank = self._client.client
         balance = bank.get_balance(self._account)
-        self._attr_state = balance.amount.amount
-        self._attr_unit_of_measurement = balance.amount.currency
+        self._attr_native_value = balance.amount.amount
+        self._attr_native_unit_of_measurement = balance.amount.currency
         _LOGGER.debug("updated balance of account %s", self.name)
 
 
@@ -198,13 +198,13 @@ class FinTsHoldingsAccount(SensorEntity):
         self._account = account
         self._holdings: list[Any] = []
         self._attr_icon = ICON
-        self._attr_unit_of_measurement = "EUR"
+        self._attr_native_unit_of_measurement = "EUR"
 
     def update(self) -> None:
         """Get the current holdings for the account."""
         bank = self._client.client
         self._holdings = bank.get_holdings(self._account)
-        self._attr_state = sum(h.total_value for h in self._holdings)
+        self._attr_native_value = sum(h.total_value for h in self._holdings)
 
     @property
     def extra_state_attributes(self) -> dict:

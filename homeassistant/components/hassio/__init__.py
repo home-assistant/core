@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 import os
-from typing import Any
+from typing import Any, NamedTuple
 
 import voluptuous as vol
 
@@ -43,7 +43,6 @@ from .const import (
     ATTR_PASSWORD,
     ATTR_REPOSITORY,
     ATTR_SLUG,
-    ATTR_SNAPSHOT,
     ATTR_URL,
     ATTR_VERSION,
     DOMAIN,
@@ -87,8 +86,6 @@ SERVICE_ADDON_UPDATE = "addon_update"
 SERVICE_ADDON_STDIN = "addon_stdin"
 SERVICE_HOST_SHUTDOWN = "host_shutdown"
 SERVICE_HOST_REBOOT = "host_reboot"
-SERVICE_SNAPSHOT_FULL = "snapshot_full"
-SERVICE_SNAPSHOT_PARTIAL = "snapshot_partial"
 SERVICE_BACKUP_FULL = "backup_full"
 SERVICE_BACKUP_PARTIAL = "backup_partial"
 SERVICE_RESTORE_FULL = "restore_full"
@@ -116,11 +113,9 @@ SCHEMA_BACKUP_PARTIAL = SCHEMA_BACKUP_FULL.extend(
 
 SCHEMA_RESTORE_FULL = vol.Schema(
     {
-        vol.Exclusive(ATTR_SLUG, ATTR_SLUG): cv.slug,
-        vol.Exclusive(ATTR_SNAPSHOT, ATTR_SLUG): cv.slug,
+        vol.Required(ATTR_SLUG): cv.slug,
         vol.Optional(ATTR_PASSWORD): cv.string,
-    },
-    cv.has_at_least_one_key(ATTR_SLUG, ATTR_SNAPSHOT),
+    }
 )
 
 SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend(
@@ -132,38 +127,47 @@ SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend(
 )
 
 
+class APIEndpointSettings(NamedTuple):
+    """Settings for API endpoint."""
+
+    command: str
+    schema: vol.Schema
+    timeout: int | None = 60
+    pass_data: bool = False
+
+
 MAP_SERVICE_API = {
-    SERVICE_ADDON_START: ("/addons/{addon}/start", SCHEMA_ADDON, 60, False),
-    SERVICE_ADDON_STOP: ("/addons/{addon}/stop", SCHEMA_ADDON, 60, False),
-    SERVICE_ADDON_RESTART: ("/addons/{addon}/restart", SCHEMA_ADDON, 60, False),
-    SERVICE_ADDON_UPDATE: ("/addons/{addon}/update", SCHEMA_ADDON, 60, False),
-    SERVICE_ADDON_STDIN: ("/addons/{addon}/stdin", SCHEMA_ADDON_STDIN, 60, False),
-    SERVICE_HOST_SHUTDOWN: ("/host/shutdown", SCHEMA_NO_DATA, 60, False),
-    SERVICE_HOST_REBOOT: ("/host/reboot", SCHEMA_NO_DATA, 60, False),
-    SERVICE_BACKUP_FULL: ("/backups/new/full", SCHEMA_BACKUP_FULL, 300, True),
-    SERVICE_BACKUP_PARTIAL: (
-        "/backups/new/partial",
-        SCHEMA_BACKUP_PARTIAL,
-        300,
+    SERVICE_ADDON_START: APIEndpointSettings("/addons/{addon}/start", SCHEMA_ADDON),
+    SERVICE_ADDON_STOP: APIEndpointSettings("/addons/{addon}/stop", SCHEMA_ADDON),
+    SERVICE_ADDON_RESTART: APIEndpointSettings("/addons/{addon}/restart", SCHEMA_ADDON),
+    SERVICE_ADDON_UPDATE: APIEndpointSettings("/addons/{addon}/update", SCHEMA_ADDON),
+    SERVICE_ADDON_STDIN: APIEndpointSettings(
+        "/addons/{addon}/stdin", SCHEMA_ADDON_STDIN
+    ),
+    SERVICE_HOST_SHUTDOWN: APIEndpointSettings("/host/shutdown", SCHEMA_NO_DATA),
+    SERVICE_HOST_REBOOT: APIEndpointSettings("/host/reboot", SCHEMA_NO_DATA),
+    SERVICE_BACKUP_FULL: APIEndpointSettings(
+        "/backups/new/full",
+        SCHEMA_BACKUP_FULL,
+        None,
         True,
     ),
-    SERVICE_RESTORE_FULL: (
+    SERVICE_BACKUP_PARTIAL: APIEndpointSettings(
+        "/backups/new/partial",
+        SCHEMA_BACKUP_PARTIAL,
+        None,
+        True,
+    ),
+    SERVICE_RESTORE_FULL: APIEndpointSettings(
         "/backups/{slug}/restore/full",
         SCHEMA_RESTORE_FULL,
-        300,
+        None,
         True,
     ),
-    SERVICE_RESTORE_PARTIAL: (
+    SERVICE_RESTORE_PARTIAL: APIEndpointSettings(
         "/backups/{slug}/restore/partial",
         SCHEMA_RESTORE_PARTIAL,
-        300,
-        True,
-    ),
-    SERVICE_SNAPSHOT_FULL: ("/backups/new/full", SCHEMA_BACKUP_FULL, 300, True),
-    SERVICE_SNAPSHOT_PARTIAL: (
-        "/backups/new/partial",
-        SCHEMA_BACKUP_PARTIAL,
-        300,
+        None,
         True,
     ),
 }
@@ -397,7 +401,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     hass.data[DOMAIN] = hassio = HassIO(hass.loop, websession, host)
 
     if not await hassio.is_connected():
-        _LOGGER.warning("Not connected with Hass.io / system too busy!")
+        _LOGGER.warning("Not connected with the supervisor / system too busy!")
 
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
     data = await store.async_load()
@@ -466,44 +470,33 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     async def async_service_handler(service):
         """Handle service calls for Hass.io."""
-        api_command = MAP_SERVICE_API[service.service][0]
-        if "snapshot" in service.service:
-            _LOGGER.warning(
-                "The service '%s' is deprecated and will be removed in Home Assistant 2021.11, use '%s' instead",
-                service.service,
-                service.service.replace("snapshot", "backup"),
-            )
+        api_endpoint = MAP_SERVICE_API[service.service]
+
         data = service.data.copy()
         addon = data.pop(ATTR_ADDON, None)
         slug = data.pop(ATTR_SLUG, None)
-        snapshot = data.pop(ATTR_SNAPSHOT, None)
-        if snapshot is not None:
-            _LOGGER.warning(
-                "Using 'snapshot' is deprecated and will be removed in Home Assistant 2021.11, use 'slug' instead"
-            )
-            slug = snapshot
-
         payload = None
 
         # Pass data to Hass.io API
         if service.service == SERVICE_ADDON_STDIN:
             payload = data[ATTR_INPUT]
-        elif MAP_SERVICE_API[service.service][3]:
+        elif api_endpoint.pass_data:
             payload = data
 
         # Call API
         try:
             await hassio.send_command(
-                api_command.format(addon=addon, slug=slug),
+                api_endpoint.command.format(addon=addon, slug=slug),
                 payload=payload,
-                timeout=MAP_SERVICE_API[service.service][2],
+                timeout=api_endpoint.timeout,
             )
-        except HassioAPIError as err:
-            _LOGGER.error("Error on Supervisor API: %s", err)
+        except HassioAPIError:
+            # The exceptions are logged properly in hassio.send_command
+            pass
 
     for service, settings in MAP_SERVICE_API.items():
         hass.services.async_register(
-            DOMAIN, service, async_service_handler, schema=settings[1]
+            DOMAIN, service, async_service_handler, schema=settings.schema
         )
 
     async def update_info_data(now):

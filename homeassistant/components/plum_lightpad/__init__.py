@@ -10,6 +10,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTAN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .utils import load_plum
@@ -34,7 +35,7 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS = ["light"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Plum Lightpad Platform initialization."""
     if DOMAIN not in config:
         return True

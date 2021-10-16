@@ -1,30 +1,39 @@
 """Support for Velbus sensors."""
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import DEVICE_CLASS_POWER, ENERGY_KILO_WATT_HOUR
+from __future__ import annotations
+
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+)
+from homeassistant.const import (
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_TEMPERATURE,
+)
 
 from . import VelbusEntity
 from .const import DOMAIN
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up Velbus sensor based on config_entry."""
+    """Set up Velbus switch based on config_entry."""
+    await hass.data[DOMAIN][entry.entry_id]["tsk"]
     cntrl = hass.data[DOMAIN][entry.entry_id]["cntrl"]
-    modules_data = hass.data[DOMAIN][entry.entry_id]["sensor"]
     entities = []
-    for address, channel in modules_data:
-        module = cntrl.get_module(address)
-        entities.append(VelbusSensor(module, channel))
-        if module.get_class(channel) == "counter":
-            entities.append(VelbusSensor(module, channel, True))
+    for channel in cntrl.get_all("sensor"):
+        entities.append(VelbusSensor(channel))
+        if channel.is_counter_channel():
+            entities.append(VelbusSensor(channel, True))
     async_add_entities(entities)
 
 
 class VelbusSensor(VelbusEntity, SensorEntity):
     """Representation of a sensor."""
 
-    def __init__(self, module, channel, counter=False):
+    def __init__(self, channel, counter=False):
         """Initialize a sensor Velbus entity."""
-        super().__init__(module, channel)
+        super().__init__(channel)
         self._is_counter = counter
 
     @property
@@ -36,27 +45,37 @@ class VelbusSensor(VelbusEntity, SensorEntity):
         return unique_id
 
     @property
+    def name(self):
+        """Return the name for the sensor."""
+        name = super().name
+        if self._is_counter:
+            name = f"{name}-counter"
+        return name
+
+    @property
     def device_class(self):
         """Return the device class of the sensor."""
-        if self._module.get_class(self._channel) == "counter" and not self._is_counter:
-            if self._module.get_counter_unit(self._channel) == ENERGY_KILO_WATT_HOUR:
-                return DEVICE_CLASS_POWER
-            return None
-        return self._module.get_class(self._channel)
+        if self._is_counter:
+            return DEVICE_CLASS_ENERGY
+        if self._channel.is_counter_channel():
+            return DEVICE_CLASS_POWER
+        if self._channel.is_temperature():
+            return DEVICE_CLASS_TEMPERATURE
+        return None
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self._is_counter:
-            return self._module.get_counter_state(self._channel)
-        return self._module.get_state(self._channel)
+            return self._channel.get_counter_state()
+        return self._channel.get_state()
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         if self._is_counter:
-            return self._module.get_counter_unit(self._channel)
-        return self._module.get_unit(self._channel)
+            return self._channel.get_counter_unit()
+        return self._channel.get_unit()
 
     @property
     def icon(self):
@@ -64,3 +83,10 @@ class VelbusSensor(VelbusEntity, SensorEntity):
         if self._is_counter:
             return "mdi:counter"
         return None
+
+    @property
+    def state_class(self):
+        """Return the state class of this device."""
+        if self._is_counter:
+            return STATE_CLASS_TOTAL_INCREASING
+        return STATE_CLASS_MEASUREMENT

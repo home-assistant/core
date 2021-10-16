@@ -11,6 +11,7 @@ from homeassistant import config_entries
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import ANDROID_TV_NAME, DEFAULT_NAME, DOMAIN, FIRE_TV_NAME
@@ -21,11 +22,11 @@ _LOGGER = logging.getLogger(__name__)
 class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NFAndroidTV."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize an NFAndroidTV flow."""
-        self.ip_address = None
+        self.ip_address = ""
 
-    async def async_step_dhcp(self, discovery_info) -> FlowResult:
+    async def async_step_dhcp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
         """Handle dhcp discovery."""
         self.ip_address = discovery_info[IP_ADDRESS]
         mac = format_mac(discovery_info[MAC_ADDRESS])
@@ -40,7 +41,7 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_confirm_discovery_fire_tv()
         return await self.async_step_confirm_discovery_android_tv()
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
@@ -134,7 +135,7 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_config):
+    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Import a config entry from configuration.yaml."""
         for entry in self._async_current_entries():
             if entry.data[CONF_HOST] == import_config[CONF_HOST]:
@@ -147,7 +148,7 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user(import_config)
 
-    async def _async_try_connect(self, host):
+    async def _async_try_connect(self, host: str) -> str | None:
         """Try connecting to Android TV / Fire TV."""
         try:
             await self.hass.async_add_executor_job(Notifications, host)
@@ -158,4 +159,4 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             return "unknown"
-        return
+        return None

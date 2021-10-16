@@ -138,7 +138,7 @@ class ArwnSensor(SensorEntity):
         # This mqtt topic for the sensor which is its uid
         self._attr_unique_id = topic
         self._state_key = state_key
-        self._attr_unit_of_measurement = units
+        self._attr_native_unit_of_measurement = units
         self._attr_icon = icon
         self._attr_device_class = device_class
 
@@ -147,5 +147,5 @@ class ArwnSensor(SensorEntity):
         ev = {}
         ev.update(event)
         self._attr_extra_state_attributes = ev
-        self._attr_state = ev.get(self._state_key, None)
+        self._attr_native_value = ev.get(self._state_key, None)
         self.async_write_ha_state()
