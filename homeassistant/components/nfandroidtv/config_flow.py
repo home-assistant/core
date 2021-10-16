@@ -11,8 +11,8 @@ from homeassistant import config_entries
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import ANDROID_TV_NAME, DEFAULT_NAME, DOMAIN, FIRE_TV_NAME
 
@@ -41,7 +41,9 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_confirm_discovery_fire_tv()
         return await self.async_step_confirm_discovery_android_tv()
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
