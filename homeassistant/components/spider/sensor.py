@@ -1,19 +1,17 @@
 """Support for Spider Powerplugs (energy & power)."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
-    SensorEntity,
-)
-
 from typing import Any
 
 from spiderpy.devices.powerplug import SpiderPowerPlug
 from spiderpy.spiderapi import SpiderApi
 
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
-
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
