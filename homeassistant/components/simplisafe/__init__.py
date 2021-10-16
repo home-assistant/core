@@ -384,12 +384,10 @@ class SimpliSafe:
                 data={**self.entry.data, CONF_TOKEN: token},
             )
 
-        # Every time simplisafe-python receives a new refresh token, save it:
         self.entry.async_on_unload(
             self._api.add_refresh_token_listener(async_save_refresh_token)
         )
 
-        # Save the refresh token after initial authentication:
         if TYPE_CHECKING:
             assert self._api.refresh_token
         async_save_refresh_token(self._api.refresh_token)
