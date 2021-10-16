@@ -92,7 +92,7 @@ from .entity import FluxEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_FLUX_LED: Final = SUPPORT_EFFECT | SUPPORT_TRANSITION
+SUPPORT_FLUX_LED: Final = SUPPORT_TRANSITION
 
 
 FLUX_COLOR_MODE_TO_HASS: Final = {
@@ -103,6 +103,7 @@ FLUX_COLOR_MODE_TO_HASS: Final = {
     FLUX_COLOR_MODE_DIM: COLOR_MODE_BRIGHTNESS,
 }
 
+EFFECT_SUPPORT_MODES = {COLOR_MODE_RGB, COLOR_MODE_RGBW, COLOR_MODE_RGBWW}
 
 # Constant color temp values for 2 flux_led special modes
 # Warm-white and Cool-white modes
@@ -299,9 +300,11 @@ class FluxLight(FluxEntity, CoordinatorEntity, LightEntity):
             FLUX_COLOR_MODE_TO_HASS.get(mode, COLOR_MODE_ONOFF)
             for mode in self._device.color_modes
         }
-        self._attr_effect_list = FLUX_EFFECT_LIST
-        if custom_effect_colors:
-            self._attr_effect_list = [*FLUX_EFFECT_LIST, EFFECT_CUSTOM]
+        if self._attr_supported_color_modes.intersection(EFFECT_SUPPORT_MODES):
+            self._attr_supported_features |= SUPPORT_EFFECT
+            self._attr_effect_list = FLUX_EFFECT_LIST
+            if custom_effect_colors:
+                self._attr_effect_list = [*FLUX_EFFECT_LIST, EFFECT_CUSTOM]
         self._custom_effect_colors = custom_effect_colors
         self._custom_effect_speed_pct = custom_effect_speed_pct
         self._custom_effect_transition = custom_effect_transition
