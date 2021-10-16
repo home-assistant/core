@@ -99,13 +99,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         connector = HubConnector(parsed_url.hostname, asyncio.Queue())
         try:
-            unique_id = await connector.get_remote_id()
+            remote_id = await connector.get_remote_id()
         except aiohttp.ClientError:
             return self.async_abort(reason="cannot_connect")
         finally:
             await connector.async_close_session()
 
-        await self.async_set_unique_id(unique_id)
+        unique_id = str(remote_id)
+        await self.async_set_unique_id(str(unique_id))
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: self.harmony_config[CONF_HOST]}
         )
