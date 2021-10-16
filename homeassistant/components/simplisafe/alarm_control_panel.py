@@ -11,6 +11,20 @@ from simplipy.system.v3 import (
     VOLUME_OFF,
     SystemV3,
 )
+from simplipy.websocket import (
+    EVENT_ALARM_CANCELED,
+    EVENT_ALARM_TRIGGERED,
+    EVENT_ARMED_AWAY,
+    EVENT_ARMED_AWAY_BY_KEYPAD,
+    EVENT_ARMED_AWAY_BY_REMOTE,
+    EVENT_ARMED_HOME,
+    EVENT_AWAY_EXIT_DELAY_BY_KEYPAD,
+    EVENT_AWAY_EXIT_DELAY_BY_REMOTE,
+    EVENT_DISARMED_BY_MASTER_PIN,
+    EVENT_DISARMED_BY_REMOTE,
+    EVENT_HOME_EXIT_DELAY,
+    WebsocketEvent,
+)
 
 from homeassistant.components.alarm_control_panel import (
     FORMAT_NUMBER,
@@ -106,6 +120,21 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
             self._attr_state = STATE_ALARM_DISARMED
         else:
             self._attr_state = None
+
+        for websocket_event_type in (
+            EVENT_ALARM_CANCELED,
+            EVENT_ALARM_TRIGGERED,
+            EVENT_ARMED_AWAY,
+            EVENT_ARMED_AWAY_BY_KEYPAD,
+            EVENT_ARMED_AWAY_BY_REMOTE,
+            EVENT_ARMED_HOME,
+            EVENT_AWAY_EXIT_DELAY_BY_KEYPAD,
+            EVENT_AWAY_EXIT_DELAY_BY_REMOTE,
+            EVENT_DISARMED_BY_MASTER_PIN,
+            EVENT_DISARMED_BY_REMOTE,
+            EVENT_HOME_EXIT_DELAY,
+        ):
+            self.websocket_events_to_listen_for.append(websocket_event_type)
 
     @callback
     def _is_code_valid(self, code: str | None, state: str) -> bool:
@@ -203,4 +232,38 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         elif self._system.state == SystemStates.off:
             self._attr_state = STATE_ALARM_DISARMED
         else:
+            LOGGER.error("Unknown system state: %s", self._system.state)
             self._attr_state = None
+
+    @callback
+    def async_update_from_websocket_event(self, event: WebsocketEvent) -> None:
+        """Update the entity when new data comes from the websocket."""
+        if event.event_type in (
+            EVENT_ALARM_CANCELED,
+            EVENT_DISARMED_BY_MASTER_PIN,
+            EVENT_DISARMED_BY_REMOTE,
+        ):
+            self._attr_state = STATE_ALARM_DISARMED
+        elif event.event_type == EVENT_ALARM_TRIGGERED:
+            self._attr_state = STATE_ALARM_TRIGGERED
+        elif event.event_type in (
+            EVENT_ARMED_AWAY,
+            EVENT_ARMED_AWAY_BY_KEYPAD,
+            EVENT_ARMED_AWAY_BY_REMOTE,
+        ):
+            self._attr_state = STATE_ALARM_ARMED_AWAY
+        elif event.event_type == EVENT_ARMED_HOME:
+            self._attr_state = STATE_ALARM_ARMED_HOME
+        elif event.event_type in (
+            EVENT_AWAY_EXIT_DELAY_BY_KEYPAD,
+            EVENT_AWAY_EXIT_DELAY_BY_REMOTE,
+            EVENT_HOME_EXIT_DELAY,
+        ):
+            self._attr_state = STATE_ALARM_ARMING
+        else:
+            LOGGER.error(
+                "Unknown websocket event triggered state change: %s", event.event_type
+            )
+            self._attr_state = None
+
+        self._attr_changed_by = event.changed_by
