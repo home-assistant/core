@@ -69,8 +69,8 @@ class EfergyEntity(Entity):
         self.api = api
         self._server_unique_id = server_unique_id
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
-        self._attr_device_info = {
-            "configuration_url": "https://engage.efergy.com/user/login",
+        self._attr_device_info = DeviceInfo(
+            configuration_url="https://engage.efergy.com/user/login",
             "connections": {(dr.CONNECTION_NETWORK_MAC, self.api.info["mac"])},
             ATTR_IDENTIFIERS: {(DOMAIN, self._server_unique_id)},
             ATTR_MANUFACTURER: DEFAULT_NAME,
