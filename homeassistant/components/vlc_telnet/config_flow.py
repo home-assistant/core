@@ -159,6 +159,7 @@ class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
         await self._async_handle_discovery_without_unique_id()
 
         self.hassio_discovery = discovery_info
+        self.context["title_placeholders"] = {"host": discovery_info[CONF_HOST]}
         return await self.async_step_hassio_confirm()
 
     async def async_step_hassio_confirm(
