@@ -111,11 +111,18 @@ class HarmonyData(HarmonySubscriberMixin):
 
         try:
             if not await self._client.connect():
-                _LOGGER.warning("%s: Unable to connect to HUB", self._name)
+                _LOGGER.warning(
+                    "%s: Unable to connect to HUB at: %s:%s",
+                    self._name,
+                    self._address,
+                    8088,
+                )
                 await self._client.close()
                 return False
         except aioexc.TimeOut:
-            _LOGGER.warning("%s: Connection timed-out", self._name)
+            _LOGGER.warning(
+                "%s: Connection timed-out to %s:%s", self._name, self._address, 8088
+            )
             return False
 
         return True

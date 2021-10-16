@@ -52,7 +52,7 @@ async def test_form_ssdp(hass):
     """Test we get the form with ssdp source."""
 
     with patch(
-        "homeassistant.components.harmony.config_flow.HubConnector._get_remote_id",
+        "homeassistant.components.harmony.config_flow.HubConnector.get_remote_id",
         return_value=1234,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -100,7 +100,7 @@ async def test_form_ssdp_fails_to_get_remote_id(hass):
     """Test we abort if we cannot get the remote id."""
 
     with patch(
-        "homeassistant.components.harmony.config_flow.HubConnector._get_remote_id",
+        "homeassistant.components.harmony.config_flow.HubConnector.get_remote_id",
         side_effect=aiohttp.ClientError,
     ):
         result = await hass.config_entries.flow.async_init(
