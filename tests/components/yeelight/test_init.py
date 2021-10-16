@@ -1,7 +1,9 @@
 """Test Yeelight."""
+import asyncio
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from yeelight import BulbException, BulbType
 from yeelight.aio import KEY_CONNECTED
 
@@ -507,3 +509,51 @@ async def test_connection_dropped_resyncs_properties(hass: HomeAssistant):
         )
         await hass.async_block_till_done()
         assert len(mocked_bulb.async_get_properties.mock_calls) == 2
+
+
+async def test_oserror_on_first_update_results_in_unavailable(hass: HomeAssistant):
+    """Test that an OSError on first update results in unavailable."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ID,
+        data={CONF_HOST: "127.0.0.1"},
+        options={CONF_NAME: "Test name"},
+    )
+    config_entry.add_to_hass(hass)
+    mocked_bulb = _mocked_bulb()
+    mocked_bulb.async_get_properties = AsyncMock(side_effect=OSError)
+
+    with _patch_discovery(), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
+        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("light.test_name").state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("exception", [BulbException, asyncio.TimeoutError])
+async def test_non_oserror_exception_on_first_update(
+    hass: HomeAssistant, exception: Exception
+):
+    """Test that an exceptions other than OSError on first update do not result in unavailable.
+
+    The unavailable state will come as a push update in this case
+    """
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ID,
+        data={CONF_HOST: "127.0.0.1"},
+        options={CONF_NAME: "Test name"},
+    )
+    config_entry.add_to_hass(hass)
+    mocked_bulb = _mocked_bulb()
+    mocked_bulb.async_get_properties = AsyncMock(side_effect=exception)
+
+    with _patch_discovery(), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
+        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("light.test_name").state != STATE_UNAVAILABLE

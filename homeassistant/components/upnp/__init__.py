@@ -264,5 +264,5 @@ class UpnpEntity(CoordinatorEntity):
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and (
-            self.coordinator.data.get(self.entity_description.key) or False
+            self.coordinator.data.get(self.entity_description.key) is not None
         )
