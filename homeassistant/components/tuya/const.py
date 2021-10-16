@@ -46,8 +46,9 @@ TUYA_SUPPORTED_PRODUCT_CATEGORIES = (
     "pc",  # Power Strip
     "pir",  # PIR Detector
     "qn",  # Heater
-    "sos",  # SOS Button
     "sgbj",  # Siren Alarm
+    "sos",  # SOS Button
+    "sp",  # Smart Camera
     "wk",  # Thermostat
     "xdd",  # Ceiling Light
     "xxj",  # Diffuser
@@ -58,6 +59,7 @@ SMARTLIFE_APP = "smartlife"
 
 PLATFORMS = [
     "binary_sensor",
+    "camera",
     "climate",
     "fan",
     "light",
@@ -106,10 +108,12 @@ class DPCode(str, Enum):
     LOCK = "lock"  # Lock / Child lock
     MATERIAL = "material"  # Material
     MODE = "mode"  # Working mode / Mode
+    MOTION_SWITCH = "motion_switch"  # Motion switch
     MUFFLING = "muffling"  # Muffling
     PIR = "pir"  # Motion sensor
     POWDER_SET = "powder_set"  # Powder
     PUMP_RESET = "pump_reset"  # Water pump reset
+    RECORD_SWITCH = "record_switch"  # Recording switch
     SHAKE = "shake"  # Oscillating
     SOS = "sos"  # Emergency State
     SOS_STATE = "sos_state"  # Emergency mode
