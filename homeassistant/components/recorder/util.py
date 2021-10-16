@@ -311,7 +311,9 @@ def setup_connection_for_dialect(
             result = query_on_connection(dbapi_connection, "SELECT VERSION()")
             version = result[0][0]
             major, minor, _patch = version.split(".", 2)
-            if int(major) == 5 and int(minor) < 8:
+            if (int(major) == 5 and int(minor) < 8) or (
+                int(major) == 10 and int(minor) < 2
+            ):
                 instance._db_supports_row_number = (  # pylint: disable=[protected-access]
                     False
                 )
