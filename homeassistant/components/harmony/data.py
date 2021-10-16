@@ -119,7 +119,7 @@ class HarmonyData(HarmonySubscriberMixin):
             await self._client.close()
             raise ConfigEntryNotReady(
                 f"{self._name}: Connection timed-out to {self._address}:8088"
-            )
+            ) from err
         except (ValueError, AttributeError) as err:
             await self._client.close()
             raise ConfigEntryNotReady(
