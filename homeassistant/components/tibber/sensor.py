@@ -34,6 +34,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import update_coordinator
 from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_reg
 from homeassistant.util import Throttle, dt as dt_util
 
@@ -264,11 +265,11 @@ class TibberSensor(SensorEntity):
     @property
     def device_info(self):
         """Return the device_info of the device."""
-        device_info = {
-            "identifiers": {(TIBBER_DOMAIN, self._tibber_home.home_id)},
-            "name": self._device_name,
-            "manufacturer": MANUFACTURER,
-        }
+        device_info = DeviceInfo(
+            identifiers={(TIBBER_DOMAIN, self._tibber_home.home_id)},
+            name=self._device_name,
+            manufacturer=MANUFACTURER,
+        )
         if self._model is not None:
             device_info["model"] = self._model
         return device_info
