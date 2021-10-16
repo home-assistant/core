@@ -15,11 +15,12 @@ from homeassistant.components.tomorrowio.config_flow import (
 from homeassistant.components.tomorrowio.const import (
     ATTRIBUTION,
     CONF_TIMESTEP,
+    DEFAULT_NAME,
     DEFAULT_TIMESTEP,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.entity_registry import async_get
 from homeassistant.util import dt as dt_util
@@ -112,6 +113,7 @@ async def _setup(
         return_value=datetime(2021, 3, 6, 23, 59, 59, tzinfo=dt_util.UTC),
     ):
         data = _get_config_schema(hass, SOURCE_USER)(config)
+        data[CONF_NAME] = DEFAULT_NAME
         config_entry = MockConfigEntry(
             domain=DOMAIN,
             data=data,

@@ -7,18 +7,18 @@ from homeassistant.components.tomorrowio.config_flow import (
 )
 from homeassistant.components.tomorrowio.const import (
     CONF_TIMESTEP,
+    DEFAULT_NAME,
     DEFAULT_TIMESTEP,
     DOMAIN,
 )
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from .const import MIN_CONFIG
 
 from tests.common import MockConfigEntry
-
-NEW_NAME = "New Name"
 
 
 async def test_load_and_unload(
@@ -27,6 +27,7 @@ async def test_load_and_unload(
 ) -> None:
     """Test loading and unloading entry."""
     data = _get_config_schema(hass, SOURCE_USER)(MIN_CONFIG)
+    data[CONF_NAME] = DEFAULT_NAME
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=data,

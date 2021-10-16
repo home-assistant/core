@@ -13,7 +13,14 @@ from pytomorrowio.pytomorrowio import TomorrowioV4
 import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.components.zone import async_active_zone
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_FRIENDLY_NAME,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -49,9 +56,6 @@ def _get_config_schema(
     if source == config_entries.SOURCE_USER:
         return vol.Schema(
             {
-                vol.Required(
-                    CONF_NAME, default=input_dict.get(CONF_NAME, DEFAULT_NAME)
-                ): str,
                 **api_key_schema,
                 vol.Required(
                     CONF_LATITUDE,
@@ -127,12 +131,20 @@ class TomorrowioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             try:
+                latitude = user_input.get(CONF_LATITUDE, self.hass.config.latitude)
+                longitude = user_input.get(CONF_LONGITUDE, self.hass.config.longitude)
                 await TomorrowioV4(
                     user_input[CONF_API_KEY],
-                    str(user_input.get(CONF_LATITUDE, self.hass.config.latitude)),
-                    str(user_input.get(CONF_LONGITUDE, self.hass.config.longitude)),
+                    str(latitude),
+                    str(longitude),
                     session=async_get_clientsession(self.hass),
                 ).realtime([TMRW_ATTR_TEMPERATURE])
+
+                user_input[CONF_NAME] = DEFAULT_NAME
+                if zone_state := async_active_zone(self.hass, latitude, longitude):
+                    user_input[
+                        CONF_NAME
+                    ] += f" - {zone_state.attributes[CONF_FRIENDLY_NAME]}"
 
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
