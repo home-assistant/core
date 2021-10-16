@@ -37,6 +37,7 @@ from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 TUYA_HVAC_TO_HA = {
     "auto": HVAC_MODE_HEAT_COOL,
     "cold": HVAC_MODE_COOL,
+    "freeze": HVAC_MODE_COOL,
     "heat": HVAC_MODE_HEAT,
     "hot": HVAC_MODE_HEAT,
     "manual": HVAC_MODE_HEAT_COOL,
