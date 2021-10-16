@@ -1,5 +1,4 @@
 """Support for the Environment Canada weather service."""
-from datetime import timedelta
 import logging
 import re
 
@@ -7,7 +6,6 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     ATTR_LOCATION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -15,12 +13,17 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import trigger_import
-from .const import ATTR_STATION, CONF_ATTRIBUTION, CONF_LANGUAGE, CONF_STATION, DOMAIN
+from .const import (
+    ATTR_OBSERVATION_TIME,
+    ATTR_STATION,
+    CONF_LANGUAGE,
+    CONF_STATION,
+    DOMAIN,
+)
 
-SCAN_INTERVAL = timedelta(minutes=10)
-ATTR_UPDATED = "updated"
 ATTR_TIME = "alert time"
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,28 +66,25 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async_add_entities(
         [
-            ECSensor(
-                sensor,
-                f"{config_entry.title} {label}",
-                weather_data,
-                f"{weather_data.metadata['location']}-{sensor}",
-            )
+            ECSensor(coordinator, sensor, label)
             for sensor, label in zip(sensors, labels)
         ],
         True,
     )
 
 
-class ECSensor(SensorEntity):
+class ECSensor(CoordinatorEntity, SensorEntity):
     """Implementation of an Environment Canada sensor."""
 
-    def __init__(self, sensor_type, name, ec_data, unique_id):
+    def __init__(self, coordinator, sensor, label):
         """Initialize the sensor."""
-        self.sensor_type = sensor_type
-        self.ec_data = ec_data
+        super().__init__(coordinator)
+        self.sensor_type = sensor
+        self.ec_data = coordinator.ec_data
 
-        self._attr_unique_id = unique_id
-        self._attr_name = name
+        self._attr_attribution = self.ec_data.metadata["attribution"]
+        self._attr_name = f"{coordinator.config_entry.title} {label}"
+        self._attr_unique_id = f"{self.ec_data.metadata['location']}-{sensor}"
         self._attr = None
         self._unit = None
         self._device_class = None
@@ -141,8 +141,7 @@ class ECSensor(SensorEntity):
 
         self._attr.update(
             {
-                ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-                ATTR_UPDATED: metadata.get("timestamp"),
+                ATTR_OBSERVATION_TIME: metadata.get("timestamp"),
                 ATTR_LOCATION: metadata.get("location"),
                 ATTR_STATION: metadata.get("station"),
             }
