@@ -287,16 +287,18 @@ async def test_hassio_flow(hass: HomeAssistant) -> None:
         "homeassistant.components.vlc_telnet.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
+        test_data = {
+            "password": "test-password",
+            "host": "1.1.1.1",
+            "port": 8888,
+            "name": "custom name",
+            "addon": "vlc",
+        }
+
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_HASSIO},
-            data={
-                "password": "test-password",
-                "host": "1.1.1.1",
-                "port": 8888,
-                "name": "custom name",
-                "addon": "vlc",
-            },
+            data=test_data,
         )
         await hass.async_block_till_done()
 
@@ -305,15 +307,33 @@ async def test_hassio_flow(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
         assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result2["title"] == "custom name"
-        assert result2["data"] == {
-            "password": "test-password",
-            "host": "1.1.1.1",
-            "port": 8888,
-            "name": "custom name",
-            "addon": "vlc",
-        }
+        assert result2["title"] == test_data["name"]
+        assert result2["data"] == test_data
         assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_hassio_already_configured(hass: HomeAssistant) -> None:
+    """Test successful hassio flow."""
+
+    entry_data = {
+        "password": "test-password",
+        "host": "1.1.1.1",
+        "port": 8888,
+        "name": "custom name",
+        "addon": "vlc",
+    }
+
+    entry = MockConfigEntry(domain=DOMAIN, data=entry_data, unique_id="hassio")
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=entry_data,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
 
 
 @pytest.mark.parametrize(

@@ -153,10 +153,8 @@ class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_hassio(self, discovery_info: dict[str, Any]) -> FlowResult:
         """Handle the discovery step via hassio."""
-        self._async_abort_entries_match(
-            {CONF_HOST: discovery_info[CONF_HOST], CONF_PORT: discovery_info[CONF_PORT]}
-        )
-        await self._async_handle_discovery_without_unique_id()
+        await self.async_set_unique_id("hassio")
+        self._abort_if_unique_id_configured(discovery_info)
 
         self.hassio_discovery = discovery_info
         self.context["title_placeholders"] = {"host": discovery_info[CONF_HOST]}
