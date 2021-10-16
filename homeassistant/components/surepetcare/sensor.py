@@ -50,7 +50,7 @@ async def async_setup_entry(
 
 
 class SureBattery(SurePetcareEntity, SensorEntity):
-    """A sensor implementation for Sure Petcare Entities."""
+    """A sensor implementation for Sure Petcare batteries."""
 
     _attr_device_class = DEVICE_CLASS_BATTERY
     _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
