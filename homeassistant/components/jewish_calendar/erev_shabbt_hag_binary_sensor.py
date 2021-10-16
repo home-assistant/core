@@ -9,51 +9,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.components.jewish_calendar.erev_shabbt_hag_binary_sensor import ErevShabbtHagBinarySensor
-from homeassistant.components.jewish_calendar.motzei_shabbt_hag_binary_sensor import MotzeiShabbtHagBinarySensor
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.helpers import event
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from . import DOMAIN
 
-BINARY_SENSOR = BinarySensorEntityDescription(
-    key="issur_melacha_in_effect",
-    name="Issur Melacha in Effect",
-    icon="mdi:power-plug-off",
-)
-
-MOTZEI_BINARY_SENSOR = BinarySensorEntityDescription(
-    key="motzei_shabbat_hat_in_effect",
-    name="Motzei Shabbat/Hag in Effect",
-    icon="mdi:power-plug-off",
-)
-
-EREV_BINARY_SENSOR = BinarySensorEntityDescription(
-    key="erev_shabbat_hat_in_effect",
-    name="Erev Shabbat/Hag in Effect",
-    icon="mdi:power-plug-off",
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-):
-    """Set up the Jewish Calendar binary sensor devices."""
-    if discovery_info is None:
-        return
-
-    async_add_entities([JewishCalendarBinarySensor(hass.data[DOMAIN], BINARY_SENSOR)])
-    async_add_entities([MotzeiShabbtHagBinarySensor(hass.data[DOMAIN], MOTZEI_BINARY_SENSOR)])
-    async_add_entities([ErevShabbtHagBinarySensor(hass.data[DOMAIN], EREV_BINARY_SENSOR)])
-
-
-class JewishCalendarBinarySensor(BinarySensorEntity):
+class ErevShabbtHagBinarySensor(BinarySensorEntity):
     """Representation of an Jewish Calendar binary sensor."""
 
     _attr_should_poll = False
@@ -71,7 +32,7 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if sensor is on."""
-        return self._get_zmanim().issur_melacha_in_effect
+        return self._get_zmanim().erev_shabbat_hag
 
     def _get_zmanim(self):
         """Return the Zmanim object for now()."""
@@ -90,7 +51,8 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
 
     @callback
     def _update(self, now=None):
-        """Update the state of the sensor."""
+        """Update the st
+        ate of the sensor."""
         self._update_unsub = None
         self._schedule_update()
         self.async_write_ha_state()
