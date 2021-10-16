@@ -42,7 +42,6 @@ class _FroniusUpdateCoordinator(
     def __init__(self, *args: Any, solar_net: FroniusSolarNet, **kwargs: Any) -> None:
         """Set up the _FroniusUpdateCoordinator class."""
         self.solar_net = solar_net
-        self.solar_net_device_id = solar_net.solar_net_device_id
         # unregistered_keys are used to create entities in platform module
         self.unregistered_keys: dict[SolarNetId, set[str]] = {}
         super().__init__(*args, **kwargs)
