@@ -1,39 +1,28 @@
 """Support for the Environment Canada radar imagery."""
 from __future__ import annotations
 
-import datetime
-
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import trigger_import
-from .const import CONF_ATTRIBUTION, CONF_STATION, DOMAIN
+from .const import ATTR_OBSERVATION_TIME, CONF_STATION, DOMAIN
 
 CONF_LOOP = "loop"
 CONF_PRECIP_TYPE = "precip_type"
-ATTR_UPDATED = "updated"
 
-MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=10)
-
-PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_LOOP),
-    cv.deprecated(CONF_STATION),
-    PLATFORM_SCHEMA=PLATFORM_SCHEMA.extend(
-        {
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Inclusive(CONF_LATITUDE, "latlon"): cv.latitude,
-            vol.Inclusive(CONF_LONGITUDE, "latlon"): cv.longitude,
-            vol.Optional(CONF_PRECIP_TYPE): vol.In(["RAIN", "SNOW"]),
-        }
-    ),
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_LOOP, default=True): cv.boolean,
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_STATION): cv.matches_regex(r"^C[A-Z]{4}$|^[A-Z]{3}$"),
+        vol.Inclusive(CONF_LATITUDE, "latlon"): cv.latitude,
+        vol.Inclusive(CONF_LONGITUDE, "latlon"): cv.longitude,
+        vol.Optional(CONF_PRECIP_TYPE): vol.In(["RAIN", "SNOW"]),
+    }
 )
 
 
@@ -51,40 +40,34 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a weather entity from a config_entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["radar_coordinator"]
-
-    async_add_entities(
-        [
-            ECCamera(
-                coordinator.ec_data,
-                f"{config_entry.title} Radar",
-                f"{config_entry.unique_id}-radar",
-            ),
-        ]
-    )
+    async_add_entities([ECCamera(coordinator)])
 
 
-class ECCamera(Camera):
+class ECCamera(CoordinatorEntity, Camera):
     """Implementation of an Environment Canada radar camera."""
 
-    def __init__(self, radar_object, camera_name, unique_id):
+    def __init__(self, coordinator):
         """Initialize the camera."""
-        super().__init__()
+        super().__init__(coordinator)
+        Camera.__init__(self)
 
-        self.radar_object = radar_object
-        self._attr_name = camera_name
-        self._attr_unique_id = unique_id
+        self.radar_object = coordinator.ec_data
+        self._attr_name = f"{coordinator.config_entry.title} Radar"
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}-radar"
+        self._attr_attribution = self.radar_object.metadata["attribution"]
+
         self.content_type = "image/gif"
         self.image = None
-        self.timestamp = None
+        self.observation_time = None
 
     def camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of camera image."""
-        self.timestamp = self.radar_object.timestamp
+        self.observation_time = self.radar_object.timestamp
         return self.radar_object.image
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes of the device."""
-        return {ATTR_ATTRIBUTION: CONF_ATTRIBUTION, ATTR_UPDATED: self.timestamp}
+        return {ATTR_OBSERVATION_TIME: self.observation_time}

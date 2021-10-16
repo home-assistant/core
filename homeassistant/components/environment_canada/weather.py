@@ -29,10 +29,11 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt
 
 from . import trigger_import
-from .const import CONF_ATTRIBUTION, CONF_STATION, DOMAIN
+from .const import CONF_STATION, DOMAIN
 
 CONF_FORECAST = "forecast"
 
@@ -82,41 +83,24 @@ async def async_setup_platform(hass, config, async_add_entries, discovery_info=N
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a weather entity from a config_entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["weather_coordinator"]
-    async_add_entities(
-        [
-            ECWeather(
-                coordinator,
-                f"{config_entry.title}",
-                config_entry.data,
-                "daily",
-                f"{config_entry.unique_id}-daily",
-            ),
-            ECWeather(
-                coordinator,
-                f"{config_entry.title} Hourly",
-                config_entry.data,
-                "hourly",
-                f"{config_entry.unique_id}-hourly",
-            ),
-        ]
-    )
+    async_add_entities([ECWeather(coordinator, False), ECWeather(coordinator, True)])
 
 
-class ECWeather(WeatherEntity):
+class ECWeather(CoordinatorEntity, WeatherEntity):
     """Representation of a weather condition."""
 
-    def __init__(self, coordinator, name, config, forecast_type, unique_id):
+    def __init__(self, coordinator, hourly):
         """Initialize Environment Canada weather."""
+        super().__init__(coordinator)
         self.ec_data = coordinator.ec_data
-        self.config = config
-        self._attr_name = name
-        self._attr_unique_id = unique_id
-        self.forecast_type = forecast_type
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return CONF_ATTRIBUTION
+        self._attr_attribution = self.ec_data.metadata["attribution"]
+        self._attr_name = (
+            f"{coordinator.config_entry.title}{' Hourly' if hourly else ''}"
+        )
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}{'-hourly' if hourly else '-daily'}"
+        )
+        self._hourly = hourly
 
     @property
     def temperature(self):
@@ -188,14 +172,14 @@ class ECWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        return get_forecast(self.ec_data, self.forecast_type)
+        return get_forecast(self.ec_data, self._hourly)
 
 
-def get_forecast(ec_data, forecast_type):
+def get_forecast(ec_data, hourly):
     """Build the forecast array."""
     forecast_array = []
 
-    if forecast_type == "daily":
+    if not hourly:
         if not (half_days := ec_data.daily_forecasts):
             return None
 
@@ -245,7 +229,7 @@ def get_forecast(ec_data, forecast_type):
                 }
             )
 
-    elif forecast_type == "hourly":
+    else:
         for hour in ec_data.hourly_forecasts:
             forecast_array.append(
                 {

@@ -6,7 +6,7 @@ import aiohttp
 from env_canada import ECWeather, ec_exc
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
+from homeassistant import config_entries
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers import config_validation as cv
 
@@ -99,7 +99,3 @@ class EnvironmentCanadaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_data):
         """Import entry from configuration.yaml."""
         return await self.async_step_user(import_data)
-
-
-class TooManyAttempts(exceptions.HomeAssistantError):
-    """Error to indicate station ID is missing, invalid, or not in EC database."""
