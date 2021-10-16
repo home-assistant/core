@@ -29,6 +29,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 import homeassistant.util.dt as dt_util
+from homeassistant.util.unit_system import UnitSystem
 
 from . import (
     DOMAIN as BMW_DOMAIN,
@@ -365,6 +366,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the BMW ConnectedDrive sensors from config entry."""
     # pylint: disable=too-many-nested-blocks
+    unit_system = hass.config.units
     account: BMWConnectedDriveAccount = hass.data[BMW_DOMAIN][DATA_ENTRIES][
         config_entry.entry_id
     ][CONF_ACCOUNT]
@@ -375,7 +377,9 @@ async def async_setup_entry(
             if service == SERVICE_STATUS:
                 entities.extend(
                     [
-                        BMWConnectedDriveSensor(hass, account, vehicle, description)
+                        BMWConnectedDriveSensor(
+                            account, vehicle, description, unit_system
+                        )
                         for attribute_name in vehicle.drive_train_attributes
                         if attribute_name in vehicle.available_attributes
                         if (description := SENSOR_TYPES.get(attribute_name))
@@ -385,7 +389,7 @@ async def async_setup_entry(
                 entities.extend(
                     [
                         BMWConnectedDriveSensor(
-                            hass, account, vehicle, description, service
+                            account, vehicle, description, unit_system, service
                         )
                         for attribute_name in vehicle.state.last_trip.available_attributes
                         if attribute_name != "date"
@@ -395,7 +399,11 @@ async def async_setup_entry(
                 if "date" in vehicle.state.last_trip.available_attributes:
                     entities.append(
                         BMWConnectedDriveSensor(
-                            hass, account, vehicle, SENSOR_TYPES["date_utc"], service
+                            account,
+                            vehicle,
+                            SENSOR_TYPES["date_utc"],
+                            unit_system,
+                            service,
                         )
                     )
             if service == SERVICE_ALL_TRIPS:
@@ -403,10 +411,10 @@ async def async_setup_entry(
                     if attribute_name == "reset_date":
                         entities.append(
                             BMWConnectedDriveSensor(
-                                hass,
                                 account,
                                 vehicle,
                                 SENSOR_TYPES["reset_date_utc"],
+                                unit_system,
                                 service,
                             )
                         )
@@ -420,10 +428,10 @@ async def async_setup_entry(
                         entities.extend(
                             [
                                 BMWConnectedDriveSensor(
-                                    hass,
                                     account,
                                     vehicle,
                                     SENSOR_TYPES[f"{attribute_name}_{attr}"],
+                                    unit_system,
                                     service,
                                 )
                                 for attr in (
@@ -437,10 +445,10 @@ async def async_setup_entry(
                         if attribute_name == "chargecycle_range":
                             entities.extend(
                                 BMWConnectedDriveSensor(
-                                    hass,
                                     account,
                                     vehicle,
                                     SENSOR_TYPES[f"{attribute_name}_{attr}"],
+                                    unit_system,
                                     service,
                                 )
                                 for attr in ("user_current_charge_cycle", "user_high")
@@ -449,10 +457,10 @@ async def async_setup_entry(
                             entities.extend(
                                 [
                                     BMWConnectedDriveSensor(
-                                        hass,
                                         account,
                                         vehicle,
                                         SENSOR_TYPES[f"{attribute_name}_{attr}"],
+                                        unit_system,
                                         service,
                                     )
                                     for attr in ("user_total",)
@@ -464,10 +472,10 @@ async def async_setup_entry(
                             description.key = attribute_name
                         entities.append(
                             BMWConnectedDriveSensor(
-                                hass,
                                 account,
                                 vehicle,
                                 description,
+                                unit_system,
                                 service,
                             )
                         )
@@ -482,10 +490,10 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         account: BMWConnectedDriveAccount,
         vehicle: ConnectedDriveVehicle,
         description: BMWSensorEntityDescription,
+        unit_system: UnitSystem,
         service: str | None = None,
     ) -> None:
         """Initialize BMW vehicle sensor."""
@@ -500,7 +508,7 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
             self._attr_name = f"{vehicle.name} {description.key}"
             self._attr_unique_id = f"{vehicle.vin}-{description.key}"
 
-        if hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
+        if unit_system.name == CONF_UNIT_SYSTEM_IMPERIAL:
             self._attr_native_unit_of_measurement = description.unit_imperial
         else:
             self._attr_native_unit_of_measurement = description.unit_metric
