@@ -355,79 +355,6 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-class SimpliSafeWebsocketManager:
-    """Define a SimpliSafe websocket "manager" object."""
-
-    def __init__(self, hass: HomeAssistant, api: API) -> None:
-        """Initialize."""
-        self._api = api
-        self._event_listener_unsub: list[Callable] = []
-        self._hass = hass
-
-    async def _async_on_connect(self) -> None:
-        """Define a callback for connecting to the websocket."""
-        if TYPE_CHECKING:
-            assert self._api.websocket
-        await self._api.websocket.async_listen()
-
-    @callback
-    def _async_on_event(self, event: WebsocketEvent) -> None:
-        """Define a callback for receiving a websocket event."""
-        LOGGER.debug("New websocket event: %s", event)
-        async_dispatcher_send(
-            self._hass, DISPATCHER_TOPIC_WEBSOCKET_EVENT.format(event.system_id), event
-        )
-
-        if event.event_type not in WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT:
-            return
-
-        sensor_type: str | None
-        if event.sensor_type:
-            sensor_type = event.sensor_type.name
-        else:
-            sensor_type = None
-
-        self._hass.bus.async_fire(
-            EVENT_SIMPLISAFE_EVENT,
-            event_data={
-                ATTR_LAST_EVENT_CHANGED_BY: event.changed_by,
-                ATTR_LAST_EVENT_TYPE: event.event_type,
-                ATTR_LAST_EVENT_INFO: event.info,
-                ATTR_LAST_EVENT_SENSOR_NAME: event.sensor_name,
-                ATTR_LAST_EVENT_SENSOR_SERIAL: event.sensor_serial,
-                ATTR_LAST_EVENT_SENSOR_TYPE: sensor_type,
-                ATTR_SYSTEM_ID: event.system_id,
-                ATTR_LAST_EVENT_TIMESTAMP: event.timestamp,
-            },
-        )
-
-    @callback
-    def async_cleanup(self) -> None:
-        """Clean up listener unsub handlers."""
-        for cancel in self._event_listener_unsub:
-            cancel()
-
-    async def async_connect(self) -> None:
-        """Register callbacks and connect to the SimpliSafe websocket."""
-        if TYPE_CHECKING:
-            assert self._api.websocket
-
-        self._event_listener_unsub.append(
-            self._api.websocket.add_connect_listener(self._async_on_connect)
-        )
-        self._event_listener_unsub.append(
-            self._api.websocket.add_event_listener(self._async_on_event)
-        )
-
-        await self._api.websocket.async_connect()
-
-    async def async_disconnect(self) -> None:
-        """Disconnect from the SimpliSafe websocket."""
-        if TYPE_CHECKING:
-            assert self._api.websocket
-        await self._api.websocket.async_disconnect()
-
-
 class SimpliSafe:
     """Define a SimpliSafe data object."""
 
@@ -436,7 +363,6 @@ class SimpliSafe:
         self._api = api
         self._hass = hass
         self._system_notifications: dict[int, set[SystemNotification]] = {}
-        self._websocket = SimpliSafeWebsocketManager(hass, api)
         self.entry = entry
         self.initial_event_to_use: dict[int, dict[str, Any]] = {}
         self.systems: dict[int, SystemV2 | SystemV3] = {}
@@ -481,14 +407,59 @@ class SimpliSafe:
 
         self._system_notifications[system.system_id] = latest_notifications
 
+    async def _async_websocket_on_connect(self) -> None:
+        """Define a callback for connecting to the websocket."""
+        if TYPE_CHECKING:
+            assert self._api.websocket
+        await self._api.websocket.async_listen()
+
+    @callback
+    def _async_websocket_on_event(self, event: WebsocketEvent) -> None:
+        """Define a callback for receiving a websocket event."""
+        LOGGER.debug("New websocket event: %s", event)
+
+        async_dispatcher_send(
+            self._hass, DISPATCHER_TOPIC_WEBSOCKET_EVENT.format(event.system_id), event
+        )
+
+        if event.event_type not in WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT:
+            return
+
+        sensor_type: str | None
+        if event.sensor_type:
+            sensor_type = event.sensor_type.name
+        else:
+            sensor_type = None
+
+        self._hass.bus.async_fire(
+            EVENT_SIMPLISAFE_EVENT,
+            event_data={
+                ATTR_LAST_EVENT_CHANGED_BY: event.changed_by,
+                ATTR_LAST_EVENT_TYPE: event.event_type,
+                ATTR_LAST_EVENT_INFO: event.info,
+                ATTR_LAST_EVENT_SENSOR_NAME: event.sensor_name,
+                ATTR_LAST_EVENT_SENSOR_SERIAL: event.sensor_serial,
+                ATTR_LAST_EVENT_SENSOR_TYPE: sensor_type,
+                ATTR_SYSTEM_ID: event.system_id,
+                ATTR_LAST_EVENT_TIMESTAMP: event.timestamp,
+            },
+        )
+
     async def async_init(self) -> None:
-        """Initialize the data class."""
-        asyncio.create_task(self._websocket.async_connect())
+        """Initialize the SimpliSafe "manager" class."""
+        if TYPE_CHECKING:
+            assert self._api.refresh_token
+            assert self._api.websocket
+
+        self._api.websocket.add_connect_listener(self._async_websocket_on_connect)
+        self._api.websocket.add_event_listener(self._async_websocket_on_event)
+        asyncio.create_task(self._api.websocket.async_connect())
 
         async def async_websocket_disconnect_listener(_: Event) -> None:
             """Define an event handler to disconnect from the websocket."""
-            await self._websocket.async_disconnect()
-            self._websocket.async_cleanup()
+            if TYPE_CHECKING:
+                assert self._api.websocket
+            await self._api.websocket.async_disconnect()
 
         self.entry.async_on_unload(
             self._hass.bus.async_listen_once(
