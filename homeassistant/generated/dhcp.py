@@ -258,6 +258,11 @@ DHCP = [
         "macaddress": "DCEFCA*"
     },
     {
+        "domain": "sense",
+        "hostname": "sense-*",
+        "macaddress": "A4D578*"
+    },
+    {
         "domain": "smartthings",
         "hostname": "st*",
         "macaddress": "24FD5B*"
