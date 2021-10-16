@@ -160,7 +160,7 @@ async def async_register_base_station(
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, system.serial)},
+        identifiers={(DOMAIN, system.system_id)},
         manufacturer="SimpliSafe",
         model=system.version,
         name=system.address,
@@ -434,23 +434,23 @@ class SimpliSafeEntity(CoordinatorEntity):
 
         if device:
             model = device.type.name
-            name = " ".join([w.title() for w in device.type.name.split("_")])
+            device_name = device.name
             serial = device.serial
         else:
             model = DEFAULT_ENTITY_MODEL
-            name = DEFAULT_ENTITY_NAME
+            device_name = DEFAULT_ENTITY_NAME
             serial = system.serial
 
         self._attr_extra_state_attributes = {ATTR_SYSTEM_ID: system.system_id}
         self._attr_device_info = {
-            "identifiers": {(DOMAIN, system.system_id)},
+            "identifiers": {(DOMAIN, serial)},
             "manufacturer": "SimpliSafe",
             "model": model,
-            "name": name,
-            "via_device": (DOMAIN, system.serial),
+            "name": device_name,
+            "via_device": (DOMAIN, system.system_id),
         }
 
-        self._attr_name = f"{system.address} {name}"
+        self._attr_name = f"{system.address} {device_name} {' '.join([w.title() for w in model.split('_')])}"
         self._attr_unique_id = serial
         self._device = device
         self._online = True
