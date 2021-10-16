@@ -3,5 +3,6 @@
   "name": "BenQ Projector",
   "documentation": "None",
   "requirements": ["pyserial==3.5"],
-  "codeowners": []
+  "codeowners": [],
+  "version": "1.0.0"
 }
