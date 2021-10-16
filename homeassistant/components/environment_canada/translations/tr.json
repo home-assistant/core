@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Ba\u011flant\u0131 ba\u015far\u0131s\u0131z"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "language": "Hava durumu bilgisi dili",
+                    "station": "Hava istasyonu ID"
+                }
+            }
+        }
+    }
+}
