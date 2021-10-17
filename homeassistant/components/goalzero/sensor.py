@@ -22,6 +22,7 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
     POWER_WATT,
     SIGNAL_STRENGTH_DECIBELS,
@@ -44,6 +45,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_POWER,
         native_unit_of_measurement=POWER_WATT,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="ampsIn",
@@ -52,6 +54,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         state_class=STATE_CLASS_MEASUREMENT,
         entity_registry_enabled_default=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="wattsOut",
@@ -59,6 +62,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_POWER,
         native_unit_of_measurement=POWER_WATT,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="ampsOut",
@@ -67,6 +71,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         state_class=STATE_CLASS_MEASUREMENT,
         entity_registry_enabled_default=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="whOut",
@@ -75,6 +80,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         state_class=STATE_CLASS_TOTAL_INCREASING,
         entity_registry_enabled_default=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="whStored",
@@ -82,6 +88,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="volts",
@@ -89,24 +96,28 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_VOLTAGE,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         entity_registry_enabled_default=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="socPercent",
         name="State of Charge Percent",
         device_class=DEVICE_CLASS_BATTERY,
         native_unit_of_measurement=PERCENTAGE,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="timeToEmptyFull",
         name="Time to Empty/Full",
         device_class=TIME_MINUTES,
         native_unit_of_measurement=TIME_MINUTES,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="temperature",
         name="Temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="wifiStrength",
@@ -114,22 +125,26 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         entity_registry_enabled_default=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="timestamp",
         name="Total Run Time",
         native_unit_of_measurement=TIME_SECONDS,
         entity_registry_enabled_default=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="ssid",
         name="Wi-Fi SSID",
         entity_registry_enabled_default=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="ipAddr",
         name="IP Address",
         entity_registry_enabled_default=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 )
 
