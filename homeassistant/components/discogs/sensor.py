@@ -168,7 +168,7 @@ def _build_marketplace_sensors(
                         device_class="monetary"
                         if sensor_type
                         in [
-                            MarketplaceSensorType.price,
+                            MarketplaceSensorType.price_desc,
                             MarketplaceSensorType.price_asc,
                         ]
                         else None,
@@ -189,8 +189,8 @@ def _build_marketplace_sensors(
 class MarketplaceSensorType(Enum):
     """Defines what type of Marketplace Sensor it is, and what value it should use."""
 
-    price = "lowest_price"
-    price_asc = "highest_price"
+    price_asc = "lowest_price"
+    price_desc = "highest_price"
     quality = "highest_quality"
     newest = "newest_listing"
 
@@ -246,7 +246,7 @@ class DiscogMarketplaceSensor(SensorEntity):
     def _attr_unit_of_measurement(self):
         """Determine the unit of measurement based on the sensor type."""
         if self.sensor_type in (
-            MarketplaceSensorType.price,
+            MarketplaceSensorType.price_desc,
             MarketplaceSensorType.price_asc,
         ):
             return self.extra_state_attributes["currency"]
@@ -261,9 +261,9 @@ class DiscogMarketplaceSensor(SensorEntity):
         if not self.listings:
             return None
 
-        if self.sensor_type == MarketplaceSensorType.price:
+        if self.sensor_type == MarketplaceSensorType.price_asc:
             return self.cheapest_listing.__dict__["data"]
-        elif self.sensor_type == MarketplaceSensorType.price_asc:
+        elif self.sensor_type == MarketplaceSensorType.price_desc:
             return self.most_expensive_listing.__dict__["data"]
         elif self.sensor_type == MarketplaceSensorType.quality:
             return self.highest_quality_listing.__dict__["data"]
@@ -277,7 +277,7 @@ class DiscogMarketplaceSensor(SensorEntity):
             return "total"
 
         if self.sensor_type in (
-            MarketplaceSensorType.price,
+            MarketplaceSensorType.price_desc,
             MarketplaceSensorType.price_asc,
         ):
             return "measurement"
@@ -293,18 +293,18 @@ class DiscogMarketplaceSensor(SensorEntity):
         if not self.listing:
             return 0
 
-        if self.sensor_type == MarketplaceSensorType.price:
+        if self.sensor_type == MarketplaceSensorType.price_asc:
             self._attr_name += " - Lowest Price"
             return self.extra_state_attributes["lowest_price"]
+        elif self.sensor_type == MarketplaceSensorType.price_desc:
+            self._attr_name += " - Highest Price"
+            return self.extra_state_attributes["highest_price"]
         elif self.sensor_type == MarketplaceSensorType.quality:
             self._attr_name += " - Best Condition (Average)"
             return self.cond_avg()
         elif self.sensor_type == MarketplaceSensorType.newest:
             self._attr_name += " - Listings Available"
             return len(self.listings)
-        elif self.sensor_type == MarketplaceSensorType.price_asc:
-            self._attr_name += " - Highest Price"
-            return self.extra_state_attributes["highest_price"]
 
     def cond_avg(self):
         """Determine the Condition Average based on the Media + Sleeve Condition."""
