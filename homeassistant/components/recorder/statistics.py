@@ -523,8 +523,7 @@ def list_statistic_ids(
         metadata = get_metadata_with_session(hass, session, None, statistic_type)
 
         for _, meta in metadata.values():
-            unit = meta["unit_of_measurement"]
-            if unit is not None:
+            if (unit := meta["unit_of_measurement"]) is not None:
                 # Display unit according to user settings
                 unit = _configured_unit(unit, units)
             meta["unit_of_measurement"] = unit

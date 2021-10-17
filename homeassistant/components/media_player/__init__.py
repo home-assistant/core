@@ -984,8 +984,7 @@ class MediaPlayerEntity(Entity):
             response = await websession.get(url)
             if response.status == HTTP_OK:
                 content = await response.read()
-                content_type = response.headers.get(CONTENT_TYPE)
-                if content_type:
+                if content_type := response.headers.get(CONTENT_TYPE):
                     content_type = content_type.split(";")[0]
 
         if content is None:

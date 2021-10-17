@@ -125,13 +125,11 @@ def get_supported_color_modes(hass: HomeAssistant, entity_id: str) -> set | None
     First try the statemachine, then entity registry.
     This is the equivalent of entity helper get_supported_features.
     """
-    state = hass.states.get(entity_id)
-    if state:
+    if state := hass.states.get(entity_id):
         return state.attributes.get(ATTR_SUPPORTED_COLOR_MODES)
 
     entity_registry = er.async_get(hass)
-    entry = entity_registry.async_get(entity_id)
-    if not entry:
+    if not (entry := entity_registry.async_get(entity_id)):
         raise HomeAssistantError(f"Unknown entity {entity_id}")
     if not entry.capabilities:
         return None
@@ -629,9 +627,7 @@ class Profiles:
     @callback
     def apply_profile(self, name: str, params: dict) -> None:
         """Apply a profile."""
-        profile = self.data.get(name)
-
-        if profile is None:
+        if (profile := self.data.get(name)) is None:
             return
 
         if profile.hs_color is not None:
