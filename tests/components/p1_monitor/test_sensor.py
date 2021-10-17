@@ -15,7 +15,6 @@ from homeassistant.const import (
     CURRENCY_EURO,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_MONETARY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_VOLTAGE,
     ELECTRIC_CURRENT_AMPERE,
@@ -158,7 +157,7 @@ async def test_settings(
     assert entry.unique_id == f"{entry_id}_settings_energy_consumption_price_low"
     assert state.state == "0.20522"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Consumption Price - Low"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_MONETARY
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}"
@@ -171,7 +170,7 @@ async def test_settings(
     assert entry.unique_id == f"{entry_id}_settings_energy_production_price_low"
     assert state.state == "0.20522"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Production Price - Low"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_MONETARY
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}"
