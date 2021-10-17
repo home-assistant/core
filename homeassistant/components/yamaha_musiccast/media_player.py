@@ -145,7 +145,7 @@ async def async_setup_entry(
         SERVICE_SET_TIMER,
         {
             vol.Required(ATTR_SLEEP_TIME): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=120)
+                vol.Coerce(int), vol.Any(30, 60, 90, 120)
             )
         },
         "set_sleep_timer",
