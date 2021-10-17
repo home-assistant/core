@@ -1,13 +1,13 @@
 set_sleep_timer:
   name: Set timer
-  description: Set a MusicCast sleep timer.
+  description: Set a MusicCast Sleep Timer.
   target:
     device:
       integration: yamaha_musiccast
   fields:
     sleep_time:
       name: Sleep Time
-      description: Number of minutes to set the timer.
+      description: Number of minutes to set the timer to.
       selector:
         number:
           min: 30
@@ -17,7 +17,7 @@ set_sleep_timer:
 
 clear_sleep_timer:
   name: Clear timer
-  description: Clear a MusicCast sleep timer.
+  description: Clear a MusicCast Sleep Timer.
   target:
     device:
       integration: yamaha_musiccast
