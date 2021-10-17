@@ -5,6 +5,7 @@ from youless_api.youless_sensor import YoulessSensor
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
@@ -40,14 +41,14 @@ async def async_setup_entry(
     async_add_entities(
         [
             GasSensor(coordinator, device),
-            PowerMeterSensor(coordinator, device, "low"),
-            PowerMeterSensor(coordinator, device, "high"),
-            PowerMeterSensor(coordinator, device, "total"),
+            PowerMeterSensor(coordinator, device, "low", STATE_CLASS_TOTAL_INCREASING),
+            PowerMeterSensor(coordinator, device, "high", STATE_CLASS_TOTAL_INCREASING),
+            PowerMeterSensor(coordinator, device, "total", STATE_CLASS_TOTAL),
             CurrentPowerSensor(coordinator, device),
             DeliveryMeterSensor(coordinator, device, "low"),
             DeliveryMeterSensor(coordinator, device, "high"),
             ExtraMeterSensor(coordinator, device, "total"),
-            ExtraMeterSensor(coordinator, device, "usage"),
+            ExtraMeterPowerSensor(coordinator, device, "usage"),
         ]
     )
 
@@ -168,7 +169,11 @@ class PowerMeterSensor(YoulessBaseSensor):
     _attr_state_class = STATE_CLASS_TOTAL_INCREASING
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, device: str, dev_type: str
+        self,
+        coordinator: DataUpdateCoordinator,
+        device: str,
+        dev_type: str,
+        state_class: str,
     ) -> None:
         """Instantiate a power meter sensor."""
         super().__init__(
@@ -177,6 +182,7 @@ class PowerMeterSensor(YoulessBaseSensor):
         self._device = device
         self._type = dev_type
         self._attr_name = f"Power {dev_type}"
+        self._attr_state_class = state_class
 
     @property
     def get_sensor(self) -> YoulessSensor | None:
@@ -191,12 +197,39 @@ class ExtraMeterSensor(YoulessBaseSensor):
     """The Youless extra meter value sensor (s0)."""
 
     _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
-    _attr_device_class = DEVICE_CLASS_POWER
+    _attr_device_class = DEVICE_CLASS_ENERGY
+    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, device: str, dev_type: str
     ) -> None:
         """Instantiate an extra meter sensor."""
+        super().__init__(
+            coordinator, device, "extra", "Extra meter", f"extra_{dev_type}"
+        )
+        self._type = dev_type
+        self._attr_name = f"Extra {dev_type}"
+
+    @property
+    def get_sensor(self) -> YoulessSensor | None:
+        """Get the sensor for providing the value."""
+        if self.coordinator.data.extra_meter is None:
+            return None
+
+        return getattr(self.coordinator.data.extra_meter, f"_{self._type}", None)
+
+
+class ExtraMeterPowerSensor(YoulessBaseSensor):
+    """The Youless extra meter power value sensor (s0)."""
+
+    _attr_native_unit_of_measurement = POWER_WATT
+    _attr_device_class = DEVICE_CLASS_POWER
+    _attr_state_class = STATE_CLASS_MEASUREMENT
+
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, device: str, dev_type: str
+    ) -> None:
+        """Instantiate an extra meter power sensor."""
         super().__init__(
             coordinator, device, "extra", "Extra meter", f"extra_{dev_type}"
         )

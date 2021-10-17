@@ -90,7 +90,6 @@ class ComfoConnectBridge:
 
     def __init__(self, hass, bridge, name, token, friendly_name, pin):
         """Initialize the ComfoConnect bridge."""
-        self.data = {}
         self.name = name
         self.hass = hass
         self.unique_id = bridge.uuid.hex()

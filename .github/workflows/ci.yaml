@@ -580,7 +580,7 @@ jobs:
 
           python -m venv venv
           . venv/bin/activate
-          pip install -U "pip<20.3" "setuptools<58" wheel
+          pip install -U "pip<20.3" setuptools wheel
           pip install -r requirements_all.txt
           pip install -r requirements_test.txt
           pip install -e .
@@ -740,4 +740,4 @@ jobs:
           coverage report --fail-under=94
           coverage xml
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2.0.3
+        uses: codecov/codecov-action@v2.1.0

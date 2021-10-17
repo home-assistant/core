@@ -9,7 +9,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple, cast
 import jwt
 
 from homeassistant import data_entry_flow
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.util import dt as dt_util
 
@@ -155,6 +155,7 @@ class AuthManager:
         self._providers = providers
         self._mfa_modules = mfa_modules
         self.login_flow = AuthManagerFlowManager(hass, self)
+        self._revoke_callbacks: dict[str, list[CALLBACK_TYPE]] = {}
 
     @property
     def auth_providers(self) -> list[AuthProvider]:
@@ -275,6 +276,12 @@ class AuthManager:
         self, user: models.User, credentials: models.Credentials
     ) -> None:
         """Link credentials to an existing user."""
+        linked_user = await self.async_get_user_by_credentials(credentials)
+        if linked_user == user:
+            return
+        if linked_user is not None:
+            raise ValueError("Credential is already linked to a user")
+
         await self._store.async_link_user(user, credentials)
 
     async def async_remove_user(self, user: models.User) -> None:
@@ -285,7 +292,7 @@ class AuthManager:
         ]
 
         if tasks:
-            await asyncio.wait(tasks)
+            await asyncio.gather(*tasks)
 
         await self._store.async_remove_user(user)
 
@@ -341,8 +348,7 @@ class AuthManager:
                 "System generated users cannot enable multi-factor auth module."
             )
 
-        module = self.get_auth_mfa_module(mfa_module_id)
-        if module is None:
+        if (module := self.get_auth_mfa_module(mfa_module_id)) is None:
             raise ValueError(f"Unable find multi-factor auth module: {mfa_module_id}")
 
         await module.async_setup_user(user.id, data)
@@ -356,8 +362,7 @@ class AuthManager:
                 "System generated users cannot disable multi-factor auth module."
             )
 
-        module = self.get_auth_mfa_module(mfa_module_id)
-        if module is None:
+        if (module := self.get_auth_mfa_module(mfa_module_id)) is None:
             raise ValueError(f"Unable find multi-factor auth module: {mfa_module_id}")
 
         await module.async_depose_user(user.id)
@@ -448,6 +453,28 @@ class AuthManager:
         """Delete a refresh token."""
         await self._store.async_remove_refresh_token(refresh_token)
 
+        callbacks = self._revoke_callbacks.pop(refresh_token.id, [])
+        for revoke_callback in callbacks:
+            revoke_callback()
+
+    @callback
+    def async_register_revoke_token_callback(
+        self, refresh_token_id: str, revoke_callback: CALLBACK_TYPE
+    ) -> CALLBACK_TYPE:
+        """Register a callback to be called when the refresh token id is revoked."""
+        if refresh_token_id not in self._revoke_callbacks:
+            self._revoke_callbacks[refresh_token_id] = []
+
+        callbacks = self._revoke_callbacks[refresh_token_id]
+        callbacks.append(revoke_callback)
+
+        @callback
+        def unregister() -> None:
+            if revoke_callback in callbacks:
+                callbacks.remove(revoke_callback)
+
+        return unregister
+
     @callback
     def async_create_access_token(
         self, refresh_token: models.RefreshToken, remote_ip: str | None = None
@@ -498,8 +525,7 @@ class AuthManager:
 
         Will raise InvalidAuthError on errors.
         """
-        provider = self._async_resolve_provider(refresh_token)
-        if provider:
+        if provider := self._async_resolve_provider(refresh_token):
             provider.async_validate_refresh_token(refresh_token, remote_ip)
 
     async def async_validate_access_token(

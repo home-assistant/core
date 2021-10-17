@@ -422,6 +422,7 @@ class PlexAuthorizationCallbackView(HomeAssistantView):
 
     async def get(self, request):
         """Receive authorization confirmation."""
+        # pylint: disable=no-self-use
         hass = request.app["hass"]
         await hass.config_entries.flow.async_configure(
             flow_id=request.query["flow_id"], user_input=None

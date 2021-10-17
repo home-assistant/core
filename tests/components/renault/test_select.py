@@ -4,7 +4,6 @@ from unittest.mock import patch
 import pytest
 from renault_api.kamereon import exceptions, schemas
 
-from homeassistant.components.renault.renault_entities import ATTR_LAST_UPDATE
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.select.const import ATTR_OPTION, SERVICE_SELECT_OPTION
 from homeassistant.const import (
@@ -14,7 +13,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from . import (
     check_device_registry,
@@ -31,7 +29,7 @@ from tests.common import load_fixture, mock_device_registry, mock_registry
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
 async def test_selects(hass: HomeAssistant, vehicle_type: str):
     """Test for Renault selects."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
@@ -58,7 +56,7 @@ async def test_selects(hass: HomeAssistant, vehicle_type: str):
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
 async def test_select_empty(hass: HomeAssistant, vehicle_type: str):
     """Test for Renault selects with empty data from Renault."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
@@ -82,13 +80,12 @@ async def test_select_empty(hass: HomeAssistant, vehicle_type: str):
             assert state.attributes.get(attr) == expected_entity.get(attr)
         # Check dynamic attributes:
         assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)
-        assert ATTR_LAST_UPDATE not in state.attributes
 
 
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
 async def test_select_errors(hass: HomeAssistant, vehicle_type: str):
     """Test for Renault selects with temporary failure."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
@@ -119,12 +116,11 @@ async def test_select_errors(hass: HomeAssistant, vehicle_type: str):
             assert state.attributes.get(attr) == expected_entity.get(attr)
         # Check dynamic attributes:
         assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)
-        assert ATTR_LAST_UPDATE not in state.attributes
 
 
 async def test_select_access_denied(hass: HomeAssistant):
     """Test for Renault selects with access denied failure."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
@@ -148,7 +144,7 @@ async def test_select_access_denied(hass: HomeAssistant):
 
 async def test_select_not_supported(hass: HomeAssistant):
     """Test for Renault selects with access denied failure."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 

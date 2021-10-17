@@ -1,6 +1,5 @@
 """Test the motionEye camera web hooks."""
 import copy
-import logging
 from typing import Any
 from unittest.mock import AsyncMock, call, patch
 
@@ -49,9 +48,6 @@ from . import (
 )
 
 from tests.common import async_capture_events
-
-_LOGGER = logging.getLogger(__name__)
-
 
 WEB_HOOK_MOTION_DETECTED_QUERY_STRING = (
     "camera_id=%t&changed_pixels=%D&despeckle_labels=%Q&event=%v&fps=%{fps}"
@@ -282,7 +278,7 @@ async def test_setup_camera_with_no_home_assistant_urls(
     assert entity_state
 
 
-async def test_good_query(hass: HomeAssistant, aiohttp_client: Any) -> None:
+async def test_good_query(hass: HomeAssistant, hass_client_no_auth: Any) -> None:
     """Test good callbacks."""
     await async_setup_component(hass, "http", {"http": {}})
 
@@ -300,7 +296,7 @@ async def test_good_query(hass: HomeAssistant, aiohttp_client: Any) -> None:
         "two": "2",
         ATTR_DEVICE_ID: device.id,
     }
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     for event in (EVENT_MOTION_DETECTED, EVENT_FILE_STORED):
         events = async_capture_events(hass, f"{DOMAIN}.{event}")
@@ -325,13 +321,13 @@ async def test_good_query(hass: HomeAssistant, aiohttp_client: Any) -> None:
 
 
 async def test_bad_query_missing_parameters(
-    hass: HomeAssistant, aiohttp_client: Any
+    hass: HomeAssistant, hass_client_no_auth: Any
 ) -> None:
     """Test a query with missing parameters."""
     await async_setup_component(hass, "http", {"http": {}})
     config_entry = await setup_mock_motioneye_config_entry(hass)
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     resp = await client.post(
         URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID]), json={}
@@ -340,13 +336,13 @@ async def test_bad_query_missing_parameters(
 
 
 async def test_bad_query_no_such_device(
-    hass: HomeAssistant, aiohttp_client: Any
+    hass: HomeAssistant, hass_client_no_auth: Any
 ) -> None:
     """Test a correct query with incorrect device."""
     await async_setup_component(hass, "http", {"http": {}})
     config_entry = await setup_mock_motioneye_config_entry(hass)
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     resp = await client.post(
         URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID]),
@@ -359,13 +355,13 @@ async def test_bad_query_no_such_device(
 
 
 async def test_bad_query_cannot_decode(
-    hass: HomeAssistant, aiohttp_client: Any
+    hass: HomeAssistant, hass_client_no_auth: Any
 ) -> None:
     """Test a correct query with incorrect device."""
     await async_setup_component(hass, "http", {"http": {}})
     config_entry = await setup_mock_motioneye_config_entry(hass)
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     motion_events = async_capture_events(hass, f"{DOMAIN}.{EVENT_MOTION_DETECTED}")
     storage_events = async_capture_events(hass, f"{DOMAIN}.{EVENT_FILE_STORED}")

@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Akun sudah dikonfigurasi"
+        },
+        "error": {
+            "invalid_auth": "Autentikasi tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "usb_config": {
+                "data": {
+                    "usb_path": "Jalur Perangkat USB"
+                }
+            },
+            "usb_manual_config": {
+                "data": {
+                    "usb_manual_path": "Jalur Perangkat USB"
+                }
+            },
+            "user": {
+                "data": {
+                    "email": "Email",
+                    "password": "Kata Sandi"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "usb_manual_config_option": {
+                "data": {
+                    "usb_manual_path": "Jalur Perangkat USB"
+                }
+            }
+        }
+    }
+}

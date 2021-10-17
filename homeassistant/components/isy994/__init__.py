@@ -41,7 +41,6 @@ from .const import (
     MANUFACTURER,
     PLATFORMS,
     PROGRAM_PLATFORMS,
-    UNDO_UPDATE_LISTENER,
 )
 from .helpers import _categorize_nodes, _categorize_programs, _categorize_variables
 from .services import async_setup_services, async_unload_services
@@ -206,23 +205,18 @@ async def async_setup_entry(
     # Load platforms for the devices in the ISY controller that we support.
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    def _start_auto_update() -> None:
-        """Start isy auto update."""
-        _LOGGER.debug("ISY Starting Event Stream and automatic updates")
-        isy.websocket.start()
-
-    def _stop_auto_update(event) -> None:
+    @callback
+    def _async_stop_auto_update(event) -> None:
         """Stop the isy auto update on Home Assistant Shutdown."""
         _LOGGER.debug("ISY Stopping Event Stream and automatic updates")
         isy.websocket.stop()
 
-    await hass.async_add_executor_job(_start_auto_update)
+    _LOGGER.debug("ISY Starting Event Stream and automatic updates")
+    isy.websocket.start()
 
-    undo_listener = entry.add_update_listener(_async_update_listener)
-
-    hass_isy_data[UNDO_UPDATE_LISTENER] = undo_listener
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_auto_update)
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_auto_update)
     )
 
     # Register Integration-wide Services:
@@ -289,8 +283,6 @@ async def async_unload_entry(
         isy.websocket.stop()
 
     await hass.async_add_executor_job(_stop_auto_update)
-
-    hass_isy_data[UNDO_UPDATE_LISTENER]()
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)

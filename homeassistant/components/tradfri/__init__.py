@@ -1,7 +1,7 @@
 """Support for IKEA Tradfri."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import Any
 
@@ -15,7 +15,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import Event, async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -97,7 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         psk=entry.data[CONF_KEY],
     )
 
-    async def on_hass_stop(event):
+    async def on_hass_stop(event: Event) -> None:
         """Close connection when hass stops."""
         await factory.shutdown()
 
@@ -135,7 +135,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    async def async_keep_alive(now):
+    async def async_keep_alive(now: datetime) -> None:
         if hass.is_stopping:
             return
 
@@ -151,7 +151,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

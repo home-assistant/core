@@ -35,7 +35,7 @@ async def test_config_non_unique_profile(hass: HomeAssistant) -> None:
 
 
 async def test_config_reauth_profile(
-    hass: HomeAssistant, aiohttp_client, aioclient_mock, current_request_with_host
+    hass: HomeAssistant, hass_client_no_auth, aioclient_mock, current_request_with_host
 ) -> None:
     """Test reauth an existing profile re-creates the config entry."""
     hass_config = {
@@ -81,7 +81,7 @@ async def test_config_reauth_profile(
         },
     )
 
-    client: TestClient = await aiohttp_client(hass.http.app)
+    client: TestClient = await hass_client_no_auth()
     resp = await client.get(f"{AUTH_CALLBACK_PATH}?code=abcd&state={state}")
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"

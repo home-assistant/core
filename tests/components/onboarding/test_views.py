@@ -20,7 +20,6 @@ from tests.components.met.conftest import mock_weather  # noqa: F401
 @pytest.fixture(autouse=True)
 def always_mock_weather(mock_weather):  # noqa: F811
     """Mock the Met weather provider."""
-    pass
 
 
 @pytest.fixture(autouse=True)
@@ -325,10 +324,16 @@ async def test_onboarding_integration_invalid_redirect_uri(
 
     client = await hass_client()
 
-    resp = await client.post(
-        "/api/onboarding/integration",
-        json={"client_id": CLIENT_ID, "redirect_uri": "http://invalid-redirect.uri"},
-    )
+    with patch(
+        "homeassistant.components.auth.indieauth.fetch_redirect_uris", return_value=[]
+    ):
+        resp = await client.post(
+            "/api/onboarding/integration",
+            json={
+                "client_id": CLIENT_ID,
+                "redirect_uri": "http://invalid-redirect.uri",
+            },
+        )
 
     assert resp.status == 400
 
@@ -380,7 +385,6 @@ async def test_onboarding_core_sets_up_rpi_power(
 ):
     """Test that the core step sets up rpi_power on RPi."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
-    await async_setup_component(hass, "persistent_notification", {})
 
     assert await async_setup_component(hass, "onboarding", {})
     await hass.async_block_till_done()
@@ -405,7 +409,6 @@ async def test_onboarding_core_no_rpi_power(
 ):
     """Test that the core step do not set up rpi_power on non RPi."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
-    await async_setup_component(hass, "persistent_notification", {})
 
     assert await async_setup_component(hass, "onboarding", {})
     await hass.async_block_till_done()
@@ -447,7 +450,6 @@ async def test_onboarding_analytics(hass, hass_storage, hass_client, hass_admin_
 async def test_onboarding_installation_type(hass, hass_storage, hass_client):
     """Test returning installation type during onboarding."""
     mock_storage(hass_storage, {"done": []})
-    await async_setup_component(hass, "persistent_notification", {})
 
     assert await async_setup_component(hass, "onboarding", {})
     await hass.async_block_till_done()
@@ -469,7 +471,6 @@ async def test_onboarding_installation_type(hass, hass_storage, hass_client):
 async def test_onboarding_installation_type_after_done(hass, hass_storage, hass_client):
     """Test raising for installation type after onboarding."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
-    await async_setup_component(hass, "persistent_notification", {})
 
     assert await async_setup_component(hass, "onboarding", {})
     await hass.async_block_till_done()

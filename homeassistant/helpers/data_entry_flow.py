@@ -1,6 +1,7 @@
 """Helpers for the data entry flow."""
 from __future__ import annotations
 
+from http import HTTPStatus
 from typing import Any
 
 from aiohttp import web
@@ -9,7 +10,6 @@ import voluptuous as vol
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.const import HTTP_BAD_REQUEST, HTTP_NOT_FOUND
 import homeassistant.helpers.config_validation as cv
 
 
@@ -77,9 +77,11 @@ class FlowManagerIndexView(_BaseFlowManagerView):
                 },
             )
         except data_entry_flow.UnknownHandler:
-            return self.json_message("Invalid handler specified", HTTP_NOT_FOUND)
+            return self.json_message("Invalid handler specified", HTTPStatus.NOT_FOUND)
         except data_entry_flow.UnknownStep:
-            return self.json_message("Handler does not support user", HTTP_BAD_REQUEST)
+            return self.json_message(
+                "Handler does not support user", HTTPStatus.BAD_REQUEST
+            )
 
         result = self._prepare_result_json(result)
 
@@ -94,7 +96,7 @@ class FlowManagerResourceView(_BaseFlowManagerView):
         try:
             result = await self._flow_mgr.async_configure(flow_id)
         except data_entry_flow.UnknownFlow:
-            return self.json_message("Invalid flow specified", HTTP_NOT_FOUND)
+            return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
 
         result = self._prepare_result_json(result)
 
@@ -108,9 +110,9 @@ class FlowManagerResourceView(_BaseFlowManagerView):
         try:
             result = await self._flow_mgr.async_configure(flow_id, data)
         except data_entry_flow.UnknownFlow:
-            return self.json_message("Invalid flow specified", HTTP_NOT_FOUND)
+            return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
         except vol.Invalid:
-            return self.json_message("User input malformed", HTTP_BAD_REQUEST)
+            return self.json_message("User input malformed", HTTPStatus.BAD_REQUEST)
 
         result = self._prepare_result_json(result)
 
@@ -121,6 +123,6 @@ class FlowManagerResourceView(_BaseFlowManagerView):
         try:
             self._flow_mgr.async_abort(flow_id)
         except data_entry_flow.UnknownFlow:
-            return self.json_message("Invalid flow specified", HTTP_NOT_FOUND)
+            return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
 
         return self.json_message("Flow aborted")

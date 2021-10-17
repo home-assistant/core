@@ -31,6 +31,7 @@ from .common import (
     FritzDevice,
     FritzDeviceBase,
     SwitchInfo,
+    device_filter_out_from_trackers,
 )
 from .const import (
     DATA_FRITZ,
@@ -166,7 +167,7 @@ def port_entities_list(
     """Get list of port forwarding entities."""
 
     _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_PORTFORWARD)
-    entities_list: list = []
+    entities_list: list[FritzBoxPortSwitch] = []
     service_name = "Layer3Forwarding"
     connection_type = service_call_action(
         fritzbox_tools, service_name, "1", "GetDefaultConnectionService"
@@ -218,11 +219,18 @@ def port_entities_list(
 
         # We can only handle port forwards of the given device
         if portmap["NewInternalClient"] == local_ip:
+            port_name = portmap["NewPortMappingDescription"]
+            for entity in entities_list:
+                if entity.port_mapping and (
+                    port_name in entity.port_mapping["NewPortMappingDescription"]
+                ):
+                    port_name = f"{port_name} {portmap['NewExternalPort']}"
             entities_list.append(
                 FritzBoxPortSwitch(
                     fritzbox_tools,
                     device_friendly_name,
                     portmap,
+                    port_name,
                     i,
                     con_type,
                 )
@@ -267,16 +275,10 @@ def wifi_entities_list(
 
 
 def profile_entities_list(
-    router: FritzBoxTools, data_fritz: FritzData
+    router: FritzBoxTools,
+    data_fritz: FritzData,
 ) -> list[FritzBoxProfileSwitch]:
     """Add new tracker entities from the router."""
-
-    def _is_tracked(mac: str) -> bool:
-        for tracked in data_fritz.profile_switches.values():
-            if mac in tracked:
-                return True
-
-        return False
 
     new_profiles: list[FritzBoxProfileSwitch] = []
 
@@ -287,7 +289,9 @@ def profile_entities_list(
         data_fritz.profile_switches[router.unique_id] = set()
 
     for mac, device in router.devices.items():
-        if device.ip_address == "" or _is_tracked(mac):
+        if device_filter_out_from_trackers(
+            mac, device, data_fritz.profile_switches.values()
+        ):
             continue
 
         new_profiles.append(FritzBoxProfileSwitch(router, device))
@@ -326,7 +330,11 @@ async def async_setup_entry(
     )
 
     entities_list = await hass.async_add_executor_job(
-        all_entities_list, fritzbox_tools, entry.title, data_fritz, local_ip
+        all_entities_list,
+        fritzbox_tools,
+        entry.title,
+        data_fritz,
+        local_ip,
     )
 
     async_add_entities(entities_list)
@@ -422,6 +430,7 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
         fritzbox_tools: FritzBoxTools,
         device_friendly_name: str,
         port_mapping: dict[str, Any] | None,
+        port_name: str,
         idx: int,
         connection_type: str,
     ) -> None:
@@ -437,7 +446,7 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
             return
 
         switch_info = SwitchInfo(
-            description=f'Port forward {port_mapping["NewPortMappingDescription"]}',
+            description=f"Port forward {port_name}",
             friendly_name=device_friendly_name,
             icon="mdi:check-network",
             type=SWITCH_TYPE_PORTFORWARD,

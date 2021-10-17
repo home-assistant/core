@@ -60,7 +60,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     self.hass.helpers.aiohttp_client.async_get_clientsession(),
                 )
         except ClientResponseError as err:
-            if err.status == HTTP_UNAUTHORIZED or err.status == HTTP_FORBIDDEN:
+            if err.status in (HTTP_UNAUTHORIZED, HTTP_FORBIDDEN):
                 return self.async_abort(reason="invalid_auth")
             return self.async_abort(reason="cannot_connect")
         except (asyncio.TimeoutError, ClientError):

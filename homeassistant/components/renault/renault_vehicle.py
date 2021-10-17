@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Callable, cast
+from typing import cast
 
 from renault_api.kamereon import models
 from renault_api.renault_vehicle import RenaultVehicle

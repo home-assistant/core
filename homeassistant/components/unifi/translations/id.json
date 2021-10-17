@@ -10,7 +10,7 @@
             "service_unavailable": "Gagal terhubung",
             "unknown_client_mac": "Tidak ada klien yang tersedia di alamat MAC tersebut"
         },
-        "flow_title": "UniFi Network {site} ({host})",
+        "flow_title": "{site} ({host})",
         "step": {
             "user": {
                 "data": {

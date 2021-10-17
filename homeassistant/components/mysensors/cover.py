@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from enum import Enum, unique
-import logging
 from typing import Any
 
 from homeassistant.components import mysensors
@@ -15,8 +14,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .helpers import on_unload
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @unique

@@ -25,6 +25,7 @@ from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN
 from homeassistant.components.ssdp import (
     ATTR_SSDP_LOCATION,
     ATTR_UPNP_MANUFACTURER_URL,
@@ -163,7 +164,8 @@ async def test_gateway_setup(hass, aioclient_mock):
         assert forward_entry_setup.mock_calls[6][1] == (config_entry, LOCK_DOMAIN)
         assert forward_entry_setup.mock_calls[7][1] == (config_entry, SCENE_DOMAIN)
         assert forward_entry_setup.mock_calls[8][1] == (config_entry, SENSOR_DOMAIN)
-        assert forward_entry_setup.mock_calls[9][1] == (config_entry, SWITCH_DOMAIN)
+        assert forward_entry_setup.mock_calls[9][1] == (config_entry, SIREN_DOMAIN)
+        assert forward_entry_setup.mock_calls[10][1] == (config_entry, SWITCH_DOMAIN)
 
 
 async def test_gateway_retry(hass):
@@ -267,14 +269,14 @@ async def test_reset_after_successful_setup(hass, aioclient_mock):
 
 async def test_get_gateway(hass):
     """Successful call."""
-    with patch("pydeconz.DeconzSession.initialize", return_value=True):
+    with patch("pydeconz.DeconzSession.refresh_state", return_value=True):
         assert await get_gateway(hass, ENTRY_CONFIG, Mock(), Mock())
 
 
 async def test_get_gateway_fails_unauthorized(hass):
     """Failed call."""
     with patch(
-        "pydeconz.DeconzSession.initialize",
+        "pydeconz.DeconzSession.refresh_state",
         side_effect=pydeconz.errors.Unauthorized,
     ), pytest.raises(AuthenticationRequired):
         assert await get_gateway(hass, ENTRY_CONFIG, Mock(), Mock()) is False
@@ -283,7 +285,7 @@ async def test_get_gateway_fails_unauthorized(hass):
 async def test_get_gateway_fails_cannot_connect(hass):
     """Failed call."""
     with patch(
-        "pydeconz.DeconzSession.initialize",
+        "pydeconz.DeconzSession.refresh_state",
         side_effect=pydeconz.errors.RequestError,
     ), pytest.raises(CannotConnect):
         assert await get_gateway(hass, ENTRY_CONFIG, Mock(), Mock()) is False

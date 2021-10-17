@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "already_in_progress": "A konfigur\u00e1ci\u00f3 m\u00e1r folyamatban van.",
+            "already_in_progress": "A konfigur\u00e1l\u00e1s m\u00e1r folyamatban van.",
             "not_konn_panel": "Nem felismert Konnected.io eszk\u00f6z",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
@@ -11,7 +11,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Modell: {model}\nAzonos\u00edt\u00f3: {id}\nGazdag\u00e9p: {host}\nPort: {port} \n\n Az IO \u00e9s a panel viselked\u00e9s\u00e9t a Konnected Alarm Panel be\u00e1ll\u00edt\u00e1saiban konfigur\u00e1lhatja.",
+                "description": "Modell: {model}\nAzonos\u00edt\u00f3: {id}\nC\u00edm: {host}\nPort: {port} \n\nAz IO \u00e9s a panel viselked\u00e9s\u00e9t a Konnected Alarm Panel be\u00e1ll\u00edt\u00e1saiban konfigur\u00e1lhatja.",
                 "title": "Konnected eszk\u00f6z k\u00e9sz"
             },
             "import_confirm": {
@@ -23,7 +23,7 @@
                     "host": "IP c\u00edm",
                     "port": "Port"
                 },
-                "description": "K\u00e9rj\u00fck, adja meg a Konnected Panel gazdag\u00e9p\u00e9nek adatait."
+                "description": "K\u00e9rj\u00fck, adja meg a Konnected Panel csatlakoz\u00e1si adatait."
             }
         }
     },

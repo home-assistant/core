@@ -47,11 +47,10 @@ from .const import (
     ATTR_HUMIDIFY_SUPPORTED,
     ATTR_ZONE_STATUS,
     DOMAIN,
-    NEXIA_DEVICE,
     SIGNAL_THERMOSTAT_UPDATE,
     SIGNAL_ZONE_UPDATE,
-    UPDATE_COORDINATOR,
 )
+from .coordinator import NexiaDataUpdateCoordinator
 from .entity import NexiaThermostatZoneEntity
 from .util import percent_conv
 
@@ -90,10 +89,8 @@ NEXIA_TO_HA_HVAC_MODE_MAP = {
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up climate for a Nexia device."""
-
-    nexia_data = hass.data[DOMAIN][config_entry.entry_id]
-    nexia_home = nexia_data[NEXIA_DEVICE]
-    coordinator = nexia_data[UPDATE_COORDINATOR]
+    coordinator: NexiaDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    nexia_home = coordinator.nexia_home
 
     platform = entity_platform.async_get_current_platform()
 
