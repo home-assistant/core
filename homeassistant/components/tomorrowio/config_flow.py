@@ -67,7 +67,6 @@ def _get_config_schema(
                 default=input_dict.get(CONF_LONGITUDE, hass.config.longitude),
             ): cv.longitude,
         },
-        extra=vol.REMOVE_EXTRA,
     )
 
 
@@ -126,21 +125,20 @@ class TomorrowioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             self._abort_if_unique_id_configured()
 
+            latitude = user_input.get(CONF_LATITUDE, self.hass.config.latitude)
+            longitude = user_input.get(CONF_LONGITUDE, self.hass.config.longitude)
+            user_input[CONF_NAME] = DEFAULT_NAME
+            if zone_state := async_active_zone(self.hass, latitude, longitude):
+                user_input[
+                    CONF_NAME
+                ] += f" - {zone_state.attributes[CONF_FRIENDLY_NAME]}"
             try:
-                latitude = user_input.get(CONF_LATITUDE, self.hass.config.latitude)
-                longitude = user_input.get(CONF_LONGITUDE, self.hass.config.longitude)
                 await TomorrowioV4(
                     user_input[CONF_API_KEY],
                     str(latitude),
                     str(longitude),
                     session=async_get_clientsession(self.hass),
                 ).realtime([TMRW_ATTR_TEMPERATURE])
-
-                user_input[CONF_NAME] = DEFAULT_NAME
-                if zone_state := async_active_zone(self.hass, latitude, longitude):
-                    user_input[
-                        CONF_NAME
-                    ] += f" - {zone_state.attributes[CONF_FRIENDLY_NAME]}"
 
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
