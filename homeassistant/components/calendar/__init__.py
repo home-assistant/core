@@ -145,8 +145,7 @@ class CalendarEventDevice(Entity):
     @property
     def state_attributes(self):
         """Return the entity state attributes."""
-        event = self.event
-        if event is None:
+        if (event := self.event) is None:
             return None
 
         event = normalize_event(event)
@@ -162,8 +161,7 @@ class CalendarEventDevice(Entity):
     @property
     def state(self):
         """Return the state of the calendar event."""
-        event = self.event
-        if event is None:
+        if (event := self.event) is None:
             return STATE_OFF
 
         event = normalize_event(event)
