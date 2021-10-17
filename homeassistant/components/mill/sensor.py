@@ -121,7 +121,7 @@ class MillSensor(CoordinatorEntity, SensorEntity):
         self._attr_name = f"{mill_device.name} {entity_description.name}"
         self._attr_unique_id = f"{mill_device.device_id}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, heater.device_id)},
+            identifiers={(DOMAIN, mill_device.device_id)},
             name=self.name,
             manufacturer=MANUFACTURER,
         )
