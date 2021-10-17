@@ -13,12 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_TYPE,
-    DEVICE_CLASS_TIMESTAMP,
-    TIME_DAYS,
-)
+from homeassistant.const import CONF_NAME, CONF_TYPE, DEVICE_CLASS_TIMESTAMP, TIME_DAYS
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.util.dt import as_local, get_time_zone, utcnow
@@ -145,7 +140,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     _LOGGER.debug(_type)
 
     season_data = SeasonData(hemisphere, _type, time_zone)
-    
+
     await season_data.async_update()
 
     entities = []
