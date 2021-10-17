@@ -42,7 +42,7 @@ class SensorID(Enum):
     Meteo = "FE"
 
 
-async def validate_response(response: ClientResponse) -> None:
+def validate_response(response: ClientResponse) -> None:
     if response.status not in (200, 201, 204):
         raise NoUsableService
 
@@ -63,7 +63,7 @@ class LookinUDPSubscriptions:
             (device_id, sensor_id.value, uuid), []
         ).append(callback)
 
-        def _remove_call(*_: Any):
+        def _remove_call(*_: Any) -> None:
             self._sensor_callbacks[(device_id, sensor_id.value, uuid)].remove(callback)
 
         return _remove_call
@@ -85,7 +85,7 @@ class LookinUDPSubscriptions:
             callback
         )
 
-        def _remove_call(*_: Any):
+        def _remove_call(*_: Any) -> None:
             self._service_callbacks[(device_id, service_name)].remove(callback)
 
         return _remove_call
@@ -175,58 +175,54 @@ async def start_lookin_udp(subscriptions: LookinUDPSubscriptions) -> Callable:
 
 
 class LookInHttpProtocol:
-    def __init__(self, host: str, session: ClientSession) -> None:
-        self._host = host
+    def __init__(self, api_uri: str, session: ClientSession) -> None:
+        self._api_uri = api_uri
         self._session = session
 
     async def get_info(self) -> Device:
         response = await self._session.get(
-            url=INFO_URL.format(host=self._host), timeout=CLIENT_TIMEOUTS
+            url=f"{self._api_uri}{INFO_URL}", timeout=CLIENT_TIMEOUTS
         )
-        async with response:
-            await validate_response(response)
-            payload = await response.json()
+        validate_response(response)
+        payload = await response.json()
 
         return Device(_data=payload)
 
     async def update_device_name(self, name: str) -> None:
         response = await self._session.post(
-            url=INFO_URL.format(host=self._host), data=json.dumps({"name": name})
+            url=f"{self._api_uri}{INFO_URL}", data=json.dumps({"name": name})
         )
-        async with response:
-            await validate_response(response)
+        validate_response(response)
 
     async def get_meteo_sensor(self) -> MeteoSensor:
         response = await self._session.get(
-            url=METEO_SENSOR_URL.format(host=self._host), timeout=CLIENT_TIMEOUTS
+            url=f"{self._api_uri}{METEO_SENSOR_URL}", timeout=CLIENT_TIMEOUTS
         )
 
-        async with response:
-            await validate_response(response)
-            payload = await response.json()
+        validate_response(response)
+        payload = await response.json()
 
         return MeteoSensor(_data=payload)
 
     async def get_devices(self) -> list[dict[str, Any]]:
         response = await self._session.get(
-            url=DEVICES_INFO_URL.format(host=self._host), timeout=CLIENT_TIMEOUTS
+            url=f"{self._api_uri}{DEVICES_INFO_URL}", timeout=CLIENT_TIMEOUTS
         )
 
-        async with response:
-            await validate_response(response)
-            payload = await response.json()
+        validate_response(response)
+        payload = await response.json()
 
         return payload
 
     async def get_device(self, uuid: str) -> dict[str, Any]:
+        url = f"{self._api_uri}{DEVICE_INFO_URL}"
         response = await self._session.get(
-            url=DEVICE_INFO_URL.format(host=self._host, uuid=uuid),
+            url=url.format(uuid=uuid),
             timeout=CLIENT_TIMEOUTS,
         )
 
-        async with response:
-            await validate_response(response)
-            payload = await response.json()
+        validate_response(response)
+        payload = await response.json()
 
         return payload
 
@@ -240,29 +236,36 @@ class LookInHttpProtocol:
 
     async def send_command(self, uuid: str, command: str, signal: str) -> None:
         if not (code := COMMAND_TO_CODE.get(command)):
-            return
+            raise ValueError(f"{command} this is the invalid command")
 
-        await self._session.get(
-            url=SEND_IR_COMMAND.format(
-                host=self._host, uuid=uuid, command=code, signal=signal
-            ),
+        url = f"{self._api_uri}{SEND_IR_COMMAND}"
+
+        response = await self._session.get(
+            url=url.format(uuid=uuid, command=code, signal=signal),
             timeout=CLIENT_TIMEOUTS,
         )
 
-    async def send_ir(self, format: IRFormat, codes: str) -> None:
-        if format == IRFormat.ProntoHEX:
-            url = SEND_IR_COMMAND_PRONTOHEX.format(host=self._host, codes=codes)
-        elif format == IRFormat.Raw:
-            url = SEND_IR_COMMAND_RAW.format(host=self._host, codes=codes)
+        validate_response(response)
+
+    async def send_ir(self, ir_format: IRFormat, codes: str) -> None:
+        if ir_format == IRFormat.ProntoHEX:
+            url = f"{self._api_uri}{SEND_IR_COMMAND_PRONTOHEX}"
+        elif ir_format == IRFormat.Raw:
+            url = f"{self._api_uri}{SEND_IR_COMMAND_RAW}"
         else:
-            raise ValueError(f"{format} is not a known IRFormat")
-        await self._session.get(url=url, timeout=CLIENT_TIMEOUTS)
+            raise ValueError(f"{ir_format} is not a known IRFormat")
+        response = await self._session.get(
+            url=url.format(codes=codes), timeout=CLIENT_TIMEOUTS
+        )
+
+        validate_response(response)
 
     async def update_conditioner(self, climate: Climate) -> None:
         """Update the conditioner from a Climate object."""
-        await self._session.get(
-            url=UPDATE_CLIMATE_URL.format(
-                host=self._host, extra=climate.extra, status=climate.to_status
-            ),
+        url = f"{self._api_uri}{UPDATE_CLIMATE_URL}"
+        response = await self._session.get(
+            url=url.format(extra=climate.extra, status=climate.to_status),
             timeout=CLIENT_TIMEOUTS,
         )
+
+        validate_response(response)

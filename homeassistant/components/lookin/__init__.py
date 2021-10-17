@@ -25,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     host = entry.data[CONF_HOST]
     lookin_protocol = LookInHttpProtocol(
-        host=host, session=async_get_clientsession(hass)
+        api_uri=f"http://{host}", session=async_get_clientsession(hass)
     )
 
     try:
