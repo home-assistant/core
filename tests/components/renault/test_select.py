@@ -171,7 +171,7 @@ async def test_select_charge_mode(hass: HomeAssistant):
     await setup_renault_integration_vehicle(hass, "zoe_40")
 
     data = {
-        ATTR_ENTITY_ID: "select.charge_mode",
+        ATTR_ENTITY_ID: "select.reg_number_charge_mode",
         ATTR_OPTION: "always",
     }
 
