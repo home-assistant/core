@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from devolo_plc_api.device import Device
 from devolo_plc_api.exceptions.device import DeviceNotFound
@@ -9,19 +10,21 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.components import zeroconf
-from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN, SERIAL_NUMBER, TITLE
+from .const import DOMAIN, PRODUCT, SERIAL_NUMBER, TITLE
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_IP_ADDRESS): str})
 
 
-async def validate_input(hass: core.HomeAssistant, data: dict) -> dict:
+async def validate_input(
+    hass: core.HomeAssistant, data: dict[str, Any]
+) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
@@ -46,10 +49,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    def __init__(self) -> None:
-        """Set up the instance."""
-        self._discovery_info: dict = {}
-
     async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
         """Handle the initial step."""
         errors: dict = {}
@@ -67,7 +66,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            await self.async_set_unique_id(info[SERIAL_NUMBER])
+            await self.async_set_unique_id(info[SERIAL_NUMBER], raise_on_progress=False)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(title=info[TITLE], data=user_input)
 
@@ -85,12 +84,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info["properties"]["SN"])
         self._abort_if_unique_id_configured()
 
-        self._discovery_info = discovery_info
-
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context[CONF_HOST] = discovery_info["host"]
         self.context["title_placeholders"] = {
-            "product": discovery_info["properties"]["Product"],
-            "name": discovery_info["hostname"].split(".")[0],
+            PRODUCT: discovery_info["properties"]["Product"],
+            CONF_NAME: discovery_info["hostname"].split(".")[0],
         }
 
         return await self.async_step_zeroconf_confirm()
@@ -99,10 +97,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: ConfigType | None = None
     ) -> FlowResult:
         """Handle a flow initiated by zeroconf."""
-        title = self._discovery_info["hostname"].split(".")[0]
+        title = self.context["title_placeholders"][CONF_NAME]
         if user_input is not None:
             data = {
-                CONF_IP_ADDRESS: self._discovery_info["host"],
+                CONF_IP_ADDRESS: self.context[CONF_HOST],
             }
             return self.async_create_entry(title=title, data=data)
         return self.async_show_form(
