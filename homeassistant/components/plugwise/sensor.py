@@ -5,11 +5,11 @@ import logging
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_ENERGY,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
     PERCENTAGE,
