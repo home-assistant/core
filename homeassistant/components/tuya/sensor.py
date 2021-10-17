@@ -262,7 +262,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
                 self.unit_of_measurement.lower()
             )
 
-            # Unknown unit of measurement, device should not be used.
+            # Unknown unit of measurement, device class should not be used.
             if self._uom is None:
                 self._attr_device_class = None
                 return
