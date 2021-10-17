@@ -18,7 +18,7 @@ from .const import (
     FroniusDeviceInfo,
     SolarNetId,
 )
-from .sensor import (
+from .descriptions import (
     INVERTER_ENTITY_DESCRIPTIONS,
     LOGGER_ENTITY_DESCRIPTIONS,
     METER_ENTITY_DESCRIPTIONS,
