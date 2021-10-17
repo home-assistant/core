@@ -315,8 +315,7 @@ def humanify(hass, events, entity_attr_cache, context_lookup):
                     "entity_id": entity_id,
                 }
 
-                icon = event.attributes_icon
-                if icon:
+                if icon := event.attributes_icon:
                     data["icon"] = icon
 
                 if event.context_user_id:
@@ -581,8 +580,7 @@ def _keep_event(hass, event, entities_filter):
     if event.event_type in HOMEASSISTANT_EVENTS:
         return entities_filter is None or entities_filter(HA_DOMAIN_ENTITY_ID)
 
-    entity_id = event.data_entity_id
-    if entity_id:
+    if entity_id := event.data_entity_id:
         return entities_filter is None or entities_filter(entity_id)
 
     if event.event_type in hass.data[DOMAIN]:
@@ -615,10 +613,9 @@ def _augment_data_with_context(
             return
 
     event_type = context_event.event_type
-    context_entity_id = context_event.entity_id
 
     # State change
-    if context_entity_id:
+    if context_entity_id := context_event.entity_id:
         data["context_entity_id"] = context_entity_id
         data["context_entity_id_name"] = _entity_name_from_event(
             context_entity_id, context_event, entity_attr_cache

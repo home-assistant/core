@@ -482,16 +482,14 @@ class MediaPlayerEntity(Entity):
         if hasattr(self, "_attr_media_image_hash"):
             return self._attr_media_image_hash
 
-        url = self.media_image_url
-        if url is not None:
+        if (url := self.media_image_url) is not None:
             return hashlib.sha256(url.encode("utf-8")).hexdigest()[:16]
 
         return None
 
     async def async_get_media_image(self):
         """Fetch media image of current playing image."""
-        url = self.media_image_url
-        if url is None:
+        if (url := self.media_image_url) is None:
             return None, None
 
         return await self._async_fetch_image_from_cache(url)
@@ -871,9 +869,7 @@ class MediaPlayerEntity(Entity):
     @property
     def media_image_local(self):
         """Return local url to media image."""
-        image_hash = self.media_image_hash
-
-        if image_hash is None:
+        if (image_hash := self.media_image_hash) is None:
             return None
 
         return (
@@ -887,15 +883,15 @@ class MediaPlayerEntity(Entity):
         supported_features = self.supported_features or 0
         data = {}
 
-        if supported_features & SUPPORT_SELECT_SOURCE:
-            source_list = self.source_list
-            if source_list:
-                data[ATTR_INPUT_SOURCE_LIST] = source_list
+        if supported_features & SUPPORT_SELECT_SOURCE and (
+            source_list := self.source_list
+        ):
+            data[ATTR_INPUT_SOURCE_LIST] = source_list
 
-        if supported_features & SUPPORT_SELECT_SOUND_MODE:
-            sound_mode_list = self.sound_mode_list
-            if sound_mode_list:
-                data[ATTR_SOUND_MODE_LIST] = sound_mode_list
+        if supported_features & SUPPORT_SELECT_SOUND_MODE and (
+            sound_mode_list := self.sound_mode_list
+        ):
+            data[ATTR_SOUND_MODE_LIST] = sound_mode_list
 
         return data
 
