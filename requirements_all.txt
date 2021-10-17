@@ -1531,9 +1531,6 @@ pymysensors==0.18.0
 # homeassistant.components.nanoleaf
 pynanoleaf==0.0.5
 
-# homeassistant.components.nello
-pynello==2.0.3
-
 # homeassistant.components.netgear
 pynetgear==0.6.1
 
