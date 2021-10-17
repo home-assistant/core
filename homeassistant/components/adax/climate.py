@@ -90,16 +90,15 @@ class AdaxDevice(ClimateEntity):
     async def async_update(self) -> None:
         """Get the latest data."""
         for room in await self._adax_data_handler.get_rooms():
-            if room["id"] == self._device_id:
-                self._attr_name = room["name"]
-                self._attr_current_temperature = room.get("temperature")
-                self._attr_hvac_mode = (
-                    HVAC_MODE_HEAT if room["heatingEnabled"] else HVAC_MODE_OFF
-                )
-                self._attr_icon = (
-                    "mdi:radiator"
-                    if self.hvac_mode == HVAC_MODE_HEAT
-                    else "mdi:radiator-off"
-                )
-                self._attr_target_temperature = room.get("targetTemperature")
-                return
+            if room["id"] != self._device_id:
+                continue
+            self._attr_name = room["name"]
+            self._attr_current_temperature = room.get("temperature")
+            self._attr_target_temperature = room.get("targetTemperature")
+            if room["heatingEnabled"]:
+                self._attr_hvac_mode = HVAC_MODE_HEAT
+                self._attr_icon = "mdi:radiator"
+            else:
+                self._attr_hvac_mode = HVAC_MODE_OFF
+                self._attr_icon = "mdi:radiator-off"
+            return
