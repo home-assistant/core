@@ -1,0 +1,16 @@
+{
+    "error_code":200,
+    "error_message":"OK",
+    "result":{
+        "version":"1.0.12",
+        "date":"20210506",
+        "pubDate":"Thu, 06 May 2021 10:10:19 +0800",
+        "buildNumber":"20210506",
+        "number":"17336",
+        "ci_commit":"1d7be9160065db02401aed96016c6ad32aca19b2",
+        "ci_branch":"v17.01.6-qnap",
+        "ci_pipeline":"4876",
+        "commit_cpss":"",
+        "commit_iss":"a05ff73f9207b47782d32bc8e381b630befa7a98"
+    }
+}

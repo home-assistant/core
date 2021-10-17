@@ -1,0 +1,13 @@
+{
+    "error_code":200,
+    "error_message":"OK",
+    "result":{
+        "MacAddr":"24:5E:BE:00:00:00",
+        "SerialNumber":"1234567890",
+        "ChipId":"ALLEYCAT3",
+        "Model":"M408",
+        "PortNum":12,
+        "Product":"QSW-M408-4C",
+        "TrunkNum":0
+    }
+}

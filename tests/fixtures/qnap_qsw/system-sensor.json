@@ -1,0 +1,10 @@
+{
+    "error_code":200,
+    "error_message":"OK",
+    "result":{
+        "Fan1Speed":2005,
+        "Fan2Speed":-1,
+        "MaxSwitchTemp":85,
+        "SwitchTemp":39
+    }
+}

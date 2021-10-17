@@ -1,0 +1,17 @@
+{
+    "error_code":200,
+    "error_message":"OK",
+    "result":{
+        "version":"1.0.12",
+        "number":"17336",
+        "buildNumber":"20210506",
+        "date":"Tue, 11, May 2021 10:59:00 +0800",
+        "description":"",
+        "downloadURL":[
+            "https://download.qnap.com/Storage/Networking/QSW408FW/QSW-M408AC3-FW.v1.0.12_S20210506_17336.img",
+            "https://eu1.qnap.com/Storage/Networking/QSW408FW/QSW-M408AC3-FW.v1.0.12_S20210506_17336.img",
+            "https://us1.qnap.com/Storage/Networking/QSW408FW/QSW-M408AC3-FW.v1.0.12_S20210506_17336.img"
+        ],
+        "newer":false
+    }
+}

@@ -1,0 +1,7 @@
+{
+    "error_code":200,
+    "error_message":"OK",
+    "result":{
+        "UpTime":60
+    }
+}

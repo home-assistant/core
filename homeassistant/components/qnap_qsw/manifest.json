@@ -1,0 +1,9 @@
+{
+  "domain": "qnap_qsw",
+  "name": "QNAP QSW",
+  "documentation": "https://www.home-assistant.io/integrations/qnap_qsw",
+  "codeowners": ["@noltari"],
+  "requirements": ["qnap-qsw==0.0.2"],
+  "config_flow": true,
+  "iot_class": "local_polling"
+}

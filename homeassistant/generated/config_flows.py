@@ -251,6 +251,7 @@ FLOWS = [
     "ps4",
     "pvoutput",
     "pvpc_hourly_pricing",
+    "qnap_qsw",
     "rachio",
     "rainforest_eagle",
     "rainmachine",
