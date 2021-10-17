@@ -120,8 +120,7 @@ class CoolmasterClimate(CoordinatorEntity, ClimateEntity):
     def hvac_mode(self):
         """Return hvac target hvac state."""
         mode = self._unit.mode
-        is_on = self._unit.is_on
-        if not is_on:
+        if not self._unit.is_on:
             return HVAC_MODE_OFF
 
         return CM_TO_HA_STATE[mode]
