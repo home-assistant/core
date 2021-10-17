@@ -17,7 +17,14 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME, DEFAULT_NAME, DOMAIN
+from .const import (
+    CONF_CONSIDER_HOME,
+    DEFAULT_CONSIDER_HOME,
+    DEFAULT_NAME,
+    DOMAIN,
+    MODELS_V2,
+    ORBI_PORT,
+)
 from .errors import CannotLoginException
 from .router import get_api
 
@@ -133,8 +140,10 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info[ssdp.ATTR_UPNP_SERIAL])
         self._abort_if_unique_id_configured(updates=updated_data)
 
-        if device_url.port:
-            updated_data[CONF_PORT] = device_url.port
+        updated_data[CONF_PORT] = DEFAULT_PORT
+        for model in MODELS_V2:
+            if discovery_info.get(ssdp.ATTR_UPNP_MODEL_NUMBER, "").startswith(model):
+                updated_data[CONF_PORT] = ORBI_PORT
 
         self.placeholders.update(updated_data)
         self.discovered = True

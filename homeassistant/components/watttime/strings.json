@@ -14,6 +14,13 @@
           "location_type": "[%key:common::config_flow::data::location%]"
         }
       },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "Please re-enter the password for {username}:",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
       "user": {
         "description": "Input your username and password:",
         "data": {
@@ -28,7 +35,8 @@
       "unknown_coordinates": "No data for latitude/longitude"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   }
 }

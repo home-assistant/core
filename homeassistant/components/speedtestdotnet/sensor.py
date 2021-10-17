@@ -8,6 +8,7 @@ from homeassistant.components.speedtestdotnet import SpeedTestDataCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
@@ -60,11 +61,12 @@ class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         self._attr_unique_id = description.key
         self._state: StateType = None
         self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, self.coordinator.config_entry.entry_id)},
-            "name": DEFAULT_NAME,
-            "entry_type": "service",
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.config_entry.entry_id)},
+            name=DEFAULT_NAME,
+            entry_type="service",
+            configuration_url="https://www.speedtest.net/",
+        )
 
     @property
     def native_value(self) -> StateType:

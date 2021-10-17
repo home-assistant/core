@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import functools
-import logging
 
 import voluptuous as vol
 from zwave_js_server.const import CommandClass
@@ -38,8 +37,6 @@ from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_PLATFORM, M
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
-
-_LOGGER = logging.getLogger(__name__)
 
 # Platform type should be <DOMAIN>.<SUBMODULE_NAME>
 PLATFORM_TYPE = f"{DOMAIN}.{__name__.rsplit('.', maxsplit=1)[-1]}"

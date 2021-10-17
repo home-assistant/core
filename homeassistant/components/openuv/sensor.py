@@ -122,7 +122,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up a OpenUV sensor based on a config entry."""
-    openuv = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
+    openuv = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
     async_add_entities(
         [OpenUvSensor(openuv, description) for description in SENSOR_DESCRIPTIONS]
     )

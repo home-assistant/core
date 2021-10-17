@@ -1,6 +1,4 @@
 """Support for Velbus covers."""
-import logging
-
 from homeassistant.components.cover import (
     ATTR_POSITION,
     SUPPORT_CLOSE,
@@ -12,8 +10,6 @@ from homeassistant.components.cover import (
 
 from . import VelbusEntity
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):

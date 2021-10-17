@@ -1,6 +1,4 @@
 """Support for a ScreenLogic Sensor."""
-import logging
-
 from screenlogicpy.const import (
     CHEM_DOSING_STATE,
     DATA as SL_DATA,
@@ -16,8 +14,6 @@ from homeassistant.components.sensor import (
 
 from . import ScreenlogicEntity
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_CHEM_SENSORS = (
     "calcium_harness",

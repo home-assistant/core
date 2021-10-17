@@ -120,7 +120,7 @@ class NetgearRouter:
         self.device_name = None
         self.firmware_version = None
 
-        self._method_version = 1
+        self.method_version = 1
         consider_home_int = entry.options.get(
             CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
         )
@@ -148,7 +148,7 @@ class NetgearRouter:
 
         for model in MODELS_V2:
             if self.model.startswith(model):
-                self._method_version = 2
+                self.method_version = 2
 
     async def async_setup(self) -> None:
         """Set up a Netgear router."""
@@ -186,7 +186,7 @@ class NetgearRouter:
 
     async def async_get_attached_devices(self) -> list:
         """Get the devices connected to the router."""
-        if self._method_version == 1:
+        if self.method_version == 1:
             return await self.hass.async_add_executor_job(
                 self._api.get_attached_devices
             )

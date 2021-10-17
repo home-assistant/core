@@ -247,7 +247,7 @@ async def test_import(hass: HomeAssistant):
     assert result["reason"] == "already_configured"
 
 
-async def test_manual(hass: HomeAssistant):
+async def test_manual_working_discovery(hass: HomeAssistant):
     """Test manually setup."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -276,8 +276,8 @@ async def test_manual(hass: HomeAssistant):
         )
         await hass.async_block_till_done()
     assert result4["type"] == "create_entry"
-    assert result4["title"] == IP_ADDRESS
-    assert result4["data"] == {CONF_HOST: IP_ADDRESS, CONF_NAME: IP_ADDRESS}
+    assert result4["title"] == DEFAULT_ENTRY_TITLE
+    assert result4["data"] == {CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE}
 
     # Duplicate
     result = await hass.config_entries.flow.async_init(
