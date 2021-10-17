@@ -6,12 +6,9 @@
   "requirements": [
     "devolo-plc-api==0.5.2"
   ],
-  "ssdp": [],
   "zeroconf": [
     "_dvl-deviceapi._tcp.local."
   ],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": [
     "@2Fake",
     "@Shutgun"
