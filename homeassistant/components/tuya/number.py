@@ -54,6 +54,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.ALARM_TIME,
             name="Time",
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
     # Vibration Sensor
