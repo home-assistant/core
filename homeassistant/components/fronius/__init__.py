@@ -6,10 +6,9 @@ from datetime import timedelta
 import logging
 from typing import Callable, TypeVar
 
-from pyfronius import Fronius, FroniusError
+from pyfronius import Fronius
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -88,7 +87,7 @@ class FroniusSolarNet:
                 update_interval=self.update_interval,
                 inverter_info=inverter_info,
             )
-            await coordinator.async_config_entry_first_refresh()
+            await coordinator.async_refresh()
             self.inverter_coordinators.append(coordinator)
 
         self.meter_coordinator = await self._init_optional_coordinator(
@@ -123,10 +122,7 @@ class FroniusSolarNet:
 
     async def _get_inverter_infos(self) -> list[FroniusDeviceInfo]:
         """Get information about the inverters in the SolarNet system."""
-        try:
-            _inverter_info = await self.fronius.inverter_info()
-        except FroniusError as err:
-            raise ConfigEntryNotReady from err
+        _inverter_info = await self.fronius.inverter_info()
 
         inverter_infos: list[FroniusDeviceInfo] = []
         for inverter in _inverter_info["inverters"]:
@@ -149,9 +145,8 @@ class FroniusSolarNet:
         coordinator: FroniusCoordinatorType,
     ) -> FroniusCoordinatorType | None:
         """Initialize an update coordinator and return it if devices are found."""
-        try:
-            await coordinator.async_config_entry_first_refresh()
-        except ConfigEntryNotReady:
+        await coordinator.async_refresh()
+        if coordinator.last_update_success is False:
             return None
         # keep coordinator only if devices are found
         # else ConfigEntryNotReady raised form KeyError
