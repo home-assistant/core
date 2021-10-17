@@ -115,16 +115,16 @@ class HarmonyData(HarmonySubscriberMixin):
         connected = False
         try:
             connected = await self._client.connect()
-        except (asyncio.TimeoutError, aioexc.TimeOut):
+        except (asyncio.TimeoutError, aioexc.TimeOut) as err:
             await self._client.close()
             raise ConfigEntryNotReady(
                 f"{self._name}: Connection timed-out to {self._address}:8088"
-            )
+            ) from err
         except (ValueError, AttributeError) as err:
             await self._client.close()
             raise ConfigEntryNotReady(
                 f"{self._name}: Error {err} while connected HUB at: {self._address}:8088"
-            )
+            ) from err
         if not connected:
             await self._client.close()
             raise ConfigEntryNotReady(
