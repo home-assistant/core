@@ -1,7 +1,6 @@
 """Tests for Renault selects."""
 from unittest.mock import patch
 
-import pytest
 from renault_api.kamereon import exceptions, schemas
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
@@ -26,7 +25,6 @@ from .const import DYNAMIC_ATTRIBUTES, FIXED_ATTRIBUTES, MOCK_VEHICLES
 from tests.common import load_fixture, mock_device_registry, mock_registry
 
 
-@pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
 async def test_selects(hass: HomeAssistant, vehicle_type: str):
     """Test for Renault selects."""
 
@@ -53,7 +51,6 @@ async def test_selects(hass: HomeAssistant, vehicle_type: str):
             assert state.attributes.get(attr) == expected_entity.get(attr)
 
 
-@pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
 async def test_select_empty(hass: HomeAssistant, vehicle_type: str):
     """Test for Renault selects with empty data from Renault."""
 
@@ -82,7 +79,6 @@ async def test_select_empty(hass: HomeAssistant, vehicle_type: str):
         assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)
 
 
-@pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
 async def test_select_errors(hass: HomeAssistant, vehicle_type: str):
     """Test for Renault selects with temporary failure."""
 

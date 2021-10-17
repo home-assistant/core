@@ -1,7 +1,6 @@
 """Tests for Renault binary sensors."""
 from unittest.mock import patch
 
-import pytest
 from renault_api.kamereon import exceptions
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -20,7 +19,6 @@ from .const import DYNAMIC_ATTRIBUTES, FIXED_ATTRIBUTES, MOCK_VEHICLES
 from tests.common import mock_device_registry, mock_registry
 
 
-@pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
 async def test_binary_sensors(hass: HomeAssistant, vehicle_type: str):
     """Test for Renault binary sensors."""
 
@@ -47,7 +45,6 @@ async def test_binary_sensors(hass: HomeAssistant, vehicle_type: str):
             assert state.attributes.get(attr) == expected_entity.get(attr)
 
 
-@pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
 async def test_binary_sensor_empty(hass: HomeAssistant, vehicle_type: str):
     """Test for Renault binary sensors with empty data from Renault."""
 
@@ -76,7 +73,6 @@ async def test_binary_sensor_empty(hass: HomeAssistant, vehicle_type: str):
         assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)
 
 
-@pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
 async def test_binary_sensor_errors(hass: HomeAssistant, vehicle_type: str):
     """Test for Renault binary sensors with temporary failure."""
 
