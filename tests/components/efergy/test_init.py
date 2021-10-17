@@ -53,6 +53,7 @@ async def test_device_info(hass: HomeAssistant, aioclient_mock: AiohttpClientMoc
 
     device = device_registry.async_get_device({(DOMAIN, entry.entry_id)})
 
+    assert device.configuration_url == "https://engage.efergy.com/user/login"
     assert device.connections == {("mac", "ff:ff:ff:ff:ff:ff")}
     assert device.identifiers == {(DOMAIN, entry.entry_id)}
     assert device.manufacturer == DEFAULT_NAME

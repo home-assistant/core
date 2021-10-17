@@ -12,6 +12,7 @@ from miio.airpurifier_miot import LedBrightness as AirpurifierMiotLedBrightness
 from miio.fan import LedBrightness as FanLedBrightness
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import callback
 
 from .const import (
@@ -63,6 +64,7 @@ SELECTOR_TYPES = {
         icon="mdi:brightness-6",
         device_class="xiaomi_miio__led_brightness",
         options=("bright", "dim", "off"),
+        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
 }
 

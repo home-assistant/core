@@ -30,6 +30,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import Event, async_call_later
@@ -124,9 +125,6 @@ PYMODBUS_CALL = [
 async def async_modbus_setup(
     hass: HomeAssistant,
     config: ConfigType,
-    service_write_register_schema: vol.Schema,
-    service_write_coil_schema: vol.Schema,
-    service_stop_start_schema: vol.Schema,
 ) -> bool:
     """Set up Modbus component."""
 
@@ -173,13 +171,6 @@ async def async_modbus_setup(
                 unit, address, int(float(value)), CALL_TYPE_WRITE_REGISTER
             )
 
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_WRITE_REGISTER,
-        async_write_register,
-        schema=service_write_register_schema,
-    )
-
     async def async_write_coil(service: ServiceCall) -> None:
         """Write Modbus coil."""
         unit = service.data[ATTR_UNIT]
@@ -193,9 +184,25 @@ async def async_modbus_setup(
         else:
             await hub.async_pymodbus_call(unit, address, state, CALL_TYPE_WRITE_COIL)
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_WRITE_COIL, async_write_coil, schema=service_write_coil_schema
-    )
+    for x_write in (
+        (SERVICE_WRITE_REGISTER, async_write_register, ATTR_VALUE, cv.positive_int),
+        (SERVICE_WRITE_COIL, async_write_coil, ATTR_STATE, cv.boolean),
+    ):
+        hass.services.async_register(
+            DOMAIN,
+            x_write[0],
+            x_write[1],
+            schema=vol.Schema(
+                {
+                    vol.Optional(ATTR_HUB, default=DEFAULT_HUB): cv.string,
+                    vol.Required(ATTR_UNIT): cv.positive_int,
+                    vol.Required(ATTR_ADDRESS): cv.positive_int,
+                    vol.Required(x_write[2]): vol.Any(
+                        cv.positive_int, vol.All(cv.ensure_list, [x_write[3]])
+                    ),
+                }
+            ),
+        )
 
     async def async_stop_hub(service: ServiceCall) -> None:
         """Stop Modbus hub."""
@@ -203,19 +210,22 @@ async def async_modbus_setup(
         hub = hub_collect[service.data[ATTR_HUB]]
         await hub.async_close()
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_STOP, async_stop_hub, schema=service_stop_start_schema
-    )
-
     async def async_restart_hub(service: ServiceCall) -> None:
         """Restart Modbus hub."""
         async_dispatcher_send(hass, SIGNAL_START_ENTITY)
         hub = hub_collect[service.data[ATTR_HUB]]
         await hub.async_restart()
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_RESTART, async_restart_hub, schema=service_stop_start_schema
-    )
+    for x_service in (
+        (SERVICE_STOP, async_stop_hub),
+        (SERVICE_RESTART, async_restart_hub),
+    ):
+        hass.services.async_register(
+            DOMAIN,
+            x_service[0],
+            x_service[1],
+            schema=vol.Schema({vol.Required(ATTR_HUB): cv.string}),
+        )
     return True
 
 

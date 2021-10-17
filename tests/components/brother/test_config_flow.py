@@ -170,6 +170,23 @@ async def test_zeroconf_device_exists_abort(hass):
         assert result["reason"] == "already_configured"
 
 
+async def test_zeroconf_no_probe_existing_device(hass):
+    """Test we do not probe the device is the host is already configured."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="0123456789", data=CONFIG)
+    entry.add_to_hass(hass)
+    with patch("brother.Brother._get_data") as mock_get_data:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data={"hostname": "localhost", "name": "Brother Printer"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert len(mock_get_data.mock_calls) == 0
+
+
 async def test_zeroconf_confirm_create_entry(hass):
     """Test zeroconf confirmation and create config entry."""
     with patch(

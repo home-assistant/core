@@ -86,6 +86,9 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Hostname is format: brother.local.
         self.host = discovery_info["hostname"].rstrip(".")
 
+        # Do not probe the device if the host is already configured
+        self._async_abort_entries_match({CONF_HOST: self.host})
+
         snmp_engine = get_snmp_engine(self.hass)
 
         self.brother = Brother(self.host, snmp_engine=snmp_engine)

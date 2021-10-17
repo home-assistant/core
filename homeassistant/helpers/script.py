@@ -1156,7 +1156,6 @@ class Script:
             elif action == cv.SCRIPT_ACTION_CHOOSE:
                 for choice in step[CONF_CHOOSE]:
                     for cond in choice[CONF_CONDITIONS]:
-                        _LOGGER.error("Extracting entities from: %s", cond)
                         referenced |= condition.async_extract_entities(cond)
                     Script._find_referenced_entities(referenced, choice[CONF_SEQUENCE])
                 if CONF_DEFAULT in step:

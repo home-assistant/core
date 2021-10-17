@@ -153,6 +153,7 @@ class KNXTestKit:
                 source_address=IndividualAddress(self.INDIVIDUAL_ADDRESS),
             )
         )
+        await self.xknx.telegrams.join()
         await self.hass.async_block_till_done()
 
     async def receive_read(

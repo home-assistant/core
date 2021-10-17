@@ -21,6 +21,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -119,11 +120,11 @@ class MillSensor(CoordinatorEntity, SensorEntity):
 
         self._attr_name = f"{mill_device.name} {entity_description.name}"
         self._attr_unique_id = f"{mill_device.device_id}_{entity_description.key}"
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, mill_device.device_id)},
-            "name": mill_device.name,
-            "manufacturer": MANUFACTURER,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, heater.device_id)},
+            name=self.name,
+            manufacturer=MANUFACTURER,
+        )
         if isinstance(mill_device, mill.Heater):
             self._attr_device_info["model"] = f"generation {mill_device.generation}"
         elif isinstance(mill_device, mill.Sensor):

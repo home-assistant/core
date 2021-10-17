@@ -1,7 +1,6 @@
 """Support for Sure PetCare Flaps/Pets sensors."""
 from __future__ import annotations
 
-import logging
 from typing import cast
 
 from surepy.entities import SurepyEntity
@@ -22,8 +21,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import SurePetcareDataCoordinator
 from .const import DOMAIN, SURE_BATT_VOLTAGE_DIFF, SURE_BATT_VOLTAGE_LOW
 from .entity import SurePetcareEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

@@ -7,6 +7,7 @@ from typing import Final
 
 import voluptuous as vol
 from xknx import XKNX
+from xknx.core import XknxConnectionState
 from xknx.core.telegram_queue import TelegramQueue
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.exceptions import XKNXException
@@ -270,6 +271,9 @@ class KNXModule:
 
         self.init_xknx()
         self._knx_event_callback: TelegramQueue.Callback = self.register_callback()
+        self.xknx.connection_manager.register_connection_state_changed_cb(
+            self.connection_state_changed_cb
+        )
 
     def init_xknx(self) -> None:
         """Initialize XKNX object."""
@@ -351,6 +355,12 @@ class KNXModule:
                 "telegramtype": telegram.payload.__class__.__name__,
             },
         )
+
+    async def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
+        """Call invoked after a KNX connection state change was received."""
+        self.connected = state == XknxConnectionState.CONNECTED
+        if tasks := [device.after_update() for device in self.xknx.devices]:
+            await asyncio.gather(*tasks)
 
     def register_callback(self) -> TelegramQueue.Callback:
         """Register callback within XKNX TelegramQueue."""
