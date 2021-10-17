@@ -1634,7 +1634,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==2.5.3rc1
+pymodbus==2.5.3
 
 # homeassistant.components.monoprice
 pymonoprice==0.3
