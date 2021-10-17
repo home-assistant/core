@@ -1535,7 +1535,7 @@ pyicloud==0.10.2
 pyinsteon==1.0.12
 
 # homeassistant.components.intesishome
-pyintesishome==1.7.6
+pyintesishome==1.8.1
 
 # homeassistant.components.ipma
 pyipma==2.0.5
