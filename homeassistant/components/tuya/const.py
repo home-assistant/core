@@ -273,7 +273,7 @@ UNITS = (
     ),
     UnitOfMeasurement(
         unit=ELECTRIC_CURRENT_MILLIAMPERE,
-        aliases={"a", "ampere"},
+        aliases={"ma", "milliampere"},
         device_classes={DEVICE_CLASS_CURRENT},
         conversion_unit=ELECTRIC_CURRENT_AMPERE,
         conversion_fn=lambda x: x / 1000,
