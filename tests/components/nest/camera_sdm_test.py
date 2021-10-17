@@ -14,7 +14,7 @@ from google_nest_sdm.event import EventMessage
 import pytest
 
 from homeassistant.components import camera
-from homeassistant.components.camera import STATE_IDLE
+from homeassistant.components.camera import STATE_IDLE, STATE_STREAMING
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -168,7 +168,7 @@ async def test_camera_device(hass):
     assert len(hass.states.async_all()) == 1
     camera = hass.states.get("camera.my_camera")
     assert camera is not None
-    assert camera.state == STATE_IDLE
+    assert camera.state == STATE_STREAMING
 
     registry = er.async_get(hass)
     entry = registry.async_get("camera.my_camera")
@@ -191,7 +191,7 @@ async def test_camera_stream(hass, auth):
     assert len(hass.states.async_all()) == 1
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
-    assert cam.state == STATE_IDLE
+    assert cam.state == STATE_STREAMING
 
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
@@ -253,7 +253,7 @@ async def test_refresh_expired_stream_token(hass, auth):
     assert len(hass.states.async_all()) == 1
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
-    assert cam.state == STATE_IDLE
+    assert cam.state == STATE_STREAMING
 
     # Request a stream for the camera entity to exercise nest cam + camera interaction
     # and shutdown on url expiration
@@ -318,7 +318,7 @@ async def test_stream_response_already_expired(hass, auth):
     assert len(hass.states.async_all()) == 1
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
-    assert cam.state == STATE_IDLE
+    assert cam.state == STATE_STREAMING
 
     # The stream is expired, but we return it anyway
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
@@ -342,7 +342,7 @@ async def test_camera_removed(hass, auth):
     assert len(hass.states.async_all()) == 1
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
-    assert cam.state == STATE_IDLE
+    assert cam.state == STATE_STREAMING
 
     # Start a stream, exercising cleanup on remove
     auth.responses = [
@@ -386,7 +386,7 @@ async def test_refresh_expired_stream_failure(hass, auth):
     assert len(hass.states.async_all()) == 1
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
-    assert cam.state == STATE_IDLE
+    assert cam.state == STATE_STREAMING
 
     # Request an HLS stream
     with patch("homeassistant.components.camera.create_stream") as create_stream:
@@ -639,7 +639,7 @@ async def test_camera_web_rtc(hass, auth, hass_ws_client):
     assert len(hass.states.async_all()) == 1
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
-    assert cam.state == STATE_IDLE
+    assert cam.state == STATE_STREAMING
 
     client = await hass_ws_client(hass)
     await client.send_json(
@@ -669,7 +669,7 @@ async def test_camera_web_rtc_unsupported(hass, auth, hass_ws_client):
     assert len(hass.states.async_all()) == 1
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
-    assert cam.state == STATE_IDLE
+    assert cam.state == STATE_STREAMING
 
     client = await hass_ws_client(hass)
     await client.send_json(
