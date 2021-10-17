@@ -528,7 +528,8 @@ class SonosSpeaker:
     ) -> None:
         """Make this player unavailable when it was not seen recently."""
         data = self.hass.data[DATA_SONOS]
-        if callback_timestamp and (zcname := data.mdns_names.get(self.soco.uid)):
+        zcname = data.mdns_names.get(self.soco.uid)
+        if callback_timestamp and zcname:
             # Called by a _seen_timer timeout, check mDNS one more time
             # This should not be checked in an "active" unseen scenario
             aiozeroconf = await zeroconf.async_get_async_instance(self.hass)
