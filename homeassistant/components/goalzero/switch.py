@@ -5,7 +5,7 @@ from typing import Any, cast
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, ENTITY_CATEGORY_CONFIG
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -17,17 +17,14 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key="v12PortStatus",
         name="12V Port Status",
-        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
     SwitchEntityDescription(
         key="usbPortStatus",
         name="USB Port Status",
-        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
     SwitchEntityDescription(
         key="acPortStatus",
         name="AC Port Status",
-        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
 )
 

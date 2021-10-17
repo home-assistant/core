@@ -26,7 +26,6 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
         key="backlight",
         name="Backlight",
         icon="mdi:clock-digital",
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     BinarySensorEntityDescription(
         key="app_online",
@@ -38,13 +37,11 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
         key="isCharging",
         name="Charging",
         device_class=DEVICE_CLASS_BATTERY_CHARGING,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     BinarySensorEntityDescription(
         key="inputDetected",
         name="Input Detected",
         device_class=DEVICE_CLASS_POWER,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 )
 

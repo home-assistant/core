@@ -45,7 +45,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_POWER,
         native_unit_of_measurement=POWER_WATT,
         state_class=STATE_CLASS_MEASUREMENT,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="ampsIn",
@@ -54,7 +53,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         state_class=STATE_CLASS_MEASUREMENT,
         entity_registry_enabled_default=False,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="wattsOut",
@@ -62,7 +60,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_POWER,
         native_unit_of_measurement=POWER_WATT,
         state_class=STATE_CLASS_MEASUREMENT,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="ampsOut",
@@ -71,7 +68,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         state_class=STATE_CLASS_MEASUREMENT,
         entity_registry_enabled_default=False,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="whOut",
@@ -80,7 +76,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         state_class=STATE_CLASS_TOTAL_INCREASING,
         entity_registry_enabled_default=False,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="whStored",
@@ -88,7 +83,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         state_class=STATE_CLASS_MEASUREMENT,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="volts",
@@ -96,21 +90,18 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_VOLTAGE,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         entity_registry_enabled_default=False,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="socPercent",
         name="State of Charge Percent",
         device_class=DEVICE_CLASS_BATTERY,
         native_unit_of_measurement=PERCENTAGE,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="timeToEmptyFull",
         name="Time to Empty/Full",
         device_class=TIME_MINUTES,
         native_unit_of_measurement=TIME_MINUTES,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="temperature",
