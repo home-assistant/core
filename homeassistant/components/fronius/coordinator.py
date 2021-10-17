@@ -1,6 +1,7 @@
 """DataUpdateCoordinators for the Fronius integration."""
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, Dict, TypeVar
 
@@ -32,23 +33,23 @@ if TYPE_CHECKING:
     FroniusEntityType = TypeVar("FroniusEntityType", bound=_FroniusSensorEntity)
 
 
-class _FroniusUpdateCoordinator(
-    DataUpdateCoordinator[Dict[SolarNetId, Dict[str, Any]]]
+class FroniusCoordinatorBase(
+    ABC, DataUpdateCoordinator[Dict[SolarNetId, Dict[str, Any]]]
 ):
     """Query Fronius endpoint and keep track of seen conditions."""
 
     valid_descriptions: Mapping[str, SensorEntityDescription]
 
     def __init__(self, *args: Any, solar_net: FroniusSolarNet, **kwargs: Any) -> None:
-        """Set up the _FroniusUpdateCoordinator class."""
+        """Set up the FroniusCoordinatorBase class."""
         self.solar_net = solar_net
         # unregistered_keys are used to create entities in platform module
         self.unregistered_keys: dict[SolarNetId, set[str]] = {}
         super().__init__(*args, **kwargs)
 
+    @abstractmethod
     async def _update_method(self) -> dict[SolarNetId, Any]:
         """Return data per solar net id from pyfronius."""
-        raise NotImplementedError("Fronius update method not implemented")
 
     async def _async_update_data(self) -> dict[SolarNetId, Any]:
         """Fetch the latest data from the source."""
@@ -99,7 +100,7 @@ class _FroniusUpdateCoordinator(
         )
 
 
-class FroniusInverterUpdateCoordinator(_FroniusUpdateCoordinator):
+class FroniusInverterUpdateCoordinator(FroniusCoordinatorBase):
     """Query Fronius device inverter endpoint and keep track of seen conditions."""
 
     valid_descriptions = INVERTER_ENTITY_DESCRIPTIONS
@@ -117,11 +118,11 @@ class FroniusInverterUpdateCoordinator(_FroniusUpdateCoordinator):
             self.inverter_info.solar_net_id
         )
         # wrap a single devices data in a dict with solar_net_id key for
-        # _FroniusUpdateCoordinator _async_update_data and add_entities_for_seen_keys
+        # FroniusCoordinatorBase _async_update_data and add_entities_for_seen_keys
         return {self.inverter_info.solar_net_id: data}
 
 
-class FroniusLoggerUpdateCoordinator(_FroniusUpdateCoordinator):
+class FroniusLoggerUpdateCoordinator(FroniusCoordinatorBase):
     """Query Fronius logger info endpoint and keep track of seen conditions."""
 
     valid_descriptions = LOGGER_ENTITY_DESCRIPTIONS
@@ -132,7 +133,7 @@ class FroniusLoggerUpdateCoordinator(_FroniusUpdateCoordinator):
         return {SOLAR_NET_ID_SYSTEM: data}
 
 
-class FroniusMeterUpdateCoordinator(_FroniusUpdateCoordinator):
+class FroniusMeterUpdateCoordinator(FroniusCoordinatorBase):
     """Query Fronius system meter endpoint and keep track of seen conditions."""
 
     valid_descriptions = METER_ENTITY_DESCRIPTIONS
@@ -143,7 +144,7 @@ class FroniusMeterUpdateCoordinator(_FroniusUpdateCoordinator):
         return data["meters"]  # type: ignore[no-any-return]
 
 
-class FroniusPowerFlowUpdateCoordinator(_FroniusUpdateCoordinator):
+class FroniusPowerFlowUpdateCoordinator(FroniusCoordinatorBase):
     """Query Fronius power flow endpoint and keep track of seen conditions."""
 
     valid_descriptions = POWER_FLOW_ENTITY_DESCRIPTIONS
@@ -154,7 +155,7 @@ class FroniusPowerFlowUpdateCoordinator(_FroniusUpdateCoordinator):
         return {SOLAR_NET_ID_POWER_FLOW: data}
 
 
-class FroniusStorageUpdateCoordinator(_FroniusUpdateCoordinator):
+class FroniusStorageUpdateCoordinator(FroniusCoordinatorBase):
     """Query Fronius system storage endpoint and keep track of seen conditions."""
 
     valid_descriptions = STORAGE_ENTITY_DESCRIPTIONS

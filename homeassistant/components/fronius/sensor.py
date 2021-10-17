@@ -21,12 +21,12 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import FroniusSolarNet
 from .const import DOMAIN
 from .coordinator import (
+    FroniusCoordinatorBase,
     FroniusInverterUpdateCoordinator,
     FroniusLoggerUpdateCoordinator,
     FroniusMeterUpdateCoordinator,
     FroniusPowerFlowUpdateCoordinator,
     FroniusStorageUpdateCoordinator,
-    _FroniusUpdateCoordinator,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,11 +76,11 @@ async def async_setup_platform(
 class _FroniusSensorEntity(CoordinatorEntity, SensorEntity):
     """Defines a Fronius coordinator entity."""
 
-    coordinator: _FroniusUpdateCoordinator
+    coordinator: FroniusCoordinatorBase
 
     def __init__(
         self,
-        coordinator: _FroniusUpdateCoordinator,
+        coordinator: FroniusCoordinatorBase,
         entity_description: SensorEntityDescription,
         solar_net_id: str,
     ) -> None:

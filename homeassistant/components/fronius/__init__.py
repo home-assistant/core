@@ -20,19 +20,17 @@ from .const import (
     FroniusDeviceInfo,
 )
 from .coordinator import (
+    FroniusCoordinatorBase,
     FroniusInverterUpdateCoordinator,
     FroniusLoggerUpdateCoordinator,
     FroniusMeterUpdateCoordinator,
     FroniusPowerFlowUpdateCoordinator,
     FroniusStorageUpdateCoordinator,
-    _FroniusUpdateCoordinator,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-FroniusCoordinatorType = TypeVar(
-    "FroniusCoordinatorType", bound=_FroniusUpdateCoordinator
-)
+FroniusCoordinatorType = TypeVar("FroniusCoordinatorType", bound=FroniusCoordinatorBase)
 
 
 class FroniusSolarNet:
