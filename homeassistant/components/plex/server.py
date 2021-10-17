@@ -259,8 +259,7 @@ class PlexServer:
         """Process a session payload received from a websocket callback."""
         session_payload = payload["PlaySessionStateNotification"][0]
 
-        state = session_payload["state"]
-        if state == "buffering":
+        if (state := session_payload["state"]) == "buffering":
             return
 
         session_key = int(session_payload["sessionKey"])
