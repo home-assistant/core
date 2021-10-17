@@ -28,7 +28,19 @@
     "hostname": "lwip*"
   },
   {
+    "hostname": "zengge_06_*"
+  },
+  {
+    "hostname": "zengge_07_*"
+  },
+  {
+    "hostname": "zengge_33_*"
+  },
+  {
     "hostname": "zengge_35_*"
+  },
+  {
+    "hostname": "zengge_41_*"
   },
   {
     "hostname": "zengge_0e_*"
