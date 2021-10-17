@@ -104,17 +104,19 @@ async def async_setup_entry(
         if api_category == DATA_PROVISION_SETTINGS:
             return partial(
                 ProvisionSettingsSensor,
+                entry,
                 coordinators[DATA_PROVISION_SETTINGS],
             )
 
         return partial(
             UniversalRestrictionsSensor,
+            entry,
             coordinators[DATA_RESTRICTIONS_UNIVERSAL],
         )
 
     async_add_entities(
         [
-            async_get_sensor(description.api_category)(entry, controller, description)
+            async_get_sensor(description.api_category)(controller, description)
             for description in SENSOR_DESCRIPTIONS
         ]
     )
