@@ -139,12 +139,6 @@ class TomorrowioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     str(longitude),
                     session=async_get_clientsession(self.hass),
                 ).realtime([TMRW_ATTR_TEMPERATURE])
-
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME],
-                    data=user_input,
-                    options={CONF_TIMESTEP: DEFAULT_TIMESTEP},
-                )
             except CantConnectException:
                 errors["base"] = "cannot_connect"
             except InvalidAPIKeyException:
@@ -154,6 +148,13 @@ class TomorrowioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+
+            if not errors:
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME],
+                    data=user_input,
+                    options={CONF_TIMESTEP: DEFAULT_TIMESTEP},
+                )
 
         return self.async_show_form(
             step_id="user",
