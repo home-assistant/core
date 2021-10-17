@@ -52,6 +52,6 @@ class RenaultDataEntity(CoordinatorEntity[Optional[T]], Entity):
     def name(self) -> str:
         """Return the name of the entity.
 
-        Overridden to include the description.
+        Overridden to include the device name.
         """
         return f"{self.vehicle.device_info[ATTR_NAME]} {self.entity_description.name}"
