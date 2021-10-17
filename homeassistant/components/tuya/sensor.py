@@ -31,7 +31,13 @@ from homeassistant.helpers.typing import StateType
 
 from . import HomeAssistantTuyaData
 from .base import EnumTypeData, IntegerTypeData, TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
+from .const import (
+    DEVICE_CLASS_UNITS,
+    DOMAIN,
+    TUYA_DISCOVERY_NEW,
+    DPCode,
+    UnitOfMeasurement,
+)
 
 # All descriptions can be found here. Mostly the Integer data types in the
 # default status set of each category (that don't have a set instruction)
@@ -209,6 +215,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
 
     _status_range: TuyaDeviceStatusRange | None = None
     _type_data: IntegerTypeData | EnumTypeData | None = None
+    _uom: UnitOfMeasurement | None = None
 
     def __init__(
         self,
@@ -235,6 +242,37 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             elif self._status_range.type == "Enum":
                 self._type_data = EnumTypeData.from_json(self._status_range.values)
 
+        # Logic to ensure the set device class and API received Unit Of Measurement
+        # match Home Assistants requirements.
+        if (
+            self.device_class is not None
+            and description.native_unit_of_measurement is None
+        ):
+            # We cannot have a device class, if the UOM isn't set or the
+            # device class cannot be found in the validation mapping.
+            if (
+                self.unit_of_measurement is None
+                or self.device_class not in DEVICE_CLASS_UNITS
+            ):
+                self._attr_device_class = None
+                return
+
+            uoms = DEVICE_CLASS_UNITS[self.device_class]
+            self._uom = uoms.get(self.unit_of_measurement) or uoms.get(
+                self.unit_of_measurement.lower()
+            )
+
+            # Unknown unit of measurement, device class should not be used.
+            if self._uom is None:
+                self._attr_device_class = None
+                return
+
+            # Found unit of measurement, use the standardized Unit
+            # Use the target conversion unit (if set)
+            self._attr_native_unit_of_measurement = (
+                self._uom.conversion_unit or self._uom.unit
+            )
+
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
@@ -253,7 +291,10 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
 
         # Scale integer/float value
         if isinstance(self._type_data, IntegerTypeData):
-            return self._type_data.scale_value(value)
+            scaled_value = self._type_data.scale_value(value)
+            if self._uom and self._uom.conversion_fn is not None:
+                return self._uom.conversion_fn(scaled_value)
+            return scaled_value
 
         # Unexpected enum value
         if (
