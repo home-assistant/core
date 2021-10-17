@@ -6,16 +6,16 @@ import logging
 
 from homeassistant.components.remote import ATTR_DELAY_SECS, RemoteEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.const import STATE_OFF
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .aiolookin import IRFormat
 from .const import DOMAIN
 from .entity import LookinDeviceEntity
 from .models import LookinData
-from homeassistant.helpers.restore_state import RestoreEntity
 
 KNOWN_FORMATS = {format.value: format for format in IRFormat}
 
