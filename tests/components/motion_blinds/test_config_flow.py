@@ -90,6 +90,8 @@ def motion_blinds_connect_fixture():
         return_value=TEST_INTERFACES,
     ), patch(
         "homeassistant.components.motion_blinds.async_setup_entry", return_value=True
+    ), patch(
+        "homeassistant.components.network.async_setup", return_value=True
     ):
         yield
 
