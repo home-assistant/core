@@ -1,5 +1,5 @@
 """Support for Abode Security System switches."""
-from typing import Any
+from typing import Any, cast
 
 from abodepy.devices.switch import AbodeSwitch as AbodeSW
 import abodepy.helpers.constants as CONST
@@ -52,7 +52,7 @@ class AbodeSwitch(AbodeDevice, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
-        return bool(self._device.is_on)
+        return cast(bool, self._device.is_on)
 
 
 class AbodeAutomationSwitch(AbodeAutomation, SwitchEntity):
