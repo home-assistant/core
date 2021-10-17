@@ -200,6 +200,61 @@ async def test_camera_stream(hass, auth):
     assert image.content == IMAGE_BYTES_FROM_STREAM
 
 
+async def test_camera_ws_stream(hass, auth, hass_ws_client):
+    """Test a basic camera that supports web rtc."""
+    auth.responses = [make_stream_url_response()]
+    await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
+
+    assert len(hass.states.async_all()) == 1
+    cam = hass.states.get("camera.my_camera")
+    assert cam is not None
+    assert cam.state == STATE_IDLE
+
+    with patch("homeassistant.components.camera.create_stream") as mock_stream:
+        mock_stream().endpoint_url.return_value = "http://home.assistant/playlist.m3u8"
+        client = await hass_ws_client(hass)
+        await client.send_json(
+            {
+                "id": 2,
+                "type": "camera/stream",
+                "entity_id": "camera.my_camera",
+            }
+        )
+        msg = await client.receive_json()
+
+    assert msg["id"] == 2
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"]["url"] == "http://home.assistant/playlist.m3u8"
+
+
+async def test_camera_ws_stream_failure(hass, auth, hass_ws_client):
+    """Test a basic camera that supports web rtc."""
+    auth.responses = [aiohttp.web.Response(status=400)]
+    await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
+
+    assert len(hass.states.async_all()) == 1
+    cam = hass.states.get("camera.my_camera")
+    assert cam is not None
+    assert cam.state == STATE_IDLE
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "camera/stream",
+            "entity_id": "camera.my_camera",
+        }
+    )
+
+    msg = await client.receive_json()
+    assert msg["id"] == 3
+    assert msg["type"] == TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"]["code"] == "start_stream_failed"
+    assert msg["error"]["message"].startswith("Nest API error")
+
+
 async def test_camera_stream_missing_trait(hass, auth):
     """Test fetching a video stream when not supported by the API."""
     traits = {
@@ -686,3 +741,48 @@ async def test_camera_web_rtc_unsupported(hass, auth, hass_ws_client):
     assert msg["type"] == TYPE_RESULT
     assert not msg["success"]
     assert msg["error"]["code"] == "web_rtc_offer_failed"
+    assert msg["error"]["message"].startswith("Camera does not support WebRTC")
+
+
+async def test_camera_web_rtc_offer_failure(hass, auth, hass_ws_client):
+    """Test a basic camera that supports web rtc."""
+    auth.responses = [
+        aiohttp.web.Response(status=400),
+    ]
+    device_traits = {
+        "sdm.devices.traits.Info": {
+            "customName": "My Camera",
+        },
+        "sdm.devices.traits.CameraLiveStream": {
+            "maxVideoResolution": {
+                "width": 640,
+                "height": 480,
+            },
+            "videoCodecs": ["H264"],
+            "audioCodecs": ["AAC"],
+            "supportedProtocols": ["WEB_RTC"],
+        },
+    }
+    await async_setup_camera(hass, device_traits, auth=auth)
+
+    assert len(hass.states.async_all()) == 1
+    cam = hass.states.get("camera.my_camera")
+    assert cam is not None
+    assert cam.state == STATE_IDLE
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "camera/web_rtc_offer",
+            "entity_id": "camera.my_camera",
+            "offer": "a=recvonly",
+        }
+    )
+
+    msg = await client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"]["code"] == "web_rtc_offer_failed"
+    assert msg["error"]["message"].startswith("Nest API error")
