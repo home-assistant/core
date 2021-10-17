@@ -10,10 +10,8 @@ from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import callback
 
 from .const import (
-    CONF_FAST_UPDATE,
     CONF_INTERFACE,
     CONF_WAIT_FOR_PUSH,
-    DEFAULT_FAST_UPDATE,
     DEFAULT_GATEWAY_NAME,
     DEFAULT_INTERFACE,
     DEFAULT_WAIT_FOR_PUSH,
@@ -47,12 +45,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_WAIT_FOR_PUSH,
                     default=self.config_entry.options.get(
                         CONF_WAIT_FOR_PUSH, DEFAULT_WAIT_FOR_PUSH
-                    ),
-                ): bool,
-                vol.Optional(
-                    CONF_FAST_UPDATE,
-                    default=self.config_entry.options.get(
-                        CONF_FAST_UPDATE, DEFAULT_FAST_UPDATE
                     ),
                 ): bool,
             }

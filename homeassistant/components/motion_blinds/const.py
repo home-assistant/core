@@ -6,10 +6,8 @@ DEFAULT_GATEWAY_NAME = "Motion Blinds Gateway"
 PLATFORMS = ["cover", "sensor"]
 
 CONF_WAIT_FOR_PUSH = "wait_for_push"
-CONF_FAST_UPDATE = "fast_update"
 CONF_INTERFACE = "interface"
 DEFAULT_WAIT_FOR_PUSH = False
-DEFAULT_FAST_UPDATE = False
 DEFAULT_INTERFACE = "any"
 
 KEY_GATEWAY = "gateway"
@@ -23,4 +21,3 @@ ATTR_AVAILABLE = "available"
 SERVICE_SET_ABSOLUTE_POSITION = "set_absolute_position"
 
 UPDATE_INTERVAL = 600
-UPDATE_INTERVAL_FAST = 60
