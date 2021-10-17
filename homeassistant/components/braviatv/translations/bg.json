@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "authorize": {
+                "data": {
+                    "pin": "\u041f\u0418\u041d \u043a\u043e\u0434"
+                }
+            }
+        }
+    }
+}

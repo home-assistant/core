@@ -1,10 +1,15 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+        },
         "step": {
             "user": {
                 "data": {
+                    "host": "Nazwa hosta lub adres IP (Opcjonalne)",
                     "password": "Has\u0142o",
                     "port": "Port (Opcjonalnie)",
+                    "ssl": "Certyfikat SSL",
                     "username": "Nazwa u\u017cytkownika (Opcjonalnie)"
                 },
                 "title": "Netgear"
