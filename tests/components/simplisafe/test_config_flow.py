@@ -59,19 +59,19 @@ async def test_options_flow(hass):
     """Test config flow options."""
     conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
 
-    config_entry = MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="abcde12345",
         data=conf,
         options={CONF_CODE: "1234"},
     )
-    config_entry.add_to_hass(hass)
+    entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.simplisafe.async_setup_entry", return_value=True
     ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        await hass.config_entries.async_setup(entry.entry_id)
+        result = await hass.config_entries.options.async_init(entry.entry_id)
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "init"
@@ -81,7 +81,7 @@ async def test_options_flow(hass):
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert config_entry.options == {CONF_CODE: "4321"}
+        assert entry.options == {CONF_CODE: "4321"}
 
 
 async def test_show_form(hass):

@@ -5,8 +5,7 @@ import asyncio
 from collections.abc import Callable, Coroutine, Iterable
 from contextvars import ContextVar
 from datetime import datetime, timedelta
-import logging
-from logging import Logger
+from logging import Logger, getLogger
 from types import ModuleType
 from typing import TYPE_CHECKING, Any, Protocol
 
@@ -59,7 +58,7 @@ PLATFORM_NOT_READY_RETRIES = 10
 DATA_ENTITY_PLATFORM = "entity_platform"
 PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = getLogger(__name__)
 
 
 class AddEntitiesCallback(Protocol):
@@ -461,20 +460,31 @@ class EntityPlatform:
                 processed_dev_info = {"config_entry_id": config_entry_id}
                 for key in (
                     "connections",
+                    "default_manufacturer",
+                    "default_model",
+                    "default_name",
+                    "entry_type",
                     "identifiers",
                     "manufacturer",
                     "model",
                     "name",
-                    "default_manufacturer",
-                    "default_model",
-                    "default_name",
-                    "sw_version",
-                    "entry_type",
-                    "via_device",
                     "suggested_area",
+                    "sw_version",
+                    "via_device",
                 ):
                     if key in device_info:
                         processed_dev_info[key] = device_info[key]  # type: ignore[misc]
+
+                if "configuration_url" in device_info:
+                    try:
+                        processed_dev_info["configuration_url"] = cv.url(
+                            device_info["configuration_url"]
+                        )
+                    except vol.Invalid:
+                        _LOGGER.warning(
+                            "Ignoring invalid device configuration_url '%s'",
+                            device_info["configuration_url"],
+                        )
 
                 try:
                     device = device_registry.async_get_or_create(**processed_dev_info)  # type: ignore[arg-type]
@@ -501,6 +511,7 @@ class EntityPlatform:
                 unit_of_measurement=entity.unit_of_measurement,
                 original_name=entity.name,
                 original_icon=entity.icon,
+                entity_category=entity.entity_category,
             )
 
             entity.registry_entry = entry

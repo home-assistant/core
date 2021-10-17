@@ -13,6 +13,11 @@
             "not_found": "Plex \u0441\u044a\u0440\u0432\u044a\u0440\u044a\u0442 \u043d\u0435 \u0435 \u043d\u0430\u043c\u0435\u0440\u0435\u043d"
         },
         "step": {
+            "manual_setup": {
+                "data": {
+                    "port": "\u041f\u043e\u0440\u0442"
+                }
+            },
             "select_server": {
                 "data": {
                     "server": "\u0421\u044a\u0440\u0432\u044a\u0440"

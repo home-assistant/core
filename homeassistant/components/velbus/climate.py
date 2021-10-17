@@ -1,6 +1,4 @@
 """Support for Velbus thermostat."""
-import logging
-
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
@@ -10,8 +8,6 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from . import VelbusEntity
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):

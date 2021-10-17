@@ -1,6 +1,7 @@
 """Test auth of websocket API."""
 from unittest.mock import patch
 
+import aiohttp
 import pytest
 
 from homeassistant.components.websocket_api.auth import (
@@ -191,3 +192,15 @@ async def test_auth_with_invalid_token(hass, hass_client_no_auth):
 
         auth_msg = await ws.receive_json()
         assert auth_msg["type"] == TYPE_AUTH_INVALID
+
+
+async def test_auth_close_after_revoke(hass, websocket_client, hass_access_token):
+    """Test that a websocket is closed after the refresh token is revoked."""
+    assert not websocket_client.closed
+
+    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    await hass.auth.async_remove_refresh_token(refresh_token)
+
+    msg = await websocket_client.receive()
+    assert msg.type == aiohttp.WSMsgType.CLOSE
+    assert websocket_client.closed

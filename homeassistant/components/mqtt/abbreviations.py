@@ -22,6 +22,7 @@ ABBREVIATIONS = {
     "clr_temp_cmd_tpl": "color_temp_command_template",
     "bat_lev_t": "battery_level_topic",
     "bat_lev_tpl": "battery_level_template",
+    "cu": "configuration_url",
     "chrg_t": "charging_topic",
     "chrg_tpl": "charging_template",
     "clrm": "color_mode",

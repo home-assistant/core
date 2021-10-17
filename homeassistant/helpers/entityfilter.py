@@ -118,23 +118,25 @@ def _test_against_patterns(patterns: list[re.Pattern[str]], entity_id: str) -> b
     return False
 
 
-# It's safe since we don't modify it. And None causes typing warnings
-# pylint: disable=dangerous-default-value
 def generate_filter(
     include_domains: list[str],
     include_entities: list[str],
     exclude_domains: list[str],
     exclude_entities: list[str],
-    include_entity_globs: list[str] = [],
-    exclude_entity_globs: list[str] = [],
+    include_entity_globs: list[str] | None = None,
+    exclude_entity_globs: list[str] | None = None,
 ) -> Callable[[str], bool]:
     """Return a function that will filter entities based on the args."""
     include_d = set(include_domains)
     include_e = set(include_entities)
     exclude_d = set(exclude_domains)
     exclude_e = set(exclude_entities)
-    include_eg_set = set(include_entity_globs)
-    exclude_eg_set = set(exclude_entity_globs)
+    include_eg_set = (
+        set(include_entity_globs) if include_entity_globs is not None else set()
+    )
+    exclude_eg_set = (
+        set(exclude_entity_globs) if exclude_entity_globs is not None else set()
+    )
     include_eg = list(map(_glob_to_re, include_eg_set))
     exclude_eg = list(map(_glob_to_re, exclude_eg_set))
 

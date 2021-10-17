@@ -1,6 +1,4 @@
 """The Keenetic Client class."""
-import logging
-
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     BinarySensorEntity,
@@ -11,8 +9,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import KeeneticRouter
 from .const import DOMAIN, ROUTER
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

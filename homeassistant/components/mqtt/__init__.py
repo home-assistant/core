@@ -56,6 +56,7 @@ from .const import (
     ATTR_TOPIC,
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
+    CONF_COMMAND_TOPIC,
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
@@ -97,9 +98,6 @@ CONF_CLIENT_KEY = "client_key"
 CONF_CLIENT_CERT = "client_cert"
 CONF_TLS_INSECURE = "tls_insecure"
 CONF_TLS_VERSION = "tls_version"
-
-CONF_COMMAND_TOPIC = "command_topic"
-CONF_TOPIC = "topic"
 
 PROTOCOL_31 = "3.1"
 

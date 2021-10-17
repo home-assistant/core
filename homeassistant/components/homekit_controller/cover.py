@@ -73,7 +73,7 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverEntity):
         return SUPPORT_OPEN | SUPPORT_CLOSE
 
     @property
-    def state(self):
+    def _state(self):
         """Return the current state of the garage door."""
         value = self.service.value(CharacteristicsTypes.DOOR_STATE_CURRENT)
         return CURRENT_GARAGE_STATE_MAP[value]
@@ -81,17 +81,17 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverEntity):
     @property
     def is_closed(self):
         """Return true if cover is closed, else False."""
-        return self.state == STATE_CLOSED
+        return self._state == STATE_CLOSED
 
     @property
     def is_closing(self):
         """Return if the cover is closing or not."""
-        return self.state == STATE_CLOSING
+        return self._state == STATE_CLOSING
 
     @property
     def is_opening(self):
         """Return if the cover is opening or not."""
-        return self.state == STATE_OPENING
+        return self._state == STATE_OPENING
 
     async def async_open_cover(self, **kwargs):
         """Send open command."""

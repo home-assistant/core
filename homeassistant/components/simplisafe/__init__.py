@@ -130,12 +130,12 @@ async def async_get_client_id(hass: HomeAssistant) -> str:
 
 
 async def async_register_base_station(
-    hass: HomeAssistant, system: SystemV2 | SystemV3, config_entry_id: str
+    hass: HomeAssistant, entry: ConfigEntry, system: SystemV2 | SystemV3
 ) -> None:
     """Register a new bridge."""
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
-        config_entry_id=config_entry_id,
+        config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, system.serial)},
         manufacturer="SimpliSafe",
         model=system.version,
@@ -144,36 +144,34 @@ async def async_register_base_station(
 
 
 @callback
-def _async_standardize_config_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> None:
+def _async_standardize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Bring a config entry up to current standards."""
-    if CONF_PASSWORD not in config_entry.data:
+    if CONF_PASSWORD not in entry.data:
         raise ConfigEntryAuthFailed("Config schema change requires re-authentication")
 
     entry_updates = {}
-    if not config_entry.unique_id:
+    if not entry.unique_id:
         # If the config entry doesn't already have a unique ID, set one:
-        entry_updates["unique_id"] = config_entry.data[CONF_USERNAME]
-    if CONF_CODE in config_entry.data:
+        entry_updates["unique_id"] = entry.data[CONF_USERNAME]
+    if CONF_CODE in entry.data:
         # If an alarm code was provided as part of configuration.yaml, pop it out of
         # the config entry's data and move it to options:
-        data = {**config_entry.data}
+        data = {**entry.data}
         entry_updates["data"] = data
         entry_updates["options"] = {
-            **config_entry.options,
+            **entry.options,
             CONF_CODE: data.pop(CONF_CODE),
         }
     if entry_updates:
-        hass.config_entries.async_update_entry(config_entry, **entry_updates)
+        hass.config_entries.async_update_entry(entry, **entry_updates)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SimpliSafe as config entry."""
     hass.data.setdefault(DOMAIN, {DATA_CLIENT: {}})
-    hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = []
+    hass.data[DOMAIN][DATA_CLIENT][entry.entry_id] = []
 
-    _async_standardize_config_entry(hass, config_entry)
+    _async_standardize_config_entry(hass, entry)
 
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
 
@@ -182,8 +180,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     try:
         api = await get_api(
-            config_entry.data[CONF_USERNAME],
-            config_entry.data[CONF_PASSWORD],
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
             client_id=client_id,
             session=websession,
         )
@@ -193,15 +191,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
-    simplisafe = SimpliSafe(hass, config_entry, api)
+    simplisafe = SimpliSafe(hass, entry, api)
 
     try:
         await simplisafe.async_init()
     except SimplipyError as err:
         raise ConfigEntryNotReady from err
 
-    hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = simplisafe
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    hass.data[DOMAIN][DATA_CLIENT][entry.entry_id] = simplisafe
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     @callback
     def verify_system_exists(
@@ -292,7 +290,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     ):
         async_register_admin_service(hass, DOMAIN, service, method, schema=schema)
 
-    config_entry.async_on_unload(config_entry.add_update_listener(async_reload_entry))
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     return True
 
@@ -306,24 +304,24 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_reload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle an options update."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 class SimpliSafe:
     """Define a SimpliSafe data object."""
 
-    def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, api: API
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, api: API) -> None:
         """Initialize."""
         self._api = api
         self._hass = hass
         self._system_notifications: dict[int, set[SystemNotification]] = {}
-        self.config_entry = config_entry
-        self.coordinator: DataUpdateCoordinator | None = None
+        self.entry = entry
         self.systems: dict[int, SystemV2 | SystemV3] = {}
+
+        # This will get filled in by async_init:
+        self.coordinator: DataUpdateCoordinator | None = None
 
     @callback
     def _async_process_new_notifications(self, system: SystemV2 | SystemV3) -> None:
@@ -369,15 +367,13 @@ class SimpliSafe:
             self._system_notifications[system.system_id] = set()
 
             self._hass.async_create_task(
-                async_register_base_station(
-                    self._hass, system, self.config_entry.entry_id
-                )
+                async_register_base_station(self._hass, self.entry, system)
             )
 
         self.coordinator = DataUpdateCoordinator(
             self._hass,
             LOGGER,
-            name=self.config_entry.data[CONF_USERNAME],
+            name=self.entry.data[CONF_USERNAME],
             update_interval=DEFAULT_SCAN_INTERVAL,
             update_method=self.async_update,
         )

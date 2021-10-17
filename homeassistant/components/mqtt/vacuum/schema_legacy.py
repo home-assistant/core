@@ -25,6 +25,7 @@ from homeassistant.helpers.icon import icon_for_battery_level
 
 from .. import subscription
 from ... import mqtt
+from ..const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
 from .const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
@@ -147,8 +148,8 @@ PLATFORM_SCHEMA_LEGACY = (
             vol.Optional(
                 CONF_SUPPORTED_FEATURES, default=DEFAULT_SERVICE_STRINGS
             ): vol.All(cv.ensure_list, [vol.In(STRING_TO_SERVICE.keys())]),
-            vol.Optional(mqtt.CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(mqtt.CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+            vol.Optional(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
+            vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         }
     )
     .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
@@ -192,10 +193,10 @@ class MqttVacuum(MqttEntity, VacuumEntity):
             supported_feature_strings, STRING_TO_SERVICE
         )
         self._fan_speed_list = config[CONF_FAN_SPEED_LIST]
-        self._qos = config[mqtt.CONF_QOS]
-        self._retain = config[mqtt.CONF_RETAIN]
+        self._qos = config[CONF_QOS]
+        self._retain = config[CONF_RETAIN]
 
-        self._command_topic = config.get(mqtt.CONF_COMMAND_TOPIC)
+        self._command_topic = config.get(CONF_COMMAND_TOPIC)
         self._set_fan_speed_topic = config.get(CONF_SET_FAN_SPEED_TOPIC)
         self._send_command_topic = config.get(CONF_SEND_COMMAND_TOPIC)
 

@@ -1,6 +1,4 @@
 """Support for Netgear routers."""
-import logging
-
 from homeassistant.components.sensor import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     SensorEntity,
@@ -14,27 +12,29 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .router import NetgearDeviceEntity, NetgearRouter, async_setup_netgear_entry
 
-_LOGGER = logging.getLogger(__name__)
-
-
 SENSOR_TYPES = {
     "type": SensorEntityDescription(
         key="type",
         name="link type",
-        native_unit_of_measurement=None,
-        device_class=None,
     ),
     "link_rate": SensorEntityDescription(
         key="link_rate",
         name="link rate",
         native_unit_of_measurement="Mbps",
-        device_class=None,
     ),
     "signal": SensorEntityDescription(
         key="signal",
         name="signal strength",
         native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+    ),
+    "ssid": SensorEntityDescription(
+        key="ssid",
+        name="ssid",
+    ),
+    "conn_ap_mac": SensorEntityDescription(
+        key="conn_ap_mac",
+        name="access point mac",
     ),
 }
 
@@ -45,10 +45,11 @@ async def async_setup_entry(
     """Set up device tracker for Netgear component."""
 
     def generate_sensor_classes(router: NetgearRouter, device: dict):
-        return [
-            NetgearSensorEntity(router, device, attribute)
-            for attribute in ("type", "link_rate", "signal")
-        ]
+        sensors = ["type", "link_rate", "signal"]
+        if router.method_version == 2:
+            sensors.extend(["ssid", "conn_ap_mac"])
+
+        return [NetgearSensorEntity(router, device, attribute) for attribute in sensors]
 
     async_setup_netgear_entry(hass, entry, async_add_entities, generate_sensor_classes)
 

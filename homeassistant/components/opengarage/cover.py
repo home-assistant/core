@@ -24,6 +24,7 @@ from homeassistant.const import (
     STATE_OPENING,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
     ATTR_DISTANCE_SENSOR,
@@ -181,9 +182,9 @@ class OpenGarageCover(CoverEntity):
     @property
     def device_info(self):
         """Return the device_info of the device."""
-        device_info = {
-            "identifiers": {(DOMAIN, self._device_id)},
-            "name": self.name,
-            "manufacturer": "Open Garage",
-        }
+        device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            name=self.name,
+            manufacturer="Open Garage",
+        )
         return device_info

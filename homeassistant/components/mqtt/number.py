@@ -18,16 +18,9 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
-from . import (
-    CONF_COMMAND_TOPIC,
-    CONF_QOS,
-    CONF_STATE_TOPIC,
-    DOMAIN,
-    PLATFORMS,
-    subscription,
-)
+from . import PLATFORMS, subscription
 from .. import mqtt
-from .const import CONF_RETAIN
+from .const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, DOMAIN
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 

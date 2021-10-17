@@ -1,6 +1,8 @@
 """Test the Xiaomi Miio config flow."""
 from unittest.mock import Mock, patch
 
+from construct.core import ChecksumError
+from micloud.micloudexception import MiCloudAccessDenied
 from miio import DeviceException
 import pytest
 
@@ -300,6 +302,23 @@ async def test_config_flow_gateway_cloud_login_error(hass):
     assert result["step_id"] == "cloud"
     assert result["errors"] == {"base": "cloud_login_error"}
 
+    with patch(
+        "homeassistant.components.xiaomi_miio.config_flow.MiCloud.login",
+        side_effect=MiCloudAccessDenied({}),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                const.CONF_CLOUD_USERNAME: TEST_CLOUD_USER,
+                const.CONF_CLOUD_PASSWORD: TEST_CLOUD_PASS,
+                const.CONF_CLOUD_COUNTRY: TEST_CLOUD_COUNTRY,
+            },
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "cloud"
+    assert result["errors"] == {"base": "cloud_login_error"}
+
 
 async def test_config_flow_gateway_cloud_no_devices(hass):
     """Test a failed config flow using cloud with no devices."""
@@ -540,8 +559,8 @@ async def test_import_flow_success(hass):
     }
 
 
-async def test_config_flow_step_device_manual_model_succes(hass):
-    """Test config flow, device connection error, manual model."""
+async def test_config_flow_step_device_manual_model_error(hass):
+    """Test config flow, device connection error, model None."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -561,7 +580,7 @@ async def test_config_flow_step_device_manual_model_succes(hass):
 
     with patch(
         "homeassistant.components.xiaomi_miio.device.Device.info",
-        side_effect=DeviceException({}),
+        return_value=get_mock_info(model=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -571,6 +590,41 @@ async def test_config_flow_step_device_manual_model_succes(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "connect"
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_config_flow_step_device_manual_model_succes(hass):
+    """Test config flow, device connection error, manual model."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "cloud"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {const.CONF_MANUAL: True},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "manual"
+    assert result["errors"] == {}
+
+    error = DeviceException({})
+    error.__cause__ = ChecksumError({})
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        side_effect=error,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "connect"
+    assert result["errors"] == {"base": "wrong_token"}
 
     overwrite_model = const.MODELS_VACUUM[0]
 
