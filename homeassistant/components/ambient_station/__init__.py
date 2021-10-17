@@ -26,7 +26,6 @@ from homeassistant.helpers.event import async_call_later
 from .const import (
     ATTR_LAST_DATA,
     CONF_APP_KEY,
-    DATA_CLIENT,
     DOMAIN,
     LOGGER,
     TYPE_SOLARRADIATION,
@@ -79,7 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ),
         )
         hass.loop.create_task(ambient.ws_connect())
-        hass.data[DOMAIN][entry.entry_id][DATA_CLIENT] = ambient
+        hass.data[DOMAIN][entry.entry_id] = ambient
     except WebsocketError as err:
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
@@ -100,8 +99,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an Ambient PWS config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        data = hass.data[DOMAIN].pop(entry.entry_id)
-        ambient = data[DATA_CLIENT]
+        ambient = hass.data[DOMAIN].pop(entry.entry_id)
         hass.async_create_task(ambient.ws_disconnect())
 
     return unload_ok
