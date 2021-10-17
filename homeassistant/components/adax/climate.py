@@ -20,9 +20,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ACCOUNT_ID
+from .const import ACCOUNT_ID, DOMAIN
 
 
 async def async_setup_entry(
@@ -59,6 +60,11 @@ class AdaxDevice(ClimateEntity):
         self._adax_data_handler = adax_data_handler
 
         self._attr_unique_id = f"{heater_data['homeId']}_{heater_data['id']}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, heater_data["id"])},
+            name=self.name,
+            manufacturer="Adax",
+        )
 
     @property
     def name(self) -> str:
