@@ -150,6 +150,24 @@ async def test_zeroconf_snmp_error(hass):
         assert result["reason"] == "cannot_connect"
 
 
+async def test_zeroconf_unsupported_model(hass):
+    """Test unsupported printer model error."""
+    with patch("brother.Brother._get_data") as mock_get_data:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data={
+                "hostname": "example.local.",
+                "name": "Brother Printer",
+                "properties": {"product": "MFC-8660DN"},
+            },
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "unsupported_model"
+        assert len(mock_get_data.mock_calls) == 0
+
+
 async def test_zeroconf_device_exists_abort(hass):
     """Test we abort zeroconf flow if Brother printer already configured."""
     with patch(
