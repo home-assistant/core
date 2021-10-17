@@ -71,14 +71,18 @@ SET_HUMIDITY_SCHEMA = {
 }
 
 SET_HVAC_RUN_MODE_SCHEMA = {
-    vol.All(
-        {
-            vol.Optional(ATTR_RUN_MODE): vol.In([HOLD_PERMANENT, HOLD_RESUME_SCHEDULE]),
-            vol.Optional(ATTR_HVAC_MODE): vol.In(
-                [HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_AUTO]
-            ),
-        },
-        cv.has_at_least_one_key(ATTR_RUN_MODE, ATTR_HVAC_MODE),
+    cv.make_entity_service_schema(
+        vol.All(
+            {
+                vol.Optional(ATTR_RUN_MODE): vol.In(
+                    [HOLD_PERMANENT, HOLD_RESUME_SCHEDULE]
+                ),
+                vol.Optional(ATTR_HVAC_MODE): vol.In(
+                    [HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_AUTO]
+                ),
+            },
+            cv.has_at_least_one_key(ATTR_RUN_MODE, ATTR_HVAC_MODE),
+        )
     )
 }
 
