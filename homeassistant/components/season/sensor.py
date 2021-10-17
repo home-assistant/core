@@ -13,7 +13,12 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import CONF_NAME, CONF_TYPE, TIME_DAYS
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_TYPE,
+    DEVICE_CLASS_TIMESTAMP,
+    TIME_DAYS,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.util.dt import as_local, get_time_zone, utcnow
@@ -96,6 +101,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=ENTITY_NEXT_SEASON,
         name="Next Start Date",
         icon=ICON_NEXT_SEASON,
+        device_class=DEVICE_CLASS_TIMESTAMP,
     ),
 )
 
@@ -139,7 +145,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     _LOGGER.debug(_type)
 
     season_data = SeasonData(hemisphere, _type, time_zone)
-
+    
     await season_data.async_update()
 
     entities = []
@@ -254,33 +260,29 @@ def get_season(self):
 
         if time_zone is not None:
             next_date = as_local(next_date.replace(tzinfo=get_time_zone("UTC")))
-    else:
-        season = STATE_NONE
-        days_left = STATE_NONE
-        days_in = STATE_NONE
-        next_date = STATE_NONE
 
     last_update = as_local(date.replace(tzinfo=get_time_zone("UTC")))
 
-    # If user is located in the southern hemisphere swap the season
+    # If user is located in the southern hemisphere, swap the season
     if hemisphere == SOUTHERN:
         season = HEMISPHERE_SEASON_SWAP.get(season)
 
+    # If user is located at the equator, no season
     if hemisphere == EQUATOR:
         self.data = {
-            ENTITY_SEASON: season,
-            ENTITY_DAYS_LEFT: days_left,
-            ENTITY_DAYS_IN: days_in,
-            ENTITY_NEXT_SEASON: next_date,
-            ATTR_LAST_UPDATED: last_update,
+            ENTITY_SEASON: STATE_NONE,
+            ENTITY_DAYS_LEFT: STATE_NONE,
+            ENTITY_DAYS_IN: STATE_NONE,
+            ENTITY_NEXT_SEASON: STATE_NONE,
+            ATTR_LAST_UPDATED: last_update.isoformat(),
         }
     else:
         self.data = {
             ENTITY_SEASON: season,
             ENTITY_DAYS_LEFT: days_left.days,
             ENTITY_DAYS_IN: abs(days_in.days) + 1,
-            ENTITY_NEXT_SEASON: next_date.strftime("%Y-%m-%d, %H:%M:%S"),
-            ATTR_LAST_UPDATED: last_update,
+            ENTITY_NEXT_SEASON: next_date.isoformat(),
+            ATTR_LAST_UPDATED: last_update.isoformat(),
         }
 
     return data
