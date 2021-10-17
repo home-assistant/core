@@ -17,7 +17,7 @@ from .const import DOMAIN
 from .entity import LookinDeviceEntity
 from .models import LookinData
 
-KNOWN_FORMATS = {format.value: format for format in IRFormat}
+KNOWN_FORMAT_PREFIXES = {f"{format.value}:": format for format in IRFormat}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ class LookinRemoteEntity(LookinDeviceEntity, RemoteEntity, RestoreEntity):
 
     async def async_send_command(self, command, **kwargs):
         """Send a list of commands."""
-        delay = kwargs[ATTR_DELAY_SECS]
+        delay = kwargs.get(ATTR_DELAY_SECS)
 
         if not self._attr_is_on:
             _LOGGER.warning(
@@ -70,21 +70,19 @@ class LookinRemoteEntity(LookinDeviceEntity, RemoteEntity, RestoreEntity):
             return
 
         for idx, codes in enumerate(command):
-            if idx:
+            if idx and delay:
                 await asyncio.sleep(delay)
 
             format = None
-            for known_format, ir_format in KNOWN_FORMATS:
-                prefix = f"{known_format}:"
+            for prefix, ir_format in KNOWN_FORMAT_PREFIXES.items():
                 if codes.startswith(prefix):
                     codes = codes[(len(prefix)) :]
                     format = ir_format
                     break
 
             if not format:
-                prefixes = [f"{known_format}:" for known_format in KNOWN_FORMATS]
                 raise HomeAssistantError(
-                    f"Commands must be prefixed with one of {prefixes}"
+                    f"Commands must be prefixed with one of {list(KNOWN_FORMAT_PREFIXES)}"
                 )
 
             codes = codes.replace(",", " ")

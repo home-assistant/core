@@ -15,7 +15,9 @@ class LookinDeviceEntity(Entity):
 
     def __init__(self, lookin_data: LookinData) -> None:
         """Init the lookin device entity."""
+        super().__init__()
         self._lookin_device = lookin_data.lookin_device
+        self._lookin_protocol = lookin_data.lookin_protocol
         self._lookin_udp_subs = lookin_data.lookin_udp_subs
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._lookin_device.id)},
