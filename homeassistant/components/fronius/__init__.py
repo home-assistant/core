@@ -8,8 +8,7 @@ from typing import Callable, TypeVar
 
 from pyfronius import Fronius
 
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.core import HomeAssistant
 
 from .const import (
     DEFAULT_UPDATE_INTERVAL,
@@ -35,7 +34,7 @@ FroniusCoordinatorType = TypeVar("FroniusCoordinatorType", bound=FroniusCoordina
 class FroniusSolarNet:
     """The FroniusSolarNet class routes received values to sensor entities."""
 
-    def __init__(self, hass: HomeAssistant, host: str) -> None:
+    def __init__(self, hass: HomeAssistant, fronius: Fronius, host: str) -> None:
         """Initialize FroniusSolarNet class."""
         self.hass = hass
         self.cleanup_callbacks: list[Callable[[], None]] = []
@@ -46,18 +45,12 @@ class FroniusSolarNet:
         self.solar_net_device_id: str = ""
         self.update_interval = timedelta(seconds=DEFAULT_UPDATE_INTERVAL)
 
-        self.fronius: Fronius = self._init_bridge()
+        self.fronius = fronius
         self.inverter_coordinators: list[FroniusInverterUpdateCoordinator] = []
         self.logger_coordinator: FroniusLoggerUpdateCoordinator | None = None
         self.meter_coordinator: FroniusMeterUpdateCoordinator | None = None
         self.power_flow_coordinator: FroniusPowerFlowUpdateCoordinator | None = None
         self.storage_coordinator: FroniusStorageUpdateCoordinator | None = None
-
-    @callback
-    def _init_bridge(self) -> Fronius:
-        """Initialize Fronius API."""
-        session = async_get_clientsession(self.hass)
-        return Fronius(session, self.host)
 
     async def init_devices(self) -> None:
         """Initialize DataUpdateCoordinators for SolarNet devices."""

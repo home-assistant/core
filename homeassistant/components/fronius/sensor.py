@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from pyfronius import Fronius
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -13,6 +14,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_RESOURCE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
@@ -45,7 +47,8 @@ async def async_setup_platform(
 ) -> None:
     """Import Fronius configuration from yaml."""
     host = config[CONF_RESOURCE]
-    solar_net = FroniusSolarNet(hass, host)
+    fronius = Fronius(async_get_clientsession(hass), host)
+    solar_net = FroniusSolarNet(hass, fronius, host)
     await solar_net.init_devices()
 
     hass.data.setdefault(DOMAIN, {})
