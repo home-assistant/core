@@ -5,6 +5,7 @@ import logging
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_PRESSURE,
@@ -68,32 +69,32 @@ ENERGY_SENSOR_MAP = {
     "electricity_consumed_interval": [
         "Consumed Power Interval",
         ENERGY_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        DEVICE_CLASS_ENERGY,
     ],
     "electricity_consumed_peak_interval": [
         "Consumed Power Interval",
         ENERGY_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        DEVICE_CLASS_ENERGY,
     ],
     "electricity_consumed_off_peak_interval": [
         "Consumed Power Interval (off peak)",
         ENERGY_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        DEVICE_CLASS_ENERGY,
     ],
     "electricity_produced_interval": [
         "Produced Power Interval",
         ENERGY_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        DEVICE_CLASS_ENERGY,
     ],
     "electricity_produced_peak_interval": [
         "Produced Power Interval",
         ENERGY_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        DEVICE_CLASS_ENERGY,
     ],
     "electricity_produced_off_peak_interval": [
         "Produced Power Interval (off peak)",
         ENERGY_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        DEVICE_CLASS_ENERGY,
     ],
     "electricity_consumed_off_peak_point": [
         "Current Consumed Power (off peak)",
@@ -108,12 +109,12 @@ ENERGY_SENSOR_MAP = {
     "electricity_consumed_off_peak_cumulative": [
         "Cumulative Consumed Power (off peak)",
         ENERGY_KILO_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        DEVICE_CLASS_ENERGY,
     ],
     "electricity_consumed_peak_cumulative": [
         "Cumulative Consumed Power",
         ENERGY_KILO_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        DEVICE_CLASS_ENERGY,
     ],
     "electricity_produced_off_peak_point": [
         "Current Produced Power (off peak)",
@@ -128,12 +129,12 @@ ENERGY_SENSOR_MAP = {
     "electricity_produced_off_peak_cumulative": [
         "Cumulative Produced Power (off peak)",
         ENERGY_KILO_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        DEVICE_CLASS_ENERGY,
     ],
     "electricity_produced_peak_cumulative": [
         "Cumulative Produced Power",
         ENERGY_KILO_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        DEVICE_CLASS_ENERGY,
     ],
     "gas_consumed_interval": [
         "Current Consumed Gas Interval",
@@ -145,7 +146,7 @@ ENERGY_SENSOR_MAP = {
     "net_electricity_cumulative": [
         "Cumulative net Power",
         ENERGY_KILO_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        DEVICE_CLASS_ENERGY,
     ],
 }
 
