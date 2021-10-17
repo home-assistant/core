@@ -216,6 +216,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
                 self._zone.call_return_to_schedule()
         if hvac_mode is not None:
             self._zone.set_mode(mode=HA_TO_NEXIA_HVAC_MODE_MAP[hvac_mode])
+        self._signal_thermostat_update()
 
     @property
     def preset_mode(self):
