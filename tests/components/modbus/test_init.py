@@ -648,7 +648,7 @@ async def test_pymodbus_close_fail(hass, caplog, mock_pymodbus):
     # Close() is called as part of teardown
 
 
-async def test_pymodbus_connect_fail(hass, caplog):
+async def test_pymodbus_connect_fail(hass, caplog, mock_pymodbus):
     """Run test for failing pymodbus constructor."""
     config = {
         DOMAIN: [
@@ -660,14 +660,11 @@ async def test_pymodbus_connect_fail(hass, caplog):
             }
         ]
     }
-    with mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusTcpClient", autospec=True
-    ) as mock_pb:
-        caplog.set_level(logging.ERROR)
-        exception_message = "test connect exception"
-        mock_pb.connect.side_effect = ModbusException(exception_message)
-
-        assert await async_setup_component(hass, DOMAIN, config) is True
+    caplog.set_level(logging.WARNING)
+    ExceptionMessage = "test connect exception"
+    mock_pymodbus.connect.side_effect = ModbusException(ExceptionMessage)
+    assert await async_setup_component(hass, DOMAIN, config) is False
+    assert ExceptionMessage in caplog.text
 
 
 async def test_delay(hass, mock_pymodbus):
