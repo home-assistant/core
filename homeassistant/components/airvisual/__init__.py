@@ -104,12 +104,12 @@ def async_get_cloud_coordinators_by_api_key(
     hass: HomeAssistant, api_key: str
 ) -> list[DataUpdateCoordinator]:
     """Get all DataUpdateCoordinator objects related to a particular API key."""
-    coordinators = []
-    for entry_id, coordinator in hass.data[DOMAIN][DATA_COORDINATOR].items():
-        entry = hass.config_entries.async_get_entry(entry_id)
-        if entry and entry.data.get(CONF_API_KEY) == api_key:
-            coordinators.append(coordinator)
-    return coordinators
+    return [
+        attrs[DATA_COORDINATOR]
+        for entry_id, attrs in hass.data[DOMAIN].items()
+        if (entry := hass.config_entries.async_get_entry(entry_id))
+        and entry.data.get(CONF_API_KEY) == api_key
+    ]
 
 
 @callback
@@ -190,7 +190,8 @@ def _standardize_node_pro_config_entry(hass: HomeAssistant, entry: ConfigEntry) 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up AirVisual as config entry."""
-    hass.data.setdefault(DOMAIN, {DATA_COORDINATOR: {}})
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {}
 
     if CONF_API_KEY in entry.data:
         _standardize_geography_config_entry(hass, entry)
@@ -270,8 +271,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     await coordinator.async_config_entry_first_refresh()
-
-    hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = coordinator
+    hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR] = coordinator
 
     # Reassess the interval between 2 server requests
     if CONF_API_KEY in entry.data:
@@ -329,8 +329,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
-
+        hass.data[DOMAIN].pop(entry.entry_id)
         if CONF_API_KEY in entry.data:
             # Re-calculate the update interval period for any remaining consumers of
             # this API key:

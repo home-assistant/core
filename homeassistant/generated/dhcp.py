@@ -98,7 +98,23 @@ DHCP = [
     },
     {
         "domain": "flux_led",
+        "hostname": "zengge_06_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_07_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_33_*"
+    },
+    {
+        "domain": "flux_led",
         "hostname": "zengge_35_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_41_*"
     },
     {
         "domain": "flux_led",
@@ -256,6 +272,11 @@ DHCP = [
         "domain": "sense",
         "hostname": "sense-*",
         "macaddress": "DCEFCA*"
+    },
+    {
+        "domain": "sense",
+        "hostname": "sense-*",
+        "macaddress": "A4D578*"
     },
     {
         "domain": "smartthings",
@@ -428,11 +449,19 @@ DHCP = [
     },
     {
         "domain": "tuya",
+        "macaddress": "105A17*"
+    },
+    {
+        "domain": "tuya",
         "macaddress": "10D561*"
     },
     {
         "domain": "tuya",
         "macaddress": "1869D8*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "381F8D*"
     },
     {
         "domain": "tuya",
@@ -444,11 +473,11 @@ DHCP = [
     },
     {
         "domain": "tuya",
-        "macaddress": "7CF666*"
+        "macaddress": "708976*"
     },
     {
         "domain": "tuya",
-        "macaddress": "708976*"
+        "macaddress": "7CF666*"
     },
     {
         "domain": "tuya",
@@ -457,6 +486,10 @@ DHCP = [
     {
         "domain": "tuya",
         "macaddress": "D4A651*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "D81F12*"
     },
     {
         "domain": "verisure",
