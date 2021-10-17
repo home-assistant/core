@@ -51,7 +51,12 @@ class LookinFanBase(LookinPowerEntity, FanEntity):
     ) -> None:
         """Init the lookin fan base class."""
         super().__init__(uuid, device, lookin_data)
-        self._attr_is_on = False
+        self._is_on = False
+
+    @property
+    def is_on(self) -> bool:
+        """Get if the fan is on."""
+        return self._is_on
 
     async def async_turn_on(
         self,
@@ -62,13 +67,13 @@ class LookinFanBase(LookinPowerEntity, FanEntity):
     ) -> None:
         """Turn on the fan."""
         await self._async_send_command(self._power_on_command)
-        self._attr_is_on = True
+        self._is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         await self._async_send_command(self._power_off_command)
-        self._attr_is_on = False
+        self._is_on = False
         self.async_write_ha_state()
 
 
