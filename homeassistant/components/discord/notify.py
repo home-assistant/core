@@ -101,11 +101,7 @@ class DiscordNotificationService(BaseNotificationService):
                     _LOGGER.warning("Channel not found for ID: %s", channelid)
                     continue
                 # Must create new instances of File for each channel.
-                files = None
-                if images:
-                    files = []
-                    for image in images:
-                        files.append(discord.File(image))
+                files = [discord.File(image) for image in images] if images else None
                 await channel.send(message, files=files, embed=embed)
         except (discord.HTTPException, discord.NotFound) as error:
             _LOGGER.warning("Communication error: %s", error)
