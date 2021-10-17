@@ -260,7 +260,8 @@ class ModbusUpdateListener:
         self,
         slave: int,
         input_type: str,
-        address: int,
+        min_address: int,
+        max_address: int,
         func: Callable[
             [ModbusResponse | None, int, str, int], Coroutine[Any, Any, None]
         ],
@@ -268,14 +269,17 @@ class ModbusUpdateListener:
         """Initialize the Modbus update listener configuration."""
         self._slave = slave
         self._input_type = input_type
-        self._address = address
+        self._min_address = min_address
+        self._max_address = max_address
         self._func = func
 
     def notify(
         self, result: ModbusResponse | None, offset: int
     ) -> Coroutine[Any, Any, None]:
         """Notify update listener."""
-        return self._func(result, self._slave, self._input_type, self._address - offset)
+        return self._func(
+            result, self._slave, self._input_type, self._min_address - offset
+        )
 
 
 class ModbusHub:
@@ -426,28 +430,30 @@ class ModbusHub:
         scan_group: str,
         slave: int,
         input_type: str,
-        address: int,
+        min_address: int,
+        max_address: int,
         func: Callable[
             [ModbusResponse | None, int, str, int], Coroutine[Any, Any, None]
         ],
     ) -> None:
         """Register update listener."""
         _LOGGER.debug(
-            "Register update listener slave=%s, input_type=%s, address=%s in scan_group=%s",
+            "Register update listener slave=%s, input_type=%s, min_address=%s, max_address=%s in scan_group=%s",
             slave,
             input_type,
-            address,
+            min_address,
+            max_address,
             scan_group,
         )
         update_listeners = self._update_listeners_by_scan_group[scan_group]
         key = (slave, input_type)
         if key in update_listeners:
             update_listeners[key].append(
-                ModbusUpdateListener(slave, input_type, address, func)
+                ModbusUpdateListener(slave, input_type, min_address, max_address, func)
             )
         else:
             update_listeners[key] = [
-                ModbusUpdateListener(slave, input_type, address, func)
+                ModbusUpdateListener(slave, input_type, min_address, max_address, func)
             ]
 
     def async_update_function(
@@ -460,12 +466,6 @@ class ModbusHub:
             """Update the state of all entities in a given scan group."""
             # remark "now" is a dummy parameter to avoid problems with
             # async_track_time_interval
-            _LOGGER.debug(
-                "async_update: scan_group=%s, items=%s",
-                scan_group,
-                self._update_listeners_by_scan_group[scan_group],
-            )
-
             for (
                 (slave, input_type),
                 listeners,
@@ -473,8 +473,8 @@ class ModbusHub:
                 min_address = 100000
                 max_address = 0
                 for listener in listeners:
-                    min_address = min(min_address, listener._address)
-                    max_address = max(max_address, listener._address)
+                    min_address = min(min_address, listener._min_address)
+                    max_address = max(max_address, listener._max_address)
                 _LOGGER.debug(
                     "query modbus: scan_group=%s, slave=%s, minAdress=%s, maxAdress=%s, input_type=%s",
                     scan_group,

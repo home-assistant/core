@@ -81,6 +81,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                 self._slave,
                 CALL_TYPE_REGISTER_HOLDING,
                 self._target_temperature_register,
+                self._target_temperature_register,
                 self.async_update_from_result,
             )
 
