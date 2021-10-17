@@ -208,7 +208,7 @@ async def test_camera_ws_stream(hass, auth, hass_ws_client):
     assert len(hass.states.async_all()) == 1
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
-    assert cam.state == STATE_IDLE
+    assert cam.state == STATE_STREAMING
 
     with patch("homeassistant.components.camera.create_stream") as mock_stream:
         mock_stream().endpoint_url.return_value = "http://home.assistant/playlist.m3u8"
@@ -236,7 +236,7 @@ async def test_camera_ws_stream_failure(hass, auth, hass_ws_client):
     assert len(hass.states.async_all()) == 1
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
-    assert cam.state == STATE_IDLE
+    assert cam.state == STATE_STREAMING
 
     client = await hass_ws_client(hass)
     await client.send_json(
@@ -768,7 +768,7 @@ async def test_camera_web_rtc_offer_failure(hass, auth, hass_ws_client):
     assert len(hass.states.async_all()) == 1
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
-    assert cam.state == STATE_IDLE
+    assert cam.state == STATE_STREAMING
 
     client = await hass_ws_client(hass)
     await client.send_json(
