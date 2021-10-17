@@ -150,9 +150,7 @@ async def async_setup(hass, config):
         "logbook", "logbook", "hass:format-list-bulleted-type"
     )
 
-    conf = config.get(DOMAIN, {})
-
-    if conf:
+    if conf := config.get(DOMAIN, {}):
         filters = sqlalchemy_filter_from_include_exclude_conf(conf)
         entities_filter = convert_include_exclude_filter(conf)
     else:
@@ -202,8 +200,7 @@ class LogbookView(HomeAssistantView):
         else:
             datetime = dt_util.start_of_local_day()
 
-        period = request.query.get("period")
-        if period is None:
+        if (period := request.query.get("period")) is None:
             period = 1
         else:
             period = int(period)
@@ -218,8 +215,7 @@ class LogbookView(HomeAssistantView):
                     "Format should be <domain>.<object_id>"
                 ) from vol.Invalid
 
-        end_time = request.query.get("end_time")
-        if end_time is None:
+        if (end_time := request.query.get("end_time")) is None:
             start_day = dt_util.as_utc(datetime) - timedelta(days=period - 1)
             end_day = start_day + timedelta(days=period)
         else:
@@ -605,9 +601,7 @@ def _keep_event(hass, event, entities_filter):
 def _augment_data_with_context(
     data, entity_id, event, context_lookup, entity_attr_cache, external_events
 ):
-    context_event = context_lookup.get(event.context_id)
-
-    if not context_event:
+    if not (context_event := context_lookup.get(event.context_id)):
         return
 
     if event == context_event:
@@ -663,8 +657,7 @@ def _augment_data_with_context(
     if event_type in external_events:
         domain, describe_event = external_events[event_type]
         data["context_domain"] = domain
-        name = describe_event(context_event).get(ATTR_NAME)
-        if name:
+        if name := describe_event(context_event).get(ATTR_NAME):
             data["context_name"] = name
 
 
@@ -789,8 +782,7 @@ class EntityAttributeCache:
         else:
             self._cache[entity_id] = {}
 
-        current_state = self._hass.states.get(entity_id)
-        if current_state:
+        if current_state := self._hass.states.get(entity_id):
             # Try the current state as its faster than decoding the
             # attributes
             self._cache[entity_id][attribute] = current_state.attributes.get(attribute)
