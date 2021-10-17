@@ -7,6 +7,7 @@ import logging
 from homeassistant.components.remote import ATTR_DELAY_SECS, RemoteEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.const import STATE_OFF
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -14,6 +15,7 @@ from .aiolookin import IRFormat
 from .const import DOMAIN
 from .entity import LookinDeviceEntity
 from .models import LookinData
+from homeassistant.helpers.restore_state import RestoreEntity
 
 KNOWN_FORMATS = {format.value: format for format in IRFormat}
 
@@ -30,7 +32,7 @@ async def async_setup_entry(
     async_add_entities([LookinRemoteEntity(lookin_data)])
 
 
-class LookinRemoteEntity(LookinDeviceEntity, RemoteEntity):
+class LookinRemoteEntity(LookinDeviceEntity, RemoteEntity, RestoreEntity):
     """Representation of a lookin remote."""
 
     def __init__(self, lookin_data: LookinData) -> None:
@@ -40,6 +42,12 @@ class LookinRemoteEntity(LookinDeviceEntity, RemoteEntity):
         self._attr_unique_id = self._lookin_device.id
         self._attr_is_on = True
         self._attr_supported_features = 0
+
+    async def async_added_to_hass(self):
+        """Call when the remote is added to hass."""
+        state = await self.async_get_last_state()
+        self._attr_is_on = state is None or state.state != STATE_OFF
+        await super().async_added_to_hass()
 
     async def async_turn_on(self, **kwargs):
         """Turn on the remote."""
