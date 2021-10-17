@@ -415,7 +415,7 @@ blockchain==1.4.4
 # bme680==1.0.5
 
 # homeassistant.components.bond
-bond-api==0.1.13
+bond-api==0.1.14
 
 # homeassistant.components.bosch_shc
 boschshcpy==0.2.19
