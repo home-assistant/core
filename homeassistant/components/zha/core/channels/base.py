@@ -148,6 +148,10 @@ class ZigbeeChannel(LogMixin):
         """Return the status of the channel."""
         return self._status
 
+    def __hash__(self) -> int:
+        """Make this a hashable."""
+        return hash(self._unique_id)
+
     @callback
     def async_send_signal(self, signal: str, *args: Any) -> None:
         """Send a signal through hass dispatcher."""

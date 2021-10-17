@@ -916,8 +916,6 @@ async def test_statistics_during_period(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "sum_decrease": None,
-                "sum_increase": None,
             }
         ]
     }

@@ -1746,11 +1746,7 @@ async def test_water_heater(hass, hk_driver, events):
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] == f"52.0{TEMP_CELSIUS}"
 
-    await hass.async_add_executor_job(acc.char_target_heat_cool.client_update_value, 0)
-    await hass.async_block_till_done()
-    assert acc.char_target_heat_cool.value == 1
-
-    await hass.async_add_executor_job(acc.char_target_heat_cool.client_update_value, 2)
+    await hass.async_add_executor_job(acc.char_target_heat_cool.client_update_value, 1)
     await hass.async_block_till_done()
     assert acc.char_target_heat_cool.value == 1
 

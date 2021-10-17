@@ -234,7 +234,7 @@ async def test_friendly_name_template(hass, attribute, start_ha):
 )
 async def test_template_syntax_error(hass, start_ha):
     """Test setup with invalid device_class."""
-    assert hass.states.async_all() == []
+    assert hass.states.async_all("sensor") == []
 
 
 @pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])

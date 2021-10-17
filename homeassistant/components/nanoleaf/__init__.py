@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEVICE, DOMAIN, NAME, SERIAL_NO
+from .const import DOMAIN
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -22,11 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except InvalidToken as err:
         raise ConfigEntryAuthFailed from err
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        DEVICE: nanoleaf,
-        NAME: nanoleaf.name,
-        SERIAL_NO: nanoleaf.serial_no,
-    }
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = nanoleaf
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "light")

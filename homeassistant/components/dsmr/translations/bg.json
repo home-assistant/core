@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "setup_network": {
+                "data": {
+                    "port": "\u041f\u043e\u0440\u0442"
+                }
+            }
+        }
+    }
+}

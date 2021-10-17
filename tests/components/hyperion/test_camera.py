@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 import base64
 from collections.abc import Awaitable
-import logging
 from typing import Callable
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -39,7 +38,6 @@ from . import (
     setup_test_config_entry,
 )
 
-_LOGGER = logging.getLogger(__name__)
 TEST_CAMERA_ENTITY_ID = "camera.test_instance_1"
 TEST_IMAGE_DATA = "TEST DATA"
 TEST_IMAGE_UPDATE = {

@@ -134,7 +134,6 @@ from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.const import HTTP_OK
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
@@ -271,18 +270,16 @@ class TokenView(HomeAssistantView):
         # 2.2 The authorization server responds with HTTP status code 200
         # if the token has been revoked successfully or if the client
         # submitted an invalid token.
-        token = data.get("token")
-
-        if token is None:
-            return web.Response(status=HTTP_OK)
+        if (token := data.get("token")) is None:
+            return web.Response(status=HTTPStatus.OK)
 
         refresh_token = await hass.auth.async_get_refresh_token_by_token(token)
 
         if refresh_token is None:
-            return web.Response(status=HTTP_OK)
+            return web.Response(status=HTTPStatus.OK)
 
         await hass.auth.async_remove_refresh_token(refresh_token)
-        return web.Response(status=HTTP_OK)
+        return web.Response(status=HTTPStatus.OK)
 
     async def _async_handle_auth_code(self, hass, data, remote_addr):
         """Handle authorization code request."""
@@ -293,9 +290,7 @@ class TokenView(HomeAssistantView):
                 status_code=HTTPStatus.BAD_REQUEST,
             )
 
-        code = data.get("code")
-
-        if code is None:
+        if (code := data.get("code")) is None:
             return self.json(
                 {"error": "invalid_request", "error_description": "Invalid code"},
                 status_code=HTTPStatus.BAD_REQUEST,
@@ -350,9 +345,7 @@ class TokenView(HomeAssistantView):
                 status_code=HTTPStatus.BAD_REQUEST,
             )
 
-        token = data.get("refresh_token")
-
-        if token is None:
+        if (token := data.get("refresh_token")) is None:
             return self.json(
                 {"error": "invalid_request"}, status_code=HTTPStatus.BAD_REQUEST
             )
@@ -413,7 +406,15 @@ class LinkUserView(HomeAssistantView):
         if credentials is None:
             return self.json_message("Invalid code", status_code=HTTPStatus.BAD_REQUEST)
 
-        await hass.auth.async_link_user(user, credentials)
+        linked_user = await hass.auth.async_get_user_by_credentials(credentials)
+        if linked_user != user and linked_user is not None:
+            return self.json_message(
+                "Credential already linked", status_code=HTTPStatus.BAD_REQUEST
+            )
+
+        # No-op if credential is already linked to the user it will be linked to
+        if linked_user != user:
+            await hass.auth.async_link_user(user, credentials)
         return self.json_message("User linked")
 
 

@@ -8,7 +8,7 @@ from libpyfoscam.foscam import (
     ERROR_FOSCAM_UNKNOWN,
 )
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.foscam import config_flow
 
 from tests.common import MockConfigEntry
@@ -76,7 +76,6 @@ def setup_mock_foscam_camera(mock_foscam_camera):
 
 async def test_user_valid(hass):
     """Test valid config from user input."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -108,7 +107,6 @@ async def test_user_valid(hass):
 
 async def test_user_invalid_auth(hass):
     """Test we handle invalid auth from user input."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -137,7 +135,6 @@ async def test_user_invalid_auth(hass):
 
 async def test_user_cannot_connect(hass):
     """Test we handle cannot connect error from user input."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -166,7 +163,6 @@ async def test_user_cannot_connect(hass):
 
 async def test_user_invalid_response(hass):
     """Test we handle invalid response error from user input."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -197,7 +193,6 @@ async def test_user_invalid_response(hass):
 
 async def test_user_already_configured(hass):
     """Test we handle already configured from user input."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry = MockConfigEntry(
         domain=config_flow.DOMAIN,
@@ -229,7 +224,6 @@ async def test_user_already_configured(hass):
 
 async def test_user_unknown_exception(hass):
     """Test we handle unknown exceptions from user input."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -255,7 +249,6 @@ async def test_user_unknown_exception(hass):
 
 async def test_import_user_valid(hass):
     """Test valid config from import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "homeassistant.components.foscam.config_flow.FoscamCamera",
@@ -282,7 +275,6 @@ async def test_import_user_valid(hass):
 
 async def test_import_user_valid_with_name(hass):
     """Test valid config with extra name from import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "homeassistant.components.foscam.config_flow.FoscamCamera",
@@ -313,7 +305,6 @@ async def test_import_user_valid_with_name(hass):
 
 async def test_import_invalid_auth(hass):
     """Test we handle invalid auth from import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "homeassistant.components.foscam.config_flow.FoscamCamera",
@@ -337,7 +328,6 @@ async def test_import_invalid_auth(hass):
 
 async def test_import_cannot_connect(hass):
     """Test we handle cannot connect error from import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "homeassistant.components.foscam.config_flow.FoscamCamera",
@@ -361,7 +351,6 @@ async def test_import_cannot_connect(hass):
 
 async def test_import_invalid_response(hass):
     """Test we handle invalid response error from import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "homeassistant.components.foscam.config_flow.FoscamCamera",
@@ -387,7 +376,6 @@ async def test_import_invalid_response(hass):
 
 async def test_import_already_configured(hass):
     """Test we handle already configured from import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry = MockConfigEntry(
         domain=config_flow.DOMAIN,
@@ -414,7 +402,6 @@ async def test_import_already_configured(hass):
 
 async def test_import_unknown_exception(hass):
     """Test we handle unknown exceptions from import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "homeassistant.components.foscam.config_flow.FoscamCamera",

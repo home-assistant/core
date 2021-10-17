@@ -1,6 +1,8 @@
 """Push notification handling."""
+from __future__ import annotations
+
 import asyncio
-from typing import Callable
+from collections.abc import Callable
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later

@@ -1,6 +1,4 @@
 """Support for Rheem EcoNet thermostats."""
-import logging
-
 from pyeconet.equipment import EquipmentType
 from pyeconet.equipment.thermostat import ThermostatFanMode, ThermostatOperationMode
 
@@ -27,8 +25,6 @@ from homeassistant.const import ATTR_TEMPERATURE
 
 from . import EcoNetEntity
 from .const import DOMAIN, EQUIPMENT
-
-_LOGGER = logging.getLogger(__name__)
 
 ECONET_STATE_TO_HA = {
     ThermostatOperationMode.HEATING: HVAC_MODE_HEAT,

@@ -1,4 +1,5 @@
 """Support to interface with the Plex API."""
+from itertools import islice
 import logging
 
 from homeassistant.components.media_player import BrowseMedia
@@ -17,6 +18,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.components.media_player.errors import BrowseError
 
 from .const import DOMAIN
+from .helpers import pretty_title
 
 
 class UnknownMediaType(BrowseError):
@@ -32,9 +34,10 @@ PLAYLISTS_BROWSE_PAYLOAD = {
     "can_play": False,
     "can_expand": True,
 }
-SPECIAL_METHODS = {
-    "On Deck": "onDeck",
-    "Recently Added": "recentlyAdded",
+
+LIBRARY_PREFERRED_LIBTYPE = {
+    "show": "episode",
+    "artist": "album",
 }
 
 ITEM_TYPE_MEDIA_CLASS = {
@@ -57,7 +60,7 @@ def browse_media(  # noqa: C901
 ):
     """Implement the websocket media browsing helper."""
 
-    def item_payload(item):
+    def item_payload(item, short_name=False):
         """Create response payload for a single media item."""
         try:
             media_class = ITEM_TYPE_MEDIA_CLASS[item.type]
@@ -65,7 +68,7 @@ def browse_media(  # noqa: C901
             _LOGGER.debug("Unknown type received: %s", item.type)
             raise UnknownMediaType from err
         payload = {
-            "title": item.title,
+            "title": pretty_title(item, short_name),
             "media_class": media_class,
             "media_content_id": str(item.ratingKey),
             "media_content_type": item.type,
@@ -129,7 +132,7 @@ def browse_media(  # noqa: C901
             media_info.children = []
             for item in media:
                 try:
-                    media_info.children.append(item_payload(item))
+                    media_info.children.append(item_payload(item, short_name=True))
                 except UnknownMediaType:
                     continue
         return media_info
@@ -180,8 +183,22 @@ def browse_media(  # noqa: C901
             "children_media_class": children_media_class,
         }
 
-        method = SPECIAL_METHODS[special_folder]
-        items = getattr(library_or_section, method)()
+        if special_folder == "On Deck":
+            items = library_or_section.onDeck()
+        elif special_folder == "Recently Added":
+            if library_or_section.TYPE:
+                libtype = LIBRARY_PREFERRED_LIBTYPE.get(
+                    library_or_section.TYPE, library_or_section.TYPE
+                )
+                items = library_or_section.recentlyAdded(libtype=libtype)
+            else:
+                recent_iter = (
+                    x
+                    for x in library_or_section.search(sort="addedAt:desc", limit=100)
+                    if x.type in ["album", "episode", "movie"]
+                )
+                items = list(islice(recent_iter, 30))
+
         for item in items:
             try:
                 payload["children"].append(item_payload(item))

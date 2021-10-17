@@ -120,4 +120,5 @@ class NAMDataUpdateCoordinator(DataUpdateCoordinator):
             "name": DEFAULT_NAME,
             "sw_version": self.nam.software_version,
             "manufacturer": MANUFACTURER,
+            "configuration_url": f"http://{self.host}/",
         }

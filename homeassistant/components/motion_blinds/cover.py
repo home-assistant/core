@@ -171,6 +171,8 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
     @property
     def is_closed(self):
         """Return if the cover is closed or not."""
+        if self._blind.position is None:
+            return None
         return self._blind.position == 100
 
     async def async_added_to_hass(self):

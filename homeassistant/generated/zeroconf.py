@@ -168,6 +168,10 @@ ZEROCONF = {
         },
         {
             "domain": "xiaomi_miio"
+        },
+        {
+            "domain": "yeelight",
+            "name": "yeelink-*"
         }
     ],
     "_nanoleafapi._tcp.local.": [
@@ -183,6 +187,11 @@ ZEROCONF = {
     "_nut._tcp.local.": [
         {
             "domain": "nut"
+        }
+    ],
+    "_plexmediasvr._tcp.local.": [
+        {
+            "domain": "plex"
         }
     ],
     "_plugwise._tcp.local.": [

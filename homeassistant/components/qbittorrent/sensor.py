@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_URL,
     CONF_USERNAME,
-    DATA_RATE_KILOBYTES_PER_SECOND,
+    DATA_RATE_KIBIBYTES_PER_SECOND,
     STATE_IDLE,
 )
 import homeassistant.helpers.config_validation as cv
@@ -41,12 +41,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=SENSOR_TYPE_DOWNLOAD_SPEED,
         name="Down Speed",
-        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+        native_unit_of_measurement=DATA_RATE_KIBIBYTES_PER_SECOND,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_UPLOAD_SPEED,
         name="Up Speed",
-        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+        native_unit_of_measurement=DATA_RATE_KIBIBYTES_PER_SECOND,
     ),
 )
 

@@ -21,8 +21,6 @@ TEST_MODBUS_HOST = "modbusHost"
 TEST_PORT_TCP = 5501
 TEST_PORT_SERIAL = "usb01"
 
-_LOGGER = logging.getLogger(__name__)
-
 
 @dataclass
 class ReadResult:
@@ -147,6 +145,18 @@ async def mock_do_cycle(hass, mock_pymodbus_exception, mock_pymodbus_return):
     ):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
+        return now
+
+
+async def do_next_cycle(hass, now, cycle):
+    """Trigger update call with time_changed event."""
+    now += timedelta(seconds=cycle)
+    with mock.patch(
+        "homeassistant.helpers.event.dt_util.utcnow", return_value=now, autospec=True
+    ):
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+        return now
 
 
 @pytest.fixture
@@ -161,3 +171,9 @@ async def mock_ha(hass, mock_pymodbus_return):
     """Load homeassistant to allow service calls."""
     assert await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()
+
+
+@pytest.fixture
+async def caplog_setup_text(caplog):
+    """Return setup log of integration."""
+    yield caplog.text

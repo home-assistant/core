@@ -7,6 +7,9 @@ DOMAIN = "tractive"
 RECONNECT_INTERVAL = timedelta(seconds=10)
 
 ATTR_DAILY_GOAL = "daily_goal"
+ATTR_BUZZER = "buzzer"
+ATTR_LED = "led"
+ATTR_LIVE_TRACKING = "live_tracking"
 ATTR_MINUTES_ACTIVE = "minutes_active"
 
 CLIENT = "client"

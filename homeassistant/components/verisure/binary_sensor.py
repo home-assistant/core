@@ -54,14 +54,15 @@ class VerisureDoorWindowSensor(CoordinatorEntity, BinarySensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         area = self.coordinator.data["door_window"][self.serial_number]["area"]
-        return {
-            "name": area,
-            "suggested_area": area,
-            "manufacturer": "Verisure",
-            "model": "Shock Sensor Detector",
-            "identifiers": {(DOMAIN, self.serial_number)},
-            "via_device": (DOMAIN, self.coordinator.entry.data[CONF_GIID]),
-        }
+        return DeviceInfo(
+            name=area,
+            suggested_area=area,
+            manufacturer="Verisure",
+            model="Shock Sensor Detector",
+            identifiers={(DOMAIN, self.serial_number)},
+            via_device=(DOMAIN, self.coordinator.entry.data[CONF_GIID]),
+            configuration_url="https://mypages.verisure.com",
+        )
 
     @property
     def is_on(self) -> bool:
@@ -95,12 +96,13 @@ class VerisureEthernetStatus(CoordinatorEntity, BinarySensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
-        return {
-            "name": "Verisure Alarm",
-            "manufacturer": "Verisure",
-            "model": "VBox",
-            "identifiers": {(DOMAIN, self.coordinator.entry.data[CONF_GIID])},
-        }
+        return DeviceInfo(
+            name="Verisure Alarm",
+            manufacturer="Verisure",
+            model="VBox",
+            identifiers={(DOMAIN, self.coordinator.entry.data[CONF_GIID])},
+            configuration_url="https://mypages.verisure.com",
+        )
 
     @property
     def is_on(self) -> bool:

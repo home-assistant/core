@@ -1,9 +1,9 @@
 """Utility functions to combine state attributes from multiple entities."""
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from itertools import groupby
-from typing import Any, Callable
+from typing import Any
 
 from homeassistant.core import State
 
@@ -11,8 +11,7 @@ from homeassistant.core import State
 def find_state_attributes(states: list[State], key: str) -> Iterator[Any]:
     """Find attributes with matching key from states."""
     for state in states:
-        value = state.attributes.get(key)
-        if value is not None:
+        if (value := state.attributes.get(key)) is not None:
             yield value
 
 

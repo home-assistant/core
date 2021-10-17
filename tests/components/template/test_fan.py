@@ -126,7 +126,7 @@ async def test_missing_optional_config(hass, start_ha):
 )
 async def test_wrong_template_config(hass, start_ha):
     """Test: missing 'value_template' will fail."""
-    assert hass.states.async_all() == []
+    assert hass.states.async_all("fan") == []
 
 
 @pytest.mark.parametrize("count,domain", [(1, DOMAIN)])

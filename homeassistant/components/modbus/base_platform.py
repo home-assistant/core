@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 import struct
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -52,9 +53,9 @@ from .const import (
     CONF_SWAP_WORD_BYTE,
     CONF_VERIFY,
     CONF_WRITE_TYPE,
-    DATA_TYPE_STRING,
     SIGNAL_START_ENTITY,
     SIGNAL_STOP_ENTITY,
+    DataType,
 )
 from .modbus import ModbusHub
 
@@ -164,7 +165,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
 
         registers = self._swap_registers(registers)
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
-        if self._data_type == DATA_TYPE_STRING:
+        if self._data_type == DataType.STRING:
             return byte_string.decode()
 
         val = struct.unpack(self._structure, byte_string)

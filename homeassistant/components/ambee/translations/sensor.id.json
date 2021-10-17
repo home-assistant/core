@@ -1,0 +1,9 @@
+{
+    "state": {
+        "ambee__risk": {
+            "high": "Tinggi",
+            "low": "Rendah",
+            "moderate": "Sedang"
+        }
+    }
+}

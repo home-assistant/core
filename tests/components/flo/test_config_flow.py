@@ -3,7 +3,7 @@ import json
 import time
 from unittest.mock import patch
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.flo.const import DOMAIN
 from homeassistant.const import CONTENT_TYPE_JSON
 
@@ -12,7 +12,7 @@ from .common import TEST_EMAIL_ADDRESS, TEST_PASSWORD, TEST_TOKEN, TEST_USER_ID
 
 async def test_form(hass, aioclient_mock_fixture):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

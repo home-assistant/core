@@ -124,6 +124,7 @@ class ViCareBinarySensor(BinarySensorEntity):
 
     def __init__(self, name, api, description: DescriptionT):
         """Initialize the sensor."""
+        self.entity_description = description
         self._attr_name = f"{name} {description.name}"
         self._api = api
         self._state = None

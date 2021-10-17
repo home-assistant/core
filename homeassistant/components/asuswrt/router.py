@@ -1,9 +1,10 @@
 """Represent the AsusWrt router."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from aioasuswrt.asuswrt import AsusWrt
 

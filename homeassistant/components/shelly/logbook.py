@@ -1,7 +1,7 @@
 """Describe Shelly logbook events."""
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, callback

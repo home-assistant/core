@@ -81,7 +81,6 @@ from homeassistant.components.http.ban import (
 )
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.const import HTTP_METHOD_NOT_ALLOWED
 
 from . import indieauth
 
@@ -131,8 +130,7 @@ def _prepare_result_json(result):
 
     data = result.copy()
 
-    schema = data["data_schema"]
-    if schema is None:
+    if (schema := data["data_schema"]) is None:
         data["data_schema"] = []
     else:
         data["data_schema"] = voluptuous_serialize.convert(schema)
@@ -155,7 +153,7 @@ class LoginFlowIndexView(HomeAssistantView):
     async def get(self, request):
         """Do not allow index of flows in progress."""
         # pylint: disable=no-self-use
-        return web.Response(status=HTTP_METHOD_NOT_ALLOWED)
+        return web.Response(status=HTTPStatus.METHOD_NOT_ALLOWED)
 
     @RequestDataValidator(
         vol.Schema(

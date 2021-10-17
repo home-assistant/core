@@ -1,9 +1,10 @@
 """Base class for IKEA TRADFRI."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from functools import wraps
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from pytradfri.command import Command
 from pytradfri.device import Device

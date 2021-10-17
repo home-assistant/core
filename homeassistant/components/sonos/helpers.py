@@ -1,9 +1,10 @@
 """Helper methods for common tasks."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import functools as ft
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from soco.exceptions import SoCoException, SoCoUPnPException
 

@@ -10,7 +10,7 @@
         "error": {
             "discovery_error": "Gagal menemukan Network Receiver AVR Denon"
         },
-        "flow_title": "Network Receiver Denon AVR: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "description": "Konfirmasikan penambahan Receiver",

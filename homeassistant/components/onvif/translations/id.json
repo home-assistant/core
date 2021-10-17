@@ -18,6 +18,15 @@
                 },
                 "title": "Konfigurasikan autentikasi"
             },
+            "configure": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nama",
+                    "password": "Kata Sandi",
+                    "port": "Port",
+                    "username": "Nama Pengguna"
+                }
+            },
             "configure_profile": {
                 "data": {
                     "include": "Buat entitas kamera"

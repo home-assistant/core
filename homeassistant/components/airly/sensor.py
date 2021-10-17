@@ -1,8 +1,9 @@
 """Support for the Airly sensor service."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,

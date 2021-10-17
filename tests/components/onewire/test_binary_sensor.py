@@ -6,7 +6,6 @@ import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.onewire.binary_sensor import DEVICE_BINARY_SENSORS
-from homeassistant.setup import async_setup_component
 
 from . import setup_onewire_patched_owserver_integration, setup_owproxy_mock_devices
 from .const import MOCK_OWPROXY_DEVICES
@@ -27,7 +26,7 @@ async def test_owserver_binary_sensor(owproxy, hass, device_id):
 
     This test forces all entities to be enabled.
     """
-    await async_setup_component(hass, "persistent_notification", {})
+
     entity_registry = mock_registry(hass)
 
     setup_owproxy_mock_devices(owproxy, BINARY_SENSOR_DOMAIN, [device_id])

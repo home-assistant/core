@@ -66,6 +66,7 @@ async def test_run_number_setup(hass, mqtt_mock):
                 "state_topic": topic,
                 "command_topic": topic,
                 "name": "Test Number",
+                "payload_reset": "reset!",
             }
         },
     )
@@ -84,6 +85,13 @@ async def test_run_number_setup(hass, mqtt_mock):
 
     state = hass.states.get("number.test_number")
     assert state.state == "20.5"
+
+    async_fire_mqtt_message(hass, topic, "reset!")
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("number.test_number")
+    assert state.state == "unknown"
 
 
 async def test_value_template(hass, mqtt_mock):
@@ -117,6 +125,13 @@ async def test_value_template(hass, mqtt_mock):
 
     state = hass.states.get("number.test_number")
     assert state.state == "20.5"
+
+    async_fire_mqtt_message(hass, topic, '{"val":null}')
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("number.test_number")
+    assert state.state == "unknown"
 
 
 async def test_run_number_service_optimistic(hass, mqtt_mock):

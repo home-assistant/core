@@ -25,7 +25,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import ValloxStateProxy
-from .const import DOMAIN, METRIC_KEY_MODE, MODE_ON, SIGNAL_VALLOX_STATE_UPDATE
+from .const import (
+    DOMAIN,
+    METRIC_KEY_MODE,
+    MODE_ON,
+    SIGNAL_VALLOX_STATE_UPDATE,
+    VALLOX_PROFILE_TO_STR_REPORTABLE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,9 +71,7 @@ class ValloxSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Fetch state from the ventilation unit."""
-        metric_key = self.entity_description.metric_key
-
-        if metric_key is None:
+        if (metric_key := self.entity_description.metric_key) is None:
             self._attr_available = False
             _LOGGER.error("Error updating sensor. Empty metric key")
             return
@@ -89,13 +93,14 @@ class ValloxProfileSensor(ValloxSensor):
     async def async_update(self) -> None:
         """Fetch state from the ventilation unit."""
         try:
-            self._attr_native_value = self._state_proxy.get_profile()
+            vallox_profile = self._state_proxy.get_profile()
 
         except OSError as err:
             self._attr_available = False
             _LOGGER.error("Error updating sensor: %s", err)
             return
 
+        self._attr_native_value = VALLOX_PROFILE_TO_STR_REPORTABLE.get(vallox_profile)
         self._attr_available = True
 
 

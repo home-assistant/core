@@ -1,7 +1,8 @@
 """Support for IKEA Tradfri lights."""
 from __future__ import annotations
 
-from typing import Any, Callable, cast
+from collections.abc import Callable
+from typing import Any, cast
 
 from pytradfri.command import Command
 
@@ -258,8 +259,7 @@ class TradfriLight(TradfriBaseDevice, LightEntity):
                 transition_time = None
 
         # HSB can always be set, but color temp + brightness is bulb dependent
-        command = dimmer_command
-        if command is not None:
+        if (command := dimmer_command) is not None:
             command += color_command
         else:
             command = color_command

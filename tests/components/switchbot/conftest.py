@@ -12,18 +12,41 @@ class MocGetSwitchbotDevices:
         """Get switchbot devices class constructor."""
         self._interface = interface
         self._all_services_data = {
-            "mac_address": "e7:89:43:99:99:99",
-            "Flags": "06",
-            "Manufacturer": "5900e78943d9fe7c",
-            "Complete 128b Services": "cba20d00-224d-11e6-9fb8-0002a5d5c51b",
-            "data": {
-                "switchMode": "true",
-                "isOn": "true",
-                "battery": 91,
-                "rssi": -71,
+            "e78943999999": {
+                "mac_address": "e7:89:43:99:99:99",
+                "Flags": "06",
+                "Manufacturer": "5900e78943d9fe7c",
+                "Complete 128b Services": "cba20d00-224d-11e6-9fb8-0002a5d5c51b",
+                "data": {
+                    "switchMode": "true",
+                    "isOn": "true",
+                    "battery": 91,
+                    "rssi": -71,
+                },
+                "model": "H",
+                "modelName": "WoHand",
             },
-            "model": "H",
-            "modelName": "WoHand",
+            "e78943909090": {
+                "mac_address": "e7:89:43:90:90:90",
+                "Flags": "06",
+                "Manufacturer": "5900e78943d9fe7c",
+                "Complete 128b Services": "cba20d00-224d-11e6-9fb8-0002a5d5c51b",
+                "data": {
+                    "calibration": True,
+                    "battery": 74,
+                    "position": 100,
+                    "lightLevel": 2,
+                    "rssi": -73,
+                },
+                "model": "c",
+                "modelName": "WoCurtain",
+            },
+            "ffffff19ffff": {
+                "mac_address": "ff:ff:ff:19:ff:ff",
+                "Flags": "06",
+                "Manufacturer": "5900ffffff19ffff",
+                "Complete 128b Services": "cba20d00-224d-11e6-9fb8-0002a5d5c51b",
+            },
         }
         self._curtain_all_services_data = {
             "mac_address": "e7:89:43:90:90:90",
@@ -90,6 +113,5 @@ def switchbot_config_flow(hass):
         instance = mock_switchbot.return_value
 
         instance.discover = MagicMock(return_value=True)
-        instance.get_device_data = MagicMock(return_value=True)
 
         yield mock_switchbot

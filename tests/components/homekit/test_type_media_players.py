@@ -1,5 +1,7 @@
 """Test different accessory types: Media Players."""
 
+import pytest
+
 from homeassistant.components.homekit.const import (
     ATTR_KEY_NAME,
     ATTR_VALUE,
@@ -353,8 +355,9 @@ async def test_media_player_television(hass, hk_driver, events, caplog):
 
     hass.bus.async_listen(EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED, listener)
 
-    await hass.async_add_executor_job(acc.char_remote_key.client_update_value, 20)
-    await hass.async_block_till_done()
+    with pytest.raises(ValueError):
+        await hass.async_add_executor_job(acc.char_remote_key.client_update_value, 20)
+        await hass.async_block_till_done()
 
     await hass.async_add_executor_job(acc.char_remote_key.client_update_value, 7)
     await hass.async_block_till_done()

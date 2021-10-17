@@ -72,9 +72,12 @@ async def test_setup(hass):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
 
-        all_states = hass.states.async_all()
         # 3 geolocation and 1 sensor entities
-        assert len(all_states) == 4
+        assert (
+            len(hass.states.async_entity_ids("geo_location"))
+            + len(hass.states.async_entity_ids("sensor"))
+            == 4
+        )
         entity_registry = er.async_get(hass)
         assert len(entity_registry.entities) == 4
 
@@ -136,25 +139,32 @@ async def test_setup(hass):
         async_fire_time_changed(hass, utcnow + DEFAULT_SCAN_INTERVAL)
         await hass.async_block_till_done()
 
-        all_states = hass.states.async_all()
-        assert len(all_states) == 4
-
+        assert (
+            len(hass.states.async_entity_ids("geo_location"))
+            + len(hass.states.async_entity_ids("sensor"))
+            == 4
+        )
         # Simulate an update - empty data, but successful update,
         # so no changes to entities.
         mock_feed_update.return_value = "OK_NO_DATA", None
         async_fire_time_changed(hass, utcnow + 2 * DEFAULT_SCAN_INTERVAL)
         await hass.async_block_till_done()
 
-        all_states = hass.states.async_all()
-        assert len(all_states) == 4
-
+        assert (
+            len(hass.states.async_entity_ids("geo_location"))
+            + len(hass.states.async_entity_ids("sensor"))
+            == 4
+        )
         # Simulate an update - empty data, removes all entities
         mock_feed_update.return_value = "ERROR", None
         async_fire_time_changed(hass, utcnow + 3 * DEFAULT_SCAN_INTERVAL)
         await hass.async_block_till_done()
 
-        all_states = hass.states.async_all()
-        assert len(all_states) == 1
+        assert (
+            len(hass.states.async_entity_ids("geo_location"))
+            + len(hass.states.async_entity_ids("sensor"))
+            == 1
+        )
         assert len(entity_registry.entities) == 1
 
 
@@ -178,8 +188,11 @@ async def test_setup_imperial(hass):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
 
-        all_states = hass.states.async_all()
-        assert len(all_states) == 2
+        assert (
+            len(hass.states.async_entity_ids("geo_location"))
+            + len(hass.states.async_entity_ids("sensor"))
+            == 2
+        )
 
         # Test conversion of 200 miles to kilometers.
         feeds = hass.data[DOMAIN][FEED]

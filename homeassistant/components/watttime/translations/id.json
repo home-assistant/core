@@ -1,0 +1,26 @@
+{
+    "config": {
+        "step": {
+            "coordinates": {
+                "data": {
+                    "latitude": "Lintang",
+                    "longitude": "Bujur"
+                },
+                "description": "Masukkan lintang dan bujur untuk dipantau:"
+            },
+            "location": {
+                "data": {
+                    "location_type": "Lokasi"
+                },
+                "description": "Pilih lokasi untuk dipantau:"
+            },
+            "user": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Masukkan nama pengguna dan kata sandi Anda:"
+            }
+        }
+    }
+}

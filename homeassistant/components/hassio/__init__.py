@@ -43,7 +43,6 @@ from .const import (
     ATTR_PASSWORD,
     ATTR_REPOSITORY,
     ATTR_SLUG,
-    ATTR_SNAPSHOT,
     ATTR_URL,
     ATTR_VERSION,
     DOMAIN,
@@ -87,8 +86,6 @@ SERVICE_ADDON_UPDATE = "addon_update"
 SERVICE_ADDON_STDIN = "addon_stdin"
 SERVICE_HOST_SHUTDOWN = "host_shutdown"
 SERVICE_HOST_REBOOT = "host_reboot"
-SERVICE_SNAPSHOT_FULL = "snapshot_full"
-SERVICE_SNAPSHOT_PARTIAL = "snapshot_partial"
 SERVICE_BACKUP_FULL = "backup_full"
 SERVICE_BACKUP_PARTIAL = "backup_partial"
 SERVICE_RESTORE_FULL = "restore_full"
@@ -116,11 +113,9 @@ SCHEMA_BACKUP_PARTIAL = SCHEMA_BACKUP_FULL.extend(
 
 SCHEMA_RESTORE_FULL = vol.Schema(
     {
-        vol.Exclusive(ATTR_SLUG, ATTR_SLUG): cv.slug,
-        vol.Exclusive(ATTR_SNAPSHOT, ATTR_SLUG): cv.slug,
+        vol.Required(ATTR_SLUG): cv.slug,
         vol.Optional(ATTR_PASSWORD): cv.string,
-    },
-    cv.has_at_least_one_key(ATTR_SLUG, ATTR_SNAPSHOT),
+    }
 )
 
 SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend(
@@ -137,7 +132,7 @@ class APIEndpointSettings(NamedTuple):
 
     command: str
     schema: vol.Schema
-    timeout: int = 60
+    timeout: int | None = 60
     pass_data: bool = False
 
 
@@ -154,37 +149,25 @@ MAP_SERVICE_API = {
     SERVICE_BACKUP_FULL: APIEndpointSettings(
         "/backups/new/full",
         SCHEMA_BACKUP_FULL,
-        300,
+        None,
         True,
     ),
     SERVICE_BACKUP_PARTIAL: APIEndpointSettings(
         "/backups/new/partial",
         SCHEMA_BACKUP_PARTIAL,
-        300,
+        None,
         True,
     ),
     SERVICE_RESTORE_FULL: APIEndpointSettings(
         "/backups/{slug}/restore/full",
         SCHEMA_RESTORE_FULL,
-        300,
+        None,
         True,
     ),
     SERVICE_RESTORE_PARTIAL: APIEndpointSettings(
         "/backups/{slug}/restore/partial",
         SCHEMA_RESTORE_PARTIAL,
-        300,
-        True,
-    ),
-    SERVICE_SNAPSHOT_FULL: APIEndpointSettings(
-        "/backups/new/full",
-        SCHEMA_BACKUP_FULL,
-        300,
-        True,
-    ),
-    SERVICE_SNAPSHOT_PARTIAL: APIEndpointSettings(
-        "/backups/new/partial",
-        SCHEMA_BACKUP_PARTIAL,
-        300,
+        None,
         True,
     ),
 }
@@ -418,7 +401,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     hass.data[DOMAIN] = hassio = HassIO(hass.loop, websession, host)
 
     if not await hassio.is_connected():
-        _LOGGER.warning("Not connected with Hass.io / system too busy!")
+        _LOGGER.warning("Not connected with the supervisor / system too busy!")
 
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
     data = await store.async_load()
@@ -489,22 +472,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         """Handle service calls for Hass.io."""
         api_endpoint = MAP_SERVICE_API[service.service]
 
-        if "snapshot" in service.service:
-            _LOGGER.warning(
-                "The service '%s' is deprecated and will be removed in Home Assistant 2021.11, use '%s' instead",
-                service.service,
-                service.service.replace("snapshot", "backup"),
-            )
         data = service.data.copy()
         addon = data.pop(ATTR_ADDON, None)
         slug = data.pop(ATTR_SLUG, None)
-        snapshot = data.pop(ATTR_SNAPSHOT, None)
-        if snapshot is not None:
-            _LOGGER.warning(
-                "Using 'snapshot' is deprecated and will be removed in Home Assistant 2021.11, use 'slug' instead"
-            )
-            slug = snapshot
-
         payload = None
 
         # Pass data to Hass.io API
@@ -520,8 +490,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 payload=payload,
                 timeout=api_endpoint.timeout,
             )
-        except HassioAPIError as err:
-            _LOGGER.error("Error on Supervisor API: %s", err)
+        except HassioAPIError:
+            # The exceptions are logged properly in hassio.send_command
+            pass
 
     for service, settings in MAP_SERVICE_API.items():
         hass.services.async_register(

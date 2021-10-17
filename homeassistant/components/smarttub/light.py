@@ -1,6 +1,4 @@
 """Platform for light integration."""
-import logging
-
 from smarttub import SpaLight
 
 from homeassistant.components.light import (
@@ -21,8 +19,6 @@ from .const import (
 )
 from .entity import SmartTubEntity
 from .helpers import get_spa_name
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
