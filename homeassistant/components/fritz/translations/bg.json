@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "start_config": {
+                "data": {
+                    "port": "\u041f\u043e\u0440\u0442"
+                }
+            },
+            "user": {
+                "data": {
+                    "port": "\u041f\u043e\u0440\u0442"
+                }
+            }
+        }
+    }
+}

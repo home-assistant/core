@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 import logging
 import re
 
-from env_canada import ECData
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -17,23 +16,20 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
+from . import trigger_import
+from .const import ATTR_STATION, CONF_ATTRIBUTION, CONF_LANGUAGE, CONF_STATION, DOMAIN
 
 SCAN_INTERVAL = timedelta(minutes=10)
-
 ATTR_UPDATED = "updated"
-ATTR_STATION = "station"
 ATTR_TIME = "alert time"
 
-CONF_ATTRIBUTION = "Data provided by Environment Canada"
-CONF_STATION = "station"
-CONF_LANGUAGE = "language"
+_LOGGER = logging.getLogger(__name__)
 
 
 def validate_station(station):
     """Check that the station ID is well-formed."""
     if station is None:
-        return
+        return None
     if not re.fullmatch(r"[A-Z]{2}/s0000\d{3}", station):
         raise vol.error.Invalid('Station ID must be of the form "XX/s0000###"')
     return station
@@ -49,46 +45,44 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Environment Canada sensor."""
+    trigger_import(hass, config)
 
-    if config.get(CONF_STATION):
-        ec_data = ECData(
-            station_id=config[CONF_STATION], language=config.get(CONF_LANGUAGE)
-        )
-    else:
-        lat = config.get(CONF_LATITUDE, hass.config.latitude)
-        lon = config.get(CONF_LONGITUDE, hass.config.longitude)
-        ec_data = ECData(coordinates=(lat, lon), language=config.get(CONF_LANGUAGE))
 
-    sensor_list = list(ec_data.conditions) + list(ec_data.alerts)
-    add_entities([ECSensor(sensor_type, ec_data) for sensor_type in sensor_list], True)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Add a weather entity from a config_entry."""
+    weather_data = hass.data[DOMAIN][config_entry.entry_id]["weather_data"]
+    sensor_list = list(weather_data.conditions) + list(weather_data.alerts)
+
+    async_add_entities(
+        [
+            ECSensor(
+                sensor_type,
+                f"{config_entry.title} {sensor_type}",
+                weather_data,
+                f"{weather_data.metadata['location']}-{sensor_type}",
+            )
+            for sensor_type in sensor_list
+        ],
+        True,
+    )
 
 
 class ECSensor(SensorEntity):
     """Implementation of an Environment Canada sensor."""
 
-    def __init__(self, sensor_type, ec_data):
+    def __init__(self, sensor_type, name, ec_data, unique_id):
         """Initialize the sensor."""
         self.sensor_type = sensor_type
         self.ec_data = ec_data
 
-        self._unique_id = None
-        self._name = None
+        self._attr_unique_id = unique_id
+        self._attr_name = name
         self._state = None
         self._attr = None
         self._unit = None
         self._device_class = None
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of the sensor."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def native_value(self):
@@ -119,9 +113,7 @@ class ECSensor(SensorEntity):
         metadata = self.ec_data.metadata
         sensor_data = conditions.get(self.sensor_type)
 
-        self._unique_id = f"{metadata['location']}-{self.sensor_type}"
         self._attr = {}
-        self._name = sensor_data.get("label")
         value = sensor_data.get("value")
 
         if isinstance(value, list):
@@ -133,7 +125,9 @@ class ECSensor(SensorEntity):
             self._state = str(value).capitalize()
         elif value is not None and len(value) > 255:
             self._state = value[:255]
-            _LOGGER.info("Value for %s truncated to 255 characters", self._unique_id)
+            _LOGGER.info(
+                "Value for %s truncated to 255 characters", self._attr_unique_id
+            )
         else:
             self._state = value
 

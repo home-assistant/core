@@ -41,7 +41,13 @@ from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from .conftest import TEST_ENTITY_NAME, TEST_MODBUS_HOST, TEST_PORT_TCP, ReadResult
+from .conftest import (
+    TEST_ENTITY_NAME,
+    TEST_MODBUS_HOST,
+    TEST_PORT_TCP,
+    ReadResult,
+    do_next_cycle,
+)
 
 from tests.common import async_fire_time_changed
 
@@ -208,6 +214,45 @@ async def test_config_switch(hass, mock_modbus):
 async def test_all_switch(hass, mock_do_cycle, expected):
     """Run test for given config."""
     assert hass.states.get(ENTITY_ID).state == expected
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_SWITCHES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_SLAVE: 1,
+                    CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                    CONF_SCAN_INTERVAL: 10,
+                    CONF_LAZY_ERROR: 2,
+                    CONF_VERIFY: {},
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "register_words,do_exception,start_expect,end_expect",
+    [
+        (
+            [0x00],
+            True,
+            STATE_OFF,
+            STATE_UNAVAILABLE,
+        ),
+    ],
+)
+async def test_lazy_error_switch(hass, start_expect, end_expect, mock_do_cycle):
+    """Run test for given config."""
+    now = mock_do_cycle
+    assert hass.states.get(ENTITY_ID).state == start_expect
+    now = await do_next_cycle(hass, now, 11)
+    assert hass.states.get(ENTITY_ID).state == start_expect
+    now = await do_next_cycle(hass, now, 11)
+    assert hass.states.get(ENTITY_ID).state == end_expect
 
 
 @pytest.mark.parametrize(

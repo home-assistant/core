@@ -277,7 +277,6 @@ def wifi_entities_list(
 def profile_entities_list(
     router: FritzBoxTools,
     data_fritz: FritzData,
-    pref_disable_new_entities: bool,
 ) -> list[FritzBoxProfileSwitch]:
     """Add new tracker entities from the router."""
 
@@ -291,7 +290,7 @@ def profile_entities_list(
 
     for mac, device in router.devices.items():
         if device_filter_out_from_trackers(
-            mac, device, pref_disable_new_entities, data_fritz.profile_switches.values()
+            mac, device, data_fritz.profile_switches.values()
         ):
             continue
 
@@ -306,14 +305,13 @@ def all_entities_list(
     device_friendly_name: str,
     data_fritz: FritzData,
     local_ip: str,
-    pref_disable_new_entities: bool,
 ) -> list[Entity]:
     """Get a list of all entities."""
     return [
         *deflection_entities_list(fritzbox_tools, device_friendly_name),
         *port_entities_list(fritzbox_tools, device_friendly_name, local_ip),
         *wifi_entities_list(fritzbox_tools, device_friendly_name),
-        *profile_entities_list(fritzbox_tools, data_fritz, pref_disable_new_entities),
+        *profile_entities_list(fritzbox_tools, data_fritz),
     ]
 
 
@@ -337,7 +335,6 @@ async def async_setup_entry(
         entry.title,
         data_fritz,
         local_ip,
-        entry.pref_disable_new_entities,
     )
 
     async_add_entities(entities_list)
@@ -345,11 +342,7 @@ async def async_setup_entry(
     @callback
     def update_router() -> None:
         """Update the values of the router."""
-        async_add_entities(
-            profile_entities_list(
-                fritzbox_tools, data_fritz, entry.pref_disable_new_entities
-            )
-        )
+        async_add_entities(profile_entities_list(fritzbox_tools, data_fritz))
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, fritzbox_tools.signal_device_new, update_router)

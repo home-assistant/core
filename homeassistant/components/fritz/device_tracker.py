@@ -80,9 +80,7 @@ async def async_setup_entry(
     @callback
     def update_router() -> None:
         """Update the values of the router."""
-        _async_add_entities(
-            router, async_add_entities, data_fritz, entry.pref_disable_new_entities
-        )
+        _async_add_entities(router, async_add_entities, data_fritz)
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, router.signal_device_new, update_router)
@@ -96,7 +94,6 @@ def _async_add_entities(
     router: FritzBoxTools,
     async_add_entities: AddEntitiesCallback,
     data_fritz: FritzData,
-    pref_disable_new_entities: bool,
 ) -> None:
     """Add new tracker entities from the router."""
 
@@ -105,9 +102,7 @@ def _async_add_entities(
         data_fritz.tracked[router.unique_id] = set()
 
     for mac, device in router.devices.items():
-        if device_filter_out_from_trackers(
-            mac, device, pref_disable_new_entities, data_fritz.tracked.values()
-        ):
+        if device_filter_out_from_trackers(mac, device, data_fritz.tracked.values()):
             continue
 
         new_tracked.append(FritzBoxTracker(router, device))

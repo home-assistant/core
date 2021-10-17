@@ -74,14 +74,15 @@ class VerisureThermometer(CoordinatorEntity, SensorEntity):
             "deviceType"
         )
         area = self.coordinator.data["climate"][self.serial_number]["deviceArea"]
-        return {
-            "name": area,
-            "suggested_area": area,
-            "manufacturer": "Verisure",
-            "model": DEVICE_TYPE_NAME.get(device_type, device_type),
-            "identifiers": {(DOMAIN, self.serial_number)},
-            "via_device": (DOMAIN, self.coordinator.entry.data[CONF_GIID]),
-        }
+        return DeviceInfo(
+            name=area,
+            suggested_area=area,
+            manufacturer="Verisure",
+            model=DEVICE_TYPE_NAME.get(device_type, device_type),
+            identifiers={(DOMAIN, self.serial_number)},
+            via_device=(DOMAIN, self.coordinator.entry.data[CONF_GIID]),
+            configuration_url="https://mypages.verisure.com",
+        )
 
     @property
     def native_value(self) -> str | None:
@@ -127,14 +128,15 @@ class VerisureHygrometer(CoordinatorEntity, SensorEntity):
             "deviceType"
         )
         area = self.coordinator.data["climate"][self.serial_number]["deviceArea"]
-        return {
-            "name": area,
-            "suggested_area": area,
-            "manufacturer": "Verisure",
-            "model": DEVICE_TYPE_NAME.get(device_type, device_type),
-            "identifiers": {(DOMAIN, self.serial_number)},
-            "via_device": (DOMAIN, self.coordinator.entry.data[CONF_GIID]),
-        }
+        return DeviceInfo(
+            name=area,
+            suggested_area=area,
+            manufacturer="Verisure",
+            model=DEVICE_TYPE_NAME.get(device_type, device_type),
+            identifiers={(DOMAIN, self.serial_number)},
+            via_device=(DOMAIN, self.coordinator.entry.data[CONF_GIID]),
+            configuration_url="https://mypages.verisure.com",
+        )
 
     @property
     def native_value(self) -> str | None:
@@ -176,14 +178,15 @@ class VerisureMouseDetection(CoordinatorEntity, SensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         area = self.coordinator.data["mice"][self.serial_number]["area"]
-        return {
-            "name": area,
-            "suggested_area": area,
-            "manufacturer": "Verisure",
-            "model": "Mouse detector",
-            "identifiers": {(DOMAIN, self.serial_number)},
-            "via_device": (DOMAIN, self.coordinator.entry.data[CONF_GIID]),
-        }
+        return DeviceInfo(
+            name=area,
+            suggested_area=area,
+            manufacturer="Verisure",
+            model="Mouse detector",
+            identifiers={(DOMAIN, self.serial_number)},
+            via_device=(DOMAIN, self.coordinator.entry.data[CONF_GIID]),
+            configuration_url="https://mypages.verisure.com",
+        )
 
     @property
     def native_value(self) -> str | None:

@@ -6,6 +6,7 @@
             "auth_missing": "Home Assistantil pole selle Samsungi teleriga \u00fchenduse loomiseks luba. Home Assistanti autoriseerimiseks kontrolli oma teleri seadeid.",
             "cannot_connect": "\u00dchendamine nurjus",
             "id_missing": "Sellel Samsungi seadmel puudub seerianumber.",
+            "missing_config_entry": "Sellel Samsungi seadmel puudub seadekirje.",
             "not_supported": "Seda Samsungi seadet praegu ei toetata.",
             "reauth_successful": "Taastuvastamine \u00f5nnestus",
             "unknown": "Tundmatu t\u00f5rge"

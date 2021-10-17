@@ -25,6 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -58,6 +59,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the OpenGarage covers."""
+    _LOGGER.warning(
+        "Open Garage YAML configuration is deprecated, "
+        "it has been imported into the UI automatically and can be safely removed"
+    )
     devices = config.get(CONF_COVERS)
     for device_config in devices.values():
         hass.async_create_task(
@@ -181,9 +186,9 @@ class OpenGarageCover(CoordinatorEntity, CoverEntity):
     @property
     def device_info(self):
         """Return the device_info of the device."""
-        device_info = {
-            "identifiers": {(DOMAIN, self._device_id)},
-            "name": self._device_name,
-            "manufacturer": "Open Garage",
-        }
+        device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            name=self._device_name,
+            manufacturer="Open Garage",
+        )
         return device_info

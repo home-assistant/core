@@ -1,4 +1,5 @@
 """Support for DoorBird devices."""
+from http import HTTPStatus
 import logging
 
 from aiohttp import web
@@ -153,7 +154,7 @@ def _init_doorbird_device(device):
     return device.ready(), device.info()
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
     hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
@@ -332,7 +333,7 @@ class DoorBirdRequestView(HomeAssistantView):
 
         if device is None:
             return web.Response(
-                status=HTTP_UNAUTHORIZED, text="Invalid token provided."
+                status=HTTPStatus.UNAUTHORIZED, text="Invalid token provided."
             )
 
         if device:

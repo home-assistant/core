@@ -67,17 +67,18 @@ async def websocket_update_device(hass, connection, msg):
 def _entry_dict(entry):
     """Convert entry to API format."""
     return {
+        "area_id": entry.area_id,
+        "configuration_url": entry.configuration_url,
         "config_entries": list(entry.config_entries),
         "connections": list(entry.connections),
-        "manufacturer": entry.manufacturer,
-        "model": entry.model,
-        "name": entry.name,
-        "sw_version": entry.sw_version,
+        "disabled_by": entry.disabled_by,
         "entry_type": entry.entry_type,
         "id": entry.id,
         "identifiers": list(entry.identifiers),
-        "via_device_id": entry.via_device_id,
-        "area_id": entry.area_id,
+        "manufacturer": entry.manufacturer,
+        "model": entry.model,
         "name_by_user": entry.name_by_user,
-        "disabled_by": entry.disabled_by,
+        "name": entry.name,
+        "sw_version": entry.sw_version,
+        "via_device_id": entry.via_device_id,
     }

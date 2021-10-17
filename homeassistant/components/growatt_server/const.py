@@ -16,3 +16,5 @@ DEFAULT_URL = SERVER_URLS[0]
 DOMAIN = "growatt_server"
 
 PLATFORMS = ["sensor"]
+
+LOGIN_INVALID_AUTH_CODE = "502"

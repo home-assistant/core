@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-import logging
 import struct
 from typing import Any
 
@@ -35,17 +34,11 @@ from .const import (
     CONF_MIN_TEMP,
     CONF_STEP,
     CONF_TARGET_TEMP,
-    DATA_TYPE_INT16,
-    DATA_TYPE_INT32,
-    DATA_TYPE_INT64,
-    DATA_TYPE_UINT16,
-    DATA_TYPE_UINT32,
-    DATA_TYPE_UINT64,
+    DataType,
 )
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
@@ -115,12 +108,12 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             float(kwargs[ATTR_TEMPERATURE]) - self._offset
         ) / self._scale
         if self._data_type in (
-            DATA_TYPE_INT16,
-            DATA_TYPE_INT32,
-            DATA_TYPE_INT64,
-            DATA_TYPE_UINT16,
-            DATA_TYPE_UINT32,
-            DATA_TYPE_UINT64,
+            DataType.INT16,
+            DataType.INT32,
+            DataType.INT64,
+            DataType.UINT16,
+            DataType.UINT32,
+            DataType.UINT64,
         ):
             target_temperature = int(target_temperature)
         as_bytes = struct.pack(self._structure, target_temperature)

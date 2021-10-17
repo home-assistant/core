@@ -1,5 +1,6 @@
 """Tests for the HTTP API for the cloud component."""
 import asyncio
+from http import HTTPStatus
 from ipaddress import ip_network
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
@@ -412,7 +413,7 @@ async def test_websocket_subscription_fail(
     hass, hass_ws_client, aioclient_mock, mock_auth, mock_cloud_login
 ):
     """Test querying the status."""
-    aioclient_mock.get(SUBSCRIPTION_INFO_URL, status=HTTP_INTERNAL_SERVER_ERROR)
+    aioclient_mock.get(SUBSCRIPTION_INFO_URL, status=HTTPStatus.INTERNAL_SERVER_ERROR)
     client = await hass_ws_client(hass)
     await client.send_json({"id": 5, "type": "cloud/subscription"})
     response = await client.receive_json()

@@ -54,7 +54,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 @deprecated_function("homeassistant.components.recorder.history.get_significant_states")
 def get_significant_states(hass, *args, **kwargs):
-    """Wrap _get_significant_states with an sql session."""
+    """Wrap get_significant_states_with_session with an sql session."""
     return history.get_significant_states(hass, *args, **kwargs)
 
 
@@ -268,18 +268,16 @@ class HistoryPeriodView(HomeAssistantView):
         timer_start = time.perf_counter()
 
         with session_scope(hass=hass) as session:
-            result = (
-                history._get_significant_states(  # pylint: disable=protected-access
-                    hass,
-                    session,
-                    start_time,
-                    end_time,
-                    entity_ids,
-                    self.filters,
-                    include_start_time_state,
-                    significant_changes_only,
-                    minimal_response,
-                )
+            result = history.get_significant_states_with_session(
+                hass,
+                session,
+                start_time,
+                end_time,
+                entity_ids,
+                self.filters,
+                include_start_time_state,
+                significant_changes_only,
+                minimal_response,
             )
 
         result = list(result.values())

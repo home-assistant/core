@@ -3,7 +3,7 @@ from unittest.mock import NonCallableMagicMock, patch
 
 from surepy.exceptions import SurePetcareAuthenticationError, SurePetcareError
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.surepetcare.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
@@ -14,10 +14,15 @@ from homeassistant.data_entry_flow import (
 
 from tests.common import MockConfigEntry
 
+INPUT_DATA = {
+    "username": "test-username",
+    "password": "test-password",
+}
+
 
 async def test_form(hass: HomeAssistant, surepetcare: NonCallableMagicMock) -> None:
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -54,7 +59,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "surepy.client.SureAPIClient.get_token",
+        "homeassistant.components.surepetcare.config_flow.surepy.client.SureAPIClient.get_token",
         side_effect=SurePetcareAuthenticationError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -76,7 +81,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "surepy.client.SureAPIClient.get_token",
+        "homeassistant.components.surepetcare.config_flow.surepy.client.SureAPIClient.get_token",
         side_effect=SurePetcareError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -98,7 +103,7 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "surepy.client.SureAPIClient.get_token",
+        "homeassistant.components.surepetcare.config_flow.surepy.client.SureAPIClient.get_token",
         side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -142,3 +147,154 @@ async def test_flow_entry_already_exists(
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_reauthentication(hass):
+    """Test surepetcare reauthentication."""
+    old_entry = MockConfigEntry(
+        domain="surepetcare",
+        data=INPUT_DATA,
+        unique_id="test-username",
+    )
+    old_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": old_entry.unique_id,
+            "entry_id": old_entry.entry_id,
+        },
+        data=old_entry.data,
+    )
+
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "homeassistant.components.surepetcare.config_flow.surepy.client.SureAPIClient.get_token",
+        return_value={"token": "token"},
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"password": "test-password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "reauth_successful"
+
+
+async def test_reauthentication_failure(hass):
+    """Test surepetcare reauthentication failure."""
+    old_entry = MockConfigEntry(
+        domain="surepetcare",
+        data=INPUT_DATA,
+        unique_id="USERID",
+    )
+    old_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": old_entry.unique_id,
+            "entry_id": old_entry.entry_id,
+        },
+        data=old_entry.data,
+    )
+
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "homeassistant.components.surepetcare.config_flow.surepy.client.SureAPIClient.get_token",
+        side_effect=SurePetcareAuthenticationError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"password": "test-password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["step_id"] == "reauth_confirm"
+    assert result["type"] == "form"
+    assert result2["errors"]["base"] == "invalid_auth"
+
+
+async def test_reauthentication_cannot_connect(hass):
+    """Test surepetcare reauthentication failure."""
+    old_entry = MockConfigEntry(
+        domain="surepetcare",
+        data=INPUT_DATA,
+        unique_id="USERID",
+    )
+    old_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": old_entry.unique_id,
+            "entry_id": old_entry.entry_id,
+        },
+        data=old_entry.data,
+    )
+
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "homeassistant.components.surepetcare.config_flow.surepy.client.SureAPIClient.get_token",
+        side_effect=SurePetcareError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"password": "test-password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["step_id"] == "reauth_confirm"
+    assert result["type"] == "form"
+    assert result2["errors"]["base"] == "cannot_connect"
+
+
+async def test_reauthentication_unknown_failure(hass):
+    """Test surepetcare reauthentication failure."""
+    old_entry = MockConfigEntry(
+        domain="surepetcare",
+        data=INPUT_DATA,
+        unique_id="USERID",
+    )
+    old_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": old_entry.unique_id,
+            "entry_id": old_entry.entry_id,
+        },
+        data=old_entry.data,
+    )
+
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "homeassistant.components.surepetcare.config_flow.surepy.client.SureAPIClient.get_token",
+        side_effect=Exception,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"password": "test-password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["step_id"] == "reauth_confirm"
+    assert result["type"] == "form"
+    assert result2["errors"]["base"] == "unknown"

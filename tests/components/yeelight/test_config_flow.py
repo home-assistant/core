@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.yeelight import (
     CONF_MODE_MUSIC,
     CONF_MODEL,
@@ -402,7 +402,6 @@ async def test_manual_no_capabilities(hass: HomeAssistant):
 
 async def test_discovered_by_homekit_and_dhcp(hass):
     """Test we get the form with homekit and abort for dhcp source when we get both."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     mocked_bulb = _mocked_bulb()
     with _patch_discovery(), _patch_discovery_interval(), patch(
@@ -471,7 +470,6 @@ async def test_discovered_by_homekit_and_dhcp(hass):
 )
 async def test_discovered_by_dhcp_or_homekit(hass, source, data):
     """Test we can setup when discovered from dhcp or homekit."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     mocked_bulb = _mocked_bulb()
     with _patch_discovery(), _patch_discovery_interval(), patch(
@@ -518,7 +516,6 @@ async def test_discovered_by_dhcp_or_homekit(hass, source, data):
 )
 async def test_discovered_by_dhcp_or_homekit_failed_to_get_id(hass, source, data):
     """Test we abort if we cannot get the unique id when discovered from dhcp or homekit."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     mocked_bulb = _mocked_bulb()
     with _patch_discovery(
@@ -535,7 +532,6 @@ async def test_discovered_by_dhcp_or_homekit_failed_to_get_id(hass, source, data
 
 async def test_discovered_ssdp(hass):
     """Test we can setup when discovered from ssdp."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     mocked_bulb = _mocked_bulb()
     with _patch_discovery(), _patch_discovery_interval(), patch(
@@ -581,7 +577,6 @@ async def test_discovered_ssdp(hass):
 
 async def test_discovered_zeroconf(hass):
     """Test we can setup when discovered from zeroconf."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     mocked_bulb = _mocked_bulb()
     with _patch_discovery(), _patch_discovery_interval(), patch(

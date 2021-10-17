@@ -120,7 +120,7 @@ class NetgearRouter:
         self.device_name = None
         self.firmware_version = None
 
-        self._method_version = 1
+        self.method_version = 1
         consider_home_int = entry.options.get(
             CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
         )
@@ -146,8 +146,9 @@ class NetgearRouter:
         self.model = self._info.get("ModelName")
         self.firmware_version = self._info.get("Firmwareversion")
 
-        if self.model in MODELS_V2:
-            self._method_version = 2
+        for model in MODELS_V2:
+            if self.model.startswith(model):
+                self.method_version = 2
 
     async def async_setup(self) -> None:
         """Set up a Netgear router."""
@@ -185,7 +186,7 @@ class NetgearRouter:
 
     async def async_get_attached_devices(self) -> list:
         """Get the devices connected to the router."""
-        if self._method_version == 1:
+        if self.method_version == 1:
             return await self.hass.async_add_executor_job(
                 self._api.get_attached_devices
             )
@@ -198,11 +199,11 @@ class NetgearRouter:
         ntg_devices = await self.async_get_attached_devices()
         now = dt_util.utcnow()
 
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("Netgear scan result: \n%s", ntg_devices)
+
         for ntg_device in ntg_devices:
             device_mac = format_mac(ntg_device.mac)
-
-            if self._method_version == 2 and not ntg_device.link_rate:
-                continue
 
             if not self.devices.get(device_mac):
                 new_device = True
@@ -273,8 +274,8 @@ class NetgearDeviceEntity(Entity):
         """Return the device information."""
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
-            "name": self._device_name,
-            "model": self._device["device_model"],
+            "default_name": self._device_name,
+            "default_model": self._device["device_model"],
             "via_device": (DOMAIN, self._router.unique_id),
         }
 

@@ -23,7 +23,7 @@
             },
             "setup_serial_manual_path": {
                 "data": {
-                    "device": "Ruta del port USB del dispositiu"
+                    "device": "Ruta del dispositiu USB"
                 },
                 "title": "Ruta"
             },
@@ -33,6 +33,16 @@
                 },
                 "title": "Selecciona el tipus de connexi\u00f3"
             }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "send_command": "Envia comanda: {subtype}",
+            "send_status": "Envia comanda d'estat: {subtype}"
+        },
+        "trigger_type": {
+            "command": "Comanda rebuda: {subtype}",
+            "status": "Estat rebut: {subtype}"
         }
     },
     "options": {

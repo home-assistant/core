@@ -147,7 +147,7 @@ def _set_entry_data(entry, hass, coordinator=None, device_id=None):
     }
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     use_webhook = entry.data[CONF_USE_WEBHOOK]
     hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()

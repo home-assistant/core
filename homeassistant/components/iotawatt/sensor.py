@@ -9,7 +9,7 @@ from iotawattpy.sensor import Sensor
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    STATE_CLASS_TOTAL,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -83,6 +83,7 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, IotaWattSensorEntityDescription] = {
     "WattHours": IotaWattSensorEntityDescription(
         "WattHours",
         native_unit_of_measurement=ENERGY_WATT_HOUR,
+        state_class=STATE_CLASS_TOTAL,
         device_class=DEVICE_CLASS_ENERGY,
     ),
     "VA": IotaWattSensorEntityDescription(
@@ -242,7 +243,6 @@ class IotaWattAccumulatingSensor(IotaWattSensor, RestoreEntity):
 
         super().__init__(coordinator, key, entity_description)
 
-        self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
         if self._attr_unique_id is not None:
             self._attr_unique_id += ".accumulated"
 
