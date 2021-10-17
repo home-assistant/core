@@ -8,10 +8,31 @@ from .const import DOMAIN
 from .models import LookinData
 
 
+class LookinDeviceEntity(Entity):
+    """A lookin device entity on the device itself."""
+
+    _attr_should_poll = False
+
+    def __init__(self, lookin_data: LookinData) -> None:
+        """Init the lookin device entity."""
+        super().__init__()
+        self._lookin_device = lookin_data.lookin_device
+        self._lookin_protocol = lookin_data.lookin_protocol
+        self._lookin_udp_subs = lookin_data.lookin_udp_subs
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._lookin_device.id)},
+            name=self._lookin_device.name,
+            manufacturer="LOOKin",
+            model="LOOKin 2",
+            sw_version=self._lookin_device.firmware,
+        )
+
+
 class LookinEntity(Entity):
     """A base class for lookin entities."""
 
     _attr_should_poll = False
+    _attr_assumed_state = True
 
     def __init__(
         self,

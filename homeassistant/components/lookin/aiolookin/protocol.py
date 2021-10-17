@@ -18,6 +18,8 @@ from .const import (
     INFO_URL,
     METEO_SENSOR_URL,
     SEND_IR_COMMAND,
+    SEND_IR_COMMAND_PRONTOHEX,
+    SEND_IR_COMMAND_RAW,
     UPDATE_CLIMATE_URL,
 )
 from .error import NoUsableService
@@ -28,6 +30,11 @@ LOOKIN_PORT: Final = 61201
 CLIENT_TIMEOUTS: Final = ClientTimeout(total=9, connect=8, sock_connect=7, sock_read=7)
 
 LOGGER = logging.getLogger(__name__)
+
+
+class IRFormat(Enum):
+    Raw = "raw"
+    ProntoHEX = "prontohex"
 
 
 class SensorID(Enum):
@@ -241,6 +248,15 @@ class LookInHttpProtocol:
             ),
             timeout=CLIENT_TIMEOUTS,
         )
+
+    async def send_ir(self, format: IRFormat, codes: str) -> None:
+        if format == IRFormat.ProntoHEX:
+            url = SEND_IR_COMMAND_PRONTOHEX.format(host=self._host, codes=codes)
+        elif format == IRFormat.Raw:
+            url = SEND_IR_COMMAND_RAW.format(host=self._host, codes=codes)
+        else:
+            raise ValueError(f"{format} is not a known IRFormat")
+        await self._session.get(url=url, timeout=CLIENT_TIMEOUTS)
 
     async def update_conditioner(self, climate: Climate) -> None:
         """Update the conditioner from a Climate object."""

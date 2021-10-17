@@ -68,7 +68,7 @@ class LookinFanBase(LookinPowerEntity, FanEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         await self._async_send_command(self._power_off_command)
-        self._attr_is_on = True
+        self._attr_is_on = False
         self.async_write_ha_state()
 
 

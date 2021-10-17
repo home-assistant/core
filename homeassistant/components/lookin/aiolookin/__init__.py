@@ -4,6 +4,7 @@ from .const import POWER_CMD, POWER_OFF_CMD, POWER_ON_CMD
 from .error import NoUsableService
 from .models import Climate, Device, MeteoSensor, Remote
 from .protocol import (
+    IRFormat,
     LookInHttpProtocol,
     LookinUDPSubscriptions,
     SensorID,
@@ -18,6 +19,7 @@ __all__ = [
     "Remote",
     "LookInHttpProtocol",
     "SensorID",
+    "IRFormat",
     "POWER_CMD",
     "POWER_OFF_CMD",
     "POWER_ON_CMD",
