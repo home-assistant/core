@@ -10,6 +10,8 @@ DEVICES_INFO_URL: Final = "http://{host}/data"
 DEVICE_INFO_URL: Final = "http://{host}/data/{uuid}"
 UPDATE_CLIMATE_URL: Final = "http://{host}/commands/ir/ac/{extra}{status}"
 SEND_IR_COMMAND: Final = "http://{host}/commands/ir/localremote/{uuid}{command}{signal}"
+SEND_IR_COMMAND_RAW: Final = "http://{host}/commands/ir/raw/{codes}"
+SEND_IR_COMMAND_PRONTOHEX: Final = "http://{host}/commands/ir/prontohex/{codes}"
 
 TEMP_OFFSET: Final = 16
 STATUS_OFF: Final = "0000"

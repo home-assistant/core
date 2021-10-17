@@ -19,6 +19,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .aiolookin import MeteoSensor, SensorID
 from .const import DOMAIN
+from .entity import LookinDeviceEntity
 from .models import LookinData
 
 LOGGER = logging.getLogger(__name__)
@@ -55,29 +56,19 @@ async def async_setup_entry(
     )
 
 
-class LookinSensorEntity(CoordinatorEntity, SensorEntity, Entity):
+class LookinSensorEntity(CoordinatorEntity, LookinDeviceEntity, SensorEntity, Entity):
     """A lookin device sensor entity."""
-
-    _attr_should_poll = False
 
     def __init__(
         self, description: SensorEntityDescription, lookin_data: LookinData
     ) -> None:
         """Init the lookin sensor entity."""
         super().__init__(lookin_data.meteo_coordinator)
+        LookinDeviceEntity.__init__(self, lookin_data)
         self.entity_description = description
-        self._lookin_device = lookin_data.lookin_device
-        self._lookin_udp_subs = lookin_data.lookin_udp_subs
         self._attr_name = f"{self._lookin_device.name} {description.name}"
         self._attr_native_value = getattr(self.coordinator.data, description.key)
         self._attr_unique_id = f"{self._lookin_device.id}-{description.key}"
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, self._lookin_device.id)},
-            "name": self._lookin_device.name,
-            "manufacturer": "LOOKin",
-            "model": "LOOKin 2",
-            "sw_version": self._lookin_device.firmware,
-        }
 
     def _handle_coordinator_update(self) -> None:
         """Update the state of the entity."""
