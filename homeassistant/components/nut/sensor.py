@@ -5,7 +5,12 @@ import logging
 
 from homeassistant.components.nut import PyNUTData
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import CONF_RESOURCES, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_NAME,
+    CONF_RESOURCES,
+    STATE_UNKNOWN,
+)
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -17,9 +22,6 @@ from .const import (
     KEY_STATUS,
     KEY_STATUS_DISPLAY,
     PYNUT_DATA,
-    PYNUT_FIRMWARE,
-    PYNUT_MANUFACTURER,
-    PYNUT_MODEL,
     PYNUT_UNIQUE_ID,
     SENSOR_TYPES,
     STATE_TYPES,
@@ -32,12 +34,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the NUT sensors."""
 
     pynut_data = hass.data[DOMAIN][config_entry.entry_id]
-    unique_id = pynut_data[PYNUT_UNIQUE_ID]
-    manufacturer = pynut_data[PYNUT_MANUFACTURER]
-    model = pynut_data[PYNUT_MODEL]
-    firmware = pynut_data[PYNUT_FIRMWARE]
     coordinator = pynut_data[COORDINATOR]
     data = pynut_data[PYNUT_DATA]
+    unique_id = pynut_data[PYNUT_UNIQUE_ID]
     status = coordinator.data
 
     enabled_resources = [
@@ -52,12 +51,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = [
         NUTSensor(
             coordinator,
-            data,
             SENSOR_TYPES[sensor_type],
+            data,
             unique_id,
-            manufacturer,
-            model,
-            firmware,
             sensor_type in enabled_resources,
         )
         for sensor_type in resources
@@ -72,41 +68,24 @@ class NUTSensor(CoordinatorEntity, SensorEntity):
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
-        data: PyNUTData,
         sensor_description: SensorEntityDescription,
+        data: PyNUTData,
         unique_id: str,
-        manufacturer: str | None,
-        model: str | None,
-        firmware: str | None,
         enabled_default: bool,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = sensor_description
-        self._manufacturer = manufacturer
-        self._firmware = firmware
-        self._model = model
-        self._device_name = data.name.title()
-        self._unique_id = unique_id
 
+        device_name = data.name.title()
         self._attr_entity_registry_enabled_default = enabled_default
-        self._attr_name = f"{self._device_name} {sensor_description.name}"
+        self._attr_name = f"{device_name} {sensor_description.name}"
         self._attr_unique_id = f"{unique_id}_{sensor_description.key}"
-
-    @property
-    def device_info(self):
-        """Device info for the ups."""
-        device_info = {
-            "identifiers": {(DOMAIN, self._unique_id)},
-            "name": self._device_name,
+        self._attr_device_info = {
+            ATTR_IDENTIFIERS: {(DOMAIN, unique_id)},
+            ATTR_NAME: device_name,
         }
-        if self._model:
-            device_info["model"] = self._model
-        if self._manufacturer:
-            device_info["manufacturer"] = self._manufacturer
-        if self._firmware:
-            device_info["sw_version"] = self._firmware
-        return device_info
+        self._attr_device_info.update(data.device_info)
 
     @property
     def native_value(self):
