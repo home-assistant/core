@@ -675,9 +675,7 @@ class LightEntity(ToggleEntity):
     @property
     def _light_internal_color_mode(self) -> str:
         """Return the color mode of the light with backwards compatibility."""
-        color_mode = self.color_mode
-
-        if color_mode is None:
+        if (color_mode := self.color_mode) is None:
             # Backwards compatibility for color_mode added in 2021.4
             # Add warning in 2021.6, remove in 2021.10
             supported = self._light_internal_supported_color_modes

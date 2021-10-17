@@ -217,8 +217,7 @@ class NestCamera(Camera):
         """Return image from any active events happening."""
         if CameraEventImageTrait.NAME not in self._device.traits:
             return None
-        trait = self._device.active_event_trait
-        if not trait:
+        if not (trait := self._device.active_event_trait):
             return None
         # Reuse image bytes if they have already been fetched
         if not isinstance(trait, EventImageGenerator):
