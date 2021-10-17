@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import (
+    CONF_MONITORED_CONDITIONS,
     CONF_RESOURCE,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CURRENT,
@@ -56,9 +57,14 @@ ELECTRIC_CHARGE_AMPERE_HOURS = "Ah"
 ENERGY_VOLT_AMPERE_REACTIVE_HOUR = "varh"
 POWER_VOLT_AMPERE_REACTIVE = "var"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_RESOURCE): cv.url},
-    extra=vol.ALLOW_EXTRA,
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated(CONF_MONITORED_CONDITIONS),
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Required(CONF_RESOURCE): cv.url,
+            vol.Required(CONF_MONITORED_CONDITIONS): object,
+        }
+    ),
 )
 
 
