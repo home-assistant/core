@@ -137,7 +137,7 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, BinarySensorEntity):
             if has_check_control_messages:
                 cbs_list = []
                 for message in check_control_messages:
-                    cbs_list.append(message.description_short)
+                    cbs_list.append(message["ccmDescriptionShort"])
                 result["check_control_messages"] = cbs_list
             else:
                 result["check_control_messages"] = "OK"

@@ -37,6 +37,16 @@ SUCCESS = ["ok"]
 SERVER_COUNTRY_CODES = ["cn", "de", "i2", "ru", "sg", "us"]
 DEFAULT_CLOUD_COUNTRY = "cn"
 
+
+# Exceptions
+class AuthException(Exception):
+    """Exception indicating an authentication error."""
+
+
+class SetupException(Exception):
+    """Exception indicating a failure during setup."""
+
+
 # Fan Models
 MODEL_AIRPURIFIER_2H = "zhimi.airpurifier.mc2"
 MODEL_AIRPURIFIER_2S = "zhimi.airpurifier.mc1"

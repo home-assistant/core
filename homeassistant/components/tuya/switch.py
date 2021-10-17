@@ -11,6 +11,7 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -237,6 +238,15 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             device_class=DEVICE_CLASS_OUTLET,
         ),
     ),
+    # Siren Alarm
+    # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
+    "sgbj": (
+        SwitchEntityDescription(
+            key=DPCode.MUFFLING,
+            name="Muffling",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
     # Diffuser
     "xxj": (
         SwitchEntityDescription(
@@ -310,14 +320,9 @@ class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
         self._attr_unique_id = f"{super().unique_id}{description.key}"
 
     @property
-    def name(self) -> str | None:
-        """Return Tuya device name."""
-        return f"{self.tuya_device.name} {self.entity_description.name}"
-
-    @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
-        return self.tuya_device.status.get(self.entity_description.key, False)
+        return self.device.status.get(self.entity_description.key, False)
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""

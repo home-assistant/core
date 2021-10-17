@@ -5,8 +5,7 @@ import asyncio
 from collections.abc import Callable, Coroutine, Iterable
 from contextvars import ContextVar
 from datetime import datetime, timedelta
-import logging
-from logging import Logger
+from logging import Logger, getLogger
 from types import ModuleType
 from typing import TYPE_CHECKING, Any, Protocol
 
@@ -59,7 +58,7 @@ PLATFORM_NOT_READY_RETRIES = 10
 DATA_ENTITY_PLATFORM = "entity_platform"
 PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = getLogger(__name__)
 
 
 class AddEntitiesCallback(Protocol):
@@ -476,6 +475,17 @@ class EntityPlatform:
                     if key in device_info:
                         processed_dev_info[key] = device_info[key]  # type: ignore[misc]
 
+                if "configuration_url" in device_info:
+                    try:
+                        processed_dev_info["configuration_url"] = cv.url(
+                            device_info["configuration_url"]
+                        )
+                    except vol.Invalid:
+                        _LOGGER.warning(
+                            "Ignoring invalid device configuration_url '%s'",
+                            device_info["configuration_url"],
+                        )
+
                 try:
                     device = device_registry.async_get_or_create(**processed_dev_info)  # type: ignore[arg-type]
                     device_id = device.id
@@ -717,8 +727,7 @@ current_platform: ContextVar[EntityPlatform | None] = ContextVar(
 @callback
 def async_get_current_platform() -> EntityPlatform:
     """Get the current platform from context."""
-    platform = current_platform.get()
-    if platform is None:
+    if (platform := current_platform.get()) is None:
         raise RuntimeError("Cannot get non-set current platform")
     return platform
 

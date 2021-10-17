@@ -192,7 +192,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up AirVisual sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id]
+    coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
 
     sensors: list[AirVisualGeographySensor | AirVisualNodeProSensor]
     if entry.data[CONF_INTEGRATION_TYPE] in (

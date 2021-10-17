@@ -8,14 +8,20 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICE, CONF_ICON, CONF_NAME, CONF_UNIQUE_ID
+from homeassistant.const import (
+    CONF_DEVICE,
+    CONF_ENTITY_CATEGORY,
+    CONF_ICON,
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA, Entity
 from homeassistant.helpers.typing import ConfigType
 
 from . import DATA_MQTT, debug_info, publish, subscription
@@ -68,6 +74,7 @@ CONF_SW_VERSION = "sw_version"
 CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
 CONF_SUGGESTED_AREA = "suggested_area"
+CONF_CONFIGURATION_URL = "configuration_url"
 
 MQTT_ATTRIBUTES_BLOCKED = {
     "assumed_state",
@@ -75,6 +82,7 @@ MQTT_ATTRIBUTES_BLOCKED = {
     "context_recent_time",
     "device_class",
     "device_info",
+    "entity_category",
     "entity_picture",
     "entity_registry_enabled_default",
     "extra_state_attributes",
@@ -154,6 +162,7 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
             vol.Optional(CONF_SW_VERSION): cv.string,
             vol.Optional(CONF_VIA_DEVICE): cv.string,
             vol.Optional(CONF_SUGGESTED_AREA): cv.string,
+            vol.Optional(CONF_CONFIGURATION_URL): cv.url,
         }
     ),
     validate_device_has_at_least_one_identifier,
@@ -163,6 +172,7 @@ MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
         vol.Optional(CONF_ENABLED_BY_DEFAULT, default=True): cv.boolean,
+        vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
         vol.Optional(CONF_ICON): cv.icon,
         vol.Optional(CONF_JSON_ATTRS_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_JSON_ATTRS_TEMPLATE): cv.template,
@@ -531,6 +541,9 @@ def device_info_from_config(config):
     if CONF_SUGGESTED_AREA in config:
         info["suggested_area"] = config[CONF_SUGGESTED_AREA]
 
+    if CONF_CONFIGURATION_URL in config:
+        info["configuration_url"] = config[CONF_CONFIGURATION_URL]
+
     return info
 
 
@@ -624,6 +637,11 @@ class MqttEntity(
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._config[CONF_ENABLED_BY_DEFAULT]
+
+    @property
+    def entity_category(self) -> str | None:
+        """Return the entity category if any."""
+        return self._config.get(CONF_ENTITY_CATEGORY)
 
     @property
     def icon(self):

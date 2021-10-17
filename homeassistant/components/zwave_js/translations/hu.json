@@ -64,7 +64,7 @@
     "device_automation": {
         "action_type": {
             "clear_lock_usercode": "{entity_name} felhaszn\u00e1l\u00f3i k\u00f3dj\u00e1nak t\u00f6rl\u00e9se",
-            "ping": "Eszk\u00f6z pinget\u00e9se",
+            "ping": "Eszk\u00f6z pingel\u00e9se",
             "refresh_value": "{entity_name} \u00e9rt\u00e9keinek friss\u00edt\u00e9se",
             "reset_meter": "{subtype} m\u00e9r\u00e9sek alaphelyzetbe \u00e1ll\u00edt\u00e1sa",
             "set_config_parameter": "{subtype} konfigur\u00e1ci\u00f3s param\u00e9ter \u00e9rt\u00e9k\u00e9nek be\u00e1ll\u00edt\u00e1sa",
