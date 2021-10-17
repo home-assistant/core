@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from .const import (
     DEFAULT_UPDATE_INTERVAL,
     DEFAULT_UPDATE_INTERVAL_LOGGER,
+    DEFAULT_UPDATE_INTERVAL_POWER_FLOW,
     DOMAIN,
     SOLAR_NET_ID_SYSTEM,
     FroniusDeviceInfo,
@@ -43,7 +44,6 @@ class FroniusSolarNet:
         # solar_net_device_id is either logger uid or first inverter uid if no logger available
         # prepended by "solar_net_" to have individual device for whole system (power_flow)
         self.solar_net_device_id: str = ""
-        self.update_interval = timedelta(seconds=DEFAULT_UPDATE_INTERVAL)
 
         self.fronius = fronius
         self.inverter_coordinators: list[FroniusInverterUpdateCoordinator] = []
@@ -77,7 +77,7 @@ class FroniusSolarNet:
                 solar_net=self,
                 logger=_LOGGER,
                 name=f"{DOMAIN}_inverter_{inverter_info.solar_net_id}_{self.host}",
-                update_interval=self.update_interval,
+                update_interval=timedelta(seconds=DEFAULT_UPDATE_INTERVAL),
                 inverter_info=inverter_info,
             )
             await coordinator.async_refresh()
@@ -89,7 +89,7 @@ class FroniusSolarNet:
                 solar_net=self,
                 logger=_LOGGER,
                 name=f"{DOMAIN}_meters_{self.host}",
-                update_interval=self.update_interval,
+                update_interval=timedelta(seconds=DEFAULT_UPDATE_INTERVAL),
             )
         )
 
@@ -99,7 +99,7 @@ class FroniusSolarNet:
                 solar_net=self,
                 logger=_LOGGER,
                 name=f"{DOMAIN}_power_flow_{self.host}",
-                update_interval=self.update_interval,
+                update_interval=timedelta(seconds=DEFAULT_UPDATE_INTERVAL_POWER_FLOW),
             )
         )
 
@@ -109,7 +109,7 @@ class FroniusSolarNet:
                 solar_net=self,
                 logger=_LOGGER,
                 name=f"{DOMAIN}_storages_{self.host}",
-                update_interval=self.update_interval,
+                update_interval=timedelta(seconds=DEFAULT_UPDATE_INTERVAL),
             )
         )
 
