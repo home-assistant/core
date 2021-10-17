@@ -144,7 +144,7 @@ async def async_setup_entry(
         SERVICE_SET_TIMER,
         {
             vol.Required(ATTR_SLEEP_TIME): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=86399)
+                vol.Coerce(int), vol.Range(min=0, max=120)
             )
         },
         "set_sleep_timer",
@@ -942,8 +942,6 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         if ZoneFeature.SLEEP not in self.coordinator.data.zones[self._zone_id].features:
             raise HomeAssistantError("This device does not support sleep timers")
         await self.coordinator.musiccast.set_sleep_timer(self._zone_id, sleep_time)
-        print(self.coordinator.data.zones[self._zone_id].features)
-        print(self.coordinator.data.zones[self._zone_id].__dict__)
 
     async def clear_sleep_timer(self):
         """Disable the sleep timer."""
