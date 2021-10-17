@@ -36,7 +36,6 @@ TUYA_SUPPORTED_PRODUCT_CATEGORIES = (
     "fs",  # Fan
     "fs",  # Fan
     "fwl",  # Ambient light
-    "jsq",  # Humidifier's light
     "kfj",  # Coffee maker
     "kg",  # Switch
     "kj",  # Air Purifier

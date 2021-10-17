@@ -45,7 +45,6 @@ TUYA_SUPPORT_TYPE = {
     "dd",  # Light strip
     "fwl",  # Ambient light
     "dc",  # Light string
-    "jsq",  # Humidifier's light
     "xdd",  # Ceiling Light
     "xxj",  # Diffuser's light
     "fs",  # Fan
