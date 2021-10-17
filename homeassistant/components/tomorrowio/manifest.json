@@ -1,0 +1,9 @@
+{
+  "domain": "tomorrowio",
+  "name": "Tomorrow.io",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/tomorrowio",
+  "requirements": ["pytomorrowio==0.1.0"],
+  "codeowners": ["@raman325"],
+  "iot_class": "cloud_polling"
+}
