@@ -11,11 +11,11 @@ from homeassistant.components.renault.const import (
     CONF_LOCALE,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
-from . import get_mock_config_entry
 from .const import MOCK_CONFIG
 
 from tests.common import load_fixture
@@ -171,13 +171,12 @@ async def test_config_flow_multiple_accounts(hass: HomeAssistant):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_config_flow_duplicate(hass: HomeAssistant):
+async def test_config_flow_duplicate(hass: HomeAssistant, config_entry: ConfigEntry):
     """Test abort if unique_id configured."""
     with patch(
         "homeassistant.components.renault.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        get_mock_config_entry().add_to_hass(hass)
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
         result = await hass.config_entries.flow.async_init(
@@ -210,22 +209,20 @@ async def test_config_flow_duplicate(hass: HomeAssistant):
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_reauth(hass):
+async def test_reauth(hass: HomeAssistant, config_entry: ConfigEntry):
     """Test the start of the config flow."""
     with patch(
         "homeassistant.components.renault.async_setup_entry",
         return_value=True,
     ):
-        original_entry = get_mock_config_entry()
-        original_entry.add_to_hass(hass)
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={
                 "source": config_entries.SOURCE_REAUTH,
-                "entry_id": original_entry.entry_id,
-                "unique_id": original_entry.unique_id,
+                "entry_id": config_entry.entry_id,
+                "unique_id": config_entry.unique_id,
             },
             data=MOCK_CONFIG,
         )

@@ -5,6 +5,7 @@ from renault_api.kamereon import exceptions, schemas
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.select.const import ATTR_OPTION, SERVICE_SELECT_OPTION
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
@@ -25,14 +26,16 @@ from .const import DYNAMIC_ATTRIBUTES, FIXED_ATTRIBUTES, MOCK_VEHICLES
 from tests.common import load_fixture, mock_device_registry, mock_registry
 
 
-async def test_selects(hass: HomeAssistant, vehicle_type: str):
+async def test_selects(
+    hass: HomeAssistant, config_entry: ConfigEntry, vehicle_type: str
+):
     """Test for Renault selects."""
 
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
     with patch("homeassistant.components.renault.PLATFORMS", [SELECT_DOMAIN]):
-        await setup_renault_integration_vehicle(hass, vehicle_type)
+        await setup_renault_integration_vehicle(hass, config_entry, vehicle_type)
         await hass.async_block_till_done()
 
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
@@ -51,14 +54,18 @@ async def test_selects(hass: HomeAssistant, vehicle_type: str):
             assert state.attributes.get(attr) == expected_entity.get(attr)
 
 
-async def test_select_empty(hass: HomeAssistant, vehicle_type: str):
+async def test_select_empty(
+    hass: HomeAssistant, config_entry: ConfigEntry, vehicle_type: str
+):
     """Test for Renault selects with empty data from Renault."""
 
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
     with patch("homeassistant.components.renault.PLATFORMS", [SELECT_DOMAIN]):
-        await setup_renault_integration_vehicle_with_no_data(hass, vehicle_type)
+        await setup_renault_integration_vehicle_with_no_data(
+            hass, config_entry, vehicle_type
+        )
         await hass.async_block_till_done()
 
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
@@ -79,7 +86,9 @@ async def test_select_empty(hass: HomeAssistant, vehicle_type: str):
         assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)
 
 
-async def test_select_errors(hass: HomeAssistant, vehicle_type: str):
+async def test_select_errors(
+    hass: HomeAssistant, config_entry: ConfigEntry, vehicle_type: str
+):
     """Test for Renault selects with temporary failure."""
 
     entity_registry = mock_registry(hass)
@@ -92,7 +101,7 @@ async def test_select_errors(hass: HomeAssistant, vehicle_type: str):
 
     with patch("homeassistant.components.renault.PLATFORMS", [SELECT_DOMAIN]):
         await setup_renault_integration_vehicle_with_side_effect(
-            hass, vehicle_type, invalid_upstream_exception
+            hass, config_entry, vehicle_type, invalid_upstream_exception
         )
         await hass.async_block_till_done()
 
@@ -114,7 +123,7 @@ async def test_select_errors(hass: HomeAssistant, vehicle_type: str):
         assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)
 
 
-async def test_select_access_denied(hass: HomeAssistant):
+async def test_select_access_denied(hass: HomeAssistant, config_entry: ConfigEntry):
     """Test for Renault selects with access denied failure."""
 
     entity_registry = mock_registry(hass)
@@ -128,7 +137,7 @@ async def test_select_access_denied(hass: HomeAssistant):
 
     with patch("homeassistant.components.renault.PLATFORMS", [SELECT_DOMAIN]):
         await setup_renault_integration_vehicle_with_side_effect(
-            hass, vehicle_type, access_denied_exception
+            hass, config_entry, vehicle_type, access_denied_exception
         )
         await hass.async_block_till_done()
 
@@ -138,7 +147,7 @@ async def test_select_access_denied(hass: HomeAssistant):
     assert len(entity_registry.entities) == 0
 
 
-async def test_select_not_supported(hass: HomeAssistant):
+async def test_select_not_supported(hass: HomeAssistant, config_entry: ConfigEntry):
     """Test for Renault selects with access denied failure."""
 
     entity_registry = mock_registry(hass)
@@ -152,7 +161,7 @@ async def test_select_not_supported(hass: HomeAssistant):
 
     with patch("homeassistant.components.renault.PLATFORMS", [SELECT_DOMAIN]):
         await setup_renault_integration_vehicle_with_side_effect(
-            hass, vehicle_type, not_supported_exception
+            hass, config_entry, vehicle_type, not_supported_exception
         )
         await hass.async_block_till_done()
 
@@ -162,9 +171,9 @@ async def test_select_not_supported(hass: HomeAssistant):
     assert len(entity_registry.entities) == 0
 
 
-async def test_select_charge_mode(hass: HomeAssistant):
+async def test_select_charge_mode(hass: HomeAssistant, config_entry: ConfigEntry):
     """Test that service invokes renault_api with correct data."""
-    await setup_renault_integration_vehicle(hass, "zoe_40")
+    await setup_renault_integration_vehicle(hass, config_entry, "zoe_40")
 
     data = {
         ATTR_ENTITY_ID: "select.charge_mode",

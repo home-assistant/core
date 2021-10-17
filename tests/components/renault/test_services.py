@@ -18,6 +18,7 @@ from homeassistant.components.renault.services import (
     SERVICE_CHARGE_START,
     SERVICES,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
@@ -42,10 +43,10 @@ def get_device_id(hass: HomeAssistant) -> str:
     return device.id
 
 
-async def test_service_registration(hass: HomeAssistant):
+async def test_service_registration(hass: HomeAssistant, config_entry: ConfigEntry):
     """Test entry setup and unload."""
     with patch("homeassistant.components.renault.PLATFORMS", []):
-        config_entry = await setup_renault_integration_simple(hass)
+        await setup_renault_integration_simple(hass, config_entry)
 
     # Check that all services are registered.
     for service in SERVICES:
@@ -59,9 +60,9 @@ async def test_service_registration(hass: HomeAssistant):
         assert not hass.services.has_service(DOMAIN, service)
 
 
-async def test_service_set_ac_cancel(hass: HomeAssistant):
+async def test_service_set_ac_cancel(hass: HomeAssistant, config_entry: ConfigEntry):
     """Test that service invokes renault_api with correct data."""
-    await setup_renault_integration_vehicle(hass, "zoe_40")
+    await setup_renault_integration_vehicle(hass, config_entry, "zoe_40")
 
     data = {
         ATTR_VEHICLE: get_device_id(hass),
@@ -82,9 +83,11 @@ async def test_service_set_ac_cancel(hass: HomeAssistant):
     assert mock_action.mock_calls[0][1] == ()
 
 
-async def test_service_set_ac_start_simple(hass: HomeAssistant):
+async def test_service_set_ac_start_simple(
+    hass: HomeAssistant, config_entry: ConfigEntry
+):
     """Test that service invokes renault_api with correct data."""
-    await setup_renault_integration_vehicle(hass, "zoe_40")
+    await setup_renault_integration_vehicle(hass, config_entry, "zoe_40")
 
     temperature = 13.5
     data = {
@@ -107,9 +110,11 @@ async def test_service_set_ac_start_simple(hass: HomeAssistant):
     assert mock_action.mock_calls[0][1] == (temperature, None)
 
 
-async def test_service_set_ac_start_with_date(hass: HomeAssistant):
+async def test_service_set_ac_start_with_date(
+    hass: HomeAssistant, config_entry: ConfigEntry
+):
     """Test that service invokes renault_api with correct data."""
-    await setup_renault_integration_vehicle(hass, "zoe_40")
+    await setup_renault_integration_vehicle(hass, config_entry, "zoe_40")
 
     temperature = 13.5
     when = datetime(2025, 8, 23, 17, 12, 45)
@@ -134,9 +139,11 @@ async def test_service_set_ac_start_with_date(hass: HomeAssistant):
     assert mock_action.mock_calls[0][1] == (temperature, when)
 
 
-async def test_service_set_charge_schedule(hass: HomeAssistant):
+async def test_service_set_charge_schedule(
+    hass: HomeAssistant, config_entry: ConfigEntry
+):
     """Test that service invokes renault_api with correct data."""
-    await setup_renault_integration_vehicle(hass, "zoe_40")
+    await setup_renault_integration_vehicle(hass, config_entry, "zoe_40")
 
     schedules = {"id": 2}
     data = {
@@ -165,9 +172,11 @@ async def test_service_set_charge_schedule(hass: HomeAssistant):
     assert mock_action.mock_calls[0][1] == (mock_call_data,)
 
 
-async def test_service_set_charge_schedule_multi(hass: HomeAssistant):
+async def test_service_set_charge_schedule_multi(
+    hass: HomeAssistant, config_entry: ConfigEntry
+):
     """Test that service invokes renault_api with correct data."""
-    await setup_renault_integration_vehicle(hass, "zoe_40")
+    await setup_renault_integration_vehicle(hass, config_entry, "zoe_40")
 
     schedules = [
         {
@@ -209,9 +218,9 @@ async def test_service_set_charge_schedule_multi(hass: HomeAssistant):
     assert mock_action.mock_calls[0][1] == (mock_call_data,)
 
 
-async def test_service_set_charge_start(hass: HomeAssistant):
+async def test_service_set_charge_start(hass: HomeAssistant, config_entry: ConfigEntry):
     """Test that service invokes renault_api with correct data."""
-    await setup_renault_integration_vehicle(hass, "zoe_40")
+    await setup_renault_integration_vehicle(hass, config_entry, "zoe_40")
 
     data = {
         ATTR_VEHICLE: get_device_id(hass),
@@ -232,9 +241,11 @@ async def test_service_set_charge_start(hass: HomeAssistant):
     assert mock_action.mock_calls[0][1] == ()
 
 
-async def test_service_invalid_device_id(hass: HomeAssistant):
+async def test_service_invalid_device_id(
+    hass: HomeAssistant, config_entry: ConfigEntry
+):
     """Test that service fails with ValueError if device_id not found in registry."""
-    await setup_renault_integration_vehicle(hass, "zoe_40")
+    await setup_renault_integration_vehicle(hass, config_entry, "zoe_40")
 
     data = {ATTR_VEHICLE: "VF1AAAAA555777999"}
 
@@ -244,9 +255,11 @@ async def test_service_invalid_device_id(hass: HomeAssistant):
         )
 
 
-async def test_service_invalid_device_id2(hass: HomeAssistant):
+async def test_service_invalid_device_id2(
+    hass: HomeAssistant, config_entry: ConfigEntry
+):
     """Test that service fails with ValueError if device_id not found in vehicles."""
-    config_entry = await setup_renault_integration_vehicle(hass, "zoe_40")
+    await setup_renault_integration_vehicle(hass, config_entry, "zoe_40")
 
     extra_vehicle = MOCK_VEHICLES["captur_phev"]["expected_device"]
 

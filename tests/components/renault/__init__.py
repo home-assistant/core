@@ -9,8 +9,7 @@ from unittest.mock import patch
 from renault_api.kamereon import schemas
 from renault_api.renault_account import RenaultAccount
 
-from homeassistant.components.renault.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ICON,
     ATTR_IDENTIFIERS,
@@ -23,21 +22,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import DeviceRegistry
 
-from .const import ICON_FOR_EMPTY_VALUES, MOCK_CONFIG, MOCK_VEHICLES
+from .const import ICON_FOR_EMPTY_VALUES, MOCK_VEHICLES
 
 from tests.common import MockConfigEntry, load_fixture
-
-
-def get_mock_config_entry():
-    """Create the Renault integration."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        source=SOURCE_USER,
-        data=MOCK_CONFIG,
-        unique_id="account_id_1",
-        options={},
-        entry_id="123456",
-    )
 
 
 def get_fixtures(vehicle_type: str) -> dict[str, Any]:
@@ -78,11 +65,10 @@ def get_no_data_icon(expected_entity: MappingProxyType):
     return ICON_FOR_EMPTY_VALUES.get(entity_id, expected_entity.get(ATTR_ICON))
 
 
-async def setup_renault_integration_simple(hass: HomeAssistant):
+async def setup_renault_integration_simple(
+    hass: HomeAssistant, config_entry: ConfigEntry
+):
     """Create the Renault integration."""
-    config_entry = get_mock_config_entry()
-    config_entry.add_to_hass(hass)
-
     renault_account = RenaultAccount(
         config_entry.unique_id,
         websession=aiohttp_client.async_get_clientsession(hass),
@@ -145,11 +131,10 @@ def patch_fixtures(
         yield
 
 
-async def setup_renault_integration_vehicle(hass: HomeAssistant, vehicle_type: str):
+async def setup_renault_integration_vehicle(
+    hass: HomeAssistant, config_entry: ConfigEntry, vehicle_type: str
+):
     """Create the Renault integration."""
-    config_entry = get_mock_config_entry()
-    config_entry.add_to_hass(hass)
-
     with patch_fixtures(hass, config_entry, vehicle_type):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -205,12 +190,9 @@ def patch_fixtures_with_no_data(
 
 
 async def setup_renault_integration_vehicle_with_no_data(
-    hass: HomeAssistant, vehicle_type: str
+    hass: HomeAssistant, config_entry: ConfigEntry, vehicle_type: str
 ):
     """Create the Renault integration."""
-    config_entry = get_mock_config_entry()
-    config_entry.add_to_hass(hass)
-
     with patch_fixtures_with_no_data(hass, config_entry, vehicle_type):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -268,12 +250,9 @@ def patch_fixtures_with_side_effect(
 
 
 async def setup_renault_integration_vehicle_with_side_effect(
-    hass: HomeAssistant, vehicle_type: str, side_effect: Any
+    hass: HomeAssistant, config_entry: ConfigEntry, vehicle_type: str, side_effect: Any
 ):
     """Create the Renault integration."""
-    config_entry = get_mock_config_entry()
-    config_entry.add_to_hass(hass)
-
     with patch_fixtures_with_side_effect(hass, config_entry, vehicle_type, side_effect):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

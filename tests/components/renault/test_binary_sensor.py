@@ -4,6 +4,7 @@ from unittest.mock import patch
 from renault_api.kamereon import exceptions
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ICON, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
@@ -19,14 +20,15 @@ from .const import DYNAMIC_ATTRIBUTES, FIXED_ATTRIBUTES, MOCK_VEHICLES
 from tests.common import mock_device_registry, mock_registry
 
 
-async def test_binary_sensors(hass: HomeAssistant, vehicle_type: str):
+async def test_binary_sensors(
+    hass: HomeAssistant, config_entry: ConfigEntry, vehicle_type: str
+):
     """Test for Renault binary sensors."""
-
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
     with patch("homeassistant.components.renault.PLATFORMS", [BINARY_SENSOR_DOMAIN]):
-        await setup_renault_integration_vehicle(hass, vehicle_type)
+        await setup_renault_integration_vehicle(hass, config_entry, vehicle_type)
         await hass.async_block_till_done()
 
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
@@ -45,14 +47,17 @@ async def test_binary_sensors(hass: HomeAssistant, vehicle_type: str):
             assert state.attributes.get(attr) == expected_entity.get(attr)
 
 
-async def test_binary_sensor_empty(hass: HomeAssistant, vehicle_type: str):
+async def test_binary_sensor_empty(
+    hass: HomeAssistant, config_entry: ConfigEntry, vehicle_type: str
+):
     """Test for Renault binary sensors with empty data from Renault."""
-
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
     with patch("homeassistant.components.renault.PLATFORMS", [BINARY_SENSOR_DOMAIN]):
-        await setup_renault_integration_vehicle_with_no_data(hass, vehicle_type)
+        await setup_renault_integration_vehicle_with_no_data(
+            hass, config_entry, vehicle_type
+        )
         await hass.async_block_till_done()
 
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
@@ -73,9 +78,10 @@ async def test_binary_sensor_empty(hass: HomeAssistant, vehicle_type: str):
         assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)
 
 
-async def test_binary_sensor_errors(hass: HomeAssistant, vehicle_type: str):
+async def test_binary_sensor_errors(
+    hass: HomeAssistant, config_entry: ConfigEntry, vehicle_type: str
+):
     """Test for Renault binary sensors with temporary failure."""
-
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
@@ -86,7 +92,7 @@ async def test_binary_sensor_errors(hass: HomeAssistant, vehicle_type: str):
 
     with patch("homeassistant.components.renault.PLATFORMS", [BINARY_SENSOR_DOMAIN]):
         await setup_renault_integration_vehicle_with_side_effect(
-            hass, vehicle_type, invalid_upstream_exception
+            hass, config_entry, vehicle_type, invalid_upstream_exception
         )
         await hass.async_block_till_done()
 
@@ -108,7 +114,9 @@ async def test_binary_sensor_errors(hass: HomeAssistant, vehicle_type: str):
         assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)
 
 
-async def test_binary_sensor_access_denied(hass):
+async def test_binary_sensor_access_denied(
+    hass: HomeAssistant, config_entry: ConfigEntry
+):
     """Test for Renault binary sensors with access denied failure."""
 
     entity_registry = mock_registry(hass)
@@ -122,7 +130,7 @@ async def test_binary_sensor_access_denied(hass):
 
     with patch("homeassistant.components.renault.PLATFORMS", [BINARY_SENSOR_DOMAIN]):
         await setup_renault_integration_vehicle_with_side_effect(
-            hass, vehicle_type, access_denied_exception
+            hass, config_entry, vehicle_type, access_denied_exception
         )
         await hass.async_block_till_done()
 
@@ -132,7 +140,9 @@ async def test_binary_sensor_access_denied(hass):
     assert len(entity_registry.entities) == 0
 
 
-async def test_binary_sensor_not_supported(hass):
+async def test_binary_sensor_not_supported(
+    hass: HomeAssistant, config_entry: ConfigEntry
+):
     """Test for Renault binary sensors with not supported failure."""
 
     entity_registry = mock_registry(hass)
@@ -146,7 +156,7 @@ async def test_binary_sensor_not_supported(hass):
 
     with patch("homeassistant.components.renault.PLATFORMS", [BINARY_SENSOR_DOMAIN]):
         await setup_renault_integration_vehicle_with_side_effect(
-            hass, vehicle_type, not_supported_exception
+            hass, config_entry, vehicle_type, not_supported_exception
         )
         await hass.async_block_till_done()
 
