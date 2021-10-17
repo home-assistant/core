@@ -152,19 +152,16 @@ class MyStromLight(LightEntity):
         try:
             await self._bulb.get_state()
             self._state = self._bulb.state
-
-            if self._bulb.bulb_type != "strip" :
-                colors = self._bulb.color
-                try:
-                    color_h, color_s, color_v = colors.split(";")
-                except ValueError:
-                    color_s, color_v = colors.split(";")
-                    color_h = 0
-
-                self._color_h = int(color_h)
-                self._color_s = int(color_s)
-                self._brightness = int(color_v) * 255 / 100
-
+            
+            colors = self._bulb.color
+            try:
+              color_h, color_s, color_v = colors.split(";")
+            except ValueError:
+              color_s, color_v = colors.split(";")
+              color_h = 0
+            self._color_h = int(color_h)
+            self._color_s = int(color_s)
+            self._brightness = int(color_v) * 255 / 100
             self._available = True
         except MyStromConnectionError:
             _LOGGER.warning("No route to myStrom bulb")
