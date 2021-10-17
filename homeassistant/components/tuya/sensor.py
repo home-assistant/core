@@ -53,11 +53,13 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
             native_unit_of_measurement=PERCENTAGE,
             device_class=DEVICE_CLASS_BATTERY,
             state_class=STATE_CLASS_MEASUREMENT,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         ),
         SensorEntityDescription(
             key=DPCode.BATTERY_STATE,
             name="Battery State",
-            entity_registry_enabled_default=False,
+            icon="mdi:battery",
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         ),
     ),
     # Switch
@@ -146,6 +148,25 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
         SensorEntityDescription(
             key=DPCode.BATTERY_STATE,
             name="Battery State",
+            icon="mdi:battery",
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+    ),
+    # Vibration Sensor
+    # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
+    "zd": (
+        SensorEntityDescription(
+            key=DPCode.BATTERY_PERCENTAGE,
+            name="Battery",
+            native_unit_of_measurement=PERCENTAGE,
+            device_class=DEVICE_CLASS_BATTERY,
+            state_class=STATE_CLASS_MEASUREMENT,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        SensorEntityDescription(
+            key=DPCode.BATTERY_STATE,
+            name="Battery State",
+            icon="mdi:battery",
             entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         ),
     ),
