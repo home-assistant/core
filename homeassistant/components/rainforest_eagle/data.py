@@ -136,9 +136,7 @@ class EagleDataCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data_200(self):
         """Get the latest data from the Eagle-200 device."""
-        eagle200_meter = self.eagle200_meter
-
-        if eagle200_meter is None:
+        if (eagle200_meter := self.eagle200_meter) is None:
             hub = aioeagle.EagleHub(
                 aiohttp_client.async_get_clientsession(self.hass),
                 self.cloud_id,

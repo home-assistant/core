@@ -259,8 +259,7 @@ class TradfriLight(TradfriBaseDevice, LightEntity):
                 transition_time = None
 
         # HSB can always be set, but color temp + brightness is bulb dependent
-        command = dimmer_command
-        if command is not None:
+        if (command := dimmer_command) is not None:
             command += color_command
         else:
             command = color_command
