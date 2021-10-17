@@ -64,10 +64,9 @@ class LookinRemoteEntity(LookinDeviceEntity, RemoteEntity, RestoreEntity):
         delay = kwargs.get(ATTR_DELAY_SECS)
 
         if not self._attr_is_on:
-            _LOGGER.warning(
-                "send_command canceled: %s entity is turned off", self.entity_id
+            raise HomeAssistantError(
+                f"send_command canceled: {self.name} ({self.entity_id}) is turned off"
             )
-            return
 
         for idx, codes in enumerate(command):
             if idx and delay:
