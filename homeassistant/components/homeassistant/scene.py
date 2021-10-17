@@ -150,9 +150,7 @@ def entities_in_scene(hass: HomeAssistant, entity_id: str) -> list[str]:
 
     platform = hass.data[DATA_PLATFORM]
 
-    entity = platform.entities.get(entity_id)
-
-    if entity is None:
+    if (entity := platform.entities.get(entity_id)) is None:
         return []
 
     return list(entity.scene_config.states)
@@ -233,8 +231,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         entities = call.data[CONF_ENTITIES]
 
         for entity_id in snapshot:
-            state = hass.states.get(entity_id)
-            if state is None:
+            if (state := hass.states.get(entity_id)) is None:
                 _LOGGER.warning(
                     "Entity %s does not exist and therefore cannot be snapshotted",
                     entity_id,
@@ -248,8 +245,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
         scene_config = SceneConfig(None, call.data[CONF_SCENE_ID], None, entities)
         entity_id = f"{SCENE_DOMAIN}.{scene_config.name}"
-        old = platform.entities.get(entity_id)
-        if old is not None:
+        if (old := platform.entities.get(entity_id)) is not None:
             if not old.from_service:
                 _LOGGER.warning("The scene %s already exists", entity_id)
                 return
@@ -263,10 +259,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 def _process_scenes_config(hass, async_add_entities, config):
     """Process multiple scenes and add them."""
-    scene_config = config[STATES]
-
     # Check empty list
-    if not scene_config:
+    if not (scene_config := config[STATES]):
         return
 
     async_add_entities(
