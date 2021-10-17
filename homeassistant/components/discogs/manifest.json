@@ -2,7 +2,7 @@
   "domain": "discogs",
   "name": "Discogs",
   "documentation": "https://www.home-assistant.io/integrations/discogs",
-  "requirements": ["discogs_client==2.3.0"],
+  "requirements": ["python3-discogs-client==2.3.12", "feedparser==6.0.2", "python-dateutil==2.8.2"],
   "codeowners": ["@thibmaek"],
   "iot_class": "cloud_polling"
 }

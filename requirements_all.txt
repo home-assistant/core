@@ -536,9 +536,6 @@ devolo-home-control-api==0.17.4
 # homeassistant.components.directv
 directv==0.4.0
 
-# homeassistant.components.discogs
-discogs_client==2.3.0
-
 # homeassistant.components.discord
 discord.py==1.7.3
 
@@ -627,6 +624,7 @@ faadelays==0.0.7
 # homeassistant.components.fastdotcom
 fastdotcom==0.0.3
 
+# homeassistant.components.discogs
 # homeassistant.components.feedreader
 feedparser==6.0.2
 
@@ -1852,6 +1850,9 @@ python-blockchain-api==0.0.2
 # homeassistant.components.clementine
 python-clementine-remote==1.0.1
 
+# homeassistant.components.discogs
+python-dateutil==2.8.2
+
 # homeassistant.components.digital_ocean
 python-digitalocean==1.13.2
 
@@ -1950,6 +1951,9 @@ python-whois==0.7.3
 
 # homeassistant.components.wink
 python-wink==1.10.5
+
+# homeassistant.components.discogs
+python3-discogs-client==2.3.12
 
 # homeassistant.components.awair
 python_awair==0.2.1

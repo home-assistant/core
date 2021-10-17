@@ -368,6 +368,7 @@ epson-projector==0.4.2
 # homeassistant.components.faa_delays
 faadelays==0.0.7
 
+# homeassistant.components.discogs
 # homeassistant.components.feedreader
 feedparser==6.0.2
 
