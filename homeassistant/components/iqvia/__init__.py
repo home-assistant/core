@@ -24,7 +24,6 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import (
     CONF_ZIP_CODE,
-    DATA_COORDINATOR,
     DOMAIN,
     LOGGER,
     TYPE_ALLERGY_FORECAST,
@@ -95,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # API calls fail:
         raise ConfigEntryNotReady()
 
-    hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR] = coordinators
+    hass.data[DOMAIN][entry.entry_id] = coordinators
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
@@ -142,7 +141,7 @@ class IQVIAEntity(CoordinatorEntity):
 
         if self.entity_description.key == TYPE_ALLERGY_FORECAST:
             self.async_on_remove(
-                self.hass.data[DOMAIN][self._entry.entry_id][DATA_COORDINATOR][
+                self.hass.data[DOMAIN][self._entry.entry_id][
                     TYPE_ALLERGY_OUTLOOK
                 ].async_add_listener(self._handle_coordinator_update)
             )
