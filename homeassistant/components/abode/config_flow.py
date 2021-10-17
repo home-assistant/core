@@ -35,10 +35,10 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         self._cache: str | None = None
-        self._mfa_code: None = None
-        self._password: None = None
+        self._mfa_code: str | None = None
+        self._password: str | None = None
         self._polling: bool = False
-        self._username: str = ""
+        self._username: str | None = None
 
     async def _async_abode_login(self, step_id: str) -> FlowResult:
         """Handle login with Abode."""
@@ -113,7 +113,7 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             return self.async_abort(reason="reauth_successful")
 
-        return self.async_create_entry(title=self._username, data=config_data)
+        return self.async_create_entry(title=self._username or "", data=config_data)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

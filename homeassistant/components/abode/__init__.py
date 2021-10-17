@@ -82,7 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Abode integration from a config entry."""
     username = entry.data.get(CONF_USERNAME)
     password = entry.data.get(CONF_PASSWORD)
-    polling = entry.data.get(CONF_POLLING, True)
+    polling = bool(entry.data.get(CONF_POLLING))
     cache = hass.config.path(DEFAULT_CACHEDB)
 
     # For previous config entries where unique_id is None
@@ -148,15 +148,9 @@ def setup_hass_services(hass: HomeAssistant) -> None:
         entity_ids = call.data.get(ATTR_ENTITY_ID)
 
         if entity_ids:
-            target_entities = [
-                entity_id
-                for entity_id in hass.data[DOMAIN].entity_ids
-                if entity_id in entity_ids
-            ]
-
-        for entity_id in target_entities:
-            signal = f"abode_camera_capture_{entity_id}"
-            dispatcher_send(hass, signal)
+            for entity_id in entity_ids:
+                signal = f"abode_camera_capture_{entity_id}"
+                dispatcher_send(hass, signal)
 
     def trigger_automation(call: ServiceCall) -> None:
         """Trigger an Abode automation."""

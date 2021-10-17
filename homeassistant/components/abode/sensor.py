@@ -1,6 +1,8 @@
 """Support for Abode Security System sensors."""
 from __future__ import annotations
 
+from typing import cast
+
 from abodepy.devices.sensor import AbodeSensor as AbodeSense
 import abodepy.helpers.constants as CONST
 
@@ -81,12 +83,12 @@ class AbodeSensor(AbodeDevice, SensorEntity):
             self._attr_native_unit_of_measurement = device.lux_unit
 
     @property
-    def native_value(self) -> str | None:
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         if self.entity_description.key == CONST.TEMP_STATUS_KEY:
-            return str(self._device.temp)
+            return cast(float, self._device.temp)
         if self.entity_description.key == CONST.HUMI_STATUS_KEY:
-            return str(self._device.humidity)
+            return cast(float, self._device.humidity)
         if self.entity_description.key == CONST.LUX_STATUS_KEY:
-            return str(self._device.lux)
+            return cast(float, self._device.lux)
         return None
