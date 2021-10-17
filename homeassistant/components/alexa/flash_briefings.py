@@ -93,8 +93,7 @@ class AlexaFlashBriefingView(http.HomeAssistantView):
                 else:
                     output[ATTR_MAIN_TEXT] = item.get(CONF_TEXT)
 
-            uid = item.get(CONF_UID)
-            if uid is None:
+            if (uid := item.get(CONF_UID)) is None:
                 uid = str(uuid.uuid4())
             output[ATTR_UID] = uid
 
