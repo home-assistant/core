@@ -7,10 +7,10 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 
 class OpenGarageEntity(CoordinatorEntity):
-    """Representation of a OpenGarage cover."""
+    """Representation of a OpenGarage entity."""
 
     def __init__(self, open_garage_data_coordinator, device_id, description=None):
-        """Initialize the cover."""
+        """Initialize the entity."""
         super().__init__(open_garage_data_coordinator)
 
         if description is not None:
@@ -39,8 +39,5 @@ class OpenGarageEntity(CoordinatorEntity):
             identifiers={(DOMAIN, self._device_id)},
             name=self.coordinator.data["name"],
             manufacturer="Open Garage",
-            suggested_area="Garage",
-            sw_version=self.coordinator.data["fwv"],
-            configuration_url=self.coordinator.open_garage_connection._devip,
         )
         return device_info
