@@ -179,7 +179,7 @@ aiogithubapi==21.8.0
 aioguardian==1.0.8
 
 # homeassistant.components.harmony
-aioharmony==0.2.7
+aioharmony==0.2.8
 
 # homeassistant.components.homekit_controller
 aiohomekit==0.6.3
@@ -415,7 +415,7 @@ blockchain==1.4.4
 # bme680==1.0.5
 
 # homeassistant.components.bond
-bond-api==0.1.13
+bond-api==0.1.14
 
 # homeassistant.components.bosch_shc
 boschshcpy==0.2.19
@@ -1964,7 +1964,7 @@ python_opendata_transport==0.2.1
 pythonegardia==1.0.40
 
 # homeassistant.components.tile
-pytile==5.2.3
+pytile==5.2.4
 
 # homeassistant.components.touchline
 pytouchline==0.7

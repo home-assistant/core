@@ -60,7 +60,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await async_migrate_entries(hass, entry.entry_id, async_migrate_callback)
 
-    websession = aiohttp_client.async_get_clientsession(hass)
+    # Tile's API uses cookies to identify a consumer; in order to allow for multiple
+    # instances of this config entry, we use a new session each time:
+    websession = aiohttp_client.async_create_clientsession(hass)
 
     try:
         client = await async_login(

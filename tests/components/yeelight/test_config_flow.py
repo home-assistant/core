@@ -502,6 +502,18 @@ async def test_discovered_by_dhcp_or_homekit(hass, source, data):
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
 
+    with _patch_discovery(
+        no_device=True
+    ), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
+        f"{MODULE_CONFIG_FLOW}.AsyncBulb", side_effect=CannotConnect
+    ):
+        result3 = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": source}, data=data
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] == RESULT_TYPE_ABORT
+    assert result3["reason"] == "already_configured"
+
 
 @pytest.mark.parametrize(
     "source, data",
