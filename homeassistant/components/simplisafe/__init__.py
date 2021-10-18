@@ -459,7 +459,9 @@ class SimpliSafe:
             """Define an event handler to disconnect from the websocket."""
             if TYPE_CHECKING:
                 assert self._api.websocket
-            await self._api.websocket.async_disconnect()
+
+            if self._api.websocket.connected:
+                await self._api.websocket.async_disconnect()
 
         self.entry.async_on_unload(
             self._hass.bus.async_listen_once(
