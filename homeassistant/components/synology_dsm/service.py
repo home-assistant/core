@@ -73,10 +73,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             LOGGER.debug("%s DSM with serial %s", call.service, serial)
             dsm_api: SynoApi = dsm_device[SYNO_API]
             try:
-                if call.service == SERVICE_REBOOT:
-                    await dsm_api.async_reboot()
-                elif call.service == SERVICE_SHUTDOWN:
-                    await dsm_api.async_shutdown()
+                await getattr(dsm_api, f"async_{call.service}")()
                 dsm_device[SYSTEM_LOADED] = False
             except SynologyDSMException as ex:
                 LOGGER.error(
