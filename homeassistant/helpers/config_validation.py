@@ -356,6 +356,26 @@ def entities_domain(domain: str | list[str]) -> Callable[[str | list], list[str]
     return validate
 
 
+def device_id(value: Any) -> str:
+    """Validate Device ID."""
+    str_value = string(value).lower()
+    try:
+        uuid_hex(str_value)
+    except vol.Invalid as err:
+        raise vol.Invalid(f"Device ID {value} is an invalid device ID") from err
+    return str_value
+
+
+def device_ids(value: str | list) -> list[str]:
+    """Validate Device IDs."""
+    if value is None:
+        raise vol.Invalid("Device IDs can not be None")
+    if isinstance(value, str):
+        value = [dev_id.strip() for dev_id in value.split(",")]
+
+    return [device_id(dev_id) for dev_id in value]
+
+
 def enum(enumClass: type[Enum]) -> vol.All:
     """Create validator for specified enum."""
     return vol.All(vol.In(enumClass.__members__), enumClass.__getitem__)
@@ -706,6 +726,20 @@ def x10_address(value: str) -> str:
     if not regex.match(value):
         raise vol.Invalid("Invalid X10 Address")
     return str(value).lower()
+
+
+def uuid_hex(value: Any) -> str:
+    """Validate UUID in hex format."""
+    try:
+        result = UUID(value)
+    except (ValueError, AttributeError, TypeError) as error:
+        raise vol.Invalid("Invalid UUID", error_message=str(error))
+
+    if result.hex != value.lower():
+        # UUID() will create a uuid if input is invalid
+        raise vol.Invalid("Invalid UUID")
+
+    return result.hex
 
 
 def uuid4_hex(value: Any) -> str:
