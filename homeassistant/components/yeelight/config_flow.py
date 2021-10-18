@@ -8,6 +8,7 @@ from yeelight.aio import AsyncBulb
 
 from homeassistant import config_entries, exceptions
 from homeassistant.components.dhcp import IP_ADDRESS
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -66,18 +67,30 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(
             "{0:#0{1}x}".format(int(discovery_info["name"][-26:-18]), 18)
         )
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: self._discovered_ip}, reload_on_update=False
-        )
-        return await self._async_handle_discovery()
+        return await self._async_handle_discovery_with_unique_id()
 
     async def async_step_ssdp(self, discovery_info):
         """Handle discovery from ssdp."""
         self._discovered_ip = urlparse(discovery_info["location"]).hostname
         await self.async_set_unique_id(discovery_info["id"])
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: self._discovered_ip}, reload_on_update=False
-        )
+        return await self._async_handle_discovery_with_unique_id()
+
+    async def _async_handle_discovery_with_unique_id(self):
+        """Handle any discovery with a unique id."""
+        for entry in self._async_current_entries():
+            if entry.unique_id != self.unique_id:
+                continue
+            reload = entry.state == ConfigEntryState.SETUP_RETRY
+            if entry.data[CONF_HOST] != self._discovered_ip:
+                self.hass.config_entries.async_update_entry(
+                    entry, data={**entry.data, CONF_HOST: self._discovered_ip}
+                )
+                reload = True
+            if reload:
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(entry.entry_id)
+                )
+            return self.async_abort(reason="already_configured")
         return await self._async_handle_discovery()
 
     async def _async_handle_discovery(self):
@@ -86,6 +99,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for progress in self._async_in_progress():
             if progress.get("context", {}).get(CONF_HOST) == self._discovered_ip:
                 return self.async_abort(reason="already_in_progress")
+        self._async_abort_entries_match({CONF_HOST: self._discovered_ip})
 
         try:
             self._discovered_model = await self._async_try_connect(
