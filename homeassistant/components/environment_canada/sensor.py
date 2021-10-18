@@ -140,8 +140,7 @@ class ECSensor(SensorEntity):
         else:
             self._unit = sensor_data.get("unit")
 
-        timestamp = metadata.get("timestamp")
-        if timestamp:
+        if timestamp := metadata.get("timestamp"):
             updated_utc = datetime.strptime(timestamp, "%Y%m%d%H%M%S").isoformat()
         else:
             updated_utc = None
