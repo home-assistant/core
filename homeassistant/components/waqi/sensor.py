@@ -44,6 +44,9 @@ KEY_TO_ATTR = {
 
 ATTRIBUTION = "Data provided by the World Air Quality Index project"
 
+ATTR_ICON = "mdi:cloud"
+ATTR_UNIT = "AQI"
+
 CONF_LOCATIONS = "locations"
 CONF_STATIONS = "stations"
 
@@ -97,6 +100,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class WaqiSensor(SensorEntity):
     """Implementation of a WAQI sensor."""
 
+    _attr_icon = ATTR_ICON
+    _attr_native_unit_of_measurement = ATTR_UNIT
+    _attr_device_class = DEVICE_CLASS_AQI
+    _attr_state_class = STATE_CLASS_MEASUREMENT
+
     def __init__(self, client, station):
         """Initialize the sensor."""
         self._client = client
@@ -125,11 +133,6 @@ class WaqiSensor(SensorEntity):
         return f"WAQI {self.url if self.url else self.uid}"
 
     @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return "mdi:cloud"
-
-    @property
     def native_value(self):
         """Return the state of the device."""
         if self._data is not None:
@@ -145,21 +148,6 @@ class WaqiSensor(SensorEntity):
     def unique_id(self):
         """Return unique ID."""
         return self.uid
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return "AQI"
-
-    @property
-    def device_class(self):
-        """Return the device class of this entity, if any."""
-        return DEVICE_CLASS_AQI
-
-    @property
-    def state_class(self):
-        """Return the state class of this entity, if any."""
-        return STATE_CLASS_MEASUREMENT
 
     @property
     def extra_state_attributes(self):
