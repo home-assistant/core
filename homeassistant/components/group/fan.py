@@ -80,10 +80,16 @@ class FanGroup(GroupEntity, FanEntity):
         self._percentage = None
         self._oscillating = None
         self._direction = None
+        self._supported_features = 0
         self._is_on = False
         self._attr_name = name
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entities}
         self._attr_unique_id = unique_id
+
+    @property
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        return self._supported_features
 
     @property
     def is_on(self) -> bool:
@@ -234,11 +240,10 @@ class FanGroup(GroupEntity, FanEntity):
             direction_states, ATTR_DIRECTION
         )
 
-        supported_features = 0
+        self._supported_features = 0
         for feature in SUPPORTED_FLAGS:
             if self._fans[feature]:
-                supported_features |= feature
-        self._attr_supported_features = supported_features
+                self._supported_features |= feature
 
         if self._attr_assumed_state:
             return
