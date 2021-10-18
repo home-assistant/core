@@ -46,7 +46,7 @@ def setup_owproxy_mock_devices(
 
 
 def setup_sysbus_mock_devices(
-    domain: str, device_ids: list[str]
+    platform: str, device_ids: list[str]
 ) -> tuple[list[str], list[Any]]:
     """Set up mock for sysbus."""
     glob_result = []
@@ -59,7 +59,7 @@ def setup_sysbus_mock_devices(
         glob_result += [f"/{DEFAULT_SYSBUS_MOUNT_DIR}/{device_id}"]
 
         # Setup sub-device reads
-        device_sensors = mock_device.get(domain, [])
+        device_sensors = mock_device.get(platform, [])
         for expected_sensor in device_sensors:
             if isinstance(expected_sensor["injected_value"], list):
                 read_side_effect += expected_sensor["injected_value"]
