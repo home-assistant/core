@@ -3,17 +3,13 @@ from datetime import timedelta
 
 import pytest
 
-from homeassistant.components.cover import (
-    ATTR_CURRENT_POSITION,
-    ATTR_CURRENT_TILT_POSITION,
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
-)
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
     ATTR_PERCENTAGE_STEP,
+    DIRECTION_FORWARD,
+    DIRECTION_REVERSE,
     DOMAIN,
     PLATFORM_SCHEMA,
     SERVICE_OSCILLATE,
@@ -24,7 +20,6 @@ from homeassistant.components.fan import (
     SUPPORT_DIRECTION,
     SUPPORT_OSCILLATE,
     SUPPORT_SET_SPEED,
-    FanEntity,
 )
 from homeassistant.components.group.fan import DEFAULT_NAME
 from homeassistant.const import (
@@ -34,6 +29,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     CONF_ENTITIES,
     CONF_UNIQUE_ID,
+    EVENT_HOMEASSISTANT_START,
     STATE_OFF,
     STATE_ON,
 )
@@ -53,9 +49,12 @@ PERCENTAGE_LIMITED_FAN_ENTITY_ID = "fan.percentage_limited_fan"
 FULL_FAN_ENTITY_IDS = [LIVING_ROOM_FAN_ENTITY_ID, PERCENTAGE_FULL_FAN_ENTITY_ID]
 LIMITED_FAN_ENTITY_IDS = [CEILING_FAN_ENTITY_ID, PERCENTAGE_LIMITED_FAN_ENTITY_ID]
 
+
+FULL_SUPPORT_FEATURES = SUPPORT_SET_SPEED | SUPPORT_DIRECTION | SUPPORT_OSCILLATE
+
+
 CONFIG_ALL = {
     DOMAIN: [
-        {"platform": "demo"},
         {
             "platform": "group",
             CONF_ENTITIES: [*FULL_FAN_ENTITY_IDS, *LIMITED_FAN_ENTITY_IDS],
@@ -65,7 +64,6 @@ CONFIG_ALL = {
 
 CONFIG_FULL_SUPPORT = {
     DOMAIN: [
-        {"platform": "demo"},
         {
             "platform": "group",
             CONF_ENTITIES: [*FULL_FAN_ENTITY_IDS],
@@ -75,7 +73,6 @@ CONFIG_FULL_SUPPORT = {
 
 CONFIG_LIMITED_SUPPORT = {
     DOMAIN: [
-        {"platform": "demo"},
         {
             "platform": "group",
             CONF_ENTITIES: [*LIMITED_FAN_ENTITY_IDS],
@@ -117,8 +114,6 @@ async def test_state(hass, setup_comp):
     ]
     assert ATTR_ASSUMED_STATE not in state.attributes
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
-    assert ATTR_CURRENT_POSITION not in state.attributes
-    assert ATTR_CURRENT_TILT_POSITION not in state.attributes
 
     # Set all entities as on -> group state on
     hass.states.async_set(CEILING_FAN_ENTITY_ID, STATE_ON, {})
@@ -169,8 +164,6 @@ async def test_attributes(hass, setup_comp):
     ]
     assert ATTR_ASSUMED_STATE not in state.attributes
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
-    assert ATTR_CURRENT_POSITION not in state.attributes
-    assert ATTR_CURRENT_TILT_POSITION not in state.attributes
     hass.states.async_set(CEILING_FAN_ENTITY_ID, STATE_ON, {})
     hass.states.async_set(LIVING_ROOM_FAN_ENTITY_ID, STATE_ON, {})
     hass.states.async_set(PERCENTAGE_FULL_FAN_ENTITY_ID, STATE_ON, {})
@@ -217,3 +210,89 @@ async def test_attributes(hass, setup_comp):
     assert state.state == STATE_ON
     assert state.attributes[ATTR_ASSUMED_STATE] is True
     assert state.attributes[ATTR_PERCENTAGE] == int((50 + 75) / 2)
+
+
+@pytest.mark.parametrize("config_count", [(CONFIG_FULL_SUPPORT, 1)])
+async def test_direction_oscillating(hass, setup_comp):
+    """Test handling of direction and oscillating attributes."""
+
+    hass.states.async_set(
+        LIVING_ROOM_FAN_ENTITY_ID,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_FEATURES: FULL_SUPPORT_FEATURES,
+            ATTR_OSCILLATING: True,
+            ATTR_DIRECTION: DIRECTION_FORWARD,
+            ATTR_PERCENTAGE: 50,
+        },
+    )
+    hass.states.async_set(
+        PERCENTAGE_FULL_FAN_ENTITY_ID,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_FEATURES: FULL_SUPPORT_FEATURES,
+            ATTR_OSCILLATING: True,
+            ATTR_DIRECTION: DIRECTION_FORWARD,
+            ATTR_PERCENTAGE: 50,
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FAN_GROUP)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_FRIENDLY_NAME] == DEFAULT_NAME
+    assert state.attributes[ATTR_ENTITY_ID] == [*FULL_FAN_ENTITY_IDS]
+    assert ATTR_ASSUMED_STATE not in state.attributes
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == FULL_SUPPORT_FEATURES
+    assert ATTR_PERCENTAGE in state.attributes
+    assert state.attributes[ATTR_PERCENTAGE] == 50
+    assert state.attributes[ATTR_OSCILLATING] is True
+    assert state.attributes[ATTR_DIRECTION] == DIRECTION_FORWARD
+    assert ATTR_ASSUMED_STATE not in state.attributes
+
+    # Add Entity that supports
+    # ### Test assumed state ###
+    # ##########################
+
+    # Add Entity with a different direction should set assumed state
+    hass.states.async_set(
+        PERCENTAGE_FULL_FAN_ENTITY_ID,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_FEATURES: FULL_SUPPORT_FEATURES,
+            ATTR_OSCILLATING: True,
+            ATTR_DIRECTION: DIRECTION_REVERSE,
+            ATTR_PERCENTAGE: 50,
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FAN_GROUP)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_ASSUMED_STATE] is True
+    assert ATTR_PERCENTAGE in state.attributes
+    assert state.attributes[ATTR_PERCENTAGE] == 50
+    assert state.attributes[ATTR_OSCILLATING] is True
+    assert ATTR_ASSUMED_STATE in state.attributes
+
+    # Now that everything is the same, no longer assumed state
+
+    hass.states.async_set(
+        LIVING_ROOM_FAN_ENTITY_ID,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_FEATURES: FULL_SUPPORT_FEATURES,
+            ATTR_OSCILLATING: True,
+            ATTR_DIRECTION: DIRECTION_REVERSE,
+            ATTR_PERCENTAGE: 50,
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FAN_GROUP)
+    assert state.state == STATE_ON
+    assert ATTR_PERCENTAGE in state.attributes
+    assert state.attributes[ATTR_PERCENTAGE] == 50
+    assert state.attributes[ATTR_OSCILLATING] is True
+    assert state.attributes[ATTR_DIRECTION] == DIRECTION_REVERSE
+    assert ATTR_ASSUMED_STATE not in state.attributes
