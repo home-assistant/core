@@ -13,7 +13,9 @@ from homeassistant.components.fan import (
     ATTR_PERCENTAGE_STEP,
     DOMAIN,
     PLATFORM_SCHEMA,
-    SERVICE_SET_SPEED,
+    SERVICE_OSCILLATE,
+    SERVICE_SET_DIRECTION,
+    SERVICE_SET_PERCENTAGE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SUPPORT_DIRECTION,
@@ -176,7 +178,21 @@ class FanGroup(GroupEntity, FanEntity):
         """Set the speed of the fan, as a percentage."""
         if percentage == 0:
             await self.async_turn_off()
-        await self._async_call_supported_entities(SERVICE_SET_SPEED, SUPPORT_SET_SPEED)
+        await self._async_call_supported_entities(
+            SERVICE_SET_PERCENTAGE, SUPPORT_SET_SPEED, {ATTR_PERCENTAGE: percentage}
+        )
+
+    async def async_oscillate(self, oscillating: bool) -> None:
+        """Oscillate the fan."""
+        await self._async_call_supported_entities(
+            SERVICE_OSCILLATE, SUPPORT_OSCILLATE, {ATTR_OSCILLATING: oscillating}
+        )
+
+    async def async_set_direction(self, direction: str) -> None:
+        """Set the direction of the fan."""
+        await self._async_call_supported_entities(
+            SERVICE_SET_DIRECTION, SUPPORT_DIRECTION, {ATTR_DIRECTION: direction}
+        )
 
     async def async_turn_on(
         self,
@@ -196,13 +212,13 @@ class FanGroup(GroupEntity, FanEntity):
         await self._async_call_all_entities(SERVICE_TURN_OFF)
 
     async def _async_call_supported_entities(
-        self, service: str, support_flag: int
+        self, service: str, support_flag: int, data: dict[str, Any]
     ) -> None:
         """Call a service with all entities."""
         await self.hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_ENTITY_ID: self._fans[support_flag]},
+            {**data, ATTR_ENTITY_ID: self._fans[support_flag]},
             blocking=True,
             context=self._context,
         )
