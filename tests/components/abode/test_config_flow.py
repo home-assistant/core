@@ -7,7 +7,7 @@ from requests.exceptions import ConnectTimeout
 
 from homeassistant import data_entry_flow
 from homeassistant.components.abode import config_flow
-from homeassistant.components.abode.const import DOMAIN
+from homeassistant.components.abode.const import CONF_POLLING, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -17,8 +17,6 @@ from homeassistant.const import (
 )
 
 from tests.common import MockConfigEntry
-
-CONF_POLLING = "polling"
 
 
 async def test_show_form(hass):

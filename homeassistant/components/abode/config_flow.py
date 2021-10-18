@@ -1,7 +1,7 @@
 """Config flow for the Abode Security System component."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from abodepy import Abode
 from abodepy.exceptions import AbodeAuthenticationException, AbodeException
@@ -13,10 +13,9 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_BAD_REQUEST
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DEFAULT_CACHEDB, DOMAIN
+from .const import CONF_POLLING, DEFAULT_CACHEDB, DOMAIN
 
 CONF_MFA = "mfa_code"
-CONF_POLLING = "polling"
 
 
 class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -113,7 +112,9 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             return self.async_abort(reason="reauth_successful")
 
-        return self.async_create_entry(title=self._username or "", data=config_data)
+        return self.async_create_entry(
+            title=cast(str, self._username), data=config_data
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

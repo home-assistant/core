@@ -27,9 +27,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import ATTRIBUTION, DEFAULT_CACHEDB, DOMAIN, LOGGER
-
-CONF_POLLING = "polling"
+from .const import ATTRIBUTION, CONF_POLLING, DEFAULT_CACHEDB, DOMAIN, LOGGER
 
 SERVICE_SETTINGS = "change_setting"
 SERVICE_CAPTURE_IMAGE = "capture_image"
@@ -82,9 +80,9 @@ class AbodeSystem:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Abode integration from a config entry."""
-    username = entry.data.get(CONF_USERNAME)
-    password = entry.data.get(CONF_PASSWORD)
-    polling = bool(entry.data.get(CONF_POLLING))
+    username = entry.data[CONF_USERNAME]
+    password = entry.data[CONF_PASSWORD]
+    polling = entry.data[CONF_POLLING]
     cache = hass.config.path(DEFAULT_CACHEDB)
 
     # For previous config entries where unique_id is None
