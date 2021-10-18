@@ -233,6 +233,13 @@ class FanGroup(GroupEntity, FanEntity):
             context=self._context,
         )
 
+    def _async_states_by_support_flag(self, flag: int) -> list[State]:
+        """Return all the entity states for a supported flag."""
+        states: list[State] = list(
+            filter(None, [self.hass.states.get(x) for x in self._fans[flag]])
+        )
+        return states
+
     async def async_update(self) -> None:
         """Update state and attributes."""
         self._attr_assumed_state = False
@@ -242,9 +249,7 @@ class FanGroup(GroupEntity, FanEntity):
         self._is_on = any(state.state == STATE_ON for state in on_states)
         self._attr_assumed_state |= not states_equal(on_states)
 
-        percentage_fans = self._fans[SUPPORT_SET_SPEED]
-        all_percentage_states = [self.hass.states.get(x) for x in percentage_fans]
-        percentage_states: list[State] = list(filter(None, all_percentage_states))
+        percentage_states = self._async_states_by_support_flag(SUPPORT_SET_SPEED)
         self._percentage = reduce_attribute(percentage_states, ATTR_PERCENTAGE)
         self._attr_assumed_state |= not attribute_equal(
             percentage_states, ATTR_PERCENTAGE
@@ -261,17 +266,13 @@ class FanGroup(GroupEntity, FanEntity):
         else:
             self._speed_count = 100
 
-        oscillate_fans = self._fans[SUPPORT_OSCILLATE]
-        all_oscillate_states = [self.hass.states.get(x) for x in oscillate_fans]
-        oscillate_states: list[State] = list(filter(None, all_oscillate_states))
+        oscillate_states = self._async_states_by_support_flag(SUPPORT_OSCILLATE)
         self._oscillating = most_frequent_attribute(oscillate_states, ATTR_OSCILLATING)
         self._attr_assumed_state |= not attribute_equal(
             oscillate_states, ATTR_OSCILLATING
         )
 
-        direction_fans = self._fans[SUPPORT_DIRECTION]
-        all_direction_states = [self.hass.states.get(x) for x in direction_fans]
-        direction_states: list[State] = list(filter(None, all_direction_states))
+        direction_states = self._async_states_by_support_flag(SUPPORT_DIRECTION)
         self._direction = most_frequent_attribute(direction_states, ATTR_DIRECTION)
         self._attr_assumed_state |= not attribute_equal(
             direction_states, ATTR_DIRECTION
