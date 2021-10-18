@@ -1,6 +1,7 @@
 """Tests for Renault sensors."""
 from unittest.mock import patch
 
+import pytest
 from renault_api.kamereon import exceptions
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
@@ -20,6 +21,13 @@ from .const import DYNAMIC_ATTRIBUTES, FIXED_ATTRIBUTES, MOCK_VEHICLES
 from tests.common import mock_device_registry, mock_registry
 
 
+@pytest.fixture(autouse=True)
+def set_platform() -> None:
+    """Override PLATFORMS."""
+    with patch("homeassistant.components.renault.PLATFORMS", [DEVICE_TRACKER_DOMAIN]):
+        yield
+
+
 async def test_device_trackers(
     hass: HomeAssistant, config_entry: ConfigEntry, vehicle_type: str
 ):
@@ -28,9 +36,8 @@ async def test_device_trackers(
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
-    with patch("homeassistant.components.renault.PLATFORMS", [DEVICE_TRACKER_DOMAIN]):
-        await setup_renault_integration_vehicle(hass, config_entry, vehicle_type)
-        await hass.async_block_till_done()
+    await setup_renault_integration_vehicle(hass, config_entry, vehicle_type)
+    await hass.async_block_till_done()
 
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
     check_device_registry(device_registry, mock_vehicle["expected_device"])
@@ -56,11 +63,10 @@ async def test_device_tracker_empty(
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
-    with patch("homeassistant.components.renault.PLATFORMS", [DEVICE_TRACKER_DOMAIN]):
-        await setup_renault_integration_vehicle_with_no_data(
-            hass, config_entry, vehicle_type
-        )
-        await hass.async_block_till_done()
+    await setup_renault_integration_vehicle_with_no_data(
+        hass, config_entry, vehicle_type
+    )
+    await hass.async_block_till_done()
 
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
     check_device_registry(device_registry, mock_vehicle["expected_device"])
@@ -93,11 +99,10 @@ async def test_device_tracker_errors(
         "Invalid response from the upstream server (The request sent to the GDC is erroneous) ; 502 Bad Gateway",
     )
 
-    with patch("homeassistant.components.renault.PLATFORMS", [DEVICE_TRACKER_DOMAIN]):
-        await setup_renault_integration_vehicle_with_side_effect(
-            hass, config_entry, vehicle_type, invalid_upstream_exception
-        )
-        await hass.async_block_till_done()
+    await setup_renault_integration_vehicle_with_side_effect(
+        hass, config_entry, vehicle_type, invalid_upstream_exception
+    )
+    await hass.async_block_till_done()
 
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
     check_device_registry(device_registry, mock_vehicle["expected_device"])
@@ -131,11 +136,10 @@ async def test_device_tracker_access_denied(
         "Access is denied for this resource",
     )
 
-    with patch("homeassistant.components.renault.PLATFORMS", [DEVICE_TRACKER_DOMAIN]):
-        await setup_renault_integration_vehicle_with_side_effect(
-            hass, config_entry, vehicle_type, access_denied_exception
-        )
-        await hass.async_block_till_done()
+    await setup_renault_integration_vehicle_with_side_effect(
+        hass, config_entry, vehicle_type, access_denied_exception
+    )
+    await hass.async_block_till_done()
 
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
     check_device_registry(device_registry, mock_vehicle["expected_device"])
@@ -157,11 +161,10 @@ async def test_device_tracker_not_supported(
         "This feature is not technically supported by this gateway",
     )
 
-    with patch("homeassistant.components.renault.PLATFORMS", [DEVICE_TRACKER_DOMAIN]):
-        await setup_renault_integration_vehicle_with_side_effect(
-            hass, config_entry, vehicle_type, not_supported_exception
-        )
-        await hass.async_block_till_done()
+    await setup_renault_integration_vehicle_with_side_effect(
+        hass, config_entry, vehicle_type, not_supported_exception
+    )
+    await hass.async_block_till_done()
 
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
     check_device_registry(device_registry, mock_vehicle["expected_device"])

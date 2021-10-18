@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 import aiohttp
+import pytest
 from renault_api.gigya.exceptions import InvalidCredentialsException
 
 from homeassistant.components.renault.const import DOMAIN
@@ -11,10 +12,16 @@ from homeassistant.core import HomeAssistant
 from . import setup_renault_integration_simple
 
 
+@pytest.fixture(autouse=True)
+def set_platform() -> None:
+    """Override PLATFORMS."""
+    with patch("homeassistant.components.renault.PLATFORMS", []):
+        yield
+
+
 async def test_setup_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Test entry setup and unload."""
-    with patch("homeassistant.components.renault.PLATFORMS", []):
-        await setup_renault_integration_simple(hass, config_entry)
+    await setup_renault_integration_simple(hass, config_entry)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.LOADED

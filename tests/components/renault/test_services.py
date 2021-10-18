@@ -35,6 +35,13 @@ from tests.common import load_fixture
 from tests.components.renault.const import MOCK_VEHICLES
 
 
+@pytest.fixture(autouse=True)
+def set_platform() -> None:
+    """Override PLATFORMS."""
+    with patch("homeassistant.components.renault.PLATFORMS", []):
+        yield
+
+
 def get_device_id(hass: HomeAssistant) -> str:
     """Get device_id."""
     device_registry = dr.async_get(hass)
@@ -45,8 +52,7 @@ def get_device_id(hass: HomeAssistant) -> str:
 
 async def test_service_registration(hass: HomeAssistant, config_entry: ConfigEntry):
     """Test entry setup and unload."""
-    with patch("homeassistant.components.renault.PLATFORMS", []):
-        await setup_renault_integration_simple(hass, config_entry)
+    await setup_renault_integration_simple(hass, config_entry)
 
     # Check that all services are registered.
     for service in SERVICES:
