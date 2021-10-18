@@ -39,6 +39,12 @@ def attribute_equal(states: list[State], key: str) -> bool:
     return _values_equal(find_state_attributes(states, key))
 
 
+def most_frequent_attribute(states: list[State], key: str) -> Any:
+    """Find attributes with matching key from states."""
+    attrs = list(find_state_attributes(states, key))
+    return max(set(attrs), key=attrs.count)
+
+
 def states_equal(states: list[State]) -> bool:
     """Return True if all states are equal.
 

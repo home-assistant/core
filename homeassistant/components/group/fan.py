@@ -6,12 +6,16 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.fan import (
+    ATTR_DIRECTION,
+    ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
     DOMAIN,
     PLATFORM_SCHEMA,
     SERVICE_SET_SPEED,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    SUPPORT_DIRECTION,
+    SUPPORT_OSCILLATE,
     SUPPORT_SET_SPEED,
     FanEntity,
 )
@@ -31,9 +35,14 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType
 
 from . import GroupEntity
-from .util import attribute_equal, reduce_attribute, states_equal
+from .util import (
+    attribute_equal,
+    most_frequent_attribute,
+    reduce_attribute,
+    states_equal,
+)
 
-SUPPORTED_FLAGS = {SUPPORT_SET_SPEED}
+SUPPORTED_FLAGS = {SUPPORT_SET_SPEED, SUPPORT_DIRECTION, SUPPORT_OSCILLATE}
 
 DEFAULT_NAME = "Fan Group"
 
@@ -69,6 +78,8 @@ class FanGroup(GroupEntity, FanEntity):
         self._entities = entities
         self._fans: dict[int, set[str]] = {flag: set() for flag in SUPPORTED_FLAGS}
         self._percentage = None
+        self._oscillating = None
+        self._direction = None
         self._attr_name = name
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entities}
         self._attr_unique_id = unique_id
@@ -82,6 +93,16 @@ class FanGroup(GroupEntity, FanEntity):
     def percentage(self) -> int | None:
         """Return the current speed as a percentage."""
         return self._percentage
+
+    @property
+    def current_direction(self) -> str | None:
+        """Return the current direction of the fan."""
+        return self._direction
+
+    @property
+    def oscillating(self) -> bool | None:
+        """Return whether or not the fan is currently oscillating."""
+        return self._oscillating
 
     async def _update_supported_features_event(self, event: Event) -> None:
         self.async_set_context(event.context)
@@ -194,6 +215,22 @@ class FanGroup(GroupEntity, FanEntity):
         self._percentage = reduce_attribute(percentage_states, ATTR_PERCENTAGE)
         self._attr_assumed_state |= not attribute_equal(
             percentage_states, ATTR_PERCENTAGE
+        )
+
+        oscillate_fans = self._fans[SUPPORT_OSCILLATE]
+        all_oscillate_states = [self.hass.states.get(x) for x in oscillate_fans]
+        oscillate_states: list[State] = list(filter(None, all_oscillate_states))
+        self._oscillating = most_frequent_attribute(oscillate_states, ATTR_OSCILLATING)
+        self._attr_assumed_state |= not attribute_equal(
+            oscillate_states, ATTR_OSCILLATING
+        )
+
+        direction_fans = self._fans[SUPPORT_DIRECTION]
+        all_direction_states = [self.hass.states.get(x) for x in direction_fans]
+        direction_states: list[State] = list(filter(None, all_direction_states))
+        self._direction = most_frequent_attribute(direction_states, ATTR_DIRECTION)
+        self._attr_assumed_state |= not attribute_equal(
+            direction_states, ATTR_DIRECTION
         )
 
         supported_features = 0
