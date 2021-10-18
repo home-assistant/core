@@ -75,8 +75,12 @@ def _assert_raw_config(domain, config, trace):
     assert trace["config"] == config
 
 
-async def _assert_contexts(client, next_id, contexts):
-    await client.send_json({"id": next_id(), "type": "trace/contexts"})
+async def _assert_contexts(client, next_id, contexts, domain=None, item_id=None):
+    request = {"id": next_id(), "type": "trace/contexts"}
+    if domain is not None:
+        request["domain"] = domain
+        request["item_id"] = item_id
+    await client.send_json(request)
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == contexts
@@ -158,6 +162,8 @@ async def test_get_trace(
 
     client = await hass_ws_client()
     contexts = {}
+    contexts_sun = {}
+    contexts_moon = {}
 
     # Trigger "sun" automation / run "sun" script
     context = Context()
@@ -197,6 +203,11 @@ async def test_get_trace(
     assert trace["context"][context_key] == context.id
     assert trace.get("trigger", UNDEFINED) == trigger[0]
     contexts[trace["context"]["id"]] = {
+        "run_id": trace["run_id"],
+        "domain": domain,
+        "item_id": trace["item_id"],
+    }
+    contexts_sun[trace["context"]["id"]] = {
         "run_id": trace["run_id"],
         "domain": domain,
         "item_id": trace["item_id"],
@@ -250,10 +261,17 @@ async def test_get_trace(
         "domain": domain,
         "item_id": trace["item_id"],
     }
+    contexts_moon[trace["context"]["id"]] = {
+        "run_id": trace["run_id"],
+        "domain": domain,
+        "item_id": trace["item_id"],
+    }
 
     if len(extra_trace_keys) <= 2:
         # Check contexts
         await _assert_contexts(client, next_id, contexts)
+        await _assert_contexts(client, next_id, contexts_moon, domain, "moon")
+        await _assert_contexts(client, next_id, contexts_sun, domain, "sun")
         return
 
     # Trigger "moon" automation with failing condition
@@ -293,6 +311,11 @@ async def test_get_trace(
     assert trace["trigger"] == "event 'test_event3'"
     assert trace["item_id"] == "moon"
     contexts[trace["context"]["id"]] = {
+        "run_id": trace["run_id"],
+        "domain": domain,
+        "item_id": trace["item_id"],
+    }
+    contexts_moon[trace["context"]["id"]] = {
         "run_id": trace["run_id"],
         "domain": domain,
         "item_id": trace["item_id"],
@@ -342,9 +365,16 @@ async def test_get_trace(
         "domain": domain,
         "item_id": trace["item_id"],
     }
+    contexts_moon[trace["context"]["id"]] = {
+        "run_id": trace["run_id"],
+        "domain": domain,
+        "item_id": trace["item_id"],
+    }
 
     # Check contexts
     await _assert_contexts(client, next_id, contexts)
+    await _assert_contexts(client, next_id, contexts_moon, domain, "moon")
+    await _assert_contexts(client, next_id, contexts_sun, domain, "sun")
 
     # List traces
     await client.send_json({"id": next_id(), "type": "trace/list", "domain": domain})
@@ -538,6 +568,151 @@ async def test_trace_overflow(hass, hass_ws_client, domain, stored_traces):
     assert len(moon_traces) == stored_traces or DEFAULT_STORED_TRACES
     assert moon_traces[0]
     assert moon_traces[0]["run_id"] == trace_uuids[0]
+    assert moon_traces[-1]["run_id"] == trace_uuids[-1]
+    assert len(_find_traces(response["result"], domain, "sun")) == 1
+
+
+@pytest.mark.parametrize(
+    "domain,num_restored_moon_traces", [("automation", 3), ("script", 1)]
+)
+async def test_restore_traces_overflow(
+    hass, hass_storage, hass_ws_client, domain, num_restored_moon_traces
+):
+    """Test restored traces are evicted first."""
+    hass.state = CoreState.not_running
+    id = 1
+
+    trace_uuids = []
+
+    def mock_random_uuid_hex():
+        nonlocal trace_uuids
+        trace_uuids.append(random_uuid_hex())
+        return trace_uuids[-1]
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
+    saved_traces = json.loads(load_fixture(f"trace/{domain}_saved_traces.json"))
+    hass_storage["trace.saved_traces"] = saved_traces
+    sun_config = {
+        "id": "sun",
+        "trigger": {"platform": "event", "event_type": "test_event"},
+        "action": {"event": "some_event"},
+    }
+    moon_config = {
+        "id": "moon",
+        "trigger": {"platform": "event", "event_type": "test_event2"},
+        "action": {"event": "another_event"},
+    }
+    await _setup_automation_or_script(hass, domain, [sun_config, moon_config])
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client()
+
+    # Traces should not yet be restored
+    assert "trace_traces_restored" not in hass.data
+
+    # List traces
+    await client.send_json({"id": next_id(), "type": "trace/list", "domain": domain})
+    response = await client.receive_json()
+    assert response["success"]
+    restored_moon_traces = _find_traces(response["result"], domain, "moon")
+    assert len(restored_moon_traces) == num_restored_moon_traces
+    assert len(_find_traces(response["result"], domain, "sun")) == 1
+
+    # Traces should be restored
+    assert "trace_traces_restored" in hass.data
+
+    # Trigger "moon" enough times to overflow the max number of stored traces
+    with patch(
+        "homeassistant.components.trace.uuid_util.random_uuid_hex",
+        wraps=mock_random_uuid_hex,
+    ):
+        for _ in range(DEFAULT_STORED_TRACES - num_restored_moon_traces + 1):
+            await _run_automation_or_script(hass, domain, moon_config, "test_event2")
+            await hass.async_block_till_done()
+
+    await client.send_json({"id": next_id(), "type": "trace/list", "domain": domain})
+    response = await client.receive_json()
+    assert response["success"]
+    moon_traces = _find_traces(response["result"], domain, "moon")
+    assert len(moon_traces) == DEFAULT_STORED_TRACES
+    if num_restored_moon_traces > 1:
+        assert moon_traces[0]["run_id"] == restored_moon_traces[1]["run_id"]
+    assert moon_traces[num_restored_moon_traces - 1]["run_id"] == trace_uuids[0]
+    assert moon_traces[-1]["run_id"] == trace_uuids[-1]
+    assert len(_find_traces(response["result"], domain, "sun")) == 1
+
+
+@pytest.mark.parametrize(
+    "domain,num_restored_moon_traces,restored_run_id",
+    [("automation", 3, "e2c97432afe9b8a42d7983588ed5e6ef"), ("script", 1, "")],
+)
+async def test_restore_traces_late_overflow(
+    hass,
+    hass_storage,
+    hass_ws_client,
+    domain,
+    num_restored_moon_traces,
+    restored_run_id,
+):
+    """Test restored traces are evicted first."""
+    hass.state = CoreState.not_running
+    id = 1
+
+    trace_uuids = []
+
+    def mock_random_uuid_hex():
+        nonlocal trace_uuids
+        trace_uuids.append(random_uuid_hex())
+        return trace_uuids[-1]
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
+    saved_traces = json.loads(load_fixture(f"trace/{domain}_saved_traces.json"))
+    hass_storage["trace.saved_traces"] = saved_traces
+    sun_config = {
+        "id": "sun",
+        "trigger": {"platform": "event", "event_type": "test_event"},
+        "action": {"event": "some_event"},
+    }
+    moon_config = {
+        "id": "moon",
+        "trigger": {"platform": "event", "event_type": "test_event2"},
+        "action": {"event": "another_event"},
+    }
+    await _setup_automation_or_script(hass, domain, [sun_config, moon_config])
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client()
+
+    # Traces should not yet be restored
+    assert "trace_traces_restored" not in hass.data
+
+    # Trigger "moon" enough times to overflow the max number of stored traces
+    with patch(
+        "homeassistant.components.trace.uuid_util.random_uuid_hex",
+        wraps=mock_random_uuid_hex,
+    ):
+        for _ in range(DEFAULT_STORED_TRACES - num_restored_moon_traces + 1):
+            await _run_automation_or_script(hass, domain, moon_config, "test_event2")
+            await hass.async_block_till_done()
+
+    await client.send_json({"id": next_id(), "type": "trace/list", "domain": domain})
+    response = await client.receive_json()
+    assert response["success"]
+    moon_traces = _find_traces(response["result"], domain, "moon")
+    assert len(moon_traces) == DEFAULT_STORED_TRACES
+    if num_restored_moon_traces > 1:
+        assert moon_traces[0]["run_id"] == restored_run_id
+    assert moon_traces[num_restored_moon_traces - 1]["run_id"] == trace_uuids[0]
     assert moon_traces[-1]["run_id"] == trace_uuids[-1]
     assert len(_find_traces(response["result"], domain, "sun")) == 1
 
