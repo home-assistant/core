@@ -45,9 +45,7 @@ class OpenUvBinarySensor(OpenUvEntity, BinarySensorEntity):
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
-        data = self.openuv.data[DATA_PROTECTION_WINDOW]
-
-        if not data:
+        if not (data := self.openuv.data[DATA_PROTECTION_WINDOW]):
             self._attr_available = False
             return
 

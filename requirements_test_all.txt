@@ -476,7 +476,7 @@ hangups==0.4.14
 hass-nabucasa==0.50.0
 
 # homeassistant.components.tasmota
-hatasmota==0.2.20
+hatasmota==0.2.21
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.2
@@ -823,7 +823,7 @@ pybotvac==0.0.22
 pycfdns==1.2.1
 
 # homeassistant.components.cast
-pychromecast==9.2.1
+pychromecast==9.3.0
 
 # homeassistant.components.climacell
 pyclimacell==0.18.2
@@ -1070,7 +1070,7 @@ pysiaalarm==3.0.2
 pysignalclirestapi==0.3.4
 
 # homeassistant.components.sma
-pysma==0.6.6
+pysma==0.6.7
 
 # homeassistant.components.smappee
 pysmappee==0.2.27
@@ -1136,7 +1136,7 @@ python-twitch-client==0.6.0
 python_awair==0.2.1
 
 # homeassistant.components.tile
-pytile==5.2.3
+pytile==5.2.4
 
 # homeassistant.components.traccar
 pytraccar==0.9.0

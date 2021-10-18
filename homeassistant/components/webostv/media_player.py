@@ -143,8 +143,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
 
     async def async_signal_handler(self, data):
         """Handle domain-specific signal by calling appropriate method."""
-        entity_ids = data[ATTR_ENTITY_ID]
-        if entity_ids == ENTITY_MATCH_NONE:
+        if (entity_ids := data[ATTR_ENTITY_ID]) == ENTITY_MATCH_NONE:
             return
 
         if entity_ids == ENTITY_MATCH_ALL or self.entity_id in entity_ids:
@@ -368,8 +367,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     @cmd
     async def async_select_source(self, source):
         """Select input source."""
-        source_dict = self._source_list.get(source)
-        if source_dict is None:
+        if (source_dict := self._source_list.get(source)) is None:
             _LOGGER.warning("Source %s not found for %s", source, self.name)
             return
         if source_dict.get("title"):

@@ -566,9 +566,7 @@ class CastDevice(MediaPlayerEntity):
     @property
     def state(self):
         """Return the state of the player."""
-        media_status = self._media_status()[0]
-
-        if media_status is None:
+        if (media_status := self._media_status()[0]) is None:
             return None
         if media_status.player_is_playing:
             return STATE_PLAYING
@@ -589,8 +587,7 @@ class CastDevice(MediaPlayerEntity):
     @property
     def media_content_type(self):
         """Content type of current playing media."""
-        media_status = self._media_status()[0]
-        if media_status is None:
+        if (media_status := self._media_status()[0]) is None:
             return None
         if media_status.media_is_tvshow:
             return MEDIA_TYPE_TVSHOW
@@ -609,8 +606,7 @@ class CastDevice(MediaPlayerEntity):
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        media_status = self._media_status()[0]
-        if media_status is None:
+        if (media_status := self._media_status()[0]) is None:
             return None
 
         images = media_status.images

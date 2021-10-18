@@ -227,8 +227,7 @@ class HarmonyRemote(HarmonyEntity, remote.RemoteEntity, RestoreEntity):
     async def async_send_command(self, command, **kwargs):
         """Send a list of commands to one device."""
         _LOGGER.debug("%s: Send Command", self.name)
-        device = kwargs.get(ATTR_DEVICE)
-        if device is None:
+        if (device := kwargs.get(ATTR_DEVICE)) is None:
             _LOGGER.error("%s: Missing required argument: device", self.name)
             return
 
