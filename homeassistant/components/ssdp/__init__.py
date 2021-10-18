@@ -54,6 +54,8 @@ ATTR_UPNP_SERIAL = "serialNumber"
 ATTR_UPNP_UDN = "UDN"
 ATTR_UPNP_UPC = "UPC"
 ATTR_UPNP_PRESENTATION_URL = "presentationURL"
+# Attributes for accessing info added by Home Assistant
+ATTR_HA_MATCHING_DOMAINS = "x-homeassistant-matching-domains"
 
 PRIMARY_MATCH_KEYS = [ATTR_UPNP_MANUFACTURER, "st", ATTR_UPNP_DEVICE_TYPE, "nt"]
 
@@ -398,6 +400,7 @@ class Scanner:
             return
 
         discovery_info = discovery_info_from_headers_and_description(info_with_desc)
+        discovery_info[ATTR_HA_MATCHING_DOMAINS] = matching_domains
         ssdp_change = SSDP_SOURCE_SSDP_CHANGE_MAPPING[source]
         await _async_process_callbacks(callbacks, discovery_info, ssdp_change)
 
