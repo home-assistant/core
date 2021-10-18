@@ -204,10 +204,6 @@ class FanGroup(GroupEntity, FanEntity):
 
         if self._attr_assumed_state:
             return
-
-        for entity_id in self._entities:
-            if (state := self.hass.states.get(entity_id)) is None:
-                continue
-            if state and state.attributes.get(ATTR_ASSUMED_STATE):
-                self._attr_assumed_state = True
-                break
+        self._attr_assumed_state = any(
+            state.attributes.get(ATTR_ASSUMED_STATE) for state in on_states
+        )
