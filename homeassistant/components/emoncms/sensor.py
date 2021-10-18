@@ -109,8 +109,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if sensor_names is not None:
             name = sensor_names.get(int(elem["id"]), None)
 
-        unit = elem.get("unit")
-        if unit:
+        if unit := elem.get("unit"):
             unit_of_measurement = unit
         else:
             unit_of_measurement = config_unit
