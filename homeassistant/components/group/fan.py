@@ -240,9 +240,7 @@ class FanGroup(GroupEntity, FanEntity):
         )
         return states
 
-    def _set_attr_from_most_frequent(
-        self, attr: str, flag: int, entity_attr: str
-    ) -> None:
+    def _set_attr_most_frequent(self, attr: str, flag: int, entity_attr: str) -> None:
         """Set an attribute based on most frequent supported entities attributes."""
         states = self._async_states_by_support_flag(flag)
         setattr(self, attr, most_frequent_attribute(states, entity_attr))
@@ -274,12 +272,10 @@ class FanGroup(GroupEntity, FanEntity):
         else:
             self._speed_count = 100
 
-        self._set_attr_from_most_frequent(
+        self._set_attr_most_frequent(
             "_oscillating", SUPPORT_OSCILLATE, ATTR_OSCILLATING
         )
-        self._set_attr_from_most_frequent(
-            "_direction", SUPPORT_OSCILLATE, ATTR_DIRECTION
-        )
+        self._set_attr_most_frequent("_direction", SUPPORT_DIRECTION, ATTR_DIRECTION)
 
         self._supported_features = 0
         for feature in SUPPORTED_FLAGS:
