@@ -151,6 +151,14 @@ async def test_state(hass, setup_comp):
     state = hass.states.get(FAN_GROUP)
     assert state.state == STATE_ON
 
+    # now remove an entity
+    hass.states.async_remove(PERCENTAGE_LIMITED_FAN_ENTITY_ID)
+    await hass.async_block_till_done()
+    state = hass.states.get(FAN_GROUP)
+    assert state.state == STATE_OFF
+    assert ATTR_ASSUMED_STATE not in state.attributes
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
+
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ATTRIBUTES, 1)])
 async def test_attributes(hass, setup_comp):
