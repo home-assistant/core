@@ -222,22 +222,16 @@ class SynoApi:
         try:
             await self._hass.async_add_executor_job(self.system.reboot)
         except (SynologyDSMLoginFailedException, SynologyDSMRequestException) as err:
-            LOGGER.error(
-                "Reboot of '%s' not possible, please try again later",
-                self._entry.unique_id,
-            )
             LOGGER.debug("Exception:%s", err)
+            raise err
 
     async def async_shutdown(self) -> None:
         """Shutdown NAS."""
         try:
             await self._hass.async_add_executor_job(self.system.shutdown)
         except (SynologyDSMLoginFailedException, SynologyDSMRequestException) as err:
-            LOGGER.error(
-                "Shutdown of '%s' not possible, please try again later",
-                self._entry.unique_id,
-            )
             LOGGER.debug("Exception:%s", err)
+            raise err
 
     async def async_unload(self) -> None:
         """Stop interacting with the NAS and prepare for removal from hass."""
