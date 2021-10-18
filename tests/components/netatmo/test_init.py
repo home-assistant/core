@@ -382,3 +382,54 @@ async def test_setup_component_with_delay(hass, config_entry):
 
         await hass.async_stop()
         mock_dropwebhook.assert_called_once()
+
+
+async def test_setup_component_invalid_token_scope(hass):
+    """Test handling of invalid token scope."""
+    config_entry = MockConfigEntry(
+        domain="netatmo",
+        data={
+            "auth_implementation": "cloud",
+            "token": {
+                "refresh_token": "mock-refresh-token",
+                "access_token": "mock-access-token",
+                "type": "Bearer",
+                "expires_in": 60,
+                "expires_at": time() + 1000,
+                "scope": " ".join(
+                    [
+                        "read_smokedetector",
+                        "read_thermostat",
+                        "write_thermostat",
+                    ]
+                ),
+            },
+        },
+        options={},
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
+    ) as mock_auth, patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+    ) as mock_impl, patch(
+        "homeassistant.components.webhook.async_generate_url"
+    ) as mock_webhook:
+        mock_auth.return_value.async_post_request.side_effect = fake_post_request
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        assert await async_setup_component(hass, "netatmo", {})
+
+    await hass.async_block_till_done()
+
+    mock_auth.assert_not_called()
+    mock_impl.assert_called_once()
+    mock_webhook.assert_not_called()
+
+    assert config_entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+    assert hass.config_entries.async_entries(DOMAIN)
+    assert len(hass.states.async_all()) > 0
+
+    for config_entry in hass.config_entries.async_entries("netatmo"):
+        await hass.config_entries.async_remove(config_entry.entry_id)
