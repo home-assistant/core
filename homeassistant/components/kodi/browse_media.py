@@ -146,8 +146,7 @@ async def item_payload(item, get_thumbnail_url=None):
     elif "channelid" in item:
         media_content_type = MEDIA_TYPE_CHANNEL
         media_content_id = f"{item['channelid']}"
-        broadcasting = item.get("broadcastnow")
-        if broadcasting:
+        if broadcasting := item.get("broadcastnow"):
             show = broadcasting.get("title")
             title = f"{title} - {show}"
         can_play = True
@@ -322,8 +321,7 @@ async def get_media_info(media_library, search_id, search_type):
             season_id=int(season_id),
             properties=["thumbnail", "tvshowid", "seasonid"],
         )
-        media = media.get("episodes")
-        if media:
+        if media := media.get("episodes"):
             season = await media_library.get_season_details(
                 season_id=int(media[0]["seasonid"]), properties=properties
             )

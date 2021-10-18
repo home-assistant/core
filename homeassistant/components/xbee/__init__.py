@@ -115,8 +115,7 @@ class XBeeConfig:
         If an address has been provided, unhexlify it, otherwise return None
         as we're talking to our local XBee device.
         """
-        address = self._config.get("address")
-        if address is not None:
+        if (address := self._config.get("address")) is not None:
             address = unhexlify(address)
         return address
 
