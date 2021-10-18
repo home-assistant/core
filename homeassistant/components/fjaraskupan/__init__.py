@@ -64,9 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "Detection: %s %s - %s", ble_device.name, ble_device, advertisement_data
         )
 
-        data = state.devices.get(ble_device.address)
-
-        if data:
+        if data := state.devices.get(ble_device.address):
             data.device.detection_callback(ble_device, advertisement_data)
             data.coordinator.async_set_updated_data(data.device.state)
         else:
