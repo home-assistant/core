@@ -61,6 +61,8 @@ ICON_FOR_EMPTY_VALUES = {
     "sensor.plug_state": "mdi:power-plug-off",
 }
 
+MOCK_ACCOUNT_ID = "account_id_1"
+
 # Mock config data to be used across multiple tests
 MOCK_CONFIG = {
     CONF_USERNAME: "email@test.com",

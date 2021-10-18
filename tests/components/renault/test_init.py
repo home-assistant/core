@@ -9,19 +9,25 @@ from homeassistant.components.renault.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from . import setup_renault_integration_simple
-
 
 @pytest.fixture(autouse=True)
-def set_platform() -> None:
+def override_platforms():
     """Override PLATFORMS."""
     with patch("homeassistant.components.renault.PLATFORMS", []):
         yield
 
 
+@pytest.fixture(autouse=True, name="vehicle_type", params=["zoe_40"])
+def override_vehicle_type(request) -> str:
+    """Parametrize vehicle type."""
+    return request.param
+
+
+@pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
 async def test_setup_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Test entry setup and unload."""
-    await setup_renault_integration_simple(hass, config_entry)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.LOADED
