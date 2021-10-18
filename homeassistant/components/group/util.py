@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterator
 from itertools import groupby
-from typing import Any, Iterable
+from typing import Any
 
 from homeassistant.core import State
 
@@ -54,7 +54,7 @@ def states_equal(states: list[State]) -> bool:
     return _values_equal(find_state(states))
 
 
-def _values_equal(values: Iterable[Any]) -> bool:
+def _values_equal(values: Iterator[Any]) -> bool:
     """Return True if all values are equal.
 
     Note: Returns True if no matching attribute is found.
