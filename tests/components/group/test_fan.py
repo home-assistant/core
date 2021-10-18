@@ -41,6 +41,7 @@ from tests.common import assert_setup_component, async_fire_time_changed
 
 FAN_GROUP = "fan.fan_group"
 
+MISSING_FAN_ENTITY_ID = "fan.missing"
 LIVING_ROOM_FAN_ENTITY_ID = "fan.living_room_fan"
 PERCENTAGE_FULL_FAN_ENTITY_ID = "fan.percentage_full_fan"
 CEILING_FAN_ENTITY_ID = "fan.ceiling_fan"
@@ -53,11 +54,16 @@ LIMITED_FAN_ENTITY_IDS = [CEILING_FAN_ENTITY_ID, PERCENTAGE_LIMITED_FAN_ENTITY_I
 FULL_SUPPORT_FEATURES = SUPPORT_SET_SPEED | SUPPORT_DIRECTION | SUPPORT_OSCILLATE
 
 
-CONFIG_ALL = {
+CONFIG_MISSING_FAN = {
     DOMAIN: [
+        {"platform": "demo"},
         {
             "platform": "group",
-            CONF_ENTITIES: [*FULL_FAN_ENTITY_IDS, *LIMITED_FAN_ENTITY_IDS],
+            CONF_ENTITIES: [
+                MISSING_FAN_ENTITY_ID,
+                *FULL_FAN_ENTITY_IDS,
+                *LIMITED_FAN_ENTITY_IDS,
+            ],
         },
     ]
 }
@@ -304,3 +310,41 @@ async def test_direction_oscillating(hass, setup_comp):
     assert state.attributes[ATTR_OSCILLATING] is True
     assert state.attributes[ATTR_DIRECTION] == DIRECTION_REVERSE
     assert ATTR_ASSUMED_STATE not in state.attributes
+
+    hass.states.async_set(
+        LIVING_ROOM_FAN_ENTITY_ID,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_FEATURES: FULL_SUPPORT_FEATURES,
+            ATTR_OSCILLATING: False,
+            ATTR_DIRECTION: DIRECTION_FORWARD,
+            ATTR_PERCENTAGE: 50,
+        },
+    )
+    hass.states.async_set(
+        PERCENTAGE_FULL_FAN_ENTITY_ID,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_FEATURES: FULL_SUPPORT_FEATURES,
+            ATTR_OSCILLATING: False,
+            ATTR_DIRECTION: DIRECTION_FORWARD,
+            ATTR_PERCENTAGE: 50,
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FAN_GROUP)
+    assert state.state == STATE_ON
+    assert ATTR_PERCENTAGE in state.attributes
+    assert state.attributes[ATTR_PERCENTAGE] == 50
+    assert state.attributes[ATTR_OSCILLATING] is False
+    assert state.attributes[ATTR_DIRECTION] == DIRECTION_FORWARD
+    assert ATTR_ASSUMED_STATE not in state.attributes
+
+
+@pytest.mark.parametrize("config_count", [(CONFIG_MISSING_FAN, 2)])
+async def test_state(hass, setup_comp):
+    """Test we can still setup with a missing entity id."""
+    state = hass.states.get(FAN_GROUP)
+    await hass.async_block_till_done()
+    assert state.state == STATE_OFF
