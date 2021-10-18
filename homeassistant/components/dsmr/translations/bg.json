@@ -1,5 +1,11 @@
 {
     "config": {
+        "abort": {
+            "cannot_communicate": "\u041d\u0435\u0443\u0441\u043f\u0435\u0448\u043d\u0430 \u043a\u043e\u043c\u0443\u043d\u0438\u043a\u0430\u0446\u0438\u044f"
+        },
+        "error": {
+            "cannot_communicate": "\u041d\u0435\u0443\u0441\u043f\u0435\u0448\u043d\u0430 \u043a\u043e\u043c\u0443\u043d\u0438\u043a\u0430\u0446\u0438\u044f"
+        },
         "step": {
             "setup_network": {
                 "data": {
