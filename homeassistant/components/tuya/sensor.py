@@ -39,6 +39,24 @@ from .const import (
     UnitOfMeasurement,
 )
 
+# Commonly used battery sensors, that are re-used in the sensors down below.
+BATTERY_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=DPCode.BATTERY_PERCENTAGE,
+        name="Battery",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=DEVICE_CLASS_BATTERY,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key=DPCode.BATTERY_STATE,
+        name="Battery State",
+        icon="mdi:battery",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+)
+
 # All descriptions can be found here. Mostly the Integer data types in the
 # default status set of each category (that don't have a set instruction)
 # end up being a sensor.
@@ -46,22 +64,7 @@ from .const import (
 SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
     # Door Window Sensor
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48hm02l8m
-    "mcs": (
-        SensorEntityDescription(
-            key=DPCode.BATTERY_PERCENTAGE,
-            name="Battery",
-            native_unit_of_measurement=PERCENTAGE,
-            device_class=DEVICE_CLASS_BATTERY,
-            state_class=STATE_CLASS_MEASUREMENT,
-            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        ),
-        SensorEntityDescription(
-            key=DPCode.BATTERY_STATE,
-            name="Battery State",
-            icon="mdi:battery",
-            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        ),
-    ),
+    "mcs": BATTERY_SENSORS,
     # Switch
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
     "kg": (
@@ -119,74 +122,17 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
             device_class=DEVICE_CLASS_CO2,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
-        SensorEntityDescription(
-            key=DPCode.BATTERY_PERCENTAGE,
-            name="Battery",
-            native_unit_of_measurement=PERCENTAGE,
-            device_class=DEVICE_CLASS_BATTERY,
-            state_class=STATE_CLASS_MEASUREMENT,
-            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        ),
-        SensorEntityDescription(
-            key=DPCode.BATTERY_STATE,
-            name="Battery State",
-            icon="mdi:battery",
-            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        ),
+        *BATTERY_SENSORS,
     ),
     # PIR Detector
     # https://developer.tuya.com/en/docs/iot/categorypir?id=Kaiuz3ss11b80
-    "pir": (
-        SensorEntityDescription(
-            key=DPCode.BATTERY_PERCENTAGE,
-            name="Battery",
-            native_unit_of_measurement=PERCENTAGE,
-            device_class=DEVICE_CLASS_BATTERY,
-            state_class=STATE_CLASS_MEASUREMENT,
-            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        ),
-        SensorEntityDescription(
-            key=DPCode.BATTERY_STATE,
-            name="Battery State",
-            icon="mdi:battery",
-            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        ),
-    ),
+    "pir": BATTERY_SENSORS,
     # Vibration Sensor
     # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
-    "zd": (
-        SensorEntityDescription(
-            key=DPCode.BATTERY_PERCENTAGE,
-            name="Battery",
-            native_unit_of_measurement=PERCENTAGE,
-            device_class=DEVICE_CLASS_BATTERY,
-            state_class=STATE_CLASS_MEASUREMENT,
-            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        ),
-        SensorEntityDescription(
-            key=DPCode.BATTERY_STATE,
-            name="Battery State",
-            icon="mdi:battery",
-            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        ),
-    ),
+    "zd": BATTERY_SENSORS,
     # Emergency Button
     # https://developer.tuya.com/en/docs/iot/categorysos?id=Kaiuz3oi6agjy
-    "sos": (
-        SensorEntityDescription(
-            key=DPCode.BATTERY_PERCENTAGE,
-            name="Battery",
-            native_unit_of_measurement=PERCENTAGE,
-            device_class=DEVICE_CLASS_BATTERY,
-            state_class=STATE_CLASS_MEASUREMENT,
-            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        ),
-        SensorEntityDescription(
-            key=DPCode.BATTERY_STATE,
-            name="Battery State",
-            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        ),
-    ),
+    "sos": BATTERY_SENSORS,
 }
 
 # Socket (duplicate of `kg`)
