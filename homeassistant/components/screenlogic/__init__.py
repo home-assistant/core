@@ -18,6 +18,7 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -30,6 +31,9 @@ from .const import DEFAULT_SCAN_INTERVAL, DISCOVERED_GATEWAYS, DOMAIN
 from .services import async_load_screenlogic_services, async_unload_screenlogic_services
 
 _LOGGER = logging.getLogger(__name__)
+
+
+REQUEST_REFRESH_DELAY = 1
 
 PLATFORMS = ["switch", "sensor", "binary_sensor", "climate", "light"]
 
@@ -135,6 +139,11 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=DOMAIN,
             update_interval=interval,
+            # We don't want an immediate refresh since the device
+            # takes a moment to reflect the state change
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
+            ),
         )
 
     def reconnect_gateway(self):
