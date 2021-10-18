@@ -138,8 +138,7 @@ class OpenGarageCover(CoordinatorEntity, CoverEntity):
     @callback
     def _update_attr(self) -> None:
         """Update the state and attributes."""
-        status = self.coordinator.data
-        if status is None:
+        if (status := self.coordinator.data) is None:
             _LOGGER.error("Unable to connect to OpenGarage device")
             self._attr_available = False
             return
