@@ -1,6 +1,7 @@
 """This platform allows several fans to be grouped into one fan."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -55,6 +56,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
@@ -226,7 +229,9 @@ class FanGroup(GroupEntity, FanEntity):
         percentage_fans = self._fans[SUPPORT_SET_SPEED]
         all_percentage_states = [self.hass.states.get(x) for x in percentage_fans]
         percentage_states: list[State] = list(filter(None, all_percentage_states))
+        _LOGGER.warning("percentage states: %s", percentage_states)
         self._percentage = reduce_attribute(percentage_states, ATTR_PERCENTAGE)
+        _LOGGER.warning("_percentage: %s", self._percentage)
         self._attr_assumed_state |= not attribute_equal(
             percentage_states, ATTR_PERCENTAGE
         )
