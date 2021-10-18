@@ -240,6 +240,14 @@ class FanGroup(GroupEntity, FanEntity):
         )
         return states
 
+    def _set_attr_from_most_frequent(
+        self, attr: str, flag: int, entity_attr: str
+    ) -> None:
+        """Set an attribute based on most frequent supported entities attributes."""
+        states = self._async_states_by_support_flag(flag)
+        setattr(self, attr, most_frequent_attribute(states, entity_attr))
+        self._attr_assumed_state |= not attribute_equal(states, entity_attr)
+
     async def async_update(self) -> None:
         """Update state and attributes."""
         self._attr_assumed_state = False
@@ -266,16 +274,11 @@ class FanGroup(GroupEntity, FanEntity):
         else:
             self._speed_count = 100
 
-        oscillate_states = self._async_states_by_support_flag(SUPPORT_OSCILLATE)
-        self._oscillating = most_frequent_attribute(oscillate_states, ATTR_OSCILLATING)
-        self._attr_assumed_state |= not attribute_equal(
-            oscillate_states, ATTR_OSCILLATING
+        self._set_attr_from_most_frequent(
+            "_oscillating", SUPPORT_OSCILLATE, ATTR_OSCILLATING
         )
-
-        direction_states = self._async_states_by_support_flag(SUPPORT_DIRECTION)
-        self._direction = most_frequent_attribute(direction_states, ATTR_DIRECTION)
-        self._attr_assumed_state |= not attribute_equal(
-            direction_states, ATTR_DIRECTION
+        self._set_attr_from_most_frequent(
+            "_direction", SUPPORT_OSCILLATE, ATTR_DIRECTION
         )
 
         self._supported_features = 0
