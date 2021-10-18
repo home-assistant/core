@@ -242,8 +242,10 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
         """Return if the entity should be enabled when first added to the entity registry."""
         # Hide fast changing status sensors
         if self._tasmota_entity.quantity in (
+            hc.SENSOR_STATUS_IP,
             hc.SENSOR_STATUS_RSSI,
             hc.SENSOR_STATUS_SIGNAL,
+            hc.SENSOR_STATUS_VERSION,
         ):
             return False
         return True

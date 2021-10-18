@@ -702,8 +702,8 @@ async def test_indexed_sensor_attributes(hass, mqtt_mock, setup_tasmota):
 @pytest.mark.parametrize(
     "sensor_name, disabled, disabled_by",
     [
-        ("tasmota_firmware_version", False, None),
-        ("tasmota_ip", False, None),
+        ("tasmota_firmware_version", True, er.DISABLED_INTEGRATION),
+        ("tasmota_ip", True, er.DISABLED_INTEGRATION),
         ("tasmota_last_restart_time", False, None),
         ("tasmota_mqtt_connect_count", False, None),
         ("tasmota_rssi", True, er.DISABLED_INTEGRATION),
