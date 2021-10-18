@@ -179,7 +179,7 @@ aiogithubapi==21.8.0
 aioguardian==1.0.8
 
 # homeassistant.components.harmony
-aioharmony==0.2.7
+aioharmony==0.2.8
 
 # homeassistant.components.homekit_controller
 aiohomekit==0.6.3
