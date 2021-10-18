@@ -80,6 +80,7 @@ class FanGroup(GroupEntity, FanEntity):
         self._percentage = None
         self._oscillating = None
         self._direction = None
+        self._is_on = False
         self._attr_name = name
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entities}
         self._attr_unique_id = unique_id
