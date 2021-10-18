@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from . import setup_owproxy_mock_devices
-from .const import MOCK_OWPROXY_DEVICES
+from .const import ATTR_DEFAULT_DISABLED, MOCK_OWPROXY_DEVICES
 
 from tests.common import mock_registry
 
@@ -40,7 +40,7 @@ async def test_owserver_binary_sensor(
 
     # Ensure all entities are enabled
     for expected_entity in expected_entities:
-        if expected_entity.get("disabled"):
+        if expected_entity.get(ATTR_DEFAULT_DISABLED):
             entity_id = expected_entity["entity_id"]
             registry_entry = entity_registry.entities.get(entity_id)
             assert registry_entry.disabled

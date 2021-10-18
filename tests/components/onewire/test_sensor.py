@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import setup_owproxy_mock_devices, setup_sysbus_mock_devices
-from .const import MOCK_OWPROXY_DEVICES, MOCK_SYSBUS_DEVICES
+from .const import ATTR_DEFAULT_DISABLED, MOCK_OWPROXY_DEVICES, MOCK_SYSBUS_DEVICES
 
 from tests.common import assert_setup_component, mock_device_registry, mock_registry
 
@@ -150,7 +150,7 @@ async def test_owserver_setup_valid_device(
 
     # Ensure all entities are enabled
     for expected_entity in expected_entities:
-        if expected_entity.get("disabled"):
+        if expected_entity.get(ATTR_DEFAULT_DISABLED):
             entity_id = expected_entity["entity_id"]
             registry_entry = entity_registry.entities.get(entity_id)
             assert registry_entry.disabled
