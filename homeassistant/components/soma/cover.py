@@ -1,6 +1,8 @@
 """Support for Soma Covers."""
 import logging
 
+import logging
+
 from requests import RequestException
 
 from homeassistant.components.cover import (
@@ -24,12 +26,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import API, DEVICES, DOMAIN, SomaEntity
 
-from .utils import (
-    is_api_response_success,
-    log_connect_api_unreachable,
-    log_debug_msg,
-    log_device_unreachable,
-)
+from .utils import is_api_response_success
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -87,7 +86,9 @@ class SomaTilt(SomaEntity, CoverEntity):
         if is_api_response_success(response):
             self.current_position = 0
         else:
-            log_device_unreachable(self.device["name"], response["msg"])
+            _LOGGER.error(
+                "Unable to reach device %s (%s)", self.device["name"], response["msg"]
+            )
 
     def open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
@@ -95,7 +96,9 @@ class SomaTilt(SomaEntity, CoverEntity):
         if is_api_response_success(response):
             self.current_position = 100
         else:
-            log_device_unreachable(self.device["name"], response["msg"])
+            _LOGGER.error(
+                "Unable to reach device %s (%s)", self.device["name"], response["msg"]
+            )
 
     def stop_cover_tilt(self, **kwargs):
         """Stop the cover tilt."""
@@ -104,7 +107,9 @@ class SomaTilt(SomaEntity, CoverEntity):
             # Set cover position to some value where up/down are both enabled
             self.current_position = 50
         else:
-            log_device_unreachable(self.device["name"], response["msg"])
+            _LOGGER.error(
+                "Unable to reach device %s (%s)", self.device["name"], response["msg"]
+            )
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
@@ -116,22 +121,26 @@ class SomaTilt(SomaEntity, CoverEntity):
         if is_api_response_success(response):
             self.current_position = kwargs[ATTR_TILT_POSITION]
         else:
-            log_device_unreachable(self.device["name"], response["msg"])
+            _LOGGER.error(
+                "Unable to reach device %s (%s)", self.device["name"], response["msg"]
+            )
 
     async def async_update(self):
         """Update the entity with the latest data."""
         try:
-            log_debug_msg("Soma Tilt Update")
+            _LOGGER.debug("Soma Tilt Update")
             response = await self.hass.async_add_executor_job(
                 self.api.get_shade_state, self.device["mac"]
             )
         except RequestException:
-            log_connect_api_unreachable()
+            _LOGGER.error("Connection to SOMA Connect failed")
             self.is_available = False
             return
 
         if not is_api_response_success(response):
-            log_device_unreachable(self.device["name"], response["msg"])
+            _LOGGER.error(
+                "Unable to reach device %s (%s)", self.device["name"], response["msg"]
+            )
             self.is_available = False
             return
 
@@ -174,13 +183,17 @@ class SomaShade(SomaEntity, CoverEntity):
         """Close the cover."""
         response = self.api.set_shade_position(self.device["mac"], 100)
         if not is_api_response_success(response):
-            log_device_unreachable(self.device["name"], response["msg"])
+            _LOGGER.error(
+                "Unable to reach device %s (%s)", self.device["name"], response["msg"]
+            )
 
     def open_cover(self, **kwargs):
         """Open the cover."""
         response = self.api.set_shade_position(self.device["mac"], 0)
         if not is_api_response_success(response):
-            log_device_unreachable(self.device["name"], response["msg"])
+            _LOGGER.error(
+                "Unable to reach device %s (%s)", self.device["name"], response["msg"]
+            )
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
@@ -189,7 +202,9 @@ class SomaShade(SomaEntity, CoverEntity):
             # Set cover position to some value where up/down are both enabled
             self.current_position = 50
         else:
-            log_device_unreachable(self.device["name"], response["msg"])
+            _LOGGER.error(
+                "Unable to reach device %s (%s)", self.device["name"], response["msg"]
+            )
 
     def set_cover_position(self, **kwargs):
         """Move the cover shutter to a specific position."""
@@ -198,21 +213,25 @@ class SomaShade(SomaEntity, CoverEntity):
             self.device["mac"], 100 - kwargs[ATTR_POSITION]
         )
         if not is_api_response_success(response):
-            log_device_unreachable(self.device["name"], response["msg"])
+            _LOGGER.error(
+                "Unable to reach device %s (%s)", self.device["name"], response["msg"]
+            )
 
     async def async_update(self):
         """Update the cover with the latest data."""
         try:
-            log_debug_msg("Soma Shade Update")
+            _LOGGER.debug("Soma Shade Update")
             response = await self.hass.async_add_executor_job(
                 self.api.get_shade_state, self.device["mac"]
             )
         except RequestException:
-            log_connect_api_unreachable()
+            _LOGGER.error("Connection to SOMA Connect failed")
             self.is_available = False
             return
         if not is_api_response_success(response):
-            log_device_unreachable(self.device["name"], response["msg"])
+            _LOGGER.error(
+                "Unable to reach device %s (%s)", self.device["name"], response["msg"]
+            )
             self.is_available = False
             return
         self.current_position = 100 - int(response["position"])
