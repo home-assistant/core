@@ -41,7 +41,7 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 22
+SCHEMA_VERSION = 23
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -310,11 +310,12 @@ class StatisticsShortTerm(Base, StatisticsBase):  # type: ignore
 class StatisticMetaData(TypedDict):
     """Statistic meta data class."""
 
+    has_mean: bool
+    has_sum: bool
+    name: str | None
     source: str
     statistic_id: str
     unit_of_measurement: str | None
-    has_mean: bool
-    has_sum: bool
 
 
 class StatisticsMeta(Base):  # type: ignore
@@ -330,6 +331,7 @@ class StatisticsMeta(Base):  # type: ignore
     unit_of_measurement = Column(String(255))
     has_mean = Column(Boolean)
     has_sum = Column(Boolean)
+    name = Column(String(255))
 
     @staticmethod
     def from_meta(meta: StatisticMetaData) -> StatisticsMeta:

@@ -15,6 +15,8 @@ from homeassistant.components.recorder.models import (
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
+    get_metadata,
+    list_statistic_ids,
     statistics_during_period,
 )
 from homeassistant.const import TEMP_CELSIUS
@@ -320,20 +322,21 @@ def test_external_statistics(hass_recorder, caplog):
     }
 
     metadata = {
-        "source": "test",
-        "statistic_id": "test.total_energy_import",
-        "unit_of_measurement": "kWh",
         "has_mean": False,
         "has_sum": True,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "test:total_energy_import",
+        "unit_of_measurement": "kWh",
     }
 
     async_add_external_statistics(hass, metadata, (statistics,))
     wait_recording_done(hass)
     stats = statistics_during_period(hass, zero, period="hour")
     assert stats == {
-        "test.total_energy_import": [
+        "test:total_energy_import": [
             {
-                "statistic_id": "test.total_energy_import",
+                "statistic_id": "test:total_energy_import",
                 "start": period1.isoformat(),
                 "end": (period1 + timedelta(hours=1)).isoformat(),
                 "max": None,
@@ -344,6 +347,29 @@ def test_external_statistics(hass_recorder, caplog):
                 "sum": approx(2.0),
             }
         ]
+    }
+    statistic_ids = list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "statistic_id": "test:total_energy_import",
+            "name": "Total imported energy",
+            "source": "test",
+            "unit_of_measurement": "kWh",
+        }
+    ]
+    metadata = get_metadata(hass, ("test:total_energy_import",))
+    assert metadata == {
+        "test:total_energy_import": (
+            1,
+            {
+                "has_mean": False,
+                "has_sum": True,
+                "name": "Total imported energy",
+                "source": "test",
+                "statistic_id": "test:total_energy_import",
+                "unit_of_measurement": "kWh",
+            },
+        )
     }
 
 

@@ -7,6 +7,7 @@ import dataclasses
 from datetime import datetime, timedelta
 from itertools import chain, groupby
 import logging
+import re
 from statistics import mean
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -22,7 +23,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
 )
-from homeassistant.core import Event, HomeAssistant, callback, valid_entity_id
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry
 import homeassistant.util.dt as dt_util
@@ -105,6 +106,7 @@ QUERY_STATISTIC_META = [
     StatisticsMeta.unit_of_measurement,
     StatisticsMeta.has_mean,
     StatisticsMeta.has_sum,
+    StatisticsMeta.name,
 ]
 
 QUERY_STATISTIC_META_ID = [
@@ -138,6 +140,17 @@ UNIT_CONVERSIONS = {
 }
 
 _LOGGER = logging.getLogger(__name__)
+
+
+VALID_STATISTIC_ID = re.compile(r"^(?!.+__)(?!_)[\da-z_]+(?<!_):(?!_)[\da-z_]+(?<!_)$")
+
+
+def valid_statistic_id(statistic_id: str) -> bool:
+    """Test if a statistic ID is a valid format.
+
+    Format: <domain>:<statistic> where both are slugs.
+    """
+    return VALID_STATISTIC_ID.match(statistic_id) is not None
 
 
 @dataclasses.dataclass
@@ -450,14 +463,15 @@ def get_metadata_with_session(
 
     def _meta(metas: list, wanted_metadata_id: str) -> StatisticMetaData | None:
         """Find metadata for a given metadata_id and store it in a StatisticMetaData."""
-        for metadata_id, statistic_id, source, unit, has_mean, has_sum in metas:
-            if metadata_id == wanted_metadata_id:
+        for meta in metas:
+            if meta["id"] == wanted_metadata_id:
                 return {
-                    "source": source,
-                    "statistic_id": statistic_id,
-                    "unit_of_measurement": unit,
-                    "has_mean": has_mean,
-                    "has_sum": has_sum,
+                    "source": meta["source"],
+                    "statistic_id": meta["statistic_id"],
+                    "unit_of_measurement": meta["unit_of_measurement"],
+                    "has_mean": meta["has_mean"],
+                    "has_sum": meta["has_sum"],
+                    "name": meta["name"],
                 }
         return None
 
@@ -570,7 +584,11 @@ def list_statistic_ids(
             meta["unit_of_measurement"] = unit
 
         statistic_ids = {
-            meta["statistic_id"]: meta["unit_of_measurement"]
+            meta["statistic_id"]: {
+                "name": meta["name"],
+                "source": meta["source"],
+                "unit_of_measurement": meta["unit_of_measurement"],
+            }
             for _, meta in metadata.values()
         }
 
@@ -580,19 +598,25 @@ def list_statistic_ids(
             continue
         platform_statistic_ids = platform.list_statistic_ids(hass, statistic_type)
 
-        for statistic_id, unit in platform_statistic_ids.items():
+        for statistic_id, info in platform_statistic_ids.items():
+            unit = info["unit_of_measurement"]
             if unit is not None:
                 # Display unit according to user settings
                 unit = _configured_unit(unit, units)
-            platform_statistic_ids[statistic_id] = unit
+            platform_statistic_ids[statistic_id]["unit_of_measurement"] = unit
 
         for key, value in platform_statistic_ids.items():
             statistic_ids.setdefault(key, value)
 
-    # Return a map of statistic_id to unit_of_measurement
+    # Return a list of statistic_id + metadata
     return [
-        {"statistic_id": _id, "unit_of_measurement": unit}
-        for _id, unit in statistic_ids.items()
+        {
+            "statistic_id": _id,
+            "name": info.get("name"),
+            "source": info["source"],
+            "unit_of_measurement": info["unit_of_measurement"],
+        }
+        for _id, info in statistic_ids.items()
     ]
 
 
@@ -964,8 +988,8 @@ def async_add_external_statistics(
 
     This inserts an add_external_statistics job in the recorder's queue.
     """
-    # The statistic_id has same limitations as an entity_id
-    if not valid_entity_id(metadata["statistic_id"]):
+    # The statistic_id has same limitations as an entity_id, but with a ':' as separator
+    if not valid_statistic_id(metadata["statistic_id"]):
         raise HomeAssistantError
 
     # The source must not be empty
@@ -973,9 +997,7 @@ def async_add_external_statistics(
         raise HomeAssistantError
 
     # TODO:
-    # - Do we allow statistic_id such as `sensor.no_such_sensor` or `sensor.will_never_have_statistics`?
     # - reject if start times are not an hourly boundary (minutes, seconds, µs should all be 0)
-    # - reject if sum_increase is not >= sum
 
     # Insert job in recorder's queue
     hass.data[DATA_INSTANCE].async_external_statistics(metadata, statistics)
