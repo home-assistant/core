@@ -9,9 +9,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.components.jewish_calendar.erev_shabbt_hag_binary_sensor import (
-    ErevShabbtHagBinarySensor,
-)
 from homeassistant.components.jewish_calendar.motzei_shabbt_hag_binary_sensor import (
     MotzeiShabbtHagBinarySensor,
 )
