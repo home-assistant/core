@@ -65,7 +65,7 @@ TEST_INTERFACES = [
 
 
 @pytest.fixture(name="motion_blinds_connect", autouse=True)
-def motion_blinds_connect_fixture():
+def motion_blinds_connect_fixture(mock_get_source_ip):
     """Mock motion blinds connection and entry setup."""
     with patch(
         "homeassistant.components.motion_blinds.gateway.MotionGateway.GetDeviceList",
@@ -94,7 +94,7 @@ def motion_blinds_connect_fixture():
         yield
 
 
-async def test_config_flow_manual_host_success(hass, mock_get_source_ip):
+async def test_config_flow_manual_host_success(hass):
     """Successful flow manually initialized by the user."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -127,7 +127,7 @@ async def test_config_flow_manual_host_success(hass, mock_get_source_ip):
     }
 
 
-async def test_config_flow_discovery_1_success(hass, mock_get_source_ip):
+async def test_config_flow_discovery_1_success(hass):
     """Successful flow with 1 gateway discovered."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -160,7 +160,7 @@ async def test_config_flow_discovery_1_success(hass, mock_get_source_ip):
     }
 
 
-async def test_config_flow_discovery_2_success(hass, mock_get_source_ip):
+async def test_config_flow_discovery_2_success(hass):
     """Successful flow with 2 gateway discovered."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -210,7 +210,7 @@ async def test_config_flow_discovery_2_success(hass, mock_get_source_ip):
     }
 
 
-async def test_config_flow_connection_error(hass, mock_get_source_ip):
+async def test_config_flow_connection_error(hass):
     """Failed flow manually initialized by the user with connection timeout."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -242,7 +242,7 @@ async def test_config_flow_connection_error(hass, mock_get_source_ip):
     assert result["reason"] == "connection_error"
 
 
-async def test_config_flow_discovery_fail(hass, mock_get_source_ip):
+async def test_config_flow_discovery_fail(hass):
     """Failed flow with no gateways discovered."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -266,7 +266,7 @@ async def test_config_flow_discovery_fail(hass, mock_get_source_ip):
     assert result["errors"] == {"base": "discovery_error"}
 
 
-async def test_config_flow_interface(hass, mock_get_source_ip):
+async def test_config_flow_interface(hass):
     """Successful flow manually initialized by the user with interface specified."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -299,7 +299,7 @@ async def test_config_flow_interface(hass, mock_get_source_ip):
     }
 
 
-async def test_config_flow_invalid_interface(hass, mock_get_source_ip):
+async def test_config_flow_invalid_interface(hass):
     """Failed flow manually initialized by the user with invalid interface."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -332,7 +332,7 @@ async def test_config_flow_invalid_interface(hass, mock_get_source_ip):
     assert result["errors"] == {const.CONF_INTERFACE: "invalid_interface"}
 
 
-async def test_options_flow(hass, mock_get_source_ip):
+async def test_options_flow(hass):
     """Test specifying non default settings using options flow."""
     config_entry = MockConfigEntry(
         domain=const.DOMAIN,
