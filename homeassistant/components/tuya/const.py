@@ -157,11 +157,20 @@ class DPCode(str, Enum):
     ANION = "anion"  # Ionizer unit
     BATTERY_PERCENTAGE = "battery_percentage"  # Battery percentage
     BATTERY_STATE = "battery_state"  # Battery state
+    BRIGHT_CONTROLLER = "bright_controller"
     BRIGHT_STATE = "bright_state"  # Brightness status
     BRIGHT_VALUE = "bright_value"  # Brightness
+    BRIGHT_VALUE_1 = "bright_value_1"
+    BRIGHT_VALUE_2 = "bright_value_2"
+    BRIGHT_VALUE_V2 = "bright_value_v2"
+    BRIGHTNESS_MAX_1 = "brightness_max_1"
+    BRIGHTNESS_MAX_2 = "brightness_max_2"
+    BRIGHTNESS_MIN_1 = "brightness_min_1"
+    BRIGHTNESS_MIN_2 = "brightness_min_2"
     C_F = "c_f"  # Temperature unit switching
     CHILD_LOCK = "child_lock"  # Child lock
     CO2_VALUE = "co2_value"  # CO2 concentration
+    COLOR_DATA_V2 = "color_data_v2"
     COLOUR_DATA = "colour_data"  # Colored light mode
     COLOUR_DATA_V2 = "colour_data_v2"  # Colored light mode
     CONCENTRATION_SET = "concentration_set"  # Concentration setting
@@ -189,9 +198,9 @@ class DPCode(str, Enum):
     RECORD_SWITCH = "record_switch"  # Recording switch
     SENSITIVITY = "sensitivity"  # Sensitivity
     SHAKE = "shake"  # Oscillating
+    SHOCK_STATE = "shock_state"  # Vibration status
     SOS = "sos"  # Emergency State
     SOS_STATE = "sos_state"  # Emergency mode
-    SHOCK_STATE = "shock_state"  # Vibration status
     SPEED = "speed"  # Speed level
     START = "start"  # Start
     SWING = "swing"  # Swing mode
@@ -203,8 +212,11 @@ class DPCode(str, Enum):
     SWITCH_5 = "switch_5"  # Switch 5
     SWITCH_6 = "switch_6"  # Switch 6
     SWITCH_BACKLIGHT = "switch_backlight"  # Backlight switch
+    SWITCH_CONTROLLER = "switch_controller"
     SWITCH_HORIZONTAL = "switch_horizontal"  # Horizontal swing flap switch
     SWITCH_LED = "switch_led"  # Switch
+    SWITCH_LED_1 = "switch_led_1"
+    SWITCH_LED_2 = "switch_led_2"
     SWITCH_SPRAY = "switch_spray"  # Spraying switch
     SWITCH_USB1 = "switch_usb1"  # USB 1
     SWITCH_USB2 = "switch_usb2"  # USB 2
@@ -214,12 +226,14 @@ class DPCode(str, Enum):
     SWITCH_USB6 = "switch_usb6"  # USB 6
     SWITCH_VERTICAL = "switch_vertical"  # Vertical swing flap switch
     SWITCH_VOICE = "switch_voice"  # Voice switch
+    TEMP_CONTROLLER = "temp_controller"
     TEMP_CURRENT = "temp_current"  # Current temperature in °C
     TEMP_CURRENT_F = "temp_current_f"  # Current temperature in °F
     TEMP_SET = "temp_set"  # Set the temperature in °C
     TEMP_SET_F = "temp_set_f"  # Set the temperature in °F
     TEMP_UNIT_CONVERT = "temp_unit_convert"  # Temperature unit switching
     TEMP_VALUE = "temp_value"  # Color temperature
+    TEMP_VALUE_V2 = "temp_value_v2"
     TEMPER_ALARM = "temper_alarm"  # Tamper alarm
     UV = "uv"  # UV sterilization
     WARM = "warm"  # Heat preservation
@@ -228,20 +242,6 @@ class DPCode(str, Enum):
     WATER_SET = "water_set"  # Water level
     WET = "wet"  # Humidification
     WORK_MODE = "work_mode"  # Working mode
-    BRIGHT_VALUE_V2 = "bright_value_v2"
-    TEMP_VALUE_V2 = "temp_value_v2"
-    COLOR_DATA_V2 = "color_data_v2"
-    SWITCH_LED_1 = "switch_led_1"
-    SWITCH_LED_2 = "switch_led_2"
-    BRIGHT_VALUE_1 = "bright_value_1"
-    BRIGHT_VALUE_2 = "bright_value_2"
-    BRIGHTNESS_MIN_1 = "brightness_min_1"
-    BRIGHTNESS_MIN_2 = "brightness_min_2"
-    BRIGHTNESS_MAX_1 = "brightness_max_1"
-    BRIGHTNESS_MAX_2 = "brightness_max_2"
-    SWITCH_CONTROLLER = "switch_controller"
-    BRIGHT_CONTROLLER = "bright_controller"
-    TEMP_CONTROLLER = "temp_controller"
 
 
 @dataclass
