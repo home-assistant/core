@@ -199,6 +199,9 @@ class NetgearRouter:
         ntg_devices = await self.async_get_attached_devices()
         now = dt_util.utcnow()
 
+        if ntg_devices is None:
+            return
+
         if _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug("Netgear scan result: \n%s", ntg_devices)
 
