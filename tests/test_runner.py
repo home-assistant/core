@@ -120,7 +120,7 @@ def test_run_does_not_block_forever_with_shielded_task(hass, tmpdir, caplog):
 
 
 async def test_unhandled_exception_traceback(hass, caplog):
-    """Test an unhandled exception get a traceback in debug mode."""
+    """Test an unhandled exception gets a traceback in debug mode."""
 
     async def _unhandled_exception():
         raise Exception("This is unhandled")
