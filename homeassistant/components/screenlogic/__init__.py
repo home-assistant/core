@@ -18,6 +18,7 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -30,6 +31,9 @@ from .const import DEFAULT_SCAN_INTERVAL, DISCOVERED_GATEWAYS, DOMAIN
 from .services import async_load_screenlogic_services, async_unload_screenlogic_services
 
 _LOGGER = logging.getLogger(__name__)
+
+
+REQUEST_REFRESH_DELAY = 1
 
 PLATFORMS = ["switch", "sensor", "binary_sensor", "climate", "light"]
 
@@ -58,10 +62,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        "coordinator": coordinator,
-        "listener": entry.add_update_listener(async_update_listener),
-    }
+    entry.async_on_unload(entry.add_update_listener(async_update_listener))
+
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -136,6 +139,11 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=DOMAIN,
             update_interval=interval,
+            # We don't want an immediate refresh since the device
+            # takes a moment to reflect the state change
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
+            ),
         )
 
     def reconnect_gateway(self):
@@ -240,11 +248,11 @@ class ScreenLogicCircuitEntity(ScreenlogicEntity):
 
     async def async_turn_on(self, **kwargs) -> None:
         """Send the ON command."""
-        return await self._async_set_circuit(ON_OFF.ON)
+        await self._async_set_circuit(ON_OFF.ON)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Send the OFF command."""
-        return await self._async_set_circuit(ON_OFF.OFF)
+        await self._async_set_circuit(ON_OFF.OFF)
 
     async def _async_set_circuit(self, circuit_value) -> None:
         async with self.coordinator.api_lock:
