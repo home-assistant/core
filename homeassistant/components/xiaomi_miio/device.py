@@ -206,7 +206,16 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
     def _parse_datetime_timedelta(time: datetime.timedelta) -> int:
         return time.seconds
 
+    # pylint: disable=useless-return
+    # pylint: disable=no-self-use
     def _parse_none(self, state, attribute) -> None:
+        """
+        Handle None for attribute values.
+
+        Self is (and can be) used in the overriding method.
+        None is returned explicitly instead of implicit, to demonstrate
+        that the returned None is expected.
+        """
         _LOGGER.warning(
             "Attribute %s returned None for state of type %s, this was unexpected",
             type(state),
