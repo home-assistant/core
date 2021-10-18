@@ -106,6 +106,10 @@ DHCP = [
     },
     {
         "domain": "flux_led",
+        "hostname": "zengge_21_*"
+    },
+    {
+        "domain": "flux_led",
         "hostname": "zengge_33_*"
     },
     {
