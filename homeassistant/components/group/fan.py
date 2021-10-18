@@ -9,6 +9,7 @@ from homeassistant.components.fan import (
     ATTR_DIRECTION,
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
+    ATTR_PERCENTAGE_STEP,
     DOMAIN,
     PLATFORM_SCHEMA,
     SERVICE_SET_SPEED,
@@ -81,6 +82,7 @@ class FanGroup(GroupEntity, FanEntity):
         self._oscillating = None
         self._direction = None
         self._supported_features = 0
+        self._speed_count = 100
         self._is_on = False
         self._attr_name = name
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entities}
@@ -90,6 +92,11 @@ class FanGroup(GroupEntity, FanEntity):
     def supported_features(self) -> int:
         """Flag supported features."""
         return self._supported_features
+
+    @property
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        return self._speed_count
 
     @property
     def is_on(self) -> bool:
@@ -223,6 +230,14 @@ class FanGroup(GroupEntity, FanEntity):
         self._attr_assumed_state |= not attribute_equal(
             percentage_states, ATTR_PERCENTAGE
         )
+        if percentage_states and attribute_equal(
+            percentage_states, ATTR_PERCENTAGE_STEP
+        ):
+            self._speed_count = round(
+                1 / percentage_states[0].attributes[ATTR_PERCENTAGE_STEP]
+            )
+        else:
+            self._speed_count = 100
 
         oscillate_fans = self._fans[SUPPORT_OSCILLATE]
         all_oscillate_states = [self.hass.states.get(x) for x in oscillate_fans]
