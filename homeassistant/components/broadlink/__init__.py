@@ -2,10 +2,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import logging
 
-from .const import DOMAIN
+from homeassistant.const import CONF_TYPE
+
+from .const import CONF_PRODUCT_ID, DOMAIN
 from .device import BroadlinkDevice
 from .heartbeat import BroadlinkHeartbeat
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -47,3 +52,18 @@ async def async_unload_entry(hass, entry):
         data.heartbeat = None
 
     return result
+
+
+async def async_migrate_entry(hass, entry):
+    """Migrate a config entry."""
+    if entry.version == 1:
+        new = {**entry.data}
+
+        new[CONF_PRODUCT_ID] = new.pop(CONF_TYPE)
+
+        entry.data = {**new}
+        entry.version = 2
+
+        _LOGGER.info("Migration to version %s successful", entry.version)
+
+    return True

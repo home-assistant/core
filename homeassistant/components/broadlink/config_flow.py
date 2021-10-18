@@ -12,38 +12,37 @@ from broadlink.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries as c, data_entry_flow
 from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
-from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT
 from homeassistant.helpers import config_validation as cv
 
-from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN, DOMAINS_AND_TYPES
+from .const import (
+    CONF_DEVICE_TYPE,
+    CONF_PRODUCT_ID,
+    DEFAULT_PORT,
+    DEFAULT_TIMEOUT,
+    DEVICE_TYPES,
+    DOMAIN,
+    LIBRARY_URL,
+)
 from .helpers import format_mac
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class BroadlinkFlowHandler(c.ConfigFlow, domain=DOMAIN):
     """Handle a Broadlink config flow."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self):
         """Initialize the Broadlink flow."""
         self.device = None
+        self.extra_config = {}
 
     async def async_set_device(self, device, raise_on_progress=True):
         """Define a device for the config flow."""
-        supported_types = set.union(*DOMAINS_AND_TYPES.values())
-        if device.type not in supported_types:
-            _LOGGER.error(
-                "Unsupported device: %s. If it worked before, please open "
-                "an issue at https://github.com/home-assistant/core/issues",
-                hex(device.devtype),
-            )
-            raise data_entry_flow.AbortFlow("not_supported")
-
         await self.async_set_unique_id(
             device.mac.hex(), raise_on_progress=raise_on_progress
         )
@@ -51,7 +50,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.context["title_placeholders"] = {
             "name": device.name,
-            "model": device.model,
+            "model": device.model or hex(device.devtype),
             "host": device.host[0],
         }
 
@@ -61,24 +60,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         unique_id = discovery_info[MAC_ADDRESS].lower().replace(":", "")
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
-
-        try:
-            device = await self.hass.async_add_executor_job(blk.hello, host)
-
-        except NetworkTimeoutError:
-            return self.async_abort(reason="cannot_connect")
-
-        except OSError as err:
-            if err.errno == errno.ENETUNREACH:
-                return self.async_abort(reason="cannot_connect")
-            return self.async_abort(reason="unknown")
-
-        supported_types = set.union(*DOMAINS_AND_TYPES.values())
-        if device.type not in supported_types:
-            return self.async_abort(reason="not_supported")
-
-        await self.async_set_device(device)
-        return await self.async_step_auth()
+        return await self.async_step_user(user_input={CONF_HOST: host})
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
@@ -110,11 +92,18 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 device.timeout = timeout
 
-                if self.source != SOURCE_REAUTH:
+                if self.source != c.SOURCE_REAUTH:
                     await self.async_set_device(device)
                     self._abort_if_unique_id_configured(
                         updates={CONF_HOST: device.host[0], CONF_TIMEOUT: timeout}
                     )
+
+                    if device.type == "Unknown":
+                        return await self.async_step_manual()
+
+                    if device.type not in DEVICE_TYPES:
+                        raise data_entry_flow.AbortFlow("not_supported")
+
                     return await self.async_step_auth()
 
                 if device.mac == self.device.mac:
@@ -127,10 +116,10 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     f"address must be {format_mac(self.device.mac)}"
                 )
 
-            _LOGGER.error("Failed to connect to the device at %s: %s", host, err_msg)
-
-            if self.source == config_entries.SOURCE_IMPORT:
+            if self.source in {c.SOURCE_IMPORT, c.SOURCE_DHCP}:
                 return self.async_abort(reason=errors["base"])
+
+            _LOGGER.error("Failed to connect to the device at %s: %s", host, err_msg)
 
         data_schema = {
             vol.Required(CONF_HOST): str,
@@ -141,6 +130,24 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(data_schema),
             errors=errors,
         )
+
+    async def async_step_manual(self, user_input=None):
+        """Configure the device manually."""
+        errors = {}
+
+        if user_input is None:
+            data_schema = {
+                vol.Required(CONF_DEVICE_TYPE): vol.In(sorted(DEVICE_TYPES)),
+            }
+            return self.async_show_form(
+                step_id="manual",
+                data_schema=vol.Schema(data_schema),
+                description_placeholders={"url": LIBRARY_URL},
+                errors=errors,
+            )
+
+        self.extra_config.update(user_input)
+        return await self.async_step_auth()
 
     async def async_step_auth(self):
         """Authenticate to the device."""
@@ -173,14 +180,12 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         else:
             await self.async_set_unique_id(device.mac.hex())
-            if self.source == config_entries.SOURCE_IMPORT:
+            if self.source in {c.SOURCE_IMPORT, c.SOURCE_DHCP}:
                 _LOGGER.warning(
-                    "%s (%s at %s) is ready to be configured. Click "
-                    "Configuration in the sidebar, click Integrations and "
-                    "click Configure on the device to complete the setup",
-                    device.name,
-                    device.model,
-                    device.host[0],
+                    "%s is ready to be configured. Click Configuration in "
+                    "the sidebar, click Integrations and click Configure "
+                    "on the device to complete the setup",
+                    device,
                 )
 
             if device.is_locked:
@@ -286,8 +291,9 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 data={
                     CONF_HOST: device.host[0],
                     CONF_MAC: device.mac.hex(),
-                    CONF_TYPE: device.devtype,
+                    CONF_PRODUCT_ID: device.devtype,
                     CONF_TIMEOUT: device.timeout,
+                    **self.extra_config,
                 },
             )
 
@@ -304,7 +310,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(self, data):
         """Reauthenticate to the device."""
         device = blk.gendevice(
-            data[CONF_TYPE],
+            data[CONF_PRODUCT_ID],
             (data[CONF_HOST], DEFAULT_PORT),
             bytes.fromhex(data[CONF_MAC]),
             name=data[CONF_NAME],

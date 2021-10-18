@@ -5,6 +5,11 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 
 DOMAIN = "broadlink"
 
+CONF_DEVICE_TYPE = "device_type"
+CONF_PRODUCT_ID = "product_id"
+
+LIBRARY_URL = "https://github.com/mjg59/python-broadlink"
+
 DOMAINS_AND_TYPES = {
     REMOTE_DOMAIN: {"RM4MINI", "RM4PRO", "RMMINI", "RMMINIB", "RMPRO"},
     SENSOR_DOMAIN: {
@@ -34,6 +39,7 @@ DOMAINS_AND_TYPES = {
         "SP4B",
     },
 }
+DEVICE_TYPES = set.union(*DOMAINS_AND_TYPES.values())
 
 DEFAULT_PORT = 80
 DEFAULT_TIMEOUT = 5

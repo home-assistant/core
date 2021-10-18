@@ -13,19 +13,34 @@ from broadlink.exceptions import (
 )
 
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
-from .const import DEFAULT_PORT, DOMAIN, DOMAINS_AND_TYPES
+from .const import (
+    CONF_DEVICE_TYPE,
+    CONF_PRODUCT_ID,
+    DEFAULT_PORT,
+    DOMAIN,
+    DOMAINS_AND_TYPES,
+    LIBRARY_URL,
+)
 from .updater import get_update_manager
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_domains(dev_type):
+def get_class_by_type(device_type):
+    """Return the class related to a device type."""
+    for device_class in blk.SUPPORTED_TYPES:
+        if device_class.TYPE == device_type:
+            return device_class
+    raise ValueError("Unsupported device type")
+
+
+def get_domains_by_type(device_type):
     """Return the domains available for a device type."""
-    return {d for d, t in DOMAINS_AND_TYPES.items() if dev_type in t}
+    return {d for d, t in DOMAINS_AND_TYPES.items() if device_type in t}
 
 
 class BroadlinkDevice:
@@ -77,14 +92,39 @@ class BroadlinkDevice:
     async def async_setup(self):
         """Set up the device and related entities."""
         config = self.config
+        name = config.title
+        host = (config.data[CONF_HOST], DEFAULT_PORT)
+        mac_addr = config.data[CONF_MAC]
+        product_id = config.data[CONF_PRODUCT_ID]
+        timeout = config.data[CONF_TIMEOUT]
+        device_type = config.data.get(CONF_DEVICE_TYPE)
 
-        api = blk.gendevice(
-            config.data[CONF_TYPE],
-            (config.data[CONF_HOST], DEFAULT_PORT),
-            bytes.fromhex(config.data[CONF_MAC]),
-            name=config.title,
-        )
-        api.timeout = config.data[CONF_TIMEOUT]
+        if device_type:
+            device_class = get_class_by_type(device_type)
+            api = device_class(
+                host,
+                mac_addr,
+                product_id,
+                timeout=timeout,
+                name=name,
+                model=device_type,
+                manufacturer="Unknown",
+            )
+            _LOGGER.warning(
+                "You have configured an unknown device: %s. If you can "
+                "make it work, please open an issue or pull request at %s",
+                api,
+                LIBRARY_URL,
+            )
+        else:
+            api = blk.gendevice(
+                product_id,
+                host,
+                mac_addr,
+                name=name,
+            )
+            api.timeout = timeout
+
         self.api = api
 
         try:
@@ -117,7 +157,7 @@ class BroadlinkDevice:
 
         # Forward entry setup to related domains.
         self.hass.config_entries.async_setup_platforms(
-            config, get_domains(self.api.type)
+            config, get_domains_by_type(self.api.type)
         )
 
         return True
@@ -131,7 +171,7 @@ class BroadlinkDevice:
             self.reset_jobs.pop()()
 
         return await self.hass.config_entries.async_unload_platforms(
-            self.config, get_domains(self.api.type)
+            self.config, get_domains_by_type(self.api.type)
         )
 
     async def async_auth(self):

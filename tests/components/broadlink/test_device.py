@@ -1,10 +1,11 @@
 """Tests for Broadlink devices."""
-from unittest.mock import patch
+from unittest.mock import call, patch
 
+import broadlink as blk
 import broadlink.exceptions as blke
 
 from homeassistant.components.broadlink.const import DOMAIN
-from homeassistant.components.broadlink.device import get_domains
+from homeassistant.components.broadlink.device import get_domains_by_type
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.helpers.entity_registry import async_entries_for_device
 
@@ -32,7 +33,53 @@ async def test_device_setup(hass):
     assert mock_setup.factory.call_count == 1
 
     forward_entries = {c[1][1] for c in mock_forward.mock_calls}
-    domains = get_domains(mock_setup.api.type)
+    domains = get_domains_by_type(mock_setup.api.type)
+    assert mock_forward.call_count == len(domains)
+    assert forward_entries == domains
+    assert mock_init.call_count == 0
+
+
+async def test_unknown_device_setup(hass):
+    """Test we set up an unknown device."""
+    device = get_device("Attic")
+    device_type = "RM4PRO"
+
+    mock_entry = device.get_mock_entry({"device_type": device_type})
+    mock_entry.add_to_hass(hass)
+
+    mock_api = device.get_mock_api()
+    mock_api.type = device_type
+    mock_api.model = device_type
+    mock_api.manufacturer = "Unknown"
+
+    with patch(
+        "homeassistant.components.broadlink.device.blk.Device.__new__",
+        return_value=mock_api,
+    ) as mock_factory, patch.object(
+        hass.config_entries, "async_forward_entry_setup"
+    ) as mock_forward, patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_init:
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_entry.state == ConfigEntryState.LOADED
+    assert mock_api.auth.call_count == 1
+    assert mock_api.get_fwversion.call_count == 1
+    assert mock_factory.call_count == 1
+    assert mock_factory.call_args == call(
+        blk.rm4pro,
+        mock_api.host,
+        mock_api.mac.hex(),
+        mock_api.devtype,
+        manufacturer=mock_api.manufacturer,
+        model=mock_api.model,
+        name=mock_api.name,
+        timeout=mock_api.timeout,
+    )
+
+    forward_entries = {c[1][1] for c in mock_forward.mock_calls}
+    domains = get_domains_by_type(mock_api.type)
     assert mock_forward.call_count == len(domains)
     assert forward_entries == domains
     assert mock_init.call_count == 0
@@ -160,7 +207,7 @@ async def test_device_setup_update_authorization_error(hass):
     assert mock_setup.api.check_sensors.call_count == 2
 
     forward_entries = {c[1][1] for c in mock_forward.mock_calls}
-    domains = get_domains(mock_api.type)
+    domains = get_domains_by_type(mock_api.type)
     assert mock_forward.call_count == len(domains)
     assert forward_entries == domains
     assert mock_init.call_count == 0
@@ -223,7 +270,7 @@ async def test_device_setup_get_fwversion_broadlink_exception(hass):
 
     assert mock_setup.entry.state is ConfigEntryState.LOADED
     forward_entries = {c[1][1] for c in mock_forward.mock_calls}
-    domains = get_domains(mock_setup.api.type)
+    domains = get_domains_by_type(mock_setup.api.type)
     assert mock_forward.call_count == len(domains)
     assert forward_entries == domains
 
@@ -239,7 +286,7 @@ async def test_device_setup_get_fwversion_os_error(hass):
 
     assert mock_setup.entry.state is ConfigEntryState.LOADED
     forward_entries = {c[1][1] for c in mock_forward.mock_calls}
-    domains = get_domains(mock_setup.api.type)
+    domains = get_domains_by_type(mock_setup.api.type)
     assert mock_forward.call_count == len(domains)
     assert forward_entries == domains
 
@@ -283,7 +330,7 @@ async def test_device_unload_works(hass):
 
     assert mock_setup.entry.state is ConfigEntryState.NOT_LOADED
     forward_entries = {c[1][1] for c in mock_forward.mock_calls}
-    domains = get_domains(mock_setup.api.type)
+    domains = get_domains_by_type(mock_setup.api.type)
     assert mock_forward.call_count == len(domains)
     assert forward_entries == domains
 

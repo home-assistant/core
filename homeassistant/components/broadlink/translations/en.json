@@ -24,6 +24,13 @@
                 },
                 "title": "Choose a name for the device"
             },
+            "manual": {
+                "title": "Manual configuration",
+                "description": "Sorry, we don't know what kind of device this is. You can try to configure it manually by selecting an appropriate device type.\n\nIf you can make it work, please open an issue or pull request at {url}.",
+                "data": {
+                    "device_type": "Device type"
+                }
+            },
             "reset": {
                 "description": "{name} ({model} at {host}) is locked. You need to unlock the device in order to authenticate and complete the configuration. Instructions:\n1. Open the Broadlink app.\n2. Click on the device.\n3. Click `...` in the upper right.\n4. Scroll to the bottom of the page.\n5. Disable the lock.",
                 "title": "Unlock the device"
