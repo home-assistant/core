@@ -16,3 +16,21 @@ hue_activate_scene:
       example: "Energize"
       selector:
         text:
+hue_group_set_on_state:
+  name: Set Group On state
+  description: Set On/Off state for the group in Hue app.
+  fields:
+    group_name:
+      name: Group
+      description: Name of hue group/room from the hue app.
+      example: "Living Room"
+      required: true
+      selector:
+        text:
+    on_state:
+      name: On State
+      description: Boolean state to turn on/off the group.
+      example: "true"
+      required: true
+      selector:
+        boolean:

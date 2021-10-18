@@ -13,6 +13,7 @@ from homeassistant.helpers.service import verify_domain_control
 from .bridge import HueBridge
 from .const import (
     ATTR_GROUP_NAME,
+    ATTR_ON_STATE,
     ATTR_SCENE_NAME,
     ATTR_TRANSITION,
     CONF_ALLOW_HUE_GROUPS,
@@ -24,6 +25,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 SERVICE_HUE_SCENE = "hue_activate_scene"
+SERVICE_HUE_GROUP_SET_ON_STATE = "hue_group_set_on_state"
 
 
 async def async_setup_entry(
@@ -136,6 +138,7 @@ async def async_unload_entry(hass, entry):
     if len(hass.data[DOMAIN]) == 0:
         hass.data.pop(DOMAIN)
         hass.services.async_remove(DOMAIN, SERVICE_HUE_SCENE)
+        hass.services.async_remove(DOMAIN, SERVICE_HUE_GROUP_SET_ON_STATE)
     return unload_success
 
 
@@ -181,6 +184,47 @@ def _register_services(hass):
                 {
                     vol.Required(ATTR_GROUP_NAME): cv.string,
                     vol.Required(ATTR_SCENE_NAME): cv.string,
+                    vol.Optional(ATTR_TRANSITION): cv.positive_int,
+                }
+            ),
+        )
+
+    async def hue_set_group_on_state(call, skip_reload=True):
+        """Handle Hue's group 'on' state."""
+        # Get parameters
+        group_name = call.data[ATTR_GROUP_NAME]
+
+        # Call the function on each bridge
+        tasks = [
+            bridge.hue_set_group_on_state(
+                call.data, skip_reload=skip_reload, hide_warnings=skip_reload
+            )
+            for bridge in hass.data[DOMAIN].values()
+            if isinstance(bridge, HueBridge)
+        ]
+        results = await asyncio.gather(*tasks)
+
+        # Did *any* bridge succeed? If not, refresh / retry
+        # Note that we'll get a "None" value for a successful call
+        if None not in results:
+            if skip_reload:
+                await hue_set_group_on_state(call, skip_reload=False)
+                return
+            _LOGGER.warning(
+                "No bridge was able to set state to a group %s",
+                group_name,
+            )
+
+    if not hass.services.has_service(DOMAIN, SERVICE_HUE_GROUP_SET_ON_STATE):
+        # Register a local handler for a group 'on/off' state
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_HUE_GROUP_SET_ON_STATE,
+            verify_domain_control(hass, DOMAIN)(hue_set_group_on_state),
+            schema=vol.Schema(
+                {
+                    vol.Required(ATTR_GROUP_NAME): cv.string,
+                    vol.Required(ATTR_ON_STATE): cv.boolean,
                     vol.Optional(ATTR_TRANSITION): cv.positive_int,
                 }
             ),

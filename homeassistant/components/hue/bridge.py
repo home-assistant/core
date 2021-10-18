@@ -17,6 +17,7 @@ from homeassistant.helpers import aiohttp_client
 
 from .const import (
     ATTR_GROUP_NAME,
+    ATTR_ON_STATE,
     ATTR_SCENE_NAME,
     ATTR_TRANSITION,
     CONF_ALLOW_HUE_GROUPS,
@@ -230,6 +231,35 @@ class HueBridge:
 
         return await self.async_request_call(
             partial(group.set_action, scene=scene.id, transitiontime=transition)
+        )
+
+    async def hue_set_group_on_state(
+        self, data, skip_reload=False, hide_warnings=False
+    ):
+        """Service to call directly into bridge to turn a Group on/off."""
+        group_name = data[ATTR_GROUP_NAME]
+        on_state = data[ATTR_ON_STATE]
+        transition = data.get(ATTR_TRANSITION)
+
+        group = next(
+            (group for group in self.api.groups.values() if group.name == group_name),
+            None,
+        )
+
+        # If we can't find it, fetch latest info.
+        if not skip_reload and group is None:
+            await self.async_request_call(self.api.groups.update)
+            return await self.hue_set_group_on_state(data, skip_reload=True)
+
+        if group is None:
+            if not hide_warnings:
+                LOGGER.warning(
+                    "Unable to find group %s" " on bridge %s", group_name, self.host
+                )
+            return False
+
+        return await self.async_request_call(
+            partial(group.set_action, on=bool(on_state), transitiontime=transition)
         )
 
     async def handle_unauthorized_error(self):

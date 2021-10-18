@@ -20,5 +20,6 @@ GROUP_TYPE_LUMINAIRE = "Luminaire"
 GROUP_TYPE_LIGHT_SOURCE = "LightSource"
 
 ATTR_GROUP_NAME = "group_name"
+ATTR_ON_STATE = "on_state"
 ATTR_SCENE_NAME = "scene_name"
 ATTR_TRANSITION = "transition"
