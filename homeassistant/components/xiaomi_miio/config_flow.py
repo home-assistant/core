@@ -256,8 +256,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             self.cloud_devices = {}
             for device in devices_raw:
-                parent_id = device.get("parent_id")
-                if not parent_id:
+                if not device.get("parent_id"):
                     name = device["name"]
                     model = device["model"]
                     list_name = f"{name} - {model}"
