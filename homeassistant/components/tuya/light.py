@@ -34,8 +34,6 @@ class TuyaLightEntityDescription(LightEntityDescription):
 
     color_mode: DPCode | None = None
     brightness: DPCode | tuple[DPCode, ...] | None = None
-    brightness_min: DPCode | None = None
-    brightness_max: DPCode | None = None
     color_temp: DPCode | tuple[DPCode, ...] | None = None
     color_data: DPCode | tuple[DPCode, ...] | None = None
 
@@ -114,15 +112,11 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             key=DPCode.SWITCH_LED_1,
             name="Light",
             brightness=DPCode.BRIGHT_VALUE_1,
-            brightness_min=DPCode.BRIGHTNESS_MIN_1,
-            brightness_max=DPCode.BRIGHTNESS_MAX_1,
         ),
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED_2,
             name="Light 2",
             brightness=DPCode.BRIGHT_VALUE_2,
-            brightness_min=DPCode.BRIGHTNESS_MIN_2,
-            brightness_max=DPCode.BRIGHTNESS_MAX_2,
         ),
     ),
     # Solar Light

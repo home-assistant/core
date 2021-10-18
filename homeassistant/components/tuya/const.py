@@ -163,10 +163,6 @@ class DPCode(str, Enum):
     BRIGHT_VALUE_1 = "bright_value_1"
     BRIGHT_VALUE_2 = "bright_value_2"
     BRIGHT_VALUE_V2 = "bright_value_v2"
-    BRIGHTNESS_MAX_1 = "brightness_max_1"
-    BRIGHTNESS_MAX_2 = "brightness_max_2"
-    BRIGHTNESS_MIN_1 = "brightness_min_1"
-    BRIGHTNESS_MIN_2 = "brightness_min_2"
     C_F = "c_f"  # Temperature unit switching
     CHILD_LOCK = "child_lock"  # Child lock
     CO2_VALUE = "co2_value"  # CO2 concentration
