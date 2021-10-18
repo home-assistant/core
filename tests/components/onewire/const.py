@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
@@ -57,7 +58,7 @@ MOCK_OWPROXY_DEVICES = {
         },
         SWITCH_DOMAIN: [
             {
-                "entity_id": "switch.05_111111111111_pio",
+                ATTR_ENTITY_ID: "switch.05_111111111111_pio",
                 "unique_id": "/05.111111111111/PIO",
                 "injected_value": b"    1",
                 "result": STATE_ON,
@@ -79,7 +80,7 @@ MOCK_OWPROXY_DEVICES = {
         },
         SENSOR_DOMAIN: [
             {
-                "entity_id": "sensor.my_ds18b20_temperature",
+                ATTR_ENTITY_ID: "sensor.my_ds18b20_temperature",
                 "unique_id": "/10.111111111111/temperature",
                 "injected_value": b"    25.123",
                 "result": "25.1",
@@ -101,7 +102,7 @@ MOCK_OWPROXY_DEVICES = {
         },
         BINARY_SENSOR_DOMAIN: [
             {
-                "entity_id": "binary_sensor.12_111111111111_sensed_a",
+                ATTR_ENTITY_ID: "binary_sensor.12_111111111111_sensed_a",
                 "unique_id": "/12.111111111111/sensed.A",
                 "injected_value": b"    1",
                 "result": STATE_ON,
@@ -110,7 +111,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
             },
             {
-                "entity_id": "binary_sensor.12_111111111111_sensed_b",
+                ATTR_ENTITY_ID: "binary_sensor.12_111111111111_sensed_b",
                 "unique_id": "/12.111111111111/sensed.B",
                 "injected_value": b"    0",
                 "result": STATE_OFF,
@@ -121,7 +122,7 @@ MOCK_OWPROXY_DEVICES = {
         ],
         SENSOR_DOMAIN: [
             {
-                "entity_id": "sensor.12_111111111111_temperature",
+                ATTR_ENTITY_ID: "sensor.12_111111111111_temperature",
                 "unique_id": "/12.111111111111/TAI8570/temperature",
                 "injected_value": b"    25.123",
                 "result": "25.1",
@@ -131,7 +132,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
-                "entity_id": "sensor.12_111111111111_pressure",
+                ATTR_ENTITY_ID: "sensor.12_111111111111_pressure",
                 "unique_id": "/12.111111111111/TAI8570/pressure",
                 "injected_value": b"  1025.123",
                 "result": "1025.1",
@@ -143,7 +144,7 @@ MOCK_OWPROXY_DEVICES = {
         ],
         SWITCH_DOMAIN: [
             {
-                "entity_id": "switch.12_111111111111_pio_a",
+                ATTR_ENTITY_ID: "switch.12_111111111111_pio_a",
                 "unique_id": "/12.111111111111/PIO.A",
                 "injected_value": b"    1",
                 "result": STATE_ON,
@@ -152,7 +153,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
             },
             {
-                "entity_id": "switch.12_111111111111_pio_b",
+                ATTR_ENTITY_ID: "switch.12_111111111111_pio_b",
                 "unique_id": "/12.111111111111/PIO.B",
                 "injected_value": b"    0",
                 "result": STATE_OFF,
@@ -161,7 +162,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
             },
             {
-                "entity_id": "switch.12_111111111111_latch_a",
+                ATTR_ENTITY_ID: "switch.12_111111111111_latch_a",
                 "unique_id": "/12.111111111111/latch.A",
                 "injected_value": b"    1",
                 "result": STATE_ON,
@@ -170,7 +171,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
             },
             {
-                "entity_id": "switch.12_111111111111_latch_b",
+                ATTR_ENTITY_ID: "switch.12_111111111111_latch_b",
                 "unique_id": "/12.111111111111/latch.B",
                 "injected_value": b"    0",
                 "result": STATE_OFF,
@@ -192,7 +193,7 @@ MOCK_OWPROXY_DEVICES = {
         },
         SENSOR_DOMAIN: [
             {
-                "entity_id": "sensor.1d_111111111111_counter_a",
+                ATTR_ENTITY_ID: "sensor.1d_111111111111_counter_a",
                 "unique_id": "/1D.111111111111/counter.A",
                 "injected_value": b"    251123",
                 "result": "251123",
@@ -201,7 +202,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
             },
             {
-                "entity_id": "sensor.1d_111111111111_counter_b",
+                ATTR_ENTITY_ID: "sensor.1d_111111111111_counter_b",
                 "unique_id": "/1D.111111111111/counter.B",
                 "injected_value": b"    248125",
                 "result": "248125",
@@ -236,7 +237,7 @@ MOCK_OWPROXY_DEVICES = {
                     },
                     SENSOR_DOMAIN: [
                         {
-                            "entity_id": "sensor.1d_111111111111_counter_a",
+                            ATTR_ENTITY_ID: "sensor.1d_111111111111_counter_a",
                             "device_file": "/1F.111111111111/main/1D.111111111111/counter.A",
                             "unique_id": "/1D.111111111111/counter.A",
                             "injected_value": b"    251123",
@@ -246,7 +247,7 @@ MOCK_OWPROXY_DEVICES = {
                             ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
                         },
                         {
-                            "entity_id": "sensor.1d_111111111111_counter_b",
+                            ATTR_ENTITY_ID: "sensor.1d_111111111111_counter_b",
                             "device_file": "/1F.111111111111/main/1D.111111111111/counter.B",
                             "unique_id": "/1D.111111111111/counter.B",
                             "injected_value": b"    248125",
@@ -272,7 +273,7 @@ MOCK_OWPROXY_DEVICES = {
         },
         SENSOR_DOMAIN: [
             {
-                "entity_id": "sensor.22_111111111111_temperature",
+                ATTR_ENTITY_ID: "sensor.22_111111111111_temperature",
                 "unique_id": "/22.111111111111/temperature",
                 "injected_value": ProtocolError,
                 "result": "unknown",
@@ -294,7 +295,7 @@ MOCK_OWPROXY_DEVICES = {
         },
         SENSOR_DOMAIN: [
             {
-                "entity_id": "sensor.26_111111111111_temperature",
+                ATTR_ENTITY_ID: "sensor.26_111111111111_temperature",
                 "unique_id": "/26.111111111111/temperature",
                 "injected_value": b"    25.123",
                 "result": "25.1",
@@ -303,7 +304,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
-                "entity_id": "sensor.26_111111111111_humidity",
+                ATTR_ENTITY_ID: "sensor.26_111111111111_humidity",
                 "unique_id": "/26.111111111111/humidity",
                 "injected_value": b"    72.7563",
                 "result": "72.8",
@@ -313,7 +314,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
-                "entity_id": "sensor.26_111111111111_humidity_hih3600",
+                ATTR_ENTITY_ID: "sensor.26_111111111111_humidity_hih3600",
                 "unique_id": "/26.111111111111/HIH3600/humidity",
                 "injected_value": b"    73.7563",
                 "result": "73.8",
@@ -323,7 +324,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
-                "entity_id": "sensor.26_111111111111_humidity_hih4000",
+                ATTR_ENTITY_ID: "sensor.26_111111111111_humidity_hih4000",
                 "unique_id": "/26.111111111111/HIH4000/humidity",
                 "injected_value": b"    74.7563",
                 "result": "74.8",
@@ -333,7 +334,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
-                "entity_id": "sensor.26_111111111111_humidity_hih5030",
+                ATTR_ENTITY_ID: "sensor.26_111111111111_humidity_hih5030",
                 "unique_id": "/26.111111111111/HIH5030/humidity",
                 "injected_value": b"    75.7563",
                 "result": "75.8",
@@ -343,7 +344,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
-                "entity_id": "sensor.26_111111111111_humidity_htm1735",
+                ATTR_ENTITY_ID: "sensor.26_111111111111_humidity_htm1735",
                 "unique_id": "/26.111111111111/HTM1735/humidity",
                 "injected_value": ProtocolError,
                 "result": "unknown",
@@ -353,7 +354,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
-                "entity_id": "sensor.26_111111111111_pressure",
+                ATTR_ENTITY_ID: "sensor.26_111111111111_pressure",
                 "unique_id": "/26.111111111111/B1-R1-A/pressure",
                 "injected_value": b"    969.265",
                 "result": "969.3",
@@ -363,7 +364,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
-                "entity_id": "sensor.26_111111111111_illuminance",
+                ATTR_ENTITY_ID: "sensor.26_111111111111_illuminance",
                 "unique_id": "/26.111111111111/S3-R1-A/illuminance",
                 "injected_value": b"    65.8839",
                 "result": "65.9",
@@ -373,7 +374,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
-                "entity_id": "sensor.26_111111111111_voltage_vad",
+                ATTR_ENTITY_ID: "sensor.26_111111111111_voltage_vad",
                 "unique_id": "/26.111111111111/VAD",
                 "injected_value": b"     2.97",
                 "result": "3.0",
@@ -383,7 +384,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
-                "entity_id": "sensor.26_111111111111_voltage_vdd",
+                ATTR_ENTITY_ID: "sensor.26_111111111111_voltage_vdd",
                 "unique_id": "/26.111111111111/VDD",
                 "injected_value": b"    4.74",
                 "result": "4.7",
@@ -393,7 +394,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
-                "entity_id": "sensor.26_111111111111_current",
+                ATTR_ENTITY_ID: "sensor.26_111111111111_current",
                 "unique_id": "/26.111111111111/IAD",
                 "injected_value": b"       1",
                 "result": "1.0",
@@ -416,7 +417,7 @@ MOCK_OWPROXY_DEVICES = {
         },
         SENSOR_DOMAIN: [
             {
-                "entity_id": "sensor.28_111111111111_temperature",
+                ATTR_ENTITY_ID: "sensor.28_111111111111_temperature",
                 "unique_id": "/28.111111111111/temperature",
                 "injected_value": b"    26.984",
                 "result": "27.0",
@@ -438,7 +439,7 @@ MOCK_OWPROXY_DEVICES = {
         },
         BINARY_SENSOR_DOMAIN: [
             {
-                "entity_id": "binary_sensor.29_111111111111_sensed_0",
+                ATTR_ENTITY_ID: "binary_sensor.29_111111111111_sensed_0",
                 "unique_id": "/29.111111111111/sensed.0",
                 "injected_value": b"    1",
                 "result": STATE_ON,
@@ -447,7 +448,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
             },
             {
-                "entity_id": "binary_sensor.29_111111111111_sensed_1",
+                ATTR_ENTITY_ID: "binary_sensor.29_111111111111_sensed_1",
                 "unique_id": "/29.111111111111/sensed.1",
                 "injected_value": b"    0",
                 "result": STATE_OFF,
@@ -456,7 +457,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
             },
             {
-                "entity_id": "binary_sensor.29_111111111111_sensed_2",
+                ATTR_ENTITY_ID: "binary_sensor.29_111111111111_sensed_2",
                 "unique_id": "/29.111111111111/sensed.2",
                 "injected_value": b"    0",
                 "result": STATE_OFF,
@@ -465,7 +466,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
             },
             {
-                "entity_id": "binary_sensor.29_111111111111_sensed_3",
+                ATTR_ENTITY_ID: "binary_sensor.29_111111111111_sensed_3",
                 "unique_id": "/29.111111111111/sensed.3",
                 "injected_value": b"    0",
                 "result": STATE_OFF,
@@ -474,7 +475,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
             },
             {
-                "entity_id": "binary_sensor.29_111111111111_sensed_4",
+                ATTR_ENTITY_ID: "binary_sensor.29_111111111111_sensed_4",
                 "unique_id": "/29.111111111111/sensed.4",
                 "injected_value": b"    0",
                 "result": STATE_OFF,
@@ -483,7 +484,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
             },
             {
-                "entity_id": "binary_sensor.29_111111111111_sensed_5",
+                ATTR_ENTITY_ID: "binary_sensor.29_111111111111_sensed_5",
                 "unique_id": "/29.111111111111/sensed.5",
                 "injected_value": b"    0",
                 "result": STATE_OFF,
@@ -492,7 +493,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
             },
             {
-                "entity_id": "binary_sensor.29_111111111111_sensed_6",
+                ATTR_ENTITY_ID: "binary_sensor.29_111111111111_sensed_6",
                 "unique_id": "/29.111111111111/sensed.6",
                 "injected_value": b"    0",
                 "result": STATE_OFF,
@@ -501,7 +502,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
             },
             {
-                "entity_id": "binary_sensor.29_111111111111_sensed_7",
+                ATTR_ENTITY_ID: "binary_sensor.29_111111111111_sensed_7",
                 "unique_id": "/29.111111111111/sensed.7",
                 "injected_value": b"    0",
                 "result": STATE_OFF,
@@ -512,7 +513,7 @@ MOCK_OWPROXY_DEVICES = {
         ],
         SWITCH_DOMAIN: [
             {
-                "entity_id": "switch.29_111111111111_pio_0",
+                ATTR_ENTITY_ID: "switch.29_111111111111_pio_0",
                 "unique_id": "/29.111111111111/PIO.0",
                 "injected_value": b"    1",
                 "result": STATE_ON,
@@ -521,7 +522,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
             },
             {
-                "entity_id": "switch.29_111111111111_pio_1",
+                ATTR_ENTITY_ID: "switch.29_111111111111_pio_1",
                 "unique_id": "/29.111111111111/PIO.1",
                 "injected_value": b"    0",
                 "result": STATE_OFF,
@@ -530,7 +531,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
             },
             {
-                "entity_id": "switch.29_111111111111_pio_2",
+                ATTR_ENTITY_ID: "switch.29_111111111111_pio_2",
                 "unique_id": "/29.111111111111/PIO.2",
                 "injected_value": b"    1",
                 "result": STATE_ON,
@@ -539,7 +540,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
             },
             {
-                "entity_id": "switch.29_111111111111_pio_3",
+                ATTR_ENTITY_ID: "switch.29_111111111111_pio_3",
                 "unique_id": "/29.111111111111/PIO.3",
                 "injected_value": b"    0",
                 "result": STATE_OFF,
@@ -548,7 +549,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
             },
             {
-                "entity_id": "switch.29_111111111111_pio_4",
+                ATTR_ENTITY_ID: "switch.29_111111111111_pio_4",
                 "unique_id": "/29.111111111111/PIO.4",
                 "injected_value": b"    1",
                 "result": STATE_ON,
@@ -557,7 +558,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
             },
             {
-                "entity_id": "switch.29_111111111111_pio_5",
+                ATTR_ENTITY_ID: "switch.29_111111111111_pio_5",
                 "unique_id": "/29.111111111111/PIO.5",
                 "injected_value": b"    0",
                 "result": STATE_OFF,
@@ -566,7 +567,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
             },
             {
-                "entity_id": "switch.29_111111111111_pio_6",
+                ATTR_ENTITY_ID: "switch.29_111111111111_pio_6",
                 "unique_id": "/29.111111111111/PIO.6",
                 "injected_value": b"    1",
                 "result": STATE_ON,
@@ -575,7 +576,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
             },
             {
-                "entity_id": "switch.29_111111111111_pio_7",
+                ATTR_ENTITY_ID: "switch.29_111111111111_pio_7",
                 "unique_id": "/29.111111111111/PIO.7",
                 "injected_value": b"    0",
                 "result": STATE_OFF,
@@ -584,7 +585,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
             },
             {
-                "entity_id": "switch.29_111111111111_latch_0",
+                ATTR_ENTITY_ID: "switch.29_111111111111_latch_0",
                 "unique_id": "/29.111111111111/latch.0",
                 "injected_value": b"    1",
                 "result": STATE_ON,
@@ -593,7 +594,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
             },
             {
-                "entity_id": "switch.29_111111111111_latch_1",
+                ATTR_ENTITY_ID: "switch.29_111111111111_latch_1",
                 "unique_id": "/29.111111111111/latch.1",
                 "injected_value": b"    0",
                 "result": STATE_OFF,
@@ -602,7 +603,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
             },
             {
-                "entity_id": "switch.29_111111111111_latch_2",
+                ATTR_ENTITY_ID: "switch.29_111111111111_latch_2",
                 "unique_id": "/29.111111111111/latch.2",
                 "injected_value": b"    1",
                 "result": STATE_ON,
@@ -611,7 +612,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
             },
             {
-                "entity_id": "switch.29_111111111111_latch_3",
+                ATTR_ENTITY_ID: "switch.29_111111111111_latch_3",
                 "unique_id": "/29.111111111111/latch.3",
                 "injected_value": b"    0",
                 "result": STATE_OFF,
@@ -620,7 +621,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
             },
             {
-                "entity_id": "switch.29_111111111111_latch_4",
+                ATTR_ENTITY_ID: "switch.29_111111111111_latch_4",
                 "unique_id": "/29.111111111111/latch.4",
                 "injected_value": b"    1",
                 "result": STATE_ON,
@@ -629,7 +630,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
             },
             {
-                "entity_id": "switch.29_111111111111_latch_5",
+                ATTR_ENTITY_ID: "switch.29_111111111111_latch_5",
                 "unique_id": "/29.111111111111/latch.5",
                 "injected_value": b"    0",
                 "result": STATE_OFF,
@@ -638,7 +639,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
             },
             {
-                "entity_id": "switch.29_111111111111_latch_6",
+                ATTR_ENTITY_ID: "switch.29_111111111111_latch_6",
                 "unique_id": "/29.111111111111/latch.6",
                 "injected_value": b"    1",
                 "result": STATE_ON,
@@ -647,7 +648,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
             },
             {
-                "entity_id": "switch.29_111111111111_latch_7",
+                ATTR_ENTITY_ID: "switch.29_111111111111_latch_7",
                 "unique_id": "/29.111111111111/latch.7",
                 "injected_value": b"    0",
                 "result": STATE_OFF,
@@ -669,7 +670,7 @@ MOCK_OWPROXY_DEVICES = {
         },
         BINARY_SENSOR_DOMAIN: [
             {
-                "entity_id": "binary_sensor.3a_111111111111_sensed_a",
+                ATTR_ENTITY_ID: "binary_sensor.3a_111111111111_sensed_a",
                 "unique_id": "/3A.111111111111/sensed.A",
                 "injected_value": b"    1",
                 "result": STATE_ON,
@@ -678,7 +679,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
             },
             {
-                "entity_id": "binary_sensor.3a_111111111111_sensed_b",
+                ATTR_ENTITY_ID: "binary_sensor.3a_111111111111_sensed_b",
                 "unique_id": "/3A.111111111111/sensed.B",
                 "injected_value": b"    0",
                 "result": STATE_OFF,
@@ -689,7 +690,7 @@ MOCK_OWPROXY_DEVICES = {
         ],
         SWITCH_DOMAIN: [
             {
-                "entity_id": "switch.3a_111111111111_pio_a",
+                ATTR_ENTITY_ID: "switch.3a_111111111111_pio_a",
                 "unique_id": "/3A.111111111111/PIO.A",
                 "injected_value": b"    1",
                 "result": STATE_ON,
@@ -698,7 +699,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_DEFAULT_DISABLED: True,
             },
             {
-                "entity_id": "switch.3a_111111111111_pio_b",
+                ATTR_ENTITY_ID: "switch.3a_111111111111_pio_b",
                 "unique_id": "/3A.111111111111/PIO.B",
                 "injected_value": b"    0",
                 "result": STATE_OFF,
@@ -720,7 +721,7 @@ MOCK_OWPROXY_DEVICES = {
         },
         SENSOR_DOMAIN: [
             {
-                "entity_id": "sensor.3b_111111111111_temperature",
+                ATTR_ENTITY_ID: "sensor.3b_111111111111_temperature",
                 "unique_id": "/3B.111111111111/temperature",
                 "injected_value": b"    28.243",
                 "result": "28.2",
@@ -742,7 +743,7 @@ MOCK_OWPROXY_DEVICES = {
         },
         SENSOR_DOMAIN: [
             {
-                "entity_id": "sensor.42_111111111111_temperature",
+                ATTR_ENTITY_ID: "sensor.42_111111111111_temperature",
                 "unique_id": "/42.111111111111/temperature",
                 "injected_value": b"    29.123",
                 "result": "29.1",
@@ -764,7 +765,7 @@ MOCK_OWPROXY_DEVICES = {
         },
         SENSOR_DOMAIN: [
             {
-                "entity_id": "sensor.ef_111111111111_humidity",
+                ATTR_ENTITY_ID: "sensor.ef_111111111111_humidity",
                 "unique_id": "/EF.111111111111/humidity/humidity_corrected",
                 "injected_value": b"    67.745",
                 "result": "67.7",
@@ -773,7 +774,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
-                "entity_id": "sensor.ef_111111111111_humidity_raw",
+                ATTR_ENTITY_ID: "sensor.ef_111111111111_humidity_raw",
                 "unique_id": "/EF.111111111111/humidity/humidity_raw",
                 "injected_value": b"    65.541",
                 "result": "65.5",
@@ -782,7 +783,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
-                "entity_id": "sensor.ef_111111111111_temperature",
+                ATTR_ENTITY_ID: "sensor.ef_111111111111_temperature",
                 "unique_id": "/EF.111111111111/humidity/temperature",
                 "injected_value": b"    25.123",
                 "result": "25.1",
@@ -808,7 +809,7 @@ MOCK_OWPROXY_DEVICES = {
         },
         SENSOR_DOMAIN: [
             {
-                "entity_id": "sensor.ef_111111111112_wetness_0",
+                ATTR_ENTITY_ID: "sensor.ef_111111111112_wetness_0",
                 "unique_id": "/EF.111111111112/moisture/sensor.0",
                 "injected_value": b"    41.745",
                 "result": "41.7",
@@ -817,7 +818,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
-                "entity_id": "sensor.ef_111111111112_wetness_1",
+                ATTR_ENTITY_ID: "sensor.ef_111111111112_wetness_1",
                 "unique_id": "/EF.111111111112/moisture/sensor.1",
                 "injected_value": b"    42.541",
                 "result": "42.5",
@@ -826,7 +827,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
-                "entity_id": "sensor.ef_111111111112_moisture_2",
+                ATTR_ENTITY_ID: "sensor.ef_111111111112_moisture_2",
                 "unique_id": "/EF.111111111112/moisture/sensor.2",
                 "injected_value": b"    43.123",
                 "result": "43.1",
@@ -835,7 +836,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
-                "entity_id": "sensor.ef_111111111112_moisture_3",
+                ATTR_ENTITY_ID: "sensor.ef_111111111112_moisture_3",
                 "unique_id": "/EF.111111111112/moisture/sensor.3",
                 "injected_value": b"    44.123",
                 "result": "44.1",
@@ -858,7 +859,7 @@ MOCK_OWPROXY_DEVICES = {
         },
         SENSOR_DOMAIN: [
             {
-                "entity_id": "sensor.7e_111111111111_temperature",
+                ATTR_ENTITY_ID: "sensor.7e_111111111111_temperature",
                 "unique_id": "/7E.111111111111/EDS0068/temperature",
                 "injected_value": b"    13.9375",
                 "result": "13.9",
@@ -867,7 +868,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
-                "entity_id": "sensor.7e_111111111111_pressure",
+                ATTR_ENTITY_ID: "sensor.7e_111111111111_pressure",
                 "unique_id": "/7E.111111111111/EDS0068/pressure",
                 "injected_value": b"  1012.21",
                 "result": "1012.2",
@@ -876,7 +877,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
-                "entity_id": "sensor.7e_111111111111_illuminance",
+                ATTR_ENTITY_ID: "sensor.7e_111111111111_illuminance",
                 "unique_id": "/7E.111111111111/EDS0068/light",
                 "injected_value": b"  65.8839",
                 "result": "65.9",
@@ -885,7 +886,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
-                "entity_id": "sensor.7e_111111111111_humidity",
+                ATTR_ENTITY_ID: "sensor.7e_111111111111_humidity",
                 "unique_id": "/7E.111111111111/EDS0068/humidity",
                 "injected_value": b"    41.375",
                 "result": "41.4",
@@ -908,7 +909,7 @@ MOCK_OWPROXY_DEVICES = {
         },
         SENSOR_DOMAIN: [
             {
-                "entity_id": "sensor.7e_222222222222_temperature",
+                ATTR_ENTITY_ID: "sensor.7e_222222222222_temperature",
                 "unique_id": "/7E.222222222222/EDS0066/temperature",
                 "injected_value": b"    13.9375",
                 "result": "13.9",
@@ -917,7 +918,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
-                "entity_id": "sensor.7e_222222222222_pressure",
+                ATTR_ENTITY_ID: "sensor.7e_222222222222_pressure",
                 "unique_id": "/7E.222222222222/EDS0066/pressure",
                 "injected_value": b"  1012.21",
                 "result": "1012.2",
@@ -940,7 +941,7 @@ MOCK_SYSBUS_DEVICES = {
         },
         SENSOR_DOMAIN: [
             {
-                "entity_id": "sensor.my_ds18b20_temperature",
+                ATTR_ENTITY_ID: "sensor.my_ds18b20_temperature",
                 "unique_id": "/sys/bus/w1/devices/10-111111111111/w1_slave",
                 "injected_value": 25.123,
                 "result": "25.1",
@@ -961,7 +962,7 @@ MOCK_SYSBUS_DEVICES = {
         },
         "sensor": [
             {
-                "entity_id": "sensor.22_111111111111_temperature",
+                ATTR_ENTITY_ID: "sensor.22_111111111111_temperature",
                 "unique_id": "/sys/bus/w1/devices/22-111111111111/w1_slave",
                 "injected_value": FileNotFoundError,
                 "result": "unknown",
@@ -981,7 +982,7 @@ MOCK_SYSBUS_DEVICES = {
         },
         SENSOR_DOMAIN: [
             {
-                "entity_id": "sensor.28_111111111111_temperature",
+                ATTR_ENTITY_ID: "sensor.28_111111111111_temperature",
                 "unique_id": "/sys/bus/w1/devices/28-111111111111/w1_slave",
                 "injected_value": InvalidCRCException,
                 "result": "unknown",
@@ -1002,7 +1003,7 @@ MOCK_SYSBUS_DEVICES = {
         },
         SENSOR_DOMAIN: [
             {
-                "entity_id": "sensor.3b_111111111111_temperature",
+                ATTR_ENTITY_ID: "sensor.3b_111111111111_temperature",
                 "unique_id": "/sys/bus/w1/devices/3B-111111111111/w1_slave",
                 "injected_value": 29.993,
                 "result": "30.0",
@@ -1021,7 +1022,7 @@ MOCK_SYSBUS_DEVICES = {
         },
         SENSOR_DOMAIN: [
             {
-                "entity_id": "sensor.42_111111111111_temperature",
+                ATTR_ENTITY_ID: "sensor.42_111111111111_temperature",
                 "unique_id": "/sys/bus/w1/devices/42-111111111111/w1_slave",
                 "injected_value": UnsupportResponseException,
                 "result": "unknown",
@@ -1040,7 +1041,7 @@ MOCK_SYSBUS_DEVICES = {
         },
         SENSOR_DOMAIN: [
             {
-                "entity_id": "sensor.42_111111111112_temperature",
+                ATTR_ENTITY_ID: "sensor.42_111111111112_temperature",
                 "unique_id": "/sys/bus/w1/devices/42-111111111112/w1_slave",
                 "injected_value": [UnsupportResponseException] * 9 + [27.993],
                 "result": "28.0",
@@ -1059,7 +1060,7 @@ MOCK_SYSBUS_DEVICES = {
         },
         SENSOR_DOMAIN: [
             {
-                "entity_id": "sensor.42_111111111113_temperature",
+                ATTR_ENTITY_ID: "sensor.42_111111111113_temperature",
                 "unique_id": "/sys/bus/w1/devices/42-111111111113/w1_slave",
                 "injected_value": [UnsupportResponseException] * 10 + [27.993],
                 "result": "unknown",

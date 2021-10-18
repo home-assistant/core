@@ -42,7 +42,7 @@ async def test_owserver_switch(
     # Ensure all entities are enabled
     for expected_entity in expected_entities:
         if expected_entity.get(ATTR_DEFAULT_DISABLED):
-            entity_id = expected_entity["entity_id"]
+            entity_id = expected_entity[ATTR_ENTITY_ID]
             registry_entry = entity_registry.entities.get(entity_id)
             assert registry_entry.disabled
             assert registry_entry.disabled_by == "integration"
@@ -53,7 +53,7 @@ async def test_owserver_switch(
     await hass.async_block_till_done()
 
     for expected_entity in expected_entities:
-        entity_id = expected_entity["entity_id"]
+        entity_id = expected_entity[ATTR_ENTITY_ID]
         registry_entry = entity_registry.entities.get(entity_id)
         assert registry_entry is not None
         state = hass.states.get(entity_id)

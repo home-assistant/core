@@ -9,6 +9,7 @@ from homeassistant.components.sensor import ATTR_STATE_CLASS, DOMAIN as SENSOR_D
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_NAME,
@@ -118,7 +119,7 @@ async def test_sensors_on_owserver_coupler(
     assert len(entity_registry.entities) == len(expected_sensors)
 
     for expected_sensor in expected_sensors:
-        entity_id = expected_sensor["entity_id"]
+        entity_id = expected_sensor[ATTR_ENTITY_ID]
         registry_entry = entity_registry.entities.get(entity_id)
         assert registry_entry is not None
         assert registry_entry.unique_id == expected_sensor["unique_id"]
@@ -151,7 +152,7 @@ async def test_owserver_setup_valid_device(
     # Ensure all entities are enabled
     for expected_entity in expected_entities:
         if expected_entity.get(ATTR_DEFAULT_DISABLED):
-            entity_id = expected_entity["entity_id"]
+            entity_id = expected_entity[ATTR_ENTITY_ID]
             registry_entry = entity_registry.entities.get(entity_id)
             assert registry_entry.disabled
             assert registry_entry.disabled_by == "integration"
@@ -172,7 +173,7 @@ async def test_owserver_setup_valid_device(
         assert registry_entry.model == device_info[ATTR_MODEL]
 
     for expected_entity in expected_entities:
-        entity_id = expected_entity["entity_id"]
+        entity_id = expected_entity[ATTR_ENTITY_ID]
         registry_entry = entity_registry.entities.get(entity_id)
         assert registry_entry is not None
         assert registry_entry.unique_id == expected_entity["unique_id"]
@@ -222,7 +223,7 @@ async def test_onewiredirect_setup_valid_device(
         assert registry_entry.model == device_info[ATTR_MODEL]
 
     for expected_sensor in expected_entities:
-        entity_id = expected_sensor["entity_id"]
+        entity_id = expected_sensor[ATTR_ENTITY_ID]
         registry_entry = entity_registry.entities.get(entity_id)
         assert registry_entry is not None
         assert registry_entry.unique_id == expected_sensor["unique_id"]

@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
 from . import setup_owproxy_mock_devices
@@ -41,7 +42,7 @@ async def test_owserver_binary_sensor(
     # Ensure all entities are enabled
     for expected_entity in expected_entities:
         if expected_entity.get(ATTR_DEFAULT_DISABLED):
-            entity_id = expected_entity["entity_id"]
+            entity_id = expected_entity[ATTR_ENTITY_ID]
             registry_entry = entity_registry.entities.get(entity_id)
             assert registry_entry.disabled
             assert registry_entry.disabled_by == "integration"
@@ -52,7 +53,7 @@ async def test_owserver_binary_sensor(
     await hass.async_block_till_done()
 
     for expected_entity in expected_entities:
-        entity_id = expected_entity["entity_id"]
+        entity_id = expected_entity[ATTR_ENTITY_ID]
         registry_entry = entity_registry.entities.get(entity_id)
         assert registry_entry is not None
         state = hass.states.get(entity_id)
