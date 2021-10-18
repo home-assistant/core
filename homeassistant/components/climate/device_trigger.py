@@ -118,9 +118,7 @@ async def async_attach_trigger(
     automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    trigger_type = config[CONF_TYPE]
-
-    if trigger_type == "hvac_mode_changed":
+    if (trigger_type := config[CONF_TYPE]) == "hvac_mode_changed":
         state_config = {
             state_trigger.CONF_PLATFORM: "state",
             state_trigger.CONF_ENTITY_ID: config[CONF_ENTITY_ID],

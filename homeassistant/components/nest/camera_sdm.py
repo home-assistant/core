@@ -118,7 +118,7 @@ class NestCamera(Camera):
         return supported_features
 
     @property
-    def stream_type(self) -> str | None:
+    def frontend_stream_type(self) -> str | None:
         """Return the type of stream supported by this camera."""
         if CameraLiveStreamTrait.NAME not in self._device.traits:
             return None
@@ -131,9 +131,11 @@ class NestCamera(Camera):
         """Return the source of the stream."""
         if not self.supported_features & SUPPORT_STREAM:
             return None
-        if self.stream_type != STREAM_TYPE_HLS:
+        if CameraLiveStreamTrait.NAME not in self._device.traits:
             return None
         trait = self._device.traits[CameraLiveStreamTrait.NAME]
+        if StreamingProtocol.RTSP not in trait.supported_protocols:
+            return None
         if not self._stream:
             _LOGGER.debug("Fetching stream url")
             try:
@@ -217,8 +219,7 @@ class NestCamera(Camera):
         """Return image from any active events happening."""
         if CameraEventImageTrait.NAME not in self._device.traits:
             return None
-        trait = self._device.active_event_trait
-        if not trait:
+        if not (trait := self._device.active_event_trait):
             return None
         # Reuse image bytes if they have already been fetched
         if not isinstance(trait, EventImageGenerator):

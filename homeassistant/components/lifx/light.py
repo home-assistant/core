@@ -462,8 +462,7 @@ class LIFXLight(LightEntity):
             "manufacturer": "LIFX",
         }
 
-        version = self.bulb.host_firmware_version
-        if version is not None:
+        if (version := self.bulb.host_firmware_version) is not None:
             info["sw_version"] = version
 
         product_map = aiolifx().products.product_map

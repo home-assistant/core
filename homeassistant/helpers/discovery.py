@@ -111,9 +111,7 @@ def async_listen_platform(
 
     async def discovery_platform_listener(discovered: DiscoveryDict) -> None:
         """Listen for platform discovery events."""
-        platform = discovered["platform"]
-
-        if not platform:
+        if not (platform := discovered["platform"]):
             return
 
         task = hass.async_run_hass_job(job, platform, discovered.get("discovered"))

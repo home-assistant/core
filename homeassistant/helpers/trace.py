@@ -113,8 +113,7 @@ def trace_id_get() -> tuple[tuple[str, str], str] | None:
 
 def trace_stack_push(trace_stack_var: ContextVar, node: Any) -> None:
     """Push an element to the top of a trace stack."""
-    trace_stack = trace_stack_var.get()
-    if trace_stack is None:
+    if (trace_stack := trace_stack_var.get()) is None:
         trace_stack = []
         trace_stack_var.set(trace_stack)
     trace_stack.append(node)
@@ -149,8 +148,7 @@ def trace_path_pop(count: int) -> None:
 
 def trace_path_get() -> str:
     """Return a string representing the current location in the config tree."""
-    path = trace_path_stack_cv.get()
-    if not path:
+    if not (path := trace_path_stack_cv.get()):
         return ""
     return "/".join(path)
 
@@ -160,12 +158,10 @@ def trace_append_element(
     maxlen: int | None = None,
 ) -> None:
     """Append a TraceElement to trace[path]."""
-    path = trace_element.path
-    trace = trace_cv.get()
-    if trace is None:
+    if (trace := trace_cv.get()) is None:
         trace = {}
         trace_cv.set(trace)
-    if path not in trace:
+    if (path := trace_element.path) not in trace:
         trace[path] = deque(maxlen=maxlen)
     trace[path].append(trace_element)
 
@@ -213,16 +209,14 @@ class StopReason:
 
 def script_execution_set(reason: str) -> None:
     """Set stop reason."""
-    data = script_execution_cv.get()
-    if data is None:
+    if (data := script_execution_cv.get()) is None:
         return
     data.script_execution = reason
 
 
 def script_execution_get() -> str | None:
     """Return the current trace."""
-    data = script_execution_cv.get()
-    if data is None:
+    if (data := script_execution_cv.get()) is None:
         return None
     return data.script_execution
 

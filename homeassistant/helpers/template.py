@@ -813,8 +813,7 @@ class TemplateState(State):
 
 
 def _collect_state(hass: HomeAssistant, entity_id: str) -> None:
-    entity_collect = hass.data.get(_RENDER_INFO)
-    if entity_collect is not None:
+    if (entity_collect := hass.data.get(_RENDER_INFO)) is not None:
         entity_collect.entities.add(entity_id)
 
 
@@ -1188,8 +1187,7 @@ def state_attr(hass: HomeAssistant, entity_id: str, name: str) -> Any:
 
 def now(hass: HomeAssistant) -> datetime:
     """Record fetching now."""
-    render_info = hass.data.get(_RENDER_INFO)
-    if render_info is not None:
+    if (render_info := hass.data.get(_RENDER_INFO)) is not None:
         render_info.has_time = True
 
     return dt_util.now()
@@ -1197,8 +1195,7 @@ def now(hass: HomeAssistant) -> datetime:
 
 def utcnow(hass: HomeAssistant) -> datetime:
     """Record fetching utcnow."""
-    render_info = hass.data.get(_RENDER_INFO)
-    if render_info is not None:
+    if (render_info := hass.data.get(_RENDER_INFO)) is not None:
         render_info.has_time = True
 
     return dt_util.utcnow()
@@ -1843,9 +1840,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             # any instance of this.
             return super().compile(source, name, filename, raw, defer_init)
 
-        cached = self.template_cache.get(source)
-
-        if cached is None:
+        if (cached := self.template_cache.get(source)) is None:
             cached = self.template_cache[source] = super().compile(source)
 
         return cached

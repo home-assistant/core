@@ -83,8 +83,7 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):  # type: ignore[valid
 def _async_loop_exception_handler(_: Any, context: dict[str, Any]) -> None:
     """Handle all exception inside the core loop."""
     kwargs = {}
-    exception = context.get("exception")
-    if exception:
+    if exception := context.get("exception"):
         kwargs["exc_info"] = (type(exception), exception, exception.__traceback__)
 
     logging.getLogger(__package__).error(

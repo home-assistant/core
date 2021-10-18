@@ -28,24 +28,24 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             key=DPCode.WATER_SET,
             name="Water Level",
             icon="mdi:cup-water",
-            entity_registry_enabled_default=False,
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.TEMP_SET,
             name="Temperature",
             icon="mdi:thermometer",
-            entity_registry_enabled_default=False,
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.WARM_TIME,
             name="Heat Preservation Time",
             icon="mdi:timer",
-            entity_registry_enabled_default=False,
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.POWDER_SET,
             name="Powder",
-            entity_registry_enabled_default=False,
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
     # Siren Alarm
@@ -54,6 +54,15 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.ALARM_TIME,
             name="Time",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
+    # Vibration Sensor
+    # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
+    "zd": (
+        NumberEntityDescription(
+            key=DPCode.SENSITIVITY,
+            name="Sensitivity",
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
