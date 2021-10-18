@@ -93,6 +93,7 @@ HA_TO_VICARE_PRESET_HEATING = {
 
 
 def _build_entity(name, vicare_api, circuit, device_config, heating_type):
+    """Create a ViCare climate entity."""
     _LOGGER.debug("Found device %s", name)
     return ViCareClimate(name, vicare_api, device_config, circuit, heating_type)
 

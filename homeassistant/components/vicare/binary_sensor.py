@@ -64,21 +64,43 @@ COMPRESSOR_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
 
 
 def _build_entity(name, vicare_api, device_config, sensor):
+    """Create a ViCare binary sensor entity."""
     try:
         sensor.value_getter(vicare_api)
         _LOGGER.debug("Found entity %s", name)
-        return ViCareBinarySensor(
-            name,
-            vicare_api,
-            device_config,
-            sensor,
-        )
     except PyViCareNotSupportedFeatureError:
         _LOGGER.info("Feature not supported %s", name)
         return None
     except AttributeError:
         _LOGGER.debug("Attribute Error %s", name)
         return None
+
+    return ViCareBinarySensor(
+        name,
+        vicare_api,
+        device_config,
+        sensor,
+    )
+
+
+async def _entities_from_descriptions(
+    hass, name, all_devices, sensor_descriptions, iterables
+):
+    """Create entities from descriptions and list of burners/circuits."""
+    for description in sensor_descriptions:
+        for burner in iterables:
+            suffix = ""
+            if len(iterables) > 1:
+                suffix = f" {burner.id}"
+            entity = await hass.async_add_executor_job(
+                _build_entity,
+                f"{name} {description.name}{suffix}",
+                burner,
+                hass.data[DOMAIN][VICARE_DEVICE_CONFIG],
+                description,
+            )
+            if entity is not None:
+                all_devices.append(entity)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -107,38 +129,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 all_devices.append(entity)
 
     try:
-        for description in BURNER_SENSORS:
-            for burner in api.burners:
-                suffix = ""
-                if len(api.burners) > 1:
-                    suffix = f" {burner.id}"
-                entity = await hass.async_add_executor_job(
-                    _build_entity,
-                    f"{name} {description.name}{suffix}",
-                    burner,
-                    hass.data[DOMAIN][VICARE_DEVICE_CONFIG],
-                    description,
-                )
-                if entity is not None:
-                    all_devices.append(entity)
+        _entities_from_descriptions(
+            hass, name, all_devices, BURNER_SENSORS, api.burners
+        )
     except PyViCareNotSupportedFeatureError:
         _LOGGER.info("No burners found")
 
     try:
-        for description in COMPRESSOR_SENSORS:
-            for compressor in api.compressors:
-                suffix = ""
-                if len(api.compressors) > 1:
-                    suffix = f" {compressor.id}"
-                entity = await hass.async_add_executor_job(
-                    _build_entity,
-                    f"{name} {description.name}{suffix}",
-                    compressor,
-                    hass.data[DOMAIN][VICARE_DEVICE_CONFIG],
-                    description,
-                )
-                if entity is not None:
-                    all_devices.append(entity)
+        _entities_from_descriptions(
+            hass, name, all_devices, COMPRESSOR_SENSORS, api.compressors
+        )
     except PyViCareNotSupportedFeatureError:
         _LOGGER.info("No compressors found")
 

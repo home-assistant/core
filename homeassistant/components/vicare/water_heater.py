@@ -55,6 +55,7 @@ HA_TO_VICARE_HVAC_DHW = {
 
 
 def _build_entity(name, vicare_api, circuit, device_config, heating_type):
+    """Create a ViCare water_heater entity."""
     _LOGGER.debug("Found device %s", name)
     return ViCareWater(
         name,

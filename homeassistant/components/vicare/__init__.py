@@ -25,6 +25,7 @@ from .const import (
     CONF_HEATING_TYPE,
     DEFAULT_HEATING_TYPE,
     DOMAIN,
+    HEATING_TYPE_TO_CREATOR_METHOD,
     PLATFORMS,
     VICARE_API,
     VICARE_CIRCUITS,
@@ -43,27 +44,27 @@ class ViCareRequiredKeysMixin:
     value_getter: Callable[[Device], bool]
 
 
-_LOGGER = logging.getLogger(__name__)
-
-
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Required(CONF_CLIENT_ID): cv.string,
-                vol.Optional(CONF_SCAN_INTERVAL, default=60): vol.All(
-                    cv.time_period, lambda value: value.total_seconds()
-                ),
-                vol.Optional(
-                    CONF_CIRCUIT
-                ): int,  # Ignored: All circuits are now supported. Will be removed when switching to Setup via UI.
-                vol.Optional(CONF_NAME, default="ViCare"): cv.string,
-                vol.Optional(CONF_HEATING_TYPE, default=DEFAULT_HEATING_TYPE): cv.enum(
-                    HeatingType
-                ),
-            }
+        DOMAIN: vol.All(
+            cv.deprecated(CONF_CIRCUIT),
+            vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Required(CONF_CLIENT_ID): cv.string,
+                    vol.Optional(CONF_SCAN_INTERVAL, default=60): vol.All(
+                        cv.time_period, lambda value: value.total_seconds()
+                    ),
+                    vol.Optional(
+                        CONF_CIRCUIT
+                    ): int,  # Ignored: All circuits are now supported. Will be removed when switching to Setup via UI.
+                    vol.Optional(CONF_NAME, default="ViCare"): cv.string,
+                    vol.Optional(
+                        CONF_HEATING_TYPE, default=DEFAULT_HEATING_TYPE
+                    ): cv.enum(HeatingType),
+                }
+            ),
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -82,10 +83,7 @@ def setup(hass, config):
     hass.data[DOMAIN][VICARE_NAME] = conf[CONF_NAME]
     setup_vicare_api(hass, conf, hass.data[DOMAIN])
 
-    if conf.get(CONF_HEATING_TYPE) is not None:
-        hass.data[DOMAIN][CONF_HEATING_TYPE] = conf[CONF_HEATING_TYPE]
-    else:
-        hass.data[DOMAIN][CONF_HEATING_TYPE] = DEFAULT_HEATING_TYPE
+    hass.data[DOMAIN][CONF_HEATING_TYPE] = conf[CONF_HEATING_TYPE]
 
     for platform in PLATFORMS:
         discovery.load_platform(hass, platform, DOMAIN, {}, config)
@@ -110,19 +108,7 @@ def setup_vicare_api(hass, conf, entity_data):
             "Found device: %s (online: %s)", device.getModel(), str(device.isOnline())
         )
     entity_data[VICARE_DEVICE_CONFIG] = device
-
-    device_types = [
-        (device.asAutoDetectDevice, HeatingType.auto),
-        (device.asGazBoiler, HeatingType.gas),
-        (device.asFuelCell, HeatingType.fuelcell),
-        (device.asHeatPump, HeatingType.heatpump),
-        (device.asOilBoiler, HeatingType.oil),
-        (device.asPelletsBoiler, HeatingType.pellets),
-    ]
-
-    for (creator_method, heating_type) in device_types:
-        if heating_type == conf[CONF_HEATING_TYPE]:
-            _LOGGER.info("Using creator_method %s", creator_method.__name__)
-            entity_data[VICARE_API] = creator_method()
-
+    entity_data[VICARE_API] = getattr(
+        device, HEATING_TYPE_TO_CREATOR_METHOD[conf[CONF_HEATING_TYPE]]
+    )()
     entity_data[VICARE_CIRCUITS] = entity_data[VICARE_API].circuits
