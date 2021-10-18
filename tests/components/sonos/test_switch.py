@@ -73,7 +73,8 @@ async def test_switch_attributes(hass, config_entry, config, soco):
     assert speech_enhancement_state.state == STATE_ON
 
     crossfade = entity_registry.entities["switch.sonos_zone_a_crossfade"]
-    assert hass.states.get(crossfade.entity_id) is None
+    crossfade_state = hass.states.get(crossfade.entity_id)
+    assert crossfade_state.state == STATE_ON
 
     status_light = entity_registry.entities["switch.sonos_zone_a_status_light"]
     assert hass.states.get(status_light.entity_id) is None

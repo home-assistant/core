@@ -14,7 +14,7 @@ import async_timeout
 from soco.core import MUSIC_SRC_LINE_IN, MUSIC_SRC_RADIO, MUSIC_SRC_TV, SoCo
 from soco.data_structures import DidlAudioBroadcast, DidlPlaylistContainer
 from soco.events_base import Event as SonosEvent, SubscriptionBase
-from soco.exceptions import SoCoException, SoCoUPnPException
+from soco.exceptions import SoCoException, SoCoSlaveException, SoCoUPnPException
 from soco.music_library import MusicLibrary
 from soco.plugins.sharelink import ShareLinkPlugin
 from soco.snapshot import Snapshot
@@ -466,6 +466,9 @@ class SonosSpeaker:
     @callback
     def async_dispatch_media_update(self, event: SonosEvent) -> None:
         """Update information about currently playing media from an event."""
+        if crossfade := event.variables.get("current_crossfade_mode"):
+            self.cross_fade = bool(int(crossfade))
+
         self.hass.async_add_executor_job(self.update_media, event)
 
     @callback
@@ -989,6 +992,11 @@ class SonosSpeaker:
         self.dialog_mode = self.soco.dialog_mode
         self.bass_level = self.soco.bass
         self.treble_level = self.soco.treble
+
+        try:
+            self.cross_fade = self.soco.cross_fade
+        except SoCoSlaveException:
+            pass
 
     def update_media(self, event: SonosEvent | None = None) -> None:
         """Update information about currently playing media."""

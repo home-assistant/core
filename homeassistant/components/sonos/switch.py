@@ -4,7 +4,7 @@ from __future__ import annotations
 import datetime
 import logging
 
-from soco.exceptions import SoCoException, SoCoUPnPException
+from soco.exceptions import SoCoException, SoCoSlaveException, SoCoUPnPException
 
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
 from homeassistant.const import ATTR_TIME, ENTITY_CATEGORY_CONFIG
@@ -46,9 +46,10 @@ ALL_FEATURES = (
     ATTR_STATUS_LIGHT,
 )
 
+COORDINATOR_FEATURES = ATTR_CROSSFADE
+
 POLL_REQUIRED = (
     ATTR_TOUCH_CONTROLS,
-    ATTR_CROSSFADE,
     ATTR_STATUS_LIGHT,
 )
 
@@ -88,8 +89,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     def available_soco_attributes(speaker: SonosSpeaker) -> list[tuple[str, bool]]:
         features = []
         for feature_type in ALL_FEATURES:
-            if (state := getattr(speaker.soco, feature_type, None)) is not None:
-                features.append((feature_type, state))
+            try:
+                if (state := getattr(speaker.soco, feature_type, None)) is not None:
+                    setattr(speaker, feature_type, state)
+                    features.append(feature_type)
+            except SoCoSlaveException:
+                features.append(feature_type)
         return features
 
     async def _async_create_switches(speaker: SonosSpeaker) -> None:
@@ -97,13 +102,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         available_features = await hass.async_add_executor_job(
             available_soco_attributes, speaker
         )
-        for feature_type, is_on in available_features:
+        for feature_type in available_features:
             _LOGGER.debug(
                 "Creating %s switch on %s",
                 FRIENDLY_NAMES[feature_type],
                 speaker.zone_name,
             )
-            entities.append(SonosSwitchEntity(feature_type, speaker, is_on))
+            entities.append(SonosSwitchEntity(feature_type, speaker))
         async_add_entities(entities)
 
     config_entry.async_on_unload(
@@ -117,15 +122,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SonosSwitchEntity(SonosEntity, SwitchEntity):
     """Representation of a Sonos feature switch."""
 
-    def __init__(self, feature_type: str, speaker: SonosSpeaker, is_on: bool) -> None:
+    def __init__(self, feature_type: str, speaker: SonosSpeaker) -> None:
         """Initialize the switch."""
         super().__init__(speaker)
         self.feature_type = feature_type
+        self.needs_coordinator = feature_type in COORDINATOR_FEATURES
         self._attr_entity_category = ENTITY_CATEGORY_CONFIG
         self._attr_name = f"Sonos {speaker.zone_name} {FRIENDLY_NAMES[feature_type]}"
         self._attr_unique_id = f"{speaker.soco.uid}-{feature_type}"
         self._attr_icon = FEATURE_ICONS.get(feature_type)
-        self._attr_is_on = is_on
 
         if feature_type in POLL_REQUIRED:
             self._attr_entity_registry_enabled_default = False
@@ -133,13 +138,14 @@ class SonosSwitchEntity(SonosEntity, SwitchEntity):
 
     def update(self) -> None:
         """Fetch switch state if necessary."""
-        self._attr_is_on = getattr(self.speaker.soco, self.feature_type)
+        state = getattr(self.soco, self.feature_type)
+        setattr(self.speaker, self.feature_type, state)
 
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        if self.feature_type in POLL_REQUIRED:
-            return self._attr_is_on
+        if self.needs_coordinator and not self.speaker.is_coordinator:
+            return getattr(self.speaker.coordinator, self.feature_type)
         return getattr(self.speaker, self.feature_type)
 
     def turn_on(self, **kwargs) -> None:
@@ -152,8 +158,12 @@ class SonosSwitchEntity(SonosEntity, SwitchEntity):
 
     def send_command(self, enable: bool) -> None:
         """Enable or disable the feature on the device."""
+        if self.needs_coordinator:
+            soco = self.soco.group.coordinator
+        else:
+            soco = self.soco
         try:
-            setattr(self.speaker.soco, self.feature_type, enable)
+            setattr(soco, self.feature_type, enable)
         except SoCoUPnPException as exc:
             _LOGGER.warning("Could not toggle %s: %s", self.entity_id, exc)
 
