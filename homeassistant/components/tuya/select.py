@@ -33,14 +33,17 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             key=DPCode.CONCENTRATION_SET,
             name="Concentration",
             icon="mdi:altimeter",
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
         SelectEntityDescription(
             key=DPCode.MATERIAL,
             name="Material",
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
         SelectEntityDescription(
             key=DPCode.MODE,
             name="Mode",
+            icon="mdi:coffee",
         ),
     ),
     # Siren Alarm

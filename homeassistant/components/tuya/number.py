@@ -28,24 +28,24 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             key=DPCode.WATER_SET,
             name="Water Level",
             icon="mdi:cup-water",
-            entity_registry_enabled_default=False,
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.TEMP_SET,
             name="Temperature",
             icon="mdi:thermometer",
-            entity_registry_enabled_default=False,
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.WARM_TIME,
             name="Heat Preservation Time",
             icon="mdi:timer",
-            entity_registry_enabled_default=False,
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.POWDER_SET,
             name="Powder",
-            entity_registry_enabled_default=False,
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
     # Siren Alarm
