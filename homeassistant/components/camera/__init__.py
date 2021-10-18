@@ -422,7 +422,7 @@ class Camera(Entity):
         return MIN_STREAM_INTERVAL
 
     @property
-    def stream_type(self) -> str | None:
+    def frontend_stream_type(self) -> str | None:
         """Return the type of stream supported by this camera.
 
         A camera may have a single stream type which is used to inform the
@@ -570,8 +570,10 @@ class Camera(Entity):
         if self.motion_detection_enabled:
             attrs["motion_detection"] = self.motion_detection_enabled
 
-        if self.stream_type:
-            attrs["stream_type"] = self.stream_type
+        if self.frontend_stream_type:
+            attrs["frontend_stream_type"] = self.frontend_stream_type
+            # Remove after home-assistant/frontend#10298 is merged into nightly
+            attrs["stream_type"] = self.frontend_stream_type
 
         return attrs
 
@@ -746,11 +748,11 @@ async def ws_camera_web_rtc_offer(
     entity_id = msg["entity_id"]
     offer = msg["offer"]
     camera = _get_camera_from_entity_id(hass, entity_id)
-    if camera.stream_type != STREAM_TYPE_WEB_RTC:
+    if camera.frontend_stream_type != STREAM_TYPE_WEB_RTC:
         connection.send_error(
             msg["id"],
             "web_rtc_offer_failed",
-            f"Camera does not support WebRTC, stream_type={camera.stream_type}",
+            f"Camera does not support WebRTC, frontend_stream_type={camera.frontend_stream_type}",
         )
         return
     try:
