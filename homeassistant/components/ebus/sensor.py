@@ -17,7 +17,8 @@ async def async_setup_entry(
 
     api = hass.data[DOMAIN][config_entry.entry_id][API]
 
-    entities = [EbusStateSensor(api)]
+    async_add_entities([EbusStateSensor(api)])
+    entities = []
     for msgdef in api.ebus.msgdefs:
         if msgdef.read or msgdef.update:
             for fielddef in msgdef.children:
@@ -25,13 +26,14 @@ async def async_setup_entry(
     async_add_entities(entities)
 
     platform = entity_platform.current_platform.get()
-    platform.async_register_entity_service(
-        SERVICE_SETVALUE,
-        {
-            vol.Required("value"): vol.Coerce(str),
-        },
-        "async_set_value",
-    )
+    if platform:
+        platform.async_register_entity_service(
+            SERVICE_SETVALUE,
+            {
+                vol.Required("value"): vol.Coerce(str),
+            },
+            "async_set_value",
+        )
 
 
 class EbusSensor(EbusFieldEntity):
@@ -64,7 +66,7 @@ class EbusSensor(EbusFieldEntity):
 class EbusStateSensor(EbusEntity):
     """EBUS State Sensor."""
 
-    def __init__(self, api: Api):
+    def __init__(self, api: Api) -> None:
         """EBUS State Sensor."""
         super().__init__(api, "state")
 

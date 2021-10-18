@@ -1,10 +1,11 @@
 """EBUS Integration."""
+from __future__ import annotations
+
 import asyncio
 import collections
 import copy
 import itertools
 import logging
-from typing import Dict
 
 from pyebus import (
     NA,
@@ -21,7 +22,7 @@ from pyebus import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
@@ -106,9 +107,9 @@ class Api:
         self._hass = hass
         self._checkinterval = checkinterval
         self._ebus = None
-        self._monitor = None
-        self.circuitmap = None
-        self._circuitinfos = {}
+        self._monitor: Monitor | None = None
+        self.circuitmap: CircuitMap | None = None
+        self._circuitinfos: dict[str, list[CircuitInfo]] = {}
 
     def configure(self, entry: ConfigEntry):
         """Configure."""
@@ -157,7 +158,8 @@ class Api:
         @callback
         def unsubscribe() -> None:
             """Unsubscribe an entity from API fetches (when disable)."""
-            self._monitor.detach(entity, fielddef=fielddef)
+            if self._monitor:
+                self._monitor.detach(entity, fielddef=fielddef)
 
         return unsubscribe
 
@@ -372,7 +374,7 @@ class Monitor:
 class EbusEntity(Entity):
     """EBUS Entity."""
 
-    def __init__(self, api: Api, ident: str):
+    def __init__(self, api: Api, ident: str) -> None:
         """EBUS Entity."""
         super().__init__()
         self._api = api
@@ -384,7 +386,7 @@ class EbusEntity(Entity):
         return self._unique_id
 
     @property
-    def device_info(self) -> Dict[str, any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._api.ident)},
@@ -402,17 +404,19 @@ class EbusEntity(Entity):
 class EbusFieldEntity(EbusEntity):
     """EBUS Entity."""
 
-    def __init__(self, api: Api, fielddef: FieldDef):
+    def __init__(self, api: Api, fielddef: FieldDef) -> None:
         """EBUS Entity."""
         super().__init__(api, fielddef.ident)
         self._fielddef = fielddef
-        self._device_class = UNIT_DEVICE_CLASS_MAP.get(self._fielddef.unit, None)
+        self._device_class: str = UNIT_DEVICE_CLASS_MAP.get(self._fielddef.unit, "")
 
     @property
     def name(self) -> str:
         """Return the name."""
         msgdef = self._fielddef.parent
-        circuit = self._api.circuitmap.get_humanname(msgdef.circuit)
+        circuit = None
+        if self._api.circuitmap:
+            circuit = self._api.circuitmap.get_humanname(msgdef.circuit)
         if circuit:
             name = f"{circuit} {msgdef.name} {self._fielddef.name}"
         else:
@@ -435,21 +439,21 @@ class EbusFieldEntity(EbusEntity):
         return self._device_class
 
     @property
-    def device_info(self) -> Dict[str, any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
         msgdef = self._fielddef.parent
-        circuitname = self._api.circuitmap.get_humanname(msgdef.circuit)
+        circuitname = None
+        if self._api.circuitmap:
+            circuitname = self._api.circuitmap.get_humanname(msgdef.circuit)
         circuitinfo = self._api.ebus.get_circuitinfo(msgdef.circuit)
-        info = {
-            "identifiers": {(DOMAIN, self._api.ident, msgdef.circuit)},
+        return {
+            "identifiers": {(DOMAIN, self._api.ident, msgdef.circuit)},  # type: ignore[arg-type]
             "name": f"EBUS - {circuitname}" if circuitname else "EBUS",
             "via_device": (DOMAIN, self._api.ident),
+            "manufacturer": circuitinfo.manufacturer if circuitinfo else None,
+            "model": circuitinfo.model if circuitinfo else None,
+            "sw_version": circuitinfo.swversion if circuitinfo else None,
         }
-        if circuitinfo:
-            info["manufacturer"] = circuitinfo.manufacturer
-            info["model"] = circuitinfo.model
-            info["sw_version"] = circuitinfo.swversion
-        return info
 
     @property
     def device_state_attributes(self):
