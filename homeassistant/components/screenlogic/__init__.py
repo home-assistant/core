@@ -58,10 +58,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        "coordinator": coordinator,
-        "listener": entry.add_update_listener(async_update_listener),
-    }
+    entry.async_on_unload(entry.add_update_listener(async_update_listener))
+
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -240,11 +239,11 @@ class ScreenLogicCircuitEntity(ScreenlogicEntity):
 
     async def async_turn_on(self, **kwargs) -> None:
         """Send the ON command."""
-        return await self._async_set_circuit(ON_OFF.ON)
+        await self._async_set_circuit(ON_OFF.ON)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Send the OFF command."""
-        return await self._async_set_circuit(ON_OFF.OFF)
+        await self._async_set_circuit(ON_OFF.OFF)
 
     async def _async_set_circuit(self, circuit_value) -> None:
         async with self.coordinator.api_lock:
