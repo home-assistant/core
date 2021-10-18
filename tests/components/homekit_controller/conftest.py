@@ -8,7 +8,7 @@ import pytest
 
 import homeassistant.util.dt as dt_util
 
-from tests.components.light.conftest import mock_light_profiles  # noqa
+from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
 @pytest.fixture
@@ -27,3 +27,8 @@ def controller(hass):
     instance = FakeController()
     with unittest.mock.patch("aiohomekit.Controller", return_value=instance):
         yield instance
+
+
+@pytest.fixture(autouse=True)
+def homekit_mock_zeroconf(mock_zeroconf):
+    """Mock zeroconf in all homekit tests."""

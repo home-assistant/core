@@ -1,4 +1,6 @@
 """Validate requirements."""
+from __future__ import annotations
+
 from collections import deque
 import json
 import operator
@@ -6,14 +8,14 @@ import os
 import re
 import subprocess
 import sys
-from typing import Dict, Set
 
+from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 from stdlib_list import stdlib_list
 from tqdm import tqdm
 
 from homeassistant.const import REQUIRED_PYTHON_VER
 import homeassistant.util.package as pkg_util
-from script.gen_requirements_all import COMMENT_REQUIREMENTS
+from script.gen_requirements_all import COMMENT_REQUIREMENTS, normalize_package_name
 
 from .model import Config, Integration
 
@@ -46,20 +48,14 @@ IGNORE_VIOLATIONS = {
 }
 
 
-def normalize_package_name(requirement: str) -> str:
-    """Return a normalized package name from a requirement string."""
-    match = PACKAGE_REGEX.search(requirement)
-    if not match:
-        return ""
-
-    # pipdeptree needs lowercase and dash instead of underscore as separator
-    package = match.group(1).lower().replace("_", "-")
-
-    return package
-
-
-def validate(integrations: Dict[str, Integration], config: Config):
+def validate(integrations: dict[str, Integration], config: Config):
     """Handle requirements for integrations."""
+    # Check if we are doing format-only validation.
+    if not config.requirements:
+        for integration in integrations.values():
+            validate_requirements_format(integration)
+        return
+
     ensure_cache()
 
     # check for incompatible requirements
@@ -73,8 +69,45 @@ def validate(integrations: Dict[str, Integration], config: Config):
         validate_requirements(integration)
 
 
+def validate_requirements_format(integration: Integration) -> bool:
+    """Validate requirements format.
+
+    Returns if valid.
+    """
+    start_errors = len(integration.errors)
+
+    for req in integration.requirements:
+        if " " in req:
+            integration.add_error(
+                "requirements",
+                f'Requirement "{req}" contains a space',
+            )
+            continue
+
+        pkg, sep, version = req.partition("==")
+
+        if not sep and integration.core:
+            integration.add_error(
+                "requirements",
+                f'Requirement {req} need to be pinned "<pkg name>==<version>".',
+            )
+            continue
+
+        if AwesomeVersion(version).strategy == AwesomeVersionStrategy.UNKNOWN:
+            integration.add_error(
+                "requirements",
+                f"Unable to parse package version ({version}) for {pkg}.",
+            )
+            continue
+
+    return len(integration.errors) == start_errors
+
+
 def validate_requirements(integration: Integration):
     """Validate requirements."""
+    if not validate_requirements_format(integration):
+        return
+
     # Some integrations have not been fixed yet so are allowed to have violations.
     if integration.domain in IGNORE_VIOLATIONS:
         return
@@ -89,10 +122,13 @@ def validate_requirements(integration: Integration):
                 f"Failed to normalize package name from requirement {req}",
             )
             return
-        if package in IGNORE_PACKAGES:
+        if (package == ign for ign in IGNORE_PACKAGES):
             continue
         integration_requirements.add(req)
         integration_packages.add(package)
+
+    if integration.disabled:
+        return
 
     install_ok = install_requirements(integration, integration_requirements)
 
@@ -153,7 +189,7 @@ def ensure_cache():
     PIPDEPTREE_CACHE = cache
 
 
-def get_requirements(integration: Integration, packages: Set[str]) -> Set[str]:
+def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
     """Return all (recursively) requirements for an integration."""
     ensure_cache()
 
@@ -184,7 +220,7 @@ def get_requirements(integration: Integration, packages: Set[str]) -> Set[str]:
     return all_requirements
 
 
-def install_requirements(integration: Integration, requirements: Set[str]) -> bool:
+def install_requirements(integration: Integration, requirements: set[str]) -> bool:
     """Install integration requirements.
 
     Return True if successful.

@@ -3,5 +3,6 @@
   "name": "MQTT JSON",
   "documentation": "https://www.home-assistant.io/integrations/mqtt_json",
   "dependencies": ["mqtt"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_push"
 }

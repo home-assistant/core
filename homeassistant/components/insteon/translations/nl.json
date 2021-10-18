@@ -28,6 +28,9 @@
                 "title": "Insteon Hub versie 2"
             },
             "plm": {
+                "data": {
+                    "device": "USB-apparaatpad"
+                },
                 "description": "Configureer de Insteon PowerLink Modem (PLM).",
                 "title": "Insteon PLM"
             },
@@ -83,7 +86,23 @@
                     "change_hub_config": "Wijzig de Hub-configuratie.",
                     "remove_override": "Verwijder een apparaatoverschrijving.",
                     "remove_x10": "Verwijder een X10-apparaat."
-                }
+                },
+                "description": "Selecteer een optie om te configureren.",
+                "title": "Insteon"
+            },
+            "remove_override": {
+                "data": {
+                    "address": "Selecteer een apparaatadres om te verwijderen"
+                },
+                "description": "Verwijder een apparaatoverschrijving",
+                "title": "Insteon"
+            },
+            "remove_x10": {
+                "data": {
+                    "address": "Selecteer een apparaatadres om te verwijderen"
+                },
+                "description": "Verwijder een X10 apparaat",
+                "title": "Insteon"
             }
         }
     }

@@ -68,7 +68,7 @@ async def async_setup_entry(
     tado = hass.data[DOMAIN][entry.entry_id][DATA]
     entities = await hass.async_add_executor_job(_generate_entities, tado)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_WATER_HEATER_TIMER,

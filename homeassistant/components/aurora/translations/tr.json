@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Enlem",
+                    "longitude": "Boylam",
+                    "name": "Ad"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,21 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "FAA Delays",
+        "description": "Enter a US Airport Code in IATA Format",
+        "data": {
+          "id": "Airport"
+        }
+      }
+    },
+    "error": {
+      "invalid_airport": "Airport code is not valid",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "This airport is already configured."
+    }
+  }
+}

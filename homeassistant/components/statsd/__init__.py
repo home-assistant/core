@@ -54,9 +54,7 @@ def setup(hass, config):
 
     def statsd_event_listener(event):
         """Listen for new messages on the bus and sends them to StatsD."""
-        state = event.data.get("new_state")
-
-        if state is None:
+        if (state := event.data.get("new_state")) is None:
             return
 
         try:
@@ -74,7 +72,7 @@ def setup(hass, config):
 
         if show_attribute_flag is True:
             if isinstance(_state, (float, int)):
-                statsd_client.gauge("%s.state" % state.entity_id, _state, sample_rate)
+                statsd_client.gauge(f"{state.entity_id}.state", _state, sample_rate)
 
             # Send attribute values
             for key, value in states.items():

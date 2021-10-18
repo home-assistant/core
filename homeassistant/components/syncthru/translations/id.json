@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "error": {
+            "invalid_url": "URL tidak valid",
+            "syncthru_not_supported": "Perangkat tidak mendukung SyncThru",
+            "unknown_state": "Status printer tidak diketahui, verifikasi URL dan konektivitas jaringan"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "name": "Nama",
+                    "url": "URL antarmuka web"
+                }
+            },
+            "user": {
+                "data": {
+                    "name": "Nama",
+                    "url": "URL antarmuka web"
+                }
+            }
+        }
+    }
+}

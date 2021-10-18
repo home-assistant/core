@@ -6,15 +6,22 @@ real HTTP calls are not initiated during testing.
 """
 from pysmartthings import ATTRIBUTES, CAPABILITIES, Attribute, Capability
 
-from homeassistant.components.sensor import DEVICE_CLASSES, DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import (
+    DEVICE_CLASSES,
+    DOMAIN as SENSOR_DOMAIN,
+    STATE_CLASSES,
+)
 from homeassistant.components.smartthings import sensor
 from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .conftest import setup_platform
@@ -30,6 +37,8 @@ async def test_mapping_integrity():
                 assert (
                     sensor_map.device_class in DEVICE_CLASSES
                 ), sensor_map.device_class
+            if sensor_map.state_class:
+                assert sensor_map.state_class in STATE_CLASSES, sensor_map.state_class
 
 
 async def test_entity_state(hass, device_factory):
@@ -77,15 +86,124 @@ async def test_entity_and_device_attributes(hass, device_factory):
     """Test the attributes of the entity are correct."""
     # Arrange
     device = device_factory("Sensor 1", [Capability.battery], {Attribute.battery: 100})
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
     # Act
     await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
     # Assert
     entry = entity_registry.async_get("sensor.sensor_1_battery")
     assert entry
     assert entry.unique_id == f"{device.device_id}.{Attribute.battery}"
-    entry = device_registry.async_get_device({(DOMAIN, device.device_id)}, [])
+    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
+    assert entry
+    assert entry.name == device.label
+    assert entry.model == device.device_type_name
+    assert entry.manufacturer == "Unavailable"
+
+
+async def test_energy_sensors_for_switch_device(hass, device_factory):
+    """Test the attributes of the entity are correct."""
+    # Arrange
+    device = device_factory(
+        "Switch_1",
+        [Capability.switch, Capability.power_meter, Capability.energy_meter],
+        {Attribute.switch: "off", Attribute.power: 355, Attribute.energy: 11.422},
+    )
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+    # Act
+    await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
+    # Assert
+    state = hass.states.get("sensor.switch_1_energy_meter")
+    assert state
+    assert state.state == "11.422"
+    entry = entity_registry.async_get("sensor.switch_1_energy_meter")
+    assert entry
+    assert entry.unique_id == f"{device.device_id}.{Attribute.energy}"
+    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
+    assert entry
+    assert entry.name == device.label
+    assert entry.model == device.device_type_name
+    assert entry.manufacturer == "Unavailable"
+
+    state = hass.states.get("sensor.switch_1_power_meter")
+    assert state
+    assert state.state == "355"
+    entry = entity_registry.async_get("sensor.switch_1_power_meter")
+    assert entry
+    assert entry.unique_id == f"{device.device_id}.{Attribute.power}"
+    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
+    assert entry
+    assert entry.name == device.label
+    assert entry.model == device.device_type_name
+    assert entry.manufacturer == "Unavailable"
+
+
+async def test_power_consumption_sensor(hass, device_factory):
+    """Test the attributes of the entity are correct."""
+    # Arrange
+    device = device_factory(
+        "refrigerator",
+        [Capability.power_consumption_report],
+        {
+            Attribute.power_consumption: {
+                "energy": 1412002,
+                "deltaEnergy": 25,
+                "power": 109,
+                "powerEnergy": 24.304498331745464,
+                "persistedEnergy": 0,
+                "energySaved": 0,
+                "start": "2021-07-30T16:45:25Z",
+                "end": "2021-07-30T16:58:33Z",
+            }
+        },
+    )
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+    # Act
+    await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
+    # Assert
+    state = hass.states.get("sensor.refrigerator_energy")
+    assert state
+    assert state.state == "1412.002"
+    entry = entity_registry.async_get("sensor.refrigerator_energy")
+    assert entry
+    assert entry.unique_id == f"{device.device_id}.energy_meter"
+    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
+    assert entry
+    assert entry.name == device.label
+    assert entry.model == device.device_type_name
+    assert entry.manufacturer == "Unavailable"
+
+    state = hass.states.get("sensor.refrigerator_power")
+    assert state
+    assert state.state == "109"
+    entry = entity_registry.async_get("sensor.refrigerator_power")
+    assert entry
+    assert entry.unique_id == f"{device.device_id}.power_meter"
+    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
+    assert entry
+    assert entry.name == device.label
+    assert entry.model == device.device_type_name
+    assert entry.manufacturer == "Unavailable"
+
+    device = device_factory(
+        "vacuum",
+        [Capability.power_consumption_report],
+        {Attribute.power_consumption: {}},
+    )
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+    # Act
+    await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
+    # Assert
+    state = hass.states.get("sensor.vacuum_energy")
+    assert state
+    assert state.state == "unknown"
+    entry = entity_registry.async_get("sensor.vacuum_energy")
+    assert entry
+    assert entry.unique_id == f"{device.device_id}.energy_meter"
+    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
     assert entry
     assert entry.name == device.label
     assert entry.model == device.device_type_name
@@ -114,7 +232,8 @@ async def test_unload_config_entry(hass, device_factory):
     # Arrange
     device = device_factory("Sensor 1", [Capability.battery], {Attribute.battery: 100})
     config_entry = await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
+    config_entry.state = ConfigEntryState.LOADED
     # Act
     await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
     # Assert
-    assert not hass.states.get("sensor.sensor_1_battery")
+    assert hass.states.get("sensor.sensor_1_battery").state == STATE_UNAVAILABLE

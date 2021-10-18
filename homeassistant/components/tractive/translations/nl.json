@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "reauth_failed_existing": "Kon het configuratie-item niet bijwerken, verwijder de integratie en stel deze opnieuw in.",
+            "reauth_successful": "Herauthenticatie was succesvol"
+        },
+        "error": {
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-mail",
+                    "password": "Wachtwoord"
+                }
+            }
+        }
+    }
+}

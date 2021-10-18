@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Layanan sudah dikonfigurasi"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nama Sensor",
+                    "tariff": "Tarif yang berlaku menurut zona geografis"
+                },
+                "description": "Sensor ini menggunakan API resmi untuk mendapatkan [harga listrik per jam (PVPC)](https://www.esios.ree.es/es/pvpc) di Spanyol.\nUntuk penjelasan yang lebih tepat, kunjungi [dokumen integrasi](https://www.home-assistant.io/integrations/pvpc_hourly_pricing/).",
+                "title": "Penyiapan sensor"
+            }
+        }
+    }
+}

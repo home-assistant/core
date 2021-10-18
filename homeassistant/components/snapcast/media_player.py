@@ -58,7 +58,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT, CONTROL_PORT)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(SERVICE_SNAPSHOT, {}, "snapshot")
     platform.async_register_entity_service(SERVICE_RESTORE, {}, "async_restore")
     platform.async_register_entity_service(
@@ -164,7 +164,7 @@ class SnapcastGroupDevice(MediaPlayerEntity):
         return list(self._group.streams_by_name().keys())
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         name = f"{self._group.friendly_name} {GROUP_SUFFIX}"
         return {"friendly_name": name}
@@ -198,6 +198,7 @@ class SnapcastGroupDevice(MediaPlayerEntity):
     async def async_restore(self):
         """Restore the group state."""
         await self._group.restore()
+        self.async_write_ha_state()
 
 
 class SnapcastClientDevice(MediaPlayerEntity):
@@ -261,7 +262,7 @@ class SnapcastClientDevice(MediaPlayerEntity):
         return STATE_OFF
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         state_attrs = {}
         if self.latency is not None:
@@ -326,6 +327,7 @@ class SnapcastClientDevice(MediaPlayerEntity):
     async def async_restore(self):
         """Restore the client state."""
         await self._client.restore()
+        self.async_write_ha_state()
 
     async def async_set_latency(self, latency):
         """Set the latency of the client."""

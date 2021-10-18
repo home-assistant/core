@@ -4,6 +4,7 @@
             "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
+            "cannot_connect": "Kan geen verbinding maken",
             "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
         },
@@ -13,6 +14,16 @@
                     "host": "IP-adres",
                     "password": "Wachtwoord",
                     "username": "Gebruikersnaam"
+                },
+                "description": "Voer uw Control4-accountgegevens en het IP-adres van uw lokale controller in."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Seconden tussen updates"
                 }
             }
         }

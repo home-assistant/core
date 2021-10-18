@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "unknown": "Error inesperado"
+        },
+        "error": {
+            "not_found": "No se encontraron dispositivos en la red"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "code": "C\u00f3digo de la estaci\u00f3n"
+                },
+                "description": "Introduzca el c\u00f3digo de la estaci\u00f3n Meteoclimatic (por ejemplo, ESCAT4300000043206B)",
+                "title": "Meteoclimatic"
+            }
+        }
+    }
+}

@@ -2,8 +2,10 @@
 
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_PRESSURE,
@@ -17,7 +19,6 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
 
 from .const import (
     COOL_ICON,
@@ -68,32 +69,32 @@ ENERGY_SENSOR_MAP = {
     "electricity_consumed_interval": [
         "Consumed Power Interval",
         ENERGY_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        DEVICE_CLASS_ENERGY,
     ],
     "electricity_consumed_peak_interval": [
         "Consumed Power Interval",
         ENERGY_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        DEVICE_CLASS_ENERGY,
     ],
     "electricity_consumed_off_peak_interval": [
         "Consumed Power Interval (off peak)",
         ENERGY_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        DEVICE_CLASS_ENERGY,
     ],
     "electricity_produced_interval": [
         "Produced Power Interval",
         ENERGY_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        DEVICE_CLASS_ENERGY,
     ],
     "electricity_produced_peak_interval": [
         "Produced Power Interval",
         ENERGY_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        DEVICE_CLASS_ENERGY,
     ],
     "electricity_produced_off_peak_interval": [
         "Produced Power Interval (off peak)",
         ENERGY_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        DEVICE_CLASS_ENERGY,
     ],
     "electricity_consumed_off_peak_point": [
         "Current Consumed Power (off peak)",
@@ -108,12 +109,12 @@ ENERGY_SENSOR_MAP = {
     "electricity_consumed_off_peak_cumulative": [
         "Cumulative Consumed Power (off peak)",
         ENERGY_KILO_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        DEVICE_CLASS_ENERGY,
     ],
     "electricity_consumed_peak_cumulative": [
         "Cumulative Consumed Power",
         ENERGY_KILO_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        DEVICE_CLASS_ENERGY,
     ],
     "electricity_produced_off_peak_point": [
         "Current Produced Power (off peak)",
@@ -128,12 +129,12 @@ ENERGY_SENSOR_MAP = {
     "electricity_produced_off_peak_cumulative": [
         "Cumulative Produced Power (off peak)",
         ENERGY_KILO_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        DEVICE_CLASS_ENERGY,
     ],
     "electricity_produced_peak_cumulative": [
         "Cumulative Produced Power",
         ENERGY_KILO_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        DEVICE_CLASS_ENERGY,
     ],
     "gas_consumed_interval": [
         "Current Consumed Gas Interval",
@@ -145,7 +146,7 @@ ENERGY_SENSOR_MAP = {
     "net_electricity_cumulative": [
         "Cumulative net Power",
         ENERGY_KILO_WATT_HOUR,
-        DEVICE_CLASS_POWER,
+        DEVICE_CLASS_ENERGY,
     ],
 }
 
@@ -236,7 +237,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class SmileSensor(SmileGateway):
+class SmileSensor(SmileGateway, SensorEntity):
     """Represent Smile Sensors."""
 
     def __init__(self, api, coordinator, name, dev_id, sensor):
@@ -272,17 +273,17 @@ class SmileSensor(SmileGateway):
         return self._icon
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of this entity."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
 
-class PwThermostatSensor(SmileSensor, Entity):
+class PwThermostatSensor(SmileSensor):
     """Thermostat (or generic) sensor devices."""
 
     def __init__(self, api, coordinator, name, dev_id, sensor, sensor_type):
@@ -305,16 +306,13 @@ class PwThermostatSensor(SmileSensor, Entity):
             return
 
         if data.get(self._sensor) is not None:
-            measurement = data[self._sensor]
-            if self._unit_of_measurement == PERCENTAGE:
-                measurement = int(measurement * 100)
-            self._state = measurement
+            self._state = data[self._sensor]
             self._icon = CUSTOM_ICONS.get(self._sensor, self._icon)
 
         self.async_write_ha_state()
 
 
-class PwAuxDeviceSensor(SmileSensor, Entity):
+class PwAuxDeviceSensor(SmileSensor):
     """Auxiliary Device Sensors."""
 
     def __init__(self, api, coordinator, name, dev_id, sensor):
@@ -351,7 +349,7 @@ class PwAuxDeviceSensor(SmileSensor, Entity):
         self.async_write_ha_state()
 
 
-class PwPowerSensor(SmileSensor, Entity):
+class PwPowerSensor(SmileSensor):
     """Power sensor entities."""
 
     def __init__(self, api, coordinator, name, dev_id, sensor, sensor_type, model):
@@ -380,10 +378,7 @@ class PwPowerSensor(SmileSensor, Entity):
             return
 
         if data.get(self._sensor) is not None:
-            measurement = data[self._sensor]
-            if self._unit_of_measurement == ENERGY_KILO_WATT_HOUR:
-                measurement = round((measurement / 1000), 1)
-            self._state = measurement
+            self._state = data[self._sensor]
             self._icon = CUSTOM_ICONS.get(self._sensor, self._icon)
 
         self.async_write_ha_state()

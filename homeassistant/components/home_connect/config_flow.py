@@ -1,7 +1,6 @@
 """Config flow for Home Connect."""
 import logging
 
-from homeassistant import config_entries
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN
@@ -13,7 +12,6 @@ class OAuth2FlowHandler(
     """Config flow to handle Home Connect OAuth2 authentication."""
 
     DOMAIN = DOMAIN
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
     @property
     def logger(self) -> logging.Logger:

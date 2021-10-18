@@ -6,10 +6,9 @@ import ephem
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_TYPE
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
@@ -109,7 +108,7 @@ def get_season(date, hemisphere, season_tracking_type):
     return HEMISPHERE_SEASON_SWAP.get(season)
 
 
-class Season(Entity):
+class Season(SensorEntity):
     """Representation of the current season."""
 
     def __init__(self, hass, hemisphere, season_tracking_type, name):
@@ -127,7 +126,7 @@ class Season(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the current season."""
         return self.season
 

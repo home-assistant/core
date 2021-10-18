@@ -8,6 +8,17 @@ pubsub subscriber.
 from google_nest_sdm.device import Device
 from google_nest_sdm.event import EventMessage
 
+from homeassistant.components.sensor import ATTR_STATE_CLASS, STATE_CLASS_MEASUREMENT
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
+    TEMP_CELSIUS,
+)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+
 from .common import async_setup_sdm_platform
 
 PLATFORM = "sensor"
@@ -47,18 +58,29 @@ async def test_thermostat_device(hass):
     temperature = hass.states.get("sensor.my_sensor_temperature")
     assert temperature is not None
     assert temperature.state == "25.1"
+    assert temperature.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert temperature.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TEMPERATURE
+    assert temperature.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
 
     humidity = hass.states.get("sensor.my_sensor_humidity")
     assert humidity is not None
     assert humidity.state == "35.0"
+    assert humidity.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
+    assert humidity.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_HUMIDITY
+    assert humidity.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     entry = registry.async_get("sensor.my_sensor_temperature")
     assert entry.unique_id == "some-device-id-temperature"
     assert entry.original_name == "My Sensor Temperature"
     assert entry.domain == "sensor"
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    entry = registry.async_get("sensor.my_sensor_humidity")
+    assert entry.unique_id == "some-device-id-humidity"
+    assert entry.original_name == "My Sensor Humidity"
+    assert entry.domain == "sensor"
+
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
     assert device.name == "My Sensor"
     assert device.model == "Thermostat"
@@ -197,13 +219,13 @@ async def test_device_with_unknown_type(hass):
     assert temperature is not None
     assert temperature.state == "25.1"
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     entry = registry.async_get("sensor.my_sensor_temperature")
     assert entry.unique_id == "some-device-id-temperature"
     assert entry.original_name == "My Sensor Temperature"
     assert entry.domain == "sensor"
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
     assert device.name == "My Sensor"
     assert device.model is None

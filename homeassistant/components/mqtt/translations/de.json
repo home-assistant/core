@@ -1,10 +1,11 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Nur eine einzige Konfiguration von MQTT ist zul\u00e4ssig."
+            "already_configured": "Der Dienst ist bereits konfiguriert",
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         },
         "error": {
-            "cannot_connect": "Es konnte keine Verbindung zum Broker hergestellt werden."
+            "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
             "broker": {
@@ -21,8 +22,8 @@
                 "data": {
                     "discovery": "Suche aktivieren"
                 },
-                "description": "M\u00f6chtest du Home Assistant so konfigurieren, dass er eine Verbindung mit dem MQTT-Broker herstellt, der vom Hass.io Add-on {addon} bereitgestellt wird?",
-                "title": "MQTT Broker per Hass.io add-on"
+                "description": "M\u00f6chtest du Home Assistant so konfigurieren, dass er eine Verbindung mit dem MQTT-Broker herstellt, der vom Supervisor Add-on {addon} bereitgestellt wird?",
+                "title": "MQTT Broker per Supervisor add-on"
             }
         }
     },
@@ -50,6 +51,8 @@
     },
     "options": {
         "error": {
+            "bad_birth": "Ung\u00fcltiges Birth Thema.",
+            "bad_will": "Ung\u00fcltiges will Thema.",
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
@@ -59,12 +62,26 @@
                     "password": "Passwort",
                     "port": "Port",
                     "username": "Benutzername"
-                }
+                },
+                "description": "Bitte gib die Verbindungsinformationen deines MQTT-Brokers ein.",
+                "title": "Broker-Optionen"
             },
             "options": {
                 "data": {
-                    "will_enable": "Letzten Willen aktivieren"
-                }
+                    "birth_enable": "Birth Nachricht aktivieren",
+                    "birth_payload": "Nutzdaten der Birth Nachricht",
+                    "birth_qos": "Birth Nachricht QoS",
+                    "birth_retain": "Birth Nachricht zwischenspeichern",
+                    "birth_topic": "Thema der Birth Nachricht",
+                    "discovery": "Erkennung aktivieren",
+                    "will_enable": "Letzten Willen aktivieren",
+                    "will_payload": "Nutzdaten der Letzter-Wille Nachricht",
+                    "will_qos": "Letzter-Wille Nachricht QoS",
+                    "will_retain": "Letzter-Wille Nachricht zwischenspeichern",
+                    "will_topic": "Thema der Letzter-Wille Nachricht"
+                },
+                "description": "Erkennung - Wenn die Erkennung aktiviert ist (empfohlen), erkennt Home Assistant automatisch Ger\u00e4te und Entit\u00e4ten, die ihre Konfiguration auf dem MQTT-Broker ver\u00f6ffentlichen. Wenn die Erkennung deaktiviert ist, muss die gesamte Konfiguration manuell vorgenommen werden.\nGeburtsnachricht - Die Geburtsnachricht wird jedes Mal gesendet, wenn sich Home Assistant (erneut) mit dem MQTT-Broker verbindet.\nWill-Nachricht - Die Will-Nachricht wird jedes Mal gesendet, wenn Home Assistant die Verbindung zum Broker verliert, sowohl im Falle einer sauberen (z. B. Herunterfahren von Home Assistant) als auch im Falle einer unsauberen (z. B. Absturz von Home Assistant oder Verlust der Netzwerkverbindung) Verbindungstrennung.",
+                "title": "MQTT-Optionen"
             }
         }
     }

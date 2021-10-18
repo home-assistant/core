@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Die f\u00fcr diese Komponente ben\u00f6tigte Systemklasse konnte nicht gefunden werden. Stelle sicher, dass dein Kernel aktuell ist und die Hardware unterst\u00fctzt wird",
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
+        },
+        "step": {
+            "confirm": {
+                "description": "M\u00f6chtest Du mit der Einrichtung beginnen?"
+            }
+        }
+    },
+    "title": "Raspberry Pi Stromversorgungspr\u00fcfer"
+}

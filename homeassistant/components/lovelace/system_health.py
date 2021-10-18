@@ -2,9 +2,10 @@
 import asyncio
 
 from homeassistant.components import system_health
+from homeassistant.const import CONF_MODE
 from homeassistant.core import HomeAssistant, callback
 
-from .const import CONF_MODE, DOMAIN, MODE_AUTO, MODE_STORAGE, MODE_YAML
+from .const import DOMAIN, MODE_AUTO, MODE_STORAGE, MODE_YAML
 
 
 @callback
@@ -21,10 +22,10 @@ async def system_health_info(hass):
     health_info.update(await hass.data[DOMAIN]["resources"].async_get_info())
 
     dashboards_info = await asyncio.gather(
-        *[
+        *(
             hass.data[DOMAIN]["dashboards"][dashboard].async_get_info()
             for dashboard in hass.data[DOMAIN]["dashboards"]
-        ]
+        )
     )
 
     modes = set()

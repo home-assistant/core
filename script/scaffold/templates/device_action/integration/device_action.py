@@ -1,5 +1,5 @@
 """Provides device actions for NEW_NAME."""
-from typing import List, Optional
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -29,7 +29,9 @@ ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_actions(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device actions for NEW_NAME devices."""
     registry = await entity_registry.async_get_registry(hass)
     actions = []
@@ -48,28 +50,20 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
 
         # Add actions for each entity that belongs to this integration
         # TODO add your own actions.
-        actions.append(
-            {
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "turn_on",
-            }
-        )
-        actions.append(
-            {
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "turn_off",
-            }
-        )
+        base_action = {
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_ENTITY_ID: entry.entity_id,
+        }
+
+        actions.append({**base_action, CONF_TYPE: "turn_on"})
+        actions.append({**base_action, CONF_TYPE: "turn_off"})
 
     return actions
 
 
 async def async_call_action_from_config(
-    hass: HomeAssistant, config: dict, variables: dict, context: Optional[Context]
+    hass: HomeAssistant, config: dict, variables: dict, context: Context | None
 ) -> None:
     """Execute a device action."""
     service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}

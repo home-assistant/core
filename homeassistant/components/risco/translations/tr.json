@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Parola",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "ha_to_risco": {
+                "data": {
+                    "armed_away": "D\u0131\u015farda Modu Aktif",
+                    "armed_custom_bypass": "\u00d6zel Mod Aktif",
+                    "armed_home": "Evde Modu Aktif",
+                    "armed_night": "Gece Modu Aktif"
+                },
+                "description": "Home Assistant alarm\u0131n\u0131 kurarken Risco alarm\u0131n\u0131z\u0131 hangi duruma ayarlayaca\u011f\u0131n\u0131z\u0131 se\u00e7in"
+            },
+            "init": {
+                "title": "Se\u00e7enekleri yap\u0131land\u0131r\u0131n"
+            },
+            "risco_to_ha": {
+                "data": {
+                    "A": "Grup A",
+                    "B": "Grup B",
+                    "C": "Grup C",
+                    "D": "Grup D"
+                }
+            }
+        }
+    }
+}

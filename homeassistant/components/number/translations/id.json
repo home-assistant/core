@@ -1,0 +1,8 @@
+{
+    "device_automation": {
+        "action_type": {
+            "set_value": "Tetapkan nilai untuk {entity_name}"
+        }
+    },
+    "title": "Bilangan"
+}

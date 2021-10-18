@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u670d\u52a1\u5df2\u88ab\u914d\u7f6e"
+        },
+        "error": {
+            "cannot_connect": "\u65e0\u6cd5\u8fde\u63a5\u5230\u670d\u52a1\u5668\u3002\u8bf7\u68c0\u67e5\u4e3b\u673a\u5730\u5740\u548c\u7aef\u53e3\u5e76\u91cd\u8bd5\uff0c\u4e14\u786e\u4fdd\u60a8\u5728\u670d\u52a1\u5668\u4e0a\u8fd0\u884c\u7684 Minecraft \u7248\u672c\u81f3\u5c11\u5728 1.7 \u4ee5\u4e0a\u3002",
+            "invalid_ip": "IP \u5730\u5740\u65e0\u6548 (\u65e0\u6cd5\u786e\u5b9a MAC \u5730\u5740)\u3002\u8bf7\u66f4\u6b63\u5e76\u91cd\u8bd5\u3002",
+            "invalid_port": "\u7aef\u53e3\u7684\u8303\u56f4\u5728 1024 \u5230 65535 \u4e4b\u95f4\u3002\u8bf7\u66f4\u6b63\u5e76\u91cd\u8bd5\u3002"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u673a\u5730\u5740",
+                    "name": "\u540d\u79f0"
+                },
+                "description": "\u8bbe\u7f6e\u60a8\u7684 Minecraft \u670d\u52a1\u5668\u5b9e\u4f8b\u4ee5\u5141\u8bb8\u76d1\u63a7\u3002",
+                "title": "\u8fde\u63a5\u60a8\u7684 Minecraft \u670d\u52a1\u5668"
+            }
+        }
+    }
+}

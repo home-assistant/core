@@ -5,5 +5,5 @@
   // https://github.com/microsoft/vscode-python/issues/14067
   "python.testing.pytestArgs": ["--no-cov"],
   // https://code.visualstudio.com/docs/python/testing#_pytest-configuration-settings
-  "python.testing.pytestEnabled": true
+  "python.testing.pytestEnabled": false
 }

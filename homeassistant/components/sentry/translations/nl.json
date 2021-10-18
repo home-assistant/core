@@ -9,8 +9,27 @@
         },
         "step": {
             "user": {
+                "data": {
+                    "dsn": "DSN"
+                },
                 "description": "Voer uw Sentry DSN in",
                 "title": "Sentry"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "environment": "Optionele naam van de omgeving.",
+                    "event_custom_components": "Gebeurtenissen verzenden vanuit aangepaste onderdelen",
+                    "event_handled": "Stuur afgehandelde gebeurtenissen",
+                    "event_third_party_packages": "Gebeurtenissen verzenden vanuit pakketten van derden",
+                    "logging_event_level": "Het logniveau waarvoor Sentry een gebeurtenis registreert",
+                    "logging_level": "Het logniveau Sentry zal logs opnemen als broodkruimels voor",
+                    "tracing": "Schakel prestatietracering in",
+                    "tracing_sample_rate": "Tracering van de steekproefsnelheid; tussen 0,0 en 1,0 (1,0 = 100%)"
+                }
             }
         }
     }

@@ -7,18 +7,18 @@
         "error": {
             "cannot_connect": "\u00dchendamine nurjus"
         },
-        "flow_title": "Elgato Key Light: {serial_number}",
+        "flow_title": "{serial_number}",
         "step": {
             "user": {
                 "data": {
                     "host": "",
                     "port": ""
                 },
-                "description": "Seadista oma Elegato Key Light sidumine Home Assistant-iga."
+                "description": "Seadista oma Elegato Light sidumine Home Assistant-iga."
             },
             "zeroconf_confirm": {
-                "description": "Kas soovite lisada Home Assistanti Elegato Key Light'i seerianumbriga \" {serial_number} \"?",
-                "title": "Leitud Elegato Key Light seade"
+                "description": "Kas soovid lisada Home Assistanti Elegato Light'i seerianumbriga \" {serial_number} \"?",
+                "title": "Leitud ElegatoLight seade"
             }
         }
     }

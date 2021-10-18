@@ -1,6 +1,8 @@
 """HTML5 Push Messaging notification service."""
+from contextlib import suppress
 from datetime import datetime, timedelta
 from functools import partial
+from http import HTTPStatus
 import json
 import logging
 import time
@@ -25,12 +27,7 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import (
-    HTTP_BAD_REQUEST,
-    HTTP_INTERNAL_SERVER_ERROR,
-    HTTP_UNAUTHORIZED,
-    URL_ROOT,
-)
+from homeassistant.const import ATTR_NAME, URL_ROOT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import ensure_unique_string
@@ -73,7 +70,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 ATTR_SUBSCRIPTION = "subscription"
 ATTR_BROWSER = "browser"
-ATTR_NAME = "name"
 
 ATTR_ENDPOINT = "endpoint"
 ATTR_KEYS = "keys"
@@ -202,10 +198,8 @@ def get_service(hass, config, discovery_info=None):
 
 def _load_config(filename):
     """Load configuration."""
-    try:
+    with suppress(HomeAssistantError):
         return load_json(filename)
-    except HomeAssistantError:
-        pass
     return {}
 
 
@@ -225,11 +219,11 @@ class HTML5PushRegistrationView(HomeAssistantView):
         try:
             data = await request.json()
         except ValueError:
-            return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
+            return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
         try:
             data = REGISTER_SCHEMA(data)
         except vol.Invalid as ex:
-            return self.json_message(humanize_error(data, ex), HTTP_BAD_REQUEST)
+            return self.json_message(humanize_error(data, ex), HTTPStatus.BAD_REQUEST)
 
         devname = data.get(ATTR_NAME)
         data.pop(ATTR_NAME, None)
@@ -253,7 +247,7 @@ class HTML5PushRegistrationView(HomeAssistantView):
                 self.registrations.pop(name)
 
             return self.json_message(
-                "Error saving registration.", HTTP_INTERNAL_SERVER_ERROR
+                "Error saving registration.", HTTPStatus.INTERNAL_SERVER_ERROR
             )
 
     def find_registration_name(self, data, suggested=None):
@@ -270,7 +264,7 @@ class HTML5PushRegistrationView(HomeAssistantView):
         try:
             data = await request.json()
         except ValueError:
-            return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
+            return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
 
         subscription = data.get(ATTR_SUBSCRIPTION)
 
@@ -296,7 +290,7 @@ class HTML5PushRegistrationView(HomeAssistantView):
         except HomeAssistantError:
             self.registrations[found] = reg
             return self.json_message(
-                "Error saving registration.", HTTP_INTERNAL_SERVER_ERROR
+                "Error saving registration.", HTTPStatus.INTERNAL_SERVER_ERROR
             )
 
         return self.json_message("Push notification subscriber unregistered.")
@@ -321,17 +315,17 @@ class HTML5PushCallbackView(HomeAssistantView):
         # 2a. If decode is successful, return the payload.
         # 2b. If decode is unsuccessful, return a 401.
 
-        target_check = jwt.decode(token, verify=False)
+        target_check = jwt.decode(
+            token, algorithms=["ES256", "HS256"], options={"verify_signature": False}
+        )
         if target_check.get(ATTR_TARGET) in self.registrations:
             possible_target = self.registrations[target_check[ATTR_TARGET]]
             key = possible_target[ATTR_SUBSCRIPTION][ATTR_KEYS][ATTR_AUTH]
-            try:
+            with suppress(jwt.exceptions.DecodeError):
                 return jwt.decode(token, key, algorithms=["ES256", "HS256"])
-            except jwt.exceptions.DecodeError:
-                pass
 
         return self.json_message(
-            "No target found in JWT", status_code=HTTP_UNAUTHORIZED
+            "No target found in JWT", status_code=HTTPStatus.UNAUTHORIZED
         )
 
     # The following is based on code from Auth0
@@ -342,7 +336,7 @@ class HTML5PushCallbackView(HomeAssistantView):
         auth = request.headers.get(AUTHORIZATION)
         if not auth:
             return self.json_message(
-                "Authorization header is expected", status_code=HTTP_UNAUTHORIZED
+                "Authorization header is expected", status_code=HTTPStatus.UNAUTHORIZED
             )
 
         parts = auth.split()
@@ -350,19 +344,21 @@ class HTML5PushCallbackView(HomeAssistantView):
         if parts[0].lower() != "bearer":
             return self.json_message(
                 "Authorization header must start with Bearer",
-                status_code=HTTP_UNAUTHORIZED,
+                status_code=HTTPStatus.UNAUTHORIZED,
             )
         if len(parts) != 2:
             return self.json_message(
                 "Authorization header must be Bearer token",
-                status_code=HTTP_UNAUTHORIZED,
+                status_code=HTTPStatus.UNAUTHORIZED,
             )
 
         token = parts[1]
         try:
             payload = self.decode_jwt(token)
         except jwt.exceptions.InvalidTokenError:
-            return self.json_message("token is invalid", status_code=HTTP_UNAUTHORIZED)
+            return self.json_message(
+                "token is invalid", status_code=HTTPStatus.UNAUTHORIZED
+            )
         return payload
 
     async def post(self, request):
@@ -374,7 +370,7 @@ class HTML5PushCallbackView(HomeAssistantView):
         try:
             data = await request.json()
         except ValueError:
-            return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
+            return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
 
         event_payload = {
             ATTR_TAG: data.get(ATTR_TAG),
@@ -560,7 +556,7 @@ def add_jwt(timestamp, target, tag, jwt_secret):
         ATTR_TARGET: target,
         ATTR_TAG: tag,
     }
-    return jwt.encode(jwt_claims, jwt_secret).decode("utf-8")
+    return jwt.encode(jwt_claims, jwt_secret)
 
 
 def create_vapid_headers(vapid_email, subscription_info, vapid_private_key):

@@ -1,0 +1,7 @@
+{
+  "domain": "select",
+  "name": "Select",
+  "documentation": "https://www.home-assistant.io/integrations/select",
+  "codeowners": ["@home-assistant/core"],
+  "quality_scale": "internal"
+}

@@ -1,6 +1,4 @@
 """The NZBGet integration."""
-import asyncio
-
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -13,9 +11,9 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -37,21 +35,24 @@ from .coordinator import NZBGetDataUpdateCoordinator
 PLATFORMS = ["sensor", "switch"]
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Optional(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_USERNAME): cv.string,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                vol.Optional(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                ): cv.time_period,
-                vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_HOST): cv.string,
+                    vol.Optional(CONF_PASSWORD): cv.string,
+                    vol.Optional(CONF_USERNAME): cv.string,
+                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                    ): cv.time_period,
+                    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -60,7 +61,7 @@ SPEED_LIMIT_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistantType, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the NZBGet integration."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -79,7 +80,7 @@ async def async_setup(hass: HomeAssistantType, config: dict) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up NZBGet from a config entry."""
     if not entry.options:
         options = {
@@ -95,10 +96,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         options=entry.options,
     )
 
-    await coordinator.async_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     undo_listener = entry.add_update_listener(_async_update_listener)
 
@@ -107,26 +105,16 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         DATA_UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     _async_register_services(hass, coordinator)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
         hass.data[DOMAIN][entry.entry_id][DATA_UNDO_UPDATE_LISTENER]()
@@ -136,7 +124,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
 
 
 def _async_register_services(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     coordinator: NZBGetDataUpdateCoordinator,
 ) -> None:
     """Register integration-level services."""
@@ -160,7 +148,7 @@ def _async_register_services(
     )
 
 
-async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry) -> None:
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 

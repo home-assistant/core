@@ -1,15 +1,33 @@
 update_setting:
-  description: Update the value of a setting on a particular Vizio media player device.
+  name: Update setting
+  description: Update the value of a setting on a Vizio media player device.
+  target:
+    entity:
+      integration: vizio
+      domain: media_player
   fields:
-    entity_id:
-      description: Name of an entity to send command to.
-      example: "media_player.vizio_smartcast"
     setting_type:
-      description: The type of setting to be changed. Available types are listed in the `setting_types` property.
+      name: Setting type
+      description:
+        The type of setting to be changed. Available types are listed in the
+        'setting_types' property.
+      required: true
       example: "audio"
+      selector:
+        text:
     setting_name:
-      description: The name of the setting to be changed. Available settings for a given setting_type are listed in the `<setting_type>_settings` property.
+      name: Setting name
+      description:
+        The name of the setting to be changed. Available settings for a given
+        setting_type are listed in the '<setting_type>_settings' property.
+      required: true
       example: "eq"
+      selector:
+        text:
     new_value:
-      description: The new value for the setting
+      name: New value
+      description: The new value for the setting.
+      required: true
       example: "Music"
+      selector:
+        text:

@@ -10,7 +10,6 @@
             },
             "user": {
                 "data": {
-                    "auto_start": "Inicio autom\u00e1tico (deshabilitar si se usa Z-Wave u otro sistema de inicio diferido)",
                     "include_domains": "Dominios para incluir"
                 },
                 "description": "Un HomeKit Bridge le permitir\u00e1 acceder a sus entidades de Home Assistant en HomeKit. Los puentes HomeKit est\u00e1n limitados a 150 accesorios por instancia, incluido el puente mismo. Si desea unir m\u00e1s de la cantidad m\u00e1xima de accesorios, se recomienda que use m\u00faltiples puentes HomeKit para diferentes dominios. La configuraci\u00f3n detallada de la entidad solo est\u00e1 disponible a trav\u00e9s de YAML para el puente primario.",
@@ -22,8 +21,7 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Inicio autom\u00e1tico (deshabilitar si se usa Z-Wave u otro sistema de inicio diferido)",
-                    "safe_mode": "Modo seguro (habil\u00edtelo solo si falla el emparejamiento)"
+                    "auto_start": "Inicio autom\u00e1tico (deshabilitar si se usa Z-Wave u otro sistema de inicio diferido)"
                 },
                 "description": "Esta configuraci\u00f3n solo necesita ser ajustada si el puente HomeKit no es funcional.",
                 "title": "Configuraci\u00f3n avanzada"

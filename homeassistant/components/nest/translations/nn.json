@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "authorize_url_fail": "Ukjent feil ved generering av autentiserings-URL",
             "authorize_url_timeout": "Tida gjekk ut for generert autentikasjons-URL"
         },
         "error": {

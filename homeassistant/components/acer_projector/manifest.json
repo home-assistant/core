@@ -3,5 +3,6 @@
   "name": "Acer Projector",
   "documentation": "https://www.home-assistant.io/integrations/acer_projector",
   "requirements": ["pyserial==3.5"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

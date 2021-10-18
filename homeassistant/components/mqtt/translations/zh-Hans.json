@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "\u670d\u52a1\u5df2\u88ab\u914d\u7f6e",
             "single_instance_allowed": "\u53ea\u5141\u8bb8\u4e00\u4e2a MQTT \u914d\u7f6e\u3002"
         },
         "error": {
@@ -21,8 +22,8 @@
                 "data": {
                     "discovery": "\u542f\u7528\u53d1\u73b0"
                 },
-                "description": "\u662f\u5426\u8981\u914d\u7f6e Home Assistant \u8fde\u63a5\u5230 Hass.io \u52a0\u8f7d\u9879 {addon} \u63d0\u4f9b\u7684 MQTT \u670d\u52a1\u5668\uff1f",
-                "title": "\u6765\u81ea Hass.io \u52a0\u8f7d\u9879\u7684 MQTT \u670d\u52a1\u5668"
+                "description": "\u662f\u5426\u8981\u914d\u7f6e Home Assistant \u8fde\u63a5\u5230 Supervisor \u52a0\u8f7d\u9879 {addon} \u63d0\u4f9b\u7684 MQTT \u670d\u52a1\u5668\uff1f",
+                "title": "\u6765\u81ea Supervisor \u52a0\u8f7d\u9879\u7684 MQTT \u670d\u52a1\u5668"
             }
         }
     },

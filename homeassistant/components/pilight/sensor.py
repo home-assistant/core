@@ -4,10 +4,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import pilight
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_PAYLOAD, CONF_UNIT_OF_MEASUREMENT
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +38,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class PilightSensor(Entity):
+class PilightSensor(SensorEntity):
     """Representation of a sensor that can be updated using Pilight."""
 
     def __init__(self, hass, name, variable, payload, unit_of_measurement):
@@ -64,12 +63,12 @@ class PilightSensor(Entity):
         return self._name
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the entity."""
         return self._state
 

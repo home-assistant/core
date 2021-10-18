@@ -3,5 +3,6 @@
   "name": "PVOutput",
   "documentation": "https://www.home-assistant.io/integrations/pvoutput",
   "after_dependencies": ["rest"],
-  "codeowners": ["@fabaff"]
+  "codeowners": ["@fabaff"],
+  "iot_class": "cloud_polling"
 }

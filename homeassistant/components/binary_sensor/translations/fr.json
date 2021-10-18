@@ -17,6 +17,7 @@
             "is_no_problem": "{entity_name} ne d\u00e9tecte pas de probl\u00e8me",
             "is_no_smoke": "{entity_name} ne d\u00e9tecte pas de fum\u00e9e",
             "is_no_sound": "{entity_name} ne d\u00e9tecte pas de son",
+            "is_no_update": "{entity_name} est \u00e0 jour",
             "is_no_vibration": "{entity_name} ne d\u00e9tecte pas de vibration",
             "is_not_bat_low": "{entity_name}  batterie normale",
             "is_not_cold": "{entity_name} n'est pas froid",
@@ -42,6 +43,7 @@
             "is_smoke": "{entity_name} d\u00e9tecte de la fum\u00e9e",
             "is_sound": "{entity_name} d\u00e9tecte du son",
             "is_unsafe": "{entity_name} est dangereux",
+            "is_update": "{entity_name} a une mise \u00e0 jour disponible",
             "is_vibration": "{entity_name} d\u00e9tecte des vibrations"
         },
         "trigger_type": {
@@ -61,6 +63,7 @@
             "no_problem": "{entity_name} a cess\u00e9 de d\u00e9tecter un probl\u00e8me",
             "no_smoke": "{entity_name} a cess\u00e9 de d\u00e9tecter de la fum\u00e9e",
             "no_sound": "{entity_name} a cess\u00e9 de d\u00e9tecter du bruit",
+            "no_update": "{entity_name} a \u00e9t\u00e9 mis \u00e0 jour",
             "no_vibration": "{entity_name} a cess\u00e9 de d\u00e9tecter des vibrations",
             "not_bat_low": "{entity_name} batterie normale",
             "not_cold": "{entity_name} n'est plus froid",
@@ -86,6 +89,7 @@
             "turned_off": "{entity_name} est d\u00e9sactiv\u00e9",
             "turned_on": "{entity_name} est activ\u00e9",
             "unsafe": "{entity_name} est devenu dangereux",
+            "update": "{entity_name} a une mise \u00e0 jour disponible",
             "vibration": "{entity_name} a commenc\u00e9 \u00e0 d\u00e9tecter les vibrations"
         }
     },
@@ -111,12 +115,12 @@
             "on": "Connect\u00e9"
         },
         "door": {
-            "off": "Ferm\u00e9e",
-            "on": "Ouverte"
+            "off": "Ferm\u00e9",
+            "on": "Ouvert"
         },
         "garage_door": {
-            "off": "Ferm\u00e9e",
-            "on": "Ouverte"
+            "off": "Ferm\u00e9",
+            "on": "Ouvert"
         },
         "gas": {
             "off": "Non d\u00e9tect\u00e9",
@@ -178,13 +182,17 @@
             "off": "Non d\u00e9tect\u00e9",
             "on": "D\u00e9tect\u00e9"
         },
+        "update": {
+            "off": "\u00c0 jour",
+            "on": "Mise \u00e0 jour disponible"
+        },
         "vibration": {
             "off": "RAS",
             "on": "D\u00e9tect\u00e9e"
         },
         "window": {
-            "off": "Ferm\u00e9e",
-            "on": "Ouverte"
+            "off": "Ferm\u00e9",
+            "on": "Ouvert"
         }
     },
     "title": "Capteur binaire"

@@ -9,7 +9,7 @@ from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -50,7 +50,10 @@ async def test_triggers(hass, tag_setup, calls):
                     "trigger": {"platform": DOMAIN, TAG_ID: "abc123"},
                     "action": {
                         "service": "test.automation",
-                        "data": {"message": "service called"},
+                        "data_template": {
+                            "message": "service called",
+                            "id": "{{ trigger.id}}",
+                        },
                     },
                 }
             ]
@@ -64,6 +67,7 @@ async def test_triggers(hass, tag_setup, calls):
 
     assert len(calls) == 1
     assert calls[0].data["message"] == "service called"
+    assert calls[0].data["id"] == 0
 
     await hass.services.async_call(
         automation.DOMAIN,

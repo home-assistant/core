@@ -43,7 +43,7 @@ class TimePattern:
 
 
 TRIGGER_SCHEMA = vol.All(
-    vol.Schema(
+    cv.TRIGGER_BASE_SCHEMA.extend(
         {
             vol.Required(CONF_PLATFORM): "time_pattern",
             CONF_HOURS: TimePattern(maximum=23),
@@ -57,6 +57,7 @@ TRIGGER_SCHEMA = vol.All(
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
+    trigger_data = automation_info["trigger_data"]
     hours = config.get(CONF_HOURS)
     minutes = config.get(CONF_MINUTES)
     seconds = config.get(CONF_SECONDS)
@@ -75,6 +76,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
             job,
             {
                 "trigger": {
+                    **trigger_data,
                     "platform": "time_pattern",
                     "now": now,
                     "description": "time pattern",

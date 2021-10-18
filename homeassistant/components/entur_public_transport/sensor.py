@@ -1,10 +1,12 @@
 """Real-time information about public transport departures in Norway."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 
 from enturclient import EnturPublicTransportData
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_LATITUDE,
@@ -15,7 +17,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
@@ -148,18 +149,20 @@ class EnturProxy:
         return self._api.get_stop_info(stop_id)
 
 
-class EnturPublicTransportSensor(Entity):
+class EnturPublicTransportSensor(SensorEntity):
     """Implementation of a Entur public transport sensor."""
 
-    def __init__(self, api: EnturProxy, name: str, stop: str, show_on_map: bool):
+    def __init__(
+        self, api: EnturProxy, name: str, stop: str, show_on_map: bool
+    ) -> None:
         """Initialize the sensor."""
         self.api = api
         self._stop = stop
         self._show_on_map = show_on_map
         self._name = name
-        self._state = None
+        self._state: int | None = None
         self._icon = ICONS[DEFAULT_ICON_KEY]
-        self._attributes = {}
+        self._attributes: dict[str, str] = {}
 
     @property
     def name(self) -> str:
@@ -167,19 +170,19 @@ class EnturPublicTransportSensor(Entity):
         return self._name
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         self._attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
         self._attributes[ATTR_STOP_ID] = self._stop
         return self._attributes
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
         return TIME_MINUTES
 
@@ -194,7 +197,7 @@ class EnturPublicTransportSensor(Entity):
 
         self._attributes = {}
 
-        data = self.api.get_stop_info(self._stop)
+        data: EnturPublicTransportData = self.api.get_stop_info(self._stop)
         if data is None:
             self._state = None
             return
@@ -203,8 +206,7 @@ class EnturPublicTransportSensor(Entity):
             self._attributes[CONF_LATITUDE] = data.latitude
             self._attributes[CONF_LONGITUDE] = data.longitude
 
-        calls = data.estimated_calls
-        if not calls:
+        if not (calls := data.estimated_calls):
             self._state = None
             return
 

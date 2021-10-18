@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later, async_track_point_in_time
 import homeassistant.util.dt as dt_util
@@ -22,15 +23,19 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+PLATFORMS = ["sensor"]
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: {
-            vol.Optional(CONF_CALC_METHOD, default=DEFAULT_CALC_METHOD): vol.In(
-                CALC_METHODS
-            ),
-        }
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: {
+                vol.Optional(CONF_CALC_METHOD, default=DEFAULT_CALC_METHOD): vol.In(
+                    CALC_METHODS
+                ),
+            }
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -63,9 +68,7 @@ async def async_unload_entry(hass, config_entry):
     if hass.data[DOMAIN].event_unsub:
         hass.data[DOMAIN].event_unsub()
     hass.data.pop(DOMAIN)
-    await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
-
-    return True
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
 class IslamicPrayerClient:
@@ -180,11 +183,7 @@ class IslamicPrayerClient:
         await self.async_update()
         self.config_entry.add_update_listener(self.async_options_updated)
 
-        self.hass.async_create_task(
-            self.hass.config_entries.async_forward_entry_setup(
-                self.config_entry, "sensor"
-            )
-        )
+        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
 
         return True
 

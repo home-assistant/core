@@ -1,14 +1,19 @@
 """Support for ESPHome binary sensors."""
-from typing import Optional
+from __future__ import annotations
 
 from aioesphomeapi import BinarySensorInfo, BinarySensorState
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import EsphomeEntity, platform_async_setup_entry
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up ESPHome binary sensors based on a config entry."""
     await platform_async_setup_entry(
         hass,
@@ -21,25 +26,19 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
 
 
-class EsphomeBinarySensor(EsphomeEntity, BinarySensorEntity):
+class EsphomeBinarySensor(
+    EsphomeEntity[BinarySensorInfo, BinarySensorState], BinarySensorEntity
+):
     """A binary sensor implementation for ESPHome."""
 
     @property
-    def _static_info(self) -> BinarySensorInfo:
-        return super()._static_info
-
-    @property
-    def _state(self) -> Optional[BinarySensorState]:
-        return super()._state
-
-    @property
-    def is_on(self) -> Optional[bool]:
+    def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if self._static_info.is_status_binary_sensor:
             # Status binary sensors indicated connected state.
             # So in their case what's usually _availability_ is now state
             return self._entry_data.available
-        if self._state is None:
+        if not self._has_state:
             return None
         if self._state.missing_state:
             return None

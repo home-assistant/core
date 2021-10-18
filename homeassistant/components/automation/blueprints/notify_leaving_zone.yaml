@@ -37,7 +37,8 @@ condition:
   value_template: "{{ trigger.from_state.state == zone_state and trigger.to_state.state != zone_state }}"
 
 action:
-  domain: mobile_app
-  type: notify
-  device_id: !input notify_device
-  message: "{{ person_name }} has left {{ zone_state }}"
+  - alias: "Notify that a person has left the zone"
+    domain: mobile_app
+    type: notify
+    device_id: !input notify_device
+    message: "{{ person_name }} has left {{ zone_state }}"

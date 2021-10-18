@@ -6,19 +6,37 @@
             "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
         "error": {
-            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "login_error": "Error d'inici de sessi\u00f3 ({code}): {msg}"
         },
         "flow_title": "Configuraci\u00f3 de Tuya",
         "step": {
+            "login": {
+                "data": {
+                    "access_id": "ID d'acc\u00e9s",
+                    "access_secret": "Secret d'acc\u00e9s",
+                    "country_code": "Codi de pa\u00eds",
+                    "endpoint": "Zona de disponibilitat",
+                    "password": "Contrasenya",
+                    "tuya_app_type": "Aplicaci\u00f3 per a m\u00f2bil",
+                    "username": "Compte"
+                },
+                "description": "Introdueix la credencial de Tuya",
+                "title": "Tuya"
+            },
             "user": {
                 "data": {
-                    "country_code": "El teu codi de pa\u00eds (per exemple, 1 per l'EUA o 86 per la Xina)",
+                    "access_id": "ID d'acc\u00e9s de Tuya IoT",
+                    "access_secret": "Secret d'acc\u00e9s de Tuya IoT",
+                    "country_code": "Pa\u00eds",
                     "password": "Contrasenya",
                     "platform": "L'aplicaci\u00f3 on es registra el teu compte",
-                    "username": "Nom d'usuari"
+                    "region": "Regi\u00f3",
+                    "tuya_project_type": "Tipus de projecte al n\u00favol de Tuya",
+                    "username": "Compte"
                 },
-                "description": "Introdueix la teva credencial de Tuya.",
-                "title": "Tuya"
+                "description": "Introdueix les teves credencial de Tuya",
+                "title": "Integraci\u00f3 Tuya"
             }
         }
     },
@@ -40,8 +58,10 @@
                     "max_temp": "Temperatura desitjada m\u00e0xima (utilitza min i max = 0 per defecte)",
                     "min_kelvin": "Temperatura del color m\u00ednima suportada, en Kelvin",
                     "min_temp": "Temperatura desitjada m\u00ednima (utilitza min i max = 0 per defecte)",
+                    "set_temp_divided": "Utilitza el valor de temperatura dividit per a ordres de configuraci\u00f3 de temperatura",
                     "support_color": "For\u00e7a el suport de color",
                     "temp_divider": "Divisor del valor de temperatura (0 = predeterminat)",
+                    "temp_step_override": "Pas de temperatura objectiu",
                     "tuya_max_coltemp": "Temperatura de color m\u00e0xima enviada pel dispositiu",
                     "unit_of_measurement": "Unitat de temperatura utilitzada pel dispositiu"
                 },

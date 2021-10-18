@@ -22,6 +22,8 @@ from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 
 from . import DEMO_DEVICES
 
+from tests.common import mock_registry
+
 API_PASSWORD = "test1234"
 
 PROJECT_ID = "hasstest-1234"
@@ -36,7 +38,7 @@ def auth_header(hass_access_token):
 
 
 @pytest.fixture
-def assistant_client(loop, hass, aiohttp_client):
+def assistant_client(loop, hass, hass_client_no_auth):
     """Create web client for the Google Assistant API."""
     loop.run_until_complete(
         setup.async_setup_component(
@@ -56,7 +58,7 @@ def assistant_client(loop, hass, aiohttp_client):
         )
     )
 
-    return loop.run_until_complete(aiohttp_client(hass.http.app))
+    return loop.run_until_complete(hass_client_no_auth())
 
 
 @pytest.fixture
@@ -123,6 +125,28 @@ def hass_fixture(loop, hass):
 
 async def test_sync_request(hass_fixture, assistant_client, auth_header):
     """Test a sync request."""
+
+    entity_registry = mock_registry(hass_fixture)
+
+    entity_entry1 = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "switch_config_id",
+        suggested_object_id="config_switch",
+        entity_category="config",
+    )
+    entity_entry2 = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "switch_diagnostic_id",
+        suggested_object_id="diagnostic_switch",
+        entity_category="diagnostic",
+    )
+
+    # These should not show up in the sync request
+    hass_fixture.states.async_set(entity_entry1.entity_id, "on")
+    hass_fixture.states.async_set(entity_entry2.entity_id, "something_else")
+
     reqid = "5711642932632160983"
     data = {"requestId": reqid, "inputs": [{"intent": "action.devices.SYNC"}]}
     result = await assistant_client.post(
@@ -134,8 +158,8 @@ async def test_sync_request(hass_fixture, assistant_client, auth_header):
     body = await result.json()
     assert body.get("requestId") == reqid
     devices = body["payload"]["devices"]
-    assert sorted([dev["id"] for dev in devices]) == sorted(
-        [dev["id"] for dev in DEMO_DEVICES]
+    assert sorted(dev["id"] for dev in devices) == sorted(
+        dev["id"] for dev in DEMO_DEVICES
     )
 
     for dev in devices:
@@ -473,4 +497,4 @@ async def test_execute_request(hass_fixture, assistant_client, auth_header):
     assert dehumidifier.attributes.get(humidifier.ATTR_HUMIDITY) == 45
 
     hygrostat = hass_fixture.states.get("humidifier.hygrostat")
-    assert hygrostat.attributes.get(humidifier.ATTR_MODE) == "eco"
+    assert hygrostat.attributes.get(const.ATTR_MODE) == "eco"

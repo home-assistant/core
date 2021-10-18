@@ -3,5 +3,6 @@
   "name": "MQTT Eventstream",
   "documentation": "https://www.home-assistant.io/integrations/mqtt_eventstream",
   "dependencies": ["mqtt"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

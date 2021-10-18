@@ -1,7 +1,9 @@
 """Offer state listening automation rules."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 import voluptuous as vol
 
@@ -25,25 +27,25 @@ CONF_ENTITY_ID = "entity_id"
 CONF_FROM = "from"
 CONF_TO = "to"
 
-BASE_SCHEMA = {
-    vol.Required(CONF_PLATFORM): "state",
-    vol.Required(CONF_ENTITY_ID): cv.entity_ids,
-    vol.Optional(CONF_FOR): cv.positive_time_period_template,
-    vol.Optional(CONF_ATTRIBUTE): cv.match_all,
-}
-
-TRIGGER_STATE_SCHEMA = vol.Schema(
+BASE_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
-        **BASE_SCHEMA,
+        vol.Required(CONF_PLATFORM): "state",
+        vol.Required(CONF_ENTITY_ID): cv.entity_ids,
+        vol.Optional(CONF_FOR): cv.positive_time_period_template,
+        vol.Optional(CONF_ATTRIBUTE): cv.match_all,
+    }
+)
+
+TRIGGER_STATE_SCHEMA = BASE_SCHEMA.extend(
+    {
         # These are str on purpose. Want to catch YAML conversions
         vol.Optional(CONF_FROM): vol.Any(str, [str]),
         vol.Optional(CONF_TO): vol.Any(str, [str]),
     }
 )
 
-TRIGGER_ATTRIBUTE_SCHEMA = vol.Schema(
+TRIGGER_ATTRIBUTE_SCHEMA = BASE_SCHEMA.extend(
     {
-        **BASE_SCHEMA,
         vol.Optional(CONF_FROM): cv.match_all,
         vol.Optional(CONF_TO): cv.match_all,
     }
@@ -79,18 +81,21 @@ async def async_attach_trigger(
     template.attach(hass, time_delta)
     match_all = from_state == MATCH_ALL and to_state == MATCH_ALL
     unsub_track_same = {}
-    period: Dict[str, timedelta] = {}
+    period: dict[str, timedelta] = {}
     match_from_state = process_state_match(from_state)
     match_to_state = process_state_match(to_state)
     attribute = config.get(CONF_ATTRIBUTE)
     job = HassJob(action)
 
+    trigger_data = automation_info["trigger_data"]
+    _variables = automation_info["variables"] or {}
+
     @callback
     def state_automation_listener(event: Event):
         """Listen for state changes and calls action."""
         entity: str = event.data["entity_id"]
-        from_s: Optional[State] = event.data.get("old_state")
-        to_s: Optional[State] = event.data.get("new_state")
+        from_s: State | None = event.data.get("old_state")
+        to_s: State | None = event.data.get("new_state")
 
         if from_s is None:
             old_value = None
@@ -127,6 +132,7 @@ async def async_attach_trigger(
                 job,
                 {
                     "trigger": {
+                        **trigger_data,
                         "platform": platform_type,
                         "entity_id": entity,
                         "from_state": from_s,
@@ -143,7 +149,7 @@ async def async_attach_trigger(
             call_action()
             return
 
-        variables = {
+        trigger_info = {
             "trigger": {
                 "platform": "state",
                 "entity_id": entity,
@@ -151,6 +157,7 @@ async def async_attach_trigger(
                 "to_state": to_s,
             }
         }
+        variables = {**_variables, **trigger_info}
 
         try:
             period[entity] = cv.positive_time_period(
@@ -162,10 +169,11 @@ async def async_attach_trigger(
             )
             return
 
-        def _check_same_state(_, _2, new_st: State):
+        def _check_same_state(_, _2, new_st: State | None) -> bool:
             if new_st is None:
                 return False
 
+            cur_value: str | None
             if attribute is None:
                 cur_value = new_st.state
             else:

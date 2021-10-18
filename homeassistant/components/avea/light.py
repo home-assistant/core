@@ -30,32 +30,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class AveaLight(LightEntity):
     """Representation of an Avea."""
 
+    _attr_supported_features = SUPPORT_AVEA
+
     def __init__(self, light):
         """Initialize an AveaLight."""
         self._light = light
-        self._name = light.name
-        self._state = None
-        self._brightness = light.brightness
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_AVEA
-
-    @property
-    def name(self):
-        """Return the display name of this light."""
-        return self._name
-
-    @property
-    def brightness(self):
-        """Return the brightness of the light."""
-        return self._brightness
-
-    @property
-    def is_on(self):
-        """Return true if light is on."""
-        return self._state
+        self._attr_name = light.name
+        self._attr_brightness = light.brightness
 
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
@@ -80,8 +61,5 @@ class AveaLight(LightEntity):
         """
         brightness = self._light.get_brightness()
         if brightness is not None:
-            if brightness == 0:
-                self._state = False
-            else:
-                self._state = True
-            self._brightness = round(255 * (brightness / 4095))
+            self._attr_is_on = brightness != 0
+            self._attr_brightness = round(255 * (brightness / 4095))

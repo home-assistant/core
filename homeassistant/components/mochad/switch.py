@@ -44,7 +44,7 @@ class MochadSwitch(SwitchEntity):
 
         self._controller = ctrl
         self._address = dev[CONF_ADDRESS]
-        self._name = dev.get(CONF_NAME, "x10_switch_dev_%s" % self._address)
+        self._name = dev.get(CONF_NAME, f"x10_switch_dev_{self._address}")
         self._comm_type = dev.get(CONF_COMM_TYPE, "pl")
         self.switch = device.Device(ctrl, self._address, comm_type=self._comm_type)
         # Init with false to avoid locking HA for long on CM19A (goes from rf

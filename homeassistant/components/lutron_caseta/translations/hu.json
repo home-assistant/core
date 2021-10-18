@@ -1,0 +1,76 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "not_lutron_device": "A felfedezett eszk\u00f6z nem Lutron eszk\u00f6z"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "import_failed": {
+                "description": "Nem siker\u00fclt be\u00e1ll\u00edtani a bridge-t ({host}) a configuration.yaml f\u00e1jlb\u00f3l import\u00e1lva.",
+                "title": "Nem siker\u00fclt import\u00e1lni a Cas\u00e9ta h\u00edd konfigur\u00e1ci\u00f3j\u00e1t."
+            },
+            "link": {
+                "description": "A(z) {name} ({host}) p\u00e1ros\u00edt\u00e1s\u00e1hoz az \u0171rlap elk\u00fcld\u00e9se ut\u00e1n nyomja meg a h\u00edd h\u00e1tulj\u00e1n tal\u00e1lhat\u00f3 fekete gombot.",
+                "title": "P\u00e1ros\u00edtsd a h\u00edddal"
+            },
+            "user": {
+                "data": {
+                    "host": "C\u00edm"
+                },
+                "description": "Add meg az eszk\u00f6z IP-c\u00edm\u00e9t.",
+                "title": "Automatikus csatlakoz\u00e1s a h\u00eddhoz"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Els\u0151 gomb",
+            "button_2": "M\u00e1sodik gomb",
+            "button_3": "Harmadik gomb",
+            "button_4": "Negyedik gomb",
+            "close_1": "Bez\u00e1r\u00e1s 1.",
+            "close_2": "Bez\u00e1r\u00e1s 2.",
+            "close_3": "Bez\u00e1r\u00e1s 3.",
+            "close_4": "Bez\u00e1r\u00e1s 4.",
+            "close_all": "Z\u00e1rja be az \u00f6sszeset",
+            "group_1_button_1": "Els\u0151 csoport els\u0151 gomb",
+            "group_1_button_2": "Els\u0151 csoport m\u00e1sodik gomb",
+            "group_2_button_1": "M\u00e1sodik csoport els\u0151 gomb",
+            "group_2_button_2": "M\u00e1sodik csoport m\u00e1sodik gomb",
+            "lower": "Als\u00f3",
+            "lower_1": "Als\u00f3 1",
+            "lower_2": "Als\u00f3 2",
+            "lower_3": "Als\u00f3 3",
+            "lower_4": "Als\u00f3 4",
+            "lower_all": "Engedje le az \u00f6sszeset",
+            "off": "Ki",
+            "on": "Be",
+            "open_1": "Nyissa meg az 1-t",
+            "open_2": "Nyissa meg a 2-at",
+            "open_3": "Nyissa meg a 3-at",
+            "open_4": "Nyissa meg a 4-et",
+            "open_all": "Nyissa meg az \u00f6sszeset",
+            "raise": "Emel",
+            "raise_1": "1. emel\u00e9s",
+            "raise_2": "2. emel\u00e9s",
+            "raise_3": "3. emel\u00e9s",
+            "raise_4": "4. emel\u00e9s",
+            "raise_all": "Emelje fel mindet",
+            "stop": "Meg\u00e1ll\u00f3 (kedvenc)",
+            "stop_1": "1. meg\u00e1ll\u00f3",
+            "stop_2": "2. meg\u00e1ll\u00f3",
+            "stop_3": "3. meg\u00e1ll\u00f3",
+            "stop_4": "4. meg\u00e1ll\u00f3",
+            "stop_all": "Az \u00f6sszes le\u00e1ll\u00edt\u00e1sa"
+        },
+        "trigger_type": {
+            "press": "\"{subtype}\" lenyomva",
+            "release": "\"{subtype}\" felengedve"
+        }
+    }
+}

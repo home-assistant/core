@@ -11,7 +11,7 @@
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "invalid_auth": "Niepoprawne uwierzytelnienie"
         },
-        "flow_title": "Urz\u0105dzenie Axis: {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {

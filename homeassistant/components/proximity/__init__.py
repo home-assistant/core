@@ -148,7 +148,7 @@ class Proximity(Entity):
         return self._unit_of_measurement
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_DIR_OF_TRAVEL: self.dir_of_travel, ATTR_NEAREST: self.nearest}
 
@@ -230,10 +230,10 @@ class Proximity(Entity):
         closest_device: str = None
         dist_to_zone: float = None
 
-        for device in distances_to_zone:
-            if not dist_to_zone or distances_to_zone[device] < dist_to_zone:
+        for device, zone in distances_to_zone.items():
+            if not dist_to_zone or zone < dist_to_zone:
                 closest_device = device
-                dist_to_zone = distances_to_zone[device]
+                dist_to_zone = zone
 
         # If the closest device is one of the other devices.
         if closest_device != entity:

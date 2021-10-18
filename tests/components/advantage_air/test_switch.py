@@ -1,5 +1,4 @@
 """Test the Advantage Air Switch Platform."""
-
 from json import loads
 
 from homeassistant.components.advantage_air.const import (
@@ -12,6 +11,7 @@ from homeassistant.components.switch import (
     SERVICE_TURN_ON,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
+from homeassistant.helpers import entity_registry as er
 
 from tests.components.advantage_air import (
     TEST_SET_RESPONSE,
@@ -36,7 +36,7 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
 
     await add_mock_config(hass)
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     assert len(aioclient_mock.mock_calls) == 1
 

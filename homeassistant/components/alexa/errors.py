@@ -1,4 +1,6 @@
 """Alexa related errors."""
+from __future__ import annotations
+
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import API_TEMP_UNITS
@@ -22,8 +24,8 @@ class AlexaError(Exception):
     A handler can raise subclasses of this to return an error to the request.
     """
 
-    namespace = None
-    error_type = None
+    namespace: str | None = None
+    error_type: str | None = None
 
     def __init__(self, error_message, payload=None):
         """Initialize an alexa error."""

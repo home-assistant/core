@@ -1,0 +1,23 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Viga tuvastamisel",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "description": "IoTawatt seade n\u00f5uab tuvastamist. Sisesta kasutajanimi ja salas\u00f5na ning kl\u00f5psa nuppu Edasta."
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    }
+}

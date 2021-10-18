@@ -24,26 +24,24 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             # Only add motion sensor when motion is enabled
             if zone["motionConfig"] >= 2:
                 entities.append(AdvantageAirZoneMotion(instance, ac_key, zone_key))
+            # Only add MyZone if it is available
+            if zone["type"] != 0:
+                entities.append(AdvantageAirZoneMyZone(instance, ac_key, zone_key))
     async_add_entities(entities)
 
 
 class AdvantageAirZoneFilter(AdvantageAirEntity, BinarySensorEntity):
     """Advantage Air Filter."""
 
-    @property
-    def name(self):
-        """Return the name."""
-        return f'{self._ac["name"]} Filter'
+    _attr_device_class = DEVICE_CLASS_PROBLEM
 
-    @property
-    def unique_id(self):
-        """Return a unique id."""
-        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-filter'
-
-    @property
-    def device_class(self):
-        """Return the device class of the vent."""
-        return DEVICE_CLASS_PROBLEM
+    def __init__(self, instance, ac_key):
+        """Initialize an Advantage Air Filter."""
+        super().__init__(instance, ac_key)
+        self._attr_name = f'{self._ac["name"]} Filter'
+        self._attr_unique_id = (
+            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-filter'
+        )
 
     @property
     def is_on(self):
@@ -54,22 +52,36 @@ class AdvantageAirZoneFilter(AdvantageAirEntity, BinarySensorEntity):
 class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
     """Advantage Air Zone Motion."""
 
-    @property
-    def name(self):
-        """Return the name."""
-        return f'{self._zone["name"]} Motion'
+    _attr_device_class = DEVICE_CLASS_MOTION
 
-    @property
-    def unique_id(self):
-        """Return a unique id."""
-        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}-motion'
-
-    @property
-    def device_class(self):
-        """Return the device class of the vent."""
-        return DEVICE_CLASS_MOTION
+    def __init__(self, instance, ac_key, zone_key):
+        """Initialize an Advantage Air Zone Motion."""
+        super().__init__(instance, ac_key, zone_key)
+        self._attr_name = f'{self._zone["name"]} Motion'
+        self._attr_unique_id = (
+            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-motion'
+        )
 
     @property
     def is_on(self):
         """Return if motion is detect."""
         return self._zone["motion"]
+
+
+class AdvantageAirZoneMyZone(AdvantageAirEntity, BinarySensorEntity):
+    """Advantage Air Zone MyZone."""
+
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(self, instance, ac_key, zone_key):
+        """Initialize an Advantage Air Zone MyZone."""
+        super().__init__(instance, ac_key, zone_key)
+        self._attr_name = f'{self._zone["name"]} MyZone'
+        self._attr_unique_id = (
+            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-myzone'
+        )
+
+    @property
+    def is_on(self):
+        """Return if this zone is the myZone."""
+        return self._zone["number"] == self._ac["myZone"]

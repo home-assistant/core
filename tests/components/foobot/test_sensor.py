@@ -51,7 +51,7 @@ async def test_default_setup(hass, aioclient_mock):
     }
 
     for name, value in metrics.items():
-        state = hass.states.get("sensor.foobot_happybot_%s" % name)
+        state = hass.states.get(f"sensor.foobot_happybot_{name}")
         assert state.state == value[0]
         assert state.attributes.get("unit_of_measurement") == value[1]
 

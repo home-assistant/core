@@ -125,7 +125,9 @@ async def async_setup_entry(hass, config):
         bot.async_update_conversation_commands,
     )
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, bot.async_handle_hass_stop)
+    config.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, bot.async_handle_hass_stop)
+    )
 
     await bot.async_connect()
 

@@ -25,13 +25,13 @@ from pysmartthings import (
 
 from homeassistant.components import webhook
 from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     APP_NAME_PREFIX,
@@ -60,7 +60,7 @@ def format_unique_id(app_id: str, location_id: str) -> str:
     return f"{app_id}_{location_id}"
 
 
-async def find_app(hass: HomeAssistantType, api):
+async def find_app(hass: HomeAssistant, api):
     """Find an existing SmartApp for this installation of hass."""
     apps = await api.apps()
     for app in [app for app in apps if app.app_name.startswith(APP_NAME_PREFIX)]:
@@ -92,7 +92,7 @@ async def validate_installed_app(api, installed_app_id: str):
     return installed_app
 
 
-def validate_webhook_requirements(hass: HomeAssistantType) -> bool:
+def validate_webhook_requirements(hass: HomeAssistant) -> bool:
     """Ensure Home Assistant is setup properly to receive webhooks."""
     if hass.components.cloud.async_active_subscription():
         return True
@@ -101,7 +101,7 @@ def validate_webhook_requirements(hass: HomeAssistantType) -> bool:
     return get_webhook_url(hass).lower().startswith("https://")
 
 
-def get_webhook_url(hass: HomeAssistantType) -> str:
+def get_webhook_url(hass: HomeAssistant) -> str:
     """
     Get the URL of the webhook.
 
@@ -113,7 +113,7 @@ def get_webhook_url(hass: HomeAssistantType) -> str:
     return webhook.async_generate_url(hass, hass.data[DOMAIN][CONF_WEBHOOK_ID])
 
 
-def _get_app_template(hass: HomeAssistantType):
+def _get_app_template(hass: HomeAssistant):
     try:
         endpoint = f"at {get_url(hass, allow_cloud=False, prefer_external=True)}"
     except NoURLAvailableError:
@@ -135,7 +135,7 @@ def _get_app_template(hass: HomeAssistantType):
     }
 
 
-async def create_app(hass: HomeAssistantType, api):
+async def create_app(hass: HomeAssistant, api):
     """Create a SmartApp for this instance of hass."""
     # Create app from template attributes
     template = _get_app_template(hass)
@@ -163,7 +163,7 @@ async def create_app(hass: HomeAssistantType, api):
     return app, client
 
 
-async def update_app(hass: HomeAssistantType, app):
+async def update_app(hass: HomeAssistant, app):
     """Ensure the SmartApp is up-to-date and update if necessary."""
     template = _get_app_template(hass)
     template.pop("app_name")  # don't update this
@@ -199,7 +199,7 @@ def setup_smartapp(hass, app):
     return smartapp
 
 
-async def setup_smartapp_endpoint(hass: HomeAssistantType):
+async def setup_smartapp_endpoint(hass: HomeAssistant):
     """
     Configure the SmartApp webhook in hass.
 
@@ -276,7 +276,7 @@ async def setup_smartapp_endpoint(hass: HomeAssistantType):
     )
 
 
-async def unload_smartapp_endpoint(hass: HomeAssistantType):
+async def unload_smartapp_endpoint(hass: HomeAssistant):
     """Tear down the component configuration."""
     if DOMAIN not in hass.data:
         return
@@ -308,7 +308,7 @@ async def unload_smartapp_endpoint(hass: HomeAssistantType):
 
 
 async def smartapp_sync_subscriptions(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     auth_token: str,
     location_id: str,
     installed_app_id: str,
@@ -397,7 +397,7 @@ async def smartapp_sync_subscriptions(
 
 
 async def _continue_flow(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     app_id: str,
     location_id: str,
     installed_app_id: str,
@@ -429,7 +429,7 @@ async def _continue_flow(
         )
 
 
-async def smartapp_install(hass: HomeAssistantType, req, resp, app):
+async def smartapp_install(hass: HomeAssistant, req, resp, app):
     """Handle a SmartApp installation and continue the config flow."""
     await _continue_flow(
         hass, app.app_id, req.location_id, req.installed_app_id, req.refresh_token
@@ -441,7 +441,7 @@ async def smartapp_install(hass: HomeAssistantType, req, resp, app):
     )
 
 
-async def smartapp_update(hass: HomeAssistantType, req, resp, app):
+async def smartapp_update(hass: HomeAssistant, req, resp, app):
     """Handle a SmartApp update and either update the entry or continue the flow."""
     entry = next(
         (
@@ -470,7 +470,7 @@ async def smartapp_update(hass: HomeAssistantType, req, resp, app):
     )
 
 
-async def smartapp_uninstall(hass: HomeAssistantType, req, resp, app):
+async def smartapp_uninstall(hass: HomeAssistant, req, resp, app):
     """
     Handle when a SmartApp is removed from a location by the user.
 
@@ -496,7 +496,7 @@ async def smartapp_uninstall(hass: HomeAssistantType, req, resp, app):
     )
 
 
-async def smartapp_webhook(hass: HomeAssistantType, webhook_id: str, request):
+async def smartapp_webhook(hass: HomeAssistant, webhook_id: str, request):
     """
     Handle a smartapp lifecycle event callback from SmartThings.
 

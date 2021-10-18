@@ -10,7 +10,7 @@
             "user": {
                 "data": {
                     "password": "Wachtwoord",
-                    "username": "Gebruikersnaam/E-mailadres"
+                    "username": "Gebruikersnaam"
                 },
                 "description": "Voer de gebruikersnaam en het wachtwoord voor uw iAqualink-account in.",
                 "title": "Verbinding maken met iAqualink"

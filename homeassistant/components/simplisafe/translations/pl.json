@@ -19,7 +19,7 @@
                 "data": {
                     "password": "Has\u0142o"
                 },
-                "description": "Tw\u00f3j token dost\u0119pu wygas\u0142 lub zosta\u0142 uniewa\u017cniony. Wprowad\u017a has\u0142o, aby ponownie po\u0142\u0105czy\u0107 swoje konto.",
+                "description": "Tw\u00f3j dost\u0119p wygas\u0142 lub zosta\u0142 uniewa\u017cniony. Wprowad\u017a has\u0142o, aby ponownie po\u0142\u0105czy\u0107 swoje konto.",
                 "title": "Ponownie uwierzytelnij integracj\u0119"
             },
             "user": {

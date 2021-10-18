@@ -24,7 +24,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
     for device in gateway.devices["light"]:
         model = device["model"]
-        if model in ["gateway", "gateway.v3"]:
+        if model in ("gateway", "gateway.v3"):
             entities.append(
                 XiaomiGatewayLight(device, "Gateway Light", gateway, config_entry)
             )
@@ -58,7 +58,7 @@ class XiaomiGatewayLight(XiaomiDevice, LightEntity):
                 self._state = False
             return True
 
-        rgbhexstr = "%x" % value
+        rgbhexstr = f"{value:x}"
         if len(rgbhexstr) > 8:
             _LOGGER.error(
                 "Light RGB data error."

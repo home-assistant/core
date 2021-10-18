@@ -18,6 +18,16 @@
                 },
                 "title": "Autentimise seadistamine"
             },
+            "configure": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nimi",
+                    "password": "Salas\u00f5na",
+                    "port": "Port",
+                    "username": "Kasutajanimi"
+                },
+                "title": "Seadista ONVIF-seade"
+            },
             "configure_profile": {
                 "data": {
                     "include": "Loo kaamera olem"
@@ -40,6 +50,9 @@
                 "title": "H\u00e4\u00e4lesta ONVIF-seade"
             },
             "user": {
+                "data": {
+                    "auto": "Otsi automaatselt"
+                },
                 "description": "Kl\u00f5psates nuppu Esita, otsime  v\u00f5rgust ONVIF-seadmeid, mis toetavad Profile S'i.\n\n M\u00f5ned tootjad on ONVIF-i vaikimisi keelanud. Veendu, et ONVIF on kaamera seadistustes lubatud.",
                 "title": "ONVIF-seadme seadistamine"
             }

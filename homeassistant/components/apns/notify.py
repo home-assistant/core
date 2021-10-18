@@ -1,4 +1,5 @@
 """APNS Notification platform."""
+from contextlib import suppress
 import logging
 
 from apns2.client import APNsClient
@@ -155,7 +156,7 @@ class ApnsNotificationService(BaseNotificationService):
         self.device_states = {}
         self.topic = topic
 
-        try:
+        with suppress(FileNotFoundError):
             self.devices = {
                 str(key): ApnsDevice(
                     str(key),
@@ -165,8 +166,6 @@ class ApnsNotificationService(BaseNotificationService):
                 )
                 for (key, value) in load_yaml_config_file(self.yaml_path).items()
             }
-        except FileNotFoundError:
-            pass
 
         tracking_ids = [
             device.full_tracking_device_id
@@ -185,7 +184,7 @@ class ApnsNotificationService(BaseNotificationService):
 
     def write_devices(self):
         """Write all known devices to file."""
-        with open(self.yaml_path, "w+") as out:
+        with open(self.yaml_path, "w+", encoding="utf8") as out:
             for device in self.devices.values():
                 _write_device(out, device)
 
@@ -203,7 +202,7 @@ class ApnsNotificationService(BaseNotificationService):
 
         if current_device is None:
             self.devices[push_id] = device
-            with open(self.yaml_path, "a") as out:
+            with open(self.yaml_path, "a", encoding="utf8") as out:
                 _write_device(out, device)
             return True
 

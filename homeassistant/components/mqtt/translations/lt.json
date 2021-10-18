@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Nepavyko prisijungti"
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "password": "Slapta\u017eodis",
+                    "port": "Portas",
+                    "username": "Prisijungimo vardas"
+                }
+            }
+        }
+    }
+}

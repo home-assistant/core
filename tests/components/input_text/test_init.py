@@ -25,7 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, CoreState, State
 from homeassistant.exceptions import Unauthorized
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.loader import bind_hass
 from homeassistant.setup import async_setup_component
 
@@ -393,7 +393,7 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is not None
@@ -419,7 +419,7 @@ async def test_update(hass, hass_ws_client, storage_setup):
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state.attributes[ATTR_FRIENDLY_NAME] == "from storage"
@@ -457,7 +457,7 @@ async def test_ws_create(hass, hass_ws_client, storage_setup):
 
     input_id = "new_input"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is None

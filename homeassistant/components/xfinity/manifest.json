@@ -1,7 +1,0 @@
-{
-  "domain": "xfinity",
-  "name": "Xfinity Gateway",
-  "documentation": "https://www.home-assistant.io/integrations/xfinity",
-  "requirements": ["xfinity-gateway==0.0.4"],
-  "codeowners": ["@cisasteelersfan"]
-}

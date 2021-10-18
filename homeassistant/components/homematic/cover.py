@@ -112,6 +112,8 @@ class HMCover(HMDevice, CoverEntity):
 class HMGarage(HMCover):
     """Represents a Homematic Garage cover. Homematic garage covers do not support position attributes."""
 
+    _attr_device_class = DEVICE_CLASS_GARAGE
+
     @property
     def current_cover_position(self):
         """
@@ -126,11 +128,6 @@ class HMGarage(HMCover):
     def is_closed(self):
         """Return whether the cover is closed."""
         return self._hmdevice.is_closed(self._hm_get_state())
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return DEVICE_CLASS_GARAGE
 
     def _init_data_struct(self):
         """Generate a data dictionary (self._data) from metadata."""

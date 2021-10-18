@@ -18,6 +18,15 @@
                 },
                 "title": "Konfigurace ov\u011b\u0159ov\u00e1n\u00ed"
             },
+            "configure": {
+                "data": {
+                    "host": "Hostitel",
+                    "name": "Jm\u00e9no",
+                    "password": "Heslo",
+                    "port": "Port",
+                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
+                }
+            },
             "configure_profile": {
                 "data": {
                     "include": "Vytvo\u0159it entitu kamery"

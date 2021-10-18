@@ -27,7 +27,7 @@
                 "data": {
                     "forecast": "Prognoza pogody"
                 },
-                "description": "Ze wzgl\u0119du na ograniczenia darmowej wersji klucza API AccuWeather po w\u0142\u0105czeniu prognozy pogody aktualizacje danych b\u0119d\u0105 wykonywane co 64 minuty zamiast co 32 minuty.",
+                "description": "Ze wzgl\u0119du na ograniczenia darmowej wersji klucza API AccuWeather po w\u0142\u0105czeniu prognozy pogody aktualizacje danych b\u0119d\u0105 wykonywane co 80 minut zamiast co 40 minut.",
                 "title": "Opcje AccuWeather"
             }
         }

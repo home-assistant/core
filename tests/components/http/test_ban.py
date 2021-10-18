@@ -24,8 +24,6 @@ from homeassistant.setup import async_setup_component
 
 from . import mock_real_ip
 
-from tests.common import async_mock_service
-
 SUPERVISOR_IP = "1.2.3.4"
 BANNED_IPS = ["200.201.202.203", "100.64.0.2"]
 BANNED_IPS_WITH_SUPERVISOR = BANNED_IPS + [SUPERVISOR_IP]
@@ -136,8 +134,6 @@ async def test_ban_middleware_loaded_by_default(hass):
 
 async def test_ip_bans_file_creation(hass, aiohttp_client):
     """Testing if banned IP file created."""
-    notification_calls = async_mock_service(hass, "persistent_notification", "create")
-
     app = web.Application()
     app["hass"] = hass
 
@@ -166,16 +162,20 @@ async def test_ip_bans_file_creation(hass, aiohttp_client):
         resp = await client.get("/")
         assert resp.status == 401
         assert len(app[KEY_BANNED_IPS]) == len(BANNED_IPS) + 1
-        m_open.assert_called_once_with(hass.config.path(IP_BANS_FILE), "a")
+        m_open.assert_called_once_with(
+            hass.config.path(IP_BANS_FILE), "a", encoding="utf8"
+        )
 
         resp = await client.get("/")
         assert resp.status == HTTP_FORBIDDEN
         assert m_open.call_count == 1
 
-        assert len(notification_calls) == 3
         assert (
-            "Login attempt or request with invalid authentication from example.com (200.201.202.204) (Python"
-            in notification_calls[0].data["message"]
+            len(notifications := hass.states.async_all("persistent_notification")) == 2
+        )
+        assert (
+            notifications[0].attributes["message"]
+            == "Login attempt or request with invalid authentication from example.com (200.201.202.204). See the log for details."
         )
 
 

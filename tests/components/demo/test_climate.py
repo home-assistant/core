@@ -69,7 +69,7 @@ def test_setup_params(hass):
     assert state.attributes.get(ATTR_HUMIDITY) == 67
     assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 54
     assert state.attributes.get(ATTR_SWING_MODE) == "Off"
-    assert STATE_OFF == state.attributes.get(ATTR_AUX_HEAT)
+    assert state.attributes.get(ATTR_AUX_HEAT) == STATE_OFF
     assert state.attributes.get(ATTR_HVAC_MODES) == [
         "off",
         "heat",

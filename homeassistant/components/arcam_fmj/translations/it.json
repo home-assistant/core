@@ -5,7 +5,11 @@
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
             "cannot_connect": "Impossibile connettersi"
         },
-        "flow_title": "Arcam FMJ su {host}",
+        "error": {
+            "one": "Pi\u00f9",
+            "other": "Altri"
+        },
+        "flow_title": "{host}",
         "step": {
             "confirm": {
                 "description": "Vuoi aggiungere Arcam FMJ su `{host}` a Home Assistant?"

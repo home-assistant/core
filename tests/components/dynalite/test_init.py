@@ -7,7 +7,7 @@ import pytest
 from voluptuous import MultipleInvalid
 
 import homeassistant.components.dynalite.const as dynalite
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_ROOM
+from homeassistant.const import CONF_DEFAULT, CONF_HOST, CONF_NAME, CONF_PORT, CONF_ROOM
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -54,7 +54,7 @@ async def test_async_setup(hass):
                                     dynalite.CONF_TEMPLATE: dynalite.CONF_TIME_COVER,
                                 },
                             },
-                            dynalite.CONF_DEFAULT: {dynalite.CONF_FADE: 2.3},
+                            CONF_DEFAULT: {dynalite.CONF_FADE: 2.3},
                             dynalite.CONF_ACTIVE: dynalite.ACTIVE_INIT,
                             dynalite.CONF_PRESET: {
                                 "5": {CONF_NAME: "pres5", dynalite.CONF_FADE: 4.5}
@@ -277,9 +277,7 @@ async def test_unload_entry(hass):
     ) as mock_unload:
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
-        assert mock_unload.call_count == len(dynalite.ENTITY_PLATFORMS)
-        expected_calls = [
-            call(entry, platform) for platform in dynalite.ENTITY_PLATFORMS
-        ]
+        assert mock_unload.call_count == len(dynalite.PLATFORMS)
+        expected_calls = [call(entry, platform) for platform in dynalite.PLATFORMS]
         for cur_call in mock_unload.mock_calls:
             assert cur_call in expected_calls

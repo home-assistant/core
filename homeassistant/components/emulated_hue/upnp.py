@@ -63,7 +63,6 @@ def create_upnp_datagram_endpoint(
     advertise_port,
 ):
     """Create the UPNP socket and protocol."""
-
     # Listen for UDP port 1900 packets sent to SSDP multicast address
     ssdp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     ssdp_socket.setblocking(False)

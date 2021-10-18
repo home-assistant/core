@@ -22,6 +22,7 @@ from homeassistant.components.light import (
 from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_BRIGHTNESS,
     CONF_LIGHTS,
     CONF_MODE,
     CONF_NAME,
@@ -49,7 +50,6 @@ CONF_STOP_TIME = "stop_time"
 CONF_START_CT = "start_colortemp"
 CONF_SUNSET_CT = "sunset_colortemp"
 CONF_STOP_CT = "stop_colortemp"
-CONF_BRIGHTNESS = "brightness"
 CONF_DISABLE_BRIGHTNESS_ADJUST = "disable_brightness_adjust"
 CONF_INTERVAL = "interval"
 

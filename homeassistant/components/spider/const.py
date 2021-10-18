@@ -3,4 +3,4 @@
 DOMAIN = "spider"
 DEFAULT_SCAN_INTERVAL = 300
 
-PLATFORMS = ["climate", "switch"]
+PLATFORMS = ["climate", "switch", "sensor"]

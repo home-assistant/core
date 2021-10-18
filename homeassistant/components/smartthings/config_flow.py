@@ -16,7 +16,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-# pylint: disable=unused-import
 from .const import (
     APP_OAUTH_CLIENT_NAME,
     APP_OAUTH_SCOPES,
@@ -45,7 +44,6 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle configuration of SmartThings integrations."""
 
     VERSION = 2
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
     def __init__(self):
         """Create a new instance of the flow handler."""

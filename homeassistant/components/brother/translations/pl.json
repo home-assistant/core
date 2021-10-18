@@ -9,7 +9,7 @@
             "snmp_error": "Serwer SNMP wy\u0142\u0105czony lub drukarka nie jest obs\u0142ugiwana",
             "wrong_host": "Niepoprawna nazwa hosta lub adres IP drukarki"
         },
-        "flow_title": "Drukarka Brother: {model} {serial_number}",
+        "flow_title": "{model} {serial_number}",
         "step": {
             "user": {
                 "data": {

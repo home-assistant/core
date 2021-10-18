@@ -6,7 +6,7 @@ from aiohttp.hdrs import USER_AGENT
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
@@ -15,7 +15,6 @@ from homeassistant.const import (
     HTTP_OK,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_point_in_time
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
@@ -54,7 +53,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices)
 
 
-class HaveIBeenPwnedSensor(Entity):
+class HaveIBeenPwnedSensor(SensorEntity):
     """Implementation of a HaveIBeenPwned sensor."""
 
     def __init__(self, data, email):
@@ -70,17 +69,17 @@ class HaveIBeenPwnedSensor(Entity):
         return f"Breaches {self._email}"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the attributes of the sensor."""
         val = {ATTR_ATTRIBUTION: ATTRIBUTION}
         if self._email not in self._data.data:

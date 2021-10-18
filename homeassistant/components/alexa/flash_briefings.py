@@ -5,7 +5,7 @@ import logging
 import uuid
 
 from homeassistant.components import http
-from homeassistant.const import HTTP_NOT_FOUND, HTTP_UNAUTHORIZED
+from homeassistant.const import CONF_PASSWORD, HTTP_NOT_FOUND, HTTP_UNAUTHORIZED
 from homeassistant.core import callback
 from homeassistant.helpers import template
 import homeassistant.util.dt as dt_util
@@ -20,7 +20,6 @@ from .const import (
     ATTR_UPDATE_DATE,
     CONF_AUDIO,
     CONF_DISPLAY_URL,
-    CONF_PASSWORD,
     CONF_TEXT,
     CONF_TITLE,
     CONF_UID,
@@ -94,8 +93,7 @@ class AlexaFlashBriefingView(http.HomeAssistantView):
                 else:
                     output[ATTR_MAIN_TEXT] = item.get(CONF_TEXT)
 
-            uid = item.get(CONF_UID)
-            if uid is None:
+            if (uid := item.get(CONF_UID)) is None:
                 uid = str(uuid.uuid4())
             output[ATTR_UID] = uid
 

@@ -2,8 +2,9 @@
     "config": {
         "abort": {
             "already_configured": "\ube0c\ub9ac\uc9c0\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
-            "already_in_progress": "\ube0c\ub9ac\uc9c0 \uad6c\uc131\uc774 \uc774\ubbf8 \uc9c4\ud589 \uc911\uc785\ub2c8\ub2e4.",
+            "already_in_progress": "\uae30\uae30 \uad6c\uc131\uc774 \uc774\ubbf8 \uc9c4\ud589 \uc911\uc785\ub2c8\ub2e4",
             "no_bridges": "\ubc1c\uacac\ub41c deCONZ \ube0c\ub9ac\uc9c0\uac00 \uc5c6\uc2b5\ub2c8\ub2e4",
+            "no_hardware_available": "deCONZ\uc5d0 \uc5f0\uacb0\ub41c \ubb34\uc120 \ud558\ub4dc\uc6e8\uc5b4\uac00 \uc5c6\uc2b5\ub2c8\ub2e4",
             "not_deconz_bridge": "deCONZ \ube0c\ub9ac\uc9c0\uac00 \uc544\ub2d9\ub2c8\ub2e4",
             "updated_instance": "deCONZ \uc778\uc2a4\ud134\uc2a4\ub97c \uc0c8\ub85c\uc6b4 \ud638\uc2a4\ud2b8 \uc8fc\uc18c\ub85c \uc5c5\ub370\uc774\ud2b8\ud588\uc2b5\ub2c8\ub2e4"
         },
@@ -13,11 +14,11 @@
         "flow_title": "deCONZ Zigbee \uac8c\uc774\ud2b8\uc6e8\uc774 ({host})",
         "step": {
             "hassio_confirm": {
-                "description": "Hass.io {addon} \uc560\ub4dc\uc628\uc5d0\uc11c \uc81c\uacf5\ub41c deCONZ \uac8c\uc774\ud2b8\uc6e8\uc774\uc5d0 \uc5f0\uacb0\ud558\ub3c4\ub85d Home Assistant \ub97c \uad6c\uc131\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
-                "title": "Hass.io \uc560\ub4dc\uc628\uc758 deCONZ Zigbee \uac8c\uc774\ud2b8\uc6e8\uc774"
+                "description": "{addon} \uc560\ub4dc\uc628\uc5d0\uc11c \uc81c\uacf5\ud558\ub294 deCONZ \uac8c\uc774\ud2b8\uc6e8\uc774\uc5d0 \uc5f0\uacb0\ud558\ub3c4\ub85d Home Assistant\ub97c \uad6c\uc131\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
+                "title": "Home Assistant \uc560\ub4dc\uc628\uc758 deCONZ Zigbee \uac8c\uc774\ud2b8\uc6e8\uc774"
             },
             "link": {
-                "description": "deCONZ \uac8c\uc774\ud2b8\uc6e8\uc774\ub97c \uc5b8\ub77d\ud558\uc5ec Home Assistant \uc5d0 \uc5f0\uacb0\ud558\uae30.\n\n1. deCONZ \uc2dc\uc2a4\ud15c \uc124\uc815\uc73c\ub85c \uc774\ub3d9\ud558\uc138\uc694\n2. \"Authenticate app\" \ubc84\ud2bc\uc744 \ub20c\ub7ec\uc8fc\uc138\uc694",
+                "description": "Home Assistant\uc5d0 \ub4f1\ub85d\ud558\ub824\uba74 deCONZ \uac8c\uc774\ud2b8\uc6e8\uc774\ub97c \uc7a0\uae08 \ud574\uc81c\ud574\uc8fc\uc138\uc694.\n\n 1. deCONZ \uc124\uc815 -> \uac8c\uc774\ud2b8\uc6e8\uc774 -> \uace0\uae09\uc73c\ub85c \uc774\ub3d9\ud574\uc8fc\uc138\uc694\n 2. \"\uc571 \uc778\uc99d\ud558\uae30\" \ubc84\ud2bc\uc744 \ub20c\ub7ec\uc8fc\uc138\uc694",
                 "title": "deCONZ \uc5f0\uacb0\ud558\uae30"
             },
             "manual_input": {
@@ -41,6 +42,10 @@
             "button_2": "\ub450 \ubc88\uc9f8",
             "button_3": "\uc138 \ubc88\uc9f8",
             "button_4": "\ub124 \ubc88\uc9f8",
+            "button_5": "\ub2e4\uc12f \ubc88\uc9f8 \ubc84\ud2bc",
+            "button_6": "\uc5ec\uc12f \ubc88\uc9f8 \ubc84\ud2bc",
+            "button_7": "\uc77c\uacf1 \ubc88\uc9f8 \ubc84\ud2bc",
+            "button_8": "\uc5ec\ub35f \ubc88\uc9f8 \ubc84\ud2bc",
             "close": "\ub2eb\uae30",
             "dim_down": "\uc5b4\ub461\uac8c \ud558\uae30",
             "dim_up": "\ubc1d\uac8c \ud558\uae30",
@@ -58,33 +63,34 @@
             "turn_on": "\ucf1c\uae30"
         },
         "trigger_type": {
-            "remote_awakened": "\uae30\uae30 \uc808\uc804 \ubaa8\ub4dc \ud574\uc81c\ub420 \ub54c",
-            "remote_button_double_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \ub450 \ubc88 \ub20c\ub9b4 \ub54c",
-            "remote_button_long_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \uacc4\uc18d \ub20c\ub824\uc9c8 \ub54c",
-            "remote_button_long_release": "\"{subtype}\" \ubc84\ud2bc\uc774 \uae38\uac8c \ub20c\ub838\ub2e4\uac00 \uc190\uc744 \ub5c4 \ub54c",
-            "remote_button_quadruple_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \ub124 \ubc88 \ub20c\ub9b4 \ub54c",
-            "remote_button_quintuple_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \ub2e4\uc12f \ubc88 \ub20c\ub9b4 \ub54c",
-            "remote_button_rotated": "\"{subtype}\" \ub85c \ubc84\ud2bc\uc774 \ud68c\uc804\ub420 \ub54c",
-            "remote_button_rotation_stopped": "\"{subtype}\" \ub85c \ubc84\ud2bc\uc774 \ud68c\uc804\uc744 \uba48\ucd9c \ub54c",
-            "remote_button_short_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \ub20c\ub9b4 \ub54c",
-            "remote_button_short_release": "\"{subtype}\" \ubc84\ud2bc\uc5d0\uc11c \uc190\uc744 \ub5c4 \ub54c",
-            "remote_button_triple_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \uc138 \ubc88 \ub20c\ub9b4 \ub54c",
-            "remote_double_tap": "\uae30\uae30\uc758 \"{subtype}\" \uac00 \ub354\ube14 \ud0ed \ub420 \ub54c",
-            "remote_double_tap_any_side": "\uae30\uae30\uc758 \uc544\ubb34 \uba74\uc774\ub098 \ub354\ube14 \ud0ed \ub420 \ub54c",
+            "remote_awakened": "\uae30\uae30\uc758 \uc808\uc804 \ubaa8\ub4dc\uac00 \ud574\uc81c\ub418\uc5c8\uc744 \ub54c",
+            "remote_button_double_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \ub450 \ubc88 \ub20c\ub838\uc744 \ub54c",
+            "remote_button_long_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \uacc4\uc18d \ub20c\ub838\uc744 \ub54c",
+            "remote_button_long_release": "\"{subtype}\" \ubc84\ud2bc\uc774 \uae38\uac8c \ub20c\ub838\ub2e4\uac00 \ub5bc\uc600\uc744 \ub54c",
+            "remote_button_quadruple_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \ub124 \ubc88 \ub20c\ub838\uc744 \ub54c",
+            "remote_button_quintuple_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \ub2e4\uc12f \ubc88 \ub20c\ub838\uc744 \ub54c",
+            "remote_button_rotated": "\"{subtype}\"(\uc73c)\ub85c \ubc84\ud2bc\uc774 \ud68c\uc804\ub418\uc5c8\uc744 \ub54c",
+            "remote_button_rotated_fast": "\"{subtype}\"(\uc73c)\ub85c \ubc84\ud2bc\uc774 \ube60\ub974\uac8c \ud68c\uc804\ub418\uc5c8\uc744 \ub54c",
+            "remote_button_rotation_stopped": "\"{subtype}\"(\uc73c)\ub85c \ubc84\ud2bc\ud68c\uc804\uc774 \uba48\ucd94\uc5c8\uc744 \ub54c",
+            "remote_button_short_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \ub20c\ub838\uc744 \ub54c",
+            "remote_button_short_release": "\"{subtype}\" \ubc84\ud2bc\uc5d0\uc11c \uc190\uc744 \ub5bc\uc5c8\uc744 \ub54c",
+            "remote_button_triple_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \uc138 \ubc88 \ub20c\ub838\uc744 \ub54c",
+            "remote_double_tap": "\uae30\uae30\uc758 \"{subtype}\"\uc774(\uac00) \ub354\ube14 \ud0ed \ub418\uc5c8\uc744 \ub54c",
+            "remote_double_tap_any_side": "\uae30\uae30\uc758 \uc544\ubb34 \uba74\uc774\ub098 \ub354\ube14 \ud0ed \ub418\uc5c8\uc744 \ub54c",
             "remote_falling": "\uae30\uae30\uac00 \ub5a8\uc5b4\uc9c8 \ub54c",
-            "remote_flip_180_degrees": "\uae30\uae30\uac00 180\ub3c4\ub85c \ub4a4\uc9d1\uc5b4\uc9c8 \ub54c",
-            "remote_flip_90_degrees": "\uae30\uae30\uac00 90\ub3c4\ub85c \ub4a4\uc9d1\uc5b4\uc9c8 \ub54c",
-            "remote_gyro_activated": "\uae30\uae30\uac00 \ud754\ub4e4\ub9b4 \ub54c",
-            "remote_moved": "\uae30\uae30\uc758 \"{subtype}\" \uac00 \uc704\ub85c \ud5a5\ud55c\ucc44\ub85c \uc6c0\uc9c1\uc77c \ub54c",
-            "remote_moved_any_side": "\uae30\uae30\uc758 \uc544\ubb34 \uba74\uc774\ub098 \uc704\ub85c \ud5a5\ud55c\ucc44\ub85c \uc6c0\uc9c1\uc77c \ub54c",
-            "remote_rotate_from_side_1": "\"\uba74 1\" \uc5d0\uc11c \"{subtype}\" \ub85c \uae30\uae30\uac00 \ud68c\uc804\ub420 \ub54c",
-            "remote_rotate_from_side_2": "\"\uba74 2\" \uc5d0\uc11c \"{subtype}\" \ub85c \uae30\uae30\uac00 \ud68c\uc804\ub420 \ub54c",
-            "remote_rotate_from_side_3": "\"\uba74 3\" \uc5d0\uc11c \"{subtype}\" \ub85c \uae30\uae30\uac00 \ud68c\uc804\ub420 \ub54c",
-            "remote_rotate_from_side_4": "\"\uba74 4\" \uc5d0\uc11c \"{subtype}\" \ub85c \uae30\uae30\uac00 \ud68c\uc804\ub420 \ub54c",
-            "remote_rotate_from_side_5": "\"\uba74 5\" \uc5d0\uc11c \"{subtype}\" \ub85c \uae30\uae30\uac00 \ud68c\uc804\ub420 \ub54c",
-            "remote_rotate_from_side_6": "\"\uba74 6\" \uc5d0\uc11c \"{subtype}\" \ub85c \uae30\uae30\uac00 \ud68c\uc804\ub420 \ub54c",
-            "remote_turned_clockwise": "\uc2dc\uacc4 \ubc29\ud5a5\uc73c\ub85c \uae30\uae30\uac00 \ud68c\uc804\ub420 \ub54c",
-            "remote_turned_counter_clockwise": "\ubc18\uc2dc\uacc4 \ubc29\ud5a5\uc73c\ub85c \uae30\uae30\uac00 \ud68c\uc804\ub420 \ub54c"
+            "remote_flip_180_degrees": "\uae30\uae30\uac00 180\ub3c4\ub85c \ub4a4\uc9d1\uc5b4\uc84c\uc744 \ub54c",
+            "remote_flip_90_degrees": "\uae30\uae30\uac00 90\ub3c4\ub85c \ub4a4\uc9d1\uc5b4\uc84c\uc744 \ub54c",
+            "remote_gyro_activated": "\uae30\uae30\uac00 \ud754\ub4e4\ub838\uc744 \ub54c",
+            "remote_moved": "\uae30\uae30\uc758 \"{subtype}\"\uc774(\uac00) \uc704\ub85c \ud5a5\ud55c \ucc44\ub85c \uc6c0\uc9c1\uc600\uc744 \ub54c",
+            "remote_moved_any_side": "\uae30\uae30\uc758 \uc544\ubb34 \uba74\uc774\ub098 \uc704\ub85c \ud5a5\ud55c\ucc44\ub85c \uc6c0\uc9c1\uc600\uc744 \ub54c",
+            "remote_rotate_from_side_1": "\"\uba74 1\" \uc5d0\uc11c \"{subtype}\"(\uc73c)\ub85c \uae30\uae30\uac00 \ud68c\uc804\ub418\uc5c8\uc744 \ub54c",
+            "remote_rotate_from_side_2": "\"\uba74 2\" \uc5d0\uc11c \"{subtype}\"(\uc73c)\ub85c \uae30\uae30\uac00 \ud68c\uc804\ub418\uc5c8\uc744 \ub54c",
+            "remote_rotate_from_side_3": "\"\uba74 3\" \uc5d0\uc11c \"{subtype}\"(\uc73c)\ub85c \uae30\uae30\uac00 \ud68c\uc804\ub418\uc5c8\uc744 \ub54c",
+            "remote_rotate_from_side_4": "\"\uba74 4\" \uc5d0\uc11c \"{subtype}\"(\uc73c)\ub85c \uae30\uae30\uac00 \ud68c\uc804\ub418\uc5c8\uc744 \ub54c",
+            "remote_rotate_from_side_5": "\"\uba74 5\" \uc5d0\uc11c \"{subtype}\"(\uc73c)\ub85c \uae30\uae30\uac00 \ud68c\uc804\ub418\uc5c8\uc744 \ub54c",
+            "remote_rotate_from_side_6": "\"\uba74 6\" \uc5d0\uc11c \"{subtype}\"(\uc73c)\ub85c \uae30\uae30\uac00 \ud68c\uc804\ub418\uc5c8\uc744 \ub54c",
+            "remote_turned_clockwise": "\uc2dc\uacc4 \ubc29\ud5a5\uc73c\ub85c \uae30\uae30\uac00 \ud68c\uc804\ub418\uc5c8\uc744 \ub54c",
+            "remote_turned_counter_clockwise": "\ubc18\uc2dc\uacc4 \ubc29\ud5a5\uc73c\ub85c \uae30\uae30\uac00 \ud68c\uc804\ub418\uc5c8\uc744 \ub54c"
         }
     },
     "options": {
@@ -92,7 +98,8 @@
             "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "deCONZ CLIP \uc13c\uc11c \ud5c8\uc6a9",
-                    "allow_deconz_groups": "deCONZ \ub77c\uc774\ud2b8 \uadf8\ub8f9 \ud5c8\uc6a9"
+                    "allow_deconz_groups": "deCONZ \ub77c\uc774\ud2b8 \uadf8\ub8f9 \ud5c8\uc6a9",
+                    "allow_new_devices": "\uc0c8\ub85c\uc6b4 \uae30\uae30\uc758 \uc790\ub3d9 \ucd94\uac00 \ud5c8\uc6a9\ud558\uae30"
                 },
                 "description": "deCONZ \uae30\uae30 \uc720\ud615\uc758 \ud45c\uc2dc \uc5ec\ubd80 \uad6c\uc131",
                 "title": "deCONZ \uc635\uc158"

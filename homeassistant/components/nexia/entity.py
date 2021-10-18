@@ -33,7 +33,7 @@ class NexiaEntity(CoordinatorEntity):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
@@ -57,6 +57,7 @@ class NexiaThermostatEntity(NexiaEntity):
             "model": self._thermostat.get_model(),
             "sw_version": self._thermostat.get_firmware(),
             "manufacturer": MANUFACTURER,
+            "configuration_url": self.coordinator.nexia_home.root_url,
         }
 
     async def async_added_to_hass(self):
@@ -83,10 +84,12 @@ class NexiaThermostatZoneEntity(NexiaThermostatEntity):
     def device_info(self):
         """Return the device_info of the device."""
         data = super().device_info
+        zone_name = self._zone.get_name()
         data.update(
             {
                 "identifiers": {(DOMAIN, self._zone.zone_id)},
-                "name": self._zone.get_name(),
+                "name": zone_name,
+                "suggested_area": zone_name,
                 "via_device": (DOMAIN, self._zone.thermostat.thermostat_id),
             }
         )

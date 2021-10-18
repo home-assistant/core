@@ -12,7 +12,7 @@
         "step": {
             "2fa": {
                 "data": {
-                    "2fa": "2FA Pin"
+                    "2fa": "2FA PIN"
                 },
                 "description": "Vuoto",
                 "title": "Autenticazione a due fattori"

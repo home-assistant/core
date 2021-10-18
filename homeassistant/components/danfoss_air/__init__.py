@@ -13,7 +13,7 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-DANFOSS_AIR_PLATFORMS = ["sensor", "binary_sensor", "switch"]
+PLATFORMS = ["sensor", "binary_sensor", "switch"]
 DOMAIN = "danfoss_air"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
@@ -29,7 +29,7 @@ def setup(hass, config):
 
     hass.data[DOMAIN] = DanfossAir(conf[CONF_HOST])
 
-    for platform in DANFOSS_AIR_PLATFORMS:
+    for platform in PLATFORMS:
         discovery.load_platform(hass, platform, DOMAIN, {}, config)
 
     return True

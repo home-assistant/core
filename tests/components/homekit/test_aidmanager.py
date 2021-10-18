@@ -77,7 +77,7 @@ async def test_aid_generation(hass, device_reg, entity_reg):
     aid_storage.delete_aid(get_system_unique_id(light_ent))
     aid_storage.delete_aid(get_system_unique_id(light_ent2))
     aid_storage.delete_aid(get_system_unique_id(remote_ent))
-    aid_storage.delete_aid("non-existant-one")
+    aid_storage.delete_aid("non-existent-one")
 
     for _ in range(0, 2):
         assert (

@@ -26,7 +26,7 @@
                     "event_handled": "\u50b3\u9001\u5df2\u8655\u7406\u4e8b\u4ef6",
                     "event_third_party_packages": "\u50b3\u9001\u7b2c\u4e09\u65b9\u5c01\u5305\u4e8b\u4ef6",
                     "logging_event_level": "\u65e5\u8a8c\u7b49\u7d1a\u76e3\u63a7\u5c07\u6703\u8a3b\u518a\u4e8b\u4ef6\u70ba",
-                    "logging_level": "\u65e5\u8a8c\u7b49\u7d1a\u76e3\u63a7\u5c07\u6703\u7d00\u9304\u4e8b\u4ef6\u70ba\u6a94\u6848\u5c0e\u822a\u70ba",
+                    "logging_level": "\u65e5\u8a8c\u7b49\u7d1a\u76e3\u63a7\u5c07\u6703\u65e5\u8a8c\u4e8b\u4ef6\u70ba\u6a94\u6848\u5c0e\u822a\u70ba",
                     "tracing": "\u958b\u555f\u6548\u80fd\u8ffd\u8e64",
                     "tracing_sample_rate": "\u8ffd\u8e64\u63a1\u6a23\u7bc4\u570d\uff0c\u4ecb\u65bc 0.0 \u53ca 1.0 \u4e4b\u9593\uff081.0 = 100%\uff09"
                 }

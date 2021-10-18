@@ -1,17 +1,25 @@
 """SAJ solar inverter interface."""
+from __future__ import annotations
+
 from datetime import date
 import logging
 
 import pysaj
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_TYPE,
     CONF_USERNAME,
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
@@ -26,7 +34,6 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
 
 _LOGGER = logging.getLogger(__name__)
@@ -104,18 +111,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
         for sensor in hass_sensors:
             state_unknown = False
-            if not values:
-                # SAJ inverters are powered by DC via solar panels and thus are
-                # offline after the sun has set. If a sensor resets on a daily
-                # basis like "today_yield", this reset won't happen automatically.
-                # Code below checks if today > day when sensor was last updated
-                # and if so: set state to None.
-                # Sensors with live values like "temperature" or "current_power"
-                # will also be reset to None.
-                if (sensor.per_day_basis and date.today() > sensor.date_updated) or (
-                    not sensor.per_day_basis and not sensor.per_total_basis
-                ):
-                    state_unknown = True
+            # SAJ inverters are powered by DC via solar panels and thus are
+            # offline after the sun has set. If a sensor resets on a daily
+            # basis like "today_yield", this reset won't happen automatically.
+            # Code below checks if today > day when sensor was last updated
+            # and if so: set state to None.
+            # Sensors with live values like "temperature" or "current_power"
+            # will also be reset to None.
+            if not values and (
+                (sensor.per_day_basis and date.today() > sensor.date_updated)
+                or (not sensor.per_day_basis and not sensor.per_total_basis)
+            ):
+                state_unknown = True
             sensor.async_update_values(unknown_state=state_unknown)
 
         return values
@@ -160,7 +167,7 @@ def async_track_time_interval_backoff(hass, action) -> CALLBACK_TYPE:
     return remove_listener
 
 
-class SAJsensor(Entity):
+class SAJsensor(SensorEntity):
     """Representation of a SAJ sensor."""
 
     def __init__(self, serialnumber, pysaj_sensor, inverter_name=None):
@@ -169,6 +176,11 @@ class SAJsensor(Entity):
         self._inverter_name = inverter_name
         self._serialnumber = serialnumber
         self._state = self._sensor.value
+
+        if pysaj_sensor.name in ("current_power", "temperature"):
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
+        if pysaj_sensor.name == "total_yield":
+            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
 
     @property
     def name(self):
@@ -179,12 +191,12 @@ class SAJsensor(Entity):
         return f"saj_{self._sensor.name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return SAJ_UNIT_MAPPINGS[self._sensor.unit]
 
@@ -193,6 +205,8 @@ class SAJsensor(Entity):
         """Return the device class the sensor belongs to."""
         if self.unit_of_measurement == POWER_WATT:
             return DEVICE_CLASS_POWER
+        if self.unit_of_measurement == ENERGY_KILO_WATT_HOUR:
+            return DEVICE_CLASS_ENERGY
         if (
             self.unit_of_measurement == TEMP_CELSIUS
             or self._sensor.unit == TEMP_FAHRENHEIT

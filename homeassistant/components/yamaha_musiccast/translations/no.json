@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "yxc_control_url_missing": "Kontroll-URL-en er ikke gitt i ssdp-beskrivelsen."
+        },
+        "error": {
+            "no_musiccast_device": "Denne enheten ser ut til \u00e5 v\u00e6re ingen MusicCast-enhet."
+        },
+        "flow_title": "MusicCast: {name}",
+        "step": {
+            "confirm": {
+                "description": "Vil du starte oppsettet?"
+            },
+            "user": {
+                "data": {
+                    "host": "Vert"
+                },
+                "description": "Sett opp MusicCast for \u00e5 integrere med Home Assistant."
+            }
+        }
+    }
+}

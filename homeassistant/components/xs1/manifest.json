@@ -3,5 +3,6 @@
   "name": "EZcontrol XS1",
   "documentation": "https://www.home-assistant.io/integrations/xs1",
   "requirements": ["xs1-api-client==3.0.0"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

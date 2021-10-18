@@ -1,15 +1,15 @@
 """Constants used be the HomeKit component."""
 
+from homeassistant.const import CONF_DEVICES
+
 # #### Misc ####
 DEBOUNCE_TIMEOUT = 0.5
 DEVICE_PRECISION_LEEWAY = 6
 DOMAIN = "homekit"
 HOMEKIT_FILE = ".homekit.state"
-AID_STORAGE = "homekit-aid-allocations"
 HOMEKIT_PAIRING_QR = "homekit-pairing-qr"
 HOMEKIT_PAIRING_QR_SECRET = "homekit-pairing-qr-secret"
 HOMEKIT = "homekit"
-UNDO_UPDATE_LISTENER = "undo_update_listener"
 SHUTDOWN_TIMEOUT = 30
 CONF_ENTRY_INDEX = "index"
 
@@ -23,10 +23,7 @@ AUDIO_CODEC_COPY = "copy"
 # #### Attributes ####
 ATTR_DISPLAY_NAME = "display_name"
 ATTR_VALUE = "value"
-ATTR_INTERGRATION = "platform"
-ATTR_MANUFACTURER = "manufacturer"
-ATTR_MODEL = "model"
-ATTR_SOFTWARE_VERSION = "sw_version"
+ATTR_INTEGRATION = "platform"
 ATTR_KEY_NAME = "key_name"
 # Current attribute used by homekit_controller
 ATTR_OBSTRUCTION_DETECTED = "obstruction-detected"
@@ -42,6 +39,7 @@ CONF_ENTITY_CONFIG = "entity_config"
 CONF_FEATURE = "feature"
 CONF_FEATURE_LIST = "feature_list"
 CONF_FILTER = "filter"
+CONF_EXCLUDE_ACCESSORY_MODE = "exclude_accessory_mode"
 CONF_LINKED_BATTERY_SENSOR = "linked_battery_sensor"
 CONF_LINKED_BATTERY_CHARGING_SENSOR = "linked_battery_charging_sensor"
 CONF_LINKED_DOORBELL_SENSOR = "linked_doorbell_sensor"
@@ -68,12 +66,13 @@ DEFAULT_AUDIO_CODEC = AUDIO_CODEC_OPUS
 DEFAULT_AUDIO_MAP = "0:a:0"
 DEFAULT_AUDIO_PACKET_SIZE = 188
 DEFAULT_AUTO_START = True
+DEFAULT_EXCLUDE_ACCESSORY_MODE = False
 DEFAULT_LOW_BATTERY_THRESHOLD = 20
 DEFAULT_MAX_FPS = 30
 DEFAULT_MAX_HEIGHT = 1080
 DEFAULT_MAX_WIDTH = 1920
-DEFAULT_PORT = 51827
-DEFAULT_CONFIG_FLOW_PORT = 51828
+DEFAULT_PORT = 21063
+DEFAULT_CONFIG_FLOW_PORT = 21064
 DEFAULT_SAFE_MODE = False
 DEFAULT_VIDEO_CODEC = VIDEO_CODEC_LIBX264
 DEFAULT_VIDEO_MAP = "0:v:0"
@@ -99,11 +98,13 @@ HOMEKIT_MODES = [HOMEKIT_MODE_BRIDGE, HOMEKIT_MODE_ACCESSORY]
 # #### HomeKit Component Services ####
 SERVICE_HOMEKIT_START = "start"
 SERVICE_HOMEKIT_RESET_ACCESSORY = "reset_accessory"
+SERVICE_HOMEKIT_UNPAIR = "unpair"
 
 # #### String Constants ####
 BRIDGE_MODEL = "Bridge"
 BRIDGE_NAME = "Home Assistant Bridge"
 SHORT_BRIDGE_NAME = "HASS Bridge"
+SHORT_ACCESSORY_NAME = "HASS Accessory"
 BRIDGE_SERIAL_NUMBER = "homekit.bridge"
 MANUFACTURER = "Home Assistant"
 
@@ -137,6 +138,7 @@ SERV_MOTION_SENSOR = "MotionSensor"
 SERV_OCCUPANCY_SENSOR = "OccupancySensor"
 SERV_OUTLET = "Outlet"
 SERV_SECURITY_SYSTEM = "SecuritySystem"
+SERV_SERVICE_LABEL = "ServiceLabel"
 SERV_SMOKE_SENSOR = "SmokeSensor"
 SERV_SPEAKER = "Speaker"
 SERV_STATELESS_PROGRAMMABLE_SWITCH = "StatelessProgrammableSwitch"
@@ -206,6 +208,8 @@ CHAR_ROTATION_DIRECTION = "RotationDirection"
 CHAR_ROTATION_SPEED = "RotationSpeed"
 CHAR_SATURATION = "Saturation"
 CHAR_SERIAL_NUMBER = "SerialNumber"
+CHAR_SERVICE_LABEL_INDEX = "ServiceLabelIndex"
+CHAR_SERVICE_LABEL_NAMESPACE = "ServiceLabelNamespace"
 CHAR_SLEEP_DISCOVER_MODE = "SleepDiscoveryMode"
 CHAR_SMOKE_DETECTED = "SmokeDetected"
 CHAR_STATUS_LOW_BATTERY = "StatusLowBattery"
@@ -235,8 +239,6 @@ PROP_CELSIUS = {"minValue": -273, "maxValue": 999}
 PROP_VALID_VALUES = "ValidValues"
 
 # #### Device Classes ####
-DEVICE_CLASS_CO = "co"
-DEVICE_CLASS_CO2 = "co2"
 DEVICE_CLASS_DOOR = "door"
 DEVICE_CLASS_GARAGE_DOOR = "garage_door"
 DEVICE_CLASS_GAS = "gas"
@@ -295,4 +297,12 @@ CONFIG_OPTIONS = [
     CONF_SAFE_MODE,
     CONF_ENTITY_CONFIG,
     CONF_HOMEKIT_MODE,
+    CONF_DEVICES,
 ]
+
+# ### Maximum Lengths ###
+MAX_NAME_LENGTH = 64
+MAX_SERIAL_LENGTH = 64
+MAX_MODEL_LENGTH = 64
+MAX_VERSION_LENGTH = 64
+MAX_MANUFACTURER_LENGTH = 64

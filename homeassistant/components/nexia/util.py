@@ -13,4 +13,6 @@ def is_invalid_auth_code(http_status_code):
 
 def percent_conv(val):
     """Convert an actual percentage (0.0-1.0) to 0-100 scale."""
+    if val is None:
+        return None
     return round(val * 100.0, 1)

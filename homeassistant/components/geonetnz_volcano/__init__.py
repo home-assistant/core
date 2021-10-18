@@ -1,8 +1,8 @@
 """The GeoNet NZ Volcano integration."""
-import asyncio
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import logging
-from typing import Optional
 
 from aio_geojson_geonetnz_volcano import GeonetnzVolcanoFeedManager
 import voluptuous as vol
@@ -24,7 +24,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .config_flow import configured_instances
-from .const import DEFAULT_RADIUS, DEFAULT_SCAN_INTERVAL, DOMAIN, FEED
+from .const import DEFAULT_RADIUS, DEFAULT_SCAN_INTERVAL, DOMAIN, FEED, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,14 +93,11 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass, entry):
     """Unload an GeoNet NZ Volcano component config entry."""
-    manager = hass.data[DOMAIN][FEED].pop(config_entry.entry_id)
+    manager = hass.data[DOMAIN][FEED].pop(entry.entry_id)
     await manager.async_stop()
-    await asyncio.wait(
-        [hass.config_entries.async_forward_entry_unload(config_entry, "sensor")]
-    )
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class GeonetnzVolcanoFeedEntityManager:
@@ -132,11 +129,7 @@ class GeonetnzVolcanoFeedEntityManager:
     async def async_init(self):
         """Schedule initial and regular updates based on configured time interval."""
 
-        self._hass.async_create_task(
-            self._hass.config_entries.async_forward_entry_setup(
-                self._config_entry, "sensor"
-            )
-        )
+        self._hass.config_entries.async_setup_platforms(self._config_entry, PLATFORMS)
 
         async def update(event_time):
             """Update."""
@@ -172,11 +165,11 @@ class GeonetnzVolcanoFeedEntityManager:
         """Get feed entry by external id."""
         return self._feed_manager.feed_entries.get(external_id)
 
-    def last_update(self) -> Optional[datetime]:
+    def last_update(self) -> datetime | None:
         """Return the last update of this feed."""
         return self._feed_manager.last_update
 
-    def last_update_successful(self) -> Optional[datetime]:
+    def last_update_successful(self) -> datetime | None:
         """Return the last successful update of this feed."""
         return self._feed_manager.last_update_successful
 

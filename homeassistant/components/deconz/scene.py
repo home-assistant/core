@@ -5,7 +5,6 @@ from homeassistant.components.scene import Scene
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import NEW_SCENE
 from .gateway import get_gateway_from_config_entry
 
 
@@ -21,9 +20,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if entities:
             async_add_entities(entities)
 
-    gateway.listeners.append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(
-            hass, gateway.async_signal_new_device(NEW_SCENE), async_add_scene
+            hass,
+            gateway.signal_new_scene,
+            async_add_scene,
         )
     )
 
@@ -38,6 +39,8 @@ class DeconzScene(Scene):
         self._scene = scene
         self.gateway = gateway
 
+        self._attr_name = scene.full_name
+
     async def async_added_to_hass(self):
         """Subscribe to sensors events."""
         self.gateway.deconz_ids[self.entity_id] = self._scene.deconz_id
@@ -49,9 +52,4 @@ class DeconzScene(Scene):
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
-        await self._scene.async_set_state({})
-
-    @property
-    def name(self):
-        """Return the name of the scene."""
-        return self._scene.full_name
+        await self._scene.recall()

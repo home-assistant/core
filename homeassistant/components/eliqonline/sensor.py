@@ -6,11 +6,14 @@ import logging
 import eliqonline
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, POWER_WATT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,8 +55,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([EliqSensor(api, channel_id, name)], True)
 
 
-class EliqSensor(Entity):
+class EliqSensor(SensorEntity):
     """Implementation of an ELIQ Online sensor."""
+
+    _attr_state_class = STATE_CLASS_MEASUREMENT
 
     def __init__(self, api, channel_id, name):
         """Initialize the sensor."""
@@ -73,12 +78,12 @@ class EliqSensor(Entity):
         return ICON
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return UNIT_OF_MEASUREMENT
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._state
 

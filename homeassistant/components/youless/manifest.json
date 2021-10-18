@@ -1,0 +1,9 @@
+{
+  "domain": "youless",
+  "name": "YouLess",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/youless",
+  "requirements": ["youless-api==0.14"],
+  "codeowners": ["@gjong"],
+  "iot_class": "local_polling"
+}

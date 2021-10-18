@@ -1,4 +1,5 @@
 """Support to interface with the Plex API."""
+from itertools import islice
 import logging
 
 from homeassistant.components.media_player import BrowseMedia
@@ -17,6 +18,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.components.media_player.errors import BrowseError
 
 from .const import DOMAIN
+from .helpers import pretty_title
 
 
 class UnknownMediaType(BrowseError):
@@ -32,9 +34,10 @@ PLAYLISTS_BROWSE_PAYLOAD = {
     "can_play": False,
     "can_expand": True,
 }
-SPECIAL_METHODS = {
-    "On Deck": "onDeck",
-    "Recently Added": "recentlyAdded",
+
+LIBRARY_PREFERRED_LIBTYPE = {
+    "show": "episode",
+    "artist": "album",
 }
 
 ITEM_TYPE_MEDIA_CLASS = {
@@ -52,10 +55,12 @@ ITEM_TYPE_MEDIA_CLASS = {
 _LOGGER = logging.getLogger(__name__)
 
 
-def browse_media(entity, is_internal, media_content_type=None, media_content_id=None):
+def browse_media(  # noqa: C901
+    entity, is_internal, media_content_type=None, media_content_id=None
+):
     """Implement the websocket media browsing helper."""
 
-    def item_payload(item):
+    def item_payload(item, short_name=False):
         """Create response payload for a single media item."""
         try:
             media_class = ITEM_TYPE_MEDIA_CLASS[item.type]
@@ -63,7 +68,7 @@ def browse_media(entity, is_internal, media_content_type=None, media_content_id=
             _LOGGER.debug("Unknown type received: %s", item.type)
             raise UnknownMediaType from err
         payload = {
-            "title": item.title,
+            "title": pretty_title(item, short_name),
             "media_class": media_class,
             "media_content_id": str(item.ratingKey),
             "media_content_type": item.type,
@@ -127,7 +132,7 @@ def browse_media(entity, is_internal, media_content_type=None, media_content_id=
             media_info.children = []
             for item in media:
                 try:
-                    media_info.children.append(item_payload(item))
+                    media_info.children.append(item_payload(item, short_name=True))
                 except UnknownMediaType:
                     continue
         return media_info
@@ -153,7 +158,7 @@ def browse_media(entity, is_internal, media_content_type=None, media_content_id=
             title = entity.plex_server.friendly_name
         elif media_content_type == "library":
             library_or_section = entity.plex_server.library.sectionByID(
-                media_content_id
+                int(media_content_id)
             )
             title = library_or_section.title
             try:
@@ -178,8 +183,22 @@ def browse_media(entity, is_internal, media_content_type=None, media_content_id=
             "children_media_class": children_media_class,
         }
 
-        method = SPECIAL_METHODS[special_folder]
-        items = getattr(library_or_section, method)()
+        if special_folder == "On Deck":
+            items = library_or_section.onDeck()
+        elif special_folder == "Recently Added":
+            if library_or_section.TYPE:
+                libtype = LIBRARY_PREFERRED_LIBTYPE.get(
+                    library_or_section.TYPE, library_or_section.TYPE
+                )
+                items = library_or_section.recentlyAdded(libtype=libtype)
+            else:
+                recent_iter = (
+                    x
+                    for x in library_or_section.search(sort="addedAt:desc", limit=100)
+                    if x.type in ["album", "episode", "movie"]
+                )
+                items = list(islice(recent_iter, 30))
+
         for item in items:
             try:
                 payload["children"].append(item_payload(item))
@@ -189,11 +208,11 @@ def browse_media(entity, is_internal, media_content_type=None, media_content_id=
         return BrowseMedia(**payload)
 
     try:
-        if media_content_type in ["server", None]:
+        if media_content_type in ("server", None):
             return server_payload(entity.plex_server)
 
         if media_content_type == "library":
-            return library_payload(media_content_id)
+            return library_payload(int(media_content_id))
 
     except UnknownMediaType as err:
         raise BrowseError(
@@ -223,7 +242,7 @@ def library_section_payload(section):
     return BrowseMedia(
         title=section.title,
         media_class=MEDIA_CLASS_DIRECTORY,
-        media_content_id=section.key,
+        media_content_id=str(section.key),
         media_content_type="library",
         can_play=False,
         can_expand=True,

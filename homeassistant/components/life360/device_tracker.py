@@ -189,7 +189,7 @@ class Life360Scanner:
                     {
                         ATTR_ENTITY_ID: f"{DEVICE_TRACKER_DOMAIN}.{dev_id}",
                         ATTR_WAIT: str(last_seen - (prev_seen or self._started)).split(
-                            "."
+                            ".", maxsplit=1
                         )[0],
                     },
                 )

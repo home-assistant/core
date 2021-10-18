@@ -11,12 +11,11 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_DEVICE_ID
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DEVICE_ID = "device_id"
 CONF_DEVICE_IDS = "device_ids"
 CONF_DEVICE_NAMES = "device_names"
 
@@ -36,10 +35,9 @@ def get_service(hass, config, discovery_info=None):
     device_id = config.get(CONF_DEVICE_ID)
     device_ids = config.get(CONF_DEVICE_IDS)
     device_names = config.get(CONF_DEVICE_NAMES)
-    if api_key:
-        if not get_devices(api_key):
-            _LOGGER.error("Error connecting to Join. Check the API key")
-            return False
+    if api_key and not get_devices(api_key):
+        _LOGGER.error("Error connecting to Join. Check the API key")
+        return False
     if device_id is None and device_ids is None and device_names is None:
         _LOGGER.error(
             "No device was provided. Please specify device_id"
@@ -61,7 +59,6 @@ class JoinNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         data = kwargs.get(ATTR_DATA) or {}
         send_notification(

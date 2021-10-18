@@ -2,7 +2,9 @@
 
 from unittest.mock import patch
 
-from homeassistant import config_entries, data_entry_flow, setup
+from aiohttp import ClientError
+
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.aurora.const import DOMAIN
 
 from tests.common import MockConfigEntry
@@ -16,7 +18,7 @@ DATA = {
 
 async def test_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -27,8 +29,6 @@ async def test_form(hass):
         "homeassistant.components.aurora.config_flow.AuroraForecast.get_forecast_data",
         return_value=True,
     ), patch(
-        "homeassistant.components.aurora.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.aurora.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -41,21 +41,19 @@ async def test_form(hass):
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Aurora - Home"
     assert result2["data"] == DATA
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_cannot_connect(hass):
     """Test if invalid response or no connection returned from the API."""
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
         "homeassistant.components.aurora.AuroraForecast.get_forecast_data",
-        side_effect=ConnectionError,
+        side_effect=ClientError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -69,7 +67,7 @@ async def test_form_cannot_connect(hass):
 
 async def test_with_unknown_error(hass):
     """Test with unknown error response from the API."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

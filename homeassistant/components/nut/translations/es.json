@@ -33,6 +33,10 @@
         }
     },
     "options": {
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "unknown": "Error inesperado"
+        },
         "step": {
             "init": {
                 "data": {

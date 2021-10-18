@@ -1,6 +1,8 @@
 """Support for Locative."""
+from __future__ import annotations
+
+from http import HTTPStatus
 import logging
-from typing import Dict
 
 from aiohttp import web
 import voluptuous as vol
@@ -11,8 +13,6 @@ from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONF_WEBHOOK_ID,
-    HTTP_OK,
-    HTTP_UNPROCESSABLE_ENTITY,
     STATE_NOT_HOME,
 )
 from homeassistant.helpers import config_entry_flow
@@ -24,6 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "locative"
 TRACKER_UPDATE = f"{DOMAIN}_tracker_update"
 
+PLATFORMS = [DEVICE_TRACKER]
 
 ATTR_DEVICE_ID = "device"
 ATTR_TRIGGER = "trigger"
@@ -34,7 +35,7 @@ def _id(value: str) -> str:
     return value.replace("-", "")
 
 
-def _validate_test_mode(obj: Dict) -> Dict:
+def _validate_test_mode(obj: dict) -> dict:
     """Validate that id is provided outside of test mode."""
     if ATTR_ID not in obj and obj[ATTR_TRIGGER] != "test":
         raise vol.Invalid("Location id not specified")
@@ -67,7 +68,9 @@ async def handle_webhook(hass, webhook_id, request):
     try:
         data = WEBHOOK_SCHEMA(dict(await request.post()))
     except vol.MultipleInvalid as error:
-        return web.Response(text=error.error_message, status=HTTP_UNPROCESSABLE_ENTITY)
+        return web.Response(
+            text=error.error_message, status=HTTPStatus.UNPROCESSABLE_ENTITY
+        )
 
     device = data[ATTR_DEVICE_ID]
     location_name = data.get(ATTR_ID, data[ATTR_TRIGGER]).lower()
@@ -76,7 +79,7 @@ async def handle_webhook(hass, webhook_id, request):
 
     if direction == "enter":
         async_dispatcher_send(hass, TRACKER_UPDATE, device, gps_location, location_name)
-        return web.Response(text=f"Setting location to {location_name}", status=HTTP_OK)
+        return web.Response(text=f"Setting location to {location_name}")
 
     if direction == "exit":
         current_state = hass.states.get(f"{DEVICE_TRACKER}.{device}")
@@ -86,7 +89,7 @@ async def handle_webhook(hass, webhook_id, request):
             async_dispatcher_send(
                 hass, TRACKER_UPDATE, device, gps_location, location_name
             )
-            return web.Response(text="Setting location to not home", status=HTTP_OK)
+            return web.Response(text="Setting location to not home")
 
         # Ignore the message if it is telling us to exit a zone that we
         # aren't currently in. This occurs when a zone is entered
@@ -94,18 +97,17 @@ async def handle_webhook(hass, webhook_id, request):
         # be sent first, then the exit message will be sent second.
         return web.Response(
             text=f"Ignoring exit from {location_name} (already in {current_state})",
-            status=HTTP_OK,
         )
 
     if direction == "test":
         # In the app, a test message can be sent. Just return something to
         # the user to let them know that it works.
-        return web.Response(text="Received test message.", status=HTTP_OK)
+        return web.Response(text="Received test message.")
 
     _LOGGER.error("Received unidentified message from Locative: %s", direction)
     return web.Response(
         text=f"Received unidentified message: {direction}",
-        status=HTTP_UNPROCESSABLE_ENTITY,
+        status=HTTPStatus.UNPROCESSABLE_ENTITY,
     )
 
 
@@ -115,9 +117,7 @@ async def async_setup_entry(hass, entry):
         DOMAIN, "Locative", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, DEVICE_TRACKER)
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
@@ -125,7 +125,7 @@ async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
     hass.data[DOMAIN]["unsub_device_tracker"].pop(entry.entry_id)()
-    return await hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async_remove_entry = config_entry_flow.webhook_async_remove_entry

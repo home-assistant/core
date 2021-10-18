@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(".")
 
 DOMAIN = "homematicip_cloud"
 
-COMPONENTS = [
+PLATFORMS = [
     ALARM_CONTROL_PANEL_DOMAIN,
     BINARY_SENSOR_DOMAIN,
     CLIMATE_DOMAIN,

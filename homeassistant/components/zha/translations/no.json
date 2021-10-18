@@ -1,12 +1,18 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
+            "not_zha_device": "Denne enheten er ikke en zha -enhet",
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig.",
+            "usb_probe_failed": "Kunne ikke unders\u00f8ke usb -enheten"
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes"
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm": {
+                "description": "Vil du konfigurere {name}?"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "Radio type"
@@ -30,6 +36,21 @@
                 "description": "Velg seriell port for Zigbee radio",
                 "title": ""
             }
+        }
+    },
+    "config_panel": {
+        "zha_alarm_options": {
+            "alarm_arm_requires_code": "Kode kreves for tilkobling",
+            "alarm_failed_tries": "Antall p\u00e5f\u00f8lgende mislykkede kodeoppf\u00f8ringer for \u00e5 utl\u00f8se en alarm",
+            "alarm_master_code": "Hovedkode for alarmens kontrollpanel(er)",
+            "title": "Alternativer for alarmkontrollpanel"
+        },
+        "zha_options": {
+            "consider_unavailable_battery": "Vurder batteridrevne enheter som utilgjengelige etter (sekunder)",
+            "consider_unavailable_mains": "Tenk p\u00e5 str\u00f8mnettet som ikke er tilgjengelig etter (sekunder)",
+            "default_light_transition": "Standard lysovergangstid (sekunder)",
+            "enable_identify_on_join": "Aktiver identifiseringseffekt n\u00e5r enheter blir med i nettverket",
+            "title": "Globale alternativer"
         }
     },
     "device_automation": {

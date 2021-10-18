@@ -6,10 +6,9 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import DATA_MEGABYTES
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,13 +44,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     path = config.get(CONF_FOLDER_PATHS)
 
     if not hass.config.is_allowed_path(path):
-        _LOGGER.error("folder %s is not valid or allowed", path)
+        _LOGGER.error("Folder %s is not valid or allowed", path)
     else:
         folder = Folder(path, config.get(CONF_FILTER))
         add_entities([folder], True)
 
 
-class Folder(Entity):
+class Folder(SensorEntity):
     """Representation of a folder."""
 
     ICON = "mdi:folder"
@@ -80,7 +79,7 @@ class Folder(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         decimals = 2
         size_mb = round(self._size / 1e6, decimals)
@@ -92,7 +91,7 @@ class Folder(Entity):
         return self.ICON
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other details about the sensor state."""
         return {
             "path": self._folder_path,
@@ -103,6 +102,6 @@ class Folder(Entity):
         }
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement

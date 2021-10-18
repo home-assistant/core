@@ -4,7 +4,6 @@ CONF_FIRE_EVENT = "fire_event"
 CONF_DATA_BITS = "data_bits"
 CONF_AUTOMATIC_ADD = "automatic_add"
 CONF_SIGNAL_REPETITIONS = "signal_repetitions"
-CONF_DEBUG = "debug"
 CONF_OFF_DELAY = "off_delay"
 CONF_VENETIAN_BLIND_MODE = "venetian_blind_mode"
 
@@ -19,6 +18,7 @@ COMMAND_ON_LIST = [
     "On",
     "Up",
     "Stop",
+    "Group on",
     "Open (inline relay)",
     "Stop (inline relay)",
     "Enable sun automation",
@@ -26,9 +26,15 @@ COMMAND_ON_LIST = [
 
 COMMAND_OFF_LIST = [
     "Off",
+    "Group off",
     "Down",
     "Close (inline relay)",
     "Disable sun automation",
+]
+
+COMMAND_GROUP_LIST = [
+    "Group on",
+    "Group off",
 ]
 
 ATTR_EVENT = "event"

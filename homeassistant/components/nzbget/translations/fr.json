@@ -15,9 +15,9 @@
                     "name": "Nom",
                     "password": "Mot de passe",
                     "port": "Port",
-                    "ssl": "NZBGet utilise un certificat SSL",
+                    "ssl": "Utilise un certificat SSL",
                     "username": "Nom d'utilisateur",
-                    "verify_ssl": "NZBGet utilise un certificat appropri\u00e9"
+                    "verify_ssl": "V\u00e9rifier le certificat SSL"
                 },
                 "title": "Se connecter \u00e0 NZBGet"
             }

@@ -1,5 +1,5 @@
 """Allows to configure a switch using RPi GPIO."""
-from pi4ioe5v9xxxx import pi4ioe5v9xxxx  # pylint: disable=import-error
+from pi4ioe5v9xxxx import pi4ioe5v9xxxx
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity

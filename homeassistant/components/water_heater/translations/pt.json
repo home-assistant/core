@@ -4,5 +4,15 @@
             "turn_off": "Desligar {entity_name}",
             "turn_on": "Ligar {entity_name}"
         }
+    },
+    "state": {
+        "_": {
+            "eco": "Eco",
+            "electric": "El\u00e9trico",
+            "gas": "G\u00e1s",
+            "heat_pump": "Bomba de calor",
+            "high_demand": "Necessidade alta",
+            "off": "Desligado"
+        }
     }
 }

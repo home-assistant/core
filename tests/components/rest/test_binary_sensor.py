@@ -2,7 +2,7 @@
 
 import asyncio
 from os import path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import httpx
 import respx
@@ -26,7 +26,7 @@ async def test_setup_missing_basic_config(hass):
         hass, binary_sensor.DOMAIN, {"binary_sensor": {"platform": "rest"}}
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
+    assert len(hass.states.async_all("binary_sensor")) == 0
 
 
 async def test_setup_missing_config(hass):
@@ -43,13 +43,16 @@ async def test_setup_missing_config(hass):
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
+    assert len(hass.states.async_all("binary_sensor")) == 0
 
 
 @respx.mock
-async def test_setup_failed_connect(hass):
+async def test_setup_failed_connect(hass, caplog):
     """Test setup when connection error occurs."""
-    respx.get("http://localhost").mock(side_effect=httpx.RequestError)
+
+    respx.get("http://localhost").mock(
+        side_effect=httpx.RequestError("server offline", request=MagicMock())
+    )
     assert await async_setup_component(
         hass,
         binary_sensor.DOMAIN,
@@ -62,7 +65,8 @@ async def test_setup_failed_connect(hass):
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
+    assert len(hass.states.async_all("binary_sensor")) == 0
+    assert "server offline" in caplog.text
 
 
 @respx.mock
@@ -81,7 +85,7 @@ async def test_setup_timeout(hass):
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
+    assert len(hass.states.async_all("binary_sensor")) == 0
 
 
 @respx.mock
@@ -100,7 +104,7 @@ async def test_setup_minimum(hass):
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all("binary_sensor")) == 1
 
 
 @respx.mock
@@ -118,7 +122,7 @@ async def test_setup_minimum_resource_template(hass):
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all("binary_sensor")) == 1
 
 
 @respx.mock
@@ -137,7 +141,7 @@ async def test_setup_duplicate_resource_template(hass):
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
+    assert len(hass.states.async_all("binary_sensor")) == 0
 
 
 @respx.mock
@@ -165,7 +169,7 @@ async def test_setup_get(hass):
     )
 
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all("binary_sensor")) == 1
 
 
 @respx.mock
@@ -193,7 +197,7 @@ async def test_setup_get_digest_auth(hass):
     )
 
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all("binary_sensor")) == 1
 
 
 @respx.mock
@@ -221,7 +225,7 @@ async def test_setup_post(hass):
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all("binary_sensor")) == 1
 
 
 @respx.mock
@@ -248,7 +252,7 @@ async def test_setup_get_off(hass):
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all("binary_sensor")) == 1
 
     state = hass.states.get("binary_sensor.foo")
     assert state.state == STATE_OFF
@@ -278,7 +282,7 @@ async def test_setup_get_on(hass):
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all("binary_sensor")) == 1
 
     state = hass.states.get("binary_sensor.foo")
     assert state.state == STATE_ON
@@ -304,7 +308,7 @@ async def test_setup_with_exception(hass):
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all("binary_sensor")) == 1
 
     state = hass.states.get("binary_sensor.foo")
     assert state.state == STATE_OFF
@@ -348,7 +352,7 @@ async def test_reload(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all("binary_sensor")) == 1
 
     assert hass.states.get("binary_sensor.mockrest")
 
@@ -387,7 +391,7 @@ async def test_setup_query_params(hass):
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all("binary_sensor")) == 1
 
 
 def _get_fixtures_base_path():

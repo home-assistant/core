@@ -1,5 +1,7 @@
 """Test different accessory types: Media Players."""
 
+import pytest
+
 from homeassistant.components.homekit.const import (
     ATTR_KEY_NAME,
     ATTR_VALUE,
@@ -37,7 +39,7 @@ from homeassistant.const import (
     STATE_STANDBY,
 )
 from homeassistant.core import CoreState
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import async_mock_service
 
@@ -61,7 +63,7 @@ async def test_media_player_set_state(hass, hk_driver, events):
     )
     await hass.async_block_till_done()
     acc = MediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, config)
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -203,7 +205,7 @@ async def test_media_player_television(hass, hk_driver, events, caplog):
     )
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -242,7 +244,7 @@ async def test_media_player_television(hass, hk_driver, events, caplog):
     hass.states.async_set(entity_id, STATE_ON, {ATTR_INPUT_SOURCE: "HDMI 5"})
     await hass.async_block_till_done()
     assert acc.char_input_source.value == 0
-    assert caplog.records[-2].levelname == "WARNING"
+    assert caplog.records[-2].levelname == "DEBUG"
 
     # Set from HomeKit
     call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
@@ -353,8 +355,9 @@ async def test_media_player_television(hass, hk_driver, events, caplog):
 
     hass.bus.async_listen(EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED, listener)
 
-    await hass.async_add_executor_job(acc.char_remote_key.client_update_value, 20)
-    await hass.async_block_till_done()
+    with pytest.raises(ValueError):
+        await hass.async_add_executor_job(acc.char_remote_key.client_update_value, 20)
+        await hass.async_block_till_done()
 
     await hass.async_add_executor_job(acc.char_remote_key.client_update_value, 7)
     await hass.async_block_till_done()
@@ -375,7 +378,7 @@ async def test_media_player_television_basic(hass, hk_driver, events, caplog):
     )
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
 
     assert acc.chars_tv == [CHAR_REMOTE_KEY]
@@ -411,7 +414,7 @@ async def test_media_player_television_supports_source_select_no_sources(
     )
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
 
     assert acc.support_select_source is False
@@ -421,7 +424,7 @@ async def test_tv_restore(hass, hk_driver, events):
     """Test setting up an entity from state in the event registry."""
     hass.state = CoreState.not_running
 
-    registry = await entity_registry.async_get_registry(hass)
+    registry = er.async_get(hass)
 
     registry.async_get_or_create(
         "media_player",

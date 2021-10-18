@@ -1,5 +1,6 @@
 """Tests for the mobile app integration."""
 from homeassistant.components.mobile_app.const import DATA_DELETED_IDS, DOMAIN
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import CALL_SERVICE
 
@@ -30,8 +31,8 @@ async def test_remove_entry(hass, create_registrations):
         await hass.config_entries.async_remove(config_entry.entry_id)
         assert config_entry.data["webhook_id"] in hass.data[DOMAIN][DATA_DELETED_IDS]
 
-    dev_reg = await hass.helpers.device_registry.async_get_registry()
+    dev_reg = dr.async_get(hass)
     assert len(dev_reg.devices) == 0
 
-    ent_reg = await hass.helpers.entity_registry.async_get_registry()
+    ent_reg = er.async_get(hass)
     assert len(ent_reg.entities) == 0

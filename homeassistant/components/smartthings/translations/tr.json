@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "webhook_error": "SmartThings, webhook URL'sini do\u011frulayamad\u0131. L\u00fctfen webhook URL'sinin internetten eri\u015filebilir oldu\u011fundan emin olun ve tekrar deneyin."
+        },
+        "step": {
+            "pat": {
+                "data": {
+                    "access_token": "Eri\u015fim Belirteci"
+                }
+            },
+            "select_location": {
+                "title": "Konum Se\u00e7in"
+            }
+        }
+    }
+}

@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "device_exists": "Perangkat sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host (atau alamat IP) perangkat twinkly Anda"
+                },
+                "description": "Siapkan string led Twinkly Anda",
+                "title": "Twinkly"
+            }
+        }
+    }
+}

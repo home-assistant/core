@@ -1,11 +1,15 @@
 """Harmony data object which contains the Harmony Client."""
+from __future__ import annotations
 
+import asyncio
+from collections.abc import Iterable
 import logging
-from typing import Iterable
 
 from aioharmony.const import ClientCallbackType, SendCommandDevice
 import aioharmony.exceptions as aioexc
 from aioharmony.harmonyapi import HarmonyAPI as HarmonyClient
+
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import ACTIVITY_POWER_OFF
 from .subscriber import HarmonySubscriberMixin
@@ -22,29 +26,24 @@ class HarmonyData(HarmonySubscriberMixin):
         self._name = name
         self._unique_id = unique_id
         self._available = False
+        self._client = None
+        self._address = address
 
-        callbacks = {
-            "config_updated": self._config_updated,
-            "connect": self._connected,
-            "disconnect": self._disconnected,
-            "new_activity_starting": self._activity_starting,
-            "new_activity": self._activity_started,
-        }
-        self._client = HarmonyClient(
-            ip_address=address, callbacks=ClientCallbackType(**callbacks)
-        )
+    @property
+    def activities(self):
+        """List of all non-poweroff activity objects."""
+        activity_infos = self._client.config.get("activity", [])
+        return [
+            info
+            for info in activity_infos
+            if info["label"] is not None and info["label"] != ACTIVITY_POWER_OFF
+        ]
 
     @property
     def activity_names(self):
         """Names of all the remotes activities."""
-        activity_infos = self._client.config.get("activity", [])
+        activity_infos = self.activities
         activities = [activity["label"] for activity in activity_infos]
-
-        # Remove both ways of representing PowerOff
-        if None in activities:
-            activities.remove(None)
-        if ACTIVITY_POWER_OFF in activities:
-            activities.remove(ACTIVITY_POWER_OFF)
 
         return activities
 
@@ -101,15 +100,36 @@ class HarmonyData(HarmonySubscriberMixin):
     async def connect(self) -> bool:
         """Connect to the Harmony Hub."""
         _LOGGER.debug("%s: Connecting", self._name)
+
+        callbacks = {
+            "config_updated": self._config_updated,
+            "connect": self._connected,
+            "disconnect": self._disconnected,
+            "new_activity_starting": self._activity_starting,
+            "new_activity": self._activity_started,
+        }
+        self._client = HarmonyClient(
+            ip_address=self._address, callbacks=ClientCallbackType(**callbacks)
+        )
+
+        connected = False
         try:
-            if not await self._client.connect():
-                _LOGGER.warning("%s: Unable to connect to HUB", self._name)
-                await self._client.close()
-                return False
-        except aioexc.TimeOut:
-            _LOGGER.warning("%s: Connection timed-out", self._name)
-            return False
-        return True
+            connected = await self._client.connect()
+        except (asyncio.TimeoutError, aioexc.TimeOut) as err:
+            await self._client.close()
+            raise ConfigEntryNotReady(
+                f"{self._name}: Connection timed-out to {self._address}:8088"
+            ) from err
+        except (ValueError, AttributeError) as err:
+            await self._client.close()
+            raise ConfigEntryNotReady(
+                f"{self._name}: Error {err} while connected HUB at: {self._address}:8088"
+            ) from err
+        if not connected:
+            await self._client.close()
+            raise ConfigEntryNotReady(
+                f"{self._name}: Unable to connect to HUB at: {self._address}:8088"
+            )
 
     async def shutdown(self):
         """Close connection on shutdown."""
@@ -155,10 +175,12 @@ class HarmonyData(HarmonySubscriberMixin):
             )
             return
 
+        await self.async_lock_start_activity()
         try:
             await self._client.start_activity(activity_id)
         except aioexc.TimeOut:
             _LOGGER.error("%s: Starting activity %s timed-out", self.name, activity)
+            self.async_unlock_start_activity()
 
     async def async_power_off(self):
         """Start the PowerOff activity."""

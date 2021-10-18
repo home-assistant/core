@@ -1,13 +1,17 @@
 """Start Home Assistant."""
+from __future__ import annotations
+
 import argparse
+import faulthandler
 import os
 import platform
 import subprocess
 import sys
 import threading
-from typing import List
 
 from homeassistant.const import REQUIRED_PYTHON_VER, RESTART_EXIT_CODE, __version__
+
+FAULT_LOG_FILENAME = "home-assistant.log.fault"
 
 
 def validate_python() -> None:
@@ -131,21 +135,20 @@ def get_arguments() -> argparse.Namespace:
 def daemonize() -> None:
     """Move current process to daemon process."""
     # Create first fork
-    pid = os.fork()
-    if pid > 0:
+    if os.fork() > 0:
         sys.exit(0)
 
     # Decouple fork
     os.setsid()
 
     # Create second fork
-    pid = os.fork()
-    if pid > 0:
+    if os.fork() > 0:
         sys.exit(0)
 
     # redirect standard file descriptors to devnull
-    infd = open(os.devnull)
-    outfd = open(os.devnull, "a+")
+    # pylint: disable=consider-using-with
+    infd = open(os.devnull, encoding="utf8")
+    outfd = open(os.devnull, "a+", encoding="utf8")
     sys.stdout.flush()
     sys.stderr.flush()
     os.dup2(infd.fileno(), sys.stdin.fileno())
@@ -157,7 +160,7 @@ def check_pid(pid_file: str) -> None:
     """Check that Home Assistant is not already running."""
     # Check pid file
     try:
-        with open(pid_file) as file:
+        with open(pid_file, encoding="utf8") as file:
             pid = int(file.readline())
     except OSError:
         # PID File does not exist
@@ -180,7 +183,7 @@ def write_pid(pid_file: str) -> None:
     """Create a PID File."""
     pid = os.getpid()
     try:
-        with open(pid_file, "w") as file:
+        with open(pid_file, "w", encoding="utf8") as file:
             file.write(str(pid))
     except OSError:
         print(f"Fatal Error: Unable to write pid file {pid_file}")
@@ -206,7 +209,7 @@ def closefds_osx(min_fd: int, max_fd: int) -> None:
             pass
 
 
-def cmdline() -> List[str]:
+def cmdline() -> list[str]:
     """Collect path and arguments to re-execute the current hass instance."""
     if os.path.basename(sys.argv[0]) == "__main__.py":
         modulepath = os.path.dirname(sys.argv[0])
@@ -309,7 +312,15 @@ def main() -> int:
         open_ui=args.open_ui,
     )
 
-    exit_code = runner.run(runtime_conf)
+    fault_file_name = os.path.join(config_dir, FAULT_LOG_FILENAME)
+    with open(fault_file_name, mode="a", encoding="utf8") as fault_file:
+        faulthandler.enable(fault_file)
+        exit_code = runner.run(runtime_conf)
+        faulthandler.disable()
+
+    if os.path.getsize(fault_file_name) == 0:
+        os.remove(fault_file_name)
+
     if exit_code == RESTART_EXIT_CODE and not args.runner:
         try_to_restart()
 

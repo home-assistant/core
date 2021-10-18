@@ -2,8 +2,7 @@
 
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 
-DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S%z"
-TEST_DATETIME_STRING = "2020-04-25 12:00:00+0000"
+TEST_DATETIME_STRING = "2020-04-25T12:00:00+00:00"
 
 TEST_API_KEY = "test-metoffice-api-key"
 

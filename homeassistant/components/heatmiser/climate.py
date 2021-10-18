@@ -1,6 +1,7 @@
 """Support for the PRT Heatmiser themostats using the V3 protocol."""
+from __future__ import annotations
+
 import logging
-from typing import List
 
 from heatmiserV3 import connection, heatmiser
 import voluptuous as vol
@@ -103,7 +104,7 @@ class HeatmiserV3Thermostat(ClimateEntity):
         return self._hvac_mode
 
     @property
-    def hvac_modes(self) -> List[str]:
+    def hvac_modes(self) -> list[str]:
         """Return the list of available hvac operation modes.
 
         Need to be a subset of HVAC_MODES.

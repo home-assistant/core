@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "L'accordo selezionato \u00e8 gi\u00e0 configurato.",
-            "authorize_url_fail": "Errore sconosciuto nel generare l'url di autorizzazione",
             "authorize_url_timeout": "Tempo scaduto nel generare l'URL di autorizzazione.",
             "missing_configuration": "Il componente non \u00e8 configurato. Si prega di seguire la documentazione.",
             "no_agreements": "Questo account non ha display Toon.",

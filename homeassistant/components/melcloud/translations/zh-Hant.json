@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u5df2\u4f7f\u7528\u6b64\u90f5\u4ef6\u8a2d\u5b9a MELCloud \u6574\u5408\u3002\u5b58\u53d6\u5bc6\u9470\u5df2\u66f4\u65b0\u3002"
+            "already_configured": "\u5df2\u4f7f\u7528\u6b64\u90f5\u4ef6\u8a2d\u5b9a MELCloud \u6574\u5408\u3002\u5b58\u53d6\u6b0a\u6756\u5df2\u66f4\u65b0\u3002"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",

@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Akun sudah dikonfigurasi",
+            "reauth_successful": "Autentikasi ulang berhasil"
+        },
+        "error": {
+            "invalid_auth": "Autentikasi tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "installation": {
+                "data": {
+                    "giid": "Instalasi"
+                },
+                "description": "Home Assistant menemukan beberapa instalasi Verisure di akun My Pages. Pilih instalasi untuk ditambahkan ke Home Assistant."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "description": "Autentikasi ulang dengan akun Verisure My Pages Anda.",
+                    "email": "Email",
+                    "password": "Kata Sandi"
+                }
+            },
+            "user": {
+                "data": {
+                    "description": "Masuk dengan akun Verisure My Pages Anda.",
+                    "email": "Email",
+                    "password": "Kata Sandi"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "code_format_mismatch": "Kode PIN default tidak cocok dengan jumlah digit yang diperlukan"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "lock_code_digits": "Jumlah digit dalam kode PIN untuk kunci",
+                    "lock_default_code": "Kode PIN default untuk kunci, digunakan jika tidak ada yang diberikan"
+                }
+            }
+        }
+    }
+}

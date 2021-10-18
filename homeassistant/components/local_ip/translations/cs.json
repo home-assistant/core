@@ -5,9 +5,6 @@
         },
         "step": {
             "user": {
-                "data": {
-                    "name": "N\u00e1zev senzoru"
-                },
                 "description": "Chcete za\u010d\u00edt nastavovat?",
                 "title": "M\u00edstn\u00ed IP adresa"
             }

@@ -9,16 +9,6 @@
             "unknown": "Uventet fejl"
         },
         "step": {
-            "user": {
-                "data": {
-                    "login_method": "Loginmetode",
-                    "password": "Adgangskode",
-                    "timeout": "Timeout (sekunder)",
-                    "username": "Brugernavn"
-                },
-                "description": "Hvis loginmetoden er 'e-mail', er brugernavn e-mailadressen. Hvis loginmetoden er 'telefon', er brugernavn telefonnummeret i formatet '+NNNNNNNNNN'.",
-                "title": "Konfigurer en August-konto"
-            },
             "validation": {
                 "data": {
                     "code": "Bekr\u00e6ftelseskode"

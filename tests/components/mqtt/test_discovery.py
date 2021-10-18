@@ -12,7 +12,12 @@ from homeassistant.components.mqtt.abbreviations import (
     DEVICE_ABBREVIATIONS,
 )
 from homeassistant.components.mqtt.discovery import ALREADY_DISCOVERED, async_start
-from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    EVENT_STATE_CHANGED,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 import homeassistant.core as ha
 
 from tests.common import (
@@ -46,24 +51,39 @@ async def test_subscribing_config_topic(hass, mqtt_mock):
     discovery_topic = "homeassistant"
     await async_start(hass, discovery_topic, entry)
 
-    assert mqtt_mock.async_subscribe.called
-    call_args = mqtt_mock.async_subscribe.mock_calls[0][1]
-    assert call_args[0] == discovery_topic + "/#"
-    assert call_args[2] == 0
+    call_args1 = mqtt_mock.async_subscribe.mock_calls[0][1]
+    assert call_args1[2] == 0
+    call_args2 = mqtt_mock.async_subscribe.mock_calls[1][1]
+    assert call_args2[2] == 0
+    topics = [call_args1[0], call_args2[0]]
+    assert discovery_topic + "/+/+/config" in topics
+    assert discovery_topic + "/+/+/+/config" in topics
 
 
-async def test_invalid_topic(hass, mqtt_mock):
+@pytest.mark.parametrize(
+    "topic, log",
+    [
+        ("homeassistant/binary_sensor/bla/not_config", False),
+        ("homeassistant/binary_sensor/rörkrökare/config", True),
+    ],
+)
+async def test_invalid_topic(hass, mqtt_mock, caplog, topic, log):
     """Test sending to invalid topic."""
     with patch(
         "homeassistant.components.mqtt.discovery.async_dispatcher_send"
     ) as mock_dispatcher_send:
         mock_dispatcher_send = AsyncMock(return_value=None)
 
-        async_fire_mqtt_message(
-            hass, "homeassistant/binary_sensor/bla/not_config", "{}"
-        )
+        async_fire_mqtt_message(hass, topic, "{}")
         await hass.async_block_till_done()
         assert not mock_dispatcher_send.called
+        if log:
+            assert (
+                f"Received message on illegal discovery topic '{topic}'" in caplog.text
+            )
+        else:
+            assert "Received message on illegal discovery topic'" not in caplog.text
+        caplog.clear()
 
 
 async def test_invalid_json(hass, mqtt_mock, caplog):
@@ -398,7 +418,7 @@ async def test_cleanup_device(hass, device_reg, entity_reg, mqtt_mock):
     await hass.async_block_till_done()
 
     # Verify device and registry entries are created
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
     assert device_entry is not None
     entity_entry = entity_reg.async_get("sensor.mqtt_sensor")
     assert entity_entry is not None
@@ -408,9 +428,10 @@ async def test_cleanup_device(hass, device_reg, entity_reg, mqtt_mock):
 
     device_reg.async_remove_device(device_entry.id)
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     # Verify device and registry entries are cleared
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
     assert device_entry is None
     entity_entry = entity_reg.async_get("sensor.mqtt_sensor")
     assert entity_entry is None
@@ -433,17 +454,36 @@ async def test_discovery_expansion(hass, mqtt_mock, caplog):
         '  "name": "DiscoveryExpansionTest1",'
         '  "stat_t": "test_topic/~",'
         '  "cmd_t": "~/test_topic",'
+        '  "availability": ['
+        "    {"
+        '      "topic":"~/avail_item1",'
+        '      "payload_available": "available",'
+        '      "payload_not_available": "not_available"'
+        "    },"
+        "    {"
+        '      "topic":"avail_item2/~",'
+        '      "payload_available": "available",'
+        '      "payload_not_available": "not_available"'
+        "    }"
+        "  ],"
         '  "dev":{'
         '    "ids":["5706DF"],'
         '    "name":"DiscoveryExpansionTest1 Device",'
         '    "mdl":"Generic",'
         '    "sw":"1.2.3.4",'
-        '    "mf":"None"'
+        '    "mf":"None",'
+        '    "sa":"default_area"'
         "  }"
         "}"
     )
 
     async_fire_mqtt_message(hass, "homeassistant/switch/bla/config", data)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.DiscoveryExpansionTest1")
+    assert state.state == STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(hass, "avail_item2/some/base/topic", "available")
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.DiscoveryExpansionTest1")
@@ -456,6 +496,12 @@ async def test_discovery_expansion(hass, mqtt_mock, caplog):
 
     state = hass.states.get("switch.DiscoveryExpansionTest1")
     assert state.state == STATE_ON
+
+    async_fire_mqtt_message(hass, "some/base/topic/avail_item1", "not_available")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.DiscoveryExpansionTest1")
+    assert state.state == STATE_UNAVAILABLE
 
 
 ABBREVIATIONS_WHITE_LIST = [

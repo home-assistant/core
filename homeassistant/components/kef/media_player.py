@@ -32,6 +32,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -123,7 +124,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     mode = get_ip_mode(host)
     mac = await hass.async_add_executor_job(partial(get_mac_address, **{mode: host}))
-    unique_id = f"kef-{mac}" if mac is not None else None
+    if mac is None:
+        raise PlatformNotReady("Cannot get the ip address of kef speaker.")
+
+    unique_id = f"kef-{mac}"
 
     media_player = KefMediaPlayer(
         name,
@@ -146,7 +150,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         hass.data[DOMAIN][host] = media_player
         async_add_entities([media_player], update_before_add=True)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_MODE,
@@ -256,7 +260,7 @@ class KefMediaPlayer(MediaPlayerEntity):
                 self._source = None
                 self._volume = None
                 self._state = STATE_OFF
-        except (ConnectionRefusedError, ConnectionError, TimeoutError) as err:
+        except (ConnectionError, TimeoutError) as err:
             _LOGGER.debug("Error in `update`: %s", err)
             self._state = None
 
@@ -395,7 +399,7 @@ class KefMediaPlayer(MediaPlayerEntity):
         self._update_dsp_task_remover = None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the DSP settings of the KEF device."""
         return self._dsp or {}
 

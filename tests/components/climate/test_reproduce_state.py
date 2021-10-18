@@ -117,3 +117,57 @@ async def test_attribute(hass, service, attribute):
 
     assert len(calls_1) == 1
     assert calls_1[0].data == {"entity_id": ENTITY_1, attribute: value}
+
+
+async def test_attribute_partial_temperature(hass):
+    """Test that service call ignores null attributes."""
+    calls_1 = async_mock_service(hass, DOMAIN, SERVICE_SET_TEMPERATURE)
+
+    await async_reproduce_states(
+        hass,
+        [
+            State(
+                ENTITY_1,
+                None,
+                {
+                    ATTR_TEMPERATURE: 23.1,
+                    ATTR_TARGET_TEMP_HIGH: None,
+                    ATTR_TARGET_TEMP_LOW: None,
+                },
+            )
+        ],
+    )
+
+    await hass.async_block_till_done()
+
+    assert len(calls_1) == 1
+    assert calls_1[0].data == {"entity_id": ENTITY_1, ATTR_TEMPERATURE: 23.1}
+
+
+async def test_attribute_partial_high_low_temperature(hass):
+    """Test that service call ignores null attributes."""
+    calls_1 = async_mock_service(hass, DOMAIN, SERVICE_SET_TEMPERATURE)
+
+    await async_reproduce_states(
+        hass,
+        [
+            State(
+                ENTITY_1,
+                None,
+                {
+                    ATTR_TEMPERATURE: None,
+                    ATTR_TARGET_TEMP_HIGH: 30.1,
+                    ATTR_TARGET_TEMP_LOW: 20.2,
+                },
+            )
+        ],
+    )
+
+    await hass.async_block_till_done()
+
+    assert len(calls_1) == 1
+    assert calls_1[0].data == {
+        "entity_id": ENTITY_1,
+        ATTR_TARGET_TEMP_HIGH: 30.1,
+        ATTR_TARGET_TEMP_LOW: 20.2,
+    }

@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "El szeretn\u00e9 kezdeni a be\u00e1ll\u00edt\u00e1st?"
+            },
+            "user": {
+                "data": {
+                    "host": "C\u00edm"
+                },
+                "description": "Integr\u00e1lja \u00f6ssze Modern Formst Home Assistanttal."
+            },
+            "zeroconf_confirm": {
+                "description": "Hozz\u00e1 szeretn\u00e9 adni `{name}`nev\u0171 Modern Forms rajong\u00f3t Home Assistanthoz?",
+                "title": "Felfedezte a Modern Forms rajong\u00f3i eszk\u00f6zt"
+            }
+        }
+    },
+    "title": "Modern Forms"
+}

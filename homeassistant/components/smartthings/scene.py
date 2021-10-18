@@ -24,7 +24,7 @@ class SmartThingsScene(Scene):
         await self._scene.execute()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Get attributes about the state."""
         return {
             "icon": self._scene.icon,

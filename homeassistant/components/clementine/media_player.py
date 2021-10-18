@@ -67,18 +67,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ClementineDevice(MediaPlayerEntity):
     """Representation of Clementine Player."""
 
+    _attr_media_content_type = MEDIA_TYPE_MUSIC
+    _attr_supported_features = SUPPORT_CLEMENTINE
+
     def __init__(self, client, name):
         """Initialize the Clementine device."""
         self._client = client
-        self._name = name
-        self._muted = False
-        self._volume = 0.0
-        self._track_id = 0
-        self._last_track_id = 0
-        self._track_name = ""
-        self._track_artist = ""
-        self._track_album_name = ""
-        self._state = None
+        self._attr_name = name
 
     def update(self):
         """Retrieve the latest data from the Clementine Player."""
@@ -86,58 +81,36 @@ class ClementineDevice(MediaPlayerEntity):
             client = self._client
 
             if client.state == "Playing":
-                self._state = STATE_PLAYING
+                self._attr_state = STATE_PLAYING
             elif client.state == "Paused":
-                self._state = STATE_PAUSED
+                self._attr_state = STATE_PAUSED
             elif client.state == "Disconnected":
-                self._state = STATE_OFF
+                self._attr_state = STATE_OFF
             else:
-                self._state = STATE_PAUSED
+                self._attr_state = STATE_PAUSED
 
             if client.last_update and (time.time() - client.last_update > 40):
-                self._state = STATE_OFF
+                self._attr_state = STATE_OFF
 
-            self._volume = float(client.volume) if client.volume else 0.0
+            volume = float(client.volume) if client.volume else 0.0
+            self._attr_volume_level = volume / 100.0
+            if client.active_playlist_id in client.playlists:
+                self._attr_source = client.playlists[client.active_playlist_id]["name"]
+            else:
+                self._attr_source = "Unknown"
+            self._attr_source_list = [s["name"] for s in client.playlists.values()]
 
             if client.current_track:
-                self._track_id = client.current_track["track_id"]
-                self._track_name = client.current_track["title"]
-                self._track_artist = client.current_track["track_artist"]
-                self._track_album_name = client.current_track["track_album"]
+                self._attr_media_title = client.current_track["title"]
+                self._attr_media_artist = client.current_track["track_artist"]
+                self._attr_media_album_name = client.current_track["track_album"]
+                self._attr_media_image_hash = client.current_track["track_id"]
+            else:
+                self._attr_media_image_hash = None
 
         except Exception:
-            self._state = STATE_OFF
+            self._attr_state = STATE_OFF
             raise
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def volume_level(self):
-        """Volume level of the media player (0..1)."""
-        return self._volume / 100.0
-
-    @property
-    def source(self):
-        """Return  current source name."""
-        source_name = "Unknown"
-        client = self._client
-        if client.active_playlist_id in client.playlists:
-            source_name = client.playlists[client.active_playlist_id]["name"]
-        return source_name
-
-    @property
-    def source_list(self):
-        """List of available input sources."""
-        source_names = [s["name"] for s in self._client.playlists.values()]
-        return source_names
 
     def select_source(self, source):
         """Select input source."""
@@ -145,39 +118,6 @@ class ClementineDevice(MediaPlayerEntity):
         sources = [s for s in client.playlists.values() if s["name"] == source]
         if len(sources) == 1:
             client.change_song(sources[0]["id"], 0)
-
-    @property
-    def media_content_type(self):
-        """Content type of current playing media."""
-        return MEDIA_TYPE_MUSIC
-
-    @property
-    def media_title(self):
-        """Title of current playing media."""
-        return self._track_name
-
-    @property
-    def media_artist(self):
-        """Artist of current playing media, music track only."""
-        return self._track_artist
-
-    @property
-    def media_album_name(self):
-        """Album name of current playing media, music track only."""
-        return self._track_album_name
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_CLEMENTINE
-
-    @property
-    def media_image_hash(self):
-        """Hash value for media image."""
-        if self._client.current_track:
-            return self._client.current_track["track_id"]
-
-        return None
 
     async def async_get_media_image(self):
         """Fetch media image of current playing image."""
@@ -207,19 +147,19 @@ class ClementineDevice(MediaPlayerEntity):
 
     def media_play_pause(self):
         """Simulate play pause media player."""
-        if self._state == STATE_PLAYING:
+        if self.state == STATE_PLAYING:
             self.media_pause()
         else:
             self.media_play()
 
     def media_play(self):
         """Send play command."""
-        self._state = STATE_PLAYING
+        self._attr_state = STATE_PLAYING
         self._client.play()
 
     def media_pause(self):
         """Send media pause command to media player."""
-        self._state = STATE_PAUSED
+        self._attr_state = STATE_PAUSED
         self._client.pause()
 
     def media_next_track(self):

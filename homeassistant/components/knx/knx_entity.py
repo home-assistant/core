@@ -1,38 +1,41 @@
 """Base class for KNX devices."""
-from xknx.devices import Climate as XknxClimate, Device as XknxDevice
+from __future__ import annotations
+
+from typing import cast
+
+from xknx.devices import Device as XknxDevice
 
 from homeassistant.helpers.entity import Entity
 
+from . import KNXModule
 from .const import DOMAIN
 
 
 class KnxEntity(Entity):
     """Representation of a KNX entity."""
 
-    def __init__(self, device: XknxDevice):
+    _attr_should_poll = False
+
+    def __init__(self, device: XknxDevice) -> None:
         """Set up device."""
         self._device = device
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the KNX device."""
         return self._device.name
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
-        return self.hass.data[DOMAIN].connected
+        knx_module = cast(KNXModule, self.hass.data[DOMAIN])
+        return knx_module.connected
 
-    @property
-    def should_poll(self):
-        """No polling needed within KNX."""
-        return False
-
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Request a state update from KNX bus."""
         await self._device.sync()
 
-    async def after_update_callback(self, device: XknxDevice):
+    async def after_update_callback(self, device: XknxDevice) -> None:
         """Call after device was updated."""
         self.async_write_ha_state()
 
@@ -40,12 +43,6 @@ class KnxEntity(Entity):
         """Store register state change callback."""
         self._device.register_device_updated_cb(self.after_update_callback)
 
-        if isinstance(self._device, XknxClimate):
-            self._device.mode.register_device_updated_cb(self.after_update_callback)
-
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
         self._device.unregister_device_updated_cb(self.after_update_callback)
-
-        if isinstance(self._device, XknxClimate):
-            self._device.mode.unregister_device_updated_cb(self.after_update_callback)

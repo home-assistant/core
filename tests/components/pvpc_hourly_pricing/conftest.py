@@ -14,6 +14,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 FIXTURE_JSON_DATA_2019_10_26 = "PVPC_CURV_DD_2019_10_26.json"
 FIXTURE_JSON_DATA_2019_10_27 = "PVPC_CURV_DD_2019_10_27.json"
 FIXTURE_JSON_DATA_2019_10_29 = "PVPC_CURV_DD_2019_10_29.json"
+FIXTURE_JSON_DATA_2021_06_01 = "PVPC_CURV_DD_2021_06_01.json"
 
 
 def check_valid_state(state, tariff: str, value=None, key_attr=None):
@@ -58,6 +59,12 @@ def pvpc_aioclient_mock(aioclient_mock: AiohttpClientMocker):
     aioclient_mock.get(
         "https://api.esios.ree.es/archives/70/download_json?locale=es&date=2019-10-29",
         text=load_fixture(f"{DOMAIN}/{FIXTURE_JSON_DATA_2019_10_29}"),
+    )
+
+    # new format for prices >= 2021-06-01
+    aioclient_mock.get(
+        "https://api.esios.ree.es/archives/70/download_json?locale=es&date=2021-06-01",
+        text=load_fixture(f"{DOMAIN}/{FIXTURE_JSON_DATA_2021_06_01}"),
     )
 
     return aioclient_mock

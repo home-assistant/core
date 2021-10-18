@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "authorize_url_fail": "Neznana napaka pri generiranju potrditvenega URL-ja.",
             "authorize_url_timeout": "\u010casovna omejitev za generiranje potrditvenega URL-ja je potekla.",
             "reauth_successful": "Ponovna overitev je uspela.",
             "unknown_authorize_url_generation": "Neznana napaka pri ustvarjanju overitvenega url."

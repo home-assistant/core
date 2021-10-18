@@ -1,6 +1,5 @@
 """The tests for the feedreader component."""
 from datetime import timedelta
-from logging import getLogger
 from os import remove
 from os.path import exists
 import time
@@ -23,8 +22,6 @@ from homeassistant.core import callback
 from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant, load_fixture
-
-_LOGGER = getLogger(__name__)
 
 URL = "http://some.rss.local/rss_feed.xml"
 VALID_CONFIG_1 = {feedreader.DOMAIN: {CONF_URLS: [URL]}}

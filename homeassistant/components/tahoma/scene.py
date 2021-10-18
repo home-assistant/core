@@ -37,6 +37,6 @@ class TahomaScene(Scene):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the scene."""
         return {"tahoma_scene_oid": self.tahoma_scene.oid}

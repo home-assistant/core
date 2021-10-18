@@ -1,0 +1,145 @@
+{
+    "config": {
+        "abort": {
+            "addon_get_discovery_info_failed": "Impossibile ottenere le informazioni sul rilevamento del componente aggiuntivo Z-Wave JS.",
+            "addon_info_failed": "Impossibile ottenere le informazioni sul componente aggiuntivo Z-Wave JS.",
+            "addon_install_failed": "Impossibile installare il componente aggiuntivo Z-Wave JS.",
+            "addon_set_config_failed": "Impossibile impostare la configurazione di Z-Wave JS.",
+            "addon_start_failed": "Impossibile avviare il componente aggiuntivo Z-Wave JS.",
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "cannot_connect": "Impossibile connettersi",
+            "discovery_requires_supervisor": "Il rilevamento richiede il Supervisor.",
+            "not_zwave_device": "Il dispositivo rilevato non \u00e8 un dispositivo Z-Wave."
+        },
+        "error": {
+            "addon_start_failed": "Impossibile avviare il componente aggiuntivo Z-Wave JS. Controlla la configurazione.",
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_ws_url": "URL websocket non valido",
+            "unknown": "Errore imprevisto"
+        },
+        "flow_title": "{name}",
+        "progress": {
+            "install_addon": "Attendi il termine dell'installazione del componente aggiuntivo Z-Wave JS. Questa operazione pu\u00f2 richiedere diversi minuti.",
+            "start_addon": "Attendi il completamento dell'avvio del componente aggiuntivo Z-Wave JS. L'operazione potrebbe richiedere alcuni secondi."
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "network_key": "Chiave di rete",
+                    "s0_legacy_key": "Chiave S0 (Obsoleta)",
+                    "s2_access_control_key": "Chiave di controllo di accesso S2",
+                    "s2_authenticated_key": "Chiave S2 autenticata",
+                    "s2_unauthenticated_key": "Chiave S2 non autenticata",
+                    "usb_path": "Percorso del dispositivo USB"
+                },
+                "title": "Accedi alla configurazione del componente aggiuntivo Z-Wave JS"
+            },
+            "hassio_confirm": {
+                "title": "Configura l'integrazione di Z-Wave JS con il componente aggiuntivo Z-Wave JS"
+            },
+            "install_addon": {
+                "title": "L'installazione del componente aggiuntivo Z-Wave JS \u00e8 iniziata"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Usa il componente aggiuntivo Z-Wave JS Supervisor"
+                },
+                "description": "Desideri utilizzare il componente aggiuntivo Z-Wave JS Supervisor?",
+                "title": "Seleziona il metodo di connessione"
+            },
+            "start_addon": {
+                "title": "Il componente aggiuntivo Z-Wave JS si sta avviando."
+            },
+            "usb_confirm": {
+                "description": "Vuoi configurare {name} con il componente aggiuntivo JS Z-Wave?"
+            }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "clear_lock_usercode": "Cancella codice utente su {entity_name}",
+            "ping": "Dispositivo ping",
+            "refresh_value": "Aggiorna il/i valore/i per {entity_name}",
+            "reset_meter": "Azzerare i contatori su {subtype}",
+            "set_config_parameter": "Imposta il valore del parametro di configurazione {subtype}",
+            "set_lock_usercode": "Imposta un codice utente su {entity_name}",
+            "set_value": "Imposta un valore Z-Wave"
+        },
+        "condition_type": {
+            "config_parameter": "Valore del parametro di configurazione {subtype}",
+            "node_status": "Stato del nodo",
+            "value": "Valore corrente di un valore Z-Wave"
+        },
+        "trigger_type": {
+            "event.notification.entry_control": "Inviata una notifica di controllo delle entrate",
+            "event.notification.notification": "Inviata una notifica",
+            "event.value_notification.basic": "Evento CC di base su {subtype}",
+            "event.value_notification.central_scene": "Azione della scena centrale su {subtype}",
+            "event.value_notification.scene_activation": "Attivazione scena su {subtype}",
+            "state.node_status": "Lo stato del nodo \u00e8 cambiato",
+            "zwave_js.value_updated.config_parameter": "Variazione sul parametro di configurazione {subtype}",
+            "zwave_js.value_updated.value": "Variazione su un valore Z-Wave JS"
+        }
+    },
+    "options": {
+        "abort": {
+            "addon_get_discovery_info_failed": "Impossibile ottenere le informazioni sul rilevamento del componente aggiuntivo Z-Wave JS.",
+            "addon_info_failed": "Impossibile ottenere le informazioni sul componente aggiuntivo Z-Wave JS.",
+            "addon_install_failed": "Impossibile installare il componente aggiuntivo Z-Wave JS.",
+            "addon_set_config_failed": "Impossibile impostare la configurazione di Z-Wave JS.",
+            "addon_start_failed": "Impossibile avviare il componente aggiuntivo Z-Wave JS.",
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "cannot_connect": "Impossibile connettersi",
+            "different_device": "Il dispositivo USB connesso non \u00e8 lo stesso configurato in precedenza per questa voce di configurazione. Si prega, invece, di creare una nuova voce di configurazione per il nuovo dispositivo."
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_ws_url": "URL del websocket non valido",
+            "unknown": "Errore imprevisto"
+        },
+        "progress": {
+            "install_addon": "Attendere il termine dell'installazione del componente aggiuntivo Z-Wave JS. Questo pu\u00f2 richiedere diversi minuti.",
+            "start_addon": "Attendere il completamento dell'avvio del componente aggiuntivo Z-Wave JS. Questa operazione potrebbe richiedere alcuni secondi."
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "emulate_hardware": "Emulare l'hardware",
+                    "log_level": "Livello di registro",
+                    "network_key": "Chiave di rete",
+                    "s0_legacy_key": "Chiave S0 (Obsoleta)",
+                    "s2_access_control_key": "Chiave di controllo di accesso S2",
+                    "s2_authenticated_key": "Chiave S2 autenticata",
+                    "s2_unauthenticated_key": "Chiave S2 non autenticata",
+                    "usb_path": "Percorso del dispositivo USB"
+                },
+                "title": "Entra nella configurazione del componente aggiuntivo Z-Wave JS"
+            },
+            "install_addon": {
+                "title": "L'installazione del componente aggiuntivo Z-Wave JS \u00e8 iniziata"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Usa il componente aggiuntivo Z-Wave JS di Supervisor"
+                },
+                "description": "Desideri utilizzare il componente aggiuntivo Z-Wave JS di Supervisor?",
+                "title": "Seleziona il metodo di connessione"
+            },
+            "start_addon": {
+                "title": "Il componente aggiuntivo Z-Wave JS si sta avviando."
+            }
+        }
+    },
+    "title": "Z-Wave JS"
+}

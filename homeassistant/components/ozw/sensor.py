@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     DOMAIN as SENSOR_DOMAIN,
+    SensorEntity,
 )
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
@@ -57,7 +58,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class ZwaveSensorBase(ZWaveDeviceEntity):
+class ZwaveSensorBase(ZWaveDeviceEntity, SensorEntity):
     """Basic Representation of a Z-Wave sensor."""
 
     @property
@@ -87,11 +88,11 @@ class ZwaveSensorBase(ZWaveDeviceEntity):
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         # We hide some of the more advanced sensors by default to not overwhelm users
-        if self.values.primary.command_class in [
+        if self.values.primary.command_class in (
             CommandClass.BASIC,
             CommandClass.INDICATOR,
             CommandClass.NOTIFICATION,
-        ]:
+        ):
             return False
         return True
 
@@ -105,12 +106,12 @@ class ZWaveStringSensor(ZwaveSensorBase):
     """Representation of a Z-Wave sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return state of the sensor."""
         return self.values.primary.value
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return unit of measurement the value is expressed in."""
         return self.values.primary.units
 
@@ -124,12 +125,12 @@ class ZWaveNumericSensor(ZwaveSensorBase):
     """Representation of a Z-Wave sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return state of the sensor."""
         return round(self.values.primary.value, 2)
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return unit of measurement the value is expressed in."""
         if self.values.primary.units == "C":
             return TEMP_CELSIUS
@@ -143,15 +144,15 @@ class ZWaveListSensor(ZwaveSensorBase):
     """Representation of a Z-Wave list sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         # We use the id as value for backwards compatibility
         return self.values.primary.value["Selected_id"]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
-        attributes = super().device_state_attributes
+        attributes = super().extra_state_attributes
         # add the value's label as property
         attributes["label"] = self.values.primary.value["Selected"]
         return attributes

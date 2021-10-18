@@ -1,5 +1,5 @@
 """Support for Genius Hub water_heater devices."""
-from typing import List
+from __future__ import annotations
 
 from homeassistant.components.water_heater import (
     SUPPORT_OPERATION_MODE,
@@ -7,7 +7,8 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
 )
 from homeassistant.const import STATE_OFF
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN, GeniusHeatingZone
 
@@ -32,7 +33,7 @@ GH_HEATERS = ["hot water temperature"]
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
 ) -> None:
     """Set up the Genius Hub water_heater entities."""
     if discovery_info is None:
@@ -61,7 +62,7 @@ class GeniusWaterHeater(GeniusHeatingZone, WaterHeaterEntity):
         self._supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
     @property
-    def operation_list(self) -> List[str]:
+    def operation_list(self) -> list[str]:
         """Return the list of available operation modes."""
         return list(HA_OPMODE_TO_GH)
 

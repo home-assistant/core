@@ -28,6 +28,8 @@ from homeassistant.components.emulated_hue.hue_api import (
     HUE_API_STATE_HUE,
     HUE_API_STATE_ON,
     HUE_API_STATE_SAT,
+    HUE_API_STATE_TRANSITION,
+    HUE_API_STATE_XY,
     HUE_API_USERNAME,
     HueAllGroupsStateView,
     HueAllLightsStateView,
@@ -39,6 +41,7 @@ from homeassistant.components.emulated_hue.hue_api import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     CONTENT_TYPE_JSON,
     HTTP_NOT_FOUND,
     HTTP_OK,
@@ -51,7 +54,11 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed, get_test_instance_port
+from tests.common import (
+    async_fire_time_changed,
+    async_mock_service,
+    get_test_instance_port,
+)
 
 HTTP_SERVER_PORT = get_test_instance_port()
 BRIDGE_SERVER_PORT = get_test_instance_port()
@@ -70,16 +77,22 @@ ENTITY_IDS_BY_NUMBER = {
     "8": "media_player.lounge_room",
     "9": "fan.living_room_fan",
     "10": "fan.ceiling_fan",
-    "11": "cover.living_room_window",
-    "12": "climate.hvac",
-    "13": "climate.heatpump",
-    "14": "climate.ecobee",
-    "15": "light.no_brightness",
-    "16": "humidifier.humidifier",
-    "17": "humidifier.dehumidifier",
-    "18": "humidifier.hygrostat",
-    "19": "scene.light_on",
-    "20": "scene.light_off",
+    "11": "fan.percentage_full_fan",
+    "12": "fan.percentage_limited_fan",
+    "13": "fan.preset_only_limited_fan",
+    "14": "cover.living_room_window",
+    "15": "climate.hvac",
+    "16": "climate.heatpump",
+    "17": "climate.ecobee",
+    "18": "light.no_brightness",
+    "19": "humidifier.humidifier",
+    "20": "humidifier.dehumidifier",
+    "21": "humidifier.hygrostat",
+    "22": "scene.light_on",
+    "23": "scene.light_off",
+    "24": "media_player.kitchen",
+    "25": "light.office_rgbw_lights",
+    "26": "light.living_room_rgbww_lights",
 }
 
 ENTITY_NUMBERS_BY_ID = {v: k for k, v in ENTITY_IDS_BY_NUMBER.items()}
@@ -196,7 +209,7 @@ def hass_hue(loop, hass):
 
 
 @pytest.fixture
-def hue_client(loop, hass_hue, aiohttp_client):
+def hue_client(loop, hass_hue, hass_client_no_auth):
     """Create web client for emulated hue api."""
     web_app = hass_hue.http.app
     config = Config(
@@ -206,6 +219,10 @@ def hue_client(loop, hass_hue, aiohttp_client):
                 "light.bed_light": {emulated_hue.CONF_ENTITY_HIDDEN: True},
                 # Kitchen light is explicitly excluded from being exposed
                 "light.kitchen_lights": {emulated_hue.CONF_ENTITY_HIDDEN: True},
+                # Entrance light is explicitly excluded from being exposed
+                "light.entrance_color_white_lights": {
+                    emulated_hue.CONF_ENTITY_HIDDEN: True
+                },
                 # Ceiling Fan is explicitly excluded from being exposed
                 "fan.ceiling_fan": {emulated_hue.CONF_ENTITY_HIDDEN: True},
                 # Expose the script
@@ -227,6 +244,7 @@ def hue_client(loop, hass_hue, aiohttp_client):
                 "scene.light_off": {emulated_hue.CONF_ENTITY_HIDDEN: False},
             },
         },
+        "127.0.0.1",
     )
     config.numbers = ENTITY_IDS_BY_NUMBER
 
@@ -238,7 +256,7 @@ def hue_client(loop, hass_hue, aiohttp_client):
     HueFullStateView(config).register(web_app, web_app.router)
     HueConfigView(config).register(web_app, web_app.router)
 
-    return loop.run_until_complete(aiohttp_client(web_app))
+    return loop.run_until_complete(hass_client_no_auth())
 
 
 async def test_discover_lights(hue_client):
@@ -285,7 +303,7 @@ async def test_light_without_brightness_supported(hass_hue, hue_client):
     assert light_without_brightness_json["type"] == "On/Off light"
 
 
-async def test_lights_all_dimmable(hass, aiohttp_client):
+async def test_lights_all_dimmable(hass, hass_client_no_auth):
     """Test CONF_LIGHTS_ALL_DIMMABLE."""
     # create a lamp without brightness support
     hass.states.async_set("light.no_brightness", "on", {})
@@ -305,11 +323,11 @@ async def test_lights_all_dimmable(hass, aiohttp_client):
             {emulated_hue.DOMAIN: hue_config},
         )
         await hass.async_block_till_done()
-    config = Config(None, hue_config)
+    config = Config(None, hue_config, "127.0.0.1")
     config.numbers = ENTITY_IDS_BY_NUMBER
     web_app = hass.http.app
     HueOneLightStateView(config).register(web_app, web_app.router)
-    client = await aiohttp_client(web_app)
+    client = await hass_client_no_auth()
     light_without_brightness_json = await perform_get_light_state(
         client, "light.no_brightness", HTTP_OK
     )
@@ -352,7 +370,7 @@ async def test_light_without_brightness_can_be_turned_off(hass_hue, hue_client):
     call = turn_off_calls[-1]
 
     assert light.DOMAIN == call.domain
-    assert SERVICE_TURN_OFF == call.service
+    assert call.service == SERVICE_TURN_OFF
     assert "light.no_brightness" in call.data[ATTR_ENTITY_ID]
 
 
@@ -390,11 +408,11 @@ async def test_light_without_brightness_can_be_turned_on(hass_hue, hue_client):
 
     # Verify that SERVICE_TURN_ON has been called
     await hass_hue.async_block_till_done()
-    assert 1 == len(turn_on_calls)
+    assert len(turn_on_calls) == 1
     call = turn_on_calls[-1]
 
     assert light.DOMAIN == call.domain
-    assert SERVICE_TURN_ON == call.service
+    assert call.service == SERVICE_TURN_ON
     assert "light.no_brightness" in call.data[ATTR_ENTITY_ID]
 
 
@@ -660,6 +678,25 @@ async def test_put_light_state(hass, hass_hue, hue_client):
     assert ceiling_json["state"][HUE_API_STATE_HUE] == 4369
     assert ceiling_json["state"][HUE_API_STATE_SAT] == 127
 
+    # update light state through api
+    await perform_put_light_state(
+        hass_hue,
+        hue_client,
+        "light.ceiling_lights",
+        True,
+        brightness=100,
+        xy=((0.488, 0.48)),
+    )
+
+    # go through api to get the state back
+    ceiling_json = await perform_get_light_state(
+        hue_client, "light.ceiling_lights", HTTP_OK
+    )
+    assert ceiling_json["state"][HUE_API_STATE_BRI] == 100
+    assert hass.states.get("light.ceiling_lights").attributes[light.ATTR_XY_COLOR] == (
+        (0.488, 0.48)
+    )
+
     # Go through the API to turn it off
     ceiling_result = await perform_put_light_state(
         hass_hue, hue_client, "light.ceiling_lights", False
@@ -710,6 +747,31 @@ async def test_put_light_state(hass, hass_hue, hue_client):
         hass_hue.states.get("light.ceiling_lights").attributes[light.ATTR_COLOR_TEMP]
         == 50
     )
+
+    # mock light.turn_on call
+    attributes = hass.states.get("light.ceiling_lights").attributes
+    supported_features = attributes[ATTR_SUPPORTED_FEATURES] | light.SUPPORT_TRANSITION
+    attributes = {**attributes, ATTR_SUPPORTED_FEATURES: supported_features}
+    hass.states.async_set("light.ceiling_lights", STATE_ON, attributes)
+    call_turn_on = async_mock_service(hass, "light", "turn_on")
+
+    # update light state through api
+    await perform_put_light_state(
+        hass_hue,
+        hue_client,
+        "light.ceiling_lights",
+        True,
+        brightness=99,
+        xy=((0.488, 0.48)),
+        transitiontime=60,
+    )
+
+    await hass.async_block_till_done()
+    assert call_turn_on[0]
+    assert call_turn_on[0].data[ATTR_ENTITY_ID] == ["light.ceiling_lights"]
+    assert call_turn_on[0].data[light.ATTR_BRIGHTNESS] == 99
+    assert call_turn_on[0].data[light.ATTR_XY_COLOR] == ((0.488, 0.48))
+    assert call_turn_on[0].data[light.ATTR_TRANSITION] == 6
 
 
 async def test_put_light_state_script(hass, hass_hue, hue_client):
@@ -830,10 +892,10 @@ async def test_put_light_state_media_player(hass_hue, hue_client):
     assert walkman.attributes[media_player.ATTR_MEDIA_VOLUME_LEVEL] == level
 
 
-async def test_close_cover(hass_hue, hue_client):
+async def test_open_cover_without_position(hass_hue, hue_client):
     """Test opening cover ."""
     cover_id = "cover.living_room_window"
-    # Turn the office light off first
+    # Close cover first
     await hass_hue.services.async_call(
         cover.DOMAIN,
         const.SERVICE_CLOSE_COVER,
@@ -853,25 +915,44 @@ async def test_close_cover(hass_hue, hue_client):
     assert cover_test.state == "closed"
 
     # Go through the API to turn it on
-    cover_result = await perform_put_light_state(
-        hass_hue, hue_client, cover_id, True, 100
-    )
+    cover_result = await perform_put_light_state(hass_hue, hue_client, cover_id, True)
 
     assert cover_result.status == HTTP_OK
     assert CONTENT_TYPE_JSON in cover_result.headers["content-type"]
 
-    for _ in range(7):
+    for _ in range(11):
         future = dt_util.utcnow() + timedelta(seconds=1)
         async_fire_time_changed(hass_hue, future)
         await hass_hue.async_block_till_done()
 
     cover_result_json = await cover_result.json()
 
-    assert len(cover_result_json) == 2
+    assert len(cover_result_json) == 1
 
     # Check to make sure the state changed
     cover_test_2 = hass_hue.states.get(cover_id)
     assert cover_test_2.state == "open"
+    assert cover_test_2.attributes.get("current_position") == 100
+
+    # Go through the API to turn it off
+    cover_result = await perform_put_light_state(hass_hue, hue_client, cover_id, False)
+
+    assert cover_result.status == HTTP_OK
+    assert CONTENT_TYPE_JSON in cover_result.headers["content-type"]
+
+    for _ in range(11):
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        async_fire_time_changed(hass_hue, future)
+        await hass_hue.async_block_till_done()
+
+    cover_result_json = await cover_result.json()
+
+    assert len(cover_result_json) == 1
+
+    # Check to make sure the state changed
+    cover_test_2 = hass_hue.states.get(cover_id)
+    assert cover_test_2.state == "closed"
+    assert cover_test_2.attributes.get("current_position") == 0
 
 
 async def test_set_position_cover(hass_hue, hue_client):
@@ -1170,6 +1251,8 @@ async def perform_put_light_state(
     saturation=None,
     color_temp=None,
     with_state=True,
+    xy=None,
+    transitiontime=None,
 ):
     """Test the setting of a light state."""
     req_headers = {"Content-Type": content_type}
@@ -1185,8 +1268,12 @@ async def perform_put_light_state(
         data[HUE_API_STATE_HUE] = hue
     if saturation is not None:
         data[HUE_API_STATE_SAT] = saturation
+    if xy is not None:
+        data[HUE_API_STATE_XY] = xy
     if color_temp is not None:
         data[HUE_API_STATE_CT] = color_temp
+    if transitiontime is not None:
+        data[HUE_API_STATE_TRANSITION] = transitiontime
 
     entity_number = ENTITY_NUMBERS_BY_ID[entity_id]
     result = await client.put(

@@ -11,7 +11,7 @@
                     "app_id": "App ID",
                     "app_secret": "Titok"
                 },
-                "description": "Alkalmaz\u00e1s azonos\u00edt\u00f3ja \u00e9s titkos k\u00f3dja a <a href=\"https://my.starline.ru/developer\" target=\"_blank\"> StarLine fejleszt\u0151i fi\u00f3kb\u00f3l </a>",
+                "description": "Alkalmaz\u00e1s azonos\u00edt\u00f3ja \u00e9s titkos k\u00f3dja a [StarLine fejleszt\u0151i fi\u00f3kb\u00f3l](https://my.starline.ru/developer)",
                 "title": "Alkalmaz\u00e1si hiteles\u00edt\u0151 adatok"
             },
             "auth_captcha": {

@@ -21,6 +21,21 @@ async def test_air_con_create_sensors(hass):
     assert state.state == "60.9"
 
 
+async def test_home_create_sensors(hass):
+    """Test creation of home sensors."""
+
+    await async_init_integration(hass)
+
+    state = hass.states.get("sensor.home_name_outdoor_temperature")
+    assert state.state == "7.46"
+
+    state = hass.states.get("sensor.home_name_solar_percentage")
+    assert state.state == "2.1"
+
+    state = hass.states.get("sensor.home_name_weather_condition")
+    assert state.state == "fog"
+
+
 async def test_heater_create_sensors(hass):
     """Test creation of heater sensors."""
 

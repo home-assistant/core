@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dialogflow, intent_script
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import callback
@@ -34,7 +34,7 @@ async def calls(hass, fixture):
 
 
 @pytest.fixture
-async def fixture(hass, aiohttp_client):
+async def fixture(hass, hass_client_no_auth):
     """Initialize a Home Assistant server for testing this module."""
     await async_setup_component(hass, dialogflow.DOMAIN, {"dialogflow": {}})
     await async_setup_component(
@@ -84,7 +84,7 @@ async def fixture(hass, aiohttp_client):
     )
 
     result = await hass.config_entries.flow.async_init(
-        "dialogflow", context={"source": "user"}
+        "dialogflow", context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM, result
 
@@ -92,7 +92,7 @@ async def fixture(hass, aiohttp_client):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     webhook_id = result["result"].data["webhook_id"]
 
-    return await aiohttp_client(hass.http.app), webhook_id
+    return await hass_client_no_auth(), webhook_id
 
 
 class _Data:

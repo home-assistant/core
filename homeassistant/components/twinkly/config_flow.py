@@ -18,10 +18,8 @@ from .const import (
     DEV_ID,
     DEV_MODEL,
     DEV_NAME,
+    DOMAIN,
 )
-
-# https://github.com/PyCQA/pylint/issues/3202
-from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 

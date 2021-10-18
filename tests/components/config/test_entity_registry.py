@@ -1,11 +1,9 @@
 """Test entity_registry API."""
-from collections import OrderedDict
-
 import pytest
 
 from homeassistant.components.config import entity_registry
 from homeassistant.const import ATTR_ICON
-from homeassistant.helpers.entity_registry import RegistryEntry
+from homeassistant.helpers.entity_registry import DISABLED_USER, RegistryEntry
 
 from tests.common import (
     MockConfigEntry,
@@ -31,18 +29,22 @@ def device_registry(hass):
 
 async def test_list_entities(hass, client):
     """Test list entries."""
-    entities = OrderedDict()
-    entities["test_domain.name"] = RegistryEntry(
-        entity_id="test_domain.name",
-        unique_id="1234",
-        platform="test_platform",
-        name="Hello World",
+    mock_registry(
+        hass,
+        {
+            "test_domain.name": RegistryEntry(
+                entity_id="test_domain.name",
+                unique_id="1234",
+                platform="test_platform",
+                name="Hello World",
+            ),
+            "test_domain.no_name": RegistryEntry(
+                entity_id="test_domain.no_name",
+                unique_id="6789",
+                platform="test_platform",
+            ),
+        },
     )
-    entities["test_domain.no_name"] = RegistryEntry(
-        entity_id="test_domain.no_name", unique_id="6789", platform="test_platform"
-    )
-
-    mock_registry(hass, entities)
 
     await client.send_json({"id": 5, "type": "config/entity_registry/list"})
     msg = await client.receive_json()
@@ -57,6 +59,7 @@ async def test_list_entities(hass, client):
             "name": "Hello World",
             "icon": None,
             "platform": "test_platform",
+            "entity_category": None,
         },
         {
             "config_entry_id": None,
@@ -67,6 +70,7 @@ async def test_list_entities(hass, client):
             "name": None,
             "icon": None,
             "platform": "test_platform",
+            "entity_category": None,
         },
     ]
 
@@ -108,6 +112,7 @@ async def test_get_entity(hass, client):
         "original_icon": None,
         "capabilities": None,
         "unique_id": "1234",
+        "entity_category": None,
     }
 
     await client.send_json(
@@ -132,6 +137,7 @@ async def test_get_entity(hass, client):
         "original_icon": None,
         "capabilities": None,
         "unique_id": "6789",
+        "entity_category": None,
     }
 
 
@@ -187,6 +193,7 @@ async def test_update_entity(hass, client):
             "original_icon": None,
             "capabilities": None,
             "unique_id": "1234",
+            "entity_category": None,
         }
     }
 
@@ -200,14 +207,14 @@ async def test_update_entity(hass, client):
             "id": 7,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
-            "disabled_by": "user",
+            "disabled_by": DISABLED_USER,
         }
     )
 
     msg = await client.receive_json()
 
     assert hass.states.get("test_domain.world") is None
-    assert registry.entities["test_domain.world"].disabled_by == "user"
+    assert registry.entities["test_domain.world"].disabled_by == DISABLED_USER
 
     # UPDATE DISABLED_BY TO NONE
     await client.send_json(
@@ -235,6 +242,7 @@ async def test_update_entity(hass, client):
             "original_icon": None,
             "capabilities": None,
             "unique_id": "1234",
+            "entity_category": None,
         },
         "reload_delay": 30,
     }
@@ -289,6 +297,7 @@ async def test_update_entity_require_restart(hass, client):
             "original_icon": None,
             "capabilities": None,
             "unique_id": "1234",
+            "entity_category": None,
         },
         "require_restart": True,
     }
@@ -305,7 +314,7 @@ async def test_enable_entity_disabled_device(hass, client, device_registry):
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
         model="model",
-        disabled_by="user",
+        disabled_by=DISABLED_USER,
     )
 
     mock_registry(
@@ -390,6 +399,7 @@ async def test_update_entity_no_changes(hass, client):
             "original_icon": None,
             "capabilities": None,
             "unique_id": "1234",
+            "entity_category": None,
         }
     }
 
@@ -470,6 +480,7 @@ async def test_update_entity_id(hass, client):
             "original_icon": None,
             "capabilities": None,
             "unique_id": "1234",
+            "entity_category": None,
         }
     }
 

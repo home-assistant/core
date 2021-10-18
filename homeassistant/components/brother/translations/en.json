@@ -9,7 +9,7 @@
             "snmp_error": "SNMP server turned off or printer not supported.",
             "wrong_host": "Invalid hostname or IP address."
         },
-        "flow_title": "Brother Printer: {model} {serial_number}",
+        "flow_title": "{model} {serial_number}",
         "step": {
             "user": {
                 "data": {

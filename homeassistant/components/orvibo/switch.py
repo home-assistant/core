@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     switch_conf = config.get(CONF_SWITCHES, [config])
 
     if config.get(CONF_DISCOVERY):
-        _LOGGER.info("Discovering S20 switches ...")
+        _LOGGER.info("Discovering S20 switches")
         switch_data.update(discover())
 
     for switch in switch_conf:

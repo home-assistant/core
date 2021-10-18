@@ -6,6 +6,13 @@
             "is_on": "{entity_name} be van kapcsolva",
             "is_paused": "{entity_name} sz\u00fcneteltetve van",
             "is_playing": "{entity_name} lej\u00e1tszik"
+        },
+        "trigger_type": {
+            "idle": "{entity_name} t\u00e9tlenn\u00e9 v\u00e1lik",
+            "paused": "{entity_name} sz\u00fcneteltetve van",
+            "playing": "{entity_name} megkezdi a lej\u00e1tsz\u00e1st",
+            "turned_off": "{entity_name} ki lett kapcsolva",
+            "turned_on": "{entity_name} be lett kapcsolva"
         }
     },
     "state": {

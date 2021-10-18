@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from omnilogic import LoginException, OmniLogicException
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.omnilogic.const import DOMAIN
 
 from tests.common import MockConfigEntry
@@ -13,7 +13,7 @@ DATA = {"username": "test-username", "password": "test-password"}
 
 async def test_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -24,8 +24,6 @@ async def test_form(hass):
         "homeassistant.components.omnilogic.config_flow.OmniLogic.connect",
         return_value=True,
     ), patch(
-        "homeassistant.components.omnilogic.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.omnilogic.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -38,7 +36,6 @@ async def test_form(hass):
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Omnilogic"
     assert result2["data"] == DATA
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -46,7 +43,6 @@ async def test_already_configured(hass):
     """Test config flow when Omnilogic component is already setup."""
     MockConfigEntry(domain="omnilogic", data=DATA).add_to_hass(hass)
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -58,7 +54,6 @@ async def test_already_configured(hass):
 async def test_with_invalid_credentials(hass):
     """Test with invalid credentials."""
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -80,7 +75,6 @@ async def test_with_invalid_credentials(hass):
 async def test_form_cannot_connect(hass):
     """Test if invalid response or no connection returned from Hayward."""
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -101,7 +95,7 @@ async def test_form_cannot_connect(hass):
 
 async def test_with_unknown_error(hass):
     """Test with unknown error response from Hayward."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

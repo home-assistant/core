@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/smarthab",
   "config_flow": true,
   "requirements": ["smarthab==0.21"],
-  "codeowners": ["@outadoc"]
+  "codeowners": ["@outadoc"],
+  "iot_class": "cloud_polling"
 }

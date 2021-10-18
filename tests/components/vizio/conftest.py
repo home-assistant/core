@@ -39,15 +39,6 @@ def get_mock_inputs(input_list):
     return [MockInput(input) for input in input_list]
 
 
-@pytest.fixture(name="skip_notifications", autouse=True)
-def skip_notifications_fixture():
-    """Skip notification calls."""
-    with patch("homeassistant.components.persistent_notification.async_create"), patch(
-        "homeassistant.components.persistent_notification.async_dismiss"
-    ):
-        yield
-
-
 @pytest.fixture(name="vizio_get_unique_id", autouse=True)
 def vizio_get_unique_id_fixture():
     """Mock get vizio unique ID."""
@@ -64,6 +55,16 @@ def vizio_data_coordinator_update_fixture():
     with patch(
         "homeassistant.components.vizio.gen_apps_list_from_url",
         return_value=APP_LIST,
+    ):
+        yield
+
+
+@pytest.fixture(name="vizio_data_coordinator_update_failure")
+def vizio_data_coordinator_update_failure_fixture():
+    """Mock get data coordinator update failure."""
+    with patch(
+        "homeassistant.components.vizio.gen_apps_list_from_url",
+        return_value=None,
     ):
         yield
 
@@ -157,6 +158,9 @@ def vizio_cant_connect_fixture():
     with patch(
         "homeassistant.components.vizio.config_flow.VizioAsync.validate_ha_config",
         AsyncMock(return_value=False),
+    ), patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
+        return_value=None,
     ):
         yield
 

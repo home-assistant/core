@@ -21,11 +21,11 @@
             "side_3": "\u7b2c 3 \u9762",
             "side_4": "\u7b2c 4 \u9762",
             "side_5": "\u7b2c 5 \u9762",
-            "side_6": "\u7b2c 6 \u9762",
-            "turn_off": "\u5173\u95ed"
+            "side_6": "\u7b2c 6 \u9762"
         },
         "trigger_type": {
             "remote_awakened": "\u8bbe\u5907\u5524\u9192",
+            "remote_button_rotation_stopped": "\u6309\u94ae \"{subtype}\" \u505c\u6b62\u65cb\u8f6c",
             "remote_double_tap": "\u8bbe\u5907\u7684\u201c{subtype}\u201d\u88ab\u8f7b\u6572\u4e24\u6b21",
             "remote_falling": "\u8bbe\u5907\u81ea\u7531\u843d\u4f53",
             "remote_gyro_activated": "\u8bbe\u5907\u6447\u6643",

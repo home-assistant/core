@@ -8,12 +8,16 @@ import pytest
 import zigpy.profiles.zha
 import zigpy.zcl.clusters.general as general
 
-import homeassistant.components.zha.core.device as zha_core_device
+from homeassistant.components.zha.core.const import (
+    CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY,
+    CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS,
+)
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
-import homeassistant.helpers.device_registry as ha_dev_reg
+import homeassistant.helpers.device_registry as dr
 import homeassistant.util.dt as dt_util
 
 from .common import async_enable_traffic, make_zcl_header
+from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
 from tests.common import async_fire_time_changed
 
@@ -29,9 +33,9 @@ def zigpy_device(zigpy_device_mock):
 
         endpoints = {
             3: {
-                "in_clusters": in_clusters,
-                "out_clusters": [],
-                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_INPUT: in_clusters,
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
             }
         }
         return zigpy_device_mock(endpoints)
@@ -50,9 +54,9 @@ def zigpy_device_mains(zigpy_device_mock):
 
         endpoints = {
             3: {
-                "in_clusters": in_clusters,
-                "out_clusters": [],
-                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_INPUT: in_clusters,
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
             }
         }
         return zigpy_device_mock(
@@ -80,9 +84,9 @@ async def ota_zha_device(zha_device_restored, zigpy_device_mock):
     zigpy_dev = zigpy_device_mock(
         {
             1: {
-                "in_clusters": [general.Basic.cluster_id],
-                "out_clusters": [general.Ota.cluster_id],
-                "device_type": 0x1234,
+                SIG_EP_INPUT: [general.Basic.cluster_id],
+                SIG_EP_OUTPUT: [general.Ota.cluster_id],
+                SIG_EP_TYPE: 0x1234,
             }
         },
         "00:11:22:33:44:55:66:77",
@@ -117,13 +121,13 @@ async def test_check_available_success(
     basic_ch.read_attributes.reset_mock()
     device_with_basic_channel.last_seen = None
     assert zha_device.available is True
-    _send_time_changed(hass, zha_core_device.CONSIDER_UNAVAILABLE_MAINS + 2)
+    _send_time_changed(hass, zha_device.consider_unavailable_time + 2)
     await hass.async_block_till_done()
     assert zha_device.available is False
     assert basic_ch.read_attributes.await_count == 0
 
     device_with_basic_channel.last_seen = (
-        time.time() - zha_core_device.CONSIDER_UNAVAILABLE_MAINS - 2
+        time.time() - zha_device.consider_unavailable_time - 2
     )
     _seens = [time.time(), device_with_basic_channel.last_seen]
 
@@ -172,7 +176,7 @@ async def test_check_available_unsuccessful(
     assert basic_ch.read_attributes.await_count == 0
 
     device_with_basic_channel.last_seen = (
-        time.time() - zha_core_device.CONSIDER_UNAVAILABLE_MAINS - 2
+        time.time() - zha_device.consider_unavailable_time - 2
     )
 
     # unsuccessfuly ping zigpy device, but zha_device is still available
@@ -189,7 +193,7 @@ async def test_check_available_unsuccessful(
     assert basic_ch.read_attributes.await_args[0][0] == ["manufacturer"]
     assert zha_device.available is True
 
-    # not even trying to update, device is unavailble
+    # not even trying to update, device is unavailable
     _send_time_changed(hass, 91)
     await hass.async_block_till_done()
     assert basic_ch.read_attributes.await_count == 2
@@ -213,7 +217,7 @@ async def test_check_available_no_basic_channel(
     assert zha_device.available is True
 
     device_without_basic_channel.last_seen = (
-        time.time() - zha_core_device.CONSIDER_UNAVAILABLE_BATTERY - 2
+        time.time() - zha_device.consider_unavailable_time - 2
     )
 
     assert "does not have a mandatory basic cluster" not in caplog.text
@@ -227,7 +231,7 @@ async def test_ota_sw_version(hass, ota_zha_device):
     """Test device entry gets sw_version updated via OTA channel."""
 
     ota_ch = ota_zha_device.channels.pools[0].client_channels["1:0x0019"]
-    dev_registry = await ha_dev_reg.async_get_registry(hass)
+    dev_registry = dr.async_get(hass)
     entry = dev_registry.async_get(ota_zha_device.device_id)
     assert entry.sw_version is None
 
@@ -246,38 +250,38 @@ async def test_ota_sw_version(hass, ota_zha_device):
         ("zigpy_device", 0, True),
         (
             "zigpy_device",
-            zha_core_device.CONSIDER_UNAVAILABLE_MAINS + 2,
+            CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS + 2,
             True,
         ),
         (
             "zigpy_device",
-            zha_core_device.CONSIDER_UNAVAILABLE_BATTERY - 2,
+            CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY - 2,
             True,
         ),
         (
             "zigpy_device",
-            zha_core_device.CONSIDER_UNAVAILABLE_BATTERY + 2,
+            CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY + 2,
             False,
         ),
         ("zigpy_device_mains", 0, True),
         (
             "zigpy_device_mains",
-            zha_core_device.CONSIDER_UNAVAILABLE_MAINS - 2,
+            CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS - 2,
             True,
         ),
         (
             "zigpy_device_mains",
-            zha_core_device.CONSIDER_UNAVAILABLE_MAINS + 2,
+            CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS + 2,
             False,
         ),
         (
             "zigpy_device_mains",
-            zha_core_device.CONSIDER_UNAVAILABLE_BATTERY - 2,
+            CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY - 2,
             False,
         ),
         (
             "zigpy_device_mains",
-            zha_core_device.CONSIDER_UNAVAILABLE_BATTERY + 2,
+            CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY + 2,
             False,
         ),
     ),

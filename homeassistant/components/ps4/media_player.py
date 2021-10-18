@@ -1,5 +1,6 @@
 """Support for PlayStation 4 consoles."""
 import asyncio
+from contextlib import suppress
 import logging
 
 from pyps4_2ndscreen.errors import NotReady, PSDataIncomplete
@@ -142,10 +143,8 @@ class PS4Device(MediaPlayerEntity):
                 and not self._ps4.is_standby
                 and self._ps4.is_available
             ):
-                try:
+                with suppress(NotReady):
                     await self._ps4.async_connect()
-                except NotReady:
-                    pass
 
         # Try to ensure correct status is set on startup for device info.
         if self._ps4.ddp_protocol is None:
@@ -161,9 +160,7 @@ class PS4Device(MediaPlayerEntity):
 
     def _parse_status(self):
         """Parse status."""
-        status = self._ps4.status
-
-        if status is not None:
+        if (status := self._ps4.status) is not None:
             self._games = load_games(self.hass, self._unique_id)
             if self._games:
                 self.get_source_list()
@@ -385,13 +382,15 @@ class PS4Device(MediaPlayerEntity):
     @property
     def entity_picture(self):
         """Return picture."""
-        if self._state == STATE_PLAYING and self._media_content_id is not None:
-            image_hash = self.media_image_hash
-            if image_hash is not None:
-                return (
-                    f"/api/media_player_proxy/{self.entity_id}?"
-                    f"token={self.access_token}&cache={image_hash}"
-                )
+        if (
+            self._state == STATE_PLAYING
+            and self._media_content_id is not None
+            and (image_hash := self.media_image_hash) is not None
+        ):
+            return (
+                f"/api/media_player_proxy/{self.entity_id}?"
+                f"token={self.access_token}&cache={image_hash}"
+            )
         return MEDIA_IMAGE_DEFAULT
 
     @property

@@ -137,7 +137,6 @@ async def build_item_response(entity, player, payload):
 
 async def library_payload(player):
     """Create response payload to describe contents of library."""
-
     library_info = {
         "title": "Music Library",
         "media_class": MEDIA_CLASS_DIRECTORY,

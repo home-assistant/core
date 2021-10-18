@@ -1,11 +1,13 @@
 {
     "config": {
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
         "step": {
             "user": {
                 "data": {
                     "host": "Ana Bilgisayar",
-                    "name": "\u0130sim",
-                    "port": "Port"
+                    "name": "\u0130sim"
                 }
             }
         }

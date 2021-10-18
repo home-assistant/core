@@ -26,13 +26,13 @@
                 "data": {
                     "use_addon": "Utilitza el complement OpenZWave Supervisor"
                 },
-                "description": "Voleu utilitzar el complement OpenZWave Supervisor?",
+                "description": "Vols utilitzar el complement Supervisor d'OpenZWave?",
                 "title": "Selecciona el m\u00e8tode de connexi\u00f3"
             },
             "start_addon": {
                 "data": {
                     "network_key": "Clau de xarxa",
-                    "usb_path": "Ruta del port USB del dispositiu"
+                    "usb_path": "Ruta del dispositiu USB"
                 },
                 "title": "Introdueix la configuraci\u00f3 del complement OpenZWave"
             }

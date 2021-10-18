@@ -1,14 +1,37 @@
 {
+    "device_automation": {
+        "action_type": {
+            "arm_away": "Aktifkan {entity_name} untuk keluar",
+            "arm_home": "Aktifkan {entity_name} untuk di rumah",
+            "arm_night": "Aktifkan {entity_name} untuk malam",
+            "disarm": "Nonaktifkan {entity_name}",
+            "trigger": "Picu {entity_name}"
+        },
+        "condition_type": {
+            "is_armed_away": "{entity_name} diaktifkan untuk keluar",
+            "is_armed_home": "{entity_name} diaktifkan untuk di rumah",
+            "is_armed_night": "{entity_name} diaktifkan untuk malam",
+            "is_disarmed": "{entity_name} dinonaktifkan",
+            "is_triggered": "{entity_name} dipicu"
+        },
+        "trigger_type": {
+            "armed_away": "{entity_name} diaktifkan untuk keluar",
+            "armed_home": "{entity_name} diaktifkan untuk di rumah",
+            "armed_night": "{entity_name} diaktifkan untuk malam",
+            "disarmed": "{entity_name} dinonaktifkan",
+            "triggered": "{entity_name} dipicu"
+        }
+    },
     "state": {
         "_": {
-            "armed": "Bersenjata",
-            "armed_away": "Armed away",
-            "armed_custom_bypass": "Armed custom bypass",
-            "armed_home": "Armed home",
-            "armed_night": "Armed night",
-            "arming": "Mempersenjatai",
-            "disarmed": "Dilucuti",
-            "disarming": "Melucuti",
+            "armed": "Diaktifkan",
+            "armed_away": "Diaktifkan untuk keluar",
+            "armed_custom_bypass": "Diaktifkan khusus",
+            "armed_home": "Diaktifkan untuk di rumah",
+            "armed_night": "Diaktifkan untuk malam",
+            "arming": "Mengaktifkan",
+            "disarmed": "Dinonaktifkan",
+            "disarming": "Dinonaktifkan",
             "pending": "Tertunda",
             "triggered": "Terpicu"
         }

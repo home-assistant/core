@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El compte ja est\u00e0 configurat",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
+        },
+        "error": {
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "installation": {
+                "data": {
+                    "giid": "Instal\u00b7laci\u00f3"
+                },
+                "description": "Home Assistant ha trobat diverses instal\u00b7lacions Verisure al compte de My Pages. Selecciona la instal\u00b7laci\u00f3 a afegir a Home Assistant."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "description": "Torna a autenticar-te amb el compte de Verisure My Pages.",
+                    "email": "Correu electr\u00f2nic",
+                    "password": "Contrasenya"
+                }
+            },
+            "user": {
+                "data": {
+                    "description": "Inicia sessi\u00f3 amb el compte de Verisure My Pages.",
+                    "email": "Correu electr\u00f2nic",
+                    "password": "Contrasenya"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "code_format_mismatch": "El codi PIN predeterminat no coincideix amb el nombre de d\u00edgits correcte"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "lock_code_digits": "Nombre de d\u00edgits del codi PIN dels panys",
+                    "lock_default_code": "Codi PIN dels panys predeterminat, s'utilitza si no se n'indica cap"
+                }
+            }
+        }
+    }
+}

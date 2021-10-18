@@ -1,0 +1,53 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "flow_title": "{mac} ({ip})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "C\u00edm",
+                    "port": "Port",
+                    "system_id": "Rendszerazonos\u00edt\u00f3"
+                },
+                "description": "A rendszerazonos\u00edt\u00f3t a MyLink alkalmaz\u00e1s Integr\u00e1ci\u00f3 r\u00e9sz\u00e9ben lehet beszerezni, b\u00e1rmely nem Cloud szolg\u00e1ltat\u00e1s kiv\u00e1laszt\u00e1s\u00e1val."
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
+        "step": {
+            "entity_config": {
+                "data": {
+                    "reverse": "A bor\u00edt\u00f3 megfordult"
+                },
+                "description": "Konfigur\u00e1lja az \u201e {entity_id} \u201d be\u00e1ll\u00edt\u00e1sait",
+                "title": "Entit\u00e1s konfigur\u00e1l\u00e1sa"
+            },
+            "init": {
+                "data": {
+                    "default_reverse": "A konfigur\u00e1latlan bor\u00edt\u00f3k alap\u00e9rtelmezett megford\u00edt\u00e1si \u00e1llapota",
+                    "entity_id": "Konfigur\u00e1ljon egy adott entit\u00e1st.",
+                    "target_id": "Az \u00e1rny\u00e9kol\u00f3 be\u00e1ll\u00edt\u00e1sainak konfigur\u00e1l\u00e1sa."
+                },
+                "title": "Mylink be\u00e1ll\u00edt\u00e1sok konfigur\u00e1l\u00e1sa"
+            },
+            "target_config": {
+                "data": {
+                    "reverse": "A bor\u00edt\u00f3 megfordult"
+                },
+                "description": "A(z) `{target_name}` be\u00e1ll\u00edt\u00e1sainak konfigur\u00e1l\u00e1sa",
+                "title": "MyLink \u00e1rny\u00e9kol\u00f3 konfigur\u00e1l\u00e1sa"
+            }
+        }
+    },
+    "title": "Somfy MyLink"
+}

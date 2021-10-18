@@ -1,0 +1,12 @@
+{
+    "options": {
+        "step": {
+            "options_1": {
+                "data": {
+                    "constant": "Sabit"
+                }
+            }
+        }
+    },
+    "title": "Demo"
+}

@@ -9,14 +9,21 @@
             "unknown": "Ov\u00e4ntat fel"
         },
         "step": {
-            "user": {
+            "reauth_validate": {
                 "data": {
-                    "login_method": "Inloggningsmetod",
+                    "password": "L\u00f6senord"
+                }
+            },
+            "user_validate": {
+                "data": {
                     "password": "L\u00f6senord",
                     "username": "Anv\u00e4ndarnamn"
                 }
             },
             "validation": {
+                "data": {
+                    "code": "Verifieringskod"
+                },
                 "title": "Tv\u00e5faktorsautentisering"
             }
         }

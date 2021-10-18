@@ -3,7 +3,7 @@
 import re
 from urllib.parse import urlparse
 
-from pysyncthru import SyncThru
+from pysyncthru import ConnectionMode, SyncThru, SyncThruAPINotSupported
 from url_normalize import url_normalize
 import voluptuous as vol
 
@@ -12,7 +12,6 @@ from homeassistant.components import ssdp
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.helpers import aiohttp_client
 
-# pylint: disable=unused-import # for DOMAIN https://github.com/PyCQA/pylint/issues/3202
 from .const import DEFAULT_MODEL, DEFAULT_NAME_TEMPLATE, DOMAIN
 
 
@@ -20,7 +19,6 @@ class SyncThruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Samsung SyncThru config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     url: str
     name: str
@@ -62,10 +60,7 @@ class SyncThruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Remove trailing " (ip)" if present for consistency with user driven config
             self.name = re.sub(r"\s+\([\d.]+\)\s*$", "", self.name)
 
-        # https://github.com/PyCQA/pylint/issues/3167
-        self.context["title_placeholders"] = {  # pylint: disable=no-member
-            CONF_NAME: self.name
-        }
+        self.context["title_placeholders"] = {CONF_NAME: self.name}
         return await self.async_step_confirm()
 
     async def async_step_confirm(self, user_input=None):
@@ -114,7 +109,9 @@ class SyncThruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 break
 
         session = aiohttp_client.async_get_clientsession(self.hass)
-        printer = SyncThru(user_input[CONF_URL], session)
+        printer = SyncThru(
+            user_input[CONF_URL], session, connection_mode=ConnectionMode.API
+        )
         errors = {}
         try:
             await printer.update()
@@ -122,7 +119,7 @@ class SyncThruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_NAME] = DEFAULT_NAME_TEMPLATE.format(
                     printer.model() or DEFAULT_MODEL
                 )
-        except ValueError:
+        except SyncThruAPINotSupported:
             errors[CONF_URL] = "syncthru_not_supported"
         else:
             if printer.is_unknown_state():

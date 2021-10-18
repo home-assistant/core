@@ -46,6 +46,7 @@ def lib_dir(deps_dir):
 def mock_popen(lib_dir):
     """Return a Popen mock."""
     with patch("homeassistant.util.package.Popen") as popen_mock:
+        popen_mock.return_value.__enter__ = popen_mock
         popen_mock.return_value.communicate.return_value = (
             bytes(lib_dir, "utf-8"),
             b"error",
@@ -87,8 +88,8 @@ def test_install(mock_sys, mock_popen, mock_env_copy, mock_venv):
     """Test an install attempt on a package that doesn't exist."""
     env = mock_env_copy()
     assert package.install_package(TEST_NEW_REQ, False)
-    assert mock_popen.call_count == 1
-    assert mock_popen.call_args == call(
+    assert mock_popen.call_count == 2
+    assert mock_popen.mock_calls[0] == call(
         [mock_sys.executable, "-m", "pip", "install", "--quiet", TEST_NEW_REQ],
         stdin=PIPE,
         stdout=PIPE,
@@ -102,8 +103,8 @@ def test_install_upgrade(mock_sys, mock_popen, mock_env_copy, mock_venv):
     """Test an upgrade attempt on a package."""
     env = mock_env_copy()
     assert package.install_package(TEST_NEW_REQ)
-    assert mock_popen.call_count == 1
-    assert mock_popen.call_args == call(
+    assert mock_popen.call_count == 2
+    assert mock_popen.mock_calls[0] == call(
         [
             mock_sys.executable,
             "-m",
@@ -140,8 +141,8 @@ def test_install_target(mock_sys, mock_popen, mock_env_copy, mock_venv):
     ]
 
     assert package.install_package(TEST_NEW_REQ, False, target=target)
-    assert mock_popen.call_count == 1
-    assert mock_popen.call_args == call(
+    assert mock_popen.call_count == 2
+    assert mock_popen.mock_calls[0] == call(
         args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env
     )
     assert mock_popen.return_value.communicate.call_count == 1
@@ -169,8 +170,8 @@ def test_install_constraint(mock_sys, mock_popen, mock_env_copy, mock_venv):
     env = mock_env_copy()
     constraints = "constraints_file.txt"
     assert package.install_package(TEST_NEW_REQ, False, constraints=constraints)
-    assert mock_popen.call_count == 1
-    assert mock_popen.call_args == call(
+    assert mock_popen.call_count == 2
+    assert mock_popen.mock_calls[0] == call(
         [
             mock_sys.executable,
             "-m",
@@ -194,8 +195,8 @@ def test_install_find_links(mock_sys, mock_popen, mock_env_copy, mock_venv):
     env = mock_env_copy()
     link = "https://wheels-repository"
     assert package.install_package(TEST_NEW_REQ, False, find_links=link)
-    assert mock_popen.call_count == 1
-    assert mock_popen.call_args == call(
+    assert mock_popen.call_count == 2
+    assert mock_popen.mock_calls[0] == call(
         [
             mock_sys.executable,
             "-m",
@@ -239,10 +240,55 @@ async def test_async_get_user_site(mock_env_copy):
 
 def test_check_package_global():
     """Test for an installed package."""
-    installed_package = list(pkg_resources.working_set)[0].project_name
+    first_package = list(pkg_resources.working_set)[0]
+    installed_package = first_package.project_name
+    installed_version = first_package.version
+
     assert package.is_installed(installed_package)
+    assert package.is_installed(f"{installed_package}=={installed_version}")
+    assert package.is_installed(f"{installed_package}>={installed_version}")
+    assert package.is_installed(f"{installed_package}<={installed_version}")
+    assert not package.is_installed(f"{installed_package}<{installed_version}")
+
+
+def test_check_package_version_does_not_match():
+    """Test for version mismatch."""
+    installed_package = list(pkg_resources.working_set)[0].project_name
+    assert not package.is_installed(f"{installed_package}==999.999.999")
+    assert not package.is_installed(f"{installed_package}>=999.999.999")
 
 
 def test_check_package_zip():
     """Test for an installed zip package."""
     assert not package.is_installed(TEST_ZIP_REQ)
+
+
+def test_get_distribution_falls_back_to_version():
+    """Test for get_distribution failing and fallback to version."""
+    first_package = list(pkg_resources.working_set)[0]
+    installed_package = first_package.project_name
+    installed_version = first_package.version
+
+    with patch(
+        "homeassistant.util.package.pkg_resources.get_distribution",
+        side_effect=pkg_resources.ExtractionError,
+    ):
+        assert package.is_installed(installed_package)
+        assert package.is_installed(f"{installed_package}=={installed_version}")
+        assert package.is_installed(f"{installed_package}>={installed_version}")
+        assert package.is_installed(f"{installed_package}<={installed_version}")
+        assert not package.is_installed(f"{installed_package}<{installed_version}")
+
+
+def test_check_package_previous_failed_install():
+    """Test for when a previously install package failed and left cruft behind."""
+    first_package = list(pkg_resources.working_set)[0]
+    installed_package = first_package.project_name
+    installed_version = first_package.version
+
+    with patch(
+        "homeassistant.util.package.pkg_resources.get_distribution",
+        side_effect=pkg_resources.ExtractionError,
+    ), patch("homeassistant.util.package.version", return_value=None):
+        assert not package.is_installed(installed_package)
+        assert not package.is_installed(f"{installed_package}=={installed_version}")

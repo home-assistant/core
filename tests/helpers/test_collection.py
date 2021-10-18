@@ -226,7 +226,7 @@ async def test_attach_entity_component_collection(hass):
     """Test attaching collection to entity component."""
     ent_comp = entity_component.EntityComponent(_LOGGER, "test", hass)
     coll = collection.ObservableCollection(_LOGGER)
-    collection.attach_entity_component_collection(ent_comp, coll, MockEntity)
+    collection.sync_entity_lifecycle(hass, "test", "test", ent_comp, coll, MockEntity)
 
     await coll.notify_changes(
         [

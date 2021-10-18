@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "reauth_successful": "Autentikasi ulang berhasil"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "flow_title": "Bosch SHC: {name}",
+        "step": {
+            "reauth_confirm": {
+                "title": "Autentikasi Ulang Integrasi"
+            }
+        }
+    }
+}

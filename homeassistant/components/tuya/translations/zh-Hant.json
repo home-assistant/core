@@ -6,19 +6,37 @@
             "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
         },
         "error": {
-            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548"
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "login_error": "\u767b\u5165\u932f\u8aa4\uff08{code}\uff09\uff1a{msg}"
         },
         "flow_title": "Tuya \u8a2d\u5b9a",
         "step": {
+            "login": {
+                "data": {
+                    "access_id": "Access ID",
+                    "access_secret": "Access Secret",
+                    "country_code": "\u570b\u78bc",
+                    "endpoint": "\u53ef\u7528\u5340\u57df",
+                    "password": "\u5bc6\u78bc",
+                    "tuya_app_type": "\u624b\u6a5f App",
+                    "username": "\u5e33\u865f"
+                },
+                "description": "\u8f38\u5165 Tuya \u6191\u8b49",
+                "title": "Tuya"
+            },
             "user": {
                 "data": {
-                    "country_code": "\u5e33\u865f\u570b\u5bb6\u4ee3\u78bc\uff08\u4f8b\u5982\uff1a\u7f8e\u570b 1 \u6216\u4e2d\u570b 86\uff09",
+                    "access_id": "Tuya IoT Access ID",
+                    "access_secret": "Tuya IoT Access Secret",
+                    "country_code": "\u570b\u5bb6",
                     "password": "\u5bc6\u78bc",
                     "platform": "\u5e33\u6236\u8a3b\u518a\u6240\u5728\u4f4d\u7f6e",
-                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                    "region": "\u5340\u57df",
+                    "tuya_project_type": "Tuya \u96f2\u5c08\u6848\u985e\u578b",
+                    "username": "\u5e33\u865f"
                 },
-                "description": "\u8f38\u5165 Tuya \u6191\u8b49\u3002",
-                "title": "Tuya"
+                "description": "\u8f38\u5165 Tuya \u6191\u8b49",
+                "title": "Tuya \u6574\u5408"
             }
         }
     },
@@ -40,8 +58,10 @@
                     "max_temp": "\u6700\u9ad8\u76ee\u6a19\u8272\u6eab\uff08\u4f7f\u7528\u6700\u4f4e\u8207\u6700\u9ad8 = 0 \u4f7f\u7528\u9810\u8a2d\uff09",
                     "min_kelvin": "Kelvin \u652f\u63f4\u6700\u4f4e\u8272\u6eab",
                     "min_temp": "\u6700\u4f4e\u76ee\u6a19\u8272\u6eab\uff08\u4f7f\u7528\u6700\u4f4e\u8207\u6700\u9ad8 = 0 \u4f7f\u7528\u9810\u8a2d\uff09",
+                    "set_temp_divided": "\u4f7f\u7528\u5206\u9694\u865f\u6eab\u5ea6\u503c\u4ee5\u57f7\u884c\u8a2d\u5b9a\u6eab\u5ea6\u6307\u4ee4",
                     "support_color": "\u5f37\u5236\u8272\u6eab\u652f\u63f4",
                     "temp_divider": "\u8272\u6eab\u503c\u5206\u914d\u5668\uff080 = \u4f7f\u7528\u9810\u8a2d\uff09",
+                    "temp_step_override": "\u76ee\u6a19\u6eab\u5ea6\u8a2d\u5b9a",
                     "tuya_max_coltemp": "\u88dd\u7f6e\u56de\u5831\u6700\u9ad8\u8272\u6eab",
                     "unit_of_measurement": "\u88dd\u7f6e\u6240\u4f7f\u7528\u4e4b\u6eab\u5ea6\u55ae\u4f4d"
                 },

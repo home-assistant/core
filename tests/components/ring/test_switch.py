@@ -1,5 +1,6 @@
 """The tests for the Ring switch platform."""
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
 
@@ -9,7 +10,7 @@ from tests.common import load_fixture
 async def test_entity_registry(hass, requests_mock):
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, SWITCH_DOMAIN)
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get("switch.front_siren")
     assert entry.unique_id == "765432-siren"

@@ -5,6 +5,7 @@ from homeassistant.components.fan import (
     SUPPORT_OSCILLATE,
     SUPPORT_SET_SPEED,
 )
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.components.homekit_controller.common import (
     Helper,
@@ -20,7 +21,7 @@ async def test_homeassistant_bridge_fan_setup(hass):
     )
     config_entry, pairing = await setup_test_accessories(hass, accessories)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     # Check that the fan is correctly found and set up
     fan_id = "fan.living_room_fan"
@@ -42,7 +43,7 @@ async def test_homeassistant_bridge_fan_setup(hass):
         SUPPORT_DIRECTION | SUPPORT_SET_SPEED | SUPPORT_OSCILLATE
     )
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
 
     device = device_registry.async_get(fan.device_id)
     assert device.manufacturer == "Home Assistant"

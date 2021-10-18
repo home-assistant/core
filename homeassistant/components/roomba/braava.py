@@ -116,9 +116,9 @@ class BraavaJet(IRobotVacuum):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
-        state_attrs = super().device_state_attributes
+        state_attrs = super().extra_state_attributes
 
         # Get Braava state
         state = self.vacuum_state

@@ -3,7 +3,7 @@ import json
 import time
 from unittest.mock import patch
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.flo.const import DOMAIN
 from homeassistant.const import CONTENT_TYPE_JSON
 
@@ -12,7 +12,7 @@ from .common import TEST_EMAIL_ADDRESS, TEST_PASSWORD, TEST_TOKEN, TEST_USER_ID
 
 async def test_form(hass, aioclient_mock_fixture):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -20,8 +20,6 @@ async def test_form(hass, aioclient_mock_fixture):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.flo.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.flo.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -32,7 +30,6 @@ async def test_form(hass, aioclient_mock_fixture):
         assert result2["title"] == "Home"
         assert result2["data"] == {"username": TEST_USER_ID, "password": TEST_PASSWORD}
         await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
         assert len(mock_setup_entry.mock_calls) == 1
 
 

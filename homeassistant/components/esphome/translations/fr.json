@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "ESP est d\u00e9j\u00e0 configur\u00e9",
-            "already_in_progress": "La configuration ESP est d\u00e9j\u00e0 en cours"
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "already_in_progress": "La configuration est d\u00e9j\u00e0 en cours"
         },
         "error": {
             "connection_error": "Impossible de se connecter \u00e0 ESP. Assurez-vous que votre fichier YAML contient une ligne 'api:'.",
@@ -23,7 +23,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Nom d'h\u00f4te ou adresse IP",
+                    "host": "H\u00f4te",
                     "port": "Port"
                 },
                 "description": "Veuillez saisir les param\u00e8tres de connexion de votre n\u0153ud [ESPHome] (https://esphomelib.com/)."

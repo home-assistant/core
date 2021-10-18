@@ -1,9 +1,10 @@
 """Support for Google Cloud Pub/Sub."""
+from __future__ import annotations
+
 import datetime
 import json
 import logging
 import os
-from typing import Any, Dict
 
 from google.cloud import pubsub_v1
 import voluptuous as vol
@@ -12,6 +13,7 @@ from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE, STATE_UN
 from homeassistant.core import Event, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,15 +39,12 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
+def setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     """Activate Google Pub/Sub component."""
-
     config = yaml_config[DOMAIN]
     project_id = config[CONF_PROJECT_ID]
     topic_name = config[CONF_TOPIC_NAME]
-    service_principal_path = os.path.join(
-        hass.config.config_dir, config[CONF_SERVICE_PRINCIPAL]
-    )
+    service_principal_path = hass.config.path(config[CONF_SERVICE_PRINCIPAL])
 
     if not os.path.isfile(service_principal_path):
         _LOGGER.error("Path to credentials file cannot be found")

@@ -81,7 +81,7 @@ class TelldusLiveEntity(Entity):
         return self._client.is_available(self.device_id)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {}
         if self._battery_level:
@@ -93,7 +93,6 @@ class TelldusLiveEntity(Entity):
     @property
     def _battery_level(self):
         """Return the battery level of a device."""
-
         if self.device.battery == BATTERY_LOW:
             return 1
         if self.device.battery == BATTERY_UNKNOWN:
@@ -124,13 +123,10 @@ class TelldusLiveEntity(Entity):
             "identifiers": {("tellduslive", self.device.device_id)},
             "name": self.device.name,
         }
-        model = device.get("model")
-        if model is not None:
+        if (model := device.get("model")) is not None:
             device_info["model"] = model.title()
-        protocol = device.get("protocol")
-        if protocol is not None:
+        if (protocol := device.get("protocol")) is not None:
             device_info["manufacturer"] = protocol.title()
-        client = device.get("client")
-        if client is not None:
+        if (client := device.get("client")) is not None:
             device_info["via_device"] = ("tellduslive", client)
         return device_info

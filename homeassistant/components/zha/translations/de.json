@@ -1,17 +1,23 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Es ist nur eine einzige Konfiguration von ZHA zul\u00e4ssig."
+            "not_zha_device": "Dieses Ger\u00e4t ist kein ZHA-Ger\u00e4t",
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich.",
+            "usb_probe_failed": "Fehler beim Testen des USB-Ger\u00e4ts"
         },
         "error": {
-            "cannot_connect": "Kein Verbindung zu ZHA-Ger\u00e4t m\u00f6glich"
+            "cannot_connect": "Verbindung fehlgeschlagen"
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm": {
+                "description": "M\u00f6chtest du {name} einrichten?"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "Funktyp"
                 },
-                "description": "W\u00e4hlen Sie einen Typ Ihres Zigbee-Funks",
+                "description": "W\u00e4hle den Typ deines Zigbee-Funks",
                 "title": "Funktyp"
             },
             "port_config": {
@@ -20,16 +26,31 @@
                     "flow_control": "Datenflusskontrolle",
                     "path": "Serieller Ger\u00e4tepfad"
                 },
-                "description": "Geben Sie die portspezifischen Einstellungen ein",
+                "description": "Gib die portspezifischen Einstellungen ein",
                 "title": "Einstellungen"
             },
             "user": {
                 "data": {
                     "path": "Serieller Ger\u00e4tepfad"
                 },
-                "description": "W\u00e4hlen Sie die serielle Schnittstelle f\u00fcr den ZigBee-Funk",
+                "description": "W\u00e4hle die serielle Schnittstelle f\u00fcr den ZigBee-Funk",
                 "title": "ZHA"
             }
+        }
+    },
+    "config_panel": {
+        "zha_alarm_options": {
+            "alarm_arm_requires_code": "Code f\u00fcr Scharfschaltaktionen erforderlich",
+            "alarm_failed_tries": "Die Anzahl aufeinanderfolgender fehlgeschlagener Codeeintr\u00e4ge, um einen Alarm auszul\u00f6sen",
+            "alarm_master_code": "Mastercode f\u00fcr die Alarmzentrale(n)",
+            "title": "Optionen f\u00fcr die Alarmsteuerung"
+        },
+        "zha_options": {
+            "consider_unavailable_battery": "Batteriebetriebene Ger\u00e4te als nicht verf\u00fcgbar betrachten nach (Sekunden)",
+            "consider_unavailable_mains": "Netzbetriebene Ger\u00e4te als nicht verf\u00fcgbar betrachten nach (Sekunden)",
+            "default_light_transition": "Standardlicht\u00fcbergangszeit (Sekunden)",
+            "enable_identify_on_join": "Aktiviere den Identifikationseffekt, wenn Ger\u00e4te dem Netzwerk beitreten",
+            "title": "Globale Optionen"
         }
     },
     "device_automation": {
@@ -65,6 +86,7 @@
             "device_dropped": "Ger\u00e4t ist gefallen",
             "device_flipped": "Ger\u00e4t umgedreht \"{subtype}\"",
             "device_knocked": "Ger\u00e4t klopfte \"{subtype}\"",
+            "device_offline": "Ger\u00e4t offline",
             "device_rotated": "Ger\u00e4t wurde gedreht \"{subtype}\"",
             "device_shaken": "Ger\u00e4t ersch\u00fcttert",
             "device_slid": "Ger\u00e4t gerutscht \"{subtype}\"",
