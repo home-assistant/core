@@ -88,14 +88,14 @@ async def _entities_from_descriptions(
 ):
     """Create entities from descriptions and list of burners/circuits."""
     for description in sensor_descriptions:
-        for burner in iterables:
+        for current in iterables:
             suffix = ""
             if len(iterables) > 1:
-                suffix = f" {burner.id}"
+                suffix = f" {current.id}"
             entity = await hass.async_add_executor_job(
                 _build_entity,
                 f"{name} {description.name}{suffix}",
-                burner,
+                current,
                 hass.data[DOMAIN][VICARE_DEVICE_CONFIG],
                 description,
             )
