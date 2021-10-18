@@ -1,4 +1,6 @@
 """Support for the Abode Security System."""
+from __future__ import annotations
+
 from functools import partial
 
 from abodepy import Abode, AbodeAutomation as AbodeAuto
@@ -74,7 +76,7 @@ class AbodeSystem:
         """Initialize the system."""
         self.abode = abode
         self.polling = polling
-        self.entity_ids: set = set()
+        self.entity_ids: set[str | None] = set()
         self.logout_listener = None
 
 
@@ -196,7 +198,7 @@ async def setup_hass_events(hass: HomeAssistant) -> None:
 def setup_abode_events(hass: HomeAssistant) -> None:
     """Event callbacks."""
 
-    def event_callback(event: str, event_json: dict) -> None:
+    def event_callback(event: str, event_json: dict[str, str]) -> None:
         """Handle an event callback from Abode."""
         data = {
             ATTR_DEVICE_ID: event_json.get(ATTR_DEVICE_ID, ""),
@@ -302,7 +304,7 @@ class AbodeDevice(AbodeEntity):
         self._device.refresh()
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,

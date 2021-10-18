@@ -1,6 +1,7 @@
 """Support for Abode Security System binary sensors."""
 from typing import cast
 
+from abodepy.devices.binary_sensor import AbodeBinarySensor as ABBinarySensor
 import abodepy.helpers.constants as CONST
 
 from homeassistant.components.binary_sensor import (
@@ -39,6 +40,8 @@ async def async_setup_entry(
 
 class AbodeBinarySensor(AbodeDevice, BinarySensorEntity):
     """A binary sensor implementation for Abode device."""
+
+    _device: ABBinarySensor
 
     @property
     def is_on(self) -> bool:
