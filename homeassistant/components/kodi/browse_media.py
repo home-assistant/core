@@ -321,7 +321,8 @@ async def get_media_info(media_library, search_id, search_type):
             season_id=int(season_id),
             properties=["thumbnail", "tvshowid", "seasonid"],
         )
-        if media := media.get("episodes"):
+        media = media.get("episodes")
+        if media:
             season = await media_library.get_season_details(
                 season_id=int(media[0]["seasonid"]), properties=properties
             )
