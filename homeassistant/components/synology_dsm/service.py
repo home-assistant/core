@@ -2,12 +2,15 @@
 from __future__ import annotations
 
 import logging
+from typing import Final
 
 from synology_dsm.exceptions import SynologyDSMException
+import voluptuous as vol
 from wakeonlan import send_magic_packet
 
-from homeassistant.const import CONF_HOST, CONF_MAC
+from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant, ServiceCall
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import async_get
 
 from .common import SynoApi
@@ -23,6 +26,12 @@ from .const import (
 
 LOGGER = logging.getLogger(__name__)
 
+SERVICE_SCHEMA: Final = vol.Schema(
+    {
+        vol.Required(CONF_DEVICE_ID): cv.device_id,
+    }
+)
+
 
 async def async_setup_services(hass: HomeAssistant) -> None:
     """Service handler setup."""
@@ -35,20 +44,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     async def service_handler(call: ServiceCall) -> None:
         """Handle service call."""
         dev_reg = async_get(hass)
-
-        device_id = call.data.get("device_id")
-        if not device_id:
-            LOGGER.error(
-                "Error during service call %s - device_id not given", call.service
-            )
-            return
-
-        if not isinstance(device_id, str):
-            LOGGER.error(
-                "Error during service call %s - device_id is not a string", call.service
-            )
-            return
-
+        device_id = call.data[CONF_DEVICE_ID]
         serial = None
         device_ip_macs: set[tuple[str, str]] = set()
         if device := dev_reg.async_get(device_id):
@@ -98,4 +94,6 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                 await hass.async_add_executor_job(_send_wol, ip_mac[1], ip_mac[0])
 
     for service in SERVICES:
-        hass.services.async_register(DOMAIN, service, service_handler)
+        hass.services.async_register(
+            DOMAIN, service, service_handler, schema=SERVICE_SCHEMA
+        )
