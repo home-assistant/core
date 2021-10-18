@@ -30,14 +30,14 @@ BINARY_SENSOR = BinarySensorEntityDescription(
 )
 
 MOTZEI_BINARY_SENSOR = BinarySensorEntityDescription(
-    key="motzei_shabbat_hat_in_effect",
-    name="Motzei Shabbat/Hag in Effect",
+    key="motzei_shabbat_hag",
+    name="Motzei Shabbat/Hag",
     icon="mdi:power-plug-off",
 )
 
 EREV_BINARY_SENSOR = BinarySensorEntityDescription(
-    key="erev_shabbat_hat_in_effect",
-    name="Erev Shabbat/Hag in Effect",
+    key="erev_shabbat_hag",
+    name="Erev Shabbat/Hag",
     icon="mdi:power-plug-off",
 )
 
