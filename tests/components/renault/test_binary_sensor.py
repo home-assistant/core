@@ -5,11 +5,16 @@ import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ICON, STATE_OFF, STATE_UNAVAILABLE
+from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 
-from . import check_device_registry, get_no_data_icon
-from .const import DYNAMIC_ATTRIBUTES, FIXED_ATTRIBUTES, MOCK_VEHICLES
+from . import (
+    check_device_registry,
+    check_entities,
+    check_entities_no_data,
+    check_entities_unavailable,
+)
+from .const import MOCK_VEHICLES
 
 from tests.common import mock_device_registry, mock_registry
 
@@ -39,15 +44,8 @@ async def test_binary_sensors(
 
     expected_entities = mock_vehicle[BINARY_SENSOR_DOMAIN]
     assert len(entity_registry.entities) == len(expected_entities)
-    for expected_entity in expected_entities:
-        entity_id = expected_entity["entity_id"]
-        registry_entry = entity_registry.entities.get(entity_id)
-        assert registry_entry is not None
-        assert registry_entry.unique_id == expected_entity["unique_id"]
-        state = hass.states.get(entity_id)
-        assert state.state == expected_entity["result"]
-        for attr in FIXED_ATTRIBUTES + DYNAMIC_ATTRIBUTES:
-            assert state.attributes.get(attr) == expected_entity.get(attr)
+
+    check_entities(hass, entity_registry, expected_entities)
 
 
 @pytest.mark.usefixtures("fixtures_with_no_data")
@@ -66,17 +64,7 @@ async def test_binary_sensor_empty(
 
     expected_entities = mock_vehicle[BINARY_SENSOR_DOMAIN]
     assert len(entity_registry.entities) == len(expected_entities)
-    for expected_entity in expected_entities:
-        entity_id = expected_entity["entity_id"]
-        registry_entry = entity_registry.entities.get(entity_id)
-        assert registry_entry is not None
-        assert registry_entry.unique_id == expected_entity["unique_id"]
-        state = hass.states.get(entity_id)
-        assert state.state == STATE_OFF
-        for attr in FIXED_ATTRIBUTES:
-            assert state.attributes.get(attr) == expected_entity.get(attr)
-        # Check dynamic attributes:
-        assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)
+    check_entities_no_data(hass, entity_registry, expected_entities, STATE_OFF)
 
 
 @pytest.mark.usefixtures("fixtures_with_invalid_upstream_exception")
@@ -95,17 +83,8 @@ async def test_binary_sensor_errors(
 
     expected_entities = mock_vehicle[BINARY_SENSOR_DOMAIN]
     assert len(entity_registry.entities) == len(expected_entities)
-    for expected_entity in expected_entities:
-        entity_id = expected_entity["entity_id"]
-        registry_entry = entity_registry.entities.get(entity_id)
-        assert registry_entry is not None
-        assert registry_entry.unique_id == expected_entity["unique_id"]
-        state = hass.states.get(entity_id)
-        assert state.state == STATE_UNAVAILABLE
-        for attr in FIXED_ATTRIBUTES:
-            assert state.attributes.get(attr) == expected_entity.get(attr)
-        # Check dynamic attributes:
-        assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)
+
+    check_entities_unavailable(hass, entity_registry, expected_entities)
 
 
 @pytest.mark.usefixtures("fixtures_with_access_denied_exception")

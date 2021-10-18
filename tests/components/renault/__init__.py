@@ -10,10 +10,13 @@ from homeassistant.const import (
     ATTR_MODEL,
     ATTR_NAME,
     ATTR_SW_VERSION,
+    STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
+from homeassistant.helpers.entity_registry import EntityRegistry
 
-from .const import ICON_FOR_EMPTY_VALUES
+from .const import DYNAMIC_ATTRIBUTES, FIXED_ATTRIBUTES, ICON_FOR_EMPTY_VALUES
 
 
 def get_no_data_icon(expected_entity: MappingProxyType):
@@ -34,3 +37,59 @@ def check_device_registry(
     assert registry_entry.name == expected_device[ATTR_NAME]
     assert registry_entry.model == expected_device[ATTR_MODEL]
     assert registry_entry.sw_version == expected_device[ATTR_SW_VERSION]
+
+
+def check_entities(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    expected_entities: MappingProxyType,
+) -> None:
+    """Ensure that the expected_entities are correct."""
+    for expected_entity in expected_entities:
+        entity_id = expected_entity["entity_id"]
+        registry_entry = entity_registry.entities.get(entity_id)
+        assert registry_entry is not None
+        assert registry_entry.unique_id == expected_entity["unique_id"]
+        state = hass.states.get(entity_id)
+        assert state.state == expected_entity["result"]
+        for attr in FIXED_ATTRIBUTES + DYNAMIC_ATTRIBUTES:
+            assert state.attributes.get(attr) == expected_entity.get(attr)
+
+
+def check_entities_no_data(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    expected_entities: MappingProxyType,
+    expected_state: str,
+) -> None:
+    """Ensure that the expected_entities are correct."""
+    for expected_entity in expected_entities:
+        entity_id = expected_entity["entity_id"]
+        registry_entry = entity_registry.entities.get(entity_id)
+        assert registry_entry is not None
+        assert registry_entry.unique_id == expected_entity["unique_id"]
+        state = hass.states.get(entity_id)
+        assert state.state == expected_state
+        for attr in FIXED_ATTRIBUTES:
+            assert state.attributes.get(attr) == expected_entity.get(attr)
+        # Check dynamic attributes:
+        assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)
+
+
+def check_entities_unavailable(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    expected_entities: MappingProxyType,
+) -> None:
+    """Ensure that the expected_entities are correct."""
+    for expected_entity in expected_entities:
+        entity_id = expected_entity["entity_id"]
+        registry_entry = entity_registry.entities.get(entity_id)
+        assert registry_entry is not None
+        assert registry_entry.unique_id == expected_entity["unique_id"]
+        state = hass.states.get(entity_id)
+        assert state.state == STATE_UNAVAILABLE
+        for attr in FIXED_ATTRIBUTES:
+            assert state.attributes.get(attr) == expected_entity.get(attr)
+        # Check dynamic attributes:
+        assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)

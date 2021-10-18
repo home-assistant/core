@@ -1,15 +1,22 @@
 """Tests for Renault sensors."""
+from types import MappingProxyType
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ICON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import check_device_registry, get_no_data_icon
-from .const import DYNAMIC_ATTRIBUTES, FIXED_ATTRIBUTES, MOCK_VEHICLES
+from . import (
+    check_device_registry,
+    check_entities,
+    check_entities_no_data,
+    check_entities_unavailable,
+)
+from .const import MOCK_VEHICLES
 
 from tests.common import mock_device_registry, mock_registry
 
@@ -21,6 +28,19 @@ def override_platforms():
     """Override PLATFORMS."""
     with patch("homeassistant.components.renault.PLATFORMS", [SENSOR_DOMAIN]):
         yield
+
+
+def _check_and_enable_disabled_entities(
+    entity_registry: EntityRegistry, expected_entities: MappingProxyType
+) -> None:
+    """Ensure that the expected_entities are correctly disabled."""
+    for expected_entity in expected_entities:
+        if expected_entity.get("default_disabled"):
+            entity_id = expected_entity["entity_id"]
+            registry_entry = entity_registry.entities.get(entity_id)
+            assert registry_entry.disabled
+            assert registry_entry.disabled_by == "integration"
+            entity_registry.async_update_entity(entity_id, **{"disabled_by": None})
 
 
 @pytest.mark.usefixtures("fixtures_with_data")
@@ -40,27 +60,11 @@ async def test_sensors(
     expected_entities = mock_vehicle[SENSOR_DOMAIN]
     assert len(entity_registry.entities) == len(expected_entities)
 
-    # Ensure all entities are enabled
-    for expected_entity in expected_entities:
-        if expected_entity.get("default_disabled"):
-            entity_id = expected_entity["entity_id"]
-            registry_entry = entity_registry.entities.get(entity_id)
-            assert registry_entry.disabled
-            assert registry_entry.disabled_by == "integration"
-            entity_registry.async_update_entity(entity_id, **{"disabled_by": None})
-
+    _check_and_enable_disabled_entities(entity_registry, expected_entities)
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    for expected_entity in expected_entities:
-        entity_id = expected_entity["entity_id"]
-        registry_entry = entity_registry.entities.get(entity_id)
-        assert registry_entry is not None
-        assert registry_entry.unique_id == expected_entity["unique_id"]
-        state = hass.states.get(entity_id)
-        assert state.state == expected_entity["result"]
-        for attr in FIXED_ATTRIBUTES + DYNAMIC_ATTRIBUTES:
-            assert state.attributes.get(attr) == expected_entity.get(attr)
+    check_entities(hass, entity_registry, expected_entities)
 
 
 @pytest.mark.usefixtures("fixtures_with_no_data")
@@ -80,29 +84,11 @@ async def test_sensor_empty(
     expected_entities = mock_vehicle[SENSOR_DOMAIN]
     assert len(entity_registry.entities) == len(expected_entities)
 
-    # Ensure all entities are enabled
-    for expected_entity in expected_entities:
-        if expected_entity.get("default_disabled"):
-            entity_id = expected_entity["entity_id"]
-            registry_entry = entity_registry.entities.get(entity_id)
-            assert registry_entry.disabled
-            assert registry_entry.disabled_by == "integration"
-            entity_registry.async_update_entity(entity_id, **{"disabled_by": None})
-
+    _check_and_enable_disabled_entities(entity_registry, expected_entities)
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    for expected_entity in expected_entities:
-        entity_id = expected_entity["entity_id"]
-        registry_entry = entity_registry.entities.get(entity_id)
-        assert registry_entry is not None
-        assert registry_entry.unique_id == expected_entity["unique_id"]
-        state = hass.states.get(entity_id)
-        assert state.state == STATE_UNKNOWN
-        for attr in FIXED_ATTRIBUTES:
-            assert state.attributes.get(attr) == expected_entity.get(attr)
-        # Check dynamic attributes:
-        assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)
+    check_entities_no_data(hass, entity_registry, expected_entities, STATE_UNKNOWN)
 
 
 @pytest.mark.usefixtures("fixtures_with_invalid_upstream_exception")
@@ -122,29 +108,11 @@ async def test_sensor_errors(
     expected_entities = mock_vehicle[SENSOR_DOMAIN]
     assert len(entity_registry.entities) == len(expected_entities)
 
-    # Ensure all entities are enabled
-    for expected_entity in expected_entities:
-        if expected_entity.get("default_disabled"):
-            entity_id = expected_entity["entity_id"]
-            registry_entry = entity_registry.entities.get(entity_id)
-            assert registry_entry.disabled
-            assert registry_entry.disabled_by == "integration"
-            entity_registry.async_update_entity(entity_id, **{"disabled_by": None})
+    _check_and_enable_disabled_entities(entity_registry, expected_entities)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-        await hass.config_entries.async_reload(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    for expected_entity in expected_entities:
-        entity_id = expected_entity["entity_id"]
-        registry_entry = entity_registry.entities.get(entity_id)
-        assert registry_entry is not None
-        assert registry_entry.unique_id == expected_entity["unique_id"]
-        state = hass.states.get(entity_id)
-        assert state.state == STATE_UNAVAILABLE
-        for attr in FIXED_ATTRIBUTES:
-            assert state.attributes.get(attr) == expected_entity.get(attr)
-        # Check dynamic attributes:
-        assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)
+    check_entities_unavailable(hass, entity_registry, expected_entities)
 
 
 @pytest.mark.usefixtures("fixtures_with_access_denied_exception")
