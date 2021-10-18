@@ -22,9 +22,9 @@ class IntegerTypeData:
 
     min: int
     max: int
-    unit: str
     scale: float
     step: float
+    unit: str | None = None
 
     @property
     def max_scaled(self) -> float:
@@ -44,6 +44,32 @@ class IntegerTypeData:
     def scale_value(self, value: float | int) -> float:
         """Scale a value."""
         return value * 1.0 / (10 ** self.scale)
+
+    def remap_value_to(
+        self,
+        value: float,
+        to_min: float | int = 0,
+        to_max: float | int = 255,
+        reverse: bool = False,
+    ) -> float:
+        """Remap a value from this range to a new range."""
+        if reverse:
+            value = self.max - value + self.min
+        return ((value - self.min) / (self.max - self.min)) * (to_max - to_min) + to_min
+
+    def remap_value_from(
+        self,
+        value: float,
+        from_min: float | int = 0,
+        from_max: float | int = 255,
+        reverse: bool = False,
+    ) -> float:
+        """Remap a value from its current range to this range."""
+        if reverse:
+            value = from_max - value + from_min
+        return ((value - from_min) / (from_max - from_min)) * (
+            self.max - self.min
+        ) + self.min
 
     @classmethod
     def from_json(cls, data: str) -> IntegerTypeData:

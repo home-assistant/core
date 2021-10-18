@@ -93,8 +93,10 @@ TUYA_SUPPORTED_PRODUCT_CATEGORIES = (
     "dj",  # Light
     "dlq",  # Breaker
     "fs",  # Fan
-    "fs",  # Fan
+    "fsd",  # Ceiling Fan Light
+    "fwd",  # Ambient Light
     "fwl",  # Ambient light
+    "gyd",  # Motion Sensor Light
     "jsq",  # Humidifier's light
     "kfj",  # Coffee maker
     "kg",  # Switch
@@ -108,6 +110,8 @@ TUYA_SUPPORTED_PRODUCT_CATEGORIES = (
     "sgbj",  # Siren Alarm
     "sos",  # SOS Button
     "sp",  # Smart Camera
+    "tgq",  # Dimmer
+    "tyndj",  # Solar Light
     "wk",  # Thermostat
     "xdd",  # Ceiling Light
     "xxj",  # Diffuser
@@ -130,6 +134,15 @@ PLATFORMS = [
     "siren",
     "switch",
 ]
+
+
+class WorkMode(str, Enum):
+    """Work modes."""
+
+    COLOUR = "colour"
+    MUSIC = "music"
+    SCENE = "scene"
+    WHITE = "white"
 
 
 class DPCode(str, Enum):
@@ -215,6 +228,20 @@ class DPCode(str, Enum):
     WATER_SET = "water_set"  # Water level
     WET = "wet"  # Humidification
     WORK_MODE = "work_mode"  # Working mode
+    BRIGHT_VALUE_V2 = "bright_value_v2"
+    TEMP_VALUE_V2 = "temp_value_v2"
+    COLOR_DATA_V2 = "color_data_v2"
+    SWITCH_LED_1 = "switch_led_1"
+    SWITCH_LED_2 = "switch_led_2"
+    BRIGHT_VALUE_1 = "bright_value_1"
+    BRIGHT_VALUE_2 = "bright_value_2"
+    BRIGHTNESS_MIN_1 = "brightness_min_1"
+    BRIGHTNESS_MIN_2 = "brightness_min_2"
+    BRIGHTNESS_MAX_1 = "brightness_max_1"
+    BRIGHTNESS_MAX_2 = "brightness_max_2"
+    SWITCH_CONTROLLER = "switch_controller"
+    BRIGHT_CONTROLLER = "bright_controller"
+    TEMP_CONTROLLER = "temp_controller"
 
 
 @dataclass
