@@ -9,7 +9,7 @@ from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TOGGLE, STATE_OFF, STATE
 from homeassistant.core import HomeAssistant
 
 from . import setup_owproxy_mock_devices
-from .const import ATTR_DEFAULT_DISABLED, MOCK_OWPROXY_DEVICES
+from .const import ATTR_DEFAULT_DISABLED, ATTR_UNIQUE_ID, MOCK_OWPROXY_DEVICES
 
 from tests.common import mock_registry
 
@@ -56,6 +56,7 @@ async def test_owserver_switch(
         entity_id = expected_entity[ATTR_ENTITY_ID]
         registry_entry = entity_registry.entities.get(entity_id)
         assert registry_entry is not None
+        assert registry_entry.unique_id == expected_entity[ATTR_UNIQUE_ID]
         state = hass.states.get(entity_id)
         assert state.state == expected_entity["result"]
 
