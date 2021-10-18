@@ -17,11 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import (
-    setup_onewire_sysbus_integration,
-    setup_owproxy_mock_devices,
-    setup_sysbus_mock_devices,
-)
+from . import setup_owproxy_mock_devices, setup_sysbus_mock_devices
 from .const import MOCK_OWPROXY_DEVICES, MOCK_SYSBUS_DEVICES
 
 from tests.common import assert_setup_component, mock_device_registry, mock_registry
@@ -75,7 +71,7 @@ async def test_setup_owserver_with_port(hass: HomeAssistant):
     await hass.async_block_till_done()
 
 
-@pytest.mark.parametrize("device_id", ["1F.111111111111"])
+@pytest.mark.parametrize("device_id", ["1F.111111111111"], indirect=True)
 async def test_sensors_on_owserver_coupler(
     hass: HomeAssistant, config_entry: ConfigEntry, owproxy: MagicMock, device_id: str
 ):
@@ -182,8 +178,11 @@ async def test_owserver_setup_valid_device(
             )
 
 
+@pytest.mark.usefixtures("sysbus")
 @pytest.mark.parametrize("device_id", MOCK_SYSBUS_DEVICES.keys(), indirect=True)
-async def test_onewiredirect_setup_valid_device(hass: HomeAssistant, device_id: str):
+async def test_onewiredirect_setup_valid_device(
+    hass: HomeAssistant, sysbus_config_entry: ConfigEntry, device_id: str
+):
     """Test that sysbus config entry works correctly."""
 
     entity_registry = mock_registry(hass)
@@ -200,7 +199,7 @@ async def test_onewiredirect_setup_valid_device(hass: HomeAssistant, device_id: 
         "pi1wire.OneWire.get_temperature",
         side_effect=read_side_effect,
     ):
-        assert await setup_onewire_sysbus_integration(hass)
+        await hass.config_entries.async_setup(sysbus_config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert len(entity_registry.entities) == len(expected_entities)
