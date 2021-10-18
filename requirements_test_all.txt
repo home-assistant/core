@@ -378,7 +378,7 @@ faadelays==0.0.7
 feedparser==6.0.2
 
 # homeassistant.components.fjaraskupan
-fjaraskupan==1.0.1
+fjaraskupan==1.0.2
 
 # homeassistant.components.flipr
 flipr-api==1.4.1
