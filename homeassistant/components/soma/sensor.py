@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle
 
 from . import DEVICES, SomaEntity
-from .const import API, DOMAIN
+from .const import API, DOMAIN, MSG_API_UNREACHABLE, MSG_DEVICE_UNREACHABLE
 from .utils import is_api_response_success
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
@@ -59,13 +59,11 @@ class SomaSensor(SomaEntity, SensorEntity):
                 self.api.get_battery_level, self.device["mac"]
             )
         except RequestException:
-            _LOGGER.error("Connection to SOMA Connect failed")
+            _LOGGER.error(MSG_API_UNREACHABLE)
             self.is_available = False
             return
         if not is_api_response_success(response):
-            _LOGGER.error(
-                "Unable to reach device %s (%s)", self.device["name"], response["msg"]
-            )
+            _LOGGER.error(MSG_DEVICE_UNREACHABLE, self.device["name"], response["msg"])
             self.is_available = False
             return
         # https://support.somasmarthome.com/hc/en-us/articles/360026064234-HTTP-API
