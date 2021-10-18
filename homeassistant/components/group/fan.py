@@ -262,8 +262,8 @@ class FanGroup(GroupEntity, FanEntity):
         )
         if (
             percentage_states
+            and percentage_states[0].attributes.get(ATTR_PERCENTAGE_STEP)
             and attribute_equal(percentage_states, ATTR_PERCENTAGE_STEP)
-            and percentage_states[0].attributes[ATTR_PERCENTAGE_STEP]
         ):
             self._speed_count = (
                 round(100 / percentage_states[0].attributes[ATTR_PERCENTAGE_STEP])
