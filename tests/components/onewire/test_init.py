@@ -1,17 +1,17 @@
 """Tests for 1-Wire config flow."""
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from pyownet.protocol import ConnError, OwnetError
 
 from homeassistant.components.onewire.const import CONF_TYPE_OWSERVER, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.config_entries import SOURCE_USER, ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import (
     setup_onewire_owserver_integration,
-    setup_onewire_patched_owserver_integration,
     setup_onewire_sysbus_integration,
     setup_owproxy_mock_devices,
 )
@@ -87,13 +87,14 @@ async def test_unload_entry(hass):
     assert not hass.data.get(DOMAIN)
 
 
-@patch("homeassistant.components.onewire.onewirehub.protocol.proxy")
-async def test_registry_cleanup(owproxy, hass):
+@patch("homeassistant.components.onewire.PLATFORMS", [SENSOR_DOMAIN])
+async def test_registry_cleanup(
+    hass: HomeAssistant, config_entry: ConfigEntry, owproxy: MagicMock
+):
     """Test for 1-Wire device.
 
     As they would be on a clean setup: all binary-sensors and switches disabled.
     """
-
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
@@ -101,9 +102,8 @@ async def test_registry_cleanup(owproxy, hass):
     setup_owproxy_mock_devices(
         owproxy, SENSOR_DOMAIN, ["10.111111111111", "28.111111111111"]
     )
-    with patch("homeassistant.components.onewire.PLATFORMS", [SENSOR_DOMAIN]):
-        await setup_onewire_patched_owserver_integration(hass)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert len(dr.async_entries_for_config_entry(device_registry, "2")) == 2
     assert len(er.async_entries_for_config_entry(entity_registry, "2")) == 2

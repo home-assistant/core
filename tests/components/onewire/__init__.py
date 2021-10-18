@@ -8,7 +8,6 @@ from pyownet.protocol import ProtocolError
 
 from homeassistant.components.onewire.const import (
     CONF_MOUNT_DIR,
-    CONF_NAMES,
     CONF_TYPE_OWSERVER,
     CONF_TYPE_SYSBUS,
     DEFAULT_SYSBUS_MOUNT_DIR,
@@ -71,30 +70,6 @@ async def setup_onewire_owserver_integration(hass):
         await hass.async_block_till_done()
 
         return config_entry
-
-
-async def setup_onewire_patched_owserver_integration(hass):
-    """Create the 1-Wire integration."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        source=SOURCE_USER,
-        data={
-            CONF_TYPE: CONF_TYPE_OWSERVER,
-            CONF_HOST: "1.2.3.4",
-            CONF_PORT: 1234,
-            CONF_NAMES: {
-                "10.111111111111": "My DS18B20",
-            },
-        },
-        options={},
-        entry_id="2",
-    )
-    config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    return config_entry
 
 
 def setup_owproxy_mock_devices(owproxy, domain, device_ids) -> None:
