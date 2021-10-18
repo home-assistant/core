@@ -1,7 +1,11 @@
 """Sensor platform for Hass.io addons."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -37,7 +41,7 @@ ADDON_ENTITY_DESCRIPTIONS = COMMON_ENTITY_DESCRIPTIONS + (
         name="CPU Percent",
         icon="mdi:cpu-64-bit",
         native_unit_of_measurement="%",
-        state_class="measurement",
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         entity_registry_enabled_default=False,
@@ -45,7 +49,7 @@ ADDON_ENTITY_DESCRIPTIONS = COMMON_ENTITY_DESCRIPTIONS + (
         name="Memory Percent",
         icon="mdi:memory",
         native_unit_of_measurement="%",
-        state_class="measurement",
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
 )
 
