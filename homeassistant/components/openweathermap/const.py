@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
-    SensorEntityDescription,
     STATE_CLASS_MEASUREMENT,
+    SensorEntityDescription,
 )
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLOUDY,
