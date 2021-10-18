@@ -83,13 +83,50 @@ DHCP = [
     },
     {
         "domain": "flux_led",
+        "macaddress": "7CB94C*",
+        "hostname": "[ba][lk]*"
+    },
+    {
+        "domain": "flux_led",
         "macaddress": "B4E842*",
         "hostname": "[ba][lk]*"
     },
     {
         "domain": "flux_led",
-        "macaddress": "2462AB*",
-        "hostname": "zengge_35*"
+        "macaddress": "8CCE4E*",
+        "hostname": "lwip*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_06_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_07_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_21_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_33_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_35_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_41_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_0e_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_00_*"
     },
     {
         "domain": "flux_led",
@@ -241,6 +278,11 @@ DHCP = [
         "macaddress": "DCEFCA*"
     },
     {
+        "domain": "sense",
+        "hostname": "sense-*",
+        "macaddress": "A4D578*"
+    },
+    {
         "domain": "smartthings",
         "hostname": "st*",
         "macaddress": "24FD5B*"
@@ -288,6 +330,11 @@ DHCP = [
         "domain": "toon",
         "hostname": "eneco-*",
         "macaddress": "74C63B*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "1027F5*"
     },
     {
         "domain": "tplink",
@@ -403,6 +450,50 @@ DHCP = [
         "domain": "tplink",
         "hostname": "lb*",
         "macaddress": "B09575*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "105A17*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "10D561*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "1869D8*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "381F8D*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "508A06*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "68572D*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "708976*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "7CF666*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "84E342*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "D4A651*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "D81F12*"
     },
     {
         "domain": "verisure",

@@ -238,8 +238,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     connection = data[DATA_CONNECTION]
     kodi = data[DATA_KODI]
     name = config_entry.data[CONF_NAME]
-    uid = config_entry.unique_id
-    if uid is None:
+    if (uid := config_entry.unique_id) is None:
         uid = config_entry.entry_id
 
     entity = KodiEntity(connection, kodi, name, uid)

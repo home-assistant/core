@@ -242,6 +242,8 @@ async def test_two_weather_sites_running(hass, requests_mock, legacy_patchable_t
     )
     assert weather.attributes.get("forecast")[18]["condition"] == "sunny"
     assert weather.attributes.get("forecast")[18]["precipitation_probability"] == 1
+    assert weather.attributes.get("forecast")[18]["condition"] == "clear-night"
+    assert weather.attributes.get("forecast")[18]["precipitation_probability"] == 1
     assert weather.attributes.get("forecast")[18]["temperature"] == 9
     assert weather.attributes.get("forecast")[18]["wind_speed"] == 4
     assert weather.attributes.get("forecast")[18]["wind_bearing"] == "NW"

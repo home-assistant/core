@@ -11,7 +11,7 @@
         "flow_title": "{model} {id} ({ipaddr})",
         "step": {
             "discovery_confirm": {
-                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani a(z) {model} {id} ({ipaddr}) webhelyet?"
+                "description": "Be szeretn\u00e9 \u00e1ll\u00edtani: {model} {id} ({ipaddr}) ?"
             },
             "user": {
                 "data": {

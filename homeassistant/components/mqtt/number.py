@@ -18,16 +18,9 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
-from . import (
-    CONF_COMMAND_TOPIC,
-    CONF_QOS,
-    CONF_STATE_TOPIC,
-    DOMAIN,
-    PLATFORMS,
-    subscription,
-)
+from . import PLATFORMS, subscription
 from .. import mqtt
-from .const import CONF_RETAIN
+from .const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, DOMAIN
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
@@ -35,10 +28,12 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_MIN = "min"
 CONF_MAX = "max"
+CONF_PAYLOAD_RESET = "payload_reset"
 CONF_STEP = "step"
 
 DEFAULT_NAME = "MQTT Number"
 DEFAULT_OPTIMISTIC = False
+DEFAULT_PAYLOAD_RESET = "None"
 
 MQTT_NUMBER_ATTRIBUTES_BLOCKED = frozenset(
     {
@@ -64,6 +59,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): vol.Coerce(float),
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+            vol.Optional(CONF_PAYLOAD_RESET, default=DEFAULT_PAYLOAD_RESET): cv.string,
             vol.Optional(CONF_STEP, default=DEFAULT_STEP): vol.All(
                 vol.Coerce(float), vol.Range(min=1e-3)
             ),
@@ -138,7 +134,9 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
             if value_template is not None:
                 payload = value_template.async_render_with_possible_json_value(payload)
             try:
-                if payload.isnumeric():
+                if payload == self._config[CONF_PAYLOAD_RESET]:
+                    num_value = None
+                elif payload.isnumeric():
                     num_value = int(payload)
                 else:
                     num_value = float(payload)
@@ -146,7 +144,9 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
                 _LOGGER.warning("Payload '%s' is not a Number", msg.payload)
                 return
 
-            if num_value < self.min_value or num_value > self.max_value:
+            if num_value is not None and (
+                num_value < self.min_value or num_value > self.max_value
+            ):
                 _LOGGER.error(
                     "Invalid value for %s: %s (range %s - %s)",
                     self.entity_id,

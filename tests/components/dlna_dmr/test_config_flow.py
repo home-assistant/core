@@ -86,12 +86,6 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     # Wait for platform to be fully setup
     await hass.async_block_till_done()
 
-    # Remove the device to clean up all resources, completing its life cycle
-    entry_id = result["result"].entry_id
-    assert await hass.config_entries.async_remove(entry_id) == {
-        "require_restart": False
-    }
-
 
 async def test_user_flow_uncontactable(
     hass: HomeAssistant, domain_data_mock: Mock
@@ -154,12 +148,6 @@ async def test_user_flow_embedded_st(
     # Wait for platform to be fully setup
     await hass.async_block_till_done()
 
-    # Remove the device to clean up all resources, completing its life cycle
-    entry_id = result["result"].entry_id
-    assert await hass.config_entries.async_remove(entry_id) == {
-        "require_restart": False
-    }
-
 
 async def test_user_flow_wrong_st(hass: HomeAssistant, domain_data_mock: Mock) -> None:
     """Test user-init'd config flow with user entering a URL for the wrong device."""
@@ -194,30 +182,6 @@ async def test_import_flow_invalid(hass: HomeAssistant, domain_data_mock: Mock) 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "incomplete_config"
 
-    # Device is not contactable
-    domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpError
-
-    result = await hass.config_entries.flow.async_init(
-        DLNA_DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={CONF_PLATFORM: DLNA_DOMAIN, CONF_URL: MOCK_DEVICE_LOCATION},
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "could_not_connect"
-
-    # Device is the wrong type
-    domain_data_mock.upnp_factory.async_create_device.side_effect = None
-    upnp_device = domain_data_mock.upnp_factory.async_create_device.return_value
-    upnp_device.device_type = WRONG_DEVICE_TYPE
-
-    result = await hass.config_entries.flow.async_init(
-        DLNA_DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={CONF_PLATFORM: DLNA_DOMAIN, CONF_URL: MOCK_DEVICE_LOCATION},
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "not_dmr"
-
 
 async def test_import_flow_ssdp_discovered(
     hass: HomeAssistant, ssdp_scanner_mock: Mock
@@ -248,7 +212,6 @@ async def test_import_flow_ssdp_discovered(
         CONF_CALLBACK_URL_OVERRIDE: None,
         CONF_POLL_AVAILABILITY: False,
     }
-    entry_id = result["result"].entry_id
 
     # The config entry should not be duplicated when dlna_dmr is restarted
     ssdp_scanner_mock.async_get_discovery_info_by_st.side_effect = [
@@ -266,11 +229,6 @@ async def test_import_flow_ssdp_discovered(
 
     # Wait for platform to be fully setup
     await hass.async_block_till_done()
-
-    # Remove the device to clean up all resources, completing its life cycle
-    assert await hass.config_entries.async_remove(entry_id) == {
-        "require_restart": False
-    }
 
 
 async def test_import_flow_direct_connect(
@@ -299,7 +257,6 @@ async def test_import_flow_direct_connect(
         CONF_CALLBACK_URL_OVERRIDE: None,
         CONF_POLL_AVAILABILITY: True,
     }
-    entry_id = result["result"].entry_id
 
     # The config entry should not be duplicated when dlna_dmr is restarted
     result = await hass.config_entries.flow.async_init(
@@ -310,10 +267,78 @@ async def test_import_flow_direct_connect(
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
-    # Remove the device to clean up all resources, completing its life cycle
-    assert await hass.config_entries.async_remove(entry_id) == {
-        "require_restart": False
+
+async def test_import_flow_offline(
+    hass: HomeAssistant, domain_data_mock: Mock, ssdp_scanner_mock: Mock
+) -> None:
+    """Test import flow of offline device."""
+    # Device is not yet contactable
+    domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpError
+
+    result = await hass.config_entries.flow.async_init(
+        DLNA_DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={
+            CONF_PLATFORM: DLNA_DOMAIN,
+            CONF_URL: MOCK_DEVICE_LOCATION,
+            CONF_NAME: IMPORTED_DEVICE_NAME,
+            CONF_CALLBACK_URL_OVERRIDE: "http://override/callback",
+            CONF_LISTEN_PORT: 2222,
+        },
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {}
+    assert result["step_id"] == "import_turn_on"
+
+    import_flow_id = result["flow_id"]
+
+    # User clicks submit, same form is displayed with an error
+    result = await hass.config_entries.flow.async_configure(
+        import_flow_id, user_input={}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "could_not_connect"}
+    assert result["step_id"] == "import_turn_on"
+
+    # Device is discovered via SSDP, new flow should not be initialized
+    ssdp_scanner_mock.async_get_discovery_info_by_st.side_effect = [
+        [MOCK_DISCOVERY],
+        [],
+        [],
+    ]
+    domain_data_mock.upnp_factory.async_create_device.side_effect = None
+
+    result = await hass.config_entries.flow.async_init(
+        DLNA_DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=MOCK_DISCOVERY,
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_in_progress"
+
+    # User clicks submit, config entry should be created
+    result = await hass.config_entries.flow.async_configure(
+        import_flow_id, user_input={}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == IMPORTED_DEVICE_NAME
+    assert result["data"] == {
+        CONF_URL: MOCK_DEVICE_LOCATION,
+        CONF_DEVICE_ID: MOCK_DEVICE_UDN,
+        CONF_TYPE: MOCK_DEVICE_TYPE,
     }
+    # Options should be retained
+    assert result["options"] == {
+        CONF_LISTEN_PORT: 2222,
+        CONF_CALLBACK_URL_OVERRIDE: "http://override/callback",
+        CONF_POLL_AVAILABILITY: True,
+    }
+
+    # Wait for platform to be fully setup
+    await hass.async_block_till_done()
 
 
 async def test_import_flow_options(
@@ -351,134 +376,6 @@ async def test_import_flow_options(
     # Wait for platform to be fully setup
     await hass.async_block_till_done()
 
-    # Remove the device to clean up all resources, completing its life cycle
-    entry_id = result["result"].entry_id
-    assert await hass.config_entries.async_remove(entry_id) == {
-        "require_restart": False
-    }
-
-
-async def test_import_flow_deferred_ssdp(
-    hass: HomeAssistant, domain_data_mock: Mock, ssdp_scanner_mock: Mock
-) -> None:
-    """Test YAML import of unavailable device later found via SSDP."""
-    # Attempted import at hass start fails because device is unavailable
-    ssdp_scanner_mock.async_get_discovery_info_by_st.side_effect = [
-        [],
-        [],
-        [],
-    ]
-    domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpError
-    result = await hass.config_entries.flow.async_init(
-        DLNA_DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_PLATFORM: DLNA_DOMAIN,
-            CONF_URL: MOCK_DEVICE_LOCATION,
-            CONF_NAME: IMPORTED_DEVICE_NAME,
-            CONF_LISTEN_PORT: 2222,
-            CONF_CALLBACK_URL_OVERRIDE: "http://override/callback",
-        },
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "could_not_connect"
-
-    # Device becomes available then discovered via SSDP, import now occurs automatically
-    ssdp_scanner_mock.async_get_discovery_info_by_st.side_effect = [
-        [MOCK_DISCOVERY],
-        [],
-        [],
-    ]
-    domain_data_mock.upnp_factory.async_create_device.side_effect = None
-
-    result = await hass.config_entries.flow.async_init(
-        DLNA_DOMAIN,
-        context={"source": config_entries.SOURCE_SSDP},
-        data=MOCK_DISCOVERY,
-    )
-    await hass.async_block_till_done()
-
-    assert hass.config_entries.flow.async_progress(include_uninitialized=True) == []
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == IMPORTED_DEVICE_NAME
-    assert result["data"] == {
-        CONF_URL: MOCK_DEVICE_LOCATION,
-        CONF_DEVICE_ID: MOCK_DEVICE_UDN,
-        CONF_TYPE: MOCK_DEVICE_TYPE,
-    }
-    assert result["options"] == {
-        CONF_LISTEN_PORT: 2222,
-        CONF_CALLBACK_URL_OVERRIDE: "http://override/callback",
-        CONF_POLL_AVAILABILITY: False,
-    }
-
-    # Remove the device to clean up all resources, completing its life cycle
-    entry_id = result["result"].entry_id
-    assert await hass.config_entries.async_remove(entry_id) == {
-        "require_restart": False
-    }
-
-
-async def test_import_flow_deferred_user(
-    hass: HomeAssistant, domain_data_mock: Mock, ssdp_scanner_mock: Mock
-) -> None:
-    """Test YAML import of unavailable device later added by user."""
-    # Attempted import at hass start fails because device is unavailable
-    ssdp_scanner_mock.async_get_discovery_info_by_st.return_value = []
-    domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpError
-    result = await hass.config_entries.flow.async_init(
-        DLNA_DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_PLATFORM: DLNA_DOMAIN,
-            CONF_URL: MOCK_DEVICE_LOCATION,
-            CONF_NAME: IMPORTED_DEVICE_NAME,
-            CONF_LISTEN_PORT: 2222,
-            CONF_CALLBACK_URL_OVERRIDE: "http://override/callback",
-        },
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "could_not_connect"
-
-    # Device becomes available then added by user, use all imported settings
-    domain_data_mock.upnp_factory.async_create_device.side_effect = None
-
-    result = await hass.config_entries.flow.async_init(
-        DLNA_DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {}
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_URL: MOCK_DEVICE_LOCATION}
-    )
-    await hass.async_block_till_done()
-
-    assert hass.config_entries.flow.async_progress(include_uninitialized=True) == []
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == IMPORTED_DEVICE_NAME
-    assert result["data"] == {
-        CONF_URL: MOCK_DEVICE_LOCATION,
-        CONF_DEVICE_ID: MOCK_DEVICE_UDN,
-        CONF_TYPE: MOCK_DEVICE_TYPE,
-    }
-    assert result["options"] == {
-        CONF_LISTEN_PORT: 2222,
-        CONF_CALLBACK_URL_OVERRIDE: "http://override/callback",
-        CONF_POLL_AVAILABILITY: True,
-    }
-
-    # Remove the device to clean up all resources, completing its life cycle
-    entry_id = result["result"].entry_id
-    assert await hass.config_entries.async_remove(entry_id) == {
-        "require_restart": False
-    }
-
 
 async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
     """Test that SSDP discovery with an available device works."""
@@ -488,7 +385,6 @@ async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
         data=MOCK_DISCOVERY,
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {}
     assert result["step_id"] == "confirm"
 
     result = await hass.config_entries.flow.async_configure(
@@ -505,20 +401,14 @@ async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
     }
     assert result["options"] == {}
 
-    # Remove the device to clean up all resources, completing its life cycle
-    entry_id = result["result"].entry_id
-    assert await hass.config_entries.async_remove(entry_id) == {
-        "require_restart": False
-    }
-
 
 async def test_ssdp_flow_unavailable(
     hass: HomeAssistant, domain_data_mock: Mock
 ) -> None:
-    """Test that SSDP discovery with an unavailable device gives an error message.
+    """Test that SSDP discovery with an unavailable device still succeeds.
 
-    This may occur if the device is turned on, discovered, then turned off
-    before the user attempts to add it.
+    All the required information for configuration is obtained from the SSDP
+    message, there's no need to connect to the device to configure it.
     """
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN,
@@ -526,7 +416,6 @@ async def test_ssdp_flow_unavailable(
         data=MOCK_DISCOVERY,
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {}
     assert result["step_id"] == "confirm"
 
     domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpError
@@ -534,9 +423,16 @@ async def test_ssdp_flow_unavailable(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "could_not_connect"}
-    assert result["step_id"] == "confirm"
+    await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == MOCK_DEVICE_NAME
+    assert result["data"] == {
+        CONF_URL: MOCK_DEVICE_LOCATION,
+        CONF_DEVICE_ID: MOCK_DEVICE_UDN,
+        CONF_TYPE: MOCK_DEVICE_TYPE,
+    }
+    assert result["options"] == {}
 
 
 async def test_ssdp_flow_existing(

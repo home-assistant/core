@@ -14,15 +14,7 @@ from homeassistant.helpers.entity_registry import (
 )
 
 from .config_flow import get_master_gateway
-from .const import (
-    CONF_BRIDGE_ID,
-    DOMAIN,
-    LOGGER,
-    NEW_GROUP,
-    NEW_LIGHT,
-    NEW_SCENE,
-    NEW_SENSOR,
-)
+from .const import CONF_BRIDGE_ID, DOMAIN, LOGGER
 
 DECONZ_SERVICES = "deconz_services"
 
@@ -145,8 +137,8 @@ async def async_refresh_devices_service(gateway):
     await gateway.api.refresh_state()
     gateway.ignore_state_updates = False
 
-    for new_device_type in (NEW_GROUP, NEW_LIGHT, NEW_SCENE, NEW_SENSOR):
-        gateway.async_add_device_callback(new_device_type, force=True)
+    for resource_type in gateway.deconz_resource_type_to_signal_new_device:
+        gateway.async_add_device_callback(resource_type, force=True)
 
 
 async def async_remove_orphaned_entries_service(gateway):

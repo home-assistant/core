@@ -45,7 +45,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 
-from .const import ATTR_DARK, ATTR_ON, NEW_SENSOR
+from .const import ATTR_DARK, ATTR_ON
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
@@ -167,7 +167,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
-            hass, gateway.async_signal_new_device(NEW_SENSOR), async_add_sensor
+            hass,
+            gateway.signal_new_sensor,
+            async_add_sensor,
         )
     )
 
@@ -340,7 +342,7 @@ class DeconzSensorStateTracker:
         if "battery" in self.sensor.changed_keys:
             async_dispatcher_send(
                 self.gateway.hass,
-                self.gateway.async_signal_new_device(NEW_SENSOR),
+                self.gateway.signal_new_sensor,
                 [self.sensor],
             )
 

@@ -63,6 +63,8 @@ from .const import (
     DATA_CAMERA_PREFS,
     DOMAIN,
     SERVICE_RECORD,
+    STREAM_TYPE_HLS,
+    STREAM_TYPE_WEB_RTC,
 )
 from .img_util import scale_jpeg_camera_image
 from .prefs import CameraPreferences
@@ -207,7 +209,6 @@ async def async_get_image(
 async def async_get_stream_source(hass: HomeAssistant, entity_id: str) -> str | None:
     """Fetch the stream source for a camera entity."""
     camera = _get_camera_from_entity_id(hass, entity_id)
-
     return await camera.stream_source()
 
 
@@ -271,9 +272,7 @@ async def async_get_still_stream(
 
 def _get_camera_from_entity_id(hass: HomeAssistant, entity_id: str) -> Camera:
     """Get camera component from entity_id."""
-    component = hass.data.get(DOMAIN)
-
-    if component is None:
+    if (component := hass.data.get(DOMAIN)) is None:
         raise HomeAssistantError("Camera integration not set up")
 
     camera = component.get_entity(entity_id)
@@ -303,6 +302,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         WS_TYPE_CAMERA_THUMBNAIL, websocket_camera_thumbnail, SCHEMA_WS_CAMERA_THUMBNAIL
     )
     hass.components.websocket_api.async_register_command(ws_camera_stream)
+    hass.components.websocket_api.async_register_command(ws_camera_web_rtc_offer)
     hass.components.websocket_api.async_register_command(websocket_get_prefs)
     hass.components.websocket_api.async_register_command(websocket_update_prefs)
 
@@ -421,6 +421,18 @@ class Camera(Entity):
         """Return the interval between frames of the mjpeg stream."""
         return MIN_STREAM_INTERVAL
 
+    @property
+    def frontend_stream_type(self) -> str | None:
+        """Return the type of stream supported by this camera.
+
+        A camera may have a single stream type which is used to inform the
+        frontend which camera attributes and player to use. The default type
+        is to use HLS, and components can override to change the type.
+        """
+        if not self.supported_features & SUPPORT_STREAM:
+            return None
+        return STREAM_TYPE_HLS
+
     async def create_stream(self) -> Stream | None:
         """Create a Stream for stream_source."""
         # There is at most one stream (a decode worker) per camera
@@ -433,9 +445,19 @@ class Camera(Entity):
         return self.stream
 
     async def stream_source(self) -> str | None:
-        """Return the source of the stream."""
+        """Return the source of the stream.
+
+        This is used by cameras with SUPPORT_STREAM and STREAM_TYPE_HLS.
+        """
         # pylint: disable=no-self-use
         return None
+
+    async def async_handle_web_rtc_offer(self, offer_sdp: str) -> str | None:
+        """Handle the WebRTC offer and return an answer.
+
+        This is used by cameras with SUPPORT_STREAM and STREAM_TYPE_WEB_RTC.
+        """
+        raise NotImplementedError()
 
     def camera_image(
         self, width: int | None = None, height: int | None = None
@@ -548,6 +570,11 @@ class Camera(Entity):
         if self.motion_detection_enabled:
             attrs["motion_detection"] = self.motion_detection_enabled
 
+        if self.frontend_stream_type:
+            attrs["frontend_stream_type"] = self.frontend_stream_type
+            # Remove after home-assistant/frontend#10298 is merged into nightly
+            attrs["stream_type"] = self.frontend_stream_type
+
         return attrs
 
     @callback
@@ -626,8 +653,7 @@ class CameraMjpegStream(CameraView):
 
     async def handle(self, request: web.Request, camera: Camera) -> web.StreamResponse:
         """Serve camera stream, possibly with interval."""
-        interval_str = request.query.get("interval")
-        if interval_str is None:
+        if (interval_str := request.query.get("interval")) is None:
             stream = await camera.handle_async_mjpeg_stream(request)
             if stream is None:
                 raise web.HTTPBadGateway()
@@ -697,6 +723,50 @@ async def ws_camera_stream(
         connection.send_error(
             msg["id"], "start_stream_failed", "Timeout getting stream source"
         )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "camera/web_rtc_offer",
+        vol.Required("entity_id"): cv.entity_id,
+        vol.Required("offer"): str,
+    }
+)
+@websocket_api.async_response
+async def ws_camera_web_rtc_offer(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+) -> None:
+    """Handle the signal path for a WebRTC stream.
+
+    This signal path is used to route the offer created by the client to the
+    camera device through the integration for negitioation on initial setup,
+    which returns an answer. The actual streaming is handled entirely between
+    the client and camera device.
+
+    Async friendly.
+    """
+    entity_id = msg["entity_id"]
+    offer = msg["offer"]
+    camera = _get_camera_from_entity_id(hass, entity_id)
+    if camera.frontend_stream_type != STREAM_TYPE_WEB_RTC:
+        connection.send_error(
+            msg["id"],
+            "web_rtc_offer_failed",
+            f"Camera does not support WebRTC, frontend_stream_type={camera.frontend_stream_type}",
+        )
+        return
+    try:
+        answer = await camera.async_handle_web_rtc_offer(offer)
+    except (HomeAssistantError, ValueError) as ex:
+        _LOGGER.error("Error handling WebRTC offer: %s", ex)
+        connection.send_error(msg["id"], "web_rtc_offer_failed", str(ex))
+    except asyncio.TimeoutError:
+        _LOGGER.error("Timeout handling WebRTC offer")
+        connection.send_error(
+            msg["id"], "web_rtc_offer_failed", "Timeout handling WebRTC offer"
+        )
+    else:
+        connection.send_result(msg["id"], {"answer": answer})
 
 
 @websocket_api.websocket_command(

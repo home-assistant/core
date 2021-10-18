@@ -248,8 +248,7 @@ def get_date(zone, offset=0):
 
 def get_release_date(data):
     """Get release date."""
-    date = data.get("physicalRelease")
-    if not date:
+    if not (date := data.get("physicalRelease")):
         date = data.get("inCinemas")
     return date
 

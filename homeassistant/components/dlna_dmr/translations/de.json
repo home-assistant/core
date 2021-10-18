@@ -17,6 +17,9 @@
             "confirm": {
                 "description": "M\u00f6chtest Du mit der Einrichtung beginnen?"
             },
+            "import_turn_on": {
+                "description": "Bitte schalte das Ger\u00e4t ein und klicke auf Senden, um die Migration fortzusetzen"
+            },
             "user": {
                 "data": {
                     "url": "URL"

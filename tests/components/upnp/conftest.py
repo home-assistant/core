@@ -9,6 +9,9 @@ from homeassistant.components import ssdp
 from homeassistant.components.upnp.const import (
     BYTES_RECEIVED,
     BYTES_SENT,
+    CONFIG_ENTRY_ST,
+    CONFIG_ENTRY_UDN,
+    DOMAIN,
     PACKETS_RECEIVED,
     PACKETS_SENT,
     ROUTER_IP,
@@ -18,6 +21,8 @@ from homeassistant.components.upnp.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt
+
+from tests.common import MockConfigEntry
 
 TEST_UDN = "uuid:device"
 TEST_ST = "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
@@ -115,8 +120,8 @@ class MockDevice:
         self.status_times_polled += 1
         return {
             WAN_STATUS: "Connected",
-            ROUTER_UPTIME: 0,
-            ROUTER_IP: "192.168.0.1",
+            ROUTER_UPTIME: 10,
+            ROUTER_IP: "8.9.10.11",
         }
 
 
@@ -185,3 +190,24 @@ async def ssdp_no_discovery():
         return_value=[],
     ) as mock_get_info:
         yield (mock_register, mock_get_info)
+
+
+@pytest.fixture
+async def setup_integration(
+    hass: HomeAssistant, mock_get_source_ip, ssdp_instant_discovery, mock_upnp_device
+):
+    """Create an initialized integration."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONFIG_ENTRY_UDN: TEST_UDN,
+            CONFIG_ENTRY_ST: TEST_ST,
+        },
+    )
+
+    # Load config_entry.
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    yield entry

@@ -301,6 +301,7 @@ def test_entity_device_info_schema():
             "name": "Beer",
             "model": "Glass",
             "sw_version": "0.1-beta",
+            "configuration_url": "http://example.com",
         }
     )
     # full device info with via_device
@@ -316,6 +317,7 @@ def test_entity_device_info_schema():
             "model": "Glass",
             "sw_version": "0.1-beta",
             "via_device": "test-hub",
+            "configuration_url": "http://example.com",
         }
     )
     # no identifiers
@@ -332,6 +334,18 @@ def test_entity_device_info_schema():
     with pytest.raises(vol.Invalid):
         MQTT_ENTITY_DEVICE_INFO_SCHEMA(
             {"identifiers": [], "connections": [], "name": "Beer"}
+        )
+
+    # not an valid URL
+    with pytest.raises(vol.Invalid):
+        MQTT_ENTITY_DEVICE_INFO_SCHEMA(
+            {
+                "manufacturer": "Whatever",
+                "name": "Beer",
+                "model": "Glass",
+                "sw_version": "0.1-beta",
+                "configuration_url": "fake://link",
+            }
         )
 
 
