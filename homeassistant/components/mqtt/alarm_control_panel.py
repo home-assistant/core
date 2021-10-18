@@ -201,8 +201,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
     @property
     def code_format(self):
         """Return one or more digits/characters."""
-        code = self._config.get(CONF_CODE)
-        if code is None:
+        if (code := self._config.get(CONF_CODE)) is None:
             return None
         if isinstance(code, str) and re.search("^\\d+$", code):
             return alarm.FORMAT_NUMBER
