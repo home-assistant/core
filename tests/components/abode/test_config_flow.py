@@ -15,11 +15,12 @@ from homeassistant.const import (
     HTTP_BAD_REQUEST,
     HTTP_INTERNAL_SERVER_ERROR,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-async def test_show_form(hass):
+async def test_show_form(hass: HomeAssistant):
     """Test that the form is served with no input."""
     flow = config_flow.AbodeFlowHandler()
     flow.hass = hass
@@ -30,7 +31,7 @@ async def test_show_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_one_config_allowed(hass):
+async def test_one_config_allowed(hass: HomeAssistant):
     """Test that only one Abode configuration is allowed."""
     flow = config_flow.AbodeFlowHandler()
     flow.hass = hass
@@ -46,7 +47,7 @@ async def test_one_config_allowed(hass):
     assert step_user_result["reason"] == "single_instance_allowed"
 
 
-async def test_invalid_credentials(hass):
+async def test_invalid_credentials(hass: HomeAssistant):
     """Test that invalid credentials throws an error."""
     conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
 
@@ -61,7 +62,7 @@ async def test_invalid_credentials(hass):
         assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_connection_auth_error(hass):
+async def test_connection_auth_error(hass: HomeAssistant):
     """Test other than invalid credentials throws an error."""
     conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
 
@@ -76,7 +77,7 @@ async def test_connection_auth_error(hass):
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_connection_error(hass):
+async def test_connection_error(hass: HomeAssistant):
     """Test login throws an error if connection times out."""
     conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
 
@@ -91,7 +92,7 @@ async def test_connection_error(hass):
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_step_user(hass):
+async def test_step_user(hass: HomeAssistant):
     """Test that the user step works."""
     conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
 
@@ -112,7 +113,7 @@ async def test_step_user(hass):
         }
 
 
-async def test_step_mfa(hass):
+async def test_step_mfa(hass: HomeAssistant):
     """Test that the MFA step works."""
     conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
 
@@ -153,7 +154,7 @@ async def test_step_mfa(hass):
         }
 
 
-async def test_step_reauth(hass):
+async def test_step_reauth(hass: HomeAssistant):
     """Test the reauth flow."""
     conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
 

@@ -4,12 +4,13 @@ from unittest.mock import patch
 from homeassistant.components.abode import DOMAIN as ABODE_DOMAIN
 from homeassistant.components.abode.const import CONF_POLLING
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
 
-async def setup_platform(hass, platform):
+async def setup_platform(hass: HomeAssistant, platform: str):
     """Set up the Abode platform."""
     mock_entry = MockConfigEntry(
         domain=ABODE_DOMAIN,
