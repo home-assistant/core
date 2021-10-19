@@ -4,6 +4,7 @@ from datetime import timedelta
 from time import time
 from unittest.mock import AsyncMock, patch
 
+import aiohttp
 import pyatmo
 
 from homeassistant import config_entries
@@ -419,6 +420,53 @@ async def test_setup_component_invalid_token_scope(hass):
         mock_auth.return_value.async_post_request.side_effect = fake_post_request
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        assert await async_setup_component(hass, "netatmo", {})
+
+    await hass.async_block_till_done()
+
+    mock_auth.assert_not_called()
+    mock_impl.assert_called_once()
+    mock_webhook.assert_not_called()
+
+    assert config_entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+    assert hass.config_entries.async_entries(DOMAIN)
+    assert len(hass.states.async_all()) > 0
+
+    for config_entry in hass.config_entries.async_entries("netatmo"):
+        await hass.config_entries.async_remove(config_entry.entry_id)
+
+
+async def test_setup_component_invalid_token(hass, config_entry):
+    """Test handling of invalid token."""
+
+    async def fake_ensure_valid_token(*args, **kwargs):
+        print("fake_ensure_valid_token")
+        raise aiohttp.ClientResponseError(
+            request_info=aiohttp.client.RequestInfo(
+                url="http://example.com",
+                method="GET",
+                headers={},
+                real_url="http://example.com",
+            ),
+            code=400,
+            history=(),
+        )
+
+    with patch(
+        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
+    ) as mock_auth, patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+    ) as mock_impl, patch(
+        "homeassistant.components.webhook.async_generate_url"
+    ) as mock_webhook, patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session"
+    ) as mock_session:
+        mock_auth.return_value.async_post_request.side_effect = fake_post_request
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        mock_session.return_value.async_ensure_token_valid.side_effect = (
+            fake_ensure_valid_token
+        )
         assert await async_setup_component(hass, "netatmo", {})
 
     await hass.async_block_till_done()
