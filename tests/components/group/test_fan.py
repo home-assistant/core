@@ -1,8 +1,11 @@
 """The tests for the group fan platform."""
 from datetime import timedelta
+from os import path
+from unittest.mock import patch
 
 import pytest
 
+from homeassistant import config as hass_config
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
     ATTR_OSCILLATING,
@@ -21,6 +24,7 @@ from homeassistant.components.fan import (
     SUPPORT_OSCILLATE,
     SUPPORT_SET_SPEED,
 )
+from homeassistant.components.group import SERVICE_RELOAD
 from homeassistant.components.group.fan import DEFAULT_NAME
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -33,6 +37,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import CoreState
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -343,8 +348,39 @@ async def test_direction_oscillating(hass, setup_comp):
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_MISSING_FAN, 2)])
-async def test_state(hass, setup_comp):
+async def test_state_missing_entity_id(hass, setup_comp):
     """Test we can still setup with a missing entity id."""
     state = hass.states.get(FAN_GROUP)
     await hass.async_block_till_done()
     assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize("config_count", [(CONFIG_MISSING_FAN, 2)])
+async def test_reload(hass, setup_comp):
+    """Test the ability to reload fans."""
+    await hass.async_block_till_done()
+    await hass.async_start()
+
+    await hass.async_block_till_done()
+    assert hass.states.get(FAN_GROUP).state == STATE_OFF
+
+    yaml_path = path.join(
+        _get_fixtures_base_path(),
+        "fixtures",
+        "group/fan_configuration.yaml",
+    )
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            "group",
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert hass.states.get(FAN_GROUP) is None
+    assert hass.states.get("fan.upstairs_fans") is not None
+
+
+def _get_fixtures_base_path():
+    return path.dirname(path.dirname(path.dirname(__file__)))
