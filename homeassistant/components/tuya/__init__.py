@@ -33,7 +33,6 @@ from .const import (
     PLATFORMS,
     TUYA_DISCOVERY_NEW,
     TUYA_HA_SIGNAL_UPDATE_ENTITY,
-    TUYA_SUPPORTED_PRODUCT_CATEGORIES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -118,8 +117,7 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Register known device IDs
     for device in device_manager.device_map.values():
-        if device.category in TUYA_SUPPORTED_PRODUCT_CATEGORIES:
-            device_ids.add(device.id)
+        device_ids.add(device.id)
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
@@ -178,20 +176,19 @@ class DeviceListener(TuyaDeviceListener):
 
     def add_device(self, device: TuyaDevice) -> None:
         """Add device added listener."""
-        if device.category in TUYA_SUPPORTED_PRODUCT_CATEGORIES:
-            # Ensure the device isn't present stale
-            self.hass.add_job(self.async_remove_device, device.id)
+        # Ensure the device isn't present stale
+        self.hass.add_job(self.async_remove_device, device.id)
 
-            self.device_ids.add(device.id)
-            dispatcher_send(self.hass, TUYA_DISCOVERY_NEW, [device.id])
+        self.device_ids.add(device.id)
+        dispatcher_send(self.hass, TUYA_DISCOVERY_NEW, [device.id])
 
-            device_manager = self.device_manager
-            device_manager.mq.stop()
-            tuya_mq = TuyaOpenMQ(device_manager.api)
-            tuya_mq.start()
+        device_manager = self.device_manager
+        device_manager.mq.stop()
+        tuya_mq = TuyaOpenMQ(device_manager.api)
+        tuya_mq.start()
 
-            device_manager.mq = tuya_mq
-            tuya_mq.add_message_listener(device_manager.on_message)
+        device_manager.mq = tuya_mq
+        tuya_mq.add_message_listener(device_manager.on_message)
 
     def remove_device(self, device_id: str) -> None:
         """Add device removed listener."""
