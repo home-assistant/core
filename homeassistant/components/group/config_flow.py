@@ -2,14 +2,16 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable
 from typing import Any
 
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_DOMAIN, CONF_ENTITIES
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.data_entry_flow import FlowResult
+import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import async_get_integration
 
 from . import PLATFORMS
@@ -50,12 +52,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.domain = user_input[CONF_DOMAIN]
             return await self.async_step_entities()
 
+        all_entities = _async_get_matching_entities(self.hass, None)
+        domains_with_entities = _domains_set_from_entities(all_entities)
         name_to_type_map = await _async_name_to_type_map(self.hass)
+        domains = {
+            domain: name
+            for domain, name in name_to_type_map.items()
+            if domain in domains_with_entities
+        }
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_DOMAIN): vol.In(name_to_type_map),
+                    vol.Required(CONF_DOMAIN): vol.In(domains),
                 }
             ),
         )
@@ -80,7 +89,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="entities",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_ENTITIES): vol.In(domain_entities),
+                    vol.Required(CONF_ENTITIES): cv.multi_select(domain_entities),
                 }
             ),
         )
@@ -107,7 +116,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_ENTITIES, default=entities): vol.In(
+                    vol.Required(CONF_ENTITIES, default=entities): cv.multi_select(
                         domain_entities
                     ),
                 }
@@ -115,8 +124,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
 
+def _domains_set_from_entities(entity_ids: Iterable) -> set[str]:
+    """Build a set of domains for the given entity ids."""
+    return {split_entity_id(entity_id)[0] for entity_id in entity_ids}
+
+
 def _async_get_matching_entities(
-    hass: HomeAssistant, domains: list[str]
+    hass: HomeAssistant, domains: list[str] | None
 ) -> dict[str, str]:
     """Fetch all entities or entities in the given domains."""
     return {

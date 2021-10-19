@@ -345,10 +345,23 @@ async def async_setup(hass, config):
     return True
 
 
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload the config entry on change of title/entities."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Group from a config entry."""
-    hass.config_entries.async_setup_platforms(entry, entry.data[CONF_DOMAIN])
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+    hass.config_entries.async_setup_platforms(entry, [entry.data[CONF_DOMAIN]])
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload Group from a config entry."""
+    return await hass.config_entries.async_unload_platforms(
+        entry, [entry.data[CONF_DOMAIN]]
+    )
 
 
 async def _process_group_platform(hass, domain, platform):
