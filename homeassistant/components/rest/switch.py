@@ -6,8 +6,13 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    DEVICE_CLASSES_SCHEMA,
+    PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import (
+    CONF_DEVICE_CLASS,
     CONF_HEADERS,
     CONF_METHOD,
     CONF_NAME,
@@ -51,6 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             vol.Lower, vol.In(SUPPORT_REST_METHODS)
         ),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
         vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
@@ -68,6 +74,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     headers = config.get(CONF_HEADERS)
     params = config.get(CONF_PARAMS)
     name = config.get(CONF_NAME)
+    device_class = config.get(CONF_DEVICE_CLASS)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     resource = config.get(CONF_RESOURCE)
@@ -89,6 +96,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     try:
         switch = RestSwitch(
             name,
+            device_class,
             resource,
             state_resource,
             method,
@@ -122,6 +130,7 @@ class RestSwitch(SwitchEntity):
     def __init__(
         self,
         name,
+        device_class,
         resource,
         state_resource,
         method,
@@ -148,6 +157,8 @@ class RestSwitch(SwitchEntity):
         self._is_on_template = is_on_template
         self._timeout = timeout
         self._verify_ssl = verify_ssl
+
+        self._attr_device_class = device_class
 
     @property
     def name(self):
