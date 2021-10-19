@@ -215,10 +215,15 @@ async def test_feed_invalid_data(hass, events):
     assert len(events) == 0
 
 
-async def test_feed_parsing_failed(hass):
+async def test_feed_parsing_failed(hass, events, caplog):
     """Test feed where parsing fails."""
+    assert "Error fetching feed data" not in caplog.text
+
     with patch("feedparser.parse", return_value=None):
         assert await async_setup_component(hass, feedreader.DOMAIN, VALID_CONFIG_2)
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
+
+    assert "Error fetching feed data" in caplog.text
+    assert not events
