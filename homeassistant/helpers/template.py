@@ -16,6 +16,7 @@ import math
 from operator import attrgetter
 import random
 import re
+import statistics
 import sys
 from typing import Any, cast
 from urllib.parse import urlencode as urllib_urlencode
@@ -1443,24 +1444,20 @@ def fail_when_undefined(value):
 
 def average(*args: Any) -> float:
     """
-    Filter and function to calculate the mean of a set.
+    Filter and function to calculate the arithmetic mean of an iterable or of two or more arguments.
 
     The parameters may be passed as an iterable or as separate arguments.
     """
-
-    def avg(*items: Any) -> float:
-        return sum(float(item) for item in items) / len(items)
-
     if len(args) == 0:
         raise TypeError("average expected at least 1 argument, got 0")
 
     if len(args) == 1:
-        if isinstance(args[0], (list, tuple)):
-            return avg(*args[0])
+        if isinstance(args[0], Iterable):
+            return statistics.fmean(args[0])
 
         raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
 
-    return avg(*args)
+    return statistics.fmean(args)
 
 
 def forgiving_float(value, default=_SENTINEL):
