@@ -5,6 +5,8 @@ from datetime import timedelta
 import logging
 from typing import Any, Final, cast
 
+from aiolookin import Climate, MeteoSensor, SensorID
+
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
@@ -32,7 +34,6 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .aiolookin import Climate, MeteoSensor, SensorID
 from .const import DOMAIN
 from .entity import LookinEntity
 from .models import LookinData

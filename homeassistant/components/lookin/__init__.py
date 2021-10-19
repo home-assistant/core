@@ -5,6 +5,7 @@ from datetime import timedelta
 import logging
 
 import aiohttp
+from aiolookin import LookInHttpProtocol, LookinUDPSubscriptions, start_lookin_udp
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -13,7 +14,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .aiolookin import LookInHttpProtocol, LookinUDPSubscriptions, start_lookin_udp
 from .const import DOMAIN, PLATFORMS
 from .models import LookinData
 
@@ -34,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except aiohttp.ClientError as ex:
         raise ConfigEntryNotReady from ex
 
-    meteo_coordinator = DataUpdateCoordinator(
+    meteo_coordinator: DataUpdateCoordinator = DataUpdateCoordinator(
         hass,
         LOGGER,
         name=entry.title,
