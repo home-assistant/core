@@ -1123,7 +1123,7 @@ onkyo-eiscp==1.2.7
 onvif-zeep-async==1.2.0
 
 # homeassistant.components.opengarage
-open-garage==0.1.5
+open-garage==0.1.6
 
 # homeassistant.components.opencv
 # opencv-python-headless==4.5.2.54
@@ -2140,7 +2140,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==11.0.7
+simplisafe-python==12.0.0
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.0

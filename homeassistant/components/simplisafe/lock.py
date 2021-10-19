@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from simplipy.device.lock import Lock, LockStates
 from simplipy.errors import SimplipyError
-from simplipy.lock import Lock, LockStates
 from simplipy.system.v3 import SystemV3
 
 from homeassistant.components.lock import LockEntity
@@ -23,7 +23,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up SimpliSafe locks based on a config entry."""
-    simplisafe = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
+    simplisafe = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
     locks = []
 
     for system in simplisafe.systems.values():
@@ -49,7 +49,7 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         try:
-            await self._lock.lock()
+            await self._lock.async_lock()
         except SimplipyError as err:
             LOGGER.error('Error while locking "%s": %s', self._lock.name, err)
             return
@@ -60,7 +60,7 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         try:
-            await self._lock.unlock()
+            await self._lock.async_unlock()
         except SimplipyError as err:
             LOGGER.error('Error while unlocking "%s": %s', self._lock.name, err)
             return

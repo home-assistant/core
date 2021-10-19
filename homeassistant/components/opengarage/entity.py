@@ -2,6 +2,7 @@
 
 from homeassistant.components.opengarage import DOMAIN
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -36,8 +37,12 @@ class OpenGarageEntity(CoordinatorEntity):
     def device_info(self):
         """Return the device_info of the device."""
         device_info = DeviceInfo(
+            configuration_url=self.coordinator.open_garage_connection.device_url,
+            connections={(CONNECTION_NETWORK_MAC, self.coordinator.data["mac"])},
             identifiers={(DOMAIN, self._device_id)},
-            name=self.coordinator.data["name"],
             manufacturer="Open Garage",
+            name=self.coordinator.data["name"],
+            suggested_area="Garage",
+            sw_version=self.coordinator.data["fwv"],
         )
         return device_info

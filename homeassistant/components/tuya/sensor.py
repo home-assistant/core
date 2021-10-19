@@ -127,12 +127,15 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
     # PIR Detector
     # https://developer.tuya.com/en/docs/iot/categorypir?id=Kaiuz3ss11b80
     "pir": BATTERY_SENSORS,
-    # Vibration Sensor
-    # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
-    "zd": BATTERY_SENSORS,
+    # Water Detector
+    # https://developer.tuya.com/en/docs/iot/categorysj?id=Kaiuz3iub2sli
+    "sj": BATTERY_SENSORS,
     # Emergency Button
     # https://developer.tuya.com/en/docs/iot/categorysos?id=Kaiuz3oi6agjy
     "sos": BATTERY_SENSORS,
+    # Vibration Sensor
+    # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
+    "zd": BATTERY_SENSORS,
 }
 
 # Socket (duplicate of `kg`)
