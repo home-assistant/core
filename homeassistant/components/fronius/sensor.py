@@ -27,6 +27,7 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     FREQUENCY_HERTZ,
     PERCENTAGE,
     POWER_VOLT_AMPERE,
@@ -186,6 +187,32 @@ INVERTER_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:current-dc",
     ),
+    # device status entities
+    "inverter_state": SensorEntityDescription(
+        key="inverter_state",
+        name="Inverter state",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    "error_code": SensorEntityDescription(
+        key="error_code",
+        name="Error code",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    "status_code": SensorEntityDescription(
+        key="status_code",
+        name="Status code",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    "led_state": SensorEntityDescription(
+        key="led_state",
+        name="LED state",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    "led_color": SensorEntityDescription(
+        key="led_color",
+        name="LED color",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
 }
 
 LOGGER_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
@@ -278,6 +305,11 @@ METER_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         name="Frequency phase average",
         native_unit_of_measurement=FREQUENCY_HERTZ,
         state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "meter_location": SensorEntityDescription(
+        key="meter_location",
+        name="Meter location",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     "power_apparent_phase_1": SensorEntityDescription(
         key="power_apparent_phase_1",
@@ -452,6 +484,11 @@ POWER_FLOW_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
+    ),
+    "meter_mode": SensorEntityDescription(
+        key="meter_mode",
+        name="Mode",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     "power_battery": SensorEntityDescription(
         key="power_battery",

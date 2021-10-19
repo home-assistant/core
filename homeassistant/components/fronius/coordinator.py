@@ -102,6 +102,11 @@ class FroniusInverterUpdateCoordinator(FroniusCoordinatorBase):
         "voltage_ac",
         "voltage_dc",
         "voltage_dc_2",
+        "inverter_state",
+        "error_code",
+        "status_code",
+        "led_state",
+        "led_color",
     ]
 
     def __init__(
@@ -150,6 +155,7 @@ class FroniusMeterUpdateCoordinator(FroniusCoordinatorBase):
         "energy_real_consumed",
         "energy_real_produced",
         "frequency_phase_average",
+        "meter_location",
         "power_apparent_phase_1",
         "power_apparent_phase_2",
         "power_apparent_phase_3",
@@ -187,6 +193,7 @@ class FroniusPowerFlowUpdateCoordinator(FroniusCoordinatorBase):
         "energy_day",
         "energy_year",
         "energy_total",
+        "meter_mode",
         "power_battery",
         "power_grid",
         "power_load",
