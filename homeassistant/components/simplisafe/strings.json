@@ -20,7 +20,8 @@
     },
     "abort": {
       "already_configured": "This SimpliSafe account is already in use.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_account": "The user credentials provided do not match this SimpliSafe account."
     }
   },
   "options": {

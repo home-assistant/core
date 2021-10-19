@@ -105,15 +105,18 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # unique ID, whereas "new" config entries utilize the SimpliSafe user ID –
             # either one is a candidate for re-auth:
             existing_entry = await self.async_set_unique_id(self._username or unique_id)
+            if not existing_entry:
+                # If we don't have an entry that matches this user ID, the user logged
+                # in with different credentials:
+                return self.async_abort(reason="wrong_account")
 
-            if existing_entry:
-                self.hass.config_entries.async_update_entry(
-                    existing_entry, unique_id=unique_id, data=data
-                )
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(existing_entry.entry_id)
-                )
-                return self.async_abort(reason="reauth_successful")
+            self.hass.config_entries.async_update_entry(
+                existing_entry, unique_id=unique_id, data=data
+            )
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(existing_entry.entry_id)
+            )
+            return self.async_abort(reason="reauth_successful")
 
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()

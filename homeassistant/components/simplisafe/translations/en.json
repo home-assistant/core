@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "This SimpliSafe account is already in use.",
-            "reauth_successful": "Re-authentication was successful"
+            "reauth_successful": "Re-authentication was successful",
+            "wrong_account": "The user credentials provided do not match this SimpliSafe account."
         },
         "error": {
             "identifier_exists": "Account already registered",
@@ -19,7 +20,7 @@
                 "title": "Finish Authorization"
             },
             "user": {
-                "description": "Starting in 2021, SimpliSafe has moved to a new authentication mechanism via its web app. Due to technical limitations, there is a manual step at the end of this process; please ensure that you read the [documentation](http://home-assistant.io/integrations/simplisafe/) before starting.\n\nWhen you are ready, click [here]({url}) to open the SimpliSafe web app and input your credentials. When the process is complete, return here and click Submit."
+                "description": "Starting in 2021, SimpliSafe has moved to a new authentication mechanism via its web app. Due to technical limitations, there is a manual step at the end of this process; please ensure that you read the [documentation](http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) before starting.\n\nWhen you are ready, click [here]({url}) to open the SimpliSafe web app and input your credentials. When the process is complete, return here and click Submit."
             }
         }
     },
