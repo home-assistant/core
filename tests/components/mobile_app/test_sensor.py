@@ -21,6 +21,7 @@ async def test_sensor(hass, create_registrations, webhook_client):
                 "type": "sensor",
                 "entity_category": "diagnostic",
                 "unique_id": "battery_state",
+                "state_class": "total",
                 "unit_of_measurement": PERCENTAGE,
             },
         },
@@ -39,6 +40,7 @@ async def test_sensor(hass, create_registrations, webhook_client):
     assert entity.attributes["icon"] == "mdi:battery"
     assert entity.attributes["unit_of_measurement"] == PERCENTAGE
     assert entity.attributes["foo"] == "bar"
+    assert entity.attributes["state_class"] == "total"
     assert entity.domain == "sensor"
     assert entity.name == "Test 1 Battery State"
     assert entity.state == "100"
