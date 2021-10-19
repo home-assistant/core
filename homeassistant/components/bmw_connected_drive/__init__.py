@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-from typing import Any
+from typing import Any, cast
 
 from bimmer_connected.account import ConnectedDriveAccount
 from bimmer_connected.country_selector import get_region_from_name
@@ -227,8 +227,13 @@ def setup_account(
         vehicle: ConnectedDriveVehicle | None = None
 
         if not vin and device_id:
-            device = device_registry.async_get(hass).async_get(device_id)
+            # If vin is None, device_id must be set (given by SERVICE_SCHEMA)
+            if not (device := device_registry.async_get(hass).async_get(device_id)):
+                _LOGGER.error("Could not find a device for id: %s", device_id)
+                return
             vin = next(iter(device.identifiers))[1]
+        else:
+            vin = cast(str, vin)
 
         # Double check for read_only accounts as another account could create the services
         for entry_data in [
