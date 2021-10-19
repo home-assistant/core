@@ -420,9 +420,7 @@ def handle_entity_source(
                 perm_category=CAT_ENTITIES,
             )
 
-        source = raw_sources.get(entity_id)
-
-        if source is None:
+        if (source := raw_sources.get(entity_id)) is None:
             connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
             return
 

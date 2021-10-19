@@ -552,8 +552,7 @@ class RoonDevice(MediaPlayerEntity):
             if output["display_name"] != self.name
         }
 
-        transfer_id = zone_ids.get(name)
-        if transfer_id is None:
+        if (transfer_id := zone_ids.get(name)) is None:
             _LOGGER.error(
                 "Can't transfer from %s to %s because destination is not known %s",
                 self.name,

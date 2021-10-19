@@ -310,6 +310,7 @@ FLOWS = [
     "vesync",
     "vilfo",
     "vizio",
+    "vlc_telnet",
     "volumio",
     "wallbox",
     "watttime",

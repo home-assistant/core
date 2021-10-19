@@ -157,9 +157,9 @@ async def async_setup_entry(
 
     entities: list[RainMachineProgram | RainMachineZone] = [
         RainMachineProgram(
+            entry,
             programs_coordinator,
             controller,
-            entry,
             RainMachineSwitchDescription(
                 key=f"RainMachineProgram_{uid}", name=program["name"], uid=uid
             ),
@@ -169,9 +169,9 @@ async def async_setup_entry(
     entities.extend(
         [
             RainMachineZone(
+                entry,
                 zones_coordinator,
                 controller,
-                entry,
                 RainMachineSwitchDescription(
                     key=f"RainMachineZone_{uid}", name=zone["name"], uid=uid
                 ),
@@ -191,13 +191,13 @@ class RainMachineSwitch(RainMachineEntity, SwitchEntity):
 
     def __init__(
         self,
+        entry: ConfigEntry,
         coordinator: DataUpdateCoordinator,
         controller: Controller,
-        entry: ConfigEntry,
         description: RainMachineSwitchDescription,
     ) -> None:
         """Initialize a generic RainMachine switch."""
-        super().__init__(coordinator, controller, description)
+        super().__init__(entry, coordinator, controller, description)
 
         self._attr_is_on = False
         self._data = coordinator.data[self.entity_description.uid]

@@ -1,7 +1,6 @@
 """Provide functionality to stream HLS."""
 from __future__ import annotations
 
-import logging
 from typing import TYPE_CHECKING, cast
 
 from aiohttp import web
@@ -23,8 +22,6 @@ from .fmp4utils import get_codec_string
 
 if TYPE_CHECKING:
     from . import Stream
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @callback

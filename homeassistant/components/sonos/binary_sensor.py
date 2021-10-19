@@ -1,7 +1,6 @@
 """Entity representing a Sonos power sensor."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from homeassistant.components.binary_sensor import (
@@ -13,8 +12,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import SONOS_CREATE_BATTERY
 from .entity import SonosEntity
 from .speaker import SonosSpeaker
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_BATTERY_POWER_SOURCE = "power_source"
 

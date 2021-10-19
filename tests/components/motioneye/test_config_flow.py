@@ -1,5 +1,4 @@
 """Test the motionEye config flow."""
-import logging
 from unittest.mock import AsyncMock, patch
 
 from motioneye_client.client import (
@@ -24,8 +23,6 @@ from homeassistant.core import HomeAssistant
 from . import TEST_URL, create_mock_motioneye_client, create_mock_motioneye_config_entry
 
 from tests.common import MockConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def test_user_success(hass: HomeAssistant) -> None:

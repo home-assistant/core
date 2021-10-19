@@ -103,8 +103,7 @@ class WiffiIntegrationApi:
 
         Remove listener for periodic callbacks.
         """
-        remove_listener = self._periodic_callback
-        if remove_listener is not None:
+        if (remove_listener := self._periodic_callback) is not None:
             remove_listener()
 
     async def __call__(self, device, metrics):

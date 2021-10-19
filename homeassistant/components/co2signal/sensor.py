@@ -109,6 +109,7 @@ class CO2Sensor(update_coordinator.CoordinatorEntity[CO2SignalResponse], SensorE
             ATTR_NAME: "CO2 signal",
             ATTR_MANUFACTURER: "Tmrow.com",
             "entry_type": "service",
+            "configuration_url": "https://www.electricitymap.org/",
         }
         self._attr_unique_id = (
             f"{coordinator.entry_id}_{description.unique_id or description.key}"

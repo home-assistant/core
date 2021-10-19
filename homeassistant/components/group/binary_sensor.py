@@ -1,7 +1,6 @@
 """This platform allows several binary sensor to be grouped into one binary sensor."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import voluptuous as vol
@@ -33,8 +32,6 @@ DEFAULT_NAME = "Binary Sensor Group"
 
 CONF_ALL = "all"
 REG_KEY = f"{BINARY_SENSOR_DOMAIN}_registry"
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

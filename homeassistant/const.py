@@ -102,6 +102,7 @@ CONF_EFFECT: Final = "effect"
 CONF_ELEVATION: Final = "elevation"
 CONF_EMAIL: Final = "email"
 CONF_ENTITIES: Final = "entities"
+CONF_ENTITY_CATEGORY: Final = "entity_category"
 CONF_ENTITY_ID: Final = "entity_id"
 CONF_ENTITY_NAMESPACE: Final = "entity_namespace"
 CONF_ENTITY_PICTURE_TEMPLATE: Final = "entity_picture_template"
@@ -704,3 +705,6 @@ CLOUD_NEVER_EXPOSED_ENTITIES: Final[list[str]] = ["group.all_locks"]
 
 # The ID of the Home Assistant Cast App
 CAST_APP_ID_HOMEASSISTANT: Final = "B12CE3CA"
+
+ENTITY_CATEGORY_CONFIG: Final = "config"
+ENTITY_CATEGORY_DIAGNOSTIC: Final = "diagnostic"

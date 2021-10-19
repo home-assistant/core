@@ -813,8 +813,7 @@ class TemplateState(State):
 
 
 def _collect_state(hass: HomeAssistant, entity_id: str) -> None:
-    entity_collect = hass.data.get(_RENDER_INFO)
-    if entity_collect is not None:
+    if (entity_collect := hass.data.get(_RENDER_INFO)) is not None:
         entity_collect.entities.add(entity_id)
 
 
@@ -1188,8 +1187,7 @@ def state_attr(hass: HomeAssistant, entity_id: str, name: str) -> Any:
 
 def now(hass: HomeAssistant) -> datetime:
     """Record fetching now."""
-    render_info = hass.data.get(_RENDER_INFO)
-    if render_info is not None:
+    if (render_info := hass.data.get(_RENDER_INFO)) is not None:
         render_info.has_time = True
 
     return dt_util.now()
@@ -1197,8 +1195,7 @@ def now(hass: HomeAssistant) -> datetime:
 
 def utcnow(hass: HomeAssistant) -> datetime:
     """Record fetching utcnow."""
-    render_info = hass.data.get(_RENDER_INFO)
-    if render_info is not None:
+    if (render_info := hass.data.get(_RENDER_INFO)) is not None:
         render_info.has_time = True
 
     return dt_util.utcnow()
@@ -1211,7 +1208,7 @@ def warn_no_default(function, value, default):
         (
             "Template warning: '%s' got invalid input '%s' when %s template '%s' "
             "but no default was specified. Currently '%s' will return '%s', however this template will fail "
-            "to render in Home Assistant core 2021.12"
+            "to render in Home Assistant core 2022.1"
         ),
         function,
         value,
@@ -1463,6 +1460,24 @@ def forgiving_float_filter(value, default=_SENTINEL):
         return default
 
 
+def forgiving_int(value, base=10, default=_SENTINEL):
+    """Try to convert value to an int, and warn if it fails."""
+    result = jinja2.filters.do_int(value, default=default, base=base)
+    if result is _SENTINEL:
+        warn_no_default("int", value, value)
+        return value
+    return result
+
+
+def forgiving_int_filter(value, base=10, default=_SENTINEL):
+    """Try to convert value to an int, and warn if it fails."""
+    result = jinja2.filters.do_int(value, default=default, base=base)
+    if result is _SENTINEL:
+        warn_no_default("int", value, 0)
+        return 0
+    return result
+
+
 def is_number(value):
     """Try to convert value to a float."""
     try:
@@ -1693,6 +1708,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["ord"] = ord
         self.filters["is_number"] = is_number
         self.filters["float"] = forgiving_float_filter
+        self.filters["int"] = forgiving_int_filter
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -1716,6 +1732,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["max"] = max
         self.globals["min"] = min
         self.globals["is_number"] = is_number
+        self.globals["int"] = forgiving_int
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
 
@@ -1823,9 +1840,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             # any instance of this.
             return super().compile(source, name, filename, raw, defer_init)
 
-        cached = self.template_cache.get(source)
-
-        if cached is None:
+        if (cached := self.template_cache.get(source)) is None:
             cached = self.template_cache[source] = super().compile(source)
 
         return cached

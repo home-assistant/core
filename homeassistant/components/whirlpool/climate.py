@@ -71,8 +71,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     # the whirlpool library needs to be updated to be able to support more
     # than one device, so we use only the first one for now
-    aircon = AirConEntity(said_list[0], auth)
-    async_add_entities([aircon], True)
+    aircons = [AirConEntity(said, auth) for said in said_list]
+    async_add_entities(aircons, True)
 
 
 class AirConEntity(ClimateEntity):

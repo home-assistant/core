@@ -27,6 +27,8 @@ from homeassistant.const import (
     DATA_RATE_KILOBITS_PER_SECOND,
     DATA_RATE_KILOBYTES_PER_SECOND,
     DEVICE_CLASS_TIMESTAMP,
+    ENTITY_CATEGORY_CONFIG,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     SIGNAL_STRENGTH_DECIBELS,
 )
 from homeassistant.core import HomeAssistant
@@ -165,12 +167,14 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         key="device_uptime",
         name="Device Uptime",
         device_class=DEVICE_CLASS_TIMESTAMP,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         value_fn=_retrieve_device_uptime_state,
     ),
     FritzSensorEntityDescription(
         key="connection_uptime",
         name="Connection Uptime",
         device_class=DEVICE_CLASS_TIMESTAMP,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         value_fn=_retrieve_connection_uptime_state,
     ),
     FritzSensorEntityDescription(
@@ -194,6 +198,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         name="Max Connection Upload Throughput",
         native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
         icon="mdi:upload",
+        entity_category=ENTITY_CATEGORY_CONFIG,
         value_fn=_retrieve_max_kb_s_sent_state,
     ),
     FritzSensorEntityDescription(
@@ -201,6 +206,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         name="Max Connection Download Throughput",
         native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
         icon="mdi:download",
+        entity_category=ENTITY_CATEGORY_CONFIG,
         value_fn=_retrieve_max_kb_s_received_state,
     ),
     FritzSensorEntityDescription(

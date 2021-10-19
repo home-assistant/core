@@ -399,6 +399,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             manufacturer="Shelly",
             model=aioshelly.const.MODEL_NAMES.get(self.model, self.model),
             sw_version=sw_version,
+            configuration_url=f"http://{self.entry.data[CONF_HOST]}",
         )
         self.device_id = entry.id
         self.device.subscribe_updates(self.async_set_updated_data)
@@ -635,6 +636,7 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             manufacturer="Shelly",
             model=aioshelly.const.MODEL_NAMES.get(self.model, self.model),
             sw_version=sw_version,
+            configuration_url=f"http://{self.entry.data[CONF_HOST]}",
         )
         self.device_id = entry.id
         self.device.subscribe_updates(self.async_set_updated_data)
