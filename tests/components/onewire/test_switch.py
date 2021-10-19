@@ -5,11 +5,22 @@ import pytest
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TOGGLE, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_STATE,
+    SERVICE_TOGGLE,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.core import HomeAssistant
 
 from . import setup_owproxy_mock_devices
-from .const import ATTR_DEFAULT_DISABLED, ATTR_UNIQUE_ID, MOCK_OWPROXY_DEVICES
+from .const import (
+    ATTR_DEFAULT_DISABLED,
+    ATTR_DEVICE_FILE,
+    ATTR_UNIQUE_ID,
+    MOCK_OWPROXY_DEVICES,
+)
 
 from tests.common import mock_registry
 
@@ -58,14 +69,14 @@ async def test_owserver_switch(
         assert registry_entry is not None
         assert registry_entry.unique_id == expected_entity[ATTR_UNIQUE_ID]
         state = hass.states.get(entity_id)
-        assert state.state == expected_entity["result"]
+        assert state.state == expected_entity[ATTR_STATE]
 
         if state.state == STATE_ON:
             owproxy.return_value.read.side_effect = [b"         0"]
-            expected_entity["result"] = STATE_OFF
+            expected_entity[ATTR_STATE] = STATE_OFF
         elif state.state == STATE_OFF:
             owproxy.return_value.read.side_effect = [b"         1"]
-            expected_entity["result"] = STATE_ON
+            expected_entity[ATTR_STATE] = STATE_ON
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -76,7 +87,7 @@ async def test_owserver_switch(
         await hass.async_block_till_done()
 
         state = hass.states.get(entity_id)
-        assert state.state == expected_entity["result"]
-        assert state.attributes["device_file"] == expected_entity.get(
-            "device_file", registry_entry.unique_id
+        assert state.state == expected_entity[ATTR_STATE]
+        assert state.attributes[ATTR_DEVICE_FILE] == expected_entity.get(
+            ATTR_DEVICE_FILE, registry_entry.unique_id
         )
