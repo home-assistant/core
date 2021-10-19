@@ -11,11 +11,13 @@ from typing import Any, List, cast
 import voluptuous as vol
 
 from homeassistant import core as ha
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
     ATTR_ICON,
     ATTR_NAME,
+    CONF_DOMAIN,
     CONF_ENTITIES,
     CONF_ICON,
     CONF_NAME,
@@ -37,9 +39,11 @@ from homeassistant.helpers.integration_platform import (
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.loader import bind_hass
 
+from .const import DOMAIN
+
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
-DOMAIN = "group"
+
 GROUP_ORDER = "group_order"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -338,6 +342,12 @@ async def async_setup(hass, config):
         schema=vol.Schema({vol.Required(ATTR_OBJECT_ID): cv.slug}),
     )
 
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Group from a config entry."""
+    hass.config_entries.async_setup_platforms(entry, entry.data[CONF_DOMAIN])
     return True
 
 
