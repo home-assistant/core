@@ -193,8 +193,7 @@ def _async_merge_lip_leap_data(lip_devices, bridge):
         if leap_device_data is None:
             continue
         for key in ("type", "model", "serial"):
-            val = leap_device_data.get(key)
-            if val is not None:
+            if (val := leap_device_data.get(key)) is not None:
                 device[key] = val
 
     _LOGGER.debug("Button Devices: %s", button_devices_by_id)

@@ -487,4 +487,5 @@ class FritzBoxBaseEntity:
             "manufacturer": "AVM",
             "model": self._fritzbox_tools.model,
             "sw_version": self._fritzbox_tools.current_firmware,
+            "configuration_url": f"http://{self._fritzbox_tools.host}",
         }

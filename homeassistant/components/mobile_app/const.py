@@ -49,6 +49,7 @@ ATTR_VERTICAL_ACCURACY = "vertical_accuracy"
 ATTR_WEBHOOK_DATA = "data"
 ATTR_WEBHOOK_ENCRYPTED = "encrypted"
 ATTR_WEBHOOK_ENCRYPTED_DATA = "encrypted_data"
+ATTR_WEBHOOK_ID = "webhook_id"
 ATTR_WEBHOOK_TYPE = "type"
 
 ERR_ENCRYPTION_ALREADY_ENABLED = "encryption_already_enabled"
