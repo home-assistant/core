@@ -92,6 +92,7 @@ PLATFORMS = [
     "camera",
     "climate",
     "fan",
+    "humidifier",
     "light",
     "number",
     "scene",
@@ -141,6 +142,7 @@ class DPCode(str, Enum):
     CUR_CURRENT = "cur_current"  # Actual current
     CUR_POWER = "cur_power"  # Actual power
     CUR_VOLTAGE = "cur_voltage"  # Actual voltage
+    DEHUMIDITY_SET_VALUE = "dehumidify_set_value"
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
     ELECTRICITY_LEFT = "electricity_left"
     FAN_DIRECTION = "fan_direction"  # Fan direction
