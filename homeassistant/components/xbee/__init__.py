@@ -116,7 +116,7 @@ class XBeeConfig:
         as we're talking to our local XBee device.
         """
         if (address := self._config.get("address")) is not None:
-            address = unhexlify(address)
+            return unhexlify(address)
         return address
 
     @property
