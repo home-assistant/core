@@ -1,0 +1,51 @@
+select_picture_mode:
+  description: Send to samsung TV the command to change picture mode.
+  fields:
+    entity_id:
+      name: Entity Name
+      description: Name of the target entity
+      required: true
+      example: "media_player.tv"
+      selector:
+        entity:
+          integration: samsungtv_smart
+    picture_mode:
+      name: Picture Mode
+      description:
+        Name of the picture mode to switch to. Possible options
+        can be found in the picture_mode_list state attribute.
+      required: true
+      example: "Standard"
+      selector:
+        text:
+
+set_art_mode:
+  description: Send to samsung TV the command to set art mode.
+  fields:
+    entity_id:
+      name: Entity Name
+      description: Name of the target entity
+      required: true
+      example: "media_player.tv"
+      selector:
+        entity:
+          integration: samsungtv_smart
+
+remote_key:
+  description: Send the media player a remote control command
+  fields:
+    entity_id:
+      name: Entity Name
+      description: Name of the target entity
+      required: true
+      example: "media_player.tv"
+      selector:
+        entity:
+          integration: samsungtv_smart
+    key_id:
+      name: Key ID
+      description: The ID of the key to send
+      required: true
+      example: "https://home-assistant.io/images/cast/splash.png"
+      selector:
+        text:

@@ -1,0 +1,77 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "This Samsung TV is already configured.",
+            "already_in_progress": "Samsung TV configuration is already in progress."
+        },
+        "error": {
+            "auth_missing": "Home Assistant is not authorized to connect to this Samsung TV. Please check your TV's settings to authorize Home Assistant.",
+            "invalid_host": "Invalid host.",
+            "not_successful": "Unable to create WebSocket connection with this Samsung TV device.",
+            "not_supported": "This Samsung TV device is currently not supported.",
+            "wrong_api_key": "Wrong SmartThings token.",
+            "st_device_not_found": "SmartThings TV deviceID not found.",
+            "st_device_used": "SmartThings TV deviceID already used."
+        },
+        "flow_title": "SamsungTV Smart: {model}",
+        "step": {
+            "confirm": {
+                "description": "Do you want to set up Samsung TV {model}? If you never connected Home Assistant before you should see a popup on your TV asking for authorization. Manual configurations for this TV will be overwritten.",
+                "title": "SamsungTV Smart"
+            },
+            "user": {
+                "data": {
+                    "host": "Host or IP address",
+                    "name": "Name assigned to the entity",
+                    "use_ha_name_for_ws": "Use HA instance name for identification on TV",
+                    "api_key": "SmartThings generated token (optional)"
+                },
+                "description": "Enter your Samsung TV information. SmartThings token is optional but really suggested. If you never connected Home Assistant before you should see a popup on your TV asking for authorization.",
+                "title": "SamsungTV Smart"
+            },
+            "stdevice": {
+                "data": {
+                    "st_devices": "SmartThings TV"
+                },
+                "description": "You have multiple TVs configured on your account. Select the TV you are configuring from the list.",
+                "title": "SamsungTV Smart"
+            },
+            "stdeviceid": {
+                "data": {
+                    "device_id": "SmartThings TV deviceID"
+                },
+                "description": "Automatic SmartThings deviceID detection failed. To continue you must identify the deviceID on the SmartThings site (see documentation) and insert it here.",
+                "title": "SamsungTV Smart"
+            }
+        },
+        "title": "SamsungTV Smart"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Options",
+                "data": {
+                    "use_st_status_info": "Use SmartThings TV Status information",
+                    "use_st_channel_info": "Use SmartThings TV Channels information",
+                    "show_channel_number": "Use SmartThings TV Channels number information",
+                    "power_on_method_opt": "Method used to turn on TV",
+                    "logo_option_opt": "Display a logo for known sources, apps and channels",
+                    "sync_turn_off": "List of entity to Power OFF with TV (comma separated)",
+                    "sync_turn_on": "List of entity to power ON with TV (comma separated)",
+                    "show_adv_opt": "Show advanced options"
+                }
+            },
+            "adv_opt": {
+                "title": "Advanced options",
+                "data": {
+                    "app_load_method_opt": "Applications list load mode at startup",
+                    "app_launch_method_opt": "Applications launch method used",
+                    "dump_apps": "Dump apps list on log file at startup (when possible)",
+                    "use_mute_check": "Use volume mute status to detect fake power ON",
+                    "wol_repeat": "Number of time WOL packet is sent to turn on TV",
+                    "power_on_delay": "Seconds to delay power ON status"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,112 @@
+{
+  "config": {
+    "error": {
+      "connection_error": "Error connecting; check network and retry",
+      "identifier_exists": "Email for Alexa URL already registered",
+      "invalid_credentials": "Invalid credentials",
+      "2fa_key_invalid": "Invalid Built-In 2FA key",
+      "hass_url_invalid": "Unable to connect to Home Assistant url. Please check the Internal Url under Configuration -> General",
+      "unknown_error": "Unknown error, please enable advanced debugging and report log info"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "Password",
+          "email": "Email Address",
+          "url": "Amazon region domain (e.g., amazon.co.uk)",
+          "hass_url": "Url to access Home Assistant",
+          "otp_secret": "Built-in 2FA App Key (automatically generate 2FA Codes)",
+          "include_devices": "Included device (comma separated)",
+          "exclude_devices": "Excluded device (comma separated)",
+          "debug": "Advanced debugging",
+          "scan_interval": "Seconds between scans",
+          "proxy": "Use Login Proxy method (2FA not required)",
+          "oauth_login": "Enable oauth-token app method"
+        },
+        "description": "Please confirm the information below. For legacy configuration, disable `Use Login Proxy method` option.",
+        "title": "Alexa Media Player - Configuration"
+      },
+      "user_legacy": {
+        "data": {
+          "proxy": "Use Login Proxy method (2FA not required)",
+          "password": "Password",
+          "email": "Email Address",
+          "securitycode": "2FA Code (recommended to avoid login issues)",
+          "otp_secret": "Built-in 2FA App Key (automatically generate 2FA Codes)",
+          "url": "Amazon region domain (e.g., amazon.co.uk)",
+          "include_devices": "Included device (comma separated)",
+          "exclude_devices": "Excluded device (comma separated)",
+          "debug": "Advanced debugging",
+          "scan_interval": "Seconds between scans",
+          "cookies_txt": "Cookies.txt data",
+          "oauth_login": "Enable oauth-token app method"
+        },
+        "description": "Please enter your [information](https://github.com/custom-components/alexa_media_player/wiki/Configuration#integrations-page). **[Cookie import](https://github.com/custom-components/alexa_media_player/wiki/Configuration#cookie-import) may be easiest!**   \n**WARNING: Amazon incorrectly reports 'Enter a valid email or mobile number' when [2FA Code is required](https://github.com/custom-components/alexa_media_player/wiki/Configuration#enable-two-factor-authentication-for-your-amazon-account).**  \n>{message}",
+        "title": "Alexa Media Player - Legacy Configuration"
+      },
+      "captcha": {
+        "data": {
+          "password": "Password",
+          "securitycode": "2FA Code (recommended to avoid login issues)",
+          "captcha": "Captcha",
+          "proxy": "Use Login Proxy method (2FA not required)"
+        },
+        "description": "**{email} - alexa.{url}**  \n{message}  \n {captcha_image}",
+        "title": "Alexa Media Player - Captcha"
+      },
+      "totp_register": {
+        "data": {
+          "registered": "OTP from the Built-in 2FA App Key confirmed successfully."
+        },
+        "description": "**{email} - alexa.{url}**  \nHave you successfully confirmed an OTP from the Built-in 2FA App Key with Amazon?  \n >OTP Code {message}",
+        "title": "Alexa Media Player - OTP Confirmation"
+      },
+      "twofactor": {
+        "data": {
+          "securitycode": "2FA Code",
+          "proxy": "Use Login Proxy method (2FA not required)"
+        },
+        "description": "**{email} - alexa.{url}**  \nEnter the One Time Password (OTP).  \n{message}",
+        "title": "Alexa Media Player - Two Factor Authentication"
+      },
+      "authselect": {
+        "data": {
+          "authselectoption": "OTP method",
+          "proxy": "Use Login Proxy method (2FA not required)"
+        },
+        "description": "**{email} - alexa.{url}**  \n{message}",
+        "title": "Alexa Media Player - One Time Password"
+      },
+      "claimspicker": {
+        "data": {
+          "authselectoption": "Verification method",
+          "proxy": "Use Login Proxy method (2FA not required)"
+        },
+        "description": "**{email} - alexa.{url}**  \nPlease select verification method by number. (e.g., `0` or `1`)  \n{message}",
+        "title": "Alexa Media Player - Verification Method"
+      },
+      "action_required": {
+        "data": {
+          "proxy": "Use Login Proxy method (2FA not required)"
+        },
+        "description": "**{email} - alexa.{url}**  \nAmazon will send a push notification per the below message. Please completely respond before continuing.  \n{message}",
+        "title": "Alexa Media Player - Action Required"
+      }
+    },
+    "abort": {
+      "forgot_password": "The Forgot Password page was detected. This normally is the result of too may failed logins. Amazon may require action before a relogin can be attempted.",
+      "login_failed": "Alexa Media Player failed to login.",
+      "reauth_successful": "Alexa Media Player successfully reauthenticated."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "queue_delay": "Seconds to wait to queue commands together",
+          "extended_entity_discovery": "Include devices connected via Echo"
+        }
+      }
+    }
+  }
+}

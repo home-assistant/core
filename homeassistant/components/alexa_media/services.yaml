@@ -1,0 +1,41 @@
+#  SPDX-License-Identifier: Apache-2.0
+update_last_called:
+  # Description of the service
+  description: Forces update of last_called echo device for each Alexa account.
+  # Different fields that your service accepts
+  fields:
+    # Key of the field
+    email:
+      # Description of the field
+      description: List of Alexa accounts to update. If empty, will update all known accounts.
+      # Example value that can be passed for this field
+      example: "my_email@alexa.com"
+
+clear_history:
+  # Description of the service
+  description: Clear last entries from Alexa history for each Alexa account.
+  # Different fields that your service accepts
+  fields:
+    # Key of the field
+    email:
+      # Description of the field
+      description: List of Alexa accounts to update. If empty, will delete from all known accounts.
+      # Example value that can be passed for this field
+      example: "my_email@alexa.com"
+    entries:
+      # Description of the field
+      description: Number of entries to clear from 1 to 50. If empty, clear 50.
+      # Example value that can be passed for this field
+      example: 50
+
+force_logout:
+  # Description of the service
+  description: Force logout of Alexa Login account and deletion of .pickle. Intended for debugging use.
+  # Different fields that your service accepts
+  fields:
+    # Key of the field
+    email:
+      # Description of the field
+      description: List of Alexa accounts to log out. If empty, will log out from all known accounts.
+      # Example value that can be passed for this field
+      example: "my_email@alexa.com"
