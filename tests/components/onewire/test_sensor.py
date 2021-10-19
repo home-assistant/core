@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import setup_owproxy_mock_devices, setup_sysbus_mock_devices
-from .const import MOCK_OWPROXY_DEVICES, MOCK_SYSBUS_DEVICES
+from .const import ATTR_DEFAULT_DISABLED, MOCK_OWPROXY_DEVICES, MOCK_SYSBUS_DEVICES
 
 from tests.common import assert_setup_component, mock_device_registry, mock_registry
 
@@ -122,7 +122,6 @@ async def test_sensors_on_owserver_coupler(
         registry_entry = entity_registry.entities.get(entity_id)
         assert registry_entry is not None
         assert registry_entry.unique_id == expected_sensor["unique_id"]
-        assert registry_entry.disabled == expected_sensor.get("disabled", False)
         state = hass.states.get(entity_id)
         assert state.state == expected_sensor["result"]
         for attr in (ATTR_DEVICE_CLASS, ATTR_STATE_CLASS, ATTR_UNIT_OF_MEASUREMENT):
@@ -140,15 +139,27 @@ async def test_owserver_setup_valid_device(
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
-    setup_owproxy_mock_devices(owproxy, SENSOR_DOMAIN, [device_id])
-
     mock_device = MOCK_OWPROXY_DEVICES[device_id]
     expected_entities = mock_device.get(SENSOR_DOMAIN, [])
 
+    setup_owproxy_mock_devices(owproxy, SENSOR_DOMAIN, [device_id])
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert len(entity_registry.entities) == len(expected_entities)
+
+    # Ensure all entities are enabled
+    for expected_entity in expected_entities:
+        if expected_entity.get(ATTR_DEFAULT_DISABLED):
+            entity_id = expected_entity["entity_id"]
+            registry_entry = entity_registry.entities.get(entity_id)
+            assert registry_entry.disabled
+            assert registry_entry.disabled_by == "integration"
+            entity_registry.async_update_entity(entity_id, **{"disabled_by": None})
+
+    setup_owproxy_mock_devices(owproxy, SENSOR_DOMAIN, [device_id])
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     if len(expected_entities) > 0:
         device_info = mock_device["device_info"]
@@ -165,17 +176,13 @@ async def test_owserver_setup_valid_device(
         registry_entry = entity_registry.entities.get(entity_id)
         assert registry_entry is not None
         assert registry_entry.unique_id == expected_entity["unique_id"]
-        assert registry_entry.disabled == expected_entity.get("disabled", False)
         state = hass.states.get(entity_id)
-        if registry_entry.disabled:
-            assert state is None
-        else:
-            assert state.state == expected_entity["result"]
-            for attr in (ATTR_DEVICE_CLASS, ATTR_STATE_CLASS, ATTR_UNIT_OF_MEASUREMENT):
-                assert state.attributes.get(attr) == expected_entity[attr]
-            assert state.attributes["device_file"] == expected_entity.get(
-                "device_file", registry_entry.unique_id
-            )
+        assert state.state == expected_entity["result"]
+        for attr in (ATTR_DEVICE_CLASS, ATTR_STATE_CLASS, ATTR_UNIT_OF_MEASUREMENT):
+            assert state.attributes.get(attr) == expected_entity[attr]
+        assert state.attributes["device_file"] == expected_entity.get(
+            "device_file", registry_entry.unique_id
+        )
 
 
 @pytest.mark.usefixtures("sysbus")
