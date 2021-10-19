@@ -157,7 +157,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise ConfigEntryAuthFailed("Not authenticated with Mazda API") from ex
         except Exception as ex:
             raise UpdateFailed(
-                "Unknown error occurred during Mazda update request: %s", ex
+                f"Unknown error occurred during Mazda update request: {ex}"
             ) from ex
 
     coordinator = DataUpdateCoordinator(

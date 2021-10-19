@@ -90,11 +90,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
     except HUB_EXCEPTIONS as err:
         raise ConfigEntryNotReady(
-            "Connection error to PowerView hub: %s", hub_address
+            f"Connection error to PowerView hub: {hub_address}"
         ) from err
 
     if not device_info:
-        raise ConfigEntryNotReady("Unable to initialize PowerView hub: %s", hub_address)
+        raise ConfigEntryNotReady(f"Unable to initialize PowerView hub: {hub_address}")
 
     async def async_update_data():
         """Fetch data from shade endpoint."""
