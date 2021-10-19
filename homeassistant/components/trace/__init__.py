@@ -162,8 +162,8 @@ async def async_restore_traces(hass):
     store = hass.data[DATA_TRACE_STORE]
     try:
         restored_traces = await store.async_load() or {}
-    except HomeAssistantError as exc:
-        _LOGGER.error("Error loading traces", exc_info=exc)
+    except HomeAssistantError:
+        _LOGGER.exception("Error loading traces")
         restored_traces = {}
 
     for key, traces in restored_traces.items():
@@ -174,7 +174,7 @@ async def async_restore_traces(hass):
                 and stored_traces.size_limit is not None
                 and len(stored_traces) >= stored_traces.size_limit
             ):
-                continue
+                break
 
             try:
                 trace = RestoredTrace(json_trace)
