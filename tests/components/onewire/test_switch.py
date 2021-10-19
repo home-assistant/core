@@ -1,17 +1,15 @@
 """Tests for 1-Wire devices connected on OWServer."""
-import copy
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.onewire.switch import DEVICE_SWITCHES
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TOGGLE, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
 from . import setup_owproxy_mock_devices
-from .const import MOCK_OWPROXY_DEVICES
+from .const import ATTR_DEFAULT_DISABLED, MOCK_OWPROXY_DEVICES
 
 from tests.common import mock_registry
 
@@ -32,24 +30,27 @@ async def test_owserver_switch(
     """
     entity_registry = mock_registry(hass)
 
-    setup_owproxy_mock_devices(owproxy, SWITCH_DOMAIN, [device_id])
-
     mock_device = MOCK_OWPROXY_DEVICES[device_id]
     expected_entities = mock_device.get(SWITCH_DOMAIN, [])
 
-    # Force enable switches
-    patch_device_switches = copy.deepcopy(DEVICE_SWITCHES)
-    if device_switch := patch_device_switches.get(device_id[0:2]):
-        for item in device_switch:
-            item.entity_registry_enabled_default = True
-
-    with patch.dict(
-        "homeassistant.components.onewire.switch.DEVICE_SWITCHES", patch_device_switches
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    setup_owproxy_mock_devices(owproxy, SWITCH_DOMAIN, [device_id])
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert len(entity_registry.entities) == len(expected_entities)
+
+    # Ensure all entities are enabled
+    for expected_entity in expected_entities:
+        if expected_entity.get(ATTR_DEFAULT_DISABLED):
+            entity_id = expected_entity["entity_id"]
+            registry_entry = entity_registry.entities.get(entity_id)
+            assert registry_entry.disabled
+            assert registry_entry.disabled_by == "integration"
+            entity_registry.async_update_entity(entity_id, **{"disabled_by": None})
+
+    setup_owproxy_mock_devices(owproxy, SWITCH_DOMAIN, [device_id])
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     for expected_entity in expected_entities:
         entity_id = expected_entity["entity_id"]
