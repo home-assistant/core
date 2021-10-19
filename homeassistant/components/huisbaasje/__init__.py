@@ -8,7 +8,6 @@ from huisbaasje import Huisbaasje, HuisbaasjeException
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -43,9 +42,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await huisbaasje.authenticate()
     except HuisbaasjeException as exception:
-        raise ConfigEntryAuthFailed(
-            f"Authentication failed: {exception}"
-        ) from exception
+        _LOGGER.error("Authentication failed: %s", str(exception))
+        return False
 
     async def async_update_data():
         return await async_update_huisbaasje(huisbaasje)
