@@ -9,16 +9,26 @@ from homeassistant.components.sensor import ATTR_STATE_CLASS, DOMAIN as SENSOR_D
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_NAME,
+    ATTR_STATE,
     ATTR_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import setup_owproxy_mock_devices, setup_sysbus_mock_devices
-from .const import ATTR_DEFAULT_DISABLED, MOCK_OWPROXY_DEVICES, MOCK_SYSBUS_DEVICES
+from .const import (
+    ATTR_DEFAULT_DISABLED,
+    ATTR_DEVICE_FILE,
+    ATTR_DEVICE_INFO,
+    ATTR_INJECT_READS,
+    ATTR_UNIQUE_ID,
+    MOCK_OWPROXY_DEVICES,
+    MOCK_SYSBUS_DEVICES,
+)
 
 from tests.common import assert_setup_component, mock_device_registry, mock_registry
 
@@ -86,10 +96,10 @@ async def test_sensors_on_owserver_coupler(
 
     dir_side_effect.append([f"/{device_id}/"])  # dir on root
     read_side_effect.append(device_id[0:2].encode())  # read family on root
-    if "inject_reads" in mock_coupler:
-        read_side_effect += mock_coupler["inject_reads"]
+    if ATTR_INJECT_READS in mock_coupler:
+        read_side_effect += mock_coupler[ATTR_INJECT_READS]
 
-    expected_sensors = []
+    expected_entities = []
     for branch, branch_details in mock_coupler["branches"].items():
         dir_side_effect.append(
             [  # dir on branch
@@ -100,12 +110,12 @@ async def test_sensors_on_owserver_coupler(
 
         for sub_device_id, sub_device in branch_details.items():
             read_side_effect.append(sub_device_id[0:2].encode())
-            if "inject_reads" in sub_device:
-                read_side_effect.extend(sub_device["inject_reads"])
+            if ATTR_INJECT_READS in sub_device:
+                read_side_effect.extend(sub_device[ATTR_INJECT_READS])
 
-            expected_sensors += sub_device[SENSOR_DOMAIN]
-            for expected_sensor in sub_device[SENSOR_DOMAIN]:
-                read_side_effect.append(expected_sensor["injected_value"])
+            expected_entities += sub_device[SENSOR_DOMAIN]
+            for expected_entity in sub_device[SENSOR_DOMAIN]:
+                read_side_effect.append(expected_entity[ATTR_INJECT_READS])
 
     # Ensure enough read side effect
     read_side_effect.extend([ProtocolError("Missing injected value")] * 10)
@@ -115,18 +125,18 @@ async def test_sensors_on_owserver_coupler(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert len(entity_registry.entities) == len(expected_sensors)
+    assert len(entity_registry.entities) == len(expected_entities)
 
-    for expected_sensor in expected_sensors:
-        entity_id = expected_sensor["entity_id"]
+    for expected_entity in expected_entities:
+        entity_id = expected_entity[ATTR_ENTITY_ID]
         registry_entry = entity_registry.entities.get(entity_id)
         assert registry_entry is not None
-        assert registry_entry.unique_id == expected_sensor["unique_id"]
+        assert registry_entry.unique_id == expected_entity[ATTR_UNIQUE_ID]
         state = hass.states.get(entity_id)
-        assert state.state == expected_sensor["result"]
+        assert state.state == expected_entity[ATTR_STATE]
         for attr in (ATTR_DEVICE_CLASS, ATTR_STATE_CLASS, ATTR_UNIT_OF_MEASUREMENT):
-            assert state.attributes.get(attr) == expected_sensor[attr]
-        assert state.attributes["device_file"] == expected_sensor["device_file"]
+            assert state.attributes.get(attr) == expected_entity[attr]
+        assert state.attributes[ATTR_DEVICE_FILE] == expected_entity[ATTR_DEVICE_FILE]
 
 
 async def test_owserver_setup_valid_device(
@@ -151,7 +161,7 @@ async def test_owserver_setup_valid_device(
     # Ensure all entities are enabled
     for expected_entity in expected_entities:
         if expected_entity.get(ATTR_DEFAULT_DISABLED):
-            entity_id = expected_entity["entity_id"]
+            entity_id = expected_entity[ATTR_ENTITY_ID]
             registry_entry = entity_registry.entities.get(entity_id)
             assert registry_entry.disabled
             assert registry_entry.disabled_by == "integration"
@@ -162,7 +172,7 @@ async def test_owserver_setup_valid_device(
     await hass.async_block_till_done()
 
     if len(expected_entities) > 0:
-        device_info = mock_device["device_info"]
+        device_info = mock_device[ATTR_DEVICE_INFO]
         assert len(device_registry.devices) == 1
         registry_entry = device_registry.async_get_device({(DOMAIN, device_id)})
         assert registry_entry is not None
@@ -172,16 +182,16 @@ async def test_owserver_setup_valid_device(
         assert registry_entry.model == device_info[ATTR_MODEL]
 
     for expected_entity in expected_entities:
-        entity_id = expected_entity["entity_id"]
+        entity_id = expected_entity[ATTR_ENTITY_ID]
         registry_entry = entity_registry.entities.get(entity_id)
         assert registry_entry is not None
-        assert registry_entry.unique_id == expected_entity["unique_id"]
+        assert registry_entry.unique_id == expected_entity[ATTR_UNIQUE_ID]
         state = hass.states.get(entity_id)
-        assert state.state == expected_entity["result"]
+        assert state.state == expected_entity[ATTR_STATE]
         for attr in (ATTR_DEVICE_CLASS, ATTR_STATE_CLASS, ATTR_UNIT_OF_MEASUREMENT):
             assert state.attributes.get(attr) == expected_entity[attr]
-        assert state.attributes["device_file"] == expected_entity.get(
-            "device_file", registry_entry.unique_id
+        assert state.attributes[ATTR_DEVICE_FILE] == expected_entity.get(
+            ATTR_DEVICE_FILE, registry_entry.unique_id
         )
 
 
@@ -212,7 +222,7 @@ async def test_onewiredirect_setup_valid_device(
     assert len(entity_registry.entities) == len(expected_entities)
 
     if len(expected_entities) > 0:
-        device_info = mock_device["device_info"]
+        device_info = mock_device[ATTR_DEVICE_INFO]
         assert len(device_registry.devices) == 1
         registry_entry = device_registry.async_get_device({(DOMAIN, device_id)})
         assert registry_entry is not None
@@ -221,12 +231,12 @@ async def test_onewiredirect_setup_valid_device(
         assert registry_entry.name == device_info[ATTR_NAME]
         assert registry_entry.model == device_info[ATTR_MODEL]
 
-    for expected_sensor in expected_entities:
-        entity_id = expected_sensor["entity_id"]
+    for expected_entity in expected_entities:
+        entity_id = expected_entity[ATTR_ENTITY_ID]
         registry_entry = entity_registry.entities.get(entity_id)
         assert registry_entry is not None
-        assert registry_entry.unique_id == expected_sensor["unique_id"]
+        assert registry_entry.unique_id == expected_entity[ATTR_UNIQUE_ID]
         state = hass.states.get(entity_id)
-        assert state.state == expected_sensor["result"]
+        assert state.state == expected_entity[ATTR_STATE]
         for attr in (ATTR_DEVICE_CLASS, ATTR_STATE_CLASS, ATTR_UNIT_OF_MEASUREMENT):
-            assert state.attributes.get(attr) == expected_sensor[attr]
+            assert state.attributes.get(attr) == expected_entity[attr]

@@ -8,7 +8,7 @@ from pyownet.protocol import ProtocolError
 
 from homeassistant.components.onewire.const import DEFAULT_SYSBUS_MOUNT_DIR
 
-from .const import MOCK_OWPROXY_DEVICES, MOCK_SYSBUS_DEVICES
+from .const import ATTR_INJECT_READS, MOCK_OWPROXY_DEVICES, MOCK_SYSBUS_DEVICES
 
 
 def setup_owproxy_mock_devices(
@@ -27,13 +27,13 @@ def setup_owproxy_mock_devices(
 
         # Setup device reads
         main_read_side_effect += [device_id[0:2].encode()]
-        if "inject_reads" in mock_device:
-            main_read_side_effect += mock_device["inject_reads"]
+        if ATTR_INJECT_READS in mock_device:
+            main_read_side_effect += mock_device[ATTR_INJECT_READS]
 
         # Setup sub-device reads
         device_sensors = mock_device.get(platform, [])
         for expected_sensor in device_sensors:
-            sub_read_side_effect.append(expected_sensor["injected_value"])
+            sub_read_side_effect.append(expected_sensor[ATTR_INJECT_READS])
 
     # Ensure enough read side effect
     read_side_effect = (
@@ -61,10 +61,10 @@ def setup_sysbus_mock_devices(
         # Setup sub-device reads
         device_sensors = mock_device.get(platform, [])
         for expected_sensor in device_sensors:
-            if isinstance(expected_sensor["injected_value"], list):
-                read_side_effect += expected_sensor["injected_value"]
+            if isinstance(expected_sensor[ATTR_INJECT_READS], list):
+                read_side_effect += expected_sensor[ATTR_INJECT_READS]
             else:
-                read_side_effect.append(expected_sensor["injected_value"])
+                read_side_effect.append(expected_sensor[ATTR_INJECT_READS])
 
     # Ensure enough read side effect
     read_side_effect.extend([FileNotFoundError("Missing injected value")] * 20)
