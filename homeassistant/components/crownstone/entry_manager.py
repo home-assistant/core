@@ -75,8 +75,7 @@ class CrownstoneEntryManager:
             )
             return False
         except CrownstoneUnknownError as unknown_err:
-            _LOGGER.error("Unknown error during login")
-            raise ConfigEntryNotReady from unknown_err
+            raise ConfigEntryNotReady("Unknown error during login") from unknown_err
 
         # A new clientsession is created because the default one does not cleanup on unload
         self.sse = CrownstoneSSEAsync(

@@ -82,8 +82,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Auto reconnect only operates if initial connection was successful.
     except HeosError as error:
         await controller.disconnect()
-        _LOGGER.debug("Unable to connect to controller %s: %s", host, error)
-        raise ConfigEntryNotReady from error
+        raise ConfigEntryNotReady(
+            f"Unable to connect to controller {host}: {error}"
+        ) from error
 
     # Disconnect when shutting down
     async def disconnect_controller(event):
@@ -108,8 +109,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         inputs = await controller.get_input_sources()
     except HeosError as error:
         await controller.disconnect()
-        _LOGGER.debug("Unable to retrieve players and sources: %s", error)
-        raise ConfigEntryNotReady from error
+        raise ConfigEntryNotReady(
+            f"Unable to retrieve players and sources: {error}"
+        ) from error
 
     controller_manager = ControllerManager(hass, controller)
     await controller_manager.connect_listeners()

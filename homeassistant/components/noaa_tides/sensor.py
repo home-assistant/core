@@ -58,11 +58,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("NOAA Tides Sensor station_id %s does not exist", station_id)
         return
     except requests.exceptions.ConnectionError as exception:
-        _LOGGER.error(
-            "Connection error during setup in NOAA Tides Sensor for station_id: %s",
-            station_id,
-        )
-        raise PlatformNotReady from exception
+        raise PlatformNotReady(
+            f"Connection error during setup in NOAA Tides Sensor for station_id: {station_id}"
+        ) from exception
 
     noaa_sensor = NOAATidesAndCurrentsSensor(
         name, station_id, timezone, unit_system, station

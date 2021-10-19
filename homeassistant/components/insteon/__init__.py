@@ -94,8 +94,9 @@ async def async_setup_entry(hass, entry):
         try:
             await async_connect(**entry.data)
         except ConnectionError as exception:
-            _LOGGER.error("Could not connect to Insteon modem")
-            raise ConfigEntryNotReady from exception
+            raise ConfigEntryNotReady(
+                "Could not connect to Insteon modem"
+            ) from exception
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_insteon_connection)

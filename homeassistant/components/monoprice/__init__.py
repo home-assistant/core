@@ -29,8 +29,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         monoprice = await hass.async_add_executor_job(get_monoprice, port)
     except SerialException as err:
-        _LOGGER.error("Error connecting to Monoprice controller at %s", port)
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            f"Error connecting to Monoprice controller at {port}"
+        ) from err
 
     # double negative to handle absence of value
     first_run = not bool(entry.data.get(CONF_NOT_FIRST_RUN))

@@ -54,8 +54,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await account.getAccountBearerToken()
     except client_exceptions.ClientError as exception:
-        _LOGGER.error("Error connecting to Control4 account API: %s", exception)
-        raise ConfigEntryNotReady from exception
+        raise ConfigEntryNotReady(
+            f"Error connecting to Control4 account API: {exception}"
+        ) from exception
     except BadCredentials as exception:
         _LOGGER.error(
             "Error authenticating with Control4 account API, incorrect username or password: %s",

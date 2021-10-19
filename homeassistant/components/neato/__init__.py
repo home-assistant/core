@@ -74,10 +74,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await session.async_ensure_token_valid()
     except aiohttp.ClientResponseError as ex:
-        _LOGGER.debug("API error: %s (%s)", ex.code, ex.message)
         if ex.code in (401, 403):
             raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
-        raise ConfigEntryNotReady from ex
+        raise ConfigEntryNotReady(f"API error: {ex.code} ({ex.message})") from ex
 
     neato_session = api.ConfigEntryAuth(hass, entry, implementation)
     hass.data[NEATO_DOMAIN][entry.entry_id] = neato_session
@@ -88,8 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await hass.async_add_executor_job(hub.update_robots)
     except NeatoException as ex:
-        _LOGGER.debug("Failed to connect to Neato API")
-        raise ConfigEntryNotReady from ex
+        raise ConfigEntryNotReady("Failed to connect to Neato API") from ex
 
     hass.data[NEATO_LOGIN] = hub
 

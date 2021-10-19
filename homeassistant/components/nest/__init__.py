@@ -164,8 +164,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await subscriber.start_async()
     except AuthException as err:
-        _LOGGER.debug("Subscriber authentication error: %s", err)
-        raise ConfigEntryAuthFailed from err
+        raise ConfigEntryAuthFailed(f"Subscriber authentication error: {err}") from err
     except ConfigurationException as err:
         _LOGGER.error("Configuration error: %s", err)
         subscriber.stop_async()

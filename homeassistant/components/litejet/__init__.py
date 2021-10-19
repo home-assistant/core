@@ -53,8 +53,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         system = pylitejet.LiteJet(port)
     except SerialException as ex:
-        _LOGGER.error("Error connecting to the LiteJet MCP at %s", port, exc_info=ex)
-        raise ConfigEntryNotReady from ex
+        raise ConfigEntryNotReady(
+            f"Error connecting to the LiteJet MCP at {port}: {ex}"
+        ) from ex
 
     hass.data[DOMAIN] = system
 

@@ -65,8 +65,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _get_ezviz_client_instance, entry
         )
     except (InvalidURL, HTTPError, PyEzvizError) as error:
-        _LOGGER.error("Unable to connect to Ezviz service: %s", str(error))
-        raise ConfigEntryNotReady from error
+        raise ConfigEntryNotReady(
+            f"Unable to connect to Ezviz service: {error}"
+        ) from error
 
     coordinator = EzvizDataUpdateCoordinator(
         hass, api=ezviz_client, api_timeout=entry.options[CONF_TIMEOUT]

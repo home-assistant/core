@@ -143,8 +143,7 @@ class IcloudAccount:
             PyiCloudServiceNotActivatedException,
             PyiCloudNoDevicesException,
         ) as err:
-            _LOGGER.error("No iCloud device found")
-            raise ConfigEntryNotReady from err
+            raise ConfigEntryNotReady("No iCloud device found") from err
 
         self._owner_fullname = f"{user_info['firstName']} {user_info['lastName']}"
 

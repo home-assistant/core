@@ -127,8 +127,7 @@ class GlancesData:
             _LOGGER.debug("Successfully connected to Glances")
 
         except exceptions.GlancesApiConnectionError as err:
-            _LOGGER.debug("Can not connect to Glances")
-            raise ConfigEntryNotReady from err
+            raise ConfigEntryNotReady("Can not connect to Glances") from err
 
         self.add_options()
         self.set_scan_interval(self.config_entry.options[CONF_SCAN_INTERVAL])

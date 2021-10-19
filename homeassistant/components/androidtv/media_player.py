@@ -226,10 +226,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         else:
             device_name = "Android TV / Fire TV device"
 
-        _LOGGER.warning(
-            "Could not connect to %s at %s %s", device_name, address, adb_log
+        raise PlatformNotReady(
+            f"Could not connect to {device_name} at {address} {adb_log}"
         )
-        raise PlatformNotReady
 
     async def _async_close(event):
         """Close the ADB socket connection when HA stops."""

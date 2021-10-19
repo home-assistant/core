@@ -45,8 +45,7 @@ async def async_setup_entry(
             organization, project, BUILDS_QUERY
         )
     except aiohttp.ClientError as exception:
-        _LOGGER.warning(exception)
-        raise PlatformNotReady from exception
+        raise PlatformNotReady(exception) from exception
 
     for build in builds:
         sensors.append(

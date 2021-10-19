@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -62,11 +62,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await juicenet.setup()
     except TokenError as error:
-        _LOGGER.error("JuiceNet Error %s", error)
-        return False
+        raise ConfigEntryAuthFailed(f"JuiceNet Error: {error}") from error
     except aiohttp.ClientError as error:
-        _LOGGER.error("Could not reach the JuiceNet API %s", error)
-        raise ConfigEntryNotReady from error
+        raise ConfigEntryNotReady(
+            f"Could not reach the JuiceNet API: {error}"
+        ) from error
 
     if not juicenet.devices:
         _LOGGER.error("No JuiceNet devices found for this account")

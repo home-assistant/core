@@ -47,8 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         deluge_api.connect()
     except ConnectionRefusedError as err:
-        _LOGGER.error("Connection to Deluge Daemon failed")
-        raise PlatformNotReady from err
+        raise PlatformNotReady("Connection to Deluge Daemon failed") from err
 
     add_entities([DelugeSwitch(deluge_api, name)])
 

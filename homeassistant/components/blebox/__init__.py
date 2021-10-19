@@ -35,8 +35,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         product = await Products.async_from_host(api_host)
     except Error as ex:
-        _LOGGER.error("Identify failed at %s:%d (%s)", api_host.host, api_host.port, ex)
-        raise ConfigEntryNotReady from ex
+        raise ConfigEntryNotReady(
+            f"Identify failed at {api_host.host}:{api_host.port} ({ex})"
+        ) from ex
 
     domain = hass.data.setdefault(DOMAIN, {})
     domain_entry = domain.setdefault(entry.entry_id, {})

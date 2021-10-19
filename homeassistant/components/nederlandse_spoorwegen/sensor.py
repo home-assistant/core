@@ -55,8 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         requests.exceptions.ConnectionError,
         requests.exceptions.HTTPError,
     ) as error:
-        _LOGGER.error("Could not connect to the internet: %s", error)
-        raise PlatformNotReady() from error
+        raise PlatformNotReady(f"Could not connect to the internet: {error}") from error
     except RequestParametersError as error:
         _LOGGER.error("Could not fetch stations, please check configuration: %s", error)
         return

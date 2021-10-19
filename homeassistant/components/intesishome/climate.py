@@ -117,8 +117,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         _LOGGER.error("Invalid username or password")
         return
     except IHConnectionError as ex:
-        _LOGGER.error("Error connecting to the %s server", device_type)
-        raise PlatformNotReady from ex
+        raise PlatformNotReady(f"Error connecting to the {device_type} server") from ex
 
     ih_devices = controller.get_devices()
     if ih_devices:
@@ -207,8 +206,7 @@ class IntesisAC(ClimateEntity):
         try:
             await self._controller.connect()
         except IHConnectionError as ex:
-            _LOGGER.error("Exception connecting to IntesisHome: %s", ex)
-            raise PlatformNotReady from ex
+            raise PlatformNotReady(f"Exception connecting to IntesisHome: {ex}") from ex
 
     @property
     def name(self):

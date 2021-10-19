@@ -61,8 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         data = CupsData(host, port, None)
         data.update()
         if data.available is False:
-            _LOGGER.error("Unable to connect to CUPS server: %s:%s", host, port)
-            raise PlatformNotReady()
+            raise PlatformNotReady(f"Unable to connect to CUPS server: {host}:{port}")
 
         dev = []
         for printer in printers:
@@ -81,8 +80,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     data = CupsData(host, port, printers)
     data.update()
     if data.available is False:
-        _LOGGER.error("Unable to connect to IPP printer: %s:%s", host, port)
-        raise PlatformNotReady()
+        raise PlatformNotReady(f"Unable to connect to IPP printer: {host}:{port}")
 
     dev = []
     for printer in printers:

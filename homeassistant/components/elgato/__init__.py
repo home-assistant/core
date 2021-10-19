@@ -1,6 +1,4 @@
 """Support for Elgato Lights."""
-import logging
-
 from elgato import Elgato, ElgatoConnectionError
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
@@ -28,8 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await elgato.info()
     except ElgatoConnectionError as exception:
-        logging.getLogger(__name__).debug("Unable to connect: %s", exception)
-        raise ConfigEntryNotReady from exception
+        raise ConfigEntryNotReady(f"Unable to connect: {exception}") from exception
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {DATA_ELGATO_CLIENT: elgato}

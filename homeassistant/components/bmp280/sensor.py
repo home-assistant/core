@@ -50,11 +50,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     except ValueError as error:
         # this usually happens when the board is I2C capable, but the device can't be found at the configured address
         if str(error.args[0]).startswith("No I2C device at address"):
-            _LOGGER.error(
-                "%s. Hint: Check wiring and make sure that the SDO pin is tied to either ground (0x76) or VCC (0x77)",
-                error.args[0],
-            )
-            raise PlatformNotReady() from error
+            raise PlatformNotReady(
+                f"{error.args[0]}. Hint: Check wiring and make sure that the SDO pin is tied to either ground (0x76) or VCC (0x77)"
+            ) from error
         _LOGGER.error(error)
         return
     # use custom name if there's any

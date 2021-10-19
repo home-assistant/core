@@ -271,9 +271,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(entry.add_update_listener(async_entry_changed))
 
     if not await bridge.async_setup():
-        LOGGER.error("Could not set up bridge for entry %s", entry.data)
         hass.data[DOMAIN][entry.entry_id] = None
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady(f"Could not set up bridge for entry {entry.data}")
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 

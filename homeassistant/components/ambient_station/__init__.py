@@ -80,8 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.loop.create_task(ambient.ws_connect())
         hass.data[DOMAIN][DATA_CLIENT][entry.entry_id] = ambient
     except WebsocketError as err:
-        LOGGER.error("Config entry failed: %s", err)
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(f"Config entry failed: {err}") from err
 
     async def _async_disconnect_websocket(_: Event) -> None:
         await ambient.client.websocket.disconnect()

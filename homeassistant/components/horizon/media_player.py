@@ -70,8 +70,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
     except OSError as msg:
         # occurs if horizon box is offline
-        _LOGGER.error("Connection to %s at %s failed: %s", name, host, msg)
-        raise PlatformNotReady from msg
+        raise PlatformNotReady(f"Connection to {name} at {host} failed: {msg}") from msg
 
     _LOGGER.info("Connection to %s at %s established", name, host)
 

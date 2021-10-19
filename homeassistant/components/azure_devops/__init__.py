@@ -31,8 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
         await client.get_project(entry.data[CONF_ORG], entry.data[CONF_PROJECT])
     except aiohttp.ClientError as exception:
-        _LOGGER.warning(exception)
-        raise ConfigEntryNotReady from exception
+        raise ConfigEntryNotReady(exception) from exception
 
     instance_key = f"{DOMAIN}_{entry.data[CONF_ORG]}_{entry.data[CONF_PROJECT]}"
     hass.data.setdefault(instance_key, {})[DATA_AZURE_DEVOPS_CLIENT] = client

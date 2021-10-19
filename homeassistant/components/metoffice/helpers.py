@@ -28,8 +28,7 @@ def fetch_data(connection: datapoint.Manager, site, mode) -> MetOfficeData:
     try:
         forecast = connection.get_forecast_for_site(site.id, mode)
     except (ValueError, datapoint.exceptions.APIException) as err:
-        _LOGGER.error("Check Met Office connection: %s", err.args)
-        raise UpdateFailed from err
+        raise UpdateFailed(f"Check Met Office connection: {err.args}") from err
     else:
         time_now = utcnow()
         return MetOfficeData(

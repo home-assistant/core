@@ -119,8 +119,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         FoobotClient.TooManyRequests,
         FoobotClient.InternalError,
     ) as err:
-        _LOGGER.exception("Failed to connect to foobot servers")
-        raise PlatformNotReady from err
+        raise PlatformNotReady("Failed to connect to foobot servers") from err
     except FoobotClient.ClientError:
         _LOGGER.error("Failed to fetch data from foobot servers")
         return

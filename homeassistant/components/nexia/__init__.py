@@ -9,7 +9,7 @@ from requests.exceptions import ConnectTimeout, HTTPError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_BRAND, DOMAIN, PLATFORMS
@@ -43,16 +43,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         )
     except ConnectTimeout as ex:
-        _LOGGER.error("Unable to connect to Nexia service: %s", ex)
-        raise ConfigEntryNotReady from ex
+        raise ConfigEntryNotReady(f"Unable to connect to Nexia service: {ex}") from ex
     except HTTPError as http_ex:
         if is_invalid_auth_code(http_ex.response.status_code):
-            _LOGGER.error(
-                "Access error from Nexia service, please check credentials: %s", http_ex
-            )
-            return False
-        _LOGGER.error("HTTP error from Nexia service: %s", http_ex)
-        raise ConfigEntryNotReady from http_ex
+            raise ConfigEntryAuthFailed(
+                f"Access error from Nexia service, please check credentials: {http_ex}"
+            ) from http_ex
+        raise ConfigEntryNotReady(
+            f"HTTP error from Nexia service: {http_ex}"
+        ) from http_ex
 
     coordinator = NexiaDataUpdateCoordinator(hass, nexia_home)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator

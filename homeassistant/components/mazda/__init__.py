@@ -63,8 +63,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         MazdaTokenExpiredException,
         MazdaAPIEncryptionException,
     ) as ex:
-        _LOGGER.error("Error occurred during Mazda login request: %s", ex)
-        raise ConfigEntryNotReady from ex
+        raise ConfigEntryNotReady(
+            f"Error occurred during Mazda login request: {ex}"
+        ) from ex
 
     async def async_handle_service_call(service_call=None):
         """Handle a service call."""
@@ -155,10 +156,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except MazdaAuthenticationException as ex:
             raise ConfigEntryAuthFailed("Not authenticated with Mazda API") from ex
         except Exception as ex:
-            _LOGGER.exception(
+            raise UpdateFailed(
                 "Unknown error occurred during Mazda update request: %s", ex
-            )
-            raise UpdateFailed(ex) from ex
+            ) from ex
 
     coordinator = DataUpdateCoordinator(
         hass,

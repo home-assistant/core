@@ -45,8 +45,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         with async_timeout.timeout(PLATFORM_TIMEOUT):
             api = await real_time_api(config_host, config_port)
     except (IamMeterError, asyncio.TimeoutError) as err:
-        _LOGGER.error("Device is not ready")
-        raise PlatformNotReady from err
+        raise PlatformNotReady("Device is not ready") from err
 
     async def async_update_data():
         try:

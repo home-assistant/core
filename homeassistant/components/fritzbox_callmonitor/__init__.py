@@ -5,7 +5,7 @@ from fritzconnection.core.exceptions import FritzConnectionException, FritzSecur
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .base import FritzBoxPhonebook
 from .const import (
@@ -39,11 +39,11 @@ async def async_setup_entry(hass, config_entry):
         )
         return False
     except FritzConnectionException as ex:
-        _LOGGER.error("Invalid authentication: %s", ex)
-        return False
+        raise ConfigEntryAuthFailed(f"Invalid authentication: {ex}") from ex
     except RequestsConnectionError as ex:
-        _LOGGER.error("Unable to connect to AVM FRITZ!Box call monitor: %s", ex)
-        raise ConfigEntryNotReady from ex
+        raise ConfigEntryNotReady(
+            f"Unable to connect to AVM FRITZ!Box call monitor: {ex}"
+        ) from ex
 
     undo_listener = config_entry.add_update_listener(update_listener)
 
