@@ -26,7 +26,6 @@ from homeassistant.components.websocket_api.auth import (
 )
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.const import ATTR_NOW, EVENT_TIME_CHANGED
-from homeassistant.exceptions import ServiceNotFound
 from homeassistant.helpers import config_entry_oauth2_flow, event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location
@@ -231,8 +230,6 @@ def hass(loop, load_registries, hass_storage, request):
             request.module.__name__,
             request.function.__name__,
         ) in IGNORE_UNCAUGHT_EXCEPTIONS:
-            continue
-        if isinstance(ex, ServiceNotFound):
             continue
         raise ex
 
