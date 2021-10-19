@@ -244,14 +244,19 @@ def _async_validate_cost_stat(
 
 @callback
 def _async_validate_auto_generated_cost_entity(
-    hass: HomeAssistant, entity_id: str, result: list[ValidationIssue]
+    hass: HomeAssistant, energy_entity_id: str, result: list[ValidationIssue]
 ) -> None:
     """Validate that the auto generated cost entity is correct."""
-    if not recorder.is_entity_recorded(hass, entity_id):
+    if not energy_entity_id:
+        return
+    if energy_entity_id not in hass.data[DOMAIN]["cost_sensors"]:
+        return
+    cost_entity_id = hass.data[DOMAIN]["cost_sensors"][energy_entity_id]
+    if not recorder.is_entity_recorded(hass, cost_entity_id):
         result.append(
             ValidationIssue(
                 "recorder_untracked",
-                entity_id,
+                cost_entity_id,
             )
         )
 
@@ -297,7 +302,8 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                 ):
                     _async_validate_auto_generated_cost_entity(
                         hass,
-                        hass.data[DOMAIN]["cost_sensors"][flow["stat_energy_from"]],
+                        # Note: The auto generated cost entity actually uses entity_energy_from!
+                        flow["stat_energy_from"],
                         source_result,
                     )
 
@@ -330,7 +336,8 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                 ):
                     _async_validate_auto_generated_cost_entity(
                         hass,
-                        hass.data[DOMAIN]["cost_sensors"][flow["stat_energy_to"]],
+                        # Note: The auto generated cost entity actually uses entity_energy_to!
+                        flow["stat_energy_to"],
                         source_result,
                     )
 
@@ -361,7 +368,8 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
             ):
                 _async_validate_auto_generated_cost_entity(
                     hass,
-                    hass.data[DOMAIN]["cost_sensors"][source["stat_energy_from"]],
+                    # Note: The auto generated cost entity actually uses entity_energy_from!
+                    source["stat_energy_from"],
                     source_result,
                 )
 
