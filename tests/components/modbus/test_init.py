@@ -770,6 +770,7 @@ async def test_shutdown(hass, caplog, mock_pymodbus, mock_modbus_with_pymodbus):
 async def test_stop_restart(hass, caplog, mock_modbus):
     """Run test for service stop."""
 
+    caplog.set_level(logging.INFO)
     entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}"
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
     hass.states.async_set(entity_id, 17)
