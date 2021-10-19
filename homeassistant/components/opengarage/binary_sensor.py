@@ -42,7 +42,7 @@ class OpenGarageBinarySensor(OpenGarageEntity, BinarySensorEntity):
 
     def __init__(self, open_garage_data_coordinator, device_id, description):
         """Initialize the entity."""
-        self._available = None
+        self._available = False
         super().__init__(open_garage_data_coordinator, device_id, description)
 
     @property
