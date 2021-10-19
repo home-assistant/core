@@ -2,6 +2,8 @@
 
 from datetime import timedelta
 
+from vallox_websocket_api import PROFILE as VALLOX_PROFILE
+
 DOMAIN = "vallox"
 DEFAULT_NAME = "Vallox"
 
@@ -20,3 +22,19 @@ MODE_OFF = 5
 DEFAULT_FAN_SPEED_HOME = 50
 DEFAULT_FAN_SPEED_AWAY = 25
 DEFAULT_FAN_SPEED_BOOST = 65
+
+VALLOX_PROFILE_TO_STR_SETTABLE = {
+    VALLOX_PROFILE.HOME: "Home",
+    VALLOX_PROFILE.AWAY: "Away",
+    VALLOX_PROFILE.BOOST: "Boost",
+    VALLOX_PROFILE.FIREPLACE: "Fireplace",
+}
+
+VALLOX_PROFILE_TO_STR_REPORTABLE = {
+    VALLOX_PROFILE.EXTRA: "Extra",
+    **VALLOX_PROFILE_TO_STR_SETTABLE,
+}
+
+STR_TO_VALLOX_PROFILE_SETTABLE = {
+    value: key for (key, value) in VALLOX_PROFILE_TO_STR_SETTABLE.items()
+}

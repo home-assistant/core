@@ -22,6 +22,7 @@ from homeassistant.util import Throttle
 
 ALL_IMAGES = [
     "default",
+    "generic-x86-64",
     "intel-nuc",
     "odroid-c2",
     "odroid-n2",

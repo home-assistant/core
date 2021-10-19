@@ -27,7 +27,7 @@ SENSORS = (
         key="daily_production",
         name="Today's Energy Production",
         native_unit_of_measurement=ENERGY_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         device_class=DEVICE_CLASS_ENERGY,
     ),
     SensorEntityDescription(

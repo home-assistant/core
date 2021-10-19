@@ -43,6 +43,7 @@ from .common import (
     CLIMATE_DANFOSS_LC13_ENTITY,
     CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
     CLIMATE_RADIO_THERMOSTAT_ENTITY,
+    SCHLAGE_BE469_LOCK_ENTITY,
 )
 
 from tests.common import MockConfigEntry
@@ -1021,6 +1022,51 @@ async def test_set_value(hass, client, climate_danfoss_lc_13, integration):
         )
 
 
+async def test_set_value_string(
+    hass, client, climate_danfoss_lc_13, lock_schlage_be469, integration
+):
+    """Test set_value service converts number to string when needed."""
+    client.async_send_command.return_value = {"success": True}
+
+    # Test that number gets converted to a string when needed
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+            ATTR_COMMAND_CLASS: 99,
+            ATTR_PROPERTY: "userCode",
+            ATTR_PROPERTY_KEY: 1,
+            ATTR_VALUE: 12345,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == lock_schlage_be469.node_id
+    assert args["valueId"] == {
+        "commandClassName": "User Code",
+        "commandClass": 99,
+        "endpoint": 0,
+        "property": "userCode",
+        "propertyName": "userCode",
+        "propertyKey": 1,
+        "propertyKeyName": "1",
+        "metadata": {
+            "type": "string",
+            "readable": True,
+            "writeable": True,
+            "minLength": 4,
+            "maxLength": 10,
+            "label": "User Code (1)",
+        },
+        "value": "**********",
+    }
+    assert args["value"] == "12345"
+
+
 async def test_set_value_options(hass, client, aeon_smart_switch_6, integration):
     """Test set_value service with options."""
     await hass.services.async_call(
@@ -1379,6 +1425,41 @@ async def test_multicast_set_value_options(
     assert args["options"] == {"transitionDuration": 1}
 
     client.async_send_command.reset_mock()
+
+
+async def test_multicast_set_value_string(
+    hass,
+    client,
+    lock_id_lock_as_id150,
+    lock_schlage_be469,
+    integration,
+):
+    """Test multicast_set_value service converts number to string when needed."""
+    client.async_send_command.return_value = {"success": True}
+
+    # Test that number gets converted to a string when needed
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_MULTICAST_SET_VALUE,
+        {
+            ATTR_BROADCAST: True,
+            ATTR_COMMAND_CLASS: 99,
+            ATTR_PROPERTY: "userCode",
+            ATTR_PROPERTY_KEY: 1,
+            ATTR_VALUE: 12345,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "broadcast_node.set_value"
+    assert args["valueId"] == {
+        "commandClass": 99,
+        "property": "userCode",
+        "propertyKey": 1,
+    }
+    assert args["value"] == "12345"
 
 
 async def test_ping(

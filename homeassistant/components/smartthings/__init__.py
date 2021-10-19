@@ -209,7 +209,7 @@ async def async_get_entry_scenes(entry: ConfigEntry, api):
     return []
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     broker = hass.data[DOMAIN][DATA_BROKERS].pop(entry.entry_id, None)
     if broker:

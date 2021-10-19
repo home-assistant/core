@@ -16,6 +16,7 @@ from .const import (
     PLEX_UPDATE_SENSOR_SIGNAL,
     SERVERS,
 )
+from .helpers import pretty_title
 
 LIBRARY_ATTRIBUTE_TYPES = {
     "artist": ["artist", "album"],
@@ -26,6 +27,11 @@ LIBRARY_ATTRIBUTE_TYPES = {
 LIBRARY_PRIMARY_LIBTYPE = {
     "show": "episode",
     "artist": "track",
+}
+
+LIBRARY_RECENT_LIBTYPE = {
+    "show": "episode",
+    "artist": "album",
 }
 
 LIBRARY_ICON_LOOKUP = {
@@ -173,6 +179,17 @@ class PlexLibrarySectionSensor(SensorEntity):
             ] = self.library_section.totalViewSize(
                 libtype=libtype, includeCollections=False
             )
+
+        recent_libtype = LIBRARY_RECENT_LIBTYPE.get(
+            self.library_type, self.library_type
+        )
+        recently_added = self.library_section.recentlyAdded(
+            maxresults=1, libtype=recent_libtype
+        )
+        if recently_added:
+            media = recently_added[0]
+            self._attr_extra_state_attributes["last_added_item"] = pretty_title(media)
+            self._attr_extra_state_attributes["last_added_timestamp"] = media.addedAt
 
     @property
     def device_info(self):

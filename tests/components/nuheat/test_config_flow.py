@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import requests
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.nuheat.const import CONF_SERIAL_NUMBER, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_INTERNAL_SERVER_ERROR
 
@@ -12,7 +12,7 @@ from .mocks import _get_mock_thermostat_run
 
 async def test_form_user(hass):
     """Test we get the form with user source."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

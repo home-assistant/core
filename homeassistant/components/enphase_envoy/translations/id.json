@@ -9,7 +9,7 @@
             "invalid_auth": "Autentikasi tidak valid",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
-        "flow_title": "Envoy {serial} ({host})",
+        "flow_title": "{serial} ({host})",
         "step": {
             "user": {
                 "data": {

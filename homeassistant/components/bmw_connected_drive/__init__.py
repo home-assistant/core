@@ -74,6 +74,7 @@ _SERVICE_MAP = {
     "light_flash": "trigger_remote_light_flash",
     "sound_horn": "trigger_remote_horn",
     "activate_air_conditioning": "trigger_remote_air_conditioning",
+    "deactivate_air_conditioning": "trigger_remote_air_conditioning_stop",
     "find_vehicle": "trigger_remote_vehicle_finder",
 }
 
@@ -163,7 +164,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry, [platform for platform in PLATFORMS if platform != NOTIFY_DOMAIN]

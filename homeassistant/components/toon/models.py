@@ -1,6 +1,8 @@
 """DataUpdate Coordinator, and base Entity and Device models for Toon."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -115,3 +117,11 @@ class ToonBoilerDeviceEntity(ToonEntity):
             "identifiers": {(DOMAIN, agreement_id, "boiler")},
             "via_device": (DOMAIN, agreement_id, "boiler_module"),
         }
+
+
+@dataclass
+class ToonRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    section: str
+    measurement: str

@@ -58,8 +58,7 @@ class WallboxHub:
             filtered_data = {k: data[k] for k in CONF_SENSOR_TYPES if k in data}
 
             for key, value in filtered_data.items():
-                sensor_round = CONF_SENSOR_TYPES[key][CONF_ROUND]
-                if sensor_round:
+                if sensor_round := CONF_SENSOR_TYPES[key][CONF_ROUND]:
                     try:
                         filtered_data[key] = round(value, sensor_round)
                     except TypeError:
@@ -112,7 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

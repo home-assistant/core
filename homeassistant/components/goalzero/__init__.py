@@ -48,14 +48,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     name = entry.data[CONF_NAME]
     host = entry.data[CONF_HOST]
 
-    session = async_get_clientsession(hass)
-    api = Yeti(host, hass.loop, session)
+    api = Yeti(host, async_get_clientsession(hass))
     try:
         await api.init_connect()
     except exceptions.ConnectError as ex:
         raise ConfigEntryNotReady(f"Failed to connect to device: {ex}") from ex
 
-    async def async_update_data():
+    async def async_update_data() -> None:
         """Fetch data from API endpoint."""
         try:
             await api.get_state()
@@ -69,6 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_method=async_update_data,
         update_interval=MIN_TIME_BETWEEN_UPDATES,
     )
+    await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_KEY_API: api,
@@ -113,6 +113,6 @@ class YetiEntity(CoordinatorEntity):
             ATTR_IDENTIFIERS: {(DOMAIN, self._server_unique_id)},
             ATTR_MANUFACTURER: "Goal Zero",
             ATTR_NAME: self._name,
-            ATTR_MODEL: self.api.sysdata.get(ATTR_MODEL),
-            ATTR_SW_VERSION: self.api.data.get("firmwareVersion"),
+            ATTR_MODEL: self.api.sysdata[ATTR_MODEL],
+            ATTR_SW_VERSION: self.api.data["firmwareVersion"],
         }

@@ -460,8 +460,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             self._trace_config,
         ) as automation_trace:
             this = None
-            state = self.hass.states.get(self.entity_id)
-            if state:
+            if state := self.hass.states.get(self.entity_id):
                 this = state.as_dict()
             variables = {"this": this, **(run_variables or {})}
             if self._variables:
@@ -589,8 +588,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
 
         this = None
         self.async_write_ha_state()
-        state = self.hass.states.get(self.entity_id)
-        if state:
+        if state := self.hass.states.get(self.entity_id):
             this = state.as_dict()
         variables = {"this": this}
         if self._trigger_variables:

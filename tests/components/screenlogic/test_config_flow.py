@@ -10,7 +10,7 @@ from screenlogicpy.const import (
     SL_GATEWAY_TYPE,
 )
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS
 from homeassistant.components.screenlogic.config_flow import (
     GATEWAY_MANUAL_ENTRY,
@@ -28,7 +28,7 @@ from tests.common import MockConfigEntry
 
 async def test_flow_discovery(hass):
     """Test the flow works with basic discovery."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     with patch(
         "homeassistant.components.screenlogic.config_flow.discovery.async_discover",
         return_value=[
@@ -72,7 +72,7 @@ async def test_flow_discovery(hass):
 
 async def test_flow_discover_none(hass):
     """Test when nothing is discovered."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     with patch(
         "homeassistant.components.screenlogic.config_flow.discovery.async_discover",
         return_value=[],
@@ -88,7 +88,7 @@ async def test_flow_discover_none(hass):
 
 async def test_flow_discover_error(hass):
     """Test when discovery errors."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     with patch(
         "homeassistant.components.screenlogic.config_flow.discovery.async_discover",
         side_effect=ScreenLogicError("Fake error"),
@@ -134,7 +134,7 @@ async def test_flow_discover_error(hass):
 
 async def test_dhcp(hass):
     """Test DHCP discovery flow."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
@@ -180,7 +180,7 @@ async def test_dhcp(hass):
 
 async def test_form_manual_entry(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     with patch(
         "homeassistant.components.screenlogic.config_flow.discovery.async_discover",
         return_value=[

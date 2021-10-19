@@ -1,9 +1,10 @@
 """Purge old data helper."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
 import logging
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import distinct
@@ -37,7 +38,8 @@ def purge_old_data(
         event_ids = _select_event_ids_to_purge(session, purge_before)
         state_ids = _select_state_ids_to_purge(session, purge_before, event_ids)
         if state_ids:
-            _purge_state_ids(session, state_ids)
+            _purge_state_ids(instance, session, state_ids)
+
         if event_ids:
             _purge_event_ids(session, event_ids)
             # If states or events purging isn't processing the purge_before yet,
@@ -67,10 +69,10 @@ def _select_event_ids_to_purge(session: Session, purge_before: datetime) -> list
 
 def _select_state_ids_to_purge(
     session: Session, purge_before: datetime, event_ids: list[int]
-) -> list[int]:
+) -> set[int]:
     """Return a list of state ids to purge."""
     if not event_ids:
-        return []
+        return set()
     states = (
         session.query(States.state_id)
         .filter(States.last_updated < purge_before)
@@ -78,10 +80,10 @@ def _select_state_ids_to_purge(
         .all()
     )
     _LOGGER.debug("Selected %s state ids to remove", len(states))
-    return [state.state_id for state in states]
+    return {state.state_id for state in states}
 
 
-def _purge_state_ids(session: Session, state_ids: list[int]) -> None:
+def _purge_state_ids(instance: Recorder, session: Session, state_ids: set[int]) -> None:
     """Disconnect states and delete by state id."""
 
     # Update old_state_id to NULL before deleting to ensure
@@ -101,6 +103,26 @@ def _purge_state_ids(session: Session, state_ids: list[int]) -> None:
         .delete(synchronize_session=False)
     )
     _LOGGER.debug("Deleted %s states", deleted_rows)
+
+    # Evict eny entries in the old_states cache referring to a purged state
+    _evict_purged_states_from_old_states_cache(instance, state_ids)
+
+
+def _evict_purged_states_from_old_states_cache(
+    instance: Recorder, purged_state_ids: set[int]
+) -> None:
+    """Evict purged states from the old states cache."""
+    # Make a map from old_state_id to entity_id
+    old_states = instance._old_states  # pylint: disable=protected-access
+    old_state_reversed = {
+        old_state.state_id: entity_id
+        for entity_id, old_state in old_states.items()
+        if old_state.state_id
+    }
+
+    # Evict any purged state from the old states cache
+    for purged_state_id in purged_state_ids.intersection(old_state_reversed):
+        old_states.pop(old_state_reversed[purged_state_id], None)
 
 
 def _purge_event_ids(session: Session, event_ids: list[int]) -> None:
@@ -138,7 +160,7 @@ def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
         if not instance.entity_filter(entity_id)
     ]
     if len(excluded_entity_ids) > 0:
-        _purge_filtered_states(session, excluded_entity_ids)
+        _purge_filtered_states(instance, session, excluded_entity_ids)
         return False
 
     # Check if excluded event_types are in database
@@ -148,13 +170,15 @@ def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
         if event_type in instance.exclude_t
     ]
     if len(excluded_event_types) > 0:
-        _purge_filtered_events(session, excluded_event_types)
+        _purge_filtered_events(instance, session, excluded_event_types)
         return False
 
     return True
 
 
-def _purge_filtered_states(session: Session, excluded_entity_ids: list[str]) -> None:
+def _purge_filtered_states(
+    instance: Recorder, session: Session, excluded_entity_ids: list[str]
+) -> None:
     """Remove filtered states and linked events."""
     state_ids: list[int]
     event_ids: list[int | None]
@@ -170,11 +194,13 @@ def _purge_filtered_states(session: Session, excluded_entity_ids: list[str]) -> 
     _LOGGER.debug(
         "Selected %s state_ids to remove that should be filtered", len(state_ids)
     )
-    _purge_state_ids(session, state_ids)
+    _purge_state_ids(instance, session, set(state_ids))
     _purge_event_ids(session, event_ids)  # type: ignore  # type of event_ids already narrowed to 'list[int]'
 
 
-def _purge_filtered_events(session: Session, excluded_event_types: list[str]) -> None:
+def _purge_filtered_events(
+    instance: Recorder, session: Session, excluded_event_types: list[str]
+) -> None:
     """Remove filtered events and linked states."""
     events: list[Events] = (
         session.query(Events.event_id)
@@ -189,8 +215,8 @@ def _purge_filtered_events(session: Session, excluded_event_types: list[str]) ->
     states: list[States] = (
         session.query(States.state_id).filter(States.event_id.in_(event_ids)).all()
     )
-    state_ids: list[int] = [state.state_id for state in states]
-    _purge_state_ids(session, state_ids)
+    state_ids: set[int] = {state.state_id for state in states}
+    _purge_state_ids(instance, session, state_ids)
     _purge_event_ids(session, event_ids)
 
 
@@ -206,7 +232,7 @@ def purge_entity_data(instance: Recorder, entity_filter: Callable[[str], bool]) 
         _LOGGER.debug("Purging entity data for %s", selected_entity_ids)
         if len(selected_entity_ids) > 0:
             # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
-            _purge_filtered_states(session, selected_entity_ids)
+            _purge_filtered_states(instance, session, selected_entity_ids)
             _LOGGER.debug("Purging entity data hasn't fully completed yet")
             return False
 

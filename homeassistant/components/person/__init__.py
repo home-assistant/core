@@ -226,9 +226,7 @@ class PersonStorageCollection(collection.StorageCollection):
         """Validate the config is valid."""
         data = self.CREATE_SCHEMA(data)
 
-        user_id = data.get(CONF_USER_ID)
-
-        if user_id is not None:
+        if (user_id := data.get(CONF_USER_ID)) is not None:
             await self._validate_user_id(user_id)
 
         return data
@@ -410,8 +408,7 @@ class Person(RestoreEntity):
             data[ATTR_GPS_ACCURACY] = self._gps_accuracy
         if self._source is not None:
             data[ATTR_SOURCE] = self._source
-        user_id = self._config.get(CONF_USER_ID)
-        if user_id is not None:
+        if (user_id := self._config.get(CONF_USER_ID)) is not None:
             data[ATTR_USER_ID] = user_id
         return data
 
@@ -448,9 +445,7 @@ class Person(RestoreEntity):
             self._unsub_track_device()
             self._unsub_track_device = None
 
-        trackers = self._config[CONF_DEVICE_TRACKERS]
-
-        if trackers:
+        if trackers := self._config[CONF_DEVICE_TRACKERS]:
             _LOGGER.debug("Subscribe to device trackers for %s", self.entity_id)
 
             self._unsub_track_device = async_track_state_change_event(

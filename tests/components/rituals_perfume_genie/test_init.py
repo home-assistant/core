@@ -12,7 +12,7 @@ from .common import init_integration, mock_config_entry
 
 async def test_config_entry_not_ready(hass: HomeAssistant):
     """Test the Rituals configuration entry setup if connection to Rituals is missing."""
-    config_entry = mock_config_entry(uniqe_id="id_123_not_ready")
+    config_entry = mock_config_entry(unique_id="id_123_not_ready")
     config_entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.rituals_perfume_genie.Account.get_devices",
@@ -24,7 +24,7 @@ async def test_config_entry_not_ready(hass: HomeAssistant):
 
 async def test_config_entry_unload(hass: HomeAssistant) -> None:
     """Test the Rituals Perfume Genie configuration entry setup and unloading."""
-    config_entry = mock_config_entry(uniqe_id="id_123_unload")
+    config_entry = mock_config_entry(unique_id="id_123_unload")
     await init_integration(hass, config_entry)
 
     await hass.config_entries.async_unload(config_entry.entry_id)

@@ -192,11 +192,14 @@ class SmileGateway(CoordinatorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        device_information = {
-            "identifiers": {(DOMAIN, self._dev_id)},
-            "name": self._entity_name,
-            "manufacturer": "Plugwise",
-        }
+        device_information = DeviceInfo(
+            identifiers={(DOMAIN, self._dev_id)},
+            name=self._entity_name,
+            manufacturer="Plugwise",
+        )
+
+        if entry := self.coordinator.config_entry:
+            device_information["configuration_url"] = f"http://{entry.data[CONF_HOST]}"
 
         if self._model is not None:
             device_information["model"] = self._model.replace("_", " ").title()

@@ -134,13 +134,13 @@ class IcloudTrackerEntity(TrackerEntity):
 
 
 def icon_for_icloud_device(icloud_device: IcloudDevice) -> str:
-    """Return a battery icon valid identifier."""
+    """Return an icon for the device."""
     switcher = {
-        "iPad": "mdi:tablet-ipad",
-        "iPhone": "mdi:cellphone-iphone",
+        "iPad": "mdi:tablet",
+        "iPhone": "mdi:cellphone",
         "iPod": "mdi:ipod",
         "iMac": "mdi:desktop-mac",
-        "MacBookPro": "mdi:laptop-mac",
+        "MacBookPro": "mdi:laptop",
     }
 
     return switcher.get(icloud_device.device_class, "mdi:cellphone-link")

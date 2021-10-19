@@ -69,13 +69,17 @@ async def test_alarm_create_delete(
 
     alarm_clock.ListAlarms.return_value = two_alarms
 
+    alarm_event.variables["alarm_list_version"] = two_alarms["CurrentAlarmListVersion"]
+
     sub_callback(event=alarm_event)
     await hass.async_block_till_done()
 
     assert "switch.sonos_alarm_14" in entity_registry.entities
     assert "switch.sonos_alarm_15" in entity_registry.entities
 
-    alarm_event.increment_variable("alarm_list_version")
+    one_alarm["CurrentAlarmListVersion"] = alarm_event.increment_variable(
+        "alarm_list_version"
+    )
 
     alarm_clock.ListAlarms.return_value = one_alarm
 

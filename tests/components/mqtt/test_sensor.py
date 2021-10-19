@@ -29,6 +29,7 @@ from .test_common import (
     help_test_discovery_update_attr,
     help_test_discovery_update_availability,
     help_test_discovery_update_unchanged,
+    help_test_entity_category,
     help_test_entity_debug_info,
     help_test_entity_debug_info_max_messages,
     help_test_entity_debug_info_message,
@@ -836,6 +837,12 @@ async def test_entity_disabled_by_default(hass, mqtt_mock):
     await help_test_entity_disabled_by_default(
         hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG
     )
+
+
+@pytest.mark.no_fail_on_log_exception
+async def test_entity_category(hass, mqtt_mock):
+    """Test entity category."""
+    await help_test_entity_category(hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG)
 
 
 async def test_value_template_with_entity_id(hass, mqtt_mock):

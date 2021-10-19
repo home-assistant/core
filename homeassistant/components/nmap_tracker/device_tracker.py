@@ -1,8 +1,9 @@
 """Support for scanning a network with nmap."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-from typing import Any, Callable
+from typing import Any
 
 import voluptuous as vol
 

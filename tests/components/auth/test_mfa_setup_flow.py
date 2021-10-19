@@ -67,7 +67,7 @@ async def test_ws_setup_depose_mfa(hass, hass_ws_client):
     assert flow["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert flow["handler"] == "example_module"
     assert flow["step_id"] == "init"
-    assert flow["data_schema"][0] == {"type": "string", "name": "pin"}
+    assert flow["data_schema"][0] == {"type": "string", "name": "pin", "required": True}
 
     await client.send_json(
         {

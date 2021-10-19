@@ -324,7 +324,7 @@ async def test_import(
     expected_config_entry_data: list[dict[str, Any]],
 ) -> None:
     """Test importing a gateway."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     with patch("sys.platform", "win32"), patch(
         "homeassistant.components.mysensors.config_flow.try_connect", return_value=True
     ), patch(

@@ -153,8 +153,7 @@ class HomematicipGenericEntity(Entity):
         if not self.registry_entry:
             return
 
-        device_id = self.registry_entry.device_id
-        if device_id:
+        if device_id := self.registry_entry.device_id:
             # Remove from device registry.
             device_registry = await dr.async_get_registry(self.hass)
             if device_id in device_registry.devices:
@@ -163,8 +162,7 @@ class HomematicipGenericEntity(Entity):
         else:
             # Remove from entity registry.
             # Only relevant for entities that do not belong to a device.
-            entity_id = self.registry_entry.entity_id
-            if entity_id:
+            if entity_id := self.registry_entry.entity_id:
                 entity_registry = await er.async_get_registry(self.hass)
                 if entity_id in entity_registry.entities:
                     entity_registry.async_remove(entity_id)

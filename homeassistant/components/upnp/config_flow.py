@@ -273,7 +273,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         title = _friendly_name_from_discovery(discovery)
         data = {
-            CONFIG_ENTRY_UDN: discovery["_udn"],
+            CONFIG_ENTRY_UDN: discovery[ssdp.ATTR_UPNP_UDN],
             CONFIG_ENTRY_ST: discovery[ssdp.ATTR_SSDP_ST],
             CONFIG_ENTRY_HOSTNAME: discovery["_host"],
         }

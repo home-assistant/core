@@ -43,13 +43,28 @@ async def async_setup_entry(hass, config):
         _LOGGER.debug("No devices found")
         return False
 
-    data = HoneywellData(hass, client, username, password, devices)
+    data = HoneywellData(hass, config, client, username, password, devices)
     await data.async_update()
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config.entry_id] = data
     hass.config_entries.async_setup_platforms(config, PLATFORMS)
 
+    config.async_on_unload(config.add_update_listener(update_listener))
+
     return True
+
+
+async def update_listener(hass, config) -> None:
+    """Update listener."""
+    await hass.config_entries.async_reload(config.entry_id)
+
+
+async def async_unload_entry(hass, config):
+    """Unload the config config and platforms."""
+    unload_ok = await hass.config_entries.async_unload_platforms(config, PLATFORMS)
+    if unload_ok:
+        hass.data.pop(DOMAIN)
+    return unload_ok
 
 
 def get_somecomfort_client(username, password):
@@ -70,9 +85,10 @@ def get_somecomfort_client(username, password):
 class HoneywellData:
     """Get the latest data and update."""
 
-    def __init__(self, hass, client, username, password, devices):
+    def __init__(self, hass, config, client, username, password, devices):
         """Initialize the data object."""
         self._hass = hass
+        self._config = config
         self._client = client
         self._username = username
         self._password = password
@@ -102,6 +118,7 @@ class HoneywellData:
             return False
 
         self.devices = devices
+        await self._hass.config_entries.async_reload(self._config.entry_id)
         return True
 
     async def _refresh_devices(self):
@@ -120,8 +137,9 @@ class HoneywellData:
                 break
             except (
                 somecomfort.client.APIRateLimited,
-                OSError,
+                somecomfort.client.ConnectionError,
                 somecomfort.client.ConnectionTimeout,
+                OSError,
             ) as exp:
                 retries -= 1
                 if retries == 0:

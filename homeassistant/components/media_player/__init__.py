@@ -9,6 +9,7 @@ from dataclasses import dataclass
 import datetime as dt
 import functools as ft
 import hashlib
+from http import HTTPStatus
 import logging
 import secrets
 from typing import final
@@ -30,7 +31,6 @@ from homeassistant.components.websocket_api.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    HTTP_INTERNAL_SERVER_ERROR,
     HTTP_NOT_FOUND,
     HTTP_OK,
     HTTP_UNAUTHORIZED,
@@ -482,16 +482,14 @@ class MediaPlayerEntity(Entity):
         if hasattr(self, "_attr_media_image_hash"):
             return self._attr_media_image_hash
 
-        url = self.media_image_url
-        if url is not None:
+        if (url := self.media_image_url) is not None:
             return hashlib.sha256(url.encode("utf-8")).hexdigest()[:16]
 
         return None
 
     async def async_get_media_image(self):
         """Fetch media image of current playing image."""
-        url = self.media_image_url
-        if url is None:
+        if (url := self.media_image_url) is None:
             return None, None
 
         return await self._async_fetch_image_from_cache(url)
@@ -507,6 +505,7 @@ class MediaPlayerEntity(Entity):
 
         Must be implemented by integration.
         """
+        # pylint: disable=no-self-use
         return None, None
 
     @property
@@ -870,9 +869,7 @@ class MediaPlayerEntity(Entity):
     @property
     def media_image_local(self):
         """Return local url to media image."""
-        image_hash = self.media_image_hash
-
-        if image_hash is None:
+        if (image_hash := self.media_image_hash) is None:
             return None
 
         return (
@@ -886,15 +883,15 @@ class MediaPlayerEntity(Entity):
         supported_features = self.supported_features or 0
         data = {}
 
-        if supported_features & SUPPORT_SELECT_SOURCE:
-            source_list = self.source_list
-            if source_list:
-                data[ATTR_INPUT_SOURCE_LIST] = source_list
+        if supported_features & SUPPORT_SELECT_SOURCE and (
+            source_list := self.source_list
+        ):
+            data[ATTR_INPUT_SOURCE_LIST] = source_list
 
-        if supported_features & SUPPORT_SELECT_SOUND_MODE:
-            sound_mode_list = self.sound_mode_list
-            if sound_mode_list:
-                data[ATTR_SOUND_MODE_LIST] = sound_mode_list
+        if supported_features & SUPPORT_SELECT_SOUND_MODE and (
+            sound_mode_list := self.sound_mode_list
+        ):
+            data[ATTR_SOUND_MODE_LIST] = sound_mode_list
 
         return data
 
@@ -983,8 +980,7 @@ class MediaPlayerEntity(Entity):
             response = await websession.get(url)
             if response.status == HTTP_OK:
                 content = await response.read()
-                content_type = response.headers.get(CONTENT_TYPE)
-                if content_type:
+                if content_type := response.headers.get(CONTENT_TYPE):
                     content_type = content_type.split(";")[0]
 
         if content is None:
@@ -1044,7 +1040,7 @@ class MediaPlayerImageView(HomeAssistantView):
         )
 
         if not authenticated:
-            return web.Response(status=HTTP_UNAUTHORIZED)
+            return web.Response(status=HTTPStatus.UNAUTHORIZED)
 
         if media_content_type and media_content_id:
             media_image_id = request.query.get("media_image_id")
@@ -1055,7 +1051,7 @@ class MediaPlayerImageView(HomeAssistantView):
             data, content_type = await player.async_get_media_image()
 
         if data is None:
-            return web.Response(status=HTTP_INTERNAL_SERVER_ERROR)
+            return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
         headers: LooseHeaders = {CACHE_CONTROL: "max-age=3600"}
         return web.Response(body=data, content_type=content_type, headers=headers)

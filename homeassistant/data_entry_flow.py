@@ -93,9 +93,7 @@ class FlowManager(abc.ABC):
 
     async def async_wait_init_flow_finish(self, handler: str) -> None:
         """Wait till all flows in progress are initialized."""
-        current = self._initializing.get(handler)
-
-        if not current:
+        if not (current := self._initializing.get(handler)):
             return
 
         await asyncio.wait(current)
@@ -121,6 +119,19 @@ class FlowManager(abc.ABC):
 
     async def async_post_init(self, flow: FlowHandler, result: FlowResult) -> None:
         """Entry has finished executing its first step asynchronously."""
+
+    @callback
+    def async_has_matching_flow(
+        self, handler: str, context: dict[str, Any], data: Any
+    ) -> bool:
+        """Check if an existing matching flow is in progress with the same handler, context, and data."""
+        return any(
+            flow
+            for flow in self._progress.values()
+            if flow.handler == handler
+            and flow.context["source"] == context["source"]
+            and flow.init_data == data
+        )
 
     @callback
     def async_progress(self, include_uninitialized: bool = False) -> list[FlowResult]:
@@ -175,6 +186,7 @@ class FlowManager(abc.ABC):
         flow.handler = handler
         flow.flow_id = uuid.uuid4().hex
         flow.context = context
+        flow.init_data = data
         self._progress[flow.flow_id] = flow
         result = await self._async_handle_step(flow, flow.init_step, data, init_done)
         return flow, result
@@ -189,9 +201,7 @@ class FlowManager(abc.ABC):
         self, flow_id: str, user_input: dict | None = None
     ) -> FlowResult:
         """Continue a configuration flow."""
-        flow = self._progress.get(flow_id)
-
-        if flow is None:
+        if (flow := self._progress.get(flow_id)) is None:
             raise UnknownFlow
 
         cur_step = flow.cur_step
@@ -321,6 +331,9 @@ class FlowHandler:
 
     # Set by _async_create_flow callback
     init_step = "init"
+
+    # The initial data that was used to start the flow
+    init_data: Any = None
 
     # Set by developer
     VERSION = 1

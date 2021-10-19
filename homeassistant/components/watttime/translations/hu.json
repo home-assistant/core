@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt"
+        },
+        "error": {
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt",
+            "unknown_coordinates": "Nincs adat a megadott sz\u00e9less\u00e9g/hossz\u00fas\u00e1g vonatkoz\u00e1s\u00e1ban"
+        },
+        "step": {
+            "coordinates": {
+                "data": {
+                    "latitude": "Sz\u00e9less\u00e9g",
+                    "longitude": "Hossz\u00fas\u00e1g"
+                },
+                "description": "Adja meg a sz\u00e9less\u00e9gi \u00e9s a hossz\u00fas\u00e1gi fokot a monitoroz\u00e1shoz:"
+            },
+            "location": {
+                "data": {
+                    "location_type": "Elhelyezked\u00e9s"
+                },
+                "description": "V\u00e1lasszon egy helyet a monitoroz\u00e1shoz:"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Jelsz\u00f3"
+                },
+                "description": "K\u00e9rem, adja meg \u00fajra a jelsz\u00f3t {username} r\u00e9sz\u00e9re:",
+                "title": "Integr\u00e1ci\u00f3 \u00fajrahiteles\u00edt\u00e9se"
+            },
+            "user": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "description": "Adja meg felhaszn\u00e1l\u00f3nev\u00e9t \u00e9s jelszav\u00e1t:"
+            }
+        }
+    }
+}
