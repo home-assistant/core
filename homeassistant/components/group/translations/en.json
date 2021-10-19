@@ -1,10 +1,33 @@
 {
+    "config": {
+        "step": {
+            "entities": {
+                "data": {
+                    "entities": "Entities to group"
+                }
+            },
+            "user": {
+                "data": {
+                    "domain": "Domain to group"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "entities": "Entities to group"
+                }
+            }
+        }
+    },
     "state": {
         "_": {
             "closed": "Closed",
-            "home": "Home",
+            "home": "[%key:common::state::home%]",
             "locked": "Locked",
-            "not_home": "Away",
+            "not_home": "[%key:common::state::not_home%]",
             "off": "Off",
             "ok": "OK",
             "on": "On",

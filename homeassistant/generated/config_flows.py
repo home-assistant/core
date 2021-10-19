@@ -110,6 +110,7 @@ FLOWS = [
     "google_travel_time",
     "gpslogger",
     "gree",
+    "group",
     "growatt_server",
     "guardian",
     "habitica",
