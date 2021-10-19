@@ -228,7 +228,6 @@ def areas_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
 
 async def async_setup(hass, config):
     """Set up all automations."""
-    # Local import to avoid circular import
     hass.data[DOMAIN] = component = EntityComponent(LOGGER, DOMAIN, hass)
 
     # To register the automation blueprints

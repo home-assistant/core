@@ -1,5 +1,4 @@
 """Constants for 1-Wire integration."""
-
 from pi1wire import InvalidCRCException, UnsupportResponseException
 from pyownet.protocol import Error as ProtocolError
 
@@ -35,6 +34,8 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 
+ATTR_DEFAULT_DISABLED = "default_disabled"
+
 MANUFACTURER = "Maxim Integrated"
 
 MOCK_OWPROXY_DEVICES = {
@@ -62,7 +63,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_ON,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
         ],
     },
@@ -106,7 +107,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_ON,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
             {
                 "entity_id": "binary_sensor.12_111111111111_sensed_b",
@@ -115,7 +116,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_OFF,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
         ],
         SENSOR_DOMAIN: [
@@ -126,7 +127,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "25.1",
                 ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
@@ -136,7 +137,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "1025.1",
                 ATTR_UNIT_OF_MEASUREMENT: PRESSURE_MBAR,
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_PRESSURE,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
         ],
@@ -148,7 +149,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_ON,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
             {
                 "entity_id": "switch.12_111111111111_pio_b",
@@ -157,7 +158,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_OFF,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
             {
                 "entity_id": "switch.12_111111111111_latch_a",
@@ -166,7 +167,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_ON,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
             {
                 "entity_id": "switch.12_111111111111_latch_b",
@@ -175,7 +176,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_OFF,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
         ],
     },
@@ -308,7 +309,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "72.8",
                 ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
@@ -318,7 +319,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "73.8",
                 ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
@@ -328,7 +329,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "74.8",
                 ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
@@ -338,7 +339,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "75.8",
                 ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
@@ -348,7 +349,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "unknown",
                 ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
@@ -358,7 +359,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "969.3",
                 ATTR_UNIT_OF_MEASUREMENT: PRESSURE_MBAR,
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_PRESSURE,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
@@ -368,7 +369,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "65.9",
                 ATTR_UNIT_OF_MEASUREMENT: LIGHT_LUX,
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_ILLUMINANCE,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
@@ -378,7 +379,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "3.0",
                 ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_VOLTAGE,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
@@ -388,7 +389,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "4.7",
                 ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_VOLTAGE,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
@@ -398,7 +399,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "1.0",
                 ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_CURRENT,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
         ],
@@ -443,7 +444,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_ON,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
             {
                 "entity_id": "binary_sensor.29_111111111111_sensed_1",
@@ -452,7 +453,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_OFF,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
             {
                 "entity_id": "binary_sensor.29_111111111111_sensed_2",
@@ -461,7 +462,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_OFF,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
             {
                 "entity_id": "binary_sensor.29_111111111111_sensed_3",
@@ -470,7 +471,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_OFF,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
             {
                 "entity_id": "binary_sensor.29_111111111111_sensed_4",
@@ -479,7 +480,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_OFF,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
             {
                 "entity_id": "binary_sensor.29_111111111111_sensed_5",
@@ -488,7 +489,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_OFF,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
             {
                 "entity_id": "binary_sensor.29_111111111111_sensed_6",
@@ -497,7 +498,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_OFF,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
             {
                 "entity_id": "binary_sensor.29_111111111111_sensed_7",
@@ -506,7 +507,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_OFF,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
         ],
         SWITCH_DOMAIN: [
@@ -517,7 +518,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_ON,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
             {
                 "entity_id": "switch.29_111111111111_pio_1",
@@ -526,7 +527,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_OFF,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
             {
                 "entity_id": "switch.29_111111111111_pio_2",
@@ -535,7 +536,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_ON,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
             {
                 "entity_id": "switch.29_111111111111_pio_3",
@@ -544,7 +545,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_OFF,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
             {
                 "entity_id": "switch.29_111111111111_pio_4",
@@ -553,7 +554,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_ON,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
             {
                 "entity_id": "switch.29_111111111111_pio_5",
@@ -562,7 +563,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_OFF,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
             {
                 "entity_id": "switch.29_111111111111_pio_6",
@@ -571,7 +572,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_ON,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
             {
                 "entity_id": "switch.29_111111111111_pio_7",
@@ -580,7 +581,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_OFF,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
             {
                 "entity_id": "switch.29_111111111111_latch_0",
@@ -589,7 +590,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_ON,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
             {
                 "entity_id": "switch.29_111111111111_latch_1",
@@ -598,7 +599,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_OFF,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
             {
                 "entity_id": "switch.29_111111111111_latch_2",
@@ -607,7 +608,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_ON,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
             {
                 "entity_id": "switch.29_111111111111_latch_3",
@@ -616,7 +617,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_OFF,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
             {
                 "entity_id": "switch.29_111111111111_latch_4",
@@ -625,7 +626,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_ON,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
             {
                 "entity_id": "switch.29_111111111111_latch_5",
@@ -634,7 +635,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_OFF,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
             {
                 "entity_id": "switch.29_111111111111_latch_6",
@@ -643,7 +644,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_ON,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
             {
                 "entity_id": "switch.29_111111111111_latch_7",
@@ -652,7 +653,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_OFF,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
         ],
     },
@@ -674,7 +675,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_ON,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
             {
                 "entity_id": "binary_sensor.3a_111111111111_sensed_b",
@@ -683,7 +684,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_OFF,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
         ],
         SWITCH_DOMAIN: [
@@ -694,7 +695,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_ON,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
             {
                 "entity_id": "switch.3a_111111111111_pio_b",
@@ -703,7 +704,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": STATE_OFF,
                 ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_DEVICE_CLASS: None,
-                "disabled": True,
+                ATTR_DEFAULT_DISABLED: True,
             },
         ],
     },
