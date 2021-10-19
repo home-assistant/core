@@ -25,7 +25,7 @@
         "data": {
           "entities": "Entities to group"
         }
-      }      
+      }
     }
   },
   "options": {
@@ -34,7 +34,7 @@
         "data": {
           "entities": "[%key:component::group::config::step::entities::data::entities%]"
         }
-      }      
+      }
     }
   }  
 }
