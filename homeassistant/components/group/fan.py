@@ -140,17 +140,13 @@ class FanGroup(GroupEntity, FanEntity):
         if not new_state:
             for values in self._fans.values():
                 values.discard(entity_id)
-            if update_state:
-                await self.async_defer_or_update_ha_state()
-            return
-
-        features = new_state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-
-        for feature in SUPPORTED_FLAGS:
-            if features & feature:
-                self._fans[feature].add(entity_id)
-            else:
-                self._fans[feature].discard(entity_id)
+        else:
+            features = new_state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+            for feature in SUPPORTED_FLAGS:
+                if features & feature:
+                    self._fans[feature].add(entity_id)
+                else:
+                    self._fans[feature].discard(entity_id)
 
         if update_state:
             await self.async_defer_or_update_ha_state()
@@ -262,8 +258,8 @@ class FanGroup(GroupEntity, FanEntity):
         )
         if (
             percentage_states
+            and percentage_states[0].attributes.get(ATTR_PERCENTAGE_STEP)
             and attribute_equal(percentage_states, ATTR_PERCENTAGE_STEP)
-            and percentage_states[0].attributes[ATTR_PERCENTAGE_STEP]
         ):
             self._speed_count = (
                 round(100 / percentage_states[0].attributes[ATTR_PERCENTAGE_STEP])

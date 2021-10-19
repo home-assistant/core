@@ -107,6 +107,7 @@ TUYA_SUPPORTED_PRODUCT_CATEGORIES = (
     "pc",  # Power Strip
     "pir",  # PIR Detector
     "qn",  # Heater
+    "sd",  # Robot vacuum
     "sgbj",  # Siren Alarm
     "sos",  # SOS Button
     "sp",  # Smart Camera
@@ -133,6 +134,7 @@ PLATFORMS = [
     "sensor",
     "siren",
     "switch",
+    "vacuum",
 ]
 
 
@@ -175,6 +177,7 @@ class DPCode(str, Enum):
     CUR_POWER = "cur_power"  # Actual power
     CUR_VOLTAGE = "cur_voltage"  # Actual voltage
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
+    ELECTRICITY_LEFT = "electricity_left"
     FAN_DIRECTION = "fan_direction"  # Fan direction
     FAN_SPEED_ENUM = "fan_speed_enum"  # Speed mode
     FAN_SPEED_PERCENT = "fan_speed_percent"  # Stepless speed
@@ -188,10 +191,13 @@ class DPCode(str, Enum):
     MODE = "mode"  # Working mode / Mode
     MOTION_SWITCH = "motion_switch"  # Motion switch
     MUFFLING = "muffling"  # Muffling
+    PAUSE = "pause"
     PIR = "pir"  # Motion sensor
     POWDER_SET = "powder_set"  # Powder
+    POWER_GO = "power_go"
     PUMP_RESET = "pump_reset"  # Water pump reset
     RECORD_SWITCH = "record_switch"  # Recording switch
+    SEEK = "seek"
     SENSITIVITY = "sensitivity"  # Sensitivity
     SHAKE = "shake"  # Oscillating
     SHOCK_STATE = "shock_state"  # Vibration status
@@ -199,6 +205,8 @@ class DPCode(str, Enum):
     SOS_STATE = "sos_state"  # Emergency mode
     SPEED = "speed"  # Speed level
     START = "start"  # Start
+    STATUS = "status"
+    SUCTION = "suction"
     SWING = "swing"  # Swing mode
     SWITCH = "switch"  # Switch
     SWITCH_1 = "switch_1"  # Switch 1
@@ -208,6 +216,7 @@ class DPCode(str, Enum):
     SWITCH_5 = "switch_5"  # Switch 5
     SWITCH_6 = "switch_6"  # Switch 6
     SWITCH_BACKLIGHT = "switch_backlight"  # Backlight switch
+    SWITCH_CHARGE = "switch_charge"
     SWITCH_CONTROLLER = "switch_controller"
     SWITCH_HORIZONTAL = "switch_horizontal"  # Horizontal swing flap switch
     SWITCH_LED = "switch_led"  # Switch

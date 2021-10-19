@@ -646,7 +646,7 @@ fitbit==0.3.1
 fixerio==1.0.0a0
 
 # homeassistant.components.fjaraskupan
-fjaraskupan==1.0.1
+fjaraskupan==1.0.2
 
 # homeassistant.components.flipr
 flipr-api==1.4.1
