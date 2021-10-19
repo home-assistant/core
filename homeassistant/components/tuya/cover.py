@@ -329,7 +329,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         self._send_command(
             [
                 {
-                    "code": self.entity_description.set_position,
+                    "code": self._tilt_dpcode,
                     "value": round(
                         self._tilt_type.remap_value_from(
                             kwargs[ATTR_TILT_POSITION], 0, 100, reverse=True
