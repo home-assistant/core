@@ -270,6 +270,46 @@ def test_entities_domain():
     assert schema(["sensor.light", "SENSOR.demo"]) == ["sensor.light", "sensor.demo"]
 
 
+def test_device_id():
+    """Test device ID validation."""
+    schema = vol.Schema(cv.device_id)
+
+    with pytest.raises(vol.MultipleInvalid):
+        schema("invalid_device_id")
+
+    assert (
+        schema("789AEE51924EF1D9E7B28D03657E1406") == "789aee51924ef1d9e7b28d03657e1406"
+    )
+
+
+def test_device_ids():
+    """Test device ID validation."""
+    schema = vol.Schema(cv.device_ids)
+
+    options = (
+        "invalid_device_id",
+        "789aee51924ef1d9e7b28d03657e1406,invalid_device_id",
+        ["invalid_device_id"],
+        ["789aee51924ef1d9e7b28d03657e1406", "invalid_device_id"],
+        ["789aee51924ef1d9e7b28d03657e1406,invalid_device_id"],
+    )
+    for value in options:
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    options = (
+        [],
+        ["789aee51924ef1d9e7b28d03657e1406"],
+        "789aee51924ef1d9e7b28d03657e1406",
+    )
+    for value in options:
+        schema(value)
+
+    assert schema(
+        "789AEE51924EF1D9E7B28D03657E1406, fd432aee914f796943bad0e31d76eb88 "
+    ) == ["789aee51924ef1d9e7b28d03657e1406", "fd432aee914f796943bad0e31d76eb88"]
+
+
 def test_ensure_list_csv():
     """Test ensure_list_csv."""
     schema = vol.Schema(cv.ensure_list_csv)
