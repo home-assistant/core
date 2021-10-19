@@ -91,6 +91,7 @@ PLATFORMS = [
     "binary_sensor",
     "camera",
     "climate",
+    "cover",
     "fan",
     "humidifier",
     "light",
@@ -214,6 +215,21 @@ class DPCode(str, Enum):
     WATER_SET = "water_set"  # Water level
     WET = "wet"  # Humidification
     WORK_MODE = "work_mode"  # Working mode
+
+    CONTROL = "control"
+    CONTROL_2 = "control_2"
+    CONTROL_3 = "control_3"
+    PERCENT_CONTROL = "percent_control"
+    PERCENT_CONTROL_2 = "percent_control_2"
+    PERCENT_CONTROL_3 = "percent_control_3"
+    PERCENT_STATE = "percent_state"
+    PERCENT_STATE_2 = "percent_state_2"
+    PERCENT_STATE_3 = "percent_state_3"
+    SITUATION_SET = "situation_set"
+    DOORCONTACT_STATE_2 = "doorcontact_state_3"
+    DOORCONTACT_STATE_3 = "doorcontact_state_3"
+    ANGLE_VERTICAL = "angle_vertical"
+    ANGLE_HORIZONTAL = "angle_horizontal"
 
 
 @dataclass
