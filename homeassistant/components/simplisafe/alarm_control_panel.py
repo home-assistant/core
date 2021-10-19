@@ -4,7 +4,13 @@ from __future__ import annotations
 from simplipy.errors import SimplipyError
 from simplipy.system import SystemStates
 from simplipy.system.v2 import SystemV2
-from simplipy.system.v3 import SystemV3
+from simplipy.system.v3 import (
+    VOLUME_HIGH,
+    VOLUME_LOW,
+    VOLUME_MEDIUM,
+    VOLUME_OFF,
+    SystemV3,
+)
 
 from homeassistant.components.alarm_control_panel import (
     FORMAT_NUMBER,
@@ -41,7 +47,6 @@ from .const import (
     DATA_CLIENT,
     DOMAIN,
     LOGGER,
-    VOLUME_STRING_MAP,
 )
 
 ATTR_BATTERY_BACKUP_POWER_LEVEL = "battery_backup_power_level"
@@ -51,12 +56,19 @@ ATTR_RF_JAMMING = "rf_jamming"
 ATTR_WALL_POWER_LEVEL = "wall_power_level"
 ATTR_WIFI_STRENGTH = "wifi_strength"
 
+VOLUME_STRING_MAP = {
+    VOLUME_HIGH: "high",
+    VOLUME_LOW: "low",
+    VOLUME_MEDIUM: "medium",
+    VOLUME_OFF: "off",
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up a SimpliSafe alarm control panel based on a config entry."""
-    simplisafe = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
+    simplisafe = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
     async_add_entities(
         [SimpliSafeAlarm(simplisafe, system) for system in simplisafe.systems.values()],
         True,
@@ -115,7 +127,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
             return
 
         try:
-            await self._system.set_off()
+            await self._system.async_set_off()
         except SimplipyError as err:
             LOGGER.error('Error while disarming "%s": %s', self._system.system_id, err)
             return
@@ -129,7 +141,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
             return
 
         try:
-            await self._system.set_home()
+            await self._system.async_set_home()
         except SimplipyError as err:
             LOGGER.error(
                 'Error while arming "%s" (home): %s', self._system.system_id, err
@@ -145,7 +157,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
             return
 
         try:
-            await self._system.set_away()
+            await self._system.async_set_away()
         except SimplipyError as err:
             LOGGER.error(
                 'Error while arming "%s" (away): %s', self._system.system_id, err

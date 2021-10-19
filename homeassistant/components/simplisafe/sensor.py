@@ -1,5 +1,8 @@
 """Support for SimpliSafe freeze sensor."""
-from simplipy.entity import EntityTypes
+from typing import TYPE_CHECKING
+
+from simplipy.device import DeviceTypes
+from simplipy.device.sensor.v3 import SensorV3
 
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -15,7 +18,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up SimpliSafe freeze sensors based on a config entry."""
-    simplisafe = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
+    simplisafe = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
     sensors = []
 
     for system in simplisafe.systems.values():
@@ -24,7 +27,7 @@ async def async_setup_entry(
             continue
 
         for sensor in system.sensors.values():
-            if sensor.type == EntityTypes.temperature:
+            if sensor.type == DeviceTypes.temperature:
                 sensors.append(SimplisafeFreezeSensor(simplisafe, system, sensor))
 
     async_add_entities(sensors)
@@ -40,4 +43,6 @@ class SimplisafeFreezeSensor(SimpliSafeBaseSensor, SensorEntity):
     @callback
     def async_update_from_rest_api(self) -> None:
         """Update the entity with the provided REST API data."""
+        if TYPE_CHECKING:
+            assert isinstance(self._sensor, SensorV3)
         self._attr_native_value = self._sensor.temperature
