@@ -39,12 +39,14 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
+    ENERGY_MEGA_WATT_HOUR,
     ENERGY_WATT_HOUR,
     POWER_KILO_WATT,
     POWER_WATT,
     PRESSURE_BAR,
     PRESSURE_HPA,
     PRESSURE_INHG,
+    PRESSURE_KPA,
     PRESSURE_MBAR,
     PRESSURE_PA,
     PRESSURE_PSI,
@@ -95,6 +97,7 @@ UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
     # Convert energy to kWh
     DEVICE_CLASS_ENERGY: {
         ENERGY_KILO_WATT_HOUR: lambda x: x,
+        ENERGY_MEGA_WATT_HOUR: lambda x: x * 1000,
         ENERGY_WATT_HOUR: lambda x: x / 1000,
     },
     # Convert power W
@@ -108,6 +111,7 @@ UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
         PRESSURE_BAR: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_BAR],
         PRESSURE_HPA: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_HPA],
         PRESSURE_INHG: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_INHG],
+        PRESSURE_KPA: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_KPA],
         PRESSURE_MBAR: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_MBAR],
         PRESSURE_PA: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_PA],
         PRESSURE_PSI: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_PSI],

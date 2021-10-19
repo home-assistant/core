@@ -473,3 +473,44 @@ async def test_webhook_handle_scan_tag(hass, create_registrations, webhook_clien
     assert len(events) == 1
     assert events[0].data["tag_id"] == "mock-tag-id"
     assert events[0].data["device_id"] == "mock-device-id"
+
+
+async def test_register_sensor_limits_state_class(
+    hass, create_registrations, webhook_client
+):
+    """Test that we limit state classes to sensors only."""
+    webhook_id = create_registrations[1]["webhook_id"]
+    webhook_url = f"/api/webhook/{webhook_id}"
+
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "Battery State",
+                "state": 100,
+                "type": "sensor",
+                "state_class": "total",
+                "unique_id": "abcd",
+            },
+        },
+    )
+
+    assert reg_resp.status == 201
+
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "Battery State",
+                "state": 100,
+                "type": "binary_sensor",
+                "state_class": "total",
+                "unique_id": "efgh",
+            },
+        },
+    )
+
+    # This means it was ignored.
+    assert reg_resp.status == 200
