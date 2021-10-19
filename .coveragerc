@@ -759,6 +759,8 @@ omit =
     homeassistant/components/openexchangerates/sensor.py
     homeassistant/components/opengarage/__init__.py
     homeassistant/components/opengarage/cover.py
+    homeassistant/components/opengarage/entity.py
+    homeassistant/components/opengarage/sensor.py
     homeassistant/components/openhome/__init__.py
     homeassistant/components/openhome/media_player.py
     homeassistant/components/openhome/const.py
