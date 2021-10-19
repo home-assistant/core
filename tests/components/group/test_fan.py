@@ -1,5 +1,4 @@
 """The tests for the group fan platform."""
-from datetime import timedelta
 from os import path
 from unittest.mock import patch
 
@@ -14,7 +13,6 @@ from homeassistant.components.fan import (
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     DOMAIN,
-    PLATFORM_SCHEMA,
     SERVICE_OSCILLATE,
     SERVICE_SET_DIRECTION,
     SERVICE_SET_PERCENTAGE,
@@ -33,16 +31,14 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     CONF_ENTITIES,
     CONF_UNIQUE_ID,
-    EVENT_HOMEASSISTANT_START,
     STATE_OFF,
     STATE_ON,
 )
 from homeassistant.core import CoreState
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
 
-from tests.common import assert_setup_component, async_fire_time_changed
+from tests.common import assert_setup_component
 
 FAN_GROUP = "fan.fan_group"
 
@@ -75,6 +71,7 @@ CONFIG_MISSING_FAN = {
 
 CONFIG_FULL_SUPPORT = {
     DOMAIN: [
+        {"platform": "demo"},
         {
             "platform": "group",
             CONF_ENTITIES: [*FULL_FAN_ENTITY_IDS],
@@ -170,6 +167,12 @@ async def test_state(hass, setup_comp):
     assert ATTR_ASSUMED_STATE not in state.attributes
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
+    # Test entity registry integration
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get(FAN_GROUP)
+    assert entry
+    assert entry.unique_id == "unique_identifier"
+
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ATTRIBUTES, 1)])
 async def test_attributes(hass, setup_comp):
@@ -231,7 +234,7 @@ async def test_attributes(hass, setup_comp):
     assert state.attributes[ATTR_PERCENTAGE] == int((50 + 75) / 2)
 
 
-@pytest.mark.parametrize("config_count", [(CONFIG_FULL_SUPPORT, 1)])
+@pytest.mark.parametrize("config_count", [(CONFIG_FULL_SUPPORT, 2)])
 async def test_direction_oscillating(hass, setup_comp):
     """Test handling of direction and oscillating attributes."""
 
@@ -396,3 +399,110 @@ async def test_reload(hass, setup_comp):
 
 def _get_fixtures_base_path():
     return path.dirname(path.dirname(path.dirname(__file__)))
+
+
+@pytest.mark.parametrize("config_count", [(CONFIG_FULL_SUPPORT, 2)])
+async def test_service_calls(hass, setup_comp):
+    """Test calling services."""
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: FAN_GROUP}, blocking=True
+    )
+    assert hass.states.get(LIVING_ROOM_FAN_ENTITY_ID).state == STATE_ON
+    assert hass.states.get(PERCENTAGE_FULL_FAN_ENTITY_ID).state == STATE_ON
+    assert hass.states.get(FAN_GROUP).state == STATE_ON
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: FAN_GROUP, ATTR_PERCENTAGE: 66},
+        blocking=True,
+    )
+    living_room_fan_state = hass.states.get(LIVING_ROOM_FAN_ENTITY_ID)
+    assert living_room_fan_state.attributes[ATTR_PERCENTAGE] == 66
+    percentage_full_fan_state = hass.states.get(PERCENTAGE_FULL_FAN_ENTITY_ID)
+    assert percentage_full_fan_state.attributes[ATTR_PERCENTAGE] == 66
+    fan_group_state = hass.states.get(FAN_GROUP)
+    assert fan_group_state.attributes[ATTR_PERCENTAGE] == 66
+    assert fan_group_state.attributes[ATTR_PERCENTAGE_STEP] == 100 / 3
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: FAN_GROUP}, blocking=True
+    )
+    assert hass.states.get(LIVING_ROOM_FAN_ENTITY_ID).state == STATE_OFF
+    assert hass.states.get(PERCENTAGE_FULL_FAN_ENTITY_ID).state == STATE_OFF
+    assert hass.states.get(FAN_GROUP).state == STATE_OFF
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: FAN_GROUP, ATTR_PERCENTAGE: 100},
+        blocking=True,
+    )
+    living_room_fan_state = hass.states.get(LIVING_ROOM_FAN_ENTITY_ID)
+    assert living_room_fan_state.attributes[ATTR_PERCENTAGE] == 100
+    percentage_full_fan_state = hass.states.get(PERCENTAGE_FULL_FAN_ENTITY_ID)
+    assert percentage_full_fan_state.attributes[ATTR_PERCENTAGE] == 100
+    fan_group_state = hass.states.get(FAN_GROUP)
+    assert fan_group_state.attributes[ATTR_PERCENTAGE] == 100
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: FAN_GROUP, ATTR_PERCENTAGE: 0},
+        blocking=True,
+    )
+    assert hass.states.get(LIVING_ROOM_FAN_ENTITY_ID).state == STATE_OFF
+    assert hass.states.get(PERCENTAGE_FULL_FAN_ENTITY_ID).state == STATE_OFF
+    assert hass.states.get(FAN_GROUP).state == STATE_OFF
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_OSCILLATE,
+        {ATTR_ENTITY_ID: FAN_GROUP, ATTR_OSCILLATING: True},
+        blocking=True,
+    )
+    living_room_fan_state = hass.states.get(LIVING_ROOM_FAN_ENTITY_ID)
+    assert living_room_fan_state.attributes[ATTR_OSCILLATING] is True
+    percentage_full_fan_state = hass.states.get(PERCENTAGE_FULL_FAN_ENTITY_ID)
+    assert percentage_full_fan_state.attributes[ATTR_OSCILLATING] is True
+    fan_group_state = hass.states.get(FAN_GROUP)
+    assert fan_group_state.attributes[ATTR_OSCILLATING] is True
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_OSCILLATE,
+        {ATTR_ENTITY_ID: FAN_GROUP, ATTR_OSCILLATING: False},
+        blocking=True,
+    )
+    living_room_fan_state = hass.states.get(LIVING_ROOM_FAN_ENTITY_ID)
+    assert living_room_fan_state.attributes[ATTR_OSCILLATING] is False
+    percentage_full_fan_state = hass.states.get(PERCENTAGE_FULL_FAN_ENTITY_ID)
+    assert percentage_full_fan_state.attributes[ATTR_OSCILLATING] is False
+    fan_group_state = hass.states.get(FAN_GROUP)
+    assert fan_group_state.attributes[ATTR_OSCILLATING] is False
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_DIRECTION,
+        {ATTR_ENTITY_ID: FAN_GROUP, ATTR_DIRECTION: DIRECTION_FORWARD},
+        blocking=True,
+    )
+    living_room_fan_state = hass.states.get(LIVING_ROOM_FAN_ENTITY_ID)
+    assert living_room_fan_state.attributes[ATTR_DIRECTION] == DIRECTION_FORWARD
+    percentage_full_fan_state = hass.states.get(PERCENTAGE_FULL_FAN_ENTITY_ID)
+    assert percentage_full_fan_state.attributes[ATTR_DIRECTION] == DIRECTION_FORWARD
+    fan_group_state = hass.states.get(FAN_GROUP)
+    assert fan_group_state.attributes[ATTR_DIRECTION] == DIRECTION_FORWARD
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_DIRECTION,
+        {ATTR_ENTITY_ID: FAN_GROUP, ATTR_DIRECTION: DIRECTION_REVERSE},
+        blocking=True,
+    )
+    living_room_fan_state = hass.states.get(LIVING_ROOM_FAN_ENTITY_ID)
+    assert living_room_fan_state.attributes[ATTR_DIRECTION] == DIRECTION_REVERSE
+    percentage_full_fan_state = hass.states.get(PERCENTAGE_FULL_FAN_ENTITY_ID)
+    assert percentage_full_fan_state.attributes[ATTR_DIRECTION] == DIRECTION_REVERSE
+    fan_group_state = hass.states.get(FAN_GROUP)
+    assert fan_group_state.attributes[ATTR_DIRECTION] == DIRECTION_REVERSE
