@@ -22,7 +22,10 @@ from homeassistant.components.device_tracker import (
     ATTR_LOCATION_NAME,
 )
 from homeassistant.components.frontend import MANIFEST_JSON
-from homeassistant.components.sensor import DEVICE_CLASSES as SENSOR_CLASSES
+from homeassistant.components.sensor import (
+    DEVICE_CLASSES as SENSOR_CLASSES,
+    STATE_CLASSES as SENSOSR_STATE_CLASSES,
+)
 from homeassistant.components.zone.const import DOMAIN as ZONE_DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -41,6 +44,7 @@ from homeassistant.helpers import (
     template,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 from homeassistant.util.decorator import Registry
 
 from .const import (
@@ -57,9 +61,11 @@ from .const import (
     ATTR_OS_VERSION,
     ATTR_SENSOR_ATTRIBUTES,
     ATTR_SENSOR_DEVICE_CLASS,
+    ATTR_SENSOR_ENTITY_CATEGORY,
     ATTR_SENSOR_ICON,
     ATTR_SENSOR_NAME,
     ATTR_SENSOR_STATE,
+    ATTR_SENSOR_STATE_CLASS,
     ATTR_SENSOR_TYPE,
     ATTR_SENSOR_TYPE_BINARY_SENSOR,
     ATTR_SENSOR_TYPE_SENSOR,
@@ -389,22 +395,38 @@ async def webhook_enable_encryption(hass, config_entry, data):
     return json_response({"secret": secret})
 
 
+def _validate_state_class_sensor(value: dict):
+    """Validate we only set state class for sensors."""
+    if (
+        ATTR_SENSOR_STATE_CLASS in value
+        and value[ATTR_SENSOR_TYPE] != ATTR_SENSOR_TYPE_SENSOR
+    ):
+        raise vol.Invalid("state_class only allowed for sensors")
+
+    return value
+
+
 @WEBHOOK_COMMANDS.register("register_sensor")
 @validate_schema(
-    {
-        vol.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
-        vol.Optional(ATTR_SENSOR_DEVICE_CLASS): vol.All(
-            vol.Lower, vol.In(COMBINED_CLASSES)
-        ),
-        vol.Required(ATTR_SENSOR_NAME): cv.string,
-        vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
-        vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
-        vol.Optional(ATTR_SENSOR_UOM): cv.string,
-        vol.Optional(ATTR_SENSOR_STATE, default=None): vol.Any(
-            None, bool, str, int, float
-        ),
-        vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): cv.icon,
-    }
+    vol.All(
+        {
+            vol.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
+            vol.Optional(ATTR_SENSOR_DEVICE_CLASS): vol.All(
+                vol.Lower, vol.In(COMBINED_CLASSES)
+            ),
+            vol.Required(ATTR_SENSOR_NAME): cv.string,
+            vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
+            vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
+            vol.Optional(ATTR_SENSOR_UOM): cv.string,
+            vol.Optional(ATTR_SENSOR_STATE, default=None): vol.Any(
+                None, bool, str, int, float
+            ),
+            vol.Optional(ATTR_SENSOR_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+            vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): cv.icon,
+            vol.Optional(ATTR_SENSOR_STATE_CLASS): vol.In(SENSOSR_STATE_CLASSES),
+        },
+        _validate_state_class_sensor,
+    )
 )
 async def webhook_register_sensor(hass, config_entry, data):
     """Handle a register sensor webhook."""
