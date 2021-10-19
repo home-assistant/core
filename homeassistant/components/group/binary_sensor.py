@@ -11,6 +11,7 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
@@ -42,6 +43,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_ALL): cv.boolean,
     }
 )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Initialize cover group from a config entry."""
+    async_add_entities(
+        [
+            BinarySensorGroup(
+                entry.entry_id, entry.title, None, entry.options[CONF_ENTITIES], None
+            )
+        ]
+    )
 
 
 async def async_setup_platform(

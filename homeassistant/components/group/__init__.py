@@ -11,11 +11,13 @@ from typing import Any, List, cast
 import voluptuous as vol
 
 from homeassistant import core as ha
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
     ATTR_ICON,
     ATTR_NAME,
+    CONF_DOMAIN,
     CONF_ENTITIES,
     CONF_ICON,
     CONF_NAME,
@@ -37,9 +39,11 @@ from homeassistant.helpers.integration_platform import (
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.loader import bind_hass
 
+from .const import DOMAIN
+
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
-DOMAIN = "group"
+
 GROUP_ORDER = "group_order"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -56,7 +60,7 @@ ATTR_ALL = "all"
 SERVICE_SET = "set"
 SERVICE_REMOVE = "remove"
 
-PLATFORMS = ["light", "cover", "notify", "fan", "binary_sensor"]
+PLATFORMS = ["binary_sensor", "cover", "fan", "light", "media_player", "notify"]
 
 REG_KEY = f"{DOMAIN}_registry"
 
@@ -339,6 +343,25 @@ async def async_setup(hass, config):
     )
 
     return True
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload the config entry on change of title/entities."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Group from a config entry."""
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+    hass.config_entries.async_setup_platforms(entry, [entry.data[CONF_DOMAIN]])
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload Group from a config entry."""
+    return await hass.config_entries.async_unload_platforms(
+        entry, [entry.data[CONF_DOMAIN]]
+    )
 
 
 async def _process_group_platform(hass, domain, platform):
