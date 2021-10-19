@@ -157,6 +157,11 @@ ZEROCONF = {
             "domain": "lutron_caseta"
         }
     ],
+    "_lookin._tcp.local.": [
+        {
+            "domain": "lookin"
+        }
+    ],
     "_mediaremotetv._tcp.local.": [
         {
             "domain": "apple_tv"
