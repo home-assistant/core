@@ -355,6 +355,18 @@ async def test_state_missing_entity_id(hass, setup_comp):
     assert state.state == STATE_OFF
 
 
+async def test_setup_before_started(hass):
+    """Test we can setup before starting."""
+    hass.state = CoreState.stopped
+    assert await async_setup_component(hass, DOMAIN, CONFIG_MISSING_FAN)
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+
+    await hass.async_block_till_done()
+    assert hass.states.get(FAN_GROUP).state == STATE_OFF
+
+
 @pytest.mark.parametrize("config_count", [(CONFIG_MISSING_FAN, 2)])
 async def test_reload(hass, setup_comp):
     """Test the ability to reload fans."""
