@@ -88,10 +88,7 @@ def _check_control_messages(
     check_control_messages = vehicle_state.check_control_messages
     has_check_control_messages = vehicle_state.has_check_control_messages
     if has_check_control_messages:
-        cbs_list = [
-            message["ccmDescriptionShort"]  # type: ignore  # needs fix in 'bimmer_connected'
-            for message in check_control_messages
-        ]
+        cbs_list = [message.description_short for message in check_control_messages]
         extra_attributes["check_control_messages"] = cbs_list
     else:
         extra_attributes["check_control_messages"] = "OK"
