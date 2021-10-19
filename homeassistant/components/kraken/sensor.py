@@ -32,6 +32,21 @@ async def async_setup_entry(
 ) -> None:
     """Add kraken entities from a config_entry."""
 
+    # Add all entities on startup / first setup
+    entities = []
+    for tracked_asset_pair in config_entry.options[CONF_TRACKED_ASSET_PAIRS]:
+        entities.extend(
+            [
+                KrakenSensor(
+                    hass.data[DOMAIN],
+                    tracked_asset_pair,
+                    description,
+                )
+                for description in SENSOR_TYPES
+            ]
+        )
+    async_add_entities(entities, True)
+
     @callback
     def async_update_sensors(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         dev_reg = device_registry.async_get(hass)
@@ -66,8 +81,6 @@ async def async_setup_entry(
         # Remove devices for asset pairs which are no longer tracked
         for device_id in existing_devices.values():
             dev_reg.async_remove_device(device_id)
-
-    async_update_sensors(hass, config_entry)
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
