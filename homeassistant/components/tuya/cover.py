@@ -277,7 +277,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             return current_state in (True, "fully_close")
 
         if (position := self.current_cover_position) is not None:
-            return position >= 99
+            return position == 0
 
         return None
 
