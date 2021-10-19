@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import logging
 
+from aiolookin import MeteoSensor, SensorID
+
 from homeassistant.components.sensor import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
@@ -17,7 +19,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .aiolookin import MeteoSensor, SensorID
 from .const import DOMAIN
 from .entity import LookinDeviceEntity
 from .models import LookinData

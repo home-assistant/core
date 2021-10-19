@@ -206,6 +206,9 @@ aiolifx_effects==0.2.2
 # homeassistant.components.lutron_caseta
 aiolip==1.1.6
 
+# homeassistant.components.lookin
+aiolookin==0.0.2
+
 # homeassistant.components.lyric
 aiolyric==1.0.7
 

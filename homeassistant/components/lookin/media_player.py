@@ -1,6 +1,8 @@
 """The lookin integration light platform."""
 from __future__ import annotations
 
+from aiolookin import Remote
+
 from homeassistant.components.media_player import (
     DEVICE_CLASS_RECEIVER,
     DEVICE_CLASS_TV,
@@ -19,7 +21,6 @@ from homeassistant.const import STATE_PLAYING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .aiolookin import Remote
 from .const import DOMAIN
 from .entity import LookinPowerEntity
 from .models import LookinData

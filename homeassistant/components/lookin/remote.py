@@ -2,7 +2,11 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable
 import logging
+from typing import Any
+
+from aiolookin import IRFormat
 
 from homeassistant.components.remote import ATTR_DELAY_SECS, RemoteEntity
 from homeassistant.config_entries import ConfigEntry
@@ -12,7 +16,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .aiolookin import IRFormat
 from .const import DOMAIN
 from .entity import LookinDeviceEntity
 from .models import LookinData
@@ -43,23 +46,23 @@ class LookinRemoteEntity(LookinDeviceEntity, RemoteEntity, RestoreEntity):
         self._attr_is_on = True
         self._attr_supported_features = 0
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when the remote is added to hass."""
         state = await self.async_get_last_state()
         self._attr_is_on = state is None or state.state != STATE_OFF
         await super().async_added_to_hass()
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the remote."""
         self._attr_is_on = True
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the remote."""
         self._attr_is_on = False
         self.async_write_ha_state()
 
-    async def async_send_command(self, command, **kwargs):
+    async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a list of commands."""
         delay = kwargs.get(ATTR_DELAY_SECS)
 
@@ -72,17 +75,17 @@ class LookinRemoteEntity(LookinDeviceEntity, RemoteEntity, RestoreEntity):
             if idx and delay:
                 await asyncio.sleep(delay)
 
-            format = None
-            for prefix, ir_format in KNOWN_FORMAT_PREFIXES.items():
+            ir_format = None
+            for prefix, ir_format_ in KNOWN_FORMAT_PREFIXES.items():
                 if codes.startswith(prefix):
                     codes = codes[(len(prefix)) :]
-                    format = ir_format
+                    ir_format = ir_format_
                     break
 
-            if not format:
+            if not ir_format:
                 raise HomeAssistantError(
                     f"Commands must be prefixed with one of {list(KNOWN_FORMAT_PREFIXES)}"
                 )
 
             codes = codes.replace(",", " ")
-            await self._lookin_protocol.send_ir(format=format, codes=codes)
+            await self._lookin_protocol.send_ir(ir_format=ir_format, codes=codes)
