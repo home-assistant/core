@@ -6,22 +6,22 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.tradfri import config_flow
 
+from . import TRADFRI_DIR
+
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture
 def mock_auth():
     """Mock authenticate."""
-    with patch(
-        "homeassistant.components.tradfri.config_flow.authenticate"
-    ) as mock_auth:
+    with patch(TRADFRI_DIR + ".config_flow.authenticate") as mock_auth:
         yield mock_auth
 
 
 async def test_already_paired(hass, mock_entry_setup):
     """Test Gateway already paired."""
     with patch(
-        "homeassistant.components.tradfri.config_flow.APIFactory",
+        TRADFRI_DIR + ".config_flow.APIFactory",
         autospec=True,
     ) as mock_lib:
         mx = AsyncMock()

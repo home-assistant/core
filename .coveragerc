@@ -1101,7 +1101,13 @@ omit =
     homeassistant/components/tractive/entity.py
     homeassistant/components/tractive/sensor.py
     homeassistant/components/tractive/switch.py
-    homeassistant/components/tradfri/*
+    homeassistant/components/tradfri/__init__.py
+    homeassistant/components/tradfri/base_class.py
+    homeassistant/components/tradfri/config_flow.py
+    homeassistant/components/tradfri/cover.py
+    homeassistant/components/tradfri/light.py
+    homeassistant/components/tradfri/sensor.py
+    homeassistant/components/tradfri/switch.py
     homeassistant/components/trafikverket_train/sensor.py
     homeassistant/components/trafikverket_weatherstation/sensor.py
     homeassistant/components/transmission/sensor.py
