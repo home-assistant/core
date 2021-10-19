@@ -244,7 +244,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             return None
 
         return round(
-            self._current_position_type.remap_value_to(position, 1, 99, reverse=True)
+            self._current_position_type.remap_value_to(position, 0, 100, reverse=True)
         )
 
     @property
