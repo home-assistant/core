@@ -176,7 +176,6 @@ def _evict_purged_states_from_old_states_cache(
 
 def _purge_statistics_runs(session: Session, statistics_runs: list[int]) -> None:
     """Delete by run_id."""
-    _LOGGER.error("meep!")
     deleted_rows = (
         session.query(StatisticsRuns)
         .filter(StatisticsRuns.run_id.in_(statistics_runs))
