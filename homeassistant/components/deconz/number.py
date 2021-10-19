@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from pydeconz.sensor import Presence
+from pydeconz.sensor import PRESENCE_DELAY, Presence
 
 from homeassistant.components.number import (
     DOMAIN,
@@ -23,7 +23,7 @@ class DeconzNumberEntityDescription(NumberEntityDescription):
     """Class describing deCONZ number entities."""
 
     entity_category = "config"
-    attribute: str | None = None
+    device_property: str | None = None
     suffix: str | None = None
     update_key: str | None = None
     max_value: int | None = None
@@ -34,10 +34,10 @@ class DeconzNumberEntityDescription(NumberEntityDescription):
 ENTITY_DESCRIPTIONS = {
     Presence: [
         DeconzNumberEntityDescription(
-            key="duration",
-            attribute="duration",
-            suffix="Duration",
-            update_key="duration",
+            key="delay",
+            device_property="delay",
+            suffix="Delay",
+            update_key=PRESENCE_DELAY,
             max_value=65535,
             min_value=0,
             step=1,
@@ -63,8 +63,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
             known_number_entities = set(gateway.entities[DOMAIN])
             for description in ENTITY_DESCRIPTIONS.get(sensor.__class__, []):
-                if getattr(sensor, description.attribute) is None:
+
+                if getattr(sensor, description.device_property) is None:
                     continue
+
                 new_number_entity = DeconzNumber(sensor, gateway, description)
                 if new_number_entity.unique_id not in known_number_entities:
                     entities.append(new_number_entity)
@@ -86,21 +88,21 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 class DeconzNumber(DeconzDevice, NumberEntity):
-    """Representation of a deCONZ number config entity."""
+    """Representation of a deCONZ number entity."""
 
     TYPE = DOMAIN
 
     def __init__(self, device, gateway, description):
-        """Initialize deCONZ binary sensor."""
+        """Initialize deCONZ number entity."""
         super().__init__(device, gateway)
 
         self.entity_description = description
 
         self._attr_name = f"{self._device.name} {description.suffix}"
-        self._attr_unique_id = f"{self.serial}-{self.entity_description.suffix.lower()}"
-        self._attr_max_value = self.entity_description.max_value
-        self._attr_min_value = self.entity_description.min_value
-        self._attr_step = self.entity_description.step
+        self._attr_unique_id = f"{self.serial}-{description.suffix.lower()}"
+        self._attr_max_value = description.max_value
+        self._attr_min_value = description.min_value
+        self._attr_step = description.step
 
     @callback
     def async_update_callback(self, force_update: bool = False) -> None:
@@ -111,10 +113,10 @@ class DeconzNumber(DeconzDevice, NumberEntity):
 
     @property
     def value(self) -> float:
-        """Return the value of the sensor attribute."""
-        return getattr(self._device, self.entity_description.attribute)
+        """Return the value of the sensor property."""
+        return getattr(self._device, self.entity_description.device_property)
 
     async def async_set_value(self, value: float) -> None:
         """Set sensor config."""
-        data = {self.entity_description.attribute: int(value)}
+        data = {self.entity_description.device_property: int(value)}
         await self._device.set_config(**data)
