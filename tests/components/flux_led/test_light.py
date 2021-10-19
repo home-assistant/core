@@ -741,21 +741,23 @@ async def test_rgb_light_custom_effects(hass: HomeAssistant) -> None:
     assert attributes[ATTR_EFFECT] == "custom"
 
 
-@pytest.mark.parametrize("effect_colors", [":: CANNOT BE PARSED ::", "None"])
+@pytest.mark.parametrize("effect_colors", [":: CANNOT BE PARSED ::", None])
 async def test_rgb_light_custom_effects_invalid_colors(
     hass: HomeAssistant, effect_colors: str
 ) -> None:
     """Test an rgb light with a invalid effect."""
+    options = {
+        CONF_MODE: MODE_AUTO,
+        CONF_CUSTOM_EFFECT_SPEED_PCT: 88,
+        CONF_CUSTOM_EFFECT_TRANSITION: TRANSITION_JUMP,
+    }
+    if effect_colors:
+        options[CONF_CUSTOM_EFFECT_COLORS] = effect_colors
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
+        options=options,
         unique_id=MAC_ADDRESS,
-        options={
-            CONF_MODE: MODE_AUTO,
-            CONF_CUSTOM_EFFECT_COLORS: effect_colors,
-            CONF_CUSTOM_EFFECT_SPEED_PCT: 88,
-            CONF_CUSTOM_EFFECT_TRANSITION: TRANSITION_JUMP,
-        },
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
