@@ -1,7 +1,9 @@
 """This platform allows several fans to be grouped into one fan."""
 from __future__ import annotations
 
+from functools import reduce
 import logging
+from operator import ior
 from typing import Any
 
 import voluptuous as vol
@@ -246,8 +248,9 @@ class FanGroup(GroupEntity, FanEntity):
         """Update state and attributes."""
         self._attr_assumed_state = False
 
-        all_on_states = [self.hass.states.get(x) for x in self._entities]
-        on_states: list[State] = list(filter(None, all_on_states))
+        on_states: list[State] = list(
+            filter(None, [self.hass.states.get(x) for x in self._entities])
+        )
         self._is_on = any(state.state == STATE_ON for state in on_states)
         self._attr_assumed_state |= not states_equal(on_states)
 
@@ -273,13 +276,9 @@ class FanGroup(GroupEntity, FanEntity):
         )
         self._set_attr_most_frequent("_direction", SUPPORT_DIRECTION, ATTR_DIRECTION)
 
-        self._supported_features = 0
-        for feature in SUPPORTED_FLAGS:
-            if self._fans[feature]:
-                self._supported_features |= feature
-
-        if self._attr_assumed_state:
-            return
-        self._attr_assumed_state = any(
+        self._supported_features = reduce(
+            ior, [feature for feature in SUPPORTED_FLAGS if self._fans[feature]], 0
+        )
+        self._attr_assumed_state |= any(
             state.attributes.get(ATTR_ASSUMED_STATE) for state in on_states
         )
