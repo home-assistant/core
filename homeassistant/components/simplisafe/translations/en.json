@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "This SimpliSafe account is already in use.",
-            "reauth_successful": "Re-authentication was successful"
+            "reauth_successful": "Re-authentication was successful",
+            "wrong_account": "The user credentials provided do not match this SimpliSafe account."
         },
         "error": {
             "identifier_exists": "Account already registered",
@@ -11,24 +12,15 @@
             "unknown": "Unexpected error"
         },
         "step": {
-            "mfa": {
-                "description": "Check your email for a link from SimpliSafe. After verifying the link, return here to complete the installation of the integration.",
-                "title": "SimpliSafe Multi-Factor Authentication"
-            },
-            "reauth_confirm": {
+            "input_auth_code": {
                 "data": {
-                    "password": "Password"
+                    "auth_code": "Authorization Code"
                 },
-                "description": "Your access has expired or been revoked. Enter your password to re-link your account.",
-                "title": "Reauthenticate Integration"
+                "description": "Input the authorization code from the SimpliSafe web app URL:",
+                "title": "Finish Authorization"
             },
             "user": {
-                "data": {
-                    "code": "Code (used in Home Assistant UI)",
-                    "password": "Password",
-                    "username": "Email"
-                },
-                "title": "Fill in your information."
+                "description": "Starting in 2021, SimpliSafe has moved to a new authentication mechanism via its web app. Due to technical limitations, there is a manual step at the end of this process; please ensure that you read the [documentation](http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) before starting.\n\nWhen you are ready, click [here]({url}) to open the SimpliSafe web app and input your credentials. When the process is complete, return here and click Submit."
             }
         }
     },
