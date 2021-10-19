@@ -227,6 +227,7 @@ class DPCode(str, Enum):
     WARM_TIME = "warm_time"  # Heat preservation time
     WATER_RESET = "water_reset"  # Resetting of water usage days
     WATER_SET = "water_set"  # Water level
+    WATERSENSOR_STATE = "watersensor_state"
     WET = "wet"  # Humidification
     WORK_MODE = "work_mode"  # Working mode
 
