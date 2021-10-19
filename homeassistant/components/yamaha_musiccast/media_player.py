@@ -309,7 +309,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     async def async_media_stop(self):
         """Send stop command."""
         if self._is_netusb:
-            await self.coordinator.musiccast.netusb_pause()
+            await self.coordinator.musiccast.netusb_stop()
         else:
             raise HomeAssistantError(
                 "Service stop is not supported for non NetUSB sources."
