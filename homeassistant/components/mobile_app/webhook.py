@@ -397,7 +397,10 @@ async def webhook_enable_encryption(hass, config_entry, data):
 
 def _validate_state_class_sensor(value: dict):
     """Validate we only set state class for sensors."""
-    if value[ATTR_SENSOR_TYPE] != ATTR_SENSOR_TYPE_SENSOR:
+    if (
+        ATTR_SENSOR_STATE_CLASS in value
+        and value[ATTR_SENSOR_TYPE] != ATTR_SENSOR_TYPE_SENSOR
+    ):
         raise vol.Invalid("state_class only allowed for sensors")
 
     return value
