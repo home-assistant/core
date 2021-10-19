@@ -354,7 +354,7 @@ class ModbusHub:
             return False
         else:
             message = f"modbus {self.name} communication open"
-            _LOGGER.warning(message)
+            _LOGGER.info(message)
             return True
 
     def _pymodbus_call(
