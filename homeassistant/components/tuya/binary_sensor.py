@@ -7,6 +7,7 @@ from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_DOOR,
+    DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_SAFETY,
     DEVICE_CLASS_TAMPER,
@@ -72,6 +73,21 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             key=DPCode.PIR,
             device_class=DEVICE_CLASS_MOTION,
             on_value="pir",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.TEMPER_ALARM,
+            name="Tamper",
+            device_class=DEVICE_CLASS_TAMPER,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+    ),
+    # Water Detector
+    # https://developer.tuya.com/en/docs/iot/categorysj?id=Kaiuz3iub2sli
+    "sj": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.WATERSENSOR_STATE,
+            device_class=DEVICE_CLASS_MOISTURE,
+            on_value="alarm",
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.TEMPER_ALARM,
