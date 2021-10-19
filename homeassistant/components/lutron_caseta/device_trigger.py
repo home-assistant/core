@@ -220,9 +220,7 @@ async def async_validate_trigger_config(hass: HomeAssistant, config: ConfigType)
     if not device:
         return config
 
-    schema = DEVICE_TYPE_SCHEMA_MAP.get(device["type"])
-
-    if not schema:
+    if not (schema := DEVICE_TYPE_SCHEMA_MAP.get(device["type"])):
         raise InvalidDeviceAutomationConfig(
             f"Device type {device['type']} not supported: {config[CONF_DEVICE_ID]}"
         )
@@ -290,8 +288,7 @@ def get_button_device_by_dr_id(hass: HomeAssistant, device_id: str):
 
     for config_entry in hass.data[DOMAIN]:
         button_devices = hass.data[DOMAIN][config_entry][BUTTON_DEVICES]
-        device = button_devices.get(device_id)
-        if device:
+        if device := button_devices.get(device_id):
             return device
 
     return None
