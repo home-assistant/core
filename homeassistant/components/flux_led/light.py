@@ -214,6 +214,9 @@ async def async_setup_platform(
             host,
         )
         custom_effects = device_config.get(CONF_CUSTOM_EFFECT, {})
+        custom_effect_colors = None
+        if CONF_COLORS in custom_effects:
+            custom_effect_colors = str(custom_effects[CONF_COLORS])
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
@@ -224,7 +227,7 @@ async def async_setup_platform(
                     CONF_NAME: device_config[CONF_NAME],
                     CONF_PROTOCOL: device_config.get(CONF_PROTOCOL),
                     CONF_MODE: device_config.get(ATTR_MODE, MODE_AUTO),
-                    CONF_CUSTOM_EFFECT_COLORS: str(custom_effects.get(CONF_COLORS)),
+                    CONF_CUSTOM_EFFECT_COLORS: custom_effect_colors,
                     CONF_CUSTOM_EFFECT_SPEED_PCT: custom_effects.get(
                         CONF_SPEED_PCT, DEFAULT_EFFECT_SPEED
                     ),
