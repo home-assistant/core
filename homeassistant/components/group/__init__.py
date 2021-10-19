@@ -60,7 +60,7 @@ ATTR_ALL = "all"
 SERVICE_SET = "set"
 SERVICE_REMOVE = "remove"
 
-PLATFORMS = ["light", "cover", "notify", "binary_sensor"]
+PLATFORMS = ["light", "cover", "notify", "binary_sensor", "media_player"]
 
 REG_KEY = f"{DOMAIN}_registry"
 

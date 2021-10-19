@@ -15,18 +15,20 @@ from homeassistant.loader import async_get_integration
 from . import PLATFORMS
 from .const import DOMAIN
 
+SUPPORTED_DOMAINS = [domain for domain in PLATFORMS if domain != "notify"]
+
 
 async def _async_name_to_type_map(hass: HomeAssistant) -> dict[str, str]:
     """Create a mapping of types of platforms group can support."""
     integrations = await asyncio.gather(
-        *(async_get_integration(hass, domain) for domain in PLATFORMS),
+        *(async_get_integration(hass, domain) for domain in SUPPORTED_DOMAINS),
         return_exceptions=True,
     )
     name_to_type_map = {
         domain: domain
         if isinstance(integrations[idx], Exception)
         else integrations[idx].name
-        for idx, domain in enumerate(PLATFORMS)
+        for idx, domain in enumerate(SUPPORTED_DOMAINS)
     }
     return name_to_type_map
 
