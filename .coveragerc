@@ -1115,6 +1115,7 @@ omit =
     homeassistant/components/tuya/camera.py
     homeassistant/components/tuya/climate.py
     homeassistant/components/tuya/const.py
+    homeassistant/components/tuya/cover.py
     homeassistant/components/tuya/fan.py
     homeassistant/components/tuya/humidifier.py
     homeassistant/components/tuya/light.py

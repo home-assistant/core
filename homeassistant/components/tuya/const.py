@@ -91,6 +91,7 @@ PLATFORMS = [
     "binary_sensor",
     "camera",
     "climate",
+    "cover",
     "fan",
     "humidifier",
     "light",
@@ -122,6 +123,8 @@ class DPCode(str, Enum):
     ALARM_SWITCH = "alarm_switch"  # Alarm switch
     ALARM_TIME = "alarm_time"  # Alarm time
     ALARM_VOLUME = "alarm_volume"  # Alarm volume
+    ANGLE_HORIZONTAL = "angle_horizontal"
+    ANGLE_VERTICAL = "angle_vertical"
     ANION = "anion"  # Ionizer unit
     BATTERY_PERCENTAGE = "battery_percentage"  # Battery percentage
     BATTERY_STATE = "battery_state"  # Battery state
@@ -138,12 +141,17 @@ class DPCode(str, Enum):
     COLOUR_DATA = "colour_data"  # Colored light mode
     COLOUR_DATA_V2 = "colour_data_v2"  # Colored light mode
     CONCENTRATION_SET = "concentration_set"  # Concentration setting
+    CONTROL = "control"
+    CONTROL_2 = "control_2"
+    CONTROL_3 = "control_3"
     CUP_NUMBER = "cup_number"  # NUmber of cups
     CUR_CURRENT = "cur_current"  # Actual current
     CUR_POWER = "cur_power"  # Actual power
     CUR_VOLTAGE = "cur_voltage"  # Actual voltage
     DEHUMIDITY_SET_VALUE = "dehumidify_set_value"
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
+    DOORCONTACT_STATE_2 = "doorcontact_state_3"
+    DOORCONTACT_STATE_3 = "doorcontact_state_3"
     ELECTRICITY_LEFT = "electricity_left"
     FAN_DIRECTION = "fan_direction"  # Fan direction
     FAN_SPEED_ENUM = "fan_speed_enum"  # Speed mode
@@ -159,6 +167,12 @@ class DPCode(str, Enum):
     MOTION_SWITCH = "motion_switch"  # Motion switch
     MUFFLING = "muffling"  # Muffling
     PAUSE = "pause"
+    PERCENT_CONTROL = "percent_control"
+    PERCENT_CONTROL_2 = "percent_control_2"
+    PERCENT_CONTROL_3 = "percent_control_3"
+    PERCENT_STATE = "percent_state"
+    PERCENT_STATE_2 = "percent_state_2"
+    PERCENT_STATE_3 = "percent_state_3"
     PIR = "pir"  # Motion sensor
     POWDER_SET = "powder_set"  # Powder
     POWER_GO = "power_go"
@@ -168,6 +182,7 @@ class DPCode(str, Enum):
     SENSITIVITY = "sensitivity"  # Sensitivity
     SHAKE = "shake"  # Oscillating
     SHOCK_STATE = "shock_state"  # Vibration status
+    SITUATION_SET = "situation_set"
     SOS = "sos"  # Emergency State
     SOS_STATE = "sos_state"  # Emergency mode
     SPEED = "speed"  # Speed level
