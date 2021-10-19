@@ -72,7 +72,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     RainMachineSensorEntityDescription(
         key=TYPE_FLOW_SENSOR_WATERING_CLICKS,
-        name="Flow Sensor Watering Clicks",
+        name="Flow Sensor Clicks",
         icon="mdi:water-pump",
         native_unit_of_measurement="clicks",
         entity_registry_enabled_default=False,
