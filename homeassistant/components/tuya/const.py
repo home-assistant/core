@@ -84,41 +84,6 @@ TUYA_RESPONSE_MSG = "msg"
 TUYA_RESPONSE_SUCCESS = "success"
 TUYA_RESPONSE_PLATFORM_URL = "platform_url"
 
-TUYA_SUPPORTED_PRODUCT_CATEGORIES = (
-    "bh",  # Smart Kettle
-    "cwysj",  # Pet Water Feeder
-    "cz",  # Socket
-    "dc",  # Light string
-    "dd",  # Light strip
-    "dj",  # Light
-    "dlq",  # Breaker
-    "fs",  # Fan
-    "fsd",  # Ceiling Fan Light
-    "fwd",  # Ambient Light
-    "fwl",  # Ambient light
-    "gyd",  # Motion Sensor Light
-    "jsq",  # Humidifier's light
-    "kfj",  # Coffee maker
-    "kg",  # Switch
-    "kj",  # Air Purifier
-    "kt",  # Air conditioner
-    "ldcg",  # Luminance Sensor
-    "mcs",  # Door Window Sensor
-    "pc",  # Power Strip
-    "pir",  # PIR Detector
-    "qn",  # Heater
-    "sd",  # Robot vacuum
-    "sgbj",  # Siren Alarm
-    "sos",  # SOS Button
-    "sp",  # Smart Camera
-    "tgq",  # Dimmer
-    "tyndj",  # Solar Light
-    "wk",  # Thermostat
-    "xdd",  # Ceiling Light
-    "xxj",  # Diffuser
-    "zd",  # Vibration Sensor
-)
-
 TUYA_SMART_APP = "tuyaSmart"
 SMARTLIFE_APP = "smartlife"
 
