@@ -1,0 +1,77 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Questo Samsung TV \u00e8 gi\u00e0 configurato.",
+            "already_in_progress": "La configurazione di Samsung TV \u00e8 gi\u00e0 in corso."
+        },
+        "error": {
+            "auth_missing": "Home Assistant non \u00e8 autorizzato a connettersi a questo Samsung TV. Controlla le impostazioni del tuo TV per autorizzare Home Assistant.",
+            "invalid_host": "Nome host non valido.",
+            "not_successful": "Impossibile aprire la connessione WebSocket con questo dispositivo Samsung TV.",
+            "not_supported": "Questo dispositivo Samsung TV non \u00e8 attualmente supportato.",
+            "wrong_api_key": "SmartThings token errato.",
+            "st_device_not_found": "SmartThings TV deviceID non trovato.",
+            "st_device_used": "SmartThings TV deviceID gi\u00e0 utilizzato."
+        },
+        "flow_title": "SamsungTV Smart: {model}",
+        "step": {
+            "confirm": {
+                "description": "Vuoi configurare Samsung TV {model}? Se non hai mai connesso Home Assistant in precedenza, dovresti vedere un messaggio sul tuo TV in cui \u00e8 richiesta l'autorizzazione. Le configurazioni manuali per questo TV verranno sovrascritte.",
+                "title": "SamsungTV Smart"
+            },
+            "user": {
+                "data": {
+                    "host": "Host o indirizzo IP",
+                    "name": "Nome dell'entit\u00e0",
+                    "use_ha_name_for_ws": "Usare il nome dell'istanza HA per identificarsi sulla TV",
+                    "api_key": "SmartThings token generato (opzionale)"
+                },
+                "description": "Inserisci le informazioni del tuo Samsung TV. Il token SmartThings \u00e8 opzionale ma fortemente consigliato. Se non hai mai connesso Home Assistant in precedenza, dovresti vedere un messaggio sul TV in cui \u00e8 richiesta l'autorizzazione.",
+                "title": "SamsungTV Smart"
+            },
+            "stdevice": {
+                "data": {
+                    "st_devices": "SmartThings TV"
+                },
+                "description": "Hai più di un TV configurato sul tuo account. Seleziona il TV che stai configurando dalla lista.",
+                "title": "SamsungTV Smart"
+            },
+            "stdeviceid": {
+                "data": {
+                    "device_id": "SmartThings TV deviceID"
+                },
+                "description": "Identificazione automatica del deviceID SmartThings fallita. Per continuare devi identificare il deviceID sul sito SmartThings (vedere documentazione) e inserirlo qui.",
+                "title": "SamsungTV Smart"
+            }
+        },
+        "title": "SamsungTV Smart"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Opzioni",
+                "data": {
+                    "use_st_status_info": "Usa informazioni Stato TV da SmartThings",
+                    "use_st_channel_info": "Usa informazioni Canale TV da SmartThings",
+                    "show_channel_number": "Usa informazioni Numero Canale TV da SmartThings",
+                    "power_on_method_opt": "Metodo usato per accendere la TV",
+                    "logo_option_opt": "Visualizza il logo per sorgenti, apps e canali conosciuti",
+                    "sync_turn_off": "Elenco entit\u00e0 da Spegnere con la TV (separate da virgola)",
+                    "sync_turn_on": "Elenco entit\u00e0 da Accendere con la TV (separate da virgola)",
+                    "show_adv_opt": "Mostra opzioni avanzate"
+                }
+            },
+            "adv_opt": {
+                "title": "Opzioni avanzate",
+                "data": {
+                    "app_load_method_opt": "Modalità caricamento lista applicazioni all'avvio",
+                    "app_launch_method_opt": "Metodo usato per lanciare le applicazioni",
+                    "dump_apps": "Mostra lista apps nel file di log all'avvio (se possibile)",
+                    "use_mute_check": "Utilizza lo stato di volume muto per identificare false accensioni",
+                    "wol_repeat": "Numero di volte che il pacchetto WOL viene inviato per accendere la TV",
+                    "power_on_delay": "Secondi di ritardo per passaggio allo stato ON"
+                }
+            }
+        }
+    }
+}

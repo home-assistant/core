@@ -1,0 +1,9 @@
+{
+  "domain": "smartthings_soundbar",
+  "name": "SmartThings Soundbar",
+  "documentation": "https://github.com/PiotrMachowski/Home-Assistant-custom-components-SmartThings-Soundbar",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": ["@PiotrMachowski"],
+  "version": "v1.0.1"
+}
