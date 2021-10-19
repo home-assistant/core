@@ -1,6 +1,6 @@
 """Entity tests for mobile_app."""
 from homeassistant.const import PERCENTAGE, STATE_UNKNOWN
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 
 async def test_sensor(hass, create_registrations, webhook_client):
@@ -19,6 +19,7 @@ async def test_sensor(hass, create_registrations, webhook_client):
                 "name": "Battery State",
                 "state": 100,
                 "type": "sensor",
+                "entity_category": "diagnostic",
                 "unique_id": "battery_state",
                 "unit_of_measurement": PERCENTAGE,
             },
@@ -41,6 +42,11 @@ async def test_sensor(hass, create_registrations, webhook_client):
     assert entity.domain == "sensor"
     assert entity.name == "Test 1 Battery State"
     assert entity.state == "100"
+
+    assert (
+        er.async_get(hass).async_get("sensor.test_1_battery_state").entity_category
+        == "diagnostic"
+    )
 
     update_resp = await webhook_client.post(
         webhook_url,

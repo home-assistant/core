@@ -61,6 +61,7 @@ ERR_INVALID_FORMAT = "invalid_format"
 
 ATTR_SENSOR_ATTRIBUTES = "attributes"
 ATTR_SENSOR_DEVICE_CLASS = "device_class"
+ATTR_SENSOR_ENTITY_CATEGORY = "entity_category"
 ATTR_SENSOR_ICON = "icon"
 ATTR_SENSOR_NAME = "name"
 ATTR_SENSOR_STATE = "state"

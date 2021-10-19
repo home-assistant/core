@@ -41,6 +41,7 @@ from homeassistant.helpers import (
     template,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 from homeassistant.util.decorator import Registry
 
 from .const import (
@@ -57,6 +58,7 @@ from .const import (
     ATTR_OS_VERSION,
     ATTR_SENSOR_ATTRIBUTES,
     ATTR_SENSOR_DEVICE_CLASS,
+    ATTR_SENSOR_ENTITY_CATEGORY,
     ATTR_SENSOR_ICON,
     ATTR_SENSOR_NAME,
     ATTR_SENSOR_STATE,
@@ -403,6 +405,7 @@ async def webhook_enable_encryption(hass, config_entry, data):
         vol.Optional(ATTR_SENSOR_STATE, default=None): vol.Any(
             None, bool, str, int, float
         ),
+        vol.Optional(ATTR_SENSOR_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
         vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): cv.icon,
     }
 )
