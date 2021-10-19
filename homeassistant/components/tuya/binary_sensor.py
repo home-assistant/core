@@ -42,6 +42,15 @@ class TuyaBinarySensorEntityDescription(BinarySensorEntityDescription):
 # end up being a binary sensor.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
+    # Human Presence Sensor
+    # https://developer.tuya.com/en/docs/iot/categoryhps?id=Kaiuz42yhn1hs
+    "hps": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.PRESENCE_STATE,
+            device_class=DEVICE_CLASS_MOTION,
+            on_value="presence",
+        ),
+    ),
     # Door Window Sensor
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48hm02l8m
     "mcs": (
