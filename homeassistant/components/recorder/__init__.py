@@ -249,6 +249,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     exclude = conf[CONF_EXCLUDE]
     exclude_t = exclude.get(CONF_EVENT_TYPES, [])
+    if EVENT_STATE_CHANGED in exclude_t:
+        _LOGGER.warning(
+            "State change events are excluded, recorder will not record state changes"
+        )
     instance = hass.data[DATA_INSTANCE] = Recorder(
         hass=hass,
         auto_purge=auto_purge,
