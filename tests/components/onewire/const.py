@@ -573,6 +573,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_UNIT_OF_MEASUREMENT: None,
             },
             {
+                ATTR_DEFAULT_DISABLED: True,
                 ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "switch.29_111111111111_pio_6",
                 ATTR_INJECT_READS: b"    1",
