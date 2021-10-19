@@ -2017,16 +2017,19 @@ def test_compile_hourly_statistics_changing_statistics(
     "db_supports_row_number,in_log,not_in_log",
     [(True, "row_number", None), (False, None, "row_number")],
 )
-def test_compile_statistics_hourly_summary(
+def test_compile_statistics_hourly_daily_monthly_summary(
     hass_recorder, caplog, db_supports_row_number, in_log, not_in_log
 ):
-    """Test compiling hourly statistics."""
+    """Test compiling hourly statistics + monthly and daily summary."""
     zero = dt_util.utcnow()
-    zero = zero.replace(minute=0, second=0, microsecond=0)
-    # Travel to the future, recorder gets confused otherwise because states are added
-    # before the start of the recorder_run
-    zero += timedelta(hours=1)
-    hass = hass_recorder()
+    # August 31st, 23:00 local time
+    zero = zero.replace(
+        year=2021, month=9, day=1, hour=5, minute=0, second=0, microsecond=0
+    )
+    with patch(
+        "homeassistant.components.recorder.models.dt_util.utcnow", return_value=zero
+    ):
+        hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     recorder._db_supports_row_number = db_supports_row_number
     setup_component(hass, "sensor", {})
@@ -2265,6 +2268,123 @@ def test_compile_statistics_hourly_summary(
         start += timedelta(hours=1)
         end += timedelta(hours=1)
     assert stats == expected_stats
+
+    stats = statistics_during_period(hass, zero, period="day")
+    expected_stats = {
+        "sensor.test1": [],
+        "sensor.test2": [],
+        "sensor.test3": [],
+        "sensor.test4": [],
+    }
+    start = dt_util.parse_datetime("2021-08-31T06:00:00+00:00")
+    end = start + timedelta(days=1)
+    for i in range(2):
+        for entity_id in [
+            "sensor.test1",
+            "sensor.test2",
+            "sensor.test3",
+            "sensor.test4",
+        ]:
+            expected_average = (
+                mean(expected_averages[entity_id][i * 12 : (i + 1) * 12])
+                if entity_id in expected_averages
+                else None
+            )
+            expected_minimum = (
+                min(expected_minima[entity_id][i * 12 : (i + 1) * 12])
+                if entity_id in expected_minima
+                else None
+            )
+            expected_maximum = (
+                max(expected_maxima[entity_id][i * 12 : (i + 1) * 12])
+                if entity_id in expected_maxima
+                else None
+            )
+            expected_state = (
+                expected_states[entity_id][(i + 1) * 12 - 1]
+                if entity_id in expected_states
+                else None
+            )
+            expected_sum = (
+                expected_sums[entity_id][(i + 1) * 12 - 1]
+                if entity_id in expected_sums
+                else None
+            )
+            expected_stats[entity_id].append(
+                {
+                    "statistic_id": entity_id,
+                    "start": process_timestamp_to_utc_isoformat(start),
+                    "end": process_timestamp_to_utc_isoformat(end),
+                    "mean": approx(expected_average),
+                    "min": approx(expected_minimum),
+                    "max": approx(expected_maximum),
+                    "last_reset": None,
+                    "state": expected_state,
+                    "sum": expected_sum,
+                }
+            )
+        start += timedelta(days=1)
+        end += timedelta(days=1)
+    assert stats == expected_stats
+
+    stats = statistics_during_period(hass, zero, period="month")
+    expected_stats = {
+        "sensor.test1": [],
+        "sensor.test2": [],
+        "sensor.test3": [],
+        "sensor.test4": [],
+    }
+    start = dt_util.parse_datetime("2021-08-01T06:00:00+00:00")
+    end = dt_util.parse_datetime("2021-09-01T06:00:00+00:00")
+    for i in range(2):
+        for entity_id in [
+            "sensor.test1",
+            "sensor.test2",
+            "sensor.test3",
+            "sensor.test4",
+        ]:
+            expected_average = (
+                mean(expected_averages[entity_id][i * 12 : (i + 1) * 12])
+                if entity_id in expected_averages
+                else None
+            )
+            expected_minimum = (
+                min(expected_minima[entity_id][i * 12 : (i + 1) * 12])
+                if entity_id in expected_minima
+                else None
+            )
+            expected_maximum = (
+                max(expected_maxima[entity_id][i * 12 : (i + 1) * 12])
+                if entity_id in expected_maxima
+                else None
+            )
+            expected_state = (
+                expected_states[entity_id][(i + 1) * 12 - 1]
+                if entity_id in expected_states
+                else None
+            )
+            expected_sum = (
+                expected_sums[entity_id][(i + 1) * 12 - 1]
+                if entity_id in expected_sums
+                else None
+            )
+            expected_stats[entity_id].append(
+                {
+                    "statistic_id": entity_id,
+                    "start": process_timestamp_to_utc_isoformat(start),
+                    "end": process_timestamp_to_utc_isoformat(end),
+                    "mean": approx(expected_average),
+                    "min": approx(expected_minimum),
+                    "max": approx(expected_maximum),
+                    "last_reset": None,
+                    "state": expected_state,
+                    "sum": expected_sum,
+                }
+            )
+        start = (start + timedelta(days=31)).replace(day=1)
+        end = (end + timedelta(days=31)).replace(day=1)
+    assert stats == expected_stats
+
     assert "Error while processing event StatisticsTask" not in caplog.text
     if in_log:
         assert in_log in caplog.text
