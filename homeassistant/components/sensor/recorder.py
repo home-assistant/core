@@ -39,6 +39,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
+    ENERGY_MEGA_WATT_HOUR,
     ENERGY_WATT_HOUR,
     POWER_KILO_WATT,
     POWER_WATT,
@@ -95,6 +96,7 @@ UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
     # Convert energy to kWh
     DEVICE_CLASS_ENERGY: {
         ENERGY_KILO_WATT_HOUR: lambda x: x,
+        ENERGY_MEGA_WATT_HOUR: lambda x: x * 1000,
         ENERGY_WATT_HOUR: lambda x: x / 1000,
     },
     # Convert power W
