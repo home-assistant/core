@@ -1086,6 +1086,12 @@ def test_today_at(mock_is_safe, hass):
         ).async_render()
         assert result == now.isoformat()
 
+        result = template.Template(
+            "{{ today_at('bad') }}",
+            hass,
+        ).async_render()
+        assert result is None
+
 
 @patch(
     "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",

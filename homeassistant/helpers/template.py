@@ -1561,15 +1561,16 @@ def random_every_time(context, values):
     return random.choice(values)
 
 
-def today_at(time_str: str = "") -> datetime:
+def today_at(time_str: str = "") -> datetime | None:
     """Record fetching now where the time has been replaced with value."""
     start = dt_util.start_of_local_day(datetime.now())
 
-    dttime = dt_util.parse_time(time_str)
-    if dttime is None:
-        dttime = start.time()
+    dttime = start.time() if time_str == "" else dt_util.parse_time(time_str)
 
-    return datetime.combine(start.date(), dttime, tzinfo=dt_util.DEFAULT_TIME_ZONE)
+    if dttime:
+        return datetime.combine(start.date(), dttime, tzinfo=dt_util.DEFAULT_TIME_ZONE)
+
+    return None
 
 
 def relative_time(value):
