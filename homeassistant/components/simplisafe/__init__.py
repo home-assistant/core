@@ -3,25 +3,30 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable
-from typing import cast
-from uuid import UUID
+from datetime import timedelta
+from typing import TYPE_CHECKING, cast
 
-from simplipy import get_api
-from simplipy.api import API
+from simplipy import API
+from simplipy.device.sensor.v2 import SensorV2
+from simplipy.device.sensor.v3 import SensorV3
 from simplipy.errors import (
     EndpointUnavailableError,
     InvalidCredentialsError,
     SimplipyError,
 )
-from simplipy.sensor.v2 import SensorV2
-from simplipy.sensor.v3 import SensorV3
 from simplipy.system import SystemNotification
 from simplipy.system.v2 import SystemV2
-from simplipy.system.v3 import SystemV3
+from simplipy.system.v3 import (
+    VOLUME_HIGH,
+    VOLUME_LOW,
+    VOLUME_MEDIUM,
+    VOLUME_OFF,
+    SystemV3,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_CODE, CONF_CODE, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import ATTR_CODE, CONF_CODE, CONF_TOKEN
 from homeassistant.core import CoreState, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -49,15 +54,15 @@ from .const import (
     ATTR_EXIT_DELAY_HOME,
     ATTR_LIGHT,
     ATTR_VOICE_PROMPT_VOLUME,
+    CONF_USER_ID,
     DATA_CLIENT,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     LOGGER,
-    VOLUMES,
 )
 
 EVENT_SIMPLISAFE_NOTIFICATION = "SIMPLISAFE_NOTIFICATION"
 
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 DEFAULT_SOCKET_MIN_RETRY = 15
 
 PLATFORMS = (
@@ -74,6 +79,8 @@ ATTR_PIN_LABEL_OR_VALUE = "label_or_pin"
 ATTR_PIN_VALUE = "pin"
 ATTR_SYSTEM_ID = "system_id"
 ATTR_TIMESTAMP = "timestamp"
+
+VOLUMES = [VOLUME_OFF, VOLUME_LOW, VOLUME_MEDIUM, VOLUME_HIGH]
 
 SERVICE_BASE_SCHEMA = vol.Schema({vol.Required(ATTR_SYSTEM_ID): cv.positive_int})
 
@@ -120,13 +127,29 @@ SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
-async def async_get_client_id(hass: HomeAssistant) -> str:
-    """Get a client ID (based on the HASS unique ID) for the SimpliSafe API.
+@callback
+def _async_standardize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Bring a config entry up to current standards."""
+    if CONF_TOKEN not in entry.data:
+        raise ConfigEntryAuthFailed(
+            "New SimpliSafe OAuth standard requires re-authentication"
+        )
 
-    Note that SimpliSafe requires full, "dashed" versions of UUIDs.
-    """
-    hass_id = await hass.helpers.instance_id.async_get()
-    return str(UUID(hass_id))
+    entry_updates = {}
+    if not entry.unique_id:
+        # If the config entry doesn't already have a unique ID, set one:
+        entry_updates["unique_id"] = entry.data[CONF_USER_ID]
+    if CONF_CODE in entry.data:
+        # If an alarm code was provided as part of configuration.yaml, pop it out of
+        # the config entry's data and move it to options:
+        data = {**entry.data}
+        entry_updates["data"] = data
+        entry_updates["options"] = {
+            **entry.options,
+            CONF_CODE: data.pop(CONF_CODE),
+        }
+    if entry_updates:
+        hass.config_entries.async_update_entry(entry, **entry_updates)
 
 
 async def async_register_base_station(
@@ -143,47 +166,19 @@ async def async_register_base_station(
     )
 
 
-@callback
-def _async_standardize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Bring a config entry up to current standards."""
-    if CONF_PASSWORD not in entry.data:
-        raise ConfigEntryAuthFailed("Config schema change requires re-authentication")
-
-    entry_updates = {}
-    if not entry.unique_id:
-        # If the config entry doesn't already have a unique ID, set one:
-        entry_updates["unique_id"] = entry.data[CONF_USERNAME]
-    if CONF_CODE in entry.data:
-        # If an alarm code was provided as part of configuration.yaml, pop it out of
-        # the config entry's data and move it to options:
-        data = {**entry.data}
-        entry_updates["data"] = data
-        entry_updates["options"] = {
-            **entry.options,
-            CONF_CODE: data.pop(CONF_CODE),
-        }
-    if entry_updates:
-        hass.config_entries.async_update_entry(entry, **entry_updates)
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SimpliSafe as config entry."""
-    hass.data.setdefault(DOMAIN, {DATA_CLIENT: {}})
-    hass.data[DOMAIN][DATA_CLIENT][entry.entry_id] = []
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {}
 
     _async_standardize_config_entry(hass, entry)
 
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
-
-    client_id = await async_get_client_id(hass)
     websession = aiohttp_client.async_get_clientsession(hass)
 
     try:
-        api = await get_api(
-            entry.data[CONF_USERNAME],
-            entry.data[CONF_PASSWORD],
-            client_id=client_id,
-            session=websession,
+        api = await API.async_from_refresh_token(
+            entry.data[CONF_TOKEN], session=websession
         )
     except InvalidCredentialsError as err:
         raise ConfigEntryAuthFailed from err
@@ -198,7 +193,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SimplipyError as err:
         raise ConfigEntryNotReady from err
 
-    hass.data[DOMAIN][DATA_CLIENT][entry.entry_id] = simplisafe
+    hass.data[DOMAIN][entry.entry_id][DATA_CLIENT] = simplisafe
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     @callback
@@ -237,7 +232,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Clear all active notifications."""
         system = simplisafe.systems[call.data[ATTR_SYSTEM_ID]]
         try:
-            await system.clear_notifications()
+            await system.async_clear_notifications()
         except SimplipyError as err:
             LOGGER.error("Error during service call: %s", err)
 
@@ -247,7 +242,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Remove a PIN."""
         system = simplisafe.systems[call.data[ATTR_SYSTEM_ID]]
         try:
-            await system.remove_pin(call.data[ATTR_PIN_LABEL_OR_VALUE])
+            await system.async_remove_pin(call.data[ATTR_PIN_LABEL_OR_VALUE])
         except SimplipyError as err:
             LOGGER.error("Error during service call: %s", err)
 
@@ -257,7 +252,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Set a PIN."""
         system = simplisafe.systems[call.data[ATTR_SYSTEM_ID]]
         try:
-            await system.set_pin(call.data[ATTR_PIN_LABEL], call.data[ATTR_PIN_VALUE])
+            await system.async_set_pin(
+                call.data[ATTR_PIN_LABEL], call.data[ATTR_PIN_VALUE]
+            )
         except SimplipyError as err:
             LOGGER.error("Error during service call: %s", err)
 
@@ -268,7 +265,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Set one or more system parameters."""
         system = cast(SystemV3, simplisafe.systems[call.data[ATTR_SYSTEM_ID]])
         try:
-            await system.set_properties(
+            await system.async_set_properties(
                 {
                     prop: value
                     for prop, value in call.data.items()
@@ -299,7 +296,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a SimpliSafe config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 
@@ -362,7 +359,7 @@ class SimpliSafe:
 
     async def async_init(self) -> None:
         """Initialize the data class."""
-        self.systems = await self._api.get_systems()
+        self.systems = await self._api.async_get_systems()
         for system in self.systems.values():
             self._system_notifications[system.system_id] = set()
 
@@ -373,17 +370,34 @@ class SimpliSafe:
         self.coordinator = DataUpdateCoordinator(
             self._hass,
             LOGGER,
-            name=self.entry.data[CONF_USERNAME],
+            name=self.entry.data[CONF_USER_ID],
             update_interval=DEFAULT_SCAN_INTERVAL,
             update_method=self.async_update,
         )
+
+        @callback
+        def async_save_refresh_token(token: str) -> None:
+            """Save a refresh token to the config entry."""
+            LOGGER.info("Saving new refresh token to HASS storage")
+            self._hass.config_entries.async_update_entry(
+                self.entry,
+                data={**self.entry.data, CONF_TOKEN: token},
+            )
+
+        self.entry.async_on_unload(
+            self._api.add_refresh_token_listener(async_save_refresh_token)
+        )
+
+        if TYPE_CHECKING:
+            assert self._api.refresh_token
+        async_save_refresh_token(self._api.refresh_token)
 
     async def async_update(self) -> None:
         """Get updated data from SimpliSafe."""
 
         async def async_update_system(system: SystemV2 | SystemV3) -> None:
             """Update a system."""
-            await system.update(cached=system.version != 3)
+            await system.async_update(cached=system.version != 3)
             self._async_process_new_notifications(system)
 
         tasks = [async_update_system(system) for system in self.systems.values()]
