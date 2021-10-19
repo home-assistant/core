@@ -39,11 +39,11 @@
     "options": {
         "step": {
             "init": {
-                "title": "Motion Blinds",
-                "description": "Specify optional settings",
                 "data": {
                     "wait_for_push": "Wait for multicast push on update"
-                }
+                },
+                "description": "Specify optional settings",
+                "title": "Motion Blinds"
             }
         }
     }
