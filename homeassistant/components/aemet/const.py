@@ -211,27 +211,23 @@ FORECAST_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=ATTR_FORECAST_PRECIPITATION,
         name="Precipitation",
         native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=ATTR_FORECAST_PRECIPITATION_PROBABILITY,
         name="Precipitation probability",
         native_unit_of_measurement=PERCENTAGE,
-        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=ATTR_FORECAST_TEMP,
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=ATTR_FORECAST_TEMP_LOW,
         name="Temperature Low",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=ATTR_FORECAST_TIME,
@@ -242,13 +238,11 @@ FORECAST_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=ATTR_FORECAST_WIND_BEARING,
         name="Wind bearing",
         native_unit_of_measurement=DEGREE,
-        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=ATTR_FORECAST_WIND_SPEED,
         name="Wind speed",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
     ),
 )
 WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
