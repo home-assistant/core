@@ -1,5 +1,10 @@
 {
   "state": {
+    "tuya__led_type": {
+      "halogen": "Halogen",
+      "incandescent": "Incandescent",
+      "led": "LED"
+    },
     "tuya__light_mode": {
       "none": "[%key:common::state::off%]",
       "pos": "Indicate switch location",
@@ -7,6 +12,9 @@
     },
     "tuya__relay_status": {
       "last": "Remember last state",
+      "memory": "Remember last state",
+      "off": "[%key:common::state::off%]",
+      "on": "[%key:common::state::on%]",
       "power_off": "[%key:common::state::off%]",
       "power_on": "[%key:common::state::on%]"
     }
