@@ -11,7 +11,7 @@ from kostal.plenticore import PlenticoreApiClient, PlenticoreAuthenticationExcep
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -52,9 +52,10 @@ class Plenticore:
         try:
             await self._client.login(self.config_entry.data[CONF_PASSWORD])
         except PlenticoreAuthenticationException as err:
-            raise ConfigEntryAuthFailed(
-                f"Authentication exception connecting to {self.host}: {err}"
-            ) from err
+            _LOGGER.error(
+                "Authentication exception connecting to %s: %s", self.host, err
+            )
+            return False
         except (ClientError, asyncio.TimeoutError) as err:
             raise ConfigEntryNotReady(f"Error connecting to {self.host}") from err
         else:
