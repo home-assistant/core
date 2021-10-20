@@ -63,7 +63,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 continue
 
             known_number_entities = set(gateway.entities[DOMAIN])
-            for description in ENTITY_DESCRIPTIONS.get(sensor.__class__, []):
+            for description in ENTITY_DESCRIPTIONS.get(type(sensor), []):
 
                 if getattr(sensor, description.device_property) is None:
                     continue
