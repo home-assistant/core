@@ -5,8 +5,6 @@ import pytest
 
 from . import GATEWAY_ID, TRADFRI_PATH
 
-from tests.components.light.conftest import mock_light_profiles  # noqa: F401
-
 # pylint: disable=protected-access
 
 
@@ -25,8 +23,8 @@ def mock_entry_setup():
         yield mock_setup
 
 
-@pytest.fixture
-def mock_gateway():
+@pytest.fixture(name="mock_gateway")
+def fixture_mock_gateway():
     """Mock a Tradfri gateway."""
 
     def get_devices():
@@ -57,8 +55,8 @@ def mock_gateway():
         yield gateway
 
 
-@pytest.fixture
-def mock_api(mock_gateway):
+@pytest.fixture(name="mock_api")
+def fixture_mock_api(mock_gateway):
     """Mock api."""
 
     async def api(command):
@@ -78,3 +76,10 @@ def mock_api_factory(mock_api):
         factory.init.return_value = factory.return_value
         factory.return_value.request = mock_api
         yield factory.return_value
+
+
+@pytest.fixture
+def mock_auth():
+    """Mock authenticate."""
+    with patch(f"{TRADFRI_PATH}.config_flow.authenticate") as auth:
+        yield auth
