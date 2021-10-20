@@ -1,4 +1,7 @@
 """Tests for the OctoPrint integration."""
+from __future__ import annotations
+
+from typing import Any
 from unittest.mock import patch
 
 from pyoctoprintapi import (
@@ -8,8 +11,8 @@ from pyoctoprintapi import (
     TrackingSetting,
 )
 
-from homeassistant import config_entries
 from homeassistant.components.octoprint import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 
 from tests.common import MockConfigEntry
 
@@ -28,9 +31,16 @@ DEFAULT_PRINTER = {
 
 
 async def init_integration(
-    hass, platform, printer: dict = DEFAULT_PRINTER, job: dict = DEFAULT_JOB
+    hass,
+    platform,
+    printer: dict[str, Any] | None = None,
+    job: dict[str, Any] | None = None,
 ):
     """Set up the octoprint integration in Home Assistant."""
+    if printer is None:
+        printer = DEFAULT_PRINTER
+    if job is None:
+        job = DEFAULT_JOB
     with patch("homeassistant.components.octoprint.PLATFORMS", [platform]), patch(
         "pyoctoprintapi.OctoprintClient.get_server_info", return_value={}
     ), patch(
@@ -65,4 +75,4 @@ async def init_integration(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == config_entries.ENTRY_STATE_LOADED
+    assert config_entry.state == ConfigEntryState.LOADED
