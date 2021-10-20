@@ -129,11 +129,11 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
             self.entity_description = entity_description
 
     @callback
-    def async_update_callback(self, force_update=False):
+    def async_update_callback(self):
         """Update the sensor's state."""
         keys = {"on", "reachable", "state"}
-        if force_update or self._device.changed_keys.intersection(keys):
-            super().async_update_callback(force_update=force_update)
+        if self._device.changed_keys.intersection(keys):
+            super().async_update_callback()
 
     @property
     def is_on(self):
@@ -183,11 +183,11 @@ class DeconzTampering(DeconzDevice, BinarySensorEntity):
         return f"{self.serial}-tampered"
 
     @callback
-    def async_update_callback(self, force_update: bool = False) -> None:
+    def async_update_callback(self) -> None:
         """Update the sensor's state."""
         keys = {"tampered", "reachable"}
-        if force_update or self._device.changed_keys.intersection(keys):
-            super().async_update_callback(force_update=force_update)
+        if self._device.changed_keys.intersection(keys):
+            super().async_update_callback()
 
     @property
     def is_on(self) -> bool:
