@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Connection details",
-        "description": "Provide the IP of your ComfoConnect Lan C bridge. ",
+        "description": "Provide the IP or hostname of your ComfoConnect LAN C bridge. ",
         "data": {
           "host": "Host",
           "name": "Name",
