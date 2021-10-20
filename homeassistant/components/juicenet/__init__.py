@@ -62,11 +62,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await juicenet.setup()
     except TokenError as error:
-        _LOGGER.error("Could not reach the JuiceNet API %s", error)
-        raise ConfigEntryNotReady from error
+        _LOGGER.error("JuiceNet Error %s", error)
+        return False
     except aiohttp.ClientError as error:
         raise ConfigEntryNotReady(
-            f"Could not reach the JuiceNet API: {error}"
+            f"Could not reach the JuiceNet API {error}"
         ) from error
 
     if not juicenet.devices:
