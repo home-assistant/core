@@ -2,9 +2,7 @@
 from __future__ import annotations
 
 from simplipy.device import DeviceTypes
-from simplipy.device.sensor.v2 import SensorV2
 from simplipy.device.sensor.v3 import SensorV3
-from simplipy.system.v2 import SystemV2
 from simplipy.system.v3 import SystemV3
 
 from homeassistant.components.binary_sensor import (
@@ -82,15 +80,15 @@ class TriggeredBinarySensor(SimpliSafeEntity, BinarySensorEntity):
     def __init__(
         self,
         simplisafe: SimpliSafe,
-        system: SystemV2 | SystemV3,
-        sensor: SensorV2 | SensorV3,
+        system: SystemV3,
+        sensor: SensorV3,
         device_class: str,
     ) -> None:
         """Initialize."""
         super().__init__(simplisafe, system, device=sensor)
 
         self._attr_device_class = device_class
-        self._device: SensorV2 | SensorV3
+        self._device: SensorV3
 
     @callback
     def async_update_from_rest_api(self) -> None:
@@ -104,17 +102,14 @@ class BatteryBinarySensor(SimpliSafeEntity, BinarySensorEntity):
     _attr_device_class = DEVICE_CLASS_BATTERY
 
     def __init__(
-        self,
-        simplisafe: SimpliSafe,
-        system: SystemV2 | SystemV3,
-        sensor: SensorV2 | SensorV3,
+        self, simplisafe: SimpliSafe, system: SystemV3, sensor: SensorV3
     ) -> None:
         """Initialize."""
         super().__init__(simplisafe, system, device=sensor)
 
         self._attr_name = f"{super().name} Battery"
         self._attr_unique_id = f"{super().unique_id}-battery"
-        self._device: SensorV2 | SensorV3
+        self._device: SensorV3
 
     @callback
     def async_update_from_rest_api(self) -> None:
