@@ -95,12 +95,10 @@ class DeconzNumber(DeconzDevice, NumberEntity):
 
     def __init__(self, device, gateway, description):
         """Initialize deCONZ number entity."""
+        self.entity_description = description
         super().__init__(device, gateway)
 
-        self.entity_description = description
-
         self._attr_name = f"{self._device.name} {description.suffix}"
-        self._attr_unique_id = f"{self.serial}-{description.suffix.lower()}"
         self._attr_max_value = description.max_value
         self._attr_min_value = description.min_value
         self._attr_step = description.step
@@ -121,3 +119,8 @@ class DeconzNumber(DeconzDevice, NumberEntity):
         """Set sensor config."""
         data = {self.entity_description.device_property: int(value)}
         await self._device.set_config(**data)
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique identifier for this entity."""
+        return f"{self.serial}-{self.entity_description.suffix.lower()}"
