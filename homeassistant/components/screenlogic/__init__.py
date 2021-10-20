@@ -244,7 +244,7 @@ class ScreenLogicCircuitEntity(ScreenlogicEntity):
     @property
     def is_on(self) -> bool:
         """Get whether the switch is in on state."""
-        return self.circuit["value"] == 1
+        return self.circuit["value"] == ON_OFF.ON
 
     async def async_turn_on(self, **kwargs) -> None:
         """Send the ON command."""
