@@ -655,14 +655,13 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
 
     def _handle_coordinator_update(self) -> None:
         if self.entity_description.parent_key is not None:
-            updated_state = self._extract_value_from_attribute(
-                getattr(self.coordinator.data, self.entity_description.parent_key),
-                self.entity_description.key,
-            )
+            data = getattr(self.coordinator.data, self.entity_description.parent_key)
         else:
-            updated_state = self._extract_value_from_attribute(
-                self.coordinator.data, self.entity_description.key
-            )
+            data = self.coordinator.data
+
+        updated_state = self._extract_value_from_attribute(
+            data, self.entity_description.key
+        )
 
         if (
             self.entity_description.allow_none_as_return_value
@@ -672,6 +671,12 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
             self._none_counter += 1
             if self._none_counter < 2:
                 return
+            else:
+                _LOGGER.warning(
+                    "Attribute %s on %s returned None for 3 consecutive updates",
+                    self.entity_description.key,
+                    type(data),
+                )
 
         self._none_counter = 0
         self._attr_native_value = updated_state
