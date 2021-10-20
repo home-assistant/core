@@ -8,8 +8,16 @@ from unittest.mock import MagicMock
 from pyownet.protocol import ProtocolError
 
 from homeassistant.components.onewire.const import DEFAULT_SYSBUS_MOUNT_DIR
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_STATE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_STATE,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from .const import (
@@ -34,6 +42,18 @@ def check_and_enable_disabled_entities(
             assert registry_entry.disabled
             assert registry_entry.disabled_by == "integration"
             entity_registry.async_update_entity(entity_id, **{"disabled_by": None})
+
+
+def check_device_registry(
+    device_registry: DeviceRegistry, expected_device: MappingProxyType
+) -> None:
+    """Ensure that the expected_device is correctly registered."""
+    registry_entry = device_registry.async_get_device(expected_device[ATTR_IDENTIFIERS])
+    assert registry_entry is not None
+    assert registry_entry.identifiers == expected_device[ATTR_IDENTIFIERS]
+    assert registry_entry.manufacturer == expected_device[ATTR_MANUFACTURER]
+    assert registry_entry.name == expected_device[ATTR_NAME]
+    assert registry_entry.model == expected_device[ATTR_MODEL]
 
 
 def check_entities(
