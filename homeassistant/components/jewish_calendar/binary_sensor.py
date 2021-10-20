@@ -17,7 +17,7 @@ import homeassistant.util.dt as dt_util
 
 from . import DOMAIN
 
-BINARY_SENSORS = (
+BINARY_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="issur_melacha_in_effect",
         name="Issur Melacha in Effect",
