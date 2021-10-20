@@ -193,11 +193,11 @@ class DeconzSensor(DeconzDevice, SensorEntity):
             self.entity_description = entity_description
 
     @callback
-    def async_update_callback(self, force_update=False):
+    def async_update_callback(self):
         """Update the sensor's state."""
         keys = {"on", "reachable", "state"}
-        if force_update or self._device.changed_keys.intersection(keys):
-            super().async_update_callback(force_update=force_update)
+        if self._device.changed_keys.intersection(keys):
+            super().async_update_callback()
 
     @property
     def native_value(self):
@@ -257,11 +257,11 @@ class DeconzTemperature(DeconzDevice, SensorEntity):
         return f"{self.serial}-temperature"
 
     @callback
-    def async_update_callback(self, force_update=False):
+    def async_update_callback(self):
         """Update the sensor's state."""
         keys = {"temperature", "reachable"}
-        if force_update or self._device.changed_keys.intersection(keys):
-            super().async_update_callback(force_update=force_update)
+        if self._device.changed_keys.intersection(keys):
+            super().async_update_callback()
 
     @property
     def native_value(self):
@@ -282,11 +282,11 @@ class DeconzBattery(DeconzDevice, SensorEntity):
         self._attr_name = f"{self._device.name} Battery Level"
 
     @callback
-    def async_update_callback(self, force_update=False):
+    def async_update_callback(self):
         """Update the battery's state, if needed."""
         keys = {"battery", "reachable"}
-        if force_update or self._device.changed_keys.intersection(keys):
-            super().async_update_callback(force_update=force_update)
+        if self._device.changed_keys.intersection(keys):
+            super().async_update_callback()
 
     @property
     def unique_id(self):
@@ -339,7 +339,7 @@ class DeconzSensorStateTracker:
         self.sensor = None
 
     @callback
-    def async_update_callback(self, ignore_update=False):
+    def async_update_callback(self):
         """Sensor state updated."""
         if "battery" in self.sensor.changed_keys:
             async_dispatcher_send(
