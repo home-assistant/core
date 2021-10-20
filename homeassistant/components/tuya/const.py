@@ -75,8 +75,9 @@ CONF_PASSWORD = "password"
 CONF_COUNTRY_CODE = "country_code"
 CONF_APP_TYPE = "tuya_app_type"
 
-DEVICE_CLASS_TUYA_RELAY_STATUS = "tuya__relay_status"
+DEVICE_CLASS_TUYA_LED_TYPE = "tuya__led_type"
 DEVICE_CLASS_TUYA_LIGHT_MODE = "tuya__light_mode"
+DEVICE_CLASS_TUYA_RELAY_STATUS = "tuya__relay_status"
 
 TUYA_DISCOVERY_NEW = "tuya_discovery_new"
 TUYA_HA_SIGNAL_UPDATE_ENTITY = "tuya_entry_update"
@@ -136,6 +137,7 @@ class DPCode(str, Enum):
     BRIGHT_VALUE = "bright_value"  # Brightness
     BRIGHT_VALUE_1 = "bright_value_1"
     BRIGHT_VALUE_2 = "bright_value_2"
+    BRIGHT_VALUE_3 = "bright_value_3"
     BRIGHT_VALUE_V2 = "bright_value_v2"
     C_F = "c_f"  # Temperature unit switching
     CH2O_STATE = "ch2o_state"
@@ -168,6 +170,9 @@ class DPCode(str, Enum):
     HUMIDITY_CURRENT = "humidity_current"  # Current humidity
     HUMIDITY_SET = "humidity_set"  # Humidity setting
     HUMIDITY_VALUE = "humidity_value"  # Humidity
+    LED_TYPE_1 = "led_type_1"
+    LED_TYPE_2 = "led_type_2"
+    LED_TYPE_3 = "led_type_3"
     LIGHT = "light"  # Light
     LIGHT_MODE = "light_mode"
     LOCK = "lock"  # Lock / Child lock
@@ -217,6 +222,7 @@ class DPCode(str, Enum):
     SWITCH_LED = "switch_led"  # Switch
     SWITCH_LED_1 = "switch_led_1"
     SWITCH_LED_2 = "switch_led_2"
+    SWITCH_LED_3 = "switch_led_3"
     SWITCH_NIGHT_LIGHT = "switch_night_light"
     SWITCH_SPRAY = "switch_spray"  # Spraying switch
     SWITCH_USB1 = "switch_usb1"  # USB 1
