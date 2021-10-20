@@ -185,7 +185,7 @@ class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
         octoprint: OctoprintClient,
         config_entry_id: str,
         interval: int,
-    ):
+    ) -> None:
         """Initialize."""
         super().__init__(
             hass,
