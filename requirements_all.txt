@@ -888,7 +888,7 @@ iotawattpy==0.1.0
 iperf3==0.1.11
 
 # homeassistant.components.gogogate2
-ismartgate==4.0.0
+ismartgate==4.0.3
 
 # homeassistant.components.rest
 jsonpath==0.82
