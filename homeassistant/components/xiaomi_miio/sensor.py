@@ -671,12 +671,12 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
             self._none_counter += 1
             if self._none_counter < 2:
                 return
-            else:
-                _LOGGER.warning(
-                    "Attribute %s on %s returned None for 3 consecutive updates",
-                    self.entity_description.key,
-                    type(data),
-                )
+
+            _LOGGER.warning(
+                "Attribute %s on %s returned None for 3 consecutive updates",
+                self.entity_description.key,
+                type(data),
+            )
 
         self._none_counter = 0
         self._attr_native_value = updated_state
