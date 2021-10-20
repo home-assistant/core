@@ -43,6 +43,7 @@ ATTR_VERSION = "version"
 ATTR_VERSION_LATEST = "version_latest"
 ATTR_UPDATE_AVAILABLE = "update_available"
 ATTR_SLUG = "slug"
+ATTR_STATE = "state"
 ATTR_URL = "url"
 ATTR_REPOSITORY = "repository"
 
