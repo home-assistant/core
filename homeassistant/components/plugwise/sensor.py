@@ -129,7 +129,7 @@ ENERGY_SENSOR_MAP = {
     "electricity_consumed_off_peak_point": [
         "Current Consumed Power (off peak)",
         POWER_WATT,
-        DEVICE_CLASS_POWER
+        DEVICE_CLASS_POWER,
         STATE_CLASS_MEASUREMENT,
     ],
     "electricity_consumed_peak_point": [
