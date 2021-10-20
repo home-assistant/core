@@ -47,6 +47,7 @@ async def async_setup_entry(hass, config_entry):
         api = await EcoNetApiInterface.login(email, password=password)
     except InvalidCredentialsError:
         _LOGGER.error("Invalid credentials provided")
+        return False
     except PyeconetError as err:
         raise ConfigEntryNotReady(f"Config entry failed: {err}") from err
 
