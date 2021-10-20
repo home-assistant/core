@@ -108,14 +108,15 @@ def _select_statistics_runs_to_purge(
         .limit(MAX_ROWS_TO_PURGE)
         .all()
     )
+    statistic_runs_list = [run.run_id for run in statistic_runs]
     # Exclude the newest statistics run
     if (
         last_run := session.query(func.max(StatisticsRuns.run_id)).scalar()
-    ) and last_run in statistic_runs:
-        statistic_runs.remove(last_run)
+    ) and last_run in statistic_runs_list:
+        statistic_runs_list.remove(last_run)
 
     _LOGGER.debug("Selected %s statistic runs to remove", len(statistic_runs))
-    return [run.run_id for run in statistic_runs]
+    return statistic_runs_list
 
 
 def _select_short_term_statistics_to_purge(
