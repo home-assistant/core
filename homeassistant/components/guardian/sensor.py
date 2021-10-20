@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_TEMPERATURE,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
     TEMP_FAHRENHEIT,
     TIME_MINUTES,
@@ -38,6 +39,7 @@ SENSOR_DESCRIPTION_BATTERY = SensorEntityDescription(
     key=SENSOR_KIND_BATTERY,
     name="Battery",
     device_class=DEVICE_CLASS_BATTERY,
+    entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     native_unit_of_measurement=PERCENTAGE,
 )
 SENSOR_DESCRIPTION_TEMPERATURE = SensorEntityDescription(
@@ -51,6 +53,7 @@ SENSOR_DESCRIPTION_UPTIME = SensorEntityDescription(
     key=SENSOR_KIND_UPTIME,
     name="Uptime",
     icon="mdi:timer",
+    entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     native_unit_of_measurement=TIME_MINUTES,
 )
 
