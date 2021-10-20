@@ -672,7 +672,7 @@ def validate_statistics(
                 # Sensor was previously recorded, but no longer is
                 validation_result[entity_id].append(
                     statistics.ValidationIssue(
-                        "entity_not_recorded",
+                        "entity_no_longer_recorded",
                         {"statistic_id": entity_id},
                     )
                 )
@@ -713,9 +713,19 @@ def validate_statistics(
                         },
                     )
                 )
+        elif state_class in STATE_CLASSES:
+            if not is_entity_recorded(hass, state.entity_id):
+                # Sensor is not recorded
+                validation_result[entity_id].append(
+                    statistics.ValidationIssue(
+                        "entity_not_recorded",
+                        {"statistic_id": entity_id},
+                    )
+                )
 
         if (
-            device_class in UNIT_CONVERSIONS
+            state_class in STATE_CLASSES
+            and device_class in UNIT_CONVERSIONS
             and state_unit not in UNIT_CONVERSIONS[device_class]
         ):
             # The unit in the state is not supported for this device class
