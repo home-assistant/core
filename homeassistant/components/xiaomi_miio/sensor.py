@@ -651,16 +651,30 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         self._attr_unique_id = unique_id
         self.entity_description: XiaomiMiioSensorDescription = description
 
+        self._none_counter = 0
+
     def _handle_coordinator_update(self) -> None:
         if self.entity_description.parent_key is not None:
-            self._attr_native_value = self._extract_value_from_attribute(
+            updated_state = self._extract_value_from_attribute(
                 getattr(self.coordinator.data, self.entity_description.parent_key),
                 self.entity_description.key,
             )
         else:
-            self._attr_native_value = self._extract_value_from_attribute(
+            updated_state = self._extract_value_from_attribute(
                 self.coordinator.data, self.entity_description.key
             )
+
+        if (
+            self.entity_description.allow_none_as_return_value
+            and self._attr_native_value is not None
+            and updated_state is None
+        ):
+            self._none_counter += 1
+            if self._none_counter < 2:
+                return
+
+        self._none_counter = 0
+        self._attr_native_value = updated_state
 
         super()._handle_coordinator_update()
 
