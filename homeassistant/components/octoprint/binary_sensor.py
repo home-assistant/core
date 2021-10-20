@@ -8,6 +8,7 @@ from pyoctoprintapi import OctoprintPrinterInfo
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -19,8 +20,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the available OctoPrint binary sensors."""
     coordinator = hass.data[COMPONENT_DOMAIN][config_entry.entry_id]["coordinator"]
 
@@ -40,7 +43,7 @@ class OctoPrintBinarySensorBase(CoordinatorEntity, BinarySensorEntity):
         coordinator: DataUpdateCoordinator,
         sensor_type: str,
         device_id: str,
-    ):
+    ) -> None:
         """Initialize a new OctoPrint sensor."""
         super().__init__(coordinator)
         self._name = f"Octoprint {sensor_type}"
@@ -83,7 +86,7 @@ class OctoPrintBinarySensorBase(CoordinatorEntity, BinarySensorEntity):
 class OctoPrintPrintingBinarySensor(OctoPrintBinarySensorBase):
     """Representation an OctoPrint binary sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, device_id: str):
+    def __init__(self, coordinator: DataUpdateCoordinator, device_id: str) -> None:
         """Initialize a new OctoPrint sensor."""
         super().__init__(coordinator, "Printing", device_id)
 
@@ -94,7 +97,7 @@ class OctoPrintPrintingBinarySensor(OctoPrintBinarySensorBase):
 class OctoPrintPrintingErrorBinarySensor(OctoPrintBinarySensorBase):
     """Representation an OctoPrint binary sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, device_id: str):
+    def __init__(self, coordinator: DataUpdateCoordinator, device_id: str) -> None:
         """Initialize a new OctoPrint sensor."""
         super().__init__(coordinator, "Printing Error", device_id)
 
