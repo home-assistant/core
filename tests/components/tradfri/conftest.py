@@ -76,10 +76,3 @@ def mock_api_factory(mock_api):
         factory.init.return_value = factory.return_value
         factory.return_value.request = mock_api
         yield factory.return_value
-
-
-@pytest.fixture
-def mock_auth():
-    """Mock authenticate."""
-    with patch(f"{TRADFRI_PATH}.config_flow.authenticate") as auth:
-        yield auth

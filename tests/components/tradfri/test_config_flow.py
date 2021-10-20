@@ -1,12 +1,21 @@
 """Test the Tradfri config flow."""
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.tradfri import config_flow
 
 from . import TRADFRI_PATH
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(name="mock_auth")
+def mock_auth_fixture():
+    """Mock authenticate."""
+    with patch(f"{TRADFRI_PATH}.config_flow.authenticate") as auth:
+        yield auth
 
 
 async def test_already_paired(hass, mock_entry_setup):
