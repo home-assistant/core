@@ -150,6 +150,7 @@ class DPCode(str, Enum):
     CUR_POWER = "cur_power"  # Actual power
     CUR_VOLTAGE = "cur_voltage"  # Actual voltage
     DEHUMIDITY_SET_VALUE = "dehumidify_set_value"
+    DO_NOT_DISTURB = "do_not_disturb"
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
     DOORCONTACT_STATE_2 = "doorcontact_state_3"
     DOORCONTACT_STATE_3 = "doorcontact_state_3"
@@ -208,6 +209,7 @@ class DPCode(str, Enum):
     SWITCH_LED = "switch_led"  # Switch
     SWITCH_LED_1 = "switch_led_1"
     SWITCH_LED_2 = "switch_led_2"
+    SWITCH_NIGHT_LIGHT = "switch_night_light"
     SWITCH_SPRAY = "switch_spray"  # Spraying switch
     SWITCH_USB1 = "switch_usb1"  # USB 1
     SWITCH_USB2 = "switch_usb2"  # USB 2
