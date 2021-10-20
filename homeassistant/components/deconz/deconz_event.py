@@ -109,7 +109,7 @@ class DeconzEvent(DeconzBase):
         self._device.remove_callback(self.async_update_callback)
 
     @callback
-    def async_update_callback(self, force_update=False):
+    def async_update_callback(self):
         """Fire the event if reason is that state is updated."""
         if (
             self.gateway.ignore_state_updates
@@ -156,7 +156,7 @@ class DeconzAlarmEvent(DeconzEvent):
     """Alarm control panel companion event when user interacts with a keypad."""
 
     @callback
-    def async_update_callback(self, force_update=False):
+    def async_update_callback(self):
         """Fire the event if reason is new action is updated."""
         if (
             self.gateway.ignore_state_updates
