@@ -204,7 +204,9 @@ def _update_or_add_metadata(
     Updating metadata source is not possible.
     """
     statistic_id = new_metadata["statistic_id"]
-    old_metadata_dict = get_metadata_with_session(hass, session, [statistic_id], None)
+    old_metadata_dict = get_metadata_with_session(
+        hass, session, statistic_ids=[statistic_id]
+    )
     if not old_metadata_dict:
         unit = new_metadata["unit_of_measurement"]
         has_mean = new_metadata["has_mean"]
@@ -417,8 +419,10 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
 def get_metadata_with_session(
     hass: HomeAssistant,
     session: scoped_session,
-    statistic_ids: Iterable[str] | None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None,
+    *,
+    statistic_ids: Iterable[str] | None = None,
+    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_source: str | None = None,
 ) -> dict[str, tuple[int, StatisticMetaData]]:
     """Fetch meta data.
 
@@ -448,11 +452,19 @@ def get_metadata_with_session(
         baked_query += lambda q: q.filter(
             StatisticsMeta.statistic_id.in_(bindparam("statistic_ids"))
         )
+    if statistic_source is not None:
+        baked_query += lambda q: q.filter(
+            StatisticsMeta.source == bindparam("statistic_source")
+        )
     if statistic_type == "mean":
         baked_query += lambda q: q.filter(StatisticsMeta.has_mean == true())
     elif statistic_type == "sum":
         baked_query += lambda q: q.filter(StatisticsMeta.has_sum == true())
-    result = execute(baked_query(session).params(statistic_ids=statistic_ids))
+    result = execute(
+        baked_query(session).params(
+            statistic_ids=statistic_ids, statistic_source=statistic_source
+        )
+    )
     if not result:
         return {}
 
@@ -468,11 +480,20 @@ def get_metadata_with_session(
 
 def get_metadata(
     hass: HomeAssistant,
-    statistic_ids: Iterable[str],
+    *,
+    statistic_ids: Iterable[str] | None = None,
+    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_source: str | None = None,
 ) -> dict[str, tuple[int, StatisticMetaData]]:
     """Return metadata for statistic_ids."""
     with session_scope(hass=hass) as session:
-        return get_metadata_with_session(hass, session, statistic_ids, None)
+        return get_metadata_with_session(
+            hass,
+            session,
+            statistic_ids=statistic_ids,
+            statistic_type=statistic_type,
+            statistic_source=statistic_source,
+        )
 
 
 def _configured_unit(unit: str, units: UnitSystem) -> str:
@@ -521,7 +542,9 @@ def list_statistic_ids(
 
     # Query the database
     with session_scope(hass=hass) as session:
-        metadata = get_metadata_with_session(hass, session, None, statistic_type)
+        metadata = get_metadata_with_session(
+            hass, session, statistic_type=statistic_type
+        )
 
         for _, meta in metadata.values():
             if (unit := meta["unit_of_measurement"]) is not None:
@@ -693,7 +716,7 @@ def statistics_during_period(
     metadata = None
     with session_scope(hass=hass) as session:
         # Fetch metadata for the given (or all) statistic_ids
-        metadata = get_metadata_with_session(hass, session, statistic_ids, None)
+        metadata = get_metadata_with_session(hass, session, statistic_ids=statistic_ids)
         if not metadata:
             return {}
 
@@ -744,7 +767,7 @@ def get_last_statistics(
     statistic_ids = [statistic_id]
     with session_scope(hass=hass) as session:
         # Fetch metadata for the given statistic_id
-        metadata = get_metadata_with_session(hass, session, statistic_ids, None)
+        metadata = get_metadata_with_session(hass, session, statistic_ids=statistic_ids)
         if not metadata:
             return {}
 

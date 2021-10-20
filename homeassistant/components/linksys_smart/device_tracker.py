@@ -66,13 +66,11 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
             result = data["responses"][0]
             devices = result["output"]["devices"]
             for device in devices:
-                macs = device["knownMACAddresses"]
-                if not macs:
+                if not (macs := device["knownMACAddresses"]):
                     _LOGGER.warning("Skipping device without known MAC address")
                     continue
                 mac = macs[-1]
-                connections = device["connections"]
-                if not connections:
+                if not device["connections"]:
                     _LOGGER.debug("Device %s is not connected", mac)
                     continue
 

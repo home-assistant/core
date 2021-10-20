@@ -146,8 +146,7 @@ async def item_payload(item, get_thumbnail_url=None):
     elif "channelid" in item:
         media_content_type = MEDIA_TYPE_CHANNEL
         media_content_id = f"{item['channelid']}"
-        broadcasting = item.get("broadcastnow")
-        if broadcasting:
+        if broadcasting := item.get("broadcastnow"):
             show = broadcasting.get("title")
             title = f"{title} - {show}"
         can_play = True

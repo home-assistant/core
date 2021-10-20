@@ -113,7 +113,7 @@ class DeconzGateway:
         """Handle signals of gateway connection status."""
         self.available = available
         self.ignore_state_updates = False
-        async_dispatcher_send(self.hass, self.signal_reachable, True)
+        async_dispatcher_send(self.hass, self.signal_reachable)
 
     @callback
     def async_add_device_callback(
