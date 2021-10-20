@@ -113,6 +113,25 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             name="Backlight",
         ),
     ),
+    # Dimmer Switch
+    # https://developer.tuya.com/en/docs/iot/categorytgkg?id=Kaiuz0ktx7m0o
+    "tgkg": (
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED_1,
+            name="Light",
+            brightness=DPCode.BRIGHT_VALUE_1,
+        ),
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED_2,
+            name="Light 2",
+            brightness=DPCode.BRIGHT_VALUE_2,
+        ),
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED_3,
+            name="Light 3",
+            brightness=DPCode.BRIGHT_VALUE_3,
+        ),
+    ),
     # Dimmer
     # https://developer.tuya.com/en/docs/iot/tgq?id=Kaof8ke9il4k4
     "tgq": (
