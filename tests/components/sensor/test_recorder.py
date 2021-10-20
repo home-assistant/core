@@ -1945,7 +1945,7 @@ def test_compile_hourly_statistics_changing_statistics(
     assert statistic_ids == [
         {"statistic_id": "sensor.test1", "unit_of_measurement": None}
     ]
-    metadata = get_metadata(hass, ("sensor.test1",))
+    metadata = get_metadata(hass, statistic_ids=("sensor.test1",))
     assert metadata == {
         "sensor.test1": (
             1,
@@ -1970,7 +1970,7 @@ def test_compile_hourly_statistics_changing_statistics(
     assert statistic_ids == [
         {"statistic_id": "sensor.test1", "unit_of_measurement": None}
     ]
-    metadata = get_metadata(hass, ("sensor.test1",))
+    metadata = get_metadata(hass, statistic_ids=("sensor.test1",))
     assert metadata == {
         "sensor.test1": (
             1,
@@ -2521,7 +2521,15 @@ async def test_validate_statistics_supported_device_class(
 
     # Remove the state - empty response
     hass.states.async_remove("sensor.test")
-    await assert_validation_result(client, {})
+    expected = {
+        "sensor.test": [
+            {
+                "data": {"statistic_id": "sensor.test"},
+                "type": "no_state",
+            }
+        ],
+    }
+    await assert_validation_result(client, expected)
 
 
 @pytest.mark.parametrize(
@@ -2743,6 +2751,65 @@ async def test_validate_statistics_sensor_not_recorded(
 
 
 @pytest.mark.parametrize(
+    "units, attributes, unit",
+    [
+        (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
+    ],
+)
+async def test_validate_statistics_sensor_removed(
+    hass, hass_ws_client, units, attributes, unit
+):
+    """Test validate_statistics."""
+    id = 1
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
+    async def assert_validation_result(client, expected_result):
+        await client.send_json(
+            {"id": next_id(), "type": "recorder/validate_statistics"}
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["result"] == expected_result
+
+    now = dt_util.utcnow()
+
+    hass.config.units = units
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "sensor", {})
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    client = await hass_ws_client()
+
+    # No statistics, no state - empty response
+    await assert_validation_result(client, {})
+
+    # No statistics, valid state - empty response
+    hass.states.async_set("sensor.test", 10, attributes=attributes)
+    await hass.async_block_till_done()
+    await assert_validation_result(client, {})
+
+    # Statistics has run, empty response
+    hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await assert_validation_result(client, {})
+
+    # Sensor removed, expect error
+    hass.states.async_remove("sensor.test")
+    expected = {
+        "sensor.test": [
+            {
+                "data": {"statistic_id": "sensor.test"},
+                "type": "no_state",
+            }
+        ],
+    }
+    await assert_validation_result(client, expected)
+
+
+@pytest.mark.parametrize(
     "attributes",
     [BATTERY_SENSOR_ATTRIBUTES, NONE_SENSOR_ATTRIBUTES],
 )
@@ -2850,7 +2917,15 @@ async def test_validate_statistics_unsupported_device_class(
 
     # Remove the state - empty response
     hass.states.async_remove("sensor.test")
-    await assert_validation_result(client, {})
+    expected = {
+        "sensor.test": [
+            {
+                "data": {"statistic_id": "sensor.test"},
+                "type": "no_state",
+            }
+        ],
+    }
+    await assert_validation_result(client, expected)
 
 
 def record_meter_states(hass, zero, entity_id, _attributes, seq):

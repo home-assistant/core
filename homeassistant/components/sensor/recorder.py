@@ -17,6 +17,7 @@ from homeassistant.components.recorder import (
     statistics,
     util as recorder_util,
 )
+from homeassistant.components.recorder.const import DOMAIN as RECORDER_DOMAIN
 from homeassistant.components.recorder.models import (
     StatisticData,
     StatisticMetaData,
@@ -416,7 +417,7 @@ def _compile_statistics(  # noqa: C901
     sensor_states = _get_sensor_states(hass)
     wanted_statistics = _wanted_statistics(sensor_states)
     old_metadatas = statistics.get_metadata_with_session(
-        hass, session, [i.entity_id for i in sensor_states], None
+        hass, session, statistic_ids=[i.entity_id for i in sensor_states]
     )
 
     # Get history between start and end
@@ -656,7 +657,9 @@ def validate_statistics(
     validation_result = defaultdict(list)
 
     sensor_states = hass.states.all(DOMAIN)
-    metadatas = statistics.get_metadata(hass, [i.entity_id for i in sensor_states])
+    metadatas = statistics.get_metadata(hass, statistic_source=RECORDER_DOMAIN)
+    sensor_entity_ids = {i.entity_id for i in sensor_states}
+    sensor_statistic_ids = set(metadatas)
 
     for state in sensor_states:
         entity_id = state.entity_id
@@ -726,5 +729,16 @@ def validate_statistics(
                     },
                 )
             )
+
+    for statistic_id in sensor_statistic_ids - sensor_entity_ids:
+        # There is no sensor matching the statistics_id
+        validation_result[statistic_id].append(
+            statistics.ValidationIssue(
+                "no_state",
+                {
+                    "statistic_id": statistic_id,
+                },
+            )
+        )
 
     return validation_result
