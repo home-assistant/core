@@ -59,132 +59,162 @@ HM_STATE_HA_CAST = {
 }
 
 
-SENSOR_TYPES: dict[tuple[str, ...] | str, SensorEntityDescription] = {
-    ("HUMIDITY"): SensorEntityDescription(
-        key="HUMIDITY",
+SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
+    "HUMIDITY_MEASUREMENT": SensorEntityDescription(
+        key="HUMIDITY_MEASUREMENT",
         native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_HUMIDITY,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    ("TEMPERATURE", "ACTUAL_TEMPERATURE"): SensorEntityDescription(
-        key="TEMPERATURE",
+    "TEMPERATURE_MEASUREMENT": SensorEntityDescription(
+        key="TEMPERATURE_MEASUREMENT",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    ("LUX", "CURRENT_ILLUMINATION", "ILLUMINATION"): SensorEntityDescription(
-        key="LUX",
+    "ILLUMINATION_MEASUREMENT": SensorEntityDescription(
+        key="ILLUMINATION_MEASUREMENT",
         native_unit_of_measurement=LIGHT_LUX,
         device_class=DEVICE_CLASS_ILLUMINANCE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    (
-        "AVERAGE_ILLUMINATION",
-        "LOWEST_ILLUMINATION",
-        "HIGHEST_ILLUMINATION",
-    ): SensorEntityDescription(
-        key="ILLUMINATION",
+    "ILLUMINATION_TOTAL": SensorEntityDescription(
+        key="ILLUMINATION_TOTAL",
         native_unit_of_measurement=LIGHT_LUX,
         device_class=DEVICE_CLASS_ILLUMINANCE,
         state_class=STATE_CLASS_TOTAL,
     ),
-    ("POWER", "IEC_POWER"): SensorEntityDescription(
-        key="POWER",
+    "POWER_MEASUREMENT": SensorEntityDescription(
+        key="POWER_MEASUREMENT",
         native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    ("CURRENT"): SensorEntityDescription(
-        key="CURRENT",
+    "CURRENT_MEASUREMENT": SensorEntityDescription(
+        key="CURRENT_MEASUREMENT",
         native_unit_of_measurement=ELECTRIC_CURRENT_MILLIAMPERE,
         device_class=DEVICE_CLASS_CURRENT,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    ("CONCENTRATION"): SensorEntityDescription(
-        key="CONCENTRATION",
+    "CONCENTRATION_MEASUREMENT": SensorEntityDescription(
+        key="CONCENTRATION_MEASUREMENT",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         device_class=DEVICE_CLASS_CO2,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    ("ENERGY_COUNTER", "IEC_ENERGY_COUNTER"): SensorEntityDescription(
-        key="ENERGY_COUNTER",
+    "ENERGY_COUNTER_TOTAL_INCREASING": SensorEntityDescription(
+        key="ENERGY_COUNTER_TOTAL_INCREASING",
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
-    ("VOLTAGE"): SensorEntityDescription(
-        key="VOLTAGE",
+    "VOLTAGE_MEASUREMENT": SensorEntityDescription(
+        key="VOLTAGE_MEASUREMENT",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=DEVICE_CLASS_VOLTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    ("GAS_POWER"): SensorEntityDescription(
-        key="GAS_POWER",
+    "GAS_POWER_MEASUREMENT": SensorEntityDescription(
+        key="GAS_POWER_MEASUREMENT",
         native_unit_of_measurement=VOLUME_CUBIC_METERS,
         device_class=DEVICE_CLASS_GAS,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    ("GAS_ENERGY_COUNTER"): SensorEntityDescription(
-        key="GAS_ENERGY_COUNTER",
+    "GAS_ENERGY_COUNTER_TOTAL_INCREASING": SensorEntityDescription(
+        key="GAS_ENERGY_COUNTER_TOTAL_INCREASING",
         native_unit_of_measurement=VOLUME_CUBIC_METERS,
         device_class=DEVICE_CLASS_GAS,
         state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
-    ("RAIN_COUNTER"): SensorEntityDescription(
+    "RAIN_COUNTER": SensorEntityDescription(
         key="RAIN_COUNTER",
         native_unit_of_measurement=LENGTH_MILLIMETERS,
     ),
-    ("WIND_SPEED"): SensorEntityDescription(
+    "WIND_SPEED": SensorEntityDescription(
         key="WIND_SPEED",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
         icon="mdi:weather-windy",
     ),
-    ("WIND_DIRECTION", "WIND_DIRECTION_RANGE"): SensorEntityDescription(
+    "WIND_DIRECTION": SensorEntityDescription(
         key="WIND_DIRECTION",
         native_unit_of_measurement=DEGREE,
     ),
-    ("SUNSHINEDURATION"): SensorEntityDescription(
+    "SUNSHINEDURATION": SensorEntityDescription(
         key="SUNSHINEDURATION",
         native_unit_of_measurement="#",
     ),
-    ("AIR_PRESSURE"): SensorEntityDescription(
+    "AIR_PRESSURE_MEASUREMENT": SensorEntityDescription(
         key="AIR_PRESSURE",
         native_unit_of_measurement=PRESSURE_HPA,
         device_class=DEVICE_CLASS_PRESSURE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    ("FREQUENCY"): SensorEntityDescription(
+    "FREQUENCY": SensorEntityDescription(
         key="FREQUENCY",
         native_unit_of_measurement=FREQUENCY_HERTZ,
     ),
-    ("VALUE"): SensorEntityDescription(
+    "VALUE": SensorEntityDescription(
         key="VALUE",
         native_unit_of_measurement="#",
     ),
-    ("VALVE_STATE"): SensorEntityDescription(
+    "VALVE_STATE": SensorEntityDescription(
         key="VALVE_STATE",
         native_unit_of_measurement=PERCENTAGE,
     ),
-    ("CARRIER_SENSE_LEVEL"): SensorEntityDescription(
+    "CARRIER_SENSE_LEVEL": SensorEntityDescription(
         key="CARRIER_SENSE_LEVEL",
         native_unit_of_measurement=PERCENTAGE,
     ),
-    ("DUTY_CYCLE_LEVEL"): SensorEntityDescription(
+    "DUTY_CYCLE_LEVEL": SensorEntityDescription(
         key="DUTY_CYCLE_LEVEL",
         native_unit_of_measurement=PERCENTAGE,
     ),
-    ("BRIGHTNESS"): SensorEntityDescription(
+    "BRIGHTNESS": SensorEntityDescription(
         key="BRIGHTNESS", native_unit_of_measurement="#", icon="mdi:invert-colors"
     ),
 }
 
+SENSOR_TYPES: dict[str, SensorEntityDescription | None] = {
+    "ACTUAL_TEMPERATURE": SENSOR_DESCRIPTIONS.get("TEMPERATURE_MEASUREMENT"),
+    "TEMPERATURE": SENSOR_DESCRIPTIONS.get("TEMPERATURE_MEASUREMENT"),
+    "LUX": SENSOR_DESCRIPTIONS.get("ILLUMINATION_MEASUREMENT"),
+    "CURRENT_ILLUMINATION": SENSOR_DESCRIPTIONS.get("ILLUMINATION_MEASUREMENT"),
+    "ILLUMINATION": SENSOR_DESCRIPTIONS.get("ILLUMINATION_MEASUREMENT"),
+    "AVERAGE_ILLUMINATION": SENSOR_DESCRIPTIONS.get("ILLUMINATION_TOTAL"),
+    "LOWEST_ILLUMINATION": SENSOR_DESCRIPTIONS.get("ILLUMINATION_TOTAL"),
+    "HIGHEST_ILLUMINATION": SENSOR_DESCRIPTIONS.get("ILLUMINATION_TOTAL"),
+    "POWER": SENSOR_DESCRIPTIONS.get("POWER_MEASUREMENT"),
+    "IEC_POWER": SENSOR_DESCRIPTIONS.get("POWER_MEASUREMENT"),
+    "CURRENT": SENSOR_DESCRIPTIONS.get("CURRENT_MEASUREMENT"),
+    "CONCENTRATION": SENSOR_DESCRIPTIONS.get("CONCENTRATION_MEASUREMENT"),
+    "ENERGY_COUNTER": SENSOR_DESCRIPTIONS.get("ENERGY_COUNTER_TOTAL_INCREASING"),
+    "IEC_ENERGY_COUNTER": SENSOR_DESCRIPTIONS.get("ENERGY_COUNTER_TOTAL_INCREASING"),
+    "VOLTAGE": SENSOR_DESCRIPTIONS.get("VOLTAGE_MEASUREMENT"),
+    "GAS_POWER": SENSOR_DESCRIPTIONS.get("GAS_POWER_MEASUREMENT"),
+    "GAS_ENERGY_COUNTER": SENSOR_DESCRIPTIONS.get(
+        "GAS_ENERGY_COUNTER_TOTAL_INCREASING"
+    ),
+    "RAIN_COUNTER": SENSOR_DESCRIPTIONS.get("RAIN_COUNTER"),
+    "WIND_SPEED": SENSOR_DESCRIPTIONS.get("WIND_SPEED"),
+    "WIND_DIRECTION": SENSOR_DESCRIPTIONS.get("WIND_DIRECTION"),
+    "WIND_DIRECTION_RANGE": SENSOR_DESCRIPTIONS.get("WIND_DIRECTION"),
+    "SUNSHINEDURATION": SENSOR_DESCRIPTIONS.get("SUNSHINEDURATION"),
+    "AIR_PRESSURE": SENSOR_DESCRIPTIONS.get("AIR_PRESSURE_MEASUREMENT"),
+    "FREQUENCY": SENSOR_DESCRIPTIONS.get("FREQUENCY"),
+    "VALUE": SENSOR_DESCRIPTIONS.get("VALUE"),
+    "VALVE_STATE": SENSOR_DESCRIPTIONS.get("VALVE_STATE"),
+    "CARRIER_SENSE_LEVEL": SENSOR_DESCRIPTIONS.get("CARRIER_SENSE_LEVEL"),
+    "DUTY_CYCLE_LEVEL": SENSOR_DESCRIPTIONS.get("DUTY_CYCLE_LEVEL"),
+    "BRIGHTNESS": SENSOR_DESCRIPTIONS.get("BRIGHTNESS"),
+}
 
-def get_sensor_type_desc_attr(sensor_type, attr):
+
+def get_sensor_type_desc_attr(sensor_type, attr, default=None):
     """Get sensor desc attribute from sensor types."""
-    for keys, desc in SENSOR_TYPES.items():
-        if sensor_type in keys:
-            return getattr(desc, attr, "")
-    return ""
+    sensor_desc = SENSOR_TYPES.get(sensor_type)
+    if sensor_desc is not None:
+        return getattr(sensor_desc, attr, default)
+    return default
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
