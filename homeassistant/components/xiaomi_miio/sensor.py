@@ -693,20 +693,14 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self):
-        """
-        Return the state attributes.
-
-        If _attr_native_value is None, that means that `_extract_value_from_attribute`
-        returned None. We exit early if `_extract_value_from_attribute` returned None
-        here to prevent uncaught exceptions due to the value being None.
-        """
-        if self._attr_native_value is None:
-            return None
+        """Return the state attributes."""
 
         return {
             attr: self._extract_value_from_attribute(self.coordinator.data, attr)
             for attr in self.entity_description.attributes
             if hasattr(self.coordinator.data, attr)
+            and self._extract_value_from_attribute(self.coordinator.data, attr)
+            is not None
         }
 
     def _parse_none(self, state, attribute) -> None:
