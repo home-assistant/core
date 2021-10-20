@@ -210,9 +210,11 @@ class LgTVDevice(MediaPlayerDevice):
         step_function = self.volume_up if volume_difference > 0 else self.volume_down
         for i in range(abs(volume_difference)):
             step_function()
-            time.sleep(.35) # tv jumps over volume steps after quick consecutive presses
+            time.sleep(
+                0.35
+            )  # tv jumps over volume steps after quick consecutive presses
         self.update(no_throttle=True)
-        if self.volume_level != volume: # some presses tend to get lost
+        if self.volume_level != volume:  # some presses tend to get lost
             self.set_volume_level(volume)
 
     def mute_volume(self, mute):
