@@ -826,8 +826,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
         def render_rgbx(color, template, color_mode):
             """Render RGBx payload."""
-            tpl = self._command_templates[template]
-            if tpl:
+            if tpl := self._command_templates[template]:
                 keys = ["red", "green", "blue"]
                 if color_mode == COLOR_MODE_RGBW:
                     keys.append("white")
