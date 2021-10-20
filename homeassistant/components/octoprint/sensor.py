@@ -1,4 +1,6 @@
 """Support for monitoring OctoPrint sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -33,7 +35,11 @@ async def async_setup_entry(
     coordinator: DataUpdateCoordinator = hass.data[COMPONENT_DOMAIN][
         config_entry.entry_id
     ]["coordinator"]
-    entities = []
+    device_id = config_entry.unique_id
+
+    assert device_id is not None
+
+    entities: list[SensorEntity] = []
     if coordinator.data["printer"]:
         printer_info = coordinator.data["printer"]
         types = ["actual", "target"]
@@ -44,18 +50,16 @@ async def async_setup_entry(
                         coordinator,
                         tool.name,
                         temp_type,
-                        config_entry.unique_id,
+                        device_id,
                     )
                 )
     else:
         _LOGGER.error("Printer appears to be offline, skipping temperature sensors")
 
-    entities.append(OctoPrintStatusSensor(coordinator, config_entry.unique_id))
-    entities.append(OctoPrintJobPercentageSensor(coordinator, config_entry.unique_id))
-    entities.append(
-        OctoPrintEstimatedFinishTimeSensor(coordinator, config_entry.unique_id)
-    )
-    entities.append(OctoPrintStartTimeSensor(coordinator, config_entry.unique_id))
+    entities.append(OctoPrintStatusSensor(coordinator, device_id))
+    entities.append(OctoPrintJobPercentageSensor(coordinator, device_id))
+    entities.append(OctoPrintEstimatedFinishTimeSensor(coordinator, device_id))
+    entities.append(OctoPrintStartTimeSensor(coordinator, device_id))
 
     async_add_entities(entities)
 
@@ -71,7 +75,6 @@ class OctoPrintSensorBase(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize a new OctoPrint sensor."""
         super().__init__(coordinator)
-        self._state = None
         self._sensor_type = sensor_type
         self._name = f"Octoprint {sensor_type}"
         self._device_id = device_id
@@ -212,7 +215,6 @@ class OctoPrintTemperatureSensor(OctoPrintSensorBase):
         super().__init__(coordinator, f"{temp_type} {tool} temp", device_id)
         self._temp_type = temp_type
         self._api_tool = tool
-        self._state = 0
         self._attr_state_class = STATE_CLASS_MEASUREMENT
 
     @property
