@@ -75,6 +75,9 @@ CONF_PASSWORD = "password"
 CONF_COUNTRY_CODE = "country_code"
 CONF_APP_TYPE = "tuya_app_type"
 
+DEVICE_CLASS_TUYA_RELAY_STATUS = "tuya__relay_status"
+DEVICE_CLASS_TUYA_LIGHT_MODE = "tuya__light_mode"
+
 TUYA_DISCOVERY_NEW = "tuya_discovery_new"
 TUYA_HA_SIGNAL_UPDATE_ENTITY = "tuya_entry_update"
 
@@ -164,6 +167,7 @@ class DPCode(str, Enum):
     HUMIDITY_SET = "humidity_set"  # Humidity setting
     HUMIDITY_VALUE = "humidity_value"  # Humidity
     LIGHT = "light"  # Light
+    LIGHT_MODE = "light_mode"
     LOCK = "lock"  # Lock / Child lock
     MATERIAL = "material"  # Material
     MODE = "mode"  # Working mode / Mode
@@ -183,6 +187,7 @@ class DPCode(str, Enum):
     PRESENCE_STATE = "presence_state"
     PUMP_RESET = "pump_reset"  # Water pump reset
     RECORD_SWITCH = "record_switch"  # Recording switch
+    RELAY_STATUS = "relay_status"
     SEEK = "seek"
     SENSITIVITY = "sensitivity"  # Sensitivity
     SHAKE = "shake"  # Oscillating
