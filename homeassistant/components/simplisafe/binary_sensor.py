@@ -18,6 +18,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -101,6 +102,7 @@ class BatteryBinarySensor(SimpliSafeBaseSensor, BinarySensorEntity):
     """Define a SimpliSafe battery binary sensor entity."""
 
     _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     def __init__(
         self,
