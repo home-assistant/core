@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 from pyownet.protocol import Error as ProtocolError
 import pytest
 
-from homeassistant.components.onewire.const import DEFAULT_SYSBUS_MOUNT_DIR, DOMAIN
+from homeassistant.components.onewire.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS, DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -17,11 +17,14 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
-from . import setup_owproxy_mock_devices, setup_sysbus_mock_devices
+from . import (
+    check_and_enable_disabled_entities,
+    check_entities,
+    setup_owproxy_mock_devices,
+    setup_sysbus_mock_devices,
+)
 from .const import (
-    ATTR_DEFAULT_DISABLED,
     ATTR_DEVICE_FILE,
     ATTR_DEVICE_INFO,
     ATTR_INJECT_READS,
@@ -30,7 +33,7 @@ from .const import (
     MOCK_SYSBUS_DEVICES,
 )
 
-from tests.common import assert_setup_component, mock_device_registry, mock_registry
+from tests.common import mock_device_registry, mock_registry
 
 MOCK_COUPLERS = {
     key: value for (key, value) in MOCK_OWPROXY_DEVICES.items() if "branches" in value
@@ -42,43 +45,6 @@ def override_platforms():
     """Override PLATFORMS."""
     with patch("homeassistant.components.onewire.PLATFORMS", [SENSOR_DOMAIN]):
         yield
-
-
-async def test_setup_minimum(hass: HomeAssistant):
-    """Test old platform setup with minimum configuration."""
-    config = {"sensor": {"platform": "onewire"}}
-    with assert_setup_component(1, "sensor"):
-        assert await async_setup_component(hass, SENSOR_DOMAIN, config)
-    await hass.async_block_till_done()
-
-
-async def test_setup_sysbus(hass: HomeAssistant):
-    """Test old platform setup with SysBus configuration."""
-    config = {
-        "sensor": {
-            "platform": "onewire",
-            "mount_dir": DEFAULT_SYSBUS_MOUNT_DIR,
-        }
-    }
-    with assert_setup_component(1, "sensor"):
-        assert await async_setup_component(hass, SENSOR_DOMAIN, config)
-    await hass.async_block_till_done()
-
-
-async def test_setup_owserver(hass: HomeAssistant):
-    """Test old platform setup with OWServer configuration."""
-    config = {"sensor": {"platform": "onewire", "host": "localhost"}}
-    with assert_setup_component(1, "sensor"):
-        assert await async_setup_component(hass, SENSOR_DOMAIN, config)
-    await hass.async_block_till_done()
-
-
-async def test_setup_owserver_with_port(hass: HomeAssistant):
-    """Test old platform setup with OWServer configuration."""
-    config = {"sensor": {"platform": "onewire", "host": "localhost", "port": "1234"}}
-    with assert_setup_component(1, "sensor"):
-        assert await async_setup_component(hass, SENSOR_DOMAIN, config)
-    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize("device_id", ["1F.111111111111"], indirect=True)
@@ -135,7 +101,7 @@ async def test_sensors_on_owserver_coupler(
         state = hass.states.get(entity_id)
         assert state.state == expected_entity[ATTR_STATE]
         for attr in (ATTR_DEVICE_CLASS, ATTR_STATE_CLASS, ATTR_UNIT_OF_MEASUREMENT):
-            assert state.attributes.get(attr) == expected_entity[attr]
+            assert state.attributes.get(attr) == expected_entity.get(attr)
         assert state.attributes[ATTR_DEVICE_FILE] == expected_entity[ATTR_DEVICE_FILE]
 
 
@@ -158,14 +124,7 @@ async def test_owserver_setup_valid_device(
 
     assert len(entity_registry.entities) == len(expected_entities)
 
-    # Ensure all entities are enabled
-    for expected_entity in expected_entities:
-        if expected_entity.get(ATTR_DEFAULT_DISABLED):
-            entity_id = expected_entity[ATTR_ENTITY_ID]
-            registry_entry = entity_registry.entities.get(entity_id)
-            assert registry_entry.disabled
-            assert registry_entry.disabled_by == "integration"
-            entity_registry.async_update_entity(entity_id, **{"disabled_by": None})
+    check_and_enable_disabled_entities(entity_registry, expected_entities)
 
     setup_owproxy_mock_devices(owproxy, SENSOR_DOMAIN, [device_id])
     await hass.config_entries.async_reload(config_entry.entry_id)
@@ -181,18 +140,7 @@ async def test_owserver_setup_valid_device(
         assert registry_entry.name == device_info[ATTR_NAME]
         assert registry_entry.model == device_info[ATTR_MODEL]
 
-    for expected_entity in expected_entities:
-        entity_id = expected_entity[ATTR_ENTITY_ID]
-        registry_entry = entity_registry.entities.get(entity_id)
-        assert registry_entry is not None
-        assert registry_entry.unique_id == expected_entity[ATTR_UNIQUE_ID]
-        state = hass.states.get(entity_id)
-        assert state.state == expected_entity[ATTR_STATE]
-        for attr in (ATTR_DEVICE_CLASS, ATTR_STATE_CLASS, ATTR_UNIT_OF_MEASUREMENT):
-            assert state.attributes.get(attr) == expected_entity[attr]
-        assert state.attributes[ATTR_DEVICE_FILE] == expected_entity.get(
-            ATTR_DEVICE_FILE, registry_entry.unique_id
-        )
+    check_entities(hass, entity_registry, expected_entities)
 
 
 @pytest.mark.usefixtures("sysbus")
@@ -231,12 +179,4 @@ async def test_onewiredirect_setup_valid_device(
         assert registry_entry.name == device_info[ATTR_NAME]
         assert registry_entry.model == device_info[ATTR_MODEL]
 
-    for expected_entity in expected_entities:
-        entity_id = expected_entity[ATTR_ENTITY_ID]
-        registry_entry = entity_registry.entities.get(entity_id)
-        assert registry_entry is not None
-        assert registry_entry.unique_id == expected_entity[ATTR_UNIQUE_ID]
-        state = hass.states.get(entity_id)
-        assert state.state == expected_entity[ATTR_STATE]
-        for attr in (ATTR_DEVICE_CLASS, ATTR_STATE_CLASS, ATTR_UNIT_OF_MEASUREMENT):
-            assert state.attributes.get(attr) == expected_entity[attr]
+    check_entities(hass, entity_registry, expected_entities)
