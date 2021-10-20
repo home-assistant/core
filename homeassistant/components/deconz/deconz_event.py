@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_XY,
 )
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import slugify
 
@@ -142,9 +143,7 @@ class DeconzEvent(DeconzBase):
         if not self.device_info:
             return
 
-        device_registry = (
-            await self.gateway.hass.helpers.device_registry.async_get_registry()
-        )
+        device_registry = dr.async_get(self.gateway.hass)
 
         entry = device_registry.async_get_or_create(
             config_entry_id=self.gateway.config_entry.entry_id, **self.device_info

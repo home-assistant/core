@@ -365,7 +365,7 @@ async def test_fan(hass):
     assert appliance["endpointId"] == "fan#test_1"
     assert appliance["displayCategories"][0] == "FAN"
     assert appliance["friendlyName"] == "Test fan 1"
-    # Alexa.RangeController is added to make a van controllable when no other controllers are available
+    # Alexa.RangeController is added to make a fan controllable when no other controllers are available
     capabilities = assert_endpoint_capabilities(
         appliance,
         "Alexa.RangeController",
@@ -400,6 +400,39 @@ async def test_fan(hass):
         payload={"rangeValue": "0"},
         instance="fan.percentage",
     )
+
+
+async def test_fan2(hass):
+    """Test fan discovery with percentage_step."""
+
+    # Test fan discovery with percentage_step
+    device = (
+        "fan.test_2",
+        "on",
+        {
+            "friendly_name": "Test fan 2",
+            "percentage": 66,
+            "supported_features": 1,
+            "percentage_step": 33.3333,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "fan#test_2"
+    assert appliance["displayCategories"][0] == "FAN"
+    assert appliance["friendlyName"] == "Test fan 2"
+    # Alexa.RangeController is added to make a fan controllable when no other controllers are available
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa.RangeController",
+        "Alexa.PowerController",
+        "Alexa.EndpointHealth",
+        "Alexa",
+    )
+
+    power_capability = get_capability(capabilities, "Alexa.PowerController")
+    assert "capabilityResources" not in power_capability
+    assert "configuration" not in power_capability
 
 
 async def test_variable_fan(hass):

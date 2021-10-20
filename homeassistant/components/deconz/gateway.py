@@ -7,7 +7,11 @@ from pydeconz import DeconzSession, errors, group, light, sensor
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import (
+    aiohttp_client,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -136,7 +140,7 @@ class DeconzGateway:
 
     async def async_update_device_registry(self) -> None:
         """Update device registry."""
-        device_registry = await self.hass.helpers.device_registry.async_get_registry()
+        device_registry = dr.async_get(self.hass)
 
         # Host device
         device_registry.async_get_or_create(
@@ -218,7 +222,7 @@ class DeconzGateway:
         else:
             deconz_ids += [group.deconz_id for group in self.api.groups.values()]
 
-        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
+        entity_registry = er.async_get(self.hass)
 
         for entity_id, deconz_id in self.deconz_ids.items():
             if deconz_id in deconz_ids and entity_registry.async_is_registered(
