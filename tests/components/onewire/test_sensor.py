@@ -18,9 +18,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import setup_owproxy_mock_devices, setup_sysbus_mock_devices
+from . import (
+    check_and_enable_disabled_entities,
+    setup_owproxy_mock_devices,
+    setup_sysbus_mock_devices,
+)
 from .const import (
-    ATTR_DEFAULT_DISABLED,
     ATTR_DEVICE_FILE,
     ATTR_DEVICE_INFO,
     ATTR_INJECT_READS,
@@ -120,14 +123,7 @@ async def test_owserver_setup_valid_device(
 
     assert len(entity_registry.entities) == len(expected_entities)
 
-    # Ensure all entities are enabled
-    for expected_entity in expected_entities:
-        if expected_entity.get(ATTR_DEFAULT_DISABLED):
-            entity_id = expected_entity[ATTR_ENTITY_ID]
-            registry_entry = entity_registry.entities.get(entity_id)
-            assert registry_entry.disabled
-            assert registry_entry.disabled_by == "integration"
-            entity_registry.async_update_entity(entity_id, **{"disabled_by": None})
+    check_and_enable_disabled_entities(entity_registry, expected_entities)
 
     setup_owproxy_mock_devices(owproxy, SENSOR_DOMAIN, [device_id])
     await hass.config_entries.async_reload(config_entry.entry_id)

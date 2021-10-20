@@ -1,14 +1,35 @@
 """Tests for 1-Wire integration."""
 from __future__ import annotations
 
+from types import MappingProxyType
 from typing import Any
 from unittest.mock import MagicMock
 
 from pyownet.protocol import ProtocolError
 
 from homeassistant.components.onewire.const import DEFAULT_SYSBUS_MOUNT_DIR
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.helpers.entity_registry import EntityRegistry
 
-from .const import ATTR_INJECT_READS, MOCK_OWPROXY_DEVICES, MOCK_SYSBUS_DEVICES
+from .const import (
+    ATTR_DEFAULT_DISABLED,
+    ATTR_INJECT_READS,
+    MOCK_OWPROXY_DEVICES,
+    MOCK_SYSBUS_DEVICES,
+)
+
+
+def check_and_enable_disabled_entities(
+    entity_registry: EntityRegistry, expected_entities: MappingProxyType
+) -> None:
+    """Ensure that the expected_entities are correctly disabled."""
+    for expected_entity in expected_entities:
+        if expected_entity.get(ATTR_DEFAULT_DISABLED):
+            entity_id = expected_entity[ATTR_ENTITY_ID]
+            registry_entry = entity_registry.entities.get(entity_id)
+            assert registry_entry.disabled
+            assert registry_entry.disabled_by == "integration"
+            entity_registry.async_update_entity(entity_id, **{"disabled_by": None})
 
 
 def setup_owproxy_mock_devices(
