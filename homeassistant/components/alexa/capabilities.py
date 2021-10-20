@@ -1531,16 +1531,11 @@ class AlexaRangeController(AlexaCapability):
         # Fan Speed Percentage Resources
         if self.instance == f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}":
             percentage_step = self.entity.attributes.get(fan.ATTR_PERCENTAGE_STEP)
-            precision = percentage_step if percentage_step else 100
-            # precision must be a divider of 100 and must be an integer
-            # fall back to a precision of 1
-            if percentage_step and (100 % int(percentage_step)):
-                precision = 1
             self._resource = AlexaPresetResource(
                 labels=["Percentage", AlexaGlobalCatalog.SETTING_FAN_SPEED],
                 min_value=0,
                 max_value=100,
-                precision=precision,
+                precision=1 if percentage_step else 100,
                 unit=AlexaGlobalCatalog.UNIT_PERCENT,
             )
             return self._resource.serialize_capability_resources()

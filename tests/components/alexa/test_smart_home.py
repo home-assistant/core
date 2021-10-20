@@ -411,7 +411,7 @@ async def test_fan2(hass):
         "on",
         {
             "friendly_name": "Test fan 2",
-            "percentage": 50,
+            "percentage": 66,
             "supported_features": 1,
             "percentage_step": 33.3333,
         },
