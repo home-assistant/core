@@ -147,8 +147,7 @@ class StatisticsSensor(SensorEntity):
         @callback
         def async_stats_sensor_state_listener(event):
             """Handle the sensor state changes."""
-            new_state = event.data.get("new_state")
-            if new_state is None:
+            if (new_state := event.data.get("new_state")) is None:
                 return
 
             self._unit_of_measurement = new_state.attributes.get(
