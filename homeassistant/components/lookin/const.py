@@ -6,5 +6,4 @@ from typing import Final
 DOMAIN: Final = "lookin"
 PLATFORMS: Final = [
     "sensor",
-
 ]
