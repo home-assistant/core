@@ -394,6 +394,7 @@ class HoneywellUSThermostat(ClimateEntity):
         if preset_mode == PRESET_AWAY:
             self._turn_away_mode_on()
         elif preset_mode == PRESET_HOLD:
+            self._away = False
             self._turn_hold_mode_on()
         else:
             self._turn_away_mode_off()
