@@ -1,6 +1,7 @@
 """Support for LG TV running on NetCast 3 or 4."""
 from datetime import timedelta
 import logging
+import time
 
 from requests import RequestException
 import voluptuous as vol
@@ -17,6 +18,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_OFF,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP,
+    SUPPORT_VOLUME_SET,
 )
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
@@ -38,6 +40,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 SUPPORT_LGTV = (
     SUPPORT_PAUSE
     | SUPPORT_VOLUME_STEP
+    | SUPPORT_VOLUME_SET
     | SUPPORT_VOLUME_MUTE
     | SUPPORT_PREVIOUS_TRACK
     | SUPPORT_NEXT_TRACK
@@ -200,6 +203,17 @@ class LgTVDevice(MediaPlayerDevice):
     def volume_down(self):
         """Volume down media player."""
         self.send_command(25)
+
+    def set_volume_level(self, volume):
+        """Set volume level, range 0..1."""
+        volume_difference = int((volume - self.volume_level) * 100)
+        step_function = self.volume_up if volume_difference > 0 else self.volume_down
+        for i in range(abs(volume_difference)):
+            step_function()
+            time.sleep(.35) # tv jumps over volume steps after quick consecutive presses
+        self.update(no_throttle=True)
+        if self.volume_level != volume: # some presses tend to get lost
+            self.set_volume_level(volume)
 
     def mute_volume(self, mute):
         """Send mute command."""
