@@ -81,7 +81,7 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
         ),
         SensorEntityDescription(
             key=DPCode.CO2_VALUE,
-            name="Carbon Dioxide (CO2)",
+            name="Carbon Dioxide",
             device_class=DEVICE_CLASS_CO2,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
@@ -117,19 +117,19 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
     "jqbj": (
         SensorEntityDescription(
             key=DPCode.CO2_VALUE,
-            name="Carbon Dioxide (CO2)",
+            name="Carbon Dioxide",
             device_class=DEVICE_CLASS_CO2,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
         SensorEntityDescription(
             key=DPCode.VOC_VALUE,
-            name="Volatile Organic Compound (VOC)",
+            name="Volatile Organic Compound",
             device_class=DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
         SensorEntityDescription(
             key=DPCode.PM25_VALUE,
-            name="Particulate Matter 2.5 µm (PM2.5)",
+            name="Particulate Matter 2.5 µm",
             device_class=DEVICE_CLASS_PM25,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
@@ -180,7 +180,7 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
         ),
         SensorEntityDescription(
             key=DPCode.CO2_VALUE,
-            name="Carbon Dioxide (CO2)",
+            name="Carbon Dioxide",
             device_class=DEVICE_CLASS_CO2,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
