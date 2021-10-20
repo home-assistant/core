@@ -280,8 +280,7 @@ class OctoPrintAPI:
 
     def update(self, sensor_type, end_point, group, tool=None):
         """Return the value for sensor_type from the provided endpoint."""
-        response = self.get(end_point)
-        if response is not None:
+        if (response := self.get(end_point)) is not None:
             return get_value_from_json(response, sensor_type, group, tool)
 
         return response
