@@ -76,9 +76,7 @@ class iOSNotificationService(BaseNotificationService):
         ):
             data[ATTR_TITLE] = kwargs.get(ATTR_TITLE)
 
-        targets = kwargs.get(ATTR_TARGET)
-
-        if not targets:
+        if not (targets := kwargs.get(ATTR_TARGET)):
             targets = ios.enabled_push_ids(self.hass)
 
         if kwargs.get(ATTR_DATA) is not None:
