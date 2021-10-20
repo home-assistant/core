@@ -10,9 +10,9 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
     SensorEntity,
     SensorEntityDescription,
-    STATE_CLASS_MEASUREMENT,
 )
 from homeassistant.const import (
     CONF_MONITORED_VARIABLES,
