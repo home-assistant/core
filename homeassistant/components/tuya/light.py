@@ -105,6 +105,14 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             color_data=DPCode.COLOUR_DATA,
         ),
     ),
+    # Switch
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
+    "kg": (
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_BACKLIGHT,
+            name="Backlight",
+        ),
+    ),
     # Dimmer
     # https://developer.tuya.com/en/docs/iot/tgq?id=Kaof8ke9il4k4
     "tgq": (
@@ -152,6 +160,14 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
         ),
     ),
 }
+
+# Socket (duplicate of `kg`)
+# https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
+LIGHTS["cz"] = LIGHTS["kg"]
+
+# Power Socket (duplicate of `kg`)
+# https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
+LIGHTS["pc"] = LIGHTS["kg"]
 
 
 @dataclass

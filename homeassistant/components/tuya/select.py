@@ -15,7 +15,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
 from .base import EnumTypeData, TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
+from .const import (
+    DEVICE_CLASS_TUYA_LIGHT_MODE,
+    DEVICE_CLASS_TUYA_RELAY_STATUS,
+    DOMAIN,
+    TUYA_DISCOVERY_NEW,
+    DPCode,
+)
 
 # All descriptions can be found here. Mostly the Enum data types in the
 # default instructions set of each category end up being a select.
@@ -46,6 +52,22 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             icon="mdi:coffee",
         ),
     ),
+    # Switch
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
+    "kg": (
+        SelectEntityDescription(
+            key=DPCode.RELAY_STATUS,
+            name="Power on Behavior",
+            device_class=DEVICE_CLASS_TUYA_RELAY_STATUS,
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.LIGHT_MODE,
+            name="Indicator Light Mode",
+            device_class=DEVICE_CLASS_TUYA_LIGHT_MODE,
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
     # Siren Alarm
     # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
     "sgbj": (
@@ -61,6 +83,15 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
         ),
     ),
 }
+
+
+# Socket (duplicate of `kg`)
+# https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
+SELECTS["cz"] = SELECTS["kg"]
+
+# Power Socket (duplicate of `kg`)
+# https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
+SELECTS["pc"] = SELECTS["kg"]
 
 
 async def async_setup_entry(

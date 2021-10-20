@@ -1,0 +1,14 @@
+{
+    "state": {
+        "tuya__light_mode": {
+            "none": "Off",
+            "pos": "Indicate switch location",
+            "relay": "Indicate switch on/off state"
+        },
+        "tuya__relay_status": {
+            "last": "Remember last state",
+            "power_off": "Off",
+            "power_on": "On"
+        }
+    }
+}
