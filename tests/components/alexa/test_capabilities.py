@@ -381,7 +381,6 @@ async def test_report_fan_speed_state(hass):
             "friendly_name": "High speed fan",
             "supported_features": 1,
             "percentage": 100,
-            "speed_count": 16,
         },
     )
     hass.states.async_set(
