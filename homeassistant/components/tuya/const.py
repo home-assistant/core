@@ -136,6 +136,7 @@ class DPCode(str, Enum):
     BRIGHT_VALUE_V2 = "bright_value_v2"
     C_F = "c_f"  # Temperature unit switching
     CHILD_LOCK = "child_lock"  # Child lock
+    CO2_STATE = "co2_state"
     CO2_VALUE = "co2_value"  # CO2 concentration
     COLOR_DATA_V2 = "color_data_v2"
     COLOUR_DATA = "colour_data"  # Colored light mode
