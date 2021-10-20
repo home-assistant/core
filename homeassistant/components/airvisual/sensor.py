@@ -27,6 +27,7 @@ from homeassistant.const import (
     DEVICE_CLASS_PM25,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -103,6 +104,7 @@ NODE_PRO_SENSOR_DESCRIPTIONS = (
         key=SENSOR_KIND_BATTERY_LEVEL,
         name="Battery",
         device_class=DEVICE_CLASS_BATTERY,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
     ),
     SensorEntityDescription(
