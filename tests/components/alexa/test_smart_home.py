@@ -421,7 +421,7 @@ async def test_fan2(hass):
     assert appliance["endpointId"] == "fan#test_2"
     assert appliance["displayCategories"][0] == "FAN"
     assert appliance["friendlyName"] == "Test fan 2"
-    # Alexa.RangeController is added to make a van controllable when no other controllers are available
+    # Alexa.RangeController is added to make a fan controllable when no other controllers are available
     capabilities = assert_endpoint_capabilities(
         appliance,
         "Alexa.RangeController",
