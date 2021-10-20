@@ -35,6 +35,7 @@ from .const import (
     IDLE_ICON,
     SENSOR_MAP_DEVICE_CLASS,
     SENSOR_MAP_MODEL,
+    SENSOR_MAP_STATE_CLASS,
     SENSOR_MAP_UOM,
     UNIT_LUMEN,
 )
