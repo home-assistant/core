@@ -654,6 +654,13 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         self._none_counter = 0
 
     def _handle_coordinator_update(self) -> None:
+        """
+        Handle coordinator update.
+
+        if self.entity_description.allow_none_as_return_value is set to true, then its allowed to returned None
+        for 3 consecutive updates. If it exceeds 3 failed updates, the sensor is set to an Unknown state
+        (by setting the state to None). When this happens, a warning will be logged.
+        """
         if self.entity_description.parent_key is not None:
             data = getattr(self.coordinator.data, self.entity_description.parent_key)
         else:
@@ -670,6 +677,7 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         ):
             self._none_counter += 1
             if self._none_counter < 2:
+                "exit early and do not update the state to Unknown, in other words, ignore the update"
                 return
 
             _LOGGER.warning(
