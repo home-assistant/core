@@ -5,11 +5,14 @@ import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_STATE
 from homeassistant.core import HomeAssistant
 
-from . import check_and_enable_disabled_entities, setup_owproxy_mock_devices
-from .const import ATTR_DEVICE_FILE, ATTR_UNIQUE_ID, MOCK_OWPROXY_DEVICES
+from . import (
+    check_and_enable_disabled_entities,
+    check_entities,
+    setup_owproxy_mock_devices,
+)
+from .const import MOCK_OWPROXY_DEVICES
 
 from tests.common import mock_registry
 
@@ -45,13 +48,4 @@ async def test_owserver_binary_sensor(
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    for expected_entity in expected_entities:
-        entity_id = expected_entity[ATTR_ENTITY_ID]
-        registry_entry = entity_registry.entities.get(entity_id)
-        assert registry_entry is not None
-        assert registry_entry.unique_id == expected_entity[ATTR_UNIQUE_ID]
-        state = hass.states.get(entity_id)
-        assert state.state == expected_entity[ATTR_STATE]
-        assert state.attributes[ATTR_DEVICE_FILE] == expected_entity.get(
-            ATTR_DEVICE_FILE, registry_entry.unique_id
-        )
+    check_entities(hass, entity_registry, expected_entities)

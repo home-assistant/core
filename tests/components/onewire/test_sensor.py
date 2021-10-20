@@ -20,6 +20,7 @@ from homeassistant.core import HomeAssistant
 
 from . import (
     check_and_enable_disabled_entities,
+    check_entities,
     setup_owproxy_mock_devices,
     setup_sysbus_mock_devices,
 )
@@ -139,18 +140,7 @@ async def test_owserver_setup_valid_device(
         assert registry_entry.name == device_info[ATTR_NAME]
         assert registry_entry.model == device_info[ATTR_MODEL]
 
-    for expected_entity in expected_entities:
-        entity_id = expected_entity[ATTR_ENTITY_ID]
-        registry_entry = entity_registry.entities.get(entity_id)
-        assert registry_entry is not None
-        assert registry_entry.unique_id == expected_entity[ATTR_UNIQUE_ID]
-        state = hass.states.get(entity_id)
-        assert state.state == expected_entity[ATTR_STATE]
-        for attr in (ATTR_DEVICE_CLASS, ATTR_STATE_CLASS, ATTR_UNIT_OF_MEASUREMENT):
-            assert state.attributes.get(attr) == expected_entity.get(attr)
-        assert state.attributes[ATTR_DEVICE_FILE] == expected_entity.get(
-            ATTR_DEVICE_FILE, registry_entry.unique_id
-        )
+    check_entities(hass, entity_registry, expected_entities)
 
 
 @pytest.mark.usefixtures("sysbus")
@@ -189,12 +179,4 @@ async def test_onewiredirect_setup_valid_device(
         assert registry_entry.name == device_info[ATTR_NAME]
         assert registry_entry.model == device_info[ATTR_MODEL]
 
-    for expected_entity in expected_entities:
-        entity_id = expected_entity[ATTR_ENTITY_ID]
-        registry_entry = entity_registry.entities.get(entity_id)
-        assert registry_entry is not None
-        assert registry_entry.unique_id == expected_entity[ATTR_UNIQUE_ID]
-        state = hass.states.get(entity_id)
-        assert state.state == expected_entity[ATTR_STATE]
-        for attr in (ATTR_DEVICE_CLASS, ATTR_STATE_CLASS, ATTR_UNIT_OF_MEASUREMENT):
-            assert state.attributes.get(attr) == expected_entity.get(attr)
+    check_entities(hass, entity_registry, expected_entities)
