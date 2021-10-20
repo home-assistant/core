@@ -62,9 +62,29 @@ BATTERY_SENSORS: tuple[SensorEntityDescription, ...] = (
 # end up being a sensor.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
-    # Door Window Sensor
-    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48hm02l8m
-    "mcs": BATTERY_SENSORS,
+    # CO2 Detector
+    # https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
+    "co2bj": (
+        SensorEntityDescription(
+            key=DPCode.HUMIDITY_VALUE,
+            name="Humidity",
+            device_class=DEVICE_CLASS_HUMIDITY,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.TEMP_CURRENT,
+            name="Temperature",
+            device_class=DEVICE_CLASS_TEMPERATURE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.CO2_VALUE,
+            name="Carbon Dioxide (CO2)",
+            device_class=DEVICE_CLASS_CO2,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        *BATTERY_SENSORS,
+    ),
     # Switch
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
     "kg": (
@@ -124,6 +144,9 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
+    # Door Window Sensor
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48hm02l8m
+    "mcs": BATTERY_SENSORS,
     # PIR Detector
     # https://developer.tuya.com/en/docs/iot/categorypir?id=Kaiuz3ss11b80
     "pir": BATTERY_SENSORS,
