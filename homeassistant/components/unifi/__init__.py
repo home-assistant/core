@@ -1,6 +1,7 @@
 """Integration to UniFi controllers and its various features."""
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .const import (
@@ -57,7 +58,7 @@ async def async_setup_entry(hass, config_entry):
     if controller.mac is None:
         return True
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(CONNECTION_NETWORK_MAC, controller.mac)},
