@@ -305,6 +305,7 @@ class SmileSensor(SmileGateway, SensorEntity):
         self._dev_class = None
         self._icon = None
         self._state = None
+        self._state_class = None
         self._unit_of_measurement = None
 
         if dev_id == self._api.heater_id:
