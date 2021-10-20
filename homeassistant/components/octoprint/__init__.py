@@ -1,12 +1,11 @@
 """Support for monitoring OctoPrint 3D printers."""
-import asyncio
 from datetime import timedelta
 import logging
 
 from pyoctoprintapi import ApiError, OctoprintClient, PrinterOffline
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryNotReady
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_BINARY_SENSORS,
@@ -170,7 +169,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    )
+
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
