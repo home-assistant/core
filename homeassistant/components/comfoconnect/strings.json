@@ -11,7 +11,7 @@
         }
       },
       "sensor_selection": {
-        "title": "Select Sensors to observe",
+        "title": "Select the sensors you want to register",
         "data": {
           "sensors": "Sensors"
         }
