@@ -245,6 +245,7 @@ class SensorTemplate(TemplateEntity, SensorEntity):
 
         self._friendly_name_template = friendly_name_template
 
+        self._attr_name = None
         # Try to render the name as it can influence the entity ID
         if friendly_name_template:
             friendly_name_template.hass = hass
