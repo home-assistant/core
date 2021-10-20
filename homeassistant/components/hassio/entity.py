@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.const import ATTR_NAME
+from homeassistant.const import ATTR_ICON, ATTR_NAME
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -27,6 +27,8 @@ class HassioAddonEntity(CoordinatorEntity):
         self._attr_name = f"{addon[ATTR_NAME]}: {entity_description.name}"
         self._attr_unique_id = f"{addon[ATTR_SLUG]}_{entity_description.key}"
         self._attr_device_info = {"identifiers": {(DOMAIN, addon[ATTR_SLUG])}}
+        if addon[ATTR_ICON]:
+            self._attr_entity_picture = f"/api/hassio/addons/{addon[ATTR_SLUG]}/icon"
 
 
 class HassioOSEntity(CoordinatorEntity):
