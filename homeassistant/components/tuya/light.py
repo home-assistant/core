@@ -130,7 +130,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             color_data=DPCode.COLOUR_DATA,
         ),
     ),
-    # Ceiling  Light
+    # Ceiling Light
     # https://developer.tuya.com/en/docs/iot/ceiling-light?id=Kaiuz03xxfc4r
     "xdd": (
         TuyaLightEntityDescription(
@@ -139,6 +139,10 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             brightness=DPCode.BRIGHT_VALUE,
             color_temp=DPCode.TEMP_VALUE,
             color_data=DPCode.COLOUR_DATA,
+        ),
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_NIGHT_LIGHT,
+            name="Night Light",
         ),
     ),
     # Remote Control
