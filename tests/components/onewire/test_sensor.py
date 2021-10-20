@@ -97,7 +97,7 @@ async def test_sensors_on_owserver_coupler(
         state = hass.states.get(entity_id)
         assert state.state == expected_entity[ATTR_STATE]
         for attr in (ATTR_DEVICE_CLASS, ATTR_STATE_CLASS, ATTR_UNIT_OF_MEASUREMENT):
-            assert state.attributes.get(attr) == expected_entity[attr]
+            assert state.attributes.get(attr) == expected_entity.get(attr)
         assert state.attributes[ATTR_DEVICE_FILE] == expected_entity[ATTR_DEVICE_FILE]
 
 
@@ -151,7 +151,7 @@ async def test_owserver_setup_valid_device(
         state = hass.states.get(entity_id)
         assert state.state == expected_entity[ATTR_STATE]
         for attr in (ATTR_DEVICE_CLASS, ATTR_STATE_CLASS, ATTR_UNIT_OF_MEASUREMENT):
-            assert state.attributes.get(attr) == expected_entity[attr]
+            assert state.attributes.get(attr) == expected_entity.get(attr)
         assert state.attributes[ATTR_DEVICE_FILE] == expected_entity.get(
             ATTR_DEVICE_FILE, registry_entry.unique_id
         )
@@ -201,4 +201,4 @@ async def test_onewiredirect_setup_valid_device(
         state = hass.states.get(entity_id)
         assert state.state == expected_entity[ATTR_STATE]
         for attr in (ATTR_DEVICE_CLASS, ATTR_STATE_CLASS, ATTR_UNIT_OF_MEASUREMENT):
-            assert state.attributes.get(attr) == expected_entity[attr]
+            assert state.attributes.get(attr) == expected_entity.get(attr)
