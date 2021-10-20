@@ -540,7 +540,7 @@ influxdb==5.2.3
 iotawattpy==0.1.0
 
 # homeassistant.components.gogogate2
-ismartgate==4.0.0
+ismartgate==4.0.3
 
 # homeassistant.components.rest
 jsonpath==0.82
