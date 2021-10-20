@@ -18,8 +18,10 @@ from homeassistant.const import (
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_PM25,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
     DEVICE_CLASS_VOLTAGE,
     ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
@@ -109,6 +111,46 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
             state_class=STATE_CLASS_MEASUREMENT,
             entity_registry_enabled_default=False,
         ),
+    ),
+    # Formaldehyde Detector
+    # Note: Not documented
+    "jqbj": (
+        SensorEntityDescription(
+            key=DPCode.CO2_VALUE,
+            name="Carbon Dioxide (CO2)",
+            device_class=DEVICE_CLASS_CO2,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.VOC_VALUE,
+            name="Volatile Organic Compound (VOC)",
+            device_class=DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.PM25_VALUE,
+            name="Particulate Matter 2.5 µm (PM2.5)",
+            device_class=DEVICE_CLASS_PM25,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.VA_HUMIDITY,
+            name="Humidity",
+            device_class=DEVICE_CLASS_HUMIDITY,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.VA_TEMPERATURE,
+            name="Temperature",
+            device_class=DEVICE_CLASS_TEMPERATURE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.CH2O_VALUE,
+            name="Formaldehyde",
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        *BATTERY_SENSORS,
     ),
     # Luminance Sensor
     # https://developer.tuya.com/en/docs/iot/categoryldcg?id=Kaiuz3n7u69l8
