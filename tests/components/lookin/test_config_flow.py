@@ -3,8 +3,9 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+from aiolookin import NoUsableService
+
 from homeassistant import config_entries
-from homeassistant.components.lookin.aiolookin import NoUsableService
 from homeassistant.components.lookin.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
