@@ -16,6 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import HomeAssistantTuyaData
 from .base import EnumTypeData, TuyaEntity
 from .const import (
+    DEVICE_CLASS_TUYA_LED_TYPE,
     DEVICE_CLASS_TUYA_LIGHT_MODE,
     DEVICE_CLASS_TUYA_RELAY_STATUS,
     DOMAIN,
@@ -79,6 +80,40 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
         SelectEntityDescription(
             key=DPCode.BRIGHT_STATE,
             name="Brightness",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
+    # Dimmer Switch
+    # https://developer.tuya.com/en/docs/iot/categorytgkg?id=Kaiuz0ktx7m0o
+    "tgkg": (
+        SelectEntityDescription(
+            key=DPCode.RELAY_STATUS,
+            name="Power on Behavior",
+            device_class=DEVICE_CLASS_TUYA_RELAY_STATUS,
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.LIGHT_MODE,
+            name="Indicator Light Mode",
+            device_class=DEVICE_CLASS_TUYA_LIGHT_MODE,
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.LED_TYPE_1,
+            name="Light Source Type",
+            device_class=DEVICE_CLASS_TUYA_LED_TYPE,
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.LED_TYPE_2,
+            name="Light 2 Source Type",
+            device_class=DEVICE_CLASS_TUYA_LED_TYPE,
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.LED_TYPE_3,
+            name="Light 3 Source Type",
+            device_class=DEVICE_CLASS_TUYA_LED_TYPE,
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
