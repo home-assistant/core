@@ -82,6 +82,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
         key=SENSOR_MISSING,
         name="Missing",
         device_class=DEVICE_CLASS_CONNECTIVITY,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         on_state="not_missing",
     ),
     NotionBinarySensorDescription(
