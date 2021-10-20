@@ -10,10 +10,10 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
-    SensorEntity,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
 )
 from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
