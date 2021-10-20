@@ -33,6 +33,7 @@ from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
@@ -73,6 +74,7 @@ ENTITY_DESCRIPTIONS = {
         device_class=DEVICE_CLASS_BATTERY,
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     Consumption: SensorEntityDescription(
         key="consumption",
