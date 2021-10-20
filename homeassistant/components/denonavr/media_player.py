@@ -35,9 +35,10 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import ATTR_COMMAND, STATE_PAUSED, STATE_PLAYING
+from homeassistant.const import ATTR_COMMAND, CONF_HOST, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity import DeviceInfo
 
 from . import CONF_RECEIVER
 from .config_flow import (
@@ -144,9 +145,19 @@ class DenonDevice(MediaPlayerEntity):
         update_audyssey: bool,
     ) -> None:
         """Initialize the device."""
+        self._attr_name = receiver.name
+        self._attr_unique_id = unique_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, config_entry.unique_id)},
+            manufacturer=config_entry.data[CONF_MANUFACTURER],
+            name=config_entry.title,
+            model=f"{config_entry.data[CONF_MODEL]}-{config_entry.data[CONF_TYPE]}",
+            configuration_url=f"http://{config_entry.data[CONF_HOST]}/",
+        )
+        self._attr_sound_mode_list = receiver.sound_mode_list
+        self._attr_source_list = receiver.input_func_list
+
         self._receiver = receiver
-        self._unique_id = unique_id
-        self._config_entry = config_entry
         self._update_audyssey = update_audyssey
 
         self._supported_features_base = SUPPORT_DENON
@@ -231,31 +242,6 @@ class DenonDevice(MediaPlayerEntity):
         return self._available
 
     @property
-    def unique_id(self):
-        """Return the unique id of the zone."""
-        return self._unique_id
-
-    @property
-    def device_info(self):
-        """Return the device info of the receiver."""
-        if self._config_entry.data[CONF_SERIAL_NUMBER] is None:
-            return None
-
-        device_info = {
-            "identifiers": {(DOMAIN, self._config_entry.unique_id)},
-            "manufacturer": self._config_entry.data[CONF_MANUFACTURER],
-            "name": self._config_entry.title,
-            "model": f"{self._config_entry.data[CONF_MODEL]}-{self._config_entry.data[CONF_TYPE]}",
-        }
-
-        return device_info
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._receiver.name
-
-    @property
     def state(self):
         """Return the state of the device."""
         return self._receiver.state
@@ -280,19 +266,9 @@ class DenonDevice(MediaPlayerEntity):
         return self._receiver.input_func
 
     @property
-    def source_list(self):
-        """Return a list of available input sources."""
-        return self._receiver.input_func_list
-
-    @property
     def sound_mode(self):
         """Return the current matched sound mode."""
         return self._receiver.sound_mode
-
-    @property
-    def sound_mode_list(self):
-        """Return a list of available sound modes."""
-        return self._receiver.sound_mode_list
 
     @property
     def supported_features(self):
