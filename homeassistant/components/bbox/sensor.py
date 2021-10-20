@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     SensorEntity,
     SensorEntityDescription,
+    STATE_CLASS_MEASUREMENT,
 )
 from homeassistant.const import (
     CONF_MONITORED_VARIABLES,
@@ -48,12 +49,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="current_down_bandwidth",
         name="Currently Used Download Bandwidth",
         native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:download",
     ),
     SensorEntityDescription(
         key="current_up_bandwidth",
         name="Currently Used Upload Bandwidth",
         native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:upload",
     ),
     SensorEntityDescription(
