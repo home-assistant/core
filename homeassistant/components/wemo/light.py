@@ -1,6 +1,5 @@
 """Support for Belkin WeMo lights."""
 import asyncio
-import logging
 
 from pywemo.ouimeaux_device import bridge
 
@@ -23,8 +22,6 @@ import homeassistant.util.color as color_util
 from .const import DOMAIN as WEMO_DOMAIN
 from .entity import WemoEntity
 from .wemo_device import DeviceCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_WEMO = (
     SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR | SUPPORT_TRANSITION

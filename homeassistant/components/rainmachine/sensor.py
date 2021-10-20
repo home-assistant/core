@@ -46,7 +46,7 @@ class RainMachineSensorEntityDescription(
 SENSOR_DESCRIPTIONS = (
     RainMachineSensorEntityDescription(
         key=TYPE_FLOW_SENSOR_CLICK_M3,
-        name="Flow Sensor Clicks",
+        name="Flow Sensor Clicks per Cubic Meter",
         icon="mdi:water-pump",
         native_unit_of_measurement=f"clicks/{VOLUME_CUBIC_METERS}",
         entity_registry_enabled_default=False,
@@ -104,11 +104,13 @@ async def async_setup_entry(
         if api_category == DATA_PROVISION_SETTINGS:
             return partial(
                 ProvisionSettingsSensor,
+                entry,
                 coordinators[DATA_PROVISION_SETTINGS],
             )
 
         return partial(
             UniversalRestrictionsSensor,
+            entry,
             coordinators[DATA_RESTRICTIONS_UNIVERSAL],
         )
 

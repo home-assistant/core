@@ -150,6 +150,23 @@ async def test_zeroconf(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_zeroconf_host_already_configured(hass):
+    """Test that errors are shown when host is already configured."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id="aa:bb:cc:dd:ee:ff", data=VALID_CONFIG
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=DISCOVERY_INFO,
+        context={"source": SOURCE_ZEROCONF},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+
 @pytest.mark.parametrize(
     "error",
     [

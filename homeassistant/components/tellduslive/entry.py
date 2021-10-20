@@ -123,13 +123,10 @@ class TelldusLiveEntity(Entity):
             "identifiers": {("tellduslive", self.device.device_id)},
             "name": self.device.name,
         }
-        model = device.get("model")
-        if model is not None:
+        if (model := device.get("model")) is not None:
             device_info["model"] = model.title()
-        protocol = device.get("protocol")
-        if protocol is not None:
+        if (protocol := device.get("protocol")) is not None:
             device_info["manufacturer"] = protocol.title()
-        client = device.get("client")
-        if client is not None:
+        if (client := device.get("client")) is not None:
             device_info["via_device"] = ("tellduslive", client)
         return device_info

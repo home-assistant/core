@@ -1,7 +1,6 @@
 """Config flow for the LiteJet lighting system."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import pylitejet
@@ -15,8 +14,6 @@ from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_DEFAULT_TRANSITION, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class LiteJetOptionsFlow(config_entries.OptionsFlow):

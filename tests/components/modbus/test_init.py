@@ -46,9 +46,6 @@ from homeassistant.components.modbus.const import (
     CONF_SWAP,
     CONF_SWAP_BYTE,
     CONF_SWAP_WORD,
-    DATA_TYPE_CUSTOM,
-    DATA_TYPE_INT,
-    DATA_TYPE_STRING,
     DEFAULT_SCAN_INTERVAL,
     MODBUS_DOMAIN as DOMAIN,
     RTUOVERTCP,
@@ -59,6 +56,7 @@ from homeassistant.components.modbus.const import (
     SERVICE_WRITE_REGISTER,
     TCP,
     UDP,
+    DataType,
 )
 from homeassistant.components.modbus.validators import (
     duplicate_entity_validator,
@@ -142,17 +140,24 @@ async def test_number_validator():
         {
             CONF_NAME: TEST_ENTITY_NAME,
             CONF_COUNT: 2,
-            CONF_DATA_TYPE: DATA_TYPE_STRING,
+            CONF_DATA_TYPE: DataType.STRING,
         },
         {
             CONF_NAME: TEST_ENTITY_NAME,
             CONF_COUNT: 2,
-            CONF_DATA_TYPE: DATA_TYPE_INT,
+            CONF_DATA_TYPE: DataType.INT,
         },
         {
             CONF_NAME: TEST_ENTITY_NAME,
             CONF_COUNT: 2,
-            CONF_DATA_TYPE: DATA_TYPE_INT,
+            CONF_DATA_TYPE: DataType.INT,
+            CONF_SWAP: CONF_SWAP_BYTE,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_COUNT: 2,
+            CONF_DATA_TYPE: DataType.CUSTOM,
+            CONF_STRUCTURE: ">i",
             CONF_SWAP: CONF_SWAP_BYTE,
         },
     ],
@@ -171,29 +176,36 @@ async def test_ok_struct_validator(do_config):
         {
             CONF_NAME: TEST_ENTITY_NAME,
             CONF_COUNT: 8,
-            CONF_DATA_TYPE: DATA_TYPE_INT,
+            CONF_DATA_TYPE: DataType.INT,
         },
         {
             CONF_NAME: TEST_ENTITY_NAME,
             CONF_COUNT: 8,
-            CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+            CONF_DATA_TYPE: DataType.CUSTOM,
         },
         {
             CONF_NAME: TEST_ENTITY_NAME,
             CONF_COUNT: 8,
-            CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+            CONF_DATA_TYPE: DataType.CUSTOM,
             CONF_STRUCTURE: "no good",
         },
         {
             CONF_NAME: TEST_ENTITY_NAME,
             CONF_COUNT: 20,
-            CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+            CONF_DATA_TYPE: DataType.CUSTOM,
             CONF_STRUCTURE: ">f",
         },
         {
             CONF_NAME: TEST_ENTITY_NAME,
             CONF_COUNT: 1,
-            CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+            CONF_DATA_TYPE: DataType.CUSTOM,
+            CONF_STRUCTURE: ">f",
+            CONF_SWAP: CONF_SWAP_WORD,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_COUNT: 1,
+            CONF_DATA_TYPE: DataType.STRING,
             CONF_STRUCTURE: ">f",
             CONF_SWAP: CONF_SWAP_WORD,
         },
@@ -636,6 +648,28 @@ async def test_pymodbus_close_fail(hass, caplog, mock_pymodbus):
     # Close() is called as part of teardown
 
 
+async def test_pymodbus_connect_fail(hass, caplog):
+    """Run test for failing pymodbus constructor."""
+    config = {
+        DOMAIN: [
+            {
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+            }
+        ]
+    }
+    with mock.patch(
+        "homeassistant.components.modbus.modbus.ModbusTcpClient", autospec=True
+    ) as mock_pb:
+        caplog.set_level(logging.ERROR)
+        ExceptionMessage = "test connect exception"
+        mock_pb.connect.side_effect = ModbusException(ExceptionMessage)
+
+        assert await async_setup_component(hass, DOMAIN, config) is True
+
+
 async def test_delay(hass, mock_pymodbus):
     """Run test for startup delay."""
 
@@ -736,6 +770,7 @@ async def test_shutdown(hass, caplog, mock_pymodbus, mock_modbus_with_pymodbus):
 async def test_stop_restart(hass, caplog, mock_modbus):
     """Run test for service stop."""
 
+    caplog.set_level(logging.INFO)
     entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}"
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
     hass.states.async_set(entity_id, 17)

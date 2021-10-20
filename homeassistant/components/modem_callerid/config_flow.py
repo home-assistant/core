@@ -62,6 +62,7 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
+        errors: dict[str, str] | None = {}
         if self._async_in_progress():
             return self.async_abort(reason="already_in_progress")
         ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
@@ -88,7 +89,7 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             dev_path = await self.hass.async_add_executor_job(
                 usb.get_serial_by_id, port.device
             )
-            errors: dict | None = await self.validate_device_errors(
+            errors = await self.validate_device_errors(
                 dev_path=dev_path, unique_id=_generate_unique_id(port)
             )
             if errors is None:
@@ -98,9 +99,7 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
         user_input = user_input or {}
         schema = vol.Schema({vol.Required(CONF_DEVICE): vol.In(unused_ports)})
-        return self.async_show_form(
-            step_id="user", data_schema=schema, errors=errors or {}
-        )
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import a config entry from configuration.yaml."""

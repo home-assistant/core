@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from tuya_iot import TuyaCloudOpenAPIEndpoint
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.tuya.const import (
@@ -17,7 +18,6 @@ from homeassistant.components.tuya.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     DOMAIN,
-    ENDPOINT_INDIA,
     SMARTLIFE_APP,
     TUYA_COUNTRIES,
     TUYA_SMART_APP,
@@ -32,7 +32,7 @@ MOCK_ACCESS_ID = "myAccessId"
 MOCK_ACCESS_SECRET = "myAccessSecret"
 MOCK_USERNAME = "myUsername"
 MOCK_PASSWORD = "myPassword"
-MOCK_ENDPOINT = ENDPOINT_INDIA
+MOCK_ENDPOINT = TuyaCloudOpenAPIEndpoint.INDIA
 
 TUYA_INPUT_DATA = {
     CONF_COUNTRY_CODE: MOCK_COUNTRY,

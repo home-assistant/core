@@ -54,9 +54,7 @@ def setup(hass, config):
 
     def statsd_event_listener(event):
         """Listen for new messages on the bus and sends them to StatsD."""
-        state = event.data.get("new_state")
-
-        if state is None:
+        if (state := event.data.get("new_state")) is None:
             return
 
         try:

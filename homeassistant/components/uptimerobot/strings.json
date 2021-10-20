@@ -2,14 +2,14 @@
     "config": {
         "step": {
             "user": {
-                "description": "You need to supply a read-only API key from Uptime Robot",
+                "description": "You need to supply a read-only API key from UptimeRobot",
                 "data": {
                     "api_key": "[%key:common::config_flow::data::api_key%]"
                 }
             },
             "reauth_confirm": {
                 "title": "[%key:common::config_flow::title::reauth%]",
-                "description": "You need to supply a new read-only API key from Uptime Robot",
+                "description": "You need to supply a new read-only API key from UptimeRobot",
                 "data": {
                     "api_key": "[%key:common::config_flow::data::api_key%]"
                 }
