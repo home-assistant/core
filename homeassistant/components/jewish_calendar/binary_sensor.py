@@ -71,12 +71,13 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
+        zman = self._get_zmanim()
         if self.entity_description.key == "issur_melacha_in_effect":
-            return self._get_zmanim().issur_melacha_in_effect
+            return zman.issur_melacha_in_effect
         if self.entity_description.key == "erev_shabbat_hag":
-            return self._get_zmanim().erev_shabbat_hag
+            return zman.erev_shabbat_hag
         if self.entity_description.key == "motzei_shabbat_hag":
-            return self._get_zmanim().motzei_shabbat_hag
+            return zman.motzei_shabbat_hag
 
         return None
 
