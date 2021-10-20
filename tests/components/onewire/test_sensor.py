@@ -102,6 +102,9 @@ async def test_owserver_setup_valid_device(
     await hass.async_block_till_done()
 
     assert len(entity_registry.entities) == len(expected_entities)
+    if len(expected_entities) > 0:
+        assert len(device_registry.devices) == 1
+        check_device_registry(device_registry, mock_device[ATTR_DEVICE_INFO])
 
     check_and_enable_disabled_entities(entity_registry, expected_entities)
 
@@ -109,9 +112,6 @@ async def test_owserver_setup_valid_device(
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    if len(expected_entities) > 0:
-        assert len(device_registry.devices) == 1
-        check_device_registry(device_registry, mock_device[ATTR_DEVICE_INFO])
     check_entities(hass, entity_registry, expected_entities)
 
 
@@ -139,8 +139,8 @@ async def test_onewiredirect_setup_valid_device(
         await hass.async_block_till_done()
 
     assert len(entity_registry.entities) == len(expected_entities)
-
     if len(expected_entities) > 0:
         assert len(device_registry.devices) == 1
         check_device_registry(device_registry, mock_device[ATTR_DEVICE_INFO])
+
     check_entities(hass, entity_registry, expected_entities)
