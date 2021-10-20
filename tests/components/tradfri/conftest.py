@@ -24,7 +24,7 @@ def mock_entry_setup():
 
 
 @pytest.fixture(name="mock_gateway")
-def fixture_mock_gateway():
+def mock_gateway_fixture():
     """Mock a Tradfri gateway."""
 
     def get_devices():
@@ -56,7 +56,7 @@ def fixture_mock_gateway():
 
 
 @pytest.fixture(name="mock_api")
-def fixture_mock_api(mock_gateway):
+def mock_api_fixture(mock_gateway):
     """Mock api."""
 
     async def api(command):
