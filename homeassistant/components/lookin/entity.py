@@ -24,7 +24,7 @@ class LookinDeviceEntity(Entity):
             identifiers={(DOMAIN, self._lookin_device.id)},
             name=self._lookin_device.name,
             manufacturer="LOOKin",
-            model="LOOKin 2",
+            model="LOOKin Remote2",
             sw_version=self._lookin_device.firmware,
         )
 
