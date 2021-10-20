@@ -2694,7 +2694,7 @@ async def test_validate_statistics_unsupported_state_class(
         (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
     ],
 )
-async def test_validate_statistics_sensor_not_recorded(
+async def test_validate_statistics_sensor_no_longer_recorded(
     hass, hass_ws_client, units, attributes, unit
 ):
     """Test validate_statistics."""
@@ -2739,6 +2739,58 @@ async def test_validate_statistics_sensor_not_recorded(
         "sensor.test": [
             {
                 "data": {"statistic_id": "sensor.test"},
+                "type": "entity_no_longer_recorded",
+            }
+        ],
+    }
+    with patch(
+        "homeassistant.components.sensor.recorder.is_entity_recorded",
+        return_value=False,
+    ):
+        await assert_validation_result(client, expected)
+
+
+@pytest.mark.parametrize(
+    "units, attributes, unit",
+    [
+        (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
+    ],
+)
+async def test_validate_statistics_sensor_not_recorded(
+    hass, hass_ws_client, units, attributes, unit
+):
+    """Test validate_statistics."""
+    id = 1
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
+    async def assert_validation_result(client, expected_result):
+        await client.send_json(
+            {"id": next_id(), "type": "recorder/validate_statistics"}
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["result"] == expected_result
+
+    now = dt_util.utcnow()
+
+    hass.config.units = units
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "sensor", {})
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    client = await hass_ws_client()
+
+    # No statistics, no state - empty response
+    await assert_validation_result(client, {})
+
+    # Sensor not recorded, expect error
+    expected = {
+        "sensor.test": [
+            {
+                "data": {"statistic_id": "sensor.test"},
                 "type": "entity_not_recorded",
             }
         ],
@@ -2747,6 +2799,13 @@ async def test_validate_statistics_sensor_not_recorded(
         "homeassistant.components.sensor.recorder.is_entity_recorded",
         return_value=False,
     ):
+        hass.states.async_set("sensor.test", 10, attributes=attributes)
+        await hass.async_block_till_done()
+        await assert_validation_result(client, expected)
+
+        # Statistics has run, expect same error
+        hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
+        await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
         await assert_validation_result(client, expected)
 
 
