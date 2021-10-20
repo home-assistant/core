@@ -16,6 +16,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -56,6 +57,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
         key=SENSOR_BATTERY,
         name="Low Battery",
         device_class=DEVICE_CLASS_BATTERY,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         on_state="critical",
     ),
     NotionBinarySensorDescription(
@@ -80,6 +82,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
         key=SENSOR_MISSING,
         name="Missing",
         device_class=DEVICE_CLASS_CONNECTIVITY,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         on_state="not_missing",
     ),
     NotionBinarySensorDescription(
