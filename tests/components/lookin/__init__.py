@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from homeassistant.components.lookin.aiolookin import Climate, Device, Remote
+from aiolookin import Climate, Device, Remote
+
 from homeassistant.components.zeroconf import HaServiceInfo
 
 DEVICE_ID = "98F33163"
