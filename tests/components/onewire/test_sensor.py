@@ -4,31 +4,20 @@ from unittest.mock import MagicMock, patch
 from pyownet.protocol import Error as ProtocolError
 import pytest
 
-from homeassistant.components.onewire.const import DOMAIN
-from homeassistant.components.sensor import ATTR_STATE_CLASS, DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_STATE,
-    ATTR_UNIT_OF_MEASUREMENT,
-)
 from homeassistant.core import HomeAssistant
 
 from . import (
     check_and_enable_disabled_entities,
+    check_device_registry,
     check_entities,
     setup_owproxy_mock_devices,
     setup_sysbus_mock_devices,
 )
 from .const import (
-    ATTR_DEVICE_FILE,
     ATTR_DEVICE_INFO,
     ATTR_INJECT_READS,
-    ATTR_UNIQUE_ID,
     MOCK_OWPROXY_DEVICES,
     MOCK_SYSBUS_DEVICES,
 )
@@ -52,7 +41,6 @@ async def test_sensors_on_owserver_coupler(
     hass: HomeAssistant, config_entry: ConfigEntry, owproxy: MagicMock, device_id: str
 ):
     """Test for 1-Wire sensors connected to DS2409 coupler."""
-
     entity_registry = mock_registry(hass)
 
     mock_coupler = MOCK_COUPLERS[device_id]
@@ -93,16 +81,7 @@ async def test_sensors_on_owserver_coupler(
 
     assert len(entity_registry.entities) == len(expected_entities)
 
-    for expected_entity in expected_entities:
-        entity_id = expected_entity[ATTR_ENTITY_ID]
-        registry_entry = entity_registry.entities.get(entity_id)
-        assert registry_entry is not None
-        assert registry_entry.unique_id == expected_entity[ATTR_UNIQUE_ID]
-        state = hass.states.get(entity_id)
-        assert state.state == expected_entity[ATTR_STATE]
-        for attr in (ATTR_DEVICE_CLASS, ATTR_STATE_CLASS, ATTR_UNIT_OF_MEASUREMENT):
-            assert state.attributes.get(attr) == expected_entity.get(attr)
-        assert state.attributes[ATTR_DEVICE_FILE] == expected_entity[ATTR_DEVICE_FILE]
+    check_entities(hass, entity_registry, expected_entities)
 
 
 async def test_owserver_setup_valid_device(
@@ -112,8 +91,8 @@ async def test_owserver_setup_valid_device(
 
     As they would be on a clean setup: all binary-sensors and switches disabled.
     """
-    entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
+    entity_registry = mock_registry(hass)
 
     mock_device = MOCK_OWPROXY_DEVICES[device_id]
     expected_entities = mock_device.get(SENSOR_DOMAIN, [])
@@ -131,15 +110,8 @@ async def test_owserver_setup_valid_device(
     await hass.async_block_till_done()
 
     if len(expected_entities) > 0:
-        device_info = mock_device[ATTR_DEVICE_INFO]
         assert len(device_registry.devices) == 1
-        registry_entry = device_registry.async_get_device({(DOMAIN, device_id)})
-        assert registry_entry is not None
-        assert registry_entry.identifiers == {(DOMAIN, device_id)}
-        assert registry_entry.manufacturer == device_info[ATTR_MANUFACTURER]
-        assert registry_entry.name == device_info[ATTR_NAME]
-        assert registry_entry.model == device_info[ATTR_MODEL]
-
+        check_device_registry(device_registry, mock_device[ATTR_DEVICE_INFO])
     check_entities(hass, entity_registry, expected_entities)
 
 
@@ -149,9 +121,8 @@ async def test_onewiredirect_setup_valid_device(
     hass: HomeAssistant, sysbus_config_entry: ConfigEntry, device_id: str
 ):
     """Test that sysbus config entry works correctly."""
-
-    entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
+    entity_registry = mock_registry(hass)
 
     glob_result, read_side_effect = setup_sysbus_mock_devices(
         SENSOR_DOMAIN, [device_id]
@@ -170,13 +141,6 @@ async def test_onewiredirect_setup_valid_device(
     assert len(entity_registry.entities) == len(expected_entities)
 
     if len(expected_entities) > 0:
-        device_info = mock_device[ATTR_DEVICE_INFO]
         assert len(device_registry.devices) == 1
-        registry_entry = device_registry.async_get_device({(DOMAIN, device_id)})
-        assert registry_entry is not None
-        assert registry_entry.identifiers == {(DOMAIN, device_id)}
-        assert registry_entry.manufacturer == device_info[ATTR_MANUFACTURER]
-        assert registry_entry.name == device_info[ATTR_NAME]
-        assert registry_entry.model == device_info[ATTR_MODEL]
-
+        check_device_registry(device_registry, mock_device[ATTR_DEVICE_INFO])
     check_entities(hass, entity_registry, expected_entities)
