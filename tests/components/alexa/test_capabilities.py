@@ -363,7 +363,6 @@ async def test_report_fan_speed_state(hass):
             "friendly_name": "Low speed fan",
             "supported_features": 1,
             "percentage": 33,
-            "percentage_step": 10,
         },
     )
     hass.states.async_set(
@@ -373,7 +372,6 @@ async def test_report_fan_speed_state(hass):
             "friendly_name": "Medium speed fan",
             "supported_features": 1,
             "percentage": 66,
-            "percentage_step": 33.333333333,
         },
     )
     hass.states.async_set(
@@ -383,7 +381,7 @@ async def test_report_fan_speed_state(hass):
             "friendly_name": "High speed fan",
             "supported_features": 1,
             "percentage": 100,
-            "percentage_step": 1,
+            "speed_count": 16,
         },
     )
     hass.states.async_set(
@@ -408,7 +406,6 @@ async def test_report_fan_speed_state(hass):
     properties = await reported_properties(hass, "fan.low_speed")
     properties.assert_equal("Alexa.RangeController", "rangeValue", 33)
 
-    # test with custom not supported speed step
     properties = await reported_properties(hass, "fan.medium_speed")
     properties.assert_equal("Alexa.RangeController", "rangeValue", 66)
 
