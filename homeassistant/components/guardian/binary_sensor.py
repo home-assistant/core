@@ -9,6 +9,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -36,6 +37,7 @@ SENSOR_DESCRIPTION_AP_ENABLED = BinarySensorEntityDescription(
     key=SENSOR_KIND_AP_INFO,
     name="Onboard AP Enabled",
     device_class=DEVICE_CLASS_CONNECTIVITY,
+    entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
 )
 SENSOR_DESCRIPTION_LEAK_DETECTED = BinarySensorEntityDescription(
     key=SENSOR_KIND_LEAK_DETECTED,
@@ -46,6 +48,7 @@ SENSOR_DESCRIPTION_MOVED = BinarySensorEntityDescription(
     key=SENSOR_KIND_MOVED,
     name="Recently Moved",
     device_class=DEVICE_CLASS_MOVING,
+    entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
 )
 
 PAIRED_SENSOR_DESCRIPTIONS = (
