@@ -70,6 +70,16 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             on_value="presence",
         ),
     ),
+    # Formaldehyde Detector
+    # Note: Not documented
+    "jqbj": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CH2O_STATE,
+            device_class=DEVICE_CLASS_SAFETY,
+            on_value="alarm",
+        ),
+        TAMPER_BINARY_SENSOR,
+    ),
     # Door Window Sensor
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48hm02l8m
     "mcs": (
