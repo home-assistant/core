@@ -126,31 +126,31 @@ def mock_light(test_features=None, test_state=None, light_number=0):
         test_state = {}
     mock_light_data = Mock(**test_state)
 
-    dev_infomock = MagicMock()
-    dev_infomock.manufacturer = "manufacturer"
-    dev_infomock.model_number = "model"
-    dev_infomock.firmware_version = "1.2.3"
-    mock_it = Mock(
+    dev_info_mock = MagicMock()
+    dev_info_mock.manufacturer = "manufacturer"
+    dev_info_mock.model_number = "model"
+    dev_info_mock.firmware_version = "1.2.3"
+    _mock_light = Mock(
         id=f"mock-light-id-{light_number}",
         reachable=True,
         observe=Mock(),
-        device_info=dev_infomock,
+        device_info=dev_info_mock,
         has_light_control=True,
         has_socket_control=False,
         has_blind_control=False,
         has_signal_repeater_control=False,
     )
-    mock_it.name = f"tradfri_light_{light_number}"
+    _mock_light.name = f"tradfri_light_{light_number}"
 
     # Set supported features for the light.
     features = {**DEFAULT_TEST_FEATURES, **test_features}
-    light_control = LightControl(mock_it)
+    light_control = LightControl(_mock_light)
     for attr, value in features.items():
         setattr(light_control, attr, value)
     # Store the initial state.
     setattr(light_control, "lights", [mock_light_data])
-    mock_light.light_control = light_control
-    return mock_it
+    _mock_light.light_control = light_control
+    return _mock_light
 
 
 async def test_light(hass, mock_gateway, mock_api_factory):
@@ -336,9 +336,9 @@ def mock_group(test_state=None, group_number=0):
 
     state = {**default_state, **test_state}
 
-    mock_it = Mock(member_ids=[], observe=Mock(), **state)
-    mock_it.name = f"tradfri_group_{group_number}"
-    return mock_it
+    _mock_group = Mock(member_ids=[], observe=Mock(), **state)
+    _mock_group.name = f"tradfri_group_{group_number}"
+    return _mock_group
 
 
 async def test_group(hass, mock_gateway, mock_api_factory):
