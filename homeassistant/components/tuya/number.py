@@ -21,6 +21,27 @@ from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 # default instructions set of each category end up being a number.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
+    # Human Presence Sensor
+    # https://developer.tuya.com/en/docs/iot/categoryhps?id=Kaiuz42yhn1hs
+    "hps": (
+        NumberEntityDescription(
+            key=DPCode.SENSITIVITY,
+            name="Sensitivity",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.NEAR_DETECTION,
+            name="Near Detection",
+            icon="mdi:signal-distance-variant",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.FAR_DETECTION,
+            name="Far Detection",
+            icon="mdi:signal-distance-variant",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
     # Coffee maker
     # https://developer.tuya.com/en/docs/iot/categorykfj?id=Kaiuz2p12pc7f
     "kfj": (

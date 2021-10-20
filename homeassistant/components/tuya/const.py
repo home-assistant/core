@@ -156,6 +156,7 @@ class DPCode(str, Enum):
     FAN_DIRECTION = "fan_direction"  # Fan direction
     FAN_SPEED_ENUM = "fan_speed_enum"  # Speed mode
     FAN_SPEED_PERCENT = "fan_speed_percent"  # Stepless speed
+    FAR_DETECTION = "far_detection"
     FILTER_RESET = "filter_reset"  # Filter (cartridge) reset
     HUMIDITY_CURRENT = "humidity_current"  # Current humidity
     HUMIDITY_SET = "humidity_set"  # Humidity setting
@@ -166,6 +167,7 @@ class DPCode(str, Enum):
     MODE = "mode"  # Working mode / Mode
     MOTION_SWITCH = "motion_switch"  # Motion switch
     MUFFLING = "muffling"  # Muffling
+    NEAR_DETECTION = "near_detection"
     PAUSE = "pause"
     PERCENT_CONTROL = "percent_control"
     PERCENT_CONTROL_2 = "percent_control_2"
@@ -176,6 +178,7 @@ class DPCode(str, Enum):
     PIR = "pir"  # Motion sensor
     POWDER_SET = "powder_set"  # Powder
     POWER_GO = "power_go"
+    PRESENCE_STATE = "presence_state"
     PUMP_RESET = "pump_reset"  # Water pump reset
     RECORD_SWITCH = "record_switch"  # Recording switch
     SEEK = "seek"
