@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 from pyownet.protocol import Error as ProtocolError
 import pytest
 
-from homeassistant.components.onewire.const import DEFAULT_SYSBUS_MOUNT_DIR, DOMAIN
+from homeassistant.components.onewire.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS, DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -17,7 +17,6 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from . import setup_owproxy_mock_devices, setup_sysbus_mock_devices
 from .const import (
@@ -30,7 +29,7 @@ from .const import (
     MOCK_SYSBUS_DEVICES,
 )
 
-from tests.common import assert_setup_component, mock_device_registry, mock_registry
+from tests.common import mock_device_registry, mock_registry
 
 MOCK_COUPLERS = {
     key: value for (key, value) in MOCK_OWPROXY_DEVICES.items() if "branches" in value
@@ -42,43 +41,6 @@ def override_platforms():
     """Override PLATFORMS."""
     with patch("homeassistant.components.onewire.PLATFORMS", [SENSOR_DOMAIN]):
         yield
-
-
-async def test_setup_minimum(hass: HomeAssistant):
-    """Test old platform setup with minimum configuration."""
-    config = {"sensor": {"platform": "onewire"}}
-    with assert_setup_component(1, "sensor"):
-        assert await async_setup_component(hass, SENSOR_DOMAIN, config)
-    await hass.async_block_till_done()
-
-
-async def test_setup_sysbus(hass: HomeAssistant):
-    """Test old platform setup with SysBus configuration."""
-    config = {
-        "sensor": {
-            "platform": "onewire",
-            "mount_dir": DEFAULT_SYSBUS_MOUNT_DIR,
-        }
-    }
-    with assert_setup_component(1, "sensor"):
-        assert await async_setup_component(hass, SENSOR_DOMAIN, config)
-    await hass.async_block_till_done()
-
-
-async def test_setup_owserver(hass: HomeAssistant):
-    """Test old platform setup with OWServer configuration."""
-    config = {"sensor": {"platform": "onewire", "host": "localhost"}}
-    with assert_setup_component(1, "sensor"):
-        assert await async_setup_component(hass, SENSOR_DOMAIN, config)
-    await hass.async_block_till_done()
-
-
-async def test_setup_owserver_with_port(hass: HomeAssistant):
-    """Test old platform setup with OWServer configuration."""
-    config = {"sensor": {"platform": "onewire", "host": "localhost", "port": "1234"}}
-    with assert_setup_component(1, "sensor"):
-        assert await async_setup_component(hass, SENSOR_DOMAIN, config)
-    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize("device_id", ["1F.111111111111"], indirect=True)
