@@ -166,8 +166,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up LIFX from a config entry."""
     # Priority 1: manual config
-    interfaces = hass.data[LIFX_DOMAIN].get(DOMAIN)
-    if not interfaces:
+    if not (interfaces := hass.data[LIFX_DOMAIN].get(DOMAIN)):
         # Priority 2: scanned interfaces
         lifx_ip_addresses = await aiolifx().LifxScan(hass.loop).scan()
         interfaces = [{CONF_SERVER: ip} for ip in lifx_ip_addresses]
@@ -251,17 +250,14 @@ class LIFXManager:
     def start_discovery(self, interface):
         """Start discovery on a network interface."""
         kwargs = {"discovery_interval": DISCOVERY_INTERVAL}
-        broadcast_ip = interface.get(CONF_BROADCAST)
-        if broadcast_ip:
+        if broadcast_ip := interface.get(CONF_BROADCAST):
             kwargs["broadcast_ip"] = broadcast_ip
         lifx_discovery = aiolifx().LifxDiscovery(self.hass.loop, self, **kwargs)
 
         kwargs = {}
-        listen_ip = interface.get(CONF_SERVER)
-        if listen_ip:
+        if listen_ip := interface.get(CONF_SERVER):
             kwargs["listen_ip"] = listen_ip
-        listen_port = interface.get(CONF_PORT)
-        if listen_port:
+        if listen_port := interface.get(CONF_PORT):
             kwargs["listen_port"] = listen_port
         lifx_discovery.start(**kwargs)
 
@@ -692,8 +688,7 @@ class LIFXStrip(LIFXColor):
         bulb = self.bulb
         num_zones = len(bulb.color_zones)
 
-        zones = kwargs.get(ATTR_ZONES)
-        if zones is None:
+        if (zones := kwargs.get(ATTR_ZONES)) is None:
             # Fast track: setting all zones to the same brightness and color
             # can be treated as a single-zone bulb.
             if hsbk[2] is not None and hsbk[3] is not None:

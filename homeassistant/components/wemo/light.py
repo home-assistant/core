@@ -117,8 +117,7 @@ class WemoLight(WemoEntity, LightEntity):
     @property
     def hs_color(self):
         """Return the hs color values of this light."""
-        xy_color = self.light.state.get("color_xy")
-        if xy_color:
+        if xy_color := self.light.state.get("color_xy"):
             return color_util.color_xy_to_hs(*xy_color)
         return None
 

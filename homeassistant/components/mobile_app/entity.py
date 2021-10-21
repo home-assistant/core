@@ -9,6 +9,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .const import (
     ATTR_SENSOR_ATTRIBUTES,
     ATTR_SENSOR_DEVICE_CLASS,
+    ATTR_SENSOR_ENTITY_CATEGORY,
     ATTR_SENSOR_ICON,
     ATTR_SENSOR_STATE,
     ATTR_SENSOR_TYPE,
@@ -85,6 +86,11 @@ class MobileAppEntity(RestoreEntity):
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return self._config[ATTR_SENSOR_ICON]
+
+    @property
+    def entity_category(self):
+        """Return the entity category, if any."""
+        return self._config.get(ATTR_SENSOR_ENTITY_CATEGORY)
 
     @property
     def unique_id(self):

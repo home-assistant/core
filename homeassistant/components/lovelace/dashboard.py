@@ -123,9 +123,7 @@ class LovelaceStorage(LovelaceConfig):
         if self._data is None:
             await self._load()
 
-        config = self._data["config"]
-
-        if config is None:
+        if (config := self._data["config"]) is None:
             raise ConfigNotFound
 
         return config

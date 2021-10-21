@@ -4,6 +4,7 @@ import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .const import DOMAIN as UNIFI_DOMAIN
@@ -53,7 +54,7 @@ def async_unload_services(hass) -> None:
 
 async def async_reconnect_client(hass, data) -> None:
     """Try to get wireless client to reconnect to Wi-Fi."""
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get(data[ATTR_DEVICE_ID])
 
     mac = ""

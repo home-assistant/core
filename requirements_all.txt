@@ -213,7 +213,7 @@ aiolyric==1.0.7
 aiomodernforms==0.1.8
 
 # homeassistant.components.yamaha_musiccast
-aiomusiccast==0.10.0
+aiomusiccast==0.11.0
 
 # homeassistant.components.nanoleaf
 aionanoleaf==0.0.3
@@ -384,7 +384,7 @@ beautifulsoup4==4.10.0
 bellows==0.28.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.7.20
+bimmer_connected==0.7.21
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -646,13 +646,13 @@ fitbit==0.3.1
 fixerio==1.0.0a0
 
 # homeassistant.components.fjaraskupan
-fjaraskupan==1.0.1
+fjaraskupan==1.0.2
 
 # homeassistant.components.flipr
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.24.8
+flux_led==0.24.12
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -786,7 +786,7 @@ hass_splunk==0.1.1
 hatasmota==0.2.21
 
 # homeassistant.components.jewish_calendar
-hdate==0.10.2
+hdate==0.10.4
 
 # homeassistant.components.heatmiser
 heatmiserV3==1.1.18
@@ -810,7 +810,7 @@ hole==0.5.1
 holidays==0.11.3.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20211014.0
+home-assistant-frontend==20211020.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -888,7 +888,7 @@ iotawattpy==0.1.0
 iperf3==0.1.11
 
 # homeassistant.components.gogogate2
-ismartgate==4.0.0
+ismartgate==4.0.3
 
 # homeassistant.components.rest
 jsonpath==0.82
@@ -1120,7 +1120,7 @@ onkyo-eiscp==1.2.7
 onvif-zeep-async==1.2.0
 
 # homeassistant.components.opengarage
-open-garage==0.1.5
+open-garage==0.1.6
 
 # homeassistant.components.opencv
 # opencv-python-headless==4.5.2.54
@@ -1384,7 +1384,7 @@ pycfdns==1.2.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==9.2.1
+pychromecast==9.3.1
 
 # homeassistant.components.pocketcasts
 pycketcasts==1.0.0
@@ -1417,7 +1417,7 @@ pydaikin==2.6.0
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==84
+pydeconz==85
 
 # homeassistant.components.delijn
 pydelijn==0.6.1
@@ -1520,7 +1520,7 @@ pyhik==0.2.8
 pyhiveapi==0.4.2
 
 # homeassistant.components.homematic
-pyhomematic==0.1.75
+pyhomematic==0.1.76
 
 # homeassistant.components.homeworks
 pyhomeworks==0.0.6
@@ -1613,7 +1613,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.2.1
+pymazda==0.2.2
 
 # homeassistant.components.mediaroom
 pymediaroom==0.6.4.1
@@ -2137,7 +2137,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==11.0.7
+simplisafe-python==12.0.0
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.0
