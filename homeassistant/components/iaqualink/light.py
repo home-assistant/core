@@ -48,14 +48,11 @@ class HassAqualinkLight(AqualinkEntity, LightEntity):
         This handles brightness and light effects for lights that do support
         them.
         """
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-        effect = kwargs.get(ATTR_EFFECT)
-
         # For now I'm assuming lights support either effects or brightness.
-        if effect:
+        if effect := kwargs.get(ATTR_EFFECT):
             effect = AqualinkLightEffect[effect].value
             await self.dev.set_effect(effect)
-        elif brightness:
+        elif brightness := kwargs.get(ATTR_BRIGHTNESS):
             # Aqualink supports percentages in 25% increments.
             pct = int(round(brightness * 4.0 / 255)) * 25
             await self.dev.set_brightness(pct)

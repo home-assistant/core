@@ -142,8 +142,7 @@ class DysonClimateEntity(DysonEntity, ClimateEntity):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        target_temp = kwargs.get(ATTR_TEMPERATURE)
-        if target_temp is None:
+        if (target_temp := kwargs.get(ATTR_TEMPERATURE)) is None:
             _LOGGER.error("Missing target temperature %s", kwargs)
             return
         target_temp = int(target_temp)
