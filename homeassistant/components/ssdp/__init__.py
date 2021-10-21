@@ -477,6 +477,10 @@ def discovery_info_from_headers_and_description(
         if udn := _udn_from_usn(info[ATTR_SSDP_USN]):
             info[ATTR_UPNP_UDN] = udn
 
+    # Increase compatibility.
+    if ATTR_SSDP_ST not in info and ATTR_SSDP_NT in info:
+        info[ATTR_SSDP_ST] = info[ATTR_SSDP_NT]
+
     return info
 
 
