@@ -34,7 +34,7 @@ ENTITY_DESCRIPTIONS = (
     HassioBinarySensorEntityDescription(
         entity_registry_enabled_default=False,
         key=ATTR_STATE,
-        name="Started",
+        name="Running",
         target="started",
     ),
 )
