@@ -1,312 +1,143 @@
 """Test the August config flow."""
-# from unittest.mock import patch
+from unittest.mock import patch
 
-# from homeassistant import config_entries
-# from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-# from tests.common import MockConfigEntry
+from wirelesstagpy.exceptions import (
+    WirelessTagsConnectionError,
+    WirelessTagsWrongCredentials,
+)
 
-# from yalexs.authenticator import ValidationResult
+from homeassistant import config_entries, data_entry_flow
+from homeassistant.components.wirelesstag import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+
+
+async def test_show_form(hass):
+    """Test that the form is served with no input."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == SOURCE_USER
 
 
 async def test_form(hass):
     """Test we get the form."""
-    pass
-    # result = await hass.config_entries.flow.async_init(
-    #     DOMAIN, context={"source": config_entries.SOURCE_USER}
-    # )
-    # assert result["type"] == "form"
-    # assert result["errors"] == {}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
 
-    # with patch(
-    #     "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
-    #     return_value=True,
-    # ), patch(
-    #     "homeassistant.components.august.async_setup_entry",
-    #     return_value=True,
-    # ) as mock_setup_entry:
-    #     result2 = await hass.config_entries.flow.async_configure(
-    #         result["flow_id"],
-    #         {
-    #             CONF_LOGIN_METHOD: "email",
-    #             CONF_USERNAME: "my@email.tld",
-    #             CONF_PASSWORD: "test-password",
-    #         },
-    #     )
-    #     await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.wirelesstag.WirelessTagPlatform.load_tags",
+        return_value={},
+    ), patch(
+        "homeassistant.components.wirelesstag.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "email@email.com",
+                CONF_PASSWORD: "password",
+            },
+        )
+        await hass.async_block_till_done()
 
-    # assert result2["type"] == "create_entry"
-    # assert result2["title"] == "my@email.tld"
-    # assert result2["data"] == {
-    #     CONF_LOGIN_METHOD: "email",
-    #     CONF_USERNAME: "my@email.tld",
-    #     CONF_INSTALL_ID: None,
-    #     CONF_ACCESS_TOKEN_CACHE_FILE: ".my@email.tld.august.conf",
-    # }
-    # assert len(mock_setup_entry.mock_calls) == 1
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["title"] == "WirelessTags"
+    assert result2["data"] == {
+        CONF_USERNAME: "email@email.com",
+        CONF_PASSWORD: "password",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_invalid_auth(hass):
     """Test we handle invalid auth."""
-    pass
-    # result = await hass.config_entries.flow.async_init(
-    #     DOMAIN, context={"source": config_entries.SOURCE_USER}
-    # )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
 
-    # with patch(
-    #     "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
-    #     side_effect=InvalidAuth,
-    # ):
-    #     result2 = await hass.config_entries.flow.async_configure(
-    #         result["flow_id"],
-    #         {
-    #             CONF_LOGIN_METHOD: "email",
-    #             CONF_USERNAME: "my@email.tld",
-    #             CONF_PASSWORD: "test-password",
-    #         },
-    #     )
+    with patch(
+        "homeassistant.components.wirelesstag.WirelessTagPlatform.load_tags",
+        side_effect=WirelessTagsWrongCredentials,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "email@email.com",
+                CONF_PASSWORD: "password",
+            },
+        )
 
-    # assert result2["type"] == "form"
-    # assert result2["errors"] == {"base": "invalid_auth"}
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
 
 
-# async def test_user_unexpected_exception(hass):
-#     """Test we handle an unexpected exception."""
-#     result = await hass.config_entries.flow.async_init(
-#         DOMAIN, context={"source": config_entries.SOURCE_USER}
-#     )
+async def test_user_unexpected_exception(hass):
+    """Test we handle an unexpected exception."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
 
-#     with patch(
-#         "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
-#         side_effect=ValueError,
-#     ):
-#         result2 = await hass.config_entries.flow.async_configure(
-#             result["flow_id"],
-#             {
-#                 CONF_LOGIN_METHOD: "email",
-#                 CONF_USERNAME: "my@email.tld",
-#                 CONF_PASSWORD: "test-password",
-#             },
-#         )
+    with patch(
+        "homeassistant.components.wirelesstag.WirelessTagPlatform.load_tags",
+        side_effect=ValueError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "email@email.com",
+                CONF_PASSWORD: "password",
+            },
+        )
 
-#     assert result2["type"] == "form"
-#     assert result2["errors"] == {"base": "unknown"}
+    assert result2["errors"] == {"base": "unknown"}
 
 
-# async def test_form_cannot_connect(hass):
-#     """Test we handle cannot connect error."""
-#     result = await hass.config_entries.flow.async_init(
-#         DOMAIN, context={"source": config_entries.SOURCE_USER}
-#     )
+async def test_form_cannot_connect(hass):
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
 
-#     with patch(
-#         "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
-#         side_effect=CannotConnect,
-#     ):
-#         result2 = await hass.config_entries.flow.async_configure(
-#             result["flow_id"],
-#             {
-#                 CONF_LOGIN_METHOD: "email",
-#                 CONF_USERNAME: "my@email.tld",
-#                 CONF_PASSWORD: "test-password",
-#             },
-#         )
+    with patch(
+        "homeassistant.components.wirelesstag.WirelessTagPlatform.load_tags",
+        side_effect=WirelessTagsConnectionError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "email@email.com",
+                CONF_PASSWORD: "wrong-password",
+            },
+        )
 
-#     assert result2["type"] == "form"
-#     assert result2["errors"] == {"base": "cannot_connect"}
-
-
-# async def test_form_needs_validate(hass):
-#     """Test we present validation when we need to validate."""
-#     result = await hass.config_entries.flow.async_init(
-#         DOMAIN, context={"source": config_entries.SOURCE_USER}
-#     )
-
-#     with patch(
-#         "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
-#         side_effect=RequireValidation,
-#     ), patch(
-#         "homeassistant.components.august.gateway.AuthenticatorAsync.async_send_verification_code",
-#         return_value=True,
-#     ) as mock_send_verification_code:
-#         result2 = await hass.config_entries.flow.async_configure(
-#             result["flow_id"],
-#             {
-#                 CONF_LOGIN_METHOD: "email",
-#                 CONF_USERNAME: "my@email.tld",
-#                 CONF_PASSWORD: "test-password",
-#             },
-#         )
-
-#     assert len(mock_send_verification_code.mock_calls) == 1
-#     assert result2["type"] == "form"
-#     assert result2["errors"] is None
-#     assert result2["step_id"] == "validation"
-
-#     # Try with the WRONG verification code give us the form back again
-#     with patch(
-#         "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
-#         side_effect=RequireValidation,
-#     ), patch(
-#         "homeassistant.components.august.gateway.AuthenticatorAsync.async_validate_verification_code",
-#         return_value=ValidationResult.INVALID_VERIFICATION_CODE,
-#     ) as mock_validate_verification_code, patch(
-#         "homeassistant.components.august.gateway.AuthenticatorAsync.async_send_verification_code",
-#         return_value=True,
-#     ) as mock_send_verification_code, patch(
-#         "homeassistant.components.august.async_setup_entry", return_value=True
-#     ) as mock_setup_entry:
-#         result3 = await hass.config_entries.flow.async_configure(
-#             result["flow_id"],
-#             {VERIFICATION_CODE_KEY: "incorrect"},
-#         )
-
-#     # Make sure we do not resend the code again
-#     # so they have a chance to retry
-#     assert len(mock_send_verification_code.mock_calls) == 0
-#     assert len(mock_validate_verification_code.mock_calls) == 1
-#     assert result3["type"] == "form"
-#     assert result3["errors"] is None
-#     assert result3["step_id"] == "validation"
-
-#     # Try with the CORRECT verification code and we setup
-#     with patch(
-#         "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
-#         return_value=True,
-#     ), patch(
-#         "homeassistant.components.august.gateway.AuthenticatorAsync.async_validate_verification_code",
-#         return_value=ValidationResult.VALIDATED,
-#     ) as mock_validate_verification_code, patch(
-#         "homeassistant.components.august.gateway.AuthenticatorAsync.async_send_verification_code",
-#         return_value=True,
-#     ) as mock_send_verification_code, patch(
-#         "homeassistant.components.august.async_setup_entry", return_value=True
-#     ) as mock_setup_entry:
-#         result4 = await hass.config_entries.flow.async_configure(
-#             result["flow_id"],
-#             {VERIFICATION_CODE_KEY: "correct"},
-#         )
-#         await hass.async_block_till_done()
-
-#     assert len(mock_send_verification_code.mock_calls) == 0
-#     assert len(mock_validate_verification_code.mock_calls) == 1
-#     assert result4["type"] == "create_entry"
-#     assert result4["title"] == "my@email.tld"
-#     assert result4["data"] == {
-#         CONF_LOGIN_METHOD: "email",
-#         CONF_USERNAME: "my@email.tld",
-#         CONF_INSTALL_ID: None,
-#         CONF_ACCESS_TOKEN_CACHE_FILE: ".my@email.tld.august.conf",
-#     }
-#     assert len(mock_setup_entry.mock_calls) == 1
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
-# async def test_form_reauth(hass):
-#     """Test reauthenticate."""
+async def test_import_flow(hass) -> None:
+    """Test successful import flow."""
+    test_data = {CONF_USERNAME: "email@email.com", CONF_PASSWORD: "wrong-password"}
+    with patch(
+        "homeassistant.components.wirelesstag.WirelessTagPlatform.load_tags",
+        return_value={},
+    ), patch(
+        "homeassistant.components.wirelesstag.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=test_data,
+        )
+        await hass.async_block_till_done()
 
-#     entry = MockConfigEntry(
-#         domain=DOMAIN,
-#         data={
-#             CONF_LOGIN_METHOD: "email",
-#             CONF_USERNAME: "my@email.tld",
-#             CONF_PASSWORD: "test-password",
-#             CONF_INSTALL_ID: None,
-#             CONF_TIMEOUT: 10,
-#             CONF_ACCESS_TOKEN_CACHE_FILE: ".my@email.tld.august.conf",
-#         },
-#         unique_id="my@email.tld",
-#     )
-#     entry.add_to_hass(hass)
-
-#     result = await hass.config_entries.flow.async_init(
-#         DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=entry.data
-#     )
-#     assert result["type"] == "form"
-#     assert result["errors"] == {}
-
-#     with patch(
-#         "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
-#         return_value=True,
-#     ), patch(
-#         "homeassistant.components.august.async_setup_entry",
-#         return_value=True,
-#     ) as mock_setup_entry:
-#         result2 = await hass.config_entries.flow.async_configure(
-#             result["flow_id"],
-#             {
-#                 CONF_PASSWORD: "new-test-password",
-#             },
-#         )
-#         await hass.async_block_till_done()
-
-#     assert result2["type"] == "abort"
-#     assert result2["reason"] == "reauth_successful"
-#     assert len(mock_setup_entry.mock_calls) == 1
-
-
-# async def test_form_reauth_with_2fa(hass):
-#     """Test reauthenticate with 2fa."""
-
-#     entry = MockConfigEntry(
-#         domain=DOMAIN,
-#         data={
-#             CONF_LOGIN_METHOD: "email",
-#             CONF_USERNAME: "my@email.tld",
-#             CONF_PASSWORD: "test-password",
-#             CONF_INSTALL_ID: None,
-#             CONF_TIMEOUT: 10,
-#             CONF_ACCESS_TOKEN_CACHE_FILE: ".my@email.tld.august.conf",
-#         },
-#         unique_id="my@email.tld",
-#     )
-#     entry.add_to_hass(hass)
-
-#     result = await hass.config_entries.flow.async_init(
-#         DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=entry.data
-#     )
-#     assert result["type"] == "form"
-#     assert result["errors"] == {}
-
-#     with patch(
-#         "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
-#         side_effect=RequireValidation,
-#     ), patch(
-#         "homeassistant.components.august.gateway.AuthenticatorAsync.async_send_verification_code",
-#         return_value=True,
-#     ) as mock_send_verification_code:
-#         result2 = await hass.config_entries.flow.async_configure(
-#             result["flow_id"],
-#             {
-#                 CONF_PASSWORD: "new-test-password",
-#             },
-#         )
-#         await hass.async_block_till_done()
-
-#     assert len(mock_send_verification_code.mock_calls) == 1
-#     assert result2["type"] == "form"
-#     assert result2["errors"] is None
-#     assert result2["step_id"] == "validation"
-
-#     # Try with the CORRECT verification code and we setup
-#     with patch(
-#         "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
-#         return_value=True,
-#     ), patch(
-#         "homeassistant.components.august.gateway.AuthenticatorAsync.async_validate_verification_code",
-#         return_value=ValidationResult.VALIDATED,
-#     ) as mock_validate_verification_code, patch(
-#         "homeassistant.components.august.gateway.AuthenticatorAsync.async_send_verification_code",
-#         return_value=True,
-#     ) as mock_send_verification_code, patch(
-#         "homeassistant.components.august.async_setup_entry", return_value=True
-#     ) as mock_setup_entry:
-#         result3 = await hass.config_entries.flow.async_configure(
-#             result2["flow_id"],
-#             {VERIFICATION_CODE_KEY: "correct"},
-#         )
-#         await hass.async_block_till_done()
-
-#     assert len(mock_validate_verification_code.mock_calls) == 1
-#     assert len(mock_send_verification_code.mock_calls) == 0
-#     assert result3["type"] == "abort"
-#     assert result3["reason"] == "reauth_successful"
-#     assert len(mock_setup_entry.mock_calls) == 1
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "WirelessTags"
+    assert result["data"] == test_data
+    assert len(mock_setup_entry.mock_calls) == 1

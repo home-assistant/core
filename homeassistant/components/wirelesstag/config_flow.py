@@ -80,6 +80,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Return info that you want to store in the config entry.
         except Exception as error:  # pylint: disable=broad-except
             _LOGGER.error("Failed to validate credentials for WirelessTags: %s", error)
+            raise ValueError from error
         return True
 
 
