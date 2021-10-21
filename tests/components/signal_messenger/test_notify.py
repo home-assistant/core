@@ -6,17 +6,19 @@ import tempfile
 from unittest.mock import patch
 
 from homeassistant.setup import async_setup_component
+
 from tests.components.signal_messenger.conftest import (
-    SIGNAL_SEND_PATH_SUFIX,
     MESSAGE,
     NUMBER_FROM,
     NUMBERS_TO,
+    SIGNAL_SEND_PATH_SUFIX,
 )
 
 BASE_COMPONENT = "notify"
 
 
 async def test_signal_messenger_init(hass):
+    """Test that service loads successfully."""
     config = {
         BASE_COMPONENT: {
             "name": "test",
@@ -35,6 +37,7 @@ async def test_signal_messenger_init(hass):
 
 
 def test_send_message(signal_notification_service, signal_requests_mock, caplog):
+    """Test send message."""
     with caplog.at_level(
         logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
     ):
@@ -48,6 +51,7 @@ def test_send_message(signal_notification_service, signal_requests_mock, caplog)
 def test_send_message_should_show_deprecation_warning(
     signal_notification_service, signal_requests_mock, caplog
 ):
+    """Test send message should show deprecation warning."""
     with caplog.at_level(
         logging.WARNING, logger="homeassistant.components.signal_messenger.notify"
     ):
@@ -65,6 +69,7 @@ def test_send_message_should_show_deprecation_warning(
 def test_send_message_with_attachment(
     signal_notification_service, signal_requests_mock, caplog
 ):
+    """Test send message with attachment."""
     with caplog.at_level(
         logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
     ):
@@ -77,6 +82,7 @@ def test_send_message_with_attachment(
 
 
 def send_message_with_attachment(signal_notification_service, deprecated=False):
+    """Send message with attachment."""
     with tempfile.NamedTemporaryFile(
         mode="w", suffix=".png", prefix=os.path.basename(__file__)
     ) as tf:
@@ -86,11 +92,12 @@ def send_message_with_attachment(signal_notification_service, deprecated=False):
 
 
 def assert_sending_requests(signal_requests_mock, attachments_num=0):
+    """Assert message was send with correct parameters."""
     send_request = signal_requests_mock.request_history[-1]
     assert send_request.path == SIGNAL_SEND_PATH_SUFIX
 
     body_request = json.loads(send_request.text)
-    assert MESSAGE == body_request["message"]
-    assert NUMBER_FROM == body_request["number"]
-    assert NUMBERS_TO == body_request["recipients"]
+    assert body_request["message"] == MESSAGE
+    assert body_request["number"] == NUMBER_FROM
+    assert body_request["recipients"] == NUMBERS_TO
     assert len(body_request["base64_attachments"]) == attachments_num
