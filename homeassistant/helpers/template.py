@@ -1460,7 +1460,7 @@ def forgiving_float_filter(value, default=_SENTINEL):
         return default
 
 
-def forgiving_int(value, base=10, default=_SENTINEL):
+def forgiving_int(value, default=_SENTINEL, base=10):
     """Try to convert value to an int, and warn if it fails."""
     result = jinja2.filters.do_int(value, default=default, base=base)
     if result is _SENTINEL:
@@ -1469,7 +1469,7 @@ def forgiving_int(value, base=10, default=_SENTINEL):
     return result
 
 
-def forgiving_int_filter(value, base=10, default=_SENTINEL):
+def forgiving_int_filter(value, default=_SENTINEL, base=10):
     """Try to convert value to an int, and warn if it fails."""
     result = jinja2.filters.do_int(value, default=default, base=base)
     if result is _SENTINEL:
