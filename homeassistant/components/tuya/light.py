@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import json
+import logging
 from typing import Any
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
@@ -10,11 +11,13 @@ from tuya_iot import TuyaDevice, TuyaDeviceManager
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
+    ATTR_EFFECT,
     ATTR_HS_COLOR,
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_HS,
     COLOR_MODE_ONOFF,
+    SUPPORT_EFFECT,
     LightEntity,
     LightEntityDescription,
 )
@@ -29,6 +32,8 @@ from .base import IntegerTypeData, TuyaEntity
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, WorkMode
 from .util import remap_value
 
+_LOGGER = logging.getLogger(__name__)
+
 
 @dataclass
 class TuyaLightEntityDescription(LightEntityDescription):
@@ -40,6 +45,7 @@ class TuyaLightEntityDescription(LightEntityDescription):
     color_data: DPCode | tuple[DPCode, ...] | None = None
     color_mode: DPCode | None = None
     color_temp: DPCode | tuple[DPCode, ...] | None = None
+    scene_data: DPCode | tuple[DPCode, ...] | None = None
 
 
 LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
@@ -74,6 +80,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             brightness=(DPCode.BRIGHT_VALUE_V2, DPCode.BRIGHT_VALUE),
             color_temp=(DPCode.TEMP_VALUE_V2, DPCode.TEMP_VALUE),
             color_data=(DPCode.COLOUR_DATA_V2, DPCode.COLOUR_DATA),
+            scene_data=DPCode.SCENE_DATA_V2,
         ),
     ),
     # Ceiling Fan Light
@@ -248,6 +255,229 @@ DEFAULT_COLOR_TYPE_DATA_V2 = ColorTypeData(
     v_type=IntegerTypeData(min=1, scale=0, max=1000, step=1),
 )
 
+DEFAULT_SCENE_DATA_V2 = {
+    "Night": {
+        "scene_num": 1,
+        "scene_units": [
+            {
+                "bright": 200,
+                "h": 0,
+                "s": 0,
+                "temperature": 0,
+                "unit_change_mode": "static",
+                "unit_gradient_duration": 13,
+                "unit_switch_duration": 14,
+                "v": 0,
+            }
+        ],
+    },
+    "Read": {
+        "scene_num": 2,
+        "scene_units": [
+            {
+                "bright": 1000,
+                "h": 0,
+                "s": 0,
+                "temperature": 500,
+                "unit_change_mode": "static",
+                "unit_gradient_duration": 13,
+                "unit_switch_duration": 14,
+                "v": 0,
+            }
+        ],
+    },
+    "Meeting": {
+        "scene_num": 3,
+        "scene_units": [
+            {
+                "bright": 1000,
+                "h": 0,
+                "s": 0,
+                "temperature": 1000,
+                "unit_change_mode": "static",
+                "unit_gradient_duration": 13,
+                "unit_switch_duration": 14,
+                "v": 0,
+            }
+        ],
+    },
+    "Leisure": {
+        "scene_num": 4,
+        "scene_units": [
+            {
+                "bright": 500,
+                "h": 0,
+                "s": 0,
+                "temperature": 500,
+                "unit_change_mode": "static",
+                "unit_gradient_duration": 13,
+                "unit_switch_duration": 14,
+                "v": 0,
+            }
+        ],
+    },
+    "Soft": {
+        "scene_num": 5,
+        "scene_units": [
+            {
+                "bright": 0,
+                "h": 120,
+                "s": 1000,
+                "temperature": 0,
+                "unit_change_mode": "gradient",
+                "unit_gradient_duration": 70,
+                "unit_switch_duration": 70,
+                "v": 1000,
+            },
+            {
+                "bright": 0,
+                "h": 120,
+                "s": 1000,
+                "temperature": 0,
+                "unit_change_mode": "gradient",
+                "unit_gradient_duration": 70,
+                "unit_switch_duration": 70,
+                "v": 10,
+            },
+        ],
+    },
+    "Rainbow": {
+        "scene_num": 6,
+        "scene_units": [
+            {
+                "bright": 0,
+                "h": 0,
+                "s": 1000,
+                "temperature": 0,
+                "unit_change_mode": "jump",
+                "unit_gradient_duration": 70,
+                "unit_switch_duration": 70,
+                "v": 1000,
+            },
+            {
+                "bright": 0,
+                "h": 120,
+                "s": 1000,
+                "temperature": 0,
+                "unit_change_mode": "jump",
+                "unit_gradient_duration": 70,
+                "unit_switch_duration": 70,
+                "v": 1000,
+            },
+            {
+                "bright": 0,
+                "h": 240,
+                "s": 1000,
+                "temperature": 0,
+                "unit_change_mode": "jump",
+                "unit_gradient_duration": 70,
+                "unit_switch_duration": 70,
+                "v": 1000,
+            },
+        ],
+    },
+    "Shine": {
+        "scene_num": 7,
+        "scene_units": [
+            {
+                "bright": 0,
+                "h": 0,
+                "s": 1000,
+                "temperature": 0,
+                "unit_change_mode": "jump",
+                "unit_gradient_duration": 70,
+                "unit_switch_duration": 70,
+                "v": 1000,
+            },
+            {
+                "bright": 0,
+                "h": 120,
+                "s": 1000,
+                "temperature": 0,
+                "unit_change_mode": "jump",
+                "unit_gradient_duration": 70,
+                "unit_switch_duration": 70,
+                "v": 1000,
+            },
+            {
+                "bright": 0,
+                "h": 240,
+                "s": 1000,
+                "temperature": 0,
+                "unit_change_mode": "jump",
+                "unit_gradient_duration": 70,
+                "unit_switch_duration": 70,
+                "v": 1000,
+            },
+        ],
+    },
+    "Beautiful": {
+        "scene_num": 8,
+        "scene_units": [
+            {
+                "bright": 0,
+                "h": 0,
+                "s": 1000,
+                "temperature": 0,
+                "unit_change_mode": "gradient",
+                "unit_gradient_duration": 70,
+                "unit_switch_duration": 70,
+                "v": 1000,
+            },
+            {
+                "bright": 0,
+                "h": 120,
+                "s": 1000,
+                "temperature": 0,
+                "unit_change_mode": "gradient",
+                "unit_gradient_duration": 70,
+                "unit_switch_duration": 70,
+                "v": 1000,
+            },
+            {
+                "bright": 0,
+                "h": 240,
+                "s": 1000,
+                "temperature": 0,
+                "unit_change_mode": "gradient",
+                "unit_gradient_duration": 70,
+                "unit_switch_duration": 70,
+                "v": 1000,
+            },
+            {
+                "bright": 0,
+                "h": 61,
+                "s": 1000,
+                "temperature": 0,
+                "unit_change_mode": "gradient",
+                "unit_gradient_duration": 70,
+                "unit_switch_duration": 70,
+                "v": 1000,
+            },
+            {
+                "bright": 0,
+                "h": 174,
+                "s": 1000,
+                "temperature": 0,
+                "unit_change_mode": "gradient",
+                "unit_gradient_duration": 70,
+                "unit_switch_duration": 70,
+                "v": 1000,
+            },
+            {
+                "bright": 0,
+                "h": 275,
+                "s": 1000,
+                "temperature": 0,
+                "unit_change_mode": "gradient",
+                "unit_gradient_duration": 70,
+                "unit_switch_duration": 70,
+                "v": 1000,
+            },
+        ],
+    },
+}
+
 
 @dataclass
 class ColorData:
@@ -377,6 +607,9 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 ),
                 None,
             )
+        # Determine DPCodes for scene's / effects
+        if isinstance(description.scene_data, DPCode):
+            self._effect_dpcode = description.scene_data
 
         # Update internals based on found brightness dpcode
         if self._brightness_dpcode:
@@ -425,6 +658,12 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                     self._brightness_type and self._brightness_type.max > 255
                 ):
                     self._color_data_type = DEFAULT_COLOR_TYPE_DATA_V2
+        if self._effect_dpcode:
+            curren_effect_data = json.loads(device.status[self._effect_dpcode])
+            for key, value in DEFAULT_SCENE_DATA_V2.items():
+                if value["scene_num"] == curren_effect_data["scene_num"]:
+                    self._attr_effect = key
+            self._attr_effect_list = list(DEFAULT_SCENE_DATA_V2.keys())
 
     @property
     def is_on(self) -> bool:
@@ -434,7 +673,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on or control the light."""
         commands = [{"code": self.entity_description.key, "value": True}]
-
+        _LOGGER.debug("turn on kwargs -> %s", kwargs)
         if self._color_data_type and (
             ATTR_HS_COLOR in kwargs
             or (ATTR_BRIGHTNESS in kwargs and self.color_mode == COLOR_MODE_HS)
@@ -549,7 +788,16 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                     "value": round(self._brightness_type.remap_value_from(brightness)),
                 },
             ]
+        if ATTR_EFFECT in kwargs and self._attr_effect_list:
+            commands += [
+                {
+                    "code": self._effect_dpcode,
+                    "value": DEFAULT_SCENE_DATA_V2[kwargs[ATTR_EFFECT]],
+                }
+            ]
 
+        for command in commands:
+            _LOGGER.debug("turn on commands -> %s", command)
         self._send_command(commands)
 
     def turn_off(self, **kwargs: Any) -> None:
@@ -669,3 +917,18 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             s_value=status["s"],
             v_value=status["v"],
         )
+
+    @property
+    def supported_features(self) -> int:
+        """Return the SUPPORT_EFFECT feature if available."""
+        features = 0
+        if self._attr_effect_list:
+            features |= SUPPORT_EFFECT
+        return features
+
+    @property
+    def effect(self) -> str | None:
+        """Return the Current effect in use."""
+        if self.device.status[DPCode.WORK_MODE] == WorkMode.SCENE:
+            return self._attr_effect
+        return None
