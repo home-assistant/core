@@ -8,7 +8,12 @@ from typing import Callable, TypeVar
 
 from pyfronius import Fronius
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
     DEFAULT_UPDATE_INTERVAL,
@@ -28,24 +33,52 @@ from .coordinator import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+PLATFORMS: list[str] = ["sensor"]
 
 FroniusCoordinatorType = TypeVar("FroniusCoordinatorType", bound=FroniusCoordinatorBase)
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up fronius from a config entry."""
+    host = entry.data[CONF_HOST]
+    fronius = Fronius(async_get_clientsession(hass), host)
+    solar_net = FroniusSolarNet(hass, entry, fronius)
+    await solar_net.init_devices()
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = solar_net
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        solar_net = hass.data[DOMAIN].pop(entry.entry_id)
+        while solar_net.cleanup_callbacks:
+            solar_net.cleanup_callbacks.pop()()
+
+    return unload_ok
 
 
 class FroniusSolarNet:
     """The FroniusSolarNet class routes received values to sensor entities."""
 
-    def __init__(self, hass: HomeAssistant, fronius: Fronius, host: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, fronius: Fronius
+    ) -> None:
         """Initialize FroniusSolarNet class."""
         self.hass = hass
         self.cleanup_callbacks: list[Callable[[], None]] = []
+        self.config_entry = entry
         self.coordinator_lock = asyncio.Lock()
-        self.host = host
-        # solar_net_device_id is either logger uid or first inverter uid if no logger available
-        # prepended by "solar_net_" to have individual device for whole system (power_flow)
-        self.solar_net_device_id: str = ""
-
         self.fronius = fronius
+        self.host: str = entry.data[CONF_HOST]
+        # entry.unique_id is either logger uid or first inverter uid if no logger available
+        # prepended by "solar_net_" to have individual device for whole system (power_flow)
+        self.solar_net_device_id = f"solar_net_{entry.unique_id}"
+
         self.inverter_coordinators: list[FroniusInverterUpdateCoordinator] = []
         self.logger_coordinator: FroniusLoggerUpdateCoordinator | None = None
         self.meter_coordinator: FroniusMeterUpdateCoordinator | None = None
@@ -54,21 +87,18 @@ class FroniusSolarNet:
 
     async def init_devices(self) -> None:
         """Initialize DataUpdateCoordinators for SolarNet devices."""
-        # Gen24 devices don't provide GetLoggerInfo
-        self.logger_coordinator = await self._init_optional_coordinator(
-            FroniusLoggerUpdateCoordinator(
+        if self.config_entry.data["is_logger"]:
+            self.logger_coordinator = FroniusLoggerUpdateCoordinator(
                 hass=self.hass,
                 solar_net=self,
                 logger=_LOGGER,
                 name=f"{DOMAIN}_logger_{self.host}",
                 update_interval=timedelta(seconds=DEFAULT_UPDATE_INTERVAL_LOGGER),
             )
-        )
-        if self.logger_coordinator:
-            logger_uid = self.logger_coordinator.data[SOLAR_NET_ID_SYSTEM][
-                "unique_identifier"
-            ]["value"]
-            self.solar_net_device_id = f"solar_net_{logger_uid}"
+            await self.logger_coordinator.async_config_entry_first_refresh()
+
+        # _create_solar_net_device uses data from self.logger_coordinator when available
+        await self._create_solar_net_device()
 
         _inverter_infos = await self._get_inverter_infos()
         for inverter_info in _inverter_infos:
@@ -113,6 +143,24 @@ class FroniusSolarNet:
             )
         )
 
+    async def _create_solar_net_device(self) -> None:
+        """Create a device for the Fronius SolarNet system."""
+        solar_net_device: DeviceInfo = DeviceInfo(
+            name="SolarNet",
+            identifiers={(DOMAIN, self.solar_net_device_id)},
+            manufacturer="Fronius",
+        )
+        if self.logger_coordinator:
+            _logger_info = self.logger_coordinator.data[SOLAR_NET_ID_SYSTEM]
+            solar_net_device["model"] = _logger_info["product_type"]["value"]
+            solar_net_device["sw_version"] = _logger_info["software_version"]["value"]
+
+        device_registry = await dr.async_get_registry(self.hass)
+        device_registry.async_get_or_create(
+            config_entry_id=self.config_entry.entry_id,
+            **solar_net_device,
+        )
+
     async def _get_inverter_infos(self) -> list[FroniusDeviceInfo]:
         """Get information about the inverters in the SolarNet system."""
         _inverter_info = await self.fronius.inverter_info()
@@ -121,16 +169,22 @@ class FroniusSolarNet:
         for inverter in _inverter_info["inverters"]:
             solar_net_id = inverter["device_id"]["value"]
             unique_id = inverter["unique_id"]["value"]
+            device_info = DeviceInfo(
+                name=inverter.get("custom_name", {}).get("value"),
+                identifiers={(DOMAIN, unique_id)},
+                manufacturer=inverter["device_type"].get("manufacturer", "Fronius"),
+                model=inverter["device_type"].get(
+                    "model", inverter["device_type"]["value"]
+                ),
+                via_device=(DOMAIN, self.solar_net_device_id),
+            )
             inverter_infos.append(
                 FroniusDeviceInfo(
+                    device_info=device_info,
                     solar_net_id=solar_net_id,
                     unique_id=unique_id,
                 )
             )
-        if not self.solar_net_device_id:
-            first_inverter_uid: str = inverter_infos[0].unique_id
-            self.solar_net_device_id = f"solar_net_{first_inverter_uid}"
-
         return inverter_infos
 
     @staticmethod
