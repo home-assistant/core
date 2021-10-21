@@ -1,8 +1,6 @@
 """Constants for the Fronius integration."""
 from typing import Final, NamedTuple, TypedDict
 
-from homeassistant.helpers.entity import DeviceInfo
-
 DEFAULT_UPDATE_INTERVAL = 60
 DEFAULT_UPDATE_INTERVAL_LOGGER = 60 * 60
 DEFAULT_UPDATE_INTERVAL_POWER_FLOW = 10
@@ -23,6 +21,5 @@ class FroniusConfigEntryData(TypedDict):
 class FroniusDeviceInfo(NamedTuple):
     """Information about a Fronius inverter device."""
 
-    device_info: DeviceInfo
     solar_net_id: SolarNetId
     unique_id: str
