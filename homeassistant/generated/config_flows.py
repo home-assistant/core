@@ -462,6 +462,11 @@ FLOWS = {
         "zha",
         "zwave_js",
         "zwave_me",
+        "tesla_custom",
+        "smartthings_soundbar",
+        "gardena_smart_system",
+        "alexa_media",
+        "samsungtv_smart",
     ],
     "helper": [
         "derivative",
