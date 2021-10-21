@@ -15,7 +15,14 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import CONF_ACCOUNT, CONF_PING_INTERVAL, DOMAIN, SIA_EVENT, SIA_NAME_FORMAT
+from .const import (
+    CONF_ACCOUNT,
+    CONF_PING_INTERVAL,
+    DOMAIN,
+    SIA_EVENT,
+    SIA_NAME_FORMAT,
+    SIA_NAME_FORMAT_HUB,
+)
 from .utils import get_attr_from_sia_event, get_unavailability_interval
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,13 +35,13 @@ class SIABaseEntity(RestoreEntity):
         self,
         entry: ConfigEntry,
         account_data: dict[str, Any],
-        zone: int,
+        zone: int | None,
         device_class: str,
     ) -> None:
         """Create SIABaseEntity object."""
         self._entry: ConfigEntry = entry
         self._account_data: dict[str, Any] = account_data
-        self._zone: int = zone
+        self._zone: int | None = zone
         self._attr_device_class: str = device_class
 
         self._port: int = self._entry.data[CONF_PORT]
@@ -45,9 +52,14 @@ class SIABaseEntity(RestoreEntity):
 
         self._attr_extra_state_attributes = {}
         self._attr_should_poll = False
-        self._attr_name = SIA_NAME_FORMAT.format(
-            self._port, self._account, self._zone, self._attr_device_class
-        )
+        if self._zone is None or self._zone == 0:
+            self._attr_name = SIA_NAME_FORMAT_HUB.format(
+                self._port, self._account, self._attr_device_class
+            )
+        else:
+            self._attr_name = SIA_NAME_FORMAT.format(
+                self._port, self._account, self._zone, self._attr_device_class
+            )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass.
@@ -88,7 +100,7 @@ class SIABaseEntity(RestoreEntity):
         If the port and account combo receives any message it means it is online and can therefore be set to available.
         """
         _LOGGER.debug("Received event: %s", sia_event)
-        if int(sia_event.ri) == self._zone:
+        if self._zone is None or int(sia_event.ri) == self._zone:
             self._attr_extra_state_attributes.update(get_attr_from_sia_event(sia_event))
             self.update_state(sia_event)
         self.async_reset_availability_cb()
