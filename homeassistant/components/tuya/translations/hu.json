@@ -75,7 +75,7 @@
                     "query_device": "V\u00e1lassza ki azt az eszk\u00f6zt, amely a lek\u00e9rdez\u00e9si m\u00f3dszert haszn\u00e1lja a gyorsabb \u00e1llapotfriss\u00edt\u00e9shez",
                     "query_interval": "Eszk\u00f6z lek\u00e9rdez\u00e9si id\u0151k\u00f6ze m\u00e1sodpercben"
                 },
-                "description": "Ne \u00e1ll\u00edtsd t\u00fal alacsonyra a lek\u00e9rdez\u00e9si intervallum \u00e9rt\u00e9keit, k\u00fcl\u00f6nben a h\u00edv\u00e1sok nem fognak hiba\u00fczenetet gener\u00e1lni a napl\u00f3ban",
+                "description": "Ne \u00e1ll\u00edtsa t\u00fal alacsonyra a lek\u00e9rdez\u00e9si intervallum \u00e9rt\u00e9keit, k\u00fcl\u00f6nben a h\u00edv\u00e1sok nem fognak hiba\u00fczenetet gener\u00e1lni a napl\u00f3ban",
                 "title": "Tuya be\u00e1ll\u00edt\u00e1sok konfigur\u00e1l\u00e1sa"
             }
         }

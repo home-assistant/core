@@ -17,6 +17,7 @@ from homeassistant.components.recorder import (
     statistics,
     util as recorder_util,
 )
+from homeassistant.components.recorder.const import DOMAIN as RECORDER_DOMAIN
 from homeassistant.components.recorder.models import (
     StatisticData,
     StatisticMetaData,
@@ -416,7 +417,7 @@ def _compile_statistics(  # noqa: C901
     sensor_states = _get_sensor_states(hass)
     wanted_statistics = _wanted_statistics(sensor_states)
     old_metadatas = statistics.get_metadata_with_session(
-        hass, session, [i.entity_id for i in sensor_states], None
+        hass, session, statistic_ids=[i.entity_id for i in sensor_states]
     )
 
     # Get history between start and end
@@ -656,7 +657,9 @@ def validate_statistics(
     validation_result = defaultdict(list)
 
     sensor_states = hass.states.all(DOMAIN)
-    metadatas = statistics.get_metadata(hass, [i.entity_id for i in sensor_states])
+    metadatas = statistics.get_metadata(hass, statistic_source=RECORDER_DOMAIN)
+    sensor_entity_ids = {i.entity_id for i in sensor_states}
+    sensor_statistic_ids = set(metadatas)
 
     for state in sensor_states:
         entity_id = state.entity_id
@@ -669,7 +672,7 @@ def validate_statistics(
                 # Sensor was previously recorded, but no longer is
                 validation_result[entity_id].append(
                     statistics.ValidationIssue(
-                        "entity_not_recorded",
+                        "entity_no_longer_recorded",
                         {"statistic_id": entity_id},
                     )
                 )
@@ -710,9 +713,19 @@ def validate_statistics(
                         },
                     )
                 )
+        elif state_class in STATE_CLASSES:
+            if not is_entity_recorded(hass, state.entity_id):
+                # Sensor is not recorded
+                validation_result[entity_id].append(
+                    statistics.ValidationIssue(
+                        "entity_not_recorded",
+                        {"statistic_id": entity_id},
+                    )
+                )
 
         if (
-            device_class in UNIT_CONVERSIONS
+            state_class in STATE_CLASSES
+            and device_class in UNIT_CONVERSIONS
             and state_unit not in UNIT_CONVERSIONS[device_class]
         ):
             # The unit in the state is not supported for this device class
@@ -726,5 +739,16 @@ def validate_statistics(
                     },
                 )
             )
+
+    for statistic_id in sensor_statistic_ids - sensor_entity_ids:
+        # There is no sensor matching the statistics_id
+        validation_result[statistic_id].append(
+            statistics.ValidationIssue(
+                "no_state",
+                {
+                    "statistic_id": statistic_id,
+                },
+            )
+        )
 
     return validation_result

@@ -399,8 +399,7 @@ def _async_register_events_and_services(hass: HomeAssistant):
         referenced = async_extract_referenced_entity_ids(hass, service)
         dev_reg = device_registry.async_get(hass)
         for device_id in referenced.referenced_devices:
-            dev_reg_ent = dev_reg.async_get(device_id)
-            if not dev_reg_ent:
+            if not (dev_reg_ent := dev_reg.async_get(device_id)):
                 raise HomeAssistantError(f"No device found for device id: {device_id}")
             macs = [
                 cval
@@ -697,8 +696,7 @@ class HomeKit:
             if not self._filter(entity_id):
                 continue
 
-            ent_reg_ent = ent_reg.async_get(entity_id)
-            if ent_reg_ent:
+            if ent_reg_ent := ent_reg.async_get(entity_id):
                 await self._async_set_device_info_attributes(
                     ent_reg_ent, dev_reg, entity_id
                 )

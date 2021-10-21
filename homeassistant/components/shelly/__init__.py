@@ -79,8 +79,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Shelly component."""
     hass.data[DOMAIN] = {DATA_CONFIG_ENTRY: {}}
 
-    conf = config.get(DOMAIN)
-    if conf is not None:
+    if (conf := config.get(DOMAIN)) is not None:
         hass.data[DOMAIN][CONF_COAP_PORT] = conf[CONF_COAP_PORT]
 
     return True
@@ -233,9 +232,8 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
     ) -> None:
         """Initialize the Shelly device wrapper."""
         self.device_id: str | None = None
-        sleep_period = entry.data["sleep_period"]
 
-        if sleep_period:
+        if sleep_period := entry.data["sleep_period"]:
             update_interval = SLEEP_PERIOD_MULTIPLIER * sleep_period
         else:
             update_interval = (
