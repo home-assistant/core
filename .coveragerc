@@ -589,6 +589,7 @@ omit =
     homeassistant/components/lookin/entity.py
     homeassistant/components/lookin/models.py
     homeassistant/components/lookin/sensor.py
+    homeassistant/components/lookin/climate.py
     homeassistant/components/loopenergy/sensor.py
     homeassistant/components/luci/device_tracker.py
     homeassistant/components/luftdaten/__init__.py
