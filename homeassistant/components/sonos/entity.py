@@ -84,9 +84,9 @@ class SonosEntity(Entity):
         except (OSError, SoCoException) as ex:
             _LOGGER.debug("Error connecting to %s: %s", self.entity_id, ex)
 
-    async def _async_poll(self) -> None:  # pylint: disable=no-self-use
+    async def _async_poll(self) -> None:
         """Poll the specific functionality. Should be implemented by platforms if needed."""
-        return
+        raise NotImplementedError
 
     @property
     def soco(self) -> SoCo:
