@@ -154,8 +154,7 @@ def process_before_send(
     ]
 
     # Add additional tags based on what caused the event.
-    platform = entity_platform.current_platform.get()
-    if platform is not None:
+    if (platform := entity_platform.current_platform.get()) is not None:
         # This event happened in a platform
         additional_tags["custom_component"] = "no"
         additional_tags["integration"] = platform.platform_name
