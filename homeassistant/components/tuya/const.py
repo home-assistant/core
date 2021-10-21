@@ -196,6 +196,7 @@ class DPCode(str, Enum):
     PUMP_RESET = "pump_reset"  # Water pump reset
     RECORD_SWITCH = "record_switch"  # Recording switch
     RELAY_STATUS = "relay_status"
+    SCENE_DATA_V2 = "scene_data_v2"
     SEEK = "seek"
     SENSITIVITY = "sensitivity"  # Sensitivity
     SHAKE = "shake"  # Oscillating
