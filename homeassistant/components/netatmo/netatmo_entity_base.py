@@ -92,10 +92,10 @@ class NetatmoBase(Entity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info for the sensor."""
-        return {
-            "configuration_url": f"https://my.netatmo.com/app/{self._netatmo_type}",
-            "identifiers": {(DOMAIN, self._id)},
-            "name": self._device_name,
-            "manufacturer": MANUFACTURER,
-            "model": MODELS[self._model],
-        }
+        return DeviceInfo(
+            configuration_url=f"https://my.netatmo.com/app/{self._netatmo_type}",
+            identifiers={(DOMAIN, self._id)},
+            name=self._device_name,
+            manufacturer=MANUFACTURER,
+            model=MODELS[self._model],
+        )
