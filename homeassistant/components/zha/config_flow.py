@@ -120,9 +120,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # If they already have a discovery for deconz
         # we ignore the usb discovery as they probably
         # want to use it there instead
-        for flow in self.hass.config_entries.flow.async_progress_by_handler(
-            DECONZ_DOMAIN
-        ):
+        if self.hass.config_entries.flow.async_progress_by_handler(DECONZ_DOMAIN):
             return self.async_abort(reason="not_zha_device")
         for entry in self.hass.config_entries.async_entries(DECONZ_DOMAIN):
             if entry.source != config_entries.SOURCE_IGNORE:

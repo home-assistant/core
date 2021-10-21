@@ -78,6 +78,23 @@ class FlowResult(TypedDict, total=False):
     options: Mapping[str, Any]
 
 
+@callback
+def _async_flow_handler_to_flow_result(
+    flows: Iterable[FlowHandler], include_uninitialized: bool
+) -> list[FlowResult]:
+    """Convert a list of FlowHandler to a partial FlowResult that can be serialized."""
+    return [
+        {
+            "flow_id": flow.flow_id,
+            "handler": flow.handler,
+            "context": flow.context,
+            "step_id": flow.cur_step["step_id"] if flow.cur_step else None,
+        }
+        for flow in flows
+        if include_uninitialized or flow.cur_step is not None
+    ]
+
+
 class FlowManager(abc.ABC):
     """Manage all the flows that are in progress."""
 
@@ -135,7 +152,7 @@ class FlowManager(abc.ABC):
     @callback
     def async_progress(self, include_uninitialized: bool = False) -> list[FlowResult]:
         """Return the flows in progress as a partial FlowResult."""
-        return self._async_handler_to_result(
+        return _async_flow_handler_to_flow_result(
             self._progress.values(), include_uninitialized
         )
 
@@ -144,7 +161,7 @@ class FlowManager(abc.ABC):
         self, handler: str, include_uninitialized: bool = False
     ) -> list[FlowResult]:
         """Return the flows in progress by handler as a partial FlowResult."""
-        return self._async_handler_to_result(
+        return _async_flow_handler_to_flow_result(
             self._async_progress_by_handler(handler), include_uninitialized
         )
 
@@ -154,21 +171,6 @@ class FlowManager(abc.ABC):
         return [
             self._progress[flow_id]
             for flow_id in self._handler_progress_index.get(handler, {})
-        ]
-
-    def _async_handler_to_result(
-        self, flows: Iterable[FlowHandler], include_uninitialized: bool
-    ) -> list[FlowResult]:
-        """Convert a list of FlowHandler to a partial FlowResult that can be serialized."""
-        return [
-            {
-                "flow_id": flow.flow_id,
-                "handler": flow.handler,
-                "context": flow.context,
-                "step_id": flow.cur_step["step_id"] if flow.cur_step else None,
-            }
-            for flow in flows
-            if include_uninitialized or flow.cur_step is not None
         ]
 
     async def async_init(
