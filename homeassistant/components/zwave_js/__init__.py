@@ -140,8 +140,7 @@ async def async_setup_entry(  # noqa: C901
     hass: HomeAssistant, entry: ConfigEntry
 ) -> bool:
     """Set up Z-Wave JS from a config entry."""
-    use_addon = entry.data.get(CONF_USE_ADDON)
-    if use_addon:
+    if use_addon := entry.data.get(CONF_USE_ADDON):
         await async_ensure_addon_running(hass, entry)
 
     client = ZwaveClient(entry.data[CONF_URL], async_get_clientsession(hass))
