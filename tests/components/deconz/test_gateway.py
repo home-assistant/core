@@ -43,6 +43,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
@@ -168,6 +169,13 @@ async def test_gateway_setup(hass, aioclient_mock):
         assert forward_entry_setup.mock_calls[9][1] == (config_entry, SENSOR_DOMAIN)
         assert forward_entry_setup.mock_calls[10][1] == (config_entry, SIREN_DOMAIN)
         assert forward_entry_setup.mock_calls[11][1] == (config_entry, SWITCH_DOMAIN)
+
+    device_registry = dr.async_get(hass)
+    gateway_entry = device_registry.async_get_device(
+        identifiers={(DECONZ_DOMAIN, gateway.bridgeid)}
+    )
+
+    assert gateway_entry.configuration_url == f"http://{HOST}:{PORT}"
 
 
 async def test_gateway_retry(hass):

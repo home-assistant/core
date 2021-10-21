@@ -151,6 +151,7 @@ class DeconzGateway:
         # Gateway service
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
+            configuration_url=f"http://{self.host}:{self.config_entry.data[CONF_PORT]}",
             identifiers={(DECONZ_DOMAIN, self.api.config.bridge_id)},
             manufacturer="Dresden Elektronik",
             model=self.api.config.model_id,
