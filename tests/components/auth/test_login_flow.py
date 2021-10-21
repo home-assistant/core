@@ -136,7 +136,7 @@ async def test_login_exist_user_ip_changes(hass, aiohttp_client):
 
     #
     # Here we modify the ip_address in the context to make sure
-    # that ip address changes in the middle of the login flow prevent logins.
+    # when ip address changes in the middle of the login flow we prevent logins.
     #
     # This method was chosen because it seemed less likely to break
     # vs patching aiohttp internals to fake the ip address

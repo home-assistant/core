@@ -272,6 +272,7 @@ async def test_external_step(hass, manager):
     assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
     assert len(manager.async_progress()) == 1
     assert len(manager.async_progress_by_handler("test")) == 1
+    assert manager.async_get(result["flow_id"])["handler"] == "test"
 
     # Mimic external step
     # Called by integrations: `hass.config_entries.flow.async_configure(…)`
@@ -329,6 +330,7 @@ async def test_show_progress(hass, manager):
     assert result["progress_action"] == "task_one"
     assert len(manager.async_progress()) == 1
     assert len(manager.async_progress_by_handler("test")) == 1
+    assert manager.async_get(result["flow_id"])["handler"] == "test"
 
     # Mimic task one done and moving to task two
     # Called by integrations: `hass.config_entries.flow.async_configure(…)`
@@ -427,6 +429,7 @@ async def test_async_has_matching_flow(
     assert result["progress_action"] == "task_one"
     assert len(manager.async_progress()) == 1
     assert len(manager.async_progress_by_handler("test")) == 1
+    assert manager.async_get(result["flow_id"])["handler"] == "test"
 
     assert (
         manager.async_has_matching_flow(
