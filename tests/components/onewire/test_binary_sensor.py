@@ -6,6 +6,7 @@ import pytest
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.config_validation import ensure_list
 
 from . import (
     check_and_enable_disabled_entities,
@@ -37,16 +38,14 @@ async def test_owserver_binary_sensor(
 
     mock_device = MOCK_OWPROXY_DEVICES[device_id]
     expected_entities = mock_device.get(BINARY_SENSOR_DOMAIN, [])
+    expected_devices = ensure_list(mock_device.get(ATTR_DEVICE_INFO))
 
     setup_owproxy_mock_devices(owproxy, BINARY_SENSOR_DOMAIN, [device_id])
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
+    check_device_registry(device_registry, expected_devices)
     assert len(entity_registry.entities) == len(expected_entities)
-    if len(expected_entities) > 0:
-        assert len(device_registry.devices) == 1
-        check_device_registry(device_registry, mock_device[ATTR_DEVICE_INFO])
-
     check_and_enable_disabled_entities(entity_registry, expected_entities)
 
     setup_owproxy_mock_devices(owproxy, BINARY_SENSOR_DOMAIN, [device_id])
