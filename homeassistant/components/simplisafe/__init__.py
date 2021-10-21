@@ -7,8 +7,7 @@ from datetime import timedelta
 from typing import TYPE_CHECKING, cast
 
 from simplipy import API
-from simplipy.device.sensor.v2 import SensorV2
-from simplipy.device.sensor.v3 import SensorV3
+from simplipy.device import Device
 from simplipy.errors import (
     EndpointUnavailableError,
     InvalidCredentialsError,
@@ -62,6 +61,8 @@ from .const import (
 
 EVENT_SIMPLISAFE_NOTIFICATION = "SIMPLISAFE_NOTIFICATION"
 
+DEFAULT_ENTITY_MODEL = "alarm_control_panel"
+DEFAULT_ENTITY_NAME = "Alarm Control Panel"
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 DEFAULT_SOCKET_MIN_RETRY = 15
 
@@ -159,7 +160,7 @@ async def async_register_base_station(
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, system.serial)},
+        identifiers={(DOMAIN, system.system_id)},
         manufacturer="SimpliSafe",
         model=system.version,
         name=system.address,
@@ -424,29 +425,34 @@ class SimpliSafeEntity(CoordinatorEntity):
         self,
         simplisafe: SimpliSafe,
         system: SystemV2 | SystemV3,
-        name: str,
         *,
-        serial: str | None = None,
+        device: Device | None = None,
     ) -> None:
         """Initialize."""
         assert simplisafe.coordinator
         super().__init__(simplisafe.coordinator)
 
-        if serial:
-            self._serial = serial
+        if device:
+            model = device.type.name
+            device_name = device.name
+            serial = device.serial
         else:
-            self._serial = system.serial
+            model = DEFAULT_ENTITY_MODEL
+            device_name = DEFAULT_ENTITY_NAME
+            serial = system.serial
 
         self._attr_extra_state_attributes = {ATTR_SYSTEM_ID: system.system_id}
         self._attr_device_info = {
-            "identifiers": {(DOMAIN, system.system_id)},
+            "identifiers": {(DOMAIN, serial)},
             "manufacturer": "SimpliSafe",
-            "model": str(system.version),
-            "name": name,
-            "via_device": (DOMAIN, system.serial),
+            "model": model,
+            "name": device_name,
+            "via_device": (DOMAIN, system.system_id),
         }
-        self._attr_name = f"{system.address} {name}"
-        self._attr_unique_id = self._serial
+
+        self._attr_name = f"{system.address} {device_name} {' '.join([w.title() for w in model.split('_')])}"
+        self._attr_unique_id = serial
+        self._device = device
         self._online = True
         self._simplisafe = simplisafe
         self._system = system
@@ -481,29 +487,3 @@ class SimpliSafeEntity(CoordinatorEntity):
     def async_update_from_rest_api(self) -> None:
         """Update the entity with the provided REST API data."""
         raise NotImplementedError()
-
-
-class SimpliSafeBaseSensor(SimpliSafeEntity):
-    """Define a SimpliSafe base (binary) sensor."""
-
-    def __init__(
-        self,
-        simplisafe: SimpliSafe,
-        system: SystemV2 | SystemV3,
-        sensor: SensorV2 | SensorV3,
-    ) -> None:
-        """Initialize."""
-        super().__init__(simplisafe, system, sensor.name, serial=sensor.serial)
-
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, sensor.serial)},
-            "manufacturer": "SimpliSafe",
-            "model": sensor.type.name,
-            "name": sensor.name,
-            "via_device": (DOMAIN, system.serial),
-        }
-
-        human_friendly_name = " ".join([w.title() for w in sensor.type.name.split("_")])
-        self._attr_name = f"{super().name} {human_friendly_name}"
-
-        self._sensor = sensor

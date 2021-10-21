@@ -80,7 +80,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
 
     def __init__(self, simplisafe: SimpliSafe, system: SystemV2 | SystemV3) -> None:
         """Initialize the SimpliSafe alarm."""
-        super().__init__(simplisafe, system, "Alarm Control Panel")
+        super().__init__(simplisafe, system)
 
         if code := self._simplisafe.entry.options.get(CONF_CODE):
             if code.isdigit():
