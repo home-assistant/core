@@ -99,8 +99,8 @@
     },
     "state": {
         "_": {
-            "off": "OFF",
-            "on": "ON"
+            "off": "off",
+            "on": "on"
         },
         "battery": {
             "off": "Normal",
