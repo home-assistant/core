@@ -377,12 +377,13 @@ class FitbitSensor(SensorEntity):
     @property
     def icon(self) -> str | None:
         """Icon to use in the frontend, if any."""
-        if self.entity_description.key == "devices/battery" and self.extra is not None:
-            extra_battery = self.extra.get("battery")
-            if extra_battery is not None:
-                battery_level = BATTERY_LEVELS.get(extra_battery)
-                if battery_level is not None:
-                    return icon_for_battery_level(battery_level=battery_level)
+        if (
+            self.entity_description.key == "devices/battery"
+            and self.extra is not None
+            and (extra_battery := self.extra.get("battery")) is not None
+            and (battery_level := BATTERY_LEVELS.get(extra_battery)) is not None
+        ):
+            return icon_for_battery_level(battery_level=battery_level)
         return self.entity_description.icon
 
     @property

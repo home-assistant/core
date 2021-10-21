@@ -112,8 +112,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async def async_assume_state(service):
         """Set state according to external service call.."""
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
-        if entity_ids:
+        if entity_ids := service.data.get(ATTR_ENTITY_ID):
             target_climate = [
                 device for device in devices if device.entity_id in entity_ids
             ]
@@ -299,8 +298,7 @@ class SensiboClimate(ClimateEntity):
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         temperature = int(temperature)
         if temperature not in self._temperatures_list:
