@@ -512,13 +512,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             DOMAIN, service, async_service_handler, schema=settings.schema
         )
 
+    async def update_addon_stats(slug):
+        """Update single addon stats."""
+        stats = await hassio.get_addon_stats(slug)
+        return (slug, stats)
+
     async def update_info_data(now):
         """Update last available supervisor information."""
-
-        async def update_addon_stats(slug):
-            """Update single addon stats."""
-            stats = await hassio.get_addon_stats(slug)
-            return (slug, stats)
 
         try:
             (
