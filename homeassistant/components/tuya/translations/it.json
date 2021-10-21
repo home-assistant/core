@@ -6,14 +6,15 @@
             "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "error": {
-            "invalid_auth": "Autenticazione non valida"
+            "invalid_auth": "Autenticazione non valida",
+            "login_error": "Errore di accesso ({code}): {msg}"
         },
         "flow_title": "Configurazione di Tuya",
         "step": {
             "login": {
                 "data": {
-                    "access_id": "ID di accesso",
-                    "access_secret": "Accesso segreto",
+                    "access_id": "Access ID",
+                    "access_secret": "Access Secret",
                     "country_code": "Prefisso internazionale",
                     "endpoint": "Zona di disponibilit\u00e0",
                     "password": "Password",
@@ -25,13 +26,16 @@
             },
             "user": {
                 "data": {
-                    "country_code": "Prefisso internazionale del tuo account (ad es. 1 per gli Stati Uniti o 86 per la Cina)",
+                    "access_id": "Tuya IoT Access ID",
+                    "access_secret": "Tuya IoT Access Secret",
+                    "country_code": "Nazione",
                     "password": "Password",
                     "platform": "L'app in cui \u00e8 registrato il tuo account",
+                    "region": "Area geografica",
                     "tuya_project_type": "Tipo di progetto Tuya cloud",
-                    "username": "Nome utente"
+                    "username": "Account"
                 },
-                "description": "Inserisci le tue credenziali Tuya.",
+                "description": "Inserisci le tue credenziali Tuya",
                 "title": "Integrazione Tuya"
             }
         }
@@ -41,7 +45,7 @@
             "cannot_connect": "Impossibile connettersi"
         },
         "error": {
-            "dev_multi_type": "Pi\u00f9 dispositivi selezionati da configurare devono essere dello stesso tipo",
+            "dev_multi_type": "I dispositivi multipli selezionati da configurare devono essere dello stesso tipo",
             "dev_not_config": "Tipo di dispositivo non configurabile",
             "dev_not_found": "Dispositivo non trovato"
         },

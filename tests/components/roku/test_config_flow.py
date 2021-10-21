@@ -10,7 +10,6 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
 )
-from homeassistant.setup import async_setup_component
 
 from tests.components.roku import (
     HOMEKIT_HOST,
@@ -59,7 +58,7 @@ async def test_duplicate_error(
 
 async def test_form(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test the user step."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     mock_connection(aioclient_mock)
 
     result = await hass.config_entries.flow.async_init(

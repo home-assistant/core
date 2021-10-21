@@ -27,8 +27,7 @@ async def handle_internal(
 ) -> None:
     """Handle a mysensors internal message."""
     internal = msg.gateway.const.Internal(msg.sub_type)
-    handler = HANDLERS.get(internal.name)
-    if handler is None:
+    if (handler := HANDLERS.get(internal.name)) is None:
         return
     await handler(hass, gateway_id, msg)
 

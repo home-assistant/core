@@ -154,7 +154,7 @@ def _init_doorbird_device(device):
     return device.ready(), device.info()
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
     hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()

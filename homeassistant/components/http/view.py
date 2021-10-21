@@ -40,8 +40,7 @@ class HomeAssistantView:
     @staticmethod
     def context(request: web.Request) -> Context:
         """Generate a context from a request."""
-        user = request.get("hass_user")
-        if user is None:
+        if (user := request.get("hass_user")) is None:
             return Context()
 
         return Context(user_id=user.id)

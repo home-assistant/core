@@ -6,7 +6,8 @@
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {
-            "invalid_auth": "Invalid authentication"
+            "invalid_auth": "Invalid authentication",
+            "login_error": "Login error ({code}): {msg}"
         },
         "flow_title": "Tuya configuration",
         "step": {
@@ -25,13 +26,16 @@
             },
             "user": {
                 "data": {
-                    "country_code": "Your account country code (e.g., 1 for USA or 86 for China)",
+                    "access_id": "Tuya IoT Access ID",
+                    "access_secret": "Tuya IoT Access Secret",
+                    "country_code": "Country",
                     "password": "Password",
                     "platform": "The app where your account is registered",
+                    "region": "Region",
                     "tuya_project_type": "Tuya cloud project type",
-                    "username": "Username"
+                    "username": "Account"
                 },
-                "description": "Enter your Tuya credentials.",
+                "description": "Enter your Tuya credentials",
                 "title": "Tuya Integration"
             }
         }

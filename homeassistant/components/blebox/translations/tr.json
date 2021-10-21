@@ -6,7 +6,8 @@
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",
-            "unknown": "Beklenmeyen hata"
+            "unknown": "Beklenmeyen hata",
+            "unsupported_version": "BleBox cihaz\u0131n\u0131n g\u00fcncel olmayan bellenimi var. L\u00fctfen \u00f6nce y\u00fckseltin."
         },
         "step": {
             "user": {

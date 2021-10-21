@@ -236,8 +236,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     elk.connect()
 
     def _element_changed(element, changeset):
-        keypress = changeset.get("last_keypress")
-        if keypress is None:
+        if (keypress := changeset.get("last_keypress")) is None:
             return
 
         hass.bus.async_fire(
@@ -285,7 +284,7 @@ def _find_elk_by_prefix(hass, prefix):
             return hass.data[DOMAIN][entry_id]["elk"]
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 

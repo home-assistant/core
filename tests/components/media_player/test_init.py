@@ -40,7 +40,7 @@ async def test_get_image(hass, hass_ws_client, caplog):
     assert "media_player_thumbnail is deprecated" in caplog.text
 
 
-async def test_get_image_http(hass, aiohttp_client):
+async def test_get_image_http(hass, hass_client_no_auth):
     """Test get image via http command."""
     await async_setup_component(
         hass, "media_player", {"media_player": {"platform": "demo"}}
@@ -50,7 +50,7 @@ async def test_get_image_http(hass, aiohttp_client):
     state = hass.states.get("media_player.bedroom")
     assert "entity_picture_local" not in state.attributes
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     with patch(
         "homeassistant.components.media_player.MediaPlayerEntity."
@@ -63,7 +63,7 @@ async def test_get_image_http(hass, aiohttp_client):
     assert content == b"image"
 
 
-async def test_get_image_http_remote(hass, aiohttp_client):
+async def test_get_image_http_remote(hass, hass_client_no_auth):
     """Test get image url via http command."""
     with patch(
         "homeassistant.components.media_player.MediaPlayerEntity."
@@ -78,7 +78,7 @@ async def test_get_image_http_remote(hass, aiohttp_client):
         state = hass.states.get("media_player.bedroom")
         assert "entity_picture_local" in state.attributes
 
-        client = await aiohttp_client(hass.http.app)
+        client = await hass_client_no_auth()
 
         with patch(
             "homeassistant.components.media_player.MediaPlayerEntity."
@@ -91,7 +91,7 @@ async def test_get_image_http_remote(hass, aiohttp_client):
         assert content == b"image"
 
 
-async def test_get_async_get_browse_image(hass, aiohttp_client, hass_ws_client):
+async def test_get_async_get_browse_image(hass, hass_client_no_auth, hass_ws_client):
     """Test get browse image."""
     await async_setup_component(
         hass, "media_player", {"media_player": {"platform": "demo"}}
@@ -104,7 +104,7 @@ async def test_get_async_get_browse_image(hass, aiohttp_client, hass_ws_client):
     player = entity_comp.get_entity("media_player.bedroom")
     assert player
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     with patch(
         "homeassistant.components.media_player.MediaPlayerEntity."

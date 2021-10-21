@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "gateway_entry": {
+                "data": {
+                    "port": "\u041f\u043e\u0440\u0442"
+                }
+            }
+        }
+    }
+}

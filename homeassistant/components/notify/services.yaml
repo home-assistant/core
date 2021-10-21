@@ -18,6 +18,7 @@ notify:
       selector:
         text:
     target:
+      name: Target
       description:
         An array of targets to send the notification to. Optional depending on
         the platform.
@@ -38,12 +39,14 @@ persistent_notification:
   description: Sends a notification to the visible in the front-end.
   fields:
     message:
+      name: Message
       description: Message body of the notification.
       required: true
       example: The garage door has been open for 10 minutes.
       selector:
         text:
     title:
+      name: Title
       description: Title for your notification.
       example: "Your Garage Door Friend"
       selector:

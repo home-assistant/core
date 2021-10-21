@@ -87,7 +87,6 @@ class NotificationService(notify.BaseNotificationService):
 async def test_warn_template(hass, caplog):
     """Test warning when template used."""
     assert await async_setup_component(hass, "notify", {})
-    assert await async_setup_component(hass, "persistent_notification", {})
 
     await hass.services.async_call(
         "notify",

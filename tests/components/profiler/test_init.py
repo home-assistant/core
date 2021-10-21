@@ -3,7 +3,6 @@ from datetime import timedelta
 import os
 from unittest.mock import patch
 
-from homeassistant import setup
 from homeassistant.components.profiler import (
     CONF_SECONDS,
     SERVICE_DUMP_LOG_OBJECTS,
@@ -25,7 +24,6 @@ async def test_basic_usage(hass, tmpdir):
     """Test we can setup and the service is registered."""
     test_dir = tmpdir.mkdir("profiles")
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
 
@@ -57,7 +55,6 @@ async def test_memory_usage(hass, tmpdir):
     """Test we can setup and the service is registered."""
     test_dir = tmpdir.mkdir("profiles")
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
 
@@ -88,7 +85,6 @@ async def test_memory_usage(hass, tmpdir):
 async def test_object_growth_logging(hass, caplog):
     """Test we can setup and the service and we can dump objects to the log."""
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
 
@@ -129,7 +125,6 @@ async def test_object_growth_logging(hass, caplog):
 async def test_dump_log_object(hass, caplog):
     """Test we can setup and the service is registered and logging works."""
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
 
@@ -153,7 +148,6 @@ async def test_dump_log_object(hass, caplog):
 async def test_log_thread_frames(hass, caplog):
     """Test we can log thread frames."""
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
 
@@ -175,7 +169,6 @@ async def test_log_thread_frames(hass, caplog):
 async def test_log_scheduled(hass, caplog):
     """Test we can log scheduled items in the event loop."""
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
 

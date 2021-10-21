@@ -22,7 +22,7 @@
                 "data": {
                     "type": "A nyomtat\u00f3 t\u00edpusa"
                 },
-                "description": "Hozz\u00e1 szeretn\u00e9 adni a {model} Brother nyomtat\u00f3t, amelynek sorsz\u00e1ma: `{serial_number}`, Home Assistant-hoz?",
+                "description": "Hozz\u00e1 szeretn\u00e9 adni a {model} Brother nyomtat\u00f3t, amelynek sorsz\u00e1ma: `{serial_number}`, Home Assistanthoz?",
                 "title": "Felfedezett Brother nyomtat\u00f3"
             }
         }

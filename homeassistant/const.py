@@ -11,7 +11,7 @@ __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 8, 0)
 # Truthy date string triggers showing related deprecation warning messages.
 REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 9, 0)
-REQUIRED_NEXT_PYTHON_DATE: Final = ""
+REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = "2022.1"
 
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
@@ -102,6 +102,7 @@ CONF_EFFECT: Final = "effect"
 CONF_ELEVATION: Final = "elevation"
 CONF_EMAIL: Final = "email"
 CONF_ENTITIES: Final = "entities"
+CONF_ENTITY_CATEGORY: Final = "entity_category"
 CONF_ENTITY_ID: Final = "entity_id"
 CONF_ENTITY_NAMESPACE: Final = "entity_namespace"
 CONF_ENTITY_PICTURE_TEMPLATE: Final = "entity_picture_template"
@@ -418,6 +419,7 @@ POWER_VOLT_AMPERE: Final = "VA"
 # Energy units
 ENERGY_WATT_HOUR: Final = "Wh"
 ENERGY_KILO_WATT_HOUR: Final = "kWh"
+ENERGY_MEGA_WATT_HOUR: Final = "MWh"
 
 # Electric_current units
 ELECTRIC_CURRENT_MILLIAMPERE: Final = "mA"
@@ -704,3 +706,6 @@ CLOUD_NEVER_EXPOSED_ENTITIES: Final[list[str]] = ["group.all_locks"]
 
 # The ID of the Home Assistant Cast App
 CAST_APP_ID_HOMEASSISTANT: Final = "B12CE3CA"
+
+ENTITY_CATEGORY_CONFIG: Final = "config"
+ENTITY_CATEGORY_DIAGNOSTIC: Final = "diagnostic"

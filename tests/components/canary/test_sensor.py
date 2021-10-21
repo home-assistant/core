@@ -29,7 +29,6 @@ from tests.common import async_fire_time_changed, mock_device_registry, mock_reg
 
 async def test_sensors_pro(hass, canary) -> None:
     """Test the creation and values of the sensors for Canary Pro."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
@@ -97,7 +96,6 @@ async def test_sensors_pro(hass, canary) -> None:
 
 async def test_sensors_attributes_pro(hass, canary) -> None:
     """Test the creation and values of the sensors attributes for Canary Pro."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     online_device_at_home = mock_device(20, "Dining Room", True, "Canary Pro")
 
@@ -158,7 +156,6 @@ async def test_sensors_attributes_pro(hass, canary) -> None:
 
 async def test_sensors_flex(hass, canary) -> None:
     """Test the creation and values of the sensors for Canary Flex."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)

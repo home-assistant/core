@@ -48,6 +48,7 @@ homeassistant.components.frontend.*
 homeassistant.components.fritz.*
 homeassistant.components.geo_location.*
 homeassistant.components.gios.*
+homeassistant.components.goalzero.*
 homeassistant.components.group.*
 homeassistant.components.guardian.*
 homeassistant.components.history.*
@@ -74,6 +75,7 @@ homeassistant.components.neato.*
 homeassistant.components.nest.*
 homeassistant.components.netatmo.*
 homeassistant.components.network.*
+homeassistant.components.nfandroidtv.*
 homeassistant.components.no_ip.*
 homeassistant.components.notify.*
 homeassistant.components.notion.*
@@ -91,6 +93,7 @@ homeassistant.components.recorder.statistics
 homeassistant.components.remote.*
 homeassistant.components.renault.*
 homeassistant.components.rituals_perfume_genie.*
+homeassistant.components.rpi_power.*
 homeassistant.components.samsungtv.*
 homeassistant.components.scene.*
 homeassistant.components.select.*
@@ -100,6 +103,7 @@ homeassistant.components.simplisafe.*
 homeassistant.components.slack.*
 homeassistant.components.sonos.media_player
 homeassistant.components.ssdp.*
+homeassistant.components.stookalert.*
 homeassistant.components.stream.*
 homeassistant.components.sun.*
 homeassistant.components.surepetcare.*
@@ -121,6 +125,7 @@ homeassistant.components.uptimerobot.*
 homeassistant.components.vacuum.*
 homeassistant.components.vallox.*
 homeassistant.components.water_heater.*
+homeassistant.components.watttime.*
 homeassistant.components.weather.*
 homeassistant.components.websocket_api.*
 homeassistant.components.zodiac.*

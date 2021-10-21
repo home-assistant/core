@@ -11,7 +11,7 @@ from homeassistant.core import CoreState, State
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.util.dt import utcnow
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, mock_registry
 
 
 @pytest.fixture
@@ -215,8 +215,25 @@ async def test_sync_google_on_home_assistant_start(hass, mock_cloud_login, cloud
         assert len(mock_sync.mock_calls) == 1
 
 
-async def test_google_config_expose_entity_prefs(mock_conf, cloud_prefs):
+async def test_google_config_expose_entity_prefs(hass, mock_conf, cloud_prefs):
     """Test Google config should expose using prefs."""
+    entity_registry = mock_registry(hass)
+
+    entity_entry1 = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "switch_config_id",
+        suggested_object_id="config_switch",
+        entity_category="config",
+    )
+    entity_entry2 = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "switch_diagnostic_id",
+        suggested_object_id="diagnostic_switch",
+        entity_category="diagnostic",
+    )
+
     entity_conf = {"should_expose": False}
     await cloud_prefs.async_update(
         google_entity_configs={"light.kitchen": entity_conf},
@@ -224,13 +241,24 @@ async def test_google_config_expose_entity_prefs(mock_conf, cloud_prefs):
     )
 
     state = State("light.kitchen", "on")
+    state_config = State(entity_entry1.entity_id, "on")
+    state_diagnostic = State(entity_entry2.entity_id, "on")
 
     assert not mock_conf.should_expose(state)
+    assert not mock_conf.should_expose(state_config)
+    assert not mock_conf.should_expose(state_diagnostic)
+
     entity_conf["should_expose"] = True
     assert mock_conf.should_expose(state)
+    # config and diagnostic entities should not be exposed
+    assert not mock_conf.should_expose(state_config)
+    assert not mock_conf.should_expose(state_diagnostic)
 
     entity_conf["should_expose"] = None
     assert mock_conf.should_expose(state)
+    # config and diagnostic entities should not be exposed
+    assert not mock_conf.should_expose(state_config)
+    assert not mock_conf.should_expose(state_diagnostic)
 
     await cloud_prefs.async_update(
         google_default_expose=["sensor"],

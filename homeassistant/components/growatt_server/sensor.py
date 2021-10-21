@@ -15,6 +15,9 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_NAME,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_URL,
@@ -37,7 +40,13 @@ from homeassistant.const import (
 )
 from homeassistant.util import Throttle, dt
 
-from .const import CONF_PLANT_ID, DEFAULT_PLANT_ID, DEFAULT_URL
+from .const import (
+    CONF_PLANT_ID,
+    DEFAULT_PLANT_ID,
+    DEFAULT_URL,
+    DOMAIN,
+    LOGIN_INVALID_AUTH_CODE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -876,7 +885,10 @@ def get_device_list(api, config):
 
     # Log in to api and fetch first plant if no plant id is defined.
     login_response = api.login(config[CONF_USERNAME], config[CONF_PASSWORD])
-    if not login_response["success"] and login_response["errCode"] == "102":
+    if (
+        not login_response["success"]
+        and login_response["msg"] == LOGIN_INVALID_AUTH_CODE
+    ):
         _LOGGER.error("Username, Password or URL may be incorrect!")
         return
     user_id = login_response["user"]["id"]
@@ -966,6 +978,12 @@ class GrowattInverter(SensorEntity):
         self._attr_name = f"{name} {description.name}"
         self._attr_unique_id = unique_id
         self._attr_icon = "mdi:solar-power"
+
+        self._attr_device_info = {
+            ATTR_IDENTIFIERS: {(DOMAIN, probe.device_id)},
+            ATTR_NAME: name,
+            ATTR_MANUFACTURER: "Growatt",
+        }
 
     @property
     def native_value(self):
