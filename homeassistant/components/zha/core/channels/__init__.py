@@ -302,7 +302,7 @@ class ChannelPool:
                     self._channels.power_configuration_ch
                     or self._channels.zha_device.is_mains_powered
                 ):
-                    # on power configuration channel per device
+                    # one power configuration channel per device
                     continue
                 self._channels.power_configuration_ch = channel
             elif channel.name == const.CHANNEL_IDENTIFY:
