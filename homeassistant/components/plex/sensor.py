@@ -113,6 +113,7 @@ class PlexSensor(SensorEntity):
             "model": "Plex Media Server",
             "name": self._server.friendly_name,
             "sw_version": self._server.version,
+            "configuration_url": f"{self._server.url_in_use}/web",
         }
 
 
@@ -203,4 +204,5 @@ class PlexLibrarySectionSensor(SensorEntity):
             "model": "Plex Media Server",
             "name": self.server_name,
             "sw_version": self._server.version,
+            "configuration_url": f"{self._server.url_in_use}/web",
         }
