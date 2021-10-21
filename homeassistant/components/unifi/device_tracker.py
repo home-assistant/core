@@ -149,6 +149,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         self.heartbeat_check = False
         self._is_connected = False
         self._controller_connection_state_changed = False
+        self._only_listen_to_event_source = False
 
         if client.last_seen:
             self._is_connected = (
@@ -191,11 +192,13 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
 
             if self.controller.available:
                 self.schedule_update = True
+                self._only_listen_to_event_source = False
 
             else:
                 self.controller.async_heartbeat(self.unique_id)
 
         elif self.client.last_updated == SOURCE_EVENT:
+            self._only_listen_to_event_source = True
             if (self.is_wired and self.client.event.event in WIRED_CONNECTION) or (
                 not self.is_wired and self.client.event.event in WIRELESS_CONNECTION
             ):
@@ -209,7 +212,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
                 self.schedule_update = True
 
         elif (
-            not self.client.event
+            not self._only_listen_to_event_source
             and self.client.last_updated == SOURCE_DATA
             and self.is_wired == self.client.is_wired
         ):
