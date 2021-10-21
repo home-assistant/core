@@ -326,6 +326,19 @@ def _extract_version_from_server_response(server_response):
         return None
 
 
+def _pgsql_numerical_version_to_string(version_num):
+    """Convert numerical PostgreSQL version to string."""
+    if version_num < 100000:
+        major = version_num // 10000
+        minor = version_num % 10000 // 100
+        patch = version_num % 100
+        return f"{major}.{minor}.{patch}"
+    else:
+        major = version_num // 10000
+        patch = version_num % 10000
+        return f"{major}.{patch}"
+
+
 def setup_connection_for_dialect(
     instance, dialect_name, dbapi_connection, first_connection
 ):
@@ -399,18 +412,12 @@ def setup_connection_for_dialect(
                 version = None
             if not version or version < MIN_VERSION_PGSQL:
                 if version:
-                    # Convert the numerical version to a nicer string
-                    version_num = int(version)
-                    if version_num < 100000:
-                        major = version_num // 10000
-                        minor = version_num % 10000 // 100
-                        patch = version_num % 100
-                        version_string = f"{major}.{minor}.{patch}"
-                    else:
-                        major = version_num // 10000
-                        patch = version_num % 10000
-                        version_string = f"{major}.{patch}"
-                _warn_unsupported_version(version_string, "PostgreSQL", "12.0")
+                    version_string = _pgsql_numerical_version_to_string(int(version))
+                _warn_unsupported_version(
+                    version_string,
+                    "PostgreSQL",
+                    _pgsql_numerical_version_to_string(int(MIN_VERSION_PGSQL)),
+                )
 
     else:
         _warn_unsupported_dialect(dialect_name)
