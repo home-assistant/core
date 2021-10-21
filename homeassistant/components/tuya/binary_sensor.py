@@ -6,10 +6,12 @@ from dataclasses import dataclass
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_DOOR,
     DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_SAFETY,
+    DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_TAMPER,
     DEVICE_CLASS_VIBRATION,
     BinarySensorEntity,
@@ -45,6 +47,12 @@ TAMPER_BINARY_SENSOR = TuyaBinarySensorEntityDescription(
     entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
 )
 
+BATTERY_BINARY_SENSOR = TuyaBinarySensorEntityDescription(
+    key=DPCode.BATTERY_STATE,
+    name="Battery",
+    device_class=DEVICE_CLASS_BATTERY,
+    on_value="low",
+)
 
 # All descriptions can be found here. Mostly the Boolean data types in the
 # default status set of each category (that don't have a set instruction)
@@ -60,6 +68,18 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             on_value="alarm",
         ),
         TAMPER_BINARY_SENSOR,
+        BATTERY_BINARY_SENSOR,
+    ),
+    # Smoke Detector
+    # https://developer.tuya.com/en/docs/iot/categoryywbj?id=Kaiuz3f6sf952
+    "ywbj": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.SMOKE_STATE,
+            device_class=DEVICE_CLASS_SMOKE,
+            on_value="alarm",
+        ),
+        TAMPER_BINARY_SENSOR,
+        BATTERY_BINARY_SENSOR,
     ),
     # Human Presence Sensor
     # https://developer.tuya.com/en/docs/iot/categoryhps?id=Kaiuz42yhn1hs
@@ -88,6 +108,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             device_class=DEVICE_CLASS_DOOR,
         ),
         TAMPER_BINARY_SENSOR,
+        BATTERY_BINARY_SENSOR,
     ),
     # Luminance Sensor
     # https://developer.tuya.com/en/docs/iot/categoryldcg?id=Kaiuz3n7u69l8
@@ -98,6 +119,8 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             device_class=DEVICE_CLASS_TAMPER,
             entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         ),
+        TAMPER_BINARY_SENSOR,
+        BATTERY_BINARY_SENSOR,
     ),
     # PIR Detector
     # https://developer.tuya.com/en/docs/iot/categorypir?id=Kaiuz3ss11b80
@@ -108,6 +131,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             on_value="pir",
         ),
         TAMPER_BINARY_SENSOR,
+        BATTERY_BINARY_SENSOR,
     ),
     # Water Detector
     # https://developer.tuya.com/en/docs/iot/categorysj?id=Kaiuz3iub2sli
@@ -118,6 +142,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             on_value="alarm",
         ),
         TAMPER_BINARY_SENSOR,
+        BATTERY_BINARY_SENSOR,
     ),
     # Emergency Button
     # https://developer.tuya.com/en/docs/iot/categorysos?id=Kaiuz3oi6agjy
@@ -127,6 +152,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             device_class=DEVICE_CLASS_SAFETY,
         ),
         TAMPER_BINARY_SENSOR,
+        BATTERY_BINARY_SENSOR,
     ),
     # Vibration Sensor
     # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
@@ -152,6 +178,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             icon="mdi:spirit-level",
             on_value="tilt",
         ),
+        BATTERY_BINARY_SENSOR,
     ),
 }
 

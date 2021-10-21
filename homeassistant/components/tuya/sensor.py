@@ -57,6 +57,13 @@ BATTERY_SENSORS: tuple[SensorEntityDescription, ...] = (
         icon="mdi:battery",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
+    SensorEntityDescription(
+        key=DPCode.BATTERY_VALUE,
+        name="Battery Value",
+        icon="mdi:battery",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        device_class=DEVICE_CLASS_BATTERY,
+    ),
 )
 
 # All descriptions can be found here. Mostly the Integer data types in the
