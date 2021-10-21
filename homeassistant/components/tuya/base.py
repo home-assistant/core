@@ -12,6 +12,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN, TUYA_HA_SIGNAL_UPDATE_ENTITY
+from .util import remap_value
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,9 +54,7 @@ class IntegerTypeData:
         reverse: bool = False,
     ) -> float:
         """Remap a value from this range to a new range."""
-        if reverse:
-            value = self.max - value + self.min
-        return ((value - self.min) / (self.max - self.min)) * (to_max - to_min) + to_min
+        return remap_value(value, self.min, self.max, to_min, to_max, reverse)
 
     def remap_value_from(
         self,
@@ -65,11 +64,7 @@ class IntegerTypeData:
         reverse: bool = False,
     ) -> float:
         """Remap a value from its current range to this range."""
-        if reverse:
-            value = from_max - value + from_min
-        return ((value - from_min) / (from_max - from_min)) * (
-            self.max - self.min
-        ) + self.min
+        return remap_value(value, from_min, from_max, self.min, self.max, reverse)
 
     @classmethod
     def from_json(cls, data: str) -> IntegerTypeData:
