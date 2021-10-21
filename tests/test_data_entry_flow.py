@@ -475,3 +475,15 @@ async def test_move_to_unknown_step_raises_and_removes_from_in_progress(manager)
         await manager.async_init("test", context={"init_step": "does_not_exist"})
 
     assert manager.async_progress() == []
+
+
+async def test_configure_raises_unknown_flow_if_not_in_progress(manager):
+    """Test configure raises UnknownFlow if the flow is not in progress."""
+    with pytest.raises(data_entry_flow.UnknownFlow):
+        await manager.async_configure("wrong_flow_id")
+
+
+async def test_abort_raises_unknown_flow_if_not_in_progress(manager):
+    """Test abort raises UnknownFlow if the flow is not in progress."""
+    with pytest.raises(data_entry_flow.UnknownFlow):
+        await manager.async_abort("wrong_flow_id")
