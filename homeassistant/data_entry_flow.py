@@ -150,6 +150,13 @@ class FlowManager(abc.ABC):
         )
 
     @callback
+    def async_get(self, flow_id: str) -> FlowResult | None:
+        """Return a flow in progress as a partial FlowResult."""
+        if (flow := self._progress.get(flow_id)) is None:
+            raise UnknownFlow
+        return _async_flow_handler_to_flow_result([flow], False)[0]
+
+    @callback
     def async_progress(self, include_uninitialized: bool = False) -> list[FlowResult]:
         """Return the flows in progress as a partial FlowResult."""
         return _async_flow_handler_to_flow_result(
