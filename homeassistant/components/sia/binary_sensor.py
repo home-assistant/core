@@ -108,7 +108,7 @@ class SIABinarySensorBase(SIABaseEntity, BinarySensorEntity):
         """Initialize a base binary sensor."""
         super().__init__(entry, account_data, zone, device_class)
         self._attr_entity_registry_enabled_default = enabled
-        if self._zone is None or self._zone == 0:
+        if self._zone is None:
             self._attr_unique_id = SIA_UNIQUE_ID_FORMAT_HUB.format(
                 self._entry.entry_id, self._account, self._attr_device_class
             )
