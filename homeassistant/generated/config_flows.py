@@ -159,6 +159,7 @@ FLOWS = [
     "local_ip",
     "locative",
     "logi_circle",
+    "lookin",
     "luftdaten",
     "lutron_caseta",
     "lyric",
