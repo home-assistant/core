@@ -414,7 +414,12 @@ class ViCareSensor(SensorEntity):
     @property
     def unique_id(self):
         """Return unique ID for this device."""
-        return f"{self._device_config.getConfig().serial}-{self._attr_name}"
+        tmp_id = (
+            f"{self._device_config.getConfig().serial}-{self.entity_description.key}"
+        )
+        if hasattr(self._api, "id"):
+            return f"{tmp_id}-{self._api.id}"
+        return tmp_id
 
     @property
     def native_value(self):
