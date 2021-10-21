@@ -789,7 +789,7 @@ hass_splunk==0.1.1
 hatasmota==0.2.21
 
 # homeassistant.components.jewish_calendar
-hdate==0.10.2
+hdate==0.10.4
 
 # homeassistant.components.heatmiser
 heatmiserV3==1.1.18
@@ -1616,7 +1616,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.2.1
+pymazda==0.2.2
 
 # homeassistant.components.mediaroom
 pymediaroom==0.6.4.1

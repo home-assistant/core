@@ -104,11 +104,11 @@ class DeconzNumber(DeconzDevice, NumberEntity):
         self._attr_step = description.step
 
     @callback
-    def async_update_callback(self, force_update: bool = False) -> None:
+    def async_update_callback(self) -> None:
         """Update the number value."""
         keys = {self.entity_description.update_key, "reachable"}
-        if force_update or self._device.changed_keys.intersection(keys):
-            super().async_update_callback(force_update=force_update)
+        if self._device.changed_keys.intersection(keys):
+            super().async_update_callback()
 
     @property
     def value(self) -> float:

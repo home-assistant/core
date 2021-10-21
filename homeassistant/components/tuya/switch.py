@@ -256,6 +256,16 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
+    # Ceiling Light
+    # https://developer.tuya.com/en/docs/iot/ceiling-light?id=Kaiuz03xxfc4r
+    "xdd": (
+        SwitchEntityDescription(
+            key=DPCode.DO_NOT_DISTURB,
+            name="Do not disturb",
+            icon="mdi:minus-circle-outline",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
     # Diffuser
     # https://developer.tuya.com/en/docs/iot/categoryxxj?id=Kaiuz1f9mo6bl
     "xxj": (

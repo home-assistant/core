@@ -686,7 +686,7 @@ jobs:
       - name: Run pytest
         run: |
           . venv/bin/activate
-          pytest \
+          python3 -X dev -bb -m pytest \
             -qq \
             --timeout=9 \
             --durations=10 \
