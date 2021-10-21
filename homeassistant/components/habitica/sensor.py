@@ -213,8 +213,7 @@ class HabitipyTaskSensor(SensorEntity):
                 task_id = received_task[TASKS_MAP_ID]
                 task = {}
                 for map_key, map_value in TASKS_MAP.items():
-                    value = received_task.get(map_value)
-                    if value:
+                    if value := received_task.get(map_value):
                         task[map_key] = value
                 attrs[task_id] = task
             return attrs
