@@ -135,10 +135,10 @@ def play_on_sonos(hass, content_type, content_id, speaker_name):
     media, plex_server = lookup_plex_media(hass, content_type, content_id)
     try:
         sonos_speaker = plex_server.account.sonos_speaker(speaker_name)
-    except BadRequest:
+    except BadRequest as exc:
         raise HomeAssistantError(
             "Sonos speakers not linked to Plex account, complete this step in the Plex app"
-        )
+        ) from exc
 
     if sonos_speaker is None:
         message = f"Sonos speaker '{speaker_name}' is not associated with '{plex_server.friendly_name}'"
