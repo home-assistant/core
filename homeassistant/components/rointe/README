@@ -1,0 +1,7 @@
+Branch: rointe-climate-with-fixes
+
+This branch contains the Rointe integration with PR fixes from the main repo reviewers.
+Only contains the climate integration.
+
+Branch: rointe-integration-v2
+HACS oriented work. Contains all platforms.
