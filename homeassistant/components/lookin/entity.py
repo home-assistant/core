@@ -2,11 +2,27 @@
 from __future__ import annotations
 
 from aiolookin import POWER_CMD, POWER_OFF_CMD, POWER_ON_CMD, Climate, Remote
+from aiolookin.models import Device
 
 from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import DOMAIN
 from .models import LookinData
+
+
+def _lookin_device_to_device_info(lookin_device: Device) -> DeviceInfo:
+    """Convert a lookin device into DeviceInfo."""
+    return DeviceInfo(
+        identifiers={(DOMAIN, lookin_device.id)},
+        name=lookin_device.name,
+        manufacturer="LOOKin",
+        model="LOOKin Remote2",
+        sw_version=lookin_device.firmware,
+    )
 
 
 class LookinDeviceEntity(Entity):
@@ -16,17 +32,21 @@ class LookinDeviceEntity(Entity):
 
     def __init__(self, lookin_data: LookinData) -> None:
         """Init the lookin device entity."""
-        super().__init__()
         self._lookin_device = lookin_data.lookin_device
         self._lookin_protocol = lookin_data.lookin_protocol
         self._lookin_udp_subs = lookin_data.lookin_udp_subs
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._lookin_device.id)},
-            name=self._lookin_device.name,
-            manufacturer="LOOKin",
-            model="LOOKin Remote2",
-            sw_version=self._lookin_device.firmware,
+        self._attr_device_info = _lookin_device_to_device_info(
+            lookin_data.lookin_device
         )
+
+
+class LookinDeviceCoordinatorEntity(LookinDeviceEntity, CoordinatorEntity):
+    """A lookin device entity on the device itself that uses the coordinator."""
+
+    def __init__(self, lookin_data: LookinData) -> None:
+        """Init the lookin device entity."""
+        super().__init__(lookin_data)
+        CoordinatorEntity.__init__(self, lookin_data.meteo_coordinator)
 
 
 class LookinEntity(Entity):
@@ -63,6 +83,21 @@ class LookinEntity(Entity):
         await self._lookin_protocol.send_command(
             uuid=self._uuid, command=command, signal="FF"
         )
+
+
+class LookinCoordinatorEntity(LookinEntity, CoordinatorEntity):
+    """A lookin device entity for an external device that uses the coordinator."""
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        uuid: str,
+        device: Remote | Climate,
+        lookin_data: LookinData,
+    ) -> None:
+        """Init the lookin device entity."""
+        super().__init__(uuid, device, lookin_data)
+        CoordinatorEntity.__init__(self, coordinator)
 
 
 class LookinPowerEntity(LookinEntity):

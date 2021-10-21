@@ -15,12 +15,10 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .entity import LookinDeviceEntity
+from .entity import LookinDeviceCoordinatorEntity
 from .models import LookinData
 
 LOGGER = logging.getLogger(__name__)
@@ -57,15 +55,14 @@ async def async_setup_entry(
     )
 
 
-class LookinSensorEntity(CoordinatorEntity, LookinDeviceEntity, SensorEntity, Entity):
+class LookinSensorEntity(LookinDeviceCoordinatorEntity, SensorEntity):
     """A lookin device sensor entity."""
 
     def __init__(
         self, description: SensorEntityDescription, lookin_data: LookinData
     ) -> None:
         """Init the lookin sensor entity."""
-        super().__init__(lookin_data.meteo_coordinator)
-        LookinDeviceEntity.__init__(self, lookin_data)
+        super().__init__(lookin_data)
         self.entity_description = description
         self._attr_name = f"{self._lookin_device.name} {description.name}"
         self._attr_native_value = getattr(self.coordinator.data, description.key)
