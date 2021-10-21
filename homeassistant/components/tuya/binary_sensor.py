@@ -47,6 +47,7 @@ TAMPER_BINARY_SENSOR = TuyaBinarySensorEntityDescription(
     entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
 )
 
+# Commonly used battery binary sensor
 BATTERY_BINARY_SENSOR = TuyaBinarySensorEntityDescription(
     key=DPCode.BATTERY_STATE,
     name="Battery",
