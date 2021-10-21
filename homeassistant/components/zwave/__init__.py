@@ -12,6 +12,7 @@ from homeassistant import config_entries
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
+    ATTR_VIA_DEVICE,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
@@ -1313,9 +1314,9 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
             "model": self.node.product_name,
         }
         if self.values.primary.instance > 1:
-            info["via_device"] = (DOMAIN, self.node_id)
+            info[ATTR_VIA_DEVICE] = (DOMAIN, self.node_id)
         elif self.node_id > 1:
-            info["via_device"] = (DOMAIN, 1)
+            info[ATTR_VIA_DEVICE] = (DOMAIN, 1)
         return info
 
     @property

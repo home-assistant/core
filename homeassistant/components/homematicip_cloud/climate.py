@@ -25,7 +25,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, ATTR_VIA_DEVICE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 
@@ -81,7 +81,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
             "name": self._device.label,
             "manufacturer": "eQ-3",
             "model": self._device.modelType,
-            "via_device": (HMIPC_DOMAIN, self._device.homeId),
+            ATTR_VIA_DEVICE: (HMIPC_DOMAIN, self._device.homeId),
         }
 
     @property

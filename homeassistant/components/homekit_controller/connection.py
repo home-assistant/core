@@ -12,6 +12,7 @@ from aiohomekit.model import Accessories
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
+from homeassistant.const import ATTR_VIA_DEVICE
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.event import async_track_time_interval
@@ -227,7 +228,7 @@ class HKDevice:
                 # Every pairing has an accessory 1
                 # It *doesn't* have a via_device, as it is the device we are connecting to
                 # Every other accessory should use it as its via device.
-                device_info["via_device"] = (
+                device_info[ATTR_VIA_DEVICE] = (
                     DOMAIN,
                     "serial-number",
                     self.connection_info["serial-number"],

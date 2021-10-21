@@ -7,7 +7,7 @@ import functools
 import logging
 from typing import Any
 
-from homeassistant.const import ATTR_NAME
+from homeassistant.const import ATTR_NAME, ATTR_VIA_DEVICE
 from homeassistant.core import CALLBACK_TYPE, Event, callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.debounce import Debouncer
@@ -98,7 +98,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
             ATTR_MANUFACTURER: zha_device_info[ATTR_MANUFACTURER],
             ATTR_MODEL: zha_device_info[ATTR_MODEL],
             ATTR_NAME: zha_device_info[ATTR_NAME],
-            "via_device": (DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
+            ATTR_VIA_DEVICE: (DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
         }
 
     @callback

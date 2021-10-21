@@ -8,7 +8,12 @@ from typing import cast
 from aioguardian import Client
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_IP_ADDRESS, CONF_PORT
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_VIA_DEVICE,
+    CONF_IP_ADDRESS,
+    CONF_PORT,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import EntityDescription
@@ -247,7 +252,7 @@ class PairedSensorEntity(GuardianEntity):
         self._attr_device_info = {
             "identifiers": {(DOMAIN, paired_sensor_uid)},
             "name": f"Guardian Paired Sensor {paired_sensor_uid}",
-            "via_device": (DOMAIN, entry.data[CONF_UID]),
+            ATTR_VIA_DEVICE: (DOMAIN, entry.data[CONF_UID]),
         }
         self._attr_name = (
             f"Guardian Paired Sensor {paired_sensor_uid}: {description.name}"

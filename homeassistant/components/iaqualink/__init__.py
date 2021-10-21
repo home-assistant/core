@@ -25,7 +25,7 @@ from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import ATTR_VIA_DEVICE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -243,5 +243,5 @@ class AqualinkEntity(Entity):
             "name": self.name,
             "model": self.dev.__class__.__name__.replace("Aqualink", ""),
             "manufacturer": "Jandy",
-            "via_device": (DOMAIN, self.dev.system.serial),
+            ATTR_VIA_DEVICE: (DOMAIN, self.dev.system.serial),
         }

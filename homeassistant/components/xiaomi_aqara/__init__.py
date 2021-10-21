@@ -9,6 +9,7 @@ from homeassistant import config_entries, core
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_ID,
+    ATTR_VIA_DEVICE,
     ATTR_VOLTAGE,
     CONF_HOST,
     CONF_MAC,
@@ -292,7 +293,7 @@ class XiaomiDevice(Entity):
                 "model": self._model,
                 "name": self._device_name,
                 "sw_version": self._protocol,
-                "via_device": (DOMAIN, self._gateway_id),
+                ATTR_VIA_DEVICE: (DOMAIN, self._gateway_id),
             }
 
         return device_info

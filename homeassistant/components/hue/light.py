@@ -26,6 +26,7 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     LightEntity,
 )
+from homeassistant.const import ATTR_VIA_DEVICE
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.debounce import Debouncer
@@ -450,7 +451,7 @@ class HueLight(CoordinatorEntity, LightEntity):
             "model": self.light.productname or self.light.modelid,
             # Not yet exposed as properties in aiohue
             "sw_version": self.light.raw["swversion"],
-            "via_device": (HUE_DOMAIN, self.bridge.api.config.bridgeid),
+            ATTR_VIA_DEVICE: (HUE_DOMAIN, self.bridge.api.config.bridgeid),
         }
 
         if self.light.id in self._rooms:

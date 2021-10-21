@@ -9,7 +9,12 @@ from aionotion import async_get_client
 from aionotion.errors import InvalidCredentialsError, NotionError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_VIA_DEVICE,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -153,7 +158,7 @@ class NotionEntity(CoordinatorEntity):
             "model": sensor["hardware_revision"],
             "name": str(sensor["name"]),
             "sw_version": sensor["firmware_version"],
-            "via_device": (DOMAIN, bridge.get("hardware_id")),
+            ATTR_VIA_DEVICE: (DOMAIN, bridge.get("hardware_id")),
         }
 
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}

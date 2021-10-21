@@ -7,6 +7,7 @@ from typing import Any
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_VIA_DEVICE,
     DATA_RATE_KILOBYTES_PER_SECOND,
     DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
@@ -168,7 +169,7 @@ class FreeboxDiskSensor(FreeboxSensor):
             "name": f"Disk {self._disk['id']}",
             "model": self._disk["model"],
             "sw_version": self._disk["firmware"],
-            "via_device": (
+            ATTR_VIA_DEVICE: (
                 DOMAIN,
                 self._router.mac,
             ),

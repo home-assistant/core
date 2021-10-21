@@ -11,7 +11,7 @@ from homeassistant.components.water_heater import (
     SUPPORT_OPERATION_MODE,
     WaterHeaterEntity,
 )
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import ATTR_VIA_DEVICE, TEMP_CELSIUS
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from . import HiveEntity, refresh_system
@@ -86,7 +86,7 @@ class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
             "model": self.device["deviceData"]["model"],
             "manufacturer": self.device["deviceData"]["manufacturer"],
             "sw_version": self.device["deviceData"]["version"],
-            "via_device": (DOMAIN, self.device["parentDevice"]),
+            ATTR_VIA_DEVICE: (DOMAIN, self.device["parentDevice"]),
         }
 
     @property

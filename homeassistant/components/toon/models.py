@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from homeassistant.const import ATTR_VIA_DEVICE
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -44,7 +45,7 @@ class ToonElectricityMeterDeviceEntity(ToonEntity):
         return {
             "name": "Electricity Meter",
             "identifiers": {(DOMAIN, agreement_id, "electricity")},
-            "via_device": (DOMAIN, agreement_id, "meter_adapter"),
+            ATTR_VIA_DEVICE: (DOMAIN, agreement_id, "meter_adapter"),
         }
 
 
@@ -58,7 +59,7 @@ class ToonGasMeterDeviceEntity(ToonEntity):
         return {
             "name": "Gas Meter",
             "identifiers": {(DOMAIN, agreement_id, "gas")},
-            "via_device": (DOMAIN, agreement_id, "electricity"),
+            ATTR_VIA_DEVICE: (DOMAIN, agreement_id, "electricity"),
         }
 
 
@@ -72,7 +73,7 @@ class ToonWaterMeterDeviceEntity(ToonEntity):
         return {
             "name": "Water Meter",
             "identifiers": {(DOMAIN, agreement_id, "water")},
-            "via_device": (DOMAIN, agreement_id, "electricity"),
+            ATTR_VIA_DEVICE: (DOMAIN, agreement_id, "electricity"),
         }
 
 
@@ -86,7 +87,7 @@ class ToonSolarDeviceEntity(ToonEntity):
         return {
             "name": "Solar Panels",
             "identifiers": {(DOMAIN, agreement_id, "solar")},
-            "via_device": (DOMAIN, agreement_id, "meter_adapter"),
+            ATTR_VIA_DEVICE: (DOMAIN, agreement_id, "meter_adapter"),
         }
 
 
@@ -101,7 +102,7 @@ class ToonBoilerModuleDeviceEntity(ToonEntity):
             "name": "Boiler Module",
             "manufacturer": "Eneco",
             "identifiers": {(DOMAIN, agreement_id, "boiler_module")},
-            "via_device": (DOMAIN, agreement_id),
+            ATTR_VIA_DEVICE: (DOMAIN, agreement_id),
         }
 
 
@@ -115,7 +116,7 @@ class ToonBoilerDeviceEntity(ToonEntity):
         return {
             "name": "Boiler",
             "identifiers": {(DOMAIN, agreement_id, "boiler")},
-            "via_device": (DOMAIN, agreement_id, "boiler_module"),
+            ATTR_VIA_DEVICE: (DOMAIN, agreement_id, "boiler_module"),
         }
 
 

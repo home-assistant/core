@@ -12,6 +12,7 @@ from homeassistant.components.alarm_control_panel.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_VIA_DEVICE,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED,
@@ -52,7 +53,7 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
             "name": self.name,
             "manufacturer": "eQ-3",
             "model": CONST_ALARM_CONTROL_PANEL_NAME,
-            "via_device": (HMIPC_DOMAIN, self._home.id),
+            ATTR_VIA_DEVICE: (HMIPC_DOMAIN, self._home.id),
         }
 
     @property

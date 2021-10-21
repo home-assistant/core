@@ -1,6 +1,7 @@
 """Bosch Smart Home Controller base entity."""
 from boschshcpy.device import SHCDevice
 
+from homeassistant.const import ATTR_VIA_DEVICE
 from homeassistant.helpers.device_registry import async_get as get_dev_reg
 from homeassistant.helpers.entity import Entity
 
@@ -33,7 +34,7 @@ class SHCEntity(Entity):
             "name": device.name,
             "manufacturer": device.manufacturer,
             "model": device.device_model,
-            "via_device": (
+            ATTR_VIA_DEVICE: (
                 DOMAIN,
                 device.parent_device_id
                 if device.parent_device_id is not None

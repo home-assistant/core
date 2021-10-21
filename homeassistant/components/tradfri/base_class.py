@@ -17,6 +17,7 @@ from pytradfri.device.socket import Socket
 from pytradfri.device.socket_control import SocketControl
 from pytradfri.error import PytradfriError
 
+from homeassistant.const import ATTR_VIA_DEVICE
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
@@ -115,7 +116,7 @@ class TradfriBaseDevice(TradfriBaseClass):
             "model": info.model_number,
             "name": self._attr_name,
             "sw_version": info.firmware_version,
-            "via_device": (DOMAIN, self._gateway_id),
+            ATTR_VIA_DEVICE: (DOMAIN, self._gateway_id),
         }
 
     def _refresh(self, device: Device) -> None:

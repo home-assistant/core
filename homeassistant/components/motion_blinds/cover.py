@@ -16,6 +16,7 @@ from homeassistant.components.cover import (
     DEVICE_CLASS_SHUTTER,
     CoverEntity,
 )
+from homeassistant.const import ATTR_VIA_DEVICE
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -143,7 +144,7 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
             "manufacturer": MANUFACTURER,
             "name": f"{blind.blind_type}-{blind.mac[12:]}",
             "model": blind.blind_type,
-            "via_device": (DOMAIN, config_entry.unique_id),
+            ATTR_VIA_DEVICE: (DOMAIN, config_entry.unique_id),
         }
 
     @property

@@ -27,6 +27,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
+    ATTR_VIA_DEVICE,
     CONF_EXCLUDE,
     PRECISION_HALVES,
     PRECISION_TENTHS,
@@ -488,7 +489,7 @@ class ZoneDevice(ClimateEntity):
             "identifiers": {(IZONE, controller.unique_id, zone.index)},
             "name": self.name,
             "manufacturer": "IZone",
-            "via_device": (IZONE, controller.unique_id),
+            ATTR_VIA_DEVICE: (IZONE, controller.unique_id),
             "model": zone.type.name.title(),
         }
 

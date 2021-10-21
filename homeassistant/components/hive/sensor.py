@@ -3,6 +3,7 @@
 from datetime import timedelta
 
 from homeassistant.components.sensor import DEVICE_CLASS_BATTERY, SensorEntity
+from homeassistant.const import ATTR_VIA_DEVICE
 
 from . import HiveEntity
 from .const import DOMAIN
@@ -43,7 +44,7 @@ class HiveSensorEntity(HiveEntity, SensorEntity):
             "model": self.device["deviceData"]["model"],
             "manufacturer": self.device["deviceData"]["manufacturer"],
             "sw_version": self.device["deviceData"]["version"],
-            "via_device": (DOMAIN, self.device["parentDevice"]),
+            ATTR_VIA_DEVICE: (DOMAIN, self.device["parentDevice"]),
         }
 
     @property

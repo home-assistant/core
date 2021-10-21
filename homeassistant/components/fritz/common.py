@@ -21,6 +21,7 @@ from homeassistant.components.device_tracker.const import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
 )
+from homeassistant.const import ATTR_VIA_DEVICE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -357,7 +358,7 @@ class FritzDeviceBase(Entity):
             "default_name": self.name,
             "default_manufacturer": "AVM",
             "default_model": "FRITZ!Box Tracked device",
-            "via_device": (
+            ATTR_VIA_DEVICE: (
                 DOMAIN,
                 self._router.unique_id,
             ),
