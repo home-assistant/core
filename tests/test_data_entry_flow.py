@@ -404,6 +404,13 @@ async def test_init_unknown_flow(manager):
         await manager.async_init("test")
 
 
+async def test_async_get_unknown_flow(manager):
+    """Test that UnknownFlow is raised when async_get is called with a flow_id that does not exist."""
+
+    with pytest.raises(data_entry_flow.UnknownFlow):
+        await manager.async_get("does_not_exist")
+
+
 async def test_async_has_matching_flow(
     hass: HomeAssistant, manager: data_entry_flow.FlowManager
 ):
@@ -455,3 +462,28 @@ async def test_async_has_matching_flow(
         )
         is False
     )
+
+
+async def test_move_to_unknown_step_raises_and_removes_from_in_progress(manager):
+    """Test that moving to an unknown step raises and removes the flow from in progress."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 1
+
+    with pytest.raises(data_entry_flow.UnknownStep):
+        await manager.async_init("test", context={"init_step": "does_not_exist"})
+
+    assert manager.async_progress() == []
+
+
+async def test_configure_raises_unknown_flow_if_not_in_progress(manager):
+    """Test configure raises UnknownFlow if the flow is not in progress."""
+    with pytest.raises(data_entry_flow.UnknownFlow):
+        await manager.async_configure("wrong_flow_id")
+
+
+async def test_abort_raises_unknown_flow_if_not_in_progress(manager):
+    """Test abort raises UnknownFlow if the flow is not in progress."""
+    with pytest.raises(data_entry_flow.UnknownFlow):
+        await manager.async_abort("wrong_flow_id")
