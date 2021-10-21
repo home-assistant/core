@@ -70,11 +70,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_entry(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Venstar thermostat."""
-    client = hass.data[DOMAIN][config.entry_id][VEN_CLIENT]
-    humidifier = config.data.get(CONF_HUMIDIFIER)
-    async_add_entities([VenstarThermostat(hass, config, client, humidifier)], True)
+    client = hass.data[DOMAIN][config_entry.entry_id][VEN_CLIENT]
+    humidifier = config_entry.data.get(CONF_HUMIDIFIER)
+    async_add_entities(
+        [VenstarThermostat(hass, config_entry, client, humidifier)], True
+    )
 
 
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
@@ -84,16 +86,15 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     configuration.yaml, the import flow will attempt to import it and create
     a config entry.
     """
-    if config["platform"] == DOMAIN:
-        _LOGGER.warning(
-            "Loading venstar via platform config is deprecated; The configuration"
-            " has been migrated to a config entry and can be safely removed"
+    _LOGGER.warning(
+        "Loading venstar via platform config is deprecated; The configuration"
+        " has been migrated to a config entry and can be safely removed"
+    )
+    # No config entry exists and configuration.yaml config exists, trigger the import flow.
+    if not hass.config_entries.async_entries(DOMAIN):
+        await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
         )
-        # No config entry exists and configuration.yaml config exists, trigger the import flow.
-        if not hass.config_entries.async_entries(DOMAIN):
-            await hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-            )
 
 
 class VenstarThermostat(VenstarData, ClimateEntity):

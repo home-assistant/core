@@ -31,16 +31,12 @@ DATA_SCHEMA = vol.Schema(
 
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect."""
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.data[CONF_HOST] == data[CONF_HOST]:
-            raise AlreadyConfigured
-
     username = data.get(CONF_USERNAME)
     password = data.get(CONF_PASSWORD)
     pin = data.get(CONF_PIN)
     host = data[CONF_HOST]
     timeout = data.get(CONF_TIMEOUT)
-    protocol = "https" if CONF_SSL in data and data[CONF_SSL] else "http"
+    protocol = "https" if data[CONF_SSL] else "http"
 
     client = VenstarColorTouch(
         addr=host,
@@ -70,16 +66,16 @@ class VenstarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+
             try:
                 info = await validate_input(self.hass, user_input)
-                return self.async_create_entry(title=info["title"], data=user_input)
-            except AlreadyConfigured:
-                return self.async_abort(reason="already_configured")
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
@@ -87,22 +83,19 @@ class VenstarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data):
         """Import entry from configuration.yaml."""
+        self._async_abort_entries_match({CONF_HOST: import_data[CONF_HOST]})
         return await self.async_step_user(
             {
                 CONF_HOST: import_data[CONF_HOST],
                 CONF_USERNAME: import_data.get(CONF_USERNAME),
                 CONF_PASSWORD: import_data.get(CONF_PASSWORD),
                 CONF_PIN: import_data.get(CONF_PIN),
-                CONF_HUMIDIFIER: import_data.get(CONF_HUMIDIFIER),
-                CONF_SSL: import_data.get(CONF_SSL),
-                CONF_TIMEOUT: import_data.get(CONF_TIMEOUT),
+                CONF_HUMIDIFIER: import_data[CONF_HUMIDIFIER],
+                CONF_SSL: import_data[CONF_SSL],
+                CONF_TIMEOUT: import_data[CONF_TIMEOUT],
             }
         )
 
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
-
-
-class AlreadyConfigured(exceptions.HomeAssistantError):
-    """Error to indicate this device is already configured."""
