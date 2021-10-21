@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from pyoctoprintapi import ApiError, DiscoverySettings
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.octoprint.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -12,7 +12,6 @@ from tests.common import MockConfigEntry
 
 async def test_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -167,7 +166,6 @@ async def test_form_unknown_exception(hass):
 async def test_show_zerconf_form(hass: HomeAssistant) -> None:
     """Test that the zeroconf confirmation form is served."""
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
@@ -232,7 +230,6 @@ async def test_show_zerconf_form(hass: HomeAssistant) -> None:
 async def test_show_ssdp_form(hass: HomeAssistant) -> None:
     """Test that the zeroconf confirmation form is served."""
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
@@ -419,3 +416,104 @@ async def test_failed_auth_unexpected_error(hass: HomeAssistant) -> None:
 
     assert result["type"] == "abort"
     assert result["reason"] == "auth_failed"
+
+
+async def test_user_duplicate_entry(hass):
+    """Test that duplicate entries abort."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={"host": "192.168.1.123"},
+        source=config_entries.SOURCE_IMPORT,
+        unique_id="uuid",
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert not result["errors"]
+
+    with patch(
+        "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "testuser",
+                "host": "1.1.1.1",
+                "name": "Printer",
+                "port": 81,
+                "ssl": True,
+                "path": "/",
+            },
+        )
+        await hass.async_block_till_done()
+    assert result["type"] == "progress"
+
+    with patch(
+        "pyoctoprintapi.OctoprintClient.get_server_info",
+        return_value=True,
+    ), patch(
+        "pyoctoprintapi.OctoprintClient.get_discovery_info",
+        return_value=DiscoverySettings({"upnpUuid": "uuid"}),
+    ), patch(
+        "homeassistant.components.octoprint.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.octoprint.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "already_configured"
+    assert len(mock_setup.mock_calls) == 0
+    assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_duplicate_zerconf_ignored(hass: HomeAssistant) -> None:
+    """Test that the duplicate zeroconf isn't shown."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={"host": "192.168.1.123"},
+        source=config_entries.SOURCE_IMPORT,
+        unique_id="83747482",
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data={
+            "host": "192.168.1.123",
+            "port": 80,
+            "hostname": "example.local.",
+            "uuid": "83747482",
+            "properties": {"uuid": "83747482", "path": "/foo/"},
+        },
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+
+
+async def test_duplicate_ssdp_ignored(hass: HomeAssistant) -> None:
+    """Test that duplicate ssdp form is note shown."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={"host": "192.168.1.123"},
+        source=config_entries.SOURCE_IMPORT,
+        unique_id="83747482",
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data={
+            "presentationURL": "http://192.168.1.123:80/discovery/device.xml",
+            "port": 80,
+            "UDN": "uuid:83747482",
+        },
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
