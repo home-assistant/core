@@ -528,9 +528,15 @@ async def test_validation_grid_external_cost_compensation(
 
 
 async def test_validation_grid_price_not_exist(
-    hass, mock_energy_manager, mock_get_metadata
+    hass, mock_energy_manager, mock_get_metadata, mock_is_entity_recorded
 ):
-    """Test validating grid with price entity that does not exist."""
+    """Test validating grid with errors.
+
+    - The price entity for the auto generated cost entity does not exist.
+    - The auto generated cost entities are not recorded.
+    """
+    mock_is_entity_recorded["sensor.grid_consumption_1_cost"] = False
+    mock_is_entity_recorded["sensor.grid_production_1_compensation"] = False
     hass.states.async_set(
         "sensor.grid_consumption_1",
         "10.10",
@@ -583,9 +589,78 @@ async def test_validation_grid_price_not_exist(
                     "type": "entity_not_defined",
                     "identifier": "sensor.grid_price_1",
                     "value": None,
-                }
+                },
+                {
+                    "type": "recorder_untracked",
+                    "identifier": "sensor.grid_consumption_1_cost",
+                    "value": None,
+                },
+                {
+                    "type": "recorder_untracked",
+                    "identifier": "sensor.grid_production_1_compensation",
+                    "value": None,
+                },
             ]
         ],
+        "device_consumption": [],
+    }
+
+
+async def test_validation_grid_auto_cost_entity_errors(
+    hass, mock_energy_manager, mock_get_metadata, mock_is_entity_recorded, caplog
+):
+    """Test validating grid when the auto generated cost entity config is incorrect.
+
+    The intention of the test is to make sure the validation does not throw due to the
+    bad config.
+    """
+    hass.states.async_set(
+        "sensor.grid_consumption_1",
+        "10.10",
+        {
+            "device_class": "energy",
+            "unit_of_measurement": "kWh",
+            "state_class": "total_increasing",
+        },
+    )
+    hass.states.async_set(
+        "sensor.grid_production_1",
+        "10.10",
+        {
+            "device_class": "energy",
+            "unit_of_measurement": "kWh",
+            "state_class": "total_increasing",
+        },
+    )
+    await mock_energy_manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "grid",
+                    "flow_from": [
+                        {
+                            "stat_energy_from": "sensor.grid_consumption_1",
+                            "entity_energy_from": None,
+                            "entity_energy_price": None,
+                            "number_energy_price": 0.20,
+                        }
+                    ],
+                    "flow_to": [
+                        {
+                            "stat_energy_to": "sensor.grid_production_1",
+                            "entity_energy_to": "invalid",
+                            "entity_energy_price": None,
+                            "number_energy_price": 0.10,
+                        }
+                    ],
+                }
+            ]
+        }
+    )
+    await hass.async_block_till_done()
+
+    assert (await validate.async_validate(hass)).as_dict() == {
+        "energy_sources": [[]],
         "device_consumption": [],
     }
 
