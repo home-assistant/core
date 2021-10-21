@@ -23,7 +23,6 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import (
     DeviceEntry,
     DeviceRegistry,
@@ -41,7 +40,6 @@ from .const import (
     CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
     CONF_OFF_DELAY,
-    CONF_REMOVE_DEVICE,
     CONF_REPLACE_DEVICE,
     CONF_SIGNAL_REPETITIONS,
     CONF_VENETIAN_BLIND_MODE,
@@ -110,26 +108,6 @@ class OptionsFlow(config_entries.OptionsFlow):
                 ]
                 self._selected_device_object = get_rfx_object(event_code)
                 return await self.async_step_set_device_options()
-            if CONF_REMOVE_DEVICE in user_input:
-                remove_devices = user_input[CONF_REMOVE_DEVICE]
-                devices = {}
-                for entry_id in remove_devices:
-                    device_data = self._get_device_data(entry_id)
-
-                    event_code = device_data[CONF_EVENT_CODE]
-                    device_id = device_data[CONF_DEVICE_ID]
-                    self.hass.helpers.dispatcher.async_dispatcher_send(
-                        f"{DOMAIN}_{CONF_REMOVE_DEVICE}_{device_id}"
-                    )
-                    self._device_registry.async_remove_device(entry_id)
-                    if event_code is not None:
-                        devices[event_code] = None
-
-                self.update_config_data(
-                    global_options=self._global_options, devices=devices
-                )
-
-                return self.async_create_entry(title="", data={})
             if CONF_EVENT_CODE in user_input:
                 self._selected_device_event_code = user_input[CONF_EVENT_CODE]
                 self._selected_device = {}
@@ -156,11 +134,6 @@ class OptionsFlow(config_entries.OptionsFlow):
         self._device_registry = device_registry
         self._device_entries = device_entries
 
-        remove_devices = {
-            entry.id: entry.name_by_user if entry.name_by_user else entry.name
-            for entry in device_entries
-        }
-
         configure_devices = {
             entry.id: entry.name_by_user if entry.name_by_user else entry.name
             for entry in device_entries
@@ -174,7 +147,6 @@ class OptionsFlow(config_entries.OptionsFlow):
             ): bool,
             vol.Optional(CONF_EVENT_CODE): str,
             vol.Optional(CONF_DEVICE): vol.In(configure_devices),
-            vol.Optional(CONF_REMOVE_DEVICE): cv.multi_select(remove_devices),
         }
 
         return self.async_show_form(

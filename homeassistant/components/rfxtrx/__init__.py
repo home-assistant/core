@@ -5,7 +5,6 @@ import asyncio
 import binascii
 from collections.abc import Callable
 import copy
-import functools
 import logging
 from typing import NamedTuple
 
@@ -14,6 +13,8 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import websocket_api
+from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -25,19 +26,19 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceRegistry
+from homeassistant.helpers.device_registry import DeviceRegistry, EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_EVENT,
     COMMAND_GROUP_LIST,
     CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
-    CONF_REMOVE_DEVICE,
     DATA_RFXOBJECT,
     DEVICE_PACKET_TYPE_LIGHTING4,
     EVENT_RFXTRX_EVENT,
@@ -82,7 +83,13 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the RFXtrx component."""
+    websocket_api.async_register_command(hass, websocket_remove_device)
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEntry):
     """Set up the RFXtrx component."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -223,6 +230,25 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
         data[CONF_DEVICES][event_code] = config
         hass.config_entries.async_update_entry(entry=entry, data=data)
         devices[device_id] = config
+
+    @callback
+    def _remove_device(event: Event):
+        if event.data["action"] != "remove":
+            return
+        device_entry = device_registry.deleted_devices[event.data["device_id"]]
+        device_id = next(iter(device_entry.identifiers))[1:]
+        data = entry.data.copy()
+        data[CONF_DEVICES] = {
+            packet_id: entity_info
+            for packet_id, entity_info in data[CONF_DEVICES].items()
+            if tuple(entity_info.get(CONF_DEVICE_ID)) != device_id
+        }
+        hass.config_entries.async_update_entry(entry=entry, data=data)
+        devices.pop(device_id)
+
+    entry.async_on_unload(
+        hass.bus.async_listen(EVENT_DEVICE_REGISTRY_UPDATED, _remove_device)
+    )
 
     def _shutdown_rfxtrx(event):
         """Close connection with RFXtrx."""
@@ -388,6 +414,40 @@ def get_device_id(
     return DeviceTuple(f"{device.packettype:x}", f"{device.subtype:x}", id_string)
 
 
+@websocket_api.websocket_command(
+    {vol.Required("type"): "rfxtrx/device/remove", vol.Required("device_id"): str}
+)
+@websocket_api.async_response
+async def websocket_remove_device(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+) -> None:
+    """Delete device."""
+    device_id = msg["device_id"]
+    dev_registry: DeviceRegistry = (
+        await hass.helpers.device_registry.async_get_registry()
+    )
+
+    device = dev_registry.async_get(device_id)
+    if not device:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Device not found"
+        )
+        return
+
+    for entry_id in device.config_entries:
+        config_entry = hass.config_entries.async_get_entry(entry_id)
+        if not config_entry or config_entry.domain != DOMAIN:
+            continue
+
+        dev_registry.async_remove_device(device_id)
+        connection.send_message(websocket_api.result_message(msg["id"]))
+        return
+
+    connection.send_error(
+        msg["id"], websocket_api.const.ERR_NOT_FOUND, "Non rfxtrx device"
+    )
+
+
 class RfxtrxEntity(RestoreEntity):
     """Represents a Rfxtrx device.
 
@@ -421,13 +481,6 @@ class RfxtrxEntity(RestoreEntity):
         self.async_on_remove(
             self.hass.helpers.dispatcher.async_dispatcher_connect(
                 SIGNAL_EVENT, self._handle_event
-            )
-        )
-
-        self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                f"{DOMAIN}_{CONF_REMOVE_DEVICE}_{self._device_id}",
-                functools.partial(self.async_remove, force_remove=True),
             )
         )
 

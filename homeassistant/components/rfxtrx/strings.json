@@ -42,8 +42,7 @@
           "debug": "Enable debugging",
           "automatic_add": "Enable automatic add",
           "event_code": "Enter event code to add",
-          "device": "Select device to configure",
-          "remove_device": "Select device to delete"
+          "device": "Select device to configure"
         },
         "title": "Rfxtrx Options"
       },
