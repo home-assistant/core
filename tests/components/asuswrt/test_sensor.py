@@ -40,6 +40,7 @@ CONFIG_DATA = {
 MOCK_BYTES_TOTAL = [60000000000, 50000000000]
 MOCK_CURRENT_TRANSFER_RATES = [20000000, 10000000]
 MOCK_LOAD_AVG = [1.1, 1.2, 1.3]
+MOCK_TEMPERATURES = {"2.4GHz": 40, "5.0GHz": 55, "CPU": 71.2}
 
 SENSOR_NAMES = [
     "Devices Connected",
@@ -50,6 +51,9 @@ SENSOR_NAMES = [
     "Load Avg (1m)",
     "Load Avg (5m)",
     "Load Avg (15m)",
+    "2.4GHz Temperature",
+    "5GHz Temperature",
+    "CPU Temperature",
 ]
 
 
@@ -87,6 +91,9 @@ def mock_controller_connect(mock_devices):
         )
         service_mock.return_value.async_get_loadavg = AsyncMock(
             return_value=MOCK_LOAD_AVG
+        )
+        service_mock.return_value.async_get_temperature = AsyncMock(
+            return_value=MOCK_TEMPERATURES
         )
         yield service_mock
 
@@ -135,6 +142,9 @@ async def test_sensors(hass, connect, mock_devices):
     assert hass.states.get(f"{sensor_prefix}_load_avg_1m").state == "1.1"
     assert hass.states.get(f"{sensor_prefix}_load_avg_5m").state == "1.2"
     assert hass.states.get(f"{sensor_prefix}_load_avg_15m").state == "1.3"
+    assert hass.states.get(f"{sensor_prefix}_2_4ghz_temperature").state == "40.0"
+    assert hass.states.get(f"{sensor_prefix}_5ghz_temperature").state == "55.0"
+    assert hass.states.get(f"{sensor_prefix}_cpu_temperature").state == "71.2"
     assert hass.states.get(f"{sensor_prefix}_devices_connected").state == "2"
 
     # add one device and remove another

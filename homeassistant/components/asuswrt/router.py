@@ -45,6 +45,7 @@ from .const import (
     SENSORS_CONNECTED_DEVICE,
     SENSORS_LOAD_AVG,
     SENSORS_RATES,
+    SENSORS_TEMPERATURES,
 )
 
 CONF_REQ_RELOAD = [CONF_DNSMASQ, CONF_INTERFACE, CONF_REQUIRE_IP]
@@ -58,6 +59,7 @@ SENSORS_TYPE_BYTES = "sensors_bytes"
 SENSORS_TYPE_COUNT = "sensors_count"
 SENSORS_TYPE_LOAD_AVG = "sensors_load_avg"
 SENSORS_TYPE_RATES = "sensors_rates"
+SENSORS_TYPE_TEMPERATURES = "sensors_temperatures"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,6 +114,19 @@ class AsusWrtSensorDataHandler:
 
         return _get_dict(SENSORS_LOAD_AVG, avg)
 
+    async def _get_temperatures(self):
+        """Fetch temperatures information from the router."""
+        try:
+            temperatures = await self._api.async_get_temperature()
+        except (OSError, ValueError) as exc:
+            if "not enough values to unpack" in str(exc):
+                raise UpdateFailed(
+                    "Cannot get temperatures from Asus router using the known commands"
+                ) from exc
+            raise UpdateFailed(exc) from exc
+
+        return temperatures
+
     def update_device_count(self, conn_devices: int):
         """Update connected devices attribute."""
         if self._connected_devices == conn_devices:
@@ -129,6 +144,8 @@ class AsusWrtSensorDataHandler:
             method = self._get_load_avg
         elif sensor_type == SENSORS_TYPE_RATES:
             method = self._get_rates
+        elif sensor_type == SENSORS_TYPE_TEMPERATURES:
+            method = self._get_temperatures
         else:
             raise RuntimeError(f"Invalid sensor type: {sensor_type}")
 
@@ -334,6 +351,7 @@ class AsusWrtRouter:
             SENSORS_TYPE_COUNT: SENSORS_CONNECTED_DEVICE,
             SENSORS_TYPE_LOAD_AVG: SENSORS_LOAD_AVG,
             SENSORS_TYPE_RATES: SENSORS_RATES,
+            SENSORS_TYPE_TEMPERATURES: SENSORS_TEMPERATURES,
         }
 
         for sensor_type, sensor_names in sensors_types.items():

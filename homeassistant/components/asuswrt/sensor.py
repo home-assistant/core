@@ -5,13 +5,18 @@ from dataclasses import dataclass
 from numbers import Real
 
 from homeassistant.components.sensor import (
+    DEVICE_CLASS_TEMPERATURE,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DATA_GIGABYTES, DATA_RATE_MEGABITS_PER_SECOND
+from homeassistant.const import (
+    DATA_GIGABYTES,
+    DATA_RATE_MEGABITS_PER_SECOND,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -25,6 +30,7 @@ from .const import (
     SENSORS_CONNECTED_DEVICE,
     SENSORS_LOAD_AVG,
     SENSORS_RATES,
+    SENSORS_TEMPERATURES,
 )
 from .router import KEY_COORDINATOR, KEY_SENSORS, AsusWrtRouter
 
@@ -107,6 +113,36 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         name="Load Avg (15m)",
         icon="mdi:cpu-32-bit",
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_registry_enabled_default=False,
+        factor=1,
+        precision=1,
+    ),
+    AsusWrtSensorEntityDescription(
+        key=SENSORS_TEMPERATURES[0],
+        name="2.4GHz Temperature",
+        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        entity_registry_enabled_default=False,
+        factor=1,
+        precision=1,
+    ),
+    AsusWrtSensorEntityDescription(
+        key=SENSORS_TEMPERATURES[1],
+        name="5GHz Temperature",
+        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        entity_registry_enabled_default=False,
+        factor=1,
+        precision=1,
+    ),
+    AsusWrtSensorEntityDescription(
+        key=SENSORS_TEMPERATURES[2],
+        name="CPU Temperature",
+        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
         entity_registry_enabled_default=False,
         factor=1,
         precision=1,
