@@ -342,12 +342,18 @@ class InputDatetime(RestoreEntity):
         return self._current_datetime.strftime(FMT_TIME)
 
     @property
+    def capability_attributes(self) -> dict:
+        """Return the capability attributes."""
+        return {
+            CONF_HAS_DATE: self.has_date,
+            CONF_HAS_TIME: self.has_time,
+        }
+
+    @property
     def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {
             ATTR_EDITABLE: self.editable,
-            CONF_HAS_DATE: self.has_date,
-            CONF_HAS_TIME: self.has_time,
         }
 
         if self._current_datetime is None:
