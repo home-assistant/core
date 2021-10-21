@@ -84,6 +84,11 @@ class OctoPrintBinarySensorBase(CoordinatorEntity, BinarySensorEntity):
 
         return bool(self._get_flag_state(printer))
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.last_update_success and self.coordinator.data["printer"]
+
     @abstractmethod
     def _get_flag_state(self, printer_info: OctoprintPrinterInfo) -> bool | None:
         """Return the value of the sensor flag."""

@@ -210,12 +210,11 @@ class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
         # reading if there is one
         try:
             printer = await self._octoprint.get_printer_info()
+            self._printer_offline = False
         except PrinterOffline:
             if not self._printer_offline:
                 _LOGGER.error("Unable to retrieve printer information: Printer offline")
-            self._printer_offline = True
-            if self.data and "printer" in self.data:
-                printer = self.data["printer"]
+                self._printer_offline = True
         except ApiError as err:
             raise UpdateFailed(err) from err
 

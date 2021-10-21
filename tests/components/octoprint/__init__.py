@@ -33,19 +33,20 @@ DEFAULT_PRINTER = {
 async def init_integration(
     hass,
     platform,
-    printer: dict[str, Any] | None = None,
+    printer: dict[str, Any] | None = DEFAULT_PRINTER,
     job: dict[str, Any] | None = None,
 ):
     """Set up the octoprint integration in Home Assistant."""
-    if printer is None:
-        printer = DEFAULT_PRINTER
+    printer_info: OctoprintPrinterInfo | None = None
+    if printer is not None:
+        printer_info = OctoprintPrinterInfo(printer)
     if job is None:
         job = DEFAULT_JOB
     with patch("homeassistant.components.octoprint.PLATFORMS", [platform]), patch(
         "pyoctoprintapi.OctoprintClient.get_server_info", return_value={}
     ), patch(
         "pyoctoprintapi.OctoprintClient.get_printer_info",
-        return_value=OctoprintPrinterInfo(printer),
+        return_value=printer_info,
     ), patch(
         "pyoctoprintapi.OctoprintClient.get_job_info",
         return_value=OctoprintJobInfo(job),
