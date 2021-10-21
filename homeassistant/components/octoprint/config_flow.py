@@ -78,7 +78,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         user_input[CONF_HOST],
                         user_input[CONF_PORT],
                         user_input[CONF_PATH],
-                        user_input[CONF_PORT],
+                        user_input[CONF_SSL],
                     ),
                 )
 
