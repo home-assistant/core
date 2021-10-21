@@ -618,19 +618,22 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         self.config_entries = config_entries
         self._hass_config = hass_config
 
+    @callback
+    def _async_has_other_discovery_flows(self, flow_id: str) -> bool:
+        """Check if there are any other discovery flows in progress."""
+        return any(
+            flow.context["source"] in DISCOVERY_SOURCES and flow.flow_id != flow_id
+            for flow in self._progress.values()
+        )
+
     async def async_finish_flow(
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
     ) -> data_entry_flow.FlowResult:
         """Finish a config flow and add an entry."""
         flow = cast(ConfigFlow, flow)
-        progress_flows = self.async_progress_by_handler(flow.handler)
 
         # Remove notification if no other discovery config entries in progress
-        if not any(
-            ent["context"]["source"] in DISCOVERY_SOURCES
-            for ent in progress_flows
-            if ent["flow_id"] != flow.flow_id
-        ):
+        if not self._async_has_other_discovery_flows(flow.flow_id):
             self.hass.components.persistent_notification.async_dismiss(
                 DISCOVERY_NOTIFICATION_ID
             )
@@ -643,7 +646,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
 
         # Abort all flows in progress with same unique ID
         # or the default discovery ID
-        for progress_flow in progress_flows:
+        for progress_flow in self.async_progress_by_handler(flow.handler):
             progress_unique_id = progress_flow["context"].get("unique_id")
             if progress_flow["flow_id"] != flow.flow_id and (
                 (flow.unique_id and progress_unique_id == flow.unique_id)
