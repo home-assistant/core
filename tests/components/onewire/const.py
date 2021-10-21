@@ -224,6 +224,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_MANUFACTURER: MANUFACTURER,
                 ATTR_MODEL: "DS2423",
                 ATTR_NAME: "1D.111111111111",
+                "via_device": (DOMAIN, "1F.111111111111"),
             },
         ],
         "branches": {

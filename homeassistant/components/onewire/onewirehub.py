@@ -87,6 +87,7 @@ class OneWireHub:
                 manufacturer=device_info[ATTR_MANUFACTURER],
                 model=device_info[ATTR_MODEL],
                 name=device_info[ATTR_NAME],
+                via_device=device_info.get("via_device"),
             )
 
     async def discover_devices(self) -> None:
@@ -121,7 +122,9 @@ class OneWireHub:
             devices.append(device)
         return devices
 
-    def _discover_devices_owserver(self, path: str = "/") -> list[OWDeviceDescription]:
+    def _discover_devices_owserver(
+        self, path: str = "/", parent_id: str | None = None
+    ) -> list[OWDeviceDescription]:
         """Discover all owserver devices."""
         devices: list[OWDeviceDescription] = []
         assert self.owproxy
@@ -137,6 +140,8 @@ class OneWireHub:
                 ATTR_MODEL: device_type,
                 ATTR_NAME: device_id,
             }
+            if parent_id:
+                device_info["via_device"] = (DOMAIN, parent_id)
             device = OWServerDeviceDescription(
                 device_info=device_info,
                 id=device_id,
@@ -147,7 +152,9 @@ class OneWireHub:
             devices.append(device)
             if device_branches := DEVICE_COUPLERS.get(device_family):
                 for branch in device_branches:
-                    devices += self._discover_devices_owserver(f"{device_path}{branch}")
+                    devices += self._discover_devices_owserver(
+                        f"{device_path}{branch}", device_id
+                    )
 
         return devices
 

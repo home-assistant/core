@@ -57,6 +57,13 @@ def check_device_registry(
         assert registry_entry.manufacturer == expected_device[ATTR_MANUFACTURER]
         assert registry_entry.name == expected_device[ATTR_NAME]
         assert registry_entry.model == expected_device[ATTR_MODEL]
+        if expected_via_device := expected_device.get("via_device"):
+            assert registry_entry.via_device_id is not None
+            parent_entry = device_registry.async_get_device({expected_via_device})
+            assert parent_entry is not None
+            assert registry_entry.via_device_id == parent_entry.id
+        else:
+            assert registry_entry.via_device_id is None
 
 
 def check_entities(
