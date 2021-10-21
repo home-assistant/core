@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -41,16 +41,18 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FroniusSolarNet
 from .const import DOMAIN
-from .coordinator import (
-    FroniusCoordinatorBase,
-    FroniusInverterUpdateCoordinator,
-    FroniusLoggerUpdateCoordinator,
-    FroniusMeterUpdateCoordinator,
-    FroniusPowerFlowUpdateCoordinator,
-    FroniusStorageUpdateCoordinator,
-)
+
+if TYPE_CHECKING:
+    from . import FroniusSolarNet
+    from .coordinator import (
+        FroniusCoordinatorBase,
+        FroniusInverterUpdateCoordinator,
+        FroniusLoggerUpdateCoordinator,
+        FroniusMeterUpdateCoordinator,
+        FroniusPowerFlowUpdateCoordinator,
+        FroniusStorageUpdateCoordinator,
+    )
 
 _LOGGER = logging.getLogger(__name__)
 
