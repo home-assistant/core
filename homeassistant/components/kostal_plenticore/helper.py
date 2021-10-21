@@ -188,16 +188,6 @@ class SettingDataUpdateCoordinator(PlenticoreUpdateCoordinator):
         fetched_data = await client.get_setting_values(self._fetch)
         return fetched_data
 
-    async def get_currentoption(self, module_id, options) -> str:
-        """Get current option."""
-        for all_option in options:
-            if all_option != 'None':
-                val = await self.async_read_data(module_id, all_option)
-                if val:
-                    return val
-
-        return 'None'
-
     async def async_read_data(self, module_id: str, data_id: str) -> [str, bool]:
         """Writes settings back to Plenticore."""
         client = self._plenticore.client
@@ -217,6 +207,71 @@ class SettingDataUpdateCoordinator(PlenticoreUpdateCoordinator):
         client = self._plenticore.client
 
         if not self._fetch or client is None:
+            return False
+
+        try:
+            await client.set_setting_values(module_id, value)
+        except PlenticoreApiException:
+            return False
+        else:
+            return True
+
+
+class PlenticoreSelectUpdateCoordinator(DataUpdateCoordinator):
+    """Base implementation of DataUpdateCoordinator for Plenticore data."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        logger: logging.Logger,
+        name: str,
+        update_inverval: timedelta,
+        plenticore: Plenticore,
+    ) -> None:
+        """Create a new update coordinator for plenticore data."""
+        super().__init__(
+            hass=hass,
+            logger=logger,
+            name=name,
+            update_interval=update_inverval,
+        )
+        # data ids to poll
+        self._plenticore = plenticore
+
+
+class SelectDataUpdateCoordinator(PlenticoreSelectUpdateCoordinator):
+    """Implementation of PlenticoreUpdateCoordinator for settings data."""
+
+    async def _async_update_data(self) -> [str, bool]:
+        client = self._plenticore.client
+
+        if client is None:
+            return ''
+
+        # _LOGGER.debug("Fetching select %s for %s", self.name, self.xmodule_id)
+
+        # current_option = self.get_currentoption(self.xmodule_id, self.xall_options)
+        return 'None'
+
+    async def async_read_data(self, module_id: str, data_id: str) -> [str, bool]:
+        """Writes settings back to Plenticore."""
+        client = self._plenticore.client
+
+        if client is None:
+            return False
+
+        try:
+            val = await client.get_setting_values(module_id, data_id)
+        except PlenticoreApiException:
+            return False
+        else:
+            return val
+
+    async def async_write_data(self, module_id: str, value: dict[str, str]) -> bool:
+        """Writes settings back to Plenticore."""
+        client = self._plenticore.client
+
+        if client is None:
             return False
 
         try:

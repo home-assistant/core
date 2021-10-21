@@ -17,7 +17,7 @@ from .const import (
     SELECT_SETTINGS_DATA,
 )
 from .helper import (
-    SettingDataUpdateCoordinator,
+    SelectDataUpdateCoordinator,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,29 +30,41 @@ async def async_setup_entry(
     plenticore = hass.data[DOMAIN][entry.entry_id]
 
     entities = []
-
+    _LOGGER.debug("A %S", entry.entry_id)
     available_settings_data = await plenticore.client.get_settings()
-    settings_data_update_coordinator = SettingDataUpdateCoordinator(
+    _LOGGER.debug("B %s", DOMAIN)
+    select_data_update_coordinator = SelectDataUpdateCoordinator(
         hass,
         _LOGGER,
-        "Settings Data",
+        "Select Data",
         timedelta(seconds=30),
         plenticore,
     )
-    for module_id, name, options in SELECT_SETTINGS_DATA:
+    _LOGGER.debug("C")
+    for module_id, name, options, is_on in SELECT_SETTINGS_DATA:
+        _LOGGER.debug("D %s", name)
+        if module_id not in available_settings_data:
+            _LOGGER.debug(
+                "Skipping non existing setting data %s/%s", module_id, name
+            )
+            continue
+        _LOGGER.debug("E %s", name)
         entities.append(
             PlenticoreDataSelect(
-                settings_data_update_coordinator,
-                entry.entry_id,
-                entry.title,
-                module_id,
-                'None',
-                options,
-                plenticore.device_info,
-                f"{entry.title}",
-                f"{entry.entry_id}",
+                coordinator=select_data_update_coordinator,
+                entry_id=entry.entry_id,
+                platform_name=entry.title,
+                device_class='kostal_plenticore__battery',
+                module_id=module_id,
+                name=name,
+                current_option='None',
+                options=options,
+                is_on=is_on,
+                device_info=plenticore.device_info,
+                unique_id=f"{entry.title}",
             )
         )
+        _LOGGER.debug("F %s", select_data_update_coordinator)
 
     async_add_entities(entities)
 
@@ -65,48 +77,58 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
         coordinator,
         entry_id: str,
         platform_name: str,
+        device_class: str | None,
         module_id: str,
+        name: str,
         current_option: str | None,
         options: list[str],
-        name: str,
+        is_on: str,
+        device_info: DeviceInfo,
         unique_id: str,
     ):
         """Create a new switch Entity for Plenticore process data."""
         super().__init__(coordinator)
         self.entry_id = entry_id
         self.platform_name = platform_name
+        self._attr_device_class = device_class
         self.module_id = module_id
         self._attr_current_option = current_option
-        self.attr_options = options
+        self._attr_options = options
+        self.all_options = options
+        self._is_on = is_on
+        self._device_info = device_info
         self._attr_name = name or DEVICE_DEFAULT_NAME
         self._attr_unique_id = unique_id
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return (
-            super().available
-            and self.coordinator.data is not None
-            and self.module_id in self.coordinator.data
-        )
 
     async def async_added_to_hass(self) -> None:
         """Register this entity on the Update Coordinator."""
         await super().async_added_to_hass()
-        self.coordinator.get_currentoption(self.module_id, self.attr_options)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unregister this entity from the Update Coordinator."""
         await super().async_will_remove_from_hass()
 
+    async def get_currentoption(self) -> [str, bool]:
+        """Get current option."""
+        _LOGGER.debug("Get current option for %s", self.name)
+        for all_option in self._attr_current_option:
+            _LOGGER.debug("Get current option for %s for %s", self.name, all_option)
+            if all_option != 'None':
+                val = await self.async_read_data(self.module_id, all_option)
+                if val:
+                    return val
+
+        return 'None'
+
     async def async_select_option(self, option: str) -> None:
         """Update the current selected option."""
         self.coordinator._attr_current_option = option
-        for all_option in self._select_options:
-            if all_option != 'None' :
-                self.coordinator.async_write_data(self.module_id, {all_option: "0"})
-        self.coordinator.async_write_data(self.module_id, {option: "1"})
-        self.coordinator.async_write_ha_state()
+        for all_option in self._attr_options:
+            if all_option != 'None':
+                await self.coordinator.async_write_data(self.module_id, {all_option: "0"})
+        _LOGGER.debug("Set current option for %s", option)
+        await self.coordinator.async_write_data(self.module_id, {option: "1"})
+        self.async_write_ha_state()
 
 
 

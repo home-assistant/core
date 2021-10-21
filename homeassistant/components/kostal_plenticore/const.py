@@ -646,7 +646,7 @@ SELECT_SETTINGS_DATA = [
     (
         "devices:local",
         "Battery Charging / Usage mode",
-        {"None", "Battery:SmartBatteryControl:Enable", "Battery:TimeControl:Enable"},
+        ["None", "Battery:SmartBatteryControl:Enable", "Battery:TimeControl:Enable"],
         "1",
     )
 ]
