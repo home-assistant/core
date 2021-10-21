@@ -1097,6 +1097,8 @@ build.json @home-assistant/supervisor
 /tests/components/rmvtransport/ @cgtobi
 /homeassistant/components/roborock/ @humbertogontijo @Lash-L
 /tests/components/roborock/ @humbertogontijo @Lash-L
+/homeassistant/components/rointe/ @tggm
+/tests/components/rointe/ @tggm
 /homeassistant/components/roku/ @ctalkington
 /tests/components/roku/ @ctalkington
 /homeassistant/components/roomba/ @pschmitt @cyr-ius @shenxn @Xitee1
