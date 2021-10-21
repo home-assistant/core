@@ -290,6 +290,10 @@ def test_supported_mysql(caplog, mysql_version):
             "110013",
             "Version 110013 of PostgreSQL is not supported; minimum supported version is 12.0.",
         ),
+        (
+            "unexpected",
+            "Version unexpected of PostgreSQL is not supported; minimum supported version is 12.0.",
+        ),
     ],
 )
 def test_warn_outdated_pgsql(caplog, pgsql_version, message):
@@ -368,6 +372,10 @@ def test_supported_pgsql(caplog, pgsql_version):
         (
             "2.0.0",
             "Version 2.0.0 of SQLite is not supported; minimum supported version is 3.32.1.",
+        ),
+        (
+            "dogs",
+            "Version dogs of SQLite is not supported; minimum supported version is 3.32.1.",
         ),
     ],
 )

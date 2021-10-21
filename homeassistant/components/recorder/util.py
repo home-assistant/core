@@ -51,7 +51,7 @@ MIN_VERSION_MARIA_DB = AwesomeVersion("10.3.0", VERSION_STRATEGIES)
 MIN_VERSION_MARIA_DB_ROWNUM = AwesomeVersion("10.2.0", VERSION_STRATEGIES)
 MIN_VERSION_MYSQL = AwesomeVersion("8.0.0", VERSION_STRATEGIES)
 MIN_VERSION_MYSQL_ROWNUM = AwesomeVersion("5.8.0", VERSION_STRATEGIES)
-MIN_VERSION_PGSQL = 120000
+MIN_VERSION_PGSQL = AwesomeVersion(120000, AwesomeVersionStrategy.BUILDVER)
 MIN_VERSION_SQLITE = AwesomeVersion("3.32.1", VERSION_STRATEGIES)
 MIN_VERSION_SQLITE_ROWNUM = AwesomeVersion("3.25.0", VERSION_STRATEGIES)
 
@@ -321,7 +321,7 @@ def _extract_version_from_server_response(server_response):
         return None
 
     try:
-        return AwesomeVersion(match.group())
+        return AwesomeVersion(match.group(), VERSION_STRATEGIES)
     except AwesomeVersionException:
         return None
 
@@ -390,9 +390,15 @@ def setup_connection_for_dialect(
         if first_connection:
             # server_version_num was added in 2006
             result = query_on_connection(dbapi_connection, "SHOW server_version_num")
-            version = int(result[0][0])
-            if version < MIN_VERSION_PGSQL:
-                _warn_unsupported_version(version, "PostgreSQL", "12.0")
+            version_string = result[0][0]
+            try:
+                version = AwesomeVersion(
+                    version_string, AwesomeVersionStrategy.BUILDVER
+                )
+            except AwesomeVersionException:
+                version = None
+            if not version or version < MIN_VERSION_PGSQL:
+                _warn_unsupported_version(version_string, "PostgreSQL", "12.0")
 
     else:
         _warn_unsupported_dialect(dialect_name)
