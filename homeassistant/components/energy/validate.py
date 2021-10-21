@@ -255,12 +255,9 @@ def _async_validate_auto_generated_cost_entity(
     hass: HomeAssistant, energy_entity_id: str, result: list[ValidationIssue]
 ) -> None:
     """Validate that the auto generated cost entity is correct."""
-    if not valid_entity_id(energy_entity_id):
-        result.append(ValidationIssue("invalid_energy_entity", energy_entity_id))
-
     if energy_entity_id not in hass.data[DOMAIN]["cost_sensors"]:
         # The cost entity has not been setup
-        result.append(ValidationIssue("no_cost_entity", energy_entity_id))
+        return
 
     cost_entity_id = hass.data[DOMAIN]["cost_sensors"][energy_entity_id]
     if not recorder.is_entity_recorded(hass, cost_entity_id):
