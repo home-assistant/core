@@ -83,32 +83,37 @@ SENSOR_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.ensure_list,
-            [
-                vol.Schema(
-                    {
-                        vol.Required(CONF_API_KEY): cv.string,
-                        vol.Required(CONF_HOST): cv.string,
-                        vol.Optional(CONF_SSL, default=False): cv.boolean,
-                        vol.Optional(CONF_PORT, default=80): cv.port,
-                        vol.Optional(CONF_PATH, default="/"): ensure_valid_path,
-                        # Following values are not longer used in the configuration of the integration
-                        # and are here for historical purposes
-                        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                        vol.Optional(CONF_NUMBER_OF_TOOLS, default=0): cv.positive_int,
-                        vol.Optional(CONF_BED, default=False): cv.boolean,
-                        vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
-                        vol.Optional(
-                            CONF_BINARY_SENSORS, default={}
-                        ): BINARY_SENSOR_SCHEMA,
-                    }
-                )
-            ],
-            has_all_unique_names,
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.All(
+                cv.ensure_list,
+                [
+                    vol.Schema(
+                        {
+                            vol.Required(CONF_API_KEY): cv.string,
+                            vol.Required(CONF_HOST): cv.string,
+                            vol.Optional(CONF_SSL, default=False): cv.boolean,
+                            vol.Optional(CONF_PORT, default=80): cv.port,
+                            vol.Optional(CONF_PATH, default="/"): ensure_valid_path,
+                            # Following values are not longer used in the configuration of the integration
+                            # and are here for historical purposes
+                            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                            vol.Optional(
+                                CONF_NUMBER_OF_TOOLS, default=0
+                            ): cv.positive_int,
+                            vol.Optional(CONF_BED, default=False): cv.boolean,
+                            vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
+                            vol.Optional(
+                                CONF_BINARY_SENSORS, default={}
+                            ): BINARY_SENSOR_SCHEMA,
+                        }
+                    )
+                ],
+                has_all_unique_names,
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
