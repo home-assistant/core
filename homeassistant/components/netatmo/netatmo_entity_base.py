@@ -28,6 +28,7 @@ class NetatmoBase(Entity):
         self._device_name: str = ""
         self._id: str = ""
         self._model: str = ""
+        self._netatmo_type: str = ""
         self._attr_name = None
         self._attr_unique_id = None
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
@@ -92,6 +93,7 @@ class NetatmoBase(Entity):
     def device_info(self) -> DeviceInfo:
         """Return the device info for the sensor."""
         return {
+            "configuration_url": f"https://my.netatmo.com/app/{self._netatmo_type}",
             "identifiers": {(DOMAIN, self._id)},
             "name": self._device_name,
             "manufacturer": MANUFACTURER,
