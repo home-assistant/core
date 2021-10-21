@@ -327,5 +327,10 @@ FLOWS = [
     "zerproc",
     "zha",
     "zwave",
-    "zwave_js"
+    "zwave_js",
+    "tesla_custom",
+    "smartthings_soundbar",
+    "gardena_smart_system",
+    "alexa_media",
+    "samsungtv_smart"
 ]
