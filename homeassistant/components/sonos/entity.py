@@ -101,6 +101,7 @@ class SonosEntity(Entity):
             },
             "manufacturer": "Sonos",
             "suggested_area": self.speaker.zone_name,
+            "configuration_url": f"http://{self.soco.ip_address}:1400/support/review",
         }
 
     @property
