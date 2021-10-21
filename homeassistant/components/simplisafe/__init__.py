@@ -636,7 +636,8 @@ class SimpliSafeEntity(CoordinatorEntity):
         # Ignore this event if it belongs to a entity with a different serial
         # number from this one's:
         if (
-            event.event_type in WEBSOCKET_EVENTS_REQUIRING_SERIAL
+            self._device
+            and event.event_type in WEBSOCKET_EVENTS_REQUIRING_SERIAL
             and event.sensor_serial != self._device.serial
         ):
             return
