@@ -296,7 +296,7 @@ def _warn_unsupported_dialect(dialect):
     _LOGGER.warning(
         "Database %s is not supported; Home Assistant supports %s. "
         "Starting with Home Assistant 2022.2 this will prevent the recorder from "
-        "starting. Please migrate your database to a supported software before then.",
+        "starting. Please migrate your database to a supported software before then",
         dialect,
         "MariaDB ≥ 10.3, MySQL ≥ 8.0, PostgreSQL ≥ 12, SQLite ≥ 3.32.1",
     )
@@ -307,7 +307,7 @@ def _warn_unsupported_version(server_version, dialect, minimum_version):
     _LOGGER.warning(
         "Version %s of %s is not supported; minimum supported version is %s. "
         "Starting with Home Assistant 2022.2 this will prevent the recorder from "
-        "starting. Please upgrade your database software before then.",
+        "starting. Please upgrade your database software before then",
         server_version,
         dialect,
         minimum_version,
