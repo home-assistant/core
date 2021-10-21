@@ -288,7 +288,11 @@ def test_supported_mysql(caplog, mysql_version):
     [
         (
             "110013",
-            "Version 110013 of PostgreSQL is not supported; minimum supported version is 12.0.",
+            "Version 11.13 of PostgreSQL is not supported; minimum supported version is 12.0.",
+        ),
+        (
+            "90210",
+            "Version 9.2.10 of PostgreSQL is not supported; minimum supported version is 12.0.",
         ),
         (
             "unexpected",
