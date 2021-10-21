@@ -311,6 +311,56 @@ async def test_flow_start_only_alive(
     )
 
 
+@pytest.mark.usefixtures("mock_get_source_ip")
+@patch(
+    "homeassistant.components.ssdp.async_get_ssdp",
+    return_value={},
+)
+async def test_discovery_from_advertisement_sets_ssdp_st(
+    mock_get_ssdp, hass, aioclient_mock, mock_flow_init
+):
+    """Test discovery from advertisement sets `ssdp_st` for more compatibility."""
+    aioclient_mock.get(
+        "http://1.1.1.1",
+        text="""
+<root>
+  <device>
+    <deviceType>Paulus</deviceType>
+  </device>
+</root>
+    """,
+    )
+    ssdp_listener = await init_ssdp_component(hass)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    mock_ssdp_advertisement = _ssdp_headers(
+        {
+            "nt": "mock-st",
+            "nts": "ssdp:alive",
+            "location": "http://1.1.1.1",
+            "usn": "uuid:mock-udn::mock-st",
+        }
+    )
+    await ssdp_listener._on_alive(mock_ssdp_advertisement)
+    await hass.async_block_till_done()
+
+    discovery_info = await ssdp.async_get_discovery_info_by_udn(hass, "uuid:mock-udn")
+    assert discovery_info == [
+        {
+            ssdp.ATTR_SSDP_LOCATION: "http://1.1.1.1",
+            ssdp.ATTR_SSDP_NT: "mock-st",
+            ssdp.ATTR_SSDP_ST: "mock-st",  # Set by ssdp component, not in original advertisement.
+            ssdp.ATTR_SSDP_USN: "uuid:mock-udn::mock-st",
+            ssdp.ATTR_UPNP_UDN: "uuid:mock-udn",
+            ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
+            ssdp.ATTR_SSDP_UDN: ANY,
+            "nts": "ssdp:alive",
+            "_timestamp": ANY,
+        }
+    ]
+
+
 @patch(  # XXX TODO: Isn't this duplicate with mock_get_source_ip?
     "homeassistant.components.ssdp.Scanner._async_build_source_set",
     return_value={IPv4Address("192.168.1.1")},
