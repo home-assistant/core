@@ -9,6 +9,7 @@ from tuya_iot.device import TuyaDeviceStatusRange
 from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -23,6 +24,15 @@ from homeassistant.const import (
     DEVICE_CLASS_VOLTAGE,
     ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    DEVICE_CLASS_PM10,
+    DEVICE_CLASS_PM25,
+    DEVICE_CLASS_PM1,
+    DEVICE_CLASS_ENERGY,
+    ENERGY_KILO_WATT_HOUR,
+    ELECTRIC_CURRENT_AMPERE,
+    POWER_KILO_WATT,
+    ELECTRIC_POTENTIAL_VOLT,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -136,6 +146,69 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
     # Vibration Sensor
     # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
     "zd": BATTERY_SENSORS,
+    "wsdcg": (
+        SensorEntityDescription(
+            key=DPCode.VA_TEMPERATURE,
+            name="Temperature",
+            device_class=DEVICE_CLASS_TEMPERATURE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+    ),
+    "pm2.5": (
+        SensorEntityDescription(
+            key=DPCode.PM100_VALUE,
+            name="PM10",
+            native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            device_class=DEVICE_CLASS_PM10,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.PM25_VALUE,
+            name="PM25",
+            native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            device_class=DEVICE_CLASS_PM25,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.PM10_VALUE,
+            name="PM1",
+            native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            device_class=DEVICE_CLASS_PM1,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+    ),
+    "ywbj": BATTERY_SENSORS,
+    "rqbj": BATTERY_SENSORS,
+    "zndb": (
+        SensorEntityDescription(
+            key=DPCode.FORWARD_ENERGY_TOTAL,
+            name="Energy",
+            native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+            device_class=DEVICE_CLASS_ENERGY,
+            state_class=STATE_CLASS_TOTAL_INCREASING,
+        ),
+        SensorEntityDescription(
+            key=DPCode.PHASE_A_ELECTRICCURRENT,
+            name="Electriccurrent",
+            native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+            device_class=DEVICE_CLASS_CURRENT,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.PHASE_B_POWER,
+            name="Power",
+            native_unit_of_measurement=POWER_KILO_WATT,
+            device_class=DEVICE_CLASS_POWER,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.PHASE_C_VOLTAGE,
+            name="Voltage",
+            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            device_class=DEVICE_CLASS_VOLTAGE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+    )
 }
 
 # Socket (duplicate of `kg`)
