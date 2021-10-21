@@ -268,7 +268,6 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=ATTR_API_RAIN,
         name="Rain",
         native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=ATTR_API_RAIN_PROB,
@@ -280,7 +279,6 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=ATTR_API_SNOW,
         name="Snow",
         native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=ATTR_API_SNOW_PROB,
@@ -344,7 +342,6 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=ATTR_API_WIND_MAX_SPEED,
         name="Wind max speed",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=ATTR_API_WIND_SPEED,
