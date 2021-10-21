@@ -367,8 +367,7 @@ class DeviceBroker:
         for evt in req.events:
             if evt.event_type != EVENT_TYPE_DEVICE:
                 continue
-            device = self.devices.get(evt.device_id)
-            if not device:
+            if not (device := self.devices.get(evt.device_id)):
                 continue
             device.status.apply_attribute_update(
                 evt.component_id,
