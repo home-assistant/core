@@ -23,6 +23,5 @@
                 "description": "Please enter a hostname or IP address and name to add a new bulb:"
             }
         }
-    },
-    "title": "WiZ Light"
+    }
 }

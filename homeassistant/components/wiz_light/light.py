@@ -2,8 +2,7 @@
 from datetime import timedelta
 import logging
 
-from pywizlight import SCENES, PilotBuilder, wizlight
-from pywizlight.bulblibrary import BulbType, BulbClass
+from pywizlight import PilotBuilder, wizlight
 from pywizlight.exceptions import (
     WizLightConnectionError,
     WizLightNotKnownBulb,
@@ -47,9 +46,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 # set poll interval to 15 sec because of changes from external to the bulb
 SCAN_INTERVAL = timedelta(seconds=15)
 
-# Bulb specific effects
-TW_EFFECT_LIST = [6, 9, 10, 11, 12, 13, 14, 15, 16, 18, 29, 30, 31, 32]
-DW_EFFECT_LIST = [9, 10, 13, 14, 29, 30, 31, 32]
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the WiZ Light platform from legacy config."""
@@ -61,7 +57,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         # Add devices
         async_add_entities([WizBulb(bulb, config[CONF_NAME])], update_before_add=True)
     except WizLightConnectionError:
-        _LOGGER.error("Can't add bulb with ip %s.", ip_address)
+        _LOGGER.error("Can't add bulb with ip %s", ip_address)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -97,7 +93,7 @@ class WizBulb(LightEntity):
         self._hscolor = None
         self._available = None
         self._effect = None
-        self._scenes = []
+        self._scenes: list[str] = []
         self._bulbtype = None
         self._mac = None
 
@@ -223,23 +219,9 @@ class WizBulb(LightEntity):
     @property
     def effect_list(self):
         """Return the list of supported effects.
+
         URL: https://docs.pro.wizconnected.com/#light-modes
         """
-        if self._bulbtype and len(self._scenes) > 0:
-            # retrun for TW
-            if self._bulbtype.bulb_type == BulbClass.TW:
-                e_list = []
-                for key in TW_EFFECT_LIST:
-                    # Array counting correction
-                    e_list.append(self._scenes[key - 1])
-                return e_list
-            if self._bulbtype.bulb_type == BulbClass.DW:
-                e_list = []
-                for key in DW_EFFECT_LIST:
-                    # Array counting correction
-                    e_list.append(self._scenes[key - 1])
-                return e_list
-            # Must be RGB with all
         return self._scenes
 
     @property
@@ -258,7 +240,7 @@ class WizBulb(LightEntity):
             self.update_temperature()
             self.update_color()
             self.update_effect()
-            self.update_scene_list()
+            await self.update_scene_list()
 
     @property
     def device_info(self):
@@ -350,7 +332,7 @@ class WizBulb(LightEntity):
         try:
             red, green, blue = self._light.state.get_rgb()
             if red is None:
-                # this is the case if the temperature was changed - no information was return form the lamp.
+                # this is the case if the temperature was changed
                 # do nothing until the RGB color was changed
                 return
             color = color_utils.color_RGB_to_hs(red, green, blue)
@@ -384,11 +366,10 @@ class WizBulb(LightEntity):
                 "[wizlight %s] Bulbtype update failed - Timeout", self._light.ip
             )
 
-    def update_scene_list(self):
+    async def update_scene_list(self):
         """Update the scene list."""
-        self._scenes = []
-        for number in SCENES:
-            self._scenes.append(SCENES[number])
+        _value = await self._light.getSupportedScenes()
+        self._scenes = _value.values()
 
     async def get_mac(self):
         """Get the mac from the bulb."""
@@ -412,9 +393,5 @@ class WizBulb(LightEntity):
                 features = features | SUPPORT_COLOR_TEMP
             return features
         except WizLightNotKnownBulb:
-            _LOGGER.info(
-                "Bulb is not present in the library. Fallback to full feature."
-            )
-            return (
-                SUPPORT_FEATURES_RGB
-            )
+            _LOGGER.info("Bulb is not present in the library. Fallback to full feature")
+            return SUPPORT_FEATURES_RGB

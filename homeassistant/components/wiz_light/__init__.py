@@ -13,6 +13,13 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["light"]
 
+
+async def async_setup(hass: HomeAssistant, config: dict):
+    """Old way of setting up the wiz_light component."""
+    hass.data[DOMAIN] = {}
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up the wiz_light integration from a config entry."""
     ip_address = entry.data.get(CONF_HOST)

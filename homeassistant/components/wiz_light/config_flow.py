@@ -13,24 +13,24 @@ from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 VERSION = 1
-STEP_USER_DATA_SCHEMA = vol.Schema( 
-        {
-            vol.Required(CONF_HOST): str,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-        }
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
+    }
 )
+
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for WiZ Light."""
-
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         errors = {}
 
         if user_input is not None:
+            bulb = wizlight(user_input[CONF_HOST])
             try:
-                bulb = wizlight(user_input[CONF_HOST])
                 mac = await bulb.getMac()
                 await self.async_set_unique_id(mac)
                 self._abort_if_unique_id_configured()
