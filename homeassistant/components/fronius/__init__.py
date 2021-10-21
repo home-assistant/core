@@ -6,11 +6,12 @@ from datetime import timedelta
 import logging
 from typing import Callable, TypeVar
 
-from pyfronius import Fronius
+from pyfronius import Fronius, FroniusError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
@@ -110,7 +111,7 @@ class FroniusSolarNet:
                 update_interval=timedelta(seconds=DEFAULT_UPDATE_INTERVAL),
                 inverter_info=inverter_info,
             )
-            await coordinator.async_refresh()
+            await coordinator.async_config_entry_first_refresh()
             self.inverter_coordinators.append(coordinator)
 
         self.meter_coordinator = await self._init_optional_coordinator(
@@ -163,7 +164,10 @@ class FroniusSolarNet:
 
     async def _get_inverter_infos(self) -> list[FroniusDeviceInfo]:
         """Get information about the inverters in the SolarNet system."""
-        _inverter_info = await self.fronius.inverter_info()
+        try:
+            _inverter_info = await self.fronius.inverter_info()
+        except FroniusError as err:
+            raise ConfigEntryNotReady from err
 
         inverter_infos: list[FroniusDeviceInfo] = []
         for inverter in _inverter_info["inverters"]:
@@ -192,8 +196,9 @@ class FroniusSolarNet:
         coordinator: FroniusCoordinatorType,
     ) -> FroniusCoordinatorType | None:
         """Initialize an update coordinator and return it if devices are found."""
-        await coordinator.async_refresh()
-        if coordinator.last_update_success is False:
+        try:
+            await coordinator.async_config_entry_first_refresh()
+        except ConfigEntryNotReady:
             return None
         # keep coordinator only if devices are found
         # else ConfigEntryNotReady raised form KeyError
