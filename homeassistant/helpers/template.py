@@ -1570,7 +1570,9 @@ def today_at(time_str: str = "") -> datetime:
     if dttime:
         return datetime.combine(start.date(), dttime, tzinfo=dt_util.DEFAULT_TIME_ZONE)
 
-    raise ValueError(f"could not convert {type(time_str).__name__} to datetime: '{time_str}'")
+    raise ValueError(
+        f"could not convert {type(time_str).__name__} to datetime: '{time_str}'"
+    )
 
 
 def relative_time(value):
