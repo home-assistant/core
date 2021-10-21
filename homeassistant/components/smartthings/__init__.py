@@ -73,8 +73,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Remove the entry which will invoke the callback to delete the app.
     hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
     # only create new flow if there isn't a pending one for SmartThings.
-    flows = hass.config_entries.flow.async_progress()
-    if not [flow for flow in flows if flow["handler"] == DOMAIN]:
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    if not flows:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_IMPORT}
@@ -181,8 +181,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if remove_entry:
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
         # only create new flow if there isn't a pending one for SmartThings.
-        flows = hass.config_entries.flow.async_progress()
-        if not [flow for flow in flows if flow["handler"] == DOMAIN]:
+        flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+        if flows:
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN, context={"source": SOURCE_IMPORT}

@@ -231,7 +231,7 @@ class LoginFlowResourceView(HomeAssistantView):
 
         try:
             # do not allow change ip during login flow
-            for flow in self._flow_mgr.async_progress():
+            for flow in self._flow_mgr.async_progress_by_handler("auth"):
                 if flow["flow_id"] == flow_id and flow["context"][
                     "ip_address"
                 ] != ip_address(request.remote):
