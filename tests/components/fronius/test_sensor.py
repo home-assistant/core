@@ -1,13 +1,62 @@
 """Tests for the Fronius sensor platform."""
 
-from homeassistant.components.fronius.sensor import DEFAULT_SCAN_INTERVAL
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.components.fronius.sensor import (
+    CONF_SCOPE,
+    DEFAULT_SCAN_INTERVAL,
+    SCOPE_DEVICE,
+    TYPE_INVERTER,
+    TYPE_LOGGER_INFO,
+    TYPE_METER,
+    TYPE_POWER_FLOW,
+)
+from homeassistant.const import CONF_DEVICE, CONF_SENSOR_TYPE, STATE_UNKNOWN
 from homeassistant.util import dt
 
 from . import setup_fronius_integration
-from .responses import symo
+from .const import MOCK_HOST
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, load_fixture
+from tests.test_util.aiohttp import AiohttpClientMocker
+
+
+def mock_responses(aioclient_mock: AiohttpClientMocker, night: bool = False) -> None:
+    """Mock responses for Fronius Symo inverter with meter."""
+    aioclient_mock.clear_requests()
+    _day_or_night = "night" if night else "day"
+
+    aioclient_mock.get(
+        f"{MOCK_HOST}/solar_api/GetAPIVersion.cgi",
+        text=load_fixture("fronius/symo/GetAPIVersion.json"),
+    )
+    aioclient_mock.get(
+        f"{MOCK_HOST}/solar_api/v1/GetInverterRealtimeData.cgi?Scope=Device&"
+        "DeviceId=1&DataCollection=CommonInverterData",
+        text=load_fixture(
+            f"fronius/symo/GetInverterRealtimeDate_Device_1_{_day_or_night}.json"
+        ),
+    )
+    aioclient_mock.get(
+        f"{MOCK_HOST}/solar_api/v1/GetInverterInfo.cgi",
+        text=load_fixture("fronius/symo/GetInverterInfo.json"),
+    )
+    aioclient_mock.get(
+        f"{MOCK_HOST}/solar_api/v1/GetLoggerInfo.cgi",
+        text=load_fixture("fronius/symo/GetLoggerInfo.json"),
+    )
+    aioclient_mock.get(
+        f"{MOCK_HOST}/solar_api/v1/GetMeterRealtimeData.cgi?Scope=Device&DeviceId=0",
+        text=load_fixture("fronius/symo/GetMeterRealtimeData_Device_0.json"),
+    )
+    aioclient_mock.get(
+        f"{MOCK_HOST}/solar_api/v1/GetMeterRealtimeData.cgi?Scope=System",
+        text=load_fixture("fronius/symo/GetMeterRealtimeData_System.json"),
+    )
+    aioclient_mock.get(
+        f"{MOCK_HOST}/solar_api/v1/GetPowerFlowRealtimeData.fcgi",
+        text=load_fixture(
+            f"fronius/symo/GetPowerFlowRealtimeData_{_day_or_night}.json"
+        ),
+    )
 
 
 async def test_symo_inverter(hass, aioclient_mock):
@@ -18,16 +67,14 @@ async def test_symo_inverter(hass, aioclient_mock):
         state = hass.states.get(entity_id)
         assert state.state == str(expected_state)
 
-    aioclient_mock.get(
-        url=symo.APIVersion.url,
-        json=symo.APIVersion.json,
-    )
     # Init at night
-    aioclient_mock.get(
-        url=symo.InverterDevice.url,
-        json=symo.InverterDevice.json_night,
-    )
-    await setup_fronius_integration(hass, aioclient_mock, [symo.InverterDevice.config])
+    mock_responses(aioclient_mock, night=True)
+    config = {
+        CONF_SENSOR_TYPE: TYPE_INVERTER,
+        CONF_SCOPE: SCOPE_DEVICE,
+        CONF_DEVICE: 1,
+    }
+    await setup_fronius_integration(hass, [config])
 
     assert len(hass.states.async_all()) == 10
     # 5 ignored from DeviceStatus
@@ -38,11 +85,7 @@ async def test_symo_inverter(hass, aioclient_mock):
     assert_state("sensor.voltage_dc_fronius_inverter_1_http_fronius", 16)
 
     # Second test at daytime when inverter is producing
-    aioclient_mock.clear_requests()
-    aioclient_mock.get(
-        url=symo.InverterDevice.url,
-        json=symo.InverterDevice.json_day,
-    )
+    mock_responses(aioclient_mock, night=False)
     async_fire_time_changed(hass, dt.utcnow() + DEFAULT_SCAN_INTERVAL)
     await hass.async_block_till_done()
 
@@ -67,15 +110,11 @@ async def test_symo_logger(hass, aioclient_mock):
         assert state
         assert state.state == str(expected_state)
 
-    aioclient_mock.get(
-        url=symo.APIVersion.url,
-        json=symo.APIVersion.json,
-    )
-    aioclient_mock.get(
-        url=symo.LoggerInfo.url,
-        json=symo.LoggerInfo.json,
-    )
-    await setup_fronius_integration(hass, aioclient_mock, [symo.LoggerInfo.config])
+    mock_responses(aioclient_mock)
+    config = {
+        CONF_SENSOR_TYPE: TYPE_LOGGER_INFO,
+    }
+    await setup_fronius_integration(hass, [config])
 
     assert len(hass.states.async_all()) == 12
     # ignored constant entities:
@@ -106,15 +145,13 @@ async def test_symo_meter(hass, aioclient_mock):
         assert state
         assert state.state == str(expected_state)
 
-    aioclient_mock.get(
-        url=symo.APIVersion.url,
-        json=symo.APIVersion.json,
-    )
-    aioclient_mock.get(
-        url=symo.MeterDevice.url,
-        json=symo.MeterDevice.json,
-    )
-    await setup_fronius_integration(hass, aioclient_mock, [symo.MeterDevice.config])
+    mock_responses(aioclient_mock)
+    config = {
+        CONF_SENSOR_TYPE: TYPE_METER,
+        CONF_SCOPE: SCOPE_DEVICE,
+        CONF_DEVICE: 0,
+    }
+    await setup_fronius_integration(hass, [config])
 
     assert len(hass.states.async_all()) == 39
     # ignored entities:
@@ -173,16 +210,12 @@ async def test_symo_power_flow(hass, aioclient_mock):
         state = hass.states.get(entity_id)
         assert state.state == str(expected_state)
 
-    aioclient_mock.get(
-        url=symo.APIVersion.url,
-        json=symo.APIVersion.json,
-    )
     # First test at night
-    aioclient_mock.get(
-        url=symo.PowerFlow.url,
-        json=symo.PowerFlow.json_night,
-    )
-    await setup_fronius_integration(hass, aioclient_mock, [symo.PowerFlow.config])
+    mock_responses(aioclient_mock, night=True)
+    config = {
+        CONF_SENSOR_TYPE: TYPE_POWER_FLOW,
+    }
+    await setup_fronius_integration(hass, [config])
 
     assert len(hass.states.async_all()) == 12
     # ignored: location, mode, timestamp
@@ -226,11 +259,7 @@ async def test_symo_power_flow(hass, aioclient_mock):
     )
 
     # Second test at daytime when inverter is producing
-    aioclient_mock.clear_requests()
-    aioclient_mock.get(
-        url=symo.PowerFlow.url,
-        json=symo.PowerFlow.json_day,
-    )
+    mock_responses(aioclient_mock, night=False)
     async_fire_time_changed(hass, dt.utcnow() + DEFAULT_SCAN_INTERVAL)
     await hass.async_block_till_done()
 

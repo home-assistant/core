@@ -7,7 +7,7 @@ from homeassistant.setup import async_setup_component
 from .const import DOMAIN, MOCK_HOST
 
 
-async def setup_fronius_integration(hass, aioclient_mock, devices):
+async def setup_fronius_integration(hass, devices):
     """Create the Fronius integration."""
     assert await async_setup_component(
         hass,
