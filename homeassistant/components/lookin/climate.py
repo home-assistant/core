@@ -3,9 +3,10 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, Final, cast
+from typing import Any, Callable, Coroutine, Final, cast
 
 from aiolookin import Climate, MeteoSensor, SensorID
+
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
@@ -80,14 +81,19 @@ async def async_setup_entry(
             continue
         uuid = remote["UUID"]
 
-        async def _async_update() -> Climate:
-            return await lookin_data.lookin_protocol.get_conditioner(uuid)
+        def _wrap_async_update(uuid) -> Callable[[], Coroutine[None, Any, Climate]]:
+            """Create a function to capture the uuid cell variable."""
+
+            async def _async_update() -> Climate:
+                return await lookin_data.lookin_protocol.get_conditioner(uuid)
+
+            return _async_update
 
         coordinator = DataUpdateCoordinator(
             hass,
             LOGGER,
             name=f"{config_entry.title} {uuid}",
-            update_method=_async_update,
+            update_method=_wrap_async_update(uuid),
             update_interval=timedelta(
                 seconds=60
             ),  # Updates are pushed (fallback is polling)
@@ -196,5 +202,8 @@ class ConditionerEntity(LookinEntity, CoordinatorEntity, ClimateEntity):
             self._lookin_udp_subs.subscribe_sensor(
                 self._lookin_device.id, SensorID.IR, self._uuid, self._async_push_update
             )
+        )
+        self.async_on_remove(
+            self._meteo_coordinator.async_add_listener(self._handle_coordinator_update)
         )
         return await super().async_added_to_hass()
