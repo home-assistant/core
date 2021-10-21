@@ -8,6 +8,8 @@ import logging
 
 from aiohttp.client_exceptions import ClientConnectionError, ClientResponseError
 from pysmartapp.event import EVENT_TYPE_DEVICE
+from pysmartthings import Attribute, Capability, SmartThings
+from pysmartthings.device import DeviceEntity
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -27,8 +29,6 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
-from pysmartthings import Attribute, Capability, SmartThings
-from pysmartthings.device import DeviceEntity
 
 from .config_flow import SmartThingsFlowHandler  # noqa: F401
 from .const import (
@@ -365,8 +365,7 @@ class DeviceBroker:
         for evt in req.events:
             if evt.event_type != EVENT_TYPE_DEVICE:
                 continue
-            device = self.devices.get(evt.device_id)
-            if not device:
+            if not (device := self.devices.get(evt.device_id)):
                 continue
             device.status.apply_attribute_update(
                 evt.component_id,

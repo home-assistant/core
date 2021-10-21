@@ -497,7 +497,7 @@ hole==0.5.1
 holidays==0.11.3.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20211014.0
+home-assistant-frontend==20211020.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -902,7 +902,7 @@ pyheos==0.7.2
 pyhiveapi==0.4.2
 
 # homeassistant.components.homematic
-pyhomematic==0.1.75
+pyhomematic==0.1.76
 
 # homeassistant.components.ialarm
 pyialarm==1.9.0

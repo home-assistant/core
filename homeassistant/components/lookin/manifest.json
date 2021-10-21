@@ -1,7 +1,7 @@
 {
   "domain": "lookin",
   "name": "LOOKin",
-  "documentation": "https://www.home-assistant.io/integrations/",
+  "documentation": "https://www.home-assistant.io/integrations/lookin/",
   "codeowners": ["@ANMalko"],
   "requirements": ["aiolookin==0.0.2"],
   "zeroconf": ["_lookin._tcp.local."],
