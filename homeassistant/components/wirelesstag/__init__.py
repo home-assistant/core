@@ -148,9 +148,15 @@ class WirelessTagPlatform:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Wirelesstags component."""
+    _LOGGER.debug("Setup Wirelesstags from yaml")
+
     if DOMAIN not in config:
+        _LOGGER.debug("Domain not in config - return")
         return True
-    _LOGGER.debug("Setup Wirelesstags from YAML - %s", config[DOMAIN])
+
+    if hass.config_entries.async_entries(DOMAIN):
+        return True
+
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
