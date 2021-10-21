@@ -64,6 +64,14 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
+    # RGB Socket
+    # https://developer.tuya.com/en/docs/iot/f?id=K9i5ql3v98hn3
+    "dj": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name="Switch",
+        ),
+    ),
     # Cirquit Breaker
     "dlq": (
         SwitchEntityDescription(

@@ -61,7 +61,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             color_data=DPCode.COLOUR_DATA,
         ),
     ),
-    # Light
+    # RGB Socket
     # https://developer.tuya.com/en/docs/iot/categorydj?id=Kaiuyzy3eheyy
     "dj": (
         TuyaLightEntityDescription(
