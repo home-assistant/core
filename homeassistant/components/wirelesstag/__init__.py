@@ -1,12 +1,18 @@
 """Support for Wireless Sensor Tags."""
+import asyncio
 import logging
 
-from requests.exceptions import ConnectTimeout, HTTPError
-import voluptuous as vol
-from wirelesstagpy import WirelessTags, WirelessTagsException
+from wirelesstagpy import WirelessTags
+from wirelesstagpy.exceptions import (
+    WirelessTagsConnectionError,
+    WirelessTagsException,
+    WirelessTagsWrongCredentials,
+)
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
+    ATTR_DEVICE_ID,
     ATTR_VOLTAGE,
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -14,9 +20,12 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,13 +36,12 @@ ATTR_TAG_SIGNAL_STRENGTH = "signal_strength"
 ATTR_TAG_OUT_OF_RANGE = "out_of_range"
 # Number in percents from max power of tag receiver
 ATTR_TAG_POWER_CONSUMPTION = "power_consumption"
-
-
-NOTIFICATION_ID = "wirelesstag_notification"
-NOTIFICATION_TITLE = "Wireless Sensor Tag Setup"
+RETRY_INTERVAL = 60  # seconds
 
 DOMAIN = "wirelesstag"
 DEFAULT_ENTITY_NAMESPACE = "wirelesstag"
+
+PLATFORMS = ["sensor", "binary_sensor"]
 
 # Template for signal - first parameter is tag_id,
 # second, tag manager mac address
@@ -42,18 +50,6 @@ SIGNAL_TAG_UPDATE = "wirelesstag.tag_info_updated_{}_{}"
 # Template for signal - tag_id, sensor type and
 # tag manager mac address
 SIGNAL_BINARY_EVENT_UPDATE = "wirelesstag.binary_event_updated_{}_{}_{}"
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
 
 class WirelessTagPlatform:
@@ -71,19 +67,21 @@ class WirelessTagPlatform:
         self.tags = self.api.load_tags()
         return self.tags
 
-    def arm(self, switch):
-        """Arm entity sensor monitoring."""
-        func_name = f"arm_{switch.sensor_type}"
+    def arm_sensor(self, sensor_type, tag_id, tag_manager_mac):
+        """Arm sensor type for monitoring."""
+        _LOGGER.debug("Arm sensor: %s", sensor_type)
+        func_name = f"arm_{sensor_type}"
         arm_func = getattr(self.api, func_name)
         if arm_func is not None:
-            arm_func(switch.tag_id, switch.tag_manager_mac)
+            arm_func(tag_id, tag_manager_mac)
 
-    def disarm(self, switch):
+    def disarm_sensor(self, sensor_type, tag_id, tag_manager_mac):
         """Disarm entity sensor monitoring."""
-        func_name = f"disarm_{switch.sensor_type}"
+        _LOGGER.debug("Disarm sensor: %s", sensor_type)
+        func_name = f"disarm_{sensor_type}"
         disarm_func = getattr(self.api, func_name)
         if disarm_func is not None:
-            disarm_func(switch.tag_id, switch.tag_manager_mac)
+            disarm_func(tag_id, tag_manager_mac)
 
     def start_monitoring(self):
         """Start monitoring push events."""
@@ -124,30 +122,130 @@ class WirelessTagPlatform:
 
         self.api.start_monitoring(push_callback)
 
+    def stop_monitoring(self):
+        """Stop cloud push monitoring."""
+        _LOGGER.debug("Stop monitoring push updates for wirelesstags")
+        self.api.stop_monitoring()
 
-def setup(hass, config):
-    """Set up the Wireless Sensor Tag component."""
-    conf = config[DOMAIN]
-    username = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
+    @property
+    def is_monitoring(self):
+        """Check if monitoring is active."""
+        return self.api.is_monitoring
 
-    try:
-        wirelesstags = WirelessTags(username=username, password=password)
-
-        platform = WirelessTagPlatform(hass, wirelesstags)
-        platform.load_tags()
-        platform.start_monitoring()
-        hass.data[DOMAIN] = platform
-    except (ConnectTimeout, HTTPError, WirelessTagsException) as ex:
-        _LOGGER.error("Unable to connect to wirelesstag.net service: %s", str(ex))
-        hass.components.persistent_notification.create(
-            f"Error: {ex}<br />Please restart hass after fixing this.",
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID,
+    async def async_update_device_registry(self, tag, config_entry) -> None:
+        """Update device registry."""
+        _LOGGER.debug("Register device for tag: %s", tag)
+        device_registry = await dr.async_get_registry(self.hass)
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={(DOMAIN, tag.uuid)},
+            manufacturer="Wirelesstag",
+            name=tag.name,
+            model=f"Tag ({tag.tag_type})",
+            sw_version=f"rev. {tag.sw_version}",
         )
-        return False
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Wirelesstags component."""
+    if DOMAIN not in config:
+        return True
+    _LOGGER.debug("Setup Wirelesstags from YAML - %s", config[DOMAIN])
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config[DOMAIN],
+        )
+    )
 
     return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Wirelesstags from a config entry."""
+    _LOGGER.debug("Setup config entry for Wirelesstags")
+    try:
+        username = entry.data[CONF_USERNAME]
+        password = entry.data[CONF_PASSWORD]
+        wirelesstags = WirelessTags(username=username, password=password)
+        platform = WirelessTagPlatform(hass, wirelesstags)
+
+        # try to authenticate during loading tags
+        await hass.async_add_executor_job(platform.load_tags)
+
+        hass.data[DOMAIN] = platform
+
+        for tag in platform.tags.values():
+            hass.async_create_task(platform.async_update_device_registry(tag, entry))
+
+        hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+        register_services(hass)
+        platform.start_monitoring()
+
+        return True
+    except (WirelessTagsWrongCredentials) as error:
+        _LOGGER.error("Wrong creds for wirelesstag.net service: %s", str(error))
+        raise ConfigEntryAuthFailed from error
+    except (WirelessTagsConnectionError, asyncio.TimeoutError) as error:
+        _LOGGER.error("Unable to connect to wirelesstag.net service: %s", str(error))
+        raise ConfigEntryNotReady from error
+    except Exception as error:
+        _LOGGER.error("Failed to connect to wirelesstag.net service: %s", str(error))
+        raise ConfigEntryNotReady from error
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    _LOGGER.debug("Unloading wirelesstags")
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN].stop_monitoring()
+        hass.data[DOMAIN] = None
+
+    return unload_ok
+
+
+def register_services(hass):
+    """Register tags services."""
+
+    async def async_arm_monitoring(service):
+        try:
+            _LOGGER.info("Handle arm_monitoring service %s", service.data)
+            await async_handle_monitoring(service, "arm_sensor")
+        except Exception as ex:  # pylint: disable=broad-except
+            _LOGGER.error("Unable to call arm_monitoring service: %s", ex)
+
+    async def async_disarm_monitoring(service):
+        """Handle disarm service request."""
+        try:
+            _LOGGER.info("Handle disarm_monitoring service %s", service.data)
+            await async_handle_monitoring(service, "disarm_sensor")
+        except Exception as ex:  # pylint: disable=broad-except
+            _LOGGER.error("Unable to call disarm_monitoring service: %s", ex)
+
+    async def async_handle_monitoring(service, selector):
+        """Handle monitoring service request for specified selector."""
+        type_monitor = service.data.get("type", "Motion")
+        sensor_type = type_monitor.lower()
+        platform = hass.data[DOMAIN]
+        device_registry = dr.async_get(hass)
+        device_ids = service.data.get(ATTR_DEVICE_ID)
+        method_to_call = getattr(platform, selector)
+        for device_id in device_ids:
+            device = device_registry.async_get(device_id)
+            uuid = list(device.identifiers)[0][1]
+            if uuid in platform.tags:
+                _LOGGER.info(
+                    "Executing %s service for %s sensor", selector, sensor_type
+                )
+                tag = platform.tags[uuid]
+                await hass.async_add_executor_job(
+                    method_to_call, sensor_type, tag.tag_id, tag.tag_manager_mac
+                )
+
+    hass.services.async_register(DOMAIN, "arm_monitoring", async_arm_monitoring)
+    hass.services.async_register(DOMAIN, "disarm_monitoring", async_disarm_monitoring)
 
 
 class WirelessTagBaseSensor(Entity):
@@ -161,7 +259,7 @@ class WirelessTagBaseSensor(Entity):
         self.tag_id = self._tag.tag_id
         self.tag_manager_mac = self._tag.tag_manager_mac
         self._name = self._tag.name
-        self._state = None
+        self._state = 0
 
     @property
     def name(self):
@@ -198,13 +296,21 @@ class WirelessTagBaseSensor(Entity):
         if not self.should_poll:
             return
 
-        updated_tags = self._api.load_tags()
-        if (updated_tag := updated_tags[self._uuid]) is None:
-            _LOGGER.error('Unable to update tag: "%s"', self.name)
-            return
+        try:
+            updated_tags = self._api.load_tags()
+            if (updated_tag := updated_tags[self._uuid]) is None:
+                _LOGGER.error('Unable to update tag: "%s"', self.name)
+                return
 
-        self._tag = updated_tag
-        self._state = self.updated_state_value()
+            self._tag = updated_tag
+            self._state = self.updated_state_value()
+
+            if self._api.is_monitoring is False:
+                self._api.start_monitoring()
+                _LOGGER.debug("Restore monitoring")
+        except WirelessTagsException as ex:
+            _LOGGER.debug("Unable to load tags with error: %s, stop monitoring", ex)
+            self._api.stop_monitoring()
 
     @property
     def extra_state_attributes(self):

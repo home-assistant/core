@@ -1,0 +1,19 @@
+{
+    "config": {        
+        "error": {
+            "cannot_connect": "Failed to connect.",
+            "invalid_auth": "Email or password is incorrect.",
+            "unknown": "Unexpected error."
+        },
+        "step": {            
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Enter your wirelesstag.net credentials.",
+                "title": "Setup Wirelesstag account"
+            }
+        }
+    }
+}

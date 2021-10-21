@@ -1,0 +1,51 @@
+# WirelessTags services definitions
+
+arm_monitoring:
+  name: Arm Monitoring
+  # Description of the service
+  description: Arm specified monitoring type for tag.
+  target:
+    device:
+      integration: wirelesstag
+  # Different fields that your service accepts
+  fields:
+    type:
+      name: Type Of Monitoring
+      description: The type of sensor to monitor.
+      example: "Motion"
+      default: "Motion"
+      required: true
+      advanced: false
+      selector:
+        select:
+          options:
+            - "Motion"
+            - "Temperature"
+            - "Humidity"
+            - "Light"
+            - "Moisture"
+
+disarm_monitoring:
+  name: Disarm Monitoring
+  # Description of the service
+  description: Disarm specified monitoring type for tag specified.
+  target:
+    device:
+      integration: wirelesstag
+  # Different fields that your service accepts
+  fields:
+    type:
+      name: Type Of Monitoring
+      description: The type of sensor to monitor.
+      example: "Motion"
+      default: "Motion"
+      required: true
+      advanced: false
+      selector:
+        select:
+          options:
+            - "Motion"
+            - "Temperature"
+            - "Humidity"
+            - "Light"
+            - "Moisture"

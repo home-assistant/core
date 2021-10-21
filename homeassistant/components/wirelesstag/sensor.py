@@ -1,47 +1,25 @@
 """Sensor support for Wireless Sensor Tags platform."""
 import logging
 
-import voluptuous as vol
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import DOMAIN as WIRELESSTAG_DOMAIN, SIGNAL_TAG_UPDATE, WirelessTagBaseSensor
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_TEMPERATURE = "temperature"
-SENSOR_HUMIDITY = "humidity"
-SENSOR_MOISTURE = "moisture"
-SENSOR_LIGHT = "light"
 
-SENSOR_TYPES = [SENSOR_TEMPERATURE, SENSOR_HUMIDITY, SENSOR_MOISTURE, SENSOR_LIGHT]
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
-        )
-    }
-)
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the sensor platform."""
-    platform = hass.data.get(WIRELESSTAG_DOMAIN)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Wirelesstags sensors."""
+    platform = hass.data[WIRELESSTAG_DOMAIN]
     sensors = []
     tags = platform.tags
     for tag in tags.values():
-        for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-            if sensor_type in tag.allowed_sensor_types:
-                sensors.append(
-                    WirelessTagSensor(platform, tag, sensor_type, hass.config)
-                )
-
-    add_entities(sensors, True)
+        for sensor_type in tag.allowed_sensor_types:
+            sensor = WirelessTagSensor(platform, tag, sensor_type, hass.config)
+            sensors.append(sensor)
+    async_add_entities(sensors)
 
 
 class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
@@ -58,9 +36,10 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
         # sensor.wirelesstag_bedroom_temperature
         # and not as sensor.bedroom for temperature and
         # sensor.bedroom_2 for humidity
-        self._entity_id = (
+        self.entity_id = (
             f"sensor.{WIRELESSTAG_DOMAIN}_{self.underscored_name}_{self._sensor_type}"
         )
+        self._state = self.updated_state_value()
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -73,14 +52,14 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
         )
 
     @property
-    def entity_id(self):
-        """Overridden version."""
-        return self._entity_id
-
-    @property
     def underscored_name(self):
         """Provide name savvy to be used in entity_id name of self."""
         return self.name.lower().replace(" ", "_")
+
+    @property
+    def unique_id(self):
+        """Return a unique, unchanging string that represents this sensor."""
+        return f"{self._tag.uuid}_{self._sensor_type}"
 
     @property
     def native_value(self):

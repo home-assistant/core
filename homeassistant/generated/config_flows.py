@@ -319,6 +319,7 @@ FLOWS = [
     "whirlpool",
     "wiffi",
     "wilight",
+    "wirelesstag",
     "withings",
     "wled",
     "wolflink",

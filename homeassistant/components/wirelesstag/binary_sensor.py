@@ -1,10 +1,7 @@
 """Binary sensor support for Wireless Sensor Tags."""
-import voluptuous as vol
-
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
-from homeassistant.const import CONF_MONITORED_CONDITIONS, STATE_OFF, STATE_ON
+from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
@@ -13,84 +10,29 @@ from . import (
     WirelessTagBaseSensor,
 )
 
-# On means in range, Off means out of range
-SENSOR_PRESENCE = "presence"
 
-# On means motion detected, Off means clear
-SENSOR_MOTION = "motion"
-
-# On means open, Off means closed
-SENSOR_DOOR = "door"
-
-# On means temperature become too cold, Off means normal
-SENSOR_COLD = "cold"
-
-# On means hot, Off means normal
-SENSOR_HEAT = "heat"
-
-# On means too dry (humidity), Off means normal
-SENSOR_DRY = "dry"
-
-# On means too wet (humidity), Off means normal
-SENSOR_WET = "wet"
-
-# On means light detected, Off means no light
-SENSOR_LIGHT = "light"
-
-# On means moisture detected (wet), Off means no moisture (dry)
-SENSOR_MOISTURE = "moisture"
-
-# On means tag battery is low, Off means normal
-SENSOR_BATTERY = "battery"
-
-# Sensor types: Name, device_class, push notification type representing 'on',
-# attr to check
-SENSOR_TYPES = {
-    SENSOR_PRESENCE: "Presence",
-    SENSOR_MOTION: "Motion",
-    SENSOR_DOOR: "Door",
-    SENSOR_COLD: "Cold",
-    SENSOR_HEAT: "Heat",
-    SENSOR_DRY: "Too dry",
-    SENSOR_WET: "Too wet",
-    SENSOR_LIGHT: "Light",
-    SENSOR_MOISTURE: "Leak",
-    SENSOR_BATTERY: "Low Battery",
-}
-
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
-        )
-    }
-)
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the platform for a WirelessTags."""
-    platform = hass.data.get(WIRELESSTAG_DOMAIN)
-
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Wirelesstags binary sensors."""
+    platform = hass.data[WIRELESSTAG_DOMAIN]
     sensors = []
     tags = platform.tags
     for tag in tags.values():
-        allowed_sensor_types = tag.supported_binary_events_types
-        for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-            if sensor_type in allowed_sensor_types:
-                sensors.append(WirelessTagBinarySensor(platform, tag, sensor_type))
-
-    add_entities(sensors, True)
+        for sensor_type in tag.supported_binary_events_types:
+            sensor = WirelessTagBinarySensor(platform, tag, sensor_type)
+            sensors.append(sensor)
+    async_add_entities(sensors)
 
 
 class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorEntity):
-    """A binary sensor implementation for WirelessTags."""
+    """A binary sensor implementation for Wirelesstags."""
 
     def __init__(self, api, tag, sensor_type):
         """Initialize a binary sensor for a Wireless Sensor Tags."""
         super().__init__(api, tag)
         self._sensor_type = sensor_type
         self._name = f"{self._tag.name} {self.event.human_readable_name}"
+        self.entity_id = f"binary_sensor.{WIRELESSTAG_DOMAIN}_{self.underscored_name}"
+        self._state = self.updated_state_value()
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -104,6 +46,16 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorEntity):
                 self._on_binary_event_callback,
             )
         )
+
+    @property
+    def unique_id(self):
+        """Return a unique, unchanging string that represents this sensor."""
+        return f"{self._tag.uuid}_binary_{self._sensor_type}"
+
+    @property
+    def underscored_name(self):
+        """Provide name savvy to be used in entity_id name of self."""
+        return self.name.lower().replace(" ", "_")
 
     @property
     def is_on(self):
