@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from pyoctoprintapi import ApiError, DiscoverySettings
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.octoprint.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -12,7 +12,6 @@ from tests.common import MockConfigEntry
 
 async def test_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -167,7 +166,6 @@ async def test_form_unknown_exception(hass):
 async def test_show_zerconf_form(hass: HomeAssistant) -> None:
     """Test that the zeroconf confirmation form is served."""
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
@@ -232,7 +230,6 @@ async def test_show_zerconf_form(hass: HomeAssistant) -> None:
 async def test_show_ssdp_form(hass: HomeAssistant) -> None:
     """Test that the zeroconf confirmation form is served."""
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
@@ -430,7 +427,6 @@ async def test_user_duplicate_entry(hass):
         unique_id="uuid",
     ).add_to_hass(hass)
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -472,6 +468,7 @@ async def test_user_duplicate_entry(hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == "abort"
+    assert result2["reason"] == "already_configured"
     assert len(mock_setup.mock_calls) == 0
     assert len(mock_setup_entry.mock_calls) == 0
 
@@ -485,7 +482,6 @@ async def test_duplicate_zerconf_ignored(hass: HomeAssistant) -> None:
         unique_id="83747482",
     ).add_to_hass(hass)
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
@@ -498,6 +494,7 @@ async def test_duplicate_zerconf_ignored(hass: HomeAssistant) -> None:
         },
     )
     assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
 
 
 async def test_duplicate_ssdp_ignored(hass: HomeAssistant) -> None:
@@ -509,7 +506,6 @@ async def test_duplicate_ssdp_ignored(hass: HomeAssistant) -> None:
         unique_id="83747482",
     ).add_to_hass(hass)
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
@@ -520,3 +516,4 @@ async def test_duplicate_ssdp_ignored(hass: HomeAssistant) -> None:
         },
     )
     assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
