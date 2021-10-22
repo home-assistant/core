@@ -4,8 +4,8 @@ from __future__ import annotations
 
 def remap_value(
     value: float | int,
-    from_min: float | int,
-    from_max: float | int,
+    from_min: float | int = 0,
+    from_max: float | int = 255,
     to_min: float | int = 0,
     to_max: float | int = 255,
     reverse: bool = False,

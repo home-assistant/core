@@ -123,16 +123,22 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             key=DPCode.SWITCH_LED_1,
             name="Light",
             brightness=DPCode.BRIGHT_VALUE_1,
+            brightness_max=DPCode.BRIGHTNESS_MAX_1,
+            brightness_min=DPCode.BRIGHTNESS_MIN_1,
         ),
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED_2,
             name="Light 2",
             brightness=DPCode.BRIGHT_VALUE_2,
+            brightness_max=DPCode.BRIGHTNESS_MAX_2,
+            brightness_min=DPCode.BRIGHTNESS_MIN_2,
         ),
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED_3,
             name="Light 3",
             brightness=DPCode.BRIGHT_VALUE_3,
+            brightness_max=DPCode.BRIGHTNESS_MAX_3,
+            brightness_min=DPCode.BRIGHTNESS_MIN_3,
         ),
     ),
     # Dimmer
@@ -475,12 +481,47 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             and self.color_mode != COLOR_MODE_HS
             and self._brightness_type
         ):
+            brightness = kwargs[ATTR_BRIGHTNESS]
+
+            # If there is a min/max value, the brightness is actually limited.
+            # Meaning it is actually not on a 0-255 scale.
+            if (
+                self._brightness_max_type is not None
+                and self._brightness_min_type is not None
+                and self.entity_description.brightness_max is not None
+                and self.entity_description.brightness_min is not None
+                and (
+                    brightness_max := self.device.status.get(
+                        self.entity_description.brightness_max
+                    )
+                )
+                is not None
+                and (
+                    brightness_min := self.device.status.get(
+                        self.entity_description.brightness_min
+                    )
+                )
+                is not None
+            ):
+                # Remap values onto our scale
+                brightness_max = self._brightness_max_type.remap_value_to(
+                    brightness_max
+                )
+                brightness_min = self._brightness_min_type.remap_value_to(
+                    brightness_min
+                )
+
+                # Remap the brightness value from their min-max to our 0-255 scale
+                brightness = remap_value(
+                    brightness,
+                    to_min=brightness_min,
+                    to_max=brightness_max,
+                )
+
             commands += [
                 {
                     "code": self._brightness_dpcode,
-                    "value": round(
-                        self._brightness_type.remap_value_from(kwargs[ATTR_BRIGHTNESS])
-                    ),
+                    "value": round(self._brightness_type.remap_value_from(brightness)),
                 },
             ]
 
