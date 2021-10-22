@@ -123,8 +123,7 @@ class SignalUpdateCallback:
         if not device_entry:
             return
         for event in events:
-            event_type = EVENT_NAME_MAP.get(event)
-            if not event_type:
+            if not (event_type := EVENT_NAME_MAP.get(event)):
                 continue
             message = {
                 "device_id": device_entry.id,
