@@ -5,16 +5,12 @@ from itertools import count
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_ENTITY_ID,
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
     ATTR_VIA_DEVICE,
     ATTR_WAKEUP,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_registry import async_get_registry
 
 from .const import (
@@ -160,15 +156,15 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         return self._unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device information."""
         identifier, name = node_device_id_and_name(self.node)
-        info = {
-            ATTR_IDENTIFIERS: {identifier},
-            ATTR_MANUFACTURER: self.node.manufacturer_name,
-            ATTR_MODEL: self.node.product_name,
-            ATTR_NAME: name,
-        }
+        info = DeviceInfo(
+            identifiers={identifier},
+            manufacturer=self.node.manufacturer_name,
+            model=self.node.product_name,
+            name=name,
+        )
         if self.node_id > 1:
             info[ATTR_VIA_DEVICE] = (DOMAIN, 1)
         return info
