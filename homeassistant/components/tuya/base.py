@@ -117,7 +117,7 @@ class TuyaEntity(Entity):
             identifiers={(DOMAIN, self.device.id)},
             manufacturer="Tuya",
             name=self.device.name,
-            model=self.device.product_name,
+            model=f"{self.device.product_name} ({self.device.product_id})",
         )
 
     @property
