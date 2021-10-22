@@ -18,10 +18,15 @@ class FritzExtraAttributes(TypedDict):
 class ClimateExtraAttributes(FritzExtraAttributes, total=False):
     """TypedDict for climates extra attributes."""
 
-    battery_low: bool
     battery_level: int
+    battery_low: bool
     holiday_mode: bool
+    nextchange_endperiod: str
+    nextchange_preset_mode: str
+    nextchange_temperature: str
     summer_mode: bool
+    temperature_comfort: str
+    temperature_eco: str
     window_open: bool
 
 

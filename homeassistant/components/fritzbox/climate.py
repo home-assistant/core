@@ -29,7 +29,12 @@ from .const import (
     ATTR_STATE_DEVICE_LOCKED,
     ATTR_STATE_HOLIDAY_MODE,
     ATTR_STATE_LOCKED,
+    ATTR_STATE_NEXTCHANGE_ENDPERIOD,
+    ATTR_STATE_NEXTCHANGE_PRESET_MODE,
+    ATTR_STATE_NEXTCHANGE_TEMPERATURE,
     ATTR_STATE_SUMMER_MODE,
+    ATTR_STATE_TEMPERATURE_COMFORT,
+    ATTR_STATE_TEMPERATURE_ECO,
     ATTR_STATE_WINDOW_OPEN,
     CONF_COORDINATOR,
     DOMAIN as FRITZBOX_DOMAIN,
@@ -185,7 +190,25 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
             attrs[ATTR_STATE_HOLIDAY_MODE] = self.device.holiday_active
         if self.device.summer_active is not None:
             attrs[ATTR_STATE_SUMMER_MODE] = self.device.summer_active
-        if ATTR_STATE_WINDOW_OPEN is not None:
+        if self.device.window_open is not None:
             attrs[ATTR_STATE_WINDOW_OPEN] = self.device.window_open
+
+        if self.device.comfort_temperature is not None:
+            attrs[ATTR_STATE_TEMPERATURE_COMFORT] = self.device.comfort_temperature
+        if self.device.eco_temperature is not None:
+            attrs[ATTR_STATE_TEMPERATURE_ECO] = self.device.eco_temperature
+
+        if self.device.nextchange_endperiod is not None:
+            attrs[ATTR_STATE_NEXTCHANGE_ENDPERIOD] = self.device.nextchange_endperiod
+        if self.device.nextchange_temperature is not None:
+            attrs[
+                ATTR_STATE_NEXTCHANGE_TEMPERATURE
+            ] = self.device.nextchange_temperature
+            attrs[ATTR_STATE_NEXTCHANGE_PRESET_MODE] = (
+                PRESET_ECO
+                if attrs[ATTR_STATE_NEXTCHANGE_TEMPERATURE]
+                == attrs[ATTR_STATE_TEMPERATURE_ECO]
+                else PRESET_COMFORT
+            )
 
         return attrs
