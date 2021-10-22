@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_USERNAME,
 )
+from homeassistant.helpers.entity import Entity
 
 from .const import _LOGGER, CONF_HUMIDIFIER, DOMAIN
 
@@ -36,7 +37,7 @@ async def async_setup_entry(hass, config):
         proto=protocol,
     )
 
-    data = VenstarData(hass, config, client, humidifier)
+    data = VenstarEntity(hass, client, humidifier)
     try:
         await data.async_update()
     except Exception:  # pylint: disable=broad-except
@@ -52,17 +53,16 @@ async def async_unload_entry(hass, config):
     """Unload the config config and platforms."""
     unload_ok = await hass.config_entries.async_unload_platforms(config, PLATFORMS)
     if unload_ok:
-        hass.data.pop(DOMAIN)
+        hass.data[DOMAIN].pop(config.entry_id)
     return unload_ok
 
 
-class VenstarData:
+class VenstarEntity(Entity):
     """Get the latest data and update."""
 
-    def __init__(self, hass, config, client, humidifier):
+    def __init__(self, hass, client, humidifier):
         """Initialize the data object."""
         self._hass = hass
-        self._config = config
         self._client = client
         self._humidifier = humidifier
 

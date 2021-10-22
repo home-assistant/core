@@ -40,7 +40,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-from . import VenstarData
+from . import VenstarEntity
 from .const import (
     _LOGGER,
     ATTR_FAN_STATE,
@@ -72,9 +72,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Venstar thermostat."""
     client = hass.data[DOMAIN][config_entry.entry_id]
     humidifier = config_entry.data.get(CONF_HUMIDIFIER)
-    async_add_entities(
-        [VenstarThermostat(hass, config_entry, client, humidifier)], True
-    )
+    async_add_entities([VenstarThermostat(hass, client, humidifier)], True)
 
 
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
@@ -95,12 +93,12 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
         )
 
 
-class VenstarThermostat(VenstarData, ClimateEntity):
+class VenstarThermostat(VenstarEntity, ClimateEntity):
     """Representation of a Venstar thermostat."""
 
-    def __init__(self, hass, config, client, humidifier):
+    def __init__(self, hass, client, humidifier):
         """Initialize the thermostat."""
-        super().__init__(hass, config, client, humidifier)
+        super().__init__(hass, client, humidifier)
         self._mode_map = {
             HVAC_MODE_HEAT: self._client.MODE_HEAT,
             HVAC_MODE_COOL: self._client.MODE_COOL,
