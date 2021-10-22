@@ -142,6 +142,11 @@ UNIT_CONVERSIONS = {
 _LOGGER = logging.getLogger(__name__)
 
 
+def split_statistic_id(entity_id: str) -> list[str]:
+    """Split a state entity ID into domain and object ID."""
+    return entity_id.split(":", 1)
+
+
 VALID_STATISTIC_ID = re.compile(r"^(?!.+__)(?!_)[\da-z_]+(?<!_):(?!_)[\da-z_]+(?<!_)$")
 
 
@@ -957,20 +962,21 @@ def validate_statistics(hass: HomeAssistant) -> dict[str, list[ValidationIssue]]
 def _statistics_id_claimed(hass: HomeAssistant, metadata: StatisticMetaData) -> bool:
     """Return True if the statistic_id is claimed by recorder or another integration."""
     statistic_id = metadata["statistic_id"]
-    old_metadata_dict = get_metadata(hass, statistic_id)
-    old_metadata = old_metadata_dict.get(statistic_id)
-    if old_metadata and old_metadata[1]["source"] != metadata["source"]:
+    existing_metadata_dict = get_metadata(hass, statistic_id)
+    existing_metadata = existing_metadata_dict.get(statistic_id)
+    if existing_metadata and existing_metadata[1]["source"] != metadata["source"]:
         _LOGGER.warning(
             "Failed to insert statistics for %s, source %s differs from %s",
             metadata["statistic_id"],
             metadata["source"],
-            old_metadata[1]["source"],
+            existing_metadata[1]["source"],
         )
         return True
 
     return False
 
 
+@callback
 def async_add_external_statistics(
     hass: HomeAssistant,
     metadata: StatisticMetaData,
@@ -982,11 +988,12 @@ def async_add_external_statistics(
     """
     # The statistic_id has same limitations as an entity_id, but with a ':' as separator
     if not valid_statistic_id(metadata["statistic_id"]):
-        raise HomeAssistantError
+        raise HomeAssistantError("Invalid statistic_id")
 
-    # The source must not be empty
-    if not metadata["source"]:
-        raise HomeAssistantError
+    # The source must not be empty and must be aligned with the statistic_id
+    domain, _object_id = split_statistic_id(metadata["statistic_id"])
+    if not metadata["source"] or metadata["source"] != domain:
+        raise HomeAssistantError("Invalid source")
 
     # TODO:
     # - reject if start times are not an hourly boundary (minutes, seconds, µs should all be 0)
