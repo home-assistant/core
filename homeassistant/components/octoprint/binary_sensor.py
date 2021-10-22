@@ -52,9 +52,9 @@ class OctoPrintBinarySensorBase(CoordinatorEntity, BinarySensorEntity):
     ) -> None:
         """Initialize a new OctoPrint sensor."""
         super().__init__(coordinator)
-        self._name = f"Octoprint {sensor_type}"
-        self.sensor_type = sensor_type
         self._device_id = device_id
+        self._attr_name = f"Octoprint {sensor_type}"
+        self._attr_unique_id = f"{sensor_type}-{device_id}"
 
     @property
     def device_info(self):
@@ -64,16 +64,6 @@ class OctoPrintBinarySensorBase(CoordinatorEntity, BinarySensorEntity):
             "manufacturer": "Octoprint",
             "name": "Octoprint",
         }
-
-    @property
-    def unique_id(self):
-        """Return a unique id."""
-        return f"{self.sensor_type}-{self._device_id}"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def is_on(self):
