@@ -1,7 +1,6 @@
 """This platform allows several binary sensor to be grouped into one binary sensor."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import voluptuous as vol
@@ -12,6 +11,7 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
@@ -34,8 +34,6 @@ DEFAULT_NAME = "Binary Sensor Group"
 CONF_ALL = "all"
 REG_KEY = f"{BINARY_SENSOR_DOMAIN}_registry"
 
-_LOGGER = logging.getLogger(__name__)
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITIES): cv.entities_domain(BINARY_SENSOR_DOMAIN),
@@ -45,6 +43,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_ALL): cv.boolean,
     }
 )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Initialize cover group from a config entry."""
+    async_add_entities(
+        [
+            BinarySensorGroup(
+                entry.entry_id, entry.title, None, entry.options[CONF_ENTITIES], None
+            )
+        ]
+    )
 
 
 async def async_setup_platform(

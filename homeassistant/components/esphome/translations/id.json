@@ -2,14 +2,15 @@
     "config": {
         "abort": {
             "already_configured": "Perangkat sudah dikonfigurasi",
-            "already_in_progress": "Alur konfigurasi sedang berlangsung"
+            "already_in_progress": "Alur konfigurasi sedang berlangsung",
+            "reauth_successful": "Autentikasi ulang berhasil"
         },
         "error": {
             "connection_error": "Tidak dapat terhubung ke ESP. Pastikan file YAML Anda mengandung baris 'api:'.",
             "invalid_auth": "Autentikasi tidak valid",
             "resolve_error": "Tidak dapat menemukan alamat ESP. Jika kesalahan ini terus terjadi, atur alamat IP statis: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
-        "flow_title": "ESPHome: {name}",
+        "flow_title": "{name}",
         "step": {
             "authenticate": {
                 "data": {

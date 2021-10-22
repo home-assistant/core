@@ -56,6 +56,7 @@ async def test_fan_basic(hass, hk_driver, events):
     hass.states.async_set(entity_id, STATE_OFF, {ATTR_SUPPORTED_FEATURES: 0})
     await hass.async_block_till_done()
     assert acc.char_active.value == 0
+    assert acc.char_current_state.value == 0
 
     hass.states.async_set(entity_id, STATE_UNKNOWN)
     await hass.async_block_till_done()
@@ -109,6 +110,7 @@ async def test_fan_basic(hass, hk_driver, events):
     assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] is None
+    assert acc.char_current_state.value == 2
 
 
 async def test_fan_direction(hass, hk_driver, events):
@@ -276,6 +278,7 @@ async def test_fan_speed(hass, hk_driver, events):
     hass.states.async_set(entity_id, STATE_ON, {ATTR_PERCENTAGE: 100})
     await hass.async_block_till_done()
     assert acc.char_speed.value == 100
+    assert acc.char_current_state.value == 2
 
     # Set from HomeKit
     call_set_percentage = async_mock_service(hass, DOMAIN, "set_percentage")
@@ -297,7 +300,7 @@ async def test_fan_speed(hass, hk_driver, events):
     )
     await hass.async_add_executor_job(acc.char_speed.client_update_value, 42)
     await hass.async_block_till_done()
-    assert acc.char_speed.value == 42
+    assert acc.char_speed.value == 50
     assert acc.char_active.value == 1
 
     assert call_set_percentage[0]
@@ -309,7 +312,7 @@ async def test_fan_speed(hass, hk_driver, events):
     # Verify speed is preserved from off to on
     hass.states.async_set(entity_id, STATE_OFF, {ATTR_PERCENTAGE: 42})
     await hass.async_block_till_done()
-    assert acc.char_speed.value == 42
+    assert acc.char_speed.value == 50
     assert acc.char_active.value == 0
 
     hk_driver.set_characteristics(
@@ -325,7 +328,7 @@ async def test_fan_speed(hass, hk_driver, events):
         "mock_addr",
     )
     await hass.async_block_till_done()
-    assert acc.char_speed.value == 42
+    assert acc.char_speed.value == 50
     assert acc.char_active.value == 1
 
 

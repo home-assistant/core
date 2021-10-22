@@ -3396,7 +3396,7 @@ async def test_reloadable(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     assert hass.states.get("light.test")
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all("light")) == 1
 
     yaml_path = path.join(
         _get_fixtures_base_path(),
@@ -3412,7 +3412,7 @@ async def test_reloadable(hass, mqtt_mock):
         )
         await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all("light")) == 1
 
     assert hass.states.get("light.test") is None
     assert hass.states.get("light.reload")

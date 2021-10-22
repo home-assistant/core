@@ -101,8 +101,7 @@ class TransmissionSpeedSensor(TransmissionSensor):
 
     def update(self):
         """Get the latest data from Transmission and updates the state."""
-        data = self._tm_client.api.data
-        if data:
+        if data := self._tm_client.api.data:
             mb_spd = (
                 float(data.downloadSpeed)
                 if self._sub_type == "download"
@@ -117,8 +116,7 @@ class TransmissionStatusSensor(TransmissionSensor):
 
     def update(self):
         """Get the latest data from Transmission and updates the state."""
-        data = self._tm_client.api.data
-        if data:
+        if data := self._tm_client.api.data:
             upload = data.uploadSpeed
             download = data.downloadSpeed
             if upload > 0 and download > 0:

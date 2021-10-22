@@ -1,4 +1,12 @@
 """Constants for the Xiaomi Miio component."""
+from miio.vacuum import (
+    ROCKROBO_S5,
+    ROCKROBO_S6,
+    ROCKROBO_S6_MAXV,
+    ROCKROBO_S7,
+    ROCKROBO_V1,
+)
+
 DOMAIN = "xiaomi_miio"
 
 # Config flow
@@ -28,6 +36,16 @@ SUCCESS = ["ok"]
 # Cloud
 SERVER_COUNTRY_CODES = ["cn", "de", "i2", "ru", "sg", "us"]
 DEFAULT_CLOUD_COUNTRY = "cn"
+
+
+# Exceptions
+class AuthException(Exception):
+    """Exception indicating an authentication error."""
+
+
+class SetupException(Exception):
+    """Exception indicating a failure during setup."""
+
 
 # Fan Models
 MODEL_AIRPURIFIER_2H = "zhimi.airpurifier.mc2"
@@ -177,7 +195,8 @@ MODELS_LIGHT = (
     + MODELS_LIGHT_BULB
     + MODELS_LIGHT_MONO
 )
-MODELS_VACUUM = ["roborock.vacuum", "rockrobo.vacuum"]
+MODELS_VACUUM = [ROCKROBO_V1, ROCKROBO_S5, ROCKROBO_S6, ROCKROBO_S6_MAXV, ROCKROBO_S7]
+MODELS_VACUUM_WITH_MOP = [ROCKROBO_S5, ROCKROBO_S6, ROCKROBO_S6_MAXV, ROCKROBO_S7]
 MODELS_AIR_MONITOR = [
     MODEL_AIRQUALITYMONITOR_V1,
     MODEL_AIRQUALITYMONITOR_B1,

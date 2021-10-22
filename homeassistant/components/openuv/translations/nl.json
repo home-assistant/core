@@ -21,6 +21,10 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "from_window": "Uv-index starten voor het beschermingsvenster",
+                    "to_window": "Uv-index voor het beveiligingsvenster be\u00ebindigen"
+                },
                 "title": "Configureer OpenUV"
             }
         }

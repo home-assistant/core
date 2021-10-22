@@ -18,7 +18,6 @@ DEVICE_DESCRIPTOR = "device_descriptor"
 DEVICE_ID_GROUP = "Device description"
 DEVICE_NAME = "device_name"
 DOMAIN = "keyboard_remote"
-VALUE = "value"
 
 ICON = "mdi:remote"
 

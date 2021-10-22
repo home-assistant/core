@@ -3,65 +3,89 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, Final
 
-from flux_led import BulbScanner, WifiLedBulb
+from flux_led import DeviceType
+from flux_led.aio import AIOWifiLedBulb
+from flux_led.aioscanner import AIOBulbScanner
 
 from homeassistant import config_entries
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_MODE,
-    CONF_DEVICES,
-    CONF_HOST,
-    CONF_MAC,
-    CONF_MODE,
-    CONF_NAME,
-    CONF_PLATFORM,
-    CONF_PROTOCOL,
-    EVENT_HOMEASSISTANT_STARTED,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    CONF_COLORS,
-    CONF_CUSTOM_EFFECT,
-    CONF_CUSTOM_EFFECT_COLORS,
-    CONF_CUSTOM_EFFECT_SPEED_PCT,
-    CONF_CUSTOM_EFFECT_TRANSITION,
-    CONF_SPEED_PCT,
-    CONF_TRANSITION,
-    DEFAULT_EFFECT_SPEED,
     DISCOVER_SCAN_TIMEOUT,
     DOMAIN,
     FLUX_HOST,
+    FLUX_LED_DISCOVERY,
     FLUX_LED_EXCEPTIONS,
-    MODE_AUTO,
+    FLUX_MAC,
+    FLUX_MODEL,
+    SIGNAL_STATE_UPDATED,
     STARTUP_SCAN_TIMEOUT,
-    TRANSITION_GRADUAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["light"]
-DISCOVERY_INTERVAL = timedelta(minutes=15)
-REQUEST_REFRESH_DELAY = 0.35
+PLATFORMS_BY_TYPE: Final = {DeviceType.Bulb: ["light"], DeviceType.Switch: ["switch"]}
+DISCOVERY_INTERVAL: Final = timedelta(minutes=15)
+REQUEST_REFRESH_DELAY: Final = 1.5
+
+
+@callback
+def async_wifi_bulb_for_host(host: str) -> AIOWifiLedBulb:
+    """Create a AIOWifiLedBulb from a host."""
+    return AIOWifiLedBulb(host)
+
+
+@callback
+def async_update_entry_from_discovery(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry, device: dict[str, Any]
+) -> None:
+    """Update a config entry from a flux_led discovery."""
+    name = f"{device[FLUX_MODEL]} {device[FLUX_MAC]}"
+    hass.config_entries.async_update_entry(
+        entry,
+        data={**entry.data, CONF_NAME: name},
+        title=name,
+        unique_id=dr.format_mac(device[FLUX_MAC]),
+    )
 
 
 async def async_discover_devices(
-    hass: HomeAssistant, timeout: int
+    hass: HomeAssistant, timeout: int, address: str | None = None
 ) -> list[dict[str, str]]:
-    """Discover ledned devices."""
+    """Discover flux led devices."""
+    scanner = AIOBulbScanner()
+    try:
+        discovered: list[dict[str, str]] = await scanner.async_scan(
+            timeout=timeout, address=address
+        )
+    except OSError as ex:
+        _LOGGER.debug("Scanning failed with error: %s", ex)
+        return []
+    else:
+        return discovered
 
-    def _scan_with_timeout():
-        scanner = BulbScanner()
-        return scanner.scan(timeout=timeout)
 
-    return await hass.async_add_executor_job(_scan_with_timeout)
+async def async_discover_device(
+    hass: HomeAssistant, host: str
+) -> dict[str, str] | None:
+    """Direct discovery at a single ip instead of broadcast."""
+    # If we are missing the unique_id we should be able to fetch it
+    # from the device by doing a directed discovery at the host only
+    for device in await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT, host):
+        if device[FLUX_HOST] == host:
+            return device
+    return None
 
 
 @callback
@@ -80,61 +104,19 @@ def async_trigger_discovery(
         )
 
 
-@callback
-def async_import_from_yaml(
-    hass: HomeAssistant,
-    config: ConfigType,
-    discovered_devices_by_host: dict[str, dict[str, Any]],
-) -> None:
-    """Import devices from yaml."""
-    for entry_config in config.get(LIGHT_DOMAIN, []):
-        if entry_config.get(CONF_PLATFORM) != DOMAIN:
-            continue
-        for host, device_config in entry_config.get[CONF_DEVICES]:
-            _LOGGER.warning(
-                "Configuring flux_led via yaml is deprecated; the configuration for"
-                " %s has been migrated to a config entry and can be safely removed",
-                host,
-            )
-            custom_effects = device_config.get(CONF_CUSTOM_EFFECT, {})
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": config_entries.SOURCE_IMPORT},
-                    data={
-                        CONF_HOST: host,
-                        CONF_MAC: discovered_devices_by_host.get(host),
-                        CONF_NAME: device_config[CONF_NAME],
-                        CONF_PROTOCOL: device_config.get(CONF_PROTOCOL),
-                        CONF_MODE: device_config.get(ATTR_MODE, MODE_AUTO),
-                        CONF_CUSTOM_EFFECT_COLORS: str(custom_effects.get(CONF_COLORS)),
-                        CONF_CUSTOM_EFFECT_SPEED_PCT: custom_effects.get(
-                            CONF_SPEED_PCT, DEFAULT_EFFECT_SPEED
-                        ),
-                        CONF_CUSTOM_EFFECT_TRANSITION: custom_effects.get(
-                            CONF_TRANSITION, TRANSITION_GRADUAL
-                        ),
-                    },
-                )
-            )
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the flux_led component."""
-    hass.data[DOMAIN] = {}
-    discovered_devices = await async_discover_devices(hass, STARTUP_SCAN_TIMEOUT)
-    discovered_devices_by_host = {
-        device[FLUX_HOST]: device for device in discovered_devices
-    }
+    domain_data = hass.data[DOMAIN] = {}
+    domain_data[FLUX_LED_DISCOVERY] = await async_discover_devices(
+        hass, STARTUP_SCAN_TIMEOUT
+    )
 
-    async_import_from_yaml(hass, config, discovered_devices_by_host)
-
-    async def _async_discovery(*_):
+    async def _async_discovery(*_: Any) -> None:
         async_trigger_discovery(
             hass, await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT)
         )
 
-    async_trigger_discovery(hass, discovered_devices)
+    async_trigger_discovery(hass, domain_data[FLUX_LED_DISCOVERY])
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_discovery)
     async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
     return True
@@ -145,13 +127,32 @@ async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flux LED/MagicLight from a config entry."""
+    host = entry.data[CONF_HOST]
+    if not entry.unique_id:
+        if discovery := await async_discover_device(hass, host):
+            async_update_entry_from_discovery(hass, entry, discovery)
 
-    coordinator = FluxLedUpdateCoordinator(hass, entry.data[CONF_HOST])
-    await coordinator.async_config_entry_first_refresh()
+    device: AIOWifiLedBulb = async_wifi_bulb_for_host(host)
+    signal = SIGNAL_STATE_UPDATED.format(device.ipaddr)
+
+    @callback
+    def _async_state_changed(*_: Any) -> None:
+        _LOGGER.debug("%s: Device state updated: %s", device.ipaddr, device.raw_state)
+        async_dispatcher_send(hass, signal)
+
+    try:
+        await device.async_setup(_async_state_changed)
+    except FLUX_LED_EXCEPTIONS as ex:
+        raise ConfigEntryNotReady(
+            str(ex) or f"Timed out trying to connect to {device.ipaddr}"
+        ) from ex
+    coordinator = FluxLedUpdateCoordinator(hass, device)
     hass.data[DOMAIN][entry.entry_id] = coordinator
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    hass.config_entries.async_setup_platforms(
+        entry, PLATFORMS_BY_TYPE[device.device_type]
+    )
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
 
     return True
@@ -159,8 +160,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
+    device: AIOWifiLedBulb = hass.data[DOMAIN][entry.entry_id].device
+    platforms = PLATFORMS_BY_TYPE[device.device_type]
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, platforms):
+        coordinator = hass.data[DOMAIN].pop(entry.entry_id)
+        await coordinator.device.async_stop()
     return unload_ok
 
 
@@ -169,18 +173,16 @@ class FluxLedUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(
         self,
-        hass,
-        host,
+        hass: HomeAssistant,
+        device: AIOWifiLedBulb,
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific device."""
-        self.host = host
-        self.device = None
-        update_interval = timedelta(seconds=5)
+        self.device = device
         super().__init__(
             hass,
             _LOGGER,
-            name=host,
-            update_interval=update_interval,
+            name=self.device.ipaddr,
+            update_interval=timedelta(seconds=5),
             # We don't want an immediate refresh since the device
             # takes a moment to reflect the state change
             request_refresh_debouncer=Debouncer(
@@ -191,11 +193,6 @@ class FluxLedUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> None:
         """Fetch all device and sensor data from api."""
         try:
-            if not self.device:
-                self.device = await self.hass.async_add_executor_job(
-                    WifiLedBulb, self.host
-                )
-            else:
-                await self.hass.async_add_executor_job(self.device.update_state)
+            await self.device.async_update()
         except FLUX_LED_EXCEPTIONS as ex:
             raise UpdateFailed(ex) from ex

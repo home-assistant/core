@@ -5,14 +5,16 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable
 import dataclasses
 from datetime import datetime, timedelta
-from itertools import groupby
+from itertools import chain, groupby
 import logging
+from statistics import mean
 from typing import TYPE_CHECKING, Any, Literal
 
 from sqlalchemy import bindparam, func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext import baked
 from sqlalchemy.orm.scoping import scoped_session
+from sqlalchemy.sql.expression import true
 
 from homeassistant.const import (
     PRESSURE_PA,
@@ -86,6 +88,13 @@ QUERY_STATISTICS_SUMMARY_SUM = [
         order_by=StatisticsShortTerm.start.desc(),
     )
     .label("rownum"),
+]
+
+QUERY_STATISTICS_SUMMARY_SUM_LEGACY = [
+    StatisticsShortTerm.metadata_id,
+    StatisticsShortTerm.last_reset,
+    StatisticsShortTerm.state,
+    StatisticsShortTerm.sum,
 ]
 
 QUERY_STATISTIC_META = [
@@ -195,7 +204,9 @@ def _update_or_add_metadata(
     Updating metadata source is not possible.
     """
     statistic_id = new_metadata["statistic_id"]
-    old_metadata_dict = _get_metadata(hass, session, [statistic_id], None)
+    old_metadata_dict = get_metadata_with_session(
+        hass, session, statistic_ids=[statistic_id]
+    )
     if not old_metadata_dict:
         unit = new_metadata["unit_of_measurement"]
         has_mean = new_metadata["has_mean"]
@@ -210,7 +221,7 @@ def _update_or_add_metadata(
         )
         return meta.id  # type: ignore[no-any-return]
 
-    metadata_id, old_metadata = next(iter(old_metadata_dict.items()))
+    metadata_id, old_metadata = old_metadata_dict[statistic_id]
     if (
         old_metadata["has_mean"] != new_metadata["has_mean"]
         or old_metadata["has_sum"] != new_metadata["has_sum"]
@@ -274,37 +285,81 @@ def compile_hourly_statistics(
             }
 
     # Get last hour's last sum
-    subquery = (
-        session.query(*QUERY_STATISTICS_SUMMARY_SUM)
-        .filter(StatisticsShortTerm.start >= bindparam("start_time"))
-        .filter(StatisticsShortTerm.start < bindparam("end_time"))
-        .subquery()
-    )
-    query = (
-        session.query(subquery)
-        .filter(subquery.c.rownum == 1)
-        .order_by(subquery.c.metadata_id)
-    )
-    stats = execute(query.params(start_time=start_time, end_time=end_time))
+    if instance._db_supports_row_number:  # pylint: disable=[protected-access]
+        subquery = (
+            session.query(*QUERY_STATISTICS_SUMMARY_SUM)
+            .filter(StatisticsShortTerm.start >= bindparam("start_time"))
+            .filter(StatisticsShortTerm.start < bindparam("end_time"))
+            .subquery()
+        )
+        query = (
+            session.query(subquery)
+            .filter(subquery.c.rownum == 1)
+            .order_by(subquery.c.metadata_id)
+        )
+        stats = execute(query.params(start_time=start_time, end_time=end_time))
 
-    if stats:
-        for stat in stats:
-            metadata_id, start, last_reset, state, _sum, _ = stat
-            if metadata_id in summary:
-                summary[metadata_id].update(
-                    {
+        if stats:
+            for stat in stats:
+                metadata_id, start, last_reset, state, _sum, _ = stat
+                if metadata_id in summary:
+                    summary[metadata_id].update(
+                        {
+                            "last_reset": process_timestamp(last_reset),
+                            "state": state,
+                            "sum": _sum,
+                        }
+                    )
+                else:
+                    summary[metadata_id] = {
+                        "start": start_time,
                         "last_reset": process_timestamp(last_reset),
                         "state": state,
                         "sum": _sum,
                     }
-                )
-            else:
-                summary[metadata_id] = {
-                    "start": start_time,
-                    "last_reset": process_timestamp(last_reset),
-                    "state": state,
-                    "sum": _sum,
-                }
+    else:
+        baked_query = instance.hass.data[STATISTICS_SHORT_TERM_BAKERY](
+            lambda session: session.query(*QUERY_STATISTICS_SUMMARY_SUM_LEGACY)
+        )
+
+        baked_query += lambda q: q.filter(
+            StatisticsShortTerm.start >= bindparam("start_time")
+        )
+        baked_query += lambda q: q.filter(
+            StatisticsShortTerm.start < bindparam("end_time")
+        )
+        baked_query += lambda q: q.order_by(
+            StatisticsShortTerm.metadata_id, StatisticsShortTerm.start.desc()
+        )
+
+        stats = execute(
+            baked_query(session).params(start_time=start_time, end_time=end_time)
+        )
+
+        if stats:
+            for metadata_id, group in groupby(stats, lambda stat: stat["metadata_id"]):  # type: ignore
+                (
+                    metadata_id,
+                    last_reset,
+                    state,
+                    _sum,
+                ) = next(group)
+                if metadata_id in summary:
+                    summary[metadata_id].update(
+                        {
+                            "start": start_time,
+                            "last_reset": process_timestamp(last_reset),
+                            "state": state,
+                            "sum": _sum,
+                        }
+                    )
+                else:
+                    summary[metadata_id] = {
+                        "start": start_time,
+                        "last_reset": process_timestamp(last_reset),
+                        "state": state,
+                        "sum": _sum,
+                    }
 
     # Insert compiled hourly statistics in the database
     for metadata_id, stat in summary.items():
@@ -361,13 +416,17 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
     return True
 
 
-def _get_metadata(
+def get_metadata_with_session(
     hass: HomeAssistant,
     session: scoped_session,
-    statistic_ids: list[str] | None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None,
-) -> dict[int, StatisticMetaData]:
-    """Fetch meta data, returns a dict of StatisticMetaData indexed by statistic_id.
+    *,
+    statistic_ids: Iterable[str] | None = None,
+    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_source: str | None = None,
+) -> dict[str, tuple[int, StatisticMetaData]]:
+    """Fetch meta data.
+
+    Returns a dict of (metadata_id, StatisticMetaData) indexed by statistic_id.
 
     If statistic_ids is given, fetch metadata only for the listed statistics_ids.
     If statistic_type is given, fetch metadata only for statistic_ids supporting it.
@@ -393,34 +452,48 @@ def _get_metadata(
         baked_query += lambda q: q.filter(
             StatisticsMeta.statistic_id.in_(bindparam("statistic_ids"))
         )
+    if statistic_source is not None:
+        baked_query += lambda q: q.filter(
+            StatisticsMeta.source == bindparam("statistic_source")
+        )
     if statistic_type == "mean":
-        baked_query += lambda q: q.filter(StatisticsMeta.has_mean.isnot(False))
+        baked_query += lambda q: q.filter(StatisticsMeta.has_mean == true())
     elif statistic_type == "sum":
-        baked_query += lambda q: q.filter(StatisticsMeta.has_sum.isnot(False))
-    result = execute(baked_query(session).params(statistic_ids=statistic_ids))
+        baked_query += lambda q: q.filter(StatisticsMeta.has_sum == true())
+    result = execute(
+        baked_query(session).params(
+            statistic_ids=statistic_ids, statistic_source=statistic_source
+        )
+    )
     if not result:
         return {}
 
     metadata_ids = [metadata[0] for metadata in result]
     # Prepare the result dict
-    metadata: dict[int, StatisticMetaData] = {}
+    metadata: dict[str, tuple[int, StatisticMetaData]] = {}
     for _id in metadata_ids:
         meta = _meta(result, _id)
         if meta:
-            metadata[_id] = meta
+            metadata[meta["statistic_id"]] = (_id, meta)
     return metadata
 
 
 def get_metadata(
     hass: HomeAssistant,
-    statistic_id: str,
-) -> StatisticMetaData | None:
-    """Return metadata for a statistic_id."""
+    *,
+    statistic_ids: Iterable[str] | None = None,
+    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_source: str | None = None,
+) -> dict[str, tuple[int, StatisticMetaData]]:
+    """Return metadata for statistic_ids."""
     with session_scope(hass=hass) as session:
-        metadata = _get_metadata(hass, session, [statistic_id], None)
-        if not metadata:
-            return None
-        return next(iter(metadata.values()))
+        return get_metadata_with_session(
+            hass,
+            session,
+            statistic_ids=statistic_ids,
+            statistic_type=statistic_type,
+            statistic_source=statistic_source,
+        )
 
 
 def _configured_unit(unit: str, units: UnitSystem) -> str:
@@ -459,18 +532,19 @@ def list_statistic_ids(
 
     # Query the database
     with session_scope(hass=hass) as session:
-        metadata = _get_metadata(hass, session, None, statistic_type)
+        metadata = get_metadata_with_session(
+            hass, session, statistic_type=statistic_type
+        )
 
-        for meta in metadata.values():
-            unit = meta["unit_of_measurement"]
-            if unit is not None:
+        for _, meta in metadata.values():
+            if (unit := meta["unit_of_measurement"]) is not None:
                 # Display unit according to user settings
                 unit = _configured_unit(unit, units)
             meta["unit_of_measurement"] = unit
 
         statistic_ids = {
             meta["statistic_id"]: meta["unit_of_measurement"]
-            for meta in metadata.values()
+            for _, meta in metadata.values()
         }
 
     # Query all integrations with a registered recorder platform
@@ -522,13 +596,107 @@ def _statistics_during_period_query(
     return baked_query  # type: ignore[no-any-return]
 
 
+def _reduce_statistics(
+    stats: dict[str, list[dict[str, Any]]],
+    same_period: Callable[[datetime, datetime], bool],
+    period_start_end: Callable[[datetime], tuple[datetime, datetime]],
+    period: timedelta,
+) -> dict[str, list[dict[str, Any]]]:
+    """Reduce hourly statistics to daily or monthly statistics."""
+    result: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for statistic_id, stat_list in stats.items():
+        max_values: list[float] = []
+        mean_values: list[float] = []
+        min_values: list[float] = []
+        prev_stat: dict[str, Any] = stat_list[0]
+
+        # Loop over the hourly statistics + a fake entry to end the period
+        for statistic in chain(
+            stat_list, ({"start": stat_list[-1]["start"] + period},)
+        ):
+            if not same_period(prev_stat["start"], statistic["start"]):
+                start, end = period_start_end(prev_stat["start"])
+                # The previous statistic was the last entry of the period
+                result[statistic_id].append(
+                    {
+                        "statistic_id": statistic_id,
+                        "start": start.isoformat(),
+                        "end": end.isoformat(),
+                        "mean": mean(mean_values) if mean_values else None,
+                        "min": min(min_values) if min_values else None,
+                        "max": max(max_values) if max_values else None,
+                        "last_reset": prev_stat["last_reset"],
+                        "state": prev_stat["state"],
+                        "sum": prev_stat["sum"],
+                    }
+                )
+                max_values = []
+                mean_values = []
+                min_values = []
+            if statistic.get("max") is not None:
+                max_values.append(statistic["max"])
+            if statistic.get("mean") is not None:
+                mean_values.append(statistic["mean"])
+            if statistic.get("min") is not None:
+                min_values.append(statistic["min"])
+            prev_stat = statistic
+
+    return result
+
+
+def _reduce_statistics_per_day(
+    stats: dict[str, list[dict[str, Any]]]
+) -> dict[str, list[dict[str, Any]]]:
+    """Reduce hourly statistics to daily statistics."""
+
+    def same_period(time1: datetime, time2: datetime) -> bool:
+        """Return True if time1 and time2 are in the same date."""
+        date1 = dt_util.as_local(time1).date()
+        date2 = dt_util.as_local(time2).date()
+        return date1 == date2
+
+    def period_start_end(time: datetime) -> tuple[datetime, datetime]:
+        """Return the start and end of the period (day) time is within."""
+        start = dt_util.as_utc(
+            dt_util.as_local(time).replace(hour=0, minute=0, second=0, microsecond=0)
+        )
+        end = start + timedelta(days=1)
+        return (start, end)
+
+    return _reduce_statistics(stats, same_period, period_start_end, timedelta(days=1))
+
+
+def _reduce_statistics_per_month(
+    stats: dict[str, list[dict[str, Any]]]
+) -> dict[str, list[dict[str, Any]]]:
+    """Reduce hourly statistics to monthly statistics."""
+
+    def same_period(time1: datetime, time2: datetime) -> bool:
+        """Return True if time1 and time2 are in the same year and month."""
+        date1 = dt_util.as_local(time1).date()
+        date2 = dt_util.as_local(time2).date()
+        return (date1.year, date1.month) == (date2.year, date2.month)
+
+    def period_start_end(time: datetime) -> tuple[datetime, datetime]:
+        """Return the start and end of the period (month) time is within."""
+        start = dt_util.as_utc(
+            dt_util.as_local(time).replace(
+                day=1, hour=0, minute=0, second=0, microsecond=0
+            )
+        )
+        end = (start + timedelta(days=31)).replace(day=1)
+        return (start, end)
+
+    return _reduce_statistics(stats, same_period, period_start_end, timedelta(days=31))
+
+
 def statistics_during_period(
     hass: HomeAssistant,
     start_time: datetime,
     end_time: datetime | None = None,
     statistic_ids: list[str] | None = None,
-    period: Literal["hour"] | Literal["5minute"] = "hour",
-) -> dict[str, list[dict[str, str]]]:
+    period: Literal["5minute", "day", "hour", "month"] = "hour",
+) -> dict[str, list[dict[str, Any]]]:
     """Return statistics during UTC period start_time - end_time for the statistic_ids.
 
     If end_time is omitted, returns statistics newer than or equal to start_time.
@@ -537,22 +705,22 @@ def statistics_during_period(
     metadata = None
     with session_scope(hass=hass) as session:
         # Fetch metadata for the given (or all) statistic_ids
-        metadata = _get_metadata(hass, session, statistic_ids, None)
+        metadata = get_metadata_with_session(hass, session, statistic_ids=statistic_ids)
         if not metadata:
             return {}
 
         metadata_ids = None
         if statistic_ids is not None:
-            metadata_ids = list(metadata.keys())
+            metadata_ids = [metadata_id for metadata_id, _ in metadata.values()]
 
-        if period == "hour":
-            bakery = STATISTICS_BAKERY
-            base_query = QUERY_STATISTICS
-            table = Statistics
-        else:
+        if period == "5minute":
             bakery = STATISTICS_SHORT_TERM_BAKERY
             base_query = QUERY_STATISTICS_SHORT_TERM
             table = StatisticsShortTerm
+        else:
+            bakery = STATISTICS_BAKERY
+            base_query = QUERY_STATISTICS
+            table = Statistics
 
         baked_query = _statistics_during_period_query(
             hass, end_time, statistic_ids, bakery, base_query, table
@@ -566,9 +734,19 @@ def statistics_during_period(
         if not stats:
             return {}
         # Return statistics combined with metadata
-        return _sorted_statistics_to_dict(
-            hass, stats, statistic_ids, metadata, True, table.duration
+        if period not in ("day", "month"):
+            return _sorted_statistics_to_dict(
+                hass, session, stats, statistic_ids, metadata, True, table, start_time
+            )
+
+        result = _sorted_statistics_to_dict(
+            hass, session, stats, statistic_ids, metadata, True, table, start_time, True
         )
+
+        if period == "day":
+            return _reduce_statistics_per_day(result)
+
+        return _reduce_statistics_per_month(result)
 
 
 def get_last_statistics(
@@ -578,7 +756,7 @@ def get_last_statistics(
     statistic_ids = [statistic_id]
     with session_scope(hass=hass) as session:
         # Fetch metadata for the given statistic_id
-        metadata = _get_metadata(hass, session, statistic_ids, None)
+        metadata = get_metadata_with_session(hass, session, statistic_ids=statistic_ids)
         if not metadata:
             return {}
 
@@ -587,7 +765,7 @@ def get_last_statistics(
         )
 
         baked_query += lambda q: q.filter_by(metadata_id=bindparam("metadata_id"))
-        metadata_id = next(iter(metadata.keys()))
+        metadata_id = metadata[statistic_id][0]
 
         baked_query += lambda q: q.order_by(
             StatisticsShortTerm.metadata_id, StatisticsShortTerm.start.desc()
@@ -606,25 +784,65 @@ def get_last_statistics(
         # Return statistics combined with metadata
         return _sorted_statistics_to_dict(
             hass,
+            session,
             stats,
             statistic_ids,
             metadata,
             convert_units,
-            StatisticsShortTerm.duration,
+            StatisticsShortTerm,
+            None,
         )
+
+
+def _statistics_at_time(
+    session: scoped_session,
+    metadata_ids: set[int],
+    table: type[Statistics | StatisticsShortTerm],
+    start_time: datetime,
+) -> list | None:
+    """Return last known statics, earlier than start_time, for the metadata_ids."""
+    # Fetch metadata for the given (or all) statistic_ids
+    if table == StatisticsShortTerm:
+        base_query = QUERY_STATISTICS_SHORT_TERM
+    else:
+        base_query = QUERY_STATISTICS
+
+    query = session.query(*base_query)
+
+    most_recent_statistic_ids = (
+        session.query(
+            func.max(table.id).label("max_id"),
+        )
+        .filter(table.start < start_time)
+        .filter(table.metadata_id.in_(metadata_ids))
+    )
+    most_recent_statistic_ids = most_recent_statistic_ids.group_by(table.metadata_id)
+    most_recent_statistic_ids = most_recent_statistic_ids.subquery()
+    query = query.join(
+        most_recent_statistic_ids,
+        table.id == most_recent_statistic_ids.c.max_id,
+    )
+
+    return execute(query)
 
 
 def _sorted_statistics_to_dict(
     hass: HomeAssistant,
+    session: scoped_session,
     stats: list,
     statistic_ids: list[str] | None,
-    metadata: dict[int, StatisticMetaData],
+    _metadata: dict[str, tuple[int, StatisticMetaData]],
     convert_units: bool,
-    duration: timedelta,
+    table: type[Statistics | StatisticsShortTerm],
+    start_time: datetime | None,
+    start_time_as_datetime: bool = False,
 ) -> dict[str, list[dict]]:
     """Convert SQL results into JSON friendly data structure."""
     result: dict = defaultdict(list)
     units = hass.config.units
+    metadata = dict(_metadata.values())
+    need_stat_at_start_time = set()
+    stats_at_start_time = {}
 
     def no_conversion(val: Any, _: Any) -> float | None:
         """Return x."""
@@ -634,6 +852,20 @@ def _sorted_statistics_to_dict(
     if statistic_ids is not None:
         for stat_id in statistic_ids:
             result[stat_id] = []
+
+    # Identify metadata IDs for which no data was available at the requested start time
+    for meta_id, group in groupby(stats, lambda stat: stat.metadata_id):  # type: ignore
+        first_start_time = process_timestamp(next(group).start)
+        if start_time and first_start_time > start_time:
+            need_stat_at_start_time.add(meta_id)
+
+    # Fetch last known statistics for the needed metadata IDs
+    if need_stat_at_start_time:
+        assert start_time  # Can not be None if need_stat_at_start_time is not empty
+        tmp = _statistics_at_time(session, need_stat_at_start_time, table, start_time)
+        if tmp:
+            for stat in tmp:
+                stats_at_start_time[stat.metadata_id] = (stat,)
 
     # Append all statistic entries, and optionally do unit conversion
     for meta_id, group in groupby(stats, lambda stat: stat.metadata_id):  # type: ignore
@@ -645,13 +877,13 @@ def _sorted_statistics_to_dict(
         else:
             convert = no_conversion
         ent_results = result[meta_id]
-        for db_state in group:
+        for db_state in chain(stats_at_start_time.get(meta_id, ()), group):
             start = process_timestamp(db_state.start)
-            end = start + duration
+            end = start + table.duration
             ent_results.append(
                 {
                     "statistic_id": statistic_id,
-                    "start": start.isoformat(),
+                    "start": start if start_time_as_datetime else start.isoformat(),
                     "end": end.isoformat(),
                     "mean": convert(db_state.mean, units),
                     "min": convert(db_state.min, units),

@@ -1,6 +1,7 @@
 """Support for Xiaomi Mi Air Purifier and Xiaomi Mi Air Humidifier."""
 from abc import abstractmethod
 import asyncio
+from enum import Enum
 import logging
 import math
 
@@ -228,8 +229,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         params = {
             key: value for key, value in service.data.items() if key != ATTR_ENTITY_ID
         }
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
-        if entity_ids:
+        if entity_ids := service.data.get(ATTR_ENTITY_ID):
             filtered_entities = [
                 entity
                 for entity in hass.data[DATA_KEY].values()
@@ -363,13 +363,21 @@ class XiaomiGenericAirPurifier(XiaomiGenericDevice):
 
         return None
 
+    @staticmethod
+    def _extract_value_from_attribute(state, attribute):
+        value = getattr(state, attribute)
+        if isinstance(value, Enum):
+            return value.value
+
+        return value
+
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
         self._state = self.coordinator.data.is_on
         self._state_attrs.update(
             {
-                key: getattr(self.coordinator.data, value)
+                key: self._extract_value_from_attribute(self.coordinator.data, value)
                 for key, value in self._available_attributes.items()
             }
         )
@@ -434,7 +442,7 @@ class XiaomiAirPurifier(XiaomiGenericAirPurifier):
         self._state = self.coordinator.data.is_on
         self._state_attrs.update(
             {
-                key: getattr(self.coordinator.data, value)
+                key: self._extract_value_from_attribute(self.coordinator.data, value)
                 for key, value in self._available_attributes.items()
             }
         )

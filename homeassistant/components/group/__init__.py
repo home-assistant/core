@@ -11,11 +11,13 @@ from typing import Any, List, cast
 import voluptuous as vol
 
 from homeassistant import core as ha
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
     ATTR_ICON,
     ATTR_NAME,
+    CONF_DOMAIN,
     CONF_ENTITIES,
     CONF_ICON,
     CONF_NAME,
@@ -37,9 +39,11 @@ from homeassistant.helpers.integration_platform import (
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.loader import bind_hass
 
+from .const import DOMAIN
+
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
-DOMAIN = "group"
+
 GROUP_ORDER = "group_order"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -56,7 +60,7 @@ ATTR_ALL = "all"
 SERVICE_SET = "set"
 SERVICE_REMOVE = "remove"
 
-PLATFORMS = ["light", "cover", "notify", "binary_sensor"]
+PLATFORMS = ["light", "cover", "notify", "fan", "binary_sensor", "media_player"]
 
 REG_KEY = f"{DOMAIN}_registry"
 
@@ -121,9 +125,7 @@ def is_on(hass, entity_id):
         # Integration not setup yet, it cannot be on
         return False
 
-    state = hass.states.get(entity_id)
-
-    if state is not None:
+    if (state := hass.states.get(entity_id)) is not None:
         return state.state in hass.data[REG_KEY].on_off_mapping
 
     return False
@@ -213,9 +215,7 @@ def groups_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
 
 async def async_setup(hass, config):
     """Set up all groups found defined in the configuration."""
-    component = hass.data.get(DOMAIN)
-
-    if component is None:
+    if (component := hass.data.get(DOMAIN)) is None:
         component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
 
     hass.data[REG_KEY] = GroupIntegrationRegistry()
@@ -343,6 +343,25 @@ async def async_setup(hass, config):
     )
 
     return True
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload the config entry on change of title/entities."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Group from a config entry."""
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+    hass.config_entries.async_setup_platforms(entry, [entry.data[CONF_DOMAIN]])
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload Group from a config entry."""
+    return await hass.config_entries.async_unload_platforms(
+        entry, [entry.data[CONF_DOMAIN]]
+    )
 
 
 async def _process_group_platform(hass, domain, platform):
@@ -509,9 +528,7 @@ class Group(Entity):
         )
 
         # If called before the platform async_setup is called (test cases)
-        component = hass.data.get(DOMAIN)
-
-        if component is None:
+        if (component := hass.data.get(DOMAIN)) is None:
             component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
 
         if add_entities:
@@ -664,9 +681,8 @@ class Group(Entity):
             return
 
         self.async_set_context(event.context)
-        new_state = event.data.get("new_state")
 
-        if new_state is None:
+        if (new_state := event.data.get("new_state")) is None:
             # The state was removed from the state machine
             self._reset_tracked_state()
 
@@ -680,9 +696,7 @@ class Group(Entity):
         self._on_states = set()
 
         for entity_id in self.trackable:
-            state = self.hass.states.get(entity_id)
-
-            if state is not None:
+            if (state := self.hass.states.get(entity_id)) is not None:
                 self._see_state(state)
 
     def _see_state(self, new_state):

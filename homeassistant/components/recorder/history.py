@@ -61,12 +61,12 @@ def async_setup(hass):
 
 
 def get_significant_states(hass, *args, **kwargs):
-    """Wrap _get_significant_states with a sql session."""
+    """Wrap get_significant_states_with_session with an sql session."""
     with session_scope(hass=hass) as session:
-        return _get_significant_states(hass, session, *args, **kwargs)
+        return get_significant_states_with_session(hass, session, *args, **kwargs)
 
 
-def _get_significant_states(
+def get_significant_states_with_session(
     hass,
     session,
     start_time,

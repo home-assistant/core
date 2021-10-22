@@ -36,7 +36,6 @@ from homeassistant.const import (
     CONF_URL,
     CONF_VERIFY_SSL,
 )
-from homeassistant.setup import async_setup_component
 
 from .const import DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN, PLEX_DIRECT_URL
 from .helpers import trigger_plex_update, wait_for_debouncer
@@ -755,7 +754,6 @@ async def test_trigger_reauth(
     hass, entry, mock_plex_server, mock_websocket, current_request_with_host
 ):
     """Test setup and reauthorization of a Plex token."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     assert entry.state is ConfigEntryState.LOADED
 

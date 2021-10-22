@@ -54,7 +54,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 @deprecated_function("homeassistant.components.recorder.history.get_significant_states")
 def get_significant_states(hass, *args, **kwargs):
-    """Wrap _get_significant_states with an sql session."""
+    """Wrap get_significant_states_with_session with an sql session."""
     return history.get_significant_states(hass, *args, **kwargs)
 
 
@@ -211,8 +211,7 @@ class HistoryPeriodView(HomeAssistantView):
         if start_time > now:
             return self.json([])
 
-        end_time_str = request.query.get("end_time")
-        if end_time_str:
+        if end_time_str := request.query.get("end_time"):
             end_time = dt_util.parse_datetime(end_time_str)
             if end_time:
                 end_time = dt_util.as_utc(end_time)
@@ -268,18 +267,16 @@ class HistoryPeriodView(HomeAssistantView):
         timer_start = time.perf_counter()
 
         with session_scope(hass=hass) as session:
-            result = (
-                history._get_significant_states(  # pylint: disable=protected-access
-                    hass,
-                    session,
-                    start_time,
-                    end_time,
-                    entity_ids,
-                    self.filters,
-                    include_start_time_state,
-                    significant_changes_only,
-                    minimal_response,
-                )
+            result = history.get_significant_states_with_session(
+                hass,
+                session,
+                start_time,
+                end_time,
+                entity_ids,
+                self.filters,
+                include_start_time_state,
+                significant_changes_only,
+                minimal_response,
             )
 
         result = list(result.values())
@@ -306,13 +303,11 @@ class HistoryPeriodView(HomeAssistantView):
 def sqlalchemy_filter_from_include_exclude_conf(conf):
     """Build a sql filter from config."""
     filters = Filters()
-    exclude = conf.get(CONF_EXCLUDE)
-    if exclude:
+    if exclude := conf.get(CONF_EXCLUDE):
         filters.excluded_entities = exclude.get(CONF_ENTITIES, [])
         filters.excluded_domains = exclude.get(CONF_DOMAINS, [])
         filters.excluded_entity_globs = exclude.get(CONF_ENTITY_GLOBS, [])
-    include = conf.get(CONF_INCLUDE)
-    if include:
+    if include := conf.get(CONF_INCLUDE):
         filters.included_entities = include.get(CONF_ENTITIES, [])
         filters.included_domains = include.get(CONF_DOMAINS, [])
         filters.included_entity_globs = include.get(CONF_ENTITY_GLOBS, [])

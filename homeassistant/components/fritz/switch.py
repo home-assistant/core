@@ -18,6 +18,7 @@ import xmltodict
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -277,7 +278,6 @@ def wifi_entities_list(
 def profile_entities_list(
     router: FritzBoxTools,
     data_fritz: FritzData,
-    pref_disable_new_entities: bool,
 ) -> list[FritzBoxProfileSwitch]:
     """Add new tracker entities from the router."""
 
@@ -291,7 +291,7 @@ def profile_entities_list(
 
     for mac, device in router.devices.items():
         if device_filter_out_from_trackers(
-            mac, device, pref_disable_new_entities, data_fritz.profile_switches.values()
+            mac, device, data_fritz.profile_switches.values()
         ):
             continue
 
@@ -306,14 +306,13 @@ def all_entities_list(
     device_friendly_name: str,
     data_fritz: FritzData,
     local_ip: str,
-    pref_disable_new_entities: bool,
 ) -> list[Entity]:
     """Get a list of all entities."""
     return [
         *deflection_entities_list(fritzbox_tools, device_friendly_name),
         *port_entities_list(fritzbox_tools, device_friendly_name, local_ip),
         *wifi_entities_list(fritzbox_tools, device_friendly_name),
-        *profile_entities_list(fritzbox_tools, data_fritz, pref_disable_new_entities),
+        *profile_entities_list(fritzbox_tools, data_fritz),
     ]
 
 
@@ -337,7 +336,6 @@ async def async_setup_entry(
         entry.title,
         data_fritz,
         local_ip,
-        entry.pref_disable_new_entities,
     )
 
     async_add_entities(entities_list)
@@ -345,11 +343,7 @@ async def async_setup_entry(
     @callback
     def update_router() -> None:
         """Update the values of the router."""
-        async_add_entities(
-            profile_entities_list(
-                fritzbox_tools, data_fritz, entry.pref_disable_new_entities
-            )
-        )
+        async_add_entities(profile_entities_list(fritzbox_tools, data_fritz))
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, fritzbox_tools.signal_device_new, update_router)
@@ -448,6 +442,7 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
         self.connection_type = connection_type
         self.port_mapping = port_mapping  # dict in the format as it comes from fritzconnection. eg: {'NewRemoteHost': '0.0.0.0', 'NewExternalPort': 22, 'NewProtocol': 'TCP', 'NewInternalPort': 22, 'NewInternalClient': '192.168.178.31', 'NewEnabled': True, 'NewPortMappingDescription': 'Beast SSH ', 'NewLeaseDuration': 0}
         self._idx = idx  # needed for update routine
+        self._attr_entity_category = ENTITY_CATEGORY_CONFIG
 
         if port_mapping is None:
             return
@@ -526,6 +521,7 @@ class FritzBoxDeflectionSwitch(FritzBoxBaseSwitch, SwitchEntity):
         self.dict_of_deflection = dict_of_deflection
         self._attributes = {}
         self.id = int(self.dict_of_deflection["DeflectionId"])
+        self._attr_entity_category = ENTITY_CATEGORY_CONFIG
 
         switch_info = SwitchInfo(
             description=f"Call deflection {self.id}",
@@ -595,6 +591,7 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
         self._attr_is_on: bool = False
         self._name = f"{device.hostname} Internet Access"
         self._attr_unique_id = f"{self._mac}_internet_access"
+        self._attr_entity_category = ENTITY_CATEGORY_CONFIG
 
     async def async_process_update(self) -> None:
         """Update device."""
@@ -655,6 +652,7 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch, SwitchEntity):
         self._fritzbox_tools = fritzbox_tools
 
         self._attributes = {}
+        self._attr_entity_category = ENTITY_CATEGORY_CONFIG
         self._network_num = network_num
 
         switch_info = SwitchInfo(

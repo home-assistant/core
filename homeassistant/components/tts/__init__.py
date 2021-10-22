@@ -30,7 +30,6 @@ from homeassistant.const import (
     CONF_DESCRIPTION,
     CONF_NAME,
     CONF_PLATFORM,
-    HTTP_NOT_FOUND,
     PLATFORM_FORMAT,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -428,8 +427,7 @@ class SpeechManager:
 
         This method is a coroutine.
         """
-        filename = self.file_cache.get(key)
-        if not filename:
+        if not (filename := self.file_cache.get(key)):
             raise HomeAssistantError(f"Key {key} not in file cache!")
 
         voice_file = os.path.join(self.cache_dir, filename)
@@ -641,7 +639,7 @@ class TextToSpeechView(HomeAssistantView):
             content, data = await self.tts.async_read_tts(filename)
         except HomeAssistantError as err:
             _LOGGER.error("Error on load tts: %s", err)
-            return web.Response(status=HTTP_NOT_FOUND)
+            return web.Response(status=HTTPStatus.NOT_FOUND)
 
         return web.Response(body=data, content_type=content)
 

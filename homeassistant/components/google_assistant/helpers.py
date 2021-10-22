@@ -53,8 +53,7 @@ async def _get_entity_and_device(
         hass.helpers.entity_registry.async_get_registry(),
     )
 
-    entity_entry = ent_reg.async_get(entity_id)
-    if not entity_entry:
+    if not (entity_entry := ent_reg.async_get(entity_id)):
         return None, None
     device_entry = dev_reg.devices.get(entity_entry.device_id)
     return entity_entry, device_entry
@@ -263,9 +262,7 @@ class AbstractConfig(ABC):
     @callback
     def async_enable_local_sdk(self):
         """Enable the local SDK."""
-        webhook_id = self.local_sdk_webhook_id
-
-        if webhook_id is None:
+        if (webhook_id := self.local_sdk_webhook_id) is None:
             return
 
         try:
@@ -500,8 +497,7 @@ class GoogleEntity:
         }
 
         # use aliases
-        aliases = entity_config.get(CONF_ALIASES)
-        if aliases:
+        if aliases := entity_config.get(CONF_ALIASES):
             device["name"]["nicknames"] = [name] + aliases
 
         if self.config.is_local_sdk_active and self.should_expose_local():
@@ -518,8 +514,7 @@ class GoogleEntity:
         for trt in traits:
             device["attributes"].update(trt.sync_attributes())
 
-        room = entity_config.get(CONF_ROOM_HINT)
-        if room:
+        if room := entity_config.get(CONF_ROOM_HINT):
             device["roomHint"] = room
         else:
             area = await _get_area(self.hass, entity_entry, device_entry)

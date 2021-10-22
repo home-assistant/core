@@ -208,8 +208,7 @@ def has_unique_host_names(hosts: list[ConfigType]) -> list[ConfigType]:
     """
     suffix = 0
     for host in hosts:
-        host_name = host.get(CONF_NAME)
-        if host_name is None:
+        if host.get(CONF_NAME) is None:
             if suffix == 0:
                 host[CONF_NAME] = DEFAULT_NAME
             else:

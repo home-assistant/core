@@ -25,6 +25,7 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
     POWER_WATT,
@@ -34,6 +35,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import update_coordinator
 from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_reg
 from homeassistant.util import Throttle, dt as dt_util
 
@@ -171,6 +173,7 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="accumulatedReward",
@@ -264,11 +267,11 @@ class TibberSensor(SensorEntity):
     @property
     def device_info(self):
         """Return the device_info of the device."""
-        device_info = {
-            "identifiers": {(TIBBER_DOMAIN, self._tibber_home.home_id)},
-            "name": self._device_name,
-            "manufacturer": MANUFACTURER,
-        }
+        device_info = DeviceInfo(
+            identifiers={(TIBBER_DOMAIN, self._tibber_home.home_id)},
+            name=self._device_name,
+            manufacturer=MANUFACTURER,
+        )
         if self._model is not None:
             device_info["model"] = self._model
         return device_info
@@ -443,8 +446,7 @@ class TibberRtDataCoordinator(update_coordinator.DataUpdateCoordinator):
 
     def get_live_measurement(self):
         """Get live measurement data."""
-        errors = self.data.get("errors")
-        if errors:
+        if errors := self.data.get("errors"):
             _LOGGER.error(errors[0])
             return None
         return self.data.get("data", {}).get("liveMeasurement")

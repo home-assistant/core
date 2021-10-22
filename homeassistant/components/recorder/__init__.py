@@ -406,6 +406,7 @@ class Recorder(threading.Thread):
         self.async_migration_event = asyncio.Event()
         self.migration_in_progress = False
         self._queue_watcher = None
+        self._db_supports_row_number = True
 
         self.enabled = True
 
@@ -455,9 +456,7 @@ class Recorder(threading.Thread):
         if event.event_type in self.exclude_t:
             return False
 
-        entity_id = event.data.get(ATTR_ENTITY_ID)
-
-        if entity_id is None:
+        if (entity_id := event.data.get(ATTR_ENTITY_ID)) is None:
             return True
 
         if isinstance(entity_id, str):
@@ -488,8 +487,7 @@ class Recorder(threading.Thread):
 
     def do_adhoc_statistics(self, **kwargs):
         """Trigger an adhoc statistics run."""
-        start = kwargs.get("start")
-        if not start:
+        if not (start := kwargs.get("start")):
             start = statistics.get_start_time()
         self.queue.put(StatisticsTask(start))
 
@@ -955,6 +953,7 @@ class Recorder(threading.Thread):
         def setup_recorder_connection(dbapi_connection, connection_record):
             """Dbapi specific connection settings."""
             setup_connection_for_dialect(
+                self,
                 self.engine.dialect.name,
                 dbapi_connection,
                 not self._completed_first_database_setup,

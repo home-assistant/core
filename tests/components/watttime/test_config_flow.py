@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 from aiowatttime.errors import CoordinatesNotFoundError, InvalidCredentialsError
 import pytest
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.watttime.config_flow import (
     CONF_LOCATION_TYPE,
     LOCATION_TYPE_COORDINATES,
@@ -42,9 +42,11 @@ def client_fixture(get_grid_region):
 @pytest.fixture(name="client_login")
 def client_login_fixture(client):
     """Define a fixture for patching the aiowatttime coroutine to get a client."""
-    with patch("homeassistant.components.watttime.config_flow.Client.async_login") as m:
-        m.return_value = client
-        yield m
+    with patch(
+        "homeassistant.components.watttime.config_flow.Client.async_login"
+    ) as mock_client:
+        mock_client.return_value = client
+        yield mock_client
 
 
 @pytest.fixture(name="get_grid_region")
@@ -81,7 +83,7 @@ async def test_duplicate_error(hass: HomeAssistant, client_login):
     assert result["reason"] == "already_configured"
 
 
-async def test_show_form_coordinates(hass: HomeAssistant) -> None:
+async def test_show_form_coordinates(hass: HomeAssistant, client_login) -> None:
     """Test showing the form to input custom latitude/longitude."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -121,7 +123,7 @@ async def test_step_coordinates_unknown_coordinates(
     hass: HomeAssistant, client_login
 ) -> None:
     """Test that providing coordinates with no data is handled."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
@@ -146,7 +148,7 @@ async def test_step_coordinates_unknown_error(
     hass: HomeAssistant, client_login
 ) -> None:
     """Test that providing coordinates with no data is handled."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
@@ -162,9 +164,92 @@ async def test_step_coordinates_unknown_error(
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_step_login_coordinates(hass: HomeAssistant, client_login) -> None:
+async def test_step_reauth(hass: HomeAssistant, client_login) -> None:
+    """Test a full reauth flow."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="51.528308, -0.3817765",
+        data={
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "password",
+            CONF_LATITUDE: 51.528308,
+            CONF_LONGITUDE: -0.3817765,
+            CONF_BALANCING_AUTHORITY: "Authority 1",
+            CONF_BALANCING_AUTHORITY_ABBREV: "AUTH_1",
+        },
+    ).add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.watttime.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_REAUTH},
+            data={
+                CONF_USERNAME: "user",
+                CONF_PASSWORD: "password",
+                CONF_LATITUDE: 51.528308,
+                CONF_LONGITUDE: -0.3817765,
+                CONF_BALANCING_AUTHORITY: "Authority 1",
+                CONF_BALANCING_AUTHORITY_ABBREV: "AUTH_1",
+            },
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_PASSWORD: "password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "reauth_successful"
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+async def test_step_reauth_invalid_credentials(hass: HomeAssistant) -> None:
+    """Test that invalid credentials during reauth are handled."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="51.528308, -0.3817765",
+        data={
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "password",
+            CONF_LATITUDE: 51.528308,
+            CONF_LONGITUDE: -0.3817765,
+            CONF_BALANCING_AUTHORITY: "Authority 1",
+            CONF_BALANCING_AUTHORITY_ABBREV: "AUTH_1",
+        },
+    ).add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.watttime.config_flow.Client.async_login",
+        AsyncMock(side_effect=InvalidCredentialsError),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_REAUTH},
+            data={
+                CONF_USERNAME: "user",
+                CONF_PASSWORD: "password",
+                CONF_LATITUDE: 51.528308,
+                CONF_LONGITUDE: -0.3817765,
+                CONF_BALANCING_AUTHORITY: "Authority 1",
+                CONF_BALANCING_AUTHORITY_ABBREV: "AUTH_1",
+            },
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_PASSWORD: "password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
+
+async def test_step_user_coordinates(hass: HomeAssistant, client_login) -> None:
     """Test a full login flow (inputting custom coordinates)."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     with patch(
         "homeassistant.components.watttime.async_setup_entry",
         return_value=True,
@@ -198,7 +283,7 @@ async def test_step_login_coordinates(hass: HomeAssistant, client_login) -> None
 
 async def test_step_user_home(hass: HomeAssistant, client_login) -> None:
     """Test a full login flow (selecting the home location)."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     with patch(
         "homeassistant.components.watttime.async_setup_entry",
         return_value=True,
@@ -228,7 +313,7 @@ async def test_step_user_home(hass: HomeAssistant, client_login) -> None:
 
 async def test_step_user_invalid_credentials(hass: HomeAssistant) -> None:
     """Test that invalid credentials are handled."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     with patch(
         "homeassistant.components.watttime.config_flow.Client.async_login",
         AsyncMock(side_effect=InvalidCredentialsError),
@@ -241,13 +326,13 @@ async def test_step_user_invalid_credentials(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {"username": "invalid_auth"}
+    assert result["errors"] == {"base": "invalid_auth"}
 
 
 @pytest.mark.parametrize("get_grid_region", [AsyncMock(side_effect=Exception)])
 async def test_step_user_unknown_error(hass: HomeAssistant, client_login) -> None:
     """Test that an unknown error during the login step is handled."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     with patch(
         "homeassistant.components.watttime.config_flow.Client.async_login",
         AsyncMock(side_effect=Exception),

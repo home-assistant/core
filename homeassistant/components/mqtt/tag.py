@@ -12,9 +12,15 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 
-from . import CONF_QOS, CONF_TOPIC, DOMAIN, subscription
+from . import subscription
 from .. import mqtt
-from .const import ATTR_DISCOVERY_HASH, ATTR_DISCOVERY_TOPIC
+from .const import (
+    ATTR_DISCOVERY_HASH,
+    ATTR_DISCOVERY_TOPIC,
+    CONF_QOS,
+    CONF_TOPIC,
+    DOMAIN,
+)
 from .discovery import MQTT_DISCOVERY_DONE, MQTT_DISCOVERY_UPDATED, clear_discovery_hash
 from .mixins import (
     CONF_CONNECTIONS,

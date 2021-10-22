@@ -30,9 +30,7 @@ def resolve_location(hass, logger, loc):
 
 def get_location_from_entity(hass, logger, entity_id):
     """Get the location from the entity state or attributes."""
-    entity = hass.states.get(entity_id)
-
-    if entity is None:
+    if (entity := hass.states.get(entity_id)) is None:
         logger.error("Unable to find entity %s", entity_id)
         return None
 

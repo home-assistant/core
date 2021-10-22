@@ -386,9 +386,8 @@ class OptionsFlow(config_entries.OptionsFlow):
     def _can_replace_device(self, entry_id):
         """Check if device can be replaced with selected device."""
         device_data = self._get_device_data(entry_id)
-        event_code = device_data[CONF_EVENT_CODE]
 
-        if event_code is not None:
+        if (event_code := device_data[CONF_EVENT_CODE]) is not None:
             rfx_obj = get_rfx_object(event_code)
             if (
                 rfx_obj.device.packettype
@@ -452,8 +451,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         if user_input is not None:
-            user_selection = user_input[CONF_TYPE]
-            if user_selection == "Serial":
+            if user_input[CONF_TYPE] == "Serial":
                 return await self.async_step_setup_serial()
 
             return await self.async_step_setup_network()

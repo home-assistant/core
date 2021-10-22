@@ -11,6 +11,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -25,16 +26,19 @@ SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
         key="is_connected",
         name="Connection",
         device_class=DEVICE_CLASS_CONNECTIVITY,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     BinarySensorEntityDescription(
         key="is_linked",
         name="Link",
         device_class=DEVICE_CLASS_PLUG,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     BinarySensorEntityDescription(
         key="firmware_update",
         name="Firmware Update",
         device_class=DEVICE_CLASS_UPDATE,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 )
 
