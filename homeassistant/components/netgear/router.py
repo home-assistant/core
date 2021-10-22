@@ -10,7 +10,6 @@ from pynetgear import Netgear
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_VIA_DEVICE,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -280,7 +279,7 @@ class NetgearDeviceEntity(Entity):
             "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
             "default_name": self._device_name,
             "default_model": self._device["device_model"],
-            ATTR_VIA_DEVICE: (DOMAIN, self._router.unique_id),
+            "via_device": (DOMAIN, self._router.unique_id),
         }
 
     @property

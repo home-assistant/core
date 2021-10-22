@@ -4,7 +4,6 @@ from __future__ import annotations
 from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_VIA_DEVICE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -125,7 +124,7 @@ class RuckusUnleashedDevice(CoordinatorEntity, ScannerEntity):
             return {
                 "name": self.name,
                 "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
-                ATTR_VIA_DEVICE: (
+                "via_device": (
                     CONNECTION_NETWORK_MAC,
                     self.coordinator.data[API_CLIENTS][self._mac][API_ACCESS_POINT],
                 ),

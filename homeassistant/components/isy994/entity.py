@@ -10,7 +10,7 @@ from pyisy.constants import (
 )
 from pyisy.helpers import NodeProperty
 
-from homeassistant.const import ATTR_VIA_DEVICE, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
@@ -82,7 +82,7 @@ class ISYEntity(Entity):
             "identifiers": {},
             "model": "Unknown",
             "manufacturer": "Unknown",
-            ATTR_VIA_DEVICE: (DOMAIN, uuid),
+            "via_device": (DOMAIN, uuid),
         }
 
         if hasattr(node, "address"):

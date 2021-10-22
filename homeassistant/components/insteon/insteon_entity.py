@@ -4,7 +4,6 @@ import logging
 
 from pyinsteon import devices
 
-from homeassistant.const import ATTR_VIA_DEVICE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -88,7 +87,7 @@ class InsteonEntity(Entity):
             "model": f"{self._insteon_device.model} ({self._insteon_device.cat!r}, 0x{self._insteon_device.subcat:02x})",
             "sw_version": f"{self._insteon_device.firmware:02x} Engine Version: {self._insteon_device.engine_version}",
             "manufacturer": "Smart Home",
-            ATTR_VIA_DEVICE: (DOMAIN, str(devices.modem.address)),
+            "via_device": (DOMAIN, str(devices.modem.address)),
         }
 
     @callback

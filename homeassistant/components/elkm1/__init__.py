@@ -13,7 +13,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
-    ATTR_VIA_DEVICE,
     CONF_EXCLUDE,
     CONF_HOST,
     CONF_INCLUDE,
@@ -456,7 +455,7 @@ class ElkEntity(Entity):
     def device_info(self):
         """Device info connecting via the ElkM1 system."""
         return {
-            ATTR_VIA_DEVICE: (DOMAIN, f"{self._prefix}_system"),
+            "via_device": (DOMAIN, f"{self._prefix}_system"),
         }
 
 

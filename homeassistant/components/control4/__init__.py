@@ -11,7 +11,6 @@ from pyControl4.error_handling import BadCredentials
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_VIA_DEVICE,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
@@ -188,5 +187,5 @@ class Control4Entity(CoordinatorEntity):
             "name": self._device_name,
             "manufacturer": self._device_manufacturer,
             "model": self._device_model,
-            ATTR_VIA_DEVICE: (DOMAIN, self._controller_unique_id),
+            "via_device": (DOMAIN, self._controller_unique_id),
         }

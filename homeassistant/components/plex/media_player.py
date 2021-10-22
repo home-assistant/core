@@ -20,7 +20,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
-from homeassistant.const import ATTR_VIA_DEVICE, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
+from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import (
@@ -543,7 +543,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             "model": self.device_product or self.device_make,
             "name": self.name,
             "sw_version": self.device_version,
-            ATTR_VIA_DEVICE: (PLEX_DOMAIN, self.plex_server.machine_identifier),
+            "via_device": (PLEX_DOMAIN, self.plex_server.machine_identifier),
         }
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):

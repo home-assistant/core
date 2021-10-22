@@ -23,7 +23,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
-    ATTR_VIA_DEVICE,
     DEVICE_DEFAULT_NAME,
     STATE_IDLE,
     STATE_OFF,
@@ -171,7 +170,7 @@ class RoonDevice(MediaPlayerEntity):
             "name": self.name,
             "manufacturer": "RoonLabs",
             "model": dev_model,
-            ATTR_VIA_DEVICE: (DOMAIN, self._server.roon_id),
+            "via_device": (DOMAIN, self._server.roon_id),
         }
 
     def update_data(self, player_data=None):

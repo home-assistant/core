@@ -4,7 +4,7 @@ import logging
 
 from tellduslive import BATTERY_LOW, BATTERY_OK, BATTERY_UNKNOWN
 
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_VIA_DEVICE, DEVICE_DEFAULT_NAME
+from homeassistant.const import ATTR_BATTERY_LEVEL, DEVICE_DEFAULT_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -128,5 +128,5 @@ class TelldusLiveEntity(Entity):
         if (protocol := device.get("protocol")) is not None:
             device_info["manufacturer"] = protocol.title()
         if (client := device.get("client")) is not None:
-            device_info[ATTR_VIA_DEVICE] = ("tellduslive", client)
+            device_info["via_device"] = ("tellduslive", client)
         return device_info

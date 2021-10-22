@@ -1,6 +1,6 @@
 """The nexia integration base entity."""
 
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_VIA_DEVICE
+from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -90,7 +90,7 @@ class NexiaThermostatZoneEntity(NexiaThermostatEntity):
                 "identifiers": {(DOMAIN, self._zone.zone_id)},
                 "name": zone_name,
                 "suggested_area": zone_name,
-                ATTR_VIA_DEVICE: (DOMAIN, self._zone.thermostat.thermostat_id),
+                "via_device": (DOMAIN, self._zone.thermostat.thermostat_id),
             }
         )
         return data

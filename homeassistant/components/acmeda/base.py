@@ -1,7 +1,6 @@
 """Base class for Acmeda Roller Blinds."""
 import aiopulse
 
-from homeassistant.const import ATTR_VIA_DEVICE
 from homeassistant.core import callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
@@ -84,5 +83,5 @@ class AcmedaBase(entity.Entity):
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.roller.name,
             "manufacturer": "Rollease Acmeda",
-            ATTR_VIA_DEVICE: (DOMAIN, self.roller.hub.id),
+            "via_device": (DOMAIN, self.roller.hub.id),
         }

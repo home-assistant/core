@@ -17,12 +17,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    ATTR_VIA_DEVICE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from . import HiveEntity, refresh_system
@@ -130,7 +125,7 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
             "model": self.device["deviceData"]["model"],
             "manufacturer": self.device["deviceData"]["manufacturer"],
             "sw_version": self.device["deviceData"]["version"],
-            ATTR_VIA_DEVICE: (DOMAIN, self.device["parentDevice"]),
+            "via_device": (DOMAIN, self.device["parentDevice"]),
         }
 
     @property

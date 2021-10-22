@@ -10,7 +10,6 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     LightEntity,
 )
-from homeassistant.const import ATTR_VIA_DEVICE
 import homeassistant.util.color as color_util
 
 from . import HiveEntity, refresh_system
@@ -49,7 +48,7 @@ class HiveDeviceLight(HiveEntity, LightEntity):
             "model": self.device["deviceData"]["model"],
             "manufacturer": self.device["deviceData"]["manufacturer"],
             "sw_version": self.device["deviceData"]["version"],
-            ATTR_VIA_DEVICE: (DOMAIN, self.device["parentDevice"]),
+            "via_device": (DOMAIN, self.device["parentDevice"]),
         }
 
     @property

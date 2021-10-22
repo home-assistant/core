@@ -9,7 +9,6 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_VIA_DEVICE,
     CONF_DEVICE,
     CONF_ENTITY_CATEGORY,
     CONF_ICON,
@@ -537,7 +536,7 @@ def device_info_from_config(config):
         info["sw_version"] = config[CONF_SW_VERSION]
 
     if CONF_VIA_DEVICE in config:
-        info[ATTR_VIA_DEVICE] = (DOMAIN, config[CONF_VIA_DEVICE])
+        info["via_device"] = (DOMAIN, config[CONF_VIA_DEVICE])
 
     if CONF_SUGGESTED_AREA in config:
         info["suggested_area"] = config[CONF_SUGGESTED_AREA]

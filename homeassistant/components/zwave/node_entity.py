@@ -2,12 +2,7 @@
 # pylint: disable=import-outside-toplevel
 from itertools import count
 
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    ATTR_ENTITY_ID,
-    ATTR_VIA_DEVICE,
-    ATTR_WAKEUP,
-)
+from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, ATTR_WAKEUP
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
 from homeassistant.helpers.entity import Entity
@@ -166,7 +161,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             "name": name,
         }
         if self.node_id > 1:
-            info[ATTR_VIA_DEVICE] = (DOMAIN, 1)
+            info["via_device"] = (DOMAIN, 1)
         return info
 
     def maybe_update_application_version(self, value):

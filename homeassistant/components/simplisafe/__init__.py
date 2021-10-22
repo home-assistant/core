@@ -26,7 +26,7 @@ from simplipy.system.v3 import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_CODE, ATTR_VIA_DEVICE, CONF_CODE, CONF_TOKEN
+from homeassistant.const import ATTR_CODE, CONF_CODE, CONF_TOKEN
 from homeassistant.core import CoreState, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -443,7 +443,7 @@ class SimpliSafeEntity(CoordinatorEntity):
             "manufacturer": "SimpliSafe",
             "model": str(system.version),
             "name": name,
-            ATTR_VIA_DEVICE: (DOMAIN, system.serial),
+            "via_device": (DOMAIN, system.serial),
         }
         self._attr_name = f"{system.address} {name}"
         self._attr_unique_id = self._serial
@@ -500,7 +500,7 @@ class SimpliSafeBaseSensor(SimpliSafeEntity):
             "manufacturer": "SimpliSafe",
             "model": sensor.type.name,
             "name": sensor.name,
-            ATTR_VIA_DEVICE: (DOMAIN, system.serial),
+            "via_device": (DOMAIN, system.serial),
         }
 
         human_friendly_name = " ".join([w.title() for w in sensor.type.name.split("_")])

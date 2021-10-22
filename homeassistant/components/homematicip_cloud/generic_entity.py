@@ -7,7 +7,7 @@ from typing import Any
 from homematicip.aio.device import AsyncDevice
 from homematicip.aio.group import AsyncGroup
 
-from homeassistant.const import ATTR_ID, ATTR_VIA_DEVICE
+from homeassistant.const import ATTR_ID
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -106,7 +106,7 @@ class HomematicipGenericEntity(Entity):
                 "model": self._device.modelType,
                 "sw_version": self._device.firmwareVersion,
                 # Link to the homematic ip access point.
-                ATTR_VIA_DEVICE: (HMIPC_DOMAIN, self._device.homeId),
+                "via_device": (HMIPC_DOMAIN, self._device.homeId),
             }
         return None
 

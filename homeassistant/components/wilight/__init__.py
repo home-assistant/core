@@ -1,7 +1,6 @@
 """The WiLight integration."""
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_VIA_DEVICE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import Entity
@@ -87,7 +86,7 @@ class WiLightDevice(Entity):
             "model": self._model,
             "manufacturer": "WiLight",
             "sw_version": self._sw_version,
-            ATTR_VIA_DEVICE: (DOMAIN, self._device_id),
+            "via_device": (DOMAIN, self._device_id),
         }
 
     @property

@@ -33,7 +33,6 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     LightEntity,
 )
-from homeassistant.const import ATTR_VIA_DEVICE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.color import color_hs_to_xy
@@ -274,7 +273,7 @@ class DeconzGroup(DeconzBaseLight):
             "manufacturer": "Dresden Elektronik",
             "model": "deCONZ group",
             "name": self._device.name,
-            ATTR_VIA_DEVICE: (DECONZ_DOMAIN, self.gateway.api.config.bridge_id),
+            "via_device": (DECONZ_DOMAIN, self.gateway.api.config.bridge_id),
         }
 
     @property

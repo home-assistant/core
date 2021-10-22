@@ -1,5 +1,4 @@
 """Support for the Philips Hue sensor devices."""
-from homeassistant.const import ATTR_VIA_DEVICE
 from homeassistant.helpers import entity
 
 from .const import DOMAIN as HUE_DOMAIN
@@ -52,7 +51,7 @@ class GenericHueDevice(entity.Entity):
             "manufacturer": self.primary_sensor.manufacturername,
             "model": (self.primary_sensor.productname or self.primary_sensor.modelid),
             "sw_version": self.primary_sensor.swversion,
-            ATTR_VIA_DEVICE: (HUE_DOMAIN, self.bridge.api.config.bridgeid),
+            "via_device": (HUE_DOMAIN, self.bridge.api.config.bridgeid),
         }
 
     async def async_added_to_hass(self) -> None:

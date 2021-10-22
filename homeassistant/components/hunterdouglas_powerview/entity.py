@@ -2,7 +2,6 @@
 
 from aiopvapi.resources.shade import ATTR_TYPE
 
-from homeassistant.const import ATTR_VIA_DEVICE
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -73,7 +72,7 @@ class ShadeEntity(HDEntity):
             "suggested_area": self._room_name,
             "manufacturer": MANUFACTURER,
             "model": str(self._shade.raw_data[ATTR_TYPE]),
-            ATTR_VIA_DEVICE: (DOMAIN, self._device_info[DEVICE_SERIAL_NUMBER]),
+            "via_device": (DOMAIN, self._device_info[DEVICE_SERIAL_NUMBER]),
         }
 
         for shade in self._shade.shade_types:

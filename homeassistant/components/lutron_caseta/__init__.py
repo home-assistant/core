@@ -12,7 +12,7 @@ from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import ATTR_VIA_DEVICE, CONF_HOST
+from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -337,7 +337,7 @@ class LutronCasetaDevice(Entity):
             "suggested_area": self._device["name"].split("_")[0],
             "manufacturer": MANUFACTURER,
             "model": f"{self._device['model']} ({self._device['type']})",
-            ATTR_VIA_DEVICE: (DOMAIN, self._bridge_device["serial"]),
+            "via_device": (DOMAIN, self._bridge_device["serial"]),
         }
 
     @property

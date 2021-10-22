@@ -16,7 +16,6 @@ from homeassistant.components.camera import (
     CameraEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_VIA_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -99,7 +98,7 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
             },
             "name": self.camera_data.name,
             "model": self.camera_data.model,
-            ATTR_VIA_DEVICE: (
+            "via_device": (
                 DOMAIN,
                 f"{self._api.information.serial}_{SynoSurveillanceStation.INFO_API_KEY}",
             ),

@@ -8,7 +8,7 @@ from typing import Any
 from pysiaalarm import SIAEvent
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_VIA_DEVICE, CONF_PORT
+from homeassistant.const import CONF_PORT
 from homeassistant.core import CALLBACK_TYPE, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -128,5 +128,5 @@ class SIABaseEntity(RestoreEntity):
         return {
             "name": self._attr_name,
             "identifiers": {(DOMAIN, self.unique_id)},
-            ATTR_VIA_DEVICE: (DOMAIN, f"{self._port}_{self._account}"),
+            "via_device": (DOMAIN, f"{self._port}_{self._account}"),
         }

@@ -2,7 +2,6 @@
 
 from abc import abstractmethod
 
-from homeassistant.const import ATTR_VIA_DEVICE
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -43,7 +42,7 @@ class SomfyEntity(CoordinatorEntity, Entity):
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
             "model": self.device.type,
-            ATTR_VIA_DEVICE: (DOMAIN, self.device.parent_id),
+            "via_device": (DOMAIN, self.device.parent_id),
             # For the moment, Somfy only returns their own device.
             "manufacturer": "Somfy",
         }

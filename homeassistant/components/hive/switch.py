@@ -2,7 +2,6 @@
 from datetime import timedelta
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import ATTR_VIA_DEVICE
 
 from . import HiveEntity, refresh_system
 from .const import ATTR_MODE, DOMAIN
@@ -41,7 +40,7 @@ class HiveDevicePlug(HiveEntity, SwitchEntity):
                 "model": self.device["deviceData"]["model"],
                 "manufacturer": self.device["deviceData"]["manufacturer"],
                 "sw_version": self.device["deviceData"]["version"],
-                ATTR_VIA_DEVICE: (DOMAIN, self.device["parentDevice"]),
+                "via_device": (DOMAIN, self.device["parentDevice"]),
             }
 
     @property

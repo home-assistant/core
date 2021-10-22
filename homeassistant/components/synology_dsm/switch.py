@@ -8,7 +8,6 @@ from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 
 from homeassistant.components.switch import ToggleEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_VIA_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -118,5 +117,5 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, ToggleEntity):
             "manufacturer": "Synology",
             "model": self._api.information.model,
             "sw_version": self._version,
-            ATTR_VIA_DEVICE: (DOMAIN, self._api.information.serial),
+            "via_device": (DOMAIN, self._api.information.serial),
         }

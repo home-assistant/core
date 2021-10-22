@@ -13,7 +13,7 @@ from pymyq.device import MyQDevice
 from pymyq.errors import InvalidCredentialsError, MyQError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_VIA_DEVICE, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
@@ -107,7 +107,7 @@ class MyQEntity(CoordinatorEntity):
         if model:
             device_info["model"] = model
         if self._device.parent_device_id:
-            device_info[ATTR_VIA_DEVICE] = (DOMAIN, self._device.parent_device_id)
+            device_info["via_device"] = (DOMAIN, self._device.parent_device_id)
         return device_info
 
     @property
