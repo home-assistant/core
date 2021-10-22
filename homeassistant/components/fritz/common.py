@@ -351,17 +351,17 @@ class FritzDeviceBase(Entity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        return {
-            "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
-            "identifiers": {(DOMAIN, self._mac)},
-            "default_name": self.name,
-            "default_manufacturer": "AVM",
-            "default_model": "FRITZ!Box Tracked device",
-            "via_device": (
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self._mac)},
+            identifiers={(DOMAIN, self._mac)},
+            default_name=self.name,
+            default_manufacturer="AVM",
+            default_model="FRITZ!Box Tracked device",
+            via_device=(
                 DOMAIN,
                 self._router.unique_id,
             ),
-        }
+        )
 
     @property
     def should_poll(self) -> bool:

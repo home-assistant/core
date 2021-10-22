@@ -35,6 +35,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util.color import color_hs_to_xy
 
 from .const import DOMAIN as DECONZ_DOMAIN, POWER_PLUGS
@@ -266,15 +267,15 @@ class DeconzGroup(DeconzBaseLight):
         return self._unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
-        return {
-            "identifiers": {(DECONZ_DOMAIN, self.unique_id)},
-            "manufacturer": "Dresden Elektronik",
-            "model": "deCONZ group",
-            "name": self._device.name,
-            "via_device": (DECONZ_DOMAIN, self.gateway.api.config.bridge_id),
-        }
+        return DeviceInfo(
+            identifiers={(DECONZ_DOMAIN, self.unique_id)},
+            manufacturer="Dresden Elektronik",
+            model="deCONZ group",
+            name=self._device.name,
+            via_device=(DECONZ_DOMAIN, self.gateway.api.config.bridge_id),
+        )
 
     @property
     def extra_state_attributes(self):
