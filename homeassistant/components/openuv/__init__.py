@@ -31,7 +31,6 @@ from .const import (
     CONF_FROM_WINDOW,
     CONF_TO_WINDOW,
     DATA_CLIENT,
-    DATA_LISTENER,
     DATA_PROTECTION_WINDOW,
     DATA_UV,
     DEFAULT_FROM_WINDOW,
@@ -52,7 +51,8 @@ PLATFORMS = ["binary_sensor", "sensor"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up OpenUV as config entry."""
-    hass.data.setdefault(DOMAIN, {DATA_CLIENT: {}, DATA_LISTENER: {}})
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {}
 
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
 
@@ -69,11 +69,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ),
         )
         await openuv.async_update()
-        hass.data[DOMAIN][DATA_CLIENT][entry.entry_id] = openuv
     except OpenUvError as err:
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
+    hass.data[DOMAIN][entry.entry_id][DATA_CLIENT] = openuv
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     @_verify_domain_control
@@ -111,7 +111,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an OpenUV config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 

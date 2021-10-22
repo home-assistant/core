@@ -427,8 +427,7 @@ class SpeechManager:
 
         This method is a coroutine.
         """
-        filename = self.file_cache.get(key)
-        if not filename:
+        if not (filename := self.file_cache.get(key)):
             raise HomeAssistantError(f"Key {key} not in file cache!")
 
         voice_file = os.path.join(self.cache_dir, filename)

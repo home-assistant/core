@@ -40,8 +40,7 @@ class WemoEntity(CoordinatorEntity):
     @property
     def name(self) -> str:
         """Return the name of the device if any."""
-        suffix = self.name_suffix
-        if suffix:
+        if suffix := self.name_suffix:
             return f"{self.wemo.name} {suffix}"
         return self.wemo.name
 
@@ -60,8 +59,7 @@ class WemoEntity(CoordinatorEntity):
     @property
     def unique_id(self) -> str:
         """Return the id of this WeMo device."""
-        suffix = self.unique_id_suffix
-        if suffix:
+        if suffix := self.unique_id_suffix:
             return f"{self.wemo.serialnumber}_{suffix}"
         return self.wemo.serialnumber
 

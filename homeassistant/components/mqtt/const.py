@@ -12,6 +12,7 @@ ATTR_TOPIC = "topic"
 CONF_AVAILABILITY = "availability"
 CONF_BROKER = "broker"
 CONF_BIRTH_MESSAGE = "birth_message"
+CONF_COMMAND_TOPIC = "command_topic"
 CONF_QOS = ATTR_QOS
 CONF_RETAIN = ATTR_RETAIN
 CONF_STATE_TOPIC = "state_topic"

@@ -1,0 +1,9 @@
+{
+    "state": {
+        "airvisual__pollutant_label": {
+            "o3": "\u041e\u0437\u043e\u043d",
+            "p1": "PM10",
+            "p2": "PM2.5"
+        }
+    }
+}

@@ -23,7 +23,7 @@ from .const import (
     TUYA_COUNTRIES,
     TUYA_RESPONSE_CODE,
     TUYA_RESPONSE_MSG,
-    TUYA_RESPONSE_PLATFROM_URL,
+    TUYA_RESPONSE_PLATFORM_URL,
     TUYA_RESPONSE_RESULT,
     TUYA_RESPONSE_SUCCESS,
     TUYA_SMART_APP,
@@ -97,7 +97,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if response.get(TUYA_RESPONSE_SUCCESS, False):
                 if endpoint := response.get(TUYA_RESPONSE_RESULT, {}).get(
-                    TUYA_RESPONSE_PLATFROM_URL
+                    TUYA_RESPONSE_PLATFORM_URL
                 ):
                     data[CONF_ENDPOINT] = endpoint
 

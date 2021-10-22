@@ -1,6 +1,5 @@
 """Platform for sensor integration."""
 from enum import Enum
-import logging
 
 import smarttub
 import voluptuous as vol
@@ -10,8 +9,6 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import DOMAIN, SMARTTUB_CONTROLLER
 from .entity import SmartTubSensorBase
-
-_LOGGER = logging.getLogger(__name__)
 
 # the desired duration, in hours, of the cycle
 ATTR_DURATION = "duration"

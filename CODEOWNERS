@@ -75,7 +75,7 @@ homeassistant/components/blink/* @fronzbot
 homeassistant/components/blueprint/* @home-assistant/core
 homeassistant/components/bmp280/* @belidzs
 homeassistant/components/bmw_connected_drive/* @gerard33 @rikroe
-homeassistant/components/bond/* @prystupa @joshs85
+homeassistant/components/bond/* @bdraco @prystupa @joshs85
 homeassistant/components/bosch_shc/* @tschamm
 homeassistant/components/braviatv/* @bieniu @Drafteed
 homeassistant/components/broadlink/* @danielhiversen @felipediel
@@ -288,6 +288,7 @@ homeassistant/components/litterrobot/* @natekspencer
 homeassistant/components/local_ip/* @issacg
 homeassistant/components/logger/* @home-assistant/core
 homeassistant/components/logi_circle/* @evanjd
+homeassistant/components/lookin/* @ANMalko
 homeassistant/components/loopenergy/* @pavoni
 homeassistant/components/lovelace/* @home-assistant/frontend
 homeassistant/components/luci/* @mzdrale
@@ -362,7 +363,7 @@ homeassistant/components/nsw_rural_fire_service_feed/* @exxamalte
 homeassistant/components/nuki/* @pschmitt @pvizeli @pree
 homeassistant/components/numato/* @clssn
 homeassistant/components/number/* @home-assistant/core @Shulyaka
-homeassistant/components/nut/* @bdraco
+homeassistant/components/nut/* @bdraco @ollo69
 homeassistant/components/nws/* @MatthewFlamm
 homeassistant/components/nzbget/* @chriscla
 homeassistant/components/obihai/* @dshokouhi
@@ -535,7 +536,6 @@ homeassistant/components/tile/* @bachya
 homeassistant/components/time_date/* @fabaff
 homeassistant/components/tmb/* @alemuro
 homeassistant/components/todoist/* @boralyl
-homeassistant/components/toon/* @frenck
 homeassistant/components/totalconnect/* @austinmroczek
 homeassistant/components/tplink/* @rytilahti @thegardenmonkey
 homeassistant/components/traccar/* @ludeeus
@@ -546,7 +546,7 @@ homeassistant/components/trafikverket_train/* @endor-force
 homeassistant/components/trafikverket_weatherstation/* @endor-force
 homeassistant/components/transmission/* @engrbm87 @JPHutchins
 homeassistant/components/tts/* @pvizeli
-homeassistant/components/tuya/* @Tuya @zlinoliver @METISU
+homeassistant/components/tuya/* @Tuya @zlinoliver @METISU @frenck
 homeassistant/components/twentemilieu/* @frenck
 homeassistant/components/twinkly/* @dr1rrb
 homeassistant/components/ubus/* @noltari
@@ -573,7 +573,7 @@ homeassistant/components/vicare/* @oischinger
 homeassistant/components/vilfo/* @ManneW
 homeassistant/components/vivotek/* @HarlemSquirrel
 homeassistant/components/vizio/* @raman325
-homeassistant/components/vlc_telnet/* @rodripf @dmcc
+homeassistant/components/vlc_telnet/* @rodripf @dmcc @MartinHjelmare
 homeassistant/components/volkszaehler/* @fabaff
 homeassistant/components/volumio/* @OnFreund
 homeassistant/components/wake_on_lan/* @ntilley905

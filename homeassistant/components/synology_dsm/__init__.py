@@ -362,6 +362,10 @@ class SynoApi:
         """Initialize the API wrapper class."""
         self._hass = hass
         self._entry = entry
+        if entry.data.get(CONF_SSL):
+            self.config_url = f"https://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
+        else:
+            self.config_url = f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
 
         # DSM APIs
         self.dsm: SynologyDSM = None
@@ -609,13 +613,14 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        return {
-            "identifiers": {(DOMAIN, self._api.information.serial)},
-            "name": "Synology NAS",
-            "manufacturer": "Synology",
-            "model": self._api.information.model,
-            "sw_version": self._api.information.version_string,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._api.information.serial)},
+            name="Synology NAS",
+            manufacturer="Synology",
+            model=self._api.information.model,
+            sw_version=self._api.information.version_string,
+            configuration_url=self._api.config_url,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register entity for updates from API."""
@@ -677,13 +682,12 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        return {
-            "identifiers": {
-                (DOMAIN, f"{self._api.information.serial}_{self._device_id}")
-            },
-            "name": f"Synology NAS ({self._device_name} - {self._device_type})",
-            "manufacturer": self._device_manufacturer,
-            "model": self._device_model,
-            "sw_version": self._device_firmware,
-            "via_device": (DOMAIN, self._api.information.serial),
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, f"{self._api.information.serial}_{self._device_id}")},
+            name=f"Synology NAS ({self._device_name} - {self._device_type})",
+            manufacturer=self._device_manufacturer,
+            model=self._device_model,
+            sw_version=self._device_firmware,
+            via_device=(DOMAIN, self._api.information.serial),
+            configuration_url=self._api.config_url,
+        )

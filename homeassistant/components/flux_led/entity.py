@@ -41,7 +41,7 @@ class FluxEntity(CoordinatorEntity):
         if self.unique_id:
             self._attr_device_info = {
                 "connections": {(dr.CONNECTION_NETWORK_MAC, self.unique_id)},
-                ATTR_MODEL: f"0x{self._device.model_num:02X}",
+                ATTR_MODEL: self._device.model,
                 ATTR_NAME: self.name,
                 ATTR_SW_VERSION: str(self._device.version_num),
                 ATTR_MANUFACTURER: "FluxLED/Magic Home",

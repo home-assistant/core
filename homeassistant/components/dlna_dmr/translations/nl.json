@@ -17,6 +17,9 @@
             "confirm": {
                 "description": "Wilt u beginnen met instellen?"
             },
+            "import_turn_on": {
+                "description": "Zet het apparaat aan en klik op verzenden om door te gaan met de migratie"
+            },
             "user": {
                 "data": {
                     "url": "URL"

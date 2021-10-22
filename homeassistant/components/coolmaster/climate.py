@@ -120,8 +120,7 @@ class CoolmasterClimate(CoordinatorEntity, ClimateEntity):
     def hvac_mode(self):
         """Return hvac target hvac state."""
         mode = self._unit.mode
-        is_on = self._unit.is_on
-        if not is_on:
+        if not self._unit.is_on:
             return HVAC_MODE_OFF
 
         return CM_TO_HA_STATE[mode]
@@ -143,8 +142,7 @@ class CoolmasterClimate(CoordinatorEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperatures."""
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        if temp is not None:
+        if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             _LOGGER.debug("Setting temp of %s to %s", self.unique_id, str(temp))
             self._unit = await self._unit.set_thermostat(temp)
             self.async_write_ha_state()

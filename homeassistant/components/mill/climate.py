@@ -14,6 +14,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -83,12 +84,12 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
         self._id = heater.device_id
         self._attr_unique_id = heater.device_id
         self._attr_name = heater.name
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, heater.device_id)},
-            "name": self.name,
-            "manufacturer": MANUFACTURER,
-            "model": f"generation {1 if heater.is_gen1 else 2}",
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, heater.device_id)},
+            name=self.name,
+            manufacturer=MANUFACTURER,
+            model=f"generation {1 if heater.is_gen1 else 2}",
+        )
         if heater.is_gen1:
             self._attr_hvac_modes = [HVAC_MODE_HEAT]
         else:

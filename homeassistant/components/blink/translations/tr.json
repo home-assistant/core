@@ -11,6 +11,9 @@
         },
         "step": {
             "2fa": {
+                "data": {
+                    "2fa": "\u0130ki ad\u0131ml\u0131 kimlik do\u011frulama kodu"
+                },
                 "description": "E-postan\u0131za g\u00f6nderilen PIN kodunu girin"
             },
             "user": {

@@ -121,6 +121,19 @@ class FlowManager(abc.ABC):
         """Entry has finished executing its first step asynchronously."""
 
     @callback
+    def async_has_matching_flow(
+        self, handler: str, context: dict[str, Any], data: Any
+    ) -> bool:
+        """Check if an existing matching flow is in progress with the same handler, context, and data."""
+        return any(
+            flow
+            for flow in self._progress.values()
+            if flow.handler == handler
+            and flow.context["source"] == context["source"]
+            and flow.init_data == data
+        )
+
+    @callback
     def async_progress(self, include_uninitialized: bool = False) -> list[FlowResult]:
         """Return the flows in progress."""
         return [
@@ -173,6 +186,7 @@ class FlowManager(abc.ABC):
         flow.handler = handler
         flow.flow_id = uuid.uuid4().hex
         flow.context = context
+        flow.init_data = data
         self._progress[flow.flow_id] = flow
         result = await self._async_handle_step(flow, flow.init_step, data, init_done)
         return flow, result
@@ -318,23 +332,20 @@ class FlowHandler:
     # Set by _async_create_flow callback
     init_step = "init"
 
+    # The initial data that was used to start the flow
+    init_data: Any = None
+
     # Set by developer
     VERSION = 1
 
     @property
     def source(self) -> str | None:
         """Source that initialized the flow."""
-        if not hasattr(self, "context"):
-            return None
-
         return self.context.get("source", None)
 
     @property
     def show_advanced_options(self) -> bool:
         """If we should show advanced options."""
-        if not hasattr(self, "context"):
-            return False
-
         return self.context.get("show_advanced_options", False)
 
     @callback
