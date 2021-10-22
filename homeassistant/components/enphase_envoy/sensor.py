@@ -170,7 +170,7 @@ class Envoy(CoordinatorEntity, SensorEntity):
         return None
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
         if not self._device_serial_number:
             return None

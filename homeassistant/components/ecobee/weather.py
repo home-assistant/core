@@ -1,4 +1,6 @@
 """Support for displaying weather info from Ecobee API."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 from pyecobee.const import ECOBEE_STATE_UNKNOWN
@@ -66,9 +68,10 @@ class EcobeeWeather(WeatherEntity):
         return self.data.ecobee.get_thermostat(self._index)["identifier"]
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device information for the ecobee weather platform."""
         thermostat = self.data.ecobee.get_thermostat(self._index)
+        model: str | None
         try:
             model = f"{ECOBEE_MODEL_TO_NAME[thermostat['modelNumber']]} Thermostat"
         except KeyError:

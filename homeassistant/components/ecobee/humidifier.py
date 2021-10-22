@@ -1,4 +1,6 @@
 """Support for using humidifier with ecobee thermostats."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 from homeassistant.components.humidifier import HumidifierEntity
@@ -55,8 +57,9 @@ class EcobeeHumidifier(HumidifierEntity):
         return f"{self.thermostat['identifier']}"
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device information for the ecobee humidifier."""
+        model: str | None
         try:
             model = f"{ECOBEE_MODEL_TO_NAME[self.thermostat['modelNumber']]} Thermostat"
         except KeyError:

@@ -77,7 +77,7 @@ class EcobeeSensor(SensorEntity):
                 return f"{thermostat['identifier']}-{sensor['id']}-{self.device_class}"
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return device information for this sensor."""
         identifier = None
         model = None

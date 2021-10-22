@@ -128,7 +128,7 @@ class EcoNetEntity(Entity):
         return self._econet.connected
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._econet.device_id)},

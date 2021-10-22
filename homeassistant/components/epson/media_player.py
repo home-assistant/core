@@ -1,4 +1,6 @@
 """Support for Epson projector."""
+from __future__ import annotations
+
 import logging
 
 from epson_projector.const import (
@@ -138,7 +140,7 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
             self._state = STATE_OFF
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Get attributes about the device."""
         if not self._unique_id:
             return None

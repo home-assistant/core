@@ -367,8 +367,9 @@ class Thermostat(ClimateEntity):
         return self.thermostat["identifier"]
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device information for this ecobee thermostat."""
+        model: str | None
         try:
             model = f"{ECOBEE_MODEL_TO_NAME[self.thermostat['modelNumber']]} Thermostat"
         except KeyError:

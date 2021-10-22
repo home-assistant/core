@@ -463,7 +463,7 @@ class ElkAttachedEntity(ElkEntity):
     """An elk entity that is attached to the elk system."""
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Device info for the underlying ElkM1 system."""
         device_name = "ElkM1"
         if self._prefix:
