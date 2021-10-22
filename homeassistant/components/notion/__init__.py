@@ -17,7 +17,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
 )
-from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -147,14 +147,14 @@ class NotionEntity(CoordinatorEntity):
 
         bridge = self.coordinator.data["bridges"].get(bridge_id, {})
         sensor = self.coordinator.data["sensors"][sensor_id]
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, sensor["hardware_id"])},
-            "manufacturer": "Silicon Labs",
-            "model": sensor["hardware_revision"],
-            "name": str(sensor["name"]),
-            "sw_version": sensor["firmware_version"],
-            "via_device": (DOMAIN, bridge.get("hardware_id")),
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, sensor["hardware_id"])},
+            manufacturer="Silicon Labs",
+            model=sensor["hardware_revision"],
+            name=str(sensor["name"]),
+            sw_version=sensor["firmware_version"],
+            via_device=(DOMAIN, bridge.get("hardware_id")),
+        )
 
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._attr_name = f'{sensor["name"]}: {description.name}'
