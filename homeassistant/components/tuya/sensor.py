@@ -21,11 +21,8 @@ from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
-<<<<<<< Updated upstream
-=======
     DEVICE_CLASS_PM1,
     DEVICE_CLASS_PM10,
->>>>>>> Stashed changes
     DEVICE_CLASS_PM25,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
