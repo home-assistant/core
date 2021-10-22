@@ -205,8 +205,7 @@ class LogbookView(HomeAssistantView):
         else:
             period = int(period)
 
-        entity_ids = request.query.get("entity")
-        if entity_ids:
+        if entity_ids := request.query.get("entity"):
             try:
                 entity_ids = cv.entity_ids(entity_ids)
             except vol.Invalid:
