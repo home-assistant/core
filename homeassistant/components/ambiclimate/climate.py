@@ -21,6 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
     ATTR_VALUE,
@@ -149,11 +150,11 @@ class AmbiclimateEntity(ClimateEntity):
         self._store = store
         self._attr_unique_id = heater.device_id
         self._attr_name = heater.name
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Ambiclimate",
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="Ambiclimate",
+            name=self.name,
+        )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
