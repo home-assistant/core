@@ -89,6 +89,9 @@ class TemperatureSensor(SensorBase):
     def native_value(self) -> float:
         """Return the state of the sensor."""
         trait: TemperatureTrait = self._device.traits[TemperatureTrait.NAME]
+        # Round for display purposes because the API returns 5 decimal places. 
+        # This can be removed if the SDM API issue is fixed, or a frontend
+        # display fix is added for all integrations.
         return round(trait.ambient_temperature_celsius, 1)
 
 
