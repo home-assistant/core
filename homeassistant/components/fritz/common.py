@@ -480,6 +480,7 @@ class FritzBoxBaseEntity:
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return DeviceInfo(
+            configuration_url=f"http://{self._fritzbox_tools.host}",
             connections={(CONNECTION_NETWORK_MAC, self.mac_address)},
             identifiers={(DOMAIN, self._fritzbox_tools.unique_id)},
             manufacturer="AVM",
