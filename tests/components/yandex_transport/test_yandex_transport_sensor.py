@@ -20,6 +20,7 @@ def mock_requester():
     """Create a mock for YandexMapsRequester."""
     with patch("aioymaps.YandexMapsRequester") as requester:
         instance = requester.return_value
+        instance.set_new_session = AsyncMock()
         instance.get_stop_info = AsyncMock(return_value=REPLY)
         yield instance
 
