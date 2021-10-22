@@ -140,6 +140,12 @@ class DPCode(str, Enum):
     BRIGHT_VALUE_2 = "bright_value_2"
     BRIGHT_VALUE_3 = "bright_value_3"
     BRIGHT_VALUE_V2 = "bright_value_v2"
+    BRIGHTNESS_MAX_1 = "brightness_max_1"
+    BRIGHTNESS_MAX_2 = "brightness_max_2"
+    BRIGHTNESS_MAX_3 = "brightness_max_3"
+    BRIGHTNESS_MIN_1 = "brightness_min_1"
+    BRIGHTNESS_MIN_2 = "brightness_min_2"
+    BRIGHTNESS_MIN_3 = "brightness_min_3"
     C_F = "c_f"  # Temperature unit switching
     CH2O_STATE = "ch2o_state"
     CH2O_VALUE = "ch2o_value"

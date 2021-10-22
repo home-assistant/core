@@ -1136,6 +1136,7 @@ omit =
     homeassistant/components/tuya/sensor.py
     homeassistant/components/tuya/siren.py
     homeassistant/components/tuya/switch.py
+    homeassistant/components/tuya/util.py
     homeassistant/components/tuya/vacuum.py
     homeassistant/components/twentemilieu/const.py
     homeassistant/components/twentemilieu/sensor.py

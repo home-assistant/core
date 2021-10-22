@@ -78,6 +78,74 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
+    # Dimmer Switch
+    # https://developer.tuya.com/en/docs/iot/categorytgkg?id=Kaiuz0ktx7m0o
+    "tgkg": (
+        NumberEntityDescription(
+            key=DPCode.BRIGHTNESS_MIN_1,
+            name="Minimum Brightness",
+            icon="mdi:lightbulb-outline",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.BRIGHTNESS_MAX_1,
+            name="Maximum Brightness",
+            icon="mdi:lightbulb-on-outline",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.BRIGHTNESS_MIN_2,
+            name="Minimum Brightness 2",
+            icon="mdi:lightbulb-outline",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.BRIGHTNESS_MAX_2,
+            name="Maximum Brightness 2",
+            icon="mdi:lightbulb-on-outline",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.BRIGHTNESS_MIN_3,
+            name="Minimum Brightness 3",
+            icon="mdi:lightbulb-outline",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.BRIGHTNESS_MAX_3,
+            name="Maximum Brightness 3",
+            icon="mdi:lightbulb-on-outline",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
+    # Dimmer Switch
+    # https://developer.tuya.com/en/docs/iot/categorytgkg?id=Kaiuz0ktx7m0o
+    "tgq": (
+        NumberEntityDescription(
+            key=DPCode.BRIGHTNESS_MIN_1,
+            name="Minimum Brightness",
+            icon="mdi:lightbulb-outline",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.BRIGHTNESS_MAX_1,
+            name="Maximum Brightness",
+            icon="mdi:lightbulb-on-outline",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.BRIGHTNESS_MIN_2,
+            name="Minimum Brightness 2",
+            icon="mdi:lightbulb-outline",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.BRIGHTNESS_MAX_2,
+            name="Maximum Brightness 2",
+            icon="mdi:lightbulb-on-outline",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
     # Vibration Sensor
     # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
     "zd": (
