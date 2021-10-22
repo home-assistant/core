@@ -196,6 +196,9 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
     # Door Window Sensor
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48hm02l8m
     "mcs": BATTERY_SENSORS,
+    # Smoke Detector
+    # https://developer.tuya.com/en/docs/iot/categoryywbj?id=Kaiuz3f6sf952
+    "ywbj": BATTERY_SENSORS,
     # PIR Detector
     # https://developer.tuya.com/en/docs/iot/categorypir?id=Kaiuz3ss11b80
     "pir": BATTERY_SENSORS,
