@@ -1,4 +1,5 @@
 """Tests for the login flow."""
+from http import HTTPStatus
 from unittest.mock import patch
 
 from . import async_setup_auth
@@ -10,7 +11,7 @@ async def test_fetch_auth_providers(hass, aiohttp_client):
     """Test fetching auth providers."""
     client = await async_setup_auth(hass, aiohttp_client)
     resp = await client.get("/auth/providers")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert await resp.json() == [
         {"name": "Example", "type": "insecure_example", "id": None}
     ]
@@ -24,7 +25,7 @@ async def test_fetch_auth_providers_onboarding(hass, aiohttp_client):
         return_value=False,
     ):
         resp = await client.get("/auth/providers")
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
     assert await resp.json() == {
         "message": "Onboarding not finished",
         "code": "onboarding_required",
@@ -35,7 +36,7 @@ async def test_cannot_get_flows_in_progress(hass, aiohttp_client):
     """Test we cannot get flows in progress."""
     client = await async_setup_auth(hass, aiohttp_client, [])
     resp = await client.get("/auth/login_flow")
-    assert resp.status == 405
+    assert resp.status == HTTPStatus.METHOD_NOT_ALLOWED
 
 
 async def test_invalid_username_password(hass, aiohttp_client):
@@ -49,7 +50,7 @@ async def test_invalid_username_password(hass, aiohttp_client):
             "redirect_uri": CLIENT_REDIRECT_URI,
         },
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     step = await resp.json()
 
     # Incorrect username
@@ -62,7 +63,7 @@ async def test_invalid_username_password(hass, aiohttp_client):
         },
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     step = await resp.json()
 
     assert step["step_id"] == "init"
@@ -78,7 +79,7 @@ async def test_invalid_username_password(hass, aiohttp_client):
         },
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     step = await resp.json()
 
     assert step["step_id"] == "init"
@@ -101,7 +102,7 @@ async def test_login_exist_user(hass, aiohttp_client):
             "redirect_uri": CLIENT_REDIRECT_URI,
         },
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     step = await resp.json()
 
     resp = await client.post(
@@ -109,7 +110,7 @@ async def test_login_exist_user(hass, aiohttp_client):
         json={"client_id": CLIENT_ID, "username": "test-user", "password": "test-pass"},
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     step = await resp.json()
     assert step["type"] == "create_entry"
     assert len(step["result"]) > 1

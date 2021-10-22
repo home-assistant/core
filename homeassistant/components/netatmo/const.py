@@ -45,6 +45,10 @@ MODELS = {
     "public": MODEL_PUBLIC,
 }
 
+TYPE_SECURITY = "security"
+TYPE_ENERGY = "energy"
+TYPE_WEATHER = "weather"
+
 AUTH = "netatmo_auth"
 CONF_PUBLIC = "public_sensor_config"
 CAMERA_DATA = "netatmo_camera"

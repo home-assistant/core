@@ -57,6 +57,13 @@ BATTERY_SENSORS: tuple[SensorEntityDescription, ...] = (
         icon="mdi:battery",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
+    SensorEntityDescription(
+        key=DPCode.BATTERY_VALUE,
+        name="Battery",
+        device_class=DEVICE_CLASS_BATTERY,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
 )
 
 # All descriptions can be found here. Mostly the Integer data types in the
@@ -198,6 +205,18 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
     # Emergency Button
     # https://developer.tuya.com/en/docs/iot/categorysos?id=Kaiuz3oi6agjy
     "sos": BATTERY_SENSORS,
+    # Smoke Detector
+    # https://developer.tuya.com/en/docs/iot/categoryywbj?id=Kaiuz3f6sf952
+    "ywbj": (
+        SensorEntityDescription(
+            key=DPCode.SMOKE_SENSOR_VALUE,
+            name="Smoke Amount",
+            icon="mdi:smoke-detector",
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            device_class=STATE_CLASS_MEASUREMENT,
+        ),
+        *BATTERY_SENSORS,
+    ),
     # Vibration Sensor
     # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
     "zd": BATTERY_SENSORS,

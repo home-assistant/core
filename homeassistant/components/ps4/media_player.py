@@ -203,8 +203,7 @@ class PS4Device(MediaPlayerEntity):
             store = self._games[self._media_content_id]
 
             # If locked get attributes from file.
-            locked = store.get(ATTR_LOCKED)
-            if locked:
+            if store.get(ATTR_LOCKED):
                 self._media_title = store.get(ATTR_MEDIA_TITLE)
                 self._source = self._media_title
                 self._media_image = store.get(ATTR_MEDIA_IMAGE_URL)

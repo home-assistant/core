@@ -224,7 +224,7 @@ apprise==0.9.5.1
 aprslib==0.6.46
 
 # homeassistant.components.arcam_fmj
-arcam-fmj==0.7.0
+arcam-fmj==0.12.0
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.ssdp
@@ -449,7 +449,7 @@ google-api-python-client==1.6.4
 google-cloud-pubsub==2.1.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.3.7
+google-nest-sdm==0.3.8
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -1006,6 +1006,9 @@ pynx584==0.5
 # homeassistant.components.nzbget
 pynzbgetapi==0.2.0
 
+# homeassistant.components.octoprint
+pyoctoprintapi==0.1.6
+
 # homeassistant.components.openuv
 pyopenuv==2.2.1
 
@@ -1424,7 +1427,7 @@ yeelight==0.7.8
 youless-api==0.14
 
 # homeassistant.components.zeroconf
-zeroconf==0.36.8
+zeroconf==0.36.9
 
 # homeassistant.components.zha
 zha-quirks==0.0.62

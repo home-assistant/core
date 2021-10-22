@@ -33,6 +33,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
 )
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.service import (
     async_register_admin_service,
     verify_domain_control,
@@ -442,14 +443,13 @@ class SimpliSafeEntity(CoordinatorEntity):
             serial = system.serial
 
         self._attr_extra_state_attributes = {ATTR_SYSTEM_ID: system.system_id}
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, serial)},
-            "manufacturer": "SimpliSafe",
-            "model": model,
-            "name": device_name,
-            "via_device": (DOMAIN, system.system_id),
-        }
-
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, serial)},
+            manufacturer="SimpliSafe",
+            model=model,
+            name=device_name,
+            via_device=(DOMAIN, system.system_id),
+        )
         self._attr_name = f"{system.address} {device_name} {' '.join([w.title() for w in model.split('_')])}"
         self._attr_unique_id = serial
         self._device = device

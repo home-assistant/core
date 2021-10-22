@@ -26,7 +26,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
@@ -452,11 +452,11 @@ class ElkEntity(Entity):
         self._element_callback(self._element, {})
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Device info connecting via the ElkM1 system."""
-        return {
-            "via_device": (DOMAIN, f"{self._prefix}_system"),
-        }
+        return DeviceInfo(
+            via_device=(DOMAIN, f"{self._prefix}_system"),
+        )
 
 
 class ElkAttachedEntity(ElkEntity):

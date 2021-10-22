@@ -831,7 +831,12 @@ def _get_state_if_valid(hass: HomeAssistant, entity_id: str) -> TemplateState | 
 
 
 def _get_state(hass: HomeAssistant, entity_id: str) -> TemplateState | None:
-    return _get_template_state_from_state(hass, entity_id, hass.states.get(entity_id))
+    state_obj = _get_template_state_from_state(
+        hass, entity_id, hass.states.get(entity_id)
+    )
+    if state_obj is None:
+        _LOGGER.warning("Template warning: entity '%s' doesn't exist", entity_id)
+    return state_obj
 
 
 def _get_template_state_from_state(
@@ -1036,6 +1041,52 @@ def area_name(hass: HomeAssistant, lookup_value: str) -> str | None:
         return _get_area_name(area_reg, device.area_id)
 
     return None
+
+
+def area_entities(hass: HomeAssistant, area_id_or_name: str) -> Iterable[str]:
+    """Return entities for a given area ID or name."""
+    _area_id: str | None
+    # if area_name returns a value, we know the input was an ID, otherwise we
+    # assume it's a name, and if it's neither, we return early
+    if area_name(hass, area_id_or_name) is None:
+        _area_id = area_id(hass, area_id_or_name)
+    else:
+        _area_id = area_id_or_name
+    if _area_id is None:
+        return []
+    ent_reg = entity_registry.async_get(hass)
+    entity_ids = [
+        entry.entity_id
+        for entry in entity_registry.async_entries_for_area(ent_reg, _area_id)
+    ]
+    dev_reg = device_registry.async_get(hass)
+    # We also need to add entities tied to a device in the area that don't themselves
+    # have an area specified since they inherit the area from the device.
+    entity_ids.extend(
+        [
+            entity.entity_id
+            for device in device_registry.async_entries_for_area(dev_reg, _area_id)
+            for entity in entity_registry.async_entries_for_device(ent_reg, device.id)
+            if entity.area_id is None
+        ]
+    )
+    return entity_ids
+
+
+def area_devices(hass: HomeAssistant, area_id_or_name: str) -> Iterable[str]:
+    """Return device IDs for a given area ID or name."""
+    _area_id: str | None
+    # if area_name returns a value, we know the input was an ID, otherwise we
+    # assume it's a name, and if it's neither, we return early
+    if area_name(hass, area_id_or_name) is not None:
+        _area_id = area_id_or_name
+    else:
+        _area_id = area_id(hass, area_id_or_name)
+    if _area_id is None:
+        return []
+    dev_reg = device_registry.async_get(hass)
+    entries = device_registry.async_entries_for_area(dev_reg, _area_id)
+    return [entry.id for entry in entries]
 
 
 def closest(hass, *args):
@@ -1576,6 +1627,20 @@ def random_every_time(context, values):
     return random.choice(values)
 
 
+def today_at(time_str: str = "") -> datetime:
+    """Record fetching now where the time has been replaced with value."""
+    start = dt_util.start_of_local_day(datetime.now())
+
+    dttime = start.time() if time_str == "" else dt_util.parse_time(time_str)
+
+    if dttime:
+        return datetime.combine(start.date(), dttime, tzinfo=dt_util.DEFAULT_TIME_ZONE)
+
+    raise ValueError(
+        f"could not convert {type(time_str).__name__} to datetime: '{time_str}'"
+    )
+
+
 def relative_time(value):
     """
     Take a datetime and return its "age" as a string.
@@ -1685,6 +1750,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["sqrt"] = square_root
         self.filters["as_datetime"] = dt_util.parse_datetime
         self.filters["as_timestamp"] = forgiving_as_timestamp
+        self.filters["today_at"] = today_at
         self.filters["as_local"] = dt_util.as_local
         self.filters["timestamp_custom"] = timestamp_custom
         self.filters["timestamp_local"] = timestamp_local
@@ -1725,6 +1791,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["as_datetime"] = dt_util.parse_datetime
         self.globals["as_local"] = dt_util.as_local
         self.globals["as_timestamp"] = forgiving_as_timestamp
+        self.globals["today_at"] = today_at
         self.globals["relative_time"] = relative_time
         self.globals["timedelta"] = timedelta
         self.globals["strptime"] = strptime
@@ -1766,6 +1833,12 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.globals["area_name"] = hassfunction(area_name)
         self.filters["area_name"] = pass_context(self.globals["area_name"])
+
+        self.globals["area_entities"] = hassfunction(area_entities)
+        self.filters["area_entities"] = pass_context(self.globals["area_entities"])
+
+        self.globals["area_devices"] = hassfunction(area_devices)
+        self.filters["area_devices"] = pass_context(self.globals["area_devices"])
 
         if limited:
             # Only device_entities is available to limited templates, mark other

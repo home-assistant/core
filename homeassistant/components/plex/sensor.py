@@ -1,4 +1,6 @@
 """Support for Plex media server monitoring."""
+from __future__ import annotations
+
 import logging
 
 from plexapi.exceptions import NotFound
@@ -7,6 +9,7 @@ import requests.exceptions
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
     CONF_SERVER_IDENTIFIER,
@@ -102,19 +105,19 @@ class PlexSensor(SensorEntity):
         return self._server.sensor_attributes
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return a device description for device registry."""
         if self.unique_id is None:
             return None
 
-        return {
-            "identifiers": {(PLEX_DOMAIN, self._server.machine_identifier)},
-            "manufacturer": "Plex",
-            "model": "Plex Media Server",
-            "name": self._server.friendly_name,
-            "sw_version": self._server.version,
-            "configuration_url": f"{self._server.url_in_use}/web",
-        }
+        return DeviceInfo(
+            identifiers={(PLEX_DOMAIN, self._server.machine_identifier)},
+            manufacturer="Plex",
+            model="Plex Media Server",
+            name=self._server.friendly_name,
+            sw_version=self._server.version,
+            configuration_url=f"{self._server.url_in_use}/web",
+        )
 
 
 class PlexLibrarySectionSensor(SensorEntity):
@@ -193,16 +196,16 @@ class PlexLibrarySectionSensor(SensorEntity):
             self._attr_extra_state_attributes["last_added_timestamp"] = media.addedAt
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return a device description for device registry."""
         if self.unique_id is None:
             return None
 
-        return {
-            "identifiers": {(PLEX_DOMAIN, self.server_id)},
-            "manufacturer": "Plex",
-            "model": "Plex Media Server",
-            "name": self.server_name,
-            "sw_version": self._server.version,
-            "configuration_url": f"{self._server.url_in_use}/web",
-        }
+        return DeviceInfo(
+            identifiers={(PLEX_DOMAIN, self.server_id)},
+            manufacturer="Plex",
+            model="Plex Media Server",
+            name=self.server_name,
+            sw_version=self._server.version,
+            configuration_url=f"{self._server.url_in_use}/web",
+        )

@@ -1,5 +1,6 @@
 """The Bond integration."""
 from asyncio import TimeoutError as AsyncIOTimeoutError
+from http import HTTPStatus
 import logging
 from typing import Any
 
@@ -7,12 +8,7 @@ from aiohttp import ClientError, ClientResponseError, ClientTimeout
 from bond_api import Bond, BPUPSubscriptions, start_bpup
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_HOST,
-    EVENT_HOMEASSISTANT_STOP,
-    HTTP_UNAUTHORIZED,
-)
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -44,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await hub.setup()
     except ClientResponseError as ex:
-        if ex.status == HTTP_UNAUTHORIZED:
+        if ex.status == HTTPStatus.UNAUTHORIZED:
             _LOGGER.error("Bond token no longer valid: %s", ex)
             return False
         raise ConfigEntryNotReady from ex
