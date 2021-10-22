@@ -1,6 +1,7 @@
 """Support for Hass.io."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 import os
@@ -45,6 +46,7 @@ from .const import (
     ATTR_SLUG,
     ATTR_URL,
     ATTR_VERSION,
+    DATA_KEY_ADDONS,
     DOMAIN,
     SupervisorEntityModel,
 )
@@ -75,7 +77,8 @@ DATA_STORE = "hassio_store"
 DATA_INFO = "hassio_info"
 DATA_OS_INFO = "hassio_os_info"
 DATA_SUPERVISOR_INFO = "hassio_supervisor_info"
-HASSIO_UPDATE_INTERVAL = timedelta(minutes=55)
+DATA_ADDONS_STATS = "hassio_addons_stats"
+HASSIO_UPDATE_INTERVAL = timedelta(minutes=5)
 
 ADDONS_COORDINATOR = "hassio_addons_coordinator"
 
@@ -345,6 +348,16 @@ def get_supervisor_info(hass):
 
 @callback
 @bind_hass
+def get_addons_stats(hass):
+    """Return Addons stats.
+
+    Async friendly.
+    """
+    return hass.data.get(DATA_ADDONS_STATS)
+
+
+@callback
+@bind_hass
 def get_os_info(hass):
     """Return OS information.
 
@@ -499,25 +512,50 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             DOMAIN, service, async_service_handler, schema=settings.schema
         )
 
+    async def update_addon_stats(slug):
+        """Update single addon stats."""
+        stats = await hassio.get_addon_stats(slug)
+        return (slug, stats)
+
     async def update_info_data(now):
         """Update last available supervisor information."""
+
         try:
-            hass.data[DATA_INFO] = await hassio.get_info()
-            hass.data[DATA_HOST_INFO] = await hassio.get_host_info()
-            hass.data[DATA_STORE] = await hassio.get_store()
-            hass.data[DATA_CORE_INFO] = await hassio.get_core_info()
-            hass.data[DATA_SUPERVISOR_INFO] = await hassio.get_supervisor_info()
-            hass.data[DATA_OS_INFO] = await hassio.get_os_info()
+            (
+                hass.data[DATA_INFO],
+                hass.data[DATA_HOST_INFO],
+                hass.data[DATA_STORE],
+                hass.data[DATA_CORE_INFO],
+                hass.data[DATA_SUPERVISOR_INFO],
+                hass.data[DATA_OS_INFO],
+            ) = await asyncio.gather(
+                hassio.get_info(),
+                hassio.get_host_info(),
+                hassio.get_store(),
+                hassio.get_core_info(),
+                hassio.get_supervisor_info(),
+                hassio.get_os_info(),
+            )
+
+            addon_slugs = [
+                addon[ATTR_SLUG]
+                for addon in hass.data[DATA_SUPERVISOR_INFO].get("addons", [])
+            ]
+            stats_data = await asyncio.gather(
+                *[update_addon_stats(slug) for slug in addon_slugs]
+            )
+            hass.data[DATA_ADDONS_STATS] = dict(stats_data)
+
             if ADDONS_COORDINATOR in hass.data:
                 await hass.data[ADDONS_COORDINATOR].async_refresh()
         except HassioAPIError as err:
-            _LOGGER.warning("Can't read last version: %s", err)
+            _LOGGER.warning("Can't read Supervisor data: %s", err)
 
         hass.helpers.event.async_track_point_in_utc_time(
             update_info_data, utcnow() + HASSIO_UPDATE_INTERVAL
         )
 
-    # Fetch last version
+    # Fetch data
     await update_info_data(None)
 
     async def async_handle_core_service(call):
@@ -675,6 +713,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         """Update data via library."""
         new_data = {}
         supervisor_info = get_supervisor_info(self.hass)
+        addons_stats = get_addons_stats(self.hass)
         store_data = get_store(self.hass)
 
         repositories = {
@@ -682,9 +721,10 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             for repo in store_data.get("repositories", [])
         }
 
-        new_data["addons"] = {
+        new_data[DATA_KEY_ADDONS] = {
             addon[ATTR_SLUG]: {
                 **addon,
+                **((addons_stats or {}).get(addon[ATTR_SLUG], {})),
                 ATTR_REPOSITORY: repositories.get(
                     addon.get(ATTR_REPOSITORY), addon.get(ATTR_REPOSITORY, "")
                 ),
@@ -697,7 +737,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         # If this is the initial refresh, register all addons and return the dict
         if not self.data:
             async_register_addons_in_dev_reg(
-                self.entry_id, self.dev_reg, new_data["addons"].values()
+                self.entry_id, self.dev_reg, new_data[DATA_KEY_ADDONS].values()
             )
             if self.is_hass_os:
                 async_register_os_in_dev_reg(
@@ -711,13 +751,15 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             if self.entry_id in device.config_entries
             and device.model == SupervisorEntityModel.ADDON
         }
-        if stale_addons := supervisor_addon_devices - set(new_data["addons"]):
+        if stale_addons := supervisor_addon_devices - set(new_data[DATA_KEY_ADDONS]):
             async_remove_addons_from_dev_reg(self.dev_reg, stale_addons)
 
         # If there are new add-ons, we should reload the config entry so we can
         # create new devices and entities. We can return an empty dict because
         # coordinator will be recreated.
-        if self.data and set(new_data["addons"]) - set(self.data["addons"]):
+        if self.data and set(new_data[DATA_KEY_ADDONS]) - set(
+            self.data[DATA_KEY_ADDONS]
+        ):
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(self.entry_id)
             )
