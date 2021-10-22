@@ -572,7 +572,7 @@ TUYA_COUNTRIES = [
     Country("Iraq", "964"),
     Country("Ireland", "353", TuyaCloudOpenAPIEndpoint.EUROPE),
     Country("Isle of Man", "44-1624"),
-    Country("Israel", "972"),
+    Country("Israel", "972", TuyaCloudOpenAPIEndpoint.EUROPE),
     Country("Italy", "39", TuyaCloudOpenAPIEndpoint.EUROPE),
     Country("Ivory Coast", "225"),
     Country("Jamaica", "1-876"),
