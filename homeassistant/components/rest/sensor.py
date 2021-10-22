@@ -8,6 +8,7 @@ import voluptuous as vol
 import xmltodict
 
 from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
     SensorEntity,
@@ -60,6 +61,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     name = conf.get(CONF_NAME)
     unit = conf.get(CONF_UNIT_OF_MEASUREMENT)
     device_class = conf.get(CONF_DEVICE_CLASS)
+    state_class = conf.get(CONF_STATE_CLASS)
     json_attrs = conf.get(CONF_JSON_ATTRS)
     json_attrs_path = conf.get(CONF_JSON_ATTRS_PATH)
     value_template = conf.get(CONF_VALUE_TEMPLATE)
@@ -77,6 +79,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 name,
                 unit,
                 device_class,
+                state_class,
                 value_template,
                 json_attrs,
                 force_update,
@@ -97,6 +100,7 @@ class RestSensor(RestEntity, SensorEntity):
         name,
         unit_of_measurement,
         device_class,
+        state_class,
         value_template,
         json_attrs,
         force_update,
@@ -104,9 +108,7 @@ class RestSensor(RestEntity, SensorEntity):
         json_attrs_path,
     ):
         """Initialize the REST sensor."""
-        super().__init__(
-            coordinator, rest, name, device_class, resource_template, force_update
-        )
+        super().__init__(coordinator, rest, name, resource_template, force_update)
         self._state = None
         self._unit_of_measurement = unit_of_measurement
         self._value_template = value_template
@@ -114,10 +116,9 @@ class RestSensor(RestEntity, SensorEntity):
         self._attributes = None
         self._json_attrs_path = json_attrs_path
 
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
+        self._attr_native_unit_of_measurement = self._unit_of_measurement
+        self._attr_device_class = device_class
+        self._attr_state_class = state_class
 
     @property
     def native_value(self):
