@@ -24,7 +24,6 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import (
     CONF_ZIP_CODE,
-    DATA_COORDINATOR,
     DOMAIN,
     LOGGER,
     TYPE_ALLERGY_FORECAST,
@@ -45,7 +44,7 @@ PLATFORMS = ["sensor"]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up IQVIA as config entry."""
     hass.data.setdefault(DOMAIN, {})
-    coordinators = {}
+    hass.data[DOMAIN][entry.entry_id] = {}
 
     if not entry.unique_id:
         # If the config entry doesn't already have a unique ID, set one:
@@ -67,7 +66,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         return cast(Dict[str, Any], data)
 
+    coordinators = {}
     init_data_update_tasks = []
+
     for sensor_type, api_coro in (
         (TYPE_ALLERGY_FORECAST, client.allergens.extended),
         (TYPE_ALLERGY_INDEX, client.allergens.current),
@@ -93,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # API calls fail:
         raise ConfigEntryNotReady()
 
-    hass.data[DOMAIN].setdefault(DATA_COORDINATOR, {})[entry.entry_id] = coordinators
+    hass.data[DOMAIN][entry.entry_id] = coordinators
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
@@ -103,7 +104,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an OpenUV config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
+
     return unload_ok
 
 
@@ -139,7 +141,7 @@ class IQVIAEntity(CoordinatorEntity):
 
         if self.entity_description.key == TYPE_ALLERGY_FORECAST:
             self.async_on_remove(
-                self.hass.data[DOMAIN][DATA_COORDINATOR][self._entry.entry_id][
+                self.hass.data[DOMAIN][self._entry.entry_id][
                     TYPE_ALLERGY_OUTLOOK
                 ].async_add_listener(self._handle_coordinator_update)
             )
