@@ -146,9 +146,7 @@ async def async_get_custom_components(
     hass: HomeAssistant,
 ) -> dict[str, Integration]:
     """Return cached list of custom integrations."""
-    reg_or_evt = hass.data.get(DATA_CUSTOM_COMPONENTS)
-
-    if reg_or_evt is None:
+    if (reg_or_evt := hass.data.get(DATA_CUSTOM_COMPONENTS)) is None:
         evt = hass.data[DATA_CUSTOM_COMPONENTS] = asyncio.Event()
 
         reg = await _async_get_custom_components(hass)
@@ -543,8 +541,7 @@ class Integration:
 
 async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration:
     """Get an integration."""
-    cache = hass.data.get(DATA_INTEGRATIONS)
-    if cache is None:
+    if (cache := hass.data.get(DATA_INTEGRATIONS)) is None:
         if not _async_mount_config_dir(hass):
             raise IntegrationNotFound(domain)
         cache = hass.data[DATA_INTEGRATIONS] = {}
@@ -553,12 +550,11 @@ async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration
 
     if isinstance(int_or_evt, asyncio.Event):
         await int_or_evt.wait()
-        int_or_evt = cache.get(domain, _UNDEF)
 
         # When we have waited and it's _UNDEF, it doesn't exist
         # We don't cache that it doesn't exist, or else people can't fix it
         # and then restart, because their config will never be valid.
-        if int_or_evt is _UNDEF:
+        if (int_or_evt := cache.get(domain, _UNDEF)) is _UNDEF:
             raise IntegrationNotFound(domain)
 
     if int_or_evt is not _UNDEF:
@@ -630,8 +626,7 @@ def _load_file(
     with suppress(KeyError):
         return hass.data[DATA_COMPONENTS][comp_or_platform]  # type: ignore
 
-    cache = hass.data.get(DATA_COMPONENTS)
-    if cache is None:
+    if (cache := hass.data.get(DATA_COMPONENTS)) is None:
         if not _async_mount_config_dir(hass):
             return None
         cache = hass.data[DATA_COMPONENTS] = {}

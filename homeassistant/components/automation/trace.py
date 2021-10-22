@@ -8,12 +8,16 @@ from homeassistant.components.trace import ActionTrace, async_store_trace
 from homeassistant.components.trace.const import CONF_STORED_TRACES
 from homeassistant.core import Context
 
+from .const import DOMAIN
+
 # mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
 
 
 class AutomationTrace(ActionTrace):
     """Container for automation trace."""
+
+    _domain = DOMAIN
 
     def __init__(
         self,
@@ -23,8 +27,7 @@ class AutomationTrace(ActionTrace):
         context: Context,
     ) -> None:
         """Container for automation trace."""
-        key = ("automation", item_id)
-        super().__init__(key, config, blueprint_inputs, context)
+        super().__init__(item_id, config, blueprint_inputs, context)
         self._trigger_description: str | None = None
 
     def set_trigger_description(self, trigger: str) -> None:
@@ -33,6 +36,9 @@ class AutomationTrace(ActionTrace):
 
     def as_short_dict(self) -> dict[str, Any]:
         """Return a brief dictionary version of this AutomationTrace."""
+        if self._short_dict:
+            return self._short_dict
+
         result = super().as_short_dict()
         result["trigger"] = self._trigger_description
         return result

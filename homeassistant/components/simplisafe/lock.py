@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from simplipy.device.lock import Lock, LockStates
 from simplipy.errors import SimplipyError
-from simplipy.lock import Lock, LockStates
 from simplipy.system.v3 import SystemV3
 
 from homeassistant.components.lock import LockEntity
@@ -23,7 +23,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up SimpliSafe locks based on a config entry."""
-    simplisafe = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
+    simplisafe = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
     locks = []
 
     for system in simplisafe.systems.values():
@@ -42,16 +42,16 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
 
     def __init__(self, simplisafe: SimpliSafe, system: SystemV3, lock: Lock) -> None:
         """Initialize."""
-        super().__init__(simplisafe, system, lock.name, serial=lock.serial)
+        super().__init__(simplisafe, system, device=lock)
 
-        self._lock = lock
+        self._device: Lock
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         try:
-            await self._lock.lock()
+            await self._device.async_lock()
         except SimplipyError as err:
-            LOGGER.error('Error while locking "%s": %s', self._lock.name, err)
+            LOGGER.error('Error while locking "%s": %s', self._device.name, err)
             return
 
         self._attr_is_locked = True
@@ -60,9 +60,9 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         try:
-            await self._lock.unlock()
+            await self._device.async_unlock()
         except SimplipyError as err:
-            LOGGER.error('Error while unlocking "%s": %s', self._lock.name, err)
+            LOGGER.error('Error while unlocking "%s": %s', self._device.name, err)
             return
 
         self._attr_is_locked = False
@@ -73,10 +73,10 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
         """Update the entity with the provided REST API data."""
         self._attr_extra_state_attributes.update(
             {
-                ATTR_LOCK_LOW_BATTERY: self._lock.lock_low_battery,
-                ATTR_PIN_PAD_LOW_BATTERY: self._lock.pin_pad_low_battery,
+                ATTR_LOCK_LOW_BATTERY: self._device.lock_low_battery,
+                ATTR_PIN_PAD_LOW_BATTERY: self._device.pin_pad_low_battery,
             }
         )
 
-        self._attr_is_jammed = self._lock.state == LockStates.jammed
-        self._attr_is_locked = self._lock.state == LockStates.locked
+        self._attr_is_jammed = self._device.state == LockStates.jammed
+        self._attr_is_locked = self._device.state == LockStates.locked

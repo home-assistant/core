@@ -37,6 +37,7 @@ from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 TUYA_HVAC_TO_HA = {
     "auto": HVAC_MODE_HEAT_COOL,
     "cold": HVAC_MODE_COOL,
+    "freeze": HVAC_MODE_COOL,
     "heat": HVAC_MODE_HEAT,
     "hot": HVAC_MODE_HEAT,
     "manual": HVAC_MODE_HEAT_COOL,
@@ -251,7 +252,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         ):
             self._current_humidity_dpcode = DPCode.HUMIDITY_CURRENT
             self._current_humidity_type = IntegerTypeData.from_json(
-                self.device.status_range[DPCode.HUMIDITY_CURRENT].values
+                device.status_range[DPCode.HUMIDITY_CURRENT].values
             )
 
         # Determine dpcode to use for getting the current humidity
@@ -261,7 +262,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         ):
             self._current_humidity_dpcode = DPCode.HUMIDITY_CURRENT
             self._current_humidity_type = IntegerTypeData.from_json(
-                self.device.status_range[DPCode.HUMIDITY_CURRENT].values
+                device.status_range[DPCode.HUMIDITY_CURRENT].values
             )
 
         # Determine fan modes
@@ -271,12 +272,12 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         ):
             self._attr_supported_features |= SUPPORT_FAN_MODE
             self._attr_fan_modes = EnumTypeData.from_json(
-                self.device.status_range[DPCode.FAN_SPEED_ENUM].values
+                device.status_range[DPCode.FAN_SPEED_ENUM].values
             ).range
 
         # Determine swing modes
         if any(
-            dpcode in self.device.function
+            dpcode in device.function
             for dpcode in (
                 DPCode.SHAKE,
                 DPCode.SWING,
@@ -287,15 +288,14 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             self._attr_supported_features |= SUPPORT_SWING_MODE
             self._attr_swing_modes = [SWING_OFF]
             if any(
-                dpcode in self.device.function
-                for dpcode in (DPCode.SHAKE, DPCode.SWING)
+                dpcode in device.function for dpcode in (DPCode.SHAKE, DPCode.SWING)
             ):
                 self._attr_swing_modes.append(SWING_ON)
 
-            if DPCode.SWITCH_HORIZONTAL in self.device.function:
+            if DPCode.SWITCH_HORIZONTAL in device.function:
                 self._attr_swing_modes.append(SWING_HORIZONTAL)
 
-            if DPCode.SWITCH_VERTICAL in self.device.function:
+            if DPCode.SWITCH_VERTICAL in device.function:
                 self._attr_swing_modes.append(SWING_VERTICAL)
 
     def set_hvac_mode(self, hvac_mode: str) -> None:

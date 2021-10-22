@@ -21,6 +21,27 @@ from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 # default instructions set of each category end up being a number.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
+    # Human Presence Sensor
+    # https://developer.tuya.com/en/docs/iot/categoryhps?id=Kaiuz42yhn1hs
+    "hps": (
+        NumberEntityDescription(
+            key=DPCode.SENSITIVITY,
+            name="Sensitivity",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.NEAR_DETECTION,
+            name="Near Detection",
+            icon="mdi:signal-distance-variant",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.FAR_DETECTION,
+            name="Far Detection",
+            icon="mdi:signal-distance-variant",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
     # Coffee maker
     # https://developer.tuya.com/en/docs/iot/categorykfj?id=Kaiuz2p12pc7f
     "kfj": (
@@ -28,24 +49,24 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             key=DPCode.WATER_SET,
             name="Water Level",
             icon="mdi:cup-water",
-            entity_registry_enabled_default=False,
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.TEMP_SET,
             name="Temperature",
             icon="mdi:thermometer",
-            entity_registry_enabled_default=False,
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.WARM_TIME,
             name="Heat Preservation Time",
             icon="mdi:timer",
-            entity_registry_enabled_default=False,
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.POWDER_SET,
             name="Powder",
-            entity_registry_enabled_default=False,
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
     # Siren Alarm
@@ -54,6 +75,15 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.ALARM_TIME,
             name="Time",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
+    # Vibration Sensor
+    # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
+    "zd": (
+        NumberEntityDescription(
+            key=DPCode.SENSITIVITY,
+            name="Sensitivity",
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),

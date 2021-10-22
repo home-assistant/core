@@ -7,8 +7,11 @@ from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_DOOR,
+    DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_SAFETY,
+    DEVICE_CLASS_TAMPER,
+    DEVICE_CLASS_VIBRATION,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -27,7 +30,20 @@ from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 class TuyaBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes a Tuya binary sensor."""
 
+    # DPCode, to use. If None, the key will be used as DPCode
+    dpcode: DPCode | None = None
+
+    # Value to consider binary sensor to be "on"
     on_value: bool | float | int | str = True
+
+
+# Commonly used sensors
+TAMPER_BINARY_SENSOR = TuyaBinarySensorEntityDescription(
+    key=DPCode.TEMPER_ALARM,
+    name="Tamper",
+    device_class=DEVICE_CLASS_TAMPER,
+    entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+)
 
 
 # All descriptions can be found here. Mostly the Boolean data types in the
@@ -35,6 +51,35 @@ class TuyaBinarySensorEntityDescription(BinarySensorEntityDescription):
 # end up being a binary sensor.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
+    # CO2 Detector
+    # https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
+    "co2bj": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CO2_STATE,
+            device_class=DEVICE_CLASS_SAFETY,
+            on_value="alarm",
+        ),
+        TAMPER_BINARY_SENSOR,
+    ),
+    # Human Presence Sensor
+    # https://developer.tuya.com/en/docs/iot/categoryhps?id=Kaiuz42yhn1hs
+    "hps": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.PRESENCE_STATE,
+            device_class=DEVICE_CLASS_MOTION,
+            on_value="presence",
+        ),
+    ),
+    # Formaldehyde Detector
+    # Note: Not documented
+    "jqbj": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CH2O_STATE,
+            device_class=DEVICE_CLASS_SAFETY,
+            on_value="alarm",
+        ),
+        TAMPER_BINARY_SENSOR,
+    ),
     # Door Window Sensor
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48hm02l8m
     "mcs": (
@@ -42,11 +87,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             key=DPCode.DOORCONTACT_STATE,
             device_class=DEVICE_CLASS_DOOR,
         ),
-        TuyaBinarySensorEntityDescription(
-            key=DPCode.TEMPER_ALARM,
-            name="Tamper",
-            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        ),
+        TAMPER_BINARY_SENSOR,
     ),
     # Luminance Sensor
     # https://developer.tuya.com/en/docs/iot/categoryldcg?id=Kaiuz3n7u69l8
@@ -54,6 +95,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         TuyaBinarySensorEntityDescription(
             key=DPCode.TEMPER_ALARM,
             name="Tamper",
+            device_class=DEVICE_CLASS_TAMPER,
             entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         ),
     ),
@@ -65,11 +107,17 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             device_class=DEVICE_CLASS_MOTION,
             on_value="pir",
         ),
+        TAMPER_BINARY_SENSOR,
+    ),
+    # Water Detector
+    # https://developer.tuya.com/en/docs/iot/categorysj?id=Kaiuz3iub2sli
+    "sj": (
         TuyaBinarySensorEntityDescription(
-            key=DPCode.TEMPER_ALARM,
-            name="Tamper",
-            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            key=DPCode.WATERSENSOR_STATE,
+            device_class=DEVICE_CLASS_MOISTURE,
+            on_value="alarm",
         ),
+        TAMPER_BINARY_SENSOR,
     ),
     # Emergency Button
     # https://developer.tuya.com/en/docs/iot/categorysos?id=Kaiuz3oi6agjy
@@ -78,10 +126,31 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             key=DPCode.SOS_STATE,
             device_class=DEVICE_CLASS_SAFETY,
         ),
+        TAMPER_BINARY_SENSOR,
+    ),
+    # Vibration Sensor
+    # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
+    "zd": (
         TuyaBinarySensorEntityDescription(
-            key=DPCode.TEMPER_ALARM,
-            name="Tamper",
-            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            key=f"{DPCode.SHOCK_STATE}_vibration",
+            dpcode=DPCode.SHOCK_STATE,
+            name="Vibration",
+            device_class=DEVICE_CLASS_VIBRATION,
+            on_value="vibration",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.SHOCK_STATE}_drop",
+            dpcode=DPCode.SHOCK_STATE,
+            name="Drop",
+            icon="mdi:icon=package-down",
+            on_value="drop",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.SHOCK_STATE}_tilt",
+            dpcode=DPCode.SHOCK_STATE,
+            name="Tilt",
+            icon="mdi:spirit-level",
+            on_value="tilt",
         ),
     ),
 }
@@ -101,10 +170,8 @@ async def async_setup_entry(
             device = hass_data.device_manager.device_map[device_id]
             if descriptions := BINARY_SENSORS.get(device.category):
                 for description in descriptions:
-                    if (
-                        description.key in device.function
-                        or description.key in device.status
-                    ):
+                    dpcode = description.dpcode or description.key
+                    if dpcode in device.status:
                         entities.append(
                             TuyaBinarySensorEntity(
                                 device, hass_data.device_manager, description
@@ -139,9 +206,7 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if sensor is on."""
-        if self.entity_description.key not in self.device.status:
+        dpcode = self.entity_description.dpcode or self.entity_description.key
+        if dpcode not in self.device.status:
             return False
-        return (
-            self.device.status[self.entity_description.key]
-            == self.entity_description.on_value
-        )
+        return self.device.status[dpcode] == self.entity_description.on_value

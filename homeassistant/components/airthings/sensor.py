@@ -22,6 +22,7 @@ from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
     PRESSURE_MBAR,
     SIGNAL_STRENGTH_DECIBELS,
@@ -65,6 +66,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="battery",
         device_class=DEVICE_CLASS_BATTERY,
         native_unit_of_measurement=PERCENTAGE,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         name="Battery",
     ),
     "co2": SensorEntityDescription(
@@ -97,6 +99,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         name="RSSI",
         entity_registry_enabled_default=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     "pm1": SensorEntityDescription(
         key="pm1",
@@ -154,9 +157,10 @@ class AirthingsHeaterEnergySensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{airthings_device.device_id}_{entity_description.key}"
         self._id = airthings_device.device_id
         self._attr_device_info = DeviceInfo(
+            configuration_url="https://dashboard.airthings.com/",
             identifiers={(DOMAIN, airthings_device.device_id)},
-            manufacturer="Airthings",
             name=airthings_device.name,
+            manufacturer="Airthings",
         )
 
     @property

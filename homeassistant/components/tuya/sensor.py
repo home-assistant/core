@@ -18,8 +18,10 @@ from homeassistant.const import (
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_PM25,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
     DEVICE_CLASS_VOLTAGE,
     ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
@@ -31,28 +33,59 @@ from homeassistant.helpers.typing import StateType
 
 from . import HomeAssistantTuyaData
 from .base import EnumTypeData, IntegerTypeData, TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
+from .const import (
+    DEVICE_CLASS_UNITS,
+    DOMAIN,
+    TUYA_DISCOVERY_NEW,
+    DPCode,
+    UnitOfMeasurement,
+)
+
+# Commonly used battery sensors, that are re-used in the sensors down below.
+BATTERY_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=DPCode.BATTERY_PERCENTAGE,
+        name="Battery",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=DEVICE_CLASS_BATTERY,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key=DPCode.BATTERY_STATE,
+        name="Battery State",
+        icon="mdi:battery",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+)
 
 # All descriptions can be found here. Mostly the Integer data types in the
 # default status set of each category (that don't have a set instruction)
 # end up being a sensor.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
-    # Door Window Sensor
-    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48hm02l8m
-    "mcs": (
+    # CO2 Detector
+    # https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
+    "co2bj": (
         SensorEntityDescription(
-            key=DPCode.BATTERY_PERCENTAGE,
-            name="Battery",
-            native_unit_of_measurement=PERCENTAGE,
-            device_class=DEVICE_CLASS_BATTERY,
+            key=DPCode.HUMIDITY_VALUE,
+            name="Humidity",
+            device_class=DEVICE_CLASS_HUMIDITY,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
         SensorEntityDescription(
-            key=DPCode.BATTERY_STATE,
-            name="Battery State",
-            entity_registry_enabled_default=False,
+            key=DPCode.TEMP_CURRENT,
+            name="Temperature",
+            device_class=DEVICE_CLASS_TEMPERATURE,
+            state_class=STATE_CLASS_MEASUREMENT,
         ),
+        SensorEntityDescription(
+            key=DPCode.CO2_VALUE,
+            name="Carbon Dioxide",
+            device_class=DEVICE_CLASS_CO2,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        *BATTERY_SENSORS,
     ),
     # Switch
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
@@ -78,6 +111,46 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
             state_class=STATE_CLASS_MEASUREMENT,
             entity_registry_enabled_default=False,
         ),
+    ),
+    # Formaldehyde Detector
+    # Note: Not documented
+    "jqbj": (
+        SensorEntityDescription(
+            key=DPCode.CO2_VALUE,
+            name="Carbon Dioxide",
+            device_class=DEVICE_CLASS_CO2,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.VOC_VALUE,
+            name="Volatile Organic Compound",
+            device_class=DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.PM25_VALUE,
+            name="Particulate Matter 2.5 µm",
+            device_class=DEVICE_CLASS_PM25,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.VA_HUMIDITY,
+            name="Humidity",
+            device_class=DEVICE_CLASS_HUMIDITY,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.VA_TEMPERATURE,
+            name="Temperature",
+            device_class=DEVICE_CLASS_TEMPERATURE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.CH2O_VALUE,
+            name="Formaldehyde",
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        *BATTERY_SENSORS,
     ),
     # Luminance Sensor
     # https://developer.tuya.com/en/docs/iot/categoryldcg?id=Kaiuz3n7u69l8
@@ -107,59 +180,27 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
         ),
         SensorEntityDescription(
             key=DPCode.CO2_VALUE,
-            name="Carbon Dioxide (CO2)",
+            name="Carbon Dioxide",
             device_class=DEVICE_CLASS_CO2,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
-        SensorEntityDescription(
-            key=DPCode.BATTERY_PERCENTAGE,
-            name="Battery",
-            native_unit_of_measurement=PERCENTAGE,
-            device_class=DEVICE_CLASS_BATTERY,
-            state_class=STATE_CLASS_MEASUREMENT,
-            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        ),
-        SensorEntityDescription(
-            key=DPCode.BATTERY_STATE,
-            name="Battery State",
-            icon="mdi:battery",
-            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        ),
+        *BATTERY_SENSORS,
     ),
+    # Door Window Sensor
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48hm02l8m
+    "mcs": BATTERY_SENSORS,
     # PIR Detector
     # https://developer.tuya.com/en/docs/iot/categorypir?id=Kaiuz3ss11b80
-    "pir": (
-        SensorEntityDescription(
-            key=DPCode.BATTERY_PERCENTAGE,
-            name="Battery",
-            native_unit_of_measurement=PERCENTAGE,
-            device_class=DEVICE_CLASS_BATTERY,
-            state_class=STATE_CLASS_MEASUREMENT,
-            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        ),
-        SensorEntityDescription(
-            key=DPCode.BATTERY_STATE,
-            name="Battery State",
-            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        ),
-    ),
+    "pir": BATTERY_SENSORS,
+    # Water Detector
+    # https://developer.tuya.com/en/docs/iot/categorysj?id=Kaiuz3iub2sli
+    "sj": BATTERY_SENSORS,
     # Emergency Button
     # https://developer.tuya.com/en/docs/iot/categorysos?id=Kaiuz3oi6agjy
-    "sos": (
-        SensorEntityDescription(
-            key=DPCode.BATTERY_PERCENTAGE,
-            name="Battery",
-            native_unit_of_measurement=PERCENTAGE,
-            device_class=DEVICE_CLASS_BATTERY,
-            state_class=STATE_CLASS_MEASUREMENT,
-            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        ),
-        SensorEntityDescription(
-            key=DPCode.BATTERY_STATE,
-            name="Battery State",
-            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        ),
-    ),
+    "sos": BATTERY_SENSORS,
+    # Vibration Sensor
+    # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
+    "zd": BATTERY_SENSORS,
 }
 
 # Socket (duplicate of `kg`)
@@ -209,6 +250,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
 
     _status_range: TuyaDeviceStatusRange | None = None
     _type_data: IntegerTypeData | EnumTypeData | None = None
+    _uom: UnitOfMeasurement | None = None
 
     def __init__(
         self,
@@ -235,6 +277,37 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             elif self._status_range.type == "Enum":
                 self._type_data = EnumTypeData.from_json(self._status_range.values)
 
+        # Logic to ensure the set device class and API received Unit Of Measurement
+        # match Home Assistants requirements.
+        if (
+            self.device_class is not None
+            and description.native_unit_of_measurement is None
+        ):
+            # We cannot have a device class, if the UOM isn't set or the
+            # device class cannot be found in the validation mapping.
+            if (
+                self.unit_of_measurement is None
+                or self.device_class not in DEVICE_CLASS_UNITS
+            ):
+                self._attr_device_class = None
+                return
+
+            uoms = DEVICE_CLASS_UNITS[self.device_class]
+            self._uom = uoms.get(self.unit_of_measurement) or uoms.get(
+                self.unit_of_measurement.lower()
+            )
+
+            # Unknown unit of measurement, device class should not be used.
+            if self._uom is None:
+                self._attr_device_class = None
+                return
+
+            # Found unit of measurement, use the standardized Unit
+            # Use the target conversion unit (if set)
+            self._attr_native_unit_of_measurement = (
+                self._uom.conversion_unit or self._uom.unit
+            )
+
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
@@ -253,7 +326,10 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
 
         # Scale integer/float value
         if isinstance(self._type_data, IntegerTypeData):
-            return self._type_data.scale_value(value)
+            scaled_value = self._type_data.scale_value(value)
+            if self._uom and self._uom.conversion_fn is not None:
+                return self._uom.conversion_fn(scaled_value)
+            return scaled_value
 
         # Unexpected enum value
         if (

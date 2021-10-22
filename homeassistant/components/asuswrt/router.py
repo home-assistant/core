@@ -388,10 +388,11 @@ class AsusWrtRouter:
         """Return the device information."""
         return DeviceInfo(
             identifiers={(DOMAIN, "AsusWRT")},
-            manufacturer="Asus",
-            model=self._model,
             name=self._host,
+            model=self._model,
+            manufacturer="Asus",
             sw_version=self._sw_v,
+            configuration_url=f"http://{self._host}",
         )
 
     @property

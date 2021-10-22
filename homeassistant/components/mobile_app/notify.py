@@ -36,6 +36,7 @@ from .const import (
     ATTR_PUSH_RATE_LIMITS_SUCCESSFUL,
     ATTR_PUSH_TOKEN,
     ATTR_PUSH_URL,
+    ATTR_WEBHOOK_ID,
     DATA_CONFIG_ENTRIES,
     DATA_NOTIFY,
     DATA_PUSH_CHANNEL,
@@ -113,9 +114,7 @@ class MobileAppNotificationService(BaseNotificationService):
         ):
             data[ATTR_TITLE] = kwargs.get(ATTR_TITLE)
 
-        targets = kwargs.get(ATTR_TARGET)
-
-        if not targets:
+        if not (targets := kwargs.get(ATTR_TARGET)):
             targets = push_registrations(self.hass).values()
 
         if kwargs.get(ATTR_DATA) is not None:
@@ -147,6 +146,7 @@ class MobileAppNotificationService(BaseNotificationService):
         reg_info = {
             ATTR_APP_ID: entry_data[ATTR_APP_ID],
             ATTR_APP_VERSION: entry_data[ATTR_APP_VERSION],
+            ATTR_WEBHOOK_ID: target,
         }
         if ATTR_OS_VERSION in entry_data:
             reg_info[ATTR_OS_VERSION] = entry_data[ATTR_OS_VERSION]

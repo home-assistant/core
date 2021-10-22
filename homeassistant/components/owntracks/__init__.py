@@ -242,9 +242,7 @@ class OwnTracksContext:
     @callback
     def async_valid_accuracy(self, message):
         """Check if we should ignore this message."""
-        acc = message.get("acc")
-
-        if acc is None:
+        if (acc := message.get("acc")) is None:
             return False
 
         try:
