@@ -12,6 +12,7 @@ from tuya_iot.device import TuyaDeviceStatusRange
 from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -205,7 +206,7 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
             name="Energy",
             native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
             device_class=DEVICE_CLASS_ENERGY,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=STATE_CLASS_TOTAL_INCREASING,
         ),
         SensorEntityDescription(
             key=DPCode.PHASE_A + CODE_EX_CURRENT,
