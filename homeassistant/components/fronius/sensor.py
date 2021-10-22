@@ -36,6 +36,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -662,6 +663,8 @@ class InverterSensor(_FroniusSensorEntity):
         """Set up an individual Fronius inverter sensor."""
         self._name_extension = f"Inverter {solar_net_id}"
         super().__init__(coordinator, key, solar_net_id)
+        # device_info created in __init__ from a `GetInverterInfo` request
+        self._attr_device_info = coordinator.inverter_info.device_info
         self._attr_unique_id = f"{coordinator.inverter_info.unique_id}-{key}"
 
 
@@ -679,8 +682,11 @@ class LoggerSensor(_FroniusSensorEntity):
     ) -> None:
         """Set up an individual Fronius meter sensor."""
         super().__init__(coordinator, key, solar_net_id)
-
         logger_data = self._device_data()
+        # Logger device is already created in FroniusSolarNet._create_solar_net_device
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.solar_net.solar_net_device_id)}
+        )
         self._attr_name = f"Fronius Logger - {self.entity_description.name}"
         self._attr_native_unit_of_measurement = logger_data[key].get("unit")
         self._attr_unique_id = f'{logger_data["unique_identifier"]["value"]}-{key}'
@@ -700,8 +706,16 @@ class MeterSensor(_FroniusSensorEntity):
         """Set up an individual Fronius meter sensor."""
         self._name_extension = f"Meter {solar_net_id}"
         super().__init__(coordinator, key, solar_net_id)
+        meter_data = self._device_data()
 
-        self._attr_unique_id = f'{self._device_data()["serial"]["value"]}-{key}'
+        self._attr_device_info = DeviceInfo(
+            name=meter_data["model"]["value"],
+            identifiers={(DOMAIN, meter_data["serial"]["value"])},
+            manufacturer=meter_data["manufacturer"]["value"],
+            model=meter_data["model"]["value"],
+            via_device=(DOMAIN, coordinator.solar_net.solar_net_device_id),
+        )
+        self._attr_unique_id = f'{meter_data["serial"]["value"]}-{key}'
 
 
 class PowerFlowSensor(_FroniusSensorEntity):
@@ -718,6 +732,10 @@ class PowerFlowSensor(_FroniusSensorEntity):
     ) -> None:
         """Set up an individual Fronius power flow sensor."""
         super().__init__(coordinator, key, solar_net_id)
+        # SolarNet device is already created in FroniusSolarNet._create_solar_net_device
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.solar_net.solar_net_device_id)}
+        )
         self._attr_unique_id = (
             f"{coordinator.solar_net.solar_net_device_id}-power_flow-{key}"
         )
@@ -737,5 +755,13 @@ class StorageSensor(_FroniusSensorEntity):
         """Set up an individual Fronius storage sensor."""
         self._name_extension = f"Storage {solar_net_id}"
         super().__init__(coordinator, key, solar_net_id)
+        storage_data = self._device_data()
 
-        self._attr_unique_id = f'{self._device_data()["serial"]["value"]}-{key}'
+        self._attr_unique_id = f'{storage_data["serial"]["value"]}-{key}'
+        self._attr_device_info = DeviceInfo(
+            name=storage_data["model"]["value"],
+            identifiers={(DOMAIN, storage_data["serial"]["value"])},
+            manufacturer=storage_data["manufacturer"]["value"],
+            model=storage_data["model"]["value"],
+            via_device=(DOMAIN, coordinator.solar_net.solar_net_device_id),
+        )
