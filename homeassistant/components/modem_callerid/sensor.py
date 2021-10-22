@@ -63,7 +63,7 @@ async def async_setup_entry(
         ]
     )
 
-    async def _async_on_hass_stop(self) -> None:
+    async def _async_on_hass_stop() -> None:
         """HA is shutting down, close modem port."""
         if hass.data[DOMAIN][entry.entry_id][DATA_KEY_API]:
             await hass.data[DOMAIN][entry.entry_id][DATA_KEY_API].close()
@@ -104,7 +104,7 @@ class ModemCalleridSensor(SensorEntity):
         await super().async_added_to_hass()
 
     @callback
-    def _async_incoming_call(self, new_state) -> None:
+    def _async_incoming_call(self, new_state: str) -> None:
         """Handle new states."""
         self._attr_extra_state_attributes = {}
         if self.api.cid_name:
