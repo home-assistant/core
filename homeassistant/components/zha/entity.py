@@ -7,6 +7,7 @@ import functools
 import logging
 from typing import Any
 
+from homeassistant.const import ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, Event, callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.debounce import Debouncer
@@ -19,9 +20,9 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .core.const import (
+    ATTR_IEEE,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
-    ATTR_NAME,
     DATA_ZHA,
     DATA_ZHA_BRIDGE_ID,
     DOMAIN,
@@ -91,7 +92,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
     def device_info(self) -> entity.DeviceInfo:
         """Return a device description for device registry."""
         zha_device_info = self._zha_device.device_info
-        ieee = zha_device_info["ieee"]
+        ieee = zha_device_info[ATTR_IEEE]
         return entity.DeviceInfo(
             connections={(CONNECTION_ZIGBEE, ieee)},
             identifiers={(DOMAIN, ieee)},
