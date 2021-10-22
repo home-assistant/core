@@ -1,4 +1,5 @@
 """The tests for mqtt camera component."""
+from http import HTTPStatus
 import json
 from unittest.mock import patch
 
@@ -56,7 +57,7 @@ async def test_run_camera_setup(hass, hass_client_no_auth, mqtt_mock):
 
     client = await hass_client_no_auth()
     resp = await client.get(url)
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     body = await resp.text()
     assert body == "beer"
 
