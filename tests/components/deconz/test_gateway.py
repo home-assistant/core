@@ -176,6 +176,7 @@ async def test_gateway_setup(hass, aioclient_mock):
     )
 
     assert gateway_entry.configuration_url == f"http://{HOST}:{PORT}"
+    assert gateway_entry.entry_type == "service"
 
 
 async def test_gateway_device_no_configuration_url_when_addon(hass, aioclient_mock):
