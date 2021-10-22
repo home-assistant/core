@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -244,11 +244,11 @@ class PairedSensorEntity(GuardianEntity):
         super().__init__(entry, description)
 
         paired_sensor_uid = coordinator.data["uid"]
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, paired_sensor_uid)},
-            "name": f"Guardian Paired Sensor {paired_sensor_uid}",
-            "via_device": (DOMAIN, entry.data[CONF_UID]),
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, paired_sensor_uid)},
+            name=f"Guardian Paired Sensor {paired_sensor_uid}",
+            via_device=(DOMAIN, entry.data[CONF_UID]),
+        )
         self._attr_name = (
             f"Guardian Paired Sensor {paired_sensor_uid}: {description.name}"
         )
