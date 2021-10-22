@@ -22,7 +22,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import BRAND, CONF_SERIAL, CONF_UPNP_DESC, DEFAULT_ZONE, DOMAIN
 
-PLATFORMS = ["media_player"]
+PLATFORMS = ["media_player", "number", "select"]
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=60)
