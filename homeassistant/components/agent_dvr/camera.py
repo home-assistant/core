@@ -13,6 +13,7 @@ from homeassistant.components.mjpeg.camera import (
 )
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.helpers import entity_platform
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
     ATTRIBUTION,
@@ -79,13 +80,13 @@ class AgentCamera(MjpegCamera):
         self._attr_name = f"{device.client.name} {device.name}"
         self._attr_unique_id = f"{device._client.unique}_{device.typeID}_{device.id}"
         super().__init__(device_info)
-        self._attr_device_info = {
-            "identifiers": {(AGENT_DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Agent",
-            "model": "Camera",
-            "sw_version": device.client.version,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(AGENT_DOMAIN, self.unique_id)},
+            manufacturer="Agent",
+            model="Camera",
+            name=self.name,
+            sw_version=device.client.version,
+        )
 
     async def async_update(self):
         """Update our state from the Agent API."""
