@@ -51,7 +51,7 @@ class BroadlinkEntity(Entity):
         return self._device.update_manager.available
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
         return DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, self._device.mac_address)},
