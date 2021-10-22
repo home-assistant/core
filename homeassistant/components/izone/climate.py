@@ -429,8 +429,7 @@ class ControllerDevice(ClimateEntity):
         if not self.supported_features & SUPPORT_TARGET_TEMPERATURE:
             self.async_schedule_update_ha_state(True)
             return
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        if temp is not None:
+        if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             await self.wrap_and_catch(self._controller.set_temp_setpoint(temp))
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
@@ -627,8 +626,7 @@ class ZoneDevice(ClimateEntity):
         """Set new target temperature."""
         if self._zone.mode != Zone.Mode.AUTO:
             return
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        if temp is not None:
+        if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             await self._controller.wrap_and_catch(self._zone.set_temp_setpoint(temp))
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:

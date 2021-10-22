@@ -585,6 +585,11 @@ omit =
     homeassistant/components/logi_circle/const.py
     homeassistant/components/logi_circle/sensor.py
     homeassistant/components/london_underground/sensor.py
+    homeassistant/components/lookin/__init__.py
+    homeassistant/components/lookin/entity.py
+    homeassistant/components/lookin/models.py
+    homeassistant/components/lookin/sensor.py
+    homeassistant/components/lookin/climate.py
     homeassistant/components/loopenergy/sensor.py
     homeassistant/components/luci/device_tracker.py
     homeassistant/components/luftdaten/__init__.py
@@ -649,7 +654,6 @@ omit =
     homeassistant/components/mjpeg/camera.py
     homeassistant/components/mochad/*
     homeassistant/components/modbus/climate.py
-    homeassistant/components/modbus/modbus.py
     homeassistant/components/modem_callerid/sensor.py
     homeassistant/components/motion_blinds/__init__.py
     homeassistant/components/motion_blinds/const.py
@@ -901,6 +905,7 @@ omit =
     homeassistant/components/screenlogic/__init__.py
     homeassistant/components/screenlogic/binary_sensor.py
     homeassistant/components/screenlogic/climate.py
+    homeassistant/components/screenlogic/light.py
     homeassistant/components/screenlogic/sensor.py
     homeassistant/components/screenlogic/services.py
     homeassistant/components/screenlogic/switch.py
@@ -1101,7 +1106,13 @@ omit =
     homeassistant/components/tractive/entity.py
     homeassistant/components/tractive/sensor.py
     homeassistant/components/tractive/switch.py
-    homeassistant/components/tradfri/*
+    homeassistant/components/tradfri/__init__.py
+    homeassistant/components/tradfri/base_class.py
+    homeassistant/components/tradfri/config_flow.py
+    homeassistant/components/tradfri/cover.py
+    homeassistant/components/tradfri/light.py
+    homeassistant/components/tradfri/sensor.py
+    homeassistant/components/tradfri/switch.py
     homeassistant/components/trafikverket_train/sensor.py
     homeassistant/components/trafikverket_weatherstation/sensor.py
     homeassistant/components/transmission/sensor.py

@@ -652,6 +652,7 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch, SwitchEntity):
         self._fritzbox_tools = fritzbox_tools
 
         self._attributes = {}
+        self._attr_entity_category = ENTITY_CATEGORY_CONFIG
         self._network_num = network_num
 
         switch_info = SwitchInfo(

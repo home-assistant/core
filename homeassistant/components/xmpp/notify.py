@@ -313,8 +313,7 @@ async def async_send_message(  # noqa: C901
             filesize = len(input_file)
             _LOGGER.debug("Filesize is %s bytes", filesize)
 
-            content_type = mimetypes.guess_type(path)[0]
-            if content_type is None:
+            if (content_type := mimetypes.guess_type(path)[0]) is None:
                 content_type = DEFAULT_CONTENT_TYPE
             _LOGGER.debug("Content type is %s", content_type)
 

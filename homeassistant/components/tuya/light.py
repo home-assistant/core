@@ -105,6 +105,33 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             color_data=DPCode.COLOUR_DATA,
         ),
     ),
+    # Switch
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
+    "kg": (
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_BACKLIGHT,
+            name="Backlight",
+        ),
+    ),
+    # Dimmer Switch
+    # https://developer.tuya.com/en/docs/iot/categorytgkg?id=Kaiuz0ktx7m0o
+    "tgkg": (
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED_1,
+            name="Light",
+            brightness=DPCode.BRIGHT_VALUE_1,
+        ),
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED_2,
+            name="Light 2",
+            brightness=DPCode.BRIGHT_VALUE_2,
+        ),
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED_3,
+            name="Light 3",
+            brightness=DPCode.BRIGHT_VALUE_3,
+        ),
+    ),
     # Dimmer
     # https://developer.tuya.com/en/docs/iot/tgq?id=Kaof8ke9il4k4
     "tgq": (
@@ -130,7 +157,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             color_data=DPCode.COLOUR_DATA,
         ),
     ),
-    # Ceiling  Light
+    # Ceiling Light
     # https://developer.tuya.com/en/docs/iot/ceiling-light?id=Kaiuz03xxfc4r
     "xdd": (
         TuyaLightEntityDescription(
@@ -139,6 +166,10 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             brightness=DPCode.BRIGHT_VALUE,
             color_temp=DPCode.TEMP_VALUE,
             color_data=DPCode.COLOUR_DATA,
+        ),
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_NIGHT_LIGHT,
+            name="Night Light",
         ),
     ),
     # Remote Control
@@ -152,6 +183,14 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
         ),
     ),
 }
+
+# Socket (duplicate of `kg`)
+# https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
+LIGHTS["cz"] = LIGHTS["kg"]
+
+# Power Socket (duplicate of `kg`)
+# https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
+LIGHTS["pc"] = LIGHTS["kg"]
 
 
 @dataclass

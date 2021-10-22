@@ -35,10 +35,15 @@ class SonarrEntity(Entity):
         if self._device_id is None:
             return None
 
+        configuration_url = "https://" if self.sonarr.tls else "http://"
+        configuration_url += f"{self.sonarr.host}:{self.sonarr.port}"
+        configuration_url += self.sonarr.base_path.replace("/api", "")
+
         return {
             ATTR_IDENTIFIERS: {(DOMAIN, self._device_id)},
             ATTR_NAME: "Activity Sensor",
             ATTR_MANUFACTURER: "Sonarr",
             ATTR_SW_VERSION: self.sonarr.app.info.version,
             "entry_type": "service",
+            "configuration_url": configuration_url,
         }

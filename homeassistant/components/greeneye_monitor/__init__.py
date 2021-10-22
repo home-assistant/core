@@ -157,8 +157,7 @@ async def async_setup(hass, config):
                 }
             )
 
-        sensor_configs = monitor_config[CONF_TEMPERATURE_SENSORS]
-        if sensor_configs:
+        if sensor_configs := monitor_config[CONF_TEMPERATURE_SENSORS]:
             temperature_unit = {
                 CONF_TEMPERATURE_UNIT: sensor_configs[CONF_TEMPERATURE_UNIT]
             }

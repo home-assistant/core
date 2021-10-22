@@ -160,7 +160,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             registers.reverse()
         return registers
 
-    def unpack_structure_result(self, registers: list[int]) -> str:
+    def unpack_structure_result(self, registers: list[int]) -> str | None:
         """Convert registers to proper result."""
 
         registers = self._swap_registers(registers)
@@ -168,7 +168,13 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         if self._data_type == DataType.STRING:
             return byte_string.decode()
 
-        val = struct.unpack(self._structure, byte_string)
+        try:
+            val = struct.unpack(self._structure, byte_string)
+        except struct.error as err:
+            recv_size = len(registers) * 2
+            msg = f"Received {recv_size} bytes, unpack error {err}"
+            _LOGGER.error(msg)
+            return None
         # Issue: https://github.com/home-assistant/core/issues/41944
         # If unpack() returns a tuple greater than 1, don't try to process the value.
         # Instead, return the values of unpack(...) separated by commas.

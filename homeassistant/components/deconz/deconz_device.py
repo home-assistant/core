@@ -66,7 +66,9 @@ class DeconzDevice(DeconzBase, Entity):
         self.gateway.deconz_ids[self.entity_id] = self._device.deconz_id
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, self.gateway.signal_reachable, self.async_update_callback
+                self.hass,
+                self.gateway.signal_reachable,
+                self.async_update_connection_state,
             )
         )
 
@@ -77,9 +79,14 @@ class DeconzDevice(DeconzBase, Entity):
         self.gateway.entities[self.TYPE].remove(self.unique_id)
 
     @callback
-    def async_update_callback(self, force_update=False):
+    def async_update_connection_state(self):
+        """Update the device's available state."""
+        self.async_write_ha_state()
+
+    @callback
+    def async_update_callback(self):
         """Update the device's state."""
-        if not force_update and self.gateway.ignore_state_updates:
+        if self.gateway.ignore_state_updates:
             return
 
         self.async_write_ha_state()
