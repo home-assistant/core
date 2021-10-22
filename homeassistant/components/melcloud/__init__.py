@@ -134,8 +134,7 @@ class MelCloudDevice:
             "manufacturer": "Mitsubishi Electric",
             "name": self.name,
         }
-        unit_infos = self.device.units
-        if unit_infos is not None:
+        if (unit_infos := self.device.units) is not None:
             _device_info["model"] = ", ".join(
                 [x["model"] for x in unit_infos if x["model"]]
             )

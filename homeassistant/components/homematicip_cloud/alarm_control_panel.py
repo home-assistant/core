@@ -47,13 +47,13 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
-        return {
-            "identifiers": {(HMIPC_DOMAIN, f"ACP {self._home.id}")},
-            "name": self.name,
-            "manufacturer": "eQ-3",
-            "model": CONST_ALARM_CONTROL_PANEL_NAME,
-            "via_device": (HMIPC_DOMAIN, self._home.id),
-        }
+        return DeviceInfo(
+            identifiers={(HMIPC_DOMAIN, f"ACP {self._home.id}")},
+            name=self.name,
+            manufacturer="eQ-3",
+            model=CONST_ALARM_CONTROL_PANEL_NAME,
+            via_device=(HMIPC_DOMAIN, self._home.id),
+        )
 
     @property
     def state(self) -> str:

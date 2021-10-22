@@ -5,7 +5,7 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, PLATFORMS
 from .onewirehub import CannotConnect, OneWireHub
@@ -25,31 +25,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.entry_id] = onewirehub
 
-    async def cleanup_registry() -> None:
+    async def cleanup_registry(onewirehub: OneWireHub) -> None:
         # Get registries
-        device_registry, entity_registry = await asyncio.gather(
-            hass.helpers.device_registry.async_get_registry(),
-            hass.helpers.entity_registry.async_get_registry(),
-        )
+        device_registry = dr.async_get(hass)
         # Generate list of all device entries
-        registry_devices = [
-            entry.id
-            for entry in dr.async_entries_for_config_entry(
-                device_registry, entry.entry_id
-            )
-        ]
+        registry_devices = list(
+            dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+        )
         # Remove devices that don't belong to any entity
-        for device_id in registry_devices:
-            if not er.async_entries_for_device(
-                entity_registry, device_id, include_disabled_entities=True
-            ):
+        for device in registry_devices:
+            if not onewirehub.has_device_in_cache(device):
                 _LOGGER.debug(
-                    "Removing device `%s` because it does not have any entities",
-                    device_id,
+                    "Removing device `%s` because it is no longer available",
+                    device.id,
                 )
-                device_registry.async_remove_device(device_id)
+                device_registry.async_remove_device(device.id)
 
-    async def start_platforms() -> None:
+    async def start_platforms(onewirehub: OneWireHub) -> None:
         """Start platforms and cleanup devices."""
         # wait until all required platforms are ready
         await asyncio.gather(
@@ -58,9 +50,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 for platform in PLATFORMS
             )
         )
-        await cleanup_registry()
+        await cleanup_registry(onewirehub)
 
-    hass.async_create_task(start_platforms())
+    hass.async_create_task(start_platforms(onewirehub))
 
     return True
 

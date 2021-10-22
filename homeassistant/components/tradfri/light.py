@@ -53,10 +53,8 @@ async def async_setup_entry(
     if lights:
         async_add_entities(TradfriLight(light, api, gateway_id) for light in lights)
 
-    if config_entry.data[CONF_IMPORT_GROUPS]:
-        groups = tradfri_data[GROUPS]
-        if groups:
-            async_add_entities(TradfriGroup(group, api, gateway_id) for group in groups)
+    if config_entry.data[CONF_IMPORT_GROUPS] and (groups := tradfri_data[GROUPS]):
+        async_add_entities(TradfriGroup(group, api, gateway_id) for group in groups)
 
 
 class TradfriGroup(TradfriBaseClass, LightEntity):
@@ -259,8 +257,7 @@ class TradfriLight(TradfriBaseDevice, LightEntity):
                 transition_time = None
 
         # HSB can always be set, but color temp + brightness is bulb dependent
-        command = dimmer_command
-        if command is not None:
+        if (command := dimmer_command) is not None:
             command += color_command
         else:
             command = color_command

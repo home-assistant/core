@@ -21,6 +21,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import callback
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -96,14 +97,14 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
         return super()._handle_coordinator_update()
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info for this device."""
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Airtouch",
-            "model": "Airtouch 4",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            name=self.name,
+            manufacturer="Airtouch",
+            model="Airtouch 4",
+        )
 
     @property
     def unique_id(self):
@@ -211,14 +212,14 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
         return super()._handle_coordinator_update()
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info for this device."""
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Airtouch",
-            "model": "Airtouch 4",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="Airtouch",
+            model="Airtouch 4",
+            name=self.name,
+        )
 
     @property
     def unique_id(self):

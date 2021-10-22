@@ -255,9 +255,7 @@ class BrightnessTrait(_Trait):
 
     async def execute(self, command, data, params, challenge):
         """Execute a brightness command."""
-        domain = self.state.domain
-
-        if domain == light.DOMAIN:
+        if self.state.domain == light.DOMAIN:
             await self.hass.services.async_call(
                 light.DOMAIN,
                 light.SERVICE_TURN_ON,
@@ -348,9 +346,7 @@ class OnOffTrait(_Trait):
 
     async def execute(self, command, data, params, challenge):
         """Execute an OnOff command."""
-        domain = self.state.domain
-
-        if domain == group.DOMAIN:
+        if (domain := self.state.domain) == group.DOMAIN:
             service_domain = HA_DOMAIN
             service = SERVICE_TURN_ON if params["on"] else SERVICE_TURN_OFF
 
@@ -1156,9 +1152,7 @@ class HumiditySettingTrait(_Trait):
 
     async def execute(self, command, data, params, challenge):
         """Execute a humidity command."""
-        domain = self.state.domain
-
-        if domain == sensor.DOMAIN:
+        if self.state.domain == sensor.DOMAIN:
             raise SmartHomeError(
                 ERR_NOT_SUPPORTED, "Execute is not supported by sensor"
             )
@@ -1449,8 +1443,7 @@ class FanSpeedTrait(_Trait):
 
     async def execute_reverse(self, data, params):
         """Execute a Reverse command."""
-        domain = self.state.domain
-        if domain == fan.DOMAIN:
+        if self.state.domain == fan.DOMAIN:
             if self.state.attributes.get(fan.ATTR_DIRECTION) == fan.DIRECTION_FORWARD:
                 direction = fan.DIRECTION_REVERSE
             else:

@@ -414,8 +414,7 @@ async def async_setup_other_entry(hass, config_entry, async_add_entities):
                 for key, value in service.data.items()
                 if key != ATTR_ENTITY_ID
             }
-            entity_ids = service.data.get(ATTR_ENTITY_ID)
-            if entity_ids:
+            if entity_ids := service.data.get(ATTR_ENTITY_ID):
                 devices = [
                     device
                     for device in hass.data[DATA_KEY].values()

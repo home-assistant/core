@@ -73,8 +73,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Remove the entry which will invoke the callback to delete the app.
     hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
     # only create new flow if there isn't a pending one for SmartThings.
-    flows = hass.config_entries.flow.async_progress()
-    if not [flow for flow in flows if flow["handler"] == DOMAIN]:
+    if not hass.config_entries.flow.async_progress_by_handler(DOMAIN):
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_IMPORT}
@@ -181,8 +180,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if remove_entry:
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
         # only create new flow if there isn't a pending one for SmartThings.
-        flows = hass.config_entries.flow.async_progress()
-        if not [flow for flow in flows if flow["handler"] == DOMAIN]:
+        if not hass.config_entries.flow.async_progress_by_handler(DOMAIN):
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN, context={"source": SOURCE_IMPORT}
@@ -367,8 +365,7 @@ class DeviceBroker:
         for evt in req.events:
             if evt.event_type != EVENT_TYPE_DEVICE:
                 continue
-            device = self.devices.get(evt.device_id)
-            if not device:
+            if not (device := self.devices.get(evt.device_id)):
                 continue
             device.status.apply_attribute_update(
                 evt.component_id,

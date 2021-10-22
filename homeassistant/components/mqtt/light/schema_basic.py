@@ -656,8 +656,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        brightness = self._brightness
-        if brightness:
+        if brightness := self._brightness:
             brightness = min(round(brightness), 255)
         return brightness
 
@@ -728,10 +727,8 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     @property
     def white_value(self):
         """Return the white property."""
-        white_value = self._white_value
-        if white_value:
-            white_value = min(round(white_value), 255)
-            return white_value
+        if white_value := self._white_value:
+            return min(round(white_value), 255)
         return None
 
     @property
@@ -829,8 +826,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
         def render_rgbx(color, template, color_mode):
             """Render RGBx payload."""
-            tpl = self._command_templates[template]
-            if tpl:
+            if tpl := self._command_templates[template]:
                 keys = ["red", "green", "blue"]
                 if color_mode == COLOR_MODE_RGBW:
                     keys.append("white")

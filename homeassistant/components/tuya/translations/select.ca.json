@@ -1,0 +1,22 @@
+{
+    "state": {
+        "tuya__led_type": {
+            "halogen": "Halogen",
+            "incandescent": "Incandescent",
+            "led": "LED"
+        },
+        "tuya__light_mode": {
+            "none": "off",
+            "pos": "Indica la ubicaci\u00f3 de l'interruptor",
+            "relay": "Indiqueu l'estat, activat/desactivat"
+        },
+        "tuya__relay_status": {
+            "last": "Recorda l'\u00faltim estat",
+            "memory": "Recorda l'\u00faltim estat",
+            "off": "off",
+            "on": "on",
+            "power_off": "off",
+            "power_on": "on"
+        }
+    }
+}

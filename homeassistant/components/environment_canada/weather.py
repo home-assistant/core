@@ -202,8 +202,7 @@ def get_forecast(ec_data, forecast_type):
     forecast_array = []
 
     if forecast_type == "daily":
-        half_days = ec_data.daily_forecasts
-        if not half_days:
+        if not (half_days := ec_data.daily_forecasts):
             return None
 
         today = {

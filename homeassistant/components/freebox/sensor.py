@@ -163,16 +163,16 @@ class FreeboxDiskSensor(FreeboxSensor):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        return {
-            "identifiers": {(DOMAIN, self._disk["id"])},
-            "name": f"Disk {self._disk['id']}",
-            "model": self._disk["model"],
-            "sw_version": self._disk["firmware"],
-            "via_device": (
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._disk["id"])},
+            name=f"Disk {self._disk['id']}",
+            model=self._disk["model"],
+            sw_version=self._disk["firmware"],
+            via_device=(
                 DOMAIN,
                 self._router.mac,
             ),
-        }
+        )
 
     @callback
     def async_update_state(self) -> None:

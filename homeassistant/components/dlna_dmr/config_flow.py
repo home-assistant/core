@@ -352,8 +352,7 @@ class DlnaDmrOptionsFlowHandler(config_entries.OptionsFlow):
 
         def _add_with_suggestion(key: str, validator: Callable) -> None:
             """Add a field to with a suggested, not default, value."""
-            suggested_value = options.get(key)
-            if suggested_value is None:
+            if (suggested_value := options.get(key)) is None:
                 fields[vol.Optional(key)] = validator
             else:
                 fields[

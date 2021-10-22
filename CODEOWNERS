@@ -75,7 +75,7 @@ homeassistant/components/blink/* @fronzbot
 homeassistant/components/blueprint/* @home-assistant/core
 homeassistant/components/bmp280/* @belidzs
 homeassistant/components/bmw_connected_drive/* @gerard33 @rikroe
-homeassistant/components/bond/* @prystupa @joshs85
+homeassistant/components/bond/* @bdraco @prystupa @joshs85
 homeassistant/components/bosch_shc/* @tschamm
 homeassistant/components/braviatv/* @bieniu @Drafteed
 homeassistant/components/broadlink/* @danielhiversen @felipediel
@@ -181,7 +181,7 @@ homeassistant/components/foscam/* @skgsergio
 homeassistant/components/freebox/* @hacf-fr @Quentame
 homeassistant/components/freedompro/* @stefano055415
 homeassistant/components/fritz/* @mammuth @AaronDavidSchneider @chemelli74
-homeassistant/components/fritzbox/* @mib1185
+homeassistant/components/fritzbox/* @mib1185 @flabbamann
 homeassistant/components/fronius/* @nielstron @farmio
 homeassistant/components/frontend/* @home-assistant/frontend
 homeassistant/components/garages_amsterdam/* @klaasnicolaas
@@ -287,6 +287,7 @@ homeassistant/components/litterrobot/* @natekspencer
 homeassistant/components/local_ip/* @issacg
 homeassistant/components/logger/* @home-assistant/core
 homeassistant/components/logi_circle/* @evanjd
+homeassistant/components/lookin/* @ANMalko
 homeassistant/components/loopenergy/* @pavoni
 homeassistant/components/lovelace/* @home-assistant/frontend
 homeassistant/components/luci/* @mzdrale
@@ -365,6 +366,7 @@ homeassistant/components/nut/* @bdraco @ollo69
 homeassistant/components/nws/* @MatthewFlamm
 homeassistant/components/nzbget/* @chriscla
 homeassistant/components/obihai/* @dshokouhi
+homeassistant/components/octoprint/* @rfleming71
 homeassistant/components/ohmconnect/* @robbiet480
 homeassistant/components/ombi/* @larssont
 homeassistant/components/omnilogic/* @oliver84 @djtimca @gentoosu

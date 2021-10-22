@@ -396,8 +396,7 @@ async def get_tracker(hass: HomeAssistant, config: ConfigType) -> DeviceTracker:
     consider_home = conf.get(CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME)
 
     defaults = conf.get(CONF_NEW_DEVICE_DEFAULTS, {})
-    track_new = conf.get(CONF_TRACK_NEW)
-    if track_new is None:
+    if (track_new := conf.get(CONF_TRACK_NEW)) is None:
         track_new = defaults.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
 
     devices = await async_load_config(yaml_path, hass, consider_home)
@@ -492,8 +491,7 @@ class DeviceTracker:
             raise HomeAssistantError("Neither mac or device id passed in")
         if mac is not None:
             mac = str(mac).upper()
-            device = self.mac_to_dev.get(mac)
-            if device is None:
+            if (device := self.mac_to_dev.get(mac)) is None:
                 dev_id = util.slugify(host_name or "") or util.slugify(mac)
         else:
             dev_id = cv.slug(str(dev_id).lower())

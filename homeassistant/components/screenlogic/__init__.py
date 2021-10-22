@@ -5,7 +5,9 @@ import logging
 
 from screenlogicpy import ScreenLogicError, ScreenLogicGateway
 from screenlogicpy.const import (
+    DATA as SL_DATA,
     EQUIPMENT,
+    ON_OFF,
     SL_GATEWAY_IP,
     SL_GATEWAY_NAME,
     SL_GATEWAY_PORT,
@@ -16,6 +18,7 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -29,7 +32,10 @@ from .services import async_load_screenlogic_services, async_unload_screenlogic_
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["switch", "sensor", "binary_sensor", "climate"]
+
+REQUEST_REFRESH_DELAY = 1
+
+PLATFORMS = ["switch", "sensor", "binary_sensor", "climate", "light"]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -56,10 +62,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        "coordinator": coordinator,
-        "listener": entry.add_update_listener(async_update_listener),
-    }
+    entry.async_on_unload(entry.add_update_listener(async_update_listener))
+
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -134,6 +139,11 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=DOMAIN,
             update_interval=interval,
+            # We don't want an immediate refresh since the device
+            # takes a moment to reflect the state change
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
+            ),
         )
 
     def reconnect_gateway(self):
@@ -221,3 +231,44 @@ class ScreenlogicEntity(CoordinatorEntity):
             "manufacturer": "Pentair",
             "model": equipment_model,
         }
+
+
+class ScreenLogicCircuitEntity(ScreenlogicEntity):
+    """ScreenLogic circuit entity."""
+
+    @property
+    def name(self):
+        """Get the name of the switch."""
+        return f"{self.gateway_name} {self.circuit['name']}"
+
+    @property
+    def is_on(self) -> bool:
+        """Get whether the switch is in on state."""
+        return self.circuit["value"] == ON_OFF.ON
+
+    async def async_turn_on(self, **kwargs) -> None:
+        """Send the ON command."""
+        await self._async_set_circuit(ON_OFF.ON)
+
+    async def async_turn_off(self, **kwargs) -> None:
+        """Send the OFF command."""
+        await self._async_set_circuit(ON_OFF.OFF)
+
+    async def _async_set_circuit(self, circuit_value) -> None:
+        async with self.coordinator.api_lock:
+            success = await self.hass.async_add_executor_job(
+                self.gateway.set_circuit, self._data_key, circuit_value
+            )
+
+        if success:
+            _LOGGER.debug("Turn %s %s", self._data_key, circuit_value)
+            await self.coordinator.async_request_refresh()
+        else:
+            _LOGGER.warning(
+                "Failed to set_circuit %s %s", self._data_key, circuit_value
+            )
+
+    @property
+    def circuit(self):
+        """Shortcut to access the circuit."""
+        return self.coordinator.data[SL_DATA.KEY_CIRCUITS][self._data_key]

@@ -109,14 +109,14 @@ class TradfriBaseDevice(TradfriBaseClass):
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         info = self._device.device_info
-        return {
-            "identifiers": {(DOMAIN, self._device.id)},
-            "manufacturer": info.manufacturer,
-            "model": info.model_number,
-            "name": self._attr_name,
-            "sw_version": info.firmware_version,
-            "via_device": (DOMAIN, self._gateway_id),
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device.id)},
+            manufacturer=info.manufacturer,
+            model=info.model_number,
+            name=self._attr_name,
+            sw_version=info.firmware_version,
+            via_device=(DOMAIN, self._gateway_id),
+        )
 
     def _refresh(self, device: Device) -> None:
         """Refresh the device data."""

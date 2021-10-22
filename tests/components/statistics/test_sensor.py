@@ -123,6 +123,18 @@ class TestStatisticsSensor(unittest.TestCase):
         assert self.change == state.attributes.get("change")
         assert self.average_change == state.attributes.get("average_change")
 
+        # Source sensor is unavailable, unit and state should not change
+        self.hass.states.set("sensor.test_monitored", "unavailable", {})
+        self.hass.block_till_done()
+        new_state = self.hass.states.get("sensor.test")
+        assert state == new_state
+
+        # Source sensor has a non float state, unit and state should not change
+        self.hass.states.set("sensor.test_monitored", "beer", {})
+        self.hass.block_till_done()
+        new_state = self.hass.states.get("sensor.test")
+        assert state == new_state
+
     def test_sampling_size(self):
         """Test rotation."""
         assert setup_component(
@@ -380,6 +392,7 @@ class TestStatisticsSensor(unittest.TestCase):
         # check if the result is as in test_sensor_source()
         state = self.hass.states.get("sensor.test")
         assert str(self.mean) == state.state
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
     def test_initialize_from_database_with_maxage(self):
         """Test initializing the statistics from the database."""

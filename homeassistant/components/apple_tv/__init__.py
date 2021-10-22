@@ -22,7 +22,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import CONF_CREDENTIALS, CONF_IDENTIFIER, CONF_START_OFF, DOMAIN
 
@@ -91,9 +91,7 @@ class AppleTVEntity(Entity):
         self.manager = manager
         self._attr_name = name
         self._attr_unique_id = identifier
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, identifier)},
-        }
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, identifier)})
 
     async def async_added_to_hass(self):
         """Handle when an entity is about to be added to Home Assistant."""

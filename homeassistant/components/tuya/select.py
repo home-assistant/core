@@ -15,7 +15,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
 from .base import EnumTypeData, TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
+from .const import (
+    DEVICE_CLASS_TUYA_LED_TYPE,
+    DEVICE_CLASS_TUYA_LIGHT_MODE,
+    DEVICE_CLASS_TUYA_RELAY_STATUS,
+    DOMAIN,
+    TUYA_DISCOVERY_NEW,
+    DPCode,
+)
 
 # All descriptions can be found here. Mostly the Enum data types in the
 # default instructions set of each category end up being a select.
@@ -33,14 +40,33 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             key=DPCode.CONCENTRATION_SET,
             name="Concentration",
             icon="mdi:altimeter",
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
         SelectEntityDescription(
             key=DPCode.MATERIAL,
             name="Material",
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
         SelectEntityDescription(
             key=DPCode.MODE,
             name="Mode",
+            icon="mdi:coffee",
+        ),
+    ),
+    # Switch
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
+    "kg": (
+        SelectEntityDescription(
+            key=DPCode.RELAY_STATUS,
+            name="Power on Behavior",
+            device_class=DEVICE_CLASS_TUYA_RELAY_STATUS,
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.LIGHT_MODE,
+            name="Indicator Light Mode",
+            device_class=DEVICE_CLASS_TUYA_LIGHT_MODE,
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
     # Siren Alarm
@@ -57,7 +83,50 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
+    # Dimmer Switch
+    # https://developer.tuya.com/en/docs/iot/categorytgkg?id=Kaiuz0ktx7m0o
+    "tgkg": (
+        SelectEntityDescription(
+            key=DPCode.RELAY_STATUS,
+            name="Power on Behavior",
+            device_class=DEVICE_CLASS_TUYA_RELAY_STATUS,
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.LIGHT_MODE,
+            name="Indicator Light Mode",
+            device_class=DEVICE_CLASS_TUYA_LIGHT_MODE,
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.LED_TYPE_1,
+            name="Light Source Type",
+            device_class=DEVICE_CLASS_TUYA_LED_TYPE,
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.LED_TYPE_2,
+            name="Light 2 Source Type",
+            device_class=DEVICE_CLASS_TUYA_LED_TYPE,
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.LED_TYPE_3,
+            name="Light 3 Source Type",
+            device_class=DEVICE_CLASS_TUYA_LED_TYPE,
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
 }
+
+
+# Socket (duplicate of `kg`)
+# https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
+SELECTS["cz"] = SELECTS["kg"]
+
+# Power Socket (duplicate of `kg`)
+# https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
+SELECTS["pc"] = SELECTS["kg"]
 
 
 async def async_setup_entry(

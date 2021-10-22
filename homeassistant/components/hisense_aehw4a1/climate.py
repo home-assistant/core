@@ -325,8 +325,7 @@ class ClimateAehW4a1(ClimateEntity):
                 "AC at %s is off, could not set temperature", self._unique_id
             )
             return
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        if temp is not None:
+        if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             _LOGGER.debug("Setting temp of %s to %s", self._unique_id, temp)
             if self._preset_mode != PRESET_NONE:
                 await self.async_set_preset_mode(PRESET_NONE)

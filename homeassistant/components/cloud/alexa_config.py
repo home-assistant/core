@@ -2,6 +2,7 @@
 import asyncio
 from contextlib import suppress
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 import aiohttp
@@ -19,7 +20,6 @@ from homeassistant.const import (
     CLOUD_NEVER_EXPOSED_ENTITIES,
     ENTITY_CATEGORY_CONFIG,
     ENTITY_CATEGORY_DIAGNOSTIC,
-    HTTP_BAD_REQUEST,
 )
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import entity_registry as er, start
@@ -134,8 +134,7 @@ class AlexaConfig(alexa_config.AbstractConfig):
             return entity_expose
 
         entity_registry = er.async_get(self.hass)
-        registry_entry = entity_registry.async_get(entity_id)
-        if registry_entry:
+        if registry_entry := entity_registry.async_get(entity_id):
             auxiliary_entity = registry_entry.entity_category in (
                 ENTITY_CATEGORY_CONFIG,
                 ENTITY_CATEGORY_DIAGNOSTIC,
@@ -143,10 +142,8 @@ class AlexaConfig(alexa_config.AbstractConfig):
         else:
             auxiliary_entity = False
 
-        default_expose = self._prefs.alexa_default_expose
-
         # Backwards compat
-        if default_expose is None:
+        if (default_expose := self._prefs.alexa_default_expose) is None:
             return not auxiliary_entity
 
         return not auxiliary_entity and split_entity_id(entity_id)[0] in default_expose
@@ -164,7 +161,7 @@ class AlexaConfig(alexa_config.AbstractConfig):
         resp = await cloud_api.async_alexa_access_token(self._cloud)
         body = await resp.json()
 
-        if resp.status == HTTP_BAD_REQUEST:
+        if resp.status == HTTPStatus.BAD_REQUEST:
             if body["reason"] in ("RefreshTokenNotFound", "UnknownRegion"):
                 if self.should_report_state:
                     await self._prefs.async_update(alexa_report_state=False)

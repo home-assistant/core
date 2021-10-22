@@ -154,8 +154,7 @@ class Doods(ImageProcessingEntity):
                     continue
 
                 # If label confidence is not specified, use global confidence
-                label_confidence = label.get(CONF_CONFIDENCE)
-                if not label_confidence:
+                if not (label_confidence := label.get(CONF_CONFIDENCE)):
                     label_confidence = confidence
                 if label_name not in dconfig or dconfig[label_name] > label_confidence:
                     dconfig[label_name] = label_confidence
@@ -187,8 +186,7 @@ class Doods(ImageProcessingEntity):
         # Handle global detection area
         self._area = [0, 0, 1, 1]
         self._covers = True
-        area_config = config.get(CONF_AREA)
-        if area_config:
+        if area_config := config.get(CONF_AREA):
             self._area = [
                 area_config[CONF_TOP],
                 area_config[CONF_LEFT],
