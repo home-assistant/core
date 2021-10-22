@@ -6,6 +6,7 @@ from typing import Any
 
 from phone_modem import DEFAULT_PORT, PhoneModem
 import serial.tools.list_ports
+from serial.tools.list_ports_common import ListPortInfo
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -20,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = vol.Schema({"name": str, "device": str})
 
 
-def _generate_unique_id(port: Any) -> str:
+def _generate_unique_id(port: ListPortInfo) -> str:
     """Generate unique id from usb attributes."""
     return f"{port.vid}:{port.pid}_{port.serial_number}_{port.manufacturer}_{port.description}"
 
