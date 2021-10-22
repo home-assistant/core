@@ -358,7 +358,7 @@ def test_external_statistics(hass_recorder, caplog):
             "unit_of_measurement": "kWh",
         }
     ]
-    metadata = get_metadata(hass, ("test:total_energy_import",))
+    metadata = get_metadata(hass, statistic_ids=("test:total_energy_import",))
     assert metadata == {
         "test:total_energy_import": (
             1,
@@ -440,7 +440,7 @@ def test_external_statistics_errors(hass_recorder, caplog):
     wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
     assert list_statistic_ids(hass) == []
-    assert get_metadata(hass, ("test:total_energy_import",)) == {}
+    assert get_metadata(hass, statistic_ids=("test:total_energy_import",)) == {}
 
     # Attempt to insert statistics for the wrong domain
     external_metadata = {**_external_metadata, "source": "other"}
@@ -450,7 +450,7 @@ def test_external_statistics_errors(hass_recorder, caplog):
     wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
     assert list_statistic_ids(hass) == []
-    assert get_metadata(hass, ("test:total_energy_import",)) == {}
+    assert get_metadata(hass, statistic_ids=("test:total_energy_import",)) == {}
 
     # Attempt to insert statistics for an naive starting time
     external_metadata = {**_external_metadata}
@@ -463,7 +463,7 @@ def test_external_statistics_errors(hass_recorder, caplog):
     wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
     assert list_statistic_ids(hass) == []
-    assert get_metadata(hass, ("test:total_energy_import",)) == {}
+    assert get_metadata(hass, statistic_ids=("test:total_energy_import",)) == {}
 
     # Attempt to insert statistics for an invalid starting time
     external_metadata = {**_external_metadata}
@@ -473,7 +473,7 @@ def test_external_statistics_errors(hass_recorder, caplog):
     wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
     assert list_statistic_ids(hass) == []
-    assert get_metadata(hass, ("test:total_energy_import",)) == {}
+    assert get_metadata(hass, statistic_ids=("test:total_energy_import",)) == {}
 
 
 def record_states(hass):
