@@ -78,7 +78,7 @@ class DoorSensorBattery(GoGoGate2Entity, SensorEntity):
         return door.voltage  # This is a percentage, not an absolute voltage
 
     @property
-    def state_class(self) -> str | None:
+    def state_class(self) -> str:
         """Return the Measurement State Class."""
         return STATE_CLASS_MEASUREMENT
 
