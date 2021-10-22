@@ -137,11 +137,11 @@ class AuroraEntity(CoordinatorEntity):
         self._attr_icon = icon
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Define the device based on name."""
         return DeviceInfo(
             entry_type="service",
-            identifiers={(DOMAIN, self.unique_id)},
+            identifiers={(DOMAIN, str(self.unique_id))},
             manufacturer="NOAA",
             model="Aurora Visibility Sensor",
             name=self.coordinator.name,
