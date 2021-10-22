@@ -20,7 +20,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from homeassistant.helpers.event import async_call_later
 
 from .const import (
@@ -223,11 +223,11 @@ class AmbientWeatherEntity(Entity):
     ) -> None:
         """Initialize the entity."""
         self._ambient = ambient
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, mac_address)},
-            "name": station_name,
-            "manufacturer": "Ambient Weather",
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, mac_address)},
+            manufacturer="Ambient Weather",
+            name=station_name,
+        )
         self._attr_name = f"{station_name}_{description.name}"
         self._attr_unique_id = f"{mac_address}_{description.key}"
         self._mac_address = mac_address

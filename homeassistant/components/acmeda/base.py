@@ -81,7 +81,7 @@ class AcmedaBase(entity.Entity):
         """Return the device info."""
         return entity.DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
-            name=self.roller.name,
             manufacturer="Rollease Acmeda",
+            name=self.roller.name,
             via_device=(DOMAIN, self.roller.hub.id),
         )

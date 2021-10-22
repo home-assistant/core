@@ -196,14 +196,14 @@ class AdGuardHomeDeviceEntity(AdGuardHomeEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this AdGuard Home instance."""
-        return {
-            "identifiers": {
+        return DeviceInfo(
+            entry_type="service",
+            identifiers={
                 (DOMAIN, self.adguard.host, self.adguard.port, self.adguard.base_path)  # type: ignore
             },
-            "name": "AdGuard Home",
-            "manufacturer": "AdGuard Team",
-            "sw_version": self.hass.data[DOMAIN][self._entry.entry_id].get(
+            manufacturer="AdGuard Team",
+            name="AdGuard Home",
+            sw_version=self.hass.data[DOMAIN][self._entry.entry_id].get(
                 DATA_ADGUARD_VERSION
             ),
-            "entry_type": "service",
-        }
+        )
