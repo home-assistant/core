@@ -260,9 +260,10 @@ class DPCode(str, Enum):
     PM10_VALUE = "pm10_value"
     VA_BATTERY = "va_battery"
     FORWARD_ENERGY_TOTAL = "forward_energy_total"
-    PHASE_A_ELECTRICCURRENT="phase_a_electricCurrent"
-    PHASE_B_POWER="phase_b_power"
-    PHASE_C_VOLTAGE="phase_c_voltage"
+    PHASE_A_ELECTRICCURRENT = "phase_a_electricCurrent"
+    PHASE_B_POWER = "phase_b_power"
+    PHASE_C_VOLTAGE = "phase_c_voltage"
+
 
 @dataclass
 class UnitOfMeasurement:
