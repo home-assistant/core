@@ -333,10 +333,11 @@ def _pgsql_numerical_version_to_string(version_num):
         minor = version_num % 10000 // 100
         patch = version_num % 100
         return f"{major}.{minor}.{patch}"
-    else:
-        major = version_num // 10000
-        patch = version_num % 10000
-        return f"{major}.{patch}"
+
+    # version 10+
+    major = version_num // 10000
+    patch = version_num % 10000
+    return f"{major}.{patch}"
 
 
 def setup_connection_for_dialect(
