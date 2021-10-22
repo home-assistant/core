@@ -32,6 +32,7 @@ from .const import (
     ATTR_STATE_NEXTCHANGE_ENDPERIOD,
     ATTR_STATE_NEXTCHANGE_PRESET_MODE,
     ATTR_STATE_NEXTCHANGE_TEMPERATURE,
+    ATTR_STATE_SCHEDULED_PRESET_MODE,
     ATTR_STATE_SUMMER_MODE,
     ATTR_STATE_TEMPERATURE_COMFORT,
     ATTR_STATE_TEMPERATURE_ECO,
@@ -208,6 +209,11 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
                 PRESET_ECO
                 if attrs[ATTR_STATE_NEXTCHANGE_TEMPERATURE]
                 == attrs[ATTR_STATE_TEMPERATURE_ECO]
+                else PRESET_COMFORT
+            )
+            attrs[ATTR_STATE_SCHEDULED_PRESET_MODE] = (
+                PRESET_ECO
+                if attrs[ATTR_STATE_NEXTCHANGE_PRESET_MODE] == PRESET_COMFORT
                 else PRESET_COMFORT
             )
 
