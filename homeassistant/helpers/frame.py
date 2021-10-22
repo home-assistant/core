@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import functools
 import logging
 from traceback import FrameSummary, extract_stack
-from typing import Any, Callable, TypeVar, cast
+from typing import Any, TypeVar, cast
 
 from homeassistant.exceptions import HomeAssistantError
 

@@ -185,7 +185,7 @@ async def async_remove_orphaned_entries_service(gateway):
 
     # Don't remove the Gateway service entry
     gateway_service = device_registry.async_get_device(
-        identifiers={(DOMAIN, gateway.api.config.bridgeid)}, connections=set()
+        identifiers={(DOMAIN, gateway.api.config.bridge_id)}, connections=set()
     )
     if gateway_service.id in devices_to_be_removed:
         devices_to_be_removed.remove(gateway_service.id)

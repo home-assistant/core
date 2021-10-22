@@ -37,10 +37,10 @@ def get_config_entry(hass):
 class OAuthFixture:
     """Simulate the oauth flow used by the config flow."""
 
-    def __init__(self, hass, aiohttp_client, aioclient_mock):
+    def __init__(self, hass, hass_client_no_auth, aioclient_mock):
         """Initialize OAuthFixture."""
         self.hass = hass
-        self.aiohttp_client = aiohttp_client
+        self.hass_client = hass_client_no_auth
         self.aioclient_mock = aioclient_mock
 
     async def async_oauth_flow(self, result):
@@ -63,7 +63,7 @@ class OAuthFixture:
             "&access_type=offline&prompt=consent"
         )
 
-        client = await self.aiohttp_client(self.hass.http.app)
+        client = await self.hass_client()
         resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
         assert resp.status == 200
         assert resp.headers["content-type"] == "text/html; charset=utf-8"
@@ -86,9 +86,9 @@ class OAuthFixture:
 
 
 @pytest.fixture
-async def oauth(hass, aiohttp_client, aioclient_mock, current_request_with_host):
+async def oauth(hass, hass_client_no_auth, aioclient_mock, current_request_with_host):
     """Create the simulated oauth flow."""
-    return OAuthFixture(hass, aiohttp_client, aioclient_mock)
+    return OAuthFixture(hass, hass_client_no_auth, aioclient_mock)
 
 
 async def test_full_flow(hass, oauth):

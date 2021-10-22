@@ -1,5 +1,7 @@
 """Constant values for the AEMET OpenData component."""
+from __future__ import annotations
 
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
@@ -40,9 +42,6 @@ DEFAULT_NAME = "AEMET"
 DOMAIN = "aemet"
 ENTRY_NAME = "name"
 ENTRY_WEATHER_COORDINATOR = "weather_coordinator"
-SENSOR_NAME = "sensor_name"
-SENSOR_UNIT = "sensor_unit"
-SENSOR_DEVICE_CLASS = "sensor_device_class"
 
 ATTR_API_CONDITION = "condition"
 ATTR_API_FORECAST_DAILY = "forecast-daily"
@@ -200,118 +199,145 @@ FORECAST_MODE_ATTR_API = {
     FORECAST_MODE_HOURLY: ATTR_API_FORECAST_HOURLY,
 }
 
-FORECAST_SENSOR_TYPES = {
-    ATTR_FORECAST_CONDITION: {
-        SENSOR_NAME: "Condition",
-    },
-    ATTR_FORECAST_PRECIPITATION: {
-        SENSOR_NAME: "Precipitation",
-        SENSOR_UNIT: PRECIPITATION_MILLIMETERS_PER_HOUR,
-    },
-    ATTR_FORECAST_PRECIPITATION_PROBABILITY: {
-        SENSOR_NAME: "Precipitation probability",
-        SENSOR_UNIT: PERCENTAGE,
-    },
-    ATTR_FORECAST_TEMP: {
-        SENSOR_NAME: "Temperature",
-        SENSOR_UNIT: TEMP_CELSIUS,
-        SENSOR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-    },
-    ATTR_FORECAST_TEMP_LOW: {
-        SENSOR_NAME: "Temperature Low",
-        SENSOR_UNIT: TEMP_CELSIUS,
-        SENSOR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-    },
-    ATTR_FORECAST_TIME: {
-        SENSOR_NAME: "Time",
-        SENSOR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
-    },
-    ATTR_FORECAST_WIND_BEARING: {
-        SENSOR_NAME: "Wind bearing",
-        SENSOR_UNIT: DEGREE,
-    },
-    ATTR_FORECAST_WIND_SPEED: {
-        SENSOR_NAME: "Wind speed",
-        SENSOR_UNIT: SPEED_KILOMETERS_PER_HOUR,
-    },
-}
-WEATHER_SENSOR_TYPES = {
-    ATTR_API_CONDITION: {
-        SENSOR_NAME: "Condition",
-    },
-    ATTR_API_HUMIDITY: {
-        SENSOR_NAME: "Humidity",
-        SENSOR_UNIT: PERCENTAGE,
-        SENSOR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
-    },
-    ATTR_API_PRESSURE: {
-        SENSOR_NAME: "Pressure",
-        SENSOR_UNIT: PRESSURE_HPA,
-        SENSOR_DEVICE_CLASS: DEVICE_CLASS_PRESSURE,
-    },
-    ATTR_API_RAIN: {
-        SENSOR_NAME: "Rain",
-        SENSOR_UNIT: PRECIPITATION_MILLIMETERS_PER_HOUR,
-    },
-    ATTR_API_RAIN_PROB: {
-        SENSOR_NAME: "Rain probability",
-        SENSOR_UNIT: PERCENTAGE,
-    },
-    ATTR_API_SNOW: {
-        SENSOR_NAME: "Snow",
-        SENSOR_UNIT: PRECIPITATION_MILLIMETERS_PER_HOUR,
-    },
-    ATTR_API_SNOW_PROB: {
-        SENSOR_NAME: "Snow probability",
-        SENSOR_UNIT: PERCENTAGE,
-    },
-    ATTR_API_STATION_ID: {
-        SENSOR_NAME: "Station ID",
-    },
-    ATTR_API_STATION_NAME: {
-        SENSOR_NAME: "Station name",
-    },
-    ATTR_API_STATION_TIMESTAMP: {
-        SENSOR_NAME: "Station timestamp",
-        SENSOR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
-    },
-    ATTR_API_STORM_PROB: {
-        SENSOR_NAME: "Storm probability",
-        SENSOR_UNIT: PERCENTAGE,
-    },
-    ATTR_API_TEMPERATURE: {
-        SENSOR_NAME: "Temperature",
-        SENSOR_UNIT: TEMP_CELSIUS,
-        SENSOR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-    },
-    ATTR_API_TEMPERATURE_FEELING: {
-        SENSOR_NAME: "Temperature feeling",
-        SENSOR_UNIT: TEMP_CELSIUS,
-        SENSOR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-    },
-    ATTR_API_TOWN_ID: {
-        SENSOR_NAME: "Town ID",
-    },
-    ATTR_API_TOWN_NAME: {
-        SENSOR_NAME: "Town name",
-    },
-    ATTR_API_TOWN_TIMESTAMP: {
-        SENSOR_NAME: "Town timestamp",
-        SENSOR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
-    },
-    ATTR_API_WIND_BEARING: {
-        SENSOR_NAME: "Wind bearing",
-        SENSOR_UNIT: DEGREE,
-    },
-    ATTR_API_WIND_MAX_SPEED: {
-        SENSOR_NAME: "Wind max speed",
-        SENSOR_UNIT: SPEED_KILOMETERS_PER_HOUR,
-    },
-    ATTR_API_WIND_SPEED: {
-        SENSOR_NAME: "Wind speed",
-        SENSOR_UNIT: SPEED_KILOMETERS_PER_HOUR,
-    },
-}
+FORECAST_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=ATTR_FORECAST_CONDITION,
+        name="Condition",
+    ),
+    SensorEntityDescription(
+        key=ATTR_FORECAST_PRECIPITATION,
+        name="Precipitation",
+        native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
+    ),
+    SensorEntityDescription(
+        key=ATTR_FORECAST_PRECIPITATION_PROBABILITY,
+        name="Precipitation probability",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    SensorEntityDescription(
+        key=ATTR_FORECAST_TEMP,
+        name="Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key=ATTR_FORECAST_TEMP_LOW,
+        name="Temperature Low",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key=ATTR_FORECAST_TIME,
+        name="Time",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key=ATTR_FORECAST_WIND_BEARING,
+        name="Wind bearing",
+        native_unit_of_measurement=DEGREE,
+    ),
+    SensorEntityDescription(
+        key=ATTR_FORECAST_WIND_SPEED,
+        name="Wind speed",
+        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+    ),
+)
+WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=ATTR_API_CONDITION,
+        name="Condition",
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_HUMIDITY,
+        name="Humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=DEVICE_CLASS_HUMIDITY,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_PRESSURE,
+        name="Pressure",
+        native_unit_of_measurement=PRESSURE_HPA,
+        device_class=DEVICE_CLASS_PRESSURE,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_RAIN,
+        name="Rain",
+        native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_RAIN_PROB,
+        name="Rain probability",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_SNOW,
+        name="Snow",
+        native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_SNOW_PROB,
+        name="Snow probability",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_STATION_ID,
+        name="Station ID",
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_STATION_NAME,
+        name="Station name",
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_STATION_TIMESTAMP,
+        name="Station timestamp",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_STORM_PROB,
+        name="Storm probability",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_TEMPERATURE,
+        name="Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_TEMPERATURE_FEELING,
+        name="Temperature feeling",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_TOWN_ID,
+        name="Town ID",
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_TOWN_NAME,
+        name="Town name",
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_TOWN_TIMESTAMP,
+        name="Town timestamp",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_WIND_BEARING,
+        name="Wind bearing",
+        native_unit_of_measurement=DEGREE,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_WIND_MAX_SPEED,
+        name="Wind max speed",
+        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_WIND_SPEED,
+        name="Wind speed",
+        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+    ),
+)
 
 WIND_BEARING_MAP = {
     "C": None,

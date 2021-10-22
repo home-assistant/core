@@ -1,6 +1,5 @@
 """Support for Tractive device trackers."""
 
-import asyncio
 import logging
 
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
@@ -9,8 +8,10 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
+    CLIENT,
     DOMAIN,
     SERVER_UNAVAILABLE,
+    TRACKABLES,
     TRACKER_HARDWARE_STATUS_UPDATED,
     TRACKER_POSITION_UPDATED,
 )
@@ -21,29 +22,23 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Tractive device trackers."""
-    client = hass.data[DOMAIN][entry.entry_id]
+    client = hass.data[DOMAIN][entry.entry_id][CLIENT]
+    trackables = hass.data[DOMAIN][entry.entry_id][TRACKABLES]
 
-    trackables = await client.trackable_objects()
+    entities = []
 
-    entities = await asyncio.gather(
-        *(create_trackable_entity(client, trackable) for trackable in trackables)
-    )
+    for item in trackables:
+        entities.append(
+            TractiveDeviceTracker(
+                client.user_id,
+                item.trackable,
+                item.tracker_details,
+                item.hw_info,
+                item.pos_report,
+            )
+        )
 
     async_add_entities(entities)
-
-
-async def create_trackable_entity(client, trackable):
-    """Create an entity instance."""
-    trackable = await trackable.details()
-    tracker = client.tracker(trackable["device_id"])
-
-    tracker_details, hw_info, pos_report = await asyncio.gather(
-        tracker.details(), tracker.hw_info(), tracker.pos_report()
-    )
-
-    return TractiveDeviceTracker(
-        client.user_id, trackable, tracker_details, hw_info, pos_report
-    )
 
 
 class TractiveDeviceTracker(TractiveEntity, TrackerEntity):

@@ -11,10 +11,13 @@ import zigpy.zcl.clusters.smartenergy as smartenergy
 from homeassistant.components.sensor import DOMAIN
 import homeassistant.config as config_util
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
+    DEVICE_CLASS_ENERGY,
+    ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
@@ -23,6 +26,8 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    VOLUME_CUBIC_FEET,
+    VOLUME_CUBIC_METERS,
 )
 from homeassistant.helpers import restore_state
 from homeassistant.util import dt as dt_util
@@ -31,9 +36,13 @@ from .common import (
     async_enable_traffic,
     async_test_rejoin,
     find_entity_id,
+    find_entity_ids,
     send_attribute_report,
     send_attributes_report,
 )
+from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
+
+ENTITY_ID_PREFIX = "sensor.fakemanufacturer_fakemodel_e769900a_{}"
 
 
 async def async_test_humidity(hass, cluster, entity_id):
@@ -64,9 +73,38 @@ async def async_test_illuminance(hass, cluster, entity_id):
 
 
 async def async_test_metering(hass, cluster, entity_id):
-    """Test metering sensor."""
+    """Test Smart Energy metering sensor."""
     await send_attributes_report(hass, cluster, {1025: 1, 1024: 12345, 1026: 100})
-    assert_state(hass, entity_id, "12345.0", "unknown")
+    assert_state(hass, entity_id, "12345.0", None)
+    assert hass.states.get(entity_id).attributes["status"] == "NO_ALARMS"
+    assert hass.states.get(entity_id).attributes["device_type"] == "Electric Metering"
+
+    await send_attributes_report(hass, cluster, {1024: 12346, "status": 64 + 8})
+    assert_state(hass, entity_id, "12346.0", None)
+    assert (
+        hass.states.get(entity_id).attributes["status"]
+        == "SERVICE_DISCONNECT|POWER_FAILURE"
+    )
+
+    await send_attributes_report(
+        hass, cluster, {"status": 32, "metering_device_type": 1}
+    )
+    # currently only statuses for electric meters are supported
+    assert hass.states.get(entity_id).attributes["status"] == "<bitmap8.32: 32>"
+
+
+async def async_test_smart_energy_summation(hass, cluster, entity_id):
+    """Test SmartEnergy Summation delivered sensro."""
+
+    await send_attributes_report(
+        hass, cluster, {1025: 1, "current_summ_delivered": 12321, 1026: 100}
+    )
+    assert_state(hass, entity_id, "12.32", VOLUME_CUBIC_METERS)
+    assert hass.states.get(entity_id).attributes["status"] == "NO_ALARMS"
+    assert hass.states.get(entity_id).attributes["device_type"] == "Electric Metering"
+    assert (
+        hass.states.get(entity_id).attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_ENERGY
+    )
 
 
 async def async_test_electrical_measurement(hass, cluster, entity_id):
@@ -105,40 +143,81 @@ async def async_test_powerconfiguration(hass, cluster, entity_id):
 
 
 @pytest.mark.parametrize(
-    "cluster_id, test_func, report_count, read_plug",
+    "cluster_id, entity_suffix, test_func, report_count, read_plug, unsupported_attrs",
     (
-        (measurement.RelativeHumidity.cluster_id, async_test_humidity, 1, None),
+        (
+            measurement.RelativeHumidity.cluster_id,
+            "humidity",
+            async_test_humidity,
+            1,
+            None,
+            None,
+        ),
         (
             measurement.TemperatureMeasurement.cluster_id,
+            "temperature",
             async_test_temperature,
             1,
             None,
+            None,
         ),
-        (measurement.PressureMeasurement.cluster_id, async_test_pressure, 1, None),
+        (
+            measurement.PressureMeasurement.cluster_id,
+            "pressure",
+            async_test_pressure,
+            1,
+            None,
+            None,
+        ),
         (
             measurement.IlluminanceMeasurement.cluster_id,
+            "illuminance",
             async_test_illuminance,
             1,
+            None,
             None,
         ),
         (
             smartenergy.Metering.cluster_id,
+            "smartenergy_metering",
             async_test_metering,
             1,
             {
                 "demand_formatting": 0xF9,
                 "divisor": 1,
+                "metering_device_type": 0x00,
                 "multiplier": 1,
+                "status": 0x00,
             },
+            {"current_summ_delivered"},
+        ),
+        (
+            smartenergy.Metering.cluster_id,
+            "smartenergy_metering_summation_delivered",
+            async_test_smart_energy_summation,
+            1,
+            {
+                "demand_formatting": 0xF9,
+                "divisor": 1000,
+                "metering_device_type": 0x00,
+                "multiplier": 1,
+                "status": 0x00,
+                "summa_formatting": 0b1_0111_010,
+                "unit_of_measure": 0x01,
+            },
+            {"instaneneous_demand"},
         ),
         (
             homeautomation.ElectricalMeasurement.cluster_id,
+            "electrical_measurement",
             async_test_electrical_measurement,
             1,
+            None,
             None,
         ),
         (
             general.PowerConfiguration.cluster_id,
+            "power",
             async_test_powerconfiguration,
             2,
             {
@@ -146,6 +225,7 @@ async def async_test_powerconfiguration(hass, cluster, entity_id):
                 "battery_voltage": 29,
                 "battery_quantity": 3,
             },
+            None,
         ),
     ),
 )
@@ -154,28 +234,33 @@ async def test_sensor(
     zigpy_device_mock,
     zha_device_joined_restored,
     cluster_id,
+    entity_suffix,
     test_func,
     report_count,
     read_plug,
+    unsupported_attrs,
 ):
     """Test zha sensor platform."""
 
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                "in_clusters": [cluster_id, general.Basic.cluster_id],
-                "out_cluster": [],
-                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_INPUT: [cluster_id, general.Basic.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
             }
         }
     )
     cluster = zigpy_device.endpoints[1].in_clusters[cluster_id]
+    if unsupported_attrs:
+        for attr in unsupported_attrs:
+            cluster.add_unsupported_attribute(attr)
     if cluster_id == smartenergy.Metering.cluster_id:
         # this one is mains powered
         zigpy_device.node_desc.mac_capability_flags |= 0b_0000_0100
     cluster.PLUGGED_ATTR_READS = read_plug
     zha_device = await zha_device_joined_restored(zigpy_device)
-    entity_id = await find_entity_id(DOMAIN, zha_device, hass)
+    entity_id = ENTITY_ID_PREFIX.format(entity_suffix)
 
     await async_enable_traffic(hass, [zha_device], enabled=False)
     await hass.async_block_till_done()
@@ -284,12 +369,12 @@ async def test_temp_uom(
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                "in_clusters": [
+                SIG_EP_INPUT: [
                     measurement.TemperatureMeasurement.cluster_id,
                     general.Basic.cluster_id,
                 ],
-                "out_cluster": [],
-                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
             }
         }
     )
@@ -327,9 +412,9 @@ async def test_electrical_measurement_init(
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                "in_clusters": [cluster_id, general.Basic.cluster_id],
-                "out_cluster": [],
-                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_INPUT: [cluster_id, general.Basic.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
             }
         }
     )
@@ -371,3 +456,197 @@ async def test_electrical_measurement_init(
     assert channel.divisor == 10
     assert channel.multiplier == 20
     assert hass.states.get(entity_id).state == "60.0"
+
+
+@pytest.mark.parametrize(
+    "cluster_id, unsupported_attributes, entity_ids, missing_entity_ids",
+    (
+        (
+            smartenergy.Metering.cluster_id,
+            {
+                "instantaneous_demand",
+            },
+            {
+                "smartenergy_metering_summation_delivered",
+            },
+            {
+                "smartenergy_metering",
+            },
+        ),
+        (
+            smartenergy.Metering.cluster_id,
+            {"instantaneous_demand", "current_summ_delivered"},
+            {},
+            {
+                "smartenergy_metering_summation_delivered",
+                "smartenergy_metering",
+            },
+        ),
+        (
+            smartenergy.Metering.cluster_id,
+            {},
+            {
+                "smartenergy_metering_summation_delivered",
+                "smartenergy_metering",
+            },
+            {},
+        ),
+    ),
+)
+async def test_unsupported_attributes_sensor(
+    hass,
+    zigpy_device_mock,
+    zha_device_joined_restored,
+    cluster_id,
+    unsupported_attributes,
+    entity_ids,
+    missing_entity_ids,
+):
+    """Test zha sensor platform."""
+
+    entity_ids = {ENTITY_ID_PREFIX.format(e) for e in entity_ids}
+    missing_entity_ids = {ENTITY_ID_PREFIX.format(e) for e in missing_entity_ids}
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [cluster_id, general.Basic.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+            }
+        }
+    )
+    cluster = zigpy_device.endpoints[1].in_clusters[cluster_id]
+    if cluster_id == smartenergy.Metering.cluster_id:
+        # this one is mains powered
+        zigpy_device.node_desc.mac_capability_flags |= 0b_0000_0100
+    for attr in unsupported_attributes:
+        cluster.add_unsupported_attribute(attr)
+    zha_device = await zha_device_joined_restored(zigpy_device)
+
+    await async_enable_traffic(hass, [zha_device], enabled=False)
+    await hass.async_block_till_done()
+    present_entity_ids = set(await find_entity_ids(DOMAIN, zha_device, hass))
+    assert present_entity_ids == entity_ids
+    assert missing_entity_ids not in present_entity_ids
+
+
+@pytest.mark.parametrize(
+    "raw_uom, raw_value, expected_state, expected_uom",
+    (
+        (
+            1,
+            12320,
+            "1.23",
+            VOLUME_CUBIC_METERS,
+        ),
+        (
+            1,
+            1232000,
+            "123.20",
+            VOLUME_CUBIC_METERS,
+        ),
+        (
+            3,
+            2340,
+            "0.23",
+            f"100 {VOLUME_CUBIC_FEET}",
+        ),
+        (
+            3,
+            2360,
+            "0.24",
+            f"100 {VOLUME_CUBIC_FEET}",
+        ),
+        (
+            8,
+            23660,
+            "2.37",
+            "kPa",
+        ),
+        (
+            0,
+            9366,
+            "0.937",
+            ENERGY_KILO_WATT_HOUR,
+        ),
+        (
+            0,
+            999,
+            "0.1",
+            ENERGY_KILO_WATT_HOUR,
+        ),
+        (
+            0,
+            10091,
+            "1.009",
+            ENERGY_KILO_WATT_HOUR,
+        ),
+        (
+            0,
+            10099,
+            "1.01",
+            ENERGY_KILO_WATT_HOUR,
+        ),
+        (
+            0,
+            100999,
+            "10.1",
+            ENERGY_KILO_WATT_HOUR,
+        ),
+        (
+            0,
+            100023,
+            "10.002",
+            ENERGY_KILO_WATT_HOUR,
+        ),
+        (
+            0,
+            102456,
+            "10.246",
+            ENERGY_KILO_WATT_HOUR,
+        ),
+    ),
+)
+async def test_se_summation_uom(
+    hass,
+    zigpy_device_mock,
+    zha_device_joined,
+    raw_uom,
+    raw_value,
+    expected_state,
+    expected_uom,
+):
+    """Test zha smart energy summation."""
+
+    entity_id = ENTITY_ID_PREFIX.format("smartenergy_metering_summation_delivered")
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [
+                    smartenergy.Metering.cluster_id,
+                    general.Basic.cluster_id,
+                ],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.SIMPLE_SENSOR,
+            }
+        }
+    )
+    zigpy_device.node_desc.mac_capability_flags |= 0b_0000_0100
+
+    cluster = zigpy_device.endpoints[1].in_clusters[smartenergy.Metering.cluster_id]
+    for attr in ("instanteneous_demand",):
+        cluster.add_unsupported_attribute(attr)
+    cluster.PLUGGED_ATTR_READS = {
+        "current_summ_delivered": raw_value,
+        "demand_formatting": 0xF9,
+        "divisor": 10000,
+        "metering_device_type": 0x00,
+        "multiplier": 1,
+        "status": 0x00,
+        "summa_formatting": 0b1_0111_010,
+        "unit_of_measure": raw_uom,
+    }
+    await zha_device_joined(zigpy_device)
+
+    assert_state(hass, entity_id, expected_state, expected_uom)

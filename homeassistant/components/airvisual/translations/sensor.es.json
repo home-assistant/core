@@ -9,11 +9,11 @@
             "s2": "Di\u00f3xido de azufre"
         },
         "airvisual__pollutant_level": {
-            "good": "Bien",
-            "hazardous": "Peligroso",
+            "good": "Bueno",
+            "hazardous": "Da\u00f1ino",
             "moderate": "Moderado",
             "unhealthy": "Insalubre",
-            "unhealthy_sensitive": "Incorrecto para grupos sensibles",
+            "unhealthy_sensitive": "Insalubre para grupos sensibles",
             "very_unhealthy": "Muy poco saludable"
         }
     }

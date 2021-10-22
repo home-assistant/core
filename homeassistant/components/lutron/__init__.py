@@ -131,6 +131,9 @@ class LutronDevice(Entity):
     @property
     def unique_id(self):
         """Return a unique ID."""
+        # Temporary fix for https://github.com/thecynic/pylutron/issues/70
+        if self._lutron_device.uuid is None:
+            return None
         return f"{self._controller.guid}_{self._lutron_device.uuid}"
 
 

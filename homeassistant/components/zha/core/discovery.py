@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Callable
 import logging
-from typing import Callable
 
 from homeassistant import const as ha_const
 from homeassistant.core import HomeAssistant, callback
@@ -46,7 +46,8 @@ async def async_add_entities(
     """Add entities helper."""
     if not entities:
         return
-    to_add = [ent_cls(*args) for ent_cls, args in entities]
+    to_add = [ent_cls.create_entity(*args) for ent_cls, args in entities]
+    to_add = [entity for entity in to_add if entity is not None]
     _async_add_entities(to_add, update_before_add=update_before_add)
     entities.clear()
 
@@ -63,6 +64,7 @@ class ProbeEndpoint:
         """Process an endpoint on a zigpy device."""
         self.discover_by_device_type(channel_pool)
         self.discover_by_cluster_id(channel_pool)
+        self.discover_multi_entities(channel_pool)
 
     @callback
     def discover_by_device_type(self, channel_pool: zha_typing.ChannelPoolType) -> None:
@@ -158,6 +160,31 @@ class ProbeEndpoint:
             )
             channel = channel_class(cluster, ep_channels)
             self.probe_single_cluster(component, channel, ep_channels)
+
+    @staticmethod
+    @callback
+    def discover_multi_entities(channel_pool: zha_typing.ChannelPoolType) -> None:
+        """Process an endpoint on and discover multiple entities."""
+
+        remaining_channels = channel_pool.unclaimed_channels()
+        for channel in remaining_channels:
+            unique_id = f"{channel_pool.unique_id}-{channel.cluster.cluster_id}"
+
+            matches, claimed = zha_regs.ZHA_ENTITIES.get_multi_entity(
+                channel_pool.manufacturer,
+                channel_pool.model,
+                channel,
+                remaining_channels,
+            )
+            if not claimed:
+                continue
+
+            channel_pool.claim_channels(claimed)
+            for component, ent_classes_list in matches.items():
+                for entity_class in ent_classes_list:
+                    channel_pool.async_new_entity(
+                        component, entity_class, unique_id, claimed
+                    )
 
     def initialize(self, hass: HomeAssistant) -> None:
         """Update device overrides config."""

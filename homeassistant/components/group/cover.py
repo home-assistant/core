@@ -37,6 +37,7 @@ from homeassistant.const import (
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
+    STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
@@ -85,7 +86,7 @@ async def async_setup_platform(
 class CoverGroup(GroupEntity, CoverEntity):
     """Representation of a CoverGroup."""
 
-    _attr_is_closed: bool | None = False
+    _attr_is_closed: bool | None = None
     _attr_is_opening: bool | None = False
     _attr_is_closing: bool | None = False
     _attr_current_cover_position: int | None = 100
@@ -261,19 +262,28 @@ class CoverGroup(GroupEntity, CoverEntity):
         self._attr_is_closed = True
         self._attr_is_closing = False
         self._attr_is_opening = False
+        has_valid_state = False
         for entity_id in self._entities:
             state = self.hass.states.get(entity_id)
             if not state:
                 continue
             if state.state == STATE_OPEN:
                 self._attr_is_closed = False
+                has_valid_state = True
+                continue
+            if state.state == STATE_CLOSED:
+                has_valid_state = True
                 continue
             if state.state == STATE_CLOSING:
                 self._attr_is_closing = True
+                has_valid_state = True
                 continue
             if state.state == STATE_OPENING:
                 self._attr_is_opening = True
+                has_valid_state = True
                 continue
+        if not has_valid_state:
+            self._attr_is_closed = None
 
         position_covers = self._covers[KEY_POSITION]
         all_position_states = [self.hass.states.get(x) for x in position_covers]

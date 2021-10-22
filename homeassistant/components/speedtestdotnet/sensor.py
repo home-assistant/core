@@ -1,15 +1,16 @@
 """Support for Speedtest.net internet speed testing sensor."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.components.speedtestdotnet import SpeedTestDataCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -23,6 +24,7 @@ from .const import (
     DOMAIN,
     ICON,
     SENSOR_TYPES,
+    SpeedtestSensorEntityDescription,
 )
 
 
@@ -43,21 +45,34 @@ class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
     """Implementation of a speedtest.net sensor."""
 
     coordinator: SpeedTestDataCoordinator
-
+    entity_description: SpeedtestSensorEntityDescription
     _attr_icon = ICON
 
     def __init__(
         self,
         coordinator: SpeedTestDataCoordinator,
-        description: SensorEntityDescription,
+        description: SpeedtestSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-
         self._attr_name = f"{DEFAULT_NAME} {description.name}"
         self._attr_unique_id = description.key
+        self._state: StateType = None
         self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, self.coordinator.config_entry.entry_id)},
+            "name": DEFAULT_NAME,
+            "entry_type": "service",
+        }
+
+    @property
+    def native_value(self) -> StateType:
+        """Return native value for entity."""
+        if self.coordinator.data:
+            state = self.coordinator.data[self.entity_description.key]
+            self._state = cast(StateType, self.entity_description.value(state))
+        return self._state
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -73,10 +88,10 @@ class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
 
             if self.entity_description.key == "download":
                 self._attrs[ATTR_BYTES_RECEIVED] = self.coordinator.data[
-                    "bytes_received"
+                    ATTR_BYTES_RECEIVED
                 ]
             elif self.entity_description.key == "upload":
-                self._attrs[ATTR_BYTES_SENT] = self.coordinator.data["bytes_sent"]
+                self._attrs[ATTR_BYTES_SENT] = self.coordinator.data[ATTR_BYTES_SENT]
 
         return self._attrs
 
@@ -85,27 +100,4 @@ class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         await super().async_added_to_hass()
         state = await self.async_get_last_state()
         if state:
-            self._attr_native_value = state.state
-
-        @callback
-        def update() -> None:
-            """Update state."""
-            self._update_state()
-            self.async_write_ha_state()
-
-        self.async_on_remove(self.coordinator.async_add_listener(update))
-        self._update_state()
-
-    def _update_state(self):
-        """Update sensors state."""
-        if self.coordinator.data:
-            if self.entity_description.key == "ping":
-                self._attr_native_value = self.coordinator.data["ping"]
-            elif self.entity_description.key == "download":
-                self._attr_native_value = round(
-                    self.coordinator.data["download"] / 10 ** 6, 2
-                )
-            elif self.entity_description.key == "upload":
-                self._attr_native_value = round(
-                    self.coordinator.data["upload"] / 10 ** 6, 2
-                )
+            self._state = state.state

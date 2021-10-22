@@ -141,7 +141,7 @@ async def test_custom_integration_version_not_valid(
         await loader.async_get_integration(hass, "test_no_version")
 
     assert (
-        "The custom integration 'test_no_version' does not have a valid version key (None) in the manifest file and was blocked from loading."
+        "The custom integration 'test_no_version' does not have a version key in the manifest file and was blocked from loading."
         in caplog.text
     )
 

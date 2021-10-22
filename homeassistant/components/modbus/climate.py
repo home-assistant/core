@@ -1,6 +1,7 @@
 """Support for Generic Modbus Thermostats."""
 from __future__ import annotations
 
+from datetime import datetime
 import logging
 import struct
 from typing import Any
@@ -12,7 +13,6 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import (
     CONF_NAME,
-    CONF_STRUCTURE,
     CONF_TEMPERATURE_UNIT,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
@@ -20,6 +20,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -50,9 +51,9 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    async_add_entities,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
-):
+) -> None:
     """Read configuration and create Modbus climate."""
     if discovery_info is None:
         return
@@ -77,7 +78,6 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         super().__init__(hub, config)
         self._target_temperature_register = config[CONF_TARGET_TEMP]
         self._unit = config[CONF_TEMPERATURE_UNIT]
-        self._structure = config[CONF_STRUCTURE]
 
         self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE
         self._attr_hvac_mode = HVAC_MODE_AUTO
@@ -95,7 +95,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         self._attr_target_temperature_step = config[CONF_TARGET_TEMP]
         self._attr_target_temperature_step = config[CONF_STEP]
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
         state = await self.async_get_last_state()
@@ -107,12 +107,12 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         # Home Assistant expects this method.
         # We'll keep it here to avoid getting exceptions.
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if ATTR_TEMPERATURE not in kwargs:
             return
         target_temperature = (
-            float(kwargs.get(ATTR_TEMPERATURE)) - self._offset
+            float(kwargs[ATTR_TEMPERATURE]) - self._offset
         ) / self._scale
         if self._data_type in (
             DATA_TYPE_INT16,
@@ -138,7 +138,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         self._attr_available = result is not None
         await self.async_update()
 
-    async def async_update(self, now=None):
+    async def async_update(self, now: datetime | None = None) -> None:
         """Update Target & Current Temperature."""
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
@@ -156,7 +156,9 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         self._call_active = False
         self.async_write_ha_state()
 
-    async def _async_read_register(self, register_type, register) -> float | None:
+    async def _async_read_register(
+        self, register_type: str, register: int
+    ) -> float | None:
         """Read register using the Modbus hub slave."""
         result = await self._hub.async_pymodbus_call(
             self._slave, register, self._count, register_type
@@ -172,7 +174,6 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         self._lazy_errors = self._lazy_error_count
         self._value = self.unpack_structure_result(result.registers)
         self._attr_available = True
-
-        if self._value is None:
+        if not self._value:
             return None
         return float(self._value)

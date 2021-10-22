@@ -20,9 +20,13 @@ DISCOVERY_INFO = {
     "name": "shelly1pm-12345",
     "properties": {"id": "shelly1pm-12345"},
 }
+MOCK_CONFIG = {
+    "wifi": {"ap": {"ssid": "Test name"}},
+}
 
 
-async def test_form(hass):
+@pytest.mark.parametrize("gen", [1, 2])
+async def test_form(hass, gen):
     """Test we get the form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
@@ -32,13 +36,23 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "aioshelly.get_info",
-        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
+        "aioshelly.common.get_info",
+        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False, "gen": gen},
     ), patch(
-        "aioshelly.Device.create",
+        "aioshelly.block_device.BlockDevice.create",
         new=AsyncMock(
             return_value=Mock(
+                model="SHSW-1",
                 settings=MOCK_SETTINGS,
+            )
+        ),
+    ), patch(
+        "aioshelly.rpc_device.RpcDevice.create",
+        new=AsyncMock(
+            return_value=Mock(
+                model="SHSW-1",
+                config=MOCK_CONFIG,
+                shutdown=AsyncMock(),
             )
         ),
     ), patch(
@@ -59,6 +73,7 @@ async def test_form(hass):
         "host": "1.1.1.1",
         "model": "SHSW-1",
         "sleep_period": 0,
+        "gen": gen,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -78,12 +93,13 @@ async def test_title_without_name(hass):
     settings["device"] = settings["device"].copy()
     settings["device"]["hostname"] = "shelly1pm-12345"
     with patch(
-        "aioshelly.get_info",
+        "aioshelly.common.get_info",
         return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
     ), patch(
-        "aioshelly.Device.create",
+        "aioshelly.block_device.BlockDevice.create",
         new=AsyncMock(
             return_value=Mock(
+                model="SHSW-1",
                 settings=settings,
             )
         ),
@@ -105,6 +121,7 @@ async def test_title_without_name(hass):
         "host": "1.1.1.1",
         "model": "SHSW-1",
         "sleep_period": 0,
+        "gen": 1,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -119,7 +136,7 @@ async def test_form_auth(hass):
     assert result["errors"] == {}
 
     with patch(
-        "aioshelly.get_info",
+        "aioshelly.common.get_info",
         return_value={"mac": "test-mac", "type": "SHSW-1", "auth": True},
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -131,9 +148,10 @@ async def test_form_auth(hass):
     assert result["errors"] == {}
 
     with patch(
-        "aioshelly.Device.create",
+        "aioshelly.block_device.BlockDevice.create",
         new=AsyncMock(
             return_value=Mock(
+                model="SHSW-1",
                 settings=MOCK_SETTINGS,
             )
         ),
@@ -155,6 +173,7 @@ async def test_form_auth(hass):
         "host": "1.1.1.1",
         "model": "SHSW-1",
         "sleep_period": 0,
+        "gen": 1,
         "username": "test username",
         "password": "test password",
     }
@@ -172,7 +191,7 @@ async def test_form_errors_get_info(hass, error):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("aioshelly.get_info", side_effect=exc):
+    with patch("aioshelly.common.get_info", side_effect=exc):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"host": "1.1.1.1"},
@@ -193,8 +212,10 @@ async def test_form_errors_test_connection(hass, error):
     )
 
     with patch(
-        "aioshelly.get_info", return_value={"mac": "test-mac", "auth": False}
-    ), patch("aioshelly.Device.create", new=AsyncMock(side_effect=exc)):
+        "aioshelly.common.get_info", return_value={"mac": "test-mac", "auth": False}
+    ), patch(
+        "aioshelly.block_device.BlockDevice.create", new=AsyncMock(side_effect=exc)
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"host": "1.1.1.1"},
@@ -217,7 +238,7 @@ async def test_form_already_configured(hass):
     )
 
     with patch(
-        "aioshelly.get_info",
+        "aioshelly.common.get_info",
         return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -252,12 +273,13 @@ async def test_user_setup_ignored_device(hass):
     settings["fw"] = "20201124-092534/v1.9.0@57ac4ad8"
 
     with patch(
-        "aioshelly.get_info",
+        "aioshelly.common.get_info",
         return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
     ), patch(
-        "aioshelly.Device.create",
+        "aioshelly.block_device.BlockDevice.create",
         new=AsyncMock(
             return_value=Mock(
+                model="SHSW-1",
                 settings=settings,
             )
         ),
@@ -287,7 +309,10 @@ async def test_form_firmware_unsupported(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("aioshelly.get_info", side_effect=aioshelly.FirmwareUnsupported):
+    with patch(
+        "aioshelly.common.get_info",
+        side_effect=aioshelly.exceptions.FirmwareUnsupported,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"host": "1.1.1.1"},
@@ -313,14 +338,17 @@ async def test_form_auth_errors_test_connection(hass, error):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("aioshelly.get_info", return_value={"mac": "test-mac", "auth": True}):
+    with patch(
+        "aioshelly.common.get_info",
+        return_value={"mac": "test-mac", "auth": True},
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"host": "1.1.1.1"},
         )
 
     with patch(
-        "aioshelly.Device.create",
+        "aioshelly.block_device.BlockDevice.create",
         new=AsyncMock(side_effect=exc),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -336,12 +364,13 @@ async def test_zeroconf(hass):
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
-        "aioshelly.get_info",
+        "aioshelly.common.get_info",
         return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
     ), patch(
-        "aioshelly.Device.create",
+        "aioshelly.block_device.BlockDevice.create",
         new=AsyncMock(
             return_value=Mock(
+                model="SHSW-1",
                 settings=MOCK_SETTINGS,
             )
         ),
@@ -378,6 +407,7 @@ async def test_zeroconf(hass):
         "host": "1.1.1.1",
         "model": "SHSW-1",
         "sleep_period": 0,
+        "gen": 1,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -388,7 +418,7 @@ async def test_zeroconf_sleeping_device(hass):
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
-        "aioshelly.get_info",
+        "aioshelly.common.get_info",
         return_value={
             "mac": "test-mac",
             "type": "SHSW-1",
@@ -396,9 +426,10 @@ async def test_zeroconf_sleeping_device(hass):
             "sleep_mode": True,
         },
     ), patch(
-        "aioshelly.Device.create",
+        "aioshelly.block_device.BlockDevice.create",
         new=AsyncMock(
             return_value=Mock(
+                model="SHSW-1",
                 settings={
                     "name": "Test name",
                     "device": {
@@ -442,6 +473,7 @@ async def test_zeroconf_sleeping_device(hass):
         "host": "1.1.1.1",
         "model": "SHSW-1",
         "sleep_period": 600,
+        "gen": 1,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -460,7 +492,7 @@ async def test_zeroconf_sleeping_device_error(hass, error):
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
-        "aioshelly.get_info",
+        "aioshelly.common.get_info",
         return_value={
             "mac": "test-mac",
             "type": "SHSW-1",
@@ -468,7 +500,7 @@ async def test_zeroconf_sleeping_device_error(hass, error):
             "sleep_mode": True,
         },
     ), patch(
-        "aioshelly.Device.create",
+        "aioshelly.block_device.BlockDevice.create",
         new=AsyncMock(side_effect=exc),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -489,7 +521,7 @@ async def test_zeroconf_already_configured(hass):
     entry.add_to_hass(hass)
 
     with patch(
-        "aioshelly.get_info",
+        "aioshelly.common.get_info",
         return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
     ):
         result = await hass.config_entries.flow.async_init(
@@ -506,7 +538,10 @@ async def test_zeroconf_already_configured(hass):
 
 async def test_zeroconf_firmware_unsupported(hass):
     """Test we abort if device firmware is unsupported."""
-    with patch("aioshelly.get_info", side_effect=aioshelly.FirmwareUnsupported):
+    with patch(
+        "aioshelly.common.get_info",
+        side_effect=aioshelly.exceptions.FirmwareUnsupported,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             data=DISCOVERY_INFO,
@@ -519,7 +554,7 @@ async def test_zeroconf_firmware_unsupported(hass):
 
 async def test_zeroconf_cannot_connect(hass):
     """Test we get the form."""
-    with patch("aioshelly.get_info", side_effect=asyncio.TimeoutError):
+    with patch("aioshelly.common.get_info", side_effect=asyncio.TimeoutError):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             data=DISCOVERY_INFO,
@@ -534,7 +569,7 @@ async def test_zeroconf_require_auth(hass):
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
-        "aioshelly.get_info",
+        "aioshelly.common.get_info",
         return_value={"mac": "test-mac", "type": "SHSW-1", "auth": True},
     ):
         result = await hass.config_entries.flow.async_init(
@@ -546,9 +581,10 @@ async def test_zeroconf_require_auth(hass):
         assert result["errors"] == {}
 
     with patch(
-        "aioshelly.Device.create",
+        "aioshelly.block_device.BlockDevice.create",
         new=AsyncMock(
             return_value=Mock(
+                model="SHSW-1",
                 settings=MOCK_SETTINGS,
             )
         ),
@@ -570,6 +606,7 @@ async def test_zeroconf_require_auth(hass):
         "host": "1.1.1.1",
         "model": "SHSW-1",
         "sleep_period": 0,
+        "gen": 1,
         "username": "test username",
         "password": "test password",
     }

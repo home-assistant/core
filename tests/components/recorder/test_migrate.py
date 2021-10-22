@@ -65,7 +65,7 @@ async def test_schema_update_calls(hass):
     assert await recorder.async_migration_in_progress(hass) is False
     update.assert_has_calls(
         [
-            call(hass.data[DATA_INSTANCE].engine, ANY, version + 1, 0)
+            call(hass.data[DATA_INSTANCE], ANY, version + 1, 0)
             for version in range(0, models.SCHEMA_VERSION)
         ]
     )

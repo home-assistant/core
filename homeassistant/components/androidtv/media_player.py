@@ -358,6 +358,7 @@ def adb_decorator(override_available=False):
         @functools.wraps(func)
         async def _adb_exception_catcher(self, *args, **kwargs):
             """Call an ADB-related method and catch exceptions."""
+            # pylint: disable=protected-access
             if not self.available and not override_available:
                 return None
 

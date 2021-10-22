@@ -172,6 +172,13 @@ class CloudGoogleConfig(AbstractConfig):
 
     async def _async_prefs_updated(self, prefs):
         """Handle updated preferences."""
+        if not self._cloud.is_logged_in:
+            if self.is_reporting_state:
+                self.async_disable_report_state()
+            if self.is_local_sdk_active:
+                self.async_disable_local_sdk()
+            return
+
         if self.enabled and GOOGLE_DOMAIN not in self.hass.config.components:
             await async_setup_component(self.hass, GOOGLE_DOMAIN, {})
 

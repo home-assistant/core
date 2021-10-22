@@ -18,6 +18,7 @@ from homeassistant.const import (
     DEVICE_CLASS_CO,
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_DATE,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_GAS,
     DEVICE_CLASS_HUMIDITY,
@@ -69,14 +70,15 @@ DEVICE_CLASSES: Final[list[str]] = [
     DEVICE_CLASS_CO,  # ppm (parts per million) Carbon Monoxide gas concentration
     DEVICE_CLASS_CO2,  # ppm (parts per million) Carbon Dioxide gas concentration
     DEVICE_CLASS_CURRENT,  # current (A)
+    DEVICE_CLASS_DATE,  # date (ISO8601)
     DEVICE_CLASS_ENERGY,  # energy (kWh, Wh)
     DEVICE_CLASS_HUMIDITY,  # % of humidity in the air
     DEVICE_CLASS_ILLUMINANCE,  # current light level (lx/lm)
     DEVICE_CLASS_MONETARY,  # Amount of money (currency)
     DEVICE_CLASS_OZONE,  # Amount of O3 (µg/m³)
     DEVICE_CLASS_NITROGEN_DIOXIDE,  # Amount of NO2 (µg/m³)
-    DEVICE_CLASS_NITROUS_OXIDE,  # Amount of NO  (µg/m³)
-    DEVICE_CLASS_NITROGEN_MONOXIDE,  # Amount of N2O (µg/m³)
+    DEVICE_CLASS_NITROUS_OXIDE,  # Amount of N2O  (µg/m³)
+    DEVICE_CLASS_NITROGEN_MONOXIDE,  # Amount of NO (µg/m³)
     DEVICE_CLASS_PM1,  # Particulate matter <= 0.1 μm (µg/m³)
     DEVICE_CLASS_PM10,  # Particulate matter <= 10 μm (µg/m³)
     DEVICE_CLASS_PM25,  # Particulate matter <= 2.5 μm (µg/m³)
@@ -96,11 +98,14 @@ DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 # The state represents a measurement in present time
 STATE_CLASS_MEASUREMENT: Final = "measurement"
+# The state represents a total amount, e.g. net energy consumption
+STATE_CLASS_TOTAL: Final = "total"
 # The state represents a monotonically increasing total, e.g. an amount of consumed gas
 STATE_CLASS_TOTAL_INCREASING: Final = "total_increasing"
 
 STATE_CLASSES: Final[list[str]] = [
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
 ]
 
@@ -214,9 +219,10 @@ class SensorEntity(Entity):
                 report_issue = self._suggest_report_issue()
                 _LOGGER.warning(
                     "Entity %s (%s) with state_class %s has set last_reset. Setting "
-                    "last_reset is deprecated and will be unsupported from Home "
-                    "Assistant Core 2021.11. Please update your configuration if "
-                    "state_class is manually configured, otherwise %s",
+                    "last_reset for entities with state_class other than 'total' is "
+                    "deprecated and will be removed from Home Assistant Core 2021.11. "
+                    "Please update your configuration if state_class is manually "
+                    "configured, otherwise %s",
                     self.entity_id,
                     type(self),
                     self.state_class,

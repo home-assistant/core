@@ -513,6 +513,9 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
         self._attr_entity_registry_enabled_default = attribute_info.get(
             attribute, [None, None, None, True]
         )[3]
+        self._attr_icon = self._attribute_info.get(
+            self._attribute, [None, None, None, None]
+        )[0]
         self._attr_device_class = attribute_info.get(
             attribute, [None, None, None, None]
         )[1]
@@ -570,6 +573,3 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
             self._attr_icon = icon_for_battery_level(
                 battery_level=vehicle_state.charging_level_hv, charging=charging_state
             )
-        self._attr_icon = self._attribute_info.get(
-            self._attribute, [None, None, None, None]
-        )[0]

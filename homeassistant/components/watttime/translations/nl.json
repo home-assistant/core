@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout",
+            "unknown_coordinates": "Geen gegevens voor lengte-/breedtegraad"
+        },
+        "step": {
+            "coordinates": {
+                "data": {
+                    "latitude": "Breedtegraad",
+                    "longitude": "Lengtegraad"
+                },
+                "description": "Voer de breedtegraad en de lengtegraad in die u wilt monitoren:"
+            },
+            "location": {
+                "data": {
+                    "location_type": "Locatie"
+                },
+                "description": "Kies een locatie om te monitoren:"
+            },
+            "user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                },
+                "description": "Voer uw gebruikersnaam en wachtwoord in:"
+            }
+        }
+    }
+}

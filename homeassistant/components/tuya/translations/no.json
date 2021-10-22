@@ -10,15 +10,29 @@
         },
         "flow_title": "Tuya konfigurasjon",
         "step": {
+            "login": {
+                "data": {
+                    "access_id": "Tilgangs -ID",
+                    "access_secret": "Tilgangshemmelighet",
+                    "country_code": "Landskode",
+                    "endpoint": "Tilgjengelighetssone",
+                    "password": "Passord",
+                    "tuya_app_type": "Mobilapp",
+                    "username": "Konto"
+                },
+                "description": "Skriv inn Tuya-legitimasjonen din",
+                "title": "Tuya"
+            },
             "user": {
                 "data": {
                     "country_code": "Din landskode for kontoen din (f.eks. 1 for USA eller 86 for Kina)",
                     "password": "Passord",
                     "platform": "Appen der kontoen din er registrert",
+                    "tuya_project_type": "Tuya -skyprosjekttype",
                     "username": "Brukernavn"
                 },
                 "description": "Angi Tuya-legitimasjonen din.",
-                "title": ""
+                "title": "Tuya Integrasjon"
             }
         }
     },

@@ -136,7 +136,7 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
                     "value" in device.properties
                     or "heatingThermostatSetpoint" in device.properties
                 )
-                and (device.properties.unit == "C" or device.properties.unit == "F")
+                and device.properties.unit in ("C", "F")
             ):
                 self._temp_sensor_device = FibaroDevice(device)
                 tempunit = device.properties.unit

@@ -1,7 +1,7 @@
 """IoTaWatt DataUpdateCoordinator."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 from iotawattpy.iotawatt import Iotawatt
@@ -32,6 +32,16 @@ class IotawattUpdater(DataUpdateCoordinator):
             update_interval=timedelta(seconds=30),
         )
 
+        self._last_run: datetime | None = None
+
+    def update_last_run(self, last_run: datetime) -> None:
+        """Notify coordinator of a sensor last update time."""
+        # We want to fetch the data from the iotawatt since HA was last shutdown.
+        # We retrieve from the sensor last updated.
+        # This method is called from each sensor upon their state being restored.
+        if self._last_run is None or last_run > self._last_run:
+            self._last_run = last_run
+
     async def _async_update_data(self):
         """Fetch sensors from IoTaWatt device."""
         if self.api is None:
@@ -52,5 +62,6 @@ class IotawattUpdater(DataUpdateCoordinator):
 
             self.api = api
 
-        await self.api.update()
+        await self.api.update(lastUpdate=self._last_run)
+        self._last_run = None
         return self.api.getSensors()

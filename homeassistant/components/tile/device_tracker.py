@@ -1,9 +1,9 @@
 """Support for Tile device trackers."""
 from __future__ import annotations
 
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from pytile.tile import Tile
 

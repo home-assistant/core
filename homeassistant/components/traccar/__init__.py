@@ -3,12 +3,7 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
-from homeassistant.const import (
-    ATTR_ID,
-    CONF_WEBHOOK_ID,
-    HTTP_OK,
-    HTTP_UNPROCESSABLE_ENTITY,
-)
+from homeassistant.const import ATTR_ID, CONF_WEBHOOK_ID, HTTP_UNPROCESSABLE_ENTITY
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -31,7 +26,7 @@ PLATFORMS = [DEVICE_TRACKER]
 TRACKER_UPDATE = f"{DOMAIN}_tracker_update"
 
 
-DEFAULT_ACCURACY = HTTP_OK
+DEFAULT_ACCURACY = 200
 DEFAULT_BATTERY = -1
 
 
@@ -87,7 +82,7 @@ async def handle_webhook(hass, webhook_id, request):
         attrs,
     )
 
-    return web.Response(text=f"Setting location for {device}", status=HTTP_OK)
+    return web.Response(text=f"Setting location for {device}")
 
 
 async def async_setup_entry(hass, entry):

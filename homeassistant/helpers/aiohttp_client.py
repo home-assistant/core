@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 from contextlib import suppress
 from ssl import SSLContext
 import sys
 from types import MappingProxyType
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 import aiohttp
 from aiohttp import web

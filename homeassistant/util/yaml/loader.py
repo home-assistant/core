@@ -60,9 +60,7 @@ class Secrets:
 
     def _load_secret_yaml(self, secret_dir: Path) -> dict[str, str]:
         """Load the secrets yaml from path."""
-        secret_path = secret_dir / SECRET_YAML
-
-        if secret_path in self._cache:
+        if (secret_path := secret_dir / SECRET_YAML) in self._cache:
             return self._cache[secret_path]
 
         _LOGGER.debug("Loading %s", secret_path)

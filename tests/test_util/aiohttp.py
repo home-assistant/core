@@ -9,6 +9,7 @@ from urllib.parse import parse_qs
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientError, ClientResponseError
 from aiohttp.streams import StreamReader
+from multidict import CIMultiDict
 from yarl import URL
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
@@ -179,7 +180,7 @@ class AiohttpClientMockResponse:
         self.response = response
         self.exc = exc
         self.side_effect = side_effect
-        self._headers = headers or {}
+        self._headers = CIMultiDict(headers or {})
         self._cookies = {}
 
         if cookies:

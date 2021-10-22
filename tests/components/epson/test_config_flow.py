@@ -22,6 +22,9 @@ async def test_form(hass):
         "homeassistant.components.epson.Projector.get_power",
         return_value="01",
     ), patch(
+        "homeassistant.components.epson.Projector.get_serial_number",
+        return_value="12345",
+    ), patch(
         "homeassistant.components.epson.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:

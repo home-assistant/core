@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import json
 import logging
 from types import MappingProxyType
-from typing import Any, Callable
+from typing import Any
 from urllib.parse import urlencode, urljoin
 
 from aiohttp.web import Request, Response

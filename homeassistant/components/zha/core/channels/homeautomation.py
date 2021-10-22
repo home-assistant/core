@@ -1,8 +1,6 @@
 """Home automation channels module for Zigbee Home Automation."""
 from __future__ import annotations
 
-from collections.abc import Coroutine
-
 from zigpy.zcl.clusters import homeautomation
 
 from .. import registries
@@ -49,6 +47,12 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
     CHANNEL_NAME = CHANNEL_ELECTRICAL_MEASUREMENT
 
     REPORT_CONFIG = ({"attr": "active_power", "config": REPORT_CONFIG_DEFAULT},)
+    ZCL_INIT_ATTRS = {
+        "ac_power_divisor": True,
+        "power_divisor": True,
+        "ac_power_multiplier": True,
+        "power_multiplier": True,
+    }
 
     async def async_update(self):
         """Retrieve latest state."""
@@ -63,19 +67,6 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
                 "active_power",
                 result,
             )
-
-    def async_initialize_channel_specific(self, from_cache: bool) -> Coroutine:
-        """Initialize channel specific attributes."""
-
-        return self.get_attributes(
-            [
-                "ac_power_divisor",
-                "power_divisor",
-                "ac_power_multiplier",
-                "power_multiplier",
-            ],
-            from_cache=True,
-        )
 
     @property
     def divisor(self) -> int | None:

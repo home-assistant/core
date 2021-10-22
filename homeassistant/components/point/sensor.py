@@ -11,10 +11,8 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
-    PRESSURE_HPA,
     SOUND_PRESSURE_WEIGHTED_DBA,
     TEMP_CELSIUS,
 )
@@ -49,12 +47,6 @@ SENSOR_TYPES: tuple[MinutPointSensorEntityDescription, ...] = (
         precision=1,
         device_class=DEVICE_CLASS_TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
-    ),
-    MinutPointSensorEntityDescription(
-        key="pressure",
-        precision=0,
-        device_class=DEVICE_CLASS_PRESSURE,
-        native_unit_of_measurement=PRESSURE_HPA,
     ),
     MinutPointSensorEntityDescription(
         key="humidity",

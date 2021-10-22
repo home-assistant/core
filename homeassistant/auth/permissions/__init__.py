@@ -1,8 +1,9 @@
 """Permissions for Home Assistant."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-from typing import Any, Callable
+from typing import Any
 
 import voluptuous as vol
 
@@ -33,9 +34,7 @@ class AbstractPermissions:
 
     def check_entity(self, entity_id: str, key: str) -> bool:
         """Check if we can access entity."""
-        entity_func = self._cached_entity_func
-
-        if entity_func is None:
+        if (entity_func := self._cached_entity_func) is None:
             entity_func = self._cached_entity_func = self._entity_func()
 
         return entity_func(entity_id, key)

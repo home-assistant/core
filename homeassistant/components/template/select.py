@@ -46,27 +46,27 @@ SELECT_SCHEMA = vol.Schema(
 
 
 async def _async_create_entities(
-    hass: HomeAssistant, entities: list[dict[str, Any]], unique_id_prefix: str | None
+    hass: HomeAssistant, definitions: list[dict[str, Any]], unique_id_prefix: str | None
 ) -> list[TemplateSelect]:
     """Create the Template select."""
-    for entity in entities:
-        unique_id = entity.get(CONF_UNIQUE_ID)
-
+    entities = []
+    for definition in definitions:
+        unique_id = definition.get(CONF_UNIQUE_ID)
         if unique_id and unique_id_prefix:
             unique_id = f"{unique_id_prefix}-{unique_id}"
-
-        return [
+        entities.append(
             TemplateSelect(
                 hass,
-                entity.get(CONF_NAME, DEFAULT_NAME),
-                entity[CONF_STATE],
-                entity.get(CONF_AVAILABILITY),
-                entity[CONF_SELECT_OPTION],
-                entity[ATTR_OPTIONS],
-                entity.get(CONF_OPTIMISTIC, DEFAULT_OPTIMISTIC),
+                definition.get(CONF_NAME, DEFAULT_NAME),
+                definition[CONF_STATE],
+                definition.get(CONF_AVAILABILITY),
+                definition[CONF_SELECT_OPTION],
+                definition[ATTR_OPTIONS],
+                definition.get(CONF_OPTIMISTIC, DEFAULT_OPTIMISTIC),
                 unique_id,
             )
-        ]
+        )
+    return entities
 
 
 async def async_setup_platform(

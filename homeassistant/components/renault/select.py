@@ -1,8 +1,9 @@
 """Support for Renault sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, cast
+from typing import cast
 
 from renault_api.kamereon.models import KamereonVehicleBatteryStatusData
 

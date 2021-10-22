@@ -103,9 +103,9 @@ from .const import (
 from .type_triggers import DeviceTriggerAccessory
 from .util import (
     accessory_friendly_name,
+    async_port_is_available,
     dismiss_setup_message,
     get_persist_fullpath_for_entry_id,
-    port_is_available,
     remove_state_files_for_entry_id,
     show_setup_message,
     state_needs_accessory_mode,
@@ -330,7 +330,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     logged_shutdown_wait = False
     for _ in range(0, SHUTDOWN_TIMEOUT):
-        if await hass.async_add_executor_job(port_is_available, entry.data[CONF_PORT]):
+        if async_port_is_available(entry.data[CONF_PORT]):
             break
 
         if not logged_shutdown_wait:
@@ -519,7 +519,7 @@ class HomeKit:
         self.bridge = None
         self.driver = None
 
-    def setup(self, async_zeroconf_instance):
+    def setup(self, async_zeroconf_instance, uuid):
         """Set up bridge and accessory driver."""
         persist_file = get_persist_fullpath_for_entry_id(self.hass, self._entry_id)
 
@@ -534,6 +534,7 @@ class HomeKit:
             persist_file=persist_file,
             advertised_address=self._advertise_ip,
             async_zeroconf_instance=async_zeroconf_instance,
+            zeroconf_server=f"{uuid}-hap.local.",
         )
 
         # If we do not load the mac address will be wrong
@@ -553,7 +554,7 @@ class HomeKit:
         acc = self.driver.accessory
         if acc.entity_id not in entity_ids:
             return
-        acc.async_stop()
+        await acc.stop()
         if not (state := self.hass.states.get(acc.entity_id)):
             _LOGGER.warning(
                 "The underlying entity %s disappeared during reset", acc.entity
@@ -576,7 +577,7 @@ class HomeKit:
                 self._name,
                 entity_id,
             )
-            acc = self.remove_bridge_accessory(aid)
+            acc = await self.async_remove_bridge_accessory(aid)
             if state := self.hass.states.get(acc.entity_id):
                 new.append(state)
             else:
@@ -669,11 +670,11 @@ class HomeKit:
             )
         )
 
-    def remove_bridge_accessory(self, aid):
+    async def async_remove_bridge_accessory(self, aid):
         """Try adding accessory to bridge if configured beforehand."""
         acc = self.bridge.accessories.pop(aid, None)
         if acc:
-            acc.async_stop()
+            await acc.stop()
         return acc
 
     async def async_configure_accessories(self):
@@ -713,7 +714,8 @@ class HomeKit:
             return
         self.status = STATUS_WAIT
         async_zc_instance = await zeroconf.async_get_async_instance(self.hass)
-        await self.hass.async_add_executor_job(self.setup, async_zc_instance)
+        uuid = await self.hass.helpers.instance_id.async_get()
+        await self.hass.async_add_executor_job(self.setup, async_zc_instance, uuid)
         self.aid_storage = AccessoryAidStorage(self.hass, self._entry_id)
         await self.aid_storage.async_initialize()
         if not await self._async_create_accessories():
@@ -864,11 +866,6 @@ class HomeKit:
         self.status = STATUS_STOPPED
         _LOGGER.debug("Driver stop for %s", self._name)
         await self.driver.async_stop()
-        if self.bridge:
-            for acc in self.bridge.accessories.values():
-                acc.async_stop()
-        else:
-            self.driver.accessory.async_stop()
 
     @callback
     def _async_configure_linked_sensors(self, ent_reg_ent, device_lookup, state):
@@ -966,6 +963,7 @@ class HomeKitPairingQRView(HomeAssistantView):
 
     async def get(self, request):
         """Retrieve the pairing QRCode image."""
+        # pylint: disable=no-self-use
         if not request.query_string:
             raise Unauthorized()
         entry_id, secret = request.query_string.split("-")

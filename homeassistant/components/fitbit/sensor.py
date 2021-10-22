@@ -48,7 +48,10 @@ from .const import (
     FITBIT_CONFIG_FILE,
     FITBIT_DEFAULT_RESOURCES,
     FITBIT_MEASUREMENTS,
+    FITBIT_RESOURCE_BATTERY,
+    FITBIT_RESOURCES_KEYS,
     FITBIT_RESOURCES_LIST,
+    FitbitSensorEntityDescription,
 )
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -61,7 +64,7 @@ PLATFORM_SCHEMA: Final = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(
             CONF_MONITORED_RESOURCES, default=FITBIT_DEFAULT_RESOURCES
-        ): vol.All(cv.ensure_list, [vol.In(FITBIT_RESOURCES_LIST)]),
+        ): vol.All(cv.ensure_list, [vol.In(FITBIT_RESOURCES_KEYS)]),
         vol.Optional(CONF_CLOCK_FORMAT, default=DEFAULT_CLOCK_FORMAT): vol.In(
             ["12H", "24H"]
         ),
@@ -188,8 +191,7 @@ def setup_platform(
         if int(time.time()) - expires_at > 3600:
             authd_client.client.refresh_token()
 
-        unit_system = config.get(CONF_UNIT_SYSTEM)
-        if unit_system == "default":
+        if (unit_system := config[CONF_UNIT_SYSTEM]) == "default":
             authd_client.system = authd_client.user_profile_get()["user"]["locale"]
             if authd_client.system != "en_GB":
                 if hass.config.units.is_metric:
@@ -199,35 +201,35 @@ def setup_platform(
         else:
             authd_client.system = unit_system
 
-        dev = []
         registered_devs = authd_client.get_devices()
-        clock_format = config.get(CONF_CLOCK_FORMAT, DEFAULT_CLOCK_FORMAT)
-        for resource in config.get(CONF_MONITORED_RESOURCES, FITBIT_DEFAULT_RESOURCES):
-
-            # monitor battery for all linked FitBit devices
-            if resource == "devices/battery":
-                for dev_extra in registered_devs:
-                    dev.append(
-                        FitbitSensor(
-                            authd_client,
-                            config_path,
-                            resource,
-                            hass.config.units.is_metric,
-                            clock_format,
-                            dev_extra,
-                        )
-                    )
-            else:
-                dev.append(
+        clock_format = config[CONF_CLOCK_FORMAT]
+        monitored_resources = config[CONF_MONITORED_RESOURCES]
+        entities = [
+            FitbitSensor(
+                authd_client,
+                config_path,
+                description,
+                hass.config.units.is_metric,
+                clock_format,
+            )
+            for description in FITBIT_RESOURCES_LIST
+            if description.key in monitored_resources
+        ]
+        if "devices/battery" in monitored_resources:
+            entities.extend(
+                [
                     FitbitSensor(
                         authd_client,
                         config_path,
-                        resource,
+                        FITBIT_RESOURCE_BATTERY,
                         hass.config.units.is_metric,
                         clock_format,
+                        dev_extra,
                     )
-                )
-        add_entities(dev, True)
+                    for dev_extra in registered_devs
+                ]
+            )
+        add_entities(entities, True)
 
     else:
         oauth = FitbitOauth2Client(
@@ -335,28 +337,28 @@ class FitbitAuthCallbackView(HomeAssistantView):
 class FitbitSensor(SensorEntity):
     """Implementation of a Fitbit sensor."""
 
+    entity_description: FitbitSensorEntityDescription
+
     def __init__(
         self,
         client: Fitbit,
         config_path: str,
-        resource_type: str,
+        description: FitbitSensorEntityDescription,
         is_metric: bool,
         clock_format: str,
         extra: dict[str, str] | None = None,
     ) -> None:
         """Initialize the Fitbit sensor."""
+        self.entity_description = description
         self.client = client
         self.config_path = config_path
-        self.resource_type = resource_type
         self.is_metric = is_metric
         self.clock_format = clock_format
         self.extra = extra
-        self._name = FITBIT_RESOURCES_LIST[self.resource_type][0]
         if self.extra is not None:
-            self._name = f"{self.extra.get('deviceVersion')} Battery"
-        unit_type = FITBIT_RESOURCES_LIST[self.resource_type][1]
-        if unit_type == "":
-            split_resource = self.resource_type.split("/")
+            self._attr_name = f"{self.extra.get('deviceVersion')} Battery"
+        if (unit_type := description.unit_type) == "":
+            split_resource = description.key.rsplit("/", maxsplit=1)[-1]
             try:
                 measurement_system = FITBIT_MEASUREMENTS[self.client.system]
             except KeyError:
@@ -364,43 +366,24 @@ class FitbitSensor(SensorEntity):
                     measurement_system = FITBIT_MEASUREMENTS["metric"]
                 else:
                     measurement_system = FITBIT_MEASUREMENTS["en_US"]
-            unit_type = measurement_system[split_resource[-1]]
-        self._unit_of_measurement = unit_type
-        self._state: str | None = None
+            unit_type = measurement_system[split_resource]
+        self._attr_native_unit_of_measurement = unit_type
 
     @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_value(self) -> str | None:
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self) -> str:
+    def icon(self) -> str | None:
         """Icon to use in the frontend, if any."""
-        if self.resource_type == "devices/battery" and self.extra is not None:
+        if self.entity_description.key == "devices/battery" and self.extra is not None:
             extra_battery = self.extra.get("battery")
             if extra_battery is not None:
                 battery_level = BATTERY_LEVELS.get(extra_battery)
                 if battery_level is not None:
                     return icon_for_battery_level(battery_level=battery_level)
-        fitbit_ressource = FITBIT_RESOURCES_LIST[self.resource_type]
-        return f"mdi:{fitbit_ressource[2]}"
+        return self.entity_description.icon
 
     @property
     def extra_state_attributes(self) -> dict[str, str | None]:
         """Return the state attributes."""
-        attrs: dict[str, str | None] = {}
-
-        attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
+        attrs: dict[str, str | None] = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
         if self.extra is not None:
             attrs["model"] = self.extra.get("deviceVersion")
@@ -411,31 +394,32 @@ class FitbitSensor(SensorEntity):
 
     def update(self) -> None:
         """Get the latest data from the Fitbit API and update the states."""
-        if self.resource_type == "devices/battery" and self.extra is not None:
+        resource_type = self.entity_description.key
+        if resource_type == "devices/battery" and self.extra is not None:
             registered_devs: list[dict[str, Any]] = self.client.get_devices()
             device_id = self.extra.get("id")
             self.extra = list(
                 filter(lambda device: device.get("id") == device_id, registered_devs)
             )[0]
-            self._state = self.extra.get("battery")
+            self._attr_native_value = self.extra.get("battery")
 
         else:
-            container = self.resource_type.replace("/", "-")
-            response = self.client.time_series(self.resource_type, period="7d")
+            container = resource_type.replace("/", "-")
+            response = self.client.time_series(resource_type, period="7d")
             raw_state = response[container][-1].get("value")
-            if self.resource_type == "activities/distance":
-                self._state = format(float(raw_state), ".2f")
-            elif self.resource_type == "activities/tracker/distance":
-                self._state = format(float(raw_state), ".2f")
-            elif self.resource_type == "body/bmi":
-                self._state = format(float(raw_state), ".1f")
-            elif self.resource_type == "body/fat":
-                self._state = format(float(raw_state), ".1f")
-            elif self.resource_type == "body/weight":
-                self._state = format(float(raw_state), ".1f")
-            elif self.resource_type == "sleep/startTime":
+            if resource_type == "activities/distance":
+                self._attr_native_value = format(float(raw_state), ".2f")
+            elif resource_type == "activities/tracker/distance":
+                self._attr_native_value = format(float(raw_state), ".2f")
+            elif resource_type == "body/bmi":
+                self._attr_native_value = format(float(raw_state), ".1f")
+            elif resource_type == "body/fat":
+                self._attr_native_value = format(float(raw_state), ".1f")
+            elif resource_type == "body/weight":
+                self._attr_native_value = format(float(raw_state), ".1f")
+            elif resource_type == "sleep/startTime":
                 if raw_state == "":
-                    self._state = "-"
+                    self._attr_native_value = "-"
                 elif self.clock_format == "12H":
                     hours, minutes = raw_state.split(":")
                     hours, minutes = int(hours), int(minutes)
@@ -445,20 +429,22 @@ class FitbitSensor(SensorEntity):
                         hours -= 12
                     elif hours == 0:
                         hours = 12
-                    self._state = f"{hours}:{minutes:02d} {setting}"
+                    self._attr_native_value = f"{hours}:{minutes:02d} {setting}"
                 else:
-                    self._state = raw_state
+                    self._attr_native_value = raw_state
             else:
                 if self.is_metric:
-                    self._state = raw_state
+                    self._attr_native_value = raw_state
                 else:
                     try:
-                        self._state = f"{int(raw_state):,}"
+                        self._attr_native_value = f"{int(raw_state):,}"
                     except TypeError:
-                        self._state = raw_state
+                        self._attr_native_value = raw_state
 
-        if self.resource_type == "activities/heart":
-            self._state = response[container][-1].get("value").get("restingHeartRate")
+        if resource_type == "activities/heart":
+            self._attr_native_value = (
+                response[container][-1].get("value").get("restingHeartRate")
+            )
 
         token = self.client.client.session.token
         config_contents = {

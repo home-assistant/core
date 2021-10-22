@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import collections
-from collections.abc import Awaitable, Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -14,7 +14,7 @@ import inspect
 import logging
 import os
 from random import SystemRandom
-from typing import Callable, Final, cast, final
+from typing import Final, cast, final
 
 from aiohttp import web
 import async_timeout
@@ -434,6 +434,7 @@ class Camera(Entity):
 
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
+        # pylint: disable=no-self-use
         return None
 
     def camera_image(

@@ -23,6 +23,7 @@
             "is_sulphur_dioxide": "A {entity_name} k\u00e9n-dioxid koncentr\u00e1ci\u00f3 jelenlegi szintje",
             "is_temperature": "{entity_name} aktu\u00e1lis h\u0151m\u00e9rs\u00e9klete",
             "is_value": "{entity_name} aktu\u00e1lis \u00e9rt\u00e9ke",
+            "is_volatile_organic_compounds": "Jelenlegi {entity_name} ill\u00e9kony szerves vegy\u00fcletek koncentr\u00e1ci\u00f3s szintje",
             "is_voltage": "A jelenlegi {entity_name} fesz\u00fclts\u00e9g"
         },
         "trigger_type": {
@@ -48,6 +49,7 @@
             "sulphur_dioxide": "{entity_name} k\u00e9n-dioxid koncentr\u00e1ci\u00f3v\u00e1ltoz\u00e1s",
             "temperature": "{entity_name} h\u0151m\u00e9rs\u00e9klete v\u00e1ltozik",
             "value": "{entity_name} \u00e9rt\u00e9ke v\u00e1ltozik",
+            "volatile_organic_compounds": "{entity_name} ill\u00e9kony szerves vegy\u00fcletek koncentr\u00e1ci\u00f3j\u00e1nak v\u00e1ltoz\u00e1sai",
             "voltage": "{entity_name} fesz\u00fclts\u00e9ge v\u00e1ltozik"
         }
     },

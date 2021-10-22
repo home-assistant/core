@@ -1,4 +1,7 @@
 """Support for deCONZ covers."""
+
+from pydeconz.light import Cover
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
@@ -18,20 +21,14 @@ from homeassistant.components.cover import (
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import (
-    COVER_TYPES,
-    LEVEL_CONTROLLABLE_OUTPUT,
-    NEW_LIGHT,
-    WINDOW_COVERING_CONTROLLER,
-    WINDOW_COVERING_DEVICE,
-)
+from .const import NEW_LIGHT
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
 DEVICE_CLASS = {
-    LEVEL_CONTROLLABLE_OUTPUT: DEVICE_CLASS_DAMPER,
-    WINDOW_COVERING_CONTROLLER: DEVICE_CLASS_SHADE,
-    WINDOW_COVERING_DEVICE: DEVICE_CLASS_SHADE,
+    "Level controllable output": DEVICE_CLASS_DAMPER,
+    "Window covering controller": DEVICE_CLASS_SHADE,
+    "Window covering device": DEVICE_CLASS_SHADE,
 }
 
 
@@ -47,8 +44,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         for light in lights:
             if (
-                light.type in COVER_TYPES
-                and light.uniqueid not in gateway.entities[DOMAIN]
+                isinstance(light, Cover)
+                and light.unique_id not in gateway.entities[DOMAIN]
             ):
                 entities.append(DeconzCover(light, gateway))
 

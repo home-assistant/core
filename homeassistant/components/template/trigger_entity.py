@@ -69,7 +69,7 @@ class TriggerEntity(update_coordinator.CoordinatorEntity):
 
         # We make a copy so our initial render is 'unknown' and not 'unavailable'
         self._rendered = dict(self._static_rendered)
-        self._parse_result = set()
+        self._parse_result = {CONF_AVAILABILITY}
 
     @property
     def name(self):

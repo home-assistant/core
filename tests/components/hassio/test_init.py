@@ -287,7 +287,7 @@ async def test_warn_when_cannot_connect(hass, caplog):
         assert result
 
     assert hass.components.hassio.is_hassio()
-    assert "Not connected with Hass.io / system too busy!" in caplog.text
+    assert "Not connected with the supervisor / system too busy!" in caplog.text
 
 
 async def test_service_register(hassio_env, hass):

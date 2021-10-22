@@ -1,7 +1,6 @@
 """Support for Tractive sensors."""
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
@@ -17,8 +16,10 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import (
     ATTR_DAILY_GOAL,
     ATTR_MINUTES_ACTIVE,
+    CLIENT,
     DOMAIN,
     SERVER_UNAVAILABLE,
+    TRACKABLES,
     TRACKER_ACTIVITY_STATUS_UPDATED,
     TRACKER_HARDWARE_STATUS_UPDATED,
 )
@@ -137,29 +138,21 @@ SENSOR_TYPES = (
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Tractive device trackers."""
-    client = hass.data[DOMAIN][entry.entry_id]
-
-    trackables = await client.trackable_objects()
+    client = hass.data[DOMAIN][entry.entry_id][CLIENT]
+    trackables = hass.data[DOMAIN][entry.entry_id][TRACKABLES]
 
     entities = []
 
-    async def _prepare_sensor_entity(item):
-        """Prepare sensor entities."""
-        trackable = await item.details()
-        tracker = client.tracker(trackable["device_id"])
-        tracker_details = await tracker.details()
+    for item in trackables:
         for description in SENSOR_TYPES:
-            unique_id = f"{trackable['_id']}_{description.key}"
             entities.append(
                 description.entity_class(
                     client.user_id,
-                    trackable,
-                    tracker_details,
-                    unique_id,
+                    item.trackable,
+                    item.tracker_details,
+                    f"{item.trackable['_id']}_{description.key}",
                     description,
                 )
             )
-
-    await asyncio.gather(*(_prepare_sensor_entity(item) for item in trackables))
 
     async_add_entities(entities)

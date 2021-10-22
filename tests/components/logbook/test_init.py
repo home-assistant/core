@@ -1289,6 +1289,45 @@ async def test_logbook_entity_matches_only(hass, hass_client):
     assert json_dict[1]["context_user_id"] == "9400facee45711eaa9308bfd3d19e474"
 
 
+async def test_custom_log_entry_discoverable_via_entity_matches_only(hass, hass_client):
+    """Test if a custom log entry is later discoverable via entity_matches_only."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "logbook", {})
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    logbook.async_log_entry(
+        hass,
+        "Alarm",
+        "is triggered",
+        "switch",
+        "switch.test_switch",
+    )
+    await hass.async_block_till_done()
+    await hass.async_add_executor_job(trigger_db_commit, hass)
+    await hass.async_block_till_done()
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    client = await hass_client()
+
+    # Today time 00:00:00
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day)
+
+    # Test today entries with filter by end_time
+    end_time = start + timedelta(hours=24)
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time.isoformat()}&entity=switch.test_switch&entity_matches_only"
+    )
+    assert response.status == 200
+    json_dict = await response.json()
+
+    assert len(json_dict) == 1
+
+    assert json_dict[0]["name"] == "Alarm"
+    assert json_dict[0]["message"] == "is triggered"
+    assert json_dict[0]["entity_id"] == "switch.test_switch"
+
+
 async def test_logbook_entity_matches_only_multiple(hass, hass_client):
     """Test the logbook view with a multiple entities and entity_matches_only."""
     await hass.async_add_executor_job(init_recorder_component, hass)

@@ -109,7 +109,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name="lyric_coordinator",
         update_method=async_update_data,
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=120),
+        update_interval=timedelta(seconds=300),
     )
 
     hass.data[DOMAIN][entry.entry_id] = coordinator

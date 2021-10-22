@@ -54,6 +54,8 @@ from .const import (
     API_THERMOSTAT_MODES,
     API_THERMOSTAT_MODES_CUSTOM,
     API_THERMOSTAT_PRESETS,
+    DATE_FORMAT,
+    PRESET_MODE_NA,
     Cause,
     Inputs,
 )
@@ -122,6 +124,8 @@ async def async_api_turn_on(hass, config, directive, context):
     service = SERVICE_TURN_ON
     if domain == cover.DOMAIN:
         service = cover.SERVICE_OPEN_COVER
+    elif domain == fan.DOMAIN:
+        service = fan.SERVICE_TURN_ON
     elif domain == vacuum.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if not supported & vacuum.SUPPORT_TURN_ON and supported & vacuum.SUPPORT_START:
@@ -156,6 +160,8 @@ async def async_api_turn_off(hass, config, directive, context):
     service = SERVICE_TURN_OFF
     if entity.domain == cover.DOMAIN:
         service = cover.SERVICE_CLOSE_COVER
+    elif domain == fan.DOMAIN:
+        service = fan.SERVICE_TURN_OFF
     elif domain == vacuum.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if (
@@ -318,7 +324,7 @@ async def async_api_activate(hass, config, directive, context):
 
     payload = {
         "cause": {"type": Cause.VOICE_INTERACTION},
-        "timestamp": f"{dt_util.utcnow().replace(tzinfo=None).isoformat()}Z",
+        "timestamp": dt_util.utcnow().strftime(DATE_FORMAT),
     }
 
     return directive.response(
@@ -342,7 +348,7 @@ async def async_api_deactivate(hass, config, directive, context):
 
     payload = {
         "cause": {"type": Cause.VOICE_INTERACTION},
-        "timestamp": f"{dt_util.utcnow().replace(tzinfo=None).isoformat()}Z",
+        "timestamp": dt_util.utcnow().strftime(DATE_FORMAT),
     }
 
     return directive.response(
@@ -825,48 +831,6 @@ async def async_api_reportstate(hass, config, directive, context):
     return directive.response(name="StateReport")
 
 
-@HANDLERS.register(("Alexa.PowerLevelController", "SetPowerLevel"))
-async def async_api_set_power_level(hass, config, directive, context):
-    """Process a SetPowerLevel request."""
-    entity = directive.entity
-    service = None
-    data = {ATTR_ENTITY_ID: entity.entity_id}
-
-    if entity.domain == fan.DOMAIN:
-        service = fan.SERVICE_SET_PERCENTAGE
-        percentage = int(directive.payload["powerLevel"])
-        data[fan.ATTR_PERCENTAGE] = percentage
-
-    await hass.services.async_call(
-        entity.domain, service, data, blocking=False, context=context
-    )
-
-    return directive.response()
-
-
-@HANDLERS.register(("Alexa.PowerLevelController", "AdjustPowerLevel"))
-async def async_api_adjust_power_level(hass, config, directive, context):
-    """Process an AdjustPowerLevel request."""
-    entity = directive.entity
-    percentage_delta = int(directive.payload["powerLevelDelta"])
-    service = None
-    data = {ATTR_ENTITY_ID: entity.entity_id}
-
-    if entity.domain == fan.DOMAIN:
-        service = fan.SERVICE_SET_PERCENTAGE
-        current = entity.attributes.get(fan.ATTR_PERCENTAGE) or 0
-
-        # set percentage
-        percentage = min(100, max(0, percentage_delta + current))
-        data[fan.ATTR_PERCENTAGE] = percentage
-
-    await hass.services.async_call(
-        entity.domain, service, data, blocking=False, context=context
-    )
-
-    return directive.response()
-
-
 @HANDLERS.register(("Alexa.SecurityPanelController", "Arm"))
 async def async_api_arm(hass, config, directive, context):
     """Process a Security Panel Arm request."""
@@ -961,7 +925,9 @@ async def async_api_set_mode(hass, config, directive, context):
     # Fan preset_mode
     elif instance == f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}":
         preset_mode = mode.split(".")[1]
-        if preset_mode in entity.attributes.get(fan.ATTR_PRESET_MODES):
+        if preset_mode != PRESET_MODE_NA and preset_mode in entity.attributes.get(
+            fan.ATTR_PRESET_MODES
+        ):
             service = fan.SERVICE_SET_PRESET_MODE
             data[fan.ATTR_PRESET_MODE] = preset_mode
         else:
@@ -1091,24 +1057,8 @@ async def async_api_set_range(hass, config, directive, context):
     data = {ATTR_ENTITY_ID: entity.entity_id}
     range_value = directive.payload["rangeValue"]
 
-    # Fan Speed
-    if instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
-        range_value = int(range_value)
-        service = fan.SERVICE_SET_SPEED
-        speed_list = entity.attributes[fan.ATTR_SPEED_LIST]
-        speed = next((v for i, v in enumerate(speed_list) if i == range_value), None)
-
-        if not speed:
-            msg = "Entity does not support value"
-            raise AlexaInvalidValueError(msg)
-
-        if speed == fan.SPEED_OFF:
-            service = fan.SERVICE_TURN_OFF
-
-        data[fan.ATTR_SPEED] = speed
-
     # Cover Position
-    elif instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
+    if instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
         range_value = int(range_value)
         if range_value == 0:
             service = cover.SERVICE_CLOSE_COVER
@@ -1128,6 +1078,19 @@ async def async_api_set_range(hass, config, directive, context):
         else:
             service = cover.SERVICE_SET_COVER_TILT_POSITION
             data[cover.ATTR_TILT_POSITION] = range_value
+
+    # Fan Speed
+    elif instance == f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}":
+        range_value = int(range_value)
+        if range_value == 0:
+            service = fan.SERVICE_TURN_OFF
+        else:
+            supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+            if supported and fan.SUPPORT_SET_SPEED:
+                service = fan.SERVICE_SET_PERCENTAGE
+                data[fan.ATTR_PERCENTAGE] = range_value
+            else:
+                service = fan.SERVICE_TURN_ON
 
     # Input Number Value
     elif instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
@@ -1184,29 +1147,8 @@ async def async_api_adjust_range(hass, config, directive, context):
     range_delta_default = bool(directive.payload["rangeValueDeltaDefault"])
     response_value = 0
 
-    # Fan Speed
-    if instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
-        range_delta = int(range_delta)
-        service = fan.SERVICE_SET_SPEED
-        speed_list = entity.attributes[fan.ATTR_SPEED_LIST]
-        current_speed = entity.attributes[fan.ATTR_SPEED]
-        current_speed_index = next(
-            (i for i, v in enumerate(speed_list) if v == current_speed), 0
-        )
-        new_speed_index = min(
-            len(speed_list) - 1, max(0, current_speed_index + range_delta)
-        )
-        speed = next(
-            (v for i, v in enumerate(speed_list) if i == new_speed_index), None
-        )
-
-        if speed == fan.SPEED_OFF:
-            service = fan.SERVICE_TURN_OFF
-
-        data[fan.ATTR_SPEED] = response_value = speed
-
     # Cover Position
-    elif instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
+    if instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
         range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
         service = SERVICE_SET_COVER_POSITION
         current = entity.attributes.get(cover.ATTR_POSITION)
@@ -1236,6 +1178,25 @@ async def async_api_adjust_range(hass, config, directive, context):
             service = cover.SERVICE_CLOSE_COVER_TILT
         else:
             data[cover.ATTR_TILT_POSITION] = tilt_position
+
+    # Fan speed percentage
+    elif instance == f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}":
+        percentage_step = entity.attributes.get(fan.ATTR_PERCENTAGE_STEP) or 20
+        range_delta = (
+            int(range_delta * percentage_step)
+            if range_delta_default
+            else int(range_delta)
+        )
+        service = fan.SERVICE_SET_PERCENTAGE
+        current = entity.attributes.get(fan.ATTR_PERCENTAGE)
+        if not current:
+            msg = f"Unable to determine {entity.entity_id} current fan speed"
+            raise AlexaInvalidValueError(msg)
+        percentage = response_value = min(100, max(0, range_delta + current))
+        if percentage:
+            data[fan.ATTR_PERCENTAGE] = percentage
+        else:
+            service = fan.SERVICE_TURN_OFF
 
     # Input Number Value
     elif instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":

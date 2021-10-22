@@ -81,7 +81,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="conductivity",
         name="Conductivity",
         native_unit_of_measurement=CONDUCTIVITY,
-        icon="mdi:flash-circle",
+        icon="mdi:lightning-bolt-circle",
     ),
     SensorEntityDescription(
         key="battery",

@@ -707,13 +707,15 @@ async def test_setup_source(hass):
 
     assert entity.entity_sources(hass) == {
         "test_domain.platform_config_source": {
-            "source": entity.SOURCE_PLATFORM_CONFIG,
+            "custom_component": False,
             "domain": "test_platform",
+            "source": entity.SOURCE_PLATFORM_CONFIG,
         },
         "test_domain.config_entry_source": {
-            "source": entity.SOURCE_CONFIG_ENTRY,
             "config_entry": platform.config_entry.entry_id,
+            "custom_component": False,
             "domain": "test_platform",
+            "source": entity.SOURCE_CONFIG_ENTRY,
         },
     }
 

@@ -509,7 +509,7 @@ async def test_external_timed_out(hass, current_request_with_host):
         assert result["reason"] == "token_request_timeout"
 
 
-async def test_callback_view(hass, aiohttp_client, current_request_with_host):
+async def test_callback_view(hass, hass_client_no_auth, current_request_with_host):
     """Test callback view."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -525,7 +525,7 @@ async def test_callback_view(hass, aiohttp_client, current_request_with_host):
         )
         assert result["type"] == "external"
 
-        client = await aiohttp_client(hass.http.app)
+        client = await hass_client_no_auth()
         forward_url = f'{config_flow.AUTH_CALLBACK_PATH}?flow_id={result["flow_id"]}'
 
         resp = await client.get(forward_url)

@@ -4,7 +4,8 @@ import logging
 from aiohttp import web
 import voluptuous as vol
 
-from homeassistant import util
+from homeassistant.components.network import async_get_source_ip
+from homeassistant.components.network.const import PUBLIC_TARGET_IP
 from homeassistant.const import (
     CONF_ENTITIES,
     CONF_TYPE,
@@ -105,7 +106,9 @@ ATTR_EMULATED_HUE_NAME = "emulated_hue_name"
 
 async def async_setup(hass, yaml_config):
     """Activate the emulated_hue component."""
-    config = Config(hass, yaml_config.get(DOMAIN, {}))
+    local_ip = await async_get_source_ip(hass, PUBLIC_TARGET_IP)
+    config = Config(hass, yaml_config.get(DOMAIN, {}), local_ip)
+    await config.async_setup()
 
     app = web.Application()
     app["hass"] = hass
@@ -156,7 +159,6 @@ async def async_setup(hass, yaml_config):
         nonlocal protocol
         nonlocal site
         nonlocal runner
-        await config.async_setup()
 
         _, protocol = await listen
 
@@ -186,7 +188,7 @@ async def async_setup(hass, yaml_config):
 class Config:
     """Hold configuration variables for the emulated hue bridge."""
 
-    def __init__(self, hass, conf):
+    def __init__(self, hass, conf, local_ip):
         """Initialize the instance."""
         self.hass = hass
         self.type = conf.get(CONF_TYPE)
@@ -204,11 +206,7 @@ class Config:
         # Get the IP address that will be passed to the Echo during discovery
         self.host_ip_addr = conf.get(CONF_HOST_IP)
         if self.host_ip_addr is None:
-            self.host_ip_addr = util.get_local_ip()
-            _LOGGER.info(
-                "Listen IP address not specified, auto-detected address is %s",
-                self.host_ip_addr,
-            )
+            self.host_ip_addr = local_ip
 
         # Get the port that the Hue bridge will listen on
         self.listen_port = conf.get(CONF_LISTEN_PORT)

@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "could_not_connect": "DLNA seadmega \u00fchenduse loomine nurjus",
+            "discovery_error": "Sobiva DLNA -seadme leidmine nurjus",
+            "incomplete_config": "Seadetes puudub n\u00f5utav muutuja",
+            "non_unique_id": "Leiti mitu sama unikaalse ID-ga seadet",
+            "not_dmr": "Seade ei ole digitaalse meedia renderdaja"
+        },
+        "error": {
+            "could_not_connect": "DLNA seadmega \u00fchenduse loomine nurjus",
+            "not_dmr": "Seade ei ole digitaalse meedia renderdaja"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "Kas alustada seadistamist?"
+            },
+            "user": {
+                "data": {
+                    "url": "URL"
+                },
+                "description": "URL aadress seadme kirjelduse XML-failile",
+                "title": "DLNA digitaalse meediumi renderdaja"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_url": "Sobimatu URL"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "callback_url_override": "S\u00fcndmuse kuulaja URL",
+                    "listen_port": "S\u00fcndmuste kuulaja port (juhuslik kui pole m\u00e4\u00e4ratud)",
+                    "poll_availability": "K\u00fcsitle seadme saadavuse kohta"
+                },
+                "title": "DLNA digitaalse meediumi renderdaja s\u00e4tted"
+            }
+        }
+    }
+}

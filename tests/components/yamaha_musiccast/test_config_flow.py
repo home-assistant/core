@@ -15,6 +15,17 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
+async def silent_ssdp_scanner(hass):
+    """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
+    with patch(
+        "homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
+    ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
+        "homeassistant.components.ssdp.Scanner.async_scan"
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def mock_setup_entry():
     """Mock setting up a config entry."""
     with patch(
@@ -104,7 +115,9 @@ def mock_empty_discovery_information():
 # User Flows
 
 
-async def test_user_input_device_not_found(hass, mock_get_device_info_mc_exception):
+async def test_user_input_device_not_found(
+    hass, mock_get_device_info_mc_exception, mock_get_source_ip
+):
     """Test when user specifies a non-existing device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -120,7 +133,9 @@ async def test_user_input_device_not_found(hass, mock_get_device_info_mc_excepti
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_user_input_non_yamaha_device_found(hass, mock_get_device_info_invalid):
+async def test_user_input_non_yamaha_device_found(
+    hass, mock_get_device_info_invalid, mock_get_source_ip
+):
     """Test when user specifies an existing device, which does not provide the musiccast API."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -136,7 +151,9 @@ async def test_user_input_non_yamaha_device_found(hass, mock_get_device_info_inv
     assert result2["errors"] == {"base": "no_musiccast_device"}
 
 
-async def test_user_input_device_already_existing(hass, mock_get_device_info_valid):
+async def test_user_input_device_already_existing(
+    hass, mock_get_device_info_valid, mock_get_source_ip
+):
     """Test when user specifies an existing device."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -158,7 +175,9 @@ async def test_user_input_device_already_existing(hass, mock_get_device_info_val
     assert result2["reason"] == "already_configured"
 
 
-async def test_user_input_unknown_error(hass, mock_get_device_info_exception):
+async def test_user_input_unknown_error(
+    hass, mock_get_device_info_exception, mock_get_source_ip
+):
     """Test when user specifies an existing device, which does not provide the musiccast API."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -175,7 +194,10 @@ async def test_user_input_unknown_error(hass, mock_get_device_info_exception):
 
 
 async def test_user_input_device_found(
-    hass, mock_get_device_info_valid, mock_valid_discovery_information
+    hass,
+    mock_get_device_info_valid,
+    mock_valid_discovery_information,
+    mock_get_source_ip,
 ):
     """Test when user specifies an existing device."""
     result = await hass.config_entries.flow.async_init(
@@ -198,7 +220,10 @@ async def test_user_input_device_found(
 
 
 async def test_user_input_device_found_no_ssdp(
-    hass, mock_get_device_info_valid, mock_empty_discovery_information
+    hass,
+    mock_get_device_info_valid,
+    mock_empty_discovery_information,
+    mock_get_source_ip,
 ):
     """Test when user specifies an existing device, which no discovery data are present for."""
     result = await hass.config_entries.flow.async_init(
@@ -220,7 +245,9 @@ async def test_user_input_device_found_no_ssdp(
     }
 
 
-async def test_import_device_already_existing(hass, mock_get_device_info_valid):
+async def test_import_device_already_existing(
+    hass, mock_get_device_info_valid, mock_get_source_ip
+):
     """Test when the configurations.yaml contains an existing device."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -239,7 +266,7 @@ async def test_import_device_already_existing(hass, mock_get_device_info_valid):
     assert result["reason"] == "already_configured"
 
 
-async def test_import_error(hass, mock_get_device_info_exception):
+async def test_import_error(hass, mock_get_device_info_exception, mock_get_source_ip):
     """Test when in the configuration.yaml a device is configured, which cannot be added.."""
     config = {"platform": "yamaha_musiccast", "host": "192.168.188.18", "port": 5006}
 
@@ -252,7 +279,10 @@ async def test_import_error(hass, mock_get_device_info_exception):
 
 
 async def test_import_device_successful(
-    hass, mock_get_device_info_valid, mock_valid_discovery_information
+    hass,
+    mock_get_device_info_valid,
+    mock_valid_discovery_information,
+    mock_get_source_ip,
 ):
     """Test when the device was imported successfully."""
     config = {"platform": "yamaha_musiccast", "host": "127.0.0.1", "port": 5006}
@@ -273,7 +303,7 @@ async def test_import_device_successful(
 # SSDP Flows
 
 
-async def test_ssdp_discovery_failed(hass, mock_ssdp_no_yamaha):
+async def test_ssdp_discovery_failed(hass, mock_ssdp_no_yamaha, mock_get_source_ip):
     """Test when an SSDP discovered device is not a musiccast device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -289,7 +319,9 @@ async def test_ssdp_discovery_failed(hass, mock_ssdp_no_yamaha):
     assert result["reason"] == "yxc_control_url_missing"
 
 
-async def test_ssdp_discovery_successful_add_device(hass, mock_ssdp_yamaha):
+async def test_ssdp_discovery_successful_add_device(
+    hass, mock_ssdp_yamaha, mock_get_source_ip
+):
     """Test when the SSDP discovered device is a musiccast device and the user confirms it."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -319,7 +351,9 @@ async def test_ssdp_discovery_successful_add_device(hass, mock_ssdp_yamaha):
     }
 
 
-async def test_ssdp_discovery_existing_device_update(hass, mock_ssdp_yamaha):
+async def test_ssdp_discovery_existing_device_update(
+    hass, mock_ssdp_yamaha, mock_get_source_ip
+):
     """Test when the SSDP discovered device is a musiccast device, but it already exists with another IP."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,

@@ -66,13 +66,9 @@ class PoolSenseEntity(CoordinatorEntity):
         """Initialize poolsense sensor."""
         super().__init__(coordinator)
         self._unique_id = f"{device_id}-{info_type}"
+        self._attr_unique_id = self._unique_id
         self.info_type = info_type
         self.device_id = device_id
-
-    @property
-    def unique_id(self):
-        """Return a unique id."""
-        return self._unique_id
 
 
 class PoolSenseDataUpdateCoordinator(DataUpdateCoordinator):

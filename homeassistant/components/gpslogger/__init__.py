@@ -10,7 +10,6 @@ from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONF_WEBHOOK_ID,
-    HTTP_OK,
     HTTP_UNPROCESSABLE_ENTITY,
 )
 from homeassistant.helpers import config_entry_flow
@@ -91,7 +90,7 @@ async def handle_webhook(hass, webhook_id, request):
         attrs,
     )
 
-    return web.Response(text=f"Setting location for {device}", status=HTTP_OK)
+    return web.Response(text=f"Setting location for {device}")
 
 
 async def async_setup_entry(hass, entry):

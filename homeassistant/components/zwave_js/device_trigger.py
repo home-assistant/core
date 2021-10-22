@@ -6,7 +6,10 @@ from typing import Any
 import voluptuous as vol
 from zwave_js_server.const import CommandClass
 
-from homeassistant.components.automation import AutomationActionType
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
@@ -46,6 +49,7 @@ from .const import (
     ZWAVE_JS_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
 )
+from .device_automation_helpers import CONF_SUBTYPE, NODE_STATUSES
 from .helpers import (
     async_get_node_from_device_id,
     async_get_node_status_sensor_entity_id,
@@ -61,8 +65,6 @@ from .triggers.value_updated import (
     ATTR_TO,
     PLATFORM_TYPE as VALUE_UPDATED_PLATFORM_TYPE,
 )
-
-CONF_SUBTYPE = "subtype"
 
 # Trigger types
 ENTRY_CONTROL_NOTIFICATION = "event.notification.entry_control"
@@ -149,8 +151,6 @@ BASE_STATE_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
     }
 )
-
-NODE_STATUSES = ["asleep", "awake", "dead", "alive"]
 
 NODE_STATUS_SCHEMA = BASE_STATE_SCHEMA.extend(
     {
@@ -358,7 +358,7 @@ async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
     action: AutomationActionType,
-    automation_info: dict,
+    automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     trigger_type = config[CONF_TYPE]

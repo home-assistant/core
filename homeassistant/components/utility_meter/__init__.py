@@ -24,6 +24,7 @@ from .const import (
     CONF_TARIFF,
     CONF_TARIFF_ENTITY,
     CONF_TARIFFS,
+    DATA_TARIFF_SENSORS,
     DATA_UTILITY,
     DOMAIN,
     METER_TYPES,
@@ -98,6 +99,7 @@ async def async_setup(hass, config):
         _LOGGER.debug("Setup %s.%s", DOMAIN, meter)
 
         hass.data[DATA_UTILITY][meter] = conf
+        hass.data[DATA_UTILITY][meter][DATA_TARIFF_SENSORS] = []
 
         if not conf[CONF_TARIFFS]:
             # only one entity is required

@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt",
-            "unsupported_version": "A BleBox eszk\u00f6z elavult firmware-rel rendelkezik. El\u0151sz\u00f6r friss\u00edtsd."
+            "unsupported_version": "A BleBox eszk\u00f6z elavult firmware-rel rendelkezik. K\u00e9rem, friss\u00edtse el\u0151bb."
         },
         "flow_title": "{name} ({host})",
         "step": {

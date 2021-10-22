@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "could_not_connect": "Impossibile connettersi al dispositivo DLNA",
+            "discovery_error": "Impossibile individuare un dispositivo DLNA corrispondente",
+            "incomplete_config": "Nella configurazione manca una variabile richiesta",
+            "non_unique_id": "Pi\u00f9 dispositivi trovati con lo stesso ID univoco",
+            "not_dmr": "Il dispositivo non \u00e8 un Digital Media Renderer"
+        },
+        "error": {
+            "could_not_connect": "Impossibile connettersi al dispositivo DLNA",
+            "not_dmr": "Il dispositivo non \u00e8 un Digital Media Renderer"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "Vuoi iniziare la configurazione?"
+            },
+            "user": {
+                "data": {
+                    "url": "URL"
+                },
+                "description": "URL di un file XML di descrizione del dispositivo",
+                "title": "DLNA Digital Media Renderer"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_url": "URL non valido"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "callback_url_override": "URL di richiamata dell'ascoltatore di eventi",
+                    "listen_port": "Porta dell'ascoltatore di eventi (casuale se non impostata)",
+                    "poll_availability": "Interrogazione per la disponibilit\u00e0 del dispositivo"
+                },
+                "title": "Configurazione DLNA Digital Media Renderer"
+            }
+        }
+    }
+}

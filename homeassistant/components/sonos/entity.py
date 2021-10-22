@@ -95,7 +95,10 @@ class SonosEntity(Entity):
             "name": self.speaker.zone_name,
             "model": self.speaker.model_name.replace("Sonos ", ""),
             "sw_version": self.speaker.version,
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self.speaker.mac_address)},
+            "connections": {
+                (dr.CONNECTION_NETWORK_MAC, self.speaker.mac_address),
+                (dr.CONNECTION_UPNP, f"uuid:{self.speaker.uid}"),
+            },
             "manufacturer": "Sonos",
             "suggested_area": self.speaker.zone_name,
         }

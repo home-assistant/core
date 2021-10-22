@@ -121,7 +121,7 @@ class DoorSensorTemperature(GoGoGate2Entity, SensorEntity):
         return TEMP_CELSIUS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         door = self._get_door()
         if door.sensorid is not None:
