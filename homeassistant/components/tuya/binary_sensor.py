@@ -62,21 +62,6 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         ),
         TAMPER_BINARY_SENSOR,
     ),
-    # Smoke Detector
-    # https://developer.tuya.com/en/docs/iot/categoryywbj?id=Kaiuz3f6sf952
-    "ywbj": (
-        TuyaBinarySensorEntityDescription(
-            key=DPCode.SMOKE_SENSOR_STATUS,
-            device_class=DEVICE_CLASS_SMOKE,
-            on_value="alarm",
-        ),
-        TuyaBinarySensorEntityDescription(
-            key=DPCode.SMOKE_SENSOR_STATE,
-            device_class=DEVICE_CLASS_SMOKE,
-            on_value="1",
-        ),
-        TAMPER_BINARY_SENSOR,
-    ),
     # Human Presence Sensor
     # https://developer.tuya.com/en/docs/iot/categoryhps?id=Kaiuz42yhn1hs
     "hps": (
@@ -142,6 +127,21 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         TuyaBinarySensorEntityDescription(
             key=DPCode.SOS_STATE,
             device_class=DEVICE_CLASS_SAFETY,
+        ),
+        TAMPER_BINARY_SENSOR,
+    ),
+    # Smoke Detector
+    # https://developer.tuya.com/en/docs/iot/categoryywbj?id=Kaiuz3f6sf952
+    "ywbj": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.SMOKE_SENSOR_STATUS,
+            device_class=DEVICE_CLASS_SMOKE,
+            on_value="alarm",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.SMOKE_SENSOR_STATE,
+            device_class=DEVICE_CLASS_SMOKE,
+            on_value="1",
         ),
         TAMPER_BINARY_SENSOR,
     ),

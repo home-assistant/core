@@ -71,18 +71,6 @@ BATTERY_SENSORS: tuple[SensorEntityDescription, ...] = (
 # end up being a sensor.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
-    # Smoke Detector
-    # https://developer.tuya.com/en/docs/iot/categoryywbj?id=Kaiuz3f6sf952
-    "ywbj": (
-        SensorEntityDescription(
-            key=DPCode.SMOKE_SENSOR_VALUE,
-            name="Smoke Detector Value",
-            icon="mdi:smoke-detector",
-            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-            device_class=STATE_CLASS_MEASUREMENT,
-        ),
-        *BATTERY_SENSORS,
-    ),
     # CO2 Detector
     # https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
     "co2bj": (
@@ -217,6 +205,18 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
     # Emergency Button
     # https://developer.tuya.com/en/docs/iot/categorysos?id=Kaiuz3oi6agjy
     "sos": BATTERY_SENSORS,
+    # Smoke Detector
+    # https://developer.tuya.com/en/docs/iot/categoryywbj?id=Kaiuz3f6sf952
+    "ywbj": (
+        SensorEntityDescription(
+            key=DPCode.SMOKE_SENSOR_VALUE,
+            name="Smoke Amount",
+            icon="mdi:smoke-detector",
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            device_class=STATE_CLASS_MEASUREMENT,
+        ),
+        *BATTERY_SENSORS,
+    ),
     # Vibration Sensor
     # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
     "zd": BATTERY_SENSORS,
