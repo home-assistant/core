@@ -180,7 +180,7 @@ class Control4Entity(CoordinatorEntity):
         return str(self._idx)
 
     @property
-    def device_info(self):  # TODO
+    def device_info(self):
         """Return info of parent Control4 device of entity."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
