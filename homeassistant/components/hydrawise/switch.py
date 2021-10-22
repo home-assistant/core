@@ -75,6 +75,7 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
     ):
         """Initialize a switch for Hydrawise device."""
         super().__init__(data, description)
+        self._attr_unique_id = f"hydrawise_relay_{data['relay_id']}_{description.key}"
         self._default_watering_timer = default_watering_timer
 
     def turn_on(self, **kwargs):

@@ -73,6 +73,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):
     """A sensor implementation for Hydrawise device."""
 
+    def __init__(self, data, description: BinarySensorEntityDescription):
+        """Initialize a binary sensor for Hydrawise device."""
+        super().__init__(data, description)
+        if description.key == "status":
+            self._attr_unique_id = (
+                f"hydrawise_controller_{data['controller_id']}_{description.key}"
+            )
+        elif description.key == "is_watering":
+            self._attr_unique_id = (
+                f"hydrawise_relay_{data['relay_id']}_{description.key}"
+            )
+
     def update(self):
         """Get the latest data and updates the state."""
         _LOGGER.debug("Updating Hydrawise binary sensor: %s", self.name)

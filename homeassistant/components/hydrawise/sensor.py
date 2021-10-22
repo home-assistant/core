@@ -68,6 +68,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class HydrawiseSensor(HydrawiseEntity, SensorEntity):
     """A sensor implementation for Hydrawise device."""
 
+    def __init__(self, data, description: SensorEntityDescription):
+        """Initialize a sensor for Hydrawise device."""
+        super().__init__(data, description)
+        self._attr_unique_id = f"hydrawise_relay_{data['relay_id']}_{description.key}"
+
     def update(self):
         """Get the latest data and updates the states."""
         mydata = self.hass.data[DATA_HYDRAWISE].data
