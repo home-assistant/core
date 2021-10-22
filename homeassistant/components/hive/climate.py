@@ -19,6 +19,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity import DeviceInfo
 
 from . import HiveEntity, refresh_system
 from .const import (
@@ -117,16 +118,16 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
         return self._unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, self.device["device_id"])},
-            "name": self.device["device_name"],
-            "model": self.device["deviceData"]["model"],
-            "manufacturer": self.device["deviceData"]["manufacturer"],
-            "sw_version": self.device["deviceData"]["version"],
-            "via_device": (DOMAIN, self.device["parentDevice"]),
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.device["device_id"])},
+            name=self.device["device_name"],
+            model=self.device["deviceData"]["model"],
+            manufacturer=self.device["deviceData"]["manufacturer"],
+            sw_version=self.device["deviceData"]["version"],
+            via_device=(DOMAIN, self.device["parentDevice"]),
+        )
 
     @property
     def supported_features(self):

@@ -76,13 +76,13 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
-        return {
-            "identifiers": {(HMIPC_DOMAIN, self._device.id)},
-            "name": self._device.label,
-            "manufacturer": "eQ-3",
-            "model": self._device.modelType,
-            "via_device": (HMIPC_DOMAIN, self._device.homeId),
-        }
+        return DeviceInfo(
+            identifiers={(HMIPC_DOMAIN, self._device.id)},
+            name=self._device.label,
+            manufacturer="eQ-3",
+            model=self._device.modelType,
+            via_device=(HMIPC_DOMAIN, self._device.homeId),
+        )
 
     @property
     def temperature_unit(self) -> str:
