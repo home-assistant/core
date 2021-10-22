@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util import Throttle
 
 from .const import CONF_UUID, DOMAIN, KEY_MAC, TIMEOUT
@@ -112,10 +113,10 @@ class DaikinApi:
     def device_info(self):
         """Return a device description for device registry."""
         info = self.device.values
-        return {
-            "connections": {(CONNECTION_NETWORK_MAC, self.device.mac)},
-            "manufacturer": "Daikin",
-            "model": info.get("model"),
-            "name": info.get("name"),
-            "sw_version": info.get("ver", "").replace("_", "."),
-        }
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self.device.mac)},
+            manufacturer="Daikin",
+            model=info.get("model"),
+            name=info.get("name"),
+            sw_version=info.get("ver", "").replace("_", "."),
+        )

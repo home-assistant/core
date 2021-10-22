@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import DEVICE_DEFAULT_NAME
+from homeassistant.helpers.entity import DeviceInfo
 
 from . import DOMAIN
 
@@ -54,10 +55,10 @@ class DemoSwitch(SwitchEntity):
     @property
     def device_info(self):
         """Return device info."""
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            name=self.name,
+        )
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
