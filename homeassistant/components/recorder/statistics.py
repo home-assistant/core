@@ -455,25 +455,11 @@ def get_metadata_with_session(
 ) -> dict[str, tuple[int, StatisticMetaData]]:
     """Fetch meta data.
 
-    Returns a dict of (metadata_id, StatisticMetaData) indexed by statistic_id.
+    Returns a dict of (metadata_id, StatisticMetaData) tuples indexed by statistic_id.
 
     If statistic_ids is given, fetch metadata only for the listed statistics_ids.
     If statistic_type is given, fetch metadata only for statistic_ids supporting it.
     """
-
-    def _meta(metas: list, wanted_metadata_id: str) -> StatisticMetaData | None:
-        """Find metadata for a given metadata_id and store it in a StatisticMetaData."""
-        for meta in metas:
-            if meta["id"] == wanted_metadata_id:
-                return {
-                    "source": meta["source"],
-                    "statistic_id": meta["statistic_id"],
-                    "unit_of_measurement": meta["unit_of_measurement"],
-                    "has_mean": meta["has_mean"],
-                    "has_sum": meta["has_sum"],
-                    "name": meta["name"],
-                }
-        return None
 
     # Fetch metatadata from the database
     baked_query = hass.data[STATISTICS_META_BAKERY](
@@ -499,14 +485,20 @@ def get_metadata_with_session(
     if not result:
         return {}
 
-    metadata_ids = [metadata[0] for metadata in result]
-    # Prepare the result dict
-    metadata: dict[str, tuple[int, StatisticMetaData]] = {}
-    for _id in metadata_ids:
-        meta = _meta(result, _id)
-        if meta:
-            metadata[meta["statistic_id"]] = (_id, meta)
-    return metadata
+    return {
+        meta["statistic_id"]: (
+            meta["id"],
+            {
+                "source": meta["source"],
+                "statistic_id": meta["statistic_id"],
+                "unit_of_measurement": meta["unit_of_measurement"],
+                "has_mean": meta["has_mean"],
+                "has_sum": meta["has_sum"],
+                "name": meta["name"],
+            },
+        )
+        for meta in result
+    }
 
 
 def get_metadata(
