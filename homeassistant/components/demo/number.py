@@ -6,6 +6,7 @@ from typing import Literal
 from homeassistant.components.number import NumberEntity
 from homeassistant.components.number.const import MODE_AUTO, MODE_BOX, MODE_SLIDER
 from homeassistant.const import DEVICE_DEFAULT_NAME
+from homeassistant.helpers.entity import DeviceInfo
 
 from . import DOMAIN
 
@@ -95,15 +96,15 @@ class DemoNumber(NumberEntity):
             self._attr_step = step
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return {
-            "identifiers": {
+        return DeviceInfo(
+            identifiers={
                 # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, self.unique_id)
             },
-            "name": self.name,
-        }
+            name=self.name,
+        )
 
     async def async_set_value(self, value):
         """Update the current value."""
