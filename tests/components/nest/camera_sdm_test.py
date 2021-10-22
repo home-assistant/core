@@ -14,7 +14,12 @@ from google_nest_sdm.event import EventMessage
 import pytest
 
 from homeassistant.components import camera
-from homeassistant.components.camera import STATE_IDLE, STATE_STREAMING
+from homeassistant.components.camera import (
+    STATE_IDLE,
+    STATE_STREAMING,
+    STREAM_TYPE_HLS,
+    STREAM_TYPE_WEB_RTC,
+)
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -192,6 +197,7 @@ async def test_camera_stream(hass, auth):
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
     assert cam.state == STATE_STREAMING
+    assert cam.attributes["frontend_stream_type"] == STREAM_TYPE_HLS
 
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
@@ -209,6 +215,7 @@ async def test_camera_ws_stream(hass, auth, hass_ws_client):
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
     assert cam.state == STATE_STREAMING
+    assert cam.attributes["frontend_stream_type"] == STREAM_TYPE_HLS
 
     with patch("homeassistant.components.camera.create_stream") as mock_stream:
         mock_stream().endpoint_url.return_value = "http://home.assistant/playlist.m3u8"
@@ -695,6 +702,7 @@ async def test_camera_web_rtc(hass, auth, hass_ws_client):
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
     assert cam.state == STATE_STREAMING
+    assert cam.attributes["frontend_stream_type"] == STREAM_TYPE_WEB_RTC
 
     client = await hass_ws_client(hass)
     await client.send_json(
@@ -725,6 +733,7 @@ async def test_camera_web_rtc_unsupported(hass, auth, hass_ws_client):
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
     assert cam.state == STATE_STREAMING
+    assert cam.attributes["frontend_stream_type"] == STREAM_TYPE_HLS
 
     client = await hass_ws_client(hass)
     await client.send_json(
@@ -786,3 +795,68 @@ async def test_camera_web_rtc_offer_failure(hass, auth, hass_ws_client):
     assert not msg["success"]
     assert msg["error"]["code"] == "web_rtc_offer_failed"
     assert msg["error"]["message"].startswith("Nest API error")
+
+
+async def test_camera_multiple_streams(hass, auth, hass_ws_client):
+    """Test a camera supporting multiple stream types."""
+    expiration = utcnow() + datetime.timedelta(seconds=100)
+    auth.responses = [
+        # RTSP response
+        make_stream_url_response(),
+        # WebRTC response
+        aiohttp.web.json_response(
+            {
+                "results": {
+                    "answerSdp": "v=0\r\ns=-\r\n",
+                    "mediaSessionId": "yP2grqz0Y1V_wgiX9KEbMWHoLd...",
+                    "expiresAt": expiration.isoformat(timespec="seconds"),
+                },
+            }
+        ),
+    ]
+    device_traits = {
+        "sdm.devices.traits.Info": {
+            "customName": "My Camera",
+        },
+        "sdm.devices.traits.CameraLiveStream": {
+            "maxVideoResolution": {
+                "width": 640,
+                "height": 480,
+            },
+            "videoCodecs": ["H264"],
+            "audioCodecs": ["AAC"],
+            "supportedProtocols": ["WEB_RTC", "RTSP"],
+        },
+    }
+    await async_setup_camera(hass, device_traits, auth=auth)
+
+    assert len(hass.states.async_all()) == 1
+    cam = hass.states.get("camera.my_camera")
+    assert cam is not None
+    assert cam.state == STATE_STREAMING
+    # Prefer WebRTC over RTSP/HLS
+    assert cam.attributes["frontend_stream_type"] == STREAM_TYPE_WEB_RTC
+
+    # RTSP stream
+    stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
+    assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
+
+    image = await async_get_image(hass)
+    assert image.content == IMAGE_BYTES_FROM_STREAM
+
+    # WebRTC stream
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "camera/web_rtc_offer",
+            "entity_id": "camera.my_camera",
+            "offer": "a=recvonly",
+        }
+    )
+
+    msg = await client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"]["answer"] == "v=0\r\ns=-\r\n"
