@@ -182,7 +182,7 @@ ENERGY_SENSOR_MAP = {
         STATE_CLASS_TOTAL,
     ],
     "gas_consumed_cumulative": [
-        "Cumulative Consumed Gas",
+        "Consumed Gas",
         VOLUME_CUBIC_METERS,
         DEVICE_CLASS_GAS,
         STATE_CLASS_TOTAL_INCREASING,
