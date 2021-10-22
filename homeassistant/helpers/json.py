@@ -32,8 +32,10 @@ class ExtendedJSONEncoder(JSONEncoder):
         """
         if isinstance(o, datetime.timedelta):
             return {"__type": str(type(o)), "total_seconds": o.total_seconds()}
-        if isinstance(o, (datetime.date, datetime.time)):
+        if isinstance(o, datetime.datetime):
             return o.isoformat()
+        if isinstance(o, (datetime.date, datetime.time)):
+            return {"__type": str(type(o)), "isoformat": o.isoformat()}
         try:
             return super().default(o)
         except TypeError:

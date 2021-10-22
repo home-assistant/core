@@ -54,12 +54,12 @@ def test_extended_json_encoder(hass):
     }
 
     # Test serializing a time
-    data = datetime.time(7, 20)
-    assert ha_json_enc.default(data) == "07:20:00"
+    o = datetime.time(7, 20)
+    assert ha_json_enc.default(o) == {"__type": str(type(o)), "isoformat": "07:20:00"}
 
     # Test serializing a date
-    data = datetime.date(2021, 12, 24)
-    assert ha_json_enc.default(data) == "2021-12-24"
+    o = datetime.date(2021, 12, 24)
+    assert ha_json_enc.default(o) == {"__type": str(type(o)), "isoformat": "2021-12-24"}
 
     # Default method falls back to repr(o)
     o = object()
