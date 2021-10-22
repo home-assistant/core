@@ -1,61 +1,74 @@
 """Support for monitoring OctoPrint binary sensors."""
+from __future__ import annotations
+
+from abc import abstractmethod
 import logging
 
-import requests
+from pyoctoprintapi import OctoprintPrinterInfo
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
-from . import BINARY_SENSOR_TYPES, DOMAIN as COMPONENT_DOMAIN
+from .const import DOMAIN as COMPONENT_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the available OctoPrint binary sensors."""
-    if discovery_info is None:
-        return
+    coordinator: DataUpdateCoordinator = hass.data[COMPONENT_DOMAIN][
+        config_entry.entry_id
+    ]["coordinator"]
+    device_id = config_entry.unique_id
 
-    name = discovery_info["name"]
-    base_url = discovery_info["base_url"]
-    monitored_conditions = discovery_info["sensors"]
-    octoprint_api = hass.data[COMPONENT_DOMAIN][base_url]
+    assert device_id is not None
 
-    devices = []
-    for octo_type in monitored_conditions:
-        new_sensor = OctoPrintBinarySensor(
-            octoprint_api,
-            octo_type,
-            BINARY_SENSOR_TYPES[octo_type][2],
-            name,
-            BINARY_SENSOR_TYPES[octo_type][3],
-            BINARY_SENSOR_TYPES[octo_type][0],
-            BINARY_SENSOR_TYPES[octo_type][1],
-            "flags",
-        )
-        devices.append(new_sensor)
-    add_entities(devices, True)
+    entities: list[BinarySensorEntity] = [
+        OctoPrintPrintingBinarySensor(coordinator, device_id),
+        OctoPrintPrintingErrorBinarySensor(coordinator, device_id),
+    ]
+
+    async_add_entities(entities)
 
 
-class OctoPrintBinarySensor(BinarySensorEntity):
+class OctoPrintBinarySensorBase(CoordinatorEntity, BinarySensorEntity):
     """Representation an OctoPrint binary sensor."""
 
     def __init__(
-        self, api, condition, sensor_type, sensor_name, unit, endpoint, group, tool=None
-    ):
+        self,
+        coordinator: DataUpdateCoordinator,
+        sensor_type: str,
+        device_id: str,
+    ) -> None:
         """Initialize a new OctoPrint sensor."""
-        self.sensor_name = sensor_name
-        if tool is None:
-            self._name = f"{sensor_name} {condition}"
-        else:
-            self._name = f"{sensor_name} {condition}"
+        super().__init__(coordinator)
+        self._name = f"Octoprint {sensor_type}"
         self.sensor_type = sensor_type
-        self.api = api
-        self._state = False
-        self._unit_of_measurement = unit
-        self.api_endpoint = endpoint
-        self.api_group = group
-        self.api_tool = tool
-        _LOGGER.debug("Created OctoPrint binary sensor %r", self)
+        self._device_id = device_id
+
+    @property
+    def device_info(self):
+        """Device info."""
+        return {
+            "identifiers": {(COMPONENT_DOMAIN, self._device_id)},
+            "manufacturer": "Octoprint",
+            "name": "Octoprint",
+        }
+
+    @property
+    def unique_id(self):
+        """Return a unique id."""
+        return f"{self.sensor_type}-{self._device_id}"
 
     @property
     def name(self):
@@ -65,19 +78,39 @@ class OctoPrintBinarySensor(BinarySensorEntity):
     @property
     def is_on(self):
         """Return true if binary sensor is on."""
-        return bool(self._state)
+        printer = self.coordinator.data["printer"]
+        if not printer:
+            return None
+
+        return bool(self._get_flag_state(printer))
 
     @property
-    def device_class(self):
-        """Return the class of this sensor, from DEVICE_CLASSES."""
-        return None
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.last_update_success and self.coordinator.data["printer"]
 
-    def update(self):
-        """Update state of sensor."""
-        try:
-            self._state = self.api.update(
-                self.sensor_type, self.api_endpoint, self.api_group, self.api_tool
-            )
-        except requests.exceptions.ConnectionError:
-            # Error calling the api, already logged in api.update()
-            return
+    @abstractmethod
+    def _get_flag_state(self, printer_info: OctoprintPrinterInfo) -> bool | None:
+        """Return the value of the sensor flag."""
+
+
+class OctoPrintPrintingBinarySensor(OctoPrintBinarySensorBase):
+    """Representation an OctoPrint binary sensor."""
+
+    def __init__(self, coordinator: DataUpdateCoordinator, device_id: str) -> None:
+        """Initialize a new OctoPrint sensor."""
+        super().__init__(coordinator, "Printing", device_id)
+
+    def _get_flag_state(self, printer_info: OctoprintPrinterInfo) -> bool | None:
+        return bool(printer_info.state.flags.printing)
+
+
+class OctoPrintPrintingErrorBinarySensor(OctoPrintBinarySensorBase):
+    """Representation an OctoPrint binary sensor."""
+
+    def __init__(self, coordinator: DataUpdateCoordinator, device_id: str) -> None:
+        """Initialize a new OctoPrint sensor."""
+        super().__init__(coordinator, "Printing Error", device_id)
+
+    def _get_flag_state(self, printer_info: OctoprintPrinterInfo) -> bool | None:
+        return bool(printer_info.state.flags.error)
