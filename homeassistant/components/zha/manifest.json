@@ -26,6 +26,10 @@
     {
       "type": "_esphomelib._tcp.local.",
       "name": "tube*"
+    },
+    {
+      "type": "_zig_star_gw._tcp.local.",
+      "name": "zigstar*"
     }
   ],
   "after_dependencies": ["usb", "zeroconf"],
