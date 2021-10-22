@@ -43,7 +43,7 @@ async def test_thermostat_device(hass):
                         "customName": "My Sensor",
                     },
                     "sdm.devices.traits.Temperature": {
-                        "ambientTemperatureCelsius": 25.1,
+                        "ambientTemperatureCelsius": 25.12345,
                     },
                     "sdm.devices.traits.Humidity": {
                         "ambientHumidityPercent": 35.0,
@@ -64,7 +64,7 @@ async def test_thermostat_device(hass):
 
     humidity = hass.states.get("sensor.my_sensor_humidity")
     assert humidity is not None
-    assert humidity.state == "35.0"
+    assert humidity.state == "35"
     assert humidity.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert humidity.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_HUMIDITY
     assert humidity.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
@@ -128,7 +128,7 @@ async def test_device_name_from_structure(hass):
                 "type": THERMOSTAT_TYPE,
                 "traits": {
                     "sdm.devices.traits.Temperature": {
-                        "ambientTemperatureCelsius": 25.2,
+                        "ambientTemperatureCelsius": 25.27654,
                     },
                 },
                 "parentRelations": [
@@ -142,7 +142,7 @@ async def test_device_name_from_structure(hass):
 
     temperature = hass.states.get("sensor.some_room_temperature")
     assert temperature is not None
-    assert temperature.state == "25.2"
+    assert temperature.state == "25.3"
 
 
 async def test_event_updates_sensor(hass):
@@ -157,7 +157,7 @@ async def test_event_updates_sensor(hass):
                         "customName": "My Sensor",
                     },
                     "sdm.devices.traits.Temperature": {
-                        "ambientTemperatureCelsius": 25.1,
+                        "ambientTemperatureCelsius": 25.12345,
                     },
                 },
             },
@@ -179,7 +179,7 @@ async def test_event_updates_sensor(hass):
                 "name": "some-device-id",
                 "traits": {
                     "sdm.devices.traits.Temperature": {
-                        "ambientTemperatureCelsius": 26.2,
+                        "ambientTemperatureCelsius": 26.28765,
                     },
                 },
             },
@@ -191,7 +191,7 @@ async def test_event_updates_sensor(hass):
 
     temperature = hass.states.get("sensor.my_sensor_temperature")
     assert temperature is not None
-    assert temperature.state == "26.2"
+    assert temperature.state == "26.3"
 
 
 async def test_device_with_unknown_type(hass):
@@ -206,7 +206,7 @@ async def test_device_with_unknown_type(hass):
                         "customName": "My Sensor",
                     },
                     "sdm.devices.traits.Temperature": {
-                        "ambientTemperatureCelsius": 25.1,
+                        "ambientTemperatureCelsius": 25.12345,
                     },
                 },
             },
