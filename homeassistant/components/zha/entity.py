@@ -20,7 +20,6 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .core.const import (
-    ATTR_IEEE,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     DATA_ZHA,
@@ -92,15 +91,15 @@ class BaseZhaEntity(LogMixin, entity.Entity):
     def device_info(self) -> entity.DeviceInfo:
         """Return a device description for device registry."""
         zha_device_info = self._zha_device.device_info
-        ieee = zha_device_info[ATTR_IEEE]
-        return entity.DeviceInfo(
-            connections={(CONNECTION_ZIGBEE, ieee)},
-            identifiers={(DOMAIN, ieee)},
-            manufacturer=zha_device_info[ATTR_MANUFACTURER],
-            model=zha_device_info[ATTR_MODEL],
-            name=zha_device_info[ATTR_NAME],
-            via_device=(DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
-        )
+        ieee = zha_device_info["ieee"]
+        return {
+            "connections": {(CONNECTION_ZIGBEE, ieee)},
+            "identifiers": {(DOMAIN, ieee)},
+            ATTR_MANUFACTURER: zha_device_info[ATTR_MANUFACTURER],
+            ATTR_MODEL: zha_device_info[ATTR_MODEL],
+            ATTR_NAME: zha_device_info[ATTR_NAME],
+            "via_device": (DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
+        }
 
     @callback
     def async_state_changed(self) -> None:
