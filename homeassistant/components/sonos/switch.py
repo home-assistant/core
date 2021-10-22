@@ -126,9 +126,12 @@ class SonosSwitchEntity(SonosEntity, SwitchEntity):
         """Initialize the switch."""
         super().__init__(speaker)
         self.feature_type = feature_type
+        self.entity_id = ENTITY_ID_FORMAT.format(
+            f"sonos_{speaker.zone_name}_{FRIENDLY_NAMES[feature_type]}"
+        )
         self.needs_coordinator = feature_type in COORDINATOR_FEATURES
         self._attr_entity_category = ENTITY_CATEGORY_CONFIG
-        self._attr_name = f"Sonos {speaker.zone_name} {FRIENDLY_NAMES[feature_type]}"
+        self._attr_name = f"{speaker.zone_name} {FRIENDLY_NAMES[feature_type]}"
         self._attr_unique_id = f"{speaker.soco.uid}-{feature_type}"
         self._attr_icon = FEATURE_ICONS.get(feature_type)
 
