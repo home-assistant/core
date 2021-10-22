@@ -90,19 +90,19 @@ class SonosEntity(Entity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
-        return {
-            "identifiers": {(DOMAIN, self.soco.uid)},
-            "name": self.speaker.zone_name,
-            "model": self.speaker.model_name.replace("Sonos ", ""),
-            "sw_version": self.speaker.version,
-            "connections": {
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.soco.uid)},
+            name=self.speaker.zone_name,
+            model=self.speaker.model_name.replace("Sonos ", ""),
+            sw_version=self.speaker.version,
+            connections={
                 (dr.CONNECTION_NETWORK_MAC, self.speaker.mac_address),
                 (dr.CONNECTION_UPNP, f"uuid:{self.speaker.uid}"),
             },
-            "manufacturer": "Sonos",
-            "suggested_area": self.speaker.zone_name,
-            "configuration_url": f"http://{self.soco.ip_address}:1400/support/review",
-        }
+            manufacturer="Sonos",
+            suggested_area=self.speaker.zone_name,
+            configuration_url=f"http://{self.soco.ip_address}:1400/support/review",
+        )
 
     @property
     def available(self) -> bool:
