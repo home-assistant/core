@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 import dataclasses
+import functools
 from typing import Any
 
 from homeassistant.components import recorder, sensor
@@ -76,9 +77,11 @@ async def _async_validate_usage_stat(
 ) -> None:
     """Validate a statistic."""
     metadata = await hass.async_add_executor_job(
-        recorder.statistics.get_metadata,
-        hass,
-        (stat_id,),
+        functools.partial(
+            recorder.statistics.get_metadata,
+            hass,
+            statistic_ids=(stat_id,),
+        )
     )
 
     if stat_id not in metadata:
@@ -207,9 +210,11 @@ async def _async_validate_cost_stat(
 ) -> None:
     """Validate that the cost stat is correct."""
     metadata = await hass.async_add_executor_job(
-        recorder.statistics.get_metadata,
-        hass,
-        (stat_id,),
+        functools.partial(
+            recorder.statistics.get_metadata,
+            hass,
+            statistic_ids=(stat_id,),
+        )
     )
 
     if stat_id not in metadata:
