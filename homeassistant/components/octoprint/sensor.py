@@ -75,9 +75,9 @@ class OctoPrintSensorBase(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize a new OctoPrint sensor."""
         super().__init__(coordinator)
-        self._sensor_type = sensor_type
-        self._name = f"Octoprint {sensor_type}"
         self._device_id = device_id
+        self._attr_name = f"Octoprint {sensor_type}"
+        self._attr_unique_id = f"{sensor_type}-{device_id}"
 
     @property
     def device_info(self):
@@ -88,19 +88,11 @@ class OctoPrintSensorBase(CoordinatorEntity, SensorEntity):
             "name": "Octoprint",
         }
 
-    @property
-    def unique_id(self):
-        """Return a unique id."""
-        return f"{self._sensor_type}-{self._device_id}"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
 
 class OctoPrintStatusSensor(OctoPrintSensorBase):
     """Representation of an OctoPrint sensor."""
+
+    _attr_icon = "mdi:printer-3d"
 
     def __init__(self, coordinator: DataUpdateCoordinator, device_id: str) -> None:
         """Initialize a new OctoPrint sensor."""
@@ -116,11 +108,6 @@ class OctoPrintStatusSensor(OctoPrintSensorBase):
         return printer.state.text
 
     @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return "mdi:printer-3d"
-
-    @property
     def available(self) -> bool:
         """Return if entity is available."""
         return self.coordinator.last_update_success and self.coordinator.data["printer"]
@@ -128,6 +115,9 @@ class OctoPrintStatusSensor(OctoPrintSensorBase):
 
 class OctoPrintJobPercentageSensor(OctoPrintSensorBase):
     """Representation of an OctoPrint sensor."""
+
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_icon = "mdi:file-percent"
 
     def __init__(self, coordinator: DataUpdateCoordinator, device_id: str) -> None:
         """Initialize a new OctoPrint sensor."""
@@ -146,19 +136,11 @@ class OctoPrintJobPercentageSensor(OctoPrintSensorBase):
 
         return round(state, 2)
 
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return PERCENTAGE
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return "mdi:file-percent"
-
 
 class OctoPrintEstimatedFinishTimeSensor(OctoPrintSensorBase):
     """Representation of an OctoPrint sensor."""
+
+    _attr_device_class = DEVICE_CLASS_TIMESTAMP
 
     def __init__(self, coordinator: DataUpdateCoordinator, device_id: str) -> None:
         """Initialize a new OctoPrint sensor."""
@@ -175,14 +157,11 @@ class OctoPrintEstimatedFinishTimeSensor(OctoPrintSensorBase):
 
         return (read_time + timedelta(seconds=job.progress.print_time_left)).isoformat()
 
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return DEVICE_CLASS_TIMESTAMP
-
 
 class OctoPrintStartTimeSensor(OctoPrintSensorBase):
     """Representation of an OctoPrint sensor."""
+
+    _attr_device_class = DEVICE_CLASS_TIMESTAMP
 
     def __init__(self, coordinator: DataUpdateCoordinator, device_id: str) -> None:
         """Initialize a new OctoPrint sensor."""
@@ -200,14 +179,13 @@ class OctoPrintStartTimeSensor(OctoPrintSensorBase):
 
         return (read_time - timedelta(seconds=job.progress.print_time)).isoformat()
 
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return DEVICE_CLASS_TIMESTAMP
-
 
 class OctoPrintTemperatureSensor(OctoPrintSensorBase):
     """Representation of an OctoPrint sensor."""
+
+    _attr_native_unit_of_measurement = TEMP_CELSIUS
+    _attr_device_class = DEVICE_CLASS_TEMPERATURE
+    _attr_state_class = STATE_CLASS_MEASUREMENT
 
     def __init__(
         self,
@@ -220,17 +198,6 @@ class OctoPrintTemperatureSensor(OctoPrintSensorBase):
         super().__init__(coordinator, f"{temp_type} {tool} temp", device_id)
         self._temp_type = temp_type
         self._api_tool = tool
-        self._attr_state_class = STATE_CLASS_MEASUREMENT
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return TEMP_CELSIUS
-
-    @property
-    def device_class(self):
-        """Return the device class of this entity."""
-        return DEVICE_CLASS_TEMPERATURE
 
     @property
     def native_value(self):
