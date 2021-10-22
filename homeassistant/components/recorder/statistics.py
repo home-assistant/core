@@ -450,12 +450,12 @@ def _insert_statistics(
 def _update_statistics(
     session: scoped_session,
     table: type[Statistics | StatisticsShortTerm],
-    id: int,
+    stat_id: int,
     statistic: StatisticData,
 ) -> None:
     """Insert statistics in the database."""
     try:
-        session.query(table).filter_by(id=id).update(
+        session.query(table).filter_by(id=stat_id).update(
             {
                 table.mean: statistic["mean"],
                 table.min: statistic["min"],
