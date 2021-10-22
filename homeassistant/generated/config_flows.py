@@ -201,6 +201,7 @@ FLOWS = [
     "nut",
     "nws",
     "nzbget",
+    "octoprint",
     "omnilogic",
     "ondilo_ico",
     "onewire",

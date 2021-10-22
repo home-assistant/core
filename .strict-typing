@@ -35,6 +35,7 @@ homeassistant.components.dlna_dmr.*
 homeassistant.components.dnsip.*
 homeassistant.components.dsmr.*
 homeassistant.components.dunehd.*
+homeassistant.components.efergy.*
 homeassistant.components.elgato.*
 homeassistant.components.esphome.*
 homeassistant.components.energy.*
@@ -59,15 +60,18 @@ homeassistant.components.hyperion.*
 homeassistant.components.image_processing.*
 homeassistant.components.integration.*
 homeassistant.components.iqvia.*
+homeassistant.components.jewish_calendar.*
 homeassistant.components.knx.*
 homeassistant.components.kraken.*
 homeassistant.components.lcn.*
 homeassistant.components.light.*
 homeassistant.components.local_ip.*
 homeassistant.components.lock.*
+homeassistant.components.lookin.*
 homeassistant.components.mailbox.*
 homeassistant.components.media_player.*
 homeassistant.components.modbus.*
+homeassistant.components.modem_callerid.*
 homeassistant.components.mysensors.*
 homeassistant.components.nam.*
 homeassistant.components.nanoleaf.*

@@ -10,12 +10,15 @@ from homeassistant import config as hass_config
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 import homeassistant.components.sensor as sensor
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     CONTENT_TYPE_JSON,
     DATA_MEGABYTES,
+    DEVICE_CLASS_TEMPERATURE,
     SERVICE_RELOAD,
     STATE_UNKNOWN,
+    TEMP_CELSIUS,
 )
 from homeassistant.setup import async_setup_component
 
@@ -177,13 +180,15 @@ async def test_setup_get(hass):
                 "method": "GET",
                 "value_template": "{{ value_json.key }}",
                 "name": "foo",
-                "unit_of_measurement": DATA_MEGABYTES,
+                "unit_of_measurement": TEMP_CELSIUS,
                 "verify_ssl": "true",
                 "timeout": 30,
                 "authentication": "basic",
                 "username": "my username",
                 "password": "my password",
                 "headers": {"Accept": CONTENT_TYPE_JSON},
+                "device_class": DEVICE_CLASS_TEMPERATURE,
+                "state_class": sensor.STATE_CLASS_MEASUREMENT,
             }
         },
     )
@@ -200,7 +205,11 @@ async def test_setup_get(hass):
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.foo").state == ""
+    state = hass.states.get("sensor.foo")
+    assert state.state == ""
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TEMPERATURE
+    assert state.attributes[sensor.ATTR_STATE_CLASS] == sensor.STATE_CLASS_MEASUREMENT
 
 
 @respx.mock

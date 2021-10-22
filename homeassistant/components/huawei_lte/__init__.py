@@ -314,8 +314,7 @@ async def async_setup_entry(  # noqa: C901
 
     # Override settings from YAML config, but only if they're changed in it
     # Old values are stored as *_from_yaml in the config entry
-    yaml_config = hass.data[DOMAIN].config.get(url)
-    if yaml_config:
+    if yaml_config := hass.data[DOMAIN].config.get(url):
         # Config values
         new_data = {}
         for key in CONF_USERNAME, CONF_PASSWORD:
