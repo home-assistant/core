@@ -1,5 +1,6 @@
 """Google config for Cloud."""
 import asyncio
+from http import HTTPStatus
 import logging
 
 from hass_nabucasa import Cloud, cloud_api
@@ -11,7 +12,6 @@ from homeassistant.const import (
     CLOUD_NEVER_EXPOSED_ENTITIES,
     ENTITY_CATEGORY_CONFIG,
     ENTITY_CATEGORY_DIAGNOSTIC,
-    HTTP_OK,
 )
 from homeassistant.core import CoreState, split_entity_id
 from homeassistant.helpers import entity_registry as er, start
@@ -178,7 +178,7 @@ class CloudGoogleConfig(AbstractConfig):
     async def _async_request_sync_devices(self, agent_user_id: str):
         """Trigger a sync with Google."""
         if self._sync_entities_lock.locked():
-            return HTTP_OK
+            return HTTPStatus.OK
 
         async with self._sync_entities_lock:
             resp = await cloud_api.async_google_actions_request_sync(self._cloud)

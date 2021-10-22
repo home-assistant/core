@@ -229,7 +229,7 @@ homeassistant/components/http/* @home-assistant/core
 homeassistant/components/huawei_lte/* @scop @fphammerle
 homeassistant/components/huawei_router/* @abmantis
 homeassistant/components/hue/* @balloob @frenck
-homeassistant/components/huisbaasje/* @denniss17
+homeassistant/components/huisbaasje/* @dennisschroer
 homeassistant/components/humidifier/* @home-assistant/core @Shulyaka
 homeassistant/components/hunterdouglas_powerview/* @bdraco
 homeassistant/components/hvv_departures/* @vigonotion
@@ -337,7 +337,6 @@ homeassistant/components/nam/* @bieniu
 homeassistant/components/nanoleaf/* @milanmeu
 homeassistant/components/neato/* @dshokouhi @Santobert
 homeassistant/components/nederlandse_spoorwegen/* @YarmoM
-homeassistant/components/nello/* @pschmitt
 homeassistant/components/ness_alarm/* @nickw444
 homeassistant/components/nest/* @allenporter
 homeassistant/components/netatmo/* @cgtobi
