@@ -38,6 +38,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util.temperature import convert
 
 from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
@@ -374,12 +375,12 @@ class Thermostat(ClimateEntity):
             # Ecobee model is not in our list
             model = None
 
-        return {
-            "identifiers": {(DOMAIN, self.thermostat["identifier"])},
-            "name": self.name,
-            "manufacturer": MANUFACTURER,
-            "model": model,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.thermostat["identifier"])},
+            manufacturer=MANUFACTURER,
+            model=model,
+            name=self.name,
+        )
 
     @property
     def temperature_unit(self):

@@ -468,10 +468,10 @@ class ElkAttachedEntity(ElkEntity):
         device_name = "ElkM1"
         if self._prefix:
             device_name += f" {self._prefix}"
-        return {
-            "name": device_name,
-            "identifiers": {(DOMAIN, f"{self._prefix}_system")},
-            "sw_version": self._elk.panel.elkm1_version,
-            "manufacturer": "ELK Products, Inc.",
-            "model": "M1",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, f"{self._prefix}_system")},
+            manufacturer="ELK Products, Inc.",
+            model="M1",
+            name=device_name,
+            sw_version=self._elk.panel.elkm1_version,
+        )
