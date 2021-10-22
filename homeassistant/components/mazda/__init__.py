@@ -110,9 +110,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def validate_mazda_device_id(device_id):
         """Check that a device ID exists in the registry and has at least one 'mazda' identifier."""
         dev_reg = device_registry.async_get(hass)
-        device_entry = dev_reg.async_get(device_id)
 
-        if device_entry is None:
+        if (device_entry := dev_reg.async_get(device_id)) is None:
             raise vol.Invalid("Invalid device ID")
 
         mazda_identifiers = [
