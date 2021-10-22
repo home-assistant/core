@@ -5,7 +5,7 @@ from aiohttp import ClientSession
 from async_timeout import timeout
 from typing import Optional
 
-DEFAULT_TIMEOUT = 0.2
+DEFAULT_TIMEOUT = 0.5
 
 
 class upnp:
