@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 
 from pywizlight import PilotBuilder, wizlight
+from pywizlight.bulblibrary import BulbType
 from pywizlight.exceptions import (
     WizLightConnectionError,
     WizLightNotKnownBulb,
@@ -58,6 +59,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         async_add_entities([WizBulb(bulb, config[CONF_NAME])], update_before_add=True)
     except WizLightConnectionError:
         _LOGGER.error("Can't add bulb with ip %s", ip_address)
+        return False
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -77,6 +79,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     service_name = slugify(f"{entry.data.get(CONF_NAME)} updateService")
     hass.services.async_register(DOMAIN, service_name, async_update)
+    return True
 
 
 class WizBulb(LightEntity):
@@ -94,7 +97,7 @@ class WizBulb(LightEntity):
         self._available = None
         self._effect = None
         self._scenes: list[str] = []
-        self._bulbtype = None
+        self._bulbtype: BulbType = None
         self._mac = None
 
     @property
@@ -129,40 +132,61 @@ class WizBulb(LightEntity):
 
     async def async_turn_on(self, **kwargs):
         """Instruct the light to turn on."""
-        rgb = None
+        brightness = None
+
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = kwargs.get(ATTR_BRIGHTNESS)
+
         if ATTR_RGB_COLOR in kwargs:
-            rgb = kwargs.get(ATTR_RGB_COLOR)
+            pilot = PilotBuilder(rgb=kwargs.get(ATTR_RGB_COLOR), brightness=brightness)
+
         if ATTR_HS_COLOR in kwargs:
             rgb = color_utils.color_hs_to_RGB(
                 kwargs[ATTR_HS_COLOR][0], kwargs[ATTR_HS_COLOR][1]
             )
-
-        brightness = None
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness = kwargs.get(ATTR_BRIGHTNESS)
-
-        colortemp = None
-        if ATTR_COLOR_TEMP in kwargs:
-            kelvin = color_utils.color_temperature_mired_to_kelvin(
-                kwargs[ATTR_COLOR_TEMP]
-            )
-            colortemp = kelvin
-            _LOGGER.debug(
-                "[wizlight %s] kelvin changed and send to bulb: %s",
-                self._light.ip,
-                colortemp,
-            )
-
-        sceneid = None
-        if ATTR_EFFECT in kwargs:
-            sceneid = self._light.get_id_from_scene_name(kwargs[ATTR_EFFECT])
-
-        if sceneid == 1000:  # rhythm
-            pilot = PilotBuilder()
+            pilot = PilotBuilder(rgb=rgb, brightness=brightness)
         else:
-            pilot = PilotBuilder(
-                rgb=rgb, brightness=brightness, colortemp=colortemp, scene=sceneid
-            )
+            colortemp = None
+            if ATTR_COLOR_TEMP in kwargs:
+                kelvin = color_utils.color_temperature_mired_to_kelvin(
+                    kwargs[ATTR_COLOR_TEMP]
+                )
+                colortemp = kelvin
+                _LOGGER.debug(
+                    "[wizlight %s] kelvin changed and send to bulb: %s",
+                    self._light.ip,
+                    colortemp,
+                )
+
+            sceneid = None
+            if ATTR_EFFECT in kwargs:
+                sceneid = self._light.get_id_from_scene_name(kwargs[ATTR_EFFECT])
+
+            if sceneid == 1000:  # rhythm
+                pilot = PilotBuilder()
+            else:
+                pilot = PilotBuilder(
+                    brightness=brightness, colortemp=colortemp, scene=sceneid
+                )
+                _LOGGER.debug(
+                    "[wizlight %s] Pilot will be send with brightness=%s, colortemp=%s, scene=%s",
+                    self._light.ip,
+                    brightness,
+                    colortemp,
+                    sceneid,
+                )
+
+            sceneid = None
+            if ATTR_EFFECT in kwargs:
+                sceneid = self._light.get_id_from_scene_name(kwargs[ATTR_EFFECT])
+
+            if sceneid == 1000:  # rhythm
+                pilot = PilotBuilder()
+            else:
+                pilot = PilotBuilder(
+                    brightness=brightness, colortemp=colortemp, scene=sceneid
+                )
+
         await self._light.turn_on(pilot)
 
     async def async_turn_off(self, **kwargs):
@@ -232,8 +256,6 @@ class WizBulb(LightEntity):
     async def async_update(self):
         """Fetch new state data for this light."""
         await self.update_state()
-        await self.get_bulb_type()
-        await self.get_mac()
 
         if self._state is not None and self._state is not False:
             self.update_brightness()
@@ -256,15 +278,15 @@ class WizBulb(LightEntity):
             "identifiers": {(DOMAIN, self._mac)},
             "name": self._name,
             "manufacturer": "WiZ Light Platform",
-            "model": self._bulbtype.name,
+            "model": f"{self._bulbtype.name} Mac: {self._mac}",
         }
 
-    async def update_state_available(self):
+    def update_state_available(self):
         """Update the state if bulb is available."""
         self._state = self._light.status
         self._available = True
 
-    async def update_state_unavailable(self):
+    def update_state_unavailable(self):
         """Update the state if bulb is unavailable."""
         self._state = False
         self._available = False
@@ -274,16 +296,25 @@ class WizBulb(LightEntity):
         try:
             await self._light.updateState()
             if self._light.state is None:
-                _LOGGER.debug(
-                    "[wizlight %s] state unavailable: %s", self._light.ip, self._state
-                )
-                await self.update_state_unavailable()
+                self.update_state_unavailable()
             else:
-                await self.update_state_available()
+                self.update_state_available()
+                # Update the rest of the missing info if available
+                if self._mac is None or self._bulbtype is None:
+                    await self.get_bulb_type()
+                    await self.get_mac()
+        except TimeoutError as ex:
+            _LOGGER.debug(ex)
+            self.update_state_unavailable()
         except WizLightTimeOutError as ex:
             _LOGGER.debug(ex)
-            await self.update_state_unavailable()
-        _LOGGER.debug("[wizlight %s] updated state: %s", self._light.ip, self._state)
+            self.update_state_unavailable()
+        _LOGGER.debug(
+            "[wizlight %s] updated state: %s and available: %s",
+            self._light.ip,
+            self._state,
+            self._available,
+        )
 
     def update_brightness(self):
         """Update the brightness."""
@@ -330,17 +361,17 @@ class WizBulb(LightEntity):
         if self._light.state.get_rgb() is None:
             return
         try:
-            red, green, blue = self._light.state.get_rgb()
-            if red is None:
+            rgb = self._light.state.get_rgb()
+            if rgb[0] is None:
                 # this is the case if the temperature was changed
                 # do nothing until the RGB color was changed
                 return
-            color = color_utils.color_RGB_to_hs(red, green, blue)
-            if color is not None:
-                self._hscolor = color
-            else:
-                _LOGGER.error("Received invalid HS color : %s", color)
-                self._hscolor = None
+            cw = self._light.state.get_warm_white()
+            if cw is None:
+                return
+
+            self._hscolor = self._light.convertHSfromRGBCW(rgb, cw)
+
         # pylint: disable=broad-except
         except Exception:
             _LOGGER.error("Cannot evaluate color", exc_info=True)
@@ -369,7 +400,7 @@ class WizBulb(LightEntity):
     async def update_scene_list(self):
         """Update the scene list."""
         _value = await self._light.getSupportedScenes()
-        self._scenes = _value.values()
+        self._scenes = list(_value.values())
 
     async def get_mac(self):
         """Get the mac from the bulb."""
