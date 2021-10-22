@@ -1038,6 +1038,52 @@ def area_name(hass: HomeAssistant, lookup_value: str) -> str | None:
     return None
 
 
+def area_entities(hass: HomeAssistant, area_id_or_name: str) -> Iterable[str]:
+    """Return entities for a given area ID or name."""
+    _area_id: str | None
+    # if area_name returns a value, we know the input was an ID, otherwise we
+    # assume it's a name, and if it's neither, we return early
+    if area_name(hass, area_id_or_name) is None:
+        _area_id = area_id(hass, area_id_or_name)
+    else:
+        _area_id = area_id_or_name
+    if _area_id is None:
+        return []
+    ent_reg = entity_registry.async_get(hass)
+    entity_ids = [
+        entry.entity_id
+        for entry in entity_registry.async_entries_for_area(ent_reg, _area_id)
+    ]
+    dev_reg = device_registry.async_get(hass)
+    # We also need to add entities tied to a device in the area that don't themselves
+    # have an area specified since they inherit the area from the device.
+    entity_ids.extend(
+        [
+            entity.entity_id
+            for device in device_registry.async_entries_for_area(dev_reg, _area_id)
+            for entity in entity_registry.async_entries_for_device(ent_reg, device.id)
+            if entity.area_id is None
+        ]
+    )
+    return entity_ids
+
+
+def area_devices(hass: HomeAssistant, area_id_or_name: str) -> Iterable[str]:
+    """Return device IDs for a given area ID or name."""
+    _area_id: str | None
+    # if area_name returns a value, we know the input was an ID, otherwise we
+    # assume it's a name, and if it's neither, we return early
+    if area_name(hass, area_id_or_name) is not None:
+        _area_id = area_id_or_name
+    else:
+        _area_id = area_id(hass, area_id_or_name)
+    if _area_id is None:
+        return []
+    dev_reg = device_registry.async_get(hass)
+    entries = device_registry.async_entries_for_area(dev_reg, _area_id)
+    return [entry.id for entry in entries]
+
+
 def closest(hass, *args):
     """Find closest entity.
 
@@ -1782,6 +1828,12 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.globals["area_name"] = hassfunction(area_name)
         self.filters["area_name"] = pass_context(self.globals["area_name"])
+
+        self.globals["area_entities"] = hassfunction(area_entities)
+        self.filters["area_entities"] = pass_context(self.globals["area_entities"])
+
+        self.globals["area_devices"] = hassfunction(area_devices)
+        self.filters["area_devices"] = pass_context(self.globals["area_devices"])
 
         if limited:
             # Only device_entities is available to limited templates, mark other
