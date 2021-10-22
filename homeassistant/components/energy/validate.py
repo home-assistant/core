@@ -103,9 +103,7 @@ async def _async_validate_usage_stat(
         )
         return
 
-    state = hass.states.get(entity_id)
-
-    if state is None:
+    if (state := hass.states.get(entity_id)) is None:
         result.append(
             ValidationIssue(
                 "entity_not_defined",
@@ -180,9 +178,7 @@ def _async_validate_price_entity(
     unit_error: str,
 ) -> None:
     """Validate that the price entity is correct."""
-    state = hass.states.get(entity_id)
-
-    if state is None:
+    if (state := hass.states.get(entity_id)) is None:
         result.append(
             ValidationIssue(
                 "entity_not_defined",
@@ -228,9 +224,7 @@ async def _async_validate_cost_stat(
     if not recorder.is_entity_recorded(hass, stat_id):
         result.append(ValidationIssue("recorder_untracked", stat_id))
 
-    state = hass.states.get(stat_id)
-
-    if state is None:
+    if (state := hass.states.get(stat_id)) is None:
         result.append(ValidationIssue("entity_not_defined", stat_id))
         return
 
