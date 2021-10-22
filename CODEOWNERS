@@ -366,6 +366,7 @@ homeassistant/components/nut/* @bdraco @ollo69
 homeassistant/components/nws/* @MatthewFlamm
 homeassistant/components/nzbget/* @chriscla
 homeassistant/components/obihai/* @dshokouhi
+homeassistant/components/octoprint/* @rfleming71
 homeassistant/components/ohmconnect/* @robbiet480
 homeassistant/components/ombi/* @larssont
 homeassistant/components/omnilogic/* @oliver84 @djtimca @gentoosu
