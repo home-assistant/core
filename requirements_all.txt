@@ -1589,7 +1589,7 @@ pylast==4.2.1
 pylaunches==1.0.0
 
 # homeassistant.components.lg_netcast
-pylgnetcast==0.3.3
+pylgnetcast==0.3.4
 
 # homeassistant.components.forked_daapd
 pylibrespot-java==0.1.0

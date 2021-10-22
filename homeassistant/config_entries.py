@@ -586,7 +586,7 @@ class ConfigEntry:
             "unique_id": self.unique_id,
         }
 
-        for flow in hass.config_entries.flow.async_progress():
+        for flow in hass.config_entries.flow.async_progress_by_handler(self.domain):
             if flow["context"] == flow_context:
                 return
 
@@ -618,6 +618,14 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         self.config_entries = config_entries
         self._hass_config = hass_config
 
+    @callback
+    def _async_has_other_discovery_flows(self, flow_id: str) -> bool:
+        """Check if there are any other discovery flows in progress."""
+        return any(
+            flow.context["source"] in DISCOVERY_SOURCES and flow.flow_id != flow_id
+            for flow in self._progress.values()
+        )
+
     async def async_finish_flow(
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
     ) -> data_entry_flow.FlowResult:
@@ -625,11 +633,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         flow = cast(ConfigFlow, flow)
 
         # Remove notification if no other discovery config entries in progress
-        if not any(
-            ent["context"]["source"] in DISCOVERY_SOURCES
-            for ent in self.hass.config_entries.flow.async_progress()
-            if ent["flow_id"] != flow.flow_id
-        ):
+        if not self._async_has_other_discovery_flows(flow.flow_id):
             self.hass.components.persistent_notification.async_dismiss(
                 DISCOVERY_NOTIFICATION_ID
             )
@@ -642,15 +646,11 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
 
         # Abort all flows in progress with same unique ID
         # or the default discovery ID
-        for progress_flow in self.async_progress():
+        for progress_flow in self.async_progress_by_handler(flow.handler):
             progress_unique_id = progress_flow["context"].get("unique_id")
-            if (
-                progress_flow["handler"] == flow.handler
-                and progress_flow["flow_id"] != flow.flow_id
-                and (
-                    (flow.unique_id and progress_unique_id == flow.unique_id)
-                    or progress_unique_id == DEFAULT_DISCOVERY_UNIQUE_ID
-                )
+            if progress_flow["flow_id"] != flow.flow_id and (
+                (flow.unique_id and progress_unique_id == flow.unique_id)
+                or progress_unique_id == DEFAULT_DISCOVERY_UNIQUE_ID
             ):
                 self.async_abort(progress_flow["flow_id"])
 
@@ -837,7 +837,9 @@ class ConfigEntries:
 
         # If the configuration entry is removed during reauth, it should
         # abort any reauth flow that is active for the removed entry.
-        for progress_flow in self.hass.config_entries.flow.async_progress():
+        for progress_flow in self.hass.config_entries.flow.async_progress_by_handler(
+            entry.domain
+        ):
             context = progress_flow.get("context")
             if (
                 context
@@ -1265,10 +1267,10 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         """Return other in progress flows for current domain."""
         return [
             flw
-            for flw in self.hass.config_entries.flow.async_progress(
-                include_uninitialized=include_uninitialized
+            for flw in self.hass.config_entries.flow.async_progress_by_handler(
+                self.handler, include_uninitialized=include_uninitialized
             )
-            if flw["handler"] == self.handler and flw["flow_id"] != self.flow_id
+            if flw["flow_id"] != self.flow_id
         ]
 
     async def async_step_ignore(
@@ -1329,7 +1331,9 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         # Remove reauth notification if no reauth flows are in progress
         if self.source == SOURCE_REAUTH and not any(
             ent["context"]["source"] == SOURCE_REAUTH
-            for ent in self.hass.config_entries.flow.async_progress()
+            for ent in self.hass.config_entries.flow.async_progress_by_handler(
+                self.handler
+            )
             if ent["flow_id"] != self.flow_id
         ):
             self.hass.components.persistent_notification.async_dismiss(

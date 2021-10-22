@@ -24,7 +24,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -332,18 +332,18 @@ class RainMachineEntity(CoordinatorEntity):
         """Initialize."""
         super().__init__(coordinator)
 
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, controller.mac)},
-            "configuration_url": f"https://{entry.data[CONF_IP_ADDRESS]}:{entry.data[CONF_PORT]}",
-            "connections": {(dr.CONNECTION_NETWORK_MAC, controller.mac)},
-            "name": str(controller.name),
-            "manufacturer": "RainMachine",
-            "model": (
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, controller.mac)},
+            configuration_url=f"https://{entry.data[CONF_IP_ADDRESS]}:{entry.data[CONF_PORT]}",
+            connections={(dr.CONNECTION_NETWORK_MAC, controller.mac)},
+            name=str(controller.name),
+            manufacturer="RainMachine",
+            model=(
                 f"Version {controller.hardware_version} "
                 f"(API: {controller.api_version})"
             ),
-            "sw_version": controller.software_version,
-        }
+            sw_version=controller.software_version,
+        )
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._attr_name = f"{controller.name} {description.name}"
         # The colons are removed from the device MAC simply because that value
