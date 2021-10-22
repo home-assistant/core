@@ -11,7 +11,11 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
     ATTR_NAME,
+    ATTR_VIA_DEVICE,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
@@ -1307,15 +1311,15 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
             self.node, self.values.primary.instance
         )
         info = {
-            "name": name,
-            "identifiers": {identifier},
-            "manufacturer": self.node.manufacturer_name,
-            "model": self.node.product_name,
+            ATTR_NAME: name,
+            ATTR_IDENTIFIERS: {identifier},
+            ATTR_MANUFACTURER: self.node.manufacturer_name,
+            ATTR_MODEL: self.node.product_name,
         }
         if self.values.primary.instance > 1:
-            info["via_device"] = (DOMAIN, self.node_id)
+            info[ATTR_VIA_DEVICE] = (DOMAIN, self.node_id)
         elif self.node_id > 1:
-            info["via_device"] = (DOMAIN, 1)
+            info[ATTR_VIA_DEVICE] = (DOMAIN, 1)
         return info
 
     @property

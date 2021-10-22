@@ -16,7 +16,7 @@ import zigpy.quirks
 from zigpy.zcl.clusters.general import Groups
 import zigpy.zdo.types as zdo_types
 
-from homeassistant.const import ATTR_COMMAND, ATTR_NAME
+from homeassistant.const import ATTR_COMMAND, ATTR_MANUFACTURER, ATTR_MODEL, ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -38,9 +38,8 @@ from .const import (
     ATTR_IEEE,
     ATTR_LAST_SEEN,
     ATTR_LQI,
-    ATTR_MANUFACTURER,
+    ATTR_MANUFACTURER as ATTR_CHANNEL_MANUFACTURER,
     ATTR_MANUFACTURER_CODE,
-    ATTR_MODEL,
     ATTR_NEIGHBORS,
     ATTR_NODE_DESCRIPTOR,
     ATTR_NWK,
@@ -371,7 +370,9 @@ class ZHADevice(LogMixin):
             self.debug("does not have a mandatory basic cluster")
             self.update_available(False)
             return
-        res = await basic_ch.get_attribute_value(ATTR_MANUFACTURER, from_cache=False)
+        res = await basic_ch.get_attribute_value(
+            ATTR_CHANNEL_MANUFACTURER, from_cache=False
+        )
         if res is not None:
             self._checkins_missed_count = 0
 
@@ -644,7 +645,7 @@ class ZHADevice(LogMixin):
             f"{ATTR_COMMAND_TYPE}: {command_type}",
             f"{ATTR_ARGS}: {args}",
             f"{ATTR_CLUSTER_ID}: {cluster_type}",
-            f"{ATTR_MANUFACTURER}: {manufacturer}",
+            f"{ATTR_CHANNEL_MANUFACTURER}: {manufacturer}",
             f"{ATTR_ENDPOINT_ID}: {endpoint_id}",
         )
         return response

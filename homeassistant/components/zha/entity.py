@@ -7,7 +7,13 @@ import functools
 import logging
 from typing import Any
 
-from homeassistant.const import ATTR_NAME
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_VIA_DEVICE,
+)
 from homeassistant.core import CALLBACK_TYPE, Event, callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.debounce import Debouncer
@@ -20,8 +26,6 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .core.const import (
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
     DATA_ZHA,
     DATA_ZHA_BRIDGE_ID,
     DOMAIN,
@@ -94,11 +98,11 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         ieee = zha_device_info["ieee"]
         return {
             "connections": {(CONNECTION_ZIGBEE, ieee)},
-            "identifiers": {(DOMAIN, ieee)},
+            ATTR_IDENTIFIERS: {(DOMAIN, ieee)},
             ATTR_MANUFACTURER: zha_device_info[ATTR_MANUFACTURER],
             ATTR_MODEL: zha_device_info[ATTR_MODEL],
             ATTR_NAME: zha_device_info[ATTR_NAME],
-            "via_device": (DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
+            ATTR_VIA_DEVICE: (DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
         }
 
     @callback
