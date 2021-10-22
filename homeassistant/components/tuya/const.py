@@ -253,10 +253,7 @@ class DPCode(str, Enum):
     WATERSENSOR_STATE = "watersensor_state"
     WET = "wet"  # Humidification
     WORK_MODE = "work_mode"  # Working mode
-    VA_TEMPERATURE = "va_temperature"
-    VA_HUMIDITY = "va_humidity"
     PM100_VALUE = "pm100_value"
-    PM25_VALUE = "pm25_value"
     PM10_VALUE = "pm10_value"
     VA_BATTERY = "va_battery"
     FORWARD_ENERGY_TOTAL = "forward_energy_total"
