@@ -23,9 +23,8 @@ class DIRECTVEntity(Entity):
         """Return device information about this DirecTV receiver."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
-            name=self.name,
             manufacturer=self.dtv.device.info.brand,
-            model=None,
+            name=self.name,
             sw_version=self.dtv.device.info.version,
             via_device=(DOMAIN, self.dtv.device.info.receiver_id),
         )
