@@ -59,10 +59,10 @@ BATTERY_SENSORS: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key=DPCode.BATTERY_VALUE,
-        name="Battery Value",
-        icon="mdi:battery",
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        name="Battery",
         device_class=DEVICE_CLASS_BATTERY,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
 )
 
