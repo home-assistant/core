@@ -20,6 +20,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import Throttle
@@ -100,12 +101,12 @@ class CanaryCamera(CoordinatorEntity, Camera):
         self._live_stream_session: LiveStreamSession | None = None
         self._attr_name = device.name
         self._attr_unique_id = str(device.device_id)
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, str(device.device_id))},
-            "name": device.name,
-            "model": device.device_type["name"],
-            "manufacturer": MANUFACTURER,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(device.device_id))},
+            manufacturer=MANUFACTURER,
+            model=device.device_type["name"],
+            name=device.name,
+        )
 
     @property
     def location(self) -> Location:

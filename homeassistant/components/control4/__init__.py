@@ -20,6 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -179,13 +180,12 @@ class Control4Entity(CoordinatorEntity):
         return str(self._idx)
 
     @property
-    def device_info(self):
+    def device_info(self):  # TODO
         """Return info of parent Control4 device of entity."""
-        return {
-            "config_entry_id": self.entry.entry_id,
-            "identifiers": {(DOMAIN, self._device_id)},
-            "name": self._device_name,
-            "manufacturer": self._device_manufacturer,
-            "model": self._device_model,
-            "via_device": (DOMAIN, self._controller_unique_id),
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            manufacturer=self._device_manufacturer,
+            model=self._device_model,
+            name=self._device_name,
+            via_device=(DOMAIN, self._controller_unique_id),
+        )
