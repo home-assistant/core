@@ -31,7 +31,9 @@ body:
       label: What version of Home Assistant Core has the issue?
       placeholder: core-
       description: >
-        Can be found in: Configuration panel -> Info.
+        Can be found in: [Configuration panel -> Info](https://my.home-assistant.io/redirect/info/).
+
+        [![Open your Home Assistant instance and show your Home Assistant version information.](https://my.home-assistant.io/badges/info.svg)](https://my.home-assistant.io/redirect/info/)
   - type: input
     attributes:
       label: What was the last working version of Home Assistant Core?
@@ -44,7 +46,9 @@ body:
     attributes:
       label: What type of installation are you running?
       description: >
-        Can be found in: Configuration panel -> Info.
+        Can be found in: [Configuration panel -> Info](https://my.home-assistant.io/redirect/info/).
+        
+        [![Open your Home Assistant instance and show your Home Assistant version information.](https://my.home-assistant.io/badges/info.svg)](https://my.home-assistant.io/redirect/info/)
       options:
         - Home Assistant OS
         - Home Assistant Container
