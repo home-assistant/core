@@ -202,9 +202,8 @@ class BaseNotificationService:
         """Handle sending notification message service calls."""
         kwargs = {}
         message = service.data[ATTR_MESSAGE]
-        title = service.data.get(ATTR_TITLE)
 
-        if title:
+        if title := service.data.get(ATTR_TITLE):
             check_templates_warn(self.hass, title)
             title.hass = self.hass
             kwargs[ATTR_TITLE] = title.async_render(parse_result=False)
