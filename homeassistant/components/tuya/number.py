@@ -101,7 +101,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MAX_2,
-            name="Maximum Brightness",
+            name="Maximum Brightness 2",
             icon="mdi:lightbulb-on-outline",
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
@@ -113,7 +113,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MAX_3,
-            name="Maximum Brightness",
+            name="Maximum Brightness 3",
             icon="mdi:lightbulb-on-outline",
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
@@ -141,7 +141,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MAX_2,
-            name="Maximum Brightness",
+            name="Maximum Brightness 2",
             icon="mdi:lightbulb-on-outline",
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
