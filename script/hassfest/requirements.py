@@ -86,11 +86,12 @@ def validate_requirements_format(integration: Integration) -> bool:
 
         pkg, sep, version = req.partition("==")
 
-        if not sep and integration.core:
-            integration.add_error(
-                "requirements",
-                f'Requirement {req} need to be pinned "<pkg name>==<version>".',
-            )
+        if not sep:
+            if integration.core:
+                integration.add_error(
+                    "requirements",
+                    f'Requirement {req} need to be pinned "<pkg name>==<version>".',
+                )
             continue
 
         if AwesomeVersion(version).strategy == AwesomeVersionStrategy.UNKNOWN:
