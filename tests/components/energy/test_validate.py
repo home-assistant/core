@@ -26,11 +26,19 @@ def mock_get_metadata():
     """Mock recorder.statistics.get_metadata."""
     mocks = {}
 
+    def _get_metadata(_hass, *, statistic_ids):
+        result = {}
+        for statistic_id in statistic_ids:
+            if statistic_id in mocks:
+                if mocks[statistic_id] is not None:
+                    result[statistic_id] = mocks[statistic_id]
+            else:
+                result[statistic_id] = (1, {})
+        return result
+
     with patch(
         "homeassistant.components.recorder.statistics.get_metadata",
-        side_effect=lambda hass, statistic_ids: mocks.get(
-            statistic_ids[0], {statistic_ids[0]: (1, {})}
-        ),
+        wraps=_get_metadata,
     ):
         yield mocks
 
@@ -361,8 +369,8 @@ async def test_validation_grid(
     """Test validating grid with sensors for energy and cost/compensation."""
     mock_is_entity_recorded["sensor.grid_cost_1"] = False
     mock_is_entity_recorded["sensor.grid_compensation_1"] = False
-    mock_get_metadata["sensor.grid_cost_1"] = {}
-    mock_get_metadata["sensor.grid_compensation_1"] = {}
+    mock_get_metadata["sensor.grid_cost_1"] = None
+    mock_get_metadata["sensor.grid_compensation_1"] = None
     await mock_energy_manager.async_update(
         {
             "energy_sources": [
@@ -456,8 +464,8 @@ async def test_validation_grid_external_cost_compensation(
     hass, mock_energy_manager, mock_is_entity_recorded, mock_get_metadata
 ):
     """Test validating grid with non entity stats for energy and cost/compensation."""
-    mock_get_metadata["external:grid_cost_1"] = {}
-    mock_get_metadata["external:grid_compensation_1"] = {}
+    mock_get_metadata["external:grid_cost_1"] = None
+    mock_get_metadata["external:grid_compensation_1"] = None
     await mock_energy_manager.async_update(
         {
             "energy_sources": [
