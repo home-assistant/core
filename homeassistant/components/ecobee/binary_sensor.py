@@ -1,4 +1,6 @@
 """Support for Ecobee binary sensors."""
+from __future__ import annotations
+
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_OCCUPANCY,
     BinarySensorEntity,
