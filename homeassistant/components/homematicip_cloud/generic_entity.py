@@ -96,18 +96,18 @@ class HomematicipGenericEntity(Entity):
         """Return device specific attributes."""
         # Only physical devices should be HA devices.
         if isinstance(self._device, AsyncDevice):
-            return {
-                "identifiers": {
+            return DeviceInfo(
+                identifiers={
                     # Serial numbers of Homematic IP device
                     (HMIPC_DOMAIN, self._device.id)
                 },
-                "name": self._device.label,
-                "manufacturer": self._device.oem,
-                "model": self._device.modelType,
-                "sw_version": self._device.firmwareVersion,
+                name=self._device.label,
+                manufacturer=self._device.oem,
+                model=self._device.modelType,
+                sw_version=self._device.firmwareVersion,
                 # Link to the homematic ip access point.
-                "via_device": (HMIPC_DOMAIN, self._device.homeId),
-            }
+                via_device=(HMIPC_DOMAIN, self._device.homeId),
+            )
         return None
 
     async def async_added_to_hass(self) -> None:

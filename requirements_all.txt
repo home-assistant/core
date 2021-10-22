@@ -318,7 +318,7 @@ aprslib==0.6.46
 aqualogic==2.6
 
 # homeassistant.components.arcam_fmj
-arcam-fmj==0.7.0
+arcam-fmj==0.12.0
 
 # homeassistant.components.arris_tg2492lg
 arris-tg2492lg==1.1.0
@@ -1589,7 +1589,7 @@ pylast==4.2.1
 pylaunches==1.0.0
 
 # homeassistant.components.lg_netcast
-pylgnetcast==0.3.3
+pylgnetcast==0.3.4
 
 # homeassistant.components.forked_daapd
 pylibrespot-java==0.1.0
@@ -1651,9 +1651,6 @@ pymyq==3.1.4
 # homeassistant.components.mysensors
 pymysensors==0.21.0
 
-# homeassistant.components.nello
-pynello==2.0.3
-
 # homeassistant.components.netgear
 pynetgear==0.7.0
 
@@ -1677,6 +1674,9 @@ pynzbgetapi==0.2.0
 
 # homeassistant.components.obihai
 pyobihai==1.3.1
+
+# homeassistant.components.octoprint
+pyoctoprintapi==0.1.6
 
 # homeassistant.components.ombi
 pyombi==0.1.10

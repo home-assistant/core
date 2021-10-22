@@ -3,7 +3,7 @@
 from abc import abstractmethod
 
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -33,19 +33,19 @@ class SomfyEntity(CoordinatorEntity, Entity):
         return self.device.name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device specific attributes.
 
         Implemented by platform classes.
         """
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "model": self.device.type,
-            "via_device": (DOMAIN, self.device.parent_id),
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            name=self.name,
+            model=self.device.type,
+            via_device=(DOMAIN, self.device.parent_id),
             # For the moment, Somfy only returns their own device.
-            "manufacturer": "Somfy",
-        }
+            manufacturer="Somfy",
+        )
 
     def has_capability(self, capability: str) -> bool:
         """Test if device has a capability."""

@@ -143,8 +143,7 @@ class ValloxStateProxy:
         if metric_key not in vlxDevConstants.__dict__:
             raise KeyError(f"Unknown metric key: {metric_key}")
 
-        value = self._metric_cache[metric_key]
-        if value is None:
+        if (value := self._metric_cache[metric_key]) is None:
             return None
 
         if not isinstance(value, (str, int, float)):

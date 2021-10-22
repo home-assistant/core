@@ -48,6 +48,7 @@ async def test_controller_mac(hass):
     with patch("homeassistant.components.unifi.UniFiController") as mock_controller:
         mock_controller.return_value.async_setup = AsyncMock(return_value=True)
         mock_controller.return_value.mac = "mac1"
+        mock_controller.return_value.api.url = "https://123:443"
         assert await unifi.async_setup_entry(hass, entry) is True
 
     assert len(mock_controller.mock_calls) == 2
@@ -56,6 +57,7 @@ async def test_controller_mac(hass):
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id, connections={(CONNECTION_NETWORK_MAC, "mac1")}
     )
+    assert device.configuration_url == "https://123:443"
     assert device.manufacturer == "Ubiquiti Networks"
     assert device.model == "UniFi Controller"
     assert device.name == "UniFi Controller"

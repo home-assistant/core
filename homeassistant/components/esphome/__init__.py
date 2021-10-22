@@ -637,6 +637,9 @@ class EsphomeEnumMapper(Generic[_EnumT, _ValT]):
         return self._inverse[value]
 
 
+ICON_SCHEMA = vol.Schema(cv.icon)
+
+
 class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     """Define a base esphome entity."""
 
@@ -760,6 +763,14 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     def name(self) -> str:
         """Return the name of the entity."""
         return self._static_info.name
+
+    @property
+    def icon(self) -> str | None:
+        """Return the icon."""
+        if not self._static_info.icon:
+            return None
+
+        return cast(str, ICON_SCHEMA(self._static_info.icon))
 
     @property
     def should_poll(self) -> bool:
