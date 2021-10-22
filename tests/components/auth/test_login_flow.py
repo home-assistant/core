@@ -114,3 +114,43 @@ async def test_login_exist_user(hass, aiohttp_client):
     step = await resp.json()
     assert step["type"] == "create_entry"
     assert len(step["result"]) > 1
+
+
+async def test_login_exist_user_ip_changes(hass, aiohttp_client):
+    """Test logging in and the ip address changes results in an rejection."""
+    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
+    cred = await hass.auth.auth_providers[0].async_get_or_create_credentials(
+        {"username": "test-user"}
+    )
+    await hass.auth.async_get_or_create_user(cred)
+
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+        },
+    )
+    assert resp.status == 200
+    step = await resp.json()
+
+    #
+    # Here we modify the ip_address in the context to make sure
+    # when ip address changes in the middle of the login flow we prevent logins.
+    #
+    # This method was chosen because it seemed less likely to break
+    # vs patching aiohttp internals to fake the ip address
+    #
+    for flow_id, flow in hass.auth.login_flow._progress.items():
+        assert flow_id == step["flow_id"]
+        flow.context["ip_address"] = "10.2.3.1"
+
+    resp = await client.post(
+        f"/auth/login_flow/{step['flow_id']}",
+        json={"client_id": CLIENT_ID, "username": "test-user", "password": "test-pass"},
+    )
+
+    assert resp.status == 400
+    response = await resp.json()
+    assert response == {"message": "IP address changed"}
