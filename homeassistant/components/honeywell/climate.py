@@ -282,8 +282,7 @@ class HoneywellUSThermostat(ClimateEntity):
 
     def _set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         try:
             # Get current mode
@@ -310,11 +309,9 @@ class HoneywellUSThermostat(ClimateEntity):
 
         try:
             if HVAC_MODE_HEAT_COOL in self._hvac_mode_map:
-                temperature = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-                if temperature:
+                if temperature := kwargs.get(ATTR_TARGET_TEMP_HIGH):
                     self._device.setpoint_cool = temperature
-                temperature = kwargs.get(ATTR_TARGET_TEMP_LOW)
-                if temperature:
+                if temperature := kwargs.get(ATTR_TARGET_TEMP_LOW):
                     self._device.setpoint_heat = temperature
         except somecomfort.SomeComfortError as err:
             _LOGGER.error("Invalid temperature %s: %s", temperature, err)

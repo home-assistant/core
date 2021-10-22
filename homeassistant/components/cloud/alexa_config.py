@@ -134,8 +134,7 @@ class AlexaConfig(alexa_config.AbstractConfig):
             return entity_expose
 
         entity_registry = er.async_get(self.hass)
-        registry_entry = entity_registry.async_get(entity_id)
-        if registry_entry:
+        if registry_entry := entity_registry.async_get(entity_id):
             auxiliary_entity = registry_entry.entity_category in (
                 ENTITY_CATEGORY_CONFIG,
                 ENTITY_CATEGORY_DIAGNOSTIC,
