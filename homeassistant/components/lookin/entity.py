@@ -140,6 +140,12 @@ class LookinCoordinatorEntity(LookinDeviceMixIn, LookinEntityMixIn, CoordinatorE
         self._attr_unique_id = uuid
         self._attr_name = device.name
 
+    async def _async_send_command(self, command: str) -> None:
+        """Send command from saved IR device."""
+        await self._lookin_protocol.send_command(
+            uuid=self._uuid, command=command, signal="FF"
+        )
+
 
 class LookinPowerEntity(LookinEntity):
     """A Lookin entity that has a power on and power off command."""
