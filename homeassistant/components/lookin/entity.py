@@ -25,7 +25,7 @@ def _lookin_device_to_device_info(lookin_device: Device) -> DeviceInfo:
     )
 
 
-def _lookin_enttiy_device_to_device_info(
+def _lookin_controlled_device_to_device_info(
     lookin_device: Device, uuid: str, device: Device
 ) -> DeviceInfo:
     return DeviceInfo(
@@ -104,7 +104,7 @@ class LookinEntity(LookinDeviceMixIn, LookinEntityMixIn, Entity):
         """Init the base entity."""
         self._set_lookin_device_attrs(lookin_data)
         self._set_lookin_entity_attrs(uuid, device, lookin_data)
-        self._attr_device_info = _lookin_enttiy_device_to_device_info(
+        self._attr_device_info = _lookin_controlled_device_to_device_info(
             self._lookin_device, uuid, device
         )
         self._attr_unique_id = uuid
@@ -134,7 +134,7 @@ class LookinCoordinatorEntity(LookinDeviceMixIn, LookinEntityMixIn, CoordinatorE
         super().__init__(coordinator)
         self._set_lookin_device_attrs(lookin_data)
         self._set_lookin_entity_attrs(uuid, device, lookin_data)
-        self._attr_device_info = _lookin_enttiy_device_to_device_info(
+        self._attr_device_info = _lookin_controlled_device_to_device_info(
             self._lookin_device, uuid, device
         )
         self._attr_unique_id = uuid
