@@ -1576,6 +1576,20 @@ def random_every_time(context, values):
     return random.choice(values)
 
 
+def today_at(time_str: str = "") -> datetime:
+    """Record fetching now where the time has been replaced with value."""
+    start = dt_util.start_of_local_day(datetime.now())
+
+    dttime = start.time() if time_str == "" else dt_util.parse_time(time_str)
+
+    if dttime:
+        return datetime.combine(start.date(), dttime, tzinfo=dt_util.DEFAULT_TIME_ZONE)
+
+    raise ValueError(
+        f"could not convert {type(time_str).__name__} to datetime: '{time_str}'"
+    )
+
+
 def relative_time(value):
     """
     Take a datetime and return its "age" as a string.
@@ -1685,6 +1699,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["sqrt"] = square_root
         self.filters["as_datetime"] = dt_util.parse_datetime
         self.filters["as_timestamp"] = forgiving_as_timestamp
+        self.filters["today_at"] = today_at
         self.filters["as_local"] = dt_util.as_local
         self.filters["timestamp_custom"] = timestamp_custom
         self.filters["timestamp_local"] = timestamp_local
@@ -1725,6 +1740,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["as_datetime"] = dt_util.parse_datetime
         self.globals["as_local"] = dt_util.as_local
         self.globals["as_timestamp"] = forgiving_as_timestamp
+        self.globals["today_at"] = today_at
         self.globals["relative_time"] = relative_time
         self.globals["timedelta"] = timedelta
         self.globals["strptime"] = strptime
