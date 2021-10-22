@@ -23,7 +23,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
@@ -273,14 +273,14 @@ class NetgearDeviceEntity(Entity):
         return self._name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        return {
-            "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
-            "default_name": self._device_name,
-            "default_model": self._device["device_model"],
-            "via_device": (DOMAIN, self._router.unique_id),
-        }
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self._mac)},
+            default_name=self._device_name,
+            default_model=self._device["device_model"],
+            via_device=(DOMAIN, self._router.unique_id),
+        )
 
     @property
     def should_poll(self) -> bool:
