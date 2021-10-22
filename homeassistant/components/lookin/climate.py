@@ -79,7 +79,9 @@ async def async_setup_entry(
             continue
         uuid = remote["UUID"]
 
-        def _wrap_async_update(uuid) -> Callable[[], Coroutine[None, Any, Climate]]:
+        def _wrap_async_update(
+            uuid: str,
+        ) -> Callable[[], Coroutine[None, Any, Climate]]:
             """Create a function to capture the uuid cell variable."""
 
             async def _async_update() -> Climate:
