@@ -735,7 +735,7 @@ omit =
     homeassistant/components/nx584/alarm_control_panel.py
     homeassistant/components/nzbget/coordinator.py
     homeassistant/components/obihai/*
-    homeassistant/components/octoprint/*
+    homeassistant/components/octoprint/__init__.py
     homeassistant/components/oem/climate.py
     homeassistant/components/oasa_telematics/sensor.py
     homeassistant/components/ohmconnect/sensor.py
