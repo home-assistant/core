@@ -39,7 +39,7 @@ class DemoBinarySensor(BinarySensorEntity):
         self._sensor_type = device_class
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
         return DeviceInfo(
             identifiers={

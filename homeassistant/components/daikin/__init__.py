@@ -110,7 +110,7 @@ class DaikinApi:
         return self._available
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         info = self.device.values
         return DeviceInfo(

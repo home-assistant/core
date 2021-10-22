@@ -53,7 +53,7 @@ class DemoSwitch(SwitchEntity):
         self._attr_unique_id = unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
         return DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},

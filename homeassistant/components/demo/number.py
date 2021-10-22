@@ -96,7 +96,7 @@ class DemoNumber(NumberEntity):
             self._attr_step = step
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
         return DeviceInfo(
             identifiers={

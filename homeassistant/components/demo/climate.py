@@ -155,7 +155,7 @@ class DemoClimate(ClimateEntity):
         self._target_temperature_low = target_temp_low
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
         return DeviceInfo(
             identifiers={

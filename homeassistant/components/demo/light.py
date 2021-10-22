@@ -139,7 +139,7 @@ class DemoLight(LightEntity):
             self._features |= SUPPORT_EFFECT
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
         return DeviceInfo(
             identifiers={

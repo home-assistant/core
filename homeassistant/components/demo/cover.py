@@ -87,7 +87,7 @@ class DemoCover(CoverEntity):
             self._closed = self.current_cover_position <= 0
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
         return DeviceInfo(
             identifiers={

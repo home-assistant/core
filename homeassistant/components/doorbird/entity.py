@@ -23,7 +23,7 @@ class DoorBirdEntity(Entity):
         self._mac_addr = get_mac_address_from_doorstation_info(doorstation_info)
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Doorbird device info."""
         firmware = self._doorstation_info[DOORBIRD_INFO_KEY_FIRMWARE]
         firmware_build = self._doorstation_info[DOORBIRD_INFO_KEY_BUILD_NUMBER]
