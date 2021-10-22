@@ -12,8 +12,10 @@ from aiohomekit.model import Accessories
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
+from homeassistant.const import ATTR_IDENTIFIERS, ATTR_VIA_DEVICE
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
@@ -205,29 +207,31 @@ class HKDevice:
                 service_type=ServicesTypes.ACCESSORY_INFORMATION,
             )
 
-            device_info = {
-                "identifiers": {
+            device_info = DeviceInfo(
+                identifiers={
                     (
                         DOMAIN,
                         "serial-number",
                         info.value(CharacteristicsTypes.SERIAL_NUMBER),
                     )
                 },
-                "name": info.value(CharacteristicsTypes.NAME),
-                "manufacturer": info.value(CharacteristicsTypes.MANUFACTURER, ""),
-                "model": info.value(CharacteristicsTypes.MODEL, ""),
-                "sw_version": info.value(CharacteristicsTypes.FIRMWARE_REVISION, ""),
-            }
+                name=info.value(CharacteristicsTypes.NAME),
+                manufacturer=info.value(CharacteristicsTypes.MANUFACTURER, ""),
+                model=info.value(CharacteristicsTypes.MODEL, ""),
+                sw_version=info.value(CharacteristicsTypes.FIRMWARE_REVISION, ""),
+            )
 
             if accessory.aid == 1:
                 # Accessory 1 is the root device (sometimes the only device, sometimes a bridge)
                 # Link the root device to the pairing id for the connection.
-                device_info["identifiers"].add((DOMAIN, "accessory-id", self.unique_id))
+                device_info[ATTR_IDENTIFIERS].add(
+                    (DOMAIN, "accessory-id", self.unique_id)
+                )
             else:
                 # Every pairing has an accessory 1
                 # It *doesn't* have a via_device, as it is the device we are connecting to
                 # Every other accessory should use it as its via device.
-                device_info["via_device"] = (
+                device_info[ATTR_VIA_DEVICE] = (
                     DOMAIN,
                     "serial-number",
                     self.connection_info["serial-number"],
