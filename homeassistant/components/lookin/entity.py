@@ -26,7 +26,7 @@ def _lookin_device_to_device_info(lookin_device: Device) -> DeviceInfo:
 
 
 def _lookin_controlled_device_to_device_info(
-    lookin_device: Device, uuid: str, device: Device
+    lookin_device: Device, uuid: str, device: Climate | Remote
 ) -> DeviceInfo:
     return DeviceInfo(
         identifiers={(DOMAIN, uuid)},

@@ -66,6 +66,7 @@ homeassistant.components.lcn.*
 homeassistant.components.light.*
 homeassistant.components.local_ip.*
 homeassistant.components.lock.*
+homeassistant.components.lookin.*
 homeassistant.components.mailbox.*
 homeassistant.components.media_player.*
 homeassistant.components.modbus.*
