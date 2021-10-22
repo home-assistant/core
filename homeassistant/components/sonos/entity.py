@@ -1,6 +1,7 @@
 """Entity representing a Sonos player."""
 from __future__ import annotations
 
+from abc import abstractmethod
 import datetime
 import logging
 
@@ -84,9 +85,9 @@ class SonosEntity(Entity):
         except (OSError, SoCoException) as ex:
             _LOGGER.debug("Error connecting to %s: %s", self.entity_id, ex)
 
+    @abstractmethod
     async def _async_poll(self) -> None:
         """Poll the specific functionality. Should be implemented by platforms if needed."""
-        raise NotImplementedError
 
     @property
     def soco(self) -> SoCo:

@@ -136,6 +136,11 @@ class SonosSwitchEntity(SonosEntity, SwitchEntity):
             self._attr_entity_registry_enabled_default = False
             self._attr_should_poll = True
 
+    async def _async_poll(self) -> None:
+        """Handle polling for subscription-based switches when subscription fails."""
+        if not self.should_poll:
+            await self.hass.async_add_executor_job(self.update)
+
     def update(self) -> None:
         """Fetch switch state if necessary."""
         state = getattr(self.soco, self.feature_type)
