@@ -355,6 +355,7 @@ ATTR_MODE: Final = "mode"
 ATTR_MANUFACTURER: Final = "manufacturer"
 ATTR_MODEL: Final = "model"
 ATTR_SW_VERSION: Final = "sw_version"
+ATTR_VIA_DEVICE: Final = "via_device"
 
 ATTR_BATTERY_CHARGING: Final = "battery_charging"
 ATTR_BATTERY_LEVEL: Final = "battery_level"
