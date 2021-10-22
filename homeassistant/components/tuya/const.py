@@ -132,6 +132,7 @@ class DPCode(str, Enum):
     ANION = "anion"  # Ionizer unit
     BATTERY_PERCENTAGE = "battery_percentage"  # Battery percentage
     BATTERY_STATE = "battery_state"  # Battery state
+    BATTERY_VALUE = "battery_value"  # Battery value
     BRIGHT_CONTROLLER = "bright_controller"
     BRIGHT_STATE = "bright_state"  # Brightness status
     BRIGHT_VALUE = "bright_value"  # Brightness
@@ -144,6 +145,9 @@ class DPCode(str, Enum):
     CH2O_VALUE = "ch2o_value"
     CHILD_LOCK = "child_lock"  # Child lock
     CO2_STATE = "co2_state"
+    SMOKE_SENSOR_STATUS = "smoke_sensor_status"
+    SMOKE_SENSOR_STATE = "smoke_sensor_state"
+    SMOKE_SENSOR_VALUE = "smoke_sensor_value"
     CO2_VALUE = "co2_value"  # CO2 concentration
     COLOR_DATA_V2 = "color_data_v2"
     COLOUR_DATA = "colour_data"  # Colored light mode
