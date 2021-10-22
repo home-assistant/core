@@ -114,9 +114,7 @@ class MobileAppNotificationService(BaseNotificationService):
         ):
             data[ATTR_TITLE] = kwargs.get(ATTR_TITLE)
 
-        targets = kwargs.get(ATTR_TARGET)
-
-        if not targets:
+        if not (targets := kwargs.get(ATTR_TARGET)):
             targets = push_registrations(self.hass).values()
 
         if kwargs.get(ATTR_DATA) is not None:
