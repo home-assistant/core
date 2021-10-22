@@ -1,9 +1,12 @@
 """Support for deCONZ locks."""
+
+from pydeconz.light import Lock
+from pydeconz.sensor import DoorLock
+
 from homeassistant.components.lock import DOMAIN, LockEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import LOCK_TYPES, NEW_LIGHT, NEW_SENSOR
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
@@ -21,8 +24,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for light in lights:
 
             if (
-                light.type in LOCK_TYPES
-                and light.uniqueid not in gateway.entities[DOMAIN]
+                isinstance(light, Lock)
+                and light.unique_id not in gateway.entities[DOMAIN]
             ):
                 entities.append(DeconzLock(light, gateway))
 
@@ -31,7 +34,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
-            hass, gateway.async_signal_new_device(NEW_LIGHT), async_add_lock_from_light
+            hass,
+            gateway.signal_new_light,
+            async_add_lock_from_light,
         )
     )
 
@@ -43,8 +48,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for sensor in sensors:
 
             if (
-                sensor.type in LOCK_TYPES
-                and sensor.uniqueid not in gateway.entities[DOMAIN]
+                isinstance(sensor, DoorLock)
+                and sensor.unique_id not in gateway.entities[DOMAIN]
             ):
                 entities.append(DeconzLock(sensor, gateway))
 
@@ -54,7 +59,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
-            gateway.async_signal_new_device(NEW_SENSOR),
+            gateway.signal_new_sensor,
             async_add_lock_from_sensor,
         )
     )

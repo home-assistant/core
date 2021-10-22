@@ -386,9 +386,8 @@ class OptionsFlow(config_entries.OptionsFlow):
     def _can_replace_device(self, entry_id):
         """Check if device can be replaced with selected device."""
         device_data = self._get_device_data(entry_id)
-        event_code = device_data[CONF_EVENT_CODE]
 
-        if event_code is not None:
+        if (event_code := device_data[CONF_EVENT_CODE]) is not None:
             rfx_obj = get_rfx_object(event_code)
             if (
                 rfx_obj.device.packettype
@@ -452,8 +451,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         if user_input is not None:
-            user_selection = user_input[CONF_TYPE]
-            if user_selection == "Serial":
+            if user_input[CONF_TYPE] == "Serial":
                 return await self.async_step_setup_serial()
 
             return await self.async_step_setup_network()
@@ -546,30 +544,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=schema,
             errors=errors,
         )
-
-    async def async_step_import(self, import_config=None):
-        """Handle the initial step."""
-        entry = await self.async_set_unique_id(DOMAIN)
-        if entry:
-            if CONF_DEVICES not in entry.data:
-                # In version 0.113, devices key was not written to config entry. Update the entry with import data
-                self._abort_if_unique_id_configured(import_config)
-            else:
-                self._abort_if_unique_id_configured()
-
-        host = import_config[CONF_HOST]
-        port = import_config[CONF_PORT]
-        device = import_config[CONF_DEVICE]
-
-        try:
-            if host is not None:
-                await self.async_validate_rfx(host=host, port=port)
-            else:
-                await self.async_validate_rfx(device=device)
-        except CannotConnect:
-            return self.async_abort(reason="cannot_connect")
-
-        return self.async_create_entry(title="RFXTRX", data=import_config)
 
     async def async_validate_rfx(self, host=None, port=None, device=None):
         """Create data for rfxtrx entry."""

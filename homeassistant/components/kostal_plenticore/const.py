@@ -1,28 +1,29 @@
 """Constants for the Kostal Plenticore Solar Inverter integration."""
 
 from homeassistant.components.sensor import (
-    ATTR_LAST_RESET,
     ATTR_STATE_CLASS,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_VOLTAGE,
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     POWER_WATT,
 )
-from homeassistant.util.dt import utc_from_timestamp
 
 DOMAIN = "kostal_plenticore"
 
 ATTR_ENABLED_DEFAULT = "entity_registry_enabled_default"
-
-LAST_RESET_NEVER = utc_from_timestamp(0)
 
 # Defines all entities for process data.
 #
@@ -139,6 +140,28 @@ SENSOR_PROCESS_DATA = [
         "format_round",
     ),
     (
+        "devices:local:pv1",
+        "U",
+        "DC1 Voltage",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_VOLTAGE,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
+        "format_round",
+    ),
+    (
+        "devices:local:pv1",
+        "I",
+        "DC1 Current",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_CURRENT,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
+        "format_float",
+    ),
+    (
         "devices:local:pv2",
         "P",
         "DC2 Power",
@@ -150,6 +173,28 @@ SENSOR_PROCESS_DATA = [
         "format_round",
     ),
     (
+        "devices:local:pv2",
+        "U",
+        "DC2 Voltage",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_VOLTAGE,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
+        "format_round",
+    ),
+    (
+        "devices:local:pv2",
+        "I",
+        "DC2 Current",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_CURRENT,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
+        "format_float",
+    ),
+    (
         "devices:local:pv3",
         "P",
         "DC3 Power",
@@ -159,6 +204,28 @@ SENSOR_PROCESS_DATA = [
             ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
         },
         "format_round",
+    ),
+    (
+        "devices:local:pv3",
+        "U",
+        "DC3 Voltage",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_VOLTAGE,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
+        "format_round",
+    ),
+    (
+        "devices:local:pv3",
+        "I",
+        "DC3 Current",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_CURRENT,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
+        "format_float",
     ),
     (
         "devices:local",
@@ -304,8 +371,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-            ATTR_LAST_RESET: LAST_RESET_NEVER,
+            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -346,8 +412,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-            ATTR_LAST_RESET: LAST_RESET_NEVER,
+            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -388,8 +453,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-            ATTR_LAST_RESET: LAST_RESET_NEVER,
+            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -430,8 +494,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-            ATTR_LAST_RESET: LAST_RESET_NEVER,
+            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -472,8 +535,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-            ATTR_LAST_RESET: LAST_RESET_NEVER,
+            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -514,8 +576,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-            ATTR_LAST_RESET: LAST_RESET_NEVER,
+            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -556,8 +617,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-            ATTR_LAST_RESET: LAST_RESET_NEVER,
+            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -599,8 +659,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-            ATTR_LAST_RESET: LAST_RESET_NEVER,
+            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
         },
         "format_energy",
     ),

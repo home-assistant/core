@@ -1,4 +1,5 @@
 """Base class for deCONZ devices."""
+
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -18,15 +19,15 @@ class DeconzBase:
     @property
     def unique_id(self):
         """Return a unique identifier for this device."""
-        return self._device.uniqueid
+        return self._device.unique_id
 
     @property
     def serial(self):
         """Return a serial number for this device."""
-        if self._device.uniqueid is None or self._device.uniqueid.count(":") != 7:
+        if self._device.unique_id is None or self._device.unique_id.count(":") != 7:
             return None
 
-        return self._device.uniqueid.split("-", 1)[0]
+        return self._device.unique_id.split("-", 1)[0]
 
     @property
     def device_info(self):
@@ -38,10 +39,10 @@ class DeconzBase:
             "connections": {(CONNECTION_ZIGBEE, self.serial)},
             "identifiers": {(DECONZ_DOMAIN, self.serial)},
             "manufacturer": self._device.manufacturer,
-            "model": self._device.modelid,
+            "model": self._device.model_id,
             "name": self._device.name,
-            "sw_version": self._device.swversion,
-            "via_device": (DECONZ_DOMAIN, self.gateway.api.config.bridgeid),
+            "sw_version": self._device.software_version,
+            "via_device": (DECONZ_DOMAIN, self.gateway.api.config.bridge_id),
         }
 
 
@@ -59,21 +60,15 @@ class DeconzDevice(DeconzBase, Entity):
 
         self._attr_name = self._device.name
 
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry.
-
-        Daylight is a virtual sensor from deCONZ that should never be enabled by default.
-        """
-        return self._device.type != "Daylight"
-
     async def async_added_to_hass(self):
         """Subscribe to device events."""
         self._device.register_callback(self.async_update_callback)
         self.gateway.deconz_ids[self.entity_id] = self._device.deconz_id
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, self.gateway.signal_reachable, self.async_update_callback
+                self.hass,
+                self.gateway.signal_reachable,
+                self.async_update_connection_state,
             )
         )
 
@@ -84,9 +79,14 @@ class DeconzDevice(DeconzBase, Entity):
         self.gateway.entities[self.TYPE].remove(self.unique_id)
 
     @callback
-    def async_update_callback(self, force_update=False):
+    def async_update_connection_state(self):
+        """Update the device's available state."""
+        self.async_write_ha_state()
+
+    @callback
+    def async_update_callback(self):
         """Update the device's state."""
-        if not force_update and self.gateway.ignore_state_updates:
+        if self.gateway.ignore_state_updates:
             return
 
         self.async_write_ha_state()

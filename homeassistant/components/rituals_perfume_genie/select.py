@@ -51,9 +51,4 @@ class DiffuserRoomSize(DiffuserEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the diffuser room size."""
-        if option in self.options:
-            await self._diffuser.set_room_size_square_meter(int(option))
-        else:
-            raise ValueError(
-                f"Can't set the room size to {option}. Allowed room sizes are: {self.options}"
-            )
+        await self._diffuser.set_room_size_square_meter(int(option))

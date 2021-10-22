@@ -160,8 +160,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
         return
 
-    hosts = config.get(CONF_HOSTS)
-    if hosts:
+    if hosts := config.get(CONF_HOSTS):
         for host in hosts:
             _add_player(
                 hass,
@@ -173,15 +172,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async def async_service_handler(service):
         """Map services to method of Bluesound devices."""
-        method = SERVICE_TO_METHOD.get(service.service)
-        if not method:
+        if not (method := SERVICE_TO_METHOD.get(service.service)):
             return
 
         params = {
             key: value for key, value in service.data.items() if key != ATTR_ENTITY_ID
         }
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
-        if entity_ids:
+        if entity_ids := service.data.get(ATTR_ENTITY_ID):
             target_players = [
                 player
                 for player in hass.data[DATA_BLUESOUND]
@@ -259,8 +256,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         if not self._icon:
             self._icon = self._sync_status.get("@icon", self.host)
 
-        master = self._sync_status.get("master")
-        if master is not None:
+        if (master := self._sync_status.get("master")) is not None:
             self._is_master = False
             master_host = master.get("#text")
             master_device = [
@@ -580,8 +576,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         if self.is_grouped and not self.is_master:
             return self._group_name
 
-        artist = self._status.get("artist")
-        if not artist:
+        if not (artist := self._status.get("artist")):
             artist = self._status.get("title2")
         return artist
 
@@ -591,8 +586,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         if self._status is None or (self.is_grouped and not self.is_master):
             return None
 
-        album = self._status.get("album")
-        if not album:
+        if not (album := self._status.get("album")):
             album = self._status.get("title3")
         return album
 
@@ -602,8 +596,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         if self._status is None or (self.is_grouped and not self.is_master):
             return None
 
-        url = self._status.get("image")
-        if not url:
+        if not (url := self._status.get("image")):
             return
         if url[0] == "/":
             url = f"http://{self.host}:{self.port}{url}"
@@ -620,8 +613,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         if self._last_status_update is None or mediastate == STATE_IDLE:
             return None
 
-        position = self._status.get("secs")
-        if position is None:
+        if (position := self._status.get("secs")) is None:
             return None
 
         position = float(position)
@@ -636,8 +628,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         if self._status is None or (self.is_grouped and not self.is_master):
             return None
 
-        duration = self._status.get("totlen")
-        if duration is None:
+        if (duration := self._status.get("totlen")) is None:
             return None
         return float(duration)
 
@@ -712,8 +703,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         if self._status is None or (self.is_grouped and not self.is_master):
             return None
 
-        current_service = self._status.get("service", "")
-        if current_service == "":
+        if (current_service := self._status.get("service", "")) == "":
             return ""
         stream_url = self._status.get("streamUrl", "")
 

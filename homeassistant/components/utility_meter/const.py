@@ -22,6 +22,7 @@ METER_TYPES = [
 ]
 
 DATA_UTILITY = "utility_meter_data"
+DATA_TARIFF_SENSORS = "utility_meter_sensors"
 
 CONF_METER = "meter"
 CONF_SOURCE_SENSOR = "source"
@@ -32,9 +33,11 @@ CONF_PAUSED = "paused"
 CONF_TARIFFS = "tariffs"
 CONF_TARIFF = "tariff"
 CONF_TARIFF_ENTITY = "tariff_entity"
+CONF_CRON_PATTERN = "cron"
 
 ATTR_TARIFF = "tariff"
 ATTR_VALUE = "value"
+ATTR_CRON_PATTERN = "cron pattern"
 
 SIGNAL_START_PAUSE_METER = "utility_meter_start_pause"
 SIGNAL_RESET_METER = "utility_meter_reset"

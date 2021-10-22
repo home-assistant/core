@@ -68,7 +68,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 @callback
 def _async_setup_shared_data(hass: HomeAssistant):
     """Create shared data for platform config and rest coordinators."""
-    hass.data[DOMAIN] = {key: [] for key in [REST_DATA, *COORDINATOR_AWARE_PLATFORMS]}
+    hass.data[DOMAIN] = {key: [] for key in (REST_DATA, *COORDINATOR_AWARE_PLATFORMS)}
 
 
 async def _async_process_config(hass, config) -> bool:

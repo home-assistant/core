@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 
 from aiohttp import ClientConnectorError, ClientResponseError
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.kmtronic.const import CONF_REVERSE, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 
@@ -12,7 +12,7 @@ from tests.common import MockConfigEntry
 
 async def test_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

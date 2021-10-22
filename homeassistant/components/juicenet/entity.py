@@ -26,4 +26,5 @@ class JuiceNetDevice(CoordinatorEntity):
             "identifiers": {(DOMAIN, self.device.id)},
             "name": self.device.name,
             "manufacturer": "JuiceNet",
+            "configuration_url": f"https://home.juice.net/Portal/Details?unitID={self.device.id}",
         }

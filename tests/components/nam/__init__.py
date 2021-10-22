@@ -24,6 +24,8 @@ nam_data = {
         {"value_type": "BME280_temperature", "value": "7.56"},
         {"value_type": "BME280_humidity", "value": "45.69"},
         {"value_type": "BME280_pressure", "value": "101101.17"},
+        {"value_type": "BMP_temperature", "value": "7.56"},
+        {"value_type": "BMP_pressure", "value": "103201.18"},
         {"value_type": "BMP280_temperature", "value": "5.56"},
         {"value_type": "BMP280_pressure", "value": "102201.18"},
         {"value_type": "SHT3X_temperature", "value": "6.28"},

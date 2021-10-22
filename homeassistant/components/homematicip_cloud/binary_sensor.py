@@ -85,7 +85,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomematicIP Cloud binary sensor from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
-    entities = [HomematicipCloudConnectionSensor(hap)]
+    entities: list[HomematicipGenericEntity] = [HomematicipCloudConnectionSensor(hap)]
     for device in hap.home.devices:
         if isinstance(device, AsyncAccelerationSensor):
             entities.append(HomematicipAccelerationSensor(hap, device))
@@ -254,7 +254,7 @@ class HomematicipMultiContactInterface(HomematicipGenericEntity, BinarySensorEnt
         return DEVICE_CLASS_OPENING
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if the contact interface is on/open."""
         if self._device.functionalChannels[self._channel].windowState is None:
             return None
@@ -544,8 +544,8 @@ class HomematicipSecuritySensorGroup(
     @property
     def is_on(self) -> bool:
         """Return true if safety issue detected."""
-        parent_is_on = super().is_on
-        if parent_is_on:
+        if super().is_on:
+            # parent is on
             return True
 
         if (

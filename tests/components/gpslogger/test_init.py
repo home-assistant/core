@@ -27,20 +27,18 @@ HOME_LONGITUDE = -115.815811
 @pytest.fixture(autouse=True)
 def mock_dev_track(mock_device_tracker_conf):
     """Mock device tracker config loading."""
-    pass
 
 
 @pytest.fixture
-async def gpslogger_client(loop, hass, aiohttp_client):
+async def gpslogger_client(loop, hass, hass_client_no_auth):
     """Mock client for GPSLogger (unauthenticated)."""
-    assert await async_setup_component(hass, "persistent_notification", {})
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     await hass.async_block_till_done()
 
     with patch("homeassistant.components.device_tracker.legacy.update_config"):
-        return await aiohttp_client(hass.http.app)
+        return await hass_client_no_auth()
 
 
 @pytest.fixture(autouse=True)

@@ -1,7 +1,7 @@
 """Helpers for config validation using voluptuous."""
 from __future__ import annotations
 
-from collections.abc import Hashable
+from collections.abc import Callable, Hashable
 from datetime import (
     date as date_sys,
     datetime as datetime_sys,
@@ -15,7 +15,7 @@ from numbers import Number
 import os
 import re
 from socket import _GLOBAL_DEFAULT_TIMEOUT  # type: ignore # private, not in typeshed
-from typing import Any, Callable, Dict, TypeVar, cast
+from typing import Any, Dict, TypeVar, cast
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -120,7 +120,7 @@ def path(value: Any) -> str:
 
 # Adapted from:
 # https://github.com/alecthomas/voluptuous/issues/115#issuecomment-144464666
-def has_at_least_one_key(*keys: str) -> Callable:
+def has_at_least_one_key(*keys: Any) -> Callable[[dict], dict]:
     """Validate that at least one key exists."""
 
     def validate(obj: dict) -> dict:
@@ -131,12 +131,13 @@ def has_at_least_one_key(*keys: str) -> Callable:
         for k in obj:
             if k in keys:
                 return obj
-        raise vol.Invalid("must contain at least one of {}.".format(", ".join(keys)))
+        expected = ", ".join(str(k) for k in keys)
+        raise vol.Invalid(f"must contain at least one of {expected}.")
 
     return validate
 
 
-def has_at_most_one_key(*keys: str) -> Callable[[dict], dict]:
+def has_at_most_one_key(*keys: Any) -> Callable[[dict], dict]:
     """Validate that zero keys exist or one key exists."""
 
     def validate(obj: dict) -> dict:
@@ -145,7 +146,8 @@ def has_at_most_one_key(*keys: str) -> Callable[[dict], dict]:
             raise vol.Invalid("expected dictionary")
 
         if len(set(keys) & set(obj)) > 1:
-            raise vol.Invalid("must contain at most one of {}.".format(", ".join(keys)))
+            expected = ", ".join(str(k) for k in keys)
+            raise vol.Invalid(f"must contain at most one of {expected}.")
         return obj
 
     return validate
@@ -1307,6 +1309,7 @@ currency = vol.In(
         "BSD",
         "BTN",
         "BWP",
+        "BYN",
         "BYR",
         "BZD",
         "CAD",

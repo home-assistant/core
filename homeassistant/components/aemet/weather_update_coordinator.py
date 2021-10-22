@@ -1,4 +1,6 @@
 """Weather data coordinator for the AEMET OpenData service."""
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
@@ -95,7 +97,7 @@ def format_condition(condition: str) -> str:
     return condition
 
 
-def format_float(value) -> float:
+def format_float(value) -> float | None:
     """Try converting string to float."""
     try:
         return float(value)
@@ -103,7 +105,7 @@ def format_float(value) -> float:
         return None
 
 
-def format_int(value) -> int:
+def format_int(value) -> int | None:
     """Try converting string to int."""
     try:
         return int(value)

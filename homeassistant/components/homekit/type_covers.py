@@ -122,10 +122,12 @@ class GarageDoorOpener(HomeAccessory):
         Run inside the Home Assistant event loop.
         """
         if self.linked_obstruction_sensor:
-            async_track_state_change_event(
-                self.hass,
-                [self.linked_obstruction_sensor],
-                self._async_update_obstruction_event,
+            self._subscriptions.append(
+                async_track_state_change_event(
+                    self.hass,
+                    [self.linked_obstruction_sensor],
+                    self._async_update_obstruction_event,
+                )
             )
 
         await super().run()

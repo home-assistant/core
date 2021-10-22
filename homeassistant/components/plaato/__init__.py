@@ -29,7 +29,6 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TOKEN,
     CONF_WEBHOOK_ID,
-    HTTP_OK,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     VOLUME_GALLONS,
@@ -86,9 +85,8 @@ WEBHOOK_SCHEMA = vol.Schema(
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Configure based on config entry."""
     hass.data.setdefault(DOMAIN, {})
-    use_webhook = entry.data[CONF_USE_WEBHOOK]
 
-    if use_webhook:
+    if entry.data[CONF_USE_WEBHOOK]:
         async_setup_webhook(hass, entry)
     else:
         await async_setup_coordinator(hass, entry)
@@ -148,7 +146,7 @@ def _set_entry_data(entry, hass, coordinator=None, device_id=None):
     }
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     use_webhook = entry.data[CONF_USE_WEBHOOK]
     hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
@@ -199,7 +197,7 @@ async def handle_webhook(hass, webhook_id, request):
 
     async_dispatcher_send(hass, SENSOR_UPDATE, *(device_id, sensor_data))
 
-    return web.Response(text=f"Saving status for {device_id}", status=HTTP_OK)
+    return web.Response(text=f"Saving status for {device_id}")
 
 
 def _device_id(data):

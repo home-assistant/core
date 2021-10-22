@@ -39,7 +39,7 @@ def service_update_mock(ipv6, zeroconf, services, handlers, *, limit_service=Non
         handlers[0](zeroconf, service, f"_name.{service}", ServiceStateChange.Added)
 
 
-def get_service_info_mock(service_type, name):
+def get_service_info_mock(service_type, name, *args, **kwargs):
     """Return service info for get_service_info."""
     return AsyncServiceInfo(
         service_type,
@@ -679,9 +679,6 @@ async def test_removed_ignored(hass, mock_async_zeroconf):
         await hass.async_block_till_done()
 
     assert len(mock_service_info.mock_calls) == 2
-    import pprint
-
-    pprint.pprint(mock_service_info.mock_calls[0][1])
     assert mock_service_info.mock_calls[0][1][0] == "_service.added.local."
     assert mock_service_info.mock_calls[1][1][0] == "_service.updated.local."
 
@@ -782,11 +779,13 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
 ]
 
 
-async def test_async_detect_interfaces_setting_empty_route(hass, mock_async_zeroconf):
-    """Test without default interface config and the route returns nothing."""
-    with patch("homeassistant.components.zeroconf.HaZeroconf") as mock_zc, patch.object(
-        hass.config_entries.flow, "async_init"
-    ), patch.object(
+async def test_async_detect_interfaces_setting_empty_route_linux(
+    hass, mock_async_zeroconf
+):
+    """Test without default interface config and the route returns nothing on linux."""
+    with patch("homeassistant.components.zeroconf.sys.platform", "linux"), patch(
+        "homeassistant.components.zeroconf.HaZeroconf"
+    ) as mock_zc, patch.object(hass.config_entries.flow, "async_init"), patch.object(
         zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
     ), patch(
         "homeassistant.components.zeroconf.network.async_get_adapters",
@@ -799,7 +798,41 @@ async def test_async_detect_interfaces_setting_empty_route(hass, mock_async_zero
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
     assert mock_zc.mock_calls[0] == call(
-        interfaces=[1, "192.168.1.5", "172.16.1.5", 3], ip_version=IPVersion.All
+        interfaces=[
+            "2001:db8::",
+            "fe80::1234:5678:9abc:def0",
+            "192.168.1.5",
+            "172.16.1.5",
+            "fe80::dead:beef:dead:beef",
+        ],
+        ip_version=IPVersion.All,
+    )
+
+
+async def test_async_detect_interfaces_setting_empty_route_freebsd(
+    hass, mock_async_zeroconf
+):
+    """Test without default interface config and the route returns nothing on freebsd."""
+    with patch("homeassistant.components.zeroconf.sys.platform", "freebsd"), patch(
+        "homeassistant.components.zeroconf.HaZeroconf"
+    ) as mock_zc, patch.object(hass.config_entries.flow, "async_init"), patch.object(
+        zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
+    ), patch(
+        "homeassistant.components.zeroconf.network.async_get_adapters",
+        return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
+    ), patch(
+        "homeassistant.components.zeroconf.AsyncServiceInfo",
+        side_effect=get_service_info_mock,
+    ):
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+    assert mock_zc.mock_calls[0] == call(
+        interfaces=[
+            "192.168.1.5",
+            "172.16.1.5",
+        ],
+        ip_version=IPVersion.V4Only,
     )
 
 
@@ -844,11 +877,13 @@ _ADAPTER_WITH_DEFAULT_ENABLED_AND_IPV6 = [
 ]
 
 
-async def test_async_detect_interfaces_explicitly_set_ipv6(hass, mock_async_zeroconf):
-    """Test interfaces are explicitly set when IPv6 is present."""
-    with patch("homeassistant.components.zeroconf.HaZeroconf") as mock_zc, patch.object(
-        hass.config_entries.flow, "async_init"
-    ), patch.object(
+async def test_async_detect_interfaces_explicitly_set_ipv6_linux(
+    hass, mock_async_zeroconf
+):
+    """Test interfaces are explicitly set when IPv6 is present on linux."""
+    with patch("homeassistant.components.zeroconf.sys.platform", "linux"), patch(
+        "homeassistant.components.zeroconf.HaZeroconf"
+    ) as mock_zc, patch.object(hass.config_entries.flow, "async_init"), patch.object(
         zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
     ), patch(
         "homeassistant.components.zeroconf.network.async_get_adapters",
@@ -862,5 +897,44 @@ async def test_async_detect_interfaces_explicitly_set_ipv6(hass, mock_async_zero
         await hass.async_block_till_done()
 
     assert mock_zc.mock_calls[0] == call(
-        interfaces=["192.168.1.5", 1], ip_version=IPVersion.All
+        interfaces=["192.168.1.5", "fe80::dead:beef:dead:beef"],
+        ip_version=IPVersion.All,
     )
+
+
+async def test_async_detect_interfaces_explicitly_set_ipv6_freebsd(
+    hass, mock_async_zeroconf
+):
+    """Test interfaces are explicitly set when IPv6 is present on freebsd."""
+    with patch("homeassistant.components.zeroconf.sys.platform", "freebsd"), patch(
+        "homeassistant.components.zeroconf.HaZeroconf"
+    ) as mock_zc, patch.object(hass.config_entries.flow, "async_init"), patch.object(
+        zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
+    ), patch(
+        "homeassistant.components.zeroconf.network.async_get_adapters",
+        return_value=_ADAPTER_WITH_DEFAULT_ENABLED_AND_IPV6,
+    ), patch(
+        "homeassistant.components.zeroconf.AsyncServiceInfo",
+        side_effect=get_service_info_mock,
+    ):
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert mock_zc.mock_calls[0] == call(
+        interfaces=InterfaceChoice.Default,
+        ip_version=IPVersion.V4Only,
+    )
+
+
+async def test_no_name(hass, mock_async_zeroconf):
+    """Test fallback to Home for mDNS announcement if the name is missing."""
+    hass.config.location_name = ""
+    with patch("homeassistant.components.zeroconf.HaZeroconf"):
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+
+    register_call = mock_async_zeroconf.async_register_service.mock_calls[-1]
+    info = register_call.args[0]
+    assert info.name == "Home._home-assistant._tcp.local."

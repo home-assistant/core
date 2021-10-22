@@ -1,7 +1,7 @@
 """The Panasonic Viera integration."""
 from functools import partial
 import logging
-from urllib.request import HTTPError, URLError
+from urllib.error import HTTPError, URLError
 
 from panasonic_viera import EncryptionRequired, Keys, RemoteControl, SOAPError
 import voluptuous as vol
@@ -73,8 +73,7 @@ async def async_setup_entry(hass, config_entry):
     host = config[CONF_HOST]
     port = config[CONF_PORT]
 
-    on_action = config[CONF_ON_ACTION]
-    if on_action is not None:
+    if (on_action := config[CONF_ON_ACTION]) is not None:
         on_action = Script(hass, on_action, config[CONF_NAME], DOMAIN)
 
     params = {}

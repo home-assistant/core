@@ -92,6 +92,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_method=gateway.update_trend_data,
         update_interval=timedelta(seconds=300),
     )
+    # Start out as unavailable so we do not report 0 data
+    # until the update happens
+    trends_coordinator.last_update_success = False
 
     # This can take longer than 60s and we already know
     # sense is online since get_discovered_device_data was
@@ -137,7 +140,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

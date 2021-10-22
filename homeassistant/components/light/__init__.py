@@ -125,13 +125,11 @@ def get_supported_color_modes(hass: HomeAssistant, entity_id: str) -> set | None
     First try the statemachine, then entity registry.
     This is the equivalent of entity helper get_supported_features.
     """
-    state = hass.states.get(entity_id)
-    if state:
+    if state := hass.states.get(entity_id):
         return state.attributes.get(ATTR_SUPPORTED_COLOR_MODES)
 
     entity_registry = er.async_get(hass)
-    entry = entity_registry.async_get(entity_id)
-    if not entry:
+    if not (entry := entity_registry.async_get(entity_id)):
         raise HomeAssistantError(f"Unknown entity {entity_id}")
     if not entry.capabilities:
         return None
@@ -445,7 +443,11 @@ async def async_setup(hass, config):  # noqa: C901
                 )
 
         # If both white and brightness are specified, override white
-        if ATTR_WHITE in params and COLOR_MODE_WHITE in supported_color_modes:
+        if (
+            supported_color_modes
+            and ATTR_WHITE in params
+            and COLOR_MODE_WHITE in supported_color_modes
+        ):
             params[ATTR_WHITE] = params.pop(ATTR_BRIGHTNESS, params[ATTR_WHITE])
 
         # Remove deprecated white value if the light supports color mode
@@ -529,7 +531,7 @@ class Profile:
     transition: int | None = None
     hs_color: tuple[float, float] | None = dataclasses.field(init=False)
 
-    SCHEMA = vol.Schema(  # pylint: disable=invalid-name
+    SCHEMA = vol.Schema(
         vol.Any(
             vol.ExactSequence(
                 (
@@ -625,9 +627,7 @@ class Profiles:
     @callback
     def apply_profile(self, name: str, params: dict) -> None:
         """Apply a profile."""
-        profile = self.data.get(name)
-
-        if profile is None:
+        if (profile := self.data.get(name)) is None:
             return
 
         if profile.hs_color is not None:
@@ -675,9 +675,7 @@ class LightEntity(ToggleEntity):
     @property
     def _light_internal_color_mode(self) -> str:
         """Return the color mode of the light with backwards compatibility."""
-        color_mode = self.color_mode
-
-        if color_mode is None:
+        if (color_mode := self.color_mode) is None:
             # Backwards compatibility for color_mode added in 2021.4
             # Add warning in 2021.6, remove in 2021.10
             supported = self._light_internal_supported_color_modes
@@ -829,6 +827,13 @@ class LightEntity(ToggleEntity):
             data[ATTR_RGB_COLOR] = tuple(int(x) for x in rgb_color[0:3])
             data[ATTR_RGBWW_COLOR] = tuple(int(x) for x in rgbww_color[0:5])
             data[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
+        elif color_mode == COLOR_MODE_COLOR_TEMP and self.color_temp:
+            hs_color = color_util.color_temperature_to_hs(
+                color_util.color_temperature_mired_to_kelvin(self.color_temp)
+            )
+            data[ATTR_HS_COLOR] = (round(hs_color[0], 3), round(hs_color[1], 3))
+            data[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(*hs_color)
+            data[ATTR_XY_COLOR] = color_util.color_hs_to_xy(*hs_color)
         return data
 
     @final
@@ -863,7 +868,7 @@ class LightEntity(ToggleEntity):
         if color_mode == COLOR_MODE_COLOR_TEMP:
             data[ATTR_COLOR_TEMP] = self.color_temp
 
-        if color_mode in COLOR_MODES_COLOR:
+        if color_mode in COLOR_MODES_COLOR or color_mode == COLOR_MODE_COLOR_TEMP:
             data.update(self._light_internal_convert_color(color_mode))
 
         if supported_features & SUPPORT_COLOR_TEMP and not self.supported_color_modes:

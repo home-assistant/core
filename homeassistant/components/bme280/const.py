@@ -1,11 +1,15 @@
 """Constants for the BME280 component."""
+from __future__ import annotations
+
 from datetime import timedelta
 
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
+    TEMP_CELSIUS,
 )
 
 # Common
@@ -25,11 +29,27 @@ DEFAULT_SCAN_INTERVAL = 300
 SENSOR_TEMP = "temperature"
 SENSOR_HUMID = "humidity"
 SENSOR_PRESS = "pressure"
-SENSOR_TYPES = {
-    SENSOR_TEMP: ["Temperature", None, DEVICE_CLASS_TEMPERATURE],
-    SENSOR_HUMID: ["Humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    SENSOR_PRESS: ["Pressure", "mb", DEVICE_CLASS_PRESSURE],
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=SENSOR_TEMP,
+        name="Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key=SENSOR_HUMID,
+        name="Humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=DEVICE_CLASS_HUMIDITY,
+    ),
+    SensorEntityDescription(
+        key=SENSOR_PRESS,
+        name="Pressure",
+        native_unit_of_measurement="mb",
+        device_class=DEVICE_CLASS_PRESSURE,
+    ),
+)
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 DEFAULT_MONITORED = [SENSOR_TEMP, SENSOR_HUMID, SENSOR_PRESS]
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=3)
 # SPI

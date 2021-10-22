@@ -168,10 +168,7 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
             return
 
         if self.home_variable == "outdoor temperature":
-            self._state = self.hass.config.units.temperature(
-                self._tado_weather_data["outsideTemperature"]["celsius"],
-                TEMP_CELSIUS,
-            )
+            self._state = self._tado_weather_data["outsideTemperature"]["celsius"]
             self._state_attributes = {
                 "time": self._tado_weather_data["outsideTemperature"]["timestamp"],
             }
@@ -245,7 +242,7 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         if self.zone_variable == "temperature":
-            return self.hass.config.units.temperature_unit
+            return TEMP_CELSIUS
         if self.zone_variable == "humidity":
             return PERCENTAGE
         if self.zone_variable == "heating":
@@ -277,9 +274,7 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
             return
 
         if self.zone_variable == "temperature":
-            self._state = self.hass.config.units.temperature(
-                self._tado_zone_data.current_temp, TEMP_CELSIUS
-            )
+            self._state = self._tado_zone_data.current_temp
             self._state_attributes = {
                 "time": self._tado_zone_data.current_temp_timestamp,
                 "setting": 0,  # setting is used in climate device

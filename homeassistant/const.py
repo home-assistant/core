@@ -4,14 +4,14 @@ from __future__ import annotations
 from typing import Final
 
 MAJOR_VERSION: Final = 2021
-MINOR_VERSION: Final = 9
+MINOR_VERSION: Final = 11
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 8, 0)
 # Truthy date string triggers showing related deprecation warning messages.
 REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 9, 0)
-REQUIRED_NEXT_PYTHON_DATE: Final = ""
+REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = "2022.1"
 
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
@@ -102,6 +102,7 @@ CONF_EFFECT: Final = "effect"
 CONF_ELEVATION: Final = "elevation"
 CONF_EMAIL: Final = "email"
 CONF_ENTITIES: Final = "entities"
+CONF_ENTITY_CATEGORY: Final = "entity_category"
 CONF_ENTITY_ID: Final = "entity_id"
 CONF_ENTITY_NAMESPACE: Final = "entity_namespace"
 CONF_ENTITY_PICTURE_TEMPLATE: Final = "entity_picture_template"
@@ -237,6 +238,7 @@ DEVICE_CLASS_BATTERY: Final = "battery"
 DEVICE_CLASS_CO: Final = "carbon_monoxide"
 DEVICE_CLASS_CO2: Final = "carbon_dioxide"
 DEVICE_CLASS_CURRENT: Final = "current"
+DEVICE_CLASS_DATE: Final = "date"
 DEVICE_CLASS_ENERGY: Final = "energy"
 DEVICE_CLASS_HUMIDITY: Final = "humidity"
 DEVICE_CLASS_ILLUMINANCE: Final = "illuminance"
@@ -256,6 +258,7 @@ DEVICE_CLASS_SULPHUR_DIOXIDE = "sulphur_dioxide"
 DEVICE_CLASS_TEMPERATURE: Final = "temperature"
 DEVICE_CLASS_TIMESTAMP: Final = "timestamp"
 DEVICE_CLASS_VOLTAGE: Final = "voltage"
+DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
 DEVICE_CLASS_GAS: Final = "gas"
 
 # #### STATES ####
@@ -416,6 +419,7 @@ POWER_VOLT_AMPERE: Final = "VA"
 # Energy units
 ENERGY_WATT_HOUR: Final = "Wh"
 ENERGY_KILO_WATT_HOUR: Final = "kWh"
+ENERGY_MEGA_WATT_HOUR: Final = "MWh"
 
 # Electric_current units
 ELECTRIC_CURRENT_MILLIAMPERE: Final = "mA"
@@ -468,6 +472,7 @@ FREQUENCY_GIGAHERTZ: Final = "GHz"
 # Pressure units
 PRESSURE_PA: Final = "Pa"
 PRESSURE_HPA: Final = "hPa"
+PRESSURE_KPA: Final = "kPa"
 PRESSURE_BAR: Final = "bar"
 PRESSURE_MBAR: Final = "mbar"
 PRESSURE_INHG: Final = "inHg"
@@ -701,3 +706,6 @@ CLOUD_NEVER_EXPOSED_ENTITIES: Final[list[str]] = ["group.all_locks"]
 
 # The ID of the Home Assistant Cast App
 CAST_APP_ID_HOMEASSISTANT: Final = "B12CE3CA"
+
+ENTITY_CATEGORY_CONFIG: Final = "config"
+ENTITY_CATEGORY_DIAGNOSTIC: Final = "diagnostic"

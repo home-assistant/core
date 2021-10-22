@@ -392,7 +392,7 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
     async_fire_mqtt_message(hass, "test_light_rgb", '{"state":"ON", "color":null}')
 
     light_state = hass.states.get("light.test")
-    assert "hs_color" not in light_state.attributes
+    assert "hs_color" in light_state.attributes
 
     async_fire_mqtt_message(hass, "test_light_rgb", '{"state":"ON", "color_temp":155}')
 

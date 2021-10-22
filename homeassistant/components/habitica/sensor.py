@@ -26,7 +26,7 @@ SENSORS_TYPES = {
     "exp": ST("EXP", "mdi:star", "EXP", ["stats", "exp"]),
     "toNextLevel": ST("Next Lvl", "mdi:star", "EXP", ["stats", "toNextLevel"]),
     "lvl": ST("Lvl", "mdi:arrow-up-bold-circle-outline", "Lvl", ["stats", "lvl"]),
-    "gp": ST("Gold", "mdi:currency-usd-circle", "Gold", ["stats", "gp"]),
+    "gp": ST("Gold", "mdi:circle-multiple", "Gold", ["stats", "gp"]),
     "class": ST("Class", "mdi:sword", "", ["stats", "class"]),
 }
 
@@ -213,8 +213,7 @@ class HabitipyTaskSensor(SensorEntity):
                 task_id = received_task[TASKS_MAP_ID]
                 task = {}
                 for map_key, map_value in TASKS_MAP.items():
-                    value = received_task.get(map_value)
-                    if value:
+                    if value := received_task.get(map_value):
                         task[map_key] = value
                 attrs[task_id] = task
             return attrs

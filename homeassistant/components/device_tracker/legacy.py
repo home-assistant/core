@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine, Sequence
+from collections.abc import Callable, Coroutine, Sequence
 from datetime import timedelta
 import hashlib
 from types import ModuleType
-from typing import Any, Callable, Final, final
+from typing import Any, Final, final
 
 import attr
 import voluptuous as vol

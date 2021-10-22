@@ -25,7 +25,8 @@ class BondDevice:
         """Create a helper device from ID and attributes returned by API."""
         self.device_id = device_id
         self.props = props
-        self._attrs = attrs
+        self._attrs = attrs or {}
+        self._supported_actions: set[str] = set(self._attrs.get("actions", []))
 
     def __repr__(self) -> str:
         """Return readable representation of a bond device."""
@@ -65,13 +66,13 @@ class BondDevice:
         """Check if Trust State is turned on."""
         return self.props.get("trust_state", False)
 
+    def has_action(self, action: str) -> bool:
+        """Check to see if the device supports an actions."""
+        return action in self._supported_actions
+
     def _has_any_action(self, actions: set[str]) -> bool:
         """Check to see if the device supports any of the actions."""
-        supported_actions: list[str] = self._attrs["actions"]
-        for action in supported_actions:
-            if action in actions:
-                return True
-        return False
+        return bool(self._supported_actions.intersection(actions))
 
     def supports_speed(self) -> bool:
         """Return True if this device supports any of the speed related commands."""

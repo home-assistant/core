@@ -1,8 +1,6 @@
 """Provides device actions for Number."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -15,6 +13,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN, const
 
@@ -29,10 +28,12 @@ ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_actions(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device actions for Number."""
     registry = await entity_registry.async_get_registry(hass)
-    actions: list[dict[str, Any]] = []
+    actions: list[dict[str, str]] = []
 
     # Get all the integrations entities for this device
     for entry in entity_registry.async_entries_for_device(registry, device_id):
@@ -67,7 +68,9 @@ async def async_call_action_from_config(
     )
 
 
-async def async_get_action_capabilities(hass: HomeAssistant, config: dict) -> dict:
+async def async_get_action_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List action capabilities."""
     fields = {vol.Required(const.ATTR_VALUE): vol.Coerce(float)}
 

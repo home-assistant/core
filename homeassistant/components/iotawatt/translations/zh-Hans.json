@@ -1,0 +1,23 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u8fde\u63a5\u5931\u8d25",
+            "invalid_auth": "\u65e0\u6548\u51ed\u8bc1",
+            "unknown": "\u672a\u77e5\u9519\u8bef"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "password": "\u5bc6\u7801",
+                    "username": "\u7528\u6237\u540d"
+                },
+                "description": "IoTawatt \u8bbe\u5907\u9700\u8981\u8eab\u4efd\u9a8c\u8bc1\u3002\u8bf7\u8f93\u5165\u7528\u6237\u540d\u548c\u5bc6\u7801\uff0c\u7136\u540e\u5355\u51fb\u63d0\u4ea4\u6309\u94ae\u3002"
+            },
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u673a\u5730\u5740"
+                }
+            }
+        }
+    }
+}

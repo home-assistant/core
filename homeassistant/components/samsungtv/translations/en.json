@@ -6,6 +6,7 @@
             "auth_missing": "Home Assistant is not authorized to connect to this Samsung TV. Check your TV's External Device Manager settings to authorize Home Assistant.",
             "cannot_connect": "Failed to connect",
             "id_missing": "This Samsung device doesn't have a SerialNumber.",
+            "missing_config_entry": "This Samsung device doesn't have a configuration entry.",
             "not_supported": "This Samsung device is currently not supported.",
             "reauth_successful": "Re-authentication was successful",
             "unknown": "Unexpected error"

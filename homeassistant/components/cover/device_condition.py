@@ -1,8 +1,6 @@
 """Provides device automations for Cover."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -38,6 +36,8 @@ from . import (
     SUPPORT_SET_TILT_POSITION,
 )
 
+# mypy: disallow-any-generics
+
 POSITION_CONDITION_TYPES = {"is_position", "is_tilt_position"}
 STATE_CONDITION_TYPES = {"is_open", "is_closed", "is_opening", "is_closing"}
 
@@ -67,10 +67,12 @@ STATE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
 CONDITION_SCHEMA = vol.Any(POSITION_CONDITION_SCHEMA, STATE_CONDITION_SCHEMA)
 
 
-async def async_get_conditions(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_conditions(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device conditions for Cover devices."""
     registry = await entity_registry.async_get_registry(hass)
-    conditions: list[dict[str, Any]] = []
+    conditions: list[dict[str, str]] = []
 
     # Get all the integrations entities for this device
     for entry in entity_registry.async_entries_for_device(registry, device_id):
@@ -100,7 +102,9 @@ async def async_get_conditions(hass: HomeAssistant, device_id: str) -> list[dict
     return conditions
 
 
-async def async_get_condition_capabilities(hass: HomeAssistant, config: dict) -> dict:
+async def async_get_condition_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List condition capabilities."""
     if config[CONF_TYPE] not in ["is_position", "is_tilt_position"]:
         return {}

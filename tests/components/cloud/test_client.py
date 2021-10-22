@@ -134,7 +134,7 @@ async def test_handler_google_actions_disabled(hass, mock_cloud_fixture):
     """Test handler Google Actions when user has disabled it."""
     mock_cloud_fixture._prefs[PREF_ENABLE_GOOGLE] = False
 
-    with patch("hass_nabucasa.Cloud.start"):
+    with patch("hass_nabucasa.Cloud.initialize"):
         assert await async_setup_component(hass, "cloud", {})
 
     reqid = "5711642932632160983"
@@ -149,7 +149,7 @@ async def test_handler_google_actions_disabled(hass, mock_cloud_fixture):
 
 async def test_webhook_msg(hass, caplog):
     """Test webhook msg."""
-    with patch("hass_nabucasa.Cloud.start"):
+    with patch("hass_nabucasa.Cloud.initialize"):
         setup = await async_setup_component(hass, "cloud", {"cloud": {}})
         assert setup
     cloud = hass.data["cloud"]
@@ -261,7 +261,7 @@ async def test_set_username(hass):
     )
     client = CloudClient(hass, prefs, None, {}, {})
     client.cloud = MagicMock(is_logged_in=True, username="mock-username")
-    await client.logged_in()
+    await client.cloud_started()
 
     assert len(prefs.async_set_username.mock_calls) == 1
     assert prefs.async_set_username.mock_calls[0][1][0] == "mock-username"
@@ -279,7 +279,7 @@ async def test_login_recovers_bad_internet(hass, caplog):
     client._alexa_config = Mock(
         async_enable_proactive_mode=Mock(side_effect=aiohttp.ClientError)
     )
-    await client.logged_in()
+    await client.cloud_started()
     assert len(client._alexa_config.async_enable_proactive_mode.mock_calls) == 1
     assert "Unable to activate Alexa Report State" in caplog.text
 

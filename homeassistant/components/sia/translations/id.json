@@ -1,0 +1,50 @@
+{
+    "config": {
+        "error": {
+            "invalid_account_format": "Format akun ini tidak dalam nilai heksadesimal, gunakan hanya karakter 0-9 dan A-F.",
+            "invalid_account_length": "Panjang format akun tidak tepat, harus antara 3 dan 16 karakter.",
+            "invalid_key_format": "Format kunci ini tidak dalam nilai heksadesimal, gunakan hanya karakter 0-9 dan A-F.",
+            "invalid_key_length": "Panjang format kunci tidak tepat, harus antara 16, 25, atau 32 karakter heksadesimal.",
+            "invalid_ping": "Interval ping harus antara 1 dan 1440 menit.",
+            "invalid_zones": "Setidaknya harus ada 1 zona.",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "additional_account": {
+                "data": {
+                    "account": "ID Akun",
+                    "additional_account": "Akun lainnya",
+                    "encryption_key": "Kunci Enkripsi",
+                    "ping_interval": "Interval Ping (menit)",
+                    "zones": "Jumlah zona untuk akun"
+                },
+                "title": "Tambahkan akun lain ke port saat ini."
+            },
+            "user": {
+                "data": {
+                    "account": "ID Akun",
+                    "additional_account": "Akun lainnya",
+                    "encryption_key": "Kunci Enkripsi",
+                    "ping_interval": "Interval Ping (menit)",
+                    "port": "Port",
+                    "protocol": "Protokol",
+                    "zones": "Jumlah zona untuk akun"
+                },
+                "title": "Buat koneksi untuk sistem alarm berbasis SIA."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "options": {
+                "data": {
+                    "ignore_timestamps": "Abaikan pemeriksaan stempel waktu peristiwa SIA",
+                    "zones": "Jumlah zona untuk akun"
+                },
+                "description": "Setel opsi untuk akun: {account}",
+                "title": "Opsi untuk Pengaturan SIA."
+            }
+        }
+    },
+    "title": "Sistem Alarm SIA"
+}

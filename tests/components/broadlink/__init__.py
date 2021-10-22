@@ -58,6 +58,16 @@ BROADLINK_DEVICES = {
         20025,
         5,
     ),
+    "Dining room": (
+        "192.168.0.16",
+        "34ea34b4fd1c",
+        "SCB1E",
+        "Broadlink",
+        "SP4B",
+        0x5115,
+        57,
+        5,
+    ),
     "Kitchen": (  # Not supported.
         "192.168.0.64",
         "34ea34b61d2c",

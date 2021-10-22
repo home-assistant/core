@@ -5,7 +5,7 @@ from unittest.mock import patch
 from pyotgw.vars import OTGW, OTGW_ABOUT
 from serial import SerialException
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.opentherm_gw.const import (
     CONF_FLOOR_TEMP,
     CONF_PRECISION,
@@ -29,7 +29,7 @@ MINIMAL_STATUS = {OTGW: {OTGW_ABOUT: "OpenTherm Gateway 4.2.5"}}
 
 async def test_form_user(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -67,7 +67,7 @@ async def test_form_user(hass):
 
 async def test_form_import(hass):
     """Test import from existing config."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     with patch(
         "homeassistant.components.opentherm_gw.async_setup",
         return_value=True,

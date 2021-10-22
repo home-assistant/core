@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_MONITORED_CONDITIONS,
     DEVICE_CLASS_BATTERY,
@@ -49,7 +48,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="battery_level",
         name="Battery Level",
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_BATTERY,
     ),
     SensorEntityDescription(
@@ -60,19 +59,19 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="temperature",
         name="Temperature",
-        unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
     ),
     SensorEntityDescription(
         key="humidity",
         name="Humidity",
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_HUMIDITY,
     ),
     SensorEntityDescription(
         key="air_quality",
         name="Air Quality",
-        unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         icon="mdi:biohazard",
     ),
 )
@@ -90,8 +89,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up an Arlo IP sensor."""
-    arlo = hass.data.get(DATA_ARLO)
-    if not arlo:
+    if not (arlo := hass.data.get(DATA_ARLO)):
         return
 
     sensors = []
@@ -122,6 +120,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class ArloSensor(SensorEntity):
     """An implementation of a Netgear Arlo IP sensor."""
+
+    _attr_attribution = ATTRIBUTION
 
     def __init__(self, device, sensor_entry):
         """Initialize an Arlo sensor."""
@@ -212,7 +212,6 @@ class ArloSensor(SensorEntity):
         """Return the device state attributes."""
         attrs = {}
 
-        attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
         attrs["brand"] = DEFAULT_BRAND
 
         if self.entity_description.key != "total_cameras":

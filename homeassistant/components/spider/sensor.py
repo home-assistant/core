@@ -1,7 +1,9 @@
 """Support for Spider Powerplugs (energy & power)."""
-from datetime import datetime
-
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+)
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
@@ -9,7 +11,6 @@ from homeassistant.const import (
     POWER_WATT,
 )
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -31,7 +32,7 @@ class SpiderPowerPlugEnergy(SensorEntity):
 
     _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
     _attr_device_class = DEVICE_CLASS_ENERGY
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
 
     def __init__(self, api, power_plug) -> None:
         """Initialize the Spider Power Plug."""
@@ -62,13 +63,6 @@ class SpiderPowerPlugEnergy(SensorEntity):
     def native_value(self) -> float:
         """Return todays energy usage in Kwh."""
         return round(self.power_plug.today_energy_consumption / 1000, 2)
-
-    @property
-    def last_reset(self) -> datetime:
-        """Return the time when last reset; Every midnight."""
-        return dt_util.as_utc(
-            dt_util.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        )
 
     def update(self) -> None:
         """Get the latest data."""

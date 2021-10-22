@@ -128,6 +128,14 @@ class LutronDevice(Entity):
         """No polling needed."""
         return False
 
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        # Temporary fix for https://github.com/thecynic/pylutron/issues/70
+        if self._lutron_device.uuid is None:
+            return None
+        return f"{self._controller.guid}_{self._lutron_device.uuid}"
+
 
 class LutronButton:
     """Representation of a button on a Lutron keypad.

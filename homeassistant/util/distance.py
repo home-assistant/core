@@ -1,8 +1,8 @@
 """Distance util functions."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from numbers import Number
-from typing import Callable
 
 from homeassistant.const import (
     LENGTH,

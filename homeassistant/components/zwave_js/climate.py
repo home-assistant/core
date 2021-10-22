@@ -4,14 +4,15 @@ from __future__ import annotations
 from typing import Any, cast
 
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import (
+from zwave_js_server.const import CommandClass
+from zwave_js_server.const.command_class.thermostat import (
     THERMOSTAT_CURRENT_TEMP_PROPERTY,
+    THERMOSTAT_HUMIDITY_PROPERTY,
     THERMOSTAT_MODE_PROPERTY,
     THERMOSTAT_MODE_SETPOINT_MAP,
     THERMOSTAT_MODES,
     THERMOSTAT_OPERATING_STATE_PROPERTY,
     THERMOSTAT_SETPOINT_PROPERTY,
-    CommandClass,
     ThermostatMode,
     ThermostatOperatingState,
     ThermostatSetpointType,
@@ -176,7 +177,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         if not self._unit_value:
             self._unit_value = self._current_temp
         self._current_humidity = self.get_zwave_value(
-            "Humidity",
+            THERMOSTAT_HUMIDITY_PROPERTY,
             command_class=CommandClass.SENSOR_MULTILEVEL,
             add_to_watched_value_ids=True,
             check_all_endpoints=True,

@@ -182,14 +182,17 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self._temp_lock = asyncio.Lock()
         self._min_temp = min_temp
         self._max_temp = max_temp
+        self._attr_preset_mode = PRESET_NONE
         self._target_temp = target_temp
         self._unit = unit
         self._unique_id = unique_id
         self._support_flags = SUPPORT_FLAGS
         if away_temp:
             self._support_flags = SUPPORT_FLAGS | SUPPORT_PRESET_MODE
+            self._attr_preset_modes = [PRESET_NONE, PRESET_AWAY]
+        else:
+            self._attr_preset_modes = [PRESET_NONE]
         self._away_temp = away_temp
-        self._is_away = False
 
     async def async_added_to_hass(self):
         """Run when entity about to be added."""
@@ -224,6 +227,12 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             ):
                 self._async_update_temp(sensor_state)
                 self.async_write_ha_state()
+            switch_state = self.hass.states.get(self.heater_entity_id)
+            if switch_state and switch_state.state not in (
+                STATE_UNAVAILABLE,
+                STATE_UNKNOWN,
+            ):
+                self.hass.create_task(self._check_switch_initial_state())
 
         if self.hass.state == CoreState.running:
             _async_startup()
@@ -247,8 +256,8 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                     )
                 else:
                     self._target_temp = float(old_state.attributes[ATTR_TEMPERATURE])
-            if old_state.attributes.get(ATTR_PRESET_MODE) == PRESET_AWAY:
-                self._is_away = True
+            if old_state.attributes.get(ATTR_PRESET_MODE) in self._attr_preset_modes:
+                self._attr_preset_mode = old_state.attributes.get(ATTR_PRESET_MODE)
             if not self._hvac_mode and old_state.state:
                 self._hvac_mode = old_state.state
 
@@ -266,14 +275,6 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         # Set default state to off
         if not self._hvac_mode:
             self._hvac_mode = HVAC_MODE_OFF
-
-        # Prevent the device from keep running if HVAC_MODE_OFF
-        if self._hvac_mode == HVAC_MODE_OFF and self._is_device_active:
-            await self._async_heater_turn_off()
-            _LOGGER.warning(
-                "The climate mode is OFF, but the switch device is ON. Turning off device %s",
-                self.heater_entity_id,
-            )
 
     @property
     def should_poll(self):
@@ -343,16 +344,6 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         """List of available operation modes."""
         return self._hvac_list
 
-    @property
-    def preset_mode(self):
-        """Return the current preset mode, e.g., home, away, temp."""
-        return PRESET_AWAY if self._is_away else PRESET_NONE
-
-    @property
-    def preset_modes(self):
-        """Return a list of available preset modes or PRESET_NONE if _away_temp is undefined."""
-        return [PRESET_NONE, PRESET_AWAY] if self._away_temp else PRESET_NONE
-
     async def async_set_hvac_mode(self, hvac_mode):
         """Set hvac mode."""
         if hvac_mode == HVAC_MODE_HEAT:
@@ -408,12 +399,24 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         await self._async_control_heating()
         self.async_write_ha_state()
 
+    async def _check_switch_initial_state(self):
+        """Prevent the device from keep running if HVAC_MODE_OFF."""
+        if self._hvac_mode == HVAC_MODE_OFF and self._is_device_active:
+            _LOGGER.warning(
+                "The climate mode is OFF, but the switch device is ON. Turning off device %s",
+                self.heater_entity_id,
+            )
+            await self._async_heater_turn_off()
+
     @callback
     def _async_switch_changed(self, event):
         """Handle heater switch state changes."""
         new_state = event.data.get("new_state")
+        old_state = event.data.get("old_state")
         if new_state is None:
             return
+        if old_state is None:
+            self.hass.create_task(self._check_switch_initial_state())
         self.async_write_ha_state()
 
     @callback
@@ -433,7 +436,6 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             if not self._active and None not in (
                 self._cur_temp,
                 self._target_temp,
-                self._is_device_active,
             ):
                 self._active = True
                 _LOGGER.info(
@@ -521,13 +523,20 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
 
     async def async_set_preset_mode(self, preset_mode: str):
         """Set new preset mode."""
-        if preset_mode == PRESET_AWAY and not self._is_away:
-            self._is_away = True
+        if preset_mode not in (self._attr_preset_modes or []):
+            raise ValueError(
+                f"Got unsupported preset_mode {preset_mode}. Must be one of {self._attr_preset_modes}"
+            )
+        if preset_mode == self._attr_preset_mode:
+            # I don't think we need to call async_write_ha_state if we didn't change the state
+            return
+        if preset_mode == PRESET_AWAY:
+            self._attr_preset_mode = PRESET_AWAY
             self._saved_target_temp = self._target_temp
             self._target_temp = self._away_temp
             await self._async_control_heating(force=True)
-        elif preset_mode == PRESET_NONE and self._is_away:
-            self._is_away = False
+        elif preset_mode == PRESET_NONE:
+            self._attr_preset_mode = PRESET_NONE
             self._target_temp = self._saved_target_temp
             await self._async_control_heating(force=True)
 

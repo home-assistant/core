@@ -1,9 +1,14 @@
 """Provides device automations for Media player."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
-from homeassistant.components.automation import AutomationActionType
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.const import (
@@ -36,7 +41,9 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, Any]]:
     """List device triggers for Media player entities."""
     registry = await entity_registry.async_get_registry(hass)
     triggers = []
@@ -61,7 +68,9 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     return triggers
 
 
-async def async_get_trigger_capabilities(hass: HomeAssistant, config: dict) -> dict:
+async def async_get_trigger_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
     return {
         "extra_fields": vol.Schema(
@@ -74,7 +83,7 @@ async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
     action: AutomationActionType,
-    automation_info: dict,
+    automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     if config[CONF_TYPE] == "turned_on":

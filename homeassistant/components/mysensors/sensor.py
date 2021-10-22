@@ -9,6 +9,7 @@ from homeassistant.components import mysensors
 from homeassistant.components.sensor import (
     DOMAIN,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -42,7 +43,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.dt import utc_from_timestamp
 
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
 from .helpers import on_unload
@@ -122,8 +122,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="V_KWH",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=utc_from_timestamp(0),
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     "V_LIGHT_LEVEL": SensorEntityDescription(
         key="V_LIGHT_LEVEL",

@@ -12,6 +12,7 @@ from homeassistant.const import (
     SERVICE_ALARM_ARM_CUSTOM_BYPASS,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_ARM_NIGHT,
+    SERVICE_ALARM_ARM_VACATION,
     SERVICE_ALARM_DISARM,
     SERVICE_ALARM_TRIGGER,
 )
@@ -59,6 +60,19 @@ async def async_alarm_arm_night(hass, code=None, entity_id=ENTITY_MATCH_ALL):
         data[ATTR_ENTITY_ID] = entity_id
 
     await hass.services.async_call(DOMAIN, SERVICE_ALARM_ARM_NIGHT, data, blocking=True)
+
+
+async def async_alarm_arm_vacation(hass, code=None, entity_id=ENTITY_MATCH_ALL):
+    """Send the alarm the command for vacation mode."""
+    data = {}
+    if code:
+        data[ATTR_CODE] = code
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_ALARM_ARM_VACATION, data, blocking=True
+    )
 
 
 async def async_alarm_trigger(hass, code=None, entity_id=ENTITY_MATCH_ALL):

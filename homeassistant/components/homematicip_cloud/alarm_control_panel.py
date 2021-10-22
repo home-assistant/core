@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 
 from . import DOMAIN as HMIPC_DOMAIN
-from .hap import HomematicipHAP
+from .hap import AsyncHome, HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
 
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the alarm control panel."""
-        self._home = hap.home
+        self._home: AsyncHome = hap.home
         _LOGGER.info("Setting up %s", self.name)
 
     @property

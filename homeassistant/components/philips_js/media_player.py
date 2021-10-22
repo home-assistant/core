@@ -187,8 +187,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
     async def async_select_source(self, source):
         """Set the input source."""
-        source_id = _inverted(self._sources).get(source)
-        if source_id:
+        if source_id := _inverted(self._sources).get(source):
             await self._tv.setSource(source_id)
         await self._async_update_soon()
 
@@ -213,9 +212,12 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
     async def async_turn_off(self):
         """Turn off the device."""
-        await self._tv.sendKey("Standby")
-        self._state = STATE_OFF
-        await self._async_update_soon()
+        if self._state == STATE_ON:
+            await self._tv.sendKey("Standby")
+            self._state = STATE_OFF
+            await self._async_update_soon()
+        else:
+            _LOGGER.debug("Ignoring turn off when already in expected state")
 
     async def async_volume_up(self):
         """Send volume up command."""
@@ -313,8 +315,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def app_name(self):
         """Name of the current running app."""
-        app = self._tv.applications.get(self._tv.application_id)
-        if app:
+        if app := self._tv.applications.get(self._tv.application_id):
             return app.get("label")
 
     @property
@@ -347,8 +348,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             else:
                 _LOGGER.error("Unable to find channel <%s>", media_id)
         elif media_type == MEDIA_TYPE_APP:
-            app = self._tv.applications.get(media_id)
-            if app:
+            if app := self._tv.applications.get(media_id):
                 await self._tv.setApplication(app["intent"])
                 await self._async_update_soon()
             else:

@@ -63,7 +63,7 @@ async def async_update_options(hass: HomeAssistant, entry: ConfigEntry):
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     api: WiffiIntegrationApi = hass.data[DOMAIN][entry.entry_id]
     await api.server.close_server()
@@ -103,8 +103,7 @@ class WiffiIntegrationApi:
 
         Remove listener for periodic callbacks.
         """
-        remove_listener = self._periodic_callback
-        if remove_listener is not None:
+        if (remove_listener := self._periodic_callback) is not None:
             remove_listener()
 
     async def __call__(self, device, metrics):
@@ -222,3 +221,11 @@ class WiffiEntity(Entity):
         ):
             self._value = None
             self.async_write_ha_state()
+
+    def _is_measurement_entity(self):
+        """Measurement entities have a value in present time."""
+        return not self._name.endswith("_gestern") and not self._is_metered_entity()
+
+    def _is_metered_entity(self):
+        """Metered entities have a value that keeps increasing until reset."""
+        return self._name.endswith("_pro_h") or self._name.endswith("_heute")

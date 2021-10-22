@@ -1,5 +1,5 @@
 """Test the Z-Wave JS lock platform."""
-from zwave_js_server.const import ATTR_CODE_SLOT, ATTR_USERCODE
+from zwave_js_server.const.command_class.lock import ATTR_CODE_SLOT, ATTR_USERCODE
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import NodeStatus
 

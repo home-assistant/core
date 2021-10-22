@@ -2,14 +2,14 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 import logging
 import os
 from pathlib import Path
 import re
 import shutil
 from types import ModuleType
-from typing import Any, Callable
+from typing import Any
 from urllib.parse import urlparse
 
 from awesomeversion import AwesomeVersion
@@ -512,9 +512,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
 
     # Only load auth during startup.
     if not hasattr(hass, "auth"):
-        auth_conf = config.get(CONF_AUTH_PROVIDERS)
-
-        if auth_conf is None:
+        if (auth_conf := config.get(CONF_AUTH_PROVIDERS)) is None:
             auth_conf = [{"type": "homeassistant"}]
 
         mfa_conf = config.get(
@@ -598,9 +596,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
     cust_glob = OrderedDict(config[CONF_CUSTOMIZE_GLOB])
 
     for name, pkg in config[CONF_PACKAGES].items():
-        pkg_cust = pkg.get(CONF_CORE)
-
-        if pkg_cust is None:
+        if (pkg_cust := pkg.get(CONF_CORE)) is None:
             continue
 
         try:
@@ -957,9 +953,7 @@ def async_notify_setup_error(
     # pylint: disable=import-outside-toplevel
     from homeassistant.components import persistent_notification
 
-    errors = hass.data.get(DATA_PERSISTENT_ERRORS)
-
-    if errors is None:
+    if (errors := hass.data.get(DATA_PERSISTENT_ERRORS)) is None:
         errors = hass.data[DATA_PERSISTENT_ERRORS] = {}
 
     errors[component] = errors.get(component) or display_link

@@ -13,12 +13,12 @@ async def websocket_client(hass, hass_ws_client):
 
 
 @pytest.fixture
-async def no_auth_websocket_client(hass, aiohttp_client):
+async def no_auth_websocket_client(hass, hass_client_no_auth):
     """Websocket connection that requires authentication."""
     assert await async_setup_component(hass, "websocket_api", {})
     await hass.async_block_till_done()
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
     ws = await client.ws_connect(URL)
 
     auth_ok = await ws.receive_json()
