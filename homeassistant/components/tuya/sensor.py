@@ -1,6 +1,9 @@
 """Support for Tuya sensors."""
 from __future__ import annotations
 
+import base64 as b64
+import struct
+
 from typing import cast
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
@@ -23,8 +26,13 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
     DEVICE_CLASS_VOLTAGE,
+    DEVICE_CLASS_ENERGY,
     ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
+    ENERGY_KILO_WATT_HOUR,
+    POWER_WATT,
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -58,6 +66,10 @@ BATTERY_SENSORS: tuple[SensorEntityDescription, ...] = (
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 )
+
+CODE_EX_CURRENT = "_electricCurrent"
+CODE_EX_POWER = "_power"
+CODE_EX_VOLTAGE = "_voltage"
 
 # All descriptions can be found here. Mostly the Integer data types in the
 # default status set of each category (that don't have a set instruction)
@@ -186,6 +198,85 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
+    # Breaker with Electricity Meter
+    "dlq": (
+        SensorEntityDescription(
+            key=DPCode.TOTAL_FORWARD_ENERGY,
+            name="Energy",
+            native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+            device_class=DEVICE_CLASS_ENERGY,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.PHASE_A + CODE_EX_CURRENT,
+            name="Current",
+            native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+            device_class=DEVICE_CLASS_CURRENT,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.PHASE_A + CODE_EX_POWER,
+            name="Power",
+            native_unit_of_measurement=POWER_WATT,
+            device_class=DEVICE_CLASS_POWER,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.PHASE_A + CODE_EX_VOLTAGE,
+            name="Voltage",
+            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            device_class=DEVICE_CLASS_VOLTAGE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.PHASE_B + CODE_EX_CURRENT,
+            name="Current_B",
+            native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+            device_class=DEVICE_CLASS_CURRENT,
+            state_class=STATE_CLASS_MEASUREMENT,
+            entity_registry_enabled_default=False,
+        ),
+        SensorEntityDescription(
+            key=DPCode.PHASE_B + CODE_EX_POWER,
+            name="Power_B",
+            native_unit_of_measurement=POWER_WATT,
+            device_class=DEVICE_CLASS_POWER,
+            state_class=STATE_CLASS_MEASUREMENT,
+            entity_registry_enabled_default=False,
+        ),
+        SensorEntityDescription(
+            key=DPCode.PHASE_B + CODE_EX_VOLTAGE,
+            name="Voltage_B",
+            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            device_class=DEVICE_CLASS_VOLTAGE,
+            state_class=STATE_CLASS_MEASUREMENT,
+            entity_registry_enabled_default=False,
+        ),
+        SensorEntityDescription(
+            key=DPCode.PHASE_C + CODE_EX_CURRENT,
+            name="Current_C",
+            native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+            device_class=DEVICE_CLASS_CURRENT,
+            state_class=STATE_CLASS_MEASUREMENT,
+            entity_registry_enabled_default=False,
+        ),
+        SensorEntityDescription(
+            key=DPCode.PHASE_C + CODE_EX_POWER,
+            name="Power_C",
+            native_unit_of_measurement=POWER_WATT,
+            device_class=DEVICE_CLASS_POWER,
+            state_class=STATE_CLASS_MEASUREMENT,
+            entity_registry_enabled_default=False,
+        ),
+        SensorEntityDescription(
+            key=DPCode.PHASE_C + CODE_EX_VOLTAGE,
+            name="Voltage_C",
+            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            device_class=DEVICE_CLASS_VOLTAGE,
+            state_class=STATE_CLASS_MEASUREMENT,
+            entity_registry_enabled_default=False,
+        ),
+    ),
     # Door Window Sensor
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48hm02l8m
     "mcs": BATTERY_SENSORS,
@@ -212,6 +303,12 @@ SENSORS["cz"] = SENSORS["kg"]
 SENSORS["pc"] = SENSORS["kg"]
 
 
+def get_key(key, category):
+    if category == "dlq" and key.startswith("phase_"):
+        key = key[:7]
+    return key
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -226,10 +323,8 @@ async def async_setup_entry(
             device = hass_data.device_manager.device_map[device_id]
             if descriptions := SENSORS.get(device.category):
                 for description in descriptions:
-                    if (
-                        description.key in device.function
-                        or description.key in device.status
-                    ):
+                    key = get_key(description.key, device.category)
+                    if key in device.function or key in device.status:
                         entities.append(
                             TuyaSensorEntity(
                                 device, hass_data.device_manager, description
@@ -263,7 +358,8 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
 
-        if status_range := device.status_range.get(description.key):
+        key = get_key(description.key, device.category)
+        if status_range := device.status_range.get(key):
             self._status_range = cast(TuyaDeviceStatusRange, status_range)
 
             # Extract type data from integer status range,
@@ -316,11 +412,14 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             "Integer",
             "String",
             "Enum",
+            "Raw",
         ):
             return None
 
+        key = get_key(self.entity_description.key, self.device.category)
+
         # Raw value
-        value = self.device.status.get(self.entity_description.key)
+        value = self.device.status.get(key)
         if value is None:
             return None
 
@@ -337,6 +436,15 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             and value not in self._type_data.range
         ):
             return None
+
+        if self._status_range.type == "Raw" and self.device.category == "dlq":
+            raw = b64.b64decode(value)
+            if self.device_class == DEVICE_CLASS_VOLTAGE:
+                return struct.unpack('>H', raw[0:2])[0] / 10.0
+            if self.device_class == DEVICE_CLASS_CURRENT:
+                return struct.unpack('>L', b'\x00' + raw[2:5])[0] / 1000.0
+            if self.device_class == DEVICE_CLASS_POWER:
+                return struct.unpack('>L', b'\x00' + raw[5:8])[0]
 
         # Valid string or enum value
         return value

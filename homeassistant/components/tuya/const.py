@@ -156,6 +156,10 @@ class DPCode(str, Enum):
     CUR_CURRENT = "cur_current"  # Actual current
     CUR_POWER = "cur_power"  # Actual power
     CUR_VOLTAGE = "cur_voltage"  # Actual voltage
+    TOTAL_FORWARD_ENERGY = "total_forward_energy"
+    PHASE_A = "phase_a"
+    PHASE_B = "phase_b"
+    PHASE_C = "phase_c"
     DEHUMIDITY_SET_VALUE = "dehumidify_set_value"
     DO_NOT_DISTURB = "do_not_disturb"
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
