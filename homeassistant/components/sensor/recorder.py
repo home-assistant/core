@@ -608,7 +608,7 @@ def _compile_statistics(  # noqa: C901
             stat["sum"] = _sum
             stat["state"] = new_state
 
-        result.append({"meta": meta, "stat": (stat,)})
+        result.append({"meta": meta, "stat": stat})
 
     return result
 

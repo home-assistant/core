@@ -413,11 +413,11 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
     # Insert collected statistics in the database
     with session_scope(session=instance.get_session()) as session:  # type: ignore
         for stats in platform_stats:
+            metadata_id = _update_or_add_metadata(instance.hass, session, stats["meta"])
             _insert_statistics(
-                instance.hass,
                 session,
                 StatisticsShortTerm,
-                stats["meta"],
+                metadata_id,
                 stats["stat"],
             )
 
@@ -431,23 +431,47 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
 
 
 def _insert_statistics(
-    hass: HomeAssistant,
     session: scoped_session,
     table: type[Statistics | StatisticsShortTerm],
-    metadata: StatisticMetaData,
-    statistics: Iterable[StatisticData],
+    metadata_id: int,
+    statistic: StatisticData,
 ) -> None:
     """Insert statistics in the database."""
-    metadata_id = _update_or_add_metadata(hass, session, metadata)
-    for stat in statistics:
-        try:
-            session.add(table.from_stats(metadata_id, stat))
-        except SQLAlchemyError:
-            _LOGGER.exception(
-                "Unexpected exception when inserting statistics %s:%s ",
-                metadata_id,
-                stat,
-            )
+    try:
+        session.add(table.from_stats(metadata_id, statistic))
+    except SQLAlchemyError:
+        _LOGGER.exception(
+            "Unexpected exception when inserting statistics %s:%s ",
+            metadata_id,
+            statistic,
+        )
+
+
+def _update_statistics(
+    session: scoped_session,
+    table: type[Statistics | StatisticsShortTerm],
+    id: int,
+    statistic: StatisticData,
+) -> None:
+    """Insert statistics in the database."""
+    try:
+        session.query(table).filter_by(id=id).update(
+            {
+                table.mean: statistic["mean"],
+                table.min: statistic["min"],
+                table.max: statistic["max"],
+                table.last_reset: statistic["last_reset"],
+                table.state: statistic["state"],
+                table.sum: statistic["sum"],
+            },
+            synchronize_session=False,
+        )
+    except SQLAlchemyError:
+        _LOGGER.exception(
+            "Unexpected exception when updating statistics %s:%s ",
+            id,
+            statistic,
+        )
 
 
 def get_metadata_with_session(
@@ -959,21 +983,19 @@ def validate_statistics(hass: HomeAssistant) -> dict[str, list[ValidationIssue]]
     return platform_validation
 
 
-def _statistics_id_claimed(hass: HomeAssistant, metadata: StatisticMetaData) -> bool:
-    """Return True if the statistic_id is claimed by recorder or another integration."""
-    statistic_id = metadata["statistic_id"]
-    existing_metadata_dict = get_metadata(hass, statistic_id)
-    existing_metadata = existing_metadata_dict.get(statistic_id)
-    if existing_metadata and existing_metadata[1]["source"] != metadata["source"]:
-        _LOGGER.warning(
-            "Failed to insert statistics for %s, source %s differs from %s",
-            metadata["statistic_id"],
-            metadata["source"],
-            existing_metadata[1]["source"],
-        )
-        return True
-
-    return False
+def _statistics_exists(
+    session: scoped_session,
+    table: type[Statistics | StatisticsShortTerm],
+    metadata_id: int,
+    start: datetime,
+) -> int | None:
+    """Return id if a statistics entry already exists."""
+    result = (
+        session.query(table.id)
+        .filter(table.metadata_id == metadata_id and table.start == start)
+        .first()
+    )
+    return result["id"] if result else None
 
 
 @callback
@@ -1009,15 +1031,14 @@ def add_external_statistics(
     statistics: Iterable[StatisticData],
 ) -> bool:
     """Process an add_statistics job."""
-    # Check if the statistic_id is or will be claimed by recorder
-    if _statistics_id_claimed(instance.hass, metadata):
-        return True
-
-    # TODO:
-    # - Should we block if statistics has already been provided for a certain time, or update?
-    # - Convert all times to UTC
-
     with session_scope(session=instance.get_session()) as session:  # type: ignore
-        _insert_statistics(instance.hass, session, Statistics, metadata, statistics)
+        metadata_id = _update_or_add_metadata(instance.hass, session, metadata)
+        for stat in statistics:
+            if stat_id := _statistics_exists(
+                session, Statistics, metadata_id, stat["start"]
+            ):
+                _update_statistics(session, Statistics, stat_id, stat)
+            else:
+                _insert_statistics(session, Statistics, metadata_id, stat)
 
     return True

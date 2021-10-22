@@ -1,7 +1,6 @@
 """Models for SQLAlchemy."""
 from __future__ import annotations
 
-from collections.abc import Iterable
 from datetime import datetime, timedelta
 import json
 import logging
@@ -231,7 +230,7 @@ class StatisticResult(TypedDict):
     """
 
     meta: StatisticMetaData
-    stat: Iterable[StatisticData]
+    stat: StatisticData
 
 
 class StatisticDataBase(TypedDict):

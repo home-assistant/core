@@ -120,7 +120,7 @@ def mock_sensor_statistics():
                 "has_mean": True,
                 "has_sum": False,
             },
-            "stat": ({"start": start},),
+            "stat": {"start": start},
         }
 
     def get_fake_stats(_hass, start, _end):
@@ -305,7 +305,7 @@ def test_statistics_duplicated(hass_recorder, caplog):
 
 
 def test_external_statistics(hass_recorder, caplog):
-    """Test statistics with same start time is not compiled."""
+    """Test inserting external statistics."""
     hass = hass_recorder()
     wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
@@ -314,14 +314,14 @@ def test_external_statistics(hass_recorder, caplog):
     zero = dt_util.utcnow()
     period1 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
 
-    statistics = {
+    external_statistics = {
         "start": period1,
         "last_reset": None,
         "state": 0,
         "sum": 2,
     }
 
-    metadata = {
+    external_metadata = {
         "has_mean": False,
         "has_sum": True,
         "name": "Total imported energy",
@@ -330,7 +330,7 @@ def test_external_statistics(hass_recorder, caplog):
         "unit_of_measurement": "kWh",
     }
 
-    async_add_external_statistics(hass, metadata, (statistics,))
+    async_add_external_statistics(hass, external_metadata, (external_statistics,))
     wait_recording_done(hass)
     stats = statistics_during_period(hass, zero, period="hour")
     assert stats == {
@@ -370,6 +370,35 @@ def test_external_statistics(hass_recorder, caplog):
                 "unit_of_measurement": "kWh",
             },
         )
+    }
+
+    # Update the previously inserted statistics
+    external_statistics = {
+        "start": period1,
+        "max": 1,
+        "mean": 2,
+        "min": 3,
+        "last_reset": None,
+        "state": 4,
+        "sum": 5,
+    }
+    async_add_external_statistics(hass, external_metadata, (external_statistics,))
+    wait_recording_done(hass)
+    stats = statistics_during_period(hass, zero, period="hour")
+    assert stats == {
+        "test:total_energy_import": [
+            {
+                "statistic_id": "test:total_energy_import",
+                "start": period1.isoformat(),
+                "end": (period1 + timedelta(hours=1)).isoformat(),
+                "max": approx(1.0),
+                "mean": approx(2.0),
+                "min": approx(3.0),
+                "last_reset": None,
+                "state": approx(4.0),
+                "sum": approx(5.0),
+            }
+        ]
     }
 
 
