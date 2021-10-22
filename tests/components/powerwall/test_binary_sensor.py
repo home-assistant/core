@@ -28,7 +28,10 @@ async def test_sensors(hass):
 
     state = hass.states.get("binary_sensor.grid_services_active")
     assert state.state == STATE_ON
-    expected_attributes = {"friendly_name": "Grid Services Active", "device_class": "power"}
+    expected_attributes = {
+        "friendly_name": "Grid Services Active",
+        "device_class": "power",
+    }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(item in state.attributes.items() for item in expected_attributes.items())
