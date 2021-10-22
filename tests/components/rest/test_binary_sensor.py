@@ -10,6 +10,7 @@ import respx
 from homeassistant import config as hass_config
 import homeassistant.components.binary_sensor as binary_sensor
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     CONTENT_TYPE_JSON,
     SERVICE_RELOAD,
@@ -164,12 +165,17 @@ async def test_setup_get(hass):
                 "username": "my username",
                 "password": "my password",
                 "headers": {"Accept": CONTENT_TYPE_JSON},
+                "device_class": binary_sensor.DEVICE_CLASS_PLUG,
             }
         },
     )
 
     await hass.async_block_till_done()
     assert len(hass.states.async_all("binary_sensor")) == 1
+
+    state = hass.states.get("binary_sensor.foo")
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_DEVICE_CLASS] == binary_sensor.DEVICE_CLASS_PLUG
 
 
 @respx.mock
