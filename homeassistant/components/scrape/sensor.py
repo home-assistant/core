@@ -161,7 +161,7 @@ class ScrapeSensor(SensorEntity):
         _LOGGER.debug(raw_data)
 
         if self._attr is not None:
-            value = raw_data.select(self._select)[self._index][self._attr]
+            value = raw_data.select(self._select)[self._index].get(self._attr)
         else:
             tag = raw_data.select(self._select)[self._index]
             if tag.name in ("style", "script", "template"):
