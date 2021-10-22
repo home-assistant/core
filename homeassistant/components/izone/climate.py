@@ -35,6 +35,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
 
@@ -483,13 +484,13 @@ class ZoneDevice(ClimateEntity):
             }
             self._supported_features |= SUPPORT_TARGET_TEMPERATURE
 
-        self._device_info = {
-            "identifiers": {(IZONE, controller.unique_id, zone.index)},
-            "name": self.name,
-            "manufacturer": "IZone",
-            "via_device": (IZONE, controller.unique_id),
-            "model": zone.type.name.title(),
-        }
+        self._device_info = DeviceInfo(
+            identifiers={(IZONE, controller.unique_id, zone.index)},
+            name=self.name,
+            manufacturer="IZone",
+            via_device=(IZONE, controller.unique_id),
+            model=zone.type.name.title(),
+        )
 
     async def async_added_to_hass(self):
         """Call on adding to hass."""

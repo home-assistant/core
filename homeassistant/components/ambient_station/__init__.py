@@ -26,7 +26,6 @@ from homeassistant.helpers.event import async_call_later
 from .const import (
     ATTR_LAST_DATA,
     CONF_APP_KEY,
-    DATA_CLIENT,
     DOMAIN,
     LOGGER,
     TYPE_SOLARRADIATION,
@@ -59,7 +58,8 @@ def async_hydrate_station_data(data: dict[str, Any]) -> dict[str, Any]:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Ambient PWS as config entry."""
-    hass.data.setdefault(DOMAIN, {DATA_CLIENT: {}})
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {}
 
     if not entry.unique_id:
         hass.config_entries.async_update_entry(
@@ -78,7 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ),
         )
         hass.loop.create_task(ambient.ws_connect())
-        hass.data[DOMAIN][DATA_CLIENT][entry.entry_id] = ambient
+        hass.data[DOMAIN][entry.entry_id] = ambient
     except WebsocketError as err:
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
@@ -97,10 +97,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an Ambient PWS config entry."""
-    ambient = hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
-    hass.async_create_task(ambient.ws_disconnect())
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        ambient = hass.data[DOMAIN].pop(entry.entry_id)
+        hass.async_create_task(ambient.ws_disconnect())
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    return unload_ok
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

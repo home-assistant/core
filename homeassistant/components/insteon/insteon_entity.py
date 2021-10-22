@@ -9,7 +9,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import (
     DOMAIN,
@@ -79,16 +79,16 @@ class InsteonEntity(Entity):
         return {"insteon_address": self.address, "insteon_group": self.group}
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, str(self._insteon_device.address))},
-            "name": f"{self._insteon_device.description} {self._insteon_device.address}",
-            "model": f"{self._insteon_device.model} ({self._insteon_device.cat!r}, 0x{self._insteon_device.subcat:02x})",
-            "sw_version": f"{self._insteon_device.firmware:02x} Engine Version: {self._insteon_device.engine_version}",
-            "manufacturer": "Smart Home",
-            "via_device": (DOMAIN, str(devices.modem.address)),
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, str(self._insteon_device.address))},
+            name=f"{self._insteon_device.description} {self._insteon_device.address}",
+            model=f"{self._insteon_device.model} ({self._insteon_device.cat!r}, 0x{self._insteon_device.subcat:02x})",
+            sw_version=f"{self._insteon_device.firmware:02x} Engine Version: {self._insteon_device.engine_version}",
+            manufacturer="Smart Home",
+            via_device=(DOMAIN, str(devices.modem.address)),
+        )
 
     @callback
     def async_entity_update(self, name, address, value, group):
