@@ -41,7 +41,7 @@ ADDON_ENTITY_DESCRIPTIONS = COMMON_ENTITY_DESCRIPTIONS + (
         key=ATTR_CPU_PERCENT,
         name="CPU Percent",
         icon="mdi:cpu-64-bit",
-        native_unit_of_measurement="%",
+        native_unit_of_measurement=PERCENTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
