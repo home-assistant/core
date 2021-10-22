@@ -10,6 +10,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_SAFETY,
+    DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_TAMPER,
     DEVICE_CLASS_VIBRATION,
     BinarySensorEntity,
@@ -98,6 +99,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             device_class=DEVICE_CLASS_TAMPER,
             entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         ),
+        TAMPER_BINARY_SENSOR,
     ),
     # PIR Detector
     # https://developer.tuya.com/en/docs/iot/categorypir?id=Kaiuz3ss11b80
@@ -125,6 +127,21 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         TuyaBinarySensorEntityDescription(
             key=DPCode.SOS_STATE,
             device_class=DEVICE_CLASS_SAFETY,
+        ),
+        TAMPER_BINARY_SENSOR,
+    ),
+    # Smoke Detector
+    # https://developer.tuya.com/en/docs/iot/categoryywbj?id=Kaiuz3f6sf952
+    "ywbj": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.SMOKE_SENSOR_STATUS,
+            device_class=DEVICE_CLASS_SMOKE,
+            on_value="alarm",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.SMOKE_SENSOR_STATE,
+            device_class=DEVICE_CLASS_SMOKE,
+            on_value="1",
         ),
         TAMPER_BINARY_SENSOR,
     ),
