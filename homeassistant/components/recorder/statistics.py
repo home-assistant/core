@@ -1017,8 +1017,13 @@ def async_add_external_statistics(
     if not metadata["source"] or metadata["source"] != domain:
         raise HomeAssistantError("Invalid source")
 
-    # TODO:
-    # - reject if start times are not an hourly boundary (minutes, seconds, µs should all be 0)
+    for statistic in statistics:
+        start = statistic["start"]
+        if start.tzinfo is None or start.tzinfo.utcoffset(start) is None:
+            raise HomeAssistantError("Naive timestamp")
+        if start.minute != 0 or start.second != 0 or start.microsecond != 0:
+            raise HomeAssistantError("Invalid timestamp")
+        statistic["start"] = dt_util.as_utc(start)
 
     # Insert job in recorder's queue
     hass.data[DATA_INSTANCE].async_external_statistics(metadata, statistics)
