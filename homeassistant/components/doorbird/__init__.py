@@ -68,9 +68,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     def _reset_device_favorites_handler(event):
         """Handle clearing favorites on device."""
-        token = event.data.get("token")
-
-        if token is None:
+        if (token := event.data.get("token")) is None:
             return
 
         doorstation = get_doorstation_by_token(hass, token)
