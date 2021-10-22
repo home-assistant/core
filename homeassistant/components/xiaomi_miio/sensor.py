@@ -677,7 +677,7 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         ):
             self._none_counter += 1
             if self._none_counter < 2:
-                "exit early and do not update the state to Unknown, in other words, ignore the update"
+                # exit early and do not update the state to Unknown, in other words, ignore the update
                 return
 
             _LOGGER.warning(
