@@ -52,6 +52,7 @@ from .const import (
     MANUFACTURER,
     SERVICE_SET_SCHEDULE,
     SIGNAL_NAME,
+    TYPE_ENERGY,
 )
 from .data_handler import (
     HOMEDATA_DATA_CLASS_NAME,
@@ -208,6 +209,8 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             if self._home_status.thermostats.get(module):
                 self._model = NA_THERM
                 break
+
+        self._netatmo_type = TYPE_ENERGY
 
         self._device_name = self._data.rooms[home_id][room_id]["name"]
         self._attr_name = f"{MANUFACTURER} {self._device_name}"
