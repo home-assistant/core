@@ -85,6 +85,12 @@ ZEROCONF = {
             "name": "tube*"
         }
     ],
+    "_zig_star_gw._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "zigstar*"
+        }
+    ],
     "_fbx-api._tcp.local.": [
         {
             "domain": "freebox"
