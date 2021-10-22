@@ -745,7 +745,9 @@ class DataManager:
                 flow = next(
                     iter(
                         flow
-                        for flow in self._hass.config_entries.flow.async_progress()
+                        for flow in self._hass.config_entries.flow.async_progress_by_handler(
+                            const.DOMAIN
+                        )
                         if flow.context == context
                     ),
                     None,
