@@ -2,6 +2,7 @@
 import asyncio
 from asyncio import CancelledError
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 from urllib import parse
 
@@ -38,7 +39,6 @@ from homeassistant.const import (
     CONF_PORT,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
-    HTTP_OK,
     STATE_IDLE,
     STATE_OFF,
     STATE_PAUSED,
@@ -351,7 +351,7 @@ class BluesoundPlayer(MediaPlayerEntity):
             with async_timeout.timeout(10):
                 response = await websession.get(url)
 
-            if response.status == HTTP_OK:
+            if response.status == HTTPStatus.OK:
                 result = await response.text()
                 if result:
                     data = xmltodict.parse(result)
@@ -395,7 +395,7 @@ class BluesoundPlayer(MediaPlayerEntity):
                     url, headers={CONNECTION: KEEP_ALIVE}
                 )
 
-            if response.status == HTTP_OK:
+            if response.status == HTTPStatus.OK:
                 result = await response.text()
                 self._is_online = True
                 self._last_status_update = dt_util.utcnow()
