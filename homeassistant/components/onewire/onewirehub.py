@@ -14,6 +14,7 @@ from homeassistant.const import (
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_NAME,
+    ATTR_VIA_DEVICE,
     CONF_HOST,
     CONF_PORT,
     CONF_TYPE,
@@ -87,7 +88,7 @@ class OneWireHub:
                 manufacturer=device_info[ATTR_MANUFACTURER],
                 model=device_info[ATTR_MODEL],
                 name=device_info[ATTR_NAME],
-                via_device=device_info.get("via_device"),
+                via_device=device_info.get(ATTR_VIA_DEVICE),
             )
 
     async def discover_devices(self) -> None:
@@ -141,7 +142,7 @@ class OneWireHub:
                 ATTR_NAME: device_id,
             }
             if parent_id:
-                device_info["via_device"] = (DOMAIN, parent_id)
+                device_info[ATTR_VIA_DEVICE] = (DOMAIN, parent_id)
             device = OWServerDeviceDescription(
                 device_info=device_info,
                 id=device_id,
