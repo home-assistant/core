@@ -12,7 +12,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 
-from .const import _LOGGER, CONF_HUMIDIFIER, DOMAIN, VEN_CLIENT, VEN_DATA
+from .const import _LOGGER, CONF_HUMIDIFIER, DOMAIN
 
 PLATFORMS = ["climate"]
 
@@ -24,7 +24,7 @@ async def async_setup_entry(hass, config):
     pin = config.data.get(CONF_PIN)
     host = config.data[CONF_HOST]
     timeout = config.data.get(CONF_TIMEOUT)
-    protocol = "https" if CONF_SSL in config.data and config.data[CONF_SSL] else "http"
+    protocol = "https" if config.data[CONF_SSL] else "http"
     humidifier = config.data.get(CONF_HUMIDIFIER)
 
     client = VenstarColorTouch(
@@ -37,11 +37,12 @@ async def async_setup_entry(hass, config):
     )
 
     data = VenstarData(hass, config, client, humidifier)
-    await data.async_update()
+    try:
+        await data.async_update()
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.error("Unable to connect to thermostat")
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config.entry_id] = {}
-    hass.data[DOMAIN][config.entry_id][VEN_DATA] = data
-    hass.data[DOMAIN][config.entry_id][VEN_CLIENT] = client
+    hass.data[DOMAIN][config.entry_id] = client
     hass.config_entries.async_setup_platforms(config, PLATFORMS)
 
     return True

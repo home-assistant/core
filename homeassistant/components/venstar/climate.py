@@ -51,8 +51,6 @@ from .const import (
     HOLD_MODE_TEMPERATURE,
     VALID_FAN_STATES,
     VALID_THERMOSTAT_MODES,
-    VEN_CLIENT,
-    VEN_DATA,
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -72,7 +70,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Venstar thermostat."""
-    client = hass.data[DOMAIN][config_entry.entry_id][VEN_CLIENT]
+    client = hass.data[DOMAIN][config_entry.entry_id]
     humidifier = config_entry.data.get(CONF_HUMIDIFIER)
     async_add_entities(
         [VenstarThermostat(hass, config_entry, client, humidifier)], True
@@ -103,16 +101,11 @@ class VenstarThermostat(VenstarData, ClimateEntity):
     def __init__(self, hass, config, client, humidifier):
         """Initialize the thermostat."""
         super().__init__(hass, config, client, humidifier)
-        self._data = hass.data[DOMAIN][config.entry_id][VEN_DATA]
         self._mode_map = {
             HVAC_MODE_HEAT: self._client.MODE_HEAT,
             HVAC_MODE_COOL: self._client.MODE_COOL,
             HVAC_MODE_AUTO: self._client.MODE_AUTO,
         }
-
-    async def async_update(self):
-        """Get the latest state from the service."""
-        await self._data.async_update()
 
     @property
     def supported_features(self):

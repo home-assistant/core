@@ -1,1 +1,48 @@
 """Tests for the venstar integration."""
+
+
+class VenstarColorTouchMock:
+    """Mock Venstar Library."""
+
+    def __init__(
+        self,
+        addr,
+        timeout,
+        user=None,
+        password=None,
+        pin=None,
+        proto="http",
+        SSLCert=False,
+    ):
+        """Initialize the Venstar library."""
+        self.status = {}
+        self.model = "COLORTOUCH"
+        self._api_ver = 5
+        self.name = "TestVenstar"
+        self._info = {}
+        self._sensors = {}
+        self.alerts = {}
+
+    def login(self):
+        """Mock login."""
+        return True
+
+    def update(self):
+        """Mock update."""
+        return True
+
+    def update_info(self):
+        """Mock update_info."""
+        return True
+
+    def update_sensors(self):
+        """Mock update_sensors."""
+        return True
+
+    def update_runtimes(self):
+        """Mock update_runtimes."""
+        return True
+
+    def update_alerts(self):
+        """Mock update_alerts."""
+        return True
