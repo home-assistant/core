@@ -57,6 +57,10 @@ def mock_responses(aioclient_mock: AiohttpClientMocker, night: bool = False) -> 
             f"fronius/symo/GetPowerFlowRealtimeData_{_day_or_night}.json"
         ),
     )
+    aioclient_mock.get(
+        f"{MOCK_HOST}/solar_api/v1/GetStorageRealtimeData.cgi?Scope=System",
+        text=load_fixture("fronius/symo/GetStorageRealtimeData_System.json"),
+    )
 
 
 async def test_symo_inverter(hass, aioclient_mock):
