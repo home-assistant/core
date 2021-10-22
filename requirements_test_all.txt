@@ -1389,7 +1389,7 @@ whirlpool-sixth-sense==0.15.1
 wiffi==1.0.1
 
 # homeassistant.components.wirelesstag
-wirelesstagpy==0.7.0
+wirelesstagpy==0.8.0
 
 # homeassistant.components.withings
 withings-api==2.3.2

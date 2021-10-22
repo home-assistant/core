@@ -1,7 +1,7 @@
 """Sensor support for Wireless Sensor Tags platform."""
 import logging
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -24,6 +24,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
     """Representation of a Sensor."""
+
+    _attr_state_class = STATE_CLASS_MEASUREMENT
 
     def __init__(self, api, tag, sensor_type, config):
         """Initialize a WirelessTag sensor."""

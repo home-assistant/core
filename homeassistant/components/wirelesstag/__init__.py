@@ -132,23 +132,6 @@ class WirelessTagPlatform:
         """Check if monitoring is active."""
         return self.api.is_monitoring
 
-    # pylint: disable=no-self-use
-    def tag_human_readable_name(self, tag):
-        """Human readable tag name."""
-        names_map = {
-            13: "Tag w/13b Temperature",
-            26: "ALSPro Tag",
-            32: "Water/Moisture Sensor",
-            42: "Outdoor Probe",
-            72: "PIR Sensor",
-        }
-
-        hw_revision = hex(tag.hw_revision)[2:].upper()
-        if tag.tag_type in names_map:
-            return f"{names_map[tag.tag_type]} rev.{hw_revision}"
-
-        return f"Tag ({tag.tag_type})"
-
     async def async_update_device_registry(self, tag, config_entry) -> None:
         """Update device registry."""
         _LOGGER.debug("Register device for tag: %s", tag)
@@ -158,7 +141,7 @@ class WirelessTagPlatform:
             identifiers={(DOMAIN, tag.uuid)},
             manufacturer="Wirelesstag",
             name=tag.name,
-            model=self.tag_human_readable_name(tag),
+            model=tag.human_readable_name,
             sw_version=f"rev. {tag.sw_version}",
         )
 
