@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def cleanup_registry(onewirehub: OneWireHub) -> None:
         # Get registries
-        device_registry = await hass.helpers.device_registry.async_get_registry()
+        device_registry = dr.async_get(hass)
         # Generate list of all device entries
         registry_devices = list(
             dr.async_entries_for_config_entry(device_registry, entry.entry_id)
