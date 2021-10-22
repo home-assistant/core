@@ -669,13 +669,11 @@ class AmcrestCam(Camera):
 
     def _set_privacy_mode(self, mode: bool) -> None:
         """Set privacy mode."""
-        strM = str(mode).lower()
+        lower_str = str(mode).lower()
         self._api.command(
-            f"configManager.cgi?action=setConfig&LeLensMask[0].Enable={strM}"
+            f"configManager.cgi?action=setConfig&LeLensMask[0].Enable={lower_str}"
         )
 
     def _get_privacy_mode(self) -> bool:
         """Get privacy mode."""
-        return (
-            self._api._get_config("LeLensMask").splitlines()[0].split("=")[1] == "true"
-        )
+        return self._api.privacy_config().splitlines()[0].split("=")[1] == "true"
