@@ -156,10 +156,6 @@ class DPCode(str, Enum):
     CUR_CURRENT = "cur_current"  # Actual current
     CUR_POWER = "cur_power"  # Actual power
     CUR_VOLTAGE = "cur_voltage"  # Actual voltage
-    TOTAL_FORWARD_ENERGY = "total_forward_energy"
-    PHASE_A = "phase_a"
-    PHASE_B = "phase_b"
-    PHASE_C = "phase_c"
     DEHUMIDITY_SET_VALUE = "dehumidify_set_value"
     DO_NOT_DISTURB = "do_not_disturb"
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
@@ -192,6 +188,9 @@ class DPCode(str, Enum):
     PERCENT_STATE = "percent_state"
     PERCENT_STATE_2 = "percent_state_2"
     PERCENT_STATE_3 = "percent_state_3"
+    PHASE_A = "phase_a"  # Electricity Meter
+    PHASE_B = "phase_b"
+    PHASE_C = "phase_c"
     PIR = "pir"  # Motion sensor
     PM25_VALUE = "pm25_value"
     POWDER_SET = "powder_set"  # Powder
@@ -246,6 +245,7 @@ class DPCode(str, Enum):
     TEMP_VALUE = "temp_value"  # Color temperature
     TEMP_VALUE_V2 = "temp_value_v2"
     TEMPER_ALARM = "temper_alarm"  # Tamper alarm
+    TOTAL_FORWARD_ENERGY = "total_forward_energy"
     UV = "uv"  # UV sterilization
     VA_HUMIDITY = "va_humidity"
     VA_TEMPERATURE = "va_temperature"

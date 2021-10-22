@@ -231,7 +231,7 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
         ),
         SensorEntityDescription(
             key=DPCode.PHASE_B + CODE_EX_CURRENT,
-            name="Current_B",
+            name="Current B",
             native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
             device_class=DEVICE_CLASS_CURRENT,
             state_class=STATE_CLASS_MEASUREMENT,
@@ -239,7 +239,7 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
         ),
         SensorEntityDescription(
             key=DPCode.PHASE_B + CODE_EX_POWER,
-            name="Power_B",
+            name="Power B",
             native_unit_of_measurement=POWER_WATT,
             device_class=DEVICE_CLASS_POWER,
             state_class=STATE_CLASS_MEASUREMENT,
@@ -247,7 +247,7 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
         ),
         SensorEntityDescription(
             key=DPCode.PHASE_B + CODE_EX_VOLTAGE,
-            name="Voltage_B",
+            name="Voltage B",
             native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
             device_class=DEVICE_CLASS_VOLTAGE,
             state_class=STATE_CLASS_MEASUREMENT,
@@ -255,7 +255,7 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
         ),
         SensorEntityDescription(
             key=DPCode.PHASE_C + CODE_EX_CURRENT,
-            name="Current_C",
+            name="Current C",
             native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
             device_class=DEVICE_CLASS_CURRENT,
             state_class=STATE_CLASS_MEASUREMENT,
@@ -263,7 +263,7 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
         ),
         SensorEntityDescription(
             key=DPCode.PHASE_C + CODE_EX_POWER,
-            name="Power_C",
+            name="Power C",
             native_unit_of_measurement=POWER_WATT,
             device_class=DEVICE_CLASS_POWER,
             state_class=STATE_CLASS_MEASUREMENT,
@@ -271,7 +271,7 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
         ),
         SensorEntityDescription(
             key=DPCode.PHASE_C + CODE_EX_VOLTAGE,
-            name="Voltage_C",
+            name="Voltage C",
             native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
             device_class=DEVICE_CLASS_VOLTAGE,
             state_class=STATE_CLASS_MEASUREMENT,
