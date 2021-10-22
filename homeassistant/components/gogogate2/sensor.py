@@ -110,7 +110,7 @@ class DoorSensorTemperature(GoGoGate2Entity, SensorEntity):
         return f"{self._get_door().name} temperature"
 
     @property
-    def state_class(self) -> str | None:
+    def state_class(self) -> str:
         """Return the Measurement State Class."""
         return STATE_CLASS_MEASUREMENT
 
