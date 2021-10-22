@@ -16,7 +16,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_TOKEN,
     CONF_USERNAME,
-    HTTP_UNAUTHORIZED,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -106,7 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         status, info = await hass.async_add_executor_job(_init_doorbird_device, device)
     except requests.exceptions.HTTPError as err:
-        if err.response.status_code == HTTP_UNAUTHORIZED:
+        if err.response.status_code == HTTPStatus.UNAUTHORIZED:
             _LOGGER.error(
                 "Authorization rejected by DoorBird for %s@%s", username, device_ip
             )
