@@ -31,14 +31,6 @@
                 "description": "Do you want to setup {name} ({host})?",
                 "title": "Synology DSM"
             },
-            "reauth": {
-                "data": {
-                    "password": "Password",
-                    "username": "Username"
-                },
-                "description": "Reason: {details}",
-                "title": "Synology DSM Reauthenticate Integration"
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Password",
@@ -64,6 +56,7 @@
             "init": {
                 "data": {
                     "scan_interval": "Minutes between scans",
+                    "snap_profile_type": "Quality level of camera snapshots (0:high 1:medium 2:low)",
                     "timeout": "Timeout (seconds)"
                 }
             }
