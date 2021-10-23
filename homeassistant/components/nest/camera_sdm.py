@@ -40,11 +40,10 @@ _LOGGER = logging.getLogger(__name__)
 # Used to schedule an alarm to refresh the stream before expiration
 STREAM_EXPIRATION_BUFFER = datetime.timedelta(seconds=30)
 
-# Battery powered cameras only have image thumbnails/clips for events, not
-# when idle. The Google Home app dispays a placeholder image that appears
-# as a blurry/dim light source, giving a better indication the camera is
-# present, and not just broken. Emulate that behavior with a blurred ellipse
-# off the top left of the screen
+# The Google Home app dispays a placeholder image that appears as a faint
+# light source (dim, blurred sphere) giving the user an indication the camera
+# is available, not just a blank screen. These constants define a blurred
+# ellipse at the top left of the thumbnail.
 PLACEHOLDER_ELLIPSE_BLUR = 0.1
 PLACEHOLDER_ELLIPSE_XY = [-0.4, 0.3, 0.3, 0.4]
 PLACEHOLDER_OVERLAY_COLOR = "#ffffff"
@@ -75,7 +74,7 @@ async def async_setup_sdm_entry(
 
 
 def placeholder_image(width: int | None = None, height: int | None = None) -> Image:
-    """Return a camera image preview for cameras that do not support live grab."""
+    """Return a camera image preview for cameras without live thumbnails."""
     if not width or not height:
         return Image.new("RGB", (1, 1))
     # Draw a dark scene with a fake light source
@@ -250,8 +249,8 @@ class NestCamera(Camera):
         if not stream_url:
             if self.frontend_stream_type != STREAM_TYPE_WEB_RTC:
                 return None
-            # Nest Web RTC cams only have image previews for events by design
-            # and need their own image placeholder.
+            # Nest Web RTC cams only have image previews for events, and not
+            # for "now" by design to save batter, and need a placeholder.
             image = placeholder_image(width=width, height=height)
             with io.BytesIO() as content:
                 image.save(content, format="JPEG", optimize=True)
