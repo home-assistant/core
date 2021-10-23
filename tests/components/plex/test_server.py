@@ -1,5 +1,6 @@
 """Tests for Plex server."""
 import copy
+from http import HTTPStatus
 from unittest.mock import patch
 
 from plexapi.exceptions import BadRequest, NotFound
@@ -188,7 +189,7 @@ async def test_media_lookups(hass, mock_plex_server, requests_mock, playqueue_cr
     # Plex Key searches
     media_player_id = hass.states.async_entity_ids("media_player")[0]
     requests_mock.post("/playqueues", text=playqueue_created)
-    requests_mock.get("/player/playback/playMedia", status_code=200)
+    requests_mock.get("/player/playback/playMedia", status_code=HTTPStatus.OK)
     assert await hass.services.async_call(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
