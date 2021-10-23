@@ -1,6 +1,8 @@
 """A sensor for incoming calls using a USB modem that supports caller ID."""
 from __future__ import annotations
 
+from typing import Callable
+
 from phone_modem import DEFAULT_PORT, PhoneModem
 import voluptuous as vol
 
@@ -63,7 +65,7 @@ async def async_setup_entry(
         ]
     )
 
-    async def _async_on_hass_stop() -> None:
+    async def _async_on_hass_stop(self: Callable) -> None:
         """HA is shutting down, close modem port."""
         if hass.data[DOMAIN][entry.entry_id][DATA_KEY_API]:
             await hass.data[DOMAIN][entry.entry_id][DATA_KEY_API].close()
