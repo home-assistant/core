@@ -735,10 +735,6 @@ def uuid_hex(value: Any) -> str:
     except (ValueError, AttributeError, TypeError) as error:
         raise vol.Invalid("Invalid UUID", error_message=str(error))
 
-    if result.hex != value.lower():
-        # UUID() will create a uuid if input is invalid
-        raise vol.Invalid("Invalid UUID")
-
     return result.hex
 
 
