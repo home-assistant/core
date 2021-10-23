@@ -161,6 +161,15 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         ),
         TAMPER_BINARY_SENSOR,
     ),
+    # Pressure Sensor
+    # https://developer.tuya.com/en/docs/iot/categoryylcg?id=Kaiuz3kc2e4gm
+    "ylcg": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.PRESSURE_STATE,
+            on_value="alarm",
+        ),
+        TAMPER_BINARY_SENSOR,
+    ),
     # Smoke Detector
     # https://developer.tuya.com/en/docs/iot/categoryywbj?id=Kaiuz3f6sf952
     "ywbj": (
