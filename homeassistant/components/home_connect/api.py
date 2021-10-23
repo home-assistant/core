@@ -79,6 +79,10 @@ class ConfigEntryAuth(homeconnect.HomeConnectAPI):
                 device = Dishwasher(self.hass, app)
             elif app.type == "FridgeFreezer":
                 device = FridgeFreezer(self.hass, app)
+            elif app.type == "Fridge":
+                device = Fridge(self.hass, app)
+            elif app.type == "Freezer":
+                device = Freezer(self.hass, app)
             elif app.type == "Oven":
                 device = Oven(self.hass, app)
             elif app.type == "CoffeeMaker":
@@ -560,6 +564,24 @@ class Hood(
 
 class FridgeFreezer(DeviceWithDoor):
     """Fridge/Freezer class."""
+
+    def get_entity_info(self):
+        """Get a dictionary with infos about the associated entities."""
+        door_entity = self.get_door_entity()
+        return {"binary_sensor": [door_entity]}
+
+
+class Fridge(DeviceWithDoor):
+    """Fridge class."""
+
+    def get_entity_info(self):
+        """Get a dictionary with infos about the associated entities."""
+        door_entity = self.get_door_entity()
+        return {"binary_sensor": [door_entity]}
+
+
+class Freezer(DeviceWithDoor):
+    """Freezer class."""
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
