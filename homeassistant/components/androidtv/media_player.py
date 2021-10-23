@@ -35,10 +35,8 @@ from homeassistant.components.media_player.const import (
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_COMMAND,
-    ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
-    ATTR_NAME,
     ATTR_SW_VERSION,
     CONF_DEVICE_CLASS,
     CONF_HOST,
@@ -54,6 +52,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
@@ -228,8 +227,9 @@ async def async_setup_entry(
     aftv = hass.data[DOMAIN][entry.entry_id][ANDROID_DEV]
     device_class = aftv.DEVICE_CLASS
     device_type = "Android TV" if device_class == DEVICE_ANDROIDTV else "Fire TV"
-    device_name = entry.data.get(CONF_NAME)
-    if not device_name:
+    if CONF_NAME in entry.data:
+        device_name = entry.data[CONF_NAME]
+    else:
         device_name = f"{device_type} {entry.data[CONF_HOST]}"
 
     device_args = [
@@ -340,15 +340,16 @@ class ADBDevice(MediaPlayerEntity):
 
         info = aftv.device_properties
         model = info.get(ATTR_MODEL)
-        mac = format_mac(info.get(PROP_ETHMAC) or info.get(PROP_WIFIMAC, ""))
-        self._attr_device_info = {
-            ATTR_IDENTIFIERS: {(DOMAIN, unique_id)},
-            ATTR_MANUFACTURER: info.get(ATTR_MANUFACTURER) or None,
-            ATTR_MODEL: f"{model} ({dev_type})" if model else dev_type,
-            ATTR_NAME: name,
-            ATTR_SW_VERSION: info.get(ATTR_SW_VERSION) or None,
-        }
-        if mac:
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            model=f"{model} ({dev_type})" if model else dev_type,
+            name=name,
+        )
+        if manufacturer := info.get(ATTR_MANUFACTURER):
+            self._attr_device_info["manufacturer"] = manufacturer
+        if sw_version := info.get(ATTR_SW_VERSION):
+            self._attr_device_info["sw_version"] = sw_version
+        if mac := format_mac(info.get(PROP_ETHMAC) or info.get(PROP_WIFIMAC, "")):
             self._attr_device_info["connections"] = {(CONNECTION_NETWORK_MAC, mac)}
 
         self._app_id_to_name = {}
@@ -503,7 +504,7 @@ class ADBDevice(MediaPlayerEntity):
     @adb_decorator()
     async def adb_command(self, command):
         """Send an ADB command to an Android TV / Fire TV device."""
-        if key := KEYS.get(cmd):
+        if key := KEYS.get(command):
             await self.aftv.adb_shell(f"input keyevent {key}")
             return
 
