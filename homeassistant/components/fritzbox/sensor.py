@@ -4,8 +4,10 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Final
+from datetime import datetime
 
 from pyfritzhome.fritzhomedevice import FritzhomeDevice
+from homeassistant.components.climate.const import PRESET_COMFORT, PRESET_ECO
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
@@ -20,6 +22,7 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
     ENERGY_KILO_WATT_HOUR,
     ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
@@ -96,6 +99,62 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         state_class=STATE_CLASS_TOTAL_INCREASING,
         suitable=lambda device: device.has_powermeter,  # type: ignore[no-any-return]
         native_value=lambda device: device.energy / 1000 if device.energy else 0.0,
+    ),
+    # Thermostat Sensors
+    FritzSensorEntityDescription(
+        key="comfort_temperature",
+        name="Comfort Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        suitable=lambda device: device.has_thermostat
+        and device.comfort_temperature is not None,
+        native_value=lambda device: device.comfort_temperature,  # type: ignore[no-any-return]
+    ),
+    FritzSensorEntityDescription(
+        key="eco_temperature",
+        name="Eco Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        suitable=lambda device: device.has_thermostat
+        and device.eco_temperature is not None,
+        native_value=lambda device: device.eco_temperature,  # type: ignore[no-any-return]
+    ),
+    FritzSensorEntityDescription(
+        key="nextchange_temperature",
+        name="Next Scheduled Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        suitable=lambda device: device.has_thermostat
+        and device.nextchange_temperature is not None,
+        native_value=lambda device: device.comfort_temperature,  # type: ignore[no-any-return]
+    ),
+    FritzSensorEntityDescription(
+        key="nextchange_time",
+        name="Next Scheduled Change Time",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+        state_class=STATE_CLASS_MEASUREMENT,
+        suitable=lambda device: device.has_thermostat
+        and device.nextchange_endperiod is not None,
+        native_value=lambda device: datetime.fromtimestamp(device.nextchange_endperiod).isoformat(),  # type: ignore[no-any-return]
+    ),
+    FritzSensorEntityDescription(
+        key="nextchange_preset",
+        name="Next Scheduled Preset",
+        state_class=STATE_CLASS_MEASUREMENT,
+        suitable=lambda device: device.has_thermostat
+        and device.nextchange_temperature is not None,
+        native_value=lambda device: PRESET_ECO if device.nextchange_temperature == device.eco_temperature else PRESET_COMFORT,  # type: ignore[no-any-return]
+    ),
+    FritzSensorEntityDescription(
+        key="scheduled_preset",
+        name="Current Scheduled Preset",
+        state_class=STATE_CLASS_MEASUREMENT,
+        suitable=lambda device: device.has_thermostat
+        and device.nextchange_temperature is not None,
+        native_value=lambda device: PRESET_COMFORT if device.nextchange_temperature == device.eco_temperature else PRESET_ECO,  # type: ignore[no-any-return]
     ),
 )
 
