@@ -37,7 +37,7 @@ async def async_setup_entry(hass, config):
     try:
         await hass.async_add_executor_job(client.update_info)
     except Exception as ex:  # pylint: disable=broad-except
-        raise ConfigEntryNotReady(f"Unable to connect to the thermostat: {ex}")
+        raise ConfigEntryNotReady(f"Unable to connect to the thermostat: {ex}") from ex
     hass.data.setdefault(DOMAIN, {})[config.entry_id] = client
     hass.config_entries.async_setup_platforms(config, PLATFORMS)
 
