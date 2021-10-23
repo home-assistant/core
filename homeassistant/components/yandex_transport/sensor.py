@@ -66,7 +66,8 @@ class DiscoverYandexTransport(SensorEntity):
         self._name = name
         self._attrs = None
         self._attr_unique_id = (
-            f"{stop_id}.{''.join(self._routes) if self._routes else ''}"
+            f"yandex_transport-{stop_id}-"
+            f"{'-'.join(sorted(self._routes)) if self._routes else ''}"
         )
 
     async def async_update(self, *, tries=0):
