@@ -28,7 +28,7 @@ cleanup:
   fields:
     device_id:
       name: Fritz!Box Device
-      description: Select the Fritz!Box to reboot
+      description: Select the Fritz!Box to check
       required: true
       selector:
         device:
