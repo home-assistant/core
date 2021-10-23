@@ -1,6 +1,7 @@
 """Support for Google Actions Smart Home Control."""
 import asyncio
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 from uuid import uuid4
 
@@ -14,8 +15,6 @@ from homeassistant.const import (
     CLOUD_NEVER_EXPOSED_ENTITIES,
     ENTITY_CATEGORY_CONFIG,
     ENTITY_CATEGORY_DIAGNOSTIC,
-    HTTP_INTERNAL_SERVER_ERROR,
-    HTTP_UNAUTHORIZED,
 )
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -157,7 +156,7 @@ class GoogleConfig(AbstractConfig):
             )
 
         _LOGGER.error("No configuration for request_sync available")
-        return HTTP_INTERNAL_SERVER_ERROR
+        return HTTPStatus.INTERNAL_SERVER_ERROR
 
     async def _async_update_token(self, force=False):
         if CONF_SERVICE_ACCOUNT not in self._config:
@@ -198,7 +197,7 @@ class GoogleConfig(AbstractConfig):
             try:
                 return await _call()
             except ClientResponseError as error:
-                if error.status == HTTP_UNAUTHORIZED:
+                if error.status == HTTPStatus.UNAUTHORIZED:
                     _LOGGER.warning(
                         "Request for %s unauthorized, renewing token and retrying", url
                     )
@@ -210,7 +209,7 @@ class GoogleConfig(AbstractConfig):
             return error.status
         except (asyncio.TimeoutError, ClientError):
             _LOGGER.error("Could not contact %s", url)
-            return HTTP_INTERNAL_SERVER_ERROR
+            return HTTPStatus.INTERNAL_SERVER_ERROR
 
     async def async_report_state(self, message, agent_user_id: str):
         """Send a state report to Google."""
