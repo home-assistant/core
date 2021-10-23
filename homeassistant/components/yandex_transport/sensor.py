@@ -61,7 +61,7 @@ class DiscoverYandexTransport(SensorEntity):
         """Initialize sensor."""
         self.requester = requester
         self._stop_id = stop_id
-        self._routes = routes or []
+        self._routes = routes
         self._state = None
         self._name = name
         self._attrs = None
