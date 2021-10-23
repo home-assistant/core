@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import ABC
 from collections import OrderedDict
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Final
 
 import voluptuous as vol
 from xknx import XKNX
@@ -439,7 +439,7 @@ class ExposeSchema(KNXPlatformSchema):
     CONF_KNX_EXPOSE_ATTRIBUTE = "attribute"
     CONF_KNX_EXPOSE_BINARY = "binary"
     CONF_KNX_EXPOSE_DEFAULT = "default"
-    EXPOSE_TIME_TYPES = [
+    EXPOSE_TIME_TYPES: Final = [
         "time",
         "date",
         "datetime",
@@ -655,7 +655,7 @@ class NumberSchema(KNXPlatformSchema):
     CONF_STEP = "step"
     DEFAULT_NAME = "KNX Number"
 
-    NUMBER_MODES = [MODE_AUTO, MODE_BOX, MODE_SLIDER]
+    NUMBER_MODES: Final = [MODE_AUTO, MODE_BOX, MODE_SLIDER]
 
     ENTITY_SCHEMA = vol.All(
         vol.Schema(
