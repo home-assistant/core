@@ -249,6 +249,7 @@ class SegmentBuffer:
         # simple to check for discontinuity at output time, and to determine
         # the discontinuity sequence number.
         self._stream_id += 1
+        self._start_time = datetime.datetime.utcnow()
 
     def close(self) -> None:
         """Close stream buffer."""
