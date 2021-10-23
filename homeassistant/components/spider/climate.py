@@ -48,8 +48,6 @@ class SpiderThermostat(ClimateEntity):
         for operation_value in thermostat.operation_values:
             if operation_value in SPIDER_STATE_TO_HA:
                 self.support_hvac.append(SPIDER_STATE_TO_HA[operation_value])
-            else:
-                _LOGGER.warning("Invalid operation value: %s", operation_value)
 
     @property
     def device_info(self):
