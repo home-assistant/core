@@ -71,12 +71,11 @@ async def async_setup(hass, config):
     if av is not None:
         integration_list.append("stream")
 
-    done, _ = await asyncio.wait(
-        [
-            async_setup_component(hass, integration, config)
-            for integration in integration_list
-            if integration not in exclude
-        ]
-    )
+    setup_tasks = [
+        hass.async_add_job(async_setup_component, hass, integration, config)
+        for integration in integration_list
+        if integration not in exclude and integration not in hass.config.components
+    ]
 
+    done, _ = await asyncio.wait(setup_tasks)
     return all(done)
