@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    DEVICE_CLASS_CO,
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_HUMIDITY,
@@ -90,6 +91,17 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
             key=DPCode.CO2_VALUE,
             name="Carbon Dioxide",
             device_class=DEVICE_CLASS_CO2,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        *BATTERY_SENSORS,
+    ),
+    # CO Detector
+    # https://developer.tuya.com/en/docs/iot/categorycobj?id=Kaiuz3u1j6q1v
+    "cobj": (
+        SensorEntityDescription(
+            key=DPCode.CO_VALUE,
+            name="Carbon Monoxide",
+            device_class=DEVICE_CLASS_CO,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
         *BATTERY_SENSORS,

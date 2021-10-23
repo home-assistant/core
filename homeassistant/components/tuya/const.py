@@ -150,10 +150,10 @@ class DPCode(str, Enum):
     CH2O_STATE = "ch2o_state"
     CH2O_VALUE = "ch2o_value"
     CHILD_LOCK = "child_lock"  # Child lock
+    CO_STATE = "co_state"
+    CO_STATUS = "co_status"
+    CO_VALUE = "co_value"
     CO2_STATE = "co2_state"
-    SMOKE_SENSOR_STATUS = "smoke_sensor_status"
-    SMOKE_SENSOR_STATE = "smoke_sensor_state"
-    SMOKE_SENSOR_VALUE = "smoke_sensor_value"
     CO2_VALUE = "co2_value"  # CO2 concentration
     COLOR_DATA_V2 = "color_data_v2"
     COLOUR_DATA = "colour_data"  # Colored light mode
@@ -211,6 +211,9 @@ class DPCode(str, Enum):
     SHAKE = "shake"  # Oscillating
     SHOCK_STATE = "shock_state"  # Vibration status
     SITUATION_SET = "situation_set"
+    SMOKE_SENSOR_STATE = "smoke_sensor_state"
+    SMOKE_SENSOR_STATUS = "smoke_sensor_status"
+    SMOKE_SENSOR_VALUE = "smoke_sensor_value"
     SOS = "sos"  # Emergency State
     SOS_STATE = "sos_state"  # Emergency mode
     SPEED = "speed"  # Speed level
