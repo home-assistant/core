@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
+from threading import Timer
 from typing import Any, Final, cast
 
 import aioshelly
@@ -66,6 +67,9 @@ BLOCK_PLATFORMS: Final = ["binary_sensor", "cover", "light", "sensor", "switch"]
 BLOCK_SLEEPING_PLATFORMS: Final = ["binary_sensor", "sensor"]
 RPC_PLATFORMS: Final = ["binary_sensor", "light", "sensor", "switch"]
 _LOGGER: Final = logging.getLogger(__name__)
+
+# Multiclick delay between clicks in seconds
+MC_MULTICLICK_DELAY = 0.7
 
 COAP_SCHEMA: Final = vol.Schema(
     {
@@ -269,6 +273,11 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             self.async_add_listener(self._async_device_updates_handler)
         )
         self._last_input_events_count: dict = {}
+        self._mc_device_name = device_name
+        self._mc_last_events: dict = {}
+        self._mc_last_state: dict = {}
+        self._mc_click_count: dict = {}
+        self._mc_click_timer: dict = {}
 
         entry.async_on_unload(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
@@ -278,6 +287,38 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         """Reload entry."""
         _LOGGER.debug("Reloading entry %s", self.name)
         await self.hass.config_entries.async_reload(self.entry.entry_id)
+
+    def _mc_send_event(
+        self, channel, delete, momentary_button, click_count, click_events
+    ):
+        if momentary_button:
+            self.hass.bus.async_fire(
+                "shelly.multiclick",
+                {
+                    ATTR_DEVICE_ID: self.device_id,
+                    ATTR_DEVICE: self.device.settings["device"]["hostname"],
+                    "device_name": self._mc_device_name,
+                    ATTR_CHANNEL: channel,
+                    "click_count" : 0,
+                    "click_events" : click_events
+                },
+            )
+        else:
+            self.hass.bus.async_fire(
+                "shelly.multiclick",
+                {
+                    ATTR_DEVICE_ID: self.device_id,
+                    ATTR_DEVICE: self.device.settings["device"]["hostname"],
+                    "device_name": self._mc_device_name,
+                    ATTR_CHANNEL: channel,
+                    "click_count" : click_count,
+                    "click_events" : ""
+                },
+            )
+
+        if delete:
+            self._mc_click_count[channel] = 0
+            self._mc_last_events[channel] = ""
 
     @callback
     def _async_device_updates_handler(self) -> None:
@@ -297,6 +338,11 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
                     self._last_input_events_count[1] = -1
 
                 break
+
+        mc_momentary_button = True
+        if "longpush_time" in self.device.settings:
+            if self.device.settings["longpush_time"] <= 10:
+                mc_momentary_button = False
 
         # Check for input events and config change
         cfg_changed = 0
@@ -326,6 +372,109 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             event_type = block.inputEvent
             last_event_count = self._last_input_events_count.get(channel)
             self._last_input_events_count[channel] = block.inputEventCnt
+
+            mc_curr_event = block.inputEvent
+            if block.inputEventCnt is not None:
+                if self._mc_click_count.get(channel) is None:
+                    self._mc_click_count[channel] = 0
+                    self._mc_last_events[channel] = ""
+                if (
+                    last_event_count is not None 
+                    and self._mc_last_state.get(channel) is not None
+                ):
+                    if block.inputEventCnt != last_event_count:
+                        if self._mc_click_timer.get(channel) is not None:
+                            self._mc_click_timer[channel].cancel()
+                            self._mc_click_timer[channel] = None
+
+                        if mc_curr_event == "S":
+                            if self._mc_last_state.get(channel) == 1:
+                                self._mc_click_count[channel] += 1
+                            else:
+                                self._mc_click_count[channel] += 2
+                            if block.input == 1:
+                                self._mc_click_count[channel] += 1
+
+                            if block.inputEventCnt - last_event_count > 1:
+                                self._mc_click_count[channel] += (block.inputEventCnt - last_event_count - 1) * 2
+                                mc_curr_event = "S" * (block.inputEventCnt - last_event_count)
+
+                        if mc_curr_event == "L":
+                            if mc_momentary_button:
+                                if block.input != self._mc_last_state.get(channel):
+                                    self._mc_click_count[channel] += 1
+                                self._mc_send_event(
+                                    channel, 
+                                    False, 
+                                    mc_momentary_button, 
+                                    0, 
+                                    self._mc_last_events[channel] + "LSTART",
+                                )
+                            else:
+                                if self._mc_last_state.get(channel) == 0:
+                                    self._mc_click_count[channel] += 1
+                                else:
+                                    self._mc_click_count[channel] += 2
+
+                                if block.input == 0:
+                                    self._mc_click_count[channel] += 1
+
+                                if block.inputEventCnt - last_event_count > 1:
+                                    self._mc_click_count[channel] += (
+                                        block.inputEventCnt - last_event_count - 1
+                                    ) * 2
+
+                        self._mc_last_events[channel] += mc_curr_event
+
+                        if not mc_momentary_button or block.input == 0:
+                            self._mc_click_timer[channel] = Timer(
+                                MC_MULTICLICK_DELAY, 
+                                self._mc_send_event, 
+                                args=(
+                                    channel, 
+                                    True, 
+                                    mc_momentary_button, 
+                                    self._mc_click_count[channel], 
+                                    self._mc_last_events[channel],
+                                ),
+                            )
+                            self._mc_click_timer[channel].start()
+
+                    if block.inputEventCnt == last_event_count and block.input != self._mc_last_state.get(channel):
+                        if self._mc_click_timer.get(channel) is not None:
+                            self._mc_click_timer[channel].cancel()
+                            self._mc_click_timer[channel] = None
+
+                        self._mc_click_count[channel] += 1
+
+                        if (
+                            mc_momentary_button 
+                            and block.input == 0 
+                            and len(self._mc_last_events[channel]) > 0
+                        ):
+                            if self._mc_last_events[channel][-1] == "L":
+                                self._mc_send_event(
+                                    channel, 
+                                    False, 
+                                    mc_momentary_button, 
+                                    0, 
+                                    self._mc_last_events[channel] + "STOP",
+                                )
+
+                        if not mc_momentary_button or block.input == 0:
+                            self._mc_click_timer[channel] = Timer(
+                                MC_MULTICLICK_DELAY, 
+                                self._mc_send_event, 
+                                args=(
+                                    channel, 
+                                    True,
+                                    mc_momentary_button, 
+                                    self._mc_click_count[channel], 
+                                    self._mc_last_events[channel],
+                                ),
+                            )
+                            self._mc_click_timer[channel].start()
+                self._mc_last_state[channel] = block.input
 
             if (
                 last_event_count is None
