@@ -47,16 +47,14 @@ def test_convert_nonnumeric_value():
 def test_convert_from_kph():
     """Test conversion from kph to other units."""
     kph = 5
-    assert (
-        speed_util.convert(kph, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR)
-        == 3.106855972222222
-    )
+    assert speed_util.convert(
+        kph, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR
+    ) == pytest.approx(3.10686, abs=1e-5)
 
 
 def test_convert_from_mph():
     """Test conversion from mph to other units."""
     mph = 5
-    assert (
-        speed_util.convert(mph, SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR)
-        == 8.046719971418051
-    )
+    assert speed_util.convert(
+        mph, SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR
+    ) == pytest.approx(8.04672, abs=1e-5)
