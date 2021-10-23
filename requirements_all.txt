@@ -264,7 +264,7 @@ aiovlc==0.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.yandex_transport
-aioymaps==1.1.0
+aioymaps==1.2.1
 
 # homeassistant.components.airly
 airly==1.1.0
@@ -750,7 +750,7 @@ gpiozero==1.5.1
 gps3==0.33.3
 
 # homeassistant.components.gree
-greeclimate==0.11.9
+greeclimate==0.12.2
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==2.1
@@ -891,7 +891,7 @@ iotawattpy==0.1.0
 iperf3==0.1.11
 
 # homeassistant.components.gogogate2
-ismartgate==4.0.3
+ismartgate==4.0.4
 
 # homeassistant.components.rest
 jsonpath==0.82
@@ -2360,7 +2360,7 @@ uvcclient==0.11.0
 vallox-websocket-api==2.8.1
 
 # homeassistant.components.velbus
-velbus-aio==2021.10.1
+velbus-aio==2021.10.6
 
 # homeassistant.components.venstar
 venstarcolortouch==0.14
