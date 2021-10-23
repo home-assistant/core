@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry, discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
@@ -330,12 +330,12 @@ class BMWConnectedDriveBaseEntity(Entity):
             "vin": self._vehicle.vin,
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, vehicle.vin)},
-            "name": f'{vehicle.attributes.get("brand")} {vehicle.name}',
-            "model": vehicle.name,
-            "manufacturer": vehicle.attributes.get("brand"),
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, vehicle.vin)},
+            manufacturer=vehicle.attributes.get("brand"),
+            model=vehicle.name,
+            name=f'{vehicle.attributes.get("brand")} {vehicle.name}',
+        )
 
     def update_callback(self):
         """Schedule a state update."""
