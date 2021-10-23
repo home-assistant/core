@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
-import re
 from typing import Any, Final, cast
 
 import aioshelly
@@ -132,10 +131,14 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
     dev_reg = device_registry.async_get(hass)
     device_entry = None
     if entry.unique_id is not None:
-        mac = ":".join(re.findall("..", entry.unique_id))
         device_entry = dev_reg.async_get_device(
             identifiers=set(),
-            connections={(device_registry.CONNECTION_NETWORK_MAC, mac)},
+            connections={
+                (
+                    device_registry.CONNECTION_NETWORK_MAC,
+                    device_registry.format_mac(entry.unique_id),
+                )
+            },
         )
     if device_entry and entry.entry_id not in device_entry.config_entries:
         device_entry = None
