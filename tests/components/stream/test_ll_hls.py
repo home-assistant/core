@@ -1,9 +1,12 @@
 """The tests for hls streams."""
 import asyncio
+from collections import deque
 import itertools
+import math
 import re
 from urllib.parse import urlparse
 
+from dateutil import parser
 import pytest
 
 from homeassistant.components.stream import create_stream
@@ -124,15 +127,18 @@ async def test_ll_hls_stream(hass, hls_stream, stream_worker_sync):
             "stream": {
                 CONF_LL_HLS: True,
                 CONF_SEGMENT_DURATION: SEGMENT_DURATION,
-                CONF_PART_DURATION: TEST_PART_DURATION,
+                # Use a slight mismatch in PART_DURATION to mimic
+                # misalignments with source DTSs
+                CONF_PART_DURATION: TEST_PART_DURATION - 0.01,
             }
         },
     )
 
     stream_worker_sync.pause()
 
+    num_playlist_segments = 3
     # Setup demo HLS track
-    source = generate_h264_video(duration=SEGMENT_DURATION + 1)
+    source = generate_h264_video(duration=num_playlist_segments * SEGMENT_DURATION + 2)
     stream = create_stream(hass, source, {})
 
     # Request stream
@@ -152,7 +158,9 @@ async def test_ll_hls_stream(hass, hls_stream, stream_worker_sync):
 
     # Fetch playlist
     playlist_url = "/" + master_playlist.splitlines()[-1]
-    playlist_response = await hls_client.get(playlist_url)
+    playlist_response = await hls_client.get(
+        playlist_url + f"?_HLS_msn={num_playlist_segments-1}"
+    )
     assert playlist_response.status == 200
 
     # Fetch segments
@@ -181,27 +189,53 @@ async def test_ll_hls_stream(hass, hls_stream, stream_worker_sync):
             return False
         return True
 
-    # Fetch all completed part segments
+    # Parse playlist
     part_re = re.compile(
-        r'#EXT-X-PART:DURATION=[0-9].[0-9]{5,5},URI="(?P<part_url>.+?)",BYTERANGE="(?P<byterange_length>[0-9]+?)@(?P<byterange_start>[0-9]+?)"(,INDEPENDENT=YES)?'
+        r'#EXT-X-PART:DURATION=(?P<part_duration>[0-9]{1,}.[0-9]{3,}),URI="(?P<part_url>.+?)"(,INDEPENDENT=YES)?'
     )
+    datetime_re = re.compile(r"#EXT-X-PROGRAM-DATE-TIME:(?P<datetime>.+)")
+    inf_re = re.compile(r"#EXTINF:(?P<segment_duration>[0-9]{1,}.[0-9]{3,}),")
+    # keep track of which tests were done (indexed by re)
+    tested = {regex: False for regex in (part_re, datetime_re, inf_re)}
+    # keep track of times and durations along playlist for checking consistency
+    part_durations = []
+    segment_duration = 0
+    datetimes = deque()
     for line in playlist.splitlines():
         match = part_re.match(line)
         if match:
+            # Fetch all completed part segments
+            part_durations.append(float(match.group("part_duration")))
             part_segment_url = "/" + match.group("part_url")
-            byterange_end = (
-                int(match.group("byterange_length"))
-                + int(match.group("byterange_start"))
-                - 1
-            )
             part_segment_response = await hls_client.get(
                 part_segment_url,
-                headers={
-                    "Range": f'bytes={match.group("byterange_start")}-{byterange_end}'
-                },
             )
-            assert part_segment_response.status == 206
+            assert part_segment_response.status == 200
             assert check_part_is_moof_mdat(await part_segment_response.read())
+            tested[part_re] = True
+            continue
+        match = datetime_re.match(line)
+        if match:
+            datetimes.append(parser.parse(match.group("datetime")))
+            # Check that segment durations are consistent with PROGRAM-DATE-TIME
+            if len(datetimes) > 1:
+                datetime_duration = (
+                    datetimes[-1] - datetimes.popleft()
+                ).total_seconds()
+                if segment_duration:
+                    assert datetime_duration == segment_duration
+                    tested[datetime_re] = True
+            continue
+        match = inf_re.match(line)
+        if match:
+            segment_duration = float(match.group("segment_duration"))
+            # Check that segment durations are consistent with part durations
+            if len(part_durations) > 1:
+                assert math.isclose(sum(part_durations), segment_duration)
+                tested[inf_re] = True
+                part_durations.clear()
+    # make sure all playlist tests were performed
+    assert all(tested.values())
 
     stream_worker_sync.resume()
 
