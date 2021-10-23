@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-import logging
 from typing import Any, cast
 
 from pytradfri.command import Command
@@ -19,8 +18,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .base_class import TradfriBaseDevice
 from .const import ATTR_AUTO, CONF_GATEWAY_ID, DEVICES, DOMAIN, KEY_API
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
