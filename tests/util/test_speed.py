@@ -45,7 +45,7 @@ def test_convert_nonnumeric_value():
 
 
 def test_convert_from_kph():
-    """Test conversion from liters to other units."""
+    """Test conversion from kph to other units."""
     kph = 5
     assert (
         speed_util.convert(kph, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR)
