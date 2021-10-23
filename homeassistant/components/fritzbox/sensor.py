@@ -126,7 +126,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         device_class=DEVICE_CLASS_TEMPERATURE,
         suitable=lambda device: device.has_thermostat
         and device.nextchange_temperature is not None,
-        native_value=lambda device: device.comfort_temperature,  # type: ignore[no-any-return]
+        native_value=lambda device: device.nextchange_temperature,  # type: ignore[no-any-return]
     ),
     FritzSensorEntityDescription(
         key="nextchange_time",
