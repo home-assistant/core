@@ -79,7 +79,7 @@ class ConfigEntryAuth(homeconnect.HomeConnectAPI):
                 device = Dishwasher(self.hass, app)
             elif app.type == "FridgeFreezer":
                 device = FridgeFreezer(self.hass, app)
-            elif app.type == "Fridge":
+            elif app.type == "Refrigerator":
                 device = Fridge(self.hass, app)
             elif app.type == "Freezer":
                 device = Freezer(self.hass, app)
