@@ -93,11 +93,17 @@ class SegmentBuffer:
                         # Create a fragment every TARGET_PART_DURATION. The data from each fragment is stored in
                         # a "Part" that can be combined with the data from all the other "Part"s, plus an init
                         # section, to reconstitute the data in a "Segment".
-                        # frag_duration seems to be a minimum threshold for determining part boundaries, so some
-                        # parts may have a higher duration. Since Part Target Duration is used in LL-HLS as a
-                        # maximum threshold for part durations, we scale that number down here by .85 and hope
-                        # that the output part durations stay below the maximum Part Target Duration threshold.
-                        # See https://datatracker.ietf.org/doc/html/draft-pantos-hls-rfc8216bis#section-4.4.4.9
+                        # frag_duration is the threshold for determining part boundaries, and the dts of the last
+                        # packet in the part should correspond to a duration that is smaller than this value.
+                        # However, as the part duration includes the duration of the last frame, the part duration
+                        # will be equal to or greater than this value.
+                        # We previously scaled this number down by .85 to account for this while keeping within
+                        # the 15% variance allowed in part duration. However, this did not work when inputs had
+                        # an audio stream - sometimes the fragment would get cut on the audio packet, causing
+                        # the durations to actually be to short.
+                        # The current approach is to use this frag_duration for creating the media while
+                        # adjusting the metadata duration to keep the durations in the metadata below the
+                        # part_target_duration threshold.
                         "frag_duration": str(
                             self._stream_settings.part_target_duration * 1e6
                         ),
@@ -199,6 +205,10 @@ class SegmentBuffer:
         # value which exceeds the part_target_duration. This can muck up the
         # duration of both this part and the next part. An easy fix is to just
         # use the current packet dts and cap it by the part target duration.
+        # The adjustment may cause a drift between this adjusted duration
+        # (used in the metadata) and the media duration, but the drift should be
+        # automatically corrected when the part duration cleanly divides the
+        # framerate.
         current_dts = min(
             packet.dts,
             self._part_start_dts
