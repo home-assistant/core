@@ -355,6 +355,7 @@ ATTR_MODE: Final = "mode"
 ATTR_MANUFACTURER: Final = "manufacturer"
 ATTR_MODEL: Final = "model"
 ATTR_SW_VERSION: Final = "sw_version"
+ATTR_VIA_DEVICE: Final = "via_device"
 
 ATTR_BATTERY_CHARGING: Final = "battery_charging"
 ATTR_BATTERY_LEVEL: Final = "battery_level"
@@ -419,6 +420,7 @@ POWER_VOLT_AMPERE: Final = "VA"
 # Energy units
 ENERGY_WATT_HOUR: Final = "Wh"
 ENERGY_KILO_WATT_HOUR: Final = "kWh"
+ENERGY_MEGA_WATT_HOUR: Final = "MWh"
 
 # Electric_current units
 ELECTRIC_CURRENT_MILLIAMPERE: Final = "mA"

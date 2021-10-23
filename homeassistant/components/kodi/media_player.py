@@ -533,9 +533,7 @@ class KodiEntity(MediaPlayerEntity):
         if self._properties.get("live"):
             return None
 
-        total_time = self._properties.get("totaltime")
-
-        if total_time is None:
+        if (total_time := self._properties.get("totaltime")) is None:
             return None
 
         return (
@@ -547,9 +545,7 @@ class KodiEntity(MediaPlayerEntity):
     @property
     def media_position(self):
         """Position of current playing media in seconds."""
-        time = self._properties.get("time")
-
-        if time is None:
+        if (time := self._properties.get("time")) is None:
             return None
 
         return time["hours"] * 3600 + time["minutes"] * 60 + time["seconds"]
@@ -562,8 +558,7 @@ class KodiEntity(MediaPlayerEntity):
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        thumbnail = self._item.get("thumbnail")
-        if thumbnail is None:
+        if (thumbnail := self._item.get("thumbnail")) is None:
             return None
 
         return self._kodi.thumbnail_url(thumbnail)
@@ -598,8 +593,7 @@ class KodiEntity(MediaPlayerEntity):
     @property
     def media_artist(self):
         """Artist of current playing media, music track only."""
-        artists = self._item.get("artist", [])
-        if artists:
+        if artists := self._item.get("artist"):
             return artists[0]
 
         return None
@@ -607,8 +601,7 @@ class KodiEntity(MediaPlayerEntity):
     @property
     def media_album_artist(self):
         """Album artist of current playing media, music track only."""
-        artists = self._item.get("albumartist", [])
-        if artists:
+        if artists := self._item.get("albumartist"):
             return artists[0]
 
         return None

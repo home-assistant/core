@@ -202,8 +202,7 @@ async def websocket_remove_device(
     device_id = msg["device_id"]
     dev_registry = await hass.helpers.device_registry.async_get_registry()
 
-    device = dev_registry.async_get(device_id)
-    if not device:
+    if not (device := dev_registry.async_get(device_id)):
         connection.send_error(
             msg["id"], websocket_api.const.ERR_NOT_FOUND, "Device not found"
         )

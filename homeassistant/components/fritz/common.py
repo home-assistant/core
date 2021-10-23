@@ -351,17 +351,17 @@ class FritzDeviceBase(Entity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        return {
-            "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
-            "identifiers": {(DOMAIN, self._mac)},
-            "default_name": self.name,
-            "default_manufacturer": "AVM",
-            "default_model": "FRITZ!Box Tracked device",
-            "via_device": (
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self._mac)},
+            default_manufacturer="AVM",
+            default_model="FRITZ!Box Tracked device",
+            default_name=self.name,
+            identifiers={(DOMAIN, self._mac)},
+            via_device=(
                 DOMAIN,
                 self._router.unique_id,
             ),
-        }
+        )
 
     @property
     def should_poll(self) -> bool:
@@ -479,13 +479,12 @@ class FritzBoxBaseEntity:
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
-
-        return {
-            "connections": {(CONNECTION_NETWORK_MAC, self.mac_address)},
-            "identifiers": {(DOMAIN, self._fritzbox_tools.unique_id)},
-            "name": self._device_name,
-            "manufacturer": "AVM",
-            "model": self._fritzbox_tools.model,
-            "sw_version": self._fritzbox_tools.current_firmware,
-            "configuration_url": f"http://{self._fritzbox_tools.host}",
-        }
+        return DeviceInfo(
+            configuration_url=f"http://{self._fritzbox_tools.host}",
+            connections={(CONNECTION_NETWORK_MAC, self.mac_address)},
+            identifiers={(DOMAIN, self._fritzbox_tools.unique_id)},
+            manufacturer="AVM",
+            model=self._fritzbox_tools.model,
+            name=self._device_name,
+            sw_version=self._fritzbox_tools.current_firmware,
+        )

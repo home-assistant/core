@@ -14,12 +14,16 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    DEVICE_CLASS_CO,
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_PM25,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
     DEVICE_CLASS_VOLTAGE,
     ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
@@ -55,6 +59,13 @@ BATTERY_SENSORS: tuple[SensorEntityDescription, ...] = (
         icon="mdi:battery",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
+    SensorEntityDescription(
+        key=DPCode.BATTERY_VALUE,
+        name="Battery",
+        device_class=DEVICE_CLASS_BATTERY,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
 )
 
 # All descriptions can be found here. Mostly the Integer data types in the
@@ -62,9 +73,40 @@ BATTERY_SENSORS: tuple[SensorEntityDescription, ...] = (
 # end up being a sensor.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
-    # Door Window Sensor
-    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48hm02l8m
-    "mcs": BATTERY_SENSORS,
+    # CO2 Detector
+    # https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
+    "co2bj": (
+        SensorEntityDescription(
+            key=DPCode.HUMIDITY_VALUE,
+            name="Humidity",
+            device_class=DEVICE_CLASS_HUMIDITY,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.TEMP_CURRENT,
+            name="Temperature",
+            device_class=DEVICE_CLASS_TEMPERATURE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.CO2_VALUE,
+            name="Carbon Dioxide",
+            device_class=DEVICE_CLASS_CO2,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        *BATTERY_SENSORS,
+    ),
+    # CO Detector
+    # https://developer.tuya.com/en/docs/iot/categorycobj?id=Kaiuz3u1j6q1v
+    "cobj": (
+        SensorEntityDescription(
+            key=DPCode.CO_VALUE,
+            name="Carbon Monoxide",
+            device_class=DEVICE_CLASS_CO,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        *BATTERY_SENSORS,
+    ),
     # Switch
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
     "kg": (
@@ -89,6 +131,46 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
             state_class=STATE_CLASS_MEASUREMENT,
             entity_registry_enabled_default=False,
         ),
+    ),
+    # Formaldehyde Detector
+    # Note: Not documented
+    "jqbj": (
+        SensorEntityDescription(
+            key=DPCode.CO2_VALUE,
+            name="Carbon Dioxide",
+            device_class=DEVICE_CLASS_CO2,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.VOC_VALUE,
+            name="Volatile Organic Compound",
+            device_class=DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.PM25_VALUE,
+            name="Particulate Matter 2.5 µm",
+            device_class=DEVICE_CLASS_PM25,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.VA_HUMIDITY,
+            name="Humidity",
+            device_class=DEVICE_CLASS_HUMIDITY,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.VA_TEMPERATURE,
+            name="Temperature",
+            device_class=DEVICE_CLASS_TEMPERATURE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.CH2O_VALUE,
+            name="Formaldehyde",
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        *BATTERY_SENSORS,
     ),
     # Luminance Sensor
     # https://developer.tuya.com/en/docs/iot/categoryldcg?id=Kaiuz3n7u69l8
@@ -118,21 +200,59 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
         ),
         SensorEntityDescription(
             key=DPCode.CO2_VALUE,
-            name="Carbon Dioxide (CO2)",
+            name="Carbon Dioxide",
             device_class=DEVICE_CLASS_CO2,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
         *BATTERY_SENSORS,
     ),
+    # Door Window Sensor
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48hm02l8m
+    "mcs": BATTERY_SENSORS,
     # PIR Detector
     # https://developer.tuya.com/en/docs/iot/categorypir?id=Kaiuz3ss11b80
     "pir": BATTERY_SENSORS,
-    # Vibration Sensor
-    # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
-    "zd": BATTERY_SENSORS,
+    # Gas Detector
+    # https://developer.tuya.com/en/docs/iot/categoryrqbj?id=Kaiuz3d162ubw
+    "rqbj": (
+        SensorEntityDescription(
+            key=DPCode.GAS_SENSOR_VALUE,
+            icon="mdi:gas-cylinder",
+            device_class=STATE_CLASS_MEASUREMENT,
+        ),
+        *BATTERY_SENSORS,
+    ),
+    # Water Detector
+    # https://developer.tuya.com/en/docs/iot/categorysj?id=Kaiuz3iub2sli
+    "sj": BATTERY_SENSORS,
     # Emergency Button
     # https://developer.tuya.com/en/docs/iot/categorysos?id=Kaiuz3oi6agjy
     "sos": BATTERY_SENSORS,
+    # Pressure Sensor
+    # https://developer.tuya.com/en/docs/iot/categoryylcg?id=Kaiuz3kc2e4gm
+    "ylcg": (
+        SensorEntityDescription(
+            key=DPCode.PRESSURE_VALUE,
+            device_class=DEVICE_CLASS_PRESSURE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        *BATTERY_SENSORS,
+    ),
+    # Smoke Detector
+    # https://developer.tuya.com/en/docs/iot/categoryywbj?id=Kaiuz3f6sf952
+    "ywbj": (
+        SensorEntityDescription(
+            key=DPCode.SMOKE_SENSOR_VALUE,
+            name="Smoke Amount",
+            icon="mdi:smoke-detector",
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            device_class=STATE_CLASS_MEASUREMENT,
+        ),
+        *BATTERY_SENSORS,
+    ),
+    # Vibration Sensor
+    # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
+    "zd": BATTERY_SENSORS,
 }
 
 # Socket (duplicate of `kg`)

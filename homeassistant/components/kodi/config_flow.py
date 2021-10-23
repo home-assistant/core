@@ -57,8 +57,7 @@ async def validate_http(hass: core.HomeAssistant, data):
 
 async def validate_ws(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect over WS."""
-    ws_port = data.get(CONF_WS_PORT)
-    if not ws_port:
+    if not (ws_port := data.get(CONF_WS_PORT)):
         return
 
     host = data[CONF_HOST]
@@ -105,8 +104,7 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._host = discovery_info["host"]
         self._port = int(discovery_info["port"])
         self._name = discovery_info["hostname"][: -len(".local.")]
-        uuid = discovery_info["properties"].get("uuid")
-        if not uuid:
+        if not (uuid := discovery_info["properties"].get("uuid")):
             return self.async_abort(reason="no_uuid")
 
         self._discovery_name = discovery_info["name"]

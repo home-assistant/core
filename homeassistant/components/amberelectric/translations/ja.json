@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "api_token": "API\u30c8\u30fc\u30af\u30f3"
+                }
+            }
+        }
+    }
+}

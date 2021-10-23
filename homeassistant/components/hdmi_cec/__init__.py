@@ -297,8 +297,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
 
     def _select_device(call):
         """Select the active device."""
-        addr = call.data[ATTR_DEVICE]
-        if not addr:
+        if not (addr := call.data[ATTR_DEVICE]):
             _LOGGER.error("Device not found: %s", call.data[ATTR_DEVICE])
             return
         if addr in device_aliases:

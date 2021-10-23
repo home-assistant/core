@@ -6,7 +6,7 @@ import aiohttp
 
 from homeassistant.components.rest import DOMAIN
 import homeassistant.components.rest.switch as rest
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DEVICE_CLASS_SWITCH, DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     CONF_HEADERS,
     CONF_NAME,
@@ -23,6 +23,7 @@ from tests.common import assert_setup_component
 """Tests for setting up the REST switch platform."""
 
 NAME = "foo"
+DEVICE_CLASS = DEVICE_CLASS_SWITCH
 METHOD = "post"
 RESOURCE = "http://localhost/"
 STATE_RESOURCE = RESOURCE
@@ -158,6 +159,7 @@ def _setup_test_switch(hass):
     body_off = Template("off", hass)
     switch = rest.RestSwitch(
         NAME,
+        DEVICE_CLASS,
         RESOURCE,
         STATE_RESOURCE,
         METHOD,
@@ -178,6 +180,12 @@ def test_name(hass):
     """Test the name."""
     switch, body_on, body_off = _setup_test_switch(hass)
     assert switch.name == NAME
+
+
+def test_device_class(hass):
+    """Test the name."""
+    switch, body_on, body_off = _setup_test_switch(hass)
+    assert switch.device_class == DEVICE_CLASS
 
 
 def test_is_on_before_update(hass):

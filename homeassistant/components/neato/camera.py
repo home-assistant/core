@@ -89,11 +89,9 @@ class NeatoCleaningMap(Camera):
             self._available = False
             return
 
-        image_url = None
         if self._mapdata:
             map_data: dict[str, Any] = self._mapdata[self._robot_serial]["maps"][0]
-        image_url = map_data["url"]
-        if image_url == self._image_url:
+        if (image_url := map_data["url"]) == self._image_url:
             _LOGGER.debug(
                 "The map image_url for '%s' is the same as old", self.entity_id
             )

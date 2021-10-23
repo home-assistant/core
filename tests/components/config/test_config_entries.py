@@ -1,6 +1,7 @@
 """Test config entries API."""
 
 from collections import OrderedDict
+from http import HTTPStatus
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -75,7 +76,7 @@ async def test_get_entries(hass, client):
         ).add_to_hass(hass)
 
         resp = await client.get("/api/config/config_entries/entry")
-        assert resp.status == 200
+        assert resp.status == HTTPStatus.OK
         data = await resp.json()
         for entry in data:
             entry.pop("entry_id")
@@ -124,7 +125,7 @@ async def test_remove_entry(hass, client):
     entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
     resp = await client.delete(f"/api/config/config_entries/entry/{entry.entry_id}")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     data = await resp.json()
     assert data == {"require_restart": True}
     assert len(hass.config_entries.async_entries()) == 0
@@ -137,7 +138,7 @@ async def test_reload_entry(hass, client):
     resp = await client.post(
         f"/api/config/config_entries/entry/{entry.entry_id}/reload"
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     data = await resp.json()
     assert data == {"require_restart": True}
     assert len(hass.config_entries.async_entries()) == 1
@@ -146,7 +147,7 @@ async def test_reload_entry(hass, client):
 async def test_reload_invalid_entry(hass, client):
     """Test reloading an invalid entry via the API."""
     resp = await client.post("/api/config/config_entries/entry/invalid/reload")
-    assert resp.status == 404
+    assert resp.status == HTTPStatus.NOT_FOUND
 
 
 async def test_remove_entry_unauth(hass, client, hass_admin_user):
@@ -155,7 +156,7 @@ async def test_remove_entry_unauth(hass, client, hass_admin_user):
     entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
     resp = await client.delete(f"/api/config/config_entries/entry/{entry.entry_id}")
-    assert resp.status == 401
+    assert resp.status == HTTPStatus.UNAUTHORIZED
     assert len(hass.config_entries.async_entries()) == 1
 
 
@@ -167,7 +168,7 @@ async def test_reload_entry_unauth(hass, client, hass_admin_user):
     resp = await client.post(
         f"/api/config/config_entries/entry/{entry.entry_id}/reload"
     )
-    assert resp.status == 401
+    assert resp.status == HTTPStatus.UNAUTHORIZED
     assert len(hass.config_entries.async_entries()) == 1
 
 
@@ -178,7 +179,7 @@ async def test_reload_entry_in_failed_state(hass, client, hass_admin_user):
     resp = await client.post(
         f"/api/config/config_entries/entry/{entry.entry_id}/reload"
     )
-    assert resp.status == 403
+    assert resp.status == HTTPStatus.FORBIDDEN
     assert len(hass.config_entries.async_entries()) == 1
 
 
@@ -186,7 +187,7 @@ async def test_available_flows(hass, client):
     """Test querying the available flows."""
     with patch.object(config_flows, "FLOWS", ["hello", "world"]):
         resp = await client.get("/api/config/config_entries/flow_handlers")
-        assert resp.status == 200
+        assert resp.status == HTTPStatus.OK
         data = await resp.json()
         assert set(data) == {"hello", "world"}
 
@@ -222,7 +223,7 @@ async def test_initialize_flow(hass, client):
             json={"handler": "test", "show_advanced_options": True},
         )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
     data.pop("flow_id")
@@ -266,7 +267,7 @@ async def test_initialize_flow_unauth(hass, client, hass_admin_user):
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
 
-    assert resp.status == 401
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_abort(hass, client):
@@ -282,7 +283,7 @@ async def test_abort(hass, client):
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     data = await resp.json()
     data.pop("flow_id")
     assert data == {
@@ -314,7 +315,7 @@ async def test_create_account(hass, client, enable_custom_integrations):
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     entries = hass.config_entries.async_entries("test")
     assert len(entries) == 1
@@ -369,7 +370,7 @@ async def test_two_step_flow(hass, client, enable_custom_integrations):
         resp = await client.post(
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
-        assert resp.status == 200
+        assert resp.status == HTTPStatus.OK
         data = await resp.json()
         flow_id = data.pop("flow_id")
         assert data == {
@@ -387,7 +388,7 @@ async def test_two_step_flow(hass, client, enable_custom_integrations):
             f"/api/config/config_entries/flow/{flow_id}",
             json={"user_title": "user-title"},
         )
-        assert resp.status == 200
+        assert resp.status == HTTPStatus.OK
 
         entries = hass.config_entries.async_entries("test")
         assert len(entries) == 1
@@ -442,7 +443,7 @@ async def test_continue_flow_unauth(hass, client, hass_admin_user):
         resp = await client.post(
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
-        assert resp.status == 200
+        assert resp.status == HTTPStatus.OK
         data = await resp.json()
         flow_id = data.pop("flow_id")
         assert data == {
@@ -461,7 +462,7 @@ async def test_continue_flow_unauth(hass, client, hass_admin_user):
         f"/api/config/config_entries/flow/{flow_id}",
         json={"user_title": "user-title"},
     )
-    assert resp.status == 401
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_get_progress_index(hass, hass_ws_client):
@@ -532,14 +533,14 @@ async def test_get_progress_flow(hass, client):
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
     resp2 = await client.get(
         "/api/config/config_entries/flow/{}".format(data["flow_id"])
     )
 
-    assert resp2.status == 200
+    assert resp2.status == HTTPStatus.OK
     data2 = await resp2.json()
 
     assert data == data2
@@ -566,7 +567,7 @@ async def test_get_progress_flow_unauth(hass, client, hass_admin_user):
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
     hass_admin_user.groups = []
@@ -575,7 +576,7 @@ async def test_get_progress_flow_unauth(hass, client, hass_admin_user):
         "/api/config/config_entries/flow/{}".format(data["flow_id"])
     )
 
-    assert resp2.status == 401
+    assert resp2.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_options_flow(hass, client):
@@ -608,7 +609,7 @@ async def test_options_flow(hass, client):
         url = "/api/config/config_entries/options/flow"
         resp = await client.post(url, json={"handler": entry.entry_id})
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
     data.pop("flow_id")
@@ -657,7 +658,7 @@ async def test_two_step_options_flow(hass, client):
         url = "/api/config/config_entries/options/flow"
         resp = await client.post(url, json={"handler": entry.entry_id})
 
-        assert resp.status == 200
+        assert resp.status == HTTPStatus.OK
         data = await resp.json()
         flow_id = data.pop("flow_id")
         assert data == {
@@ -675,7 +676,7 @@ async def test_two_step_options_flow(hass, client):
             f"/api/config/config_entries/options/flow/{flow_id}",
             json={"enabled": True},
         )
-        assert resp.status == 200
+        assert resp.status == HTTPStatus.OK
         data = await resp.json()
         data.pop("flow_id")
         assert data == {

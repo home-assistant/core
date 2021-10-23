@@ -16,7 +16,7 @@ from tuya_iot import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import (
@@ -33,7 +33,6 @@ from .const import (
     PLATFORMS,
     TUYA_DISCOVERY_NEW,
     TUYA_HA_SIGNAL_UPDATE_ENTITY,
-    TUYA_SUPPORTED_PRODUCT_CATEGORIES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -117,9 +116,16 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await cleanup_device_registry(hass, device_manager)
 
     # Register known device IDs
+    device_registry = dr.async_get(hass)
     for device in device_manager.device_map.values():
-        if device.category in TUYA_SUPPORTED_PRODUCT_CATEGORIES:
-            device_ids.add(device.id)
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, device.id)},
+            manufacturer="Tuya",
+            name=device.name,
+            model=f"{device.product_name} (unsupported)",
+        )
+        device_ids.add(device.id)
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
@@ -129,11 +135,11 @@ async def cleanup_device_registry(
     hass: HomeAssistant, device_manager: TuyaDeviceManager
 ) -> None:
     """Remove deleted device registry entry if there are no remaining entities."""
-    device_registry_object = device_registry.async_get(hass)
-    for dev_id, device_entry in list(device_registry_object.devices.items()):
+    device_registry = dr.async_get(hass)
+    for dev_id, device_entry in list(device_registry.devices.items()):
         for item in device_entry.identifiers:
             if DOMAIN == item[0] and item[1] not in device_manager.device_map:
-                device_registry_object.async_remove_device(dev_id)
+                device_registry.async_remove_device(dev_id)
                 break
 
 
@@ -178,20 +184,19 @@ class DeviceListener(TuyaDeviceListener):
 
     def add_device(self, device: TuyaDevice) -> None:
         """Add device added listener."""
-        if device.category in TUYA_SUPPORTED_PRODUCT_CATEGORIES:
-            # Ensure the device isn't present stale
-            self.hass.add_job(self.async_remove_device, device.id)
+        # Ensure the device isn't present stale
+        self.hass.add_job(self.async_remove_device, device.id)
 
-            self.device_ids.add(device.id)
-            dispatcher_send(self.hass, TUYA_DISCOVERY_NEW, [device.id])
+        self.device_ids.add(device.id)
+        dispatcher_send(self.hass, TUYA_DISCOVERY_NEW, [device.id])
 
-            device_manager = self.device_manager
-            device_manager.mq.stop()
-            tuya_mq = TuyaOpenMQ(device_manager.api)
-            tuya_mq.start()
+        device_manager = self.device_manager
+        device_manager.mq.stop()
+        tuya_mq = TuyaOpenMQ(device_manager.api)
+        tuya_mq.start()
 
-            device_manager.mq = tuya_mq
-            tuya_mq.add_message_listener(device_manager.on_message)
+        device_manager.mq = tuya_mq
+        tuya_mq.add_message_listener(device_manager.on_message)
 
     def remove_device(self, device_id: str) -> None:
         """Add device removed listener."""
@@ -201,10 +206,10 @@ class DeviceListener(TuyaDeviceListener):
     def async_remove_device(self, device_id: str) -> None:
         """Remove device from Home Assistant."""
         _LOGGER.debug("Remove device: %s", device_id)
-        device_registry_object = device_registry.async_get(self.hass)
-        device_entry = device_registry_object.async_get_device(
+        device_registry = dr.async_get(self.hass)
+        device_entry = device_registry.async_get_device(
             identifiers={(DOMAIN, device_id)}
         )
         if device_entry is not None:
-            device_registry_object.async_remove_device(device_entry.id)
+            device_registry.async_remove_device(device_entry.id)
             self.device_ids.discard(device_id)
