@@ -15,13 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    CATEGORY_CDC_REPORT,
-    CATEGORY_USER_REPORT,
-    DATA_COORDINATOR,
-    DOMAIN,
-    LOGGER,
-)
+from .const import CATEGORY_CDC_REPORT, CATEGORY_USER_REPORT, DOMAIN, LOGGER
 
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=30)
 
@@ -33,7 +27,6 @@ PLATFORMS = ["sensor"]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flu Near You as config entry."""
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {DATA_COORDINATOR: {}}
 
     websession = aiohttp_client.async_get_clientsession(hass)
     client = Client(session=websession)
@@ -71,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data_init_tasks.append(coordinator.async_refresh())
 
     await asyncio.gather(*data_init_tasks)
-    hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR] = coordinators
+    hass.data[DOMAIN][entry.entry_id] = coordinators
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
