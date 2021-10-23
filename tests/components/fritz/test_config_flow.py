@@ -82,7 +82,10 @@ async def test_user(hass: HomeAssistant, fc_class_mock, mock_get_source_ip):
         "requests.get"
     ) as mock_request_get, patch(
         "requests.post"
-    ) as mock_request_post:
+    ) as mock_request_post, patch(
+        "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+        return_value=MOCK_IP,
+    ):
 
         mock_request_get.return_value.status_code = 200
         mock_request_get.return_value.content = MOCK_REQUEST
@@ -495,7 +498,10 @@ async def test_import(hass: HomeAssistant, fc_class_mock, mock_get_source_ip):
         "requests.get"
     ) as mock_request_get, patch(
         "requests.post"
-    ) as mock_request_post:
+    ) as mock_request_post, patch(
+        "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+        return_value=MOCK_IP,
+    ):
 
         mock_request_get.return_value.status_code = 200
         mock_request_get.return_value.content = MOCK_REQUEST
