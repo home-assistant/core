@@ -776,6 +776,9 @@ ha-philipsjs==2.7.5
 # homeassistant.components.habitica
 habitipy==0.2.0
 
+# homeassistant.components.halohome
+halohome==0.2.0
+
 # homeassistant.components.hangouts
 hangups==0.4.14
 

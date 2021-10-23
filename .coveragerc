@@ -414,6 +414,7 @@ omit =
     homeassistant/components/habitica/__init__.py
     homeassistant/components/habitica/const.py
     homeassistant/components/habitica/sensor.py
+    homeassistant/components/halohome/*
     homeassistant/components/hangouts/*
     homeassistant/components/harman_kardon_avr/media_player.py
     homeassistant/components/harmony/const.py
