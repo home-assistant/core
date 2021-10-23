@@ -106,7 +106,6 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         name="Comfort Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
         suitable=lambda device: device.has_thermostat
         and device.comfort_temperature is not None,
         native_value=lambda device: device.comfort_temperature,  # type: ignore[no-any-return]
@@ -116,7 +115,6 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         name="Eco Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
         suitable=lambda device: device.has_thermostat
         and device.eco_temperature is not None,
         native_value=lambda device: device.eco_temperature,  # type: ignore[no-any-return]
@@ -126,7 +124,6 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         name="Next Scheduled Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
         suitable=lambda device: device.has_thermostat
         and device.nextchange_temperature is not None,
         native_value=lambda device: device.comfort_temperature,  # type: ignore[no-any-return]
@@ -135,7 +132,6 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         key="nextchange_time",
         name="Next Scheduled Change Time",
         device_class=DEVICE_CLASS_TIMESTAMP,
-        state_class=STATE_CLASS_MEASUREMENT,
         suitable=lambda device: device.has_thermostat
         and device.nextchange_endperiod is not None,
         native_value=lambda device: datetime.fromtimestamp(device.nextchange_endperiod).isoformat(),  # type: ignore[no-any-return]
@@ -143,7 +139,6 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
     FritzSensorEntityDescription(
         key="nextchange_preset",
         name="Next Scheduled Preset",
-        state_class=STATE_CLASS_MEASUREMENT,
         suitable=lambda device: device.has_thermostat
         and device.nextchange_temperature is not None,
         native_value=lambda device: PRESET_ECO if device.nextchange_temperature == device.eco_temperature else PRESET_COMFORT,  # type: ignore[no-any-return]
@@ -151,7 +146,6 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
     FritzSensorEntityDescription(
         key="scheduled_preset",
         name="Current Scheduled Preset",
-        state_class=STATE_CLASS_MEASUREMENT,
         suitable=lambda device: device.has_thermostat
         and device.nextchange_temperature is not None,
         native_value=lambda device: PRESET_COMFORT if device.nextchange_temperature == device.eco_temperature else PRESET_ECO,  # type: ignore[no-any-return]
