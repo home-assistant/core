@@ -651,10 +651,10 @@ class HuaweiLteBaseEntity(Entity):
     @property
     def device_info(self) -> DeviceInfo:
         """Get info for matching with parent router."""
-        return {
-            "identifiers": self.router.device_identifiers,
-            "connections": self.router.device_connections,
-        }
+        return DeviceInfo(
+            connections=self.router.device_connections,
+            identifiers=self.router.device_identifiers,
+        )
 
     async def async_update(self) -> None:
         """Update state."""
