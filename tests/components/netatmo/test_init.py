@@ -234,7 +234,7 @@ async def test_setup_with_cloudhook(hass):
                 "type": "Bearer",
                 "expires_in": 60,
                 "expires_at": time() + 1000,
-                "scope": " ".join(ALL_SCOPES),
+                "scope": ALL_SCOPES,
             },
         },
     )
