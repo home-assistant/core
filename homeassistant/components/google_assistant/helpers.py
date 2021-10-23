@@ -262,9 +262,7 @@ class AbstractConfig(ABC):
     @callback
     def async_enable_local_sdk(self):
         """Enable the local SDK."""
-        webhook_id = self.local_sdk_webhook_id
-
-        if webhook_id is None:
+        if (webhook_id := self.local_sdk_webhook_id) is None:
             return
 
         try:

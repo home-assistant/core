@@ -42,7 +42,14 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_WEATHER_AREAS, DATA_HANDLER, DOMAIN, MANUFACTURER, SIGNAL_NAME
+from .const import (
+    CONF_WEATHER_AREAS,
+    DATA_HANDLER,
+    DOMAIN,
+    MANUFACTURER,
+    SIGNAL_NAME,
+    TYPE_WEATHER,
+)
 from .data_handler import (
     HOMECOACH_DATA_CLASS_NAME,
     PUBLICDATA_DATA_CLASS_NAME,
@@ -492,6 +499,7 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
 
         self._attr_name = f"{MANUFACTURER} {self._device_name} {description.name}"
         self._model = device["type"]
+        self._netatmo_type = TYPE_WEATHER
         self._attr_unique_id = f"{self._id}-{description.key}"
 
     @property

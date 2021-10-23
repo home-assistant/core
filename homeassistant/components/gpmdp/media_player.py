@@ -109,8 +109,7 @@ def request_configuration(hass, config, url, add_entities_callback):
                     "the desktop player and try again"
                 )
                 break
-            code = tmpmsg["payload"]
-            if code == "CODE_REQUIRED":
+            if (code := tmpmsg["payload"]) == "CODE_REQUIRED":
                 continue
             setup_gpmdp(hass, config, code, add_entities_callback)
             save_json(hass.config.path(GPMDP_CONFIG_FILE), {"CODE": code})

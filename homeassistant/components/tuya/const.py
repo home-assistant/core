@@ -1,8 +1,67 @@
 """Constants for the Tuya integration."""
-from dataclasses import dataclass
+from __future__ import annotations
+
+from dataclasses import dataclass, field
 from enum import Enum
+from typing import Callable
 
 from tuya_iot import TuyaCloudOpenAPIEndpoint
+
+from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
+    CONCENTRATION_PARTS_PER_MILLION,
+    DEVICE_CLASS_AQI,
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_CO,
+    DEVICE_CLASS_CO2,
+    DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_DATE,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_GAS,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_MONETARY,
+    DEVICE_CLASS_NITROGEN_DIOXIDE,
+    DEVICE_CLASS_NITROGEN_MONOXIDE,
+    DEVICE_CLASS_NITROUS_OXIDE,
+    DEVICE_CLASS_OZONE,
+    DEVICE_CLASS_PM1,
+    DEVICE_CLASS_PM10,
+    DEVICE_CLASS_PM25,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_POWER_FACTOR,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_SIGNAL_STRENGTH,
+    DEVICE_CLASS_SULPHUR_DIOXIDE,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
+    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
+    DEVICE_CLASS_VOLTAGE,
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_CURRENT_MILLIAMPERE,
+    ELECTRIC_POTENTIAL_MILLIVOLT,
+    ELECTRIC_POTENTIAL_VOLT,
+    ENERGY_KILO_WATT_HOUR,
+    ENERGY_WATT_HOUR,
+    LIGHT_LUX,
+    PERCENTAGE,
+    POWER_KILO_WATT,
+    POWER_WATT,
+    PRESSURE_BAR,
+    PRESSURE_HPA,
+    PRESSURE_INHG,
+    PRESSURE_MBAR,
+    PRESSURE_PA,
+    PRESSURE_PSI,
+    SIGNAL_STRENGTH_DECIBELS,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    VOLUME_CUBIC_FEET,
+    VOLUME_CUBIC_METERS,
+)
 
 DOMAIN = "tuya"
 
@@ -16,6 +75,10 @@ CONF_PASSWORD = "password"
 CONF_COUNTRY_CODE = "country_code"
 CONF_APP_TYPE = "tuya_app_type"
 
+DEVICE_CLASS_TUYA_LED_TYPE = "tuya__led_type"
+DEVICE_CLASS_TUYA_LIGHT_MODE = "tuya__light_mode"
+DEVICE_CLASS_TUYA_RELAY_STATUS = "tuya__relay_status"
+
 TUYA_DISCOVERY_NEW = "tuya_discovery_new"
 TUYA_HA_SIGNAL_UPDATE_ENTITY = "tuya_entry_update"
 
@@ -25,41 +88,16 @@ TUYA_RESPONSE_MSG = "msg"
 TUYA_RESPONSE_SUCCESS = "success"
 TUYA_RESPONSE_PLATFORM_URL = "platform_url"
 
-TUYA_SUPPORTED_PRODUCT_CATEGORIES = (
-    "bh",  # Smart Kettle
-    "cwysj",  # Pet Water Feeder
-    "cz",  # Socket
-    "dc",  # Light string
-    "dd",  # Light strip
-    "dj",  # Light
-    "dlq",  # Breaker
-    "fs",  # Fan
-    "fs",  # Fan
-    "fwl",  # Ambient light
-    "jsq",  # Humidifier's light
-    "kfj",  # Coffee maker
-    "kg",  # Switch
-    "kj",  # Air Purifier
-    "kt",  # Air conditioner
-    "ldcg",  # Luminance Sensor
-    "mcs",  # Door Window Sensor
-    "pc",  # Power Strip
-    "pir",  # PIR Detector
-    "qn",  # Heater
-    "sos",  # SOS Button
-    "sgbj",  # Siren Alarm
-    "wk",  # Thermostat
-    "xdd",  # Ceiling Light
-    "xxj",  # Diffuser
-)
-
 TUYA_SMART_APP = "tuyaSmart"
 SMARTLIFE_APP = "smartlife"
 
 PLATFORMS = [
     "binary_sensor",
+    "camera",
     "climate",
+    "cover",
     "fan",
+    "humidifier",
     "light",
     "number",
     "scene",
@@ -67,7 +105,17 @@ PLATFORMS = [
     "sensor",
     "siren",
     "switch",
+    "vacuum",
 ]
+
+
+class WorkMode(str, Enum):
+    """Work modes."""
+
+    COLOUR = "colour"
+    MUSIC = "music"
+    SCENE = "scene"
+    WHITE = "white"
 
 
 class DPCode(str, Enum):
@@ -79,42 +127,96 @@ class DPCode(str, Enum):
     ALARM_SWITCH = "alarm_switch"  # Alarm switch
     ALARM_TIME = "alarm_time"  # Alarm time
     ALARM_VOLUME = "alarm_volume"  # Alarm volume
+    ANGLE_HORIZONTAL = "angle_horizontal"
+    ANGLE_VERTICAL = "angle_vertical"
     ANION = "anion"  # Ionizer unit
     BATTERY_PERCENTAGE = "battery_percentage"  # Battery percentage
     BATTERY_STATE = "battery_state"  # Battery state
+    BATTERY_VALUE = "battery_value"  # Battery value
+    BRIGHT_CONTROLLER = "bright_controller"
     BRIGHT_STATE = "bright_state"  # Brightness status
     BRIGHT_VALUE = "bright_value"  # Brightness
+    BRIGHT_VALUE_1 = "bright_value_1"
+    BRIGHT_VALUE_2 = "bright_value_2"
+    BRIGHT_VALUE_3 = "bright_value_3"
+    BRIGHT_VALUE_V2 = "bright_value_v2"
+    BRIGHTNESS_MAX_1 = "brightness_max_1"
+    BRIGHTNESS_MAX_2 = "brightness_max_2"
+    BRIGHTNESS_MAX_3 = "brightness_max_3"
+    BRIGHTNESS_MIN_1 = "brightness_min_1"
+    BRIGHTNESS_MIN_2 = "brightness_min_2"
+    BRIGHTNESS_MIN_3 = "brightness_min_3"
     C_F = "c_f"  # Temperature unit switching
+    CH2O_STATE = "ch2o_state"
+    CH2O_VALUE = "ch2o_value"
     CHILD_LOCK = "child_lock"  # Child lock
+    CO2_STATE = "co2_state"
+    SMOKE_SENSOR_STATUS = "smoke_sensor_status"
+    SMOKE_SENSOR_STATE = "smoke_sensor_state"
+    SMOKE_SENSOR_VALUE = "smoke_sensor_value"
     CO2_VALUE = "co2_value"  # CO2 concentration
+    COLOR_DATA_V2 = "color_data_v2"
     COLOUR_DATA = "colour_data"  # Colored light mode
     COLOUR_DATA_V2 = "colour_data_v2"  # Colored light mode
     CONCENTRATION_SET = "concentration_set"  # Concentration setting
+    CONTROL = "control"
+    CONTROL_2 = "control_2"
+    CONTROL_3 = "control_3"
     CUP_NUMBER = "cup_number"  # NUmber of cups
     CUR_CURRENT = "cur_current"  # Actual current
     CUR_POWER = "cur_power"  # Actual power
     CUR_VOLTAGE = "cur_voltage"  # Actual voltage
+    DEHUMIDITY_SET_VALUE = "dehumidify_set_value"
+    DO_NOT_DISTURB = "do_not_disturb"
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
+    DOORCONTACT_STATE_2 = "doorcontact_state_3"
+    DOORCONTACT_STATE_3 = "doorcontact_state_3"
+    ELECTRICITY_LEFT = "electricity_left"
     FAN_DIRECTION = "fan_direction"  # Fan direction
     FAN_SPEED_ENUM = "fan_speed_enum"  # Speed mode
     FAN_SPEED_PERCENT = "fan_speed_percent"  # Stepless speed
+    FAR_DETECTION = "far_detection"
     FILTER_RESET = "filter_reset"  # Filter (cartridge) reset
     HUMIDITY_CURRENT = "humidity_current"  # Current humidity
     HUMIDITY_SET = "humidity_set"  # Humidity setting
     HUMIDITY_VALUE = "humidity_value"  # Humidity
+    LED_TYPE_1 = "led_type_1"
+    LED_TYPE_2 = "led_type_2"
+    LED_TYPE_3 = "led_type_3"
     LIGHT = "light"  # Light
+    LIGHT_MODE = "light_mode"
     LOCK = "lock"  # Lock / Child lock
     MATERIAL = "material"  # Material
     MODE = "mode"  # Working mode / Mode
+    MOTION_SWITCH = "motion_switch"  # Motion switch
     MUFFLING = "muffling"  # Muffling
+    NEAR_DETECTION = "near_detection"
+    PAUSE = "pause"
+    PERCENT_CONTROL = "percent_control"
+    PERCENT_CONTROL_2 = "percent_control_2"
+    PERCENT_CONTROL_3 = "percent_control_3"
+    PERCENT_STATE = "percent_state"
+    PERCENT_STATE_2 = "percent_state_2"
+    PERCENT_STATE_3 = "percent_state_3"
     PIR = "pir"  # Motion sensor
+    PM25_VALUE = "pm25_value"
     POWDER_SET = "powder_set"  # Powder
+    POWER_GO = "power_go"
+    PRESENCE_STATE = "presence_state"
     PUMP_RESET = "pump_reset"  # Water pump reset
+    RECORD_SWITCH = "record_switch"  # Recording switch
+    RELAY_STATUS = "relay_status"
+    SEEK = "seek"
+    SENSITIVITY = "sensitivity"  # Sensitivity
     SHAKE = "shake"  # Oscillating
+    SHOCK_STATE = "shock_state"  # Vibration status
+    SITUATION_SET = "situation_set"
     SOS = "sos"  # Emergency State
     SOS_STATE = "sos_state"  # Emergency mode
     SPEED = "speed"  # Speed level
     START = "start"  # Start
+    STATUS = "status"
+    SUCTION = "suction"
     SWING = "swing"  # Swing mode
     SWITCH = "switch"  # Switch
     SWITCH_1 = "switch_1"  # Switch 1
@@ -124,8 +226,14 @@ class DPCode(str, Enum):
     SWITCH_5 = "switch_5"  # Switch 5
     SWITCH_6 = "switch_6"  # Switch 6
     SWITCH_BACKLIGHT = "switch_backlight"  # Backlight switch
+    SWITCH_CHARGE = "switch_charge"
+    SWITCH_CONTROLLER = "switch_controller"
     SWITCH_HORIZONTAL = "switch_horizontal"  # Horizontal swing flap switch
     SWITCH_LED = "switch_led"  # Switch
+    SWITCH_LED_1 = "switch_led_1"
+    SWITCH_LED_2 = "switch_led_2"
+    SWITCH_LED_3 = "switch_led_3"
+    SWITCH_NIGHT_LIGHT = "switch_night_light"
     SWITCH_SPRAY = "switch_spray"  # Spraying switch
     SWITCH_USB1 = "switch_usb1"  # USB 1
     SWITCH_USB2 = "switch_usb2"  # USB 2
@@ -135,20 +243,232 @@ class DPCode(str, Enum):
     SWITCH_USB6 = "switch_usb6"  # USB 6
     SWITCH_VERTICAL = "switch_vertical"  # Vertical swing flap switch
     SWITCH_VOICE = "switch_voice"  # Voice switch
+    TEMP_CONTROLLER = "temp_controller"
     TEMP_CURRENT = "temp_current"  # Current temperature in °C
     TEMP_CURRENT_F = "temp_current_f"  # Current temperature in °F
     TEMP_SET = "temp_set"  # Set the temperature in °C
     TEMP_SET_F = "temp_set_f"  # Set the temperature in °F
     TEMP_UNIT_CONVERT = "temp_unit_convert"  # Temperature unit switching
     TEMP_VALUE = "temp_value"  # Color temperature
+    TEMP_VALUE_V2 = "temp_value_v2"
     TEMPER_ALARM = "temper_alarm"  # Tamper alarm
     UV = "uv"  # UV sterilization
+    VA_HUMIDITY = "va_humidity"
+    VA_TEMPERATURE = "va_temperature"
+    VOC_VALUE = "voc_value"
     WARM = "warm"  # Heat preservation
     WARM_TIME = "warm_time"  # Heat preservation time
     WATER_RESET = "water_reset"  # Resetting of water usage days
     WATER_SET = "water_set"  # Water level
+    WATERSENSOR_STATE = "watersensor_state"
     WET = "wet"  # Humidification
     WORK_MODE = "work_mode"  # Working mode
+
+
+@dataclass
+class UnitOfMeasurement:
+    """Describes a unit of measurement."""
+
+    unit: str
+    device_classes: set[str]
+
+    aliases: set[str] = field(default_factory=set)
+    conversion_unit: str | None = None
+    conversion_fn: Callable[[float], float] | None = None
+
+
+# A tuple of available units of measurements we can work with.
+# Tuya's devices aren't consistent in UOM use, thus this provides
+# a list of aliases for units and possible conversions we can do
+# to make them compatible with our model.
+UNITS = (
+    UnitOfMeasurement(
+        unit="",
+        aliases={" "},
+        device_classes={
+            DEVICE_CLASS_AQI,
+            DEVICE_CLASS_DATE,
+            DEVICE_CLASS_MONETARY,
+            DEVICE_CLASS_TIMESTAMP,
+        },
+    ),
+    UnitOfMeasurement(
+        unit=PERCENTAGE,
+        aliases={"pct", "percent"},
+        device_classes={
+            DEVICE_CLASS_BATTERY,
+            DEVICE_CLASS_HUMIDITY,
+            DEVICE_CLASS_POWER_FACTOR,
+        },
+    ),
+    UnitOfMeasurement(
+        unit=CONCENTRATION_PARTS_PER_MILLION,
+        device_classes={
+            DEVICE_CLASS_CO,
+            DEVICE_CLASS_CO2,
+        },
+    ),
+    UnitOfMeasurement(
+        unit=CONCENTRATION_PARTS_PER_BILLION,
+        device_classes={
+            DEVICE_CLASS_CO,
+            DEVICE_CLASS_CO2,
+        },
+        conversion_unit=CONCENTRATION_PARTS_PER_MILLION,
+        conversion_fn=lambda x: x / 1000,
+    ),
+    UnitOfMeasurement(
+        unit=ELECTRIC_CURRENT_AMPERE,
+        aliases={"a", "ampere"},
+        device_classes={DEVICE_CLASS_CURRENT},
+    ),
+    UnitOfMeasurement(
+        unit=ELECTRIC_CURRENT_MILLIAMPERE,
+        aliases={"ma", "milliampere"},
+        device_classes={DEVICE_CLASS_CURRENT},
+        conversion_unit=ELECTRIC_CURRENT_AMPERE,
+        conversion_fn=lambda x: x / 1000,
+    ),
+    UnitOfMeasurement(
+        unit=ENERGY_WATT_HOUR,
+        aliases={"wh", "watthour"},
+        device_classes={DEVICE_CLASS_ENERGY},
+    ),
+    UnitOfMeasurement(
+        unit=ENERGY_KILO_WATT_HOUR,
+        aliases={"kwh", "kilowatt-hour"},
+        device_classes={DEVICE_CLASS_ENERGY},
+    ),
+    UnitOfMeasurement(
+        unit=VOLUME_CUBIC_FEET,
+        aliases={"ft3"},
+        device_classes={DEVICE_CLASS_GAS},
+    ),
+    UnitOfMeasurement(
+        unit=VOLUME_CUBIC_METERS,
+        aliases={"m3"},
+        device_classes={DEVICE_CLASS_GAS},
+    ),
+    UnitOfMeasurement(
+        unit=LIGHT_LUX,
+        aliases={"lux"},
+        device_classes={DEVICE_CLASS_ILLUMINANCE},
+    ),
+    UnitOfMeasurement(
+        unit="lm",
+        aliases={"lum", "lumen"},
+        device_classes={DEVICE_CLASS_ILLUMINANCE},
+    ),
+    UnitOfMeasurement(
+        unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        aliases={"ug/m3", "µg/m3", "ug/m³"},
+        device_classes={
+            DEVICE_CLASS_NITROGEN_DIOXIDE,
+            DEVICE_CLASS_NITROGEN_MONOXIDE,
+            DEVICE_CLASS_NITROUS_OXIDE,
+            DEVICE_CLASS_OZONE,
+            DEVICE_CLASS_PM1,
+            DEVICE_CLASS_PM25,
+            DEVICE_CLASS_PM10,
+            DEVICE_CLASS_SULPHUR_DIOXIDE,
+            DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
+        },
+    ),
+    UnitOfMeasurement(
+        unit=CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        aliases={"mg/m3"},
+        device_classes={
+            DEVICE_CLASS_NITROGEN_DIOXIDE,
+            DEVICE_CLASS_NITROGEN_MONOXIDE,
+            DEVICE_CLASS_NITROUS_OXIDE,
+            DEVICE_CLASS_OZONE,
+            DEVICE_CLASS_PM1,
+            DEVICE_CLASS_PM25,
+            DEVICE_CLASS_PM10,
+            DEVICE_CLASS_SULPHUR_DIOXIDE,
+            DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
+        },
+        conversion_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        conversion_fn=lambda x: x * 1000,
+    ),
+    UnitOfMeasurement(
+        unit=POWER_WATT,
+        aliases={"watt"},
+        device_classes={DEVICE_CLASS_POWER},
+    ),
+    UnitOfMeasurement(
+        unit=POWER_KILO_WATT,
+        aliases={"kilowatt"},
+        device_classes={DEVICE_CLASS_POWER},
+    ),
+    UnitOfMeasurement(
+        unit=PRESSURE_BAR,
+        device_classes={DEVICE_CLASS_PRESSURE},
+    ),
+    UnitOfMeasurement(
+        unit=PRESSURE_MBAR,
+        aliases={"millibar"},
+        device_classes={DEVICE_CLASS_PRESSURE},
+    ),
+    UnitOfMeasurement(
+        unit=PRESSURE_HPA,
+        aliases={"hpa", "hectopascal"},
+        device_classes={DEVICE_CLASS_PRESSURE},
+    ),
+    UnitOfMeasurement(
+        unit=PRESSURE_INHG,
+        aliases={"inhg"},
+        device_classes={DEVICE_CLASS_PRESSURE},
+    ),
+    UnitOfMeasurement(
+        unit=PRESSURE_PSI,
+        device_classes={DEVICE_CLASS_PRESSURE},
+    ),
+    UnitOfMeasurement(
+        unit=PRESSURE_PA,
+        device_classes={DEVICE_CLASS_PRESSURE},
+    ),
+    UnitOfMeasurement(
+        unit=SIGNAL_STRENGTH_DECIBELS,
+        aliases={"db"},
+        device_classes={DEVICE_CLASS_SIGNAL_STRENGTH},
+    ),
+    UnitOfMeasurement(
+        unit=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        aliases={"dbm"},
+        device_classes={DEVICE_CLASS_SIGNAL_STRENGTH},
+    ),
+    UnitOfMeasurement(
+        unit=TEMP_CELSIUS,
+        aliases={"°c", "c", "celsius"},
+        device_classes={DEVICE_CLASS_TEMPERATURE},
+    ),
+    UnitOfMeasurement(
+        unit=TEMP_FAHRENHEIT,
+        aliases={"°f", "f", "fahrenheit"},
+        device_classes={DEVICE_CLASS_TEMPERATURE},
+    ),
+    UnitOfMeasurement(
+        unit=ELECTRIC_POTENTIAL_VOLT,
+        aliases={"volt"},
+        device_classes={DEVICE_CLASS_VOLTAGE},
+    ),
+    UnitOfMeasurement(
+        unit=ELECTRIC_POTENTIAL_MILLIVOLT,
+        aliases={"mv", "millivolt"},
+        device_classes={DEVICE_CLASS_VOLTAGE},
+        conversion_unit=ELECTRIC_POTENTIAL_VOLT,
+        conversion_fn=lambda x: x / 1000,
+    ),
+)
+
+
+DEVICE_CLASS_UNITS: dict[str, dict[str, UnitOfMeasurement]] = {}
+for uom in UNITS:
+    for device_class in uom.device_classes:
+        DEVICE_CLASS_UNITS.setdefault(device_class, {})[uom.unit] = uom
+        for unit_alias in uom.aliases:
+            DEVICE_CLASS_UNITS[device_class][unit_alias] = uom
 
 
 @dataclass
@@ -262,7 +582,7 @@ TUYA_COUNTRIES = [
     Country("Iraq", "964"),
     Country("Ireland", "353", TuyaCloudOpenAPIEndpoint.EUROPE),
     Country("Isle of Man", "44-1624"),
-    Country("Israel", "972"),
+    Country("Israel", "972", TuyaCloudOpenAPIEndpoint.EUROPE),
     Country("Italy", "39", TuyaCloudOpenAPIEndpoint.EUROPE),
     Country("Ivory Coast", "225"),
     Country("Jamaica", "1-876"),

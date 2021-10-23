@@ -74,6 +74,7 @@ _SERVICE_MAP = {
     "light_flash": "trigger_remote_light_flash",
     "sound_horn": "trigger_remote_horn",
     "activate_air_conditioning": "trigger_remote_air_conditioning",
+    "deactivate_air_conditioning": "trigger_remote_air_conditioning_stop",
     "find_vehicle": "trigger_remote_vehicle_finder",
 }
 

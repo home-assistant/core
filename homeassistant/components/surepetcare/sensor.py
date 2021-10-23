@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_VOLTAGE,
     DEVICE_CLASS_BATTERY,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
     VOLUME_MILLILITERS,
 )
@@ -49,9 +50,10 @@ async def async_setup_entry(
 
 
 class SureBattery(SurePetcareEntity, SensorEntity):
-    """A sensor implementation for Sure Petcare Entities."""
+    """A sensor implementation for Sure Petcare batteries."""
 
     _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
     _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(

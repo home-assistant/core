@@ -92,7 +92,7 @@ from .entity import FluxEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_FLUX_LED: Final = SUPPORT_EFFECT | SUPPORT_TRANSITION
+SUPPORT_FLUX_LED: Final = SUPPORT_TRANSITION
 
 
 FLUX_COLOR_MODE_TO_HASS: Final = {
@@ -103,6 +103,7 @@ FLUX_COLOR_MODE_TO_HASS: Final = {
     FLUX_COLOR_MODE_DIM: COLOR_MODE_BRIGHTNESS,
 }
 
+EFFECT_SUPPORT_MODES = {COLOR_MODE_RGB, COLOR_MODE_RGBW, COLOR_MODE_RGBWW}
 
 # Constant color temp values for 2 flux_led special modes
 # Warm-white and Cool-white modes
@@ -213,6 +214,9 @@ async def async_setup_platform(
             host,
         )
         custom_effects = device_config.get(CONF_CUSTOM_EFFECT, {})
+        custom_effect_colors = None
+        if CONF_COLORS in custom_effects:
+            custom_effect_colors = str(custom_effects[CONF_COLORS])
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
@@ -223,7 +227,7 @@ async def async_setup_platform(
                     CONF_NAME: device_config[CONF_NAME],
                     CONF_PROTOCOL: device_config.get(CONF_PROTOCOL),
                     CONF_MODE: device_config.get(ATTR_MODE, MODE_AUTO),
-                    CONF_CUSTOM_EFFECT_COLORS: str(custom_effects.get(CONF_COLORS)),
+                    CONF_CUSTOM_EFFECT_COLORS: custom_effect_colors,
                     CONF_CUSTOM_EFFECT_SPEED_PCT: custom_effects.get(
                         CONF_SPEED_PCT, DEFAULT_EFFECT_SPEED
                     ),
@@ -299,9 +303,11 @@ class FluxLight(FluxEntity, CoordinatorEntity, LightEntity):
             FLUX_COLOR_MODE_TO_HASS.get(mode, COLOR_MODE_ONOFF)
             for mode in self._device.color_modes
         }
-        self._attr_effect_list = FLUX_EFFECT_LIST
-        if custom_effect_colors:
-            self._attr_effect_list = [*FLUX_EFFECT_LIST, EFFECT_CUSTOM]
+        if self._attr_supported_color_modes.intersection(EFFECT_SUPPORT_MODES):
+            self._attr_supported_features |= SUPPORT_EFFECT
+            self._attr_effect_list = FLUX_EFFECT_LIST
+            if custom_effect_colors:
+                self._attr_effect_list = [*FLUX_EFFECT_LIST, EFFECT_CUSTOM]
         self._custom_effect_colors = custom_effect_colors
         self._custom_effect_speed_pct = custom_effect_speed_pct
         self._custom_effect_transition = custom_effect_transition

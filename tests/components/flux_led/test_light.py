@@ -638,6 +638,7 @@ async def test_white_light(hass: HomeAssistant) -> None:
     assert attributes[ATTR_BRIGHTNESS] == 128
     assert attributes[ATTR_COLOR_MODE] == "brightness"
     assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["brightness"]
+    assert ATTR_EFFECT_LIST not in attributes  # single channel does not support effects
 
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -740,18 +741,23 @@ async def test_rgb_light_custom_effects(hass: HomeAssistant) -> None:
     assert attributes[ATTR_EFFECT] == "custom"
 
 
-async def test_rgb_light_custom_effects_invalid_colors(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("effect_colors", [":: CANNOT BE PARSED ::", None])
+async def test_rgb_light_custom_effects_invalid_colors(
+    hass: HomeAssistant, effect_colors: str
+) -> None:
     """Test an rgb light with a invalid effect."""
+    options = {
+        CONF_MODE: MODE_AUTO,
+        CONF_CUSTOM_EFFECT_SPEED_PCT: 88,
+        CONF_CUSTOM_EFFECT_TRANSITION: TRANSITION_JUMP,
+    }
+    if effect_colors:
+        options[CONF_CUSTOM_EFFECT_COLORS] = effect_colors
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
+        options=options,
         unique_id=MAC_ADDRESS,
-        options={
-            CONF_MODE: MODE_AUTO,
-            CONF_CUSTOM_EFFECT_COLORS: ":: CANNOT BE PARSED ::",
-            CONF_CUSTOM_EFFECT_SPEED_PCT: 88,
-            CONF_CUSTOM_EFFECT_TRANSITION: TRANSITION_JUMP,
-        },
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
@@ -826,7 +832,7 @@ async def test_rgb_light_custom_effect_via_service(
     bulb.async_set_custom_pattern.reset_mock()
 
 
-async def test_migrate_from_yaml(hass: HomeAssistant) -> None:
+async def test_migrate_from_yaml_with_custom_effect(hass: HomeAssistant) -> None:
     """Test migrate from yaml."""
     config = {
         LIGHT_DOMAIN: [
@@ -875,6 +881,50 @@ async def test_migrate_from_yaml(hass: HomeAssistant) -> None:
     }
 
 
+async def test_migrate_from_yaml_no_custom_effect(hass: HomeAssistant) -> None:
+    """Test migrate from yaml."""
+    config = {
+        LIGHT_DOMAIN: [
+            {
+                CONF_PLATFORM: DOMAIN,
+                CONF_DEVICES: {
+                    IP_ADDRESS: {
+                        CONF_NAME: "flux_lamppost",
+                        CONF_PROTOCOL: "ledenet",
+                    }
+                },
+            }
+        ],
+    }
+    with _patch_discovery(), _patch_wifibulb():
+        await async_setup_component(hass, LIGHT_DOMAIN, config)
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert entries
+
+    migrated_entry = None
+    for entry in entries:
+        if entry.unique_id == MAC_ADDRESS:
+            migrated_entry = entry
+            break
+
+    assert migrated_entry is not None
+    assert migrated_entry.data == {
+        CONF_HOST: IP_ADDRESS,
+        CONF_NAME: "flux_lamppost",
+        CONF_PROTOCOL: "ledenet",
+    }
+    assert migrated_entry.options == {
+        CONF_MODE: "auto",
+        CONF_CUSTOM_EFFECT_COLORS: None,
+        CONF_CUSTOM_EFFECT_SPEED_PCT: 50,
+        CONF_CUSTOM_EFFECT_TRANSITION: "gradual",
+    }
+
+
 async def test_addressable_light(hass: HomeAssistant) -> None:
     """Test an addressable light."""
     config_entry = MockConfigEntry(
@@ -897,7 +947,9 @@ async def test_addressable_light(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
     attributes = state.attributes
     assert attributes[ATTR_COLOR_MODE] == "onoff"
-    assert attributes[ATTR_EFFECT_LIST] == FLUX_EFFECT_LIST
+    assert (
+        ATTR_EFFECT_LIST not in attributes
+    )  # no support for effects with addressable yet
     assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["onoff"]
 
     await hass.services.async_call(

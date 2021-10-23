@@ -79,13 +79,11 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
         # Check state of entity. If valid, set up a listener.
         if new_state.domain == "input_datetime":
-            has_date = new_state.attributes["has_date"]
-            if has_date:
+            if has_date := new_state.attributes["has_date"]:
                 year = new_state.attributes["year"]
                 month = new_state.attributes["month"]
                 day = new_state.attributes["day"]
-            has_time = new_state.attributes["has_time"]
-            if has_time:
+            if has_time := new_state.attributes["has_time"]:
                 hour = new_state.attributes["hour"]
                 minute = new_state.attributes["minute"]
                 second = new_state.attributes["second"]

@@ -33,14 +33,14 @@ async def async_setup_entry(
 
     sensors = []
 
-    device_info: DeviceInfo = {
-        "identifiers": {(DOMAIN, coordinator.data.serial)},
-        "name": coordinator.data.model,
-        "manufacturer": ATTR_MANUFACTURER,
-        "model": coordinator.data.model,
-        "sw_version": getattr(coordinator.data, "firmware", None),
-        "configuration_url": f"http://{entry.data[CONF_HOST]}/",
-    }
+    device_info = DeviceInfo(
+        configuration_url=f"http://{entry.data[CONF_HOST]}/",
+        identifiers={(DOMAIN, coordinator.data.serial)},
+        manufacturer=ATTR_MANUFACTURER,
+        model=coordinator.data.model,
+        name=coordinator.data.model,
+        sw_version=getattr(coordinator.data, "firmware", None),
+    )
 
     for description in SENSOR_TYPES:
         if description.key in coordinator.data:

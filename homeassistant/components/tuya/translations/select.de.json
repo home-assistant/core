@@ -1,0 +1,22 @@
+{
+    "state": {
+        "tuya__led_type": {
+            "halogen": "Halogen",
+            "incandescent": "Gl\u00fchlampe",
+            "led": "LED"
+        },
+        "tuya__light_mode": {
+            "none": "Aus",
+            "pos": "Schalterposition anzeigen",
+            "relay": "Ein-/Ausschaltzustand anzeigen"
+        },
+        "tuya__relay_status": {
+            "last": "Letzten Zustand merken",
+            "memory": "Letzten Zustand merken",
+            "off": "Aus",
+            "on": "An",
+            "power_off": "Aus",
+            "power_on": "An"
+        }
+    }
+}

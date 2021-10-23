@@ -83,8 +83,7 @@ def has_date_or_time(conf):
 
 def valid_initial(conf):
     """Check the initial value is valid."""
-    initial = conf.get(CONF_INITIAL)
-    if not initial:
+    if not (initial := conf.get(CONF_INITIAL)):
         return conf
 
     if conf[CONF_HAS_DATE] and conf[CONF_HAS_TIME]:
@@ -226,8 +225,7 @@ class InputDatetime(RestoreEntity):
         self.editable = True
         self._current_datetime = None
 
-        initial = config.get(CONF_INITIAL)
-        if not initial:
+        if not (initial := config.get(CONF_INITIAL)):
             return
 
         if self.has_date and self.has_time:
@@ -344,12 +342,18 @@ class InputDatetime(RestoreEntity):
         return self._current_datetime.strftime(FMT_TIME)
 
     @property
+    def capability_attributes(self) -> dict:
+        """Return the capability attributes."""
+        return {
+            CONF_HAS_DATE: self.has_date,
+            CONF_HAS_TIME: self.has_time,
+        }
+
+    @property
     def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {
             ATTR_EDITABLE: self.editable,
-            CONF_HAS_DATE: self.has_date,
-            CONF_HAS_TIME: self.has_time,
         }
 
         if self._current_datetime is None:

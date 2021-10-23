@@ -56,10 +56,12 @@ FIXED_ATTRIBUTES = (
 DYNAMIC_ATTRIBUTES = (ATTR_ICON,)
 
 ICON_FOR_EMPTY_VALUES = {
-    "select.charge_mode": "mdi:calendar-remove",
-    "sensor.charge_state": "mdi:flash-off",
-    "sensor.plug_state": "mdi:power-plug-off",
+    "select.reg_number_charge_mode": "mdi:calendar-remove",
+    "sensor.reg_number_charge_state": "mdi:flash-off",
+    "sensor.reg_number_plug_state": "mdi:power-plug-off",
 }
+
+MOCK_ACCOUNT_ID = "account_id_1"
 
 # Mock config data to be used across multiple tests
 MOCK_CONFIG = {
@@ -93,13 +95,13 @@ MOCK_VEHICLES = {
         },
         BINARY_SENSOR_DOMAIN: [
             {
-                "entity_id": "binary_sensor.plugged_in",
+                "entity_id": "binary_sensor.reg_number_plugged_in",
                 "unique_id": "vf1aaaaa555777999_plugged_in",
                 "result": STATE_ON,
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_PLUG,
             },
             {
-                "entity_id": "binary_sensor.charging",
+                "entity_id": "binary_sensor.reg_number_charging",
                 "unique_id": "vf1aaaaa555777999_charging",
                 "result": STATE_ON,
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY_CHARGING,
@@ -108,7 +110,7 @@ MOCK_VEHICLES = {
         DEVICE_TRACKER_DOMAIN: [],
         SELECT_DOMAIN: [
             {
-                "entity_id": "select.charge_mode",
+                "entity_id": "select.reg_number_charge_mode",
                 "unique_id": "vf1aaaaa555777999_charge_mode",
                 "result": "always",
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_CHARGE_MODE,
@@ -118,7 +120,7 @@ MOCK_VEHICLES = {
         ],
         SENSOR_DOMAIN: [
             {
-                "entity_id": "sensor.battery_autonomy",
+                "entity_id": "sensor.reg_number_battery_autonomy",
                 "unique_id": "vf1aaaaa555777999_battery_autonomy",
                 "result": "141",
                 ATTR_ICON: "mdi:ev-station",
@@ -126,7 +128,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
             },
             {
-                "entity_id": "sensor.battery_available_energy",
+                "entity_id": "sensor.reg_number_battery_available_energy",
                 "unique_id": "vf1aaaaa555777999_battery_available_energy",
                 "result": "31",
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
@@ -134,7 +136,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             },
             {
-                "entity_id": "sensor.battery_level",
+                "entity_id": "sensor.reg_number_battery_level",
                 "unique_id": "vf1aaaaa555777999_battery_level",
                 "result": "60",
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY,
@@ -142,14 +144,14 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             },
             {
-                "entity_id": "sensor.battery_last_activity",
+                "entity_id": "sensor.reg_number_battery_last_activity",
                 "unique_id": "vf1aaaaa555777999_battery_last_activity",
                 "result": "2020-01-12T21:40:16+00:00",
                 "default_disabled": True,
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
             },
             {
-                "entity_id": "sensor.battery_temperature",
+                "entity_id": "sensor.reg_number_battery_temperature",
                 "unique_id": "vf1aaaaa555777999_battery_temperature",
                 "result": "20",
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
@@ -157,14 +159,14 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             },
             {
-                "entity_id": "sensor.charge_state",
+                "entity_id": "sensor.reg_number_charge_state",
                 "unique_id": "vf1aaaaa555777999_charge_state",
                 "result": "charge_in_progress",
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_CHARGE_STATE,
                 ATTR_ICON: "mdi:flash",
             },
             {
-                "entity_id": "sensor.charging_power",
+                "entity_id": "sensor.reg_number_charging_power",
                 "unique_id": "vf1aaaaa555777999_charging_power",
                 "result": "0.027",
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
@@ -172,7 +174,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: POWER_KILO_WATT,
             },
             {
-                "entity_id": "sensor.charging_remaining_time",
+                "entity_id": "sensor.reg_number_charging_remaining_time",
                 "unique_id": "vf1aaaaa555777999_charging_remaining_time",
                 "result": "145",
                 ATTR_ICON: "mdi:timer",
@@ -180,7 +182,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: TIME_MINUTES,
             },
             {
-                "entity_id": "sensor.mileage",
+                "entity_id": "sensor.reg_number_mileage",
                 "unique_id": "vf1aaaaa555777999_mileage",
                 "result": "49114",
                 ATTR_ICON: "mdi:sign-direction",
@@ -188,7 +190,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
             },
             {
-                "entity_id": "sensor.outside_temperature",
+                "entity_id": "sensor.reg_number_outside_temperature",
                 "unique_id": "vf1aaaaa555777999_outside_temperature",
                 "result": "8.0",
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
@@ -196,7 +198,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             },
             {
-                "entity_id": "sensor.plug_state",
+                "entity_id": "sensor.reg_number_plug_state",
                 "unique_id": "vf1aaaaa555777999_plug_state",
                 "result": "plugged",
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_PLUG_STATE,
@@ -227,13 +229,13 @@ MOCK_VEHICLES = {
         },
         BINARY_SENSOR_DOMAIN: [
             {
-                "entity_id": "binary_sensor.plugged_in",
+                "entity_id": "binary_sensor.reg_number_plugged_in",
                 "unique_id": "vf1aaaaa555777999_plugged_in",
                 "result": STATE_OFF,
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_PLUG,
             },
             {
-                "entity_id": "binary_sensor.charging",
+                "entity_id": "binary_sensor.reg_number_charging",
                 "unique_id": "vf1aaaaa555777999_charging",
                 "result": STATE_OFF,
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY_CHARGING,
@@ -241,7 +243,7 @@ MOCK_VEHICLES = {
         ],
         DEVICE_TRACKER_DOMAIN: [
             {
-                "entity_id": "device_tracker.location",
+                "entity_id": "device_tracker.reg_number_location",
                 "unique_id": "vf1aaaaa555777999_location",
                 "result": STATE_NOT_HOME,
                 ATTR_ICON: "mdi:car",
@@ -249,7 +251,7 @@ MOCK_VEHICLES = {
         ],
         SELECT_DOMAIN: [
             {
-                "entity_id": "select.charge_mode",
+                "entity_id": "select.reg_number_charge_mode",
                 "unique_id": "vf1aaaaa555777999_charge_mode",
                 "result": "schedule_mode",
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_CHARGE_MODE,
@@ -259,7 +261,7 @@ MOCK_VEHICLES = {
         ],
         SENSOR_DOMAIN: [
             {
-                "entity_id": "sensor.battery_autonomy",
+                "entity_id": "sensor.reg_number_battery_autonomy",
                 "unique_id": "vf1aaaaa555777999_battery_autonomy",
                 "result": "128",
                 ATTR_ICON: "mdi:ev-station",
@@ -267,7 +269,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
             },
             {
-                "entity_id": "sensor.battery_available_energy",
+                "entity_id": "sensor.reg_number_battery_available_energy",
                 "unique_id": "vf1aaaaa555777999_battery_available_energy",
                 "result": "0",
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
@@ -275,7 +277,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             },
             {
-                "entity_id": "sensor.battery_level",
+                "entity_id": "sensor.reg_number_battery_level",
                 "unique_id": "vf1aaaaa555777999_battery_level",
                 "result": "50",
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY,
@@ -283,14 +285,14 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             },
             {
-                "entity_id": "sensor.battery_last_activity",
+                "entity_id": "sensor.reg_number_battery_last_activity",
                 "unique_id": "vf1aaaaa555777999_battery_last_activity",
                 "result": "2020-11-17T08:06:48+00:00",
                 "default_disabled": True,
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
             },
             {
-                "entity_id": "sensor.battery_temperature",
+                "entity_id": "sensor.reg_number_battery_temperature",
                 "unique_id": "vf1aaaaa555777999_battery_temperature",
                 "result": STATE_UNKNOWN,
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
@@ -298,14 +300,14 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             },
             {
-                "entity_id": "sensor.charge_state",
+                "entity_id": "sensor.reg_number_charge_state",
                 "unique_id": "vf1aaaaa555777999_charge_state",
                 "result": "charge_error",
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_CHARGE_STATE,
                 ATTR_ICON: "mdi:flash-off",
             },
             {
-                "entity_id": "sensor.charging_power",
+                "entity_id": "sensor.reg_number_charging_power",
                 "unique_id": "vf1aaaaa555777999_charging_power",
                 "result": STATE_UNKNOWN,
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_CURRENT,
@@ -313,7 +315,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
             },
             {
-                "entity_id": "sensor.charging_remaining_time",
+                "entity_id": "sensor.reg_number_charging_remaining_time",
                 "unique_id": "vf1aaaaa555777999_charging_remaining_time",
                 "result": STATE_UNKNOWN,
                 ATTR_ICON: "mdi:timer",
@@ -321,7 +323,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: TIME_MINUTES,
             },
             {
-                "entity_id": "sensor.mileage",
+                "entity_id": "sensor.reg_number_mileage",
                 "unique_id": "vf1aaaaa555777999_mileage",
                 "result": "49114",
                 ATTR_ICON: "mdi:sign-direction",
@@ -329,14 +331,14 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
             },
             {
-                "entity_id": "sensor.plug_state",
+                "entity_id": "sensor.reg_number_plug_state",
                 "unique_id": "vf1aaaaa555777999_plug_state",
                 "result": "unplugged",
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_PLUG_STATE,
                 ATTR_ICON: "mdi:power-plug-off",
             },
             {
-                "entity_id": "sensor.location_last_activity",
+                "entity_id": "sensor.reg_number_location_last_activity",
                 "unique_id": "vf1aaaaa555777999_location_last_activity",
                 "result": "2020-02-18T16:58:38+00:00",
                 "default_disabled": True,
@@ -367,13 +369,13 @@ MOCK_VEHICLES = {
         },
         BINARY_SENSOR_DOMAIN: [
             {
-                "entity_id": "binary_sensor.plugged_in",
+                "entity_id": "binary_sensor.reg_number_plugged_in",
                 "unique_id": "vf1aaaaa555777123_plugged_in",
                 "result": STATE_ON,
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_PLUG,
             },
             {
-                "entity_id": "binary_sensor.charging",
+                "entity_id": "binary_sensor.reg_number_charging",
                 "unique_id": "vf1aaaaa555777123_charging",
                 "result": STATE_ON,
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY_CHARGING,
@@ -381,7 +383,7 @@ MOCK_VEHICLES = {
         ],
         DEVICE_TRACKER_DOMAIN: [
             {
-                "entity_id": "device_tracker.location",
+                "entity_id": "device_tracker.reg_number_location",
                 "unique_id": "vf1aaaaa555777123_location",
                 "result": STATE_NOT_HOME,
                 ATTR_ICON: "mdi:car",
@@ -389,7 +391,7 @@ MOCK_VEHICLES = {
         ],
         SELECT_DOMAIN: [
             {
-                "entity_id": "select.charge_mode",
+                "entity_id": "select.reg_number_charge_mode",
                 "unique_id": "vf1aaaaa555777123_charge_mode",
                 "result": "always",
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_CHARGE_MODE,
@@ -399,7 +401,7 @@ MOCK_VEHICLES = {
         ],
         SENSOR_DOMAIN: [
             {
-                "entity_id": "sensor.battery_autonomy",
+                "entity_id": "sensor.reg_number_battery_autonomy",
                 "unique_id": "vf1aaaaa555777123_battery_autonomy",
                 "result": "141",
                 ATTR_ICON: "mdi:ev-station",
@@ -407,7 +409,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
             },
             {
-                "entity_id": "sensor.battery_available_energy",
+                "entity_id": "sensor.reg_number_battery_available_energy",
                 "unique_id": "vf1aaaaa555777123_battery_available_energy",
                 "result": "31",
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
@@ -415,7 +417,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             },
             {
-                "entity_id": "sensor.battery_level",
+                "entity_id": "sensor.reg_number_battery_level",
                 "unique_id": "vf1aaaaa555777123_battery_level",
                 "result": "60",
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY,
@@ -423,14 +425,14 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             },
             {
-                "entity_id": "sensor.battery_last_activity",
+                "entity_id": "sensor.reg_number_battery_last_activity",
                 "unique_id": "vf1aaaaa555777123_battery_last_activity",
                 "result": "2020-01-12T21:40:16+00:00",
                 "default_disabled": True,
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
             },
             {
-                "entity_id": "sensor.battery_temperature",
+                "entity_id": "sensor.reg_number_battery_temperature",
                 "unique_id": "vf1aaaaa555777123_battery_temperature",
                 "result": "20",
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
@@ -438,14 +440,14 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             },
             {
-                "entity_id": "sensor.charge_state",
+                "entity_id": "sensor.reg_number_charge_state",
                 "unique_id": "vf1aaaaa555777123_charge_state",
                 "result": "charge_in_progress",
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_CHARGE_STATE,
                 ATTR_ICON: "mdi:flash",
             },
             {
-                "entity_id": "sensor.charging_power",
+                "entity_id": "sensor.reg_number_charging_power",
                 "unique_id": "vf1aaaaa555777123_charging_power",
                 "result": "27.0",
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_CURRENT,
@@ -453,7 +455,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
             },
             {
-                "entity_id": "sensor.charging_remaining_time",
+                "entity_id": "sensor.reg_number_charging_remaining_time",
                 "unique_id": "vf1aaaaa555777123_charging_remaining_time",
                 "result": "145",
                 ATTR_ICON: "mdi:timer",
@@ -461,7 +463,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: TIME_MINUTES,
             },
             {
-                "entity_id": "sensor.fuel_autonomy",
+                "entity_id": "sensor.reg_number_fuel_autonomy",
                 "unique_id": "vf1aaaaa555777123_fuel_autonomy",
                 "result": "35",
                 ATTR_ICON: "mdi:gas-station",
@@ -469,7 +471,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
             },
             {
-                "entity_id": "sensor.fuel_quantity",
+                "entity_id": "sensor.reg_number_fuel_quantity",
                 "unique_id": "vf1aaaaa555777123_fuel_quantity",
                 "result": "3",
                 ATTR_ICON: "mdi:fuel",
@@ -477,7 +479,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: VOLUME_LITERS,
             },
             {
-                "entity_id": "sensor.mileage",
+                "entity_id": "sensor.reg_number_mileage",
                 "unique_id": "vf1aaaaa555777123_mileage",
                 "result": "5567",
                 ATTR_ICON: "mdi:sign-direction",
@@ -485,14 +487,14 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
             },
             {
-                "entity_id": "sensor.plug_state",
+                "entity_id": "sensor.reg_number_plug_state",
                 "unique_id": "vf1aaaaa555777123_plug_state",
                 "result": "plugged",
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_PLUG_STATE,
                 ATTR_ICON: "mdi:power-plug",
             },
             {
-                "entity_id": "sensor.location_last_activity",
+                "entity_id": "sensor.reg_number_location_last_activity",
                 "unique_id": "vf1aaaaa555777123_location_last_activity",
                 "result": "2020-02-18T16:58:38+00:00",
                 "default_disabled": True,
@@ -522,7 +524,7 @@ MOCK_VEHICLES = {
         BINARY_SENSOR_DOMAIN: [],
         DEVICE_TRACKER_DOMAIN: [
             {
-                "entity_id": "device_tracker.location",
+                "entity_id": "device_tracker.reg_number_location",
                 "unique_id": "vf1aaaaa555777123_location",
                 "result": STATE_NOT_HOME,
                 ATTR_ICON: "mdi:car",
@@ -531,7 +533,7 @@ MOCK_VEHICLES = {
         SELECT_DOMAIN: [],
         SENSOR_DOMAIN: [
             {
-                "entity_id": "sensor.fuel_autonomy",
+                "entity_id": "sensor.reg_number_fuel_autonomy",
                 "unique_id": "vf1aaaaa555777123_fuel_autonomy",
                 "result": "35",
                 ATTR_ICON: "mdi:gas-station",
@@ -539,7 +541,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
             },
             {
-                "entity_id": "sensor.fuel_quantity",
+                "entity_id": "sensor.reg_number_fuel_quantity",
                 "unique_id": "vf1aaaaa555777123_fuel_quantity",
                 "result": "3",
                 ATTR_ICON: "mdi:fuel",
@@ -547,7 +549,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: VOLUME_LITERS,
             },
             {
-                "entity_id": "sensor.mileage",
+                "entity_id": "sensor.reg_number_mileage",
                 "unique_id": "vf1aaaaa555777123_mileage",
                 "result": "5567",
                 ATTR_ICON: "mdi:sign-direction",
@@ -555,7 +557,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
             },
             {
-                "entity_id": "sensor.location_last_activity",
+                "entity_id": "sensor.reg_number_location_last_activity",
                 "unique_id": "vf1aaaaa555777123_location_last_activity",
                 "result": "2020-02-18T16:58:38+00:00",
                 "default_disabled": True,

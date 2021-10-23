@@ -193,12 +193,9 @@ async def async_setup(hass, config):
                 for sms_id in service.data[ATTR_SMS_ID]:
                     await modem_data.modem.delete_sms(sms_id)
             elif service.service == SERVICE_SET_OPTION:
-                failover = service.data.get(ATTR_FAILOVER)
-                if failover:
+                if failover := service.data.get(ATTR_FAILOVER):
                     await modem_data.modem.set_failover_mode(failover)
-
-                autoconnect = service.data.get(ATTR_AUTOCONNECT)
-                if autoconnect:
+                if autoconnect := service.data.get(ATTR_AUTOCONNECT):
                     await modem_data.modem.set_autoconnect_mode(autoconnect)
             elif service.service == SERVICE_CONNECT_LTE:
                 await modem_data.modem.connect_lte()

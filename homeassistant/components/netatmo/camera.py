@@ -36,6 +36,7 @@ from .const import (
     SERVICE_SET_PERSON_AWAY,
     SERVICE_SET_PERSONS_HOME,
     SIGNAL_NAME,
+    TYPE_SECURITY,
     WEBHOOK_LIGHT_MODE,
     WEBHOOK_NACAMERA_CONNECTION,
     WEBHOOK_PUSH_TYPE,
@@ -135,6 +136,7 @@ class NetatmoCamera(NetatmoBase, Camera):
         self._device_name = self._data.get_camera(camera_id=camera_id)["name"]
         self._attr_name = f"{MANUFACTURER} {self._device_name}"
         self._model = camera_type
+        self._netatmo_type = TYPE_SECURITY
         self._attr_unique_id = f"{self._id}-{self._model}"
         self._quality = quality
         self._vpnurl: str | None = None

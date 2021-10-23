@@ -6,6 +6,7 @@ from unittest.mock import DEFAULT, AsyncMock, Mock, patch
 
 import pytest
 from xknx import XKNX
+from xknx.core import XknxConnectionState
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.address import GroupAddress, IndividualAddress
@@ -53,6 +54,9 @@ class KNXTestKit:
             side_effect=fish_xknx,
         ):
             await async_setup_component(self.hass, KNX_DOMAIN, {KNX_DOMAIN: config})
+            await self.xknx.connection_manager.connection_state_changed(
+                XknxConnectionState.CONNECTED
+            )
             await self.hass.async_block_till_done()
 
     ########################
@@ -94,6 +98,7 @@ class KNXTestKit:
         apci_type: type[APCI],
     ) -> None:
         """Assert outgoing telegram. One by one in timely order."""
+        await self.xknx.telegrams.join()
         await self.hass.async_block_till_done()
         try:
             telegram = self._outgoing_telegrams.get_nowait()

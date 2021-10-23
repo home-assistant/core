@@ -61,8 +61,7 @@ def _parse_legacy_options(
     )
 
     # Parsing of sensors configuration
-    config_sensors = entry.data.get(CONF_SENSORS)
-    if not config_sensors:
+    if not (config_sensors := entry.data.get(CONF_SENSORS)):
         return []
 
     # Support import of legacy config that should have been removed from 0.99, but was still functional

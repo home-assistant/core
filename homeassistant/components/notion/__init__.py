@@ -17,7 +17,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
 )
-from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -39,7 +39,8 @@ CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Notion as a config entry."""
-    hass.data.setdefault(DOMAIN, {DATA_COORDINATOR: {}})
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {}
 
     if not entry.unique_id:
         hass.config_entries.async_update_entry(
@@ -89,9 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         return data
 
-    coordinator = hass.data[DOMAIN][DATA_COORDINATOR][
-        entry.entry_id
-    ] = DataUpdateCoordinator(
+    coordinator = DataUpdateCoordinator(
         hass,
         LOGGER,
         name=entry.data[CONF_USERNAME],
@@ -100,6 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     await coordinator.async_config_entry_first_refresh()
+    hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR] = coordinator
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -110,7 +110,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a Notion config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 
@@ -147,14 +147,14 @@ class NotionEntity(CoordinatorEntity):
 
         bridge = self.coordinator.data["bridges"].get(bridge_id, {})
         sensor = self.coordinator.data["sensors"][sensor_id]
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, sensor["hardware_id"])},
-            "manufacturer": "Silicon Labs",
-            "model": sensor["hardware_revision"],
-            "name": str(sensor["name"]),
-            "sw_version": sensor["firmware_version"],
-            "via_device": (DOMAIN, bridge.get("hardware_id")),
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, sensor["hardware_id"])},
+            manufacturer="Silicon Labs",
+            model=sensor["hardware_revision"],
+            name=str(sensor["name"]),
+            sw_version=sensor["firmware_version"],
+            via_device=(DOMAIN, bridge.get("hardware_id")),
+        )
 
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._attr_name = f'{sensor["name"]}: {description.name}'
