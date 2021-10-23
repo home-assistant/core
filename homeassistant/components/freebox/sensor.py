@@ -165,8 +165,8 @@ class FreeboxDiskSensor(FreeboxSensor):
         """Return the device information."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._disk["id"])},
-            name=f"Disk {self._disk['id']}",
             model=self._disk["model"],
+            name=f"Disk {self._disk['id']}",
             sw_version=self._disk["firmware"],
             via_device=(
                 DOMAIN,
