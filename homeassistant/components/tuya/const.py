@@ -206,6 +206,8 @@ class DPCode(str, Enum):
     POWDER_SET = "powder_set"  # Powder
     POWER_GO = "power_go"
     PRESENCE_STATE = "presence_state"
+    PRESSURE_STATE = "pressure_state"
+    PRESSURE_VALUE = "pressure_value"
     PUMP_RESET = "pump_reset"  # Water pump reset
     RECORD_SWITCH = "record_switch"  # Recording switch
     RELAY_STATUS = "relay_status"
