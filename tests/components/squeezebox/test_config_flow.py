@@ -1,4 +1,5 @@
 """Test the Logitech Squeezebox config flow."""
+from http import HTTPStatus
 from unittest.mock import patch
 
 from pysqueezebox import Server
@@ -6,13 +7,7 @@ from pysqueezebox import Server
 from homeassistant import config_entries
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 from homeassistant.components.squeezebox.const import DOMAIN
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    HTTP_UNAUTHORIZED,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
@@ -39,7 +34,7 @@ async def mock_failed_discover(_discovery_callback):
 
 async def patch_async_query_unauthorized(self, *args):
     """Mock an unauthorized query."""
-    self.http_status = HTTP_UNAUTHORIZED
+    self.http_status = HTTPStatus.UNAUTHORIZED
     return False
 
 
@@ -128,7 +123,7 @@ async def test_form_invalid_auth(hass):
     )
 
     async def patch_async_query(self, *args):
-        self.http_status = HTTP_UNAUTHORIZED
+        self.http_status = HTTPStatus.UNAUTHORIZED
         return False
 
     with patch("pysqueezebox.Server.async_query", new=patch_async_query):
