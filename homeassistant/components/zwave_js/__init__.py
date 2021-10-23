@@ -18,9 +18,16 @@ from zwave_js_server.model.value import Value, ValueNotification
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_CONFIG_ENTRY_ID,
     ATTR_DEVICE_ID,
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SUGGESTED_AREA,
+    ATTR_SW_VERSION,
     CONF_URL,
     EVENT_HOMEASSISTANT_STOP,
 )
@@ -120,15 +127,17 @@ def register_node_in_dev_reg(
     ):
         remove_device_func(device)
     params = {
-        "config_entry_id": entry.entry_id,
-        "identifiers": {device_id},
-        "sw_version": node.firmware_version,
-        "name": node.name or node.device_config.description or f"Node {node.node_id}",
-        "model": node.device_config.label,
-        "manufacturer": node.device_config.manufacturer,
+        ATTR_CONFIG_ENTRY_ID: entry.entry_id,
+        ATTR_IDENTIFIERS: {device_id},
+        ATTR_SW_VERSION: node.firmware_version,
+        ATTR_NAME: node.name
+        or node.device_config.description
+        or f"Node {node.node_id}",
+        ATTR_MODEL: node.device_config.label,
+        ATTR_MANUFACTURER: node.device_config.manufacturer,
     }
     if node.location:
-        params["suggested_area"] = node.location
+        params[ATTR_SUGGESTED_AREA] = node.location
     device = dev_reg.async_get_or_create(**params)
 
     async_dispatcher_send(hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
