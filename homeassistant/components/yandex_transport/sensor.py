@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 
-from aioymaps import YandexMapsRequester
+from aioymaps import CaptchaError, YandexMapsRequester
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -42,8 +42,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     routes = config[CONF_ROUTE]
 
     client_session = async_create_clientsession(hass, requote_redirect_url=False)
-    data = YandexMapsRequester(user_agent=USER_AGENT, client_session=client_session)
-    async_add_entities([DiscoverYandexTransport(data, stop_id, routes, name)], True)
+    ymaps = YandexMapsRequester(user_agent=USER_AGENT, client_session=client_session)
+    try:
+        await ymaps.set_new_session()
+    except CaptchaError as ex:
+        _LOGGER.error(
+            "%s. You may need to disable the integration for some time",
+            ex,
+        )
+        return
+    async_add_entities([DiscoverYandexTransport(ymaps, stop_id, routes, name)], True)
 
 
 class DiscoverYandexTransport(SensorEntity):
@@ -63,7 +71,14 @@ class DiscoverYandexTransport(SensorEntity):
         """Get the latest data from maps.yandex.ru and update the states."""
         attrs = {}
         closer_time = None
-        yandex_reply = await self.requester.get_stop_info(self._stop_id)
+        try:
+            yandex_reply = await self.requester.get_stop_info(self._stop_id)
+        except CaptchaError as ex:
+            _LOGGER.error(
+                "%s. You may need to disable the integration for some time",
+                ex,
+            )
+            return
         try:
             data = yandex_reply["data"]
         except KeyError as key_error:
