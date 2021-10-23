@@ -247,6 +247,22 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             device_class=DEVICE_CLASS_OUTLET,
         ),
     ),
+    # Heater
+    # https://developer.tuya.com/en/docs/iot/categoryqn?id=Kaiuz18kih0sm
+    "qn": (
+        SwitchEntityDescription(
+            key=DPCode.ANION,
+            name="Ionizer",
+            icon="mdi:minus-circle-outline",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.LOCK,
+            name="Child Lock",
+            icon="mdi:account-lock",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
     # Siren Alarm
     # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
     "sgbj": (
