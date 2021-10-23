@@ -160,6 +160,9 @@ async def async_setup_entry(
     for sensor_data in router.sensors_coordinator.values():
         coordinator = sensor_data[KEY_COORDINATOR]
         sensors = sensor_data[KEY_SENSORS]
+        if sensors == SENSORS_TEMPERATURES:
+            await coordinator.async_config_entry_first_refresh()
+            sensors = [sns for sns in sensors if coordinator.data[sns] != 0]
         entities.extend(
             [
                 AsusWrtSensor(coordinator, router, sensor_descr)
