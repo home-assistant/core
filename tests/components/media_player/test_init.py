@@ -2,8 +2,10 @@
 import base64
 from unittest.mock import patch
 
-from homeassistant.components import media_player
+from homeassistant.components import demo, media_player
+from homeassistant.components.media_player.const import SUPPORT_GROUPING
 from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.setup import async_setup_component
 
 
@@ -183,3 +185,28 @@ async def test_media_browse(hass, hass_ws_client):
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {"bla": "yo"}
+
+
+async def test_group_members_available_when_off(hass):
+    """Test that group_members are still available when media_player is off."""
+
+    # Fake group support for DemoYoutubePlayer
+    youtube_player_support_orig = demo.mediaplayer.YOUTUBE_PLAYER_SUPPORT
+    demo.mediaplayer.YOUTUBE_PLAYER_SUPPORT |= SUPPORT_GROUPING
+
+    await async_setup_component(
+        hass, "media_player", {"media_player": {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "media_player",
+        "turn_off",
+        {ATTR_ENTITY_ID: "media_player.bedroom"},
+        blocking=True,
+    )
+
+    state = hass.states.get("media_player.bedroom")
+    assert "group_members" in state.attributes
+
+    demo.mediaplayer.YOUTUBE_PLAYER_SUPPORT = youtube_player_support_orig
