@@ -94,33 +94,6 @@ set_option:
     device:
       integration: sonos
   fields:
-    buttons_enabled:
-      name: Buttons enabled
-      description: Enable control buttons on the device
-      example: "true"
-      selector:
-        boolean:
-    crossfade:
-      name: Crossfade
-      description: Enable crossfade on the device
-      example: "true"
-      selector:
-        boolean:
-    night_sound:
-      name: Night sound
-      description: Enable Night Sound mode
-      selector:
-        boolean:
-    speech_enhance:
-      name: Speech enhance
-      description: Enable Speech Enhancement mode
-      selector:
-        boolean:
-    status_light:
-      name: Status light
-      description: Enable Status (LED) Light
-      selector:
-        boolean:
     bass_level:
       name: Bass Level
       description: Bass level for EQ.

@@ -46,7 +46,7 @@ class SonosPowerEntity(SonosEntity, BinarySensorEntity):
         """Return the entity's device class."""
         return DEVICE_CLASS_BATTERY_CHARGING
 
-    async def async_update(self) -> None:
+    async def _async_poll(self) -> None:
         """Poll the device for the current state."""
         await self.speaker.async_poll_battery()
 
