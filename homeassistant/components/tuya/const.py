@@ -75,8 +75,14 @@ CONF_PASSWORD = "password"
 CONF_COUNTRY_CODE = "country_code"
 CONF_APP_TYPE = "tuya_app_type"
 
+DEVICE_CLASS_TUYA_BASIC_ANTI_FLICKR = "tuya__basic_anti_flickr"
+DEVICE_CLASS_TUYA_BASIC_NIGHTVISION = "tuya__basic_nightvision"
+DEVICE_CLASS_TUYA_DECIBEL_SENSITIVITY = "tuya__decibel_sensitivity"
+DEVICE_CLASS_TUYA_IPC_WORK_MODE = "tuya__ipc_work_mode"
 DEVICE_CLASS_TUYA_LED_TYPE = "tuya__led_type"
 DEVICE_CLASS_TUYA_LIGHT_MODE = "tuya__light_mode"
+DEVICE_CLASS_TUYA_MOTION_SENSITIVITY = "tuya__motion_sensitivity"
+DEVICE_CLASS_TUYA_RECORD_MODE = "tuya__record_mode"
 DEVICE_CLASS_TUYA_RELAY_STATUS = "tuya__relay_status"
 
 TUYA_DISCOVERY_NEW = "tuya_discovery_new"
@@ -130,6 +136,14 @@ class DPCode(str, Enum):
     ANGLE_HORIZONTAL = "angle_horizontal"
     ANGLE_VERTICAL = "angle_vertical"
     ANION = "anion"  # Ionizer unit
+    BASIC_ANTI_FLICKER = "basic_anti_flicker"
+    BASIC_DEVICE_VOLUME = "basic_device_volume"
+    BASIC_FLIP = "basic_flip"
+    BASIC_INDICATOR = "basic_indicator"
+    BASIC_NIGHTVISION = "basic_nightvision"
+    BASIC_OSD = "basic_osd"
+    BASIC_PRIVATE = "basic_private"
+    BASIC_WDR = "basic_wdr"
     BATTERY_PERCENTAGE = "battery_percentage"  # Battery percentage
     BATTERY_STATE = "battery_state"  # Battery state
     BATTERY_VALUE = "battery_value"  # Battery value
@@ -162,10 +176,13 @@ class DPCode(str, Enum):
     CONTROL = "control"
     CONTROL_2 = "control_2"
     CONTROL_3 = "control_3"
+    CRY_DETECTION_SWITCH = "cry_detection_switch"
     CUP_NUMBER = "cup_number"  # NUmber of cups
     CUR_CURRENT = "cur_current"  # Actual current
     CUR_POWER = "cur_power"  # Actual power
     CUR_VOLTAGE = "cur_voltage"  # Actual voltage
+    DECIBEL_SENSITIVITY = "decibel_sensitivity"
+    DECIBEL_SWITCH = "decibel_switch"
     DEHUMIDITY_SET_VALUE = "dehumidify_set_value"
     DO_NOT_DISTURB = "do_not_disturb"
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
@@ -177,12 +194,15 @@ class DPCode(str, Enum):
     FAN_SPEED_PERCENT = "fan_speed_percent"  # Stepless speed
     FAR_DETECTION = "far_detection"
     FILTER_RESET = "filter_reset"  # Filter (cartridge) reset
+    FLOODLIGHT_LIGHTNESS = "floodlight_lightness"
+    FLOODLIGHT_SWITCH = "floodlight_switch"
     GAS_SENSOR_STATE = "gas_sensor_state"
     GAS_SENSOR_STATUS = "gas_sensor_status"
     GAS_SENSOR_VALUE = "gas_sensor_value"
     HUMIDITY_CURRENT = "humidity_current"  # Current humidity
     HUMIDITY_SET = "humidity_set"  # Humidity setting
     HUMIDITY_VALUE = "humidity_value"  # Humidity
+    IPC_WORK_MODE = "ipc_work_mode"
     LED_TYPE_1 = "led_type_1"
     LED_TYPE_2 = "led_type_2"
     LED_TYPE_3 = "led_type_3"
@@ -191,7 +211,10 @@ class DPCode(str, Enum):
     LOCK = "lock"  # Lock / Child lock
     MATERIAL = "material"  # Material
     MODE = "mode"  # Working mode / Mode
+    MOTION_RECORD = "motion_record"
+    MOTION_SENSITIVITY = "motion_sensitivity"
     MOTION_SWITCH = "motion_switch"  # Motion switch
+    MOTION_TRACKING = "motion_tracking"
     MUFFLING = "muffling"  # Muffling
     NEAR_DETECTION = "near_detection"
     PAUSE = "pause"
@@ -209,12 +232,16 @@ class DPCode(str, Enum):
     PRESSURE_STATE = "pressure_state"
     PRESSURE_VALUE = "pressure_value"
     PUMP_RESET = "pump_reset"  # Water pump reset
+    RECORD_MODE = "record_mode"
     RECORD_SWITCH = "record_switch"  # Recording switch
     RELAY_STATUS = "relay_status"
     SEEK = "seek"
     SENSITIVITY = "sensitivity"  # Sensitivity
+    SENSOR_HUMIDITY = "sensor_humidity"
+    SENSOR_TEMPERATURE = "sensor_temperature"
     SHAKE = "shake"  # Oscillating
     SHOCK_STATE = "shock_state"  # Vibration status
+    SIREN_SWITCH = "siren_switch"
     SITUATION_SET = "situation_set"
     SMOKE_SENSOR_STATE = "smoke_sensor_state"
     SMOKE_SENSOR_STATUS = "smoke_sensor_status"
@@ -270,6 +297,8 @@ class DPCode(str, Enum):
     WATER_SET = "water_set"  # Water level
     WATERSENSOR_STATE = "watersensor_state"
     WET = "wet"  # Humidification
+    WIRELESS_BATTERYLOCK = "wireless_batterylock"
+    WIRELESS_ELECTRICITY = "wireless_electricity"
     WORK_MODE = "work_mode"  # Working mode
     WORK_POWER = "work_power"
 
