@@ -23,4 +23,4 @@ GROUPS = "tradfri_groups"
 KEY_SECURITY_CODE = "security_code"
 SUPPORTED_GROUP_FEATURES = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
 SUPPORTED_LIGHT_FEATURES = SUPPORT_TRANSITION
-PLATFORMS = ["cover", "light", "sensor", "switch"]
+PLATFORMS = ["cover", "light", "sensor", "switch", "fan"]
