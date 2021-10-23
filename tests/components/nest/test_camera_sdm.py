@@ -6,6 +6,7 @@ pubsub subscriber.
 """
 
 import datetime
+from http import HTTPStatus
 from unittest.mock import patch
 
 import aiohttp
@@ -237,7 +238,7 @@ async def test_camera_ws_stream(hass, auth, hass_ws_client):
 
 async def test_camera_ws_stream_failure(hass, auth, hass_ws_client):
     """Test a basic camera that supports web rtc."""
-    auth.responses = [aiohttp.web.Response(status=400)]
+    auth.responses = [aiohttp.web.Response(status=HTTPStatus.BAD_REQUEST)]
     await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
 
     assert len(hass.states.async_all()) == 1
@@ -438,7 +439,7 @@ async def test_refresh_expired_stream_failure(hass, auth):
     auth.responses = [
         make_stream_url_response(expiration=stream_1_expiration, token_num=1),
         # Extending the stream fails with arbitrary error
-        aiohttp.web.Response(status=500),
+        aiohttp.web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR),
         # Next attempt to get a stream fetches a new url
         make_stream_url_response(expiration=stream_2_expiration, token_num=2),
     ]
@@ -544,7 +545,7 @@ async def test_generate_event_image_url_failure(hass, auth):
 
     auth.responses = [
         # Fail to generate the image url
-        aiohttp.web.Response(status=500),
+        aiohttp.web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR),
         # Camera fetches a stream url as a fallback
         make_stream_url_response(),
     ]
@@ -566,7 +567,7 @@ async def test_fetch_event_image_failure(hass, auth):
         # Fake response from API that returns url image
         aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
         # Fail to download the image
-        aiohttp.web.Response(status=500),
+        aiohttp.web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR),
         # Camera fetches a stream url as a fallback
         make_stream_url_response(),
     ]
@@ -756,7 +757,7 @@ async def test_camera_web_rtc_unsupported(hass, auth, hass_ws_client):
 async def test_camera_web_rtc_offer_failure(hass, auth, hass_ws_client):
     """Test a basic camera that supports web rtc."""
     auth.responses = [
-        aiohttp.web.Response(status=400),
+        aiohttp.web.Response(status=HTTPStatus.BAD_REQUEST),
     ]
     device_traits = {
         "sdm.devices.traits.Info": {

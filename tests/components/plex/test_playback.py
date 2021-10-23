@@ -1,4 +1,5 @@
 """Tests for Plex player playback methods/services."""
+from http import HTTPStatus
 from unittest.mock import patch
 
 from homeassistant.components.media_player.const import (
@@ -23,7 +24,7 @@ async def test_media_player_playback(
 
     media_player = "media_player.plex_plex_web_chrome"
     requests_mock.post("/playqueues", text=playqueue_created)
-    requests_mock.get("/player/playback/playMedia", status_code=200)
+    requests_mock.get("/player/playback/playMedia", status_code=HTTPStatus.OK)
 
     # Test movie success
     assert await hass.services.async_call(
@@ -111,7 +112,7 @@ async def test_media_player_playback(
     )
 
     # Test media lookup failure by key
-    requests_mock.get("/library/metadata/999", status_code=404)
+    requests_mock.get("/library/metadata/999", status_code=HTTPStatus.NOT_FOUND)
     assert await hass.services.async_call(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
