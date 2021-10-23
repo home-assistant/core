@@ -6,7 +6,6 @@ import unittest.mock as mock
 import pytest
 
 from homeassistant.components import climate, humidifier, sensor
-from homeassistant.components.demo import number
 from homeassistant.components.demo.number import DemoNumber
 from homeassistant.components.demo.sensor import DemoSensor
 import homeassistant.components.prometheus as prometheus
