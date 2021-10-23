@@ -131,7 +131,7 @@ class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
         preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
-        """Turn on the fan in the auto mode."""
+        """Turn on the fan."""
         if not self._device_control:
             return
 
