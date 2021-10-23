@@ -66,6 +66,9 @@ class DiscoverYandexTransport(SensorEntity):
         self._state = None
         self._name = name
         self._attrs = None
+        self._attr_unique_id = (
+            f"{stop_id}.{''.join(self._routes) if self._routes else ''}"
+        )
 
     async def async_update(self, *, tries=0):
         """Get the latest data from maps.yandex.ru and update the states."""
