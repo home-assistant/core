@@ -47,9 +47,9 @@ class GenericHueDevice(entity.Entity):
         """
         return entity.DeviceInfo(
             identifiers={(HUE_DOMAIN, self.device_id)},
-            name=self.primary_sensor.name,
             manufacturer=self.primary_sensor.manufacturername,
             model=(self.primary_sensor.productname or self.primary_sensor.modelid),
+            name=self.primary_sensor.name,
             sw_version=self.primary_sensor.swversion,
             via_device=(HUE_DOMAIN, self.bridge.api.config.bridgeid),
         )

@@ -101,9 +101,9 @@ class HomematicipGenericEntity(Entity):
                     # Serial numbers of Homematic IP device
                     (HMIPC_DOMAIN, self._device.id)
                 },
-                name=self._device.label,
                 manufacturer=self._device.oem,
                 model=self._device.modelType,
+                name=self._device.label,
                 sw_version=self._device.firmwareVersion,
                 # Link to the homematic ip access point.
                 via_device=(HMIPC_DOMAIN, self._device.homeId),
