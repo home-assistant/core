@@ -1,6 +1,7 @@
 """The tests for the REST binary sensor platform."""
 
 import asyncio
+from http import HTTPStatus
 from os import path
 from unittest.mock import MagicMock, patch
 
@@ -92,7 +93,7 @@ async def test_setup_timeout(hass):
 @respx.mock
 async def test_setup_minimum(hass):
     """Test setup with minimum configuration."""
-    respx.get("http://localhost") % 200
+    respx.get("http://localhost") % HTTPStatus.OK
     assert await async_setup_component(
         hass,
         binary_sensor.DOMAIN,
@@ -111,7 +112,7 @@ async def test_setup_minimum(hass):
 @respx.mock
 async def test_setup_minimum_resource_template(hass):
     """Test setup with minimum configuration (resource_template)."""
-    respx.get("http://localhost") % 200
+    respx.get("http://localhost") % HTTPStatus.OK
     assert await async_setup_component(
         hass,
         binary_sensor.DOMAIN,
@@ -129,7 +130,7 @@ async def test_setup_minimum_resource_template(hass):
 @respx.mock
 async def test_setup_duplicate_resource_template(hass):
     """Test setup with duplicate resources."""
-    respx.get("http://localhost") % 200
+    respx.get("http://localhost") % HTTPStatus.OK
     assert await async_setup_component(
         hass,
         binary_sensor.DOMAIN,
@@ -148,7 +149,7 @@ async def test_setup_duplicate_resource_template(hass):
 @respx.mock
 async def test_setup_get(hass):
     """Test setup with valid configuration."""
-    respx.get("http://localhost").respond(status_code=200, json={})
+    respx.get("http://localhost").respond(status_code=HTTPStatus.OK, json={})
     assert await async_setup_component(
         hass,
         "binary_sensor",
@@ -181,7 +182,7 @@ async def test_setup_get(hass):
 @respx.mock
 async def test_setup_get_digest_auth(hass):
     """Test setup with valid configuration."""
-    respx.get("http://localhost").respond(status_code=200, json={})
+    respx.get("http://localhost").respond(status_code=HTTPStatus.OK, json={})
     assert await async_setup_component(
         hass,
         "binary_sensor",
@@ -209,7 +210,7 @@ async def test_setup_get_digest_auth(hass):
 @respx.mock
 async def test_setup_post(hass):
     """Test setup with valid configuration."""
-    respx.post("http://localhost").respond(status_code=200, json={})
+    respx.post("http://localhost").respond(status_code=HTTPStatus.OK, json={})
     assert await async_setup_component(
         hass,
         "binary_sensor",
@@ -238,7 +239,7 @@ async def test_setup_post(hass):
 async def test_setup_get_off(hass):
     """Test setup with valid off configuration."""
     respx.get("http://localhost").respond(
-        status_code=200,
+        status_code=HTTPStatus.OK,
         headers={"content-type": "text/json"},
         json={"dog": False},
     )
@@ -268,7 +269,7 @@ async def test_setup_get_off(hass):
 async def test_setup_get_on(hass):
     """Test setup with valid on configuration."""
     respx.get("http://localhost").respond(
-        status_code=200,
+        status_code=HTTPStatus.OK,
         headers={"content-type": "text/json"},
         json={"dog": True},
     )
@@ -297,7 +298,7 @@ async def test_setup_get_on(hass):
 @respx.mock
 async def test_setup_with_exception(hass):
     """Test setup with exception."""
-    respx.get("http://localhost").respond(status_code=200, json={})
+    respx.get("http://localhost").respond(status_code=HTTPStatus.OK, json={})
     assert await async_setup_component(
         hass,
         "binary_sensor",
@@ -340,7 +341,7 @@ async def test_setup_with_exception(hass):
 async def test_reload(hass):
     """Verify we can reload reset sensors."""
 
-    respx.get("http://localhost") % 200
+    respx.get("http://localhost") % HTTPStatus.OK
 
     await async_setup_component(
         hass,
@@ -383,7 +384,7 @@ async def test_reload(hass):
 @respx.mock
 async def test_setup_query_params(hass):
     """Test setup with query params."""
-    respx.get("http://localhost", params={"search": "something"}) % 200
+    respx.get("http://localhost", params={"search": "something"}) % HTTPStatus.OK
     assert await async_setup_component(
         hass,
         binary_sensor.DOMAIN,
