@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .base_class import TradfriBaseDevice
-from .const import CONF_GATEWAY_ID, DEVICES, DOMAIN, KEY_API
+from .const import ATTR_AUTO, CONF_GATEWAY_ID, DEVICES, DOMAIN, KEY_API
 
 
 async def async_setup_entry(
@@ -55,7 +55,7 @@ class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
     @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
-        return 11
+        return 10
 
     @property
     def is_on(self) -> bool:
@@ -67,7 +67,7 @@ class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
     @property
     def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
-        return ["0", "1", "10", "15", "20", "25", "30", "35", "40", "45", "50"]
+        return [ATTR_AUTO]
 
     @property
     def preset_mode(self) -> str | None:
@@ -80,7 +80,10 @@ class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
         """Set the preset mode of the fan."""
         if not self._device_control:
             return
-        await self._api(self._device_control.set_mode(int(preset_mode)))
+
+        if not preset_mode == ATTR_AUTO:
+            raise ValueError("Preset must be 'Auto'.")
+        await self._api(self._device_control.set_mode(1))
 
     async def async_turn_on(
         self,
@@ -92,7 +95,9 @@ class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
         """Turn on the fan in the auto mode."""
         if not self._device_control:
             return
-        await self._api(self._device_control.set_mode(1))
+
+        if preset_mode and preset_mode == ATTR_AUTO:
+            await self._api(self._device_control.set_mode(1))
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""

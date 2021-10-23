@@ -2,6 +2,7 @@
 from homeassistant.components.light import SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION
 from homeassistant.const import CONF_HOST  # noqa: F401 pylint: disable=unused-import
 
+ATTR_AUTO = "Auto"
 ATTR_DIMMER = "dimmer"
 ATTR_HUE = "hue"
 ATTR_SAT = "saturation"
