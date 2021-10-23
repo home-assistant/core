@@ -1,6 +1,4 @@
 """Support for Spider thermostats."""
-import logging
-
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_COOL,
@@ -12,8 +10,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 HA_STATE_TO_SPIDER = {
     HVAC_MODE_COOL: "Cool",
