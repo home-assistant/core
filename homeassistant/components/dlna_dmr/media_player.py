@@ -61,6 +61,8 @@ from .const import (
     MEDIA_METADATA_DIDL,
     MEDIA_TYPE_MAP,
     MEDIA_UPNP_CLASS_MAP,
+    REPEAT_PLAY_MODES,
+    SHUFFLE_PLAY_MODES,
 )
 from .data import EventListenAddr, get_domain_data
 
@@ -673,43 +675,8 @@ class DlnaDmrEntity(MediaPlayerEntity):
         """Enable/disable shuffle mode."""
         assert self._device is not None
 
-        # Map a combination of shuffle & repeat to a list of play modes in
-        # order of suitability. Fall back to PlayMode.NORMAL in any case.
-        POTENTIAL_PLAY_MODES: dict[tuple[bool, str], list[PlayMode]] = {
-            (False, REPEAT_MODE_OFF): [
-                PlayMode.NORMAL,
-            ],
-            (False, REPEAT_MODE_ONE): [
-                PlayMode.REPEAT_ONE,
-                PlayMode.REPEAT_ALL,
-                PlayMode.NORMAL,
-            ],
-            (False, REPEAT_MODE_ALL): [
-                PlayMode.REPEAT_ALL,
-                PlayMode.REPEAT_ONE,
-                PlayMode.NORMAL,
-            ],
-            (True, REPEAT_MODE_OFF): [
-                PlayMode.SHUFFLE,
-                PlayMode.RANDOM,
-                PlayMode.NORMAL,
-            ],
-            (True, REPEAT_MODE_ONE): [
-                PlayMode.RANDOM,
-                PlayMode.SHUFFLE,
-                PlayMode.REPEAT_ONE,
-                PlayMode.NORMAL,
-            ],
-            (True, REPEAT_MODE_ALL): [
-                PlayMode.RANDOM,
-                PlayMode.SHUFFLE,
-                PlayMode.REPEAT_ALL,
-                PlayMode.NORMAL,
-            ],
-        }
-
         repeat = self.repeat or REPEAT_MODE_OFF
-        potential_play_modes = POTENTIAL_PLAY_MODES[(shuffle, repeat)]
+        potential_play_modes = SHUFFLE_PLAY_MODES[(shuffle, repeat)]
 
         valid_play_modes = self._device.valid_play_modes
 
@@ -748,45 +715,8 @@ class DlnaDmrEntity(MediaPlayerEntity):
         """Set repeat mode."""
         assert self._device is not None
 
-        # Map a combination of shuffle & repeat to a list of play modes in
-        # order of suitability. Fall back to PlayMode.NORMAL in any case.
-        # NOTE: This list is slightly different to that in async_set_shuffle,
-        # due to fallback behaviour when turning on repeat modes.
-        POTENTIAL_PLAY_MODES: dict[tuple[bool, str], list[PlayMode]] = {
-            (False, REPEAT_MODE_OFF): [
-                PlayMode.NORMAL,
-            ],
-            (False, REPEAT_MODE_ONE): [
-                PlayMode.REPEAT_ONE,
-                PlayMode.REPEAT_ALL,
-                PlayMode.NORMAL,
-            ],
-            (False, REPEAT_MODE_ALL): [
-                PlayMode.REPEAT_ALL,
-                PlayMode.REPEAT_ONE,
-                PlayMode.NORMAL,
-            ],
-            (True, REPEAT_MODE_OFF): [
-                PlayMode.SHUFFLE,
-                PlayMode.RANDOM,
-                PlayMode.NORMAL,
-            ],
-            (True, REPEAT_MODE_ONE): [
-                PlayMode.REPEAT_ONE,
-                PlayMode.RANDOM,
-                PlayMode.SHUFFLE,
-                PlayMode.NORMAL,
-            ],
-            (True, REPEAT_MODE_ALL): [
-                PlayMode.RANDOM,
-                PlayMode.REPEAT_ALL,
-                PlayMode.SHUFFLE,
-                PlayMode.NORMAL,
-            ],
-        }
-
         shuffle = self.shuffle or False
-        potential_play_modes = POTENTIAL_PLAY_MODES[(shuffle, repeat)]
+        potential_play_modes = REPEAT_PLAY_MODES[(shuffle, repeat)]
 
         valid_play_modes = self._device.valid_play_modes
 

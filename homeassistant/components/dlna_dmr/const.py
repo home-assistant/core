@@ -5,6 +5,8 @@ from collections.abc import Mapping
 import logging
 from typing import Final
 
+from async_upnp_client.profiles.dlna import PlayMode as _PlayMode
+
 from homeassistant.components.media_player import const as _mp_const
 
 LOGGER = logging.getLogger(__package__)
@@ -95,4 +97,77 @@ MEDIA_METADATA_DIDL: Mapping[str, str] = {
     "episode": "episodeNumber",
     "albumName": "album",
     "trackNumber": "originalTrackNumber",
+}
+
+# For (un)setting repeat mode, map a combination of shuffle & repeat to a list
+# of play modes in order of suitability. Fall back to _PlayMode.NORMAL in any
+# case. NOTE: This list is slightly different to that in SHUFFLE_PLAY_MODES,
+# due to fallback behaviour when turning on repeat modes.
+REPEAT_PLAY_MODES: Mapping[tuple[bool, str], list[_PlayMode]] = {
+    (False, _mp_const.REPEAT_MODE_OFF): [
+        _PlayMode.NORMAL,
+    ],
+    (False, _mp_const.REPEAT_MODE_ONE): [
+        _PlayMode.REPEAT_ONE,
+        _PlayMode.REPEAT_ALL,
+        _PlayMode.NORMAL,
+    ],
+    (False, _mp_const.REPEAT_MODE_ALL): [
+        _PlayMode.REPEAT_ALL,
+        _PlayMode.REPEAT_ONE,
+        _PlayMode.NORMAL,
+    ],
+    (True, _mp_const.REPEAT_MODE_OFF): [
+        _PlayMode.SHUFFLE,
+        _PlayMode.RANDOM,
+        _PlayMode.NORMAL,
+    ],
+    (True, _mp_const.REPEAT_MODE_ONE): [
+        _PlayMode.REPEAT_ONE,
+        _PlayMode.RANDOM,
+        _PlayMode.SHUFFLE,
+        _PlayMode.NORMAL,
+    ],
+    (True, _mp_const.REPEAT_MODE_ALL): [
+        _PlayMode.RANDOM,
+        _PlayMode.REPEAT_ALL,
+        _PlayMode.SHUFFLE,
+        _PlayMode.NORMAL,
+    ],
+}
+
+# For (un)setting shuffle mode, map a combination of shuffle & repeat to a list
+# of play modes in order of suitability. Fall back to _PlayMode.NORMAL in any
+# case.
+SHUFFLE_PLAY_MODES: Mapping[tuple[bool, str], list[_PlayMode]] = {
+    (False, _mp_const.REPEAT_MODE_OFF): [
+        _PlayMode.NORMAL,
+    ],
+    (False, _mp_const.REPEAT_MODE_ONE): [
+        _PlayMode.REPEAT_ONE,
+        _PlayMode.REPEAT_ALL,
+        _PlayMode.NORMAL,
+    ],
+    (False, _mp_const.REPEAT_MODE_ALL): [
+        _PlayMode.REPEAT_ALL,
+        _PlayMode.REPEAT_ONE,
+        _PlayMode.NORMAL,
+    ],
+    (True, _mp_const.REPEAT_MODE_OFF): [
+        _PlayMode.SHUFFLE,
+        _PlayMode.RANDOM,
+        _PlayMode.NORMAL,
+    ],
+    (True, _mp_const.REPEAT_MODE_ONE): [
+        _PlayMode.RANDOM,
+        _PlayMode.SHUFFLE,
+        _PlayMode.REPEAT_ONE,
+        _PlayMode.NORMAL,
+    ],
+    (True, _mp_const.REPEAT_MODE_ALL): [
+        _PlayMode.RANDOM,
+        _PlayMode.SHUFFLE,
+        _PlayMode.REPEAT_ALL,
+        _PlayMode.NORMAL,
+    ],
 }
