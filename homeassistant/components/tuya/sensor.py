@@ -211,6 +211,16 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
     # PIR Detector
     # https://developer.tuya.com/en/docs/iot/categorypir?id=Kaiuz3ss11b80
     "pir": BATTERY_SENSORS,
+    # Gas Detector
+    # https://developer.tuya.com/en/docs/iot/categoryrqbj?id=Kaiuz3d162ubw
+    "rqbj": (
+        SensorEntityDescription(
+            key=DPCode.GAS_SENSOR_VALUE,
+            icon="mdi:gas-cylinder",
+            device_class=STATE_CLASS_MEASUREMENT,
+        ),
+        *BATTERY_SENSORS,
+    ),
     # Water Detector
     # https://developer.tuya.com/en/docs/iot/categorysj?id=Kaiuz3iub2sli
     "sj": BATTERY_SENSORS,
