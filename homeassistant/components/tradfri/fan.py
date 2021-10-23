@@ -3,17 +3,24 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import logging
 from typing import Any, cast
 
 from pytradfri.command import Command
 
-from homeassistant.components.fan import SUPPORT_PRESET_MODE, FanEntity
+from homeassistant.components.fan import (
+    SUPPORT_PRESET_MODE,
+    SUPPORT_SET_SPEED,
+    FanEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .base_class import TradfriBaseDevice
 from .const import ATTR_AUTO, CONF_GATEWAY_ID, DEVICES, DOMAIN, KEY_API
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -34,6 +41,16 @@ async def async_setup_entry(
         )
 
 
+def _from_percentage(percentage: int) -> int:
+    """Convert percent to a value that the Tradfri API understands."""
+    return int(percentage / 100 * 50)
+
+
+def _from_fan_speed(fan_speed: int) -> int:
+    """Convert the Tradfri API fan speed to a percentage value."""
+    return int(fan_speed / 50 * 100)
+
+
 class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
     """The platform class required by Home Assistant."""
 
@@ -50,11 +67,25 @@ class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        return SUPPORT_PRESET_MODE
+        return SUPPORT_PRESET_MODE + SUPPORT_SET_SPEED
 
     @property
     def speed_count(self) -> int:
-        """Return the number of speeds the fan supports."""
+        """
+        Return the number of speeds the fan supports.
+
+        These are the steps:
+        0 = Off
+        10 = Min
+        15
+        20
+        25
+        30
+        35
+        40
+        45
+        50 = Max
+        """
         return 10
 
     @property
@@ -68,6 +99,17 @@ class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
     def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
         return [ATTR_AUTO]
+
+    @property
+    def percentage(self) -> int | None:
+        """Return the current speed percentage."""
+        if not self._device_data:
+            return None
+
+        if self._device_data.fan_speed:
+            return _from_fan_speed(self._device_data.fan_speed)
+
+        return None
 
     @property
     def preset_mode(self) -> str | None:
@@ -96,8 +138,18 @@ class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
         if not self._device_control:
             return
 
+        if percentage:
+            await self._api(self._device_control.set_mode(_from_percentage(percentage)))
+
         if preset_mode and preset_mode == ATTR_AUTO:
             await self._api(self._device_control.set_mode(1))
+
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Set the speed percentage of the fan."""
+        if not self._device_control:
+            return
+
+        await self._api(self._device_control.set_mode(_from_percentage(percentage)))
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
