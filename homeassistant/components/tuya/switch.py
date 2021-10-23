@@ -272,6 +272,76 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
+    # Smart Camera
+    # https://developer.tuya.com/en/docs/iot/categorysp?id=Kaiuz35leyo12
+    "sp": (
+        SwitchEntityDescription(
+            key=DPCode.WIRELESS_BATTERYLOCK,
+            name="Battery Lock",
+            icon="mdi:battery-lock",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.CRY_DETECTION_SWITCH,
+            icon="mdi:emoticon-cry",
+            name="Cry Detection",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.DECIBEL_SWITCH,
+            icon="mdi:microphone-outline",
+            name="Sound Detection",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.RECORD_SWITCH,
+            icon="mdi:record-rec",
+            name="Video Recording",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.MOTION_RECORD,
+            icon="mdi:record-rec",
+            name="Motion Recording",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.BASIC_PRIVATE,
+            icon="mdi:eye-off",
+            name="Privacy Mode",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.BASIC_FLIP,
+            icon="mdi:flip-horizontal",
+            name="Flip",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.BASIC_OSD,
+            icon="mdi:watermark",
+            name="Time Watermark",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.BASIC_WDR,
+            icon="mdi:watermark",
+            name="Wide Dynamic Range",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.MOTION_TRACKING,
+            icon="mdi:motion-sensor",
+            name="Motion Tracking",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.MOTION_SWITCH,
+            icon="mdi:motion-sensor",
+            name="Motion Alarm",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
     # Ceiling Light
     # https://developer.tuya.com/en/docs/iot/ceiling-light?id=Kaiuz03xxfc4r
     "xdd": (
