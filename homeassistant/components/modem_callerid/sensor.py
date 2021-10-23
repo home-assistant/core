@@ -12,7 +12,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.typing import DiscoveryInfoType
 
@@ -63,7 +63,7 @@ async def async_setup_entry(
         ]
     )
 
-    async def _async_on_hass_stop() -> None:
+    async def _async_on_hass_stop(event: Event) -> None:
         """HA is shutting down, close modem port."""
         if hass.data[DOMAIN][entry.entry_id][DATA_KEY_API]:
             await hass.data[DOMAIN][entry.entry_id][DATA_KEY_API].close()
