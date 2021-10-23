@@ -93,21 +93,20 @@ class GoGoGate2Entity(CoordinatorEntity):
         return self._door
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Device info for the controller."""
         data = self.coordinator.data
-        info: DeviceInfo = {
-            "identifiers": {(DOMAIN, self._config_entry.unique_id)},
-            "name": self._config_entry.title,
-            "manufacturer": MANUFACTURER,
-            "model": data.model,
-            "sw_version": data.firmwareversion,
-        }
+        url = None
         if data.model.startswith("ismartgate"):
-            info[
-                "configuration_url"
-            ] = f"https://{self._config_entry.unique_id}.isgaccess.com"
-        return info
+            url = f"https://{self._config_entry.unique_id}.isgaccess.com"
+        return DeviceInfo(
+            configuration_url=url,
+            identifiers={(DOMAIN, str(self._config_entry.unique_id))},
+            name=self._config_entry.title,
+            manufacturer=MANUFACTURER,
+            model=data.model,
+            sw_version=data.firmwareversion,
+        )
 
 
 def get_data_update_coordinator(

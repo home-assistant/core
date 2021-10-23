@@ -6,15 +6,10 @@ from typing import Any, cast
 
 from flux_led.aiodevice import AIOWifiLedBulb
 
-from homeassistant.const import (
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SW_VERSION,
-)
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import FluxLedUpdateCoordinator
@@ -39,13 +34,13 @@ class FluxEntity(CoordinatorEntity):
         self._attr_name = name
         self._attr_unique_id = unique_id
         if self.unique_id:
-            self._attr_device_info = {
-                "connections": {(dr.CONNECTION_NETWORK_MAC, self.unique_id)},
-                ATTR_MODEL: self._device.model,
-                ATTR_NAME: self.name,
-                ATTR_SW_VERSION: str(self._device.version_num),
-                ATTR_MANUFACTURER: "FluxLED/Magic Home",
-            }
+            self._attr_device_info = DeviceInfo(
+                connections={(dr.CONNECTION_NETWORK_MAC, self.unique_id)},
+                manufacturer="FluxLED/Magic Home",
+                model=self._device.model,
+                name=self.name,
+                sw_version=str(self._device.version_num),
+            )
 
     @property
     def is_on(self) -> bool:
