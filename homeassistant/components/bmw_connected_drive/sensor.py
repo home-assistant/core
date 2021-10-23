@@ -389,11 +389,11 @@ async def async_setup_entry(
                 entities.extend(
                     [
                         BMWConnectedDriveSensor(
-                            account, vehicle, description, unit_system, service
+                            account, vehicle, description2, unit_system, service
                         )
                         for attribute_name in vehicle.state.last_trip.available_attributes
                         if attribute_name != "date"
-                        and (description := SENSOR_TYPES.get(attribute_name))
+                        and (description2 := SENSOR_TYPES.get(attribute_name))
                     ]
                 )
                 if "date" in vehicle.state.last_trip.available_attributes:
@@ -534,7 +534,13 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
             vehicle_last_trip = self._vehicle.state.last_trip
             if sensor_key == "date_utc":
                 date_str = getattr(vehicle_last_trip, "date")
-                self._attr_native_value = dt_util.parse_datetime(date_str).isoformat()
+                if parsed_date := dt_util.parse_datetime(date_str):
+                    self._attr_native_value = parsed_date.isoformat()
+                else:
+                    _LOGGER.warning(
+                        "Could not parse date string for 'date_utc' sensor: %s",
+                        date_str,
+                    )
             else:
                 self._attr_native_value = getattr(vehicle_last_trip, sensor_key)
         elif self._service == SERVICE_ALL_TRIPS:
@@ -553,7 +559,13 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
                     return
             if sensor_key == "reset_date_utc":
                 date_str = getattr(vehicle_all_trips, "reset_date")
-                self._attr_native_value = dt_util.parse_datetime(date_str).isoformat()
+                if parsed_date := dt_util.parse_datetime(date_str):
+                    self._attr_native_value = parsed_date.isoformat()
+                else:
+                    _LOGGER.warning(
+                        "Could not parse date string for 'reset_date_utc' sensor: %s",
+                        date_str,
+                    )
             else:
                 self._attr_native_value = getattr(vehicle_all_trips, sensor_key)
 
