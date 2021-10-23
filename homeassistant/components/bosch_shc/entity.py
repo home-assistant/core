@@ -30,9 +30,9 @@ class SHCEntity(Entity):
         self._attr_unique_id = device.serial
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.id)},
-            name=device.name,
             manufacturer=device.manufacturer,
             model=device.device_model,
+            name=device.name,
             via_device=(
                 DOMAIN,
                 device.parent_device_id
