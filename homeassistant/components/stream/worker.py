@@ -153,8 +153,6 @@ class SegmentBuffer:
             ):
                 # Flush segment (also flushes the stub part segment)
                 self.flush(packet, last_part=True)
-                # Reinitialize
-                self.reset(packet.dts)
 
             # Mux the packet
             packet.stream = self._output_video_stream
@@ -226,6 +224,8 @@ class SegmentBuffer:
         if last_part:
             # If we've written the last part, we can close the memory_file.
             self._memory_file.close()  # We don't need the BytesIO object anymore
+            # Reinitialize
+            self.reset(current_dts)
         else:
             # For the last part, these will get set again elsewhere so we can skip
             # setting them here.
