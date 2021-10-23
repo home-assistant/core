@@ -43,15 +43,15 @@ class HDEntity(CoordinatorEntity):
         firmware = self._device_info[DEVICE_FIRMWARE]
         sw_version = f"{firmware[FIRMWARE_REVISION]}.{firmware[FIRMWARE_SUB_REVISION]}.{firmware[FIRMWARE_BUILD]}"
         return DeviceInfo(
-            identifiers={(DOMAIN, self._device_info[DEVICE_SERIAL_NUMBER])},
             connections={
                 (dr.CONNECTION_NETWORK_MAC, self._device_info[DEVICE_MAC_ADDRESS])
             },
+            identifiers={(DOMAIN, self._device_info[DEVICE_SERIAL_NUMBER])},
+            manufacturer=MANUFACTURER,
+            model=self._device_info[DEVICE_MODEL],
             name=self._device_info[DEVICE_NAME],
             suggested_area=self._room_name,
-            model=self._device_info[DEVICE_MODEL],
             sw_version=sw_version,
-            manufacturer=MANUFACTURER,
         )
 
 
