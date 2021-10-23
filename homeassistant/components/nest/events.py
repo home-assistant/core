@@ -21,7 +21,11 @@ NEST_EVENT = "nest_event"
 # {
 #   "device_id": "enterprises/some/device/identifier"
 #   "event_type": "camera_motion"
+#   "nest_event_id": "KcO1HIR9sPKQ2bqby_vTcCcEov..."
 # }
+#
+# The nest_event_id corresponds to the event id in the SDM API used to retrieve
+# snapshots.
 #
 # The following event types are fired:
 EVENT_DOORBELL_CHIME = "doorbell_chime"
