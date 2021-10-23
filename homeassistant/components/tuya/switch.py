@@ -64,12 +64,15 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
-    # RGB Socket
+    # Light
     # https://developer.tuya.com/en/docs/iot/f?id=K9i5ql3v98hn3
     "dj": (
+        # There are sockets available with an RGB light
+        # that advertise as `dj`, but provide an additional
+        # switch to control the plug.
         SwitchEntityDescription(
             key=DPCode.SWITCH,
-            name="Switch",
+            name="Plug",
         ),
     ),
     # Cirquit Breaker
