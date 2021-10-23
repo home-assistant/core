@@ -21,13 +21,7 @@ class ClimateExtraAttributes(FritzExtraAttributes, total=False):
     battery_level: int
     battery_low: bool
     holiday_mode: bool
-    nextchange_endperiod: str
-    nextchange_preset_mode: str
-    nextchange_temperature: str
-    scheduled_mode: str
     summer_mode: bool
-    temperature_comfort: str
-    temperature_eco: str
     window_open: bool
 
 
