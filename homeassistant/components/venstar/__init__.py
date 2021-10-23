@@ -1,6 +1,4 @@
 """The venstar component."""
-import asyncio
-
 from venstarcolortouch import VenstarColorTouch
 
 from homeassistant.const import (
@@ -10,6 +8,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import Entity
 
 from .const import _LOGGER, DOMAIN, VENSTAR_TIMEOUT
@@ -35,14 +34,11 @@ async def async_setup_entry(hass, config):
         proto=protocol,
     )
 
-    VenstarEntity(config, client)
     try:
         await hass.async_add_executor_job(client.update_info)
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.error("Unable to connect to thermostat")
-        return False
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config.entry_id] = client
+    except Exception as ex:  # pylint: disable=broad-except
+        raise ConfigEntryNotReady(f"Unable to connect to the thermostat: {ex}")
+    hass.data.setdefault(DOMAIN, {})[config.entry_id] = client
     hass.config_entries.async_setup_platforms(config, PLATFORMS)
 
     return True
@@ -68,7 +64,6 @@ class VenstarEntity(Entity):
     async def async_update(self):
         """Update the state."""
         info_success = await self.hass.async_add_executor_job(self._client.update_info)
-        await asyncio.sleep(3)
         sensor_success = await self.hass.async_add_executor_job(
             self._client.update_sensors
         )
@@ -83,8 +78,7 @@ class VenstarEntity(Entity):
     @property
     def unique_id(self):
         """Set unique_id for this entity."""
-        # pylint: disable=protected-access
-        return f"{self._client.name}-{self._client._type}"
+        return f"{self._config.entry_id}"
 
     @property
     def device_info(self):

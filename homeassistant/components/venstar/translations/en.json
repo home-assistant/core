@@ -8,9 +8,7 @@
 	  "username": "Username for thermostat (optional)",
 	  "password": "Password for thermostat (optional)",
 	  "pin": "Pin for Lockscreen (required if lock screen enabled)",
-	  "ssl": "Whether to use SSL or not when communicating",
-	  "timeout": "Number of seconds for API timeout",
-	  "humidifier": "Report humidity and expose humidifier setpoints."
+	  "ssl": "Whether to use SSL or not when communicating"
 	}
       }
     },

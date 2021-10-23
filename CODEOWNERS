@@ -563,6 +563,7 @@ homeassistant/components/utility_meter/* @dgomes
 homeassistant/components/vallox/* @andre-richter
 homeassistant/components/velbus/* @Cereal2nd @brefra
 homeassistant/components/velux/* @Julius2342
+homeassistant/components/venstar/* @garbled1
 homeassistant/components/vera/* @pavoni
 homeassistant/components/verisure/* @frenck
 homeassistant/components/versasense/* @flamm3blemuff1n

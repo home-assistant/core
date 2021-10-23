@@ -47,7 +47,6 @@ class VenstarColorTouchMock:
     def broken_update_info(self):
         """Mock a update_info the raises Exception."""
         raise Exception
-        return True
 
     def update_sensors(self):
         """Mock update_sensors."""

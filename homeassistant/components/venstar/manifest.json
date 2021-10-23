@@ -6,6 +6,6 @@
   "requirements": [
     "venstarcolortouch==0.14"
   ],
-  "codeowners": [],
+  "codeowners": ["@garbled1"],
   "iot_class": "local_polling"
 }

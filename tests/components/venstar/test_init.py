@@ -68,4 +68,4 @@ async def test_setup_entry_exception(hass: HomeAssistant):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert config_entry.state == ConfigEntryState.SETUP_RETRY
