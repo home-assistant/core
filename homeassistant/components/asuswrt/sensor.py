@@ -8,9 +8,14 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
+    SensorDeviceClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DATA_GIGABYTES, DATA_RATE_MEGABITS_PER_SECOND
+from homeassistant.const import (
+    DATA_GIGABYTES,
+    DATA_RATE_MEGABITS_PER_SECOND,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.update_coordinator import (
@@ -25,6 +30,7 @@ from .const import (
     SENSORS_CONNECTED_DEVICE,
     SENSORS_LOAD_AVG,
     SENSORS_RATES,
+    SENSORS_TEMPERATURES,
 )
 from .router import KEY_COORDINATOR, KEY_SENSORS, AsusWrtRouter
 
@@ -110,6 +116,36 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         icon="mdi:cpu-32-bit",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        factor=1,
+        precision=1,
+    ),
+    AsusWrtSensorEntityDescription(
+        key=SENSORS_TEMPERATURES[0],
+        name="2.4GHz Temperature",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        entity_registry_enabled_default=False,
+        factor=1,
+        precision=1,
+    ),
+    AsusWrtSensorEntityDescription(
+        key=SENSORS_TEMPERATURES[1],
+        name="5GHz Temperature",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        entity_registry_enabled_default=False,
+        factor=1,
+        precision=1,
+    ),
+    AsusWrtSensorEntityDescription(
+        key=SENSORS_TEMPERATURES[2],
+        name="CPU Temperature",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
         entity_registry_enabled_default=False,
         factor=1,
         precision=1,
