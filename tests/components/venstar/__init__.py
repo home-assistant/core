@@ -22,10 +22,19 @@ class VenstarColorTouchMock:
         self._info = {}
         self._sensors = {}
         self.alerts = {}
+        self.MODE_OFF = 0
+        self.MODE_HEAT = 1
+        self.MODE_COOL = 2
+        self.MODE_AUTO = 3
+        self._type = "residential"
 
     def login(self):
         """Mock login."""
         return True
+
+    def _request(self, path, data=None):
+        """Mock request."""
+        self.status = {}
 
     def update(self):
         """Mock update."""

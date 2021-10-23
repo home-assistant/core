@@ -8,11 +8,10 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PIN,
     CONF_SSL,
-    CONF_TIMEOUT,
     CONF_USERNAME,
 )
 
-from .const import _LOGGER, CONF_HUMIDIFIER, DOMAIN
+from .const import _LOGGER, DOMAIN, VENSTAR_TIMEOUT
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -20,11 +19,7 @@ DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_USERNAME): str,
         vol.Optional(CONF_PASSWORD): str,
         vol.Optional(CONF_PIN): str,
-        vol.Optional(CONF_HUMIDIFIER, default=True): bool,
         vol.Optional(CONF_SSL, default=False): bool,
-        vol.Optional(CONF_TIMEOUT, default=5): vol.All(
-            vol.Coerce(int), vol.Range(min=1)
-        ),
     }
 )
 
@@ -35,7 +30,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     password = data.get(CONF_PASSWORD)
     pin = data.get(CONF_PIN)
     host = data[CONF_HOST]
-    timeout = data.get(CONF_TIMEOUT)
+    timeout = VENSTAR_TIMEOUT
     protocol = "https" if data[CONF_SSL] else "http"
 
     client = VenstarColorTouch(
@@ -92,9 +87,7 @@ class VenstarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_USERNAME: import_data.get(CONF_USERNAME),
                 CONF_PASSWORD: import_data.get(CONF_PASSWORD),
                 CONF_PIN: import_data.get(CONF_PIN),
-                CONF_HUMIDIFIER: import_data[CONF_HUMIDIFIER],
                 CONF_SSL: import_data[CONF_SSL],
-                CONF_TIMEOUT: import_data[CONF_TIMEOUT],
             }
         )
 

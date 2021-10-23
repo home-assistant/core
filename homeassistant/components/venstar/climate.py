@@ -31,7 +31,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PIN,
     CONF_SSL,
-    CONF_TIMEOUT,
     CONF_USERNAME,
     PRECISION_HALVES,
     STATE_ON,
@@ -45,7 +44,6 @@ from .const import (
     _LOGGER,
     ATTR_FAN_STATE,
     ATTR_HVAC_STATE,
-    CONF_HUMIDIFIER,
     DEFAULT_SSL,
     DOMAIN,
     HOLD_MODE_TEMPERATURE,
@@ -57,11 +55,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_HUMIDIFIER, default=True): cv.boolean,
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_TIMEOUT, default=5): vol.All(
-            vol.Coerce(int), vol.Range(min=1)
-        ),
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PIN): cv.string,
     }
@@ -71,8 +65,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Venstar thermostat."""
     client = hass.data[DOMAIN][config_entry.entry_id]
-    humidifier = config_entry.data.get(CONF_HUMIDIFIER)
-    async_add_entities([VenstarThermostat(hass, client, humidifier)], True)
+    async_add_entities([VenstarThermostat(config_entry, client)], True)
 
 
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
@@ -96,9 +89,9 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 class VenstarThermostat(VenstarEntity, ClimateEntity):
     """Representation of a Venstar thermostat."""
 
-    def __init__(self, hass, client, humidifier):
+    def __init__(self, config, client):
         """Initialize the thermostat."""
-        super().__init__(hass, client, humidifier)
+        super().__init__(config, client)
         self._mode_map = {
             HVAC_MODE_HEAT: self._client.MODE_HEAT,
             HVAC_MODE_COOL: self._client.MODE_COOL,
