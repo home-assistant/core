@@ -20,7 +20,7 @@ class IAlarmPanel(CoordinatorEntity, AlarmControlPanelEntity):
     """Representation of an iAlarm device."""
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info for this device."""
         return DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
