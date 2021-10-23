@@ -271,6 +271,7 @@ class DPCode(str, Enum):
     WATERSENSOR_STATE = "watersensor_state"
     WET = "wet"  # Humidification
     WORK_MODE = "work_mode"  # Working mode
+    WORK_POWER = "work_power"
 
 
 @dataclass
