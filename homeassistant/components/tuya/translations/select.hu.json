@@ -1,0 +1,22 @@
+{
+    "state": {
+        "tuya__led_type": {
+            "halogen": "Halog\u00e9n",
+            "incandescent": "Izz\u00f3",
+            "led": "LED"
+        },
+        "tuya__light_mode": {
+            "none": "Ki",
+            "pos": "A kapcsol\u00f3 hely\u00e9nek jelz\u00e9se",
+            "relay": "Be-/kikapcsolt \u00e1llapot jelz\u00e9se"
+        },
+        "tuya__relay_status": {
+            "last": "Utols\u00f3 \u00e1llapot megjegyz\u00e9se",
+            "memory": "Utols\u00f3 \u00e1llapot megjegyz\u00e9se",
+            "off": "Ki",
+            "on": "Be",
+            "power_off": "Ki",
+            "power_on": "Be"
+        }
+    }
+}
