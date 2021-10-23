@@ -183,13 +183,13 @@ class FreeboxRouter:
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        return {
-            "connections": {(CONNECTION_NETWORK_MAC, self.mac)},
-            "identifiers": {(DOMAIN, self.mac)},
-            "name": self.name,
-            "manufacturer": "Freebox SAS",
-            "sw_version": self._sw_v,
-        }
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self.mac)},
+            identifiers={(DOMAIN, self.mac)},
+            manufacturer="Freebox SAS",
+            name=self.name,
+            sw_version=self._sw_v,
+        )
 
     @property
     def signal_device_new(self) -> str:
