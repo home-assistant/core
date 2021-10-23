@@ -287,6 +287,7 @@ def test_device_ids():
     schema = vol.Schema(cv.device_ids)
 
     options = (
+        None,
         "invalid_device_id",
         "789aee51924ef1d9e7b28d03657e1406,invalid_device_id",
         ["invalid_device_id"],
