@@ -10,6 +10,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
@@ -130,16 +131,15 @@ class MikrotikHubTracker(ScannerEntity):
         return None
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return a client description for device registry."""
-        info = {
-            "connections": {(CONNECTION_NETWORK_MAC, self.device.mac)},
-            "identifiers": {(DOMAIN, self.device.mac)},
-            # We only get generic info from device discovery and so don't want
-            # to override API specific info that integrations can provide
-            "default_name": self.name,
-        }
-        return info
+        # We only get generic info from device discovery and so don't want
+        # to override API specific info that integrations can provide
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self.device.mac)},
+            default_name=self.name,
+            identifiers={(DOMAIN, self.device.mac)},
+        )
 
     async def async_added_to_hass(self):
         """Client entity created."""
