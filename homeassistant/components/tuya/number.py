@@ -78,6 +78,16 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
+    # Smart Camera
+    # https://developer.tuya.com/en/docs/iot/categorysp?id=Kaiuz35leyo12
+    "sp": (
+        NumberEntityDescription(
+            key=DPCode.BASIC_DEVICE_VOLUME,
+            name="Volume",
+            icon="mdi:volume-high",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
     # Dimmer Switch
     # https://developer.tuya.com/en/docs/iot/categorytgkg?id=Kaiuz0ktx7m0o
     "tgkg": (

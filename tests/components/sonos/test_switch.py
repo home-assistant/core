@@ -30,10 +30,14 @@ async def test_entity_registry(hass, config_entry, config):
 
     assert "media_player.zone_a" in entity_registry.entities
     assert "switch.sonos_alarm_14" in entity_registry.entities
+    assert "switch.sonos_zone_a_status_light" in entity_registry.entities
+    assert "switch.sonos_zone_a_night_sound" in entity_registry.entities
+    assert "switch.sonos_zone_a_speech_enhancement" in entity_registry.entities
+    assert "switch.sonos_zone_a_touch_controls" in entity_registry.entities
 
 
-async def test_alarm_attributes(hass, config_entry, config):
-    """Test for correct sonos alarm state."""
+async def test_switch_attributes(hass, config_entry, config, soco):
+    """Test for correct Sonos switch states."""
     await setup_platform(hass, config_entry, config)
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
@@ -48,6 +52,28 @@ async def test_alarm_attributes(hass, config_entry, config):
     assert alarm_state.attributes.get(ATTR_VOLUME) == 0.25
     assert alarm_state.attributes.get(ATTR_PLAY_MODE) == "SHUFFLE_NOREPEAT"
     assert not alarm_state.attributes.get(ATTR_INCLUDE_LINKED_ZONES)
+
+    night_sound = entity_registry.entities["switch.sonos_zone_a_night_sound"]
+    night_sound_state = hass.states.get(night_sound.entity_id)
+    assert night_sound_state.state == STATE_ON
+
+    speech_enhancement = entity_registry.entities[
+        "switch.sonos_zone_a_speech_enhancement"
+    ]
+    speech_enhancement_state = hass.states.get(speech_enhancement.entity_id)
+    assert speech_enhancement_state.state == STATE_ON
+
+    crossfade = entity_registry.entities["switch.sonos_zone_a_crossfade"]
+    crossfade_state = hass.states.get(crossfade.entity_id)
+    assert crossfade_state.state == STATE_ON
+
+    status_light = entity_registry.entities["switch.sonos_zone_a_status_light"]
+    status_light_state = hass.states.get(status_light.entity_id)
+    assert status_light_state.state == STATE_ON
+
+    touch_controls = entity_registry.entities["switch.sonos_zone_a_touch_controls"]
+    touch_controls_state = hass.states.get(touch_controls.entity_id)
+    assert touch_controls_state.state == STATE_ON
 
 
 async def test_alarm_create_delete(
