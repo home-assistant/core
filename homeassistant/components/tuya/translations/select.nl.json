@@ -1,0 +1,20 @@
+{
+    "state": {
+        "tuya__led_type": {
+            "halogen": "Halogeen",
+            "led": "LED"
+        },
+        "tuya__light_mode": {
+            "none": "Uit",
+            "relay": "Aan/uit-toestand aangeven"
+        },
+        "tuya__relay_status": {
+            "last": "Onthoud laatste staat",
+            "memory": "Onthoud laatste staat",
+            "off": "Uit",
+            "on": "Aan",
+            "power_off": "Uit",
+            "power_on": "Aan"
+        }
+    }
+}
