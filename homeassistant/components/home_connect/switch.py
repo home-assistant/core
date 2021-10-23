@@ -41,7 +41,7 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
 
     def __init__(self, device, program_name):
         """Initialize the entity."""
-        desc = " ".join(["Program", program_name.split(".")[-1]])
+        desc = " ".join(["Program", program_name])
         super().__init__(device, desc)
         self.program_name = program_name
         self._state = None
