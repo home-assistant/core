@@ -23,6 +23,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
+    ATTR_SUGGESTED_AREA,
     ATTR_TEMPERATURE,
     PRECISION_HALVES,
     STATE_OFF,
@@ -115,8 +116,6 @@ DEFAULT_MAX_TEMP = 30
 
 NA_THERM = "NATherm1"
 NA_VALVE = "NRV"
-
-SUGGESTED_AREA = "suggested_area"
 
 
 async def async_setup_entry(
@@ -616,5 +615,5 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device info for the thermostat."""
         device_info: DeviceInfo = super().device_info
-        device_info["suggested_area"] = self._room_data["name"]
+        device_info[ATTR_SUGGESTED_AREA] = self._room_data["name"]
         return device_info
