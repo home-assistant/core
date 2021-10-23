@@ -42,3 +42,30 @@ async def test_setup_entry(hass: HomeAssistant):
     await hass.config_entries.async_unload(config_entry.entry_id)
 
     assert config_entry.state == ConfigEntryState.NOT_LOADED
+
+
+async def test_setup_entry_exception(hass: HomeAssistant):
+    """Validate that setup entry also configure the client."""
+    config_entry = MockConfigEntry(
+        domain=VENSTAR_DOMAIN,
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_SSL: False,
+        },
+    )
+
+    with patch(
+        "homeassistant.components.venstar.VenstarColorTouch._request",
+        new=VenstarColorTouchMock._request,
+    ), patch(
+        "homeassistant.components.venstar.VenstarColorTouch.update_sensors",
+        new=VenstarColorTouchMock.update_sensors,
+    ), patch(
+        "homeassistant.components.venstar.VenstarColorTouch.update_info",
+        new=VenstarColorTouchMock.broken_update_info,
+    ):
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state == ConfigEntryState.SETUP_ERROR
