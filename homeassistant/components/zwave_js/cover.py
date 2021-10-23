@@ -19,6 +19,7 @@ from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    ATTR_TILT_POSITION,
     DEVICE_CLASS_BLIND,
     DEVICE_CLASS_GARAGE,
     DEVICE_CLASS_SHUTTER,
@@ -39,6 +40,8 @@ from .entity import ZWaveBaseEntity
 
 LOGGER = logging.getLogger(__name__)
 
+VENETIAN_BLINDS_TILT = "venetianBlindsTilt"
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -55,7 +58,10 @@ async def async_setup_entry(
         if info.platform_hint == "motorized_barrier":
             entities.append(ZwaveMotorizedBarrier(config_entry, client, info))
         else:
-            entities.append(ZWaveCover(config_entry, client, info))
+            if info.node.manufacturer_id == 271:
+                entities.append(ZWaveCoverFibaro(config_entry, client, info))
+            else:
+                entities.append(ZWaveCover(config_entry, client, info))
         async_add_entities(entities)
 
     config_entry.async_on_unload(
@@ -148,6 +154,36 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
         if close_value:
             # Stop the cover if it's closing
             await self.info.node.async_set_value(close_value, False)
+
+
+class ZWaveCoverFibaro(ZWaveCover):
+    """Representation of a Fibaro Z-Wave cover device."""
+
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        client: ZwaveClient,
+        info: ZwaveDiscoveryInfo,
+    ) -> None:
+        """Initialize a ZWaveCover entity."""
+        super().__init__(config_entry, client, info)
+        self._attr_current_cover_tilt_position = 0
+
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+        """Move the cover tilt to a specific position."""
+        self._attr_current_cover_tilt_position = kwargs[ATTR_TILT_POSITION]
+        tilt_value = self.get_zwave_value("fibaro", 145, 0, VENETIAN_BLINDS_TILT)  # type: ignore
+        await self.info.node.async_set_value(
+            tilt_value, percent_to_zwave_position(kwargs[ATTR_TILT_POSITION])
+        )
+
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+        """Open the cover tilt."""
+        await self.async_set_cover_tilt_position(tilt_position=100)
+
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+        """Close the cover tilt."""
+        await self.async_set_cover_tilt_position(tilt_position=0)
 
 
 class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
