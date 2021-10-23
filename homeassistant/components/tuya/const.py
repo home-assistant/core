@@ -177,6 +177,9 @@ class DPCode(str, Enum):
     FAN_SPEED_PERCENT = "fan_speed_percent"  # Stepless speed
     FAR_DETECTION = "far_detection"
     FILTER_RESET = "filter_reset"  # Filter (cartridge) reset
+    GAS_SENSOR_STATE = "gas_sensor_state"
+    GAS_SENSOR_STATUS = "gas_sensor_status"
+    GAS_SENSOR_VALUE = "gas_sensor_value"
     HUMIDITY_CURRENT = "humidity_current"  # Current humidity
     HUMIDITY_SET = "humidity_set"  # Humidity setting
     HUMIDITY_VALUE = "humidity_value"  # Humidity
