@@ -1,6 +1,7 @@
 """The Netatmo integration."""
 from __future__ import annotations
 
+from http import HTTPStatus
 import logging
 import secrets
 
@@ -119,12 +120,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await session.async_ensure_token_valid()
     except aiohttp.ClientResponseError as ex:
         _LOGGER.debug("API error: %s (%s)", ex.code, ex.message)
-        if ex.code in (400, 401, 403):
+        if ex.code in (
+            HTTPStatus.BAD_REQUEST,
+            HTTPStatus.UNAUTHORIZED,
+            HTTPStatus.FORBIDDEN,
+        ):
             raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
         raise ConfigEntryNotReady from ex
 
-    if sorted(session.token["scope"].split(" ")) != sorted(NETATMO_SCOPES):
-        _LOGGER.debug("%s != %s", session.token["scope"].split(" "), NETATMO_SCOPES)
+    if sorted(session.token["scope"]) != sorted(NETATMO_SCOPES):
+        _LOGGER.debug(
+            "Scope is invalid: %s != %s", session.token["scope"], NETATMO_SCOPES
+        )
         raise ConfigEntryAuthFailed("Token scope not valid, trigger renewal")
 
     hass.data[DOMAIN][entry.entry_id] = {
@@ -239,15 +246,17 @@ async def async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) ->
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    data = hass.data[DOMAIN]
+
     if CONF_WEBHOOK_ID in entry.data:
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-        await hass.data[DOMAIN][entry.entry_id][AUTH].async_dropwebhook()
+        await data[entry.entry_id][AUTH].async_dropwebhook()
         _LOGGER.info("Unregister Netatmo webhook")
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    if unload_ok and entry.entry_id in hass.data[DOMAIN]:
-        hass.data[DOMAIN].pop(entry.entry_id)
+    if unload_ok and entry.entry_id in data:
+        data.pop(entry.entry_id)
 
     return unload_ok
 
