@@ -83,15 +83,18 @@ def make_playlist(
     discontinuity_sequence=0,
     segments=None,
     hint=None,
+    segment_duration=None,
     part_target_duration=None,
 ):
     """Create a an hls playlist response for tests to assert on."""
+    if not segment_duration:
+        segment_duration = SEGMENT_DURATION
     response = [
         "#EXTM3U",
         "#EXT-X-VERSION:6",
         "#EXT-X-INDEPENDENT-SEGMENTS",
         '#EXT-X-MAP:URI="init.mp4"',
-        f"#EXT-X-TARGETDURATION:{SEGMENT_DURATION}",
+        f"#EXT-X-TARGETDURATION:{segment_duration}",
         f"#EXT-X-MEDIA-SEQUENCE:{sequence}",
         f"#EXT-X-DISCONTINUITY-SEQUENCE:{discontinuity_sequence}",
     ]
@@ -105,7 +108,7 @@ def make_playlist(
         )
     else:
         response.append(
-            f"#EXT-X-START:TIME-OFFSET=-{EXT_X_START_NON_LL_HLS*SEGMENT_DURATION:.3f},PRECISE=YES",
+            f"#EXT-X-START:TIME-OFFSET=-{EXT_X_START_NON_LL_HLS*segment_duration:.3f},PRECISE=YES",
         )
     if segments:
         response.extend(segments)

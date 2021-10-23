@@ -22,7 +22,7 @@ from homeassistant.components.stream.core import Part
 from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 
-from .test_hls import SEGMENT_DURATION, STREAM_SOURCE, HlsClient, make_playlist
+from .test_hls import STREAM_SOURCE, HlsClient, make_playlist
 
 from tests.components.stream.common import (
     FAKE_TIME,
@@ -30,7 +30,8 @@ from tests.components.stream.common import (
     generate_h264_video,
 )
 
-TEST_PART_DURATION = 1
+SEGMENT_DURATION = 6
+TEST_PART_DURATION = 0.75
 NUM_PART_SEGMENTS = int(-(-SEGMENT_DURATION // TEST_PART_DURATION))
 PART_INDEPENDENT_PERIOD = int(1 / TEST_PART_DURATION) or 1
 BYTERANGE_LENGTH = 1
@@ -101,7 +102,7 @@ def make_segment_with_parts(
             "#EXT-X-PROGRAM-DATE-TIME:"
             + FAKE_TIME.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
             + "Z",
-            f"#EXTINF:{SEGMENT_DURATION:.3f},",
+            f"#EXTINF:{math.ceil(SEGMENT_DURATION/TEST_PART_DURATION)*TEST_PART_DURATION:.3f},",
             f"./segment/{segment}.m4s",
         ]
     )
@@ -286,6 +287,7 @@ async def test_ll_hls_playlist_view(hass, hls_stream, stream_worker_sync):
             for i in range(2)
         ],
         hint=make_hint(2, 0),
+        segment_duration=SEGMENT_DURATION,
         part_target_duration=hls.stream_settings.part_target_duration,
     )
 
@@ -307,6 +309,7 @@ async def test_ll_hls_playlist_view(hass, hls_stream, stream_worker_sync):
             for i in range(3)
         ],
         hint=make_hint(3, 0),
+        segment_duration=SEGMENT_DURATION,
         part_target_duration=hls.stream_settings.part_target_duration,
     )
 
