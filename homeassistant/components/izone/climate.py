@@ -161,12 +161,12 @@ class ControllerDevice(ClimateEntity):
             self._fan_to_pizone[_IZONE_FAN_TO_HA[fan]] = fan
         self._available = True
 
-        self._device_info = {
-            "identifiers": {(IZONE, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "IZone",
-            "model": self._controller.sys_type,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(IZONE, self.unique_id)},
+            manufacturer="IZone",
+            model=self._controller.sys_type,
+            name=self.name,
+        )
 
         # Create the zones
         self.zones = {}
@@ -245,11 +245,6 @@ class ControllerDevice(ClimateEntity):
         self.async_write_ha_state()
         for zone in self.zones.values():
             zone.async_schedule_update_ha_state()
-
-    @property
-    def device_info(self):
-        """Return the device info for the iZone system."""
-        return self._device_info
 
     @property
     def unique_id(self):
@@ -484,12 +479,12 @@ class ZoneDevice(ClimateEntity):
             }
             self._supported_features |= SUPPORT_TARGET_TEMPERATURE
 
-        self._device_info = DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(IZONE, controller.unique_id, zone.index)},
-            name=self.name,
             manufacturer="IZone",
-            via_device=(IZONE, controller.unique_id),
             model=zone.type.name.title(),
+            name=self.name,
+            via_device=(IZONE, controller.unique_id),
         )
 
     async def async_added_to_hass(self):
@@ -516,11 +511,6 @@ class ZoneDevice(ClimateEntity):
     def assumed_state(self) -> bool:
         """Return True if unable to access real state of the entity."""
         return self._controller.assumed_state
-
-    @property
-    def device_info(self):
-        """Return the device info for the iZone system."""
-        return self._device_info
 
     @property
     def unique_id(self):
