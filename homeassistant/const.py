@@ -352,8 +352,12 @@ ATTR_LOCATION: Final = "location"
 
 ATTR_MODE: Final = "mode"
 
+ATTR_CONFIG_ENTRY_ID: Final = "config_entry_id"
+ATTR_CONFIGURATION_URL: Final = "configuration_url"
+ATTR_CONNECTIONS: Final = "connections"
 ATTR_MANUFACTURER: Final = "manufacturer"
 ATTR_MODEL: Final = "model"
+ATTR_SUGGESTED_AREA: Final = "suggested_area"
 ATTR_SW_VERSION: Final = "sw_version"
 ATTR_VIA_DEVICE: Final = "via_device"
 
