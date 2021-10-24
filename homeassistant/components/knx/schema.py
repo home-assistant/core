@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import ABC
 from collections import OrderedDict
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Final
 
 import voluptuous as vol
 from xknx import XKNX
@@ -18,11 +18,13 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.components.climate.const import HVAC_MODE_HEAT, HVAC_MODES
 from homeassistant.components.cover import DEVICE_CLASSES as COVER_DEVICE_CLASSES
+from homeassistant.components.number.const import MODE_AUTO, MODE_BOX, MODE_SLIDER
 from homeassistant.components.sensor import CONF_STATE_CLASS, STATE_CLASSES_SCHEMA
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
     CONF_HOST,
+    CONF_MODE,
     CONF_NAME,
     CONF_PORT,
     CONF_TYPE,
@@ -437,7 +439,7 @@ class ExposeSchema(KNXPlatformSchema):
     CONF_KNX_EXPOSE_ATTRIBUTE = "attribute"
     CONF_KNX_EXPOSE_BINARY = "binary"
     CONF_KNX_EXPOSE_DEFAULT = "default"
-    EXPOSE_TIME_TYPES = [
+    EXPOSE_TIME_TYPES: Final = [
         "time",
         "date",
         "datetime",
@@ -653,11 +655,14 @@ class NumberSchema(KNXPlatformSchema):
     CONF_STEP = "step"
     DEFAULT_NAME = "KNX Number"
 
+    NUMBER_MODES: Final = [MODE_AUTO, MODE_BOX, MODE_SLIDER]
+
     ENTITY_SCHEMA = vol.All(
         vol.Schema(
             {
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                 vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
+                vol.Optional(CONF_MODE, default=MODE_AUTO): vol.In(NUMBER_MODES),
                 vol.Required(CONF_TYPE): numeric_type_validator,
                 vol.Required(KNX_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,

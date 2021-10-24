@@ -109,7 +109,7 @@ class NeatoConnectedSwitch(ToggleEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Device info for neato robot."""
-        return {"identifiers": {(NEATO_DOMAIN, self._robot_serial)}}
+        return DeviceInfo(identifiers={(NEATO_DOMAIN, self._robot_serial)})
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""

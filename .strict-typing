@@ -72,6 +72,7 @@ homeassistant.components.mailbox.*
 homeassistant.components.media_player.*
 homeassistant.components.modbus.*
 homeassistant.components.modem_callerid.*
+homeassistant.components.media_source.*
 homeassistant.components.mysensors.*
 homeassistant.components.nam.*
 homeassistant.components.nanoleaf.*
