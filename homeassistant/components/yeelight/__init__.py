@@ -213,7 +213,6 @@ async def _async_initialize(
 
     # fetch initial state
     await device.async_update()
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
 
 @callback
@@ -273,6 +272,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from ex
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    # Wait to install the reload listener until everything was successfully initialized
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     return True
 
@@ -661,36 +663,24 @@ class YeelightDevice:
 class YeelightEntity(Entity):
     """Represents single Yeelight entity."""
 
+    _attr_should_poll = False
+
     def __init__(self, device: YeelightDevice, entry: ConfigEntry) -> None:
         """Initialize the entity."""
         self._device = device
-        self._unique_id = entry.unique_id or entry.entry_id
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID."""
-        return self._unique_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, self._unique_id)},
-            "name": self._device.name,
-            "manufacturer": "Yeelight",
-            "model": self._device.model,
-            "sw_version": self._device.fw_version,
-        }
+        self._attr_unique_id = entry.unique_id or entry.entry_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.unique_id or entry.entry_id)},
+            name=self._device.name,
+            manufacturer="Yeelight",
+            model=self._device.model,
+            sw_version=self._device.fw_version,
+        )
 
     @property
     def available(self) -> bool:
         """Return if bulb is available."""
         return self._device.available
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
 
     async def async_update(self) -> None:
         """Update the entity."""
