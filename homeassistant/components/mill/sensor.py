@@ -9,6 +9,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
+    STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
@@ -59,18 +60,21 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
         name="Temperature",
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=HUMIDITY,
         device_class=DEVICE_CLASS_HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         name="Humidity",
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=BATTERY,
         device_class=DEVICE_CLASS_BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         name="Battery",
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=ECO2,
@@ -82,6 +86,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=TVOC,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         name="TVOC",
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
 )
 
@@ -140,18 +145,4 @@ class MillSensor(CoordinatorEntity, SensorEntity):
     @callback
     def _update_attr(self, device):
         self._attr_available = device.available
-
-        if self.entity_description.key == CONSUMPTION_TODAY:
-            self._attr_native_value = device.day_consumption
-        elif self.entity_description.key == CONSUMPTION_YEAR:
-            self._attr_native_value = device.year_consumption
-        elif self.entity_description.key == TEMPERATURE:
-            self._attr_native_value = device.current_temp
-        elif self.entity_description.key == HUMIDITY:
-            self._attr_native_value = device.humidity
-        elif self.entity_description.key == BATTERY:
-            self._attr_native_value = device.battery
-        elif self.entity_description.key == ECO2:
-            self._attr_native_value = device.eco2
-        elif self.entity_description.key == TVOC:
-            self._attr_native_value = device.tvoc
+        self._attr_native_value = getattr(device, self.entity_description.key)
