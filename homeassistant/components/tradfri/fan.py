@@ -147,6 +147,10 @@ class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
         if not self._device_control:
             return
 
+        # The device cannot be set to speed 5 (10%), so we should turn off the device
+        # for any value below 20
+        if percentage < 20:
+            percentage = 0
         await self._api(self._device_control.set_mode(_from_percentage(percentage)))
 
     async def async_turn_off(self, **kwargs: Any) -> None:
