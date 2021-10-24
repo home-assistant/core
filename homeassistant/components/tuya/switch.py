@@ -353,6 +353,16 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
+    # Solar Light
+    # https://developer.tuya.com/en/docs/iot/tynd?id=Kaof8j02e1t98
+    "tyndj": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_SAVE_ENERGY,
+            name="Energy Saving",
+            icon="mdi:leaf",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
     # Ceiling Light
     # https://developer.tuya.com/en/docs/iot/ceiling-light?id=Kaiuz03xxfc4r
     "xdd": (

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -70,12 +71,12 @@ class AbstractOpenWeatherMapSensor(SensorEntity):
         self._attr_name = f"{name} {description.name}"
         self._attr_unique_id = unique_id
         split_unique_id = unique_id.split("-")
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, f"{split_unique_id[0]}-{split_unique_id[1]}")},
-            "name": DEFAULT_NAME,
-            "manufacturer": MANUFACTURER,
-            "entry_type": "service",
-        }
+        self._attr_device_info = DeviceInfo(
+            entry_type="service",
+            identifiers={(DOMAIN, f"{split_unique_id[0]}-{split_unique_id[1]}")},
+            manufacturer=MANUFACTURER,
+            name=DEFAULT_NAME,
+        )
 
     @property
     def attribution(self):
