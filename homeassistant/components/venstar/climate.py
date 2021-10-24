@@ -31,6 +31,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PIN,
     CONF_SSL,
+    CONF_TIMEOUT,
     CONF_USERNAME,
     PRECISION_HALVES,
     STATE_ON,
@@ -44,6 +45,7 @@ from .const import (
     _LOGGER,
     ATTR_FAN_STATE,
     ATTR_HVAC_STATE,
+    CONF_HUMIDIFIER,
     DEFAULT_SSL,
     DOMAIN,
     HOLD_MODE_TEMPERATURE,
@@ -55,7 +57,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_HUMIDIFIER, default=True): cv.boolean,
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        vol.Optional(CONF_TIMEOUT, default=5): vol.All(
+            vol.Coerce(int), vol.Range(min=1)
+        ),
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PIN): cv.string,
     }

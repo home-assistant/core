@@ -70,7 +70,7 @@ class VenstarEntity(Entity):
                 self._client.update_info
             )
         except (OSError, RequestException) as ex:
-            _LOGGER.error("Exception during info update: %s", str(ex))
+            _LOGGER.error("Exception during info update: %s", ex)
 
         # older venstars sometimes cannot handle rapid sequential connections
         await asyncio.sleep(3)
@@ -80,7 +80,7 @@ class VenstarEntity(Entity):
                 self._client.update_sensors
             )
         except (OSError, RequestException) as ex:
-            _LOGGER.error("Exception during sensor update: %s", str(ex))
+            _LOGGER.error("Exception during sensor update: %s", ex)
 
         if not info_success or not sensor_success:
             _LOGGER.error("Failed to update data")

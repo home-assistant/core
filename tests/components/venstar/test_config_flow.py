@@ -88,7 +88,7 @@ async def test_unknown_error(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.venstar.config_flow.VenstarColorTouch.login",
+        "homeassistant.components.venstar.config_flow.VenstarColorTouch.update_info",
         side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
