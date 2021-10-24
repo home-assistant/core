@@ -163,6 +163,8 @@ class DPCode(str, Enum):
     C_F = "c_f"  # Temperature unit switching
     CH2O_STATE = "ch2o_state"
     CH2O_VALUE = "ch2o_value"
+    CH4_SENSOR_STATE = "ch4_sensor_state"
+    CH4_SENSOR_VALUE = "ch4_sensor_value"
     CHILD_LOCK = "child_lock"  # Child lock
     CO_STATE = "co_state"
     CO_STATUS = "co_status"

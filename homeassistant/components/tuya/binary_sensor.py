@@ -97,6 +97,16 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         ),
         TAMPER_BINARY_SENSOR,
     ),
+    # Methane Detector
+    # https://developer.tuya.com/en/docs/iot/categoryjwbj?id=Kaiuz40u98lkm
+    "jwbj": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CH4_SENSOR_STATE,
+            device_class=DEVICE_CLASS_GAS,
+            on_value="alarm",
+        ),
+        TAMPER_BINARY_SENSOR,
+    ),
     # Door Window Sensor
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48hm02l8m
     "mcs": (
