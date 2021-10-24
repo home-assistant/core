@@ -40,12 +40,12 @@ async def async_setup_entry(
 
 def _from_percentage(percentage: int) -> int:
     """Convert percent to a value that the Tradfri API understands."""
-    return int(percentage / 100 * 50)
+    return round(percentage / 100 * 50)
 
 
 def _from_fan_speed(fan_speed: int) -> int:
     """Convert the Tradfri API fan speed to a percentage value."""
-    return int(fan_speed / 50 * 100)
+    return round(fan_speed / 50 * 100)
 
 
 class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
