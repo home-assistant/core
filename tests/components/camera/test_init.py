@@ -53,7 +53,7 @@ async def mock_camera_web_rtc_fixture(hass):
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.camera.Camera.stream_type",
+        "homeassistant.components.camera.Camera.frontend_stream_type",
         new_callable=PropertyMock(return_value=STREAM_TYPE_WEB_RTC),
     ), patch(
         "homeassistant.components.camera.Camera.async_handle_web_rtc_offer",

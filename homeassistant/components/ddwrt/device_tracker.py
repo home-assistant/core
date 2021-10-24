@@ -88,9 +88,7 @@ class DdWrtDeviceScanner(DeviceScanner):
             if not data:
                 return None
 
-            dhcp_leases = data.get("dhcp_leases")
-
-            if not dhcp_leases:
+            if not (dhcp_leases := data.get("dhcp_leases")):
                 return None
 
             # Remove leading and trailing quotes and spaces

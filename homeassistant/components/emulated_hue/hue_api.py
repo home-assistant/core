@@ -294,9 +294,7 @@ class HueOneLightStateView(HomeAssistantView):
             )
             return self.json_message("Entity not found", HTTPStatus.NOT_FOUND)
 
-        entity = hass.states.get(hass_entity_id)
-
-        if entity is None:
+        if (entity := hass.states.get(hass_entity_id)) is None:
             _LOGGER.error("Entity not found: %s", hass_entity_id)
             return self.json_message("Entity not found", HTTPStatus.NOT_FOUND)
 
@@ -333,9 +331,7 @@ class HueOneLightChangeView(HomeAssistantView):
             _LOGGER.error("Unknown entity number: %s", entity_number)
             return self.json_message("Entity not found", HTTPStatus.NOT_FOUND)
 
-        entity = hass.states.get(entity_id)
-
-        if entity is None:
+        if (entity := hass.states.get(entity_id)) is None:
             _LOGGER.error("Entity not found: %s", entity_id)
             return self.json_message("Entity not found", HTTPStatus.NOT_FOUND)
 
@@ -544,8 +540,7 @@ class HueOneLightChangeView(HomeAssistantView):
         ):
             domain = entity.domain
             # Convert 0-100 to a fan speed
-            brightness = parsed[STATE_BRIGHTNESS]
-            if brightness == 0:
+            if (brightness := parsed[STATE_BRIGHTNESS]) == 0:
                 data[ATTR_SPEED] = SPEED_OFF
             elif 0 < brightness <= 33.3:
                 data[ATTR_SPEED] = SPEED_LOW

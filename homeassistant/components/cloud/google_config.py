@@ -7,9 +7,14 @@ from hass_nabucasa.google_report_state import ErrorResponse
 
 from homeassistant.components.google_assistant.const import DOMAIN as GOOGLE_DOMAIN
 from homeassistant.components.google_assistant.helpers import AbstractConfig
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, HTTP_OK
+from homeassistant.const import (
+    CLOUD_NEVER_EXPOSED_ENTITIES,
+    ENTITY_CATEGORY_CONFIG,
+    ENTITY_CATEGORY_DIAGNOSTIC,
+    HTTP_OK,
+)
 from homeassistant.core import CoreState, split_entity_id
-from homeassistant.helpers import entity_registry, start
+from homeassistant.helpers import entity_registry as er, start
 from homeassistant.setup import async_setup_component
 
 from .const import (
@@ -104,7 +109,7 @@ class CloudGoogleConfig(AbstractConfig):
         self._prefs.async_listen_updates(self._async_prefs_updated)
 
         self.hass.bus.async_listen(
-            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
             self._handle_entity_registry_updated,
         )
 
@@ -126,13 +131,23 @@ class CloudGoogleConfig(AbstractConfig):
         if entity_expose is not None:
             return entity_expose
 
+        entity_registry = er.async_get(self.hass)
+        registry_entry = entity_registry.async_get(entity_id)
+        if registry_entry:
+            auxiliary_entity = registry_entry.entity_category in (
+                ENTITY_CATEGORY_CONFIG,
+                ENTITY_CATEGORY_DIAGNOSTIC,
+            )
+        else:
+            auxiliary_entity = False
+
         default_expose = self._prefs.google_default_expose
 
         # Backwards compat
         if default_expose is None:
-            return True
+            return not auxiliary_entity
 
-        return split_entity_id(entity_id)[0] in default_expose
+        return not auxiliary_entity and split_entity_id(entity_id)[0] in default_expose
 
     @property
     def agent_user_id(self):
@@ -215,7 +230,7 @@ class CloudGoogleConfig(AbstractConfig):
 
         # Only consider entity registry updates if info relevant for Google has changed
         if event.data["action"] == "update" and not bool(
-            set(event.data["changes"]) & entity_registry.ENTITY_DESCRIBING_ATTRIBUTES
+            set(event.data["changes"]) & er.ENTITY_DESCRIBING_ATTRIBUTES
         ):
             return
 

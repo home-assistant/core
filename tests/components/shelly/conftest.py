@@ -108,7 +108,7 @@ async def coap_wrapper(hass):
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"sleep_period": 0, "model": "SHSW-25"},
+        data={"sleep_period": 0, "model": "SHSW-25", "host": "1.2.3.4"},
         unique_id="12345678",
     )
     config_entry.add_to_hass(hass)
@@ -140,7 +140,7 @@ async def rpc_wrapper(hass):
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"sleep_period": 0, "model": "SNSW-001P16EU", "gen": 2},
+        data={"sleep_period": 0, "model": "SNSW-001P16EU", "gen": 2, "host": "1.2.3.4"},
         unique_id="12345678",
     )
     config_entry.add_to_hass(hass)

@@ -236,8 +236,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     elk.connect()
 
     def _element_changed(element, changeset):
-        keypress = changeset.get("last_keypress")
-        if keypress is None:
+        if (keypress := changeset.get("last_keypress")) is None:
             return
 
         hass.bus.async_fire(

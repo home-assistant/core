@@ -76,8 +76,7 @@ def setup(hass, config):
 
         kwargs = {"mid": ring_id}
 
-        ring_vol = call.data.get(ATTR_RINGTONE_VOL)
-        if ring_vol is not None:
+        if (ring_vol := call.data.get(ATTR_RINGTONE_VOL)) is not None:
             kwargs["vol"] = ring_vol
 
         gateway.write_to_hub(gateway.sid, **kwargs)
@@ -379,8 +378,7 @@ def _add_gateway_to_schema(hass, schema):
         raise vol.Invalid(f"Unknown gateway sid {sid}")
 
     kwargs = {}
-    xiaomi_data = hass.data.get(DOMAIN)
-    if xiaomi_data is not None:
+    if (xiaomi_data := hass.data.get(DOMAIN)) is not None:
         gateways = list(xiaomi_data[GATEWAYS_KEY].values())
 
         # If the user has only 1 gateway, make it the default for services.
