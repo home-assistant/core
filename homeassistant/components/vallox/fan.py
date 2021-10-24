@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, NamedTuple
 
 from vallox_websocket_api import Vallox
 from vallox_websocket_api.exceptions import ValloxApiException
@@ -15,7 +15,7 @@ from homeassistant.components.fan import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -36,18 +36,25 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_PROFILE_FAN_SPEED_HOME = {
-    "description": "fan_speed_home",
-    "metric_key": METRIC_KEY_PROFILE_FAN_SPEED_HOME,
-}
-ATTR_PROFILE_FAN_SPEED_AWAY = {
-    "description": "fan_speed_away",
-    "metric_key": METRIC_KEY_PROFILE_FAN_SPEED_AWAY,
-}
-ATTR_PROFILE_FAN_SPEED_BOOST = {
-    "description": "fan_speed_boost",
-    "metric_key": METRIC_KEY_PROFILE_FAN_SPEED_BOOST,
-}
+
+class ExtraStateAttributeDetails(NamedTuple):
+    """Extra state attribute properties."""
+
+    description: str
+    metric_key: str
+
+
+EXTRA_STATE_ATTRIBUTES = (
+    ExtraStateAttributeDetails(
+        description="fan_speed_home", metric_key=METRIC_KEY_PROFILE_FAN_SPEED_HOME
+    ),
+    ExtraStateAttributeDetails(
+        description="fan_speed_away", metric_key=METRIC_KEY_PROFILE_FAN_SPEED_AWAY
+    ),
+    ExtraStateAttributeDetails(
+        description="fan_speed_boost", metric_key=METRIC_KEY_PROFILE_FAN_SPEED_BOOST
+    ),
+)
 
 
 async def async_setup_platform(
@@ -111,26 +118,17 @@ class ValloxFan(CoordinatorEntity[ValloxState], FanEntity):
     @property
     def extra_state_attributes(self) -> Mapping[str, int | None]:
         """Return device specific state attributes."""
-        fan_speed_home = self.coordinator.data.get_metric(
-            ATTR_PROFILE_FAN_SPEED_HOME["metric_key"]
-        )
-        fan_speed_away = self.coordinator.data.get_metric(
-            ATTR_PROFILE_FAN_SPEED_AWAY["metric_key"]
-        )
-        fan_speed_boost = self.coordinator.data.get_metric(
-            ATTR_PROFILE_FAN_SPEED_BOOST["metric_key"]
-        )
+        data = self.coordinator.data
+
+        def check_and_convert(value: StateType) -> int | None:
+            if isinstance(value, (int, float)):
+                return int(value)
+
+            return None
 
         return {
-            ATTR_PROFILE_FAN_SPEED_HOME["description"]: int(fan_speed_home)
-            if isinstance(fan_speed_home, (int, float))
-            else None,
-            ATTR_PROFILE_FAN_SPEED_AWAY["description"]: int(fan_speed_away)
-            if isinstance(fan_speed_away, (int, float))
-            else None,
-            ATTR_PROFILE_FAN_SPEED_BOOST["description"]: int(fan_speed_boost)
-            if isinstance(fan_speed_boost, (int, float))
-            else None,
+            attr.description: check_and_convert(data.get_metric(attr.metric_key))
+            for attr in EXTRA_STATE_ATTRIBUTES
         }
 
     async def _async_set_preset_mode_internal(self, preset_mode: str) -> bool:
