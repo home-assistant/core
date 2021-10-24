@@ -668,14 +668,19 @@ class YeelightEntity(Entity):
     def __init__(self, device: YeelightDevice, entry: ConfigEntry) -> None:
         """Initialize the entity."""
         self._device = device
-        self._attr_unique_id = entry.unique_id or entry.entry_id
+        self._unique_id = entry.unique_id or entry.entry_id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.unique_id or entry.entry_id)},
+            identifiers={(DOMAIN, self._unique_id)},
             name=self._device.name,
             manufacturer="Yeelight",
             model=self._device.model,
             sw_version=self._device.fw_version,
         )
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID."""
+        return self._unique_id
 
     @property
     def available(self) -> bool:
