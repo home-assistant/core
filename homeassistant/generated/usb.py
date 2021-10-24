@@ -44,8 +44,8 @@ USB = [
     {
         "domain": "zha",
         "vid": "10C4",
-        "pid": "8293",
-        "description": "*telegesis*"
+        "pid": "8B34",
+        "description": "*bv 2010/10*"
     },
     {
         "domain": "zwave_js",

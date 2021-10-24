@@ -468,10 +468,10 @@ class PlexMediaPlayer(MediaPlayerEntity):
     def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         if not (self.device and "playback" in self._device_protocol_capabilities):
-            _LOGGER.debug(
-                "Client is not currently accepting playback controls: %s", self.name
+            raise HomeAssistantError(
+                f"Client is not currently accepting playback controls: {self.name}"
             )
-            return
+
         if not self.plex_server.has_token:
             _LOGGER.warning(
                 "Plex integration configured without a token, playback may fail"
@@ -495,16 +495,17 @@ class PlexMediaPlayer(MediaPlayerEntity):
             media = self.plex_server.lookup_media(media_type, **src)
 
             if media is None:
-                _LOGGER.error("Media could not be found: %s", media_id)
-                return
+                raise HomeAssistantError(f"Media could not be found: {media_id}")
 
             _LOGGER.debug("Attempting to play %s on %s", media, self.name)
             playqueue = self.plex_server.create_playqueue(media, shuffle=shuffle)
 
         try:
             self.device.playMedia(playqueue)
-        except requests.exceptions.ConnectTimeout:
-            _LOGGER.error("Timed out playing on %s", self.name)
+        except requests.exceptions.ConnectTimeout as exc:
+            raise HomeAssistantError(
+                f"Request failed when playing on {self.name}"
+            ) from exc
 
     @property
     def extra_state_attributes(self):
