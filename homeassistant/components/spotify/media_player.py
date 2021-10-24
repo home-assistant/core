@@ -238,9 +238,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         name: str,
     ) -> None:
         """Initialize."""
-        self._id = user_id
         self._me = me
-        self._name = f"Spotify {name}"
         self._session = session
         self._spotify = spotify
         self._scope_ok = set(session.token["scope"].split(" ")).issuperset(
@@ -251,24 +249,19 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         self._devices: list[dict] | None = []
         self._playlist: dict | None = None
 
-        self._attr_name = self._name
+        self._attr_name = f"Spotify {name}"
         self._attr_unique_id = user_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this entity."""
         model = "Spotify Free"
-        if self._me is not None:
-            product = self._me["product"]
+        if me is not None:
+            product = me["product"]
             model = f"Spotify {product}"
-
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._id)},
+        self._attr_device_info = DeviceInfo(
+            configuration_url="https://open.spotify.com",
+            entry_type="service",
+            identifiers={(DOMAIN, user_id)},
             manufacturer="Spotify AB",
             model=model,
-            name=self._name,
-            entry_type="service",
-            configuration_url="https://open.spotify.com",
+            name=f"Spotify {name}",
         )
 
     @property

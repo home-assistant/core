@@ -614,12 +614,12 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return DeviceInfo(
+            configuration_url=self._api.config_url,
             identifiers={(DOMAIN, self._api.information.serial)},
-            name="Synology NAS",
             manufacturer="Synology",
             model=self._api.information.model,
+            name="Synology NAS",
             sw_version=self._api.information.version_string,
-            configuration_url=self._api.config_url,
         )
 
     async def async_added_to_hass(self) -> None:
@@ -683,11 +683,11 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return DeviceInfo(
+            configuration_url=self._api.config_url,
             identifiers={(DOMAIN, f"{self._api.information.serial}_{self._device_id}")},
-            name=f"Synology NAS ({self._device_name} - {self._device_type})",
             manufacturer=self._device_manufacturer,
             model=self._device_model,
+            name=f"Synology NAS ({self._device_name} - {self._device_type})",
             sw_version=self._device_firmware,
             via_device=(DOMAIN, self._api.information.serial),
-            configuration_url=self._api.config_url,
         )

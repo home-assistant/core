@@ -8,6 +8,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DOMAIN
 
@@ -43,16 +44,12 @@ class SpiderThermostat(ClimateEntity):
         """Initialize the thermostat."""
         self.api = api
         self.thermostat = thermostat
-
-    @property
-    def device_info(self):
-        """Return the device_info of the device."""
-        return {
-            "identifiers": {(DOMAIN, self.thermostat.id)},
-            "name": self.thermostat.name,
-            "manufacturer": self.thermostat.manufacturer,
-            "model": self.thermostat.model,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.thermostat.id)},
+            manufacturer=self.thermostat.manufacturer,
+            model=self.thermostat.model,
+            name=self.thermostat.name,
+        )
 
     @property
     def supported_features(self):

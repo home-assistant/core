@@ -27,7 +27,15 @@ from homeassistant.components.samsungtv.bridge import (
     SamsungTVWSBridge,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_CONNECTIONS,
+    ATTR_IDENTIFIERS,
+    CONF_HOST,
+    CONF_MAC,
+    CONF_NAME,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_component
 import homeassistant.helpers.config_validation as cv
@@ -115,6 +123,19 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._bridge = bridge
         self._auth_failed = False
         self._bridge.register_reauth_callback(self.access_denied)
+        self._attr_device_info = DeviceInfo(
+            name=self.name,
+            manufacturer=self._manufacturer,
+            model=self._model,
+        )
+        if self._mac:
+            self._attr_device_info[ATTR_CONNECTIONS] = {
+                (CONNECTION_NETWORK_MAC, self._mac)
+            }
+        if config_entry.unique_id:
+            self._attr_device_info[ATTR_IDENTIFIERS] = {
+                (DOMAIN, config_entry.unique_id)
+            }
 
     def access_denied(self) -> None:
         """Access denied callback."""
@@ -179,20 +200,6 @@ class SamsungTVDevice(MediaPlayerEntity):
             or self._mac is not None
             or self._power_off_in_progress()
         )
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return device specific attributes."""
-        info: DeviceInfo = {
-            "name": self.name,
-            "manufacturer": self._manufacturer,
-            "model": self._model,
-        }
-        if self.unique_id:
-            info["identifiers"] = {(DOMAIN, self.unique_id)}
-        if self._mac:
-            info["connections"] = {(CONNECTION_NETWORK_MAC, self._mac)}
-        return info
 
     @property
     def is_volume_muted(self) -> bool:

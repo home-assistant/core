@@ -79,12 +79,12 @@ class StookalertBinarySensor(BinarySensorEntity):
         self._attr_name = f"Stookalert {entry.data[CONF_PROVINCE]}"
         self._attr_unique_id = entry.unique_id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{entry.entry_id}")},
-            name=entry.data[CONF_PROVINCE],
-            manufacturer="RIVM",
-            model="Stookalert",
             entry_type=ENTRY_TYPE_SERVICE,
             configuration_url="https://www.rivm.nl/stookalert",
+            identifiers={(DOMAIN, f"{entry.entry_id}")},
+            manufacturer="RIVM",
+            model="Stookalert",
+            name=entry.data[CONF_PROVINCE],
         )
 
     def update(self) -> None:

@@ -26,20 +26,16 @@ class SmartTubEntity(CoordinatorEntity):
         super().__init__(coordinator)
         self.spa = spa
         self._entity_name = entity_name
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, spa.id)},
+            manufacturer=spa.brand,
+            model=spa.model,
+        )
 
     @property
     def unique_id(self) -> str:
         """Return a unique id for the entity."""
         return f"{self.spa.id}-{self._entity_name}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return {
-            "identifiers": {(DOMAIN, self.spa.id)},
-            "manufacturer": self.spa.brand,
-            "model": self.spa.model,
-        }
 
     @property
     def name(self) -> str:

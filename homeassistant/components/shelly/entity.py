@@ -282,6 +282,9 @@ class ShellyBlockEntity(entity.Entity):
         self.wrapper = wrapper
         self.block = block
         self._name = get_block_entity_name(wrapper.device, block)
+        self._attr_device_info = DeviceInfo(
+            connections={(device_registry.CONNECTION_NETWORK_MAC, wrapper.mac)}
+        )
 
     @property
     def name(self) -> str:
@@ -292,13 +295,6 @@ class ShellyBlockEntity(entity.Entity):
     def should_poll(self) -> bool:
         """If device should be polled."""
         return False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Device info."""
-        return {
-            "connections": {(device_registry.CONNECTION_NETWORK_MAC, self.wrapper.mac)}
-        }
 
     @property
     def available(self) -> bool:
@@ -348,16 +344,16 @@ class ShellyRpcEntity(entity.Entity):
         self.wrapper = wrapper
         self.key = key
         self._attr_should_poll = False
-        self._attr_device_info = {
-            "connections": {(device_registry.CONNECTION_NETWORK_MAC, wrapper.mac)}
-        }
+        self._attr_device_info = DeviceInfo(
+            connections={(device_registry.CONNECTION_NETWORK_MAC, wrapper.mac)}
+        )
         self._attr_unique_id = f"{wrapper.mac}-{key}"
         self._attr_name = get_rpc_entity_name(wrapper.device, key)
 
     @property
     def available(self) -> bool:
         """Available."""
-        return self.wrapper.device.connected
+        return cast(bool, self.wrapper.device.connected)
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to HASS."""
@@ -494,18 +490,14 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
         self.description = description
         self._name = get_block_entity_name(wrapper.device, None, self.description.name)
         self._last_value = None
+        self._attr_device_info = DeviceInfo(
+            connections={(device_registry.CONNECTION_NETWORK_MAC, wrapper.mac)}
+        )
 
     @property
     def name(self) -> str:
         """Name of sensor."""
         return self._name
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Device info."""
-        return {
-            "connections": {(device_registry.CONNECTION_NETWORK_MAC, self.wrapper.mac)}
-        }
 
     @property
     def entity_registry_enabled_default(self) -> bool:
@@ -639,7 +631,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
         self.last_state: StateType = None
         self.wrapper = wrapper
         self.attribute = attribute
-        self.block: Block | None = block  # type: ignore[assignment]
+        self.block: Block | None = block
         self.description = description
         self._unit = self.description.unit
 

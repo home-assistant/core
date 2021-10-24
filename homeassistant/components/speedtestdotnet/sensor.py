@@ -62,10 +62,10 @@ class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         self._state: StateType = None
         self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self._attr_device_info = DeviceInfo(
+            configuration_url="https://www.speedtest.net/",
+            entry_type="service",
             identifiers={(DOMAIN, self.coordinator.config_entry.entry_id)},
             name=DEFAULT_NAME,
-            entry_type="service",
-            configuration_url="https://www.speedtest.net/",
         )
 
     @property

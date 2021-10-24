@@ -9,6 +9,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_NAME, CONF_RESOURCE, CONF_URL, PERCENTAGE
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -106,6 +107,9 @@ class SyncThruSensor(CoordinatorEntity, SensorEntity):
         self._icon = "mdi:printer"
         self._unit_of_measurement = None
         self._id_suffix = ""
+        self._attr_device_info = DeviceInfo(
+            identifiers=device_identifiers(self.syncthru)
+        )
 
     @property
     def unique_id(self):
@@ -127,11 +131,6 @@ class SyncThruSensor(CoordinatorEntity, SensorEntity):
     def native_unit_of_measurement(self):
         """Return the unit of measuremnt."""
         return self._unit_of_measurement
-
-    @property
-    def device_info(self):
-        """Return device information."""
-        return {"identifiers": device_identifiers(self.syncthru)}
 
 
 class SyncThruMainSensor(SyncThruSensor):

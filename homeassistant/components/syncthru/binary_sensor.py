@@ -8,6 +8,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_NAME
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -50,6 +51,9 @@ class SyncThruBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self.syncthru: SyncThru = coordinator.data
         self._name = name
         self._id_suffix = ""
+        self._attr_device_info = DeviceInfo(
+            identifiers=device_identifiers(self.syncthru)
+        )
 
     @property
     def unique_id(self):
@@ -61,11 +65,6 @@ class SyncThruBinarySensor(CoordinatorEntity, BinarySensorEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
-
-    @property
-    def device_info(self):
-        """Return device information."""
-        return {"identifiers": device_identifiers(self.syncthru)}
 
 
 class SyncThruOnlineSensor(SyncThruBinarySensor):
