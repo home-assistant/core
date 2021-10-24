@@ -89,11 +89,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
             coordinator.async_set_updated_data(device.state)
 
-            device_info: DeviceInfo = {
-                "identifiers": {(DOMAIN, ble_device.address)},
-                "manufacturer": "Fjäråskupan",
-                "name": "Fjäråskupan",
-            }
+            device_info = DeviceInfo(
+                identifiers={(DOMAIN, ble_device.address)},
+                manufacturer="Fjäråskupan",
+                name="Fjäråskupan",
+            )
             device_state = DeviceState(device, coordinator, device_info)
             state.devices[ble_device.address] = device_state
             async_dispatcher_send(

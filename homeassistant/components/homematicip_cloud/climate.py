@@ -78,9 +78,9 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         """Return device specific attributes."""
         return DeviceInfo(
             identifiers={(HMIPC_DOMAIN, self._device.id)},
-            name=self._device.label,
             manufacturer="eQ-3",
             model=self._device.modelType,
+            name=self._device.label,
             via_device=(HMIPC_DOMAIN, self._device.homeId),
         )
 

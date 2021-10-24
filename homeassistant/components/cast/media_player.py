@@ -55,6 +55,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 import homeassistant.util.dt as dt_util
 from homeassistant.util.logging import async_create_catching_coro
@@ -184,12 +185,12 @@ class CastDevice(MediaPlayerEntity):
         self._attr_unique_id = cast_info.uuid
         self._attr_name = cast_info.friendly_name
         if cast_info.model_name != "Google Cast Group":
-            self._attr_device_info = {
-                "name": str(cast_info.friendly_name),
-                "identifiers": {(CAST_DOMAIN, str(cast_info.uuid).replace("-", ""))},
-                "model": cast_info.model_name,
-                "manufacturer": str(cast_info.manufacturer),
-            }
+            self._attr_device_info = DeviceInfo(
+                identifiers={(CAST_DOMAIN, str(cast_info.uuid).replace("-", ""))},
+                manufacturer=str(cast_info.manufacturer),
+                model=cast_info.model_name,
+                name=str(cast_info.friendly_name),
+            )
 
     async def async_added_to_hass(self):
         """Create chromecast object when added to hass."""

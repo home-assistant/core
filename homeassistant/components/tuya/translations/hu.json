@@ -65,7 +65,7 @@
                     "tuya_max_coltemp": "Az eszk\u00f6z \u00e1ltal megadott maxim\u00e1lis sz\u00ednh\u0151m\u00e9rs\u00e9klet",
                     "unit_of_measurement": "Az eszk\u00f6z \u00e1ltal haszn\u00e1lt h\u0151m\u00e9rs\u00e9kleti egys\u00e9g"
                 },
-                "description": "Konfigur\u00e1l\u00e1si lehet\u0151s\u00e9gek a(z) {device_type} t\u00edpus\u00fa `{device_name}` eszk\u00f6z megjelen\u00edtett inform\u00e1ci\u00f3inak be\u00e1ll\u00edt\u00e1s\u00e1hoz",
+                "description": "Konfigur\u00e1l\u00e1si lehet\u0151s\u00e9gek {device_type} t\u00edpus\u00fa `{device_name}` eszk\u00f6z megjelen\u00edtett inform\u00e1ci\u00f3inak be\u00e1ll\u00edt\u00e1s\u00e1hoz",
                 "title": "Tuya eszk\u00f6z konfigur\u00e1l\u00e1sa"
             },
             "init": {
