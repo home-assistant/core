@@ -9,5 +9,5 @@ def test_from_fan_speed():
 
 
 def test_from_percentage():
-    """Test that we can convert percentage to fan speed."""
+    """Test that we can convert percentage value to fan speed."""
     assert _from_percentage(80) == 40
