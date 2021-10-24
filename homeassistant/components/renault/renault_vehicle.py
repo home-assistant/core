@@ -11,13 +11,6 @@ from typing import cast
 from renault_api.kamereon import models
 from renault_api.renault_vehicle import RenaultVehicle
 
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SW_VERSION,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 
@@ -55,13 +48,13 @@ class RenaultVehicleProxy:
         self.hass = hass
         self._vehicle = vehicle
         self._details = details
-        self._device_info: DeviceInfo = {
-            ATTR_IDENTIFIERS: {(DOMAIN, cast(str, details.vin))},
-            ATTR_MANUFACTURER: (details.get_brand_label() or "").capitalize(),
-            ATTR_MODEL: (details.get_model_label() or "").capitalize(),
-            ATTR_NAME: details.registrationNumber or "",
-            ATTR_SW_VERSION: details.get_model_code() or "",
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, cast(str, details.vin))},
+            manufacturer=(details.get_brand_label() or "").capitalize(),
+            model=(details.get_model_label() or "").capitalize(),
+            name=details.registrationNumber or "",
+            sw_version=details.get_model_code() or "",
+        )
         self.coordinators: dict[str, RenaultDataUpdateCoordinator] = {}
         self.hvac_target_temperature = 21
         self._scan_interval = scan_interval
@@ -70,11 +63,6 @@ class RenaultVehicleProxy:
     def details(self) -> models.KamereonVehicleDetails:
         """Return the specs of the vehicle."""
         return self._details
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return a device description for device registry."""
-        return self._device_info
 
     @property
     def vehicle(self) -> RenaultVehicle:
@@ -131,28 +119,28 @@ COORDINATORS: tuple[RenaultCoordinatorDescription, ...] = (
     RenaultCoordinatorDescription(
         endpoint="cockpit",
         key="cockpit",
-        update_method=lambda x: x.get_cockpit,
+        update_method=lambda x: cast(Callable, x.get_cockpit),
     ),
     RenaultCoordinatorDescription(
         endpoint="hvac-status",
         key="hvac_status",
-        update_method=lambda x: x.get_hvac_status,
+        update_method=lambda x: cast(Callable, x.get_hvac_status),
     ),
     RenaultCoordinatorDescription(
         endpoint="location",
         key="location",
-        update_method=lambda x: x.get_location,
+        update_method=lambda x: cast(Callable, x.get_location),
     ),
     RenaultCoordinatorDescription(
         endpoint="battery-status",
         key="battery",
         requires_electricity=True,
-        update_method=lambda x: x.get_battery_status,
+        update_method=lambda x: cast(Callable, x.get_battery_status),
     ),
     RenaultCoordinatorDescription(
         endpoint="charge-mode",
         key="charge_mode",
         requires_electricity=True,
-        update_method=lambda x: x.get_charge_mode,
+        update_method=lambda x: cast(Callable, x.get_charge_mode),
     ),
 )
