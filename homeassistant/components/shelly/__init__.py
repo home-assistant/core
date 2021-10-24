@@ -56,6 +56,7 @@ from .const import (
     SLEEP_PERIOD_MULTIPLIER,
     UPDATE_PERIOD_MULTIPLIER,
 )
+from .service import async_services_setup
 from .utils import (
     get_block_device_name,
     get_block_device_sleep_period,
@@ -182,6 +183,8 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
         _LOGGER.debug("Setting up offline block device %s", entry.title)
         await async_block_device_setup(hass, entry, device)
 
+    await async_services_setup(hass)
+
     return True
 
 
@@ -229,6 +232,8 @@ async def async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool
 
     hass.config_entries.async_setup_platforms(entry, RPC_PLATFORMS)
 
+    await async_services_setup(hass)
+
     return True
 
 
@@ -273,6 +278,9 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self._last_mode: str | None = None
         self._last_effect: int | None = None
 
+        self._ota_update_pending = False
+        self._ota_update_params = {"beta": False}
+
         entry.async_on_unload(
             self.async_add_listener(self._async_device_updates_handler)
         )
@@ -305,6 +313,10 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
                     self._last_input_events_count[1] = -1
 
                 break
+
+        # check if OTA update is scheduled
+        if self._ota_update_pending:
+            self.hass.async_create_task(self._async_do_ota_update())
 
         # Check for input events and config change
         cfg_changed = 0
@@ -410,6 +422,62 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         )
         self.device_id = entry.id
         self.device.subscribe_updates(self.async_set_updated_data)
+
+    async def async_trigger_ota_update(self, beta: bool = False) -> None:
+        """Trigger or schedule an ota update."""
+        update_data = self.device.status["update"]
+        _LOGGER.debug("OTA update service - update_data: %s", update_data)
+
+        if self._ota_update_pending:
+            _LOGGER.error(
+                "OTA update already scheduled for sleeping device %s", self.name
+            )
+            return
+
+        if not update_data["has_update"] and not beta:
+            _LOGGER.error("No OTA update available for device %s", self.name)
+            return
+
+        if beta and not update_data.get("beta_version") and not beta:
+            _LOGGER.error(
+                "No OTA update on beta channel available for device %s", self.name
+            )
+            return
+
+        if update_data["status"] == "updating":
+            _LOGGER.error("OTA update already in progress for %s", self.name)
+            return
+
+        if self.entry.data.get(CONF_SLEEP_PERIOD):
+            self._ota_update_pending = True
+            self._ota_update_params = {"beta": beta}
+            _LOGGER.info("OTA update scheduled for sleeping device %s", self.name)
+        else:
+            self._ota_update_params = {"beta": beta}
+            await self._async_do_ota_update()
+
+    async def _async_do_ota_update(self) -> None:
+        """Perform an ota update."""
+        beta_channel = self._ota_update_params["beta"]
+        update_data = self.device.status["update"]
+        new_version = update_data["new_version"]
+        if beta_channel:
+            new_version = update_data["beta_version"]
+
+        _LOGGER.info(
+            "Start OTA update of device %s from '%s' to '%s'",
+            self.name,
+            update_data["old_version"],
+            new_version,
+        )
+        result = None
+        try:
+            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
+                result = await self.device.trigger_ota_update(beta=beta_channel)
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.exception("Error while perform ota update: %s", err)
+
+        _LOGGER.debug("Result of OTA update call: %s", result)
 
     def shutdown(self) -> None:
         """Shutdown the wrapper."""
