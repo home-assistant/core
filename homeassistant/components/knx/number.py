@@ -7,7 +7,13 @@ from xknx import XKNX
 from xknx.devices import NumericValue
 
 from homeassistant.components.number import NumberEntity
-from homeassistant.const import CONF_NAME, CONF_TYPE, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    CONF_MODE,
+    CONF_NAME,
+    CONF_TYPE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -63,6 +69,7 @@ class KNXNumber(KnxEntity, NumberEntity, RestoreEntity):
             NumberSchema.CONF_MIN,
             self._device.sensor_value.dpt_class.value_min,
         )
+        self._attr_mode = config[CONF_MODE]
         self._attr_step = config.get(
             NumberSchema.CONF_STEP,
             self._device.sensor_value.dpt_class.resolution,
