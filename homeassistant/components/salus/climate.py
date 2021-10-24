@@ -8,7 +8,9 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER
@@ -16,7 +18,9 @@ from .const import DOMAIN, MANUFACTURER
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+):
     """Set up the it500 Salus thermostat."""
     coordinator, device = hass.data[DOMAIN][config_entry.entry_id]
 
@@ -94,6 +98,9 @@ class IT500Salus(CoordinatorEntity, ClimateEntity):
             "model": "IT500 Salus",
             "manufacturer": MANUFACTURER,
         }
+
+    def set_hvac_mode(self, mode: str):
+        """We do nothing here as we only support heating."""
 
     async def async_set_temperature(self, **kwargs):
         """Set a new target temperature."""

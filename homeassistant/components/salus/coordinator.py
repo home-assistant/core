@@ -3,10 +3,10 @@ from datetime import timedelta
 import logging
 
 from async_timeout import timeout
-from requests import ConnectTimeout, HTTPError
+from requests.exceptions import ConnectTimeout, HTTPError
 from salus.api import Api
 
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 class SalusDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching Salus data."""
 
-    def __init__(self, hass: HomeAssistantType, *, api: Api, device_id: str):
+    def __init__(self, hass: HomeAssistant, *, api: Api, device_id: str):
         """Initialize global Salus data updater."""
         self.salus = api
         self._device_id = device_id
@@ -37,17 +37,14 @@ class SalusDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict:
         """Fetch data from Salus."""
 
-        try:
-            async with timeout(15):
-                return await self.hass.async_add_executor_job(self._update_data)
-        except (ConnectTimeout, HTTPError) as error:
-            raise UpdateFailed(f"Invalid response from API: {error}") from error
+        async with timeout(15):
+            return await self.hass.async_add_executor_job(self._update_data)
 
-    def _update_temperature(self, temperature: float):
+    def _update_temperature(self, temperature: float) -> None:
         """Update the target temperature - doing a manual override."""
         self.salus.set_manual_override(self._device_id, temperature)
 
-    async def set_manual_temperature_override(self, temperature: float):
+    async def set_manual_temperature_override(self, temperature: float) -> None:
         """Async update the target temperature - doing a manual override."""
         try:
             async with timeout(15):

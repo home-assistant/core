@@ -3,21 +3,20 @@
 import logging
 from typing import Any, Dict
 
-from requests import ConnectTimeout, HTTPError
+from requests.exceptions import ConnectTimeout, HTTPError
 from salus.api import Api
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_DEVICE, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
-# pylint: disable=unused-import
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def validate_input(hass: HomeAssistantType, data: dict) -> Dict[str, Any]:
+def validate_input(hass: HomeAssistant, data: dict) -> bool:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -31,7 +30,7 @@ def validate_input(hass: HomeAssistantType, data: dict) -> Dict[str, Any]:
     return True
 
 
-def get_salus_devices(hass: HomeAssistantType, data: dict) -> Dict[str, Any]:
+def get_salus_devices(hass: HomeAssistant, data: dict) -> Dict[str, Any]:
     """Get a list of available Salus devices in user account."""
     api = Api(
         data[CONF_USERNAME],

@@ -442,12 +442,8 @@ homeassistant/components/rpi_power/* @shenxn @swetoast
 homeassistant/components/ruckus_unleashed/* @gabe565
 homeassistant/components/safe_mode/* @home-assistant/core
 homeassistant/components/saj/* @fredericvl
-<<<<<<< HEAD
-homeassistant/components/samsungtv/* @escoand @chemelli74
-=======
 homeassistant/components/salus/* @cipacda
-homeassistant/components/samsungtv/* @escoand
->>>>>>> ac7be2d7fc (Add it500 Salus integration)
+homeassistant/components/samsungtv/* @escoand @chemelli74
 homeassistant/components/scene/* @home-assistant/core
 homeassistant/components/schluter/* @prairieapps
 homeassistant/components/scrape/* @fabaff

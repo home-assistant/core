@@ -5,7 +5,7 @@ from salus.api import Api
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import SalusDataUpdateCoordinator
@@ -13,15 +13,7 @@ from .coordinator import SalusDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistantType, config: dict) -> bool:
-    """Set up the Salus integration."""
-    hass.data.setdefault(DOMAIN, {})
-
-    # Return boolean to indicate that initialization was successful.
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Salus from a config entry."""
     salus_api = await hass.async_add_executor_job(_get_salus_api_instance, entry)
     devices = await hass.async_add_executor_job(salus_api.get_devices)
@@ -34,6 +26,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     )
     await coordinator.async_refresh()
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = (coordinator, device)
 
     for platform in PLATFORMS:
