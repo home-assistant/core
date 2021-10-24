@@ -83,6 +83,28 @@ DEFAULT_CONFIG_CODE = {
     }
 }
 
+DEFAULT_CONFIG_REMOTE_CODE = {
+    alarm_control_panel.DOMAIN: {
+        "platform": "mqtt",
+        "name": "test",
+        "state_topic": "alarm/state",
+        "command_topic": "alarm/command",
+        "code": "REMOTE_CODE",
+        "code_arm_required": True,
+    }
+}
+
+DEFAULT_CONFIG_REMOTE_CODE_TEXT = {
+    alarm_control_panel.DOMAIN: {
+        "platform": "mqtt",
+        "name": "test",
+        "state_topic": "alarm/state",
+        "command_topic": "alarm/command",
+        "code": "REMOTE_CODE_TEXT",
+        "code_arm_required": True,
+    }
+}
+
 
 async def test_fail_setup_without_state_topic(hass, mqtt_mock):
     """Test for failing with no state topic."""
@@ -241,6 +263,86 @@ async def test_publish_mqtt_with_code(hass, mqtt_mock, service, payload):
 
 
 @pytest.mark.parametrize(
+    "service,payload",
+    [
+        (SERVICE_ALARM_ARM_HOME, "ARM_HOME"),
+        (SERVICE_ALARM_ARM_AWAY, "ARM_AWAY"),
+        (SERVICE_ALARM_ARM_NIGHT, "ARM_NIGHT"),
+        (SERVICE_ALARM_ARM_VACATION, "ARM_VACATION"),
+        (SERVICE_ALARM_ARM_CUSTOM_BYPASS, "ARM_CUSTOM_BYPASS"),
+        (SERVICE_ALARM_DISARM, "DISARM"),
+    ],
+)
+async def test_publish_mqtt_with_remote_code(hass, mqtt_mock, service, payload):
+    """Test publishing of MQTT messages when remode code is configured."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        DEFAULT_CONFIG_REMOTE_CODE,
+    )
+    await hass.async_block_till_done()
+    call_count = mqtt_mock.async_publish.call_count
+
+    # No code provided, should not publish
+    await hass.services.async_call(
+        alarm_control_panel.DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "alarm_control_panel.test"},
+        blocking=True,
+    )
+    assert mqtt_mock.async_publish.call_count == call_count
+
+    # Any code numbered  provided, should publish
+    await hass.services.async_call(
+        alarm_control_panel.DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: "1234"},
+        blocking=True,
+    )
+    mqtt_mock.async_publish.assert_called_once_with("alarm/command", payload, 0, False)
+
+
+@pytest.mark.parametrize(
+    "service,payload",
+    [
+        (SERVICE_ALARM_ARM_HOME, "ARM_HOME"),
+        (SERVICE_ALARM_ARM_AWAY, "ARM_AWAY"),
+        (SERVICE_ALARM_ARM_NIGHT, "ARM_NIGHT"),
+        (SERVICE_ALARM_ARM_VACATION, "ARM_VACATION"),
+        (SERVICE_ALARM_ARM_CUSTOM_BYPASS, "ARM_CUSTOM_BYPASS"),
+        (SERVICE_ALARM_DISARM, "DISARM"),
+    ],
+)
+async def test_publish_mqtt_with_remote_code_text(hass, mqtt_mock, service, payload):
+    """Test publishing of MQTT messages when remote text code is configured."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        DEFAULT_CONFIG_REMOTE_CODE_TEXT,
+    )
+    await hass.async_block_till_done()
+    call_count = mqtt_mock.async_publish.call_count
+
+    # No code provided, should not publish
+    await hass.services.async_call(
+        alarm_control_panel.DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "alarm_control_panel.test"},
+        blocking=True,
+    )
+    assert mqtt_mock.async_publish.call_count == call_count
+
+    # Any code numbered  provided, should publish
+    await hass.services.async_call(
+        alarm_control_panel.DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: "any_code"},
+        blocking=True,
+    )
+    mqtt_mock.async_publish.assert_called_once_with("alarm/command", payload, 0, False)
+
+
+@pytest.mark.parametrize(
     "service,payload,disable_code",
     [
         (SERVICE_ALARM_ARM_HOME, "ARM_HOME", "code_arm_required"),
@@ -356,6 +458,21 @@ async def test_attributes_code_number(hass, mqtt_mock):
     """Test attributes which are not supported by the vacuum."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config[alarm_control_panel.DOMAIN]["code"] = CODE_NUMBER
+
+    assert await async_setup_component(hass, alarm_control_panel.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("alarm_control_panel.test")
+    assert (
+        state.attributes.get(alarm_control_panel.ATTR_CODE_FORMAT)
+        == alarm_control_panel.FORMAT_NUMBER
+    )
+
+
+async def test_attributes_remote_code_number(hass, mqtt_mock):
+    """Test attributes which are not supported by the vacuum."""
+    config = copy.deepcopy(DEFAULT_CONFIG_REMOTE_CODE)
+    config[alarm_control_panel.DOMAIN]["code"] = "REMOTE_CODE"
 
     assert await async_setup_component(hass, alarm_control_panel.DOMAIN, config)
     await hass.async_block_till_done()

@@ -1,6 +1,7 @@
 """The tests the History component."""
 # pylint: disable=protected-access,invalid-name
 from datetime import timedelta
+from http import HTTPStatus
 import json
 from unittest.mock import patch, sentinel
 
@@ -586,7 +587,7 @@ async def test_fetch_period_api(hass, hass_client):
     await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
     response = await client.get(f"/api/history/period/{dt_util.utcnow().isoformat()}")
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
 
 
 async def test_fetch_period_api_with_use_include_order(hass, hass_client):
@@ -598,7 +599,7 @@ async def test_fetch_period_api_with_use_include_order(hass, hass_client):
     await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
     response = await client.get(f"/api/history/period/{dt_util.utcnow().isoformat()}")
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
 
 
 async def test_fetch_period_api_with_minimal_response(hass, hass_client):
@@ -610,7 +611,7 @@ async def test_fetch_period_api_with_minimal_response(hass, hass_client):
     response = await client.get(
         f"/api/history/period/{dt_util.utcnow().isoformat()}?minimal_response"
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
 
 
 async def test_fetch_period_api_with_no_timestamp(hass, hass_client):
@@ -620,7 +621,7 @@ async def test_fetch_period_api_with_no_timestamp(hass, hass_client):
     await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
     response = await client.get("/api/history/period")
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
 
 
 async def test_fetch_period_api_with_include_order(hass, hass_client):
@@ -642,7 +643,7 @@ async def test_fetch_period_api_with_include_order(hass, hass_client):
         f"/api/history/period/{dt_util.utcnow().isoformat()}",
         params={"filter_entity_id": "non.existing,something.else"},
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
 
 
 async def test_fetch_period_api_with_entity_glob_include(hass, hass_client):
@@ -672,7 +673,7 @@ async def test_fetch_period_api_with_entity_glob_include(hass, hass_client):
     response = await client.get(
         f"/api/history/period/{dt_util.utcnow().isoformat()}",
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert response_json[0][0]["entity_id"] == "light.kitchen"
 
@@ -710,7 +711,7 @@ async def test_fetch_period_api_with_entity_glob_exclude(hass, hass_client):
     response = await client.get(
         f"/api/history/period/{dt_util.utcnow().isoformat()}",
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 2
     assert response_json[0][0]["entity_id"] == "light.cow"
@@ -754,7 +755,7 @@ async def test_fetch_period_api_with_entity_glob_include_and_exclude(hass, hass_
     response = await client.get(
         f"/api/history/period/{dt_util.utcnow().isoformat()}",
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 3
     assert response_json[0][0]["entity_id"] == "light.match"
@@ -785,7 +786,7 @@ async def test_entity_ids_limit_via_api(hass, hass_client):
     response = await client.get(
         f"/api/history/period/{dt_util.utcnow().isoformat()}?filter_entity_id=light.kitchen,light.cow",
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 2
     assert response_json[0][0]["entity_id"] == "light.kitchen"
@@ -815,7 +816,7 @@ async def test_entity_ids_limit_via_api_with_skip_initial_state(hass, hass_clien
     response = await client.get(
         f"/api/history/period/{dt_util.utcnow().isoformat()}?filter_entity_id=light.kitchen,light.cow&skip_initial_state",
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 0
 
@@ -823,7 +824,7 @@ async def test_entity_ids_limit_via_api_with_skip_initial_state(hass, hass_clien
     response = await client.get(
         f"/api/history/period/{when.isoformat()}?filter_entity_id=light.kitchen,light.cow&skip_initial_state",
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 2
     assert response_json[0][0]["entity_id"] == "light.kitchen"

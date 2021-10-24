@@ -72,7 +72,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.luftdaten.*",
     "homeassistant.components.lutron_caseta.*",
     "homeassistant.components.lyric.*",
-    "homeassistant.components.media_source.*",
     "homeassistant.components.melcloud.*",
     "homeassistant.components.meteo_france.*",
     "homeassistant.components.metoffice.*",

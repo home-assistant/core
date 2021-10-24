@@ -1,4 +1,6 @@
 """Support for displaying weather info from Ecobee API."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 from pyecobee.const import ECOBEE_STATE_UNKNOWN
@@ -13,6 +15,7 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.const import PRESSURE_HPA, PRESSURE_INHG, TEMP_FAHRENHEIT
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util import dt as dt_util
 from homeassistant.util.pressure import convert as pressure_convert
 
@@ -65,21 +68,22 @@ class EcobeeWeather(WeatherEntity):
         return self.data.ecobee.get_thermostat(self._index)["identifier"]
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device information for the ecobee weather platform."""
         thermostat = self.data.ecobee.get_thermostat(self._index)
+        model: str | None
         try:
             model = f"{ECOBEE_MODEL_TO_NAME[thermostat['modelNumber']]} Thermostat"
         except KeyError:
             # Ecobee model is not in our list
             model = None
 
-        return {
-            "identifiers": {(DOMAIN, thermostat["identifier"])},
-            "name": self.name,
-            "manufacturer": MANUFACTURER,
-            "model": model,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, thermostat["identifier"])},
+            manufacturer=MANUFACTURER,
+            model=model,
+            name=self.name,
+        )
 
     @property
     def condition(self):

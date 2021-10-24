@@ -1,12 +1,12 @@
 """Sensor for checking the status of London air."""
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import HTTP_OK
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
@@ -83,7 +83,7 @@ class APIData:
     def update(self):
         """Get the latest data from TFL."""
         response = requests.get(URL, timeout=10)
-        if response.status_code != HTTP_OK:
+        if response.status_code != HTTPStatus.OK:
             _LOGGER.warning("Invalid response from API")
         else:
             self.data = parse_api_response(response.json())

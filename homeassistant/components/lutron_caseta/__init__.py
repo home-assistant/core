@@ -17,7 +17,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import (
     ACTION_PRESS,
@@ -193,8 +193,7 @@ def _async_merge_lip_leap_data(lip_devices, bridge):
         if leap_device_data is None:
             continue
         for key in ("type", "model", "serial"):
-            val = leap_device_data.get(key)
-            if val is not None:
+            if (val := leap_device_data.get(key)) is not None:
                 device[key] = val
 
     _LOGGER.debug("Button Devices: %s", button_devices_by_id)
@@ -330,16 +329,16 @@ class LutronCasetaDevice(Entity):
         return str(self.serial)
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, self.serial)},
-            "name": self.name,
-            "suggested_area": self._device["name"].split("_")[0],
-            "manufacturer": MANUFACTURER,
-            "model": f"{self._device['model']} ({self._device['type']})",
-            "via_device": (DOMAIN, self._bridge_device["serial"]),
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.serial)},
+            name=self.name,
+            suggested_area=self._device["name"].split("_")[0],
+            manufacturer=MANUFACTURER,
+            model=f"{self._device['model']} ({self._device['type']})",
+            via_device=(DOMAIN, self._bridge_device["serial"]),
+        )
 
     @property
     def extra_state_attributes(self):

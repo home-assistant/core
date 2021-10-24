@@ -1,5 +1,6 @@
 """The tests for hls streams."""
 import asyncio
+from http import HTTPStatus
 import itertools
 import re
 from urllib.parse import urlparse
@@ -16,7 +17,6 @@ from homeassistant.components.stream.const import (
     HLS_PROVIDER,
 )
 from homeassistant.components.stream.core import Part
-from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 
 from .test_hls import SEGMENT_DURATION, STREAM_SOURCE, HlsClient, make_playlist
@@ -143,17 +143,17 @@ async def test_ll_hls_stream(hass, hls_stream, stream_worker_sync):
 
     # Fetch playlist
     master_playlist_response = await hls_client.get()
-    assert master_playlist_response.status == 200
+    assert master_playlist_response.status == HTTPStatus.OK
 
     # Fetch init
     master_playlist = await master_playlist_response.text()
     init_response = await hls_client.get("/init.mp4")
-    assert init_response.status == 200
+    assert init_response.status == HTTPStatus.OK
 
     # Fetch playlist
     playlist_url = "/" + master_playlist.splitlines()[-1]
     playlist_response = await hls_client.get(playlist_url)
-    assert playlist_response.status == 200
+    assert playlist_response.status == HTTPStatus.OK
 
     # Fetch segments
     playlist = await playlist_response.text()
@@ -163,7 +163,7 @@ async def test_ll_hls_stream(hass, hls_stream, stream_worker_sync):
         if match:
             segment_url = "/" + match.group("segment_url")
             segment_response = await hls_client.get(segment_url)
-            assert segment_response.status == 200
+            assert segment_response.status == HTTPStatus.OK
 
     def check_part_is_moof_mdat(data: bytes):
         if len(data) < 8 or data[4:8] != b"moof":
@@ -200,7 +200,7 @@ async def test_ll_hls_stream(hass, hls_stream, stream_worker_sync):
                     "Range": f'bytes={match.group("byterange_start")}-{byterange_end}'
                 },
             )
-            assert part_segment_response.status == 206
+            assert part_segment_response.status == HTTPStatus.PARTIAL_CONTENT
             assert check_part_is_moof_mdat(await part_segment_response.read())
 
     stream_worker_sync.resume()
@@ -210,7 +210,7 @@ async def test_ll_hls_stream(hass, hls_stream, stream_worker_sync):
 
     # Ensure playlist not accessible after stream ends
     fail_response = await hls_client.get()
-    assert fail_response.status == HTTP_NOT_FOUND
+    assert fail_response.status == HTTPStatus.NOT_FOUND
 
 
 async def test_ll_hls_playlist_view(hass, hls_stream, stream_worker_sync):
@@ -244,7 +244,7 @@ async def test_ll_hls_playlist_view(hass, hls_stream, stream_worker_sync):
     hls_client = await hls_stream(stream)
 
     resp = await hls_client.get("/playlist.m3u8")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert await resp.text() == make_playlist(
         sequence=0,
         segments=[
@@ -265,7 +265,7 @@ async def test_ll_hls_playlist_view(hass, hls_stream, stream_worker_sync):
 
     await hass.async_block_till_done()
     resp = await hls_client.get("/playlist.m3u8")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert await resp.text() == make_playlist(
         sequence=0,
         segments=[
@@ -316,10 +316,10 @@ async def test_ll_hls_msn(hass, hls_stream, stream_worker_sync, hls_sync):
 
     msn_responses = await msn_requests
 
-    assert msn_responses[0].status == 200
-    assert msn_responses[1].status == 200
-    assert msn_responses[2].status == 400
-    assert msn_responses[3].status == 400
+    assert msn_responses[0].status == HTTPStatus.OK
+    assert msn_responses[1].status == HTTPStatus.OK
+    assert msn_responses[2].status == HTTPStatus.BAD_REQUEST
+    assert msn_responses[3].status == HTTPStatus.BAD_REQUEST
 
     # Sequence number is now 2. Create six more requests for sequences 0 through 5.
     # Calls for msn 0 through 4 should work, 5 should fail.
@@ -334,12 +334,12 @@ async def test_ll_hls_msn(hass, hls_stream, stream_worker_sync, hls_sync):
         hls.put(segment)
 
     msn_responses = await msn_requests
-    assert msn_responses[0].status == 200
-    assert msn_responses[1].status == 200
-    assert msn_responses[2].status == 200
-    assert msn_responses[3].status == 200
-    assert msn_responses[4].status == 200
-    assert msn_responses[5].status == 400
+    assert msn_responses[0].status == HTTPStatus.OK
+    assert msn_responses[1].status == HTTPStatus.OK
+    assert msn_responses[2].status == HTTPStatus.OK
+    assert msn_responses[3].status == HTTPStatus.OK
+    assert msn_responses[4].status == HTTPStatus.OK
+    assert msn_responses[5].status == HTTPStatus.BAD_REQUEST
 
     stream_worker_sync.resume()
 
@@ -369,7 +369,9 @@ async def test_ll_hls_playlist_bad_msn_part(hass, hls_stream, stream_worker_sync
     # If the Playlist URI contains an _HLS_part directive but no _HLS_msn
     # directive, the Server MUST return Bad Request, such as HTTP 400.
 
-    assert (await hls_client.get("/playlist.m3u8?_HLS_part=1")).status == 400
+    assert (
+        await hls_client.get("/playlist.m3u8?_HLS_part=1")
+    ).status == HTTPStatus.BAD_REQUEST
 
     # Seed hls with 1 complete segment and 1 in process segment
     segment = create_segment(sequence=0)
@@ -398,12 +400,14 @@ async def test_ll_hls_playlist_bad_msn_part(hass, hls_stream, stream_worker_sync
     # The following two tests should fail immediately:
     # - request with a _HLS_msn of 4
     # - request with a _HLS_msn of 1 and a _HLS_part of num_completed_parts-1+advance_part_limit
-    assert (await hls_client.get("/playlist.m3u8?_HLS_msn=4")).status == 400
+    assert (
+        await hls_client.get("/playlist.m3u8?_HLS_msn=4")
+    ).status == HTTPStatus.BAD_REQUEST
     assert (
         await hls_client.get(
             f"/playlist.m3u8?_HLS_msn=1&_HLS_part={num_completed_parts-1+hass.data[DOMAIN][ATTR_SETTINGS].hls_advance_part_limit}"
         )
-    ).status == 400
+    ).status == HTTPStatus.BAD_REQUEST
     stream_worker_sync.resume()
 
 
@@ -478,8 +482,8 @@ async def test_ll_hls_playlist_rollover_part(
 
     different_response, *same_responses = await requests
 
-    assert different_response.status == 200
-    assert all(response.status == 200 for response in same_responses)
+    assert different_response.status == HTTPStatus.OK
+    assert all(response.status == HTTPStatus.OK for response in same_responses)
     different_playlist = await different_response.read()
     same_playlists = [await response.read() for response in same_responses]
     assert different_playlist != same_playlists[0]
@@ -549,8 +553,8 @@ async def test_ll_hls_playlist_msn_part(hass, hls_stream, stream_worker_sync, hl
     msn_responses = await msn_requests
 
     # All the responses should succeed except the last one which fails
-    assert all(response.status == 200 for response in msn_responses[:-1])
-    assert msn_responses[-1].status == 400
+    assert all(response.status == HTTPStatus.OK for response in msn_responses[:-1])
+    assert msn_responses[-1].status == HTTPStatus.BAD_REQUEST
 
     stream_worker_sync.resume()
 
@@ -600,7 +604,7 @@ async def test_get_part_segments(hass, hls_stream, stream_worker_sync, hls_sync)
         )
     )
     responses = await requests
-    assert all(response.status == 200 for response in responses)
+    assert all(response.status == HTTPStatus.OK for response in responses)
     assert all(
         [
             await responses[i].read() == segment.parts[i].data
@@ -616,7 +620,7 @@ async def test_get_part_segments(hass, hls_stream, stream_worker_sync, hls_sync)
     await hls_sync.wait_for_handler()
     hls.part_put()
     response = await request
-    assert response.status == 404
+    assert response.status == HTTPStatus.NOT_FOUND
 
     # Put the remaining parts and complete the segment
     while remaining_parts:
@@ -641,7 +645,7 @@ async def test_get_part_segments(hass, hls_stream, stream_worker_sync, hls_sync)
     complete_segment(segment)
     # Check the response
     response = await request
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     assert (
         await response.read()
         == ALT_SEQUENCE_BYTES[: len(hls.get_segment(2).parts[0].data)]

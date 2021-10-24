@@ -1,4 +1,5 @@
 """Config flow for NuHeat integration."""
+from http import HTTPStatus
 import logging
 
 import nuheat
@@ -6,12 +7,7 @@ import requests.exceptions
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    HTTP_BAD_REQUEST,
-    HTTP_INTERNAL_SERVER_ERROR,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import CONF_SERIAL_NUMBER, DOMAIN
 
@@ -39,8 +35,8 @@ async def validate_input(hass: core.HomeAssistant, data):
         raise CannotConnect from ex
     except requests.exceptions.HTTPError as ex:
         if (
-            ex.response.status_code > HTTP_BAD_REQUEST
-            and ex.response.status_code < HTTP_INTERNAL_SERVER_ERROR
+            ex.response.status_code > HTTPStatus.BAD_REQUEST
+            and ex.response.status_code < HTTPStatus.INTERNAL_SERVER_ERROR
         ):
             raise InvalidAuth from ex
         raise CannotConnect from ex

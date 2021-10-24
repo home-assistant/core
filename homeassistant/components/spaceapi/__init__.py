@@ -249,8 +249,7 @@ class APISpaceApiView(HomeAssistantView):
     @staticmethod
     def get_sensor_data(hass, spaceapi, sensor):
         """Get data from a sensor."""
-        sensor_state = hass.states.get(sensor)
-        if not sensor_state:
+        if not (sensor_state := hass.states.get(sensor)):
             return None
         sensor_data = {ATTR_NAME: sensor_state.name, ATTR_VALUE: sensor_state.state}
         if ATTR_SENSOR_LOCATION in sensor_state.attributes:
@@ -279,9 +278,8 @@ class APISpaceApiView(HomeAssistantView):
             pass
 
         state_entity = spaceapi["state"][ATTR_ENTITY_ID]
-        space_state = hass.states.get(state_entity)
 
-        if space_state is not None:
+        if (space_state := hass.states.get(state_entity)) is not None:
             state = {
                 ATTR_OPEN: space_state.state != "off",
                 ATTR_LASTCHANGE: dt_util.as_timestamp(space_state.last_updated),

@@ -37,7 +37,7 @@ async def test_pr3000rt2u(hass):
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == attr for key, attr in expected_attributes.items()
     )
 
 
@@ -62,7 +62,7 @@ async def test_cp1350c(hass):
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == attr for key, attr in expected_attributes.items()
     )
 
 
@@ -86,7 +86,7 @@ async def test_5e850i(hass):
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == attr for key, attr in expected_attributes.items()
     )
 
 
@@ -110,7 +110,7 @@ async def test_5e650i(hass):
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == attr for key, attr in expected_attributes.items()
     )
 
 
@@ -137,7 +137,7 @@ async def test_backupsses600m1(hass):
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == attr for key, attr in expected_attributes.items()
     )
 
 
@@ -163,7 +163,7 @@ async def test_cp1500pfclcd(hass):
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == attr for key, attr in expected_attributes.items()
     )
 
 
@@ -187,7 +187,7 @@ async def test_dl650elcd(hass):
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == attr for key, attr in expected_attributes.items()
     )
 
 
@@ -211,7 +211,7 @@ async def test_blazer_usb(hass):
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == attr for key, attr in expected_attributes.items()
     )
 
 

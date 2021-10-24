@@ -179,8 +179,7 @@ class VlcDevice(MediaPlayerEntity):
 
             if not self._media_title:
                 # Fall back to filename.
-                data_info = data.get("data")
-                if data_info:
+                if data_info := data.get("data"):
                     self._media_title = data_info["filename"]
 
         except CommandError as err:
@@ -282,8 +281,7 @@ class VlcDevice(MediaPlayerEntity):
     async def async_media_pause(self) -> None:
         """Send pause command."""
         status = await self._vlc.status()
-        current_state = status.state
-        if current_state != "paused":
+        if status.state != "paused":
             # Make sure we're not already paused since VLCTelnet.pause() toggles
             # pause.
             await self._vlc.pause()
