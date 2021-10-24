@@ -4,7 +4,6 @@ import binascii
 import copy
 import functools
 import logging
-from typing import cast
 
 import RFXtrx as rfxtrxmod
 import async_timeout
@@ -393,10 +392,10 @@ class RfxtrxEntity(RestoreEntity):
         return self._unique_id
 
     @property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self):
         """Return the device info."""
         return DeviceInfo(
-            identifiers={(DOMAIN, cast(str, self._device_id))},
+            identifiers={(DOMAIN, *self._device_id)},
             model=self._device.type_string,
             name=f"{self._device.type_string} {self._device.id_string}",
         )
