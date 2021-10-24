@@ -172,6 +172,7 @@ class DPCode(str, Enum):
     CO2_STATE = "co2_state"
     CO2_VALUE = "co2_value"  # CO2 concentration
     COLOR_DATA_V2 = "color_data_v2"
+    COLOUR_DATA_HSV = "colour_data_hsv"  # Colored light mode
     COLOUR_DATA = "colour_data"  # Colored light mode
     COLOUR_DATA_V2 = "colour_data_v2"  # Colored light mode
     CONCENTRATION_SET = "concentration_set"  # Concentration setting
