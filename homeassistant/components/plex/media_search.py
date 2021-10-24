@@ -15,6 +15,15 @@ LEGACY_PARAM_MAPPING = {
     "video_name": "movie.title",
 }
 
+PREFERRED_LIBTYPE_ORDER = (
+    "episode",
+    "season",
+    "show",
+    "track",
+    "album",
+    "artist",
+)
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,16 +50,9 @@ def search_media(media_type, library_section, allow_multiple=False, **kwargs):
 
     if not libtype:
         # Default to a sane libtype if not explicitly provided
-        for libtype in (
-            "episode",
-            "season",
-            "show",
-            "track",
-            "album",
-            "artist",
-            None,
-        ):
-            if not libtype or any(key.startswith(libtype) for key in search_query):
+        for preferred_libtype in PREFERRED_LIBTYPE_ORDER:
+            if any(key.startswith(preferred_libtype) for key in search_query):
+                libtype = preferred_libtype
                 break
 
     search_query.update(libtype=libtype)
