@@ -1,4 +1,6 @@
 """The venstar component."""
+import asyncio
+
 from requests import RequestException
 from venstarcolortouch import VenstarColorTouch
 
@@ -60,14 +62,26 @@ class VenstarEntity(Entity):
         """Initialize the data object."""
         self._config = config
         self._client = client
-        self._humidifier = True
 
     async def async_update(self):
         """Update the state."""
-        info_success = await self.hass.async_add_executor_job(self._client.update_info)
-        sensor_success = await self.hass.async_add_executor_job(
-            self._client.update_sensors
-        )
+        try:
+            info_success = await self.hass.async_add_executor_job(
+                self._client.update_info
+            )
+        except (OSError, RequestException) as ex:
+            _LOGGER.error("Exception during info update: %s", str(ex))
+
+        # older venstars sometimes cannot handle rapid sequential connections
+        await asyncio.sleep(3)
+
+        try:
+            sensor_success = await self.hass.async_add_executor_job(
+                self._client.update_sensors
+            )
+        except (OSError, RequestException) as ex:
+            _LOGGER.error("Exception during sensor update: %s", str(ex))
+
         if not info_success or not sensor_success:
             _LOGGER.error("Failed to update data")
 

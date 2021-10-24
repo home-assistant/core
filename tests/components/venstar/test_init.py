@@ -22,6 +22,7 @@ async def test_setup_entry(hass: HomeAssistant):
             CONF_SSL: False,
         },
     )
+    config_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.venstar.VenstarColorTouch._request",
@@ -33,7 +34,6 @@ async def test_setup_entry(hass: HomeAssistant):
         "homeassistant.components.venstar.VenstarColorTouch.update_info",
         new=VenstarColorTouchMock.update_info,
     ):
-        config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -53,6 +53,7 @@ async def test_setup_entry_exception(hass: HomeAssistant):
             CONF_SSL: False,
         },
     )
+    config_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.venstar.VenstarColorTouch._request",
@@ -64,7 +65,6 @@ async def test_setup_entry_exception(hass: HomeAssistant):
         "homeassistant.components.venstar.VenstarColorTouch.update_info",
         new=VenstarColorTouchMock.broken_update_info,
     ):
-        config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
