@@ -366,11 +366,11 @@ class WizBulb(LightEntity):
                 # this is the case if the temperature was changed
                 # do nothing until the RGB color was changed
                 return
-            cw = self._light.state.get_warm_white()
-            if cw is None:
+            warmwhite = self._light.state.get_warm_white()
+            if warmwhite is None:
                 return
 
-            self._hscolor = self._light.convertHSfromRGBCW(rgb, cw)
+            self._hscolor = self._light.convertHSfromRGBCW(rgb, warmwhite)
 
         # pylint: disable=broad-except
         except Exception:
