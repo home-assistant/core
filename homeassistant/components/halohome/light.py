@@ -1,32 +1,22 @@
+"""HALO Home integration light platform."""
 import logging
 
 import halohome
-import voluptuous as vol
-
-import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     COLOR_MODE_COLOR_TEMP,
-    PLATFORM_SCHEMA,
     LightEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
-
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_HOST, default="https://api.avi-on.com"): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-    }
-)
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the HALO Home light platform from a config entry."""
+    config = config_entry.data
     host = config[CONF_HOST]
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
@@ -41,12 +31,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 
 class HaloLight(LightEntity):
+    """HALO Home Light Entity."""
+
     _attr_max_mireds = 1000000 // 2700
     _attr_min_mireds = 1000000 // 5000
     _attr_supported_color_modes = {COLOR_MODE_COLOR_TEMP}
     _attr_color_mode = COLOR_MODE_COLOR_TEMP
 
     def __init__(self, device: halohome.Device):
+        """Create a new HaloLight object."""
         self._device = device
         self._attr_is_on = False
         self._attr_brightness = 255
@@ -56,6 +49,7 @@ class HaloLight(LightEntity):
         self._attr_unique_id = device.pid
 
     async def async_turn_on(self, **kwargs):
+        """Change brightness or color of a HALO Home light."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
 
@@ -74,6 +68,7 @@ class HaloLight(LightEntity):
             self._attr_is_on = True
 
     async def async_turn_off(self, **kwargs):
+        """Turn off a HALO Home light."""
         await self._device.set_brightness(0)
         self._brightness = 0
         self._attr_is_on = False
