@@ -47,6 +47,7 @@ DEFAULT_SAVE_ON_CHANGE = False
 DEFAULT_NIGHTLIGHT_SWITCH = False
 
 CONF_MODEL = "model"
+CONF_DETECTED_MODEL = "detected_model"
 CONF_TRANSITION = "transition"
 CONF_SAVE_ON_CHANGE = "save_on_change"
 CONF_MODE_MUSIC = "use_music_mode"
@@ -205,10 +206,11 @@ async def _async_initialize(
     if (
         device.capabilities
         and device.capabilities["model"] in get_known_models()
-        and entry.options.get(CONF_MODEL) != device.capabilities["model"]
+        and entry.data.get(CONF_DETECTED_MODEL) != device.capabilities["model"]
     ):
         hass.config_entries.async_update_entry(
-            entry, options={**entry.options, CONF_MODEL: device.capabilities["model"]}
+            entry,
+            data={**entry.data, CONF_DETECTED_MODEL: device.capabilities["model"]},
         )
 
     # fetch initial state
@@ -230,6 +232,7 @@ def _async_normalize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> No
             data={
                 CONF_HOST: entry.data.get(CONF_HOST),
                 CONF_ID: entry.data.get(CONF_ID) or entry.unique_id,
+                CONF_DETECTED_MODEL: entry.data.get(CONF_DETECTED_MODEL),
             },
             options={
                 CONF_NAME: entry.data.get(CONF_NAME, ""),
@@ -700,7 +703,7 @@ async def _async_get_device(
     hass: HomeAssistant, host: str, entry: ConfigEntry
 ) -> YeelightDevice:
     # Get model from config and capabilities
-    model = entry.options.get(CONF_MODEL)
+    model = entry.options.get(CONF_MODEL) or entry.data.get(CONF_DETECTED_MODEL)
 
     # Set up device
     bulb = AsyncBulb(host, model=model or None)

@@ -15,6 +15,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from . import (
+    CONF_DETECTED_MODEL,
     CONF_MODE_MUSIC,
     CONF_MODEL,
     CONF_NIGHTLIGHT_SWITCH,
@@ -275,15 +276,20 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=options)
 
         options = self._config_entry.options
-        model = options[CONF_MODEL]
+        detected_model = self._config_entry.data.get(CONF_DETECTED_MODEL)
+        configured_model = options[CONF_MODEL]
+
         schema_dict = {}
         known_models = get_known_models()
-        if model not in known_models:
+        if configured_model not in known_models:
+            known_models.insert(0, configured_model)
+
+        if detected_model != configured_model:
             schema_dict.update(
                 {
-                    vol.Optional(CONF_MODEL, default=options[CONF_MODEL]): vol.In(
-                        [model, *known_models]
-                    ),
+                    vol.Optional(
+                        CONF_MODEL, default=configured_model or detected_model
+                    ): vol.In(known_models),
                 }
             )
         schema_dict.update(
