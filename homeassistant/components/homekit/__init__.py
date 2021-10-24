@@ -69,7 +69,6 @@ from .const import (
     BRIDGE_NAME,
     BRIDGE_SERIAL_NUMBER,
     CONF_ADVERTISE_IP,
-    CONF_AUTO_START,
     CONF_ENTITY_CONFIG,
     CONF_ENTRY_INDEX,
     CONF_EXCLUDE_ACCESSORY_MODE,
@@ -80,14 +79,10 @@ from .const import (
     CONF_LINKED_DOORBELL_SENSOR,
     CONF_LINKED_HUMIDITY_SENSOR,
     CONF_LINKED_MOTION_SENSOR,
-    CONF_SAFE_MODE,
-    CONF_ZEROCONF_DEFAULT_INTERFACE,
     CONFIG_OPTIONS,
-    DEFAULT_AUTO_START,
     DEFAULT_EXCLUDE_ACCESSORY_MODE,
     DEFAULT_HOMEKIT_MODE,
     DEFAULT_PORT,
-    DEFAULT_SAFE_MODE,
     DOMAIN,
     HOMEKIT,
     HOMEKIT_MODE_ACCESSORY,
@@ -141,9 +136,6 @@ def _has_all_unique_names_and_ports(bridges):
 
 
 BRIDGE_SCHEMA = vol.All(
-    cv.deprecated(CONF_ZEROCONF_DEFAULT_INTERFACE),
-    cv.deprecated(CONF_SAFE_MODE),
-    cv.deprecated(CONF_AUTO_START),
     vol.Schema(
         {
             vol.Optional(CONF_HOMEKIT_MODE, default=DEFAULT_HOMEKIT_MODE): vol.In(
@@ -155,11 +147,8 @@ BRIDGE_SCHEMA = vol.All(
             vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
             vol.Optional(CONF_IP_ADDRESS): vol.All(ipaddress.ip_address, cv.string),
             vol.Optional(CONF_ADVERTISE_IP): vol.All(ipaddress.ip_address, cv.string),
-            vol.Optional(CONF_AUTO_START, default=DEFAULT_AUTO_START): cv.boolean,
-            vol.Optional(CONF_SAFE_MODE, default=DEFAULT_SAFE_MODE): cv.boolean,
             vol.Optional(CONF_FILTER, default={}): BASE_FILTER_SCHEMA,
             vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
-            vol.Optional(CONF_ZEROCONF_DEFAULT_INTERFACE): cv.boolean,
             vol.Optional(CONF_DEVICES): cv.ensure_list,
         },
         extra=vol.ALLOW_EXTRA,
@@ -279,7 +268,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     homekit_mode = options.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
     entity_config = options.get(CONF_ENTITY_CONFIG, {}).copy()
-    auto_start = options.get(CONF_AUTO_START, DEFAULT_AUTO_START)
     entity_filter = FILTER_SCHEMA(options.get(CONF_FILTER, {}))
     devices = options.get(CONF_DEVICES, [])
 
@@ -307,7 +295,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if hass.state == CoreState.running:
         await homekit.async_start()
-    elif auto_start:
+    else:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, homekit.async_start)
 
     return True
