@@ -117,6 +117,12 @@ class ValloxState:
         return value
 
 
+class ValloxDataUpdateCoordinator(DataUpdateCoordinator):
+    """The DataUpdateCoordinator for Vallox."""
+
+    data: ValloxState
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the client and boot the platforms."""
     conf = config[DOMAIN]
@@ -138,7 +144,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         return ValloxState(metric_cache, profile)
 
-    coordinator = DataUpdateCoordinator[ValloxState](
+    coordinator = ValloxDataUpdateCoordinator(
         hass,
         _LOGGER,
         name=f"{name} DataUpdateCoordinator",

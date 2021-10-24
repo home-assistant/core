@@ -16,12 +16,9 @@ from homeassistant.components.fan import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ValloxState
+from . import ValloxDataUpdateCoordinator
 from .const import (
     DOMAIN,
     METRIC_KEY_MODE,
@@ -77,14 +74,16 @@ async def async_setup_platform(
     async_add_entities([device])
 
 
-class ValloxFan(CoordinatorEntity[ValloxState], FanEntity):
+class ValloxFan(CoordinatorEntity, FanEntity):
     """Representation of the fan."""
+
+    coordinator: ValloxDataUpdateCoordinator
 
     def __init__(
         self,
         name: str,
         client: Vallox,
-        coordinator: DataUpdateCoordinator[ValloxState],
+        coordinator: ValloxDataUpdateCoordinator,
     ) -> None:
         """Initialize the fan."""
         super().__init__(coordinator)
