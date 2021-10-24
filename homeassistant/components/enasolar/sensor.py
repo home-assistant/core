@@ -6,15 +6,12 @@ from datetime import date, datetime
 import logging
 from typing import Callable
 
-import pyenasolar
-
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
 from homeassistant.const import (
-    CONF_HOST,
     CONF_NAME,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
@@ -26,7 +23,6 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import CALLBACK_TYPE, callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util
 
@@ -38,6 +34,8 @@ from .const import (
     CONF_SUN_UP,
     DEFAULT_SUN_DOWN,
     DEFAULT_SUN_UP,
+    DOMAIN,
+    ENASOLAR,
     ENASOLAR_UNIT_MAPPINGS,
     SCAN_DATA_MIN_INTERVAL,
     SCAN_MAX_INTERVAL,
@@ -54,16 +52,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass_meter_sensors = []
     hass_data_sensors = []
 
-    host = config_entry.data[CONF_HOST]
-
-    _LOGGER.debug("Instantiate an EnaSolar Inverter at '%s'", host)
-    enasolar = pyenasolar.EnaSolar()
-
-    try:
-        await enasolar.interogate_inverter(host)
-    except Exception as conerr:
-        _LOGGER.error("Connection to EnaSolar Inverter '%s' failed (%s)", host, conerr)
-        raise ConfigEntryNotReady from conerr
+    enasolar = hass.data[DOMAIN][config_entry.entry_id][ENASOLAR]
 
     if config_entry.options != {}:
         enasolar.sun_up = dt_util.parse_time(config_entry.options[CONF_SUN_UP])

@@ -1,6 +1,7 @@
 """EnaSolar solar inverter configuration."""
 from __future__ import annotations
 
+import contextlib
 import logging
 import socket
 from typing import Any
@@ -37,10 +38,8 @@ _LOGGER = logging.getLogger(__name__)
 
 def _get_ip(host):
     """Get the ip address from the host name."""
-    try:
+    with contextlib.suppress(socket.gaierror):
         return socket.gethostbyname(host)
-    except socket.gaierror:
-        return None
 
 
 class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

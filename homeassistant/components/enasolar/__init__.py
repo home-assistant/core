@@ -8,6 +8,8 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
+from .const import DOMAIN, ENASOLAR
+
 PLATFORMS = ["sensor"]
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,9 +24,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     try:
         await enasolar.interogate_inverter(host)
     except Exception as conerr:
-        _LOGGER.error("Connection to EnaSolar Inverter '%s' failed (%s)", host, conerr)
-        raise ConfigEntryNotReady from conerr
+        raise ConfigEntryNotReady(
+            f"Connection to EnaSolar Inverter '{host}' failed ({conerr})"
+        ) from conerr
 
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][config_entry.entry_id] = {ENASOLAR: enasolar}
     config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
     return True
