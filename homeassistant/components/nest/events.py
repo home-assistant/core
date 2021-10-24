@@ -57,3 +57,11 @@ EVENT_NAME_MAP = {
     CameraPersonEvent.NAME: EVENT_CAMERA_PERSON,
     CameraSoundEvent.NAME: EVENT_CAMERA_SOUND,
 }
+
+# Names for event types shown in the media source
+MEDIA_SOURCE_EVENT_TITLE_MAP = {
+    DoorbellChimeEvent.NAME: "Doorbell pressed",
+    CameraMotionEvent.NAME: "Motion detected",
+    CameraPersonEvent.NAME: "Person detected",
+    CameraSoundEvent.NAME: "Sound detected",
+}
