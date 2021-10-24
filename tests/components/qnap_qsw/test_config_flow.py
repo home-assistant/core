@@ -72,7 +72,7 @@ async def test_connection_error(hass):
     """Test connection to host error."""
 
     with patch(
-        "homeassistant.components.qnap_qsw.config_flow.QSHA.async_identify",
+        "homeassistant.components.qnap_qsw.config_flow.QSHA.sync_identify",
         side_effect=ConnectionError(),
     ), requests_mock.mock() as _m:
         result = await hass.config_entries.flow.async_init(
@@ -82,7 +82,7 @@ async def test_connection_error(hass):
         assert result["errors"] == {"base": "cannot_connect"}
 
     with patch(
-        "homeassistant.components.qnap_qsw.config_flow.QSHA.async_update",
+        "homeassistant.components.qnap_qsw.config_flow.QSHA.sync_update",
         side_effect=ConnectionError(),
     ), requests_mock.mock() as _m:
         qnap_qsw_requests_mock(_m)
@@ -110,7 +110,7 @@ async def test_login_error(hass):
     """Test login error."""
 
     with patch(
-        "homeassistant.components.qnap_qsw.config_flow.QSHA.async_identify",
+        "homeassistant.components.qnap_qsw.config_flow.QSHA.sync_identify",
         side_effect=LoginError("login error"),
     ), requests_mock.mock() as _m:
         result = await hass.config_entries.flow.async_init(
@@ -120,7 +120,7 @@ async def test_login_error(hass):
         assert result["errors"] == {"base": "invalid_auth"}
 
     with patch(
-        "homeassistant.components.qnap_qsw.config_flow.QSHA.async_update",
+        "homeassistant.components.qnap_qsw.config_flow.QSHA.sync_update",
         side_effect=LoginError("login error"),
     ), requests_mock.mock() as _m:
         qnap_qsw_requests_mock(_m)
