@@ -9,16 +9,9 @@ from wled import Device as WLEDDevice
 from homeassistant.components.wled.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
-
-
-@pytest.fixture(autouse=True)
-async def mock_persistent_notification(hass: HomeAssistant) -> None:
-    """Set up component for persistent notifications."""
-    await async_setup_component(hass, "persistent_notification", {})
 
 
 @pytest.fixture

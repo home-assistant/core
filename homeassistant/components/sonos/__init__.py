@@ -90,6 +90,7 @@ class SonosData:
         self.discovery_ignored: set[str] = set()
         self.discovery_known: set[str] = set()
         self.boot_counts: dict[str, int] = {}
+        self.mdns_names: dict[str, str] = {}
 
 
 async def async_setup(hass, config):
@@ -263,20 +264,22 @@ class SonosDiscoveryManager:
             else:
                 async_dispatcher_send(self.hass, f"{SONOS_SEEN}-{uid}")
 
-    @callback
-    def _async_ssdp_discovered_player(self, info):
+    async def _async_ssdp_discovered_player(self, info, change):
+        if change == ssdp.SsdpChange.BYEBYE:
+            return
+
         discovered_ip = urlparse(info[ssdp.ATTR_SSDP_LOCATION]).hostname
         boot_seqnum = info.get("X-RINCON-BOOTSEQ")
         uid = info.get(ssdp.ATTR_UPNP_UDN)
         if uid.startswith("uuid:"):
             uid = uid[5:]
         self.async_discovered_player(
-            "SSDP", info, discovered_ip, uid, boot_seqnum, info.get("modelName")
+            "SSDP", info, discovered_ip, uid, boot_seqnum, info.get("modelName"), None
         )
 
     @callback
     def async_discovered_player(
-        self, source, info, discovered_ip, uid, boot_seqnum, model
+        self, source, info, discovered_ip, uid, boot_seqnum, model, mdns_name
     ):
         """Handle discovery via ssdp or zeroconf."""
         if model in DISCOVERY_IGNORED_MODELS:
@@ -285,6 +288,9 @@ class SonosDiscoveryManager:
         if boot_seqnum:
             boot_seqnum = int(boot_seqnum)
             self.data.boot_counts.setdefault(uid, boot_seqnum)
+        if mdns_name:
+            self.data.mdns_names[uid] = mdns_name
+
         if uid not in self.data.discovery_known:
             _LOGGER.debug("New %s discovery uid=%s: %s", source, uid, info)
             self.data.discovery_known.add(uid)
@@ -316,7 +322,7 @@ class SonosDiscoveryManager:
             return
 
         self.entry.async_on_unload(
-            ssdp.async_register_callback(
+            await ssdp.async_register_callback(
                 self.hass, self._async_ssdp_discovered_player, {"st": UPNP_ST}
             )
         )

@@ -5,7 +5,7 @@ import logging
 
 from homeassistant.components.nut import PyNUTData
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import ATTR_STATE, CONF_RESOURCES, STATE_UNKNOWN
+from homeassistant.const import CONF_RESOURCES, STATE_UNKNOWN
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -132,11 +132,6 @@ class NUTSensor(CoordinatorEntity, SensorEntity):
         if self.entity_description.key == KEY_STATUS_DISPLAY:
             return _format_display_state(self._data.status)
         return self._data.status.get(self.entity_description.key)
-
-    @property
-    def extra_state_attributes(self):
-        """Return the sensor attributes."""
-        return {ATTR_STATE: _format_display_state(self._data.status)}
 
 
 def _format_display_state(status):

@@ -1,7 +1,10 @@
 """Starts a service to scan in intervals for new devices."""
+from __future__ import annotations
+
 from datetime import timedelta
 import json
 import logging
+from typing import NamedTuple
 
 from netdisco.discovery import NetworkDiscovery
 import voluptuous as vol
@@ -44,20 +47,27 @@ CONFIG_ENTRY_HANDLERS = {
     "logitech_mediaserver": "squeezebox",
 }
 
+
+class ServiceDetails(NamedTuple):
+    """Store service details."""
+
+    component: str
+    platform: str | None
+
+
 # These have no config flows
 SERVICE_HANDLERS = {
-    SERVICE_NETGEAR: ("device_tracker", None),
-    SERVICE_ENIGMA2: ("media_player", "enigma2"),
-    SERVICE_SABNZBD: ("sabnzbd", None),
-    "yamaha": ("media_player", "yamaha"),
-    "frontier_silicon": ("media_player", "frontier_silicon"),
-    "openhome": ("media_player", "openhome"),
-    "bose_soundtouch": ("media_player", "soundtouch"),
-    "bluesound": ("media_player", "bluesound"),
-    "lg_smart_device": ("media_player", "lg_soundbar"),
+    SERVICE_ENIGMA2: ServiceDetails("media_player", "enigma2"),
+    SERVICE_SABNZBD: ServiceDetails("sabnzbd", None),
+    "yamaha": ServiceDetails("media_player", "yamaha"),
+    "frontier_silicon": ServiceDetails("media_player", "frontier_silicon"),
+    "openhome": ServiceDetails("media_player", "openhome"),
+    "bose_soundtouch": ServiceDetails("media_player", "soundtouch"),
+    "bluesound": ServiceDetails("media_player", "bluesound"),
+    "lg_smart_device": ServiceDetails("media_player", "lg_soundbar"),
 }
 
-OPTIONAL_SERVICE_HANDLERS = {SERVICE_DLNA_DMR: ("media_player", "dlna_dmr")}
+OPTIONAL_SERVICE_HANDLERS: dict[str, tuple[str, str | None]] = {}
 
 MIGRATED_SERVICE_HANDLERS = [
     SERVICE_APPLE_TV,
@@ -65,6 +75,7 @@ MIGRATED_SERVICE_HANDLERS = [
     "deconz",
     SERVICE_DAIKIN,
     "denonavr",
+    SERVICE_DLNA_DMR,
     "esphome",
     "google_cast",
     SERVICE_HASS_IOS_APP,
@@ -76,6 +87,7 @@ MIGRATED_SERVICE_HANDLERS = [
     "kodi",
     SERVICE_KONNECTED,
     SERVICE_MOBILE_APP,
+    SERVICE_NETGEAR,
     SERVICE_OCTOPRINT,
     "philips_hue",
     SERVICE_SAMSUNG_PRINTER,
@@ -169,24 +181,24 @@ async def async_setup(hass, config):
             )
             return
 
-        comp_plat = SERVICE_HANDLERS.get(service)
+        service_details = SERVICE_HANDLERS.get(service)
 
-        if not comp_plat and service in enabled_platforms:
-            comp_plat = OPTIONAL_SERVICE_HANDLERS[service]
+        if not service_details and service in enabled_platforms:
+            service_details = OPTIONAL_SERVICE_HANDLERS[service]
 
         # We do not know how to handle this service.
-        if not comp_plat:
+        if not service_details:
             logger.debug("Unknown service discovered: %s %s", service, info)
             return
 
         logger.info("Found new service: %s %s", service, info)
 
-        component, platform = comp_plat
-
-        if platform is None:
-            await async_discover(hass, service, info, component, config)
+        if service_details.platform is None:
+            await async_discover(hass, service, info, service_details.component, config)
         else:
-            await async_load_platform(hass, component, platform, info, config)
+            await async_load_platform(
+                hass, service_details.component, service_details.platform, info, config
+            )
 
     async def scan_devices(now):
         """Scan for devices."""

@@ -14,7 +14,7 @@
                 "data": {
                     "password": "Jelsz\u00f3"
                 },
-                "description": "Add meg a(z) {username} jelszav\u00e1t.",
+                "description": "Adja meg a(z) {username} jelszav\u00e1t.",
                 "title": "August fi\u00f3k \u00fajrahiteles\u00edt\u00e9se"
             },
             "user_validate": {

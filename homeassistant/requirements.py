@@ -3,10 +3,11 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterable
+import logging
 import os
 from typing import Any, cast
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.loader import Integration, IntegrationNotFound, async_get_integration
@@ -15,9 +16,11 @@ import homeassistant.util.package as pkg_util
 # mypy: disallow-any-generics
 
 PIP_TIMEOUT = 60  # The default is too low when the internet connection is satellite or high latency
+MAX_INSTALL_FAILURES = 3
 DATA_PIP_LOCK = "pip_lock"
 DATA_PKG_CACHE = "pkg_cache"
 DATA_INTEGRATIONS_WITH_REQS = "integrations_with_reqs"
+DATA_INSTALL_FAILURE_HISTORY = "install_failure_history"
 CONSTRAINT_FILE = "package_constraints.txt"
 DISCOVERY_INTEGRATIONS: dict[str, Iterable[str]] = {
     "dhcp": ("dhcp",),
@@ -25,6 +28,7 @@ DISCOVERY_INTEGRATIONS: dict[str, Iterable[str]] = {
     "ssdp": ("ssdp",),
     "zeroconf": ("zeroconf", "homekit"),
 }
+_LOGGER = logging.getLogger(__name__)
 
 
 class RequirementsNotFound(HomeAssistantError):
@@ -135,6 +139,13 @@ async def _async_process_integration(
             raise result
 
 
+@callback
+def async_clear_install_history(hass: HomeAssistant) -> None:
+    """Forget the install history."""
+    if install_failure_history := hass.data.get(DATA_INSTALL_FAILURE_HISTORY):
+        install_failure_history.clear()
+
+
 async def async_process_requirements(
     hass: HomeAssistant, name: str, requirements: list[str]
 ) -> None:
@@ -146,22 +157,47 @@ async def async_process_requirements(
     pip_lock = hass.data.get(DATA_PIP_LOCK)
     if pip_lock is None:
         pip_lock = hass.data[DATA_PIP_LOCK] = asyncio.Lock()
+    install_failure_history = hass.data.get(DATA_INSTALL_FAILURE_HISTORY)
+    if install_failure_history is None:
+        install_failure_history = hass.data[DATA_INSTALL_FAILURE_HISTORY] = set()
 
     kwargs = pip_kwargs(hass.config.config_dir)
 
     async with pip_lock:
         for req in requirements:
-            if pkg_util.is_installed(req):
-                continue
+            await _async_process_requirements(
+                hass, name, req, install_failure_history, kwargs
+            )
 
-            def _install(req: str, kwargs: dict[str, Any]) -> bool:
-                """Install requirement."""
-                return pkg_util.install_package(req, **kwargs)
 
-            ret = await hass.async_add_executor_job(_install, req, kwargs)
+async def _async_process_requirements(
+    hass: HomeAssistant,
+    name: str,
+    req: str,
+    install_failure_history: set[str],
+    kwargs: Any,
+) -> None:
+    """Install a requirement and save failures."""
+    if req in install_failure_history:
+        _LOGGER.info(
+            "Multiple attempts to install %s failed, install will be retried after next configuration check or restart",
+            req,
+        )
+        raise RequirementsNotFound(name, [req])
 
-            if not ret:
-                raise RequirementsNotFound(name, [req])
+    if pkg_util.is_installed(req):
+        return
+
+    def _install(req: str, kwargs: dict[str, Any]) -> bool:
+        """Install requirement."""
+        return pkg_util.install_package(req, **kwargs)
+
+    for _ in range(MAX_INSTALL_FAILURES):
+        if await hass.async_add_executor_job(_install, req, kwargs):
+            return
+
+    install_failure_history.add(req)
+    raise RequirementsNotFound(name, [req])
 
 
 def pip_kwargs(config_dir: str | None) -> dict[str, Any]:

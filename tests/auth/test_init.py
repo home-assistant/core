@@ -529,6 +529,42 @@ async def test_remove_refresh_token(mock_hass):
     assert await manager.async_validate_access_token(access_token) is None
 
 
+async def test_register_revoke_token_callback(mock_hass):
+    """Test that a registered revoke token callback is called."""
+    manager = await auth.auth_manager_from_config(mock_hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    refresh_token = await manager.async_create_refresh_token(user, CLIENT_ID)
+
+    called = False
+
+    def cb():
+        nonlocal called
+        called = True
+
+    manager.async_register_revoke_token_callback(refresh_token.id, cb)
+    await manager.async_remove_refresh_token(refresh_token)
+    assert called
+
+
+async def test_unregister_revoke_token_callback(mock_hass):
+    """Test that a revoke token callback can be unregistered."""
+    manager = await auth.auth_manager_from_config(mock_hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    refresh_token = await manager.async_create_refresh_token(user, CLIENT_ID)
+
+    called = False
+
+    def cb():
+        nonlocal called
+        called = True
+
+    unregister = manager.async_register_revoke_token_callback(refresh_token.id, cb)
+    unregister()
+
+    await manager.async_remove_refresh_token(refresh_token)
+    assert not called
+
+
 async def test_create_access_token(mock_hass):
     """Test normal refresh_token's jwt_key keep same after used."""
     manager = await auth.auth_manager_from_config(mock_hass, [], [])
@@ -539,7 +575,7 @@ async def test_create_access_token(mock_hass):
     access_token = manager.async_create_access_token(refresh_token)
     assert access_token is not None
     assert refresh_token.jwt_key == jwt_key
-    jwt_payload = jwt.decode(access_token, jwt_key, algorithm=["HS256"])
+    jwt_payload = jwt.decode(access_token, jwt_key, algorithms=["HS256"])
     assert jwt_payload["iss"] == refresh_token.id
     assert (
         jwt_payload["exp"] - jwt_payload["iat"] == timedelta(minutes=30).total_seconds()
@@ -558,7 +594,7 @@ async def test_create_long_lived_access_token(mock_hass):
     )
     assert refresh_token.token_type == auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
     access_token = manager.async_create_access_token(refresh_token)
-    jwt_payload = jwt.decode(access_token, refresh_token.jwt_key, algorithm=["HS256"])
+    jwt_payload = jwt.decode(access_token, refresh_token.jwt_key, algorithms=["HS256"])
     assert jwt_payload["iss"] == refresh_token.id
     assert (
         jwt_payload["exp"] - jwt_payload["iat"] == timedelta(days=300).total_seconds()
@@ -610,7 +646,7 @@ async def test_one_long_lived_access_token_per_refresh_token(mock_hass):
     assert jwt_key != jwt_key_2
 
     rt = await manager.async_validate_access_token(access_token_2)
-    jwt_payload = jwt.decode(access_token_2, rt.jwt_key, algorithm=["HS256"])
+    jwt_payload = jwt.decode(access_token_2, rt.jwt_key, algorithms=["HS256"])
     assert jwt_payload["iss"] == refresh_token_2.id
     assert (
         jwt_payload["exp"] - jwt_payload["iat"] == timedelta(days=3000).total_seconds()

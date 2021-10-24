@@ -13,99 +13,95 @@ from .const import (
     BYTES_SENT,
     DATA_PACKETS,
     DATA_RATE_PACKETS_PER_SECOND,
-    DERIVED_SENSOR,
     DOMAIN,
     KIBIBYTE,
-    LOGGER,
     PACKETS_RECEIVED,
     PACKETS_SENT,
-    RAW_SENSOR,
     ROUTER_IP,
     ROUTER_UPTIME,
     TIMESTAMP,
     WAN_STATUS,
 )
 
-SENSOR_ENTITY_DESCRIPTIONS: dict[str, tuple[UpnpSensorEntityDescription, ...]] = {
-    RAW_SENSOR: (
-        UpnpSensorEntityDescription(
-            key=BYTES_RECEIVED,
-            name=f"{DATA_BYTES} received",
-            icon="mdi:server-network",
-            native_unit_of_measurement=DATA_BYTES,
-            format="d",
-        ),
-        UpnpSensorEntityDescription(
-            key=BYTES_SENT,
-            name=f"{DATA_BYTES} sent",
-            icon="mdi:server-network",
-            native_unit_of_measurement=DATA_BYTES,
-            format="d",
-        ),
-        UpnpSensorEntityDescription(
-            key=PACKETS_RECEIVED,
-            name=f"{DATA_PACKETS} received",
-            icon="mdi:server-network",
-            native_unit_of_measurement=DATA_PACKETS,
-            format="d",
-        ),
-        UpnpSensorEntityDescription(
-            key=PACKETS_SENT,
-            name=f"{DATA_PACKETS} sent",
-            icon="mdi:server-network",
-            native_unit_of_measurement=DATA_PACKETS,
-            format="d",
-        ),
-        UpnpSensorEntityDescription(
-            key=ROUTER_IP,
-            name="External IP",
-            icon="mdi:server-network",
-        ),
-        UpnpSensorEntityDescription(
-            key=ROUTER_UPTIME,
-            name="Uptime",
-            icon="mdi:server-network",
-            native_unit_of_measurement=TIME_SECONDS,
-            entity_registry_enabled_default=False,
-            format="d",
-        ),
-        UpnpSensorEntityDescription(
-            key=WAN_STATUS,
-            name="wan status",
-            icon="mdi:server-network",
-        ),
+RAW_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
+    UpnpSensorEntityDescription(
+        key=BYTES_RECEIVED,
+        name=f"{DATA_BYTES} received",
+        icon="mdi:server-network",
+        native_unit_of_measurement=DATA_BYTES,
+        format="d",
     ),
-    DERIVED_SENSOR: (
-        UpnpSensorEntityDescription(
-            key="KiB/sec_received",
-            name=f"{DATA_RATE_KIBIBYTES_PER_SECOND} received",
-            icon="mdi:server-network",
-            native_unit_of_measurement=DATA_RATE_KIBIBYTES_PER_SECOND,
-            format=".1f",
-        ),
-        UpnpSensorEntityDescription(
-            key="KiB/sent",
-            name=f"{DATA_RATE_KIBIBYTES_PER_SECOND} sent",
-            icon="mdi:server-network",
-            native_unit_of_measurement=DATA_RATE_KIBIBYTES_PER_SECOND,
-            format=".1f",
-        ),
-        UpnpSensorEntityDescription(
-            key="packets/sec_received",
-            name=f"{DATA_RATE_PACKETS_PER_SECOND} received",
-            icon="mdi:server-network",
-            native_unit_of_measurement=DATA_RATE_PACKETS_PER_SECOND,
-            format=".1f",
-        ),
-        UpnpSensorEntityDescription(
-            key="packets/sent",
-            name=f"{DATA_RATE_PACKETS_PER_SECOND} sent",
-            icon="mdi:server-network",
-            native_unit_of_measurement=DATA_RATE_PACKETS_PER_SECOND,
-            format=".1f",
-        ),
+    UpnpSensorEntityDescription(
+        key=BYTES_SENT,
+        name=f"{DATA_BYTES} sent",
+        icon="mdi:server-network",
+        native_unit_of_measurement=DATA_BYTES,
+        format="d",
     ),
-}
+    UpnpSensorEntityDescription(
+        key=PACKETS_RECEIVED,
+        name=f"{DATA_PACKETS} received",
+        icon="mdi:server-network",
+        native_unit_of_measurement=DATA_PACKETS,
+        format="d",
+    ),
+    UpnpSensorEntityDescription(
+        key=PACKETS_SENT,
+        name=f"{DATA_PACKETS} sent",
+        icon="mdi:server-network",
+        native_unit_of_measurement=DATA_PACKETS,
+        format="d",
+    ),
+    UpnpSensorEntityDescription(
+        key=ROUTER_IP,
+        name="External IP",
+        icon="mdi:server-network",
+    ),
+    UpnpSensorEntityDescription(
+        key=ROUTER_UPTIME,
+        name="Uptime",
+        icon="mdi:server-network",
+        native_unit_of_measurement=TIME_SECONDS,
+        entity_registry_enabled_default=False,
+        format="d",
+    ),
+    UpnpSensorEntityDescription(
+        key=WAN_STATUS,
+        name="wan status",
+        icon="mdi:server-network",
+    ),
+)
+
+DERIVED_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
+    UpnpSensorEntityDescription(
+        key="KiB/sec_received",
+        name=f"{DATA_RATE_KIBIBYTES_PER_SECOND} received",
+        icon="mdi:server-network",
+        native_unit_of_measurement=DATA_RATE_KIBIBYTES_PER_SECOND,
+        format=".1f",
+    ),
+    UpnpSensorEntityDescription(
+        key="KiB/sent",
+        name=f"{DATA_RATE_KIBIBYTES_PER_SECOND} sent",
+        icon="mdi:server-network",
+        native_unit_of_measurement=DATA_RATE_KIBIBYTES_PER_SECOND,
+        format=".1f",
+    ),
+    UpnpSensorEntityDescription(
+        key="packets/sec_received",
+        name=f"{DATA_RATE_PACKETS_PER_SECOND} received",
+        icon="mdi:server-network",
+        native_unit_of_measurement=DATA_RATE_PACKETS_PER_SECOND,
+        format=".1f",
+    ),
+    UpnpSensorEntityDescription(
+        key="packets/sent",
+        name=f"{DATA_RATE_PACKETS_PER_SECOND} sent",
+        icon="mdi:server-network",
+        native_unit_of_measurement=DATA_RATE_PACKETS_PER_SECOND,
+        format=".1f",
+    ),
+)
 
 
 async def async_setup_entry(
@@ -116,25 +112,23 @@ async def async_setup_entry(
     """Set up the UPnP/IGD sensors."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    LOGGER.debug("Adding sensors")
-
-    entities = []
-    entities.append(
+    entities: list[UpnpSensor] = [
         RawUpnpSensor(
             coordinator=coordinator,
             entity_description=entity_description,
         )
-        for entity_description in SENSOR_ENTITY_DESCRIPTIONS[RAW_SENSOR]
+        for entity_description in RAW_SENSORS
         if coordinator.data.get(entity_description.key) is not None
-    )
-
-    entities.append(
-        DerivedUpnpSensor(
-            coordinator=coordinator,
-            entity_description=entity_description,
-        )
-        for entity_description in SENSOR_ENTITY_DESCRIPTIONS[DERIVED_SENSOR]
-        if coordinator.data.get(entity_description.key) is not None
+    ]
+    entities.extend(
+        [
+            DerivedUpnpSensor(
+                coordinator=coordinator,
+                entity_description=entity_description,
+            )
+            for entity_description in DERIVED_SENSORS
+            if coordinator.data.get(entity_description.key) is not None
+        ]
     )
 
     async_add_entities(entities)

@@ -3,13 +3,12 @@
 import asyncio
 from unittest.mock import PropertyMock, patch
 
-from aiohttp import ClientError
-from aiohttp.web_exceptions import HTTPForbidden
+from aiohttp import ClientError, web_exceptions
 import pytest
 
 from homeassistant.components.daikin.const import KEY_MAC
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
@@ -84,8 +83,8 @@ async def test_abort_if_already_setup(hass, mock_daikin):
     "s_effect,reason",
     [
         (asyncio.TimeoutError, "cannot_connect"),
-        (HTTPForbidden, "invalid_auth"),
-        (ClientError, "unknown"),
+        (ClientError, "cannot_connect"),
+        (web_exceptions.HTTPForbidden, "invalid_auth"),
         (Exception, "unknown"),
     ],
 )
@@ -100,6 +99,18 @@ async def test_device_abort(hass, mock_daikin, s_effect, reason):
     )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {"base": reason}
+    assert result["step_id"] == "user"
+
+
+async def test_api_password_abort(hass):
+    """Test device abort."""
+    result = await hass.config_entries.flow.async_init(
+        "daikin",
+        context={"source": SOURCE_USER},
+        data={CONF_HOST: HOST, CONF_API_KEY: "aa", CONF_PASSWORD: "aa"},
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "api_password"}
     assert result["step_id"] == "user"
 
 

@@ -39,6 +39,13 @@
                 "description": "Reason: {details}",
                 "title": "Synology DSM Reauthenticate Integration"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "title": "Synology DSM Reauthenticate Integration"
+            },
             "user": {
                 "data": {
                     "host": "Host",

@@ -1,8 +1,10 @@
 """The tests for Efergy sensor platform."""
 
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import load_fixture
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 token = "9p6QGJ7dpZfO3fqPTBk1fyEmjV1cGoLT"
 multi_sensor_token = "9r6QGF7dpZfO3fqPTBl1fyRmjV1cGoLT"
@@ -28,38 +30,40 @@ MULTI_SENSOR_CONFIG = {
 }
 
 
-def mock_responses(mock):
+def mock_responses(aioclient_mock: AiohttpClientMocker):
     """Mock responses for Efergy."""
     base_url = "https://engage.efergy.com/mobile_proxy/"
-    mock.get(
+    aioclient_mock.get(
         f"{base_url}getInstant?token={token}",
-        text=load_fixture("efergy_instant.json"),
+        text=load_fixture("efergy/efergy_instant.json"),
     )
-    mock.get(
+    aioclient_mock.get(
         f"{base_url}getEnergy?token={token}&offset=300&period=day",
-        text=load_fixture("efergy_energy.json"),
+        text=load_fixture("efergy/efergy_energy.json"),
     )
-    mock.get(
+    aioclient_mock.get(
         f"{base_url}getBudget?token={token}",
-        text=load_fixture("efergy_budget.json"),
+        text=load_fixture("efergy/efergy_budget.json"),
     )
-    mock.get(
+    aioclient_mock.get(
         f"{base_url}getCost?token={token}&offset=300&period=day",
-        text=load_fixture("efergy_cost.json"),
+        text=load_fixture("efergy/efergy_cost.json"),
     )
-    mock.get(
+    aioclient_mock.get(
         f"{base_url}getCurrentValuesSummary?token={token}",
-        text=load_fixture("efergy_current_values_single.json"),
+        text=load_fixture("efergy/efergy_current_values_single.json"),
     )
-    mock.get(
+    aioclient_mock.get(
         f"{base_url}getCurrentValuesSummary?token={multi_sensor_token}",
-        text=load_fixture("efergy_current_values_multi.json"),
+        text=load_fixture("efergy/efergy_current_values_multi.json"),
     )
 
 
-async def test_single_sensor_readings(hass, requests_mock):
+async def test_single_sensor_readings(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+):
     """Test for successfully setting up the Efergy platform."""
-    mock_responses(requests_mock)
+    mock_responses(aioclient_mock)
     assert await async_setup_component(hass, "sensor", {"sensor": ONE_SENSOR_CONFIG})
     await hass.async_block_till_done()
 
@@ -70,9 +74,11 @@ async def test_single_sensor_readings(hass, requests_mock):
     assert hass.states.get("sensor.efergy_728386").state == "1628"
 
 
-async def test_multi_sensor_readings(hass, requests_mock):
+async def test_multi_sensor_readings(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+):
     """Test for multiple sensors in one household."""
-    mock_responses(requests_mock)
+    mock_responses(aioclient_mock)
     assert await async_setup_component(hass, "sensor", {"sensor": MULTI_SENSOR_CONFIG})
     await hass.async_block_till_done()
 

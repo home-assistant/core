@@ -1,8 +1,9 @@
 """Provides device automations for MQTT."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-from typing import Any, Callable
+from typing import Any
 
 import attr
 import voluptuous as vol

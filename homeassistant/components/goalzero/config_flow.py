@@ -104,14 +104,11 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_try_connect(self, host: str) -> tuple[str | None, str | None]:
         """Try connecting to Goal Zero Yeti."""
         try:
-            session = async_get_clientsession(self.hass)
-            api = Yeti(host, self.hass.loop, session)
+            api = Yeti(host, async_get_clientsession(self.hass))
             await api.sysinfo()
         except exceptions.ConnectError:
-            _LOGGER.error("Error connecting to device at %s", host)
             return None, "cannot_connect"
         except exceptions.InvalidHost:
-            _LOGGER.error("Invalid host at %s", host)
             return None, "invalid_host"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")

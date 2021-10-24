@@ -1,7 +1,11 @@
 """Support the ElkM1 Gold and ElkM1 EZ8 alarm/integration panels."""
+from __future__ import annotations
+
 import asyncio
 import logging
 import re
+from types import MappingProxyType
+from typing import Any
 
 import async_timeout
 import elkm1_lib as elkm1
@@ -197,7 +201,7 @@ def _async_find_matching_config_entry(hass, prefix):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Elk-M1 Control from a config entry."""
-    conf = entry.data
+    conf: MappingProxyType[str, Any] = entry.data
 
     _LOGGER.debug("Setting up elkm1 %s", conf["host"])
 
@@ -205,7 +209,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if conf[CONF_TEMPERATURE_UNIT] in (BARE_TEMP_CELSIUS, TEMP_CELSIUS):
         temperature_unit = TEMP_CELSIUS
 
-    config = {"temperature_unit": temperature_unit}
+    config: dict[str, Any] = {"temperature_unit": temperature_unit}
 
     if not conf[CONF_AUTO_CONFIGURE]:
         # With elkm1-lib==0.7.16 and later auto configure is available
@@ -281,7 +285,7 @@ def _find_elk_by_prefix(hass, prefix):
             return hass.data[DOMAIN][entry_id]["elk"]
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 

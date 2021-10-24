@@ -38,7 +38,7 @@ from homeassistant.core import (
     ServiceCall,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.exceptions import HomeAssistantError, TemplateError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.typing import ConfigType, ServiceDataType
@@ -151,16 +151,6 @@ MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
     },
     required=True,
 )
-
-
-def embedded_broker_deprecated(value):
-    """Warn user that embedded MQTT broker is deprecated."""
-    _LOGGER.warning(
-        "The embedded MQTT broker has been deprecated and will stop working"
-        "after June 5th, 2019. Use an external broker instead. For"
-        "instructions, see https://www.home-assistant.io/docs/mqtt/broker"
-    )
-    return value
 
 
 CONFIG_SCHEMA = vol.Schema(
@@ -495,7 +485,7 @@ async def async_setup_entry(hass, entry):
                 payload = template.Template(payload_template, hass).async_render(
                     parse_result=False
                 )
-            except template.jinja2.TemplateError as exc:
+            except (template.jinja2.TemplateError, TemplateError) as exc:
                 _LOGGER.error(
                     "Unable to publish to %s: rendering payload template of "
                     "%s failed because %s",

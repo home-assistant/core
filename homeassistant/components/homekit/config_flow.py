@@ -41,6 +41,7 @@ from .const import (
     CONF_EXCLUDE_ACCESSORY_MODE,
     CONF_FILTER,
     CONF_HOMEKIT_MODE,
+    CONF_SUPPORT_AUDIO,
     CONF_VIDEO_CODEC,
     DEFAULT_AUTO_START,
     DEFAULT_CONFIG_FLOW_PORT,
@@ -54,6 +55,7 @@ from .const import (
 )
 from .util import async_find_next_available_port, state_needs_accessory_mode
 
+CONF_CAMERA_AUDIO = "camera_audio"
 CONF_CAMERA_COPY = "camera_copy"
 CONF_INCLUDE_EXCLUDE_MODE = "include_exclude_mode"
 
@@ -362,20 +364,34 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     and CONF_VIDEO_CODEC in entity_config[entity_id]
                 ):
                     del entity_config[entity_id][CONF_VIDEO_CODEC]
+                if entity_id in user_input[CONF_CAMERA_AUDIO]:
+                    entity_config.setdefault(entity_id, {})[CONF_SUPPORT_AUDIO] = True
+                elif (
+                    entity_id in entity_config
+                    and CONF_SUPPORT_AUDIO in entity_config[entity_id]
+                ):
+                    del entity_config[entity_id][CONF_SUPPORT_AUDIO]
             return await self.async_step_advanced()
 
+        cameras_with_audio = []
         cameras_with_copy = []
         entity_config = self.hk_options.setdefault(CONF_ENTITY_CONFIG, {})
         for entity in self.included_cameras:
             hk_entity_config = entity_config.get(entity, {})
             if hk_entity_config.get(CONF_VIDEO_CODEC) == VIDEO_CODEC_COPY:
                 cameras_with_copy.append(entity)
+            if hk_entity_config.get(CONF_SUPPORT_AUDIO):
+                cameras_with_audio.append(entity)
 
         data_schema = vol.Schema(
             {
                 vol.Optional(
                     CONF_CAMERA_COPY,
                     default=cameras_with_copy,
+                ): cv.multi_select(self.included_cameras),
+                vol.Optional(
+                    CONF_CAMERA_AUDIO,
+                    default=cameras_with_audio,
                 ): cv.multi_select(self.included_cameras),
             }
         )

@@ -51,10 +51,6 @@ ATTR_TIME_REMAINING = "time_remaining"
 ATTR_VEGETATION_TYPE = "vegetation_type"
 ATTR_ZONES = "zones"
 
-CONF_PROGRAM_ID = "program_id"
-CONF_SECONDS = "seconds"
-CONF_ZONE_ID = "zone_id"
-
 DEFAULT_ICON = "mdi:water"
 
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
@@ -112,9 +108,6 @@ VEGETATION_MAP = {
     99: "Other",
 }
 
-SWITCH_TYPE_PROGRAM = "program"
-SWITCH_TYPE_ZONE = "zone"
-
 
 @dataclass
 class RainMachineSwitchDescriptionMixin:
@@ -136,42 +129,23 @@ async def async_setup_entry(
     """Set up RainMachine switches based on a config entry."""
     platform = entity_platform.async_get_current_platform()
 
-    alter_program_schema = {vol.Required(CONF_PROGRAM_ID): cv.positive_int}
-    alter_zone_schema = {vol.Required(CONF_ZONE_ID): cv.positive_int}
-
     for service_name, schema, method in (
-        ("disable_program", alter_program_schema, "async_disable_program"),
-        ("disable_zone", alter_zone_schema, "async_disable_zone"),
-        ("enable_program", alter_program_schema, "async_enable_program"),
-        ("enable_zone", alter_zone_schema, "async_enable_zone"),
-        (
-            "pause_watering",
-            {vol.Required(CONF_SECONDS): cv.positive_int},
-            "async_pause_watering",
-        ),
-        (
-            "start_program",
-            {vol.Required(CONF_PROGRAM_ID): cv.positive_int},
-            "async_start_program",
-        ),
+        ("disable_program", {}, "async_disable_program"),
+        ("disable_zone", {}, "async_disable_zone"),
+        ("enable_program", {}, "async_enable_program"),
+        ("enable_zone", {}, "async_enable_zone"),
+        ("start_program", {}, "async_start_program"),
         (
             "start_zone",
             {
-                vol.Required(CONF_ZONE_ID): cv.positive_int,
                 vol.Optional(
                     CONF_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN
-                ): cv.positive_int,
+                ): cv.positive_int
             },
             "async_start_zone",
         ),
-        ("stop_all", {}, "async_stop_all"),
-        (
-            "stop_program",
-            {vol.Required(CONF_PROGRAM_ID): cv.positive_int},
-            "async_stop_program",
-        ),
-        ("stop_zone", {vol.Required(CONF_ZONE_ID): cv.positive_int}, "async_stop_zone"),
-        ("unpause_watering", {}, "async_unpause_watering"),
+        ("stop_program", {}, "async_stop_program"),
+        ("stop_zone", {}, "async_stop_zone"),
     ):
         platform.async_register_entity_service(service_name, schema, method)
 
@@ -187,9 +161,7 @@ async def async_setup_entry(
             controller,
             entry,
             RainMachineSwitchDescription(
-                key=f"RainMachineProgram_{uid}",
-                name=program["name"],
-                uid=uid,
+                key=f"RainMachineProgram_{uid}", name=program["name"], uid=uid
             ),
         )
         for uid, program in programs_coordinator.data.items()
@@ -201,9 +173,7 @@ async def async_setup_entry(
                 controller,
                 entry,
                 RainMachineSwitchDescription(
-                    key=f"RainMachineZone_{uid}",
-                    name=zone["name"],
-                    uid=uid,
+                    key=f"RainMachineZone_{uid}", name=zone["name"], uid=uid
                 ),
             )
             for uid, zone in zones_coordinator.data.items()
@@ -267,60 +237,37 @@ class RainMachineSwitch(RainMachineEntity, SwitchEntity):
             async_update_programs_and_zones(self.hass, self._entry)
         )
 
-    async def async_disable_program(self, *, program_id: int) -> None:
+    async def async_disable_program(self) -> None:
         """Disable a program."""
-        await self._controller.programs.disable(program_id)
-        await async_update_programs_and_zones(self.hass, self._entry)
+        raise NotImplementedError("Service not implemented for this entity")
 
-    async def async_disable_zone(self, *, zone_id: int) -> None:
+    async def async_disable_zone(self) -> None:
         """Disable a zone."""
-        await self._controller.zones.disable(zone_id)
-        await async_update_programs_and_zones(self.hass, self._entry)
+        raise NotImplementedError("Service not implemented for this entity")
 
-    async def async_enable_program(self, *, program_id: int) -> None:
+    async def async_enable_program(self) -> None:
         """Enable a program."""
-        await self._controller.programs.enable(program_id)
-        await async_update_programs_and_zones(self.hass, self._entry)
+        raise NotImplementedError("Service not implemented for this entity")
 
-    async def async_enable_zone(self, *, zone_id: int) -> None:
+    async def async_enable_zone(self) -> None:
         """Enable a zone."""
-        await self._controller.zones.enable(zone_id)
-        await async_update_programs_and_zones(self.hass, self._entry)
+        raise NotImplementedError("Service not implemented for this entity")
 
-    async def async_pause_watering(self, *, seconds: int) -> None:
-        """Pause watering for a set number of seconds."""
-        await self._controller.watering.pause_all(seconds)
-        await async_update_programs_and_zones(self.hass, self._entry)
+    async def async_start_program(self) -> None:
+        """Start a program."""
+        raise NotImplementedError("Service not implemented for this entity")
 
-    async def async_start_program(self, *, program_id: int) -> None:
-        """Start a particular program."""
-        await self._controller.programs.start(program_id)
-        await async_update_programs_and_zones(self.hass, self._entry)
+    async def async_start_zone(self, *, zone_run_time: int) -> None:
+        """Start a zone."""
+        raise NotImplementedError("Service not implemented for this entity")
 
-    async def async_start_zone(self, *, zone_id: int, zone_run_time: int) -> None:
-        """Start a particular zone for a certain amount of time."""
-        await self._controller.zones.start(zone_id, zone_run_time)
-        await async_update_programs_and_zones(self.hass, self._entry)
-
-    async def async_stop_all(self) -> None:
-        """Stop all watering."""
-        await self._controller.watering.stop_all()
-        await async_update_programs_and_zones(self.hass, self._entry)
-
-    async def async_stop_program(self, *, program_id: int) -> None:
+    async def async_stop_program(self) -> None:
         """Stop a program."""
-        await self._controller.programs.stop(program_id)
-        await async_update_programs_and_zones(self.hass, self._entry)
+        raise NotImplementedError("Service not implemented for this entity")
 
-    async def async_stop_zone(self, *, zone_id: int) -> None:
+    async def async_stop_zone(self) -> None:
         """Stop a zone."""
-        await self._controller.zones.stop(zone_id)
-        await async_update_programs_and_zones(self.hass, self._entry)
-
-    async def async_unpause_watering(self) -> None:
-        """Unpause watering."""
-        await self._controller.watering.unpause_all()
-        await async_update_programs_and_zones(self.hass, self._entry)
+        raise NotImplementedError("Service not implemented for this entity")
 
     @callback
     def update_from_latest_data(self) -> None:
@@ -336,6 +283,24 @@ class RainMachineProgram(RainMachineSwitch):
     def zones(self) -> list:
         """Return a list of active zones associated with this program."""
         return [z for z in self._data["wateringTimes"] if z["active"]]
+
+    async def async_disable_program(self) -> None:
+        """Disable a program."""
+        await self._controller.programs.disable(self.entity_description.uid)
+        await async_update_programs_and_zones(self.hass, self._entry)
+
+    async def async_enable_program(self) -> None:
+        """Enable a program."""
+        await self._controller.programs.enable(self.entity_description.uid)
+        await async_update_programs_and_zones(self.hass, self._entry)
+
+    async def async_start_program(self) -> None:
+        """Start a program."""
+        await self.async_turn_on()
+
+    async def async_stop_program(self) -> None:
+        """Stop a program."""
+        await self.async_turn_off()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the program off."""
@@ -380,6 +345,25 @@ class RainMachineProgram(RainMachineSwitch):
 
 class RainMachineZone(RainMachineSwitch):
     """A RainMachine zone."""
+
+    async def async_disable_zone(self) -> None:
+        """Disable a zone."""
+        await self._controller.zones.disable(self.entity_description.uid)
+        await async_update_programs_and_zones(self.hass, self._entry)
+
+    async def async_enable_zone(self) -> None:
+        """Enable a zone."""
+        await self._controller.zones.enable(self.entity_description.uid)
+        await async_update_programs_and_zones(self.hass, self._entry)
+
+    async def async_start_zone(self, *, zone_run_time: int) -> None:
+        """Start a particular zone for a certain amount of time."""
+        await self._controller.zones.start(self.entity_description.uid, zone_run_time)
+        await async_update_programs_and_zones(self.hass, self._entry)
+
+    async def async_stop_zone(self) -> None:
+        """Stop a zone."""
+        await self.async_turn_off()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the zone off."""

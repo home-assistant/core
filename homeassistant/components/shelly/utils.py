@@ -5,8 +5,11 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, Final, cast
 
-import aioshelly
+from aioshelly.block_device import BLOCK_VALUE_UNIT, COAP, Block, BlockDevice
+from aioshelly.const import MODEL_NAMES
+from aioshelly.rpc_device import RpcDevice
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import singleton
@@ -18,6 +21,8 @@ from .const import (
     CONF_COAP_PORT,
     DEFAULT_COAP_PORT,
     DOMAIN,
+    MAX_RPC_KEY_INSTANCES,
+    RPC_INPUTS_EVENTS_TYPES,
     SHBTN_INPUTS_EVENTS_TYPES,
     SHBTN_MODELS,
     SHIX3_1_INPUTS_EVENTS_TYPES,
@@ -40,18 +45,27 @@ async def async_remove_shelly_entity(
 
 def temperature_unit(block_info: dict[str, Any]) -> str:
     """Detect temperature unit."""
-    if block_info[aioshelly.BLOCK_VALUE_UNIT] == "F":
+    if block_info[BLOCK_VALUE_UNIT] == "F":
         return TEMP_FAHRENHEIT
     return TEMP_CELSIUS
 
 
-def get_device_name(device: aioshelly.Device) -> str:
+def get_block_device_name(device: BlockDevice) -> str:
     """Naming for device."""
     return cast(str, device.settings["name"] or device.settings["device"]["hostname"])
 
 
-def get_number_of_channels(device: aioshelly.Device, block: aioshelly.Block) -> int:
+def get_rpc_device_name(device: RpcDevice) -> str:
+    """Naming for device."""
+    # Gen2 does not support setting device name
+    # AP SSID name is used as a nicely formatted device name
+    return cast(str, device.config["wifi"]["ap"]["ssid"] or device.hostname)
+
+
+def get_number_of_channels(device: BlockDevice, block: Block) -> int:
     """Get number of channels for block type."""
+    assert isinstance(device.shelly, dict)
+
     channels = None
 
     if block.type == "input":
@@ -70,13 +84,13 @@ def get_number_of_channels(device: aioshelly.Device, block: aioshelly.Block) -> 
     return channels or 1
 
 
-def get_entity_name(
-    device: aioshelly.Device,
-    block: aioshelly.Block,
+def get_block_entity_name(
+    device: BlockDevice,
+    block: Block | None,
     description: str | None = None,
 ) -> str:
-    """Naming for switch and sensors."""
-    channel_name = get_device_channel_name(device, block)
+    """Naming for block based switch and sensors."""
+    channel_name = get_block_channel_name(device, block)
 
     if description:
         return f"{channel_name} {description}"
@@ -84,12 +98,9 @@ def get_entity_name(
     return channel_name
 
 
-def get_device_channel_name(
-    device: aioshelly.Device,
-    block: aioshelly.Block,
-) -> str:
+def get_block_channel_name(device: BlockDevice, block: Block | None) -> str:
     """Get name based on device and channel name."""
-    entity_name = get_device_name(device)
+    entity_name = get_block_device_name(device)
 
     if (
         not block
@@ -98,8 +109,10 @@ def get_device_channel_name(
     ):
         return entity_name
 
+    assert block.channel
+
     channel_name: str | None = None
-    mode = block.type + "s"
+    mode = cast(str, block.type) + "s"
     if mode in device.settings:
         channel_name = device.settings[mode][int(block.channel)].get("name")
 
@@ -114,8 +127,8 @@ def get_device_channel_name(
     return f"{entity_name} channel {chr(int(block.channel)+base)}"
 
 
-def is_momentary_input(settings: dict[str, Any], block: aioshelly.Block) -> bool:
-    """Return true if input button settings is set to a momentary type."""
+def is_block_momentary_input(settings: dict[str, Any], block: Block) -> bool:
+    """Return true if block input button settings is set to a momentary type."""
     # Shelly Button type is fixed to momentary and no btn_type
     if settings["device"]["type"] in SHBTN_MODELS:
         return True
@@ -136,9 +149,9 @@ def is_momentary_input(settings: dict[str, Any], block: aioshelly.Block) -> bool
     return button_type in ["momentary", "momentary_on_release"]
 
 
-def get_device_uptime(status: dict[str, Any], last_uptime: str | None) -> str:
+def get_device_uptime(uptime: float, last_uptime: str | None) -> str:
     """Return device uptime string, tolerate up to 5 seconds deviation."""
-    delta_uptime = utcnow() - timedelta(seconds=status["uptime"])
+    delta_uptime = utcnow() - timedelta(seconds=uptime)
 
     if (
         not last_uptime
@@ -150,14 +163,14 @@ def get_device_uptime(status: dict[str, Any], last_uptime: str | None) -> str:
     return last_uptime
 
 
-def get_input_triggers(
-    device: aioshelly.Device, block: aioshelly.Block
+def get_block_input_triggers(
+    device: BlockDevice, block: Block
 ) -> list[tuple[str, str]]:
     """Return list of input triggers for block."""
     if "inputEvent" not in block.sensor_ids or "inputEventCnt" not in block.sensor_ids:
         return []
 
-    if not is_momentary_input(device.settings, block):
+    if not is_block_momentary_input(device.settings, block):
         return []
 
     triggers = []
@@ -165,6 +178,7 @@ def get_input_triggers(
     if block.type == "device" or get_number_of_channels(device, block) == 1:
         subtype = "button"
     else:
+        assert block.channel
         subtype = f"button{int(block.channel)+1}"
 
     if device.settings["device"]["type"] in SHBTN_MODELS:
@@ -180,10 +194,20 @@ def get_input_triggers(
     return triggers
 
 
+def get_shbtn_input_triggers() -> list[tuple[str, str]]:
+    """Return list of input triggers for SHBTN models."""
+    triggers = []
+
+    for trigger_type in SHBTN_INPUTS_EVENTS_TYPES:
+        triggers.append((trigger_type, "button"))
+
+    return triggers
+
+
 @singleton.singleton("shelly_coap")
-async def get_coap_context(hass: HomeAssistant) -> aioshelly.COAP:
+async def get_coap_context(hass: HomeAssistant) -> COAP:
     """Get CoAP context to be used in all Shelly devices."""
-    context = aioshelly.COAP()
+    context = COAP()
     if DOMAIN in hass.data:
         port = hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT)
     else:
@@ -200,7 +224,7 @@ async def get_coap_context(hass: HomeAssistant) -> aioshelly.COAP:
     return context
 
 
-def get_device_sleep_period(settings: dict[str, Any]) -> int:
+def get_block_device_sleep_period(settings: dict[str, Any]) -> int:
     """Return the device sleep period in seconds or 0 for non sleeping devices."""
     sleep_period = 0
 
@@ -210,3 +234,114 @@ def get_device_sleep_period(settings: dict[str, Any]) -> int:
             sleep_period *= 60  # hours to minutes
 
     return sleep_period * 60  # minutes to seconds
+
+
+def get_info_auth(info: dict[str, Any]) -> bool:
+    """Return true if device has authorization enabled."""
+    return cast(bool, info.get("auth") or info.get("auth_en"))
+
+
+def get_info_gen(info: dict[str, Any]) -> int:
+    """Return the device generation from shelly info."""
+    return int(info.get("gen", 1))
+
+
+def get_model_name(info: dict[str, Any]) -> str:
+    """Return the device model name."""
+    if get_info_gen(info) == 2:
+        return cast(str, MODEL_NAMES.get(info["model"], info["model"]))
+
+    return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
+
+
+def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
+    """Get name based on device and channel name."""
+    key = key.replace("input", "switch")
+    device_name = get_rpc_device_name(device)
+    entity_name: str | None = device.config[key].get("name", device_name)
+
+    if entity_name is None:
+        return f"{device_name} {key.replace(':', '_')}"
+
+    return entity_name
+
+
+def get_rpc_entity_name(
+    device: RpcDevice, key: str, description: str | None = None
+) -> str:
+    """Naming for RPC based switch and sensors."""
+    channel_name = get_rpc_channel_name(device, key)
+
+    if description:
+        return f"{channel_name} {description}"
+
+    return channel_name
+
+
+def get_device_entry_gen(entry: ConfigEntry) -> int:
+    """Return the device generation from config entry."""
+    return entry.data.get("gen", 1)
+
+
+def get_rpc_key_instances(keys_dict: dict[str, Any], key: str) -> list[str]:
+    """Return list of key instances for RPC device from a dict."""
+    if key in keys_dict:
+        return [key]
+
+    keys_list: list[str] = []
+    for i in range(MAX_RPC_KEY_INSTANCES):
+        key_inst = f"{key}:{i}"
+        if key_inst not in keys_dict:
+            return keys_list
+
+        keys_list.append(key_inst)
+
+    return keys_list
+
+
+def get_rpc_key_ids(keys_dict: dict[str, Any], key: str) -> list[int]:
+    """Return list of key ids for RPC device from a dict."""
+    key_ids: list[int] = []
+    for i in range(MAX_RPC_KEY_INSTANCES):
+        key_inst = f"{key}:{i}"
+        if key_inst not in keys_dict:
+            return key_ids
+
+        key_ids.append(i)
+
+    return key_ids
+
+
+def is_rpc_momentary_input(config: dict[str, Any], key: str) -> bool:
+    """Return true if rpc input button settings is set to a momentary type."""
+    return cast(bool, config[key]["type"] == "button")
+
+
+def is_block_channel_type_light(settings: dict[str, Any], channel: int) -> bool:
+    """Return true if block channel appliance type is set to light."""
+    app_type = settings["relays"][channel].get("appliance_type")
+    return app_type is not None and app_type.lower().startswith("light")
+
+
+def is_rpc_channel_type_light(config: dict[str, Any], channel: int) -> bool:
+    """Return true if rpc channel consumption type is set to light."""
+    con_types = config["sys"]["ui_data"].get("consumption_types")
+    return con_types is not None and con_types[channel].lower().startswith("light")
+
+
+def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
+    """Return list of input triggers for RPC device."""
+    triggers = []
+
+    key_ids = get_rpc_key_ids(device.config, "input")
+
+    for id_ in key_ids:
+        key = f"input:{id_}"
+        if not is_rpc_momentary_input(device.config, key):
+            continue
+
+        for trigger_type in RPC_INPUTS_EVENTS_TYPES:
+            subtype = f"button{id_+1}"
+            triggers.append((trigger_type, subtype))
+
+    return triggers

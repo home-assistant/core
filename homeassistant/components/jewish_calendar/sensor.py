@@ -22,7 +22,7 @@ DATA_SENSORS = (
     SensorEntityDescription(
         key="date",
         name="Date",
-        icon="mdi:judaism",
+        icon="mdi:star-david",
     ),
     SensorEntityDescription(
         key="weekly_portion",

@@ -51,7 +51,7 @@ def _get_homegraph_jwt(time, iss, key):
         "iat": now,
         "exp": now + 3600,
     }
-    return jwt.encode(jwt_raw, key, algorithm="RS256").decode("utf-8")
+    return jwt.encode(jwt_raw, key, algorithm="RS256")
 
 
 async def _get_homegraph_token(hass, jwt_signed):

@@ -14,7 +14,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from . import (
     check_device_registry,
@@ -31,7 +30,7 @@ from tests.common import load_fixture, mock_device_registry, mock_registry
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
 async def test_selects(hass: HomeAssistant, vehicle_type: str):
     """Test for Renault selects."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
@@ -58,7 +57,7 @@ async def test_selects(hass: HomeAssistant, vehicle_type: str):
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
 async def test_select_empty(hass: HomeAssistant, vehicle_type: str):
     """Test for Renault selects with empty data from Renault."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
@@ -88,7 +87,7 @@ async def test_select_empty(hass: HomeAssistant, vehicle_type: str):
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
 async def test_select_errors(hass: HomeAssistant, vehicle_type: str):
     """Test for Renault selects with temporary failure."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
@@ -124,7 +123,7 @@ async def test_select_errors(hass: HomeAssistant, vehicle_type: str):
 
 async def test_select_access_denied(hass: HomeAssistant):
     """Test for Renault selects with access denied failure."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
@@ -148,7 +147,7 @@ async def test_select_access_denied(hass: HomeAssistant):
 
 async def test_select_not_supported(hass: HomeAssistant):
     """Test for Renault selects with access denied failure."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 

@@ -27,13 +27,11 @@ HOME_LONGITUDE = -115.815811
 @pytest.fixture(autouse=True)
 def mock_dev_track(mock_device_tracker_conf):
     """Mock device tracker config loading."""
-    pass
 
 
 @pytest.fixture
 async def gpslogger_client(loop, hass, hass_client_no_auth):
     """Mock client for GPSLogger (unauthenticated)."""
-    assert await async_setup_component(hass, "persistent_notification", {})
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 

@@ -39,6 +39,13 @@
                 "description": "Motiu: {details}",
                 "title": "Reautenticaci\u00f3 de la integraci\u00f3 Synology DSM"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                },
+                "title": "Reautenticaci\u00f3 de la integraci\u00f3 Synology DSM"
+            },
             "user": {
                 "data": {
                     "host": "Amfitri\u00f3",

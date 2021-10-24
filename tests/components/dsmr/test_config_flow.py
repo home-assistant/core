@@ -7,7 +7,7 @@ from unittest.mock import DEFAULT, AsyncMock, MagicMock, patch, sentinel
 import serial
 import serial.tools.list_ports
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.dsmr import DOMAIN, config_flow
 
 from tests.common import MockConfigEntry
@@ -150,8 +150,6 @@ async def test_setup_serial_fail(com_mock, hass, dsmr_connection_send_validate_f
     """Test failed serial connection."""
     (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     port = com_port()
 
     result = await hass.config_entries.flow.async_init(
@@ -197,8 +195,6 @@ async def test_setup_serial_wrong_telegram(
     """Test failed telegram data."""
     (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     port = com_port()
 
     result = await hass.config_entries.flow.async_init(
@@ -231,7 +227,6 @@ async def test_setup_serial_wrong_telegram(
 
 async def test_import_usb(hass, dsmr_connection_send_validate_fixture):
     """Test we can import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -257,8 +252,6 @@ async def test_import_usb_failed_connection(
 ):
     """Test we can import."""
     (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
-
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -293,8 +286,6 @@ async def test_import_usb_no_data(hass, dsmr_connection_send_validate_fixture):
     """Test we can import."""
     (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "2.2",
@@ -325,8 +316,6 @@ async def test_import_usb_wrong_telegram(hass, dsmr_connection_send_validate_fix
     """Test we can import."""
     (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "2.2",
@@ -349,7 +338,6 @@ async def test_import_usb_wrong_telegram(hass, dsmr_connection_send_validate_fix
 
 async def test_import_network(hass, dsmr_connection_send_validate_fixture):
     """Test we can import from network."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry_data = {
         "host": "localhost",
@@ -373,7 +361,6 @@ async def test_import_network(hass, dsmr_connection_send_validate_fixture):
 
 async def test_import_update(hass, dsmr_connection_send_validate_fixture):
     """Test we can import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -422,7 +409,6 @@ async def test_import_update(hass, dsmr_connection_send_validate_fixture):
 
 async def test_options_flow(hass):
     """Test options flow."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -462,7 +448,6 @@ async def test_options_flow(hass):
 
 async def test_import_luxembourg(hass, dsmr_connection_send_validate_fixture):
     """Test we can import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -485,7 +470,6 @@ async def test_import_luxembourg(hass, dsmr_connection_send_validate_fixture):
 
 async def test_import_sweden(hass, dsmr_connection_send_validate_fixture):
     """Test we can import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry_data = {
         "port": "/dev/ttyUSB0",

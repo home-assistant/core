@@ -1,10 +1,10 @@
 """Common code for GogoGate2 component."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from datetime import timedelta
 import logging
-from typing import Any, Callable, NamedTuple
+from typing import Any, NamedTuple
 
 from ismartgate import AbstractGateApi, GogoGate2Api, ISmartGateApi
 from ismartgate.common import AbstractDoor, get_door_by_id

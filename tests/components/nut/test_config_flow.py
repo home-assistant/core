@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.nut.const import DOMAIN
 from homeassistant.const import CONF_RESOURCES, CONF_SCAN_INTERVAL
 
@@ -73,7 +73,7 @@ async def test_form_zeroconf(hass):
 
 async def test_form_user_one_ups(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -128,7 +128,6 @@ async def test_form_user_one_ups(hass):
 
 async def test_form_user_multiple_ups(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -210,7 +209,6 @@ async def test_form_user_one_ups_with_ignored_entry(hass):
     )
     ignored_entry.add_to_hass(hass)
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

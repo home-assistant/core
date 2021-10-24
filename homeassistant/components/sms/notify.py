@@ -46,7 +46,7 @@ class SMSNotificationService(BaseNotificationService):
         """Send SMS message."""
         smsinfo = {
             "Class": -1,
-            "Unicode": False,
+            "Unicode": True,
             "Entries": [{"ID": "ConcatenatedTextLong", "Buffer": message}],
         }
         try:

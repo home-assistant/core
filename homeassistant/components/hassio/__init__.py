@@ -137,7 +137,7 @@ class APIEndpointSettings(NamedTuple):
 
     command: str
     schema: vol.Schema
-    timeout: int = 60
+    timeout: int | None = 60
     pass_data: bool = False
 
 
@@ -154,37 +154,37 @@ MAP_SERVICE_API = {
     SERVICE_BACKUP_FULL: APIEndpointSettings(
         "/backups/new/full",
         SCHEMA_BACKUP_FULL,
-        300,
+        None,
         True,
     ),
     SERVICE_BACKUP_PARTIAL: APIEndpointSettings(
         "/backups/new/partial",
         SCHEMA_BACKUP_PARTIAL,
-        300,
+        None,
         True,
     ),
     SERVICE_RESTORE_FULL: APIEndpointSettings(
         "/backups/{slug}/restore/full",
         SCHEMA_RESTORE_FULL,
-        300,
+        None,
         True,
     ),
     SERVICE_RESTORE_PARTIAL: APIEndpointSettings(
         "/backups/{slug}/restore/partial",
         SCHEMA_RESTORE_PARTIAL,
-        300,
+        None,
         True,
     ),
     SERVICE_SNAPSHOT_FULL: APIEndpointSettings(
         "/backups/new/full",
         SCHEMA_BACKUP_FULL,
-        300,
+        None,
         True,
     ),
     SERVICE_SNAPSHOT_PARTIAL: APIEndpointSettings(
         "/backups/new/partial",
         SCHEMA_BACKUP_PARTIAL,
-        300,
+        None,
         True,
     ),
 }
@@ -418,7 +418,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     hass.data[DOMAIN] = hassio = HassIO(hass.loop, websession, host)
 
     if not await hassio.is_connected():
-        _LOGGER.warning("Not connected with Hass.io / system too busy!")
+        _LOGGER.warning("Not connected with the supervisor / system too busy!")
 
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
     data = await store.async_load()
@@ -520,8 +520,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 payload=payload,
                 timeout=api_endpoint.timeout,
             )
-        except HassioAPIError as err:
-            _LOGGER.error("Error on Supervisor API: %s", err)
+        except HassioAPIError:
+            # The exceptions are logged properly in hassio.send_command
+            pass
 
     for service, settings in MAP_SERVICE_API.items():
         hass.services.async_register(

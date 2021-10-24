@@ -10,9 +10,9 @@ timer.
 from __future__ import annotations
 
 from collections import OrderedDict
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 import logging
-from typing import TYPE_CHECKING, Any, Callable, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import attr
 
@@ -381,6 +381,7 @@ class EntityRegistry:
         *,
         name: str | None | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
+        config_entry_id: str | None | UndefinedType = UNDEFINED,
         area_id: str | None | UndefinedType = UNDEFINED,
         new_entity_id: str | UndefinedType = UNDEFINED,
         new_unique_id: str | UndefinedType = UNDEFINED,
@@ -391,6 +392,7 @@ class EntityRegistry:
             entity_id,
             name=name,
             icon=icon,
+            config_entry_id=config_entry_id,
             area_id=area_id,
             new_entity_id=new_entity_id,
             new_unique_id=new_unique_id,

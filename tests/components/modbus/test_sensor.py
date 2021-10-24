@@ -246,6 +246,7 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
+                    CONF_SCAN_INTERVAL: 1,
                 },
             ],
         },

@@ -69,15 +69,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for pump_num, pump_data in coordinator.data[SL_DATA.KEY_PUMPS].items():
         if pump_data["data"] != 0 and "currentWatts" in pump_data:
             for pump_key in pump_data:
-                # Considerations for Intelliflow VF
+                enabled = True
+                # Assumptions for Intelliflow VF
                 if pump_data["pumpType"] == 1 and pump_key == "currentRPM":
-                    continue
-                # Considerations for Intelliflow VS
+                    enabled = False
+                # Assumptions for Intelliflow VS
                 if pump_data["pumpType"] == 2 and pump_key == "currentGPM":
-                    continue
+                    enabled = False
                 if pump_key in SUPPORTED_PUMP_SENSORS:
                     entities.append(
-                        ScreenLogicPumpSensor(coordinator, pump_num, pump_key)
+                        ScreenLogicPumpSensor(coordinator, pump_num, pump_key, enabled)
                     )
 
     # IntelliChem sensors
@@ -85,7 +86,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for chem_sensor_name in coordinator.data[SL_DATA.KEY_CHEMISTRY]:
             enabled = True
             if equipment_flags & EQUIPMENT.FLAG_CHLORINATOR:
-                if chem_sensor_name in ("salt_tds_ppm"):
+                if chem_sensor_name in ("salt_tds_ppm",):
                     enabled = False
             if chem_sensor_name in SUPPORTED_CHEM_SENSORS:
                 entities.append(

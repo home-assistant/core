@@ -15,7 +15,6 @@ from homeassistant.const import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
 )
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt
@@ -197,6 +196,17 @@ async def test_allow_clip_sensors(hass, aioclient_mock):
                 "config": {"reachable": True},
                 "uniqueid": "00:00:00:00:00:00:00:01-00",
             },
+            "3": {
+                "config": {"on": True, "reachable": True},
+                "etag": "a5ed309124d9b7a21ef29fc278f2625e",
+                "manufacturername": "Philips",
+                "modelid": "CLIPGenericStatus",
+                "name": "CLIP Flur",
+                "state": {"lastupdated": "2021-10-01T10:23:06.779", "status": 0},
+                "swversion": "1.0",
+                "type": "CLIPGenericStatus",
+                "uniqueid": "/sensors/3",
+            },
         }
     }
     with patch.dict(DECONZ_WEB_REQUEST, data):
@@ -206,8 +216,9 @@ async def test_allow_clip_sensors(hass, aioclient_mock):
             options={CONF_ALLOW_CLIP_SENSOR: True},
         )
 
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 4
     assert hass.states.get("sensor.clip_light_level_sensor").state == "999.8"
+    assert hass.states.get("sensor.clip_flur").state == "0"
 
     # Disallow clip sensors
 
@@ -218,6 +229,7 @@ async def test_allow_clip_sensors(hass, aioclient_mock):
 
     assert len(hass.states.async_all()) == 2
     assert not hass.states.get("sensor.clip_light_level_sensor")
+    assert not hass.states.get("sensor.clip_flur")
 
     # Allow clip sensors
 
@@ -226,8 +238,9 @@ async def test_allow_clip_sensors(hass, aioclient_mock):
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 4
     assert hass.states.get("sensor.clip_light_level_sensor").state == "999.8"
+    assert hass.states.get("sensor.clip_flur").state == "0"
 
 
 async def test_add_new_sensor(hass, aioclient_mock, mock_deconz_websocket):
@@ -553,5 +566,4 @@ async def test_unsupported_sensor(hass, aioclient_mock):
     with patch.dict(DECONZ_WEB_REQUEST, data):
         await setup_deconz_integration(hass, aioclient_mock)
 
-    assert len(hass.states.async_all()) == 1
-    assert hass.states.get("sensor.name").state == STATE_UNKNOWN
+    assert len(hass.states.async_all()) == 0

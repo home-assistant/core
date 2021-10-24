@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "invalid_auth": "Autenticazione non valida",
+            "unknown": "Errore imprevisto",
+            "unknown_coordinates": "Nessun dato per latitudine/longitudine"
+        },
+        "step": {
+            "coordinates": {
+                "data": {
+                    "latitude": "Latitudine",
+                    "longitude": "Logitudine"
+                },
+                "description": "Immettere la latitudine e la longitudine da monitorare:"
+            },
+            "location": {
+                "data": {
+                    "location_type": "Posizione"
+                },
+                "description": "Scegli una posizione da monitorare:"
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Nome utente"
+                },
+                "description": "Inserisci il tuo nome utente e password:"
+            }
+        }
+    }
+}

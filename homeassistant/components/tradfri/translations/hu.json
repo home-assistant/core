@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "already_in_progress": "A konfigur\u00e1ci\u00f3 m\u00e1r folyamatban van."
+            "already_in_progress": "A konfigur\u00e1l\u00e1s m\u00e1r folyamatban van."
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
@@ -12,11 +12,11 @@
         "step": {
             "auth": {
                 "data": {
-                    "host": "Hoszt",
+                    "host": "C\u00edm",
                     "security_code": "Biztons\u00e1gi K\u00f3d"
                 },
                 "description": "A biztons\u00e1gi k\u00f3dot a Gatewayed h\u00e1toldal\u00e1n tal\u00e1lod.",
-                "title": "Add meg a biztons\u00e1gi k\u00f3dot"
+                "title": "Adja meg a biztons\u00e1gi k\u00f3dot"
             }
         }
     }

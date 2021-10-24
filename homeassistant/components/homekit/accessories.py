@@ -499,8 +499,7 @@ class HomeAccessory(Accessory):
             )
         )
 
-    @ha_callback
-    def async_stop(self):
+    async def stop(self):
         """Cancel any subscriptions when the bridge is stopped."""
         while self._subscriptions:
             self._subscriptions.pop(0)()

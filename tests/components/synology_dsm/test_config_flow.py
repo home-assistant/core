@@ -10,7 +10,7 @@ from synology_dsm.exceptions import (
     SynologyDSMRequestException,
 )
 
-from homeassistant import data_entry_flow, setup
+from homeassistant import data_entry_flow
 from homeassistant.components import ssdp
 from homeassistant.components.synology_dsm.config_flow import CONF_OTP_CODE
 from homeassistant.components.synology_dsm.const import (
@@ -257,7 +257,7 @@ async def test_user_vdsm(hass: HomeAssistant, service_vdsm: MagicMock):
 
 async def test_reauth(hass: HomeAssistant, service: MagicMock):
     """Test reauthentication."""
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_HOST: HOST,
@@ -265,7 +265,8 @@ async def test_reauth(hass: HomeAssistant, service: MagicMock):
             CONF_PASSWORD: f"{PASSWORD}_invalid",
         },
         unique_id=SERIAL,
-    ).add_to_hass(hass)
+    )
+    entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_reload",
@@ -276,27 +277,21 @@ async def test_reauth(hass: HomeAssistant, service: MagicMock):
             DOMAIN,
             context={
                 "source": SOURCE_REAUTH,
-                "data": {
-                    CONF_HOST: HOST,
-                    CONF_USERNAME: USERNAME,
-                    CONF_PASSWORD: PASSWORD,
-                },
+                "entry_id": entry.entry_id,
+                "unique_id": entry.unique_id,
+            },
+            data={
+                CONF_HOST: HOST,
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
             },
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "reauth"
+        assert result["step_id"] == "reauth_confirm"
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": SOURCE_REAUTH,
-                "data": {
-                    CONF_HOST: HOST,
-                    CONF_USERNAME: USERNAME,
-                    CONF_PASSWORD: PASSWORD,
-                },
-            },
-            data={
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
                 CONF_USERNAME: USERNAME,
                 CONF_PASSWORD: PASSWORD,
             },
@@ -388,7 +383,6 @@ async def test_missing_data_after_login(hass: HomeAssistant, service_failed: Mag
 
 async def test_form_ssdp(hass: HomeAssistant, service: MagicMock):
     """Test we can setup from ssdp."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -424,7 +418,6 @@ async def test_form_ssdp(hass: HomeAssistant, service: MagicMock):
 
 async def test_reconfig_ssdp(hass: HomeAssistant, service: MagicMock):
     """Test re-configuration of already existing entry by ssdp."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     MockConfigEntry(
         domain=DOMAIN,
@@ -452,7 +445,6 @@ async def test_reconfig_ssdp(hass: HomeAssistant, service: MagicMock):
 
 async def test_existing_ssdp(hass: HomeAssistant, service: MagicMock):
     """Test abort of already existing entry by ssdp."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     MockConfigEntry(
         domain=DOMAIN,

@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler",
+            "unknown_coordinates": "Keine Daten f\u00fcr Breitengrad/L\u00e4ngengrad"
+        },
+        "step": {
+            "coordinates": {
+                "data": {
+                    "latitude": "Breitengrad",
+                    "longitude": "L\u00e4ngengrad"
+                },
+                "description": "Gib den zu \u00fcberwachenden Breitengrad und L\u00e4ngengrad ein:"
+            },
+            "location": {
+                "data": {
+                    "location_type": "Standort"
+                },
+                "description": "W\u00e4hle einen Standort f\u00fcr die \u00dcberwachung:"
+            },
+            "user": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "description": "Gib deinen Benutzernamen und dein Passwort ein:"
+            }
+        }
+    }
+}

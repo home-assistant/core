@@ -44,13 +44,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="fido_dollar",
         name="Fido dollar",
         native_unit_of_measurement=PRICE,
-        icon="mdi:cash-usd",
+        icon="mdi:cash",
     ),
     SensorEntityDescription(
         key="balance",
         name="Balance",
         native_unit_of_measurement=PRICE,
-        icon="mdi:cash-usd",
+        icon="mdi:cash",
     ),
     SensorEntityDescription(
         key="data_used",

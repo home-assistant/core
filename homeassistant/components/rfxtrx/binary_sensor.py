@@ -1,7 +1,6 @@
 """Support for RFXtrx binary sensors."""
 from __future__ import annotations
 
-from dataclasses import replace
 import logging
 
 import RFXtrx as rfxtrxmod
@@ -15,7 +14,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
-    CONF_DEVICE_CLASS,
     CONF_DEVICES,
     STATE_ON,
 )
@@ -23,8 +21,6 @@ from homeassistant.core import callback
 from homeassistant.helpers import event as evt
 
 from . import (
-    CONF_DATA_BITS,
-    CONF_OFF_DELAY,
     RfxtrxEntity,
     connect_auto_add,
     find_possible_pt2262_device,
@@ -32,7 +28,13 @@ from . import (
     get_pt2262_cmd,
     get_rfx_object,
 )
-from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST, DEVICE_PACKET_TYPE_LIGHTING4
+from .const import (
+    COMMAND_OFF_LIST,
+    COMMAND_ON_LIST,
+    CONF_DATA_BITS,
+    CONF_OFF_DELAY,
+    DEVICE_PACKET_TYPE_LIGHTING4,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -106,12 +108,10 @@ async def async_setup_entry(
 
     discovery_info = config_entry.data
 
-    def get_sensor_description(type_string: str, device_class: str | None = None):
+    def get_sensor_description(type_string: str):
         description = SENSOR_TYPES_DICT.get(type_string)
         if description is None:
             description = BinarySensorEntityDescription(key=type_string)
-        if device_class:
-            description = replace(description, device_class=device_class)
         return description
 
     for packet_id, entity_info in discovery_info[CONF_DEVICES].items():
@@ -136,9 +136,7 @@ async def async_setup_entry(
         device = RfxtrxBinarySensor(
             event.device,
             device_id,
-            get_sensor_description(
-                event.device.type_string, entity_info.get(CONF_DEVICE_CLASS)
-            ),
+            get_sensor_description(event.device.type_string),
             entity_info.get(CONF_OFF_DELAY),
             entity_info.get(CONF_DATA_BITS),
             entity_info.get(CONF_COMMAND_ON),

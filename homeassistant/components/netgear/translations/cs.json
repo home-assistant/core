@@ -1,0 +1,15 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostitel (nepovinn\u00fd)",
+                    "password": "Heslo",
+                    "port": "Port (nepovinn\u00fd)",
+                    "ssl": "Pou\u017e\u00edv\u00e1 SSL certifik\u00e1t",
+                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no (nepovinn\u00e9)"
+                }
+            }
+        }
+    }
+}

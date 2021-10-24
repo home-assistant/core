@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Callable
 from contextlib import suppress
 from datetime import timedelta
 import logging
 import time
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 import attr
 from huawei_lte_api.AuthorizedConnection import AuthorizedConnection

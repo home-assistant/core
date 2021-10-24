@@ -18,6 +18,7 @@ from homeassistant.const import (
     DEVICE_CLASS_CO,
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_DATE,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_GAS,
     DEVICE_CLASS_HUMIDITY,
@@ -69,14 +70,15 @@ DEVICE_CLASSES: Final[list[str]] = [
     DEVICE_CLASS_CO,  # ppm (parts per million) Carbon Monoxide gas concentration
     DEVICE_CLASS_CO2,  # ppm (parts per million) Carbon Dioxide gas concentration
     DEVICE_CLASS_CURRENT,  # current (A)
+    DEVICE_CLASS_DATE,  # date (ISO8601)
     DEVICE_CLASS_ENERGY,  # energy (kWh, Wh)
     DEVICE_CLASS_HUMIDITY,  # % of humidity in the air
     DEVICE_CLASS_ILLUMINANCE,  # current light level (lx/lm)
     DEVICE_CLASS_MONETARY,  # Amount of money (currency)
     DEVICE_CLASS_OZONE,  # Amount of O3 (µg/m³)
     DEVICE_CLASS_NITROGEN_DIOXIDE,  # Amount of NO2 (µg/m³)
-    DEVICE_CLASS_NITROUS_OXIDE,  # Amount of NO  (µg/m³)
-    DEVICE_CLASS_NITROGEN_MONOXIDE,  # Amount of N2O (µg/m³)
+    DEVICE_CLASS_NITROUS_OXIDE,  # Amount of N2O  (µg/m³)
+    DEVICE_CLASS_NITROGEN_MONOXIDE,  # Amount of NO (µg/m³)
     DEVICE_CLASS_PM1,  # Particulate matter <= 0.1 μm (µg/m³)
     DEVICE_CLASS_PM10,  # Particulate matter <= 10 μm (µg/m³)
     DEVICE_CLASS_PM25,  # Particulate matter <= 2.5 μm (µg/m³)
