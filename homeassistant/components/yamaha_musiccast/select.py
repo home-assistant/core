@@ -70,12 +70,13 @@ class SelectableCapapility(MusicCastDeviceEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Select the given option."""
-        await self.capability.set(option)
+        value = {val: key for key, val in self.capability.options.items()}[option]
+        await self.capability.set(value)
 
     @property
     def options(self):
         """Return the list possible options."""
-        return list(self.capability.options.keys())
+        return list(self.capability.options.values())
 
     def current_option(self):
         """Return the currently selected option."""

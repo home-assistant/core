@@ -74,6 +74,6 @@ class NumberCapability(MusicCastDeviceEntity, NumberEntity):
         """Return the current."""
         return self.capability.current
 
-    def set_value(self, value: float):
+    async def async_set_value(self, value: float):
         """Set a new value."""
-        self.capability.set_current(value)
+        await self.capability.set(value)
