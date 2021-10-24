@@ -101,13 +101,13 @@ class ValloxState:
         _LOGGER.debug("Fetching metric key: %s", metric_key)
 
         if metric_key not in vlxDevConstants.__dict__:
-            _LOGGER.error("Metric key invalid: %s", metric_key)
+            _LOGGER.debug("Metric key invalid: %s", metric_key)
 
         if (value := self.metric_cache.get(metric_key)) is None:
             return None
 
         if not isinstance(value, (str, int, float)):
-            _LOGGER.error(
+            _LOGGER.debug(
                 "Return value of metric %s has unexpected type %s",
                 metric_key,
                 type(value),

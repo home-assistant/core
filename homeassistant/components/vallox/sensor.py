@@ -55,7 +55,7 @@ class ValloxSensor(CoordinatorEntity[ValloxState], SensorEntity):
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         if (metric_key := self.entity_description.metric_key) is None:
-            _LOGGER.error("Error updating sensor. Empty metric key")
+            _LOGGER.debug("Error updating sensor. Empty metric key")
             return None
 
         return self.coordinator.data.get_metric(metric_key)
@@ -96,7 +96,7 @@ class ValloxFilterRemainingSensor(ValloxSensor):
         super_native_value = super().native_value
 
         if not isinstance(super_native_value, (int, float)):
-            _LOGGER.error("Value has unexpected type: %s", type(super_native_value))
+            _LOGGER.debug("Value has unexpected type: %s", type(super_native_value))
             return None
 
         # Since only a delta of days is received from the device, fix the time so the timestamp does
