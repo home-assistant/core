@@ -1,6 +1,6 @@
 """The select entities for musiccast."""
 
-from aiomusiccast.configurables import OptionSetter
+from aiomusiccast.capabilities import OptionSetter
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.components.yamaha_musiccast import (
@@ -23,34 +23,34 @@ async def async_setup_entry(
 
     select_entities = []
 
-    for configurable in coordinator.data.configurables:
-        if isinstance(configurable, OptionSetter):
-            select_entities.append(ConfigurableOption(coordinator, configurable))
+    for capability in coordinator.data.capabilities:
+        if isinstance(capability, OptionSetter):
+            select_entities.append(SelectableCapapility(coordinator, capability))
 
     for zone, data in coordinator.data.zones.items():
-        for configurable in data.configurables:
-            if isinstance(configurable, OptionSetter):
+        for capability in data.capabilities:
+            if isinstance(capability, OptionSetter):
                 select_entities.append(
-                    ConfigurableOption(coordinator, configurable, zone)
+                    SelectableCapapility(coordinator, capability, zone)
                 )
 
     async_add_entities(select_entities)
 
 
-class ConfigurableOption(MusicCastDeviceEntity, SelectEntity):
+class SelectableCapapility(MusicCastDeviceEntity, SelectEntity):
     """Representation of a MusicCast Alarm entity."""
 
     def __init__(
         self,
         coordinator: MusicCastDataUpdateCoordinator,
-        configurable: OptionSetter,
+        capability: OptionSetter,
         zone_id: str = None,
     ) -> None:
         """Initialize the switch."""
         if zone_id is not None:
             self._zone_id = zone_id
-        self.configurable = configurable
-        super().__init__(name=configurable.name, icon="", coordinator=coordinator)
+        self.capability = capability
+        super().__init__(name=capability.name, icon="", coordinator=coordinator)
 
     async def async_added_to_hass(self):
         """Run when this Entity has been added to HA."""
@@ -66,17 +66,17 @@ class ConfigurableOption(MusicCastDeviceEntity, SelectEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this media_player."""
-        return f"{self.device_id}_{self.configurable.id}"
+        return f"{self.device_id}_{self.capability.id}"
 
     async def async_select_option(self, option: str) -> None:
         """Select the given option."""
-        await self.configurable.set(option)
+        await self.capability.set(option)
 
     @property
     def options(self):
         """Return the list possible options."""
-        return list(self.configurable.options.keys())
+        return list(self.capability.options.keys())
 
     def current_option(self):
         """Return the currently selected option."""
-        return self.configurable.current
+        return self.capability.current

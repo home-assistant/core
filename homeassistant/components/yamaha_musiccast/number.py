@@ -1,6 +1,6 @@
 """Number entities for musiccast."""
 
-from aiomusiccast.configurables import NumberSetter
+from aiomusiccast.capabilities import NumberSetter
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.components.yamaha_musiccast import (
@@ -23,37 +23,35 @@ async def async_setup_entry(
 
     number_entities = []
 
-    for configurable in coordinator.data.configurables:
-        if isinstance(configurable, NumberSetter):
-            number_entities.append(ConfigurableNumber(coordinator, configurable))
+    for capability in coordinator.data.capabilities:
+        if isinstance(capability, NumberSetter):
+            number_entities.append(NumberCapability(coordinator, capability))
 
     for zone, data in coordinator.data.zones.items():
-        for configurable in data.configurables:
-            if isinstance(configurable, NumberSetter):
-                number_entities.append(
-                    ConfigurableNumber(coordinator, configurable, zone)
-                )
+        for capability in data.capabilities:
+            if isinstance(capability, NumberSetter):
+                number_entities.append(NumberCapability(coordinator, capability, zone))
 
     async_add_entities(number_entities)
 
 
-class ConfigurableNumber(MusicCastDeviceEntity, NumberEntity):
+class NumberCapability(MusicCastDeviceEntity, NumberEntity):
     """Representation of a MusicCast Alarm entity."""
 
     def __init__(
         self,
         coordinator: MusicCastDataUpdateCoordinator,
-        configurable: NumberSetter,
+        capability: NumberSetter,
         zone_id: str = None,
     ) -> None:
         """Initialize the switch."""
         if zone_id is not None:
             self._zone_id = zone_id
-        self.configurable = configurable
-        self._attr_min_value = configurable.min_value
-        self._attr_max_value = configurable.max_value
-        self._attr_step = configurable.step
-        super().__init__(name=configurable.name, icon="", coordinator=coordinator)
+        self.capability = capability
+        self._attr_min_value = capability.min_value
+        self._attr_max_value = capability.max_value
+        self._attr_step = capability.step
+        super().__init__(name=capability.name, icon="", coordinator=coordinator)
 
     async def async_added_to_hass(self):
         """Run when this Entity has been added to HA."""
@@ -69,13 +67,13 @@ class ConfigurableNumber(MusicCastDeviceEntity, NumberEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this media_player."""
-        return f"{self.device_id}_{self.configurable.id}"
+        return f"{self.device_id}_{self.capability.id}"
 
     @property
     def value(self):
         """Return the current."""
-        return self.configurable.current
+        return self.capability.current
 
     def set_value(self, value: float):
         """Set a new value."""
-        self.configurable.set_current(value)
+        self.capability.set_current(value)
