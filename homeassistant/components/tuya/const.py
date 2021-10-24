@@ -163,6 +163,8 @@ class DPCode(str, Enum):
     C_F = "c_f"  # Temperature unit switching
     CH2O_STATE = "ch2o_state"
     CH2O_VALUE = "ch2o_value"
+    CH4_SENSOR_STATE = "ch4_sensor_state"
+    CH4_SENSOR_VALUE = "ch4_sensor_value"
     CHILD_LOCK = "child_lock"  # Child lock
     CO_STATE = "co_state"
     CO_STATUS = "co_status"
@@ -225,6 +227,9 @@ class DPCode(str, Enum):
     PERCENT_STATE_2 = "percent_state_2"
     PERCENT_STATE_3 = "percent_state_3"
     PIR = "pir"  # Motion sensor
+    PM1 = "pm1"
+    PM10 = "pm10"
+    PM25_STATE = "pm25_state"
     PM25_VALUE = "pm25_value"
     POWDER_SET = "powder_set"  # Powder
     POWER_GO = "power_go"
@@ -291,6 +296,7 @@ class DPCode(str, Enum):
     UV = "uv"  # UV sterilization
     VA_HUMIDITY = "va_humidity"
     VA_TEMPERATURE = "va_temperature"
+    VOC_STATE = "voc_state"
     VOC_VALUE = "voc_value"
     WARM = "warm"  # Heat preservation
     WARM_TIME = "warm_time"  # Heat preservation time
