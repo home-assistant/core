@@ -23,6 +23,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
+from . import _async_isy_to_configuration_url
 from .const import DOMAIN
 
 
@@ -79,9 +80,8 @@ class ISYEntity(Entity):
         isy = self._node.isy
         uuid = isy.configuration["uuid"]
         node = self._node
-        connection_info = isy.conn.connection_info
-        proto = "https" if "tls" in connection_info else "http"
-        url = f"{proto}://{connection_info['addr']}:{connection_info['port']}"
+        url = _async_isy_to_configuration_url(isy)
+
         basename = self.name
 
         if hasattr(self._node, "parent_node") and self._node.parent_node is not None:
