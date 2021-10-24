@@ -36,7 +36,7 @@ async def test_form(hass):
     """Test we get the form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
     )
     assert result["type"] == "form"
     assert result["errors"] == {}
@@ -79,7 +79,7 @@ async def test_form(hass):
 async def test_user_form_exceptions(hass, side_effect, error_base):
     """Test all user exceptions in the flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
     )
 
     with patch(
@@ -110,7 +110,7 @@ async def test_form_updates_unique_id(hass):
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
     )
     with patch(
         "homeassistant.components.wiz_light.wizlight.getBulbConfig",
