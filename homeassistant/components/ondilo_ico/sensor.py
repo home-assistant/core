@@ -16,6 +16,7 @@ from homeassistant.const import (
     PERCENTAGE,
     TEMP_CELSIUS,
 )
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -169,13 +170,13 @@ class OndiloICO(CoordinatorEntity, SensorEntity):
         return self._devdata()["value"]
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info for the sensor."""
         pooldata = self._pooldata()
-        return {
-            "identifiers": {(DOMAIN, pooldata["ICO"]["serial_number"])},
-            "name": self._device_name,
-            "manufacturer": "Ondilo",
-            "model": "ICO",
-            "sw_version": pooldata["ICO"]["sw_version"],
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, pooldata["ICO"]["serial_number"])},
+            manufacturer="Ondilo",
+            model="ICO",
+            name=self._device_name,
+            sw_version=pooldata["ICO"]["sw_version"],
+        )

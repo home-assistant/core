@@ -5,12 +5,8 @@ import logging
 
 from homeassistant.components.nut import PyNUTData
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_NAME,
-    CONF_RESOURCES,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import CONF_RESOURCES, STATE_UNKNOWN
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -81,10 +77,10 @@ class NUTSensor(CoordinatorEntity, SensorEntity):
         self._attr_entity_registry_enabled_default = enabled_default
         self._attr_name = f"{device_name} {sensor_description.name}"
         self._attr_unique_id = f"{unique_id}_{sensor_description.key}"
-        self._attr_device_info = {
-            ATTR_IDENTIFIERS: {(DOMAIN, unique_id)},
-            ATTR_NAME: device_name,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            name=device_name,
+        )
         self._attr_device_info.update(data.device_info)
 
     @property
