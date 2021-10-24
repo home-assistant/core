@@ -820,6 +820,7 @@ async def async_handle_snapshot_service(
     def _write_image(to_file: str, image_data: bytes | None) -> None:
         """Executor helper to write image."""
         if image_data is None:
+            _LOGGER.info("No image captured")
             return
         if not os.path.exists(os.path.dirname(to_file)):
             os.makedirs(os.path.dirname(to_file), exist_ok=True)
