@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_reboot(call):
         """Handle reboot service call."""
-        await _qnap_qsw_reboot(hass, qsha)
+        await qsha.async_reboot()
 
     hass.services.async_register(DOMAIN, SERVICE_REBOOT, async_reboot)
 
@@ -75,16 +75,8 @@ class QnapQswDataUpdateCoordinator(DataUpdateCoordinator):
         """Update data via library."""
         with async_timeout.timeout(ASYNC_TIMEOUT):
             try:
-                await _qnap_qsw_update(self.hass, self.qsha)
+                await self.qsha.async_update()
             except (ConnectionError, LoginError) as error:
                 raise UpdateFailed(error) from error
 
         return self.qsha.data()
-
-
-async def _qnap_qsw_reboot(hass, qsha):
-    return await hass.async_add_executor_job(qsha.reboot)
-
-
-async def _qnap_qsw_update(hass, qsha):
-    return await hass.async_add_executor_job(qsha.async_update)

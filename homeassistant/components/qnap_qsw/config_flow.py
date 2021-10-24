@@ -45,7 +45,7 @@ class QnapQswConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 username = user_input[CONF_USERNAME]
                 password = user_input[CONF_PASSWORD]
                 self.qsha = QSHA(host=host, user=username, password=password)
-                await _qnap_qsw_update(self.hass, self.qsha)
+                await self.qsha.async_identify()
 
                 await self.async_set_unique_id(self.qsha.serial().lower())
                 self._abort_if_unique_id_configured()
@@ -60,7 +60,3 @@ class QnapQswConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
-
-
-async def _qnap_qsw_update(hass, qsha):
-    return await hass.async_add_executor_job(qsha.async_identify)
