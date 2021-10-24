@@ -162,9 +162,7 @@ class MusicCastDeviceEntity(MusicCastEntity):
     @property
     def device_name(self):
         """Return the name of the current device."""
-        if self._zone_id == DEFAULT_ZONE:
-            return self.coordinator.data.network_name
-        return f"{self.coordinator.data.network_name} {self._zone_id}"
+        return self.coordinator.data.zones[self._zone_id].name
 
     @property
     def device_info(self) -> DeviceInfo:
