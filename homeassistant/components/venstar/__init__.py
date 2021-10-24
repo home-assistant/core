@@ -1,4 +1,6 @@
 """The venstar component."""
+from requests import RequestException, Timeout
+from requests.exceptions import ConnectionError as RequestsConnectionError
 from venstarcolortouch import VenstarColorTouch
 
 from homeassistant.const import (
@@ -36,7 +38,7 @@ async def async_setup_entry(hass, config):
 
     try:
         await hass.async_add_executor_job(client.update_info)
-    except Exception as ex:  # pylint: disable=broad-except
+    except (OSError, RequestException, RequestsConnectionError, Timeout) as ex:
         raise ConfigEntryNotReady(f"Unable to connect to the thermostat: {ex}") from ex
     hass.data.setdefault(DOMAIN, {})[config.entry_id] = client
     hass.config_entries.async_setup_platforms(config, PLATFORMS)

@@ -3,7 +3,6 @@ import logging
 from unittest.mock import patch
 
 from homeassistant import config_entries
-from homeassistant.components.venstar.config_flow import CannotConnect
 from homeassistant.components.venstar.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
@@ -46,7 +45,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.venstar.VenstarColorTouch.update_info",
+        "homeassistant.components.venstar.config_flow.VenstarColorTouch.update_info",
         new=VenstarColorTouchMock.update_info,
     ), patch(
         "homeassistant.components.venstar.async_setup_entry",
@@ -70,8 +69,8 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.venstar.config_flow.VenstarColorTouch.login",
-        side_effect=CannotConnect,
+        "homeassistant.components.venstar.config_flow.VenstarColorTouch.update_info",
+        return_value=False,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

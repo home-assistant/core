@@ -1,4 +1,5 @@
 """Tests for the venstar integration."""
+from requests.exceptions import ConnectionError as RequestsConnectionError
 
 
 class VenstarColorTouchMock:
@@ -46,7 +47,7 @@ class VenstarColorTouchMock:
 
     def broken_update_info(self):
         """Mock a update_info the raises Exception."""
-        raise Exception
+        raise RequestsConnectionError
 
     def update_sensors(self):
         """Mock update_sensors."""
