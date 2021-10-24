@@ -91,6 +91,7 @@ class ISYEntity(Entity):
             model="Unknown",
             name=basename,
             via_device=(DOMAIN, uuid),
+            configuration_url=node.isy.conn.connection_info["addr"],
         )
 
         if hasattr(node, "address"):

@@ -264,6 +264,7 @@ async def _async_get_or_create_isy_device_in_registry(
         name=isy.configuration["name"],
         model=isy.configuration["model"],
         sw_version=isy.configuration["firmware"],
+        configuration_url=isy.conn.connection_info["addr"],
     )
 
 
