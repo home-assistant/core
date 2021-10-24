@@ -137,6 +137,16 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         ),
         TAMPER_BINARY_SENSOR,
     ),
+    # PM2.5 Sensor
+    # https://developer.tuya.com/en/docs/iot/categorypm25?id=Kaiuz3qof3yfu
+    "pm2.5": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.PM25_STATE,
+            device_class=DEVICE_CLASS_SAFETY,
+            on_value="alarm",
+        ),
+        TAMPER_BINARY_SENSOR,
+    ),
     # Gas Detector
     # https://developer.tuya.com/en/docs/iot/categoryrqbj?id=Kaiuz3d162ubw
     "rqbj": (

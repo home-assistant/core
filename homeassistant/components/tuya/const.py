@@ -227,6 +227,9 @@ class DPCode(str, Enum):
     PERCENT_STATE_2 = "percent_state_2"
     PERCENT_STATE_3 = "percent_state_3"
     PIR = "pir"  # Motion sensor
+    PM1 = "pm1"
+    PM10 = "pm10"
+    PM25_STATE = "pm25_state"
     PM25_VALUE = "pm25_value"
     POWDER_SET = "powder_set"  # Powder
     POWER_GO = "power_go"
