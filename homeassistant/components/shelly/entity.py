@@ -353,7 +353,7 @@ class ShellyRpcEntity(entity.Entity):
     @property
     def available(self) -> bool:
         """Available."""
-        return cast(bool, self.wrapper.device.connected)
+        return self.wrapper.device.connected
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to HASS."""
@@ -631,7 +631,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
         self.last_state: StateType = None
         self.wrapper = wrapper
         self.attribute = attribute
-        self.block: Block | None = block
+        self.block: Block | None = block  # type: ignore[assignment]
         self.description = description
         self._unit = self.description.unit
 
