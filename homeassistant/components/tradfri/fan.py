@@ -46,7 +46,8 @@ def _from_percentage(percentage: int) -> int:
 
 def _from_fan_speed(fan_speed: int) -> int:
     """Convert the Tradfri API fan speed to a percentage value."""
-    return round(fan_speed / 50 * 100)
+    nearest_10: int = round(fan_speed / 10) * 10  # Round to nearest multiple of 10
+    return round(nearest_10 / 50 * 100)
 
 
 class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
