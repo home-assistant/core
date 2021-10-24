@@ -34,7 +34,13 @@ from homeassistant.components.light import (
     LightEntity,
     preprocess_turn_on_alternatives,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_MODE,
+    ATTR_MODEL,
+    ATTR_SW_VERSION,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
@@ -452,16 +458,19 @@ class LIFXLight(LightEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
-        product_map = aiolifx().products.product_map
-        model = product_map.get(self.bulb.product) or self.bulb.product
-        return DeviceInfo(
+        _map = aiolifx().products.product_map
+        info = DeviceInfo(
             identifiers={(LIFX_DOMAIN, self.unique_id)},
             connections={(dr.CONNECTION_NETWORK_MAC, self.bulb.mac_addr)},
             manufacturer="LIFX",
-            model=str(model),
             name=self.name,
             sw_version=self.bulb.host_firmware_version,
         )
+        if model := (_map.get(self.bulb.product) or self.bulb.product) is not None:
+            info[ATTR_MODEL] = str(model)
+        if (version := self.bulb.host_firmware_version) is not None:
+            info[ATTR_SW_VERSION] = version
+        return info
 
     @property
     def available(self):
