@@ -41,10 +41,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             except httpx.HTTPError as err:
                 raise UpdateFailed(f"Error communicating with API: {err}") from err
 
-            consumption = ted_reader.consumption()
+            consumption = ted_reader.total_consumption()
+            data["is_5000"] = isinstance(ted_reader, tedpy.TED5000)
             data["consumption"] = consumption.now
             data["daily_consumption"] = consumption.daily
             data["mtd_consumption"] = consumption.mtd
+            data["spyders"] = {}
+            for spyder in ted_reader.spyders:
+                for ctgroup in spyder.ctgroups:
+                    consumption = ted_reader.spyder_ctgroup_consumption(spyder, ctgroup)
+                    data["spyders"][f"{spyder.position}.{ctgroup.position}"] = {
+                        "name": ctgroup.description,
+                        "consumption": consumption.now,
+                        "daily_consumption": consumption.daily,
+                        "mtd_consumption": consumption.mtd,
+                    }
+            data["mtus"] = {}
+            for mtu in ted_reader.mtus:
+                consumption = ted_reader.mtu_consumption(mtu)
+                data["mtus"][mtu.position] = {
+                    "name": mtu.description,
+                    "consumption": consumption.current_usage,
+                    "voltage": consumption.voltage,
+                }
 
             _LOGGER.debug("Retrieved data from API: %s", data)
 
