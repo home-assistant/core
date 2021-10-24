@@ -7,6 +7,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import ENERGY_KILO_WATT_HOUR
 from homeassistant.core import callback
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONSUMPTION_TODAY, CONSUMPTION_YEAR, DOMAIN, MANUFACTURER
@@ -41,12 +42,12 @@ class MillHeaterEnergySensor(CoordinatorEntity, SensorEntity):
 
         self._attr_name = f"{heater.name} {sensor_type.replace('_', ' ')}"
         self._attr_unique_id = f"{heater.device_id}_{sensor_type}"
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, heater.device_id)},
-            "name": self.name,
-            "manufacturer": MANUFACTURER,
-            "model": f"generation {1 if heater.is_gen1 else 2}",
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, heater.device_id)},
+            name=self.name,
+            manufacturer=MANUFACTURER,
+            model=f"generation {1 if heater.is_gen1 else 2}",
+        )
         self._update_attr(heater)
 
     @callback

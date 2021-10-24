@@ -1,4 +1,5 @@
 """Test the Wallbox config flow."""
+from http import HTTPStatus
 import json
 
 import requests_mock
@@ -33,7 +34,7 @@ async def test_form_cannot_authenticate(hass):
         mock_request.get(
             "https://api.wall-box.com/auth/token/user",
             text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
-            status_code=403,
+            status_code=HTTPStatus.FORBIDDEN,
         )
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -58,12 +59,12 @@ async def test_form_cannot_connect(hass):
         mock_request.get(
             "https://api.wall-box.com/auth/token/user",
             text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
-            status_code=200,
+            status_code=HTTPStatus.OK,
         )
         mock_request.get(
             "https://api.wall-box.com/chargers/status/12345",
             text='{"Temperature": 100, "Location": "Toronto", "Datetime": "2020-07-23", "Units": "Celsius"}',
-            status_code=404,
+            status_code=HTTPStatus.NOT_FOUND,
         )
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -88,12 +89,12 @@ async def test_form_validate_input(hass):
         mock_request.get(
             "https://api.wall-box.com/auth/token/user",
             text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
-            status_code=200,
+            status_code=HTTPStatus.OK,
         )
         mock_request.get(
             "https://api.wall-box.com/chargers/status/12345",
             text='{"Temperature": 100, "Location": "Toronto", "Datetime": "2020-07-23", "Units": "Celsius"}',
-            status_code=200,
+            status_code=HTTPStatus.OK,
         )
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

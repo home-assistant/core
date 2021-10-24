@@ -1,5 +1,9 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "already_in_progress": "Konfiguracja jest ju\u017c w toku"
+        },
         "error": {
             "cannot_connect": "Nie uda\u0142o si\u0119 po\u0142\u0105czy\u0107"
         },

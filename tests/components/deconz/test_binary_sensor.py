@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_PROBLEM,
+    DEVICE_CLASS_TAMPER,
     DEVICE_CLASS_VIBRATION,
 )
 from homeassistant.components.deconz.const import (
@@ -17,6 +17,7 @@ from homeassistant.components.deconz.services import SERVICE_DEVICE_REFRESH
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     DEVICE_CLASS_TEMPERATURE,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -133,10 +134,12 @@ async def test_tampering_sensor(hass, aioclient_mock, mock_deconz_websocket):
     with patch.dict(DECONZ_WEB_REQUEST, data):
         config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
+    ent_reg = er.async_get(hass)
+
     assert len(hass.states.async_all()) == 3
     presence_tamper = hass.states.get("binary_sensor.presence_sensor_tampered")
     assert presence_tamper.state == STATE_OFF
-    assert presence_tamper.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_PROBLEM
+    assert presence_tamper.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TAMPER
 
     event_changed_sensor = {
         "t": "event",
@@ -149,6 +152,10 @@ async def test_tampering_sensor(hass, aioclient_mock, mock_deconz_websocket):
     await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.presence_sensor_tampered").state == STATE_ON
+    assert (
+        ent_reg.async_get("binary_sensor.presence_sensor_tampered").entity_category
+        == ENTITY_CATEGORY_DIAGNOSTIC
+    )
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 

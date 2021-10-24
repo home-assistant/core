@@ -15,9 +15,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_NAME,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_URL,
@@ -38,6 +35,7 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
 )
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util import Throttle, dt
 
 from .const import (
@@ -979,11 +977,11 @@ class GrowattInverter(SensorEntity):
         self._attr_unique_id = unique_id
         self._attr_icon = "mdi:solar-power"
 
-        self._attr_device_info = {
-            ATTR_IDENTIFIERS: {(DOMAIN, probe.device_id)},
-            ATTR_NAME: name,
-            ATTR_MANUFACTURER: "Growatt",
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, probe.device_id)},
+            manufacturer="Growatt",
+            name=name,
+        )
 
     @property
     def native_value(self):

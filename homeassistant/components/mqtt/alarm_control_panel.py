@@ -67,6 +67,10 @@ DEFAULT_ARM_HOME = "ARM_HOME"
 DEFAULT_ARM_CUSTOM_BYPASS = "ARM_CUSTOM_BYPASS"
 DEFAULT_DISARM = "DISARM"
 DEFAULT_NAME = "MQTT Alarm"
+
+REMOTE_CODE = "REMOTE_CODE"
+REMOTE_CODE_TEXT = "REMOTE_CODE_TEXT"
+
 PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_CODE): cv.string,
@@ -201,10 +205,9 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
     @property
     def code_format(self):
         """Return one or more digits/characters."""
-        code = self._config.get(CONF_CODE)
-        if code is None:
+        if (code := self._config.get(CONF_CODE)) is None:
             return None
-        if isinstance(code, str) and re.search("^\\d+$", code):
+        if code == REMOTE_CODE or (isinstance(code, str) and re.search("^\\d+$", code)):
             return alarm.FORMAT_NUMBER
         return alarm.FORMAT_TEXT
 
@@ -296,7 +299,12 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
     def _validate_code(self, code, state):
         """Validate given code."""
         conf_code = self._config.get(CONF_CODE)
-        check = conf_code is None or code == conf_code
+        check = (
+            conf_code is None
+            or code == conf_code
+            or (conf_code == REMOTE_CODE and code)
+            or (conf_code == REMOTE_CODE_TEXT and code)
+        )
         if not check:
             _LOGGER.warning("Wrong code entered for %s", state)
         return check

@@ -262,8 +262,7 @@ class ViCareClimate(ClimateEntity):
 
     def set_temperature(self, **kwargs):
         """Set new target temperatures."""
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        if temp is not None:
+        if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             self._api.setProgramTemperature(self._current_program, temp)
             self._target_temperature = temp
 

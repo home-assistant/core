@@ -1,0 +1,22 @@
+{
+    "state": {
+        "tuya__led_type": {
+            "halogen": "\u9e75\u7d20\u71c8",
+            "incandescent": "\u767d\u71be\u71c8",
+            "led": "LED"
+        },
+        "tuya__light_mode": {
+            "none": "\u95dc\u9589",
+            "pos": "\u6307\u793a\u958b\u95dc\u4f4d\u7f6e",
+            "relay": "\u6307\u793a\u958b\u95dc\u958b\u555f/\u95dc\u9589\u72c0\u614b"
+        },
+        "tuya__relay_status": {
+            "last": "\u8a18\u4f4f\u6700\u5f8c\u72c0\u614b",
+            "memory": "\u8a18\u4f4f\u6700\u5f8c\u72c0\u614b",
+            "off": "\u95dc\u9589",
+            "on": "\u958b\u555f",
+            "power_off": "\u95dc\u9589",
+            "power_on": "\u958b\u555f"
+        }
+    }
+}

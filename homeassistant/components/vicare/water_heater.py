@@ -124,8 +124,7 @@ class ViCareWater(WaterHeaterEntity):
 
     def set_temperature(self, **kwargs):
         """Set new target temperatures."""
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        if temp is not None:
+        if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             self._api.setDomesticHotWaterTemperature(temp)
             self._target_temperature = temp
 

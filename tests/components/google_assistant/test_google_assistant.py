@@ -1,4 +1,6 @@
 """The tests for the Google Assistant component."""
+from http import HTTPStatus
+
 # pylint: disable=protected-access
 import json
 
@@ -154,7 +156,7 @@ async def test_sync_request(hass_fixture, assistant_client, auth_header):
         data=json.dumps(data),
         headers=auth_header,
     )
-    assert result.status == 200
+    assert result.status == HTTPStatus.OK
     body = await result.json()
     assert body.get("requestId") == reqid
     devices = body["payload"]["devices"]
@@ -198,7 +200,7 @@ async def test_query_request(hass_fixture, assistant_client, auth_header):
         data=json.dumps(data),
         headers=auth_header,
     )
-    assert result.status == 200
+    assert result.status == HTTPStatus.OK
     body = await result.json()
     assert body.get("requestId") == reqid
     devices = body["payload"]["devices"]
@@ -238,7 +240,7 @@ async def test_query_climate_request(hass_fixture, assistant_client, auth_header
         data=json.dumps(data),
         headers=auth_header,
     )
-    assert result.status == 200
+    assert result.status == HTTPStatus.OK
     body = await result.json()
     assert body.get("requestId") == reqid
     devices = body["payload"]["devices"]
@@ -297,7 +299,7 @@ async def test_query_climate_request_f(hass_fixture, assistant_client, auth_head
         data=json.dumps(data),
         headers=auth_header,
     )
-    assert result.status == 200
+    assert result.status == HTTPStatus.OK
     body = await result.json()
     assert body.get("requestId") == reqid
     devices = body["payload"]["devices"]
@@ -350,7 +352,7 @@ async def test_query_humidifier_request(hass_fixture, assistant_client, auth_hea
         data=json.dumps(data),
         headers=auth_header,
     )
-    assert result.status == 200
+    assert result.status == HTTPStatus.OK
     body = await result.json()
     assert body.get("requestId") == reqid
     devices = body["payload"]["devices"]
@@ -464,7 +466,7 @@ async def test_execute_request(hass_fixture, assistant_client, auth_header):
         data=json.dumps(data),
         headers=auth_header,
     )
-    assert result.status == 200
+    assert result.status == HTTPStatus.OK
     body = await result.json()
     assert body.get("requestId") == reqid
     commands = body["payload"]["commands"]
