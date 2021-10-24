@@ -71,8 +71,25 @@ MOCK_SHELLY = {
     "num_outputs": 2,
 }
 
-MOCK_STATUS = {
+MOCK_STATUS_COAP = {
+    "update": {
+        "status": "pending",
+        "has_update": True,
+        "beta_version": "some_beta_version",
+        "new_version": "some_new_version",
+        "old_version": "some_old_version",
+    },
+}
+
+
+MOCK_STATUS_RPC = {
     "switch:0": {"output": True},
+    "sys": {
+        "available_updates": {
+            "beta": {"version": "some_beta_version"},
+            "stable": {"version": "some_beta_version"},
+        }
+    },
 }
 
 
@@ -117,8 +134,10 @@ async def coap_wrapper(hass):
         blocks=MOCK_BLOCKS,
         settings=MOCK_SETTINGS,
         shelly=MOCK_SHELLY,
+        status=MOCK_STATUS_COAP,
         firmware_version="some fw string",
         update=AsyncMock(),
+        trigger_ota_update=AsyncMock(),
         initialized=True,
     )
 
@@ -150,9 +169,10 @@ async def rpc_wrapper(hass):
         config=MOCK_CONFIG,
         event={},
         shelly=MOCK_SHELLY,
-        status=MOCK_STATUS,
+        status=MOCK_STATUS_RPC,
         firmware_version="some fw string",
         update=AsyncMock(),
+        trigger_ota_update=AsyncMock(),
         initialized=True,
         shutdown=AsyncMock(),
     )
