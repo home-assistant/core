@@ -50,7 +50,7 @@
                     "maxDamper": 100,
                     "measuredTemp": 25,
                     "minDamper": 0,
-                    "motion": 20,
+                    "motion": 22,
                     "motionConfig": 2,
                     "name": "Zone 3",
                     "number": 3,
