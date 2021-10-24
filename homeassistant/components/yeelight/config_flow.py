@@ -270,19 +270,23 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Handle the initial step."""
-        if user_input is not None:
-            options = {**self._config_entry.options}
-            options.update(user_input)
-            return self.async_create_entry(title="", data=options)
-
+        data = self._config_entry.data
         options = self._config_entry.options
-        detected_model = self._config_entry.data.get(CONF_DETECTED_MODEL)
+        detected_model = data.get(CONF_DETECTED_MODEL)
         model = options[CONF_MODEL] or detected_model
+
+        if user_input is not None:
+            return self.async_create_entry(
+                title="", data={CONF_MODEL: model, **options, **user_input}
+            )
 
         schema_dict = {}
         known_models = get_known_models()
-        if is_unknown_model := detected_model not in known_models:
+        if is_unknown_model := model not in known_models:
             known_models.insert(0, model)
+        import pprint
+
+        pprint.pprint([model, "known_models", known_models])
 
         if is_unknown_model or model != detected_model:
             schema_dict.update(

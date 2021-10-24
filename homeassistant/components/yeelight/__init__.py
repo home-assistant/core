@@ -233,7 +233,9 @@ def _async_normalize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> No
             },
             options={
                 CONF_NAME: entry.data.get(CONF_NAME, ""),
-                CONF_MODEL: entry.data.get(CONF_MODEL, ""),
+                CONF_MODEL: entry.data.get(
+                    CONF_MODEL, entry.data.get(CONF_DETECTED_MODEL, "")
+                ),
                 CONF_TRANSITION: entry.data.get(CONF_TRANSITION, DEFAULT_TRANSITION),
                 CONF_MODE_MUSIC: entry.data.get(CONF_MODE_MUSIC, DEFAULT_MODE_MUSIC),
                 CONF_SAVE_ON_CHANGE: entry.data.get(
