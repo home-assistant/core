@@ -1,6 +1,4 @@
 """HALO Home integration light platform."""
-import logging
-
 import halohome
 
 from homeassistant.components.light import (
@@ -9,24 +7,17 @@ from homeassistant.components.light import (
     COLOR_MODE_COLOR_TEMP,
     LightEntity,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+):
     """Set up the HALO Home light platform from a config entry."""
-    config = config_entry.data
-    host = config[CONF_HOST]
-    username = config[CONF_USERNAME]
-    password = config[CONF_PASSWORD]
-
-    try:
-        connection = await halohome.connect(username, password, host)
-    except Exception:
-        _LOGGER.error("Could not connect to HALO Home / Avi On Cloud")
-        return
-
+    connection = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(HaloLight(device) for device in await connection.list_devices())
 
 
