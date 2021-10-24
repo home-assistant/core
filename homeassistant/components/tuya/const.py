@@ -291,6 +291,7 @@ class DPCode(str, Enum):
     UV = "uv"  # UV sterilization
     VA_HUMIDITY = "va_humidity"
     VA_TEMPERATURE = "va_temperature"
+    VOC_STATE = "voc_state"
     VOC_VALUE = "voc_value"
     WARM = "warm"  # Heat preservation
     WARM_TIME = "warm_time"  # Heat preservation time
