@@ -40,6 +40,11 @@ async def async_setup_entry(
 
 def _from_percentage(percentage: int) -> int:
     """Convert percent to a value that the Tradfri API understands."""
+    if percentage < 20:
+        # The device cannot be set to speed 5 (10%), so we should turn off the device
+        # for any value below 20
+        return 0
+
     nearest_10: int = round(percentage / 10) * 10  # Round to nearest multiple of 10
     return round(nearest_10 / 100 * 50)
 
@@ -149,10 +154,6 @@ class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
         if not self._device_control:
             return
 
-        # The device cannot be set to speed 5 (10%), so we should turn off the device
-        # for any value below 20
-        if percentage < 20:
-            percentage = 0
         await self._api(self._device_control.set_mode(_from_percentage(percentage)))
 
     async def async_turn_off(self, **kwargs: Any) -> None:
