@@ -48,7 +48,7 @@ class RenaultVehicleProxy:
         self.hass = hass
         self._vehicle = vehicle
         self._details = details
-        self._attr_device_info = DeviceInfo(
+        self._device_info = DeviceInfo(
             identifiers={(DOMAIN, cast(str, details.vin))},
             manufacturer=(details.get_brand_label() or "").capitalize(),
             model=(details.get_model_label() or "").capitalize(),
@@ -63,6 +63,11 @@ class RenaultVehicleProxy:
     def details(self) -> models.KamereonVehicleDetails:
         """Return the specs of the vehicle."""
         return self._details
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return a device description for device registry."""
+        return self._device_info
 
     @property
     def vehicle(self) -> RenaultVehicle:
