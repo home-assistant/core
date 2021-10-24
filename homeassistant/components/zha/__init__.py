@@ -125,7 +125,7 @@ async def async_setup_entry(hass, config_entry):
         await zha_data[DATA_ZHA_GATEWAY].async_update_device_storage()
 
     zha_data[DATA_ZHA_SHUTDOWN_TASK] = hass.bus.async_listen_once(
-        ha_const.EVENT_HOMEASSISTANT_CLOSE, async_zha_shutdown
+        ha_const.EVENT_HOMEASSISTANT_FINAL_WRITE, async_zha_shutdown
     )
     asyncio.create_task(async_load_entities(hass))
     return True
