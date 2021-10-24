@@ -1,12 +1,12 @@
-"""Config flow for Ted6000 integration."""
+"""Config flow for TED integration."""
 from __future__ import annotations
 
 import logging
 from typing import Any
 
 import httpx
+import tedpy
 import voluptuous as vol
-import xmltodict
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS, CONF_NAME
@@ -22,12 +22,12 @@ CONF_SERIAL = "serial"
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Ted6000."""
+    """Handle a config flow for TED."""
 
     VERSION = 1
 
     def __init__(self):
-        """Initialize an Ted6000 flow."""
+        """Initialize an TED flow."""
         self.ip_address = None
         self.name = None
         self.serial = None
@@ -80,12 +80,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
 
             try:
-                async with get_async_client(self.hass):
-                    settings = httpx.get(
-                        f"http://{user_input[CONF_HOST]}/api/SystemSettings.xml"
-                    )
-                doc = xmltodict.parse(settings.text)["SystemSettings"]
-                self.serial = doc["Gateway"]["GatewayID"]
+                reader = await tedpy.createTED(
+                    user_input[CONF_HOST], async_client=get_async_client(self.hass)
+                )
+                await reader.update()
+                self.serial = reader.gateway_id
                 await self.async_set_unique_id(self.serial)
             except httpx.HTTPError:
                 errors["base"] = "cannot_connect"

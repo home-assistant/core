@@ -271,7 +271,7 @@ FLOWS = [
     "system_bridge",
     "tado",
     "tasmota",
-    "ted6000",
+    "ted",
     "tellduslive",
     "tesla",
     "tibber",

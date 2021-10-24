@@ -1,12 +1,42 @@
-"""Support gathering ted6000 information."""
+"""Support gathering ted5000 and ted6000 information."""
 import logging
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.const import DEVICE_CLASS_ENERGY, ENERGY_WATT_HOUR, POWER_WATT
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt
 
-from .const import COORDINATOR, DOMAIN, NAME, SENSORS
+from .const import COORDINATOR, DOMAIN, NAME
 
 _LOGGER = logging.getLogger(__name__)
+
+SENSORS = (
+    SensorEntityDescription(
+        key="consumption",
+        name="Current Energy Consumption",
+        native_unit_of_measurement=POWER_WATT,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="daily_consumption",
+        name="Today's Energy Consumption",
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=DEVICE_CLASS_ENERGY,
+        last_reset=dt.start_of_local_day(),
+    ),
+    SensorEntityDescription(
+        key="mtd_consumption",
+        name="Month to Date Energy Production",
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=DEVICE_CLASS_ENERGY,
+    ),
+)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -19,7 +49,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for sensor_description in SENSORS:
         entity_name = f"{name} {sensor_description.name}"
         entities.append(
-            Ted6000Sensor(
+            TedSensor(
                 sensor_description, entity_name, config_entry.unique_id, coordinator
             )
         )
@@ -28,8 +58,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     return True
 
 
-class Ted6000Sensor(CoordinatorEntity, SensorEntity):
-    """Implementation of a Ted6000 sensor."""
+class TedSensor(CoordinatorEntity, SensorEntity):
+    """Implementation of a Ted5000 and Ted6000 sensor."""
 
     def __init__(self, description, name, device_id, coordinator):
         """Initialize the sensor."""

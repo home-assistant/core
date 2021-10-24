@@ -2265,6 +2265,9 @@ tank_utility==1.4.0
 # homeassistant.components.tapsaff
 tapsaff==0.2.1
 
+# homeassistant.components.ted
+tedpy==0.1.0
+
 # homeassistant.components.tellstick
 tellcore-net==0.4
 
@@ -2427,8 +2430,6 @@ xknx==0.18.9
 # homeassistant.components.fritz
 # homeassistant.components.rest
 # homeassistant.components.startca
-# homeassistant.components.ted5000
-# homeassistant.components.ted6000
 # homeassistant.components.zestimate
 xmltodict==0.12.0
 

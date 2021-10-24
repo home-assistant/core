@@ -1,4 +1,4 @@
-"""The Ted6000 integration."""
+"""The TED integration."""
 from __future__ import annotations
 
 from datetime import timedelta
@@ -6,7 +6,7 @@ import logging
 
 import async_timeout
 import httpx
-import xmltodict
+import tedpy
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
@@ -27,21 +27,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     config = entry.data
     name = config[CONF_NAME]
 
+    ted_reader = await tedpy.createTED(
+        config[CONF_HOST],
+        async_client=get_async_client(hass),
+    )
+
     async def async_update_data():
         """Fetch data from API endpoint."""
         data = {}
-        api_url = f"http://{config[CONF_HOST]}/api"
         async with async_timeout.timeout(30):
             try:
-                async with get_async_client(hass):
-                    dashdata = httpx.get(api_url + "/DashData.xml?T=0&D=0&M=0")
+                await ted_reader.update()
             except httpx.HTTPError as err:
                 raise UpdateFailed(f"Error communicating with API: {err}") from err
 
-            dash_doc = xmltodict.parse(dashdata.text)["DashData"]
-            data["consumption"] = dash_doc["Now"]
-            data["daily_consumption"] = dash_doc["TDY"]
-            data["mtd_consumption"] = dash_doc["MTD"]
+            consumption = ted_reader.consumption()
+            data["consumption"] = consumption.now
+            data["daily_consumption"] = consumption.daily
+            data["mtd_consumption"] = consumption.mtd
 
             _LOGGER.debug("Retrieved data from API: %s", data)
 
@@ -50,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        name=f"TED6000 {name}",
+        name=f"TED {name}",
         update_method=async_update_data,
         update_interval=SCAN_INTERVAL,
     )
