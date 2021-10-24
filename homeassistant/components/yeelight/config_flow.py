@@ -281,10 +281,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         schema_dict = {}
         known_models = get_known_models()
-        if model not in known_models:
+        if is_unknown_model := detected_model not in known_models:
             known_models.insert(0, model)
 
-        if detected_model not in known_models or model != detected_model:
+        if is_unknown_model or model != detected_model:
             schema_dict.update(
                 {
                     vol.Optional(CONF_MODEL, default=model): vol.In(known_models),
