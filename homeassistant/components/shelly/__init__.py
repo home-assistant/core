@@ -617,6 +617,8 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self.entry = entry
         self.device = device
 
+        self._ota_update_params = {"beta": False}
+
         self._debounced_reload = Debouncer(
             hass,
             _LOGGER,
@@ -715,6 +717,48 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         )
         self.device_id = entry.id
         self.device.subscribe_updates(self.async_set_updated_data)
+
+    async def async_trigger_ota_update(self, beta: bool = False) -> None:
+        """Trigger or schedule an ota update."""
+        update_data = self.device.status["sys"]["available_updates"]
+        _LOGGER.debug("OTA update service - update_data: %s", update_data)
+
+        if not bool(update_data) or (not update_data.get("stable") and not beta):
+            _LOGGER.error("No OTA update available for device %s", self.name)
+            return
+
+        if beta and not update_data.get("beta"):
+            _LOGGER.error(
+                "No OTA update on beta channel available for device %s", self.name
+            )
+            return
+
+        self._ota_update_params = {"beta": beta}
+        await self._async_do_ota_update()
+
+    async def _async_do_ota_update(self) -> None:
+        """Perform an ota update."""
+        beta_channel = self._ota_update_params["beta"]
+        update_data = self.device.status["sys"]["available_updates"]
+        new_version = update_data.get("stable", {"version": ""})["version"]
+        if beta_channel:
+            new_version = update_data.get("beta", {"version": ""})["version"]
+
+        assert self.device.shelly
+        _LOGGER.info(
+            "Start OTA update of device %s from '%s' to '%s'",
+            self.name,
+            self.device.shelly["fw"],
+            new_version,
+        )
+        result = None
+        try:
+            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
+                result = await self.device.trigger_ota_update(beta=beta_channel)
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.exception("Error while perform ota update: %s", err)
+
+        _LOGGER.debug("Result of OTA update call: %s", result)
 
     async def shutdown(self) -> None:
         """Shutdown the wrapper."""

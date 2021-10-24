@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service import async_extract_config_entry_ids
 
-from .const import BLOCK, DATA_CONFIG_ENTRY, DOMAIN, SERVICE_OTA_UPDATE
+from .const import BLOCK, DATA_CONFIG_ENTRY, DOMAIN, RPC, SERVICE_OTA_UPDATE
 
 
 async def async_services_setup(hass: HomeAssistant) -> None:
@@ -28,5 +28,8 @@ async def async_services_setup(hass: HomeAssistant) -> None:
                 ):
                     if block_wrapper := active_entry.get(BLOCK):
                         await block_wrapper.async_trigger_ota_update(beta=beta_channel)
+
+                    if rpc_wrapper := active_entry.get(RPC):
+                        await rpc_wrapper.async_trigger_ota_update(beta=beta_channel)
 
     hass.services.async_register(DOMAIN, SERVICE_OTA_UPDATE, async_service_ota_update)
