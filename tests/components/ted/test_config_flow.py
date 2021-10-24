@@ -3,9 +3,10 @@ from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.ted import DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_NAME
 
 CONFIG = {CONF_HOST: "127.0.0.1"}
+CONFIG_FINAL = {CONF_HOST: "127.0.0.1", CONF_NAME: "TED ted5000"}
 
 
 async def test_form(hass):
@@ -16,7 +17,9 @@ async def test_form(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {}
 
-    with patch(
+    with patch("tedpy.TED5000.check", return_value=True), patch(
+        "tedpy.TED5000.update", return_value=True
+    ), patch(
         "homeassistant.components.ted.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -28,5 +31,5 @@ async def test_form(hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result2["data"] == CONFIG
+    assert result2["data"] == CONFIG_FINAL
     assert len(mock_setup_entry.mock_calls) == 1
