@@ -92,11 +92,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data[CONF_NAME] = f"TED {self.serial}"
                 return self.async_create_entry(title=data[CONF_NAME], data=data)
 
-        if self.serial:
-            self.context["title_placeholders"] = {
-                CONF_SERIAL: self.serial,
-                CONF_HOST: self.ip_address,
-            }
         return self.async_show_form(
             step_id="user",
             data_schema=self._async_generate_schema(),
