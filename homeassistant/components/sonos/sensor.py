@@ -2,7 +2,11 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
+from homeassistant.const import (
+    DEVICE_CLASS_BATTERY,
+    ENTITY_CATEGORY_DIAGNOSTIC,
+    PERCENTAGE,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import SONOS_CREATE_BATTERY
@@ -24,6 +28,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class SonosBatteryEntity(SonosEntity, SensorEntity):
     """Representation of a Sonos Battery entity."""
+
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     @property
     def unique_id(self) -> str:
