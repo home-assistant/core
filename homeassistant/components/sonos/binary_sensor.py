@@ -7,6 +7,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY_CHARGING,
     BinarySensorEntity,
 )
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import SONOS_CREATE_BATTERY
@@ -30,6 +31,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class SonosPowerEntity(SonosEntity, BinarySensorEntity):
     """Representation of a Sonos power entity."""
+
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     @property
     def unique_id(self) -> str:
