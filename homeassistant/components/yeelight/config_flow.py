@@ -277,19 +277,17 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         options = self._config_entry.options
         detected_model = self._config_entry.data.get(CONF_DETECTED_MODEL)
-        configured_model = options[CONF_MODEL]
+        model = options[CONF_MODEL] or detected_model
 
         schema_dict = {}
         known_models = get_known_models()
-        if configured_model not in known_models:
-            known_models.insert(0, configured_model)
+        if model not in known_models:
+            known_models.insert(0, model)
 
-        if detected_model != configured_model:
+        if detected_model not in known_models or model != detected_model:
             schema_dict.update(
                 {
-                    vol.Optional(
-                        CONF_MODEL, default=configured_model or detected_model
-                    ): vol.In(known_models),
+                    vol.Optional(CONF_MODEL, default=model): vol.In(known_models),
                 }
             )
         schema_dict.update(
