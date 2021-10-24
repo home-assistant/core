@@ -284,9 +284,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         known_models = get_known_models()
         if is_unknown_model := model not in known_models:
             known_models.insert(0, model)
-        import pprint
-
-        pprint.pprint([model, "known_models", known_models])
 
         if is_unknown_model or model != detected_model:
             schema_dict.update(
