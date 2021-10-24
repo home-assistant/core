@@ -8,7 +8,7 @@ from yeelight import BulbException, BulbType
 from yeelight.aio import KEY_CONNECTED
 
 from homeassistant.components.yeelight import (
-    CONF_MODEL,
+    CONF_DETECTED_MODEL,
     CONF_NIGHTLIGHT_SWITCH,
     CONF_NIGHTLIGHT_SWITCH_TYPE,
     DOMAIN,
@@ -377,7 +377,7 @@ async def test_async_listen_error_late_discovery(hass, caplog):
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
-    assert config_entry.options[CONF_MODEL] == MODEL
+    assert config_entry.data[CONF_DETECTED_MODEL] == MODEL
 
 
 async def test_unload_before_discovery(hass, caplog):
