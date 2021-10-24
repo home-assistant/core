@@ -1,4 +1,5 @@
 """Support for Xiaomi Mi routers."""
+from http import HTTPStatus
 import logging
 
 import requests
@@ -9,7 +10,7 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, HTTP_OK
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -112,7 +113,7 @@ def _retrieve_list(host, token, **kwargs):
     except requests.exceptions.Timeout:
         _LOGGER.exception("Connection to the router timed out at URL %s", url)
         return
-    if res.status_code != HTTP_OK:
+    if res.status_code != HTTPStatus.OK:
         _LOGGER.exception("Connection failed with http code %s", res.status_code)
         return
     try:
@@ -150,7 +151,7 @@ def _get_token(host, username, password):
     except requests.exceptions.Timeout:
         _LOGGER.exception("Connection to the router timed out")
         return
-    if res.status_code == HTTP_OK:
+    if res.status_code == HTTPStatus.OK:
         try:
             result = res.json()
         except ValueError:
