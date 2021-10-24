@@ -31,7 +31,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.ip_address = None
         self.name = None
         self.serial = None
-        self._reauth_entry = None
 
     @callback
     def _async_generate_schema(self):
@@ -73,10 +72,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            if (
-                not self._reauth_entry
-                and user_input[CONF_HOST] in self._async_current_hosts()
-            ):
+            if user_input[CONF_HOST] in self._async_current_hosts():
                 return self.async_abort(reason="already_configured")
 
             try:
@@ -94,12 +90,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 data = user_input.copy()
                 data[CONF_NAME] = f"TED {self.serial}"
-                if self._reauth_entry:
-                    self.hass.config_entries.async_update_entry(
-                        self._reauth_entry,
-                        data=data,
-                    )
-                    return self.async_abort(reason="reauth_successful")
                 return self.async_create_entry(title=data[CONF_NAME], data=data)
 
         if self.serial:
