@@ -172,6 +172,16 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
+    # Methane Detector
+    # https://developer.tuya.com/en/docs/iot/categoryjwbj?id=Kaiuz40u98lkm
+    "jwbj": (
+        SensorEntityDescription(
+            key=DPCode.CH4_SENSOR_VALUE,
+            name="Methane",
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        *BATTERY_SENSORS,
+    ),
     # Luminance Sensor
     # https://developer.tuya.com/en/docs/iot/categoryldcg?id=Kaiuz3n7u69l8
     "ldcg": (
