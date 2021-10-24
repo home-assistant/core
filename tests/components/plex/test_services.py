@@ -180,10 +180,13 @@ async def test_sonos_play_media(
 
     # Test with speakers available but media not found
     content_id_bad_media = '{"library_name": "Music", "artist_name": "Not an Artist"}'
-    with pytest.raises(HomeAssistantError) as excinfo:
-        play_on_sonos(hass, MEDIA_TYPE_MUSIC, content_id_bad_media, sonos_speaker_name)
-    assert "Plex media not found" in str(excinfo.value)
-    assert playback_mock.call_count == 3
+    with patch("plexapi.library.LibrarySection.search", return_value=None):
+        with pytest.raises(HomeAssistantError) as excinfo:
+            play_on_sonos(
+                hass, MEDIA_TYPE_MUSIC, content_id_bad_media, sonos_speaker_name
+            )
+        assert "Plex media not found" in str(excinfo.value)
+        assert playback_mock.call_count == 3
 
     # Test with speakers available and playqueue
     requests_mock.get("https://1.2.3.4:32400/playQueues/1234", text=playqueue_1234)
