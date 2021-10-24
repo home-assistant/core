@@ -40,7 +40,8 @@ async def async_setup_entry(
 
 def _from_percentage(percentage: int) -> int:
     """Convert percent to a value that the Tradfri API understands."""
-    return round(percentage / 100 * 50)
+    nearest_10: int = round(percentage / 10) * 10  # Round to nearest multiple of 10
+    return round(nearest_10 / 100 * 50)
 
 
 def _from_fan_speed(fan_speed: int) -> int:
