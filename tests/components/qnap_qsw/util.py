@@ -8,6 +8,12 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
+CONFIG = {
+    CONF_HOST: "192.168.1.200",
+    CONF_PASSWORD: "pass",
+    CONF_USERNAME: "admin",
+}
+
 
 def qnap_qsw_requests_mock(mock):
     """Mock requests performed to QNAP QSW API."""
@@ -69,14 +75,7 @@ async def async_init_integration(
     with requests_mock.mock() as _m:
         qnap_qsw_requests_mock(_m)
 
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            data={
-                CONF_HOST: "192.168.1.200",
-                CONF_PASSWORD: "pass",
-                CONF_USERNAME: "admin",
-            },
-        )
+        entry = MockConfigEntry(domain=DOMAIN, data=CONFIG)
         entry.add_to_hass(hass)
 
         if not skip_setup:

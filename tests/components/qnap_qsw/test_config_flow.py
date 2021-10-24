@@ -10,15 +10,9 @@ from homeassistant.components.qnap_qsw.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
-from .util import qnap_qsw_requests_mock
+from .util import CONFIG, qnap_qsw_requests_mock
 
 from tests.common import MockConfigEntry
-
-CONFIG = {
-    CONF_HOST: "192.168.1.200",
-    CONF_PASSWORD: "pass",
-    CONF_USERNAME: "admin",
-}
 
 
 async def test_form(hass):

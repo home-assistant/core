@@ -12,7 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import ASYNC_TIMEOUT, DOMAIN
+from .const import ASYNC_TIMEOUT, DOMAIN, SERVICE_REBOOT
 
 PLATFORMS = ["binary_sensor", "sensor"]
 
@@ -37,6 +37,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
+    async def async_reboot(call):
+        """Handle reboot service call."""
+        await _qnap_qsw_reboot(hass, qsha)
+
+    hass.services.async_register(DOMAIN, SERVICE_REBOOT, async_reboot)
+
     return True
 
 
@@ -46,6 +52,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
+        hass.services.async_remove(DOMAIN, SERVICE_REBOOT)
 
     return unload_ok
 
@@ -73,6 +80,10 @@ class QnapQswDataUpdateCoordinator(DataUpdateCoordinator):
                 raise UpdateFailed(error) from error
 
         return self.qsha.data()
+
+
+async def _qnap_qsw_reboot(hass, qsha):
+    return await hass.async_add_executor_job(qsha.reboot)
 
 
 async def _qnap_qsw_update(hass, qsha):

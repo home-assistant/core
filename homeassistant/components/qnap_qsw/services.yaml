@@ -1,0 +1,3 @@
+reboot:
+  name: Reboot
+  description: Reboots the QNAP QSW switch.

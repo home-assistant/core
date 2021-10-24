@@ -2,19 +2,34 @@
 
 import requests_mock
 
-from homeassistant.components.qnap_qsw.const import DOMAIN
+from homeassistant.components.qnap_qsw.const import DOMAIN, SERVICE_REBOOT
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
-from .util import qnap_qsw_requests_mock
+from .util import CONFIG, qnap_qsw_requests_mock
 
 from tests.common import MockConfigEntry
 
-CONFIG = {
-    CONF_HOST: "192.168.1.200",
-    CONF_PASSWORD: "pass",
-    CONF_USERNAME: "admin",
-}
+
+async def test_service_reboot(hass):
+    """Test reboot service."""
+
+    with requests_mock.mock() as _m:
+        qnap_qsw_requests_mock(_m)
+
+        entry = MockConfigEntry(domain=DOMAIN, data=CONFIG)
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert hass.services.has_service(DOMAIN, SERVICE_REBOOT)
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_REBOOT,
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
 
 async def test_unload_entry(hass):

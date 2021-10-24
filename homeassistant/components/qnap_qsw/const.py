@@ -32,10 +32,10 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 
+ASYNC_TIMEOUT: Final = 30
 DOMAIN: Final = "qnap_qsw"
 MANUFACTURER: Final = "QNAP"
-ASYNC_TIMEOUT: Final = 30
-
+SERVICE_REBOOT: Final = "reboot"
 UNIT_RPM: Final = "rpm"
 
 BINARY_SENSOR_TYPES: Final[tuple[BinarySensorEntityDescription, ...]] = (
