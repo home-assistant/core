@@ -54,6 +54,13 @@ EXTRA_STATE_ATTRIBUTES = (
 )
 
 
+def _convert_fan_speed_value(value: StateType) -> int | None:
+    if isinstance(value, (int, float)):
+        return int(value)
+
+    return None
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -119,14 +126,8 @@ class ValloxFan(CoordinatorEntity, FanEntity):
         """Return device specific state attributes."""
         data = self.coordinator.data
 
-        def check_and_convert(value: StateType) -> int | None:
-            if isinstance(value, (int, float)):
-                return int(value)
-
-            return None
-
         return {
-            attr.description: check_and_convert(data.get_metric(attr.metric_key))
+            attr.description: _convert_fan_speed_value(data.get_metric(attr.metric_key))
             for attr in EXTRA_STATE_ATTRIBUTES
         }
 
