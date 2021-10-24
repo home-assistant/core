@@ -120,7 +120,11 @@ class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
         """Return the current preset mode."""
         if not self._device_data:
             return None
-        return str(self._device_data.mode)
+
+        if self._device_data.mode == ATTR_AUTO:
+            return ATTR_AUTO
+
+        return None
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
