@@ -34,7 +34,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         ),
         SwitchEntityDescription(
             key=DPCode.WARM,
-            name="Heat preservation",
+            name="Heat Preservation",
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
