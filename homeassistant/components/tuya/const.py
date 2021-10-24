@@ -269,6 +269,7 @@ class DPCode(str, Enum):
     SWITCH_LED_2 = "switch_led_2"
     SWITCH_LED_3 = "switch_led_3"
     SWITCH_NIGHT_LIGHT = "switch_night_light"
+    SWITCH_SAVE_ENERGY = "switch_save_energy"
     SWITCH_SPRAY = "switch_spray"  # Spraying switch
     SWITCH_USB1 = "switch_usb1"  # USB 1
     SWITCH_USB2 = "switch_usb2"  # USB 2
