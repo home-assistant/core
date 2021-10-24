@@ -19,7 +19,8 @@
    {"vid":"10C4","pid":"EA60","description":"*tubeszb*","known_devices":["TubesZB Coordinator"]},
    {"vid":"1A86","pid":"7523","description":"*tubeszb*","known_devices":["TubesZB Coordinator"]},
    {"vid":"1CF1","pid":"0030","description":"*conbee*","known_devices":["Conbee II"]},
-   {"vid":"10C4","pid":"8A2A","description":"*zigbee*","known_devices":["Nortek HUSBZB-1"]}
+   {"vid":"10C4","pid":"8A2A","description":"*zigbee*","known_devices":["Nortek HUSBZB-1"]},
+   {"vid":"10C4","pid":"8B34","description":"*bv 2010/10*","known_devices":["Bitron Video AV2010/10"]}
   ],
   "codeowners": ["@dmulcahey", "@adminiuga"],
   "zeroconf": [
