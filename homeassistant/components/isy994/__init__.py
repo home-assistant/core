@@ -255,6 +255,9 @@ async def _async_get_or_create_isy_device_in_registry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry, isy
 ) -> None:
     device_registry = await dr.async_get_registry(hass)
+    connection_info = isy.conn.connection_info
+    proto = "https" if "tls" in connection_info else "http"
+    url = f"{proto}://{connection_info['addr']}:{connection_info['port']}"
 
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -264,7 +267,7 @@ async def _async_get_or_create_isy_device_in_registry(
         name=isy.configuration["name"],
         model=isy.configuration["model"],
         sw_version=isy.configuration["firmware"],
-        configuration_url=isy.conn.connection_info["addr"],
+        configuration_url=url,
     )
 
 

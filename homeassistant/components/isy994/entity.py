@@ -76,8 +76,12 @@ class ISYEntity(Entity):
         if hasattr(self._node, "protocol") and self._node.protocol == PROTO_GROUP:
             # not a device
             return None
-        uuid = self._node.isy.configuration["uuid"]
+        isy = self._node.isy
+        uuid = isy.configuration["uuid"]
         node = self._node
+        connection_info = isy.conn.connection_info
+        proto = "https" if "tls" in connection_info else "http"
+        url = f"{proto}://{connection_info['addr']}:{connection_info['port']}"
         basename = self.name
 
         if hasattr(self._node, "parent_node") and self._node.parent_node is not None:
@@ -91,7 +95,7 @@ class ISYEntity(Entity):
             model="Unknown",
             name=basename,
             via_device=(DOMAIN, uuid),
-            configuration_url=node.isy.conn.connection_info["addr"],
+            configuration_url=url,
         )
 
         if hasattr(node, "address"):
