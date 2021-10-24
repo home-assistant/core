@@ -22,7 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         connection = await halohome.connect(username, password, host)
     except Exception:
-        LOGGER.error("Could not connec to HALO Home")
+        LOGGER.error("Could not connect to HALO Home")
         return False
 
     data = hass.data.setdefault(DOMAIN, {})
