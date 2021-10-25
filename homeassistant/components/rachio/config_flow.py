@@ -1,4 +1,5 @@
 """Config flow for Rachio integration."""
+from http import HTTPStatus
 import logging
 
 from rachiopy import Rachio
@@ -6,7 +7,7 @@ from requests.exceptions import ConnectTimeout
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_API_KEY, HTTP_OK
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
 
 from .const import (
@@ -33,13 +34,13 @@ async def validate_input(hass: core.HomeAssistant, data):
     try:
         data = await hass.async_add_executor_job(rachio.person.info)
         _LOGGER.debug("rachio.person.getInfo: %s", data)
-        if int(data[0][KEY_STATUS]) != HTTP_OK:
+        if int(data[0][KEY_STATUS]) != HTTPStatus.OK:
             raise InvalidAuth
 
         rachio_id = data[1][KEY_ID]
         data = await hass.async_add_executor_job(rachio.person.get, rachio_id)
         _LOGGER.debug("rachio.person.get: %s", data)
-        if int(data[0][KEY_STATUS]) != HTTP_OK:
+        if int(data[0][KEY_STATUS]) != HTTPStatus.OK:
             raise CannotConnect
 
         username = data[1][KEY_USERNAME]

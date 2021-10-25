@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -16,7 +16,7 @@ from . import (
     check_entities_no_data,
     check_entities_unavailable,
 )
-from .const import MOCK_VEHICLES
+from .const import ATTR_DEFAULT_DISABLED, MOCK_VEHICLES
 
 from tests.common import mock_device_registry, mock_registry
 
@@ -35,8 +35,8 @@ def _check_and_enable_disabled_entities(
 ) -> None:
     """Ensure that the expected_entities are correctly disabled."""
     for expected_entity in expected_entities:
-        if expected_entity.get("default_disabled"):
-            entity_id = expected_entity["entity_id"]
+        if expected_entity.get(ATTR_DEFAULT_DISABLED):
+            entity_id = expected_entity[ATTR_ENTITY_ID]
             registry_entry = entity_registry.entities.get(entity_id)
             assert registry_entry.disabled
             assert registry_entry.disabled_by == "integration"

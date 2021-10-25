@@ -31,9 +31,6 @@ from homeassistant.components.websocket_api.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    HTTP_NOT_FOUND,
-    HTTP_OK,
-    HTTP_UNAUTHORIZED,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -978,7 +975,7 @@ class MediaPlayerEntity(Entity):
         websession = async_get_clientsession(self.hass)
         with suppress(asyncio.TimeoutError), async_timeout.timeout(10):
             response = await websession.get(url)
-            if response.status == HTTP_OK:
+            if response.status == HTTPStatus.OK:
                 content = await response.read()
                 if content_type := response.headers.get(CONTENT_TYPE):
                     content_type = content_type.split(";")[0]
@@ -1031,7 +1028,11 @@ class MediaPlayerImageView(HomeAssistantView):
         """Start a get request."""
         player = self.component.get_entity(entity_id)
         if player is None:
-            status = HTTP_NOT_FOUND if request[KEY_AUTHENTICATED] else HTTP_UNAUTHORIZED
+            status = (
+                HTTPStatus.NOT_FOUND
+                if request[KEY_AUTHENTICATED]
+                else HTTPStatus.UNAUTHORIZED
+            )
             return web.Response(status=status)
 
         authenticated = (

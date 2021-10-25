@@ -1,5 +1,6 @@
 """Support for the Italian train system using ViaggiaTreno API."""
 import asyncio
+from http import HTTPStatus
 import logging
 import time
 
@@ -8,7 +9,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, HTTP_OK, TIME_MINUTES
+from homeassistant.const import ATTR_ATTRIBUTION, TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,7 +72,7 @@ async def async_http_request(hass, uri):
         session = hass.helpers.aiohttp_client.async_get_clientsession(hass)
         with async_timeout.timeout(REQUEST_TIMEOUT):
             req = await session.get(uri)
-        if req.status != HTTP_OK:
+        if req.status != HTTPStatus.OK:
             return {"error": req.status}
         json_response = await req.json()
         return json_response

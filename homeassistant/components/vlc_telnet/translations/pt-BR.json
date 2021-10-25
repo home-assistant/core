@@ -1,0 +1,18 @@
+{
+    "config": {
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Senha"
+                }
+            },
+            "user": {
+                "data": {
+                    "name": "Nome",
+                    "password": "Senha",
+                    "port": "Porta"
+                }
+            }
+        }
+    }
+}

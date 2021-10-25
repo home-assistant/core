@@ -20,6 +20,7 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_STATE,
     ATTR_UNIT_OF_MEASUREMENT,
+    ATTR_VIA_DEVICE,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
@@ -212,12 +213,21 @@ MOCK_OWPROXY_DEVICES = {
         ATTR_INJECT_READS: [
             b"DS2409",  # read device type
         ],
-        ATTR_DEVICE_INFO: {
-            ATTR_IDENTIFIERS: {(DOMAIN, "1F.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
-            ATTR_MODEL: "DS2409",
-            ATTR_NAME: "1F.111111111111",
-        },
+        ATTR_DEVICE_INFO: [
+            {
+                ATTR_IDENTIFIERS: {(DOMAIN, "1F.111111111111")},
+                ATTR_MANUFACTURER: MANUFACTURER,
+                ATTR_MODEL: "DS2409",
+                ATTR_NAME: "1F.111111111111",
+            },
+            {
+                ATTR_IDENTIFIERS: {(DOMAIN, "1D.111111111111")},
+                ATTR_MANUFACTURER: MANUFACTURER,
+                ATTR_MODEL: "DS2423",
+                ATTR_NAME: "1D.111111111111",
+                ATTR_VIA_DEVICE: (DOMAIN, "1F.111111111111"),
+            },
+        ],
         "branches": {
             "aux": {},
             "main": {
@@ -225,12 +235,6 @@ MOCK_OWPROXY_DEVICES = {
                     ATTR_INJECT_READS: [
                         b"DS2423",  # read device type
                     ],
-                    ATTR_DEVICE_INFO: {
-                        ATTR_IDENTIFIERS: {(DOMAIN, "1D.111111111111")},
-                        ATTR_MANUFACTURER: MANUFACTURER,
-                        ATTR_MODEL: "DS2423",
-                        ATTR_NAME: "1D.111111111111",
-                    },
                     SENSOR_DOMAIN: [
                         {
                             ATTR_DEVICE_FILE: "/1F.111111111111/main/1D.111111111111/counter.A",

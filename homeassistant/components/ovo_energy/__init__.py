@@ -111,9 +111,9 @@ class OVOEnergyDeviceEntity(OVOEnergyEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this OVO Energy instance."""
-        return {
-            "identifiers": {(DOMAIN, self._client.account_id)},
-            "manufacturer": "OVO Energy",
-            "name": self._client.username,
-            "entry_type": "service",
-        }
+        return DeviceInfo(
+            entry_type="service",
+            identifiers={(DOMAIN, self._client.account_id)},
+            manufacturer="OVO Energy",
+            name=self._client.username,
+        )

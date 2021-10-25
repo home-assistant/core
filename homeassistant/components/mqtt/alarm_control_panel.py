@@ -97,6 +97,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
+
 
 async def async_setup_platform(
     hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
@@ -111,7 +113,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
-    await async_setup_entry_helper(hass, alarm.DOMAIN, setup, PLATFORM_SCHEMA)
+    await async_setup_entry_helper(hass, alarm.DOMAIN, setup, DISCOVERY_SCHEMA)
 
 
 async def _async_setup_entity(
@@ -135,7 +137,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
     @staticmethod
     def config_schema():
         """Return the config schema."""
-        return PLATFORM_SCHEMA
+        return DISCOVERY_SCHEMA
 
     def _setup_from_config(self, config):
         value_template = self._config.get(CONF_VALUE_TEMPLATE)
@@ -205,8 +207,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
     @property
     def code_format(self):
         """Return one or more digits/characters."""
-        code = self._config.get(CONF_CODE)
-        if code is None:
+        if (code := self._config.get(CONF_CODE)) is None:
             return None
         if code == REMOTE_CODE or (isinstance(code, str) and re.search("^\\d+$", code)):
             return alarm.FORMAT_NUMBER

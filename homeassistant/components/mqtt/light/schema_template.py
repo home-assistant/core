@@ -84,6 +84,8 @@ PLATFORM_SCHEMA_TEMPLATE = (
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 
+DISCOVERY_SCHEMA_TEMPLATE = PLATFORM_SCHEMA_TEMPLATE.extend({}, extra=vol.REMOVE_EXTRA)
+
 
 async def async_setup_entity_template(
     hass, config, async_add_entities, config_entry, discovery_data
@@ -117,7 +119,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
     @staticmethod
     def config_schema():
         """Return the config schema."""
-        return PLATFORM_SCHEMA_TEMPLATE
+        return DISCOVERY_SCHEMA_TEMPLATE
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""

@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -132,12 +133,12 @@ class FlumeSensor(CoordinatorEntity, SensorEntity):
 
         self._attr_name = f"{name} {description.name}"
         self._attr_unique_id = f"{description.key}_{device_id}"
-        self._attr_device_info = {
-            "name": self.name,
-            "identifiers": {(DOMAIN, device_id)},
-            "manufacturer": "Flume, Inc.",
-            "model": "Flume Smart Water Monitor",
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device_id)},
+            manufacturer="Flume, Inc.",
+            model="Flume Smart Water Monitor",
+            name=self.name,
+        )
 
     @property
     def native_value(self):
