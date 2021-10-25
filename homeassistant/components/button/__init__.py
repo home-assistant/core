@@ -16,6 +16,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, SERVICE_PRESS
 
@@ -38,7 +39,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_PRESS,
         {},
-        "async_press",
+        "_async_press_action",
     )
 
     return True
@@ -66,16 +67,16 @@ class ButtonEntity(Entity):
 
     entity_description: ButtonEntityDescription
     _attr_device_class: None = None
-    _attr_last_pressed: datetime | None = None
     _attr_state: None = None
+    __last_pressed: datetime | None = None
 
     @property
     @final
     def state(self) -> str | None:
         """Return the entity state."""
-        if self.last_pressed is None:
+        if self.__last_pressed is None:
             return None
-        return self.last_pressed.isoformat()
+        return self.__last_pressed.isoformat()
 
     @property
     @final
@@ -83,10 +84,15 @@ class ButtonEntity(Entity):
         """Return the class of this device, which is always a timestamp ."""
         return DEVICE_CLASS_TIMESTAMP
 
-    @property
-    def last_pressed(self) -> datetime | None:
-        """Return a datetime object of the last button press."""
-        return self._attr_last_pressed
+    @final
+    async def _async_press_action(self) -> None:
+        """Press the button (from e.g., service call).
+
+        Should not be over ridden, handle setting last press timestamp.
+        """
+        self.__last_pressed = dt_util.utcnow()
+        self.async_write_ha_state()
+        await self.async_press()
 
     def press(self) -> None:
         """Press the button."""

@@ -7,7 +7,6 @@ from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import dt as dt_util
 
 from . import DOMAIN
 
@@ -60,6 +59,7 @@ class DemoButton(ButtonEntity):
         }
 
     async def async_press(self) -> None:
-        """Update last pressed with current datetime."""
-        self._attr_last_pressed = dt_util.utcnow()
-        self.async_write_ha_state()
+        """Send out a persistent notification."""
+        self.hass.components.persistent_notification.async_create(
+            "Button pressed", title="Button"
+        )

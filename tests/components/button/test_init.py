@@ -1,6 +1,5 @@
 """The tests for the Button component."""
-from datetime import datetime
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -11,16 +10,10 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 
-class MockButtonEntity(ButtonEntity):
-    """Mock ButtonEntity to use in tests."""
-
-    _attr_last_pressed = datetime(2021, 1, 1, 23, 59, 59, tzinfo=dt_util.UTC)
-
-
 async def test_button(hass: HomeAssistant) -> None:
     """Test getting data from the mocked button entity."""
-    button = MockButtonEntity()
-    assert button.state == "2021-01-01T23:59:59+00:00"
+    button = ButtonEntity()
+    assert button.state is None
 
     button.hass = hass
 
@@ -33,7 +26,7 @@ async def test_button(hass: HomeAssistant) -> None:
     assert button.press.called
 
 
-async def test_custom_integration(hass, enable_custom_integrations):
+async def test_custom_integration(hass, caplog, enable_custom_integrations):
     """Test we integration."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -43,11 +36,14 @@ async def test_custom_integration(hass, enable_custom_integrations):
 
     assert hass.states.get("button.button_1").state == STATE_UNKNOWN
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.button_1"},
-        blocking=True,
-    )
+    now = dt_util.utcnow()
+    with patch("homeassistant.core.dt_util.utcnow", return_value=now):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.button_1"},
+            blocking=True,
+        )
 
-    assert hass.states.get("button.button_1").state == "2021-01-01T23:59:59+00:00"
+    assert hass.states.get("button.button_1").state == now.isoformat()
+    assert "The button has been pressed" in caplog.text

@@ -3,10 +3,9 @@ Provide a mock button platform.
 
 Call init before using it in your tests to ensure clean test data.
 """
-from datetime import datetime
+import logging
 
 from homeassistant.components.button import ButtonEntity
-from homeassistant.util import dt as dt_util
 
 from tests.common import MockEntity
 
@@ -14,13 +13,15 @@ UNIQUE_BUTTON_1 = "unique_button_1"
 
 ENTITIES = []
 
+_LOGGER = logging.getLogger(__name__)
+
 
 class MockButtonEntity(MockEntity, ButtonEntity):
     """Mock Button class."""
 
     def press(self) -> None:
         """Press the button."""
-        self._attr_last_pressed = datetime(2021, 1, 1, 23, 59, 59, tzinfo=dt_util.UTC)
+        _LOGGER.info("The button has been pressed")
 
 
 def init(empty=False):
