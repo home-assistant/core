@@ -225,6 +225,7 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
             device_class=DEVICE_CLASS_PM1,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
+        *BATTERY_SENSORS,
     ),
     # Gas Detector
     # https://developer.tuya.com/en/docs/iot/categoryrqbj?id=Kaiuz3d162ubw
