@@ -6,7 +6,7 @@
           },
           "reauth_confirm": {
             "title": "[%key:common::config_flow::title::reauth%]",
-            "description": "The Nettmo integration needs to re-authenticate your account"
+            "description": "The Netatmo integration needs to re-authenticate your account"
           }
         },
         "abort": {
