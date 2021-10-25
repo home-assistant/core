@@ -1,15 +1,48 @@
 """Test KNX binary sensor."""
 from datetime import timedelta
+from unittest.mock import patch
 
 from homeassistant.components.knx.const import CONF_STATE_ADDRESS, CONF_SYNC_STATE
 from homeassistant.components.knx.schema import BinarySensorSchema
-from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    CONF_ENTITY_CATEGORY,
+    CONF_NAME,
+    ENTITY_CATEGORY_DIAGNOSTIC,
+    STATE_OFF,
+    STATE_ON,
+)
+from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.entity_registry import (
+    async_get_registry as async_get_entity_registry,
+)
 from homeassistant.util import dt
 
 from .conftest import KNXTestKit
 
 from tests.common import async_capture_events, async_fire_time_changed
+
+
+async def test_binary_sensor_entity_category(hass: HomeAssistant, knx: KNXTestKit):
+    """Test KNX binary sensor entity category."""
+    await knx.setup_integration(
+        {
+            BinarySensorSchema.PLATFORM_NAME: [
+                {
+                    CONF_NAME: "test_normal",
+                    CONF_STATE_ADDRESS: "1/1/1",
+                    CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
+                },
+            ]
+        }
+    )
+    assert len(hass.states.async_all()) == 1
+
+    await knx.assert_read("1/1/1")
+    await knx.receive_response("1/1/1", True)
+
+    registry = await async_get_entity_registry(hass)
+    entity = registry.async_get("binary_sensor.test_normal")
+    assert entity.entity_category == ENTITY_CATEGORY_DIAGNOSTIC
 
 
 async def test_binary_sensor(hass: HomeAssistant, knx: KNXTestKit):
@@ -211,5 +244,71 @@ async def test_binary_sensor_reset(hass: HomeAssistant, knx: KNXTestKit):
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     # state reset after after timeout
+    state = hass.states.get("binary_sensor.test")
+    assert state.state is STATE_OFF
+
+
+async def test_binary_sensor_restore_and_respond(hass, knx):
+    """Test restoring KNX binary sensor state and respond to read."""
+    _ADDRESS = "2/2/2"
+    fake_state = State("binary_sensor.test", STATE_ON)
+
+    with patch(
+        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
+        return_value=fake_state,
+    ):
+        await knx.setup_integration(
+            {
+                BinarySensorSchema.PLATFORM_NAME: [
+                    {
+                        CONF_NAME: "test",
+                        CONF_STATE_ADDRESS: _ADDRESS,
+                        CONF_SYNC_STATE: False,
+                    },
+                ]
+            }
+        )
+
+    # restored state - doesn't send telegram
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_ON
+    await knx.assert_telegram_count(0)
+
+    await knx.receive_write(_ADDRESS, False)
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test")
+    assert state.state is STATE_OFF
+
+
+async def test_binary_sensor_restore_invert(hass, knx):
+    """Test restoring KNX binary sensor state with invert."""
+    _ADDRESS = "2/2/2"
+    fake_state = State("binary_sensor.test", STATE_ON)
+
+    with patch(
+        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
+        return_value=fake_state,
+    ):
+        await knx.setup_integration(
+            {
+                BinarySensorSchema.PLATFORM_NAME: [
+                    {
+                        CONF_NAME: "test",
+                        CONF_STATE_ADDRESS: _ADDRESS,
+                        BinarySensorSchema.CONF_INVERT: True,
+                        CONF_SYNC_STATE: False,
+                    },
+                ]
+            }
+        )
+
+    # restored state - doesn't send telegram
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_ON
+    await knx.assert_telegram_count(0)
+
+    # inverted is on, make sure the state is off after it
+    await knx.receive_write(_ADDRESS, True)
+    await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.test")
     assert state.state is STATE_OFF

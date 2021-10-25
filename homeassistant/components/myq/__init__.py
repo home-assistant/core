@@ -13,10 +13,16 @@ from pymyq.device import MyQDevice
 from pymyq.errors import InvalidCredentialsError, MyQError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    ATTR_MODEL,
+    ATTR_VIA_DEVICE,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -91,23 +97,23 @@ class MyQEntity(CoordinatorEntity):
         return self._device.name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
-        device_info = {
-            "identifiers": {(DOMAIN, self._device.device_id)},
-            "name": self._device.name,
-            "manufacturer": MANUFACTURER,
-            "sw_version": self._device.firmware_version,
-        }
+        device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._device.device_id)},
+            name=self._device.name,
+            manufacturer=MANUFACTURER,
+            sw_version=self._device.firmware_version,
+        )
         model = (
             KNOWN_MODELS.get(self._device.device_id[2:4])
             if self._device.device_id is not None
             else None
         )
         if model:
-            device_info["model"] = model
+            device_info[ATTR_MODEL] = model
         if self._device.parent_device_id:
-            device_info["via_device"] = (DOMAIN, self._device.parent_device_id)
+            device_info[ATTR_VIA_DEVICE] = (DOMAIN, self._device.parent_device_id)
         return device_info
 
     @property

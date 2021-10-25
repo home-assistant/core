@@ -64,11 +64,11 @@ class DynaliteBase(Entity):
     @property
     def device_info(self) -> DeviceInfo:
         """Device info for this entity."""
-        return {
-            "identifiers": {(DOMAIN, self._device.unique_id)},
-            "name": self.name,
-            "manufacturer": "Dynalite",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device.unique_id)},
+            manufacturer="Dynalite",
+            name=self.name,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Added to hass so need to register to dispatch."""

@@ -212,12 +212,21 @@ MOCK_OWPROXY_DEVICES = {
         ATTR_INJECT_READS: [
             b"DS2409",  # read device type
         ],
-        ATTR_DEVICE_INFO: {
-            ATTR_IDENTIFIERS: {(DOMAIN, "1F.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
-            ATTR_MODEL: "DS2409",
-            ATTR_NAME: "1F.111111111111",
-        },
+        ATTR_DEVICE_INFO: [
+            {
+                ATTR_IDENTIFIERS: {(DOMAIN, "1F.111111111111")},
+                ATTR_MANUFACTURER: MANUFACTURER,
+                ATTR_MODEL: "DS2409",
+                ATTR_NAME: "1F.111111111111",
+            },
+            {
+                ATTR_IDENTIFIERS: {(DOMAIN, "1D.111111111111")},
+                ATTR_MANUFACTURER: MANUFACTURER,
+                ATTR_MODEL: "DS2423",
+                ATTR_NAME: "1D.111111111111",
+                "via_device": (DOMAIN, "1F.111111111111"),
+            },
+        ],
         "branches": {
             "aux": {},
             "main": {
@@ -225,12 +234,6 @@ MOCK_OWPROXY_DEVICES = {
                     ATTR_INJECT_READS: [
                         b"DS2423",  # read device type
                     ],
-                    ATTR_DEVICE_INFO: {
-                        ATTR_IDENTIFIERS: {(DOMAIN, "1D.111111111111")},
-                        ATTR_MANUFACTURER: MANUFACTURER,
-                        ATTR_MODEL: "DS2423",
-                        ATTR_NAME: "1D.111111111111",
-                    },
                     SENSOR_DOMAIN: [
                         {
                             ATTR_DEVICE_FILE: "/1F.111111111111/main/1D.111111111111/counter.A",

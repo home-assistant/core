@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from http import HTTPStatus
 import logging
 from pathlib import Path
 from typing import Any
@@ -14,7 +15,6 @@ from homeassistant.components.alexa import (
     smart_home as alexa_sh,
 )
 from homeassistant.components.google_assistant import const as gc, smart_home as ga
-from homeassistant.const import HTTP_OK
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
@@ -210,7 +210,7 @@ class CloudClient(Interface):
                 break
 
         if found is None:
-            return {"status": HTTP_OK}
+            return {"status": HTTPStatus.OK}
 
         request = MockRequest(
             content=payload["body"].encode("utf-8"),

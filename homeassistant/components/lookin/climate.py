@@ -30,13 +30,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
-from .entity import LookinEntity
+from .entity import LookinCoordinatorEntity
 from .models import LookinData
 
 SUPPORT_FLAGS: int = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_SWING_MODE
@@ -82,7 +79,9 @@ async def async_setup_entry(
             continue
         uuid = remote["UUID"]
 
-        def _wrap_async_update(uuid) -> Callable[[], Coroutine[None, Any, Climate]]:
+        def _wrap_async_update(
+            uuid: str,
+        ) -> Callable[[], Coroutine[None, Any, Climate]]:
             """Create a function to capture the uuid cell variable."""
 
             async def _async_update() -> Climate:
@@ -113,7 +112,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ConditionerEntity(LookinEntity, CoordinatorEntity, ClimateEntity):
+class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
     """An aircon or heat pump."""
 
     _attr_temperature_unit = TEMP_CELSIUS
@@ -133,8 +132,7 @@ class ConditionerEntity(LookinEntity, CoordinatorEntity, ClimateEntity):
         coordinator: DataUpdateCoordinator,
     ) -> None:
         """Init the ConditionerEntity."""
-        CoordinatorEntity.__init__(self, coordinator)
-        super().__init__(uuid, device, lookin_data)
+        super().__init__(coordinator, uuid, device, lookin_data)
         self._async_update_from_data()
 
     @property

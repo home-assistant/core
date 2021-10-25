@@ -45,6 +45,7 @@ HUMIDIFIERS: dict[str, TuyaHumidifierEntityDescription] = {
     # https://developer.tuya.com/en/docs/iot/categoryjsq?id=Kaiuz1smr440b
     "jsq": TuyaHumidifierEntityDescription(
         key=DPCode.SWITCH,
+        dpcode=(DPCode.SWITCH, DPCode.SWITCH_SPRAY),
         humidity=DPCode.HUMIDITY_SET,
         device_class=DEVICE_CLASS_HUMIDIFIER,
     ),

@@ -139,6 +139,7 @@ def mock_light(test_features=None, test_state=None, light_number=0):
         has_socket_control=False,
         has_blind_control=False,
         has_signal_repeater_control=False,
+        has_air_purifier_control=False,
     )
     _mock_light.name = f"tradfri_light_{light_number}"
 

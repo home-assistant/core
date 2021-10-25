@@ -30,13 +30,11 @@ class NestDeviceInfo:
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         return DeviceInfo(
-            {
-                # The API "name" field is a unique device identifier.
-                "identifiers": {(DOMAIN, self._device.name)},
-                "name": self.device_name,
-                "manufacturer": self.device_brand,
-                "model": self.device_model,
-            }
+            # The API "name" field is a unique device identifier.
+            identifiers={(DOMAIN, self._device.name)},
+            manufacturer=self.device_brand,
+            model=self.device_model,
+            name=self.device_name,
         )
 
     @property
@@ -45,7 +43,7 @@ class NestDeviceInfo:
         if InfoTrait.NAME in self._device.traits:
             trait: InfoTrait = self._device.traits[InfoTrait.NAME]
             if trait.custom_name:
-                return trait.custom_name
+                return str(trait.custom_name)
         # Build a name from the room/structure.  Note: This room/structure name
         # is not associated with a home assistant Area.
         if parent_relations := self._device.parent_relations:

@@ -349,7 +349,7 @@ async def test_remove_entry_cancels_reauth(hass, manager):
     await entry.async_setup(hass)
     await hass.async_block_till_done()
 
-    flows = hass.config_entries.flow.async_progress()
+    flows = hass.config_entries.flow.async_progress_by_handler("test")
     assert len(flows) == 1
     assert flows[0]["context"]["entry_id"] == entry.entry_id
     assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
@@ -357,7 +357,7 @@ async def test_remove_entry_cancels_reauth(hass, manager):
 
     await manager.async_remove(entry.entry_id)
 
-    flows = hass.config_entries.flow.async_progress()
+    flows = hass.config_entries.flow.async_progress_by_handler("test")
     assert len(flows) == 0
 
 
@@ -2100,11 +2100,11 @@ async def test_unignore_step_form(hass, manager):
 
         # Right after removal there shouldn't be an entry or active flows
         assert len(hass.config_entries.async_entries("comp")) == 0
-        assert len(hass.config_entries.flow.async_progress()) == 0
+        assert len(hass.config_entries.flow.async_progress_by_handler("comp")) == 0
 
         # But after a 'tick' the unignore step has run and we can see an active flow again.
         await hass.async_block_till_done()
-        assert len(hass.config_entries.flow.async_progress()) == 1
+        assert len(hass.config_entries.flow.async_progress_by_handler("comp")) == 1
 
         # and still not config entries
         assert len(hass.config_entries.async_entries("comp")) == 0
@@ -2144,7 +2144,7 @@ async def test_unignore_create_entry(hass, manager):
         await manager.async_remove(entry.entry_id)
 
         # Right after removal there shouldn't be an entry or flow
-        assert len(hass.config_entries.flow.async_progress()) == 0
+        assert len(hass.config_entries.flow.async_progress_by_handler("comp")) == 0
         assert len(hass.config_entries.async_entries("comp")) == 0
 
         # But after a 'tick' the unignore step has run and we can see a config entry.
@@ -2155,7 +2155,7 @@ async def test_unignore_create_entry(hass, manager):
         assert entry.title == "yo"
 
         # And still no active flow
-        assert len(hass.config_entries.flow.async_progress()) == 0
+        assert len(hass.config_entries.flow.async_progress_by_handler("comp")) == 0
 
 
 async def test_unignore_default_impl(hass, manager):

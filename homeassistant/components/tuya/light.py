@@ -19,6 +19,7 @@ from homeassistant.components.light import (
     LightEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -26,16 +27,19 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import HomeAssistantTuyaData
 from .base import IntegerTypeData, TuyaEntity
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, WorkMode
+from .util import remap_value
 
 
 @dataclass
 class TuyaLightEntityDescription(LightEntityDescription):
     """Describe an Tuya light entity."""
 
-    color_mode: DPCode | None = None
+    brightness_max: DPCode | None = None
+    brightness_min: DPCode | None = None
     brightness: DPCode | tuple[DPCode, ...] | None = None
-    color_temp: DPCode | tuple[DPCode, ...] | None = None
     color_data: DPCode | tuple[DPCode, ...] | None = None
+    color_mode: DPCode | None = None
+    color_temp: DPCode | tuple[DPCode, ...] | None = None
 
 
 LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
@@ -105,12 +109,36 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             color_data=DPCode.COLOUR_DATA,
         ),
     ),
+    # Humidifier Light
+    # https://developer.tuya.com/en/docs/iot/categoryjsq?id=Kaiuz1smr440b
+    "jsq": (
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED,
+            color_mode=DPCode.WORK_MODE,
+            brightness=DPCode.BRIGHT_VALUE,
+            color_data=DPCode.COLOUR_DATA_HSV,
+        ),
+    ),
     # Switch
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
     "kg": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_BACKLIGHT,
             name="Backlight",
+        ),
+    ),
+    # Smart Camera
+    # https://developer.tuya.com/en/docs/iot/categorysp?id=Kaiuz35leyo12
+    "sp": (
+        TuyaLightEntityDescription(
+            key=DPCode.FLOODLIGHT_SWITCH,
+            brightness=DPCode.FLOODLIGHT_LIGHTNESS,
+            name="Floodlight",
+        ),
+        TuyaLightEntityDescription(
+            key=DPCode.BASIC_INDICATOR,
+            name="Indicator Light",
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
     # Dimmer Switch
@@ -120,16 +148,22 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             key=DPCode.SWITCH_LED_1,
             name="Light",
             brightness=DPCode.BRIGHT_VALUE_1,
+            brightness_max=DPCode.BRIGHTNESS_MAX_1,
+            brightness_min=DPCode.BRIGHTNESS_MIN_1,
         ),
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED_2,
             name="Light 2",
             brightness=DPCode.BRIGHT_VALUE_2,
+            brightness_max=DPCode.BRIGHTNESS_MAX_2,
+            brightness_min=DPCode.BRIGHTNESS_MIN_2,
         ),
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED_3,
             name="Light 3",
             brightness=DPCode.BRIGHT_VALUE_3,
+            brightness_max=DPCode.BRIGHTNESS_MAX_3,
+            brightness_min=DPCode.BRIGHTNESS_MIN_3,
         ),
     ),
     # Dimmer
@@ -276,6 +310,8 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
 
     entity_description: TuyaLightEntityDescription
     _brightness_dpcode: DPCode | None = None
+    _brightness_max_type: IntegerTypeData | None = None
+    _brightness_min_type: IntegerTypeData | None = None
     _brightness_type: IntegerTypeData | None = None
     _color_data_dpcode: DPCode | None = None
     _color_data_type: ColorTypeData | None = None
@@ -348,6 +384,20 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             self._brightness_type = IntegerTypeData.from_json(
                 device.status_range[self._brightness_dpcode].values
             )
+
+            # Check if min/max capable
+            if (
+                description.brightness_max is not None
+                and description.brightness_min is not None
+                and description.brightness_max in device.function
+                and description.brightness_min in device.function
+            ):
+                self._brightness_max_type = IntegerTypeData.from_json(
+                    device.status_range[description.brightness_max].values
+                )
+                self._brightness_min_type = IntegerTypeData.from_json(
+                    device.status_range[description.brightness_min].values
+                )
 
         # Update internals based on found color temperature dpcode
         if self._color_temp_dpcode:
@@ -456,12 +506,47 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             and self.color_mode != COLOR_MODE_HS
             and self._brightness_type
         ):
+            brightness = kwargs[ATTR_BRIGHTNESS]
+
+            # If there is a min/max value, the brightness is actually limited.
+            # Meaning it is actually not on a 0-255 scale.
+            if (
+                self._brightness_max_type is not None
+                and self._brightness_min_type is not None
+                and self.entity_description.brightness_max is not None
+                and self.entity_description.brightness_min is not None
+                and (
+                    brightness_max := self.device.status.get(
+                        self.entity_description.brightness_max
+                    )
+                )
+                is not None
+                and (
+                    brightness_min := self.device.status.get(
+                        self.entity_description.brightness_min
+                    )
+                )
+                is not None
+            ):
+                # Remap values onto our scale
+                brightness_max = self._brightness_max_type.remap_value_to(
+                    brightness_max
+                )
+                brightness_min = self._brightness_min_type.remap_value_to(
+                    brightness_min
+                )
+
+                # Remap the brightness value from their min-max to our 0-255 scale
+                brightness = remap_value(
+                    brightness,
+                    to_min=brightness_min,
+                    to_max=brightness_max,
+                )
+
             commands += [
                 {
                     "code": self._brightness_dpcode,
-                    "value": round(
-                        self._brightness_type.remap_value_from(kwargs[ATTR_BRIGHTNESS])
-                    ),
+                    "value": round(self._brightness_type.remap_value_from(brightness)),
                 },
             ]
 
@@ -485,7 +570,41 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         if brightness is None:
             return None
 
-        return round(self._brightness_type.remap_value_to(brightness))
+        # Remap value to our scale
+        brightness = self._brightness_type.remap_value_to(brightness)
+
+        # If there is a min/max value, the brightness is actually limited.
+        # Meaning it is actually not on a 0-255 scale.
+        if (
+            self._brightness_max_type is not None
+            and self._brightness_min_type is not None
+            and self.entity_description.brightness_max is not None
+            and self.entity_description.brightness_min is not None
+            and (
+                brightness_max := self.device.status.get(
+                    self.entity_description.brightness_max
+                )
+            )
+            is not None
+            and (
+                brightness_min := self.device.status.get(
+                    self.entity_description.brightness_min
+                )
+            )
+            is not None
+        ):
+            # Remap values onto our scale
+            brightness_max = self._brightness_max_type.remap_value_to(brightness_max)
+            brightness_min = self._brightness_min_type.remap_value_to(brightness_min)
+
+            # Remap the brightness value from their min-max to our 0-255 scale
+            brightness = remap_value(
+                brightness,
+                from_min=brightness_min,
+                from_max=brightness_max,
+            )
+
+        return round(brightness)
 
     @property
     def color_temp(self) -> int | None:

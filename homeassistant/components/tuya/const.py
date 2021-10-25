@@ -75,9 +75,16 @@ CONF_PASSWORD = "password"
 CONF_COUNTRY_CODE = "country_code"
 CONF_APP_TYPE = "tuya_app_type"
 
+DEVICE_CLASS_TUYA_BASIC_ANTI_FLICKR = "tuya__basic_anti_flickr"
+DEVICE_CLASS_TUYA_BASIC_NIGHTVISION = "tuya__basic_nightvision"
+DEVICE_CLASS_TUYA_DECIBEL_SENSITIVITY = "tuya__decibel_sensitivity"
+DEVICE_CLASS_TUYA_IPC_WORK_MODE = "tuya__ipc_work_mode"
 DEVICE_CLASS_TUYA_LED_TYPE = "tuya__led_type"
 DEVICE_CLASS_TUYA_LIGHT_MODE = "tuya__light_mode"
+DEVICE_CLASS_TUYA_MOTION_SENSITIVITY = "tuya__motion_sensitivity"
+DEVICE_CLASS_TUYA_RECORD_MODE = "tuya__record_mode"
 DEVICE_CLASS_TUYA_RELAY_STATUS = "tuya__relay_status"
+DEVICE_CLASS_TUYA_STATUS = "tuya__status"
 
 TUYA_DISCOVERY_NEW = "tuya_discovery_new"
 TUYA_HA_SIGNAL_UPDATE_ENTITY = "tuya_entry_update"
@@ -130,8 +137,17 @@ class DPCode(str, Enum):
     ANGLE_HORIZONTAL = "angle_horizontal"
     ANGLE_VERTICAL = "angle_vertical"
     ANION = "anion"  # Ionizer unit
+    BASIC_ANTI_FLICKER = "basic_anti_flicker"
+    BASIC_DEVICE_VOLUME = "basic_device_volume"
+    BASIC_FLIP = "basic_flip"
+    BASIC_INDICATOR = "basic_indicator"
+    BASIC_NIGHTVISION = "basic_nightvision"
+    BASIC_OSD = "basic_osd"
+    BASIC_PRIVATE = "basic_private"
+    BASIC_WDR = "basic_wdr"
     BATTERY_PERCENTAGE = "battery_percentage"  # Battery percentage
     BATTERY_STATE = "battery_state"  # Battery state
+    BATTERY_VALUE = "battery_value"  # Battery value
     BRIGHT_CONTROLLER = "bright_controller"
     BRIGHT_STATE = "bright_state"  # Brightness status
     BRIGHT_VALUE = "bright_value"  # Brightness
@@ -139,24 +155,39 @@ class DPCode(str, Enum):
     BRIGHT_VALUE_2 = "bright_value_2"
     BRIGHT_VALUE_3 = "bright_value_3"
     BRIGHT_VALUE_V2 = "bright_value_v2"
+    BRIGHTNESS_MAX_1 = "brightness_max_1"
+    BRIGHTNESS_MAX_2 = "brightness_max_2"
+    BRIGHTNESS_MAX_3 = "brightness_max_3"
+    BRIGHTNESS_MIN_1 = "brightness_min_1"
+    BRIGHTNESS_MIN_2 = "brightness_min_2"
+    BRIGHTNESS_MIN_3 = "brightness_min_3"
     C_F = "c_f"  # Temperature unit switching
     CH2O_STATE = "ch2o_state"
     CH2O_VALUE = "ch2o_value"
     CHARGE_STATE = "charge_state"
+    CH4_SENSOR_STATE = "ch4_sensor_state"
+    CH4_SENSOR_VALUE = "ch4_sensor_value"
     CHILD_LOCK = "child_lock"  # Child lock
+    CO_STATE = "co_state"
+    CO_STATUS = "co_status"
+    CO_VALUE = "co_value"
     CO2_STATE = "co2_state"
     CO2_VALUE = "co2_value"  # CO2 concentration
     COLOR_DATA_V2 = "color_data_v2"
+    COLOUR_DATA_HSV = "colour_data_hsv"  # Colored light mode
     COLOUR_DATA = "colour_data"  # Colored light mode
     COLOUR_DATA_V2 = "colour_data_v2"  # Colored light mode
     CONCENTRATION_SET = "concentration_set"  # Concentration setting
     CONTROL = "control"
     CONTROL_2 = "control_2"
     CONTROL_3 = "control_3"
+    CRY_DETECTION_SWITCH = "cry_detection_switch"
     CUP_NUMBER = "cup_number"  # NUmber of cups
     CUR_CURRENT = "cur_current"  # Actual current
     CUR_POWER = "cur_power"  # Actual power
     CUR_VOLTAGE = "cur_voltage"  # Actual voltage
+    DECIBEL_SENSITIVITY = "decibel_sensitivity"
+    DECIBEL_SWITCH = "decibel_switch"
     DEHUMIDITY_SET_VALUE = "dehumidify_set_value"
     DO_NOT_DISTURB = "do_not_disturb"
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
@@ -169,11 +200,15 @@ class DPCode(str, Enum):
     FAR_DETECTION = "far_detection"
     FILTER_RESET = "filter_reset"  # Filter (cartridge) reset
     FORWARD_ENERGY_TOTAL = "forward_energy_total"
+    FLOODLIGHT_LIGHTNESS = "floodlight_lightness"
+    FLOODLIGHT_SWITCH = "floodlight_switch"
+    GAS_SENSOR_STATE = "gas_sensor_state"
     GAS_SENSOR_STATUS = "gas_sensor_status"
     GAS_SENSOR_VALUE = "gas_sensor_value"
     HUMIDITY_CURRENT = "humidity_current"  # Current humidity
     HUMIDITY_SET = "humidity_set"  # Humidity setting
     HUMIDITY_VALUE = "humidity_value"  # Humidity
+    IPC_WORK_MODE = "ipc_work_mode"
     LED_TYPE_1 = "led_type_1"
     LED_TYPE_2 = "led_type_2"
     LED_TYPE_3 = "led_type_3"
@@ -182,7 +217,10 @@ class DPCode(str, Enum):
     LOCK = "lock"  # Lock / Child lock
     MATERIAL = "material"  # Material
     MODE = "mode"  # Working mode / Mode
+    MOTION_RECORD = "motion_record"
+    MOTION_SENSITIVITY = "motion_sensitivity"
     MOTION_SWITCH = "motion_switch"  # Motion switch
+    MOTION_TRACKING = "motion_tracking"
     MUFFLING = "muffling"  # Muffling
     NEAR_DETECTION = "near_detection"
     PAUSE = "pause"
@@ -197,20 +235,27 @@ class DPCode(str, Enum):
     PHASE_C_VOLTAGE = "phase_c_voltage"
     PIR = "pir"  # Motion sensor
     PM1 = "pm1"
+    PM10 = "pm10"
     PM25_STATE = "pm25_state"
     PM25_VALUE = "pm25_value"
-    PM10 = "pm10"
     POWDER_SET = "powder_set"  # Powder
     POWER_GO = "power_go"
     PRESENCE_STATE = "presence_state"
+    PRESSURE_STATE = "pressure_state"
+    PRESSURE_VALUE = "pressure_value"
     PUMP_RESET = "pump_reset"  # Water pump reset
+    RECORD_MODE = "record_mode"
     RECORD_SWITCH = "record_switch"  # Recording switch
     RELAY_STATUS = "relay_status"
     SEEK = "seek"
     SENSITIVITY = "sensitivity"  # Sensitivity
+    SENSOR_HUMIDITY = "sensor_humidity"
+    SENSOR_TEMPERATURE = "sensor_temperature"
     SHAKE = "shake"  # Oscillating
     SHOCK_STATE = "shock_state"  # Vibration status
+    SIREN_SWITCH = "siren_switch"
     SITUATION_SET = "situation_set"
+    SMOKE_SENSOR_STATE = "smoke_sensor_state"
     SMOKE_SENSOR_STATUS = "smoke_sensor_status"
     SMOKE_SENSOR_VALUE = "smoke_sensor_value"
     SOS = "sos"  # Emergency State
@@ -236,6 +281,7 @@ class DPCode(str, Enum):
     SWITCH_LED_2 = "switch_led_2"
     SWITCH_LED_3 = "switch_led_3"
     SWITCH_NIGHT_LIGHT = "switch_night_light"
+    SWITCH_SAVE_ENERGY = "switch_save_energy"
     SWITCH_SPRAY = "switch_spray"  # Spraying switch
     SWITCH_USB1 = "switch_usb1"  # USB 1
     SWITCH_USB2 = "switch_usb2"  # USB 2
@@ -245,6 +291,8 @@ class DPCode(str, Enum):
     SWITCH_USB6 = "switch_usb6"  # USB 6
     SWITCH_VERTICAL = "switch_vertical"  # Vertical swing flap switch
     SWITCH_VOICE = "switch_voice"  # Voice switch
+    TEMP_BOILING_C = "temp_boiling_c"
+    TEMP_BOILING_F = "temp_boiling_f"
     TEMP_CONTROLLER = "temp_controller"
     TEMP_CURRENT = "temp_current"  # Current temperature in °C
     TEMP_CURRENT_F = "temp_current_f"  # Current temperature in °F
@@ -258,6 +306,7 @@ class DPCode(str, Enum):
     VA_BATTERY = "va_battery"
     VA_HUMIDITY = "va_humidity"
     VA_TEMPERATURE = "va_temperature"
+    VOC_STATE = "voc_state"
     VOC_VALUE = "voc_value"
     WARM = "warm"  # Heat preservation
     WARM_TIME = "warm_time"  # Heat preservation time
@@ -265,7 +314,10 @@ class DPCode(str, Enum):
     WATER_SET = "water_set"  # Water level
     WATERSENSOR_STATE = "watersensor_state"
     WET = "wet"  # Humidification
+    WIRELESS_BATTERYLOCK = "wireless_batterylock"
+    WIRELESS_ELECTRICITY = "wireless_electricity"
     WORK_MODE = "work_mode"  # Working mode
+    WORK_POWER = "work_power"
 
 
 @dataclass
@@ -585,7 +637,7 @@ TUYA_COUNTRIES = [
     Country("Iraq", "964"),
     Country("Ireland", "353", TuyaCloudOpenAPIEndpoint.EUROPE),
     Country("Isle of Man", "44-1624"),
-    Country("Israel", "972"),
+    Country("Israel", "972", TuyaCloudOpenAPIEndpoint.EUROPE),
     Country("Italy", "39", TuyaCloudOpenAPIEndpoint.EUROPE),
     Country("Ivory Coast", "225"),
     Country("Jamaica", "1-876"),

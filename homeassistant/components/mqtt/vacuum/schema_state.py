@@ -136,6 +136,9 @@ PLATFORM_SCHEMA_STATE = (
 )
 
 
+DISCOVERY_SCHEMA_STATE = PLATFORM_SCHEMA_STATE.extend({}, extra=vol.REMOVE_EXTRA)
+
+
 async def async_setup_entity_state(
     hass, config, async_add_entities, config_entry, discovery_data
 ):
@@ -159,7 +162,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     @staticmethod
     def config_schema():
         """Return the config schema."""
-        return PLATFORM_SCHEMA_STATE
+        return DISCOVERY_SCHEMA_STATE
 
     def _setup_from_config(self, config):
         supported_feature_strings = config[CONF_SUPPORTED_FEATURES]

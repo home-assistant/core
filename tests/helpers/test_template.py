@@ -1084,6 +1084,44 @@ def test_utcnow(mock_is_safe, hass):
     "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
     return_value=True,
 )
+def test_today_at(mock_is_safe, hass):
+    """Test today_at method."""
+    now = dt_util.now()
+    with patch("homeassistant.util.dt.now", return_value=now):
+        now = now.replace(hour=10, minute=0, second=0, microsecond=0)
+        result = template.Template(
+            "{{ today_at('10:00').isoformat() }}",
+            hass,
+        ).async_render()
+        assert result == now.isoformat()
+
+        result = template.Template(
+            "{{ today_at('10:00:00').isoformat() }}",
+            hass,
+        ).async_render()
+        assert result == now.isoformat()
+
+        result = template.Template(
+            "{{ ('10:00:00' | today_at).isoformat() }}",
+            hass,
+        ).async_render()
+        assert result == now.isoformat()
+
+        now = now.replace(hour=0)
+        result = template.Template(
+            "{{ today_at().isoformat() }}",
+            hass,
+        ).async_render()
+        assert result == now.isoformat()
+
+        with pytest.raises(TemplateError):
+            template.Template("{{ today_at('bad') }}", hass).async_render()
+
+
+@patch(
+    "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
+    return_value=True,
+)
 def test_relative_time(mock_is_safe, hass):
     """Test relative_time method."""
     now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
@@ -2105,6 +2143,91 @@ async def test_area_name(hass):
     assert info.rate_limit is None
 
 
+async def test_area_entities(hass):
+    """Test area_entities function."""
+    config_entry = MockConfigEntry(domain="light")
+    entity_registry = mock_registry(hass)
+    device_registry = mock_device_registry(hass)
+    area_registry = mock_area_registry(hass)
+
+    # Test non existing device id
+    info = render_to_info(hass, "{{ area_entities('deadbeef') }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    # Test wrong value type
+    info = render_to_info(hass, "{{ area_entities(56) }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    area_entry = area_registry.async_get_or_create("sensor.fake")
+    entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        area_id=area_entry.id,
+    )
+
+    info = render_to_info(hass, f"{{{{ area_entities('{area_entry.id}') }}}}")
+    assert_result_info(info, ["light.hue_5678"])
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ '{area_entry.name}' | area_entities }}}}")
+    assert_result_info(info, ["light.hue_5678"])
+    assert info.rate_limit is None
+
+    # Test for entities that inherit area from device
+    device_entry = device_registry.async_get_or_create(
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        config_entry_id=config_entry.entry_id,
+        suggested_area="sensor.fake",
+    )
+    entity_registry.async_get_or_create(
+        "light",
+        "hue_light",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+    )
+
+    info = render_to_info(hass, f"{{{{ '{area_entry.name}' | area_entities }}}}")
+    assert_result_info(info, ["light.hue_5678", "light.hue_light_5678"])
+    assert info.rate_limit is None
+
+
+async def test_area_devices(hass):
+    """Test area_devices function."""
+    config_entry = MockConfigEntry(domain="light")
+    device_registry = mock_device_registry(hass)
+    area_registry = mock_area_registry(hass)
+
+    # Test non existing device id
+    info = render_to_info(hass, "{{ area_devices('deadbeef') }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    # Test wrong value type
+    info = render_to_info(hass, "{{ area_devices(56) }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    area_entry = area_registry.async_get_or_create("sensor.fake")
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        suggested_area=area_entry.name,
+    )
+
+    info = render_to_info(hass, f"{{{{ area_devices('{area_entry.id}') }}}}")
+    assert_result_info(info, [device_entry.id])
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ '{area_entry.name}' | area_devices }}}}")
+    assert_result_info(info, [device_entry.id])
+    assert info.rate_limit is None
+
+
 def test_closest_function_to_coord(hass):
     """Test closest function to coord."""
     hass.states.async_set(
@@ -3083,3 +3206,21 @@ async def test_undefined_variable(hass, caplog):
         "Template variable warning: 'no_such_variable' is undefined when rendering '{{ no_such_variable }}'"
         in caplog.text
     )
+
+
+async def test_missing_entity(hass, caplog):
+    """Test a warning is logged on missing entity."""
+    hass.states.async_set("binary_sensor.active", "on")
+    valid_template = template.Template(
+        "{{ is_state('binary_sensor.active', 'on') }}", hass
+    )
+    invalid_template = template.Template(
+        "{{ is_state('binary_sensor.abcde', 'on') }}", hass
+    )
+    assert valid_template.async_render() is True
+    assert invalid_template.async_render() is False
+    assert (
+        "Template warning: entity 'binary_sensor.active' doesn't exist"
+        not in caplog.text
+    )
+    assert "Template warning: entity 'binary_sensor.abcde' doesn't exist" in caplog.text
