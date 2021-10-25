@@ -702,12 +702,21 @@ async def test_durations(hass, record_worker_sync):
         for part in segment.parts:
             av_part = av.open(io.BytesIO(segment.init + part.data))
             running_metadata_duration += part.duration
-            # av_part.duration will just return the largest dts in av_part.
-            # When we normalize by av.time_base this should equal the running duration
-            assert math.isclose(
-                running_metadata_duration,
-                av_part.duration / av.time_base,
-                abs_tol=1e-6,
+            # av_part.duration actually returns the dts of the first packet of
+            # the next av_part. When we normalize this by av.time_base we get
+            # the running duration of the media.
+            # The metadata duration is slightly different. The worker has
+            # some flexibility of where to set each metadata boundary, and
+            # when the media's duration is slightly too long, the metadata
+            # duration is adjusted down. This means that the running metadata
+            # duration may be up to one video frame duration smaller than the
+            # part duration.
+            assert running_metadata_duration < av_part.duration / av.time_base + 1e-6
+            assert (
+                running_metadata_duration
+                > av_part.duration / av.time_base
+                - 1 / av_part.streams.video[0].rate
+                - 1e-6
             )
             av_part.close()
     # check that the Part durations are consistent with the Segment durations
