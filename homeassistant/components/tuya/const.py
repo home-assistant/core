@@ -295,6 +295,7 @@ class DPCode(str, Enum):
     TEMP_VALUE_V2 = "temp_value_v2"
     TEMPER_ALARM = "temper_alarm"  # Tamper alarm
     UV = "uv"  # UV sterilization
+    VA_BATTERY = "va_battery"
     VA_HUMIDITY = "va_humidity"
     VA_TEMPERATURE = "va_temperature"
     VOC_STATE = "voc_state"
