@@ -18,7 +18,11 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
+    ATTR_ENTITY_ID,
+    ATTR_UNIT_OF_MEASUREMENT,
+)
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
@@ -66,6 +70,7 @@ async def test_run_number_setup(hass, mqtt_mock):
                 "state_topic": topic,
                 "command_topic": topic,
                 "name": "Test Number",
+                "unit_of_measurement": "my unit",
                 "payload_reset": "reset!",
             }
         },
@@ -78,6 +83,7 @@ async def test_run_number_setup(hass, mqtt_mock):
 
     state = hass.states.get("number.test_number")
     assert state.state == "10"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "my unit"
 
     async_fire_mqtt_message(hass, topic, "20.5")
 
@@ -85,6 +91,7 @@ async def test_run_number_setup(hass, mqtt_mock):
 
     state = hass.states.get("number.test_number")
     assert state.state == "20.5"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "my unit"
 
     async_fire_mqtt_message(hass, topic, "reset!")
 
@@ -92,6 +99,7 @@ async def test_run_number_setup(hass, mqtt_mock):
 
     state = hass.states.get("number.test_number")
     assert state.state == "unknown"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "my unit"
 
 
 async def test_value_template(hass, mqtt_mock):
