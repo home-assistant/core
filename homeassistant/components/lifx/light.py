@@ -464,7 +464,6 @@ class LIFXLight(LightEntity):
             connections={(dr.CONNECTION_NETWORK_MAC, self.bulb.mac_addr)},
             manufacturer="LIFX",
             name=self.name,
-            sw_version=self.bulb.host_firmware_version,
         )
         if model := (_map.get(self.bulb.product) or self.bulb.product) is not None:
             info[ATTR_MODEL] = str(model)
