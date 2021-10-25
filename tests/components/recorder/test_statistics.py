@@ -432,7 +432,7 @@ def test_external_statistics_errors(hass_recorder, caplog):
     # Attempt to insert statistics for an entity
     external_metadata = {
         **_external_metadata,
-        "statistic_id": "sensor:total_energy_import",
+        "statistic_id": "sensor.total_energy_import",
     }
     external_statistics = {**_external_statistics}
     with pytest.raises(HomeAssistantError):
@@ -440,7 +440,7 @@ def test_external_statistics_errors(hass_recorder, caplog):
     wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
     assert list_statistic_ids(hass) == []
-    assert get_metadata(hass, statistic_ids=("test:total_energy_import",)) == {}
+    assert get_metadata(hass, statistic_ids=("sensor.total_energy_import",)) == {}
 
     # Attempt to insert statistics for the wrong domain
     external_metadata = {**_external_metadata, "source": "other"}
