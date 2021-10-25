@@ -25,14 +25,14 @@ class RachioDevice(Entity):
         return DeviceInfo(
             identifiers={
                 (
-                    device_registry.CONNECTION_NETWORK_MAC,
-                    self._controller.mac_address,
+                    DOMAIN,
+                    self._controller.serial_number,
                 )
             },
             connections={
                 (
-                    DOMAIN,
-                    self._controller.serial_number,
+                    device_registry.CONNECTION_NETWORK_MAC,
+                    self._controller.mac_address,
                 )
             },
             name=self._controller.name,

@@ -124,28 +124,28 @@ COORDINATORS: tuple[RenaultCoordinatorDescription, ...] = (
     RenaultCoordinatorDescription(
         endpoint="cockpit",
         key="cockpit",
-        update_method=lambda x: cast(Callable, x.get_cockpit),
+        update_method=lambda x: x.get_cockpit,
     ),
     RenaultCoordinatorDescription(
         endpoint="hvac-status",
         key="hvac_status",
-        update_method=lambda x: cast(Callable, x.get_hvac_status),
+        update_method=lambda x: x.get_hvac_status,
     ),
     RenaultCoordinatorDescription(
         endpoint="location",
         key="location",
-        update_method=lambda x: cast(Callable, x.get_location),
+        update_method=lambda x: x.get_location,
     ),
     RenaultCoordinatorDescription(
         endpoint="battery-status",
         key="battery",
         requires_electricity=True,
-        update_method=lambda x: cast(Callable, x.get_battery_status),
+        update_method=lambda x: x.get_battery_status,
     ),
     RenaultCoordinatorDescription(
         endpoint="charge-mode",
         key="charge_mode",
         requires_electricity=True,
-        update_method=lambda x: cast(Callable, x.get_charge_mode),
+        update_method=lambda x: x.get_charge_mode,
     ),
 )
