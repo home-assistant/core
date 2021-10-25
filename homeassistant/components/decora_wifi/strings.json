@@ -9,8 +9,16 @@
         },
         "description": "Enter your myLeviton login information."
       },
-      "validate": {
-        "title": "[%key:component::decora_wifi::config::step::user::title%]",
+      "user_validate": {
+        "title": "myLeviton Login",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "Enter your myLeviton login information."
+      },
+      "reauth_validate": {
+        "title": "myLeviton Login",
         "data": {
             "password": "[%key:common::config_flow::data::password%]"
         },

@@ -33,7 +33,12 @@ async def test_user_flow(hass: HomeAssistant):
     with patch(
         "homeassistant.components.decora_wifi.common.DecoraWiFiSession",
         side_effect=FakeDecoraWiFiSession,
-    ):
+    ), patch(
+        "homeassistant.components.decora_wifi.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.decora_wifi.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
         hass.data[DOMAIN] = {}
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -45,6 +50,8 @@ async def test_user_flow(hass: HomeAssistant):
         CONF_USERNAME: USERNAME,
         CONF_PASSWORD: PASSWORD,
     }
+    mock_setup.assert_called_once()
+    mock_setup_entry.assert_called_once()
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
@@ -74,7 +81,12 @@ async def test_reauth_flow(hass: HomeAssistant):
     with patch(
         "homeassistant.components.decora_wifi.common.DecoraWiFiSession",
         side_effect=FakeDecoraWiFiSession,
-    ), patch.dict(hass.data):
+    ), patch(
+        "homeassistant.components.decora_wifi.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry, patch.dict(
+        hass.data
+    ):
         hass.data[DOMAIN] = {}
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -83,6 +95,7 @@ async def test_reauth_flow(hass: HomeAssistant):
             },
         )
     await hass.async_block_till_done()
+    mock_setup_entry.assert_called_once()
     assert mock_config.data.get("username") == USERNAME
     assert mock_config.data.get("password") == UPDATED_PASSWORD
     assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -110,7 +123,7 @@ async def test_abort_if_existing_entry(hass: HomeAssistant):
     assert result["reason"] == "already_configured"
 
 
-async def test_validate_invalid_login(hass: HomeAssistant):
+async def test_user_validate_invalid_login(hass: HomeAssistant):
     """Test user flow with invalid username."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -124,11 +137,11 @@ async def test_validate_invalid_login(hass: HomeAssistant):
             {CONF_USERNAME: USERNAME, CONF_PASSWORD: INCORRECT_PASSWORD},
         )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["step_id"] == "validate"
+    assert result2["step_id"] == "user_validate"
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_validate_no_internet_connection(hass: HomeAssistant):
+async def test_user_validate_no_internet_connection(hass: HomeAssistant):
     """Test user flow with no internet connection."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -143,5 +156,40 @@ async def test_validate_no_internet_connection(hass: HomeAssistant):
             {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["step_id"] == "validate"
+    assert result2["step_id"] == "user_validate"
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_reauth_validate_invalid_login(hass: HomeAssistant):
+    """Test reauth flow with invalid username."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=USERNAME,
+        data={
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: INCORRECT_PASSWORD,
+        },
+    )
+    mock_config.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": mock_config.unique_id,
+        },
+        data=mock_config.data,
+    )
+    with patch(
+        "homeassistant.components.decora_wifi.common.DecoraWiFiSession",
+        side_effect=FakeDecoraWiFiSession,
+    ):
+        hass.data[DOMAIN] = {}
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PASSWORD: INCORRECT_PASSWORD,
+            },
+        )
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["step_id"] == "reauth_validate"
+    assert result2["errors"] == {"base": "invalid_auth"}

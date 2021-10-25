@@ -45,6 +45,7 @@ async def test_platform_works(hass):
             hass, USERNAME, PASSWORD
         )
         assert isinstance(instance, DecoraWifiPlatform)
+        assert instance.email == USERNAME
         # Check that getdevices left platform object in expected state
         assert len(instance.active_platforms) == 1
         assert len(instance.lights) == 6

@@ -168,13 +168,11 @@ class DecoraWifiEntity(Entity):
     def __init__(self, device: IotSwitch) -> None:
         """Initialize Decora Wifi device base class."""
         self._switch = device
-        self._model = device.model
-        self._mac_address = device.mac
-
-    @property
-    def device_info(self):
-        """Return device info for the associated device."""
-        return {
+        self._model = self._switch.model
+        self._mac_address = self._switch.mac
+        self._attr_name = self._switch.name
+        self._attr_unique_id = self._mac_address
+        self._attr_device_info = {
             "name": self._switch.name,
             "connections": {
                 (device_registry.CONNECTION_NETWORK_MAC, self._mac_address)
@@ -183,13 +181,3 @@ class DecoraWifiEntity(Entity):
             "model": self._model,
             "sw_version": self._switch.version,
         }
-
-    @property
-    def name(self):
-        """Return the display name of this switch."""
-        return self._switch.name
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the switch."""
-        return self._mac_address
