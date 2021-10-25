@@ -101,7 +101,7 @@ PLATFORM_SCHEMA = vol.All(
 
 DISCOVERY_SCHEMA = vol.All(
     cv.deprecated(CONF_LAST_RESET_TOPIC),
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.ALLOW_EXTRA),
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
     validate_options,
 )
 

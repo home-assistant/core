@@ -198,7 +198,7 @@ DISCOVERY_SCHEMA = vol.All(
     cv.deprecated(CONF_SPEED_LIST),
     cv.deprecated(CONF_SPEED_STATE_TOPIC),
     cv.deprecated(CONF_SPEED_VALUE_TEMPLATE),
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.ALLOW_EXTRA),
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
     valid_speed_range_configuration,
     valid_preset_mode_configuration,
 )

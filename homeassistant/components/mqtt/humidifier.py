@@ -131,7 +131,7 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 DISCOVERY_SCHEMA = vol.All(
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.ALLOW_EXTRA),
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
     valid_humidity_range_configuration,
     valid_mode_configuration,
 )

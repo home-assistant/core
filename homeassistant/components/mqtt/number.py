@@ -80,7 +80,7 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 DISCOVERY_SCHEMA = vol.All(
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.ALLOW_EXTRA),
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
     validate_config,
 )
 

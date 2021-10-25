@@ -44,7 +44,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=vol.REMOVE_EXTRA,
 )
 
 

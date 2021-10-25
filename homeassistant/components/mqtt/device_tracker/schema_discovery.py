@@ -37,7 +37,7 @@ PLATFORM_SCHEMA_DISCOVERY = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-DISCOVERY_SCHEMA = PLATFORM_SCHEMA_DISCOVERY.extend({}, extra=vol.ALLOW_EXTRA)
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA_DISCOVERY.extend({}, extra=vol.REMOVE_EXTRA)
 
 
 async def async_setup_entry_from_discovery(hass, config_entry, async_add_entities):

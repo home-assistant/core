@@ -136,7 +136,7 @@ PLATFORM_SCHEMA_STATE = (
 )
 
 
-DISCOVERY_SCHEMA_STATE = PLATFORM_SCHEMA_STATE.extend({}, extra=vol.ALLOW_EXTRA)
+DISCOVERY_SCHEMA_STATE = PLATFORM_SCHEMA_STATE.extend({}, extra=vol.REMOVE_EXTRA)
 
 
 async def async_setup_entity_state(

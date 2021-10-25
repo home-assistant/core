@@ -152,7 +152,7 @@ PLATFORM_SCHEMA_JSON = vol.All(
 )
 
 DISCOVERY_SCHEMA_JSON = vol.All(
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.ALLOW_EXTRA),
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
     valid_color_configuration,
 )
 

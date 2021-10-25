@@ -84,7 +84,7 @@ TRIGGER_DISCOVERY_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_TYPE): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE, default=None): vol.Any(None, cv.string),
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=vol.REMOVE_EXTRA,
 )
 
 DEVICE_TRIGGERS = "mqtt_device_triggers"

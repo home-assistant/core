@@ -225,7 +225,7 @@ PLATFORM_SCHEMA_BASIC = vol.All(
 DISCOVERY_SCHEMA_BASIC = vol.All(
     # CONF_VALUE_TEMPLATE is deprecated, support will be removed in 2021.10
     cv.deprecated(CONF_VALUE_TEMPLATE, CONF_STATE_VALUE_TEMPLATE),
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.ALLOW_EXTRA),
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
 )
 
 

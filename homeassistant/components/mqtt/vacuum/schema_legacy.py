@@ -156,7 +156,7 @@ PLATFORM_SCHEMA_LEGACY = (
     .extend(MQTT_VACUUM_SCHEMA.schema)
 )
 
-DISCOVERY_SCHEMA_LEGACY = PLATFORM_SCHEMA_LEGACY.extend({}, extra=vol.ALLOW_EXTRA)
+DISCOVERY_SCHEMA_LEGACY = PLATFORM_SCHEMA_LEGACY.extend({}, extra=vol.REMOVE_EXTRA)
 
 
 async def async_setup_entity_legacy(
