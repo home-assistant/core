@@ -27,32 +27,32 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
     """Representation of a Velbus thermostat."""
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Return the list off supported features."""
         return SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
     @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> str:
         """Return the unit."""
         return TEMP_CELSIUS
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> int | None:
         """Return the current temperature."""
         return self._channel.get_state()
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode."""
         return HVAC_MODE_HEAT
 
     @property
-    def hvac_modes(self):
+    def hvac_modes(self) -> list[str]:
         """Return the list of available hvac operation modes."""
-        return HVAC_MODE_HEAT
+        return [HVAC_MODE_HEAT]
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> int | None:
         """Return the temperature we try to reach."""
         return self._channel.get_climate_target()
 
@@ -73,7 +73,7 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
             None,
         )
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperatures."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
