@@ -31,6 +31,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.ip_address = None
         self.name = None
         self.serial = None
+        self.model = None
 
     @callback
     def _async_generate_schema(self):
@@ -81,6 +82,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 await reader.update()
                 self.serial = reader.gateway_id
+                self.model = 5000 if isinstance(reader, tedpy.TED5000) else 6000
                 await self.async_set_unique_id(self.serial)
             except httpx.HTTPError:
                 errors["base"] = "cannot_connect"
@@ -89,7 +91,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 data = user_input.copy()
-                data[CONF_NAME] = f"TED {self.serial}"
+                data[CONF_NAME] = f"TED {self.model}"
                 return self.async_create_entry(title=data[CONF_NAME], data=data)
 
         return self.async_show_form(

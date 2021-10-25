@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 CONFIG = {CONF_HOST: "127.0.0.1"}
-CONFIG_FINAL = {CONF_HOST: "127.0.0.1", CONF_NAME: "TED ted5000"}
+CONFIG_FINAL = {CONF_HOST: "127.0.0.1", CONF_NAME: "TED 5000"}
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -122,9 +122,9 @@ async def test_import(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "TED ted5000"
+    assert result2["title"] == "TED 5000"
     assert result2["data"] == {
         "host": "1.1.1.1",
-        "name": "TED ted5000",
+        "name": "TED 5000",
     }
     assert len(mock_setup_entry.mock_calls) == 1
