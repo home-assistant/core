@@ -43,18 +43,12 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
 
     @property
     def hvac_mode(self):
-        """Return hvac operation ie. heat, cool mode.
-
-        Need to be one of HVAC_MODE_*.
-        """
+        """Return hvac operation ie. heat, cool mode."""
         return HVAC_MODE_HEAT
 
     @property
     def hvac_modes(self):
-        """Return the list of available hvac operation modes.
-
-        Need to be a subset of HVAC_MODES.
-        """
+        """Return the list of available hvac operation modes."""
         return HVAC_MODE_HEAT
 
     @property
@@ -70,7 +64,14 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
     @property
     def preset_mode(self) -> str | None:
         """Return the current Preset for this channel."""
-        return self._channel.get_climate_mode()
+        return next(
+            (
+                key
+                for key, val in PRESET_MODES.items()
+                if val == self._channel.get_climate_preset()
+            ),
+            None,
+        )
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperatures."""
@@ -82,9 +83,4 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the new preset mode."""
         await self._channel.set_preset(PRESET_MODES[preset_mode])
-        self.async_write_ha_state()
-
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
-        """Set the new hvac mode."""
-        await self._channel.set_mode(hvac_mode)
         self.async_write_ha_state()
