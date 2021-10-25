@@ -8,7 +8,7 @@ pubsub subscriber.
 import datetime
 from http import HTTPStatus
 import os
-from unittest.mock import patch
+from unittest.mock import mock_open, patch
 
 import aiohttp
 from google_nest_sdm.device import Device
@@ -993,3 +993,24 @@ async def test_service_snapshot_event_image_create_directory(hass, auth, tmpdir)
     with open(filename, "rb") as f:
         contents = f.read()
     assert contents == IMAGE_BYTES_FROM_EVENT
+
+
+async def test_service_snapshot_event_write_failure(hass, auth, tmpdir):
+    """Test a failure when writing the snapshot."""
+    await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
+    assert len(hass.states.async_all()) == 1
+    assert hass.states.get("camera.my_camera")
+
+    auth.responses = [
+        aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
+        aiohttp.web.Response(body=IMAGE_BYTES_FROM_EVENT),
+    ]
+
+    filename = f"{tmpdir}/snapshot.jpg"
+    with patch.object(hass.config, "is_allowed_path", return_value=True), patch(
+        "homeassistant.components.nest.camera_sdm.open", mock_open(), create=True
+    ) as mocked_open, pytest.raises(HomeAssistantError, match=r"Failed to write.*"):
+        mocked_open.side_effect = IOError()
+        assert await async_call_service_event_snapshot(hass, filename)
+
+    assert not os.path.exists(filename)
