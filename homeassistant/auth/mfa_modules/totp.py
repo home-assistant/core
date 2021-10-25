@@ -181,7 +181,7 @@ class TotpSetupFlow(SetupFlow):
         # to fix typing complaint
         self._auth_module: TotpAuthModule = auth_module
         self._user = user
-        self._ota_secret: str = None
+        self._ota_secret: str = ""
         self._url = None  # type Optional[str]
         self._image = None  # type Optional[str]
 
