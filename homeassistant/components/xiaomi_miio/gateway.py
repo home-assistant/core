@@ -7,7 +7,7 @@ from micloud.micloudexception import MiCloudAccessDenied
 from miio import DeviceException, gateway
 from miio.gateway.gateway import GATEWAY_MODEL_EU
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -151,16 +151,16 @@ class XiaomiGatewayDevice(CoordinatorEntity, Entity):
         return self._name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info of the gateway."""
-        return {
-            "identifiers": {(DOMAIN, self._sub_device.sid)},
-            "via_device": (DOMAIN, self._entry.unique_id),
-            "manufacturer": "Xiaomi",
-            "name": self._sub_device.name,
-            "model": self._sub_device.model,
-            "sw_version": self._sub_device.firmware_version,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._sub_device.sid)},
+            via_device=(DOMAIN, self._entry.unique_id),
+            manufacturer="Xiaomi",
+            name=self._sub_device.name,
+            model=self._sub_device.model,
+            sw_version=self._sub_device.firmware_version,
+        )
 
     @property
     def available(self):

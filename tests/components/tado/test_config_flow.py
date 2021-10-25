@@ -1,4 +1,5 @@
 """Test the Tado config flow."""
+from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
 import requests
@@ -59,7 +60,7 @@ async def test_form_invalid_auth(hass):
     )
 
     response_mock = MagicMock()
-    type(response_mock).status_code = 401
+    type(response_mock).status_code = HTTPStatus.UNAUTHORIZED
     mock_tado_api = _get_mock_tado_api(getMe=requests.HTTPError(response=response_mock))
 
     with patch(
@@ -82,7 +83,7 @@ async def test_form_cannot_connect(hass):
     )
 
     response_mock = MagicMock()
-    type(response_mock).status_code = 500
+    type(response_mock).status_code = HTTPStatus.INTERNAL_SERVER_ERROR
     mock_tado_api = _get_mock_tado_api(getMe=requests.HTTPError(response=response_mock))
 
     with patch(

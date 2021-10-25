@@ -3,6 +3,7 @@
 import asyncio
 from copy import deepcopy
 from datetime import timedelta
+from http import HTTPStatus
 from unittest.mock import Mock, patch
 
 import aiounifi
@@ -40,6 +41,8 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     CONTENT_TYPE_JSON,
 )
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -256,6 +259,14 @@ async def test_controller_mac(hass, aioclient_mock):
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     assert controller.mac == CONTROLLER_HOST["mac"]
 
+    device_registry = dr.async_get(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(CONNECTION_NETWORK_MAC, controller.mac)},
+    )
+
+    assert device_entry.configuration_url == controller.api.url
+
 
 async def test_controller_not_accessible(hass):
     """Retry to login gets scheduled when connection fails."""
@@ -394,7 +405,9 @@ async def test_reconnect_mechanism(hass, aioclient_mock, mock_unifi_websocket):
     await setup_unifi_integration(hass, aioclient_mock)
 
     aioclient_mock.clear_requests()
-    aioclient_mock.post(f"https://{DEFAULT_HOST}:1234/api/login", status=502)
+    aioclient_mock.post(
+        f"https://{DEFAULT_HOST}:1234/api/login", status=HTTPStatus.BAD_GATEWAY
+    )
 
     mock_unifi_websocket(state=STATE_DISCONNECTED)
     await hass.async_block_till_done()

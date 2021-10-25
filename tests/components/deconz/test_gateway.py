@@ -23,6 +23,7 @@ from homeassistant.components.deconz.gateway import (
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN
@@ -33,7 +34,7 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_UDN,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -42,6 +43,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
@@ -162,10 +164,38 @@ async def test_gateway_setup(hass, aioclient_mock):
         assert forward_entry_setup.mock_calls[4][1] == (config_entry, FAN_DOMAIN)
         assert forward_entry_setup.mock_calls[5][1] == (config_entry, LIGHT_DOMAIN)
         assert forward_entry_setup.mock_calls[6][1] == (config_entry, LOCK_DOMAIN)
-        assert forward_entry_setup.mock_calls[7][1] == (config_entry, SCENE_DOMAIN)
-        assert forward_entry_setup.mock_calls[8][1] == (config_entry, SENSOR_DOMAIN)
-        assert forward_entry_setup.mock_calls[9][1] == (config_entry, SIREN_DOMAIN)
-        assert forward_entry_setup.mock_calls[10][1] == (config_entry, SWITCH_DOMAIN)
+        assert forward_entry_setup.mock_calls[7][1] == (config_entry, NUMBER_DOMAIN)
+        assert forward_entry_setup.mock_calls[8][1] == (config_entry, SCENE_DOMAIN)
+        assert forward_entry_setup.mock_calls[9][1] == (config_entry, SENSOR_DOMAIN)
+        assert forward_entry_setup.mock_calls[10][1] == (config_entry, SIREN_DOMAIN)
+        assert forward_entry_setup.mock_calls[11][1] == (config_entry, SWITCH_DOMAIN)
+
+    device_registry = dr.async_get(hass)
+    gateway_entry = device_registry.async_get_device(
+        identifiers={(DECONZ_DOMAIN, gateway.bridgeid)}
+    )
+
+    assert gateway_entry.configuration_url == f"http://{HOST}:{PORT}"
+    assert gateway_entry.entry_type == "service"
+
+
+async def test_gateway_device_no_configuration_url_when_addon(hass, aioclient_mock):
+    """Successful setup."""
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup",
+        return_value=True,
+    ):
+        config_entry = await setup_deconz_integration(
+            hass, aioclient_mock, source=SOURCE_HASSIO
+        )
+        gateway = get_gateway_from_config_entry(hass, config_entry)
+
+    device_registry = dr.async_get(hass)
+    gateway_entry = device_registry.async_get_device(
+        identifiers={(DECONZ_DOMAIN, gateway.bridgeid)}
+    )
+
+    assert not gateway_entry.configuration_url
 
 
 async def test_gateway_retry(hass):

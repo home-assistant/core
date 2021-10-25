@@ -17,6 +17,9 @@
             "confirm": {
                 "description": "Vil du starte oppsettet?"
             },
+            "import_turn_on": {
+                "description": "Sl\u00e5 p\u00e5 enheten og klikk p\u00e5 send for \u00e5 fortsette overf\u00f8ringen"
+            },
             "user": {
                 "data": {
                     "url": "URL"

@@ -3,12 +3,6 @@ from __future__ import annotations
 
 from sonarr import Sonarr
 
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_NAME,
-    ATTR_SW_VERSION,
-)
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN
@@ -35,10 +29,15 @@ class SonarrEntity(Entity):
         if self._device_id is None:
             return None
 
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._device_id)},
-            ATTR_NAME: "Activity Sensor",
-            ATTR_MANUFACTURER: "Sonarr",
-            ATTR_SW_VERSION: self.sonarr.app.info.version,
-            "entry_type": "service",
-        }
+        configuration_url = "https://" if self.sonarr.tls else "http://"
+        configuration_url += f"{self.sonarr.host}:{self.sonarr.port}"
+        configuration_url += self.sonarr.base_path.replace("/api", "")
+
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            name="Activity Sensor",
+            manufacturer="Sonarr",
+            sw_version=self.sonarr.app.info.version,
+            entry_type="service",
+            configuration_url=configuration_url,
+        )

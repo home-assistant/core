@@ -26,7 +26,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
@@ -452,26 +452,26 @@ class ElkEntity(Entity):
         self._element_callback(self._element, {})
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Device info connecting via the ElkM1 system."""
-        return {
-            "via_device": (DOMAIN, f"{self._prefix}_system"),
-        }
+        return DeviceInfo(
+            via_device=(DOMAIN, f"{self._prefix}_system"),
+        )
 
 
 class ElkAttachedEntity(ElkEntity):
     """An elk entity that is attached to the elk system."""
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Device info for the underlying ElkM1 system."""
         device_name = "ElkM1"
         if self._prefix:
             device_name += f" {self._prefix}"
-        return {
-            "name": device_name,
-            "identifiers": {(DOMAIN, f"{self._prefix}_system")},
-            "sw_version": self._elk.panel.elkm1_version,
-            "manufacturer": "ELK Products, Inc.",
-            "model": "M1",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, f"{self._prefix}_system")},
+            manufacturer="ELK Products, Inc.",
+            model="M1",
+            name=device_name,
+            sw_version=self._elk.panel.elkm1_version,
+        )

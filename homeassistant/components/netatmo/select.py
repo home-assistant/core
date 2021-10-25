@@ -20,6 +20,7 @@ from .const import (
     EVENT_TYPE_SCHEDULE,
     MANUFACTURER,
     SIGNAL_NAME,
+    TYPE_ENERGY,
 )
 from .data_handler import HOMEDATA_DATA_CLASS_NAME, NetatmoDataHandler
 from .helper import get_all_home_ids, update_climate_schedules
@@ -87,6 +88,7 @@ class NetatmoScheduleSelect(NetatmoBase, SelectEntity):
         self._attr_name = f"{MANUFACTURER} {self._device_name}"
 
         self._model: str = "NATherm1"
+        self._netatmo_type = TYPE_ENERGY
 
         self._attr_unique_id = f"{self._home_id}-schedule-select"
 

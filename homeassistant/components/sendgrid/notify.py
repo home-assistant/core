@@ -1,4 +1,5 @@
 """SendGrid notification service."""
+from http import HTTPStatus
 import logging
 
 from sendgrid import SendGridAPIClient
@@ -15,7 +16,6 @@ from homeassistant.const import (
     CONF_RECIPIENT,
     CONF_SENDER,
     CONTENT_TYPE_TEXT_PLAIN,
-    HTTP_ACCEPTED,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -66,5 +66,5 @@ class SendgridNotificationService(BaseNotificationService):
         }
 
         response = self._sg.client.mail.send.post(request_body=data)
-        if response.status_code != HTTP_ACCEPTED:
+        if response.status_code != HTTPStatus.ACCEPTED:
             _LOGGER.error("Unable to send notification")

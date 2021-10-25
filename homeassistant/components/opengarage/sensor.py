@@ -9,10 +9,14 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import (
+    DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_SIGNAL_STRENGTH,
+    DEVICE_CLASS_TEMPERATURE,
     ENTITY_CATEGORY_DIAGNOSTIC,
     LENGTH_CENTIMETERS,
+    PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
+    TEMP_CELSIUS,
 )
 from homeassistant.core import callback
 
@@ -35,6 +39,18 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
+    SensorEntityDescription(
+        key="temp",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="humid",
+        device_class=DEVICE_CLASS_HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
 )
 
 
@@ -49,6 +65,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 description,
             )
             for description in SENSOR_TYPES
+            if description.key in open_garage_data_coordinator.data
         ],
     )
 

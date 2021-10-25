@@ -1,5 +1,6 @@
 """Tests for the Wallbox integration."""
 
+from http import HTTPStatus
 import json
 
 import requests_mock
@@ -33,12 +34,12 @@ async def setup_integration(hass):
         mock_request.get(
             "https://api.wall-box.com/auth/token/user",
             text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
-            status_code=200,
+            status_code=HTTPStatus.OK,
         )
         mock_request.get(
             "https://api.wall-box.com/chargers/status/12345",
             json=test_response,
-            status_code=200,
+            status_code=HTTPStatus.OK,
         )
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

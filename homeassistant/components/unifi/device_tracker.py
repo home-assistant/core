@@ -19,6 +19,7 @@ from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.dt as dt_util
@@ -417,8 +418,7 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
 
     async def async_update_device_registry(self) -> None:
         """Update device registry."""
-        device_registry = await self.hass.helpers.device_registry.async_get_registry()
-
+        device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(
             config_entry_id=self.controller.config_entry.entry_id, **self.device_info
         )

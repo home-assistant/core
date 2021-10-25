@@ -1,8 +1,8 @@
 {
     "state": {
         "_": {
-            "off": "OFF",
-            "on": "ON"
+            "off": "off",
+            "on": "on"
         }
     },
     "title": "Programa (script)"

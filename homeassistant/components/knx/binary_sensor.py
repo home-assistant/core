@@ -7,9 +7,16 @@ from xknx import XKNX
 from xknx.devices import BinarySensor as XknxBinarySensor
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_NAME,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt
 
@@ -36,7 +43,7 @@ async def async_setup_platform(
     )
 
 
-class KNXBinarySensor(KnxEntity, BinarySensorEntity):
+class KNXBinarySensor(KnxEntity, BinarySensorEntity, RestoreEntity):
     """Representation of a KNX binary sensor."""
 
     _device: XknxBinarySensor
@@ -60,6 +67,14 @@ class KNXBinarySensor(KnxEntity, BinarySensorEntity):
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_force_update = self._device.ignore_internal_state
         self._attr_unique_id = str(self._device.remote_value.group_address_state)
+
+    async def async_added_to_hass(self) -> None:
+        """Restore last state."""
+        await super().async_added_to_hass()
+        if (
+            last_state := await self.async_get_last_state()
+        ) and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+            await self._device.remote_value.update_value(last_state.state == STATE_ON)
 
     @property
     def is_on(self) -> bool:

@@ -15,8 +15,7 @@ PLATFORMS = [SENSOR_DOMAIN]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up IPP from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-    coordinator = hass.data[DOMAIN].get(entry.entry_id)
-    if not coordinator:
+    if not (coordinator := hass.data[DOMAIN].get(entry.entry_id)):
         # Create IPP instance for this entry
         coordinator = IPPDataUpdateCoordinator(
             hass,
