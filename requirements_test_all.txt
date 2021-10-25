@@ -1148,7 +1148,7 @@ pytile==5.2.4
 pytraccar==0.9.0
 
 # homeassistant.components.tradfri
-pytradfri[async]==7.1.0
+pytradfri[async]==7.1.1
 
 # homeassistant.components.usb
 pyudev==0.22.0
