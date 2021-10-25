@@ -101,6 +101,7 @@ class BasicLight(LightEntity):
 
         if led_type in ["RGB", "RGBW", "RGBWW"]:
             spectrum = self._spectrum
+
             if "WHITE" in spectrum:
                 self._supported_color_modes.add(COLOR_MODE_WHITE)
 
@@ -263,6 +264,7 @@ class BasicLight(LightEntity):
         if ATTR_BRIGHTNESS in kwargs and brightness_supported(supported_color_modes):
             self._brightness = kwargs.get(ATTR_BRIGHTNESS)
             self._oocsi.send(self._oocsichannel, {"brightness": self._brightness})
+            
         if ATTR_WHITE in kwargs and COLOR_MODE_WHITE in supported_color_modes:
             self._color_mode = COLOR_MODE_WHITE
             self._brightness = kwargs.get(ATTR_WHITE)
