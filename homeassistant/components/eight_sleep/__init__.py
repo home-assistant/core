@@ -128,7 +128,7 @@ async def async_setup(hass, config):
     user_coordinator = hass.data[DOMAIN][DATA_USER] = EightSleepUserDataCoordinator(
         hass, eight
     )
-    await heat_coordinator.async_request_refresh()
+    await heat_coordinator.async_config_entry_first_refresh()
     await user_coordinator.async_request_refresh()
 
     # Load sub components
