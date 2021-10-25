@@ -363,7 +363,9 @@ def setup_connection_for_dialect(
                     False
                 )
             if not version or version < MIN_VERSION_SQLITE:
-                _warn_unsupported_version(version or version_string, "SQLite", "3.32.1")
+                _warn_unsupported_version(
+                    version or version_string, "SQLite", MIN_VERSION_SQLITE
+                )
 
         # approximately 8MiB of memory
         execute_on_connection(dbapi_connection, "PRAGMA cache_size = -8192")
