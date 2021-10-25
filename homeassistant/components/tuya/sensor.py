@@ -206,24 +206,24 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
     # https://developer.tuya.com/en/docs/iot/categorypm25?id=Kaiuz3qof3yfu
     "pm25": (
         SensorEntityDescription(
-            key=DPCode.PM10_VALUE,
-            name="PM1",
+            key=DPCode.PM1,
+            name="Particulate Matter 1.0 µm",
             native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             device_class=DEVICE_CLASS_PM1,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
         SensorEntityDescription(
-            key=DPCode.PM100_VALUE,
-            name="PM10",
+            key=DPCode.PM25_VALUE,
+            name="Particulate Matter 2.5 µm",
             native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-            device_class=DEVICE_CLASS_PM10,
+            device_class=DEVICE_CLASS_PM25,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
         SensorEntityDescription(
-            key=DPCode.PM25_VALUE,
-            name="PM25",
+            key=DPCode.PM10,
+            name="Particulate Matter 10.0 µm",
             native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-            device_class=DEVICE_CLASS_PM25,
+            device_class=DEVICE_CLASS_PM10,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
         *BATTERY_SENSORS,

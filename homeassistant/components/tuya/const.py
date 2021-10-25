@@ -196,10 +196,10 @@ class DPCode(str, Enum):
     PHASE_B_POWER = "phase_b_power"
     PHASE_C_VOLTAGE = "phase_c_voltage"
     PIR = "pir"  # Motion sensor
-    PM10_VALUE = "pm10_value"
+    PM1 = "pm1"
     PM25_STATE = "pm25_state"
     PM25_VALUE = "pm25_value"
-    PM100_VALUE = "pm100_value"
+    PM10 = "pm10"
     POWDER_SET = "powder_set"  # Powder
     POWER_GO = "power_go"
     PRESENCE_STATE = "presence_state"
