@@ -96,8 +96,11 @@ class GoGoGate2Entity(CoordinatorEntity):
     def device_info(self) -> DeviceInfo:
         """Device info for the controller."""
         data = self.coordinator.data
+        configuration_url = (
+            f"https://{data.remoteaccess}" if data.remoteaccess else None
+        )
         return DeviceInfo(
-            configuration_url=data.remoteaccess if data.remoteaccess else None,
+            configuration_url=configuration_url,
             identifiers={(DOMAIN, str(self._config_entry.unique_id))},
             name=self._config_entry.title,
             manufacturer=MANUFACTURER,
