@@ -14,7 +14,6 @@ from homeassistant.const import (
     LENGTH_METERS,
     MASS_GRAMS,
     PRESSURE_PA,
-    SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
     VOLUME_LITERS,
 )
@@ -35,13 +34,7 @@ from tests.common import (
 def _set_up_units(hass):
     """Set up the tests."""
     hass.config.units = UnitSystem(
-        "custom",
-        TEMP_CELSIUS,
-        LENGTH_METERS,
-        SPEED_KILOMETERS_PER_HOUR,
-        VOLUME_LITERS,
-        MASS_GRAMS,
-        PRESSURE_PA,
+        "custom", TEMP_CELSIUS, LENGTH_METERS, VOLUME_LITERS, MASS_GRAMS, PRESSURE_PA
     )
 
 
