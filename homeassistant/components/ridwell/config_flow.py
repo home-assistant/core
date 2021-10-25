@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -40,6 +41,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._reauthing: bool = False
         self._username: str | None = None
 
+    @callback
+    def _async_show_errors(
+        self, errors: dict, error_step_id: str, error_schema: vol.Schema
+    ) -> FlowResult:
+        """Show an error on the correct form."""
+        return self.async_show_form(
+            step_id=error_step_id,
+            data_schema=error_schema,
+            errors=errors,
+            description_placeholders={CONF_USERNAME: self._username},
+        )
+
     async def _async_validate(
         self, error_step_id: str, error_schema: vol.Schema
     ) -> FlowResult:
@@ -53,26 +66,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await async_get_client(self._username, self._password, session=session)
         except InvalidCredentialsError:
-            return self.async_show_form(
-                step_id=error_step_id,
-                data_schema=error_schema,
-                errors={"base": "invalid_auth"},
-                description_placeholders={CONF_USERNAME: self._username},
+            return self._async_show_errors(
+                {"base": "invalid_auth"}, error_step_id, error_schema
             )
         except RidwellError as err:
             LOGGER.error("Unknown Ridwell error: %s", err)
-            return self.async_show_form(
-                step_id=error_step_id,
-                data_schema=error_schema,
-                errors={"base": "unknown"},
-                description_placeholders={CONF_USERNAME: self._username},
+            return self._async_show_errors(
+                {"base": "unknown"}, error_step_id, error_schema
             )
 
         if self._reauthing:
             if existing_entry := await self.async_set_unique_id(self._username):
                 self.hass.config_entries.async_update_entry(
                     existing_entry,
-                    data={CONF_USERNAME: self._username, CONF_PASSWORD: self._password},
+                    data={**existing_entry.data, CONF_PASSWORD: self._password},
                 )
                 self.hass.async_create_task(
                     self.hass.config_entries.async_reload(existing_entry.entry_id)
@@ -116,7 +123,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        await self.async_set_unique_id(user_input[CONF_USERNAME])
+        await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
         self._abort_if_unique_id_configured()
 
         self._username = user_input[CONF_USERNAME]

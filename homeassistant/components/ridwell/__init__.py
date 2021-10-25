@@ -11,7 +11,7 @@ from aioridwell.errors import InvalidCredentialsError, RidwellError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -36,8 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except InvalidCredentialsError as err:
         raise ConfigEntryAuthFailed("Invalid username/password") from err
     except RidwellError as err:
-        LOGGER.error("Error while authenticating with Ridwell: %s", err)
-        return False
+        raise ConfigEntryNotReady(err) from err
 
     accounts = await client.async_get_accounts()
 
