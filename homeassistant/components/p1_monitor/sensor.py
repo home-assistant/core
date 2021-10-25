@@ -12,9 +12,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_NAME,
     CURRENCY_EURO,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
@@ -28,13 +25,13 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import P1MonitorDataUpdateCoordinator
 from .const import (
-    ATTR_ENTRY_TYPE,
     DOMAIN,
     ENTRY_TYPE_SERVICE,
     SERVICE_PHASES,
@@ -266,14 +263,14 @@ class P1MonitorSensorEntity(CoordinatorEntity, SensorEntity):
             f"{coordinator.config_entry.entry_id}_{service_key}_{description.key}"
         )
 
-        self._attr_device_info = {
-            ATTR_IDENTIFIERS: {
+        self._attr_device_info = DeviceInfo(
+            entry_type=ENTRY_TYPE_SERVICE,
+            identifiers={
                 (DOMAIN, f"{coordinator.config_entry.entry_id}_{service_key}")
             },
-            ATTR_NAME: service,
-            ATTR_MANUFACTURER: "P1 Monitor",
-            ATTR_ENTRY_TYPE: ENTRY_TYPE_SERVICE,
-        }
+            manufacturer="P1 Monitor",
+            name=service,
+        )
 
     @property
     def native_value(self) -> StateType:
