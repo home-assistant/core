@@ -3,6 +3,7 @@ import logging
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -34,9 +35,25 @@ SENSORS = (
     ),
     SensorEntityDescription(
         key="mtd_consumption",
-        name="Month to Date Energy Production",
+        name="Month to Date Energy Consumption",
         native_unit_of_measurement=ENERGY_WATT_HOUR,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        device_class=DEVICE_CLASS_ENERGY,
+    ),
+)
+
+SPYDER_SENSORS = (
+    SensorEntityDescription(
+        key="consumption",
+        name="Current Energy Consumption",
+        native_unit_of_measurement=POWER_WATT,
         state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="mtd_consumption",
+        name="Month to Date Energy Consumption",
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         device_class=DEVICE_CLASS_ENERGY,
     ),
 )
@@ -44,7 +61,7 @@ SENSORS = (
 MTU_SENSORS = (
     SensorEntityDescription(
         key="consumption",
-        name="Power",
+        name="Current Energy Consumption",
         native_unit_of_measurement=POWER_WATT,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
@@ -74,7 +91,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
     for spyder_id, spyder in coordinator.data["spyders"].items():
         spyder_name = spyder["name"]
-        for sensor_description in SENSORS:
+        for sensor_description in SPYDER_SENSORS:
             entity_name = f"{spyder_name} {sensor_description.name}"
             entities.append(
                 TedBreakdownSensor(
