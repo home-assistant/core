@@ -454,7 +454,7 @@ class PlexServer:
                     _LOGGER.debug("Photo session detected, skipping: %s", session)
                     continue
 
-                session_username = session.usernames[0]
+                session_username = next(iter(session.usernames), None)
                 for player in session.players:
                     unique_id = f"{self.machine_identifier}:{player.machineIdentifier}"
                     if unique_id not in self.active_sessions:
