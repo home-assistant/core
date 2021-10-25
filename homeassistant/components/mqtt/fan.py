@@ -113,6 +113,64 @@ def valid_preset_mode_configuration(config):
     return config
 
 
+_PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+        vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
+        vol.Optional(CONF_OSCILLATION_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_OSCILLATION_COMMAND_TEMPLATE): cv.template,
+        vol.Optional(CONF_OSCILLATION_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_OSCILLATION_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_PERCENTAGE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_PERCENTAGE_COMMAND_TEMPLATE): cv.template,
+        vol.Optional(CONF_PERCENTAGE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_PERCENTAGE_VALUE_TEMPLATE): cv.template,
+        # CONF_PRESET_MODE_COMMAND_TOPIC and CONF_PRESET_MODES_LIST must be used together
+        vol.Inclusive(
+            CONF_PRESET_MODE_COMMAND_TOPIC, "preset_modes"
+        ): mqtt.valid_publish_topic,
+        vol.Inclusive(
+            CONF_PRESET_MODES_LIST, "preset_modes", default=[]
+        ): cv.ensure_list,
+        vol.Optional(CONF_PRESET_MODE_COMMAND_TEMPLATE): cv.template,
+        vol.Optional(CONF_PRESET_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_PRESET_MODE_VALUE_TEMPLATE): cv.template,
+        vol.Optional(
+            CONF_SPEED_RANGE_MIN, default=DEFAULT_SPEED_RANGE_MIN
+        ): cv.positive_int,
+        vol.Optional(
+            CONF_SPEED_RANGE_MAX, default=DEFAULT_SPEED_RANGE_MAX
+        ): cv.positive_int,
+        vol.Optional(
+            CONF_PAYLOAD_RESET_PERCENTAGE, default=DEFAULT_PAYLOAD_RESET
+        ): cv.string,
+        vol.Optional(
+            CONF_PAYLOAD_RESET_PRESET_MODE, default=DEFAULT_PAYLOAD_RESET
+        ): cv.string,
+        vol.Optional(CONF_PAYLOAD_HIGH_SPEED, default=SPEED_HIGH): cv.string,
+        vol.Optional(CONF_PAYLOAD_LOW_SPEED, default=SPEED_LOW): cv.string,
+        vol.Optional(CONF_PAYLOAD_MEDIUM_SPEED, default=SPEED_MEDIUM): cv.string,
+        vol.Optional(CONF_PAYLOAD_OFF_SPEED, default=SPEED_OFF): cv.string,
+        vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
+        vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+        vol.Optional(
+            CONF_PAYLOAD_OSCILLATION_OFF, default=OSCILLATE_OFF_PAYLOAD
+        ): cv.string,
+        vol.Optional(
+            CONF_PAYLOAD_OSCILLATION_ON, default=OSCILLATE_ON_PAYLOAD
+        ): cv.string,
+        vol.Optional(CONF_SPEED_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(
+            CONF_SPEED_LIST,
+            default=[SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH],
+        ): cv.ensure_list,
+        vol.Optional(CONF_SPEED_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_SPEED_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
+    }
+).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
+
 PLATFORM_SCHEMA = vol.All(
     # CONF_SPEED_COMMAND_TOPIC, CONF_SPEED_LIST, CONF_SPEED_STATE_TOPIC, CONF_SPEED_VALUE_TEMPLATE and
     # Speeds SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH SPEED_OFF,
@@ -124,63 +182,23 @@ PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_SPEED_LIST),
     cv.deprecated(CONF_SPEED_STATE_TOPIC),
     cv.deprecated(CONF_SPEED_VALUE_TEMPLATE),
-    mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
-        {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-            vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_OSCILLATION_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_OSCILLATION_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_OSCILLATION_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_OSCILLATION_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_PERCENTAGE_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_PERCENTAGE_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_PERCENTAGE_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_PERCENTAGE_VALUE_TEMPLATE): cv.template,
-            # CONF_PRESET_MODE_COMMAND_TOPIC and CONF_PRESET_MODES_LIST must be used together
-            vol.Inclusive(
-                CONF_PRESET_MODE_COMMAND_TOPIC, "preset_modes"
-            ): mqtt.valid_publish_topic,
-            vol.Inclusive(
-                CONF_PRESET_MODES_LIST, "preset_modes", default=[]
-            ): cv.ensure_list,
-            vol.Optional(CONF_PRESET_MODE_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_PRESET_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_PRESET_MODE_VALUE_TEMPLATE): cv.template,
-            vol.Optional(
-                CONF_SPEED_RANGE_MIN, default=DEFAULT_SPEED_RANGE_MIN
-            ): cv.positive_int,
-            vol.Optional(
-                CONF_SPEED_RANGE_MAX, default=DEFAULT_SPEED_RANGE_MAX
-            ): cv.positive_int,
-            vol.Optional(
-                CONF_PAYLOAD_RESET_PERCENTAGE, default=DEFAULT_PAYLOAD_RESET
-            ): cv.string,
-            vol.Optional(
-                CONF_PAYLOAD_RESET_PRESET_MODE, default=DEFAULT_PAYLOAD_RESET
-            ): cv.string,
-            vol.Optional(CONF_PAYLOAD_HIGH_SPEED, default=SPEED_HIGH): cv.string,
-            vol.Optional(CONF_PAYLOAD_LOW_SPEED, default=SPEED_LOW): cv.string,
-            vol.Optional(CONF_PAYLOAD_MEDIUM_SPEED, default=SPEED_MEDIUM): cv.string,
-            vol.Optional(CONF_PAYLOAD_OFF_SPEED, default=SPEED_OFF): cv.string,
-            vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
-            vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
-            vol.Optional(
-                CONF_PAYLOAD_OSCILLATION_OFF, default=OSCILLATE_OFF_PAYLOAD
-            ): cv.string,
-            vol.Optional(
-                CONF_PAYLOAD_OSCILLATION_ON, default=OSCILLATE_ON_PAYLOAD
-            ): cv.string,
-            vol.Optional(CONF_SPEED_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(
-                CONF_SPEED_LIST,
-                default=[SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH],
-            ): cv.ensure_list,
-            vol.Optional(CONF_SPEED_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_SPEED_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
-        }
-    ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema),
+    _PLATFORM_SCHEMA_BASE,
+    valid_speed_range_configuration,
+    valid_preset_mode_configuration,
+)
+
+DISCOVERY_SCHEMA = vol.All(
+    # CONF_SPEED_COMMAND_TOPIC, CONF_SPEED_LIST, CONF_SPEED_STATE_TOPIC, CONF_SPEED_VALUE_TEMPLATE and
+    # Speeds SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH SPEED_OFF,
+    # are deprecated, support will be removed with release 2021.9
+    cv.deprecated(CONF_PAYLOAD_HIGH_SPEED),
+    cv.deprecated(CONF_PAYLOAD_LOW_SPEED),
+    cv.deprecated(CONF_PAYLOAD_MEDIUM_SPEED),
+    cv.deprecated(CONF_SPEED_COMMAND_TOPIC),
+    cv.deprecated(CONF_SPEED_LIST),
+    cv.deprecated(CONF_SPEED_STATE_TOPIC),
+    cv.deprecated(CONF_SPEED_VALUE_TEMPLATE),
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
     valid_speed_range_configuration,
     valid_preset_mode_configuration,
 )
@@ -199,7 +217,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
-    await async_setup_entry_helper(hass, fan.DOMAIN, setup, PLATFORM_SCHEMA)
+    await async_setup_entry_helper(hass, fan.DOMAIN, setup, DISCOVERY_SCHEMA)
 
 
 async def _async_setup_entity(
@@ -236,7 +254,7 @@ class MqttFan(MqttEntity, FanEntity):
     @staticmethod
     def config_schema():
         """Return the config schema."""
-        return PLATFORM_SCHEMA
+        return DISCOVERY_SCHEMA
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""

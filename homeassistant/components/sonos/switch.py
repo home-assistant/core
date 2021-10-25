@@ -178,6 +178,8 @@ class SonosSwitchEntity(SonosEntity, SwitchEntity):
 class SonosAlarmEntity(SonosEntity, SwitchEntity):
     """Representation of a Sonos Alarm entity."""
 
+    _attr_entity_category = ENTITY_CATEGORY_CONFIG
+
     def __init__(self, alarm_id: str, speaker: SonosSpeaker) -> None:
         """Initialize the switch."""
         super().__init__(speaker)
@@ -215,7 +217,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        return "Sonos Alarm {} {} {}".format(
+        return "{} {} Alarm {}".format(
             self.speaker.zone_name,
             self.alarm.recurrence.title(),
             str(self.alarm.start_time)[0:5],

@@ -230,7 +230,7 @@ arcam-fmj==0.12.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.22.9
+async-upnp-client==0.22.10
 
 # homeassistant.components.aurora
 auroranoaa==0.0.2
@@ -1148,7 +1148,7 @@ pytile==5.2.4
 pytraccar==0.9.0
 
 # homeassistant.components.tradfri
-pytradfri[async]==7.1.0
+pytradfri[async]==7.1.1
 
 # homeassistant.components.usb
 pyudev==0.22.0
@@ -1333,7 +1333,7 @@ total_connect_client==0.57
 transmissionrpc==0.11
 
 # homeassistant.components.tuya
-tuya-iot-py-sdk==0.5.0
+tuya-iot-py-sdk==0.6.3
 
 # homeassistant.components.twentemilieu
 twentemilieu==0.3.0
@@ -1424,7 +1424,7 @@ yalexs==1.1.13
 yeelight==0.7.8
 
 # homeassistant.components.youless
-youless-api==0.14
+youless-api==0.15
 
 # homeassistant.components.zeroconf
 zeroconf==0.36.9
@@ -1445,7 +1445,7 @@ zigpy-zigate==0.7.3
 zigpy-znp==0.5.4
 
 # homeassistant.components.zha
-zigpy==0.38.0
+zigpy==0.39.0
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.31.3

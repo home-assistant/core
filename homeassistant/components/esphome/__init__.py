@@ -755,9 +755,9 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
-        return {
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self._device_info.mac_address)}
-        }
+        return DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, self._device_info.mac_address)}
+        )
 
     @property
     def name(self) -> str:

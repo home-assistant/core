@@ -154,6 +154,13 @@ async def test_sonos_play_media(
     await hass.config_entries.async_unload(entry.entry_id)
     mock_plex_server = await setup_plex_server()
 
+    # Test with unlinked Plex/Sonos accounts
+    requests_mock.get("https://sonos.plex.tv/resources", status_code=403)
+    with pytest.raises(HomeAssistantError) as excinfo:
+        play_on_sonos(hass, MEDIA_TYPE_MUSIC, media_content_id, sonos_speaker_name)
+    assert "Sonos speakers not linked to Plex account" in str(excinfo.value)
+    assert playback_mock.call_count == 0
+
     # Test with no speakers available
     requests_mock.get("https://sonos.plex.tv/resources", text=empty_payload)
     with pytest.raises(HomeAssistantError) as excinfo:

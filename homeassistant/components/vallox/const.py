@@ -37,3 +37,10 @@ VALLOX_PROFILE_TO_STR_REPORTABLE = {
 STR_TO_VALLOX_PROFILE_SETTABLE = {
     value: key for (key, value) in VALLOX_PROFILE_TO_STR_SETTABLE.items()
 }
+
+VALLOX_CELL_STATE_TO_STR = {
+    0: "Heat Recovery",
+    1: "Cool Recovery",
+    2: "Bypass",
+    3: "Defrosting",
+}

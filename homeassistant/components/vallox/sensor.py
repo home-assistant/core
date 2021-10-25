@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-import logging
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
@@ -25,9 +24,13 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateTyp
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import ValloxDataUpdateCoordinator
-from .const import DOMAIN, METRIC_KEY_MODE, MODE_ON, VALLOX_PROFILE_TO_STR_REPORTABLE
-
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    DOMAIN,
+    METRIC_KEY_MODE,
+    MODE_ON,
+    VALLOX_CELL_STATE_TO_STR,
+    VALLOX_PROFILE_TO_STR_REPORTABLE,
+)
 
 
 class ValloxSensor(CoordinatorEntity, SensorEntity):
@@ -53,7 +56,6 @@ class ValloxSensor(CoordinatorEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         if (metric_key := self.entity_description.metric_key) is None:
-            _LOGGER.debug("Error updating sensor. Empty metric key")
             return None
 
         return self.coordinator.data.get_metric(metric_key)
@@ -94,7 +96,6 @@ class ValloxFilterRemainingSensor(ValloxSensor):
         super_native_value = super().native_value
 
         if not isinstance(super_native_value, (int, float)):
-            _LOGGER.debug("Value has unexpected type: %s", type(super_native_value))
             return None
 
         # Since only a delta of days is received from the device, fix the time so the timestamp does
@@ -104,6 +105,20 @@ class ValloxFilterRemainingSensor(ValloxSensor):
         now = datetime.utcnow().replace(hour=13, minute=0, second=0, microsecond=0)
 
         return (now + days_remaining_delta).isoformat()
+
+
+class ValloxCellStateSensor(ValloxSensor):
+    """Child class for cell state reporting."""
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the value reported by the sensor."""
+        super_native_value = super().native_value
+
+        if not isinstance(super_native_value, int):
+            return None
+
+        return VALLOX_CELL_STATE_TO_STR.get(super_native_value)
 
 
 @dataclass
@@ -136,6 +151,13 @@ SENSORS: tuple[ValloxSensorEntityDescription, ...] = (
         metric_key="A_CYC_REMAINING_TIME_FOR_FILTER",
         device_class=DEVICE_CLASS_TIMESTAMP,
         sensor_type=ValloxFilterRemainingSensor,
+    ),
+    ValloxSensorEntityDescription(
+        key="cell_state",
+        name="Cell State",
+        icon="mdi:swap-horizontal-bold",
+        metric_key="A_CYC_CELL_STATE",
+        sensor_type=ValloxCellStateSensor,
     ),
     ValloxSensorEntityDescription(
         key="extract_air",

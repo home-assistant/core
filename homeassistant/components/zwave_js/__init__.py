@@ -18,7 +18,6 @@ from zwave_js_server.model.value import Value, ValueNotification
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_CONFIG_ENTRY_ID,
     ATTR_DEVICE_ID,
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
@@ -127,7 +126,6 @@ def register_node_in_dev_reg(
     ):
         remove_device_func(device)
     params = {
-        ATTR_CONFIG_ENTRY_ID: entry.entry_id,
         ATTR_IDENTIFIERS: {device_id},
         ATTR_SW_VERSION: node.firmware_version,
         ATTR_NAME: node.name
@@ -138,7 +136,7 @@ def register_node_in_dev_reg(
     }
     if node.location:
         params[ATTR_SUGGESTED_AREA] = node.location
-    device = dev_reg.async_get_or_create(**params)
+    device = dev_reg.async_get_or_create(config_entry_id=entry.entry_id, **params)
 
     async_dispatcher_send(hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
 

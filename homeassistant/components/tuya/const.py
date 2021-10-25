@@ -84,6 +84,7 @@ DEVICE_CLASS_TUYA_LIGHT_MODE = "tuya__light_mode"
 DEVICE_CLASS_TUYA_MOTION_SENSITIVITY = "tuya__motion_sensitivity"
 DEVICE_CLASS_TUYA_RECORD_MODE = "tuya__record_mode"
 DEVICE_CLASS_TUYA_RELAY_STATUS = "tuya__relay_status"
+DEVICE_CLASS_TUYA_STATUS = "tuya__status"
 
 TUYA_DISCOVERY_NEW = "tuya_discovery_new"
 TUYA_HA_SIGNAL_UPDATE_ENTITY = "tuya_entry_update"
@@ -285,6 +286,8 @@ class DPCode(str, Enum):
     SWITCH_USB6 = "switch_usb6"  # USB 6
     SWITCH_VERTICAL = "switch_vertical"  # Vertical swing flap switch
     SWITCH_VOICE = "switch_voice"  # Voice switch
+    TEMP_BOILING_C = "temp_boiling_c"
+    TEMP_BOILING_F = "temp_boiling_f"
     TEMP_CONTROLLER = "temp_controller"
     TEMP_CURRENT = "temp_current"  # Current temperature in °C
     TEMP_CURRENT_F = "temp_current_f"  # Current temperature in °F
@@ -295,6 +298,7 @@ class DPCode(str, Enum):
     TEMP_VALUE_V2 = "temp_value_v2"
     TEMPER_ALARM = "temper_alarm"  # Tamper alarm
     UV = "uv"  # UV sterilization
+    VA_BATTERY = "va_battery"
     VA_HUMIDITY = "va_humidity"
     VA_TEMPERATURE = "va_temperature"
     VOC_STATE = "voc_state"
