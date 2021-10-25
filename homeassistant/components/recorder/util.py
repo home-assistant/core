@@ -46,14 +46,14 @@ RETRIES = 3
 QUERY_RETRY_WAIT = 0.1
 SQLITE3_POSTFIXES = ["", "-wal", "-shm"]
 
-VERSION_STRATEGIES = [AwesomeVersionStrategy.CALVER, AwesomeVersionStrategy.SEMVER]
-MIN_VERSION_MARIA_DB = AwesomeVersion("10.3.0", VERSION_STRATEGIES)
-MIN_VERSION_MARIA_DB_ROWNUM = AwesomeVersion("10.2.0", VERSION_STRATEGIES)
-MIN_VERSION_MYSQL = AwesomeVersion("8.0.0", VERSION_STRATEGIES)
-MIN_VERSION_MYSQL_ROWNUM = AwesomeVersion("5.8.0", VERSION_STRATEGIES)
+VERSION_STRATEGY = [AwesomeVersionStrategy.SIMPLEVER]
+MIN_VERSION_MARIA_DB = AwesomeVersion("10.3.0", VERSION_STRATEGY)
+MIN_VERSION_MARIA_DB_ROWNUM = AwesomeVersion("10.2.0", VERSION_STRATEGY)
+MIN_VERSION_MYSQL = AwesomeVersion("8.0.0", VERSION_STRATEGY)
+MIN_VERSION_MYSQL_ROWNUM = AwesomeVersion("5.8.0", VERSION_STRATEGY)
 MIN_VERSION_PGSQL = AwesomeVersion(120000, AwesomeVersionStrategy.BUILDVER)
-MIN_VERSION_SQLITE = AwesomeVersion("3.32.1", VERSION_STRATEGIES)
-MIN_VERSION_SQLITE_ROWNUM = AwesomeVersion("3.25.0", VERSION_STRATEGIES)
+MIN_VERSION_SQLITE = AwesomeVersion("3.32.1", VERSION_STRATEGY)
+MIN_VERSION_SQLITE_ROWNUM = AwesomeVersion("3.25.0", VERSION_STRATEGY)
 
 # This is the maximum time after the recorder ends the session
 # before we no longer consider startup to be a "restart" and we
@@ -316,12 +316,10 @@ def _warn_unsupported_version(server_version, dialect, minimum_version):
 
 def _extract_version_from_server_response(server_response):
     """Attempt to extract version from server response."""
-    match = RE_SERVER_VERSION.match(server_response)
-    if not match:
-        return None
-
     try:
-        return AwesomeVersion(match.group(), VERSION_STRATEGIES)
+        return AwesomeVersion(
+            server_response, ensure_strategy=VERSION_STRATEGY, find_first_match=True
+        )
     except AwesomeVersionException:
         return None
 
