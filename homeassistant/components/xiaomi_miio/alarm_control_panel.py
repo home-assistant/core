@@ -14,6 +14,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
 )
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import CONF_GATEWAY, DOMAIN
 
@@ -53,6 +54,9 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
         self._icon = "mdi:shield-home"
         self._available = None
         self._state = None
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._gateway_device_id)}
+        )
 
     @property
     def unique_id(self):
@@ -63,13 +67,6 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
     def device_id(self):
         """Return the device id of the gateway."""
         return self._gateway_device_id
-
-    @property
-    def device_info(self):
-        """Return the device info of the gateway."""
-        return {
-            "identifiers": {(DOMAIN, self._gateway_device_id)},
-        }
 
     @property
     def name(self):

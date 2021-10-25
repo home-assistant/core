@@ -8,7 +8,6 @@ import logging
 from pywemo.exceptions import ActionException
 
 from homeassistant.core import callback
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .wemo_device import DeviceCoordinator
@@ -29,7 +28,7 @@ class WemoEntity(CoordinatorEntity):
         """Initialize the WeMo device."""
         super().__init__(coordinator)
         self.wemo = coordinator.wemo
-        self._device_info = coordinator.device_info
+        self._attr_device_info = coordinator.device_info
         self._available = True
 
     @property
@@ -62,11 +61,6 @@ class WemoEntity(CoordinatorEntity):
         if suffix := self.unique_id_suffix:
             return f"{self.wemo.serialnumber}_{suffix}"
         return self.wemo.serialnumber
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return self._device_info
 
     @callback
     def _handle_coordinator_update(self) -> None:

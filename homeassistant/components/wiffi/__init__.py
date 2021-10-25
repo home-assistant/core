@@ -14,7 +14,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.dt import utcnow
 
@@ -141,16 +141,14 @@ class WiffiEntity(Entity):
     def __init__(self, device, metric, options):
         """Initialize the base elements of a wiffi entity."""
         self._id = generate_unique_id(device, metric)
-        self._device_info = {
-            "connections": {
-                (device_registry.CONNECTION_NETWORK_MAC, device.mac_address)
-            },
-            "identifiers": {(DOMAIN, device.mac_address)},
-            "manufacturer": "stall.biz",
-            "name": f"{device.moduletype} {device.mac_address}",
-            "model": device.moduletype,
-            "sw_version": device.sw_version,
-        }
+        self._attr_device_info = DeviceInfo(
+            connections={(device_registry.CONNECTION_NETWORK_MAC, device.mac_address)},
+            identifiers={(DOMAIN, device.mac_address)},
+            manufacturer="stall.biz",
+            model=device.moduletype,
+            name=f"{device.moduletype} {device.mac_address}",
+            sw_version=device.sw_version,
+        )
         self._name = metric.description
         self._expiration_date = None
         self._value = None
@@ -175,11 +173,6 @@ class WiffiEntity(Entity):
     def should_poll(self):
         """Disable polling because data driven ."""
         return False
-
-    @property
-    def device_info(self):
-        """Return wiffi device info which is shared between all entities of a device."""
-        return self._device_info
 
     @property
     def unique_id(self):

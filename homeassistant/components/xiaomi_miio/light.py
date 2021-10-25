@@ -26,6 +26,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util import color, dt
 
 from .const import (
@@ -937,18 +938,12 @@ class XiaomiGatewayLight(LightEntity):
         self._brightness_pct = 100
         self._rgb = (255, 255, 255)
         self._hs = (0, 0)
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, gateway_device_id)})
 
     @property
     def unique_id(self):
         """Return an unique ID."""
         return self._unique_id
-
-    @property
-    def device_info(self):
-        """Return the device info of the gateway."""
-        return {
-            "identifiers": {(DOMAIN, self._gateway_device_id)},
-        }
 
     @property
     def name(self):

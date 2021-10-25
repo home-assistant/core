@@ -671,13 +671,13 @@ class YeelightEntity(Entity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, self._unique_id)},
-            "name": self._device.name,
-            "manufacturer": "Yeelight",
-            "model": self._device.model,
-            "sw_version": self._device.fw_version,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._unique_id)},
+            manufacturer="Yeelight",
+            model=self._device.model,
+            name=self._device.name,
+            sw_version=self._device.fw_version,
+        )
 
     @property
     def available(self) -> bool:

@@ -16,6 +16,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.color as color_util
@@ -88,6 +89,11 @@ class ZerprocLight(LightEntity):
         self._hs_color = None
         self._brightness = None
         self._available = True
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="Zerproc",
+            name=self.name,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -115,15 +121,6 @@ class ZerprocLight(LightEntity):
     def unique_id(self):
         """Return the ID of this light."""
         return self._light.address
-
-    @property
-    def device_info(self):
-        """Device info for this light."""
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Zerproc",
-        }
 
     @property
     def icon(self) -> str | None:
