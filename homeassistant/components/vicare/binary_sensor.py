@@ -19,7 +19,14 @@ from homeassistant.components.binary_sensor import (
 )
 
 from . import ViCareRequiredKeysMixin
-from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG, VICARE_NAME
+from .const import (
+    DOMAIN,
+    VICARE_API,
+    VICARE_DEVICE_CONFIG,
+    VICARE_NAME,
+    VICARE_UNIT_TO_DEVICE_CLASS,
+    VICARE_UNIT_TO_UNIT_OF_MEASUREMENT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,6 +48,7 @@ CIRCUIT_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
         name="Circulation pump active",
         device_class=DEVICE_CLASS_POWER,
         value_getter=lambda api: api.getCirculationPumpActive(),
+        unit_getter=lambda api: None,
     ),
 )
 
@@ -50,6 +58,7 @@ BURNER_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
         name="Burner active",
         device_class=DEVICE_CLASS_POWER,
         value_getter=lambda api: api.getActive(),
+        unit_getter=lambda api: None,
     ),
 )
 
@@ -59,6 +68,7 @@ COMPRESSOR_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
         name="Compressor active",
         device_class=DEVICE_CLASS_POWER,
         value_getter=lambda api: api.getActive(),
+        unit_getter=lambda api: None,
     ),
 )
 
@@ -67,6 +77,15 @@ def _build_entity(name, vicare_api, device_config, sensor):
     """Create a ViCare binary sensor entity."""
     try:
         sensor.value_getter(vicare_api)
+
+        if callable(sensor.unit_getter):
+            with suppress(PyViCareNotSupportedFeatureError):
+                vicare_unit = sensor.unit_getter(vicare_api)
+                sensor.device_class = VICARE_UNIT_TO_DEVICE_CLASS.get(vicare_unit)
+                sensor.native_unit_of_measurement = (
+                    VICARE_UNIT_TO_UNIT_OF_MEASUREMENT.get(vicare_unit)
+                )
+
         _LOGGER.debug("Found entity %s", name)
     except PyViCareNotSupportedFeatureError:
         _LOGGER.info("Feature not supported %s", name)
