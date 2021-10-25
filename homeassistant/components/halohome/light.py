@@ -49,7 +49,7 @@ class HaloLight(LightEntity):
 
         if brightness is not None:
             await self._device.set_brightness(brightness)
-            self._brightness = brightness
+            self._attr_brightness = brightness
             self._attr_is_on = True
 
         if color_temp is not None:
@@ -61,5 +61,5 @@ class HaloLight(LightEntity):
     async def async_turn_off(self, **kwargs):
         """Turn off a HALO Home light."""
         await self._device.set_brightness(0)
-        self._brightness = 0
+        self._attr_brightness = 0
         self._attr_is_on = False
