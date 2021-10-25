@@ -38,6 +38,7 @@ from homeassistant.helpers.typing import StateType
 from . import HomeAssistantTuyaData
 from .base import EnumTypeData, IntegerTypeData, TuyaEntity
 from .const import (
+    DEVICE_CLASS_TUYA_STATUS,
     DEVICE_CLASS_UNITS,
     DOMAIN,
     TUYA_DISCOVERY_NEW,
@@ -82,6 +83,27 @@ BATTERY_SENSORS: tuple[SensorEntityDescription, ...] = (
 # end up being a sensor.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
+    # Smart Kettle
+    # https://developer.tuya.com/en/docs/iot/fbh?id=K9gf484m21yq7
+    "bh": (
+        SensorEntityDescription(
+            key=DPCode.TEMP_CURRENT,
+            name="Current Temperature",
+            device_class=DEVICE_CLASS_TEMPERATURE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.TEMP_CURRENT_F,
+            name="Current Temperature",
+            device_class=DEVICE_CLASS_TEMPERATURE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.STATUS,
+            name="Status",
+            device_class=DEVICE_CLASS_TUYA_STATUS,
+        ),
+    ),
     # CO2 Detector
     # https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
     "co2bj": (
@@ -515,6 +537,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         # match Home Assistants requirements.
         if (
             self.device_class is not None
+            and not self.device_class.startswith(DOMAIN)
             and description.native_unit_of_measurement is None
         ):
             # We cannot have a device class, if the UOM isn't set or the
