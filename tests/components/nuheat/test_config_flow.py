@@ -1,11 +1,12 @@
 """Test the NuHeat config flow."""
+from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
 import requests
 
 from homeassistant import config_entries
 from homeassistant.components.nuheat.const import CONF_SERIAL_NUMBER, DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_INTERNAL_SERVER_ERROR
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .mocks import _get_mock_thermostat_run
 
@@ -98,7 +99,7 @@ async def test_form_invalid_thermostat(hass):
     )
 
     response_mock = MagicMock()
-    type(response_mock).status_code = HTTP_INTERNAL_SERVER_ERROR
+    type(response_mock).status_code = HTTPStatus.INTERNAL_SERVER_ERROR
 
     with patch(
         "homeassistant.components.nuheat.config_flow.nuheat.NuHeat.authenticate",

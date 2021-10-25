@@ -55,7 +55,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.6.1
 
 # homeassistant.components.vicare
-PyViCare==1.0.0
+PyViCare==2.13.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.13.4
@@ -207,7 +207,7 @@ aiolifx_effects==0.2.2
 aiolip==1.1.6
 
 # homeassistant.components.lookin
-aiolookin==0.0.2
+aiolookin==0.0.3
 
 # homeassistant.components.lyric
 aiolyric==1.0.7
@@ -333,7 +333,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.22.9
+async-upnp-client==0.22.10
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -1598,7 +1598,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2021.8.1
+pylitterbot==2021.10.1
 
 # homeassistant.components.loopenergy
 pyloopenergy==0.2.1
@@ -1964,7 +1964,7 @@ pytouchline==0.7
 pytraccar==0.9.0
 
 # homeassistant.components.tradfri
-pytradfri[async]==7.1.0
+pytradfri[async]==7.1.1
 
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
@@ -2290,7 +2290,7 @@ temperusb==1.5.3
 # tensorflow==2.3.0
 
 # homeassistant.components.powerwall
-tesla-powerwall==0.3.11
+tesla-powerwall==0.3.12
 
 # homeassistant.components.tensorflow
 # tf-models-official==2.3.0
@@ -2323,7 +2323,7 @@ tp-connected==0.0.4
 transmissionrpc==0.11
 
 # homeassistant.components.tuya
-tuya-iot-py-sdk==0.5.0
+tuya-iot-py-sdk==0.6.3
 
 # homeassistant.components.twentemilieu
 twentemilieu==0.3.0
@@ -2456,7 +2456,7 @@ yeelight==0.7.8
 yeelightsunflower==0.0.10
 
 # homeassistant.components.youless
-youless-api==0.14
+youless-api==0.15
 
 # homeassistant.components.media_extractor
 youtube_dl==2021.06.06
@@ -2465,7 +2465,7 @@ youtube_dl==2021.06.06
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.36.8
+zeroconf==0.36.9
 
 # homeassistant.components.zha
 zha-quirks==0.0.62

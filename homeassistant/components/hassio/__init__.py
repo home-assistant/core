@@ -17,6 +17,7 @@ from homeassistant.components.homeassistant import (
 import homeassistant.config as conf_util
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_MANUFACTURER,
     ATTR_NAME,
     ATTR_SERVICE,
     EVENT_CORE_CONFIG_UPDATE,
@@ -27,6 +28,7 @@ from homeassistant.core import DOMAIN as HASS_DOMAIN, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, recorder
 from homeassistant.helpers.device_registry import DeviceRegistry, async_get_registry
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.loader import bind_hass
@@ -653,17 +655,16 @@ def async_register_addons_in_dev_reg(
 ) -> None:
     """Register addons in the device registry."""
     for addon in addons:
-        params = {
-            "config_entry_id": entry_id,
-            "identifiers": {(DOMAIN, addon[ATTR_SLUG])},
-            "model": SupervisorEntityModel.ADDON,
-            "sw_version": addon[ATTR_VERSION],
-            "name": addon[ATTR_NAME],
-            "entry_type": ATTR_SERVICE,
-        }
+        params = DeviceInfo(
+            identifiers={(DOMAIN, addon[ATTR_SLUG])},
+            model=SupervisorEntityModel.ADDON,
+            sw_version=addon[ATTR_VERSION],
+            name=addon[ATTR_NAME],
+            entry_type=ATTR_SERVICE,
+        )
         if manufacturer := addon.get(ATTR_REPOSITORY) or addon.get(ATTR_URL):
-            params["manufacturer"] = manufacturer
-        dev_reg.async_get_or_create(**params)
+            params[ATTR_MANUFACTURER] = manufacturer
+        dev_reg.async_get_or_create(config_entry_id=entry_id, **params)
 
 
 @callback
@@ -671,16 +672,15 @@ def async_register_os_in_dev_reg(
     entry_id: str, dev_reg: DeviceRegistry, os_dict: dict[str, Any]
 ) -> None:
     """Register OS in the device registry."""
-    params = {
-        "config_entry_id": entry_id,
-        "identifiers": {(DOMAIN, "OS")},
-        "manufacturer": "Home Assistant",
-        "model": SupervisorEntityModel.OS,
-        "sw_version": os_dict[ATTR_VERSION],
-        "name": "Home Assistant Operating System",
-        "entry_type": ATTR_SERVICE,
-    }
-    dev_reg.async_get_or_create(**params)
+    params = DeviceInfo(
+        identifiers={(DOMAIN, "OS")},
+        manufacturer="Home Assistant",
+        model=SupervisorEntityModel.OS,
+        sw_version=os_dict[ATTR_VERSION],
+        name="Home Assistant Operating System",
+        entry_type=ATTR_SERVICE,
+    )
+    dev_reg.async_get_or_create(config_entry_id=entry_id, **params)
 
 
 @callback

@@ -35,6 +35,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
     }
 ).extend(MQTT_AVAILABILITY_SCHEMA.schema)
 
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA)
+
 
 async def async_setup_platform(
     hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
@@ -49,7 +51,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     setup = functools.partial(
         _async_setup_entity, async_add_entities, config_entry=config_entry
     )
-    await async_setup_entry_helper(hass, scene.DOMAIN, setup, PLATFORM_SCHEMA)
+    await async_setup_entry_helper(hass, scene.DOMAIN, setup, DISCOVERY_SCHEMA)
 
 
 async def _async_setup_entity(
@@ -85,7 +87,7 @@ class MqttScene(
 
     async def discovery_update(self, discovery_payload):
         """Handle updated discovery message."""
-        config = PLATFORM_SCHEMA(discovery_payload)
+        config = DISCOVERY_SCHEMA(discovery_payload)
         self._setup_from_config(config)
         await self.availability_discovery_update(config)
         self.async_write_ha_state()

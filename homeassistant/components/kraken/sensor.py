@@ -9,6 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -112,12 +113,12 @@ class KrakenSensor(CoordinatorEntity[Optional[KrakenResponse]], SensorEntity):
         self._received_data_at_least_once = False
         self._available = True
 
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, f"{source_asset}_{self._target_asset}")},
-            "name": self._device_name,
-            "manufacturer": "Kraken.com",
-            "entry_type": "service",
-        }
+        self._attr_device_info = DeviceInfo(
+            entry_type="service",
+            identifiers={(DOMAIN, f"{source_asset}_{self._target_asset}")},
+            manufacturer="Kraken.com",
+            name=self._device_name,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""

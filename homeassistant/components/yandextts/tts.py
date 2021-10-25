@@ -1,5 +1,6 @@
 """Support for the yandex speechkit tts  service."""
 import asyncio
+from http import HTTPStatus
 import logging
 
 import aiohttp
@@ -7,7 +8,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
-from homeassistant.const import CONF_API_KEY, HTTP_OK
+from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -133,7 +134,7 @@ class YandexSpeechKitProvider(Provider):
 
                 request = await websession.get(YANDEX_API_URL, params=url_param)
 
-                if request.status != HTTP_OK:
+                if request.status != HTTPStatus.OK:
                     _LOGGER.error(
                         "Error %d on load URL %s", request.status, request.url
                     )

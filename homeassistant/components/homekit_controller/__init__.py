@@ -152,9 +152,9 @@ class HomeKitEntity(Entity):
 
         device_info = DeviceInfo(
             identifiers={(DOMAIN, "serial-number", accessory_serial)},
-            name=info.value(CharacteristicsTypes.NAME),
             manufacturer=info.value(CharacteristicsTypes.MANUFACTURER, ""),
             model=info.value(CharacteristicsTypes.MODEL, ""),
+            name=info.value(CharacteristicsTypes.NAME),
             sw_version=info.value(CharacteristicsTypes.FIRMWARE_REVISION, ""),
         )
 

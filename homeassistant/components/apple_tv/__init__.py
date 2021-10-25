@@ -10,6 +10,13 @@ from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
+    ATTR_CONNECTIONS,
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SUGGESTED_AREA,
+    ATTR_SW_VERSION,
     CONF_ADDRESS,
     CONF_NAME,
     CONF_PROTOCOL,
@@ -322,25 +329,27 @@ class AppleTVManager:
 
     async def _async_setup_device_registry(self):
         attrs = {
-            "identifiers": {(DOMAIN, self.config_entry.unique_id)},
-            "manufacturer": "Apple",
-            "name": self.config_entry.data[CONF_NAME],
+            ATTR_IDENTIFIERS: {(DOMAIN, self.config_entry.unique_id)},
+            ATTR_MANUFACTURER: "Apple",
+            ATTR_NAME: self.config_entry.data[CONF_NAME],
         }
 
-        area = attrs["name"]
+        area = attrs[ATTR_NAME]
         name_trailer = f" {DEFAULT_NAME}"
         if area.endswith(name_trailer):
             area = area[: -len(name_trailer)]
-        attrs["suggested_area"] = area
+        attrs[ATTR_SUGGESTED_AREA] = area
 
         if self.atv:
             dev_info = self.atv.device_info
 
-            attrs["model"] = DEFAULT_NAME + " " + dev_info.model.name.replace("Gen", "")
-            attrs["sw_version"] = dev_info.version
+            attrs[ATTR_MODEL] = (
+                DEFAULT_NAME + " " + dev_info.model.name.replace("Gen", "")
+            )
+            attrs[ATTR_SW_VERSION] = dev_info.version
 
             if dev_info.mac:
-                attrs["connections"] = {(dr.CONNECTION_NETWORK_MAC, dev_info.mac)}
+                attrs[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, dev_info.mac)}
 
         device_registry = await dr.async_get_registry(self.hass)
         device_registry.async_get_or_create(

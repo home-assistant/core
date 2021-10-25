@@ -929,8 +929,10 @@ SERVICE_SCHEMA = vol.All(
             vol.Exclusive(CONF_SERVICE_TEMPLATE, "service name"): vol.Any(
                 service, dynamic_template
             ),
-            vol.Optional("data"): vol.All(dict, template_complex),
-            vol.Optional("data_template"): vol.All(dict, template_complex),
+            vol.Optional("data"): vol.Any(template, vol.All(dict, template_complex)),
+            vol.Optional("data_template"): vol.Any(
+                template, vol.All(dict, template_complex)
+            ),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
             vol.Optional(CONF_TARGET): vol.Any(ENTITY_SERVICE_FIELDS, dynamic_template),
         }
