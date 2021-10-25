@@ -23,6 +23,7 @@ TEST_NAME = "My Inverter"
 GOOD_TEST_HOST = "123.123.123.123"
 TEST_DATA = {CONF_HOST: GOOD_TEST_HOST, CONF_NAME: TEST_NAME}
 INVERTER_DATA = {CONF_MAX_OUTPUT: 3.8, CONF_DC_STRINGS: 1, CONF_CAPABILITY: 0x107}
+INVERTER_BAD_DATA = {CONF_MAX_OUTPUT: 3.8, CONF_DC_STRINGS: 1, CONF_CAPABILITY: 0x147}
 
 
 async def test_form(hass: HomeAssistant):
@@ -42,6 +43,36 @@ async def test_form(hass: HomeAssistant):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "inverter"
+
+
+async def test_inverter(hass: HomeAssistant):
+    """Test inverter config."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.enasolar.config_flow.pyenasolar.EnaSolar.interogate_inverter",
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=TEST_DATA,
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "inverter"
+
+    with patch("homeassistant.components.enasolar.config_flow.pyenasolar.EnaSolar"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=INVERTER_BAD_DATA,
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "inverter"
+        assert result["errors"] == {"capability": "capability_invalid"}
 
 
 async def test_user(hass: HomeAssistant):
@@ -236,7 +267,7 @@ async def test_options_flow(hass):
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "my.inverter.fqdn", CONF_NAME: "My Inverter"},
-        options={},
+        options={CONF_SUN_UP: "06:00", CONF_SUN_DOWN: "22:00"},
         entry_id=1,
         version=1,
     )
@@ -259,3 +290,65 @@ async def test_options_flow(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {CONF_SUN_UP: "06:00", CONF_SUN_DOWN: "22:00"}
+
+
+async def test_options_bad_times_flow(hass):
+    """Test config flow options."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "my.inverter.fqdn", CONF_NAME: "My Inverter"},
+        options={},
+        entry_id=1,
+        version=1,
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context={"show_advanced_options": False}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_SUN_UP: "37:00", CONF_SUN_DOWN: "XX:00"},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {"sun_down": "time_invalid", "sun_up": "time_invalid"}
+
+
+async def test_options_bad_range_flow(hass):
+    """Test config flow options."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "my.inverter.fqdn", CONF_NAME: "My Inverter"},
+        options={},
+        entry_id=1,
+        version=1,
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context={"show_advanced_options": False}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_SUN_UP: "13:00", CONF_SUN_DOWN: "10:00"},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {"sun_down": "time_range"}
