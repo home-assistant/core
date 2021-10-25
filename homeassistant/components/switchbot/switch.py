@@ -151,6 +151,8 @@ class SwitchBotBotEntity(SwitchbotEntity, SwitchEntity, RestoreEntity):
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
+        if not self.data["data"]["switchMode"]:
+            return
         return self.data["data"]["isOn"]
 
     @property
