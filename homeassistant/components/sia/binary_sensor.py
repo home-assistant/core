@@ -141,7 +141,7 @@ class SIABinarySensorRegular(SIABinarySensorBase):
     ) -> None:
         """Initialize a binary sensor."""
         super().__init__(entry, account_data, zone, device_class, enabled)
-        self.consequences = CODE_CONSEQUENCES.get(device_class)
+        self.consequences = CODE_CONSEQUENCES[device_class]
 
     def update_state(self, sia_event: SIAEvent) -> None:
         """Update the state of the binary sensor."""
