@@ -59,13 +59,10 @@ def async_load_screenlogic_services(hass: HomeAssistant):
                 color_num,
             )
             try:
-                async with coordinator.api_lock:
-                    if not await hass.async_add_executor_job(
-                        coordinator.gateway.set_color_lights, color_num
-                    ):
-                        raise HomeAssistantError(
-                            f"Failed to call service '{SERVICE_SET_COLOR_MODE}'"
-                        )
+                if not await coordinator.gateway.async_set_color_lights(color_num):
+                    raise HomeAssistantError(
+                        f"Failed to call service '{SERVICE_SET_COLOR_MODE}'"
+                    )
             except ScreenLogicError as error:
                 raise HomeAssistantError(error) from error
 
