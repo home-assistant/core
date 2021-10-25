@@ -7,7 +7,6 @@ import logging
 from typing import Any
 
 from vallox_websocket_api import PROFILE as VALLOX_PROFILE, Vallox
-from vallox_websocket_api.constants import vlxDevConstants
 from vallox_websocket_api.exceptions import ValloxApiException
 import voluptuous as vol
 
@@ -98,20 +97,11 @@ class ValloxState:
 
     def get_metric(self, metric_key: str) -> StateType:
         """Return cached state value."""
-        _LOGGER.debug("Fetching metric key: %s", metric_key)
-
-        if metric_key not in vlxDevConstants.__dict__:
-            _LOGGER.debug("Metric key invalid: %s", metric_key)
 
         if (value := self.metric_cache.get(metric_key)) is None:
             return None
 
         if not isinstance(value, (str, int, float)):
-            _LOGGER.debug(
-                "Return value of metric %s has unexpected type %s",
-                metric_key,
-                type(value),
-            )
             return None
 
         return value
@@ -126,8 +116,8 @@ class ValloxDataUpdateCoordinator(DataUpdateCoordinator):
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the client and boot the platforms."""
     conf = config[DOMAIN]
-    host = conf.get(CONF_HOST)
-    name = conf.get(CONF_NAME)
+    host = conf[CONF_HOST]
+    name = conf[CONF_NAME]
 
     client = Vallox(host)
 
