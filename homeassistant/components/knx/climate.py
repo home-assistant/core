@@ -17,7 +17,12 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    CONF_ENTITY_CATEGORY,
+    CONF_NAME,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -176,6 +181,7 @@ class KNXClimate(KnxEntity, ClimateEntity):
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of a KNX climate device."""
         super().__init__(_create_climate(xknx, config))
+        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE
         if self.preset_modes:
             self._attr_supported_features |= SUPPORT_PRESET_MODE
