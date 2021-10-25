@@ -107,6 +107,9 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Eight Sleep component."""
 
+    if DOMAIN not in config:
+        return True
+
     conf = config[DOMAIN]
     user = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
