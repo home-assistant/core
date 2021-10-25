@@ -20,6 +20,7 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_STATE,
     ATTR_UNIT_OF_MEASUREMENT,
+    ATTR_VIA_DEVICE,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
@@ -224,7 +225,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_MANUFACTURER: MANUFACTURER,
                 ATTR_MODEL: "DS2423",
                 ATTR_NAME: "1D.111111111111",
-                "via_device": (DOMAIN, "1F.111111111111"),
+                ATTR_VIA_DEVICE: (DOMAIN, "1F.111111111111"),
             },
         ],
         "branches": {
