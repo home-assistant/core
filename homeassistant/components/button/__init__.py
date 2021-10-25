@@ -13,8 +13,9 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
@@ -62,7 +63,7 @@ class ButtonEntityDescription(EntityDescription):
     """A class that describes button entities."""
 
 
-class ButtonEntity(Entity):
+class ButtonEntity(RestoreEntity):
     """Representation of a Button entity."""
 
     entity_description: ButtonEntityDescription
@@ -93,6 +94,12 @@ class ButtonEntity(Entity):
         self.__last_pressed = dt_util.utcnow()
         self.async_write_ha_state()
         await self.async_press()
+
+    async def async_added_to_hass(self) -> None:
+        """Call when the button is added to hass."""
+        state = await self.async_get_last_state()
+        if state is not None and state.state is not None:
+            self.__last_pressed = dt_util.parse_datetime(state.state)
 
     def press(self) -> None:
         """Press the button."""
