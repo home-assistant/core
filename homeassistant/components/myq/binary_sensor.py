@@ -1,9 +1,9 @@
 """Support for MyQ gateways."""
-from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     BinarySensorEntity,
 )
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 
 from . import MyQEntity
 from .const import DOMAIN, MYQ_COORDINATOR, MYQ_GATEWAY
