@@ -315,8 +315,8 @@ class EnergyCostSensor(SensorEntity):
                 energy_unit = None
 
         elif self._adapter.source_type == "gas":
-            GAS_UNITS = [VOLUME_CUBIC_METERS, ENERGY_KILO_WATT_HOUR, ENERGY_WATT_HOUR]
-            if energy_unit not in GAS_UNITS:
+            gas_units = [VOLUME_CUBIC_METERS, ENERGY_KILO_WATT_HOUR, ENERGY_WATT_HOUR]
+            if energy_unit not in gas_units:
                 energy_unit = None
             if energy_unit == ENERGY_WATT_HOUR:
                 energy_price /= 1000
