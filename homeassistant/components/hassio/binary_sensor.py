@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_RUNNING,
     DEVICE_CLASS_UPDATE,
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -32,6 +33,7 @@ ENTITY_DESCRIPTIONS = (
         name="Update Available",
     ),
     HassioBinarySensorEntityDescription(
+        device_class=DEVICE_CLASS_RUNNING,
         entity_registry_enabled_default=False,
         key=ATTR_STATE,
         name="Running",
