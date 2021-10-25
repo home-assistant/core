@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 import logging
-
-# import socket
 from typing import Any
 
 from oocsi import OOCSI
@@ -13,27 +11,19 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
-
-# from homeassistant.core import Config, HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
-# import homeassistant.helpers.config_validation as cv
-
-
 "Import everything that is necessary"
 
-# RANDOMISED = petname
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = "switch"
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 4444
 
-
-# TODO adjust the data schema to the data that you need
 USER_CONFIG_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): str,
@@ -71,8 +61,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         return self._async_show_form_popup()
 
-    #    return self.async_show_form(step_id="user", data_schema=USER_CONFIG_SCHEMA, errors=errors)
-
     def _async_show_form_popup(
         self, errors: dict[str, str] | None = None
     ) -> FlowResult:
@@ -81,15 +69,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _connect_to_oocsi(self, user_input):
+        """Attempt oocsi connection details"""
         self.name = user_input[CONF_NAME]
         self.host = user_input[CONF_HOST]
         self.port = user_input[CONF_PORT]
-        oocsiconnect = OOCSI(self.name, self.host, self.port)
+        oocsiconnect = OOCSI(self.name, self.host, self.port, None, _LOGGER.info, 3)
         oocsiconnect.stop()
-
-    # async def async_unload_entry(self) -> bool:
-    #     if self._connect_to_oocsi = True
-    #     await oocsiconnect.stop()
 
 
 class CannotConnect(HomeAssistantError):

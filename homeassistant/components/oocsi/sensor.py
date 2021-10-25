@@ -1,43 +1,51 @@
 """Platform for sensor integration."""
 from __future__ import annotations
-from typing import Any
+
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import TEMP_CELSIUS
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.core import callback
-from .const import DOMAIN
+
 from . import async_create_new_platform_entity
+from .const import DOMAIN
 
 
-async def async_setup_entry(hass, ConfigEntry, async_add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass, config_entry, async_add_entities, discovery_info=None
+):
     """Set up the Oocsi sensor platform."""
 
-    api = hass.data[DOMAIN][ConfigEntry.entry_id]
+    api = hass.data[DOMAIN][config_entry.entry_id]
     platform = "sensor"
     await async_create_new_platform_entity(
-        hass, ConfigEntry, api, BasicSensor, async_add_entities, platform
+        hass, config_entry, api, BasicSensor, async_add_entities, platform
     )
 
 
 class BasicSensor(SensorEntity):
-    def __init__(self, hass, entity_name, api, entityProperty):
+    """Basic oocsi sensor"""
+
+    def __init__(self, hass, entity_name, api, entityProperty, device):
         self._hass = hass
         self._oocsi = api
         self._name = entity_name
-        self._device_class = entityProperty["type"]
-        self._attr_unique_id = entityProperty["channelName"]
-        self._oocsichannel = entityProperty["channelName"]
-        self._nativeUnit = entityProperty["unit"]
-        self._channelState = entityProperty["state"]
+        self._device_class = entityProperty["sensor_type"]
+        self._attr_unique_id = entityProperty["channel_name"]
+        self._oocsichannel = entityProperty["channel_name"]
+        self._native_unit = entityProperty["unit"]
+        self._channel_value = entityProperty["value"]
+        self._attr_device_info = {
+            "name": entity_name,
+            "manufacturer": entityProperty["creator"],
+            "via_device_id": device,
+        }
 
     async def async_added_to_hass(self) -> None:
         @callback
-        def channelUpdateEvent(sender, recipient, event):
-            """executeOocsi state change."""
-            self._channelState = event["state"]
+        def channel_update_event(sender, recipient, event):
+            """execute Oocsi state change."""
+            self._channel_value = event["value"]
             self.async_write_ha_state()
 
-        self._oocsi.subscribe(self._oocsichannel, channelUpdateEvent)
+        self._oocsi.subscribe(self._oocsichannel, channel_update_event)
 
     @property
     def device_class(self) -> str:
@@ -47,7 +55,7 @@ class BasicSensor(SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
-        return self._nativeUnit
+        return self._native_unit
 
     @property
     def device_info(self):
@@ -62,4 +70,4 @@ class BasicSensor(SensorEntity):
     @property
     def state(self):
         """Return true if the switch is on."""
-        return self._channelState
+        return self._channel_value
