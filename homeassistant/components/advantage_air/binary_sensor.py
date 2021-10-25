@@ -67,7 +67,7 @@ class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """Return if motion is detect."""
-        return self._zone["motion"]
+        return self._zone["motion"] == 20
 
 
 class AdvantageAirZoneMyZone(AdvantageAirEntity, BinarySensorEntity):
