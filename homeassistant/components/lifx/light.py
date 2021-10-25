@@ -34,11 +34,18 @@ from homeassistant.components.light import (
     LightEntity,
     preprocess_turn_on_alternatives,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_MODE,
+    ATTR_MODEL,
+    ATTR_SW_VERSION,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_point_in_utc_time
 import homeassistant.util.color as color_util
 
@@ -449,24 +456,19 @@ class LIFXLight(LightEntity):
         self.lock = asyncio.Lock()
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return information about the device."""
-        info = {
-            "identifiers": {(LIFX_DOMAIN, self.unique_id)},
-            "name": self.name,
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self.bulb.mac_addr)},
-            "manufacturer": "LIFX",
-        }
-
+        _map = aiolifx().products.product_map
+        info = DeviceInfo(
+            identifiers={(LIFX_DOMAIN, self.unique_id)},
+            connections={(dr.CONNECTION_NETWORK_MAC, self.bulb.mac_addr)},
+            manufacturer="LIFX",
+            name=self.name,
+        )
+        if model := (_map.get(self.bulb.product) or self.bulb.product) is not None:
+            info[ATTR_MODEL] = str(model)
         if (version := self.bulb.host_firmware_version) is not None:
-            info["sw_version"] = version
-
-        product_map = aiolifx().products.product_map
-
-        model = product_map.get(self.bulb.product) or self.bulb.product
-        if model is not None:
-            info["model"] = str(model)
-
+            info[ATTR_SW_VERSION] = version
         return info
 
     @property
