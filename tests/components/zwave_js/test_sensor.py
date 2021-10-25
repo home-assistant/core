@@ -166,16 +166,9 @@ async def test_node_status_sensor(hass, client, lock_id_lock_as_id150, integrati
     node = lock_id_lock_as_id150
     ent_reg = er.async_get(hass)
     entity_entry = ent_reg.async_get(NODE_STATUS_ENTITY)
-    assert entity_entry.disabled
-    assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
-    updated_entry = ent_reg.async_update_entity(
-        entity_entry.entity_id, **{"disabled_by": None}
-    )
 
-    await hass.config_entries.async_reload(integration.entry_id)
-    await hass.async_block_till_done()
-
-    assert not updated_entry.disabled
+    assert not entity_entry.disabled
+    assert entity_entry.entity_category == ENTITY_CATEGORY_DIAGNOSTIC
     assert hass.states.get(NODE_STATUS_ENTITY).state == "alive"
 
     # Test transitions work
@@ -227,16 +220,8 @@ async def test_node_status_sensor_not_ready(
     assert not node.ready
     ent_reg = er.async_get(hass)
     entity_entry = ent_reg.async_get(NODE_STATUS_ENTITY)
-    assert entity_entry.disabled
-    assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
-    updated_entry = ent_reg.async_update_entity(
-        entity_entry.entity_id, **{"disabled_by": None}
-    )
 
-    await hass.config_entries.async_reload(integration.entry_id)
-    await hass.async_block_till_done()
-
-    assert not updated_entry.disabled
+    assert not entity_entry.disabled
     assert hass.states.get(NODE_STATUS_ENTITY)
     assert hass.states.get(NODE_STATUS_ENTITY).state == "alive"
 
