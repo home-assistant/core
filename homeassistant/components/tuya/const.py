@@ -167,6 +167,7 @@ class DPCode(str, Enum):
     FAN_SPEED_PERCENT = "fan_speed_percent"  # Stepless speed
     FAR_DETECTION = "far_detection"
     FILTER_RESET = "filter_reset"  # Filter (cartridge) reset
+    FORWARD_ENERGY_TOTAL = "forward_energy_total"
     HUMIDITY_CURRENT = "humidity_current"  # Current humidity
     HUMIDITY_SET = "humidity_set"  # Humidity setting
     HUMIDITY_VALUE = "humidity_value"  # Humidity
@@ -188,8 +189,13 @@ class DPCode(str, Enum):
     PERCENT_STATE = "percent_state"
     PERCENT_STATE_2 = "percent_state_2"
     PERCENT_STATE_3 = "percent_state_3"
+    PHASE_A_ELECTRICCURRENT = "phase_a_electricCurrent"
+    PHASE_B_POWER = "phase_b_power"
+    PHASE_C_VOLTAGE = "phase_c_voltage"
     PIR = "pir"  # Motion sensor
+    PM10_VALUE = "pm10_value"
     PM25_VALUE = "pm25_value"
+    PM100_VALUE = "pm100_value"
     POWDER_SET = "powder_set"  # Powder
     POWER_GO = "power_go"
     PRESENCE_STATE = "presence_state"
@@ -243,6 +249,7 @@ class DPCode(str, Enum):
     TEMP_VALUE_V2 = "temp_value_v2"
     TEMPER_ALARM = "temper_alarm"  # Tamper alarm
     UV = "uv"  # UV sterilization
+    VA_BATTERY = "va_battery"
     VA_HUMIDITY = "va_humidity"
     VA_TEMPERATURE = "va_temperature"
     VOC_VALUE = "voc_value"
@@ -253,13 +260,6 @@ class DPCode(str, Enum):
     WATERSENSOR_STATE = "watersensor_state"
     WET = "wet"  # Humidification
     WORK_MODE = "work_mode"  # Working mode
-    PM100_VALUE = "pm100_value"
-    PM10_VALUE = "pm10_value"
-    VA_BATTERY = "va_battery"
-    FORWARD_ENERGY_TOTAL = "forward_energy_total"
-    PHASE_A_ELECTRICCURRENT = "phase_a_electricCurrent"
-    PHASE_B_POWER = "phase_b_power"
-    PHASE_C_VOLTAGE = "phase_c_voltage"
 
 
 @dataclass
