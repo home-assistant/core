@@ -354,6 +354,7 @@ ATTR_MODE: Final = "mode"
 
 ATTR_CONFIGURATION_URL: Final = "configuration_url"
 ATTR_CONNECTIONS: Final = "connections"
+ATTR_DEFAULT_NAME: Final = "default_name"
 ATTR_MANUFACTURER: Final = "manufacturer"
 ATTR_MODEL: Final = "model"
 ATTR_SUGGESTED_AREA: Final = "suggested_area"
