@@ -80,7 +80,7 @@ SSDP_TARGET = ("239.255.255.250", 1982)
 SSDP_ST = "wifi_bulb"
 DISCOVERY_ATTEMPTS = 3
 DISCOVERY_SEARCH_INTERVAL = timedelta(seconds=2)
-DISCOVERY_TIMEOUT = 2
+DISCOVERY_TIMEOUT = 8
 
 
 YEELIGHT_RGB_TRANSITION = "RGBTransition"
@@ -210,9 +210,6 @@ async def _async_initialize(
             entry,
             data={**entry.data, CONF_DETECTED_MODEL: device.capabilities["model"]},
         )
-
-    # fetch initial state
-    await device.async_update()
 
 
 @callback
@@ -500,7 +497,6 @@ class YeelightDevice:
         self._device_type = None
         self._available = True
         self._initialized = False
-        self._did_first_update = False
         self._name = None
 
     @property
@@ -568,7 +564,7 @@ class YeelightDevice:
     @property
     def is_color_flow_enabled(self) -> bool:
         """Return true / false if color flow is currently running."""
-        return int(self._color_flow) == ACTIVE_COLOR_FLOWING
+        return self._color_flow and int(self._color_flow) == ACTIVE_COLOR_FLOWING
 
     @property
     def _active_mode(self):
@@ -632,7 +628,6 @@ class YeelightDevice:
 
     async def async_update(self, force=False):
         """Update device properties and send data updated signal."""
-        self._did_first_update = True
         if not force and self._initialized and self._available:
             # No need to poll unless force, already connected
             return
@@ -649,7 +644,7 @@ class YeelightDevice:
         was_available = self._available
         self._available = data.get(KEY_CONNECTED, True)
         if update_needs_bg_power_workaround(data) or (
-            self._did_first_update and not was_available and self._available
+            not was_available and self._available
         ):
             # On reconnect the properties may be out of sync
             #
@@ -723,5 +718,21 @@ async def _async_get_device(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_listen_task)
     )
     entry.async_on_unload(_async_stop_listen_on_unload)
+
+    # fetch initial state
+    await device.async_update()
+
+    if (
+        # Must have last_properties
+        not device.bulb.last_properties
+        # Must have at least a power property
+        or (
+            "main_power" not in device.bulb.last_properties
+            and "power" not in device.bulb.last_properties
+        )
+    ):
+        raise ConfigEntryNotReady(
+            "Could not fetch initial state; try power cycling the device"
+        )
 
     return device
