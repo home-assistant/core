@@ -1,6 +1,4 @@
 """Test the ClimaCell config flow."""
-import logging
-
 from homeassistant import data_entry_flow
 from homeassistant.components.climacell.const import (
     CONF_TIMESTEP,
@@ -13,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from .const import API_V4_ENTRY_DATA
 
 from tests.common import MockConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:
