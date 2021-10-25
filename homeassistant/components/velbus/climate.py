@@ -1,13 +1,16 @@
 """Support for Velbus thermostat."""
+from __future__ import annotations
+
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
+    SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from . import VelbusEntity
-from .const import DOMAIN
+from .const import DOMAIN, PRESET_MODES
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -26,7 +29,7 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
     @property
     def supported_features(self):
         """Return the list off supported features."""
-        return SUPPORT_TARGET_TEMPERATURE
+        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
     @property
     def temperature_unit(self):
@@ -52,19 +55,36 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
 
         Need to be a subset of HVAC_MODES.
         """
-        return [HVAC_MODE_HEAT]
+        return HVAC_MODE_HEAT
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return self._channel.get_climate_target()
 
-    def set_temperature(self, **kwargs):
+    @property
+    def preset_modes(self) -> list[str] | None:
+        """Return a list of all possible presets."""
+        return list(PRESET_MODES.keys())
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return the current Preset for this channel."""
+        return self._channel.get_climate_mode()
+
+    async def async_set_temperature(self, **kwargs):
         """Set new target temperatures."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
-        self._channel.set_temp(temp)
+        await self._channel.set_temp(temp)
         self.schedule_update_ha_state()
 
-    def set_hvac_mode(self, hvac_mode):
-        """Set new target hvac mode."""
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the new preset mode."""
+        await self._channel.set_preset(PRESET_MODES[preset_mode])
+        self.async_write_ha_state()
+
+    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+        """Set the new hvac mode."""
+        await self._channel.set_mode(hvac_mode)
+        self.async_write_ha_state()
