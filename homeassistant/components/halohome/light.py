@@ -55,7 +55,7 @@ class HaloLight(LightEntity):
         if color_temp is not None:
             color_temp = max(self.min_mireds, min(color_temp, self.max_mireds))
             await self._device.set_color_temp(1000000 // color_temp)
-            self._color_temp = color_temp
+            self._attr_color_temp = color_temp
             self._attr_is_on = True
 
     async def async_turn_off(self, **kwargs):
