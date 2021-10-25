@@ -60,8 +60,7 @@ async def async_setup(hass, config):
     ignore_event = conf.get(CONF_IGNORE_EVENT)
     ignore_event.append(EVENT_TIME_CHANGED)
 
-    @callback
-    def _event_publisher(event):
+    async def _event_publisher(event):
         """Handle events by publishing them on the MQTT queue."""
         if event.origin != EventOrigin.local:
             return
@@ -82,7 +81,7 @@ async def async_setup(hass, config):
 
         event_info = {"event_type": event.event_type, "event_data": event.data}
         msg = json.dumps(event_info, cls=JSONEncoder)
-        mqtt.async_publish(pub_topic, msg)
+        await mqtt.async_publish(pub_topic, msg)
 
     # Only listen for local events if you are going to publish them.
     if pub_topic:

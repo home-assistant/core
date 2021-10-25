@@ -153,7 +153,7 @@ async def async_setup(hass, config):
                 notification["text"] = intent_response.speech["plain"]["speech"]
 
             _LOGGER.debug("send_response %s", json.dumps(notification))
-            mqtt.async_publish(
+            await mqtt.async_publish(
                 hass, "hermes/dialogueManager/endSession", json.dumps(notification)
             )
         except intent.UnknownIntent:
@@ -172,7 +172,7 @@ async def async_setup(hass, config):
             "customData": call.data.get(ATTR_CUSTOM_DATA, ""),
             "init": {"type": "notification", "text": call.data.get(ATTR_TEXT)},
         }
-        mqtt.async_publish(
+        await mqtt.async_publish(
             hass, "hermes/dialogueManager/startSession", json.dumps(notification)
         )
         return
@@ -189,7 +189,7 @@ async def async_setup(hass, config):
                 "intentFilter": call.data.get(ATTR_INTENT_FILTER, []),
             },
         }
-        mqtt.async_publish(
+        await mqtt.async_publish(
             hass, "hermes/dialogueManager/startSession", json.dumps(notification)
         )
         return

@@ -106,7 +106,7 @@ async def async_setup_entry(  # noqa: C901
                 _LOGGER.error("MQTT integration is not set up")
                 return
 
-            mqtt.async_publish(hass, topic, json.dumps(payload))
+            mqtt.publish(hass, topic, json.dumps(payload))
 
         manager_options["send_message"] = send_message
 

@@ -12,7 +12,6 @@ from homeassistant.components import mqtt, websocket_api
 from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.mixins import MQTT_ENTITY_DEVICE_INFO_SCHEMA
 from homeassistant.const import (
-    EVENT_CALL_SERVICE,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     TEMP_CELSIUS,
@@ -92,29 +91,51 @@ async def test_mqtt_disconnects_on_home_assistant_stop(hass, mqtt_mock):
     assert mqtt_mock.async_disconnect.called
 
 
-async def test_publish_calls_service(hass, mqtt_mock, calls, record_calls):
-    """Test the publishing of call to services."""
-    hass.bus.async_listen_once(EVENT_CALL_SERVICE, record_calls)
-
-    mqtt.async_publish(hass, "test-topic", "test-payload")
+async def test_publish_(hass, mqtt_mock):
+    """Test the publish function."""
+    await mqtt.async_publish(hass, "test-topic", "test-payload")
     await hass.async_block_till_done()
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0] == (
+        "test-topic",
+        "test-payload",
+        0,
+        False,
+    )
+    mqtt_mock.reset_mock()
 
-    assert len(calls) == 1
-    assert calls[0][0].data["service_data"][mqtt.ATTR_TOPIC] == "test-topic"
-    assert calls[0][0].data["service_data"][mqtt.ATTR_PAYLOAD] == "test-payload"
-    assert mqtt.ATTR_QOS not in calls[0][0].data["service_data"]
-    assert mqtt.ATTR_RETAIN not in calls[0][0].data["service_data"]
-
-    hass.bus.async_listen_once(EVENT_CALL_SERVICE, record_calls)
-
-    mqtt.async_publish(hass, "test-topic", "test-payload", 2, True)
+    await mqtt.async_publish(hass, "test-topic", "test-payload", 2, True)
     await hass.async_block_till_done()
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0] == (
+        "test-topic",
+        "test-payload",
+        2,
+        True,
+    )
+    mqtt_mock.reset_mock()
 
-    assert len(calls) == 2
-    assert calls[1][0].data["service_data"][mqtt.ATTR_TOPIC] == "test-topic"
-    assert calls[1][0].data["service_data"][mqtt.ATTR_PAYLOAD] == "test-payload"
-    assert calls[1][0].data["service_data"][mqtt.ATTR_QOS] == 2
-    assert calls[1][0].data["service_data"][mqtt.ATTR_RETAIN] is True
+    mqtt.publish(hass, "test-topic2", "test-payload2")
+    await hass.async_block_till_done()
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0] == (
+        "test-topic2",
+        "test-payload2",
+        0,
+        False,
+    )
+    mqtt_mock.reset_mock()
+
+    mqtt.publish(hass, "test-topic2", "test-payload2", 2, True)
+    await hass.async_block_till_done()
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0] == (
+        "test-topic2",
+        "test-payload2",
+        2,
+        True,
+    )
+    mqtt_mock.reset_mock()
 
 
 async def test_service_call_without_topic_does_not_publish(hass, mqtt_mock):
@@ -134,18 +155,6 @@ async def test_service_call_with_template_payload_renders_template(hass, mqtt_mo
 
     If 'payload_template' is provided and 'payload' is not, then render it.
     """
-    mqtt.publish_template(hass, "test/topic", "{{ 1+1 }}")
-    await hass.async_block_till_done()
-    assert mqtt_mock.async_publish.called
-    assert mqtt_mock.async_publish.call_args[0][1] == "2"
-    mqtt_mock.reset_mock()
-
-    mqtt.async_publish_template(hass, "test/topic", "{{ 2+2 }}")
-    await hass.async_block_till_done()
-    assert mqtt_mock.async_publish.called
-    assert mqtt_mock.async_publish.call_args[0][1] == "4"
-    mqtt_mock.reset_mock()
-
     await hass.services.async_call(
         mqtt.DOMAIN,
         mqtt.SERVICE_PUBLISH,

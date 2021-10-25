@@ -228,7 +228,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         if code_required and not self._validate_code(code, "disarming"):
             return
         payload = self._config[CONF_PAYLOAD_DISARM]
-        self._publish(code, payload)
+        await self._publish(code, payload)
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command.
@@ -239,7 +239,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         if code_required and not self._validate_code(code, "arming home"):
             return
         action = self._config[CONF_PAYLOAD_ARM_HOME]
-        self._publish(code, action)
+        await self._publish(code, action)
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command.
@@ -250,7 +250,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         if code_required and not self._validate_code(code, "arming away"):
             return
         action = self._config[CONF_PAYLOAD_ARM_AWAY]
-        self._publish(code, action)
+        await self._publish(code, action)
 
     async def async_alarm_arm_night(self, code=None):
         """Send arm night command.
@@ -261,7 +261,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         if code_required and not self._validate_code(code, "arming night"):
             return
         action = self._config[CONF_PAYLOAD_ARM_NIGHT]
-        self._publish(code, action)
+        await self._publish(code, action)
 
     async def async_alarm_arm_vacation(self, code=None):
         """Send arm vacation command.
@@ -272,7 +272,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         if code_required and not self._validate_code(code, "arming vacation"):
             return
         action = self._config[CONF_PAYLOAD_ARM_VACATION]
-        self._publish(code, action)
+        await self._publish(code, action)
 
     async def async_alarm_arm_custom_bypass(self, code=None):
         """Send arm custom bypass command.
@@ -283,14 +283,14 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         if code_required and not self._validate_code(code, "arming custom bypass"):
             return
         action = self._config[CONF_PAYLOAD_ARM_CUSTOM_BYPASS]
-        self._publish(code, action)
+        await self._publish(code, action)
 
-    def _publish(self, code, action):
+    async def _publish(self, code, action):
         """Publish via mqtt."""
         command_template = self._config[CONF_COMMAND_TEMPLATE]
         values = {"action": action, "code": code}
         payload = command_template.async_render(**values, parse_result=False)
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._config[CONF_COMMAND_TOPIC],
             payload,

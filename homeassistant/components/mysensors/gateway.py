@@ -185,7 +185,7 @@ async def _get_gateway(
 
         def pub_callback(topic: str, payload: str, qos: int, retain: bool) -> None:
             """Call MQTT publish function."""
-            mqtt.async_publish(topic, payload, qos, retain)
+            mqtt.publish(topic, payload, qos, retain)
 
         def sub_callback(
             topic: str, sub_cb: Callable[[str, ReceivePayloadType, int], None], qos: int

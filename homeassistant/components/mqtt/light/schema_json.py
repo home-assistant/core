@@ -621,7 +621,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 self._white_value = kwargs[ATTR_WHITE_VALUE]
                 should_update = True
 
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._topic[CONF_COMMAND_TOPIC],
             json.dumps(message),
@@ -646,7 +646,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
         self._set_flash_and_transition(message, **kwargs)
 
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._topic[CONF_COMMAND_TOPIC],
             json.dumps(message),
