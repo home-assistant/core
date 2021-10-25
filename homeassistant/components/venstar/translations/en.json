@@ -1,0 +1,20 @@
+{
+  "config": {
+    "step": {
+      "user": {
+	"title": "Connect to the Venstar Thermostat",
+	"data": {
+	  "host": "Hostname or IP",
+	  "username": "Username for thermostat (optional)",
+	  "password": "Password for thermostat (optional)",
+	  "pin": "Pin for Lockscreen (required if lock screen enabled)",
+	  "ssl": "Whether to use SSL or not when communicating"
+	}
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to thermostat, please validate username/password if supplied, hostname/ip, and that LOCAL API is enabled on the thermostat.",
+      "unknown": "An unknown error has occurred."
+    }
+  }
+}
