@@ -344,15 +344,19 @@ async def test_discovery_removal_number(hass, mqtt_mock, caplog):
 
 async def test_discovery_update_number(hass, mqtt_mock, caplog):
     """Test update of discovered number."""
-    data1 = (
-        '{ "name": "Beer", "state_topic": "test-topic", "command_topic": "test-topic"}'
-    )
-    data2 = (
-        '{ "name": "Milk", "state_topic": "test-topic", "command_topic": "test-topic"}'
-    )
+    config1 = {
+        "name": "Beer",
+        "state_topic": "test-topic",
+        "command_topic": "test-topic",
+    }
+    config2 = {
+        "name": "Milk",
+        "state_topic": "test-topic",
+        "command_topic": "test-topic",
+    }
 
     await help_test_discovery_update(
-        hass, mqtt_mock, caplog, number.DOMAIN, data1, data2
+        hass, mqtt_mock, caplog, number.DOMAIN, config1, config2
     )
 
 
