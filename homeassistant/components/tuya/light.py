@@ -127,6 +127,14 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             name="Backlight",
         ),
     ),
+    # Air conditioner
+    # https://developer.tuya.com/en/docs/iot/categorykt?id=Kaiuz0z71ov2n
+    "kt": (
+        TuyaLightEntityDescription(
+            key=DPCode.LIGHT,
+            name="Backlight",
+        ),
+    ),
     # Smart Camera
     # https://developer.tuya.com/en/docs/iot/categorysp?id=Kaiuz35leyo12
     "sp": (
