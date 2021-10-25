@@ -8,9 +8,11 @@ from tuya_iot import TuyaDevice, TuyaDeviceManager
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY_CHARGING,
     DEVICE_CLASS_DOOR,
+    DEVICE_CLASS_GAS,
     DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_SAFETY,
+    DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_TAMPER,
     DEVICE_CLASS_VIBRATION,
     BinarySensorEntity,
@@ -120,6 +122,16 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         ),
         TAMPER_BINARY_SENSOR,
     ),
+    # Gas Detector
+    # https://developer.tuya.com/en/docs/iot/categoryrqbj?id=Kaiuz3d162ubw
+    "rqbj": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.GAS_SENSOR_STATUS,
+            device_class=DEVICE_CLASS_GAS,
+            on_value="alarm",
+        ),
+        TAMPER_BINARY_SENSOR,
+    ),
     # Water Detector
     # https://developer.tuya.com/en/docs/iot/categorysj?id=Kaiuz3iub2sli
     "sj": (
@@ -145,6 +157,16 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         TuyaBinarySensorEntityDescription(
             key=DPCode.CHARGE_STATE,
             device_class=DEVICE_CLASS_BATTERY_CHARGING,
+        ),
+        TAMPER_BINARY_SENSOR,
+    ),
+    # Smoke Detector
+    # https://developer.tuya.com/en/docs/iot/categoryywbj?id=Kaiuz3f6sf952
+    "ywbj": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.SMOKE_SENSOR_STATUS,
+            device_class=DEVICE_CLASS_SMOKE,
+            on_value="vibration",
         ),
         TAMPER_BINARY_SENSOR,
     ),

@@ -19,6 +19,7 @@ from homeassistant.const import (
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_GAS,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_PM1,
@@ -205,6 +206,13 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
     # https://developer.tuya.com/en/docs/iot/categorypm25?id=Kaiuz3qof3yfu
     "pm25": (
         SensorEntityDescription(
+            key=DPCode.PM10_VALUE,
+            name="PM1",
+            native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            device_class=DEVICE_CLASS_PM1,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
             key=DPCode.PM100_VALUE,
             name="PM10",
             native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -218,18 +226,19 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
             device_class=DEVICE_CLASS_PM25,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
-        SensorEntityDescription(
-            key=DPCode.PM10_VALUE,
-            name="PM1",
-            native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-            device_class=DEVICE_CLASS_PM1,
-            state_class=STATE_CLASS_MEASUREMENT,
-        ),
         *BATTERY_SENSORS,
     ),
     # Gas Detector
     # https://developer.tuya.com/en/docs/iot/categoryrqbj?id=Kaiuz3d162ubw
-    "rqbj": BATTERY_SENSORS,
+    "rqbj": (
+        SensorEntityDescription(
+            key=DPCode.GAS_SENSOR_VALUE,
+            name="Gas",
+            device_class=DEVICE_CLASS_GAS,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        BATTERY_SENSORS,
+    ),
     # Water Detector
     # https://developer.tuya.com/en/docs/iot/categorysj?id=Kaiuz3iub2sli
     "sj": BATTERY_SENSORS,
@@ -255,7 +264,15 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
     ),
     # Smoke Detector
     # https://developer.tuya.com/en/docs/iot/categoryywbj?id=Kaiuz3f6sf952
-    "ywbj": BATTERY_SENSORS,
+    "ywbj": (
+        SensorEntityDescription(
+            key=DPCode.SMOKE_SENSOR_VALUE,
+            name="SMOKE",
+            device_class=DEVICE_CLASS_GAS,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        *BATTERY_SENSORS,
+    ),
     # Vibration Sensor
     # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
     "zd": BATTERY_SENSORS,

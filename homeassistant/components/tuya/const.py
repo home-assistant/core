@@ -169,6 +169,8 @@ class DPCode(str, Enum):
     FAR_DETECTION = "far_detection"
     FILTER_RESET = "filter_reset"  # Filter (cartridge) reset
     FORWARD_ENERGY_TOTAL = "forward_energy_total"
+    GAS_SENSOR_STATUS = "gas_sensor_status"
+    GAS_SENSOR_VALUE = "gas_sensor_value"
     HUMIDITY_CURRENT = "humidity_current"  # Current humidity
     HUMIDITY_SET = "humidity_set"  # Humidity setting
     HUMIDITY_VALUE = "humidity_value"  # Humidity
@@ -209,6 +211,8 @@ class DPCode(str, Enum):
     SHAKE = "shake"  # Oscillating
     SHOCK_STATE = "shock_state"  # Vibration status
     SITUATION_SET = "situation_set"
+    SMOKE_SENSOR_STATUS = "smoke_sensor_status"
+    SMOKE_SENSOR_VALUE = "smoke_sensor_value"
     SOS = "sos"  # Emergency State
     SOS_STATE = "sos_state"  # Emergency mode
     SPEED = "speed"  # Speed level
