@@ -21,6 +21,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_ICON,
+    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
@@ -30,6 +31,7 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     POWER_WATT,
     STATE_UNAVAILABLE,
     TEMP_CELSIUS,
@@ -38,6 +40,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .common import (
     AIR_TEMPERATURE_SENSOR,
+    BATTERY_SENSOR,
     CURRENT_SENSOR,
     ENERGY_SENSOR,
     HUMIDITY_SENSOR,
@@ -58,6 +61,18 @@ async def test_numeric_sensor(hass, multisensor_6, integration):
     assert state.state == "9.0"
     assert state.attributes["unit_of_measurement"] == TEMP_CELSIUS
     assert state.attributes["device_class"] == DEVICE_CLASS_TEMPERATURE
+
+    state = hass.states.get(BATTERY_SENSOR)
+
+    assert state
+    assert state.state == "100.0"
+    assert state.attributes["unit_of_measurement"] == "%"
+    assert state.attributes["device_class"] == DEVICE_CLASS_BATTERY
+
+    ent_reg = er.async_get(hass)
+    entity_entry = ent_reg.async_get(BATTERY_SENSOR)
+    assert entity_entry
+    assert entity_entry.entity_category == ENTITY_CATEGORY_DIAGNOSTIC
 
     state = hass.states.get(HUMIDITY_SENSOR)
 
