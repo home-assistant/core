@@ -23,6 +23,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
+from . import _async_isy_to_configuration_url
 from .const import DOMAIN
 
 
@@ -76,8 +77,11 @@ class ISYEntity(Entity):
         if hasattr(self._node, "protocol") and self._node.protocol == PROTO_GROUP:
             # not a device
             return None
-        uuid = self._node.isy.configuration["uuid"]
+        isy = self._node.isy
+        uuid = isy.configuration["uuid"]
         node = self._node
+        url = _async_isy_to_configuration_url(isy)
+
         basename = self.name
 
         if hasattr(self._node, "parent_node") and self._node.parent_node is not None:
@@ -91,6 +95,7 @@ class ISYEntity(Entity):
             model="Unknown",
             name=basename,
             via_device=(DOMAIN, uuid),
+            configuration_url=url,
         )
 
         if hasattr(node, "address"):

@@ -55,7 +55,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.6.1
 
 # homeassistant.components.vicare
-PyViCare==1.0.0
+PyViCare==2.13.1
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.13.4
@@ -333,7 +333,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.22.9
+async-upnp-client==0.22.10
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -1589,7 +1589,7 @@ pylast==4.2.1
 pylaunches==1.0.0
 
 # homeassistant.components.lg_netcast
-pylgnetcast==0.3.4
+pylgnetcast==0.3.5
 
 # homeassistant.components.forked_daapd
 pylibrespot-java==0.1.0
@@ -1964,7 +1964,7 @@ pytouchline==0.7
 pytraccar==0.9.0
 
 # homeassistant.components.tradfri
-pytradfri[async]==7.1.0
+pytradfri[async]==7.1.1
 
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
@@ -2140,7 +2140,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==12.0.0
+simplisafe-python==12.0.2
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.0
@@ -2323,7 +2323,7 @@ tp-connected==0.0.4
 transmissionrpc==0.11
 
 # homeassistant.components.tuya
-tuya-iot-py-sdk==0.5.0
+tuya-iot-py-sdk==0.6.3
 
 # homeassistant.components.twentemilieu
 twentemilieu==0.3.0
@@ -2456,7 +2456,7 @@ yeelight==0.7.8
 yeelightsunflower==0.0.10
 
 # homeassistant.components.youless
-youless-api==0.14
+youless-api==0.15
 
 # homeassistant.components.media_extractor
 youtube_dl==2021.06.06
@@ -2489,7 +2489,7 @@ zigpy-zigate==0.7.3
 zigpy-znp==0.5.4
 
 # homeassistant.components.zha
-zigpy==0.38.0
+zigpy==0.39.0
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2

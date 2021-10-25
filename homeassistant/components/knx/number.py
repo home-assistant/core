@@ -8,6 +8,7 @@ from xknx.devices import NumericValue
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.const import (
+    CONF_ENTITY_CATEGORY,
     CONF_MODE,
     CONF_NAME,
     CONF_TYPE,
@@ -74,7 +75,9 @@ class KNXNumber(KnxEntity, NumberEntity, RestoreEntity):
             NumberSchema.CONF_STEP,
             self._device.sensor_value.dpt_class.resolution,
         )
+        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_unique_id = str(self._device.sensor_value.group_address)
+        self._attr_unit_of_measurement = self._device.unit_of_measurement()
         self._device.sensor_value.value = max(0, self._attr_min_value)
 
     async def async_added_to_hass(self) -> None:
