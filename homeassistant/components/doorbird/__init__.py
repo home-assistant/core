@@ -1,4 +1,5 @@
 """Support for DoorBird devices."""
+from http import HTTPStatus
 import logging
 
 from aiohttp import web
@@ -15,13 +16,12 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_TOKEN,
     CONF_USERNAME,
-    HTTP_OK,
-    HTTP_UNAUTHORIZED,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import get_url
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util, slugify
 
 from .const import (
@@ -58,7 +58,7 @@ DEVICE_SCHEMA = vol.Schema(
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the DoorBird component."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -67,9 +67,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
     def _reset_device_favorites_handler(event):
         """Handle clearing favorites on device."""
-        token = event.data.get("token")
-
-        if token is None:
+        if (token := event.data.get("token")) is None:
             return
 
         doorstation = get_doorstation_by_token(hass, token)
@@ -107,7 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         status, info = await hass.async_add_executor_job(_init_doorbird_device, device)
     except requests.exceptions.HTTPError as err:
-        if err.response.status_code == HTTP_UNAUTHORIZED:
+        if err.response.status_code == HTTPStatus.UNAUTHORIZED:
             _LOGGER.error(
                 "Authorization rejected by DoorBird for %s@%s", username, device_ip
             )
@@ -153,7 +151,7 @@ def _init_doorbird_device(device):
     return device.ready(), device.info()
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
     hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
@@ -323,6 +321,7 @@ class DoorBirdRequestView(HomeAssistantView):
 
     async def get(self, request, event):
         """Respond to requests from the device."""
+        # pylint: disable=no-self-use
         hass = request.app["hass"]
 
         token = request.query.get("token")
@@ -331,7 +330,7 @@ class DoorBirdRequestView(HomeAssistantView):
 
         if device is None:
             return web.Response(
-                status=HTTP_UNAUTHORIZED, text="Invalid token provided."
+                status=HTTPStatus.UNAUTHORIZED, text="Invalid token provided."
             )
 
         if device:
@@ -343,7 +342,7 @@ class DoorBirdRequestView(HomeAssistantView):
             hass.bus.async_fire(RESET_DEVICE_FAVORITES, {"token": token})
 
             message = f"HTTP Favorites cleared for {device.slug}"
-            return web.Response(status=HTTP_OK, text=message)
+            return web.Response(text=message)
 
         event_data[ATTR_ENTITY_ID] = hass.data[DOMAIN][
             DOOR_STATION_EVENT_ENTITY_IDS
@@ -351,4 +350,4 @@ class DoorBirdRequestView(HomeAssistantView):
 
         hass.bus.async_fire(f"{DOMAIN}_{event}", event_data)
 
-        return web.Response(status=HTTP_OK, text="OK")
+        return web.Response(text="OK")

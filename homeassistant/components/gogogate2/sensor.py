@@ -5,11 +5,12 @@ from itertools import chain
 
 from ismartgate.common import AbstractDoor, get_configured_doors
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_TEMPERATURE,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
@@ -51,6 +52,8 @@ async def async_setup_entry(
 class DoorSensorBattery(GoGoGate2Entity, SensorEntity):
     """Battery sensor entity for gogogate2 door sensor."""
 
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+
     def __init__(
         self,
         config_entry: ConfigEntry,
@@ -72,10 +75,15 @@ class DoorSensorBattery(GoGoGate2Entity, SensorEntity):
         return DEVICE_CLASS_BATTERY
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the entity."""
         door = self._get_door()
         return door.voltage  # This is a percentage, not an absolute voltage
+
+    @property
+    def state_class(self) -> str:
+        """Return the Measurement State Class."""
+        return STATE_CLASS_MEASUREMENT
 
     @property
     def extra_state_attributes(self):
@@ -105,23 +113,28 @@ class DoorSensorTemperature(GoGoGate2Entity, SensorEntity):
         return f"{self._get_door().name} temperature"
 
     @property
+    def state_class(self) -> str:
+        """Return the Measurement State Class."""
+        return STATE_CLASS_MEASUREMENT
+
+    @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return DEVICE_CLASS_TEMPERATURE
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the entity."""
         door = self._get_door()
         return door.temperature
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit_of_measurement."""
         return TEMP_CELSIUS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         door = self._get_door()
         if door.sensorid is not None:

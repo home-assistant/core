@@ -103,4 +103,4 @@ class BrottsplatskartanSensor(SensorEntity):
             ATTR_ATTRIBUTION: brottsplatskartan.ATTRIBUTION
         }
         self._attr_extra_state_attributes.update(incident_counts)
-        self._attr_state = len(incidents)
+        self._attr_native_value = len(incidents)

@@ -65,7 +65,7 @@ class CurrencylayerSensor(SensorEntity):
         self._state = None
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._quote
 
@@ -80,7 +80,7 @@ class CurrencylayerSensor(SensorEntity):
         return ICON
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -92,8 +92,7 @@ class CurrencylayerSensor(SensorEntity):
     def update(self):
         """Update current date."""
         self.rest.update()
-        value = self.rest.data
-        if value is not None:
+        if (value := self.rest.data) is not None:
             self._state = round(value[f"{self._base}{self._quote}"], 4)
 
 

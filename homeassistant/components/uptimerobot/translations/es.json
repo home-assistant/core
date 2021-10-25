@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La cuenta ya ha sido configurada",
+            "reauth_failed_existing": "No se pudo actualizar la entrada de configuraci\u00f3n, elimine la integraci\u00f3n y config\u00farela nuevamente.",
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
+            "unknown": "Error inesperado"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "invalid_api_key": "Clave API no v\u00e1lida",
+            "reauth_failed_matching_account": "La clave de API que has proporcionado no coincide con el ID de cuenta para la configuraci\u00f3n existente.",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API Key"
+                },
+                "description": "Debes proporcionar una nueva clave API de solo lectura de Uptime Robot",
+                "title": "Volver a autenticar la integraci\u00f3n"
+            },
+            "user": {
+                "data": {
+                    "api_key": "Clave API"
+                },
+                "description": "Debes proporcionar una clave API de solo lectura de robot de tiempo de actividad/funcionamiento"
+            }
+        }
+    }
+}

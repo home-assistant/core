@@ -11,7 +11,7 @@
                     "power_p3": "Vertraglich vereinbarte Leistung f\u00fcr Talperiode P3 (kW)",
                     "tariff": "Geltender Tarif nach geografischer Zone"
                 },
-                "description": "Dieser Sensor verwendet die offizielle API, um [st\u00fcndliche Strompreise (PVPC)] (https://www.esios.ree.es/es/pvpc) in Spanien zu erhalten. Weitere Informationen findest du in den [Integrations-Dokumentation] (https://www.home-assistant.io/integrations/pvpc_hourly_pricing/). ",
+                "description": "Dieser Sensor verwendet die offizielle API, um [st\u00fcndliche Strompreise (PVPC)] (https://www.esios.ree.es/es/pvpc) in Spanien zu erhalten. Weitere Informationen findest du in den [Integrations-Dokumentation] (https://www.home-assistant.io/integrations/pvpc_hourly_pricing/).",
                 "title": "Sensoreinrichtung"
             }
         }

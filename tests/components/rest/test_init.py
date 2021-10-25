@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import timedelta
+from http import HTTPStatus
 from os import path
 from unittest.mock import patch
 
@@ -67,7 +68,7 @@ async def test_setup_with_endpoint_timeout_with_recovery(hass):
     assert len(hass.states.async_all()) == 0
 
     respx.get("http://localhost").respond(
-        status_code=200,
+        status_code=HTTPStatus.OK,
         json={
             "sensor1": "1",
             "sensor2": "2",
@@ -107,7 +108,7 @@ async def test_setup_with_endpoint_timeout_with_recovery(hass):
     # endpoint is working again
 
     respx.get("http://localhost").respond(
-        status_code=200,
+        status_code=HTTPStatus.OK,
         json={
             "sensor1": "1",
             "sensor2": "2",
@@ -133,7 +134,7 @@ async def test_setup_minimum_resource_template(hass):
     """Test setup with minimum configuration (resource_template)."""
 
     respx.get("http://localhost").respond(
-        status_code=200,
+        status_code=HTTPStatus.OK,
         json={
             "sensor1": "1",
             "sensor2": "2",
@@ -190,7 +191,7 @@ async def test_setup_minimum_resource_template(hass):
 async def test_reload(hass):
     """Verify we can reload."""
 
-    respx.get("http://localhost") % 200
+    respx.get("http://localhost") % HTTPStatus.OK
 
     assert await async_setup_component(
         hass,
@@ -242,7 +243,7 @@ async def test_reload(hass):
 async def test_reload_and_remove_all(hass):
     """Verify we can reload and remove all."""
 
-    respx.get("http://localhost") % 200
+    respx.get("http://localhost") % HTTPStatus.OK
 
     assert await async_setup_component(
         hass,
@@ -292,7 +293,7 @@ async def test_reload_and_remove_all(hass):
 async def test_reload_fails_to_read_configuration(hass):
     """Verify reload when configuration is missing or broken."""
 
-    respx.get("http://localhost") % 200
+    respx.get("http://localhost") % HTTPStatus.OK
 
     assert await async_setup_component(
         hass,
@@ -345,7 +346,7 @@ async def test_multiple_rest_endpoints(hass):
     """Test multiple rest endpoints."""
 
     respx.get("http://date.jsontest.com").respond(
-        status_code=200,
+        status_code=HTTPStatus.OK,
         json={
             "date": "03-17-2021",
             "milliseconds_since_epoch": 1616008268573,
@@ -354,7 +355,7 @@ async def test_multiple_rest_endpoints(hass):
     )
 
     respx.get("http://time.jsontest.com").respond(
-        status_code=200,
+        status_code=HTTPStatus.OK,
         json={
             "date": "03-17-2021",
             "milliseconds_since_epoch": 1616008299665,
@@ -362,7 +363,7 @@ async def test_multiple_rest_endpoints(hass):
         },
     )
     respx.get("http://localhost").respond(
-        status_code=200,
+        status_code=HTTPStatus.OK,
         json={
             "value": "1",
         },

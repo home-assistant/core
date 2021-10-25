@@ -127,7 +127,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         self._paused = False
 
         self._current_source = None
-        self._source_list = {}
+        self._source_list: dict = {}
 
     async def async_added_to_hass(self):
         """Connect and subscribe to dispatcher signals and state updates."""
@@ -143,8 +143,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
 
     async def async_signal_handler(self, data):
         """Handle domain-specific signal by calling appropriate method."""
-        entity_ids = data[ATTR_ENTITY_ID]
-        if entity_ids == ENTITY_MATCH_NONE:
+        if (entity_ids := data[ATTR_ENTITY_ID]) == ENTITY_MATCH_NONE:
             return
 
         if entity_ids == ENTITY_MATCH_ALL or self.entity_id in entity_ids:
@@ -304,9 +303,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         """Flag media player features that are supported."""
         supported = SUPPORT_WEBOSTV
 
-        if (self._client.sound_output == "external_arc") or (
-            self._client.sound_output == "external_speaker"
-        ):
+        if self._client.sound_output in ("external_arc", "external_speaker"):
             supported = supported | SUPPORT_WEBOSTV_VOLUME
         elif self._client.sound_output != "lineout":
             supported = supported | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
@@ -370,8 +367,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     @cmd
     async def async_select_source(self, source):
         """Select input source."""
-        source_dict = self._source_list.get(source)
-        if source_dict is None:
+        if (source_dict := self._source_list.get(source)) is None:
             _LOGGER.warning("Source %s not found for %s", source, self.name)
             return
         if source_dict.get("title"):

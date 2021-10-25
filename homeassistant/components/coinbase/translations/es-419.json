@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "api_token": "Secreto de la API",
+                    "exchange_rates": "Tipos de cambio"
+                },
+                "description": "Ingrese los detalles de su clave API proporcionada por Coinbase.",
+                "title": "Detalles clave de la API de Coinbase"
+            }
+        }
+    }
+}

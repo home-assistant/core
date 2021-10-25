@@ -113,6 +113,7 @@ ABBREVIATIONS = {
     "pl_arm_away": "payload_arm_away",
     "pl_arm_home": "payload_arm_home",
     "pl_arm_nite": "payload_arm_night",
+    "pl_arm_vacation": "payload_arm_vacation",
     "pl_arm_custom_b": "payload_arm_custom_bypass",
     "pl_avail": "payload_available",
     "pl_cln_sp": "payload_clean_spot",
@@ -133,6 +134,7 @@ ABBREVIATIONS = {
     "pl_osc_off": "payload_oscillation_off",
     "pl_osc_on": "payload_oscillation_on",
     "pl_paus": "payload_pause",
+    "pl_rst": "payload_reset",
     "pl_rst_hum": "payload_reset_humidity",
     "pl_rst_mode": "payload_reset_mode",
     "pl_rst_pct": "payload_reset_percentage",
@@ -243,6 +245,7 @@ ABBREVIATIONS = {
 
 DEVICE_ABBREVIATIONS = {
     "cns": "connections",
+    "cu": "configuration_url",
     "ids": "identifiers",
     "name": "name",
     "mf": "manufacturer",

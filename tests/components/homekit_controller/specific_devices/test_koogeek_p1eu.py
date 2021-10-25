@@ -1,5 +1,6 @@
 """Make sure that existing Koogeek P1EU support isn't broken."""
 
+from homeassistant.const import POWER_WATT
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.components.homekit_controller.common import (
@@ -37,7 +38,7 @@ async def test_koogeek_p1eu_setup(hass):
 
     # Assert the power sensor is detected
     entry = entity_registry.async_get("sensor.koogeek_p1_a00aa0_real_time_energy")
-    assert entry.unique_id == "homekit-EUCP03190xxxxx48-aid:1-sid:21-cid:21"
+    assert entry.unique_id == "homekit-EUCP03190xxxxx48-aid:1-sid:21-cid:22"
 
     helper = Helper(
         hass,
@@ -48,6 +49,7 @@ async def test_koogeek_p1eu_setup(hass):
     )
     state = await helper.poll_and_get_state()
     assert state.attributes["friendly_name"] == "Koogeek-P1-A00AA0 - Real Time Energy"
+    assert state.attributes["unit_of_measurement"] == POWER_WATT
 
     # The sensor and switch should be part of the same device
     assert entry.device_id == device.id

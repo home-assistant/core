@@ -10,7 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DEFAULT_SETUP_TIMEOUT, DOMAIN, PRODUCT
 
@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
@@ -82,13 +82,13 @@ class BleBoxEntity(Entity):
         self._attr_name = feature.full_name
         self._attr_unique_id = feature.unique_id
         product = feature.product
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, product.unique_id)},
-            "name": product.name,
-            "manufacturer": product.brand,
-            "model": product.model,
-            "sw_version": product.firmware_version,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, product.unique_id)},
+            manufacturer=product.brand,
+            model=product.model,
+            name=product.name,
+            sw_version=product.firmware_version,
+        )
 
     async def async_update(self):
         """Update the entity state."""

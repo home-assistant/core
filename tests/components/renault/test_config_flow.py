@@ -1,8 +1,10 @@
 """Test the Renault config flow."""
 from unittest.mock import AsyncMock, PropertyMock, patch
 
+import pytest
 from renault_api.gigya.exceptions import InvalidCredentialsException
 from renault_api.kamereon import schemas
+from renault_api.renault_account import RenaultAccount
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.renault.const import (
@@ -10,13 +12,28 @@ from homeassistant.components.renault.const import (
     CONF_LOCALE,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import aiohttp_client
+
+from .const import MOCK_CONFIG
 
 from tests.common import load_fixture
 
 
-async def test_config_flow_single_account(hass: HomeAssistant):
+@pytest.fixture(autouse=True, name="mock_setup_entry")
+def override_async_setup_entry() -> AsyncMock:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.renault.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+async def test_config_flow_single_account(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+):
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -72,8 +89,10 @@ async def test_config_flow_single_account(hass: HomeAssistant):
     assert result["data"][CONF_KAMEREON_ACCOUNT_ID] == "account_id_1"
     assert result["data"][CONF_LOCALE] == "fr_FR"
 
+    assert len(mock_setup_entry.mock_calls) == 1
 
-async def test_config_flow_no_account(hass: HomeAssistant):
+
+async def test_config_flow_no_account(hass: HomeAssistant, mock_setup_entry: AsyncMock):
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -83,7 +102,7 @@ async def test_config_flow_no_account(hass: HomeAssistant):
 
     # Account list empty
     with patch("renault_api.renault_session.RenaultSession.login"), patch(
-        "homeassistant.components.renault.config_flow.RenaultHub.get_account_ids",
+        "renault_api.renault_client.RenaultClient.get_api_accounts",
         return_value=[],
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -98,8 +117,12 @@ async def test_config_flow_no_account(hass: HomeAssistant):
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "kamereon_no_account"
 
+    assert len(mock_setup_entry.mock_calls) == 0
 
-async def test_config_flow_multiple_accounts(hass: HomeAssistant):
+
+async def test_config_flow_multiple_accounts(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+):
     """Test what happens if multiple Kamereon accounts are available."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -107,11 +130,20 @@ async def test_config_flow_multiple_accounts(hass: HomeAssistant):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {}
 
+    renault_account_1 = RenaultAccount(
+        "account_id_1",
+        websession=aiohttp_client.async_get_clientsession(hass),
+    )
+    renault_account_2 = RenaultAccount(
+        "account_id_2",
+        websession=aiohttp_client.async_get_clientsession(hass),
+    )
+
     # Multiple accounts
     with patch("renault_api.renault_session.RenaultSession.login"), patch(
-        "homeassistant.components.renault.config_flow.RenaultHub.get_account_ids",
-        return_value=["account_id_1", "account_id_2"],
-    ):
+        "renault_api.renault_client.RenaultClient.get_api_accounts",
+        return_value=[renault_account_1, renault_account_2],
+    ), patch("renault_api.renault_account.RenaultAccount.get_vehicles"):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -135,3 +167,83 @@ async def test_config_flow_multiple_accounts(hass: HomeAssistant):
     assert result["data"][CONF_PASSWORD] == "test"
     assert result["data"][CONF_KAMEREON_ACCOUNT_ID] == "account_id_2"
     assert result["data"][CONF_LOCALE] == "fr_FR"
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("config_entry")
+async def test_config_flow_duplicate(hass: HomeAssistant, mock_setup_entry: AsyncMock):
+    """Test abort if unique_id configured."""
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {}
+
+    renault_account = RenaultAccount(
+        "account_id_1",
+        websession=aiohttp_client.async_get_clientsession(hass),
+    )
+    with patch("renault_api.renault_session.RenaultSession.login"), patch(
+        "renault_api.renault_client.RenaultClient.get_api_accounts",
+        return_value=[renault_account],
+    ), patch("renault_api.renault_account.RenaultAccount.get_vehicles"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_LOCALE: "fr_FR",
+                CONF_USERNAME: "email@test.com",
+                CONF_PASSWORD: "test",
+            },
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    await hass.async_block_till_done()
+
+    assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_reauth(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Test the start of the config flow."""
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": config_entry.entry_id,
+            "unique_id": config_entry.unique_id,
+        },
+        data=MOCK_CONFIG,
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["description_placeholders"] == {CONF_USERNAME: "email@test.com"}
+    assert result["errors"] == {}
+
+    # Failed credentials
+    with patch(
+        "renault_api.renault_session.RenaultSession.login",
+        side_effect=InvalidCredentialsException(403042, "invalid loginID or password"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_PASSWORD: "any"},
+        )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["description_placeholders"] == {CONF_USERNAME: "email@test.com"}
+    assert result2["errors"] == {"base": "invalid_credentials"}
+
+    # Valid credentials
+    with patch("renault_api.renault_session.RenaultSession.login"):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_PASSWORD: "any"},
+        )
+
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result3["reason"] == "reauth_successful"

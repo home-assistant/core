@@ -1,8 +1,8 @@
 """Test the Panasonic Viera remote entity."""
 
-from unittest.mock import call
+from unittest.mock import Mock, call
 
-from panasonic_viera import Keys
+from panasonic_viera import Keys, SOAPError
 
 from homeassistant.components.panasonic_viera.const import ATTR_UDN, DOMAIN
 from homeassistant.components.remote import (
@@ -37,6 +37,9 @@ async def test_onoff(hass, mock_remote):
     await setup_panasonic_viera(hass)
 
     data = {ATTR_ENTITY_ID: "remote.panasonic_viera_tv"}
+
+    # simulate tv off when async_update
+    mock_remote.get_mute = Mock(side_effect=SOAPError)
 
     await hass.services.async_call(REMOTE_DOMAIN, SERVICE_TURN_OFF, data)
     await hass.services.async_call(REMOTE_DOMAIN, SERVICE_TURN_ON, data)

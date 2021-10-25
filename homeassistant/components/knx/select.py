@@ -5,7 +5,12 @@ from xknx import XKNX
 from xknx.devices import Device as XknxDevice, RawValue
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    CONF_ENTITY_CATEGORY,
+    CONF_NAME,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -66,6 +71,7 @@ class KNXSelect(KnxEntity, SelectEntity, RestoreEntity):
         }
         self._attr_options = list(self._option_payloads)
         self._attr_current_option = None
+        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_unique_id = str(self._device.remote_value.group_address)
 
     async def async_added_to_hass(self) -> None:
@@ -97,7 +103,5 @@ class KNXSelect(KnxEntity, SelectEntity, RestoreEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        payload = self._option_payloads.get(option)
-        if payload is None:
-            raise ValueError(f"Invalid option for {self.entity_id}: {option}")
+        payload = self._option_payloads[option]
         await self._device.set(payload)

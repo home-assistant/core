@@ -36,9 +36,7 @@ async def async_setup_entry(
     coordinator: IPPDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     # config flow sets this to either UUID, serial number or None
-    unique_id = entry.unique_id
-
-    if unique_id is None:
+    if (unique_id := entry.unique_id) is None:
         unique_id = entry.entry_id
 
     sensors = []
@@ -72,7 +70,7 @@ class IPPSensor(IPPEntity, SensorEntity):
         """Initialize IPP sensor."""
         self._key = key
         self._attr_unique_id = f"{unique_id}_{key}"
-        self._attr_unit_of_measurement = unit_of_measurement
+        self._attr_native_unit_of_measurement = unit_of_measurement
 
         super().__init__(
             entry_id=entry_id,
@@ -123,7 +121,7 @@ class IPPMarkerSensor(IPPSensor):
         }
 
     @property
-    def state(self) -> int | None:
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
         level = self.coordinator.data.markers[self.marker_index].level
 
@@ -164,7 +162,7 @@ class IPPPrinterSensor(IPPSensor):
         }
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         return self.coordinator.data.state.printer_state
 
@@ -189,7 +187,7 @@ class IPPUptimeSensor(IPPSensor):
         )
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         uptime = utcnow() - timedelta(seconds=self.coordinator.data.info.uptime)
         return uptime.replace(microsecond=0).isoformat()

@@ -20,7 +20,7 @@ async def test_vocolinc_flowerbud_setup(hass):
     # Check that the switch entity is handled correctly
 
     entry = entity_registry.async_get("number.vocolinc_flowerbud_0d324b")
-    assert entry.unique_id == "homekit-AM01121849000327-aid:1-sid:30-cid:30"
+    assert entry.unique_id == "homekit-AM01121849000327-aid:1-sid:30-cid:38"
 
     helper = Helper(
         hass, "number.vocolinc_flowerbud_0d324b", pairing, accessories[0], config_entry
@@ -73,7 +73,7 @@ async def test_vocolinc_flowerbud_setup(hass):
     entry = entity_registry.async_get(
         "sensor.vocolinc_flowerbud_0d324b_current_humidity"
     )
-    assert entry.unique_id == "homekit-AM01121849000327-aid:1-sid:30-cid:30"
+    assert entry.unique_id == "homekit-AM01121849000327-aid:1-sid:30-cid:33"
 
     helper = Helper(
         hass,

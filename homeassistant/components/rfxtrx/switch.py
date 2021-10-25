@@ -8,8 +8,6 @@ from homeassistant.const import CONF_DEVICES, STATE_ON
 from homeassistant.core import callback
 
 from . import (
-    CONF_DATA_BITS,
-    CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
     DOMAIN,
     RfxtrxCommandEntity,
@@ -17,7 +15,12 @@ from . import (
     get_device_id,
     get_rfx_object,
 )
-from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
+from .const import (
+    COMMAND_OFF_LIST,
+    COMMAND_ON_LIST,
+    CONF_DATA_BITS,
+    CONF_SIGNAL_REPETITIONS,
+)
 
 DATA_SWITCH = f"{DOMAIN}_switch"
 
@@ -61,7 +64,7 @@ async def async_setup_entry(
         device_ids.add(device_id)
 
         entity = RfxtrxSwitch(
-            event.device, device_id, entity_info[CONF_SIGNAL_REPETITIONS]
+            event.device, device_id, entity_info.get(CONF_SIGNAL_REPETITIONS, 1)
         )
         entities.append(entity)
 

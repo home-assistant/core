@@ -116,7 +116,7 @@ class RovaSensor(SensorEntity):
         self.data_service.update()
         pickup_date = self.data_service.data.get(self.entity_description.key)
         if pickup_date is not None:
-            self._attr_state = pickup_date.isoformat()
+            self._attr_native_value = pickup_date.isoformat()
 
 
 class RovaData:

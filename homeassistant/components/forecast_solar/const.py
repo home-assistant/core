@@ -21,7 +21,6 @@ CONF_DECLINATION = "declination"
 CONF_AZIMUTH = "azimuth"
 CONF_MODULES_POWER = "modules power"
 CONF_DAMPING = "damping"
-ATTR_ENTRY_TYPE: Final = "entry_type"
 ENTRY_TYPE_SERVICE: Final = "service"
 
 SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
@@ -30,14 +29,14 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
         name="Estimated Energy Production - Today",
         state=lambda estimate: estimate.energy_production_today / 1000,
         device_class=DEVICE_CLASS_ENERGY,
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
     ),
     ForecastSolarSensorEntityDescription(
         key="energy_production_tomorrow",
         name="Estimated Energy Production - Tomorrow",
         state=lambda estimate: estimate.energy_production_tomorrow / 1000,
         device_class=DEVICE_CLASS_ENERGY,
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
     ),
     ForecastSolarSensorEntityDescription(
         key="power_highest_peak_time_today",
@@ -55,7 +54,7 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_POWER,
         state=lambda estimate: estimate.power_production_now,
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=POWER_WATT,
     ),
     ForecastSolarSensorEntityDescription(
         key="power_production_next_hour",
@@ -65,7 +64,7 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
         name="Estimated Power Production - Next Hour",
         device_class=DEVICE_CLASS_POWER,
         entity_registry_enabled_default=False,
-        unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=POWER_WATT,
     ),
     ForecastSolarSensorEntityDescription(
         key="power_production_next_12hours",
@@ -75,7 +74,7 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
         name="Estimated Power Production - Next 12 Hours",
         device_class=DEVICE_CLASS_POWER,
         entity_registry_enabled_default=False,
-        unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=POWER_WATT,
     ),
     ForecastSolarSensorEntityDescription(
         key="power_production_next_24hours",
@@ -85,20 +84,20 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
         name="Estimated Power Production - Next 24 Hours",
         device_class=DEVICE_CLASS_POWER,
         entity_registry_enabled_default=False,
-        unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=POWER_WATT,
     ),
     ForecastSolarSensorEntityDescription(
         key="energy_current_hour",
         name="Estimated Energy Production - This Hour",
         state=lambda estimate: estimate.energy_current_hour / 1000,
         device_class=DEVICE_CLASS_ENERGY,
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
     ),
     ForecastSolarSensorEntityDescription(
         key="energy_next_hour",
         state=lambda estimate: estimate.sum_energy_production(1) / 1000,
         name="Estimated Energy Production - Next Hour",
         device_class=DEVICE_CLASS_ENERGY,
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
     ),
 )

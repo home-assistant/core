@@ -6,6 +6,7 @@ This Koogeek device has a custom power sensor that extra handling.
 It should have 2 entities - the actual switch and a sensor for power usage.
 """
 
+from homeassistant.const import POWER_WATT
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.components.homekit_controller.common import (
@@ -45,7 +46,7 @@ async def test_koogeek_ls1_setup(hass):
 
     # Assert that the power sensor entity is correctly added to the entity registry
     entry = entity_registry.async_get("sensor.koogeek_sw2_187a91_real_time_energy")
-    assert entry.unique_id == "homekit-CNNT061751001372-aid:1-sid:14-cid:14"
+    assert entry.unique_id == "homekit-CNNT061751001372-aid:1-sid:14-cid:18"
 
     helper = Helper(
         hass,
@@ -58,6 +59,7 @@ async def test_koogeek_ls1_setup(hass):
 
     # Assert that the friendly name is detected correctly
     assert state.attributes["friendly_name"] == "Koogeek-SW2-187A91 - Real Time Energy"
+    assert state.attributes["unit_of_measurement"] == POWER_WATT
 
     device_registry = dr.async_get(hass)
 

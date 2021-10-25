@@ -13,7 +13,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN as HMIPC_DOMAIN
-from .hap import HomematicipHAP
+from .hap import AsyncHome, HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,7 +82,7 @@ class HomematicipGenericEntity(Entity):
     ) -> None:
         """Initialize the generic entity."""
         self._hap = hap
-        self._home = hap.home
+        self._home: AsyncHome = hap.home
         self._device = device
         self._post = post
         self._channel = channel
@@ -92,22 +92,22 @@ class HomematicipGenericEntity(Entity):
         _LOGGER.info("Setting up %s (%s)", self.name, self._device.modelType)
 
     @property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> DeviceInfo | None:
         """Return device specific attributes."""
         # Only physical devices should be HA devices.
         if isinstance(self._device, AsyncDevice):
-            return {
-                "identifiers": {
+            return DeviceInfo(
+                identifiers={
                     # Serial numbers of Homematic IP device
                     (HMIPC_DOMAIN, self._device.id)
                 },
-                "name": self._device.label,
-                "manufacturer": self._device.oem,
-                "model": self._device.modelType,
-                "sw_version": self._device.firmwareVersion,
+                manufacturer=self._device.oem,
+                model=self._device.modelType,
+                name=self._device.label,
+                sw_version=self._device.firmwareVersion,
                 # Link to the homematic ip access point.
-                "via_device": (HMIPC_DOMAIN, self._device.homeId),
-            }
+                via_device=(HMIPC_DOMAIN, self._device.homeId),
+            )
         return None
 
     async def async_added_to_hass(self) -> None:
@@ -153,8 +153,7 @@ class HomematicipGenericEntity(Entity):
         if not self.registry_entry:
             return
 
-        device_id = self.registry_entry.device_id
-        if device_id:
+        if device_id := self.registry_entry.device_id:
             # Remove from device registry.
             device_registry = await dr.async_get_registry(self.hass)
             if device_id in device_registry.devices:
@@ -163,8 +162,7 @@ class HomematicipGenericEntity(Entity):
         else:
             # Remove from entity registry.
             # Only relevant for entities that do not belong to a device.
-            entity_id = self.registry_entry.entity_id
-            if entity_id:
+            if entity_id := self.registry_entry.entity_id:
                 entity_registry = await er.async_get_registry(self.hass)
                 if entity_id in entity_registry.entities:
                     entity_registry.async_remove(entity_id)

@@ -8,6 +8,7 @@ import async_timeout
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, LENGTH_METERS
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -121,13 +122,13 @@ class Measurement(CoordinatorEntity, SensorEntity):
     @property
     def device_info(self):
         """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, "measure-id", self.station_id)},
-            "name": self.name,
-            "manufacturer": "https://environment.data.gov.uk/",
-            "model": self.parameter_name,
-            "entry_type": "service",
-        }
+        return DeviceInfo(
+            entry_type="service",
+            identifiers={(DOMAIN, "measure-id", self.station_id)},
+            manufacturer="https://environment.data.gov.uk/",
+            model=self.parameter_name,
+            name=self.name,
+        )
 
     @property
     def available(self) -> bool:
@@ -149,7 +150,7 @@ class Measurement(CoordinatorEntity, SensorEntity):
         return True
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return units for the sensor."""
         measure = self.coordinator.data["measures"][self.key]
         if "unit" not in measure:
@@ -162,6 +163,6 @@ class Measurement(CoordinatorEntity, SensorEntity):
         return {ATTR_ATTRIBUTION: self.attribution}
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the current sensor value."""
         return self.coordinator.data["measures"][self.key]["latestReading"]["value"]

@@ -7,7 +7,7 @@ from aioguardian import Client
 from aioguardian.errors import GuardianError
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_FILENAME, CONF_PORT, CONF_URL
 from homeassistant.core import HomeAssistant, callback
@@ -38,6 +38,14 @@ SERVICE_REBOOT = "reboot"
 SERVICE_RESET_VALVE_DIAGNOSTICS = "reset_valve_diagnostics"
 SERVICE_UNPAIR_SENSOR = "unpair_sensor"
 SERVICE_UPGRADE_FIRMWARE = "upgrade_firmware"
+
+SWITCH_KIND_VALVE = "valve"
+
+SWITCH_DESCRIPTION_VALVE = SwitchEntityDescription(
+    key=SWITCH_KIND_VALVE,
+    name="Valve Controller",
+    icon="mdi:water",
+)
 
 
 async def async_setup_entry(
@@ -73,8 +81,8 @@ async def async_setup_entry(
         [
             ValveControllerSwitch(
                 entry,
-                hass.data[DOMAIN][DATA_CLIENT][entry.entry_id],
-                hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id],
+                hass.data[DOMAIN][entry.entry_id][DATA_CLIENT],
+                hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR],
             )
         ]
     )
@@ -90,9 +98,7 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
         coordinators: dict[str, DataUpdateCoordinator],
     ) -> None:
         """Initialize."""
-        super().__init__(
-            entry, coordinators, "valve", "Valve Controller", None, "mdi:water"
-        )
+        super().__init__(entry, coordinators, SWITCH_DESCRIPTION_VALVE)
 
         self._attr_is_on = True
         self._client = client
@@ -154,8 +160,8 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
             LOGGER.error("Error while adding paired sensor: %s", err)
             return
 
-        await self.hass.data[DOMAIN][DATA_PAIRED_SENSOR_MANAGER][
-            self._entry.entry_id
+        await self.hass.data[DOMAIN][self._entry.entry_id][
+            DATA_PAIRED_SENSOR_MANAGER
         ].async_pair_sensor(uid)
 
     async def async_reboot(self) -> None:
@@ -183,8 +189,8 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
             LOGGER.error("Error while removing paired sensor: %s", err)
             return
 
-        await self.hass.data[DOMAIN][DATA_PAIRED_SENSOR_MANAGER][
-            self._entry.entry_id
+        await self.hass.data[DOMAIN][self._entry.entry_id][
+            DATA_PAIRED_SENSOR_MANAGER
         ].async_unpair_sensor(uid)
 
     async def async_upgrade_firmware(
@@ -201,7 +207,7 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
         except GuardianError as err:
             LOGGER.error("Error while upgrading firmware: %s", err)
 
-    async def async_turn_off(self, **kwargs: dict[str, Any]) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the valve off (closed)."""
         try:
             async with self._client:
@@ -213,7 +219,7 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
         self._attr_is_on = False
         self.async_write_ha_state()
 
-    async def async_turn_on(self, **kwargs: dict[str, Any]) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the valve on (open)."""
         try:
             async with self._client:

@@ -11,6 +11,7 @@ from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     LIGHT_LUX,
     PERCENTAGE,
     TEMP_CELSIUS,
@@ -42,10 +43,10 @@ class HueLightLevel(GenericHueGaugeSensorEntity):
     """The light level sensor entity for a Hue motion sensor device."""
 
     _attr_device_class = DEVICE_CLASS_ILLUMINANCE
-    _attr_unit_of_measurement = LIGHT_LUX
+    _attr_native_unit_of_measurement = LIGHT_LUX
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         if self.sensor.lightlevel is None:
             return None
@@ -78,10 +79,10 @@ class HueTemperature(GenericHueGaugeSensorEntity):
 
     _attr_device_class = DEVICE_CLASS_TEMPERATURE
     _attr_state_class = STATE_CLASS_MEASUREMENT
-    _attr_unit_of_measurement = TEMP_CELSIUS
+    _attr_native_unit_of_measurement = TEMP_CELSIUS
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         if self.sensor.temperature is None:
             return None
@@ -94,7 +95,8 @@ class HueBattery(GenericHueSensor, SensorEntity):
 
     _attr_device_class = DEVICE_CLASS_BATTERY
     _attr_state_class = STATE_CLASS_MEASUREMENT
-    _attr_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     @property
     def unique_id(self):
@@ -102,7 +104,7 @@ class HueBattery(GenericHueSensor, SensorEntity):
         return f"{self.sensor.uniqueid}-battery"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the battery."""
         return self.sensor.battery
 

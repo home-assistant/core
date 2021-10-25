@@ -27,6 +27,7 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from . import api, config_flow
 from .const import DATA_SDM, DATA_SUBSCRIBER, DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
@@ -69,7 +70,7 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS = ["sensor", "camera", "climate"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Nest components with dispatch between old/new flows."""
     hass.data[DOMAIN] = {}
 
@@ -80,7 +81,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         return await async_setup_legacy(hass, config)
 
     if CONF_SUBSCRIBER_ID not in config[DOMAIN]:
-        _LOGGER.error("Configuration option '{CONF_SUBSCRIBER_ID}' required")
+        _LOGGER.error("Configuration option 'subscriber_id' required")
         return False
 
     # For setup of ConfigEntry below
@@ -114,8 +115,7 @@ class SignalUpdateCallback:
         if not event_message.resource_update_name:
             return
         device_id = event_message.resource_update_name
-        events = event_message.resource_update_events
-        if not events:
+        if not (events := event_message.resource_update_events):
             return
         _LOGGER.debug("Event Update %s", events.keys())
         device_registry = await self._hass.helpers.device_registry.async_get_registry()
@@ -123,8 +123,7 @@ class SignalUpdateCallback:
         if not device_entry:
             return
         for event in events:
-            event_type = EVENT_NAME_MAP.get(event)
-            if not event_type:
+            if not (event_type := EVENT_NAME_MAP.get(event)):
                 continue
             message = {
                 "device_id": device_entry.id,

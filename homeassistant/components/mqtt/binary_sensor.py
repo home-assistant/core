@@ -26,8 +26,9 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from . import CONF_QOS, CONF_STATE_TOPIC, DOMAIN, PLATFORMS, subscription
+from . import PLATFORMS, subscription
 from .. import mqtt
+from .const import CONF_QOS, CONF_STATE_TOPIC, DOMAIN
 from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
@@ -57,6 +58,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA)
+
 
 async def async_setup_platform(
     hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
@@ -71,7 +74,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
-    await async_setup_entry_helper(hass, binary_sensor.DOMAIN, setup, PLATFORM_SCHEMA)
+    await async_setup_entry_helper(hass, binary_sensor.DOMAIN, setup, DISCOVERY_SCHEMA)
 
 
 async def _async_setup_entity(
@@ -100,7 +103,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity):
     @staticmethod
     def config_schema():
         """Return the config schema."""
-        return PLATFORM_SCHEMA
+        return DISCOVERY_SCHEMA
 
     def _setup_from_config(self, config):
         value_template = self._config.get(CONF_VALUE_TEMPLATE)

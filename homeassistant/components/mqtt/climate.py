@@ -51,15 +51,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType
 
-from . import (
-    CONF_QOS,
-    CONF_RETAIN,
-    DOMAIN,
-    MQTT_BASE_PLATFORM_SCHEMA,
-    PLATFORMS,
-    subscription,
-)
+from . import MQTT_BASE_PLATFORM_SCHEMA, PLATFORMS, subscription
 from .. import mqtt
+from .const import CONF_QOS, CONF_RETAIN, DOMAIN
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
@@ -274,6 +268,8 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA)
+
 
 async def async_setup_platform(
     hass: HomeAssistant, async_add_entities, config: ConfigType, discovery_info=None
@@ -288,7 +284,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
-    await async_setup_entry_helper(hass, climate.DOMAIN, setup, PLATFORM_SCHEMA)
+    await async_setup_entry_helper(hass, climate.DOMAIN, setup, DISCOVERY_SCHEMA)
 
 
 async def _async_setup_entity(
@@ -325,7 +321,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
     @staticmethod
     def config_schema():
         """Return the config schema."""
-        return PLATFORM_SCHEMA
+        return DISCOVERY_SCHEMA
 
     async def async_added_to_hass(self):
         """Handle being added to Home Assistant."""

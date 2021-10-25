@@ -8,6 +8,8 @@ from homeassistant.core import HomeAssistant, callback
 
 from . import template
 
+# mypy: disallow-any-generics
+
 
 class ScriptVariables:
     """Class to hold and render script variables."""
@@ -65,6 +67,6 @@ class ScriptVariables:
 
         return rendered_variables
 
-    def as_dict(self) -> dict:
+    def as_dict(self) -> dict[str, Any]:
         """Return dict version of this class."""
         return self.variables

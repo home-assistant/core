@@ -31,8 +31,7 @@ async def async_setup_entry(hass, config_entry):
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     def _element_changed(element, changeset):
-        change = changeset.get("last_change")
-        if change is None:
+        if (change := changeset.get("last_change")) is None:
             return
         if change.get("command") is None:
             return

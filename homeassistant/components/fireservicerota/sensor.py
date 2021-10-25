@@ -49,7 +49,7 @@ class IncidentsSensor(RestoreEntity, SensorEntity):
         return "mdi:fire-truck"
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         return self._state
 
@@ -67,9 +67,8 @@ class IncidentsSensor(RestoreEntity, SensorEntity):
     def extra_state_attributes(self) -> object:
         """Return available attributes for sensor."""
         attr = {}
-        data = self._state_attributes
 
-        if not data:
+        if not (data := self._state_attributes):
             return attr
 
         for value in (

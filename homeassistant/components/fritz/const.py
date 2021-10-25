@@ -1,10 +1,14 @@
 """Constants for the FRITZ!Box Tools integration."""
 
+from typing import Literal
+
 DOMAIN = "fritz"
 
 PLATFORMS = ["binary_sensor", "device_tracker", "sensor", "switch"]
 
 DATA_FRITZ = "fritz_data"
+
+DSL_CONNECTION: Literal["dsl"] = "dsl"
 
 DEFAULT_DEVICE_NAME = "Unknown device"
 DEFAULT_HOST = "192.168.178.1"

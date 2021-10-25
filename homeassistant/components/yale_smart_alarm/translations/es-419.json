@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "area_id": "ID de \u00c1rea"
+                }
+            }
+        }
+    }
+}

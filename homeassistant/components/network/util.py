@@ -116,6 +116,7 @@ def _ifaddr_adapter_to_ha(
 
     return {
         "name": adapter.nice_name,
+        "index": adapter.index,
         "enabled": False,
         "auto": auto,
         "default": default,

@@ -43,7 +43,7 @@ MIN_UPDATE_SOURCES = timedelta(seconds=1)
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HEOS component."""
     if DOMAIN not in config:
         return True
@@ -130,7 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     controller_manager = hass.data[DOMAIN][DATA_CONTROLLER_MANAGER]
     await controller_manager.disconnect()

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Autenticazione non valida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Nome utente"
+                },
+                "description": "Inserisci le credenziali utilizzate per accedere a mytotalconnectcomfort.com.",
+                "title": "Honeywell Total Connect Comfort (USA)"
+            }
+        }
+    }
+}

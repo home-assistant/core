@@ -8,12 +8,14 @@ import voluptuous as vol
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
@@ -219,8 +221,6 @@ class AtomeData:
 class AtomeSensor(SensorEntity):
     """Representation of a sensor entity for Atome."""
 
-    _attr_device_class = DEVICE_CLASS_POWER
-
     def __init__(self, data, name, sensor_type):
         """Initialize the sensor."""
         self._attr_name = name
@@ -229,10 +229,13 @@ class AtomeSensor(SensorEntity):
         self._sensor_type = sensor_type
 
         if sensor_type == LIVE_TYPE:
-            self._attr_unit_of_measurement = POWER_WATT
+            self._attr_device_class = DEVICE_CLASS_POWER
+            self._attr_native_unit_of_measurement = POWER_WATT
             self._attr_state_class = STATE_CLASS_MEASUREMENT
         else:
-            self._attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+            self._attr_device_class = DEVICE_CLASS_ENERGY
+            self._attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
 
     def update(self):
         """Update device state."""
@@ -240,13 +243,13 @@ class AtomeSensor(SensorEntity):
         update_function()
 
         if self._sensor_type == LIVE_TYPE:
-            self._attr_state = self._data.live_power
+            self._attr_native_value = self._data.live_power
             self._attr_extra_state_attributes = {
                 "subscribed_power": self._data.subscribed_power,
                 "is_connected": self._data.is_connected,
             }
         else:
-            self._attr_state = getattr(self._data, f"{self._sensor_type}_usage")
+            self._attr_native_value = getattr(self._data, f"{self._sensor_type}_usage")
             self._attr_extra_state_attributes = {
                 "price": getattr(self._data, f"{self._sensor_type}_price")
             }

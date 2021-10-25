@@ -37,10 +37,14 @@ from . import (
     DEVICE_CLASS_SAFETY,
     DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_SOUND,
+    DEVICE_CLASS_TAMPER,
+    DEVICE_CLASS_UPDATE,
     DEVICE_CLASS_VIBRATION,
     DEVICE_CLASS_WINDOW,
     DOMAIN,
 )
+
+# mypy: disallow-any-generics
 
 DEVICE_CLASS_NONE = "none"
 
@@ -82,6 +86,10 @@ CONF_IS_SMOKE = "is_smoke"
 CONF_IS_NO_SMOKE = "is_no_smoke"
 CONF_IS_SOUND = "is_sound"
 CONF_IS_NO_SOUND = "is_no_sound"
+CONF_IS_TAMPERED = "is_tampered"
+CONF_IS_NOT_TAMPERED = "is_not_tampered"
+CONF_IS_UPDATE = "is_update"
+CONF_IS_NO_UPDATE = "is_no_update"
 CONF_IS_VIBRATION = "is_vibration"
 CONF_IS_NO_VIBRATION = "is_no_vibration"
 CONF_IS_OPEN = "is_open"
@@ -107,6 +115,8 @@ IS_ON = [
     CONF_IS_PROBLEM,
     CONF_IS_SMOKE,
     CONF_IS_SOUND,
+    CONF_IS_TAMPERED,
+    CONF_IS_UPDATE,
     CONF_IS_UNSAFE,
     CONF_IS_VIBRATION,
     CONF_IS_ON,
@@ -126,6 +136,7 @@ IS_OFF = [
     CONF_IS_NOT_PLUGGED_IN,
     CONF_IS_NOT_POWERED,
     CONF_IS_NOT_PRESENT,
+    CONF_IS_NOT_TAMPERED,
     CONF_IS_NOT_UNSAFE,
     CONF_IS_NO_GAS,
     CONF_IS_NO_LIGHT,
@@ -133,6 +144,7 @@ IS_OFF = [
     CONF_IS_NO_PROBLEM,
     CONF_IS_NO_SMOKE,
     CONF_IS_NO_SOUND,
+    CONF_IS_NO_UPDATE,
     CONF_IS_NO_VIBRATION,
     CONF_IS_OFF,
 ]
@@ -187,6 +199,11 @@ ENTITY_CONDITIONS = {
     DEVICE_CLASS_SAFETY: [{CONF_TYPE: CONF_IS_UNSAFE}, {CONF_TYPE: CONF_IS_NOT_UNSAFE}],
     DEVICE_CLASS_SMOKE: [{CONF_TYPE: CONF_IS_SMOKE}, {CONF_TYPE: CONF_IS_NO_SMOKE}],
     DEVICE_CLASS_SOUND: [{CONF_TYPE: CONF_IS_SOUND}, {CONF_TYPE: CONF_IS_NO_SOUND}],
+    DEVICE_CLASS_TAMPER: [
+        {CONF_TYPE: CONF_IS_TAMPERED},
+        {CONF_TYPE: CONF_IS_NOT_TAMPERED},
+    ],
+    DEVICE_CLASS_UPDATE: [{CONF_TYPE: CONF_IS_UPDATE}, {CONF_TYPE: CONF_IS_NO_UPDATE}],
     DEVICE_CLASS_VIBRATION: [
         {CONF_TYPE: CONF_IS_VIBRATION},
         {CONF_TYPE: CONF_IS_NO_VIBRATION},
@@ -260,7 +277,9 @@ def async_condition_from_config(
     return condition.state_from_config(state_config)
 
 
-async def async_get_condition_capabilities(hass: HomeAssistant, config: dict) -> dict:
+async def async_get_condition_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List condition capabilities."""
     return {
         "extra_fields": vol.Schema(

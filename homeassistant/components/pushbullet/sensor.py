@@ -1,34 +1,72 @@
 """Pushbullet platform for sensor component."""
+from __future__ import annotations
+
 import logging
 import threading
 
 from pushbullet import InvalidKeyError, Listener, PushBullet
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import CONF_API_KEY, CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_TYPES = {
-    "application_name": ["Application name"],
-    "body": ["Body"],
-    "notification_id": ["Notification ID"],
-    "notification_tag": ["Notification tag"],
-    "package_name": ["Package name"],
-    "receiver_email": ["Receiver email"],
-    "sender_email": ["Sender email"],
-    "source_device_iden": ["Sender device ID"],
-    "title": ["Title"],
-    "type": ["Type"],
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="application_name",
+        name="Application name",
+    ),
+    SensorEntityDescription(
+        key="body",
+        name="Body",
+    ),
+    SensorEntityDescription(
+        key="notification_id",
+        name="Notification ID",
+    ),
+    SensorEntityDescription(
+        key="notification_tag",
+        name="Notification tag",
+    ),
+    SensorEntityDescription(
+        key="package_name",
+        name="Package name",
+    ),
+    SensorEntityDescription(
+        key="receiver_email",
+        name="Receiver email",
+    ),
+    SensorEntityDescription(
+        key="sender_email",
+        name="Sender email",
+    ),
+    SensorEntityDescription(
+        key="source_device_iden",
+        name="Sender device ID",
+    ),
+    SensorEntityDescription(
+        key="title",
+        name="Title",
+    ),
+    SensorEntityDescription(
+        key="type",
+        name="Type",
+    ),
+)
+
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_MONITORED_CONDITIONS, default=["title", "body"]): vol.All(
-            cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_TYPES)]
+            cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_KEYS)]
         ),
     }
 )
@@ -45,21 +83,24 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     pbprovider = PushBulletNotificationProvider(pushbullet)
 
-    devices = []
-    for sensor_type in config[CONF_MONITORED_CONDITIONS]:
-        devices.append(PushBulletNotificationSensor(pbprovider, sensor_type))
-    add_entities(devices)
+    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
+    entities = [
+        PushBulletNotificationSensor(pbprovider, description)
+        for description in SENSOR_TYPES
+        if description.key in monitored_conditions
+    ]
+    add_entities(entities)
 
 
 class PushBulletNotificationSensor(SensorEntity):
     """Representation of a Pushbullet Sensor."""
 
-    def __init__(self, pb, element):
+    def __init__(self, pb, description: SensorEntityDescription):
         """Initialize the Pushbullet sensor."""
+        self.entity_description = description
         self.pushbullet = pb
-        self._element = element
-        self._state = None
-        self._state_attributes = None
+
+        self._attr_name = f"Pushbullet {description.key}"
 
     def update(self):
         """Fetch the latest data from the sensor.
@@ -68,25 +109,10 @@ class PushBulletNotificationSensor(SensorEntity):
         attributes into self._state_attributes.
         """
         try:
-            self._state = self.pushbullet.data[self._element]
-            self._state_attributes = self.pushbullet.data
+            self._attr_native_value = self.pushbullet.data[self.entity_description.key]
+            self._attr_extra_state_attributes = self.pushbullet.data
         except (KeyError, TypeError):
             pass
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"Pushbullet {self._element}"
-
-    @property
-    def state(self):
-        """Return the current state of the sensor."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self):
-        """Return all known attributes of the sensor."""
-        return self._state_attributes
 
 
 class PushBulletNotificationProvider:

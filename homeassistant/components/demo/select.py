@@ -5,6 +5,7 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -66,15 +67,12 @@ class DemoSelect(SelectEntity):
         self._attr_icon = icon
         self._attr_device_class = device_class
         self._attr_options = options
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, unique_id)},
-            "name": name,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            name=name,
+        )
 
     async def async_select_option(self, option: str) -> None:
         """Update the current selected option."""
-        if option not in self.options:
-            raise ValueError(f"Invalid option for {self.entity_id}: {option}")
-
         self._attr_current_option = option
         self.async_write_ha_state()

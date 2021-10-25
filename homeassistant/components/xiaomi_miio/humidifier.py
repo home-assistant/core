@@ -5,11 +5,10 @@ import math
 
 from miio.airhumidifier import OperationMode as AirhumidifierOperationMode
 from miio.airhumidifier_miot import OperationMode as AirhumidifierMiotOperationMode
+from miio.airhumidifier_mjjsq import OperationMode as AirhumidifierMjjsqOperationMode
 
 from homeassistant.components.humidifier import HumidifierEntity
 from homeassistant.components.humidifier.const import (
-    DEFAULT_MAX_HUMIDITY,
-    DEFAULT_MIN_HUMIDITY,
     DEVICE_CLASS_HUMIDIFIER,
     SUPPORT_MODES,
 )
@@ -28,6 +27,7 @@ from .const import (
     MODEL_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1,
     MODELS_HUMIDIFIER_MIOT,
+    MODELS_HUMIDIFIER_MJJSQ,
 )
 from .device import XiaomiCoordinatedMiioEntity
 
@@ -40,6 +40,23 @@ AVAILABLE_ATTRIBUTES = {
     ATTR_MODE: "mode",
     ATTR_TARGET_HUMIDITY: "target_humidity",
 }
+
+AVAILABLE_MODES_CA1_CB1 = [
+    mode.name
+    for mode in AirhumidifierOperationMode
+    if mode is not AirhumidifierOperationMode.Strong
+]
+AVAILABLE_MODES_CA4 = [mode.name for mode in AirhumidifierMiotOperationMode]
+AVAILABLE_MODES_MJJSQ = [
+    mode.name
+    for mode in AirhumidifierMjjsqOperationMode
+    if mode is not AirhumidifierMjjsqOperationMode.WetAndProtect
+]
+AVAILABLE_MODES_OTHER = [
+    mode.name
+    for mode in AirhumidifierOperationMode
+    if mode is not AirhumidifierOperationMode.Auto
+]
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -56,6 +73,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if model in MODELS_HUMIDIFIER_MIOT:
         air_humidifier = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
         entity = XiaomiAirHumidifierMiot(
+            name,
+            air_humidifier,
+            config_entry,
+            unique_id,
+            coordinator,
+        )
+    elif model in MODELS_HUMIDIFIER_MJJSQ:
+        air_humidifier = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+        entity = XiaomiAirHumidifierMjjsq(
             name,
             air_humidifier,
             config_entry,
@@ -89,10 +115,7 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
 
         self._state = None
         self._attributes = {}
-        self._available_modes = []
         self._mode = None
-        self._min_humidity = DEFAULT_MIN_HUMIDITY
-        self._max_humidity = DEFAULT_MAX_HUMIDITY
         self._humidity_steps = 100
         self._target_humidity = None
 
@@ -110,24 +133,9 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
         return value
 
     @property
-    def available_modes(self) -> list:
-        """Get the list of available modes."""
-        return self._available_modes
-
-    @property
     def mode(self):
         """Get the current mode."""
         return self._mode
-
-    @property
-    def min_humidity(self):
-        """Return the minimum target humidity."""
-        return self._min_humidity
-
-    @property
-    def max_humidity(self):
-        """Return the maximum target humidity."""
-        return self._max_humidity
 
     async def async_turn_on(
         self,
@@ -168,31 +176,20 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
     def __init__(self, name, device, entry, unique_id, coordinator):
         """Initialize the plug switch."""
         super().__init__(name, device, entry, unique_id, coordinator)
+
+        self._attr_min_humidity = 30
+        self._attr_max_humidity = 80
         if self._model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
-            self._available_modes = []
-            self._available_modes = [
-                mode.name
-                for mode in AirhumidifierOperationMode
-                if mode is not AirhumidifierOperationMode.Strong
-            ]
-            self._min_humidity = 30
-            self._max_humidity = 80
+            self._attr_available_modes = AVAILABLE_MODES_CA1_CB1
             self._humidity_steps = 10
         elif self._model in [MODEL_AIRHUMIDIFIER_CA4]:
-            self._available_modes = [
-                mode.name for mode in AirhumidifierMiotOperationMode
-            ]
-            self._min_humidity = 30
-            self._max_humidity = 80
+            self._attr_available_modes = AVAILABLE_MODES_CA4
+            self._humidity_steps = 100
+        elif self._model in MODELS_HUMIDIFIER_MJJSQ:
+            self._attr_available_modes = AVAILABLE_MODES_MJJSQ
             self._humidity_steps = 100
         else:
-            self._available_modes = [
-                mode.name
-                for mode in AirhumidifierOperationMode
-                if mode is not AirhumidifierOperationMode.Auto
-            ]
-            self._min_humidity = 30
-            self._max_humidity = 80
+            self._attr_available_modes = AVAILABLE_MODES_OTHER
             self._humidity_steps = 10
 
         self._state = self.coordinator.data.is_on
@@ -363,4 +360,76 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
                 self.REVERSE_MODE_MAPPING[mode],
             ):
                 self._mode = self.REVERSE_MODE_MAPPING[mode].value
+                self.async_write_ha_state()
+
+
+class XiaomiAirHumidifierMjjsq(XiaomiAirHumidifier):
+    """Representation of a Xiaomi Air MJJSQ Humidifier."""
+
+    MODE_MAPPING = {
+        "Low": AirhumidifierMjjsqOperationMode.Low,
+        "Medium": AirhumidifierMjjsqOperationMode.Medium,
+        "High": AirhumidifierMjjsqOperationMode.High,
+        "Humidity": AirhumidifierMjjsqOperationMode.Humidity,
+    }
+
+    @property
+    def mode(self):
+        """Return the current mode."""
+        return AirhumidifierMjjsqOperationMode(self._mode).name
+
+    @property
+    def target_humidity(self):
+        """Return the target humidity."""
+        if self._state:
+            if (
+                AirhumidifierMjjsqOperationMode(self._mode)
+                == AirhumidifierMjjsqOperationMode.Humidity
+            ):
+                return self._target_humidity
+        return None
+
+    async def async_set_humidity(self, humidity: int) -> None:
+        """Set the target humidity of the humidifier and set the mode to Humidity."""
+        target_humidity = self.translate_humidity(humidity)
+        if not target_humidity:
+            return
+
+        _LOGGER.debug("Setting the humidity to: %s", target_humidity)
+        if await self._try_command(
+            "Setting operation mode of the miio device failed.",
+            self._device.set_target_humidity,
+            target_humidity,
+        ):
+            self._target_humidity = target_humidity
+        if (
+            self.supported_features & SUPPORT_MODES == 0
+            or AirhumidifierMjjsqOperationMode(self._attributes[ATTR_MODE])
+            == AirhumidifierMjjsqOperationMode.Humidity
+        ):
+            self.async_write_ha_state()
+            return
+        _LOGGER.debug("Setting the operation mode to: Humidity")
+        if await self._try_command(
+            "Setting operation mode of the miio device to MODE_HUMIDITY failed.",
+            self._device.set_mode,
+            AirhumidifierMjjsqOperationMode.Humidity,
+        ):
+            self._mode = 3
+            self.async_write_ha_state()
+
+    async def async_set_mode(self, mode: str) -> None:
+        """Set the mode of the fan."""
+        if mode not in self.MODE_MAPPING:
+            _LOGGER.warning("Mode %s is not a valid operation mode", mode)
+            return
+
+        _LOGGER.debug("Setting the operation mode to: %s", mode)
+        if self._state:
+            if await self._try_command(
+                "Setting operation mode of the miio device failed.",
+                self._device.set_mode,
+                self.MODE_MAPPING[mode],
+            ):
+                self._mode = self.MODE_MAPPING[mode].value
                 self.async_write_ha_state()

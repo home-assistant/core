@@ -91,7 +91,7 @@ class RedditSensor(SensorEntity):
         self._limit = limit
         self._sort_by = sort_by
 
-        self._subreddit_data = []
+        self._subreddit_data: list = []
 
     @property
     def name(self):
@@ -99,7 +99,7 @@ class RedditSensor(SensorEntity):
         return f"reddit_{self._subreddit}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return len(self._subreddit_data)
 

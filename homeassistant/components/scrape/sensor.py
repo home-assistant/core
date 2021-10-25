@@ -66,8 +66,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    value_template = config.get(CONF_VALUE_TEMPLATE)
-    if value_template is not None:
+
+    if (value_template := config.get(CONF_VALUE_TEMPLATE)) is not None:
         value_template.hass = hass
 
     if username and password:
@@ -108,12 +108,12 @@ class ScrapeSensor(SensorEntity):
         return self._name
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._state
 

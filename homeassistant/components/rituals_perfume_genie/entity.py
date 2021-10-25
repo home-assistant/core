@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from pyrituals import Diffuser
 
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import RitualsDataUpdateCoordinator
@@ -33,13 +34,13 @@ class DiffuserEntity(CoordinatorEntity):
 
         self._attr_name = f"{hubname}{entity_suffix}"
         self._attr_unique_id = f"{hublot}{entity_suffix}"
-        self._attr_device_info = {
-            "name": hubname,
-            "identifiers": {(DOMAIN, hublot)},
-            "manufacturer": MANUFACTURER,
-            "model": MODEL if diffuser.has_battery else MODEL2,
-            "sw_version": diffuser.version,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, hublot)},
+            manufacturer=MANUFACTURER,
+            model=MODEL if diffuser.has_battery else MODEL2,
+            name=hubname,
+            sw_version=diffuser.version,
+        )
 
     @property
     def available(self) -> bool:

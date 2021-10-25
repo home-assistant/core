@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u00da\u010det je ji\u017e nastaven",
+            "reauth_failed_existing": "Nepoda\u0159ilo se aktualizovat polo\u017eku konfigurace, odstra\u0148te pros\u00edm integraci a nastavte ji znovu.",
+            "reauth_successful": "Op\u011btovn\u00e9 ov\u011b\u0159en\u00ed bylo \u00fasp\u011b\u0161n\u00e9",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_api_key": "Neplatn\u00fd kl\u00ed\u010d API",
+            "reauth_failed_matching_account": "Zadan\u00fd kl\u00ed\u010d API neodpov\u00edd\u00e1 ID \u00fa\u010dtu pro st\u00e1vaj\u00edc\u00ed konfiguraci.",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Kl\u00ed\u010d API"
+                },
+                "description": "Je t\u0159eba zadat nov\u00fd kl\u00ed\u010d API \u010dten\u00ed od spole\u010dnosti Uptime Robot.",
+                "title": "Znovu ov\u011b\u0159it integraci"
+            },
+            "user": {
+                "data": {
+                    "api_key": "Kl\u00ed\u010d API"
+                },
+                "description": "Mus\u00edte zadat kl\u00ed\u010d API pro \u010dten\u00ed od spole\u010dnosti Uptime Robot."
+            }
+        }
+    }
+}

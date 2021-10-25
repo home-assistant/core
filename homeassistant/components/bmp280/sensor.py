@@ -78,7 +78,7 @@ class Bmp280Sensor(SensorEntity):
         """Initialize the sensor."""
         self._bmp280 = bmp280
         self._attr_name = name
-        self._attr_unit_of_measurement = unit_of_measurement
+        self._attr_native_unit_of_measurement = unit_of_measurement
 
 
 class Bmp280TemperatureSensor(Bmp280Sensor):
@@ -94,7 +94,7 @@ class Bmp280TemperatureSensor(Bmp280Sensor):
     def update(self):
         """Fetch new state data for the sensor."""
         try:
-            self._attr_state = round(self._bmp280.temperature, 1)
+            self._attr_native_value = round(self._bmp280.temperature, 1)
             if not self.available:
                 _LOGGER.warning("Communication restored with temperature sensor")
                 self._attr_available = True
@@ -119,7 +119,7 @@ class Bmp280PressureSensor(Bmp280Sensor):
     def update(self):
         """Fetch new state data for the sensor."""
         try:
-            self._attr_state = round(self._bmp280.pressure)
+            self._attr_native_value = round(self._bmp280.pressure)
             if not self.available:
                 _LOGGER.warning("Communication restored with pressure sensor")
                 self._attr_available = True

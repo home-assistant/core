@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
+from typing import Any, cast
 
 import pyatmo
 import voluptuous as vol
@@ -23,6 +23,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
+    ATTR_SUGGESTED_AREA,
     ATTR_TEMPERATURE,
     PRECISION_HALVES,
     STATE_OFF,
@@ -52,6 +53,7 @@ from .const import (
     MANUFACTURER,
     SERVICE_SET_SCHEDULE,
     SIGNAL_NAME,
+    TYPE_ENERGY,
 )
 from .data_handler import (
     HOMEDATA_DATA_CLASS_NAME,
@@ -114,8 +116,6 @@ DEFAULT_MAX_TEMP = 30
 
 NA_THERM = "NATherm1"
 NA_VALVE = "NRV"
-
-SUGGESTED_AREA = "suggested_area"
 
 
 async def async_setup_entry(
@@ -208,6 +208,8 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             if self._home_status.thermostats.get(module):
                 self._model = NA_THERM
                 break
+
+        self._netatmo_type = TYPE_ENERGY
 
         self._device_name = self._data.rooms[home_id][room_id]["name"]
         self._attr_name = f"{MANUFACTURER} {self._device_name}"
@@ -439,10 +441,9 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         """Return a list of available preset modes."""
         return SUPPORT_PRESET
 
-    async def async_set_temperature(self, **kwargs: dict) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature for 2 hours."""
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        if temp is None:
+        if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         await self._home_status.async_set_room_thermpoint(
             self._id, STATE_NETATMO_MANUAL, temp
@@ -589,7 +590,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
 
         return {}
 
-    async def _async_service_set_schedule(self, **kwargs: dict) -> None:
+    async def _async_service_set_schedule(self, **kwargs: Any) -> None:
         schedule_name = kwargs.get(ATTR_SCHEDULE_NAME)
         schedule_id = None
         for sid, name in self.hass.data[DOMAIN][DATA_SCHEDULES][self._home_id].items():
@@ -614,5 +615,5 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device info for the thermostat."""
         device_info: DeviceInfo = super().device_info
-        device_info["suggested_area"] = self._room_data["name"]
+        device_info[ATTR_SUGGESTED_AREA] = self._room_data["name"]
         return device_info

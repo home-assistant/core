@@ -3,7 +3,9 @@ import logging
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
@@ -40,6 +42,7 @@ HM_STATE_HA_CAST = {
         2: "allsens_armed",
         3: "alarm_blocked",
     },
+    "IPLockDLD": {0: None, 1: "locked", 2: "unlocked"},
 }
 
 HM_UNIT_HA_CAST = {
@@ -72,6 +75,7 @@ HM_UNIT_HA_CAST = {
     "VALVE_STATE": PERCENTAGE,
     "CARRIER_SENSE_LEVEL": PERCENTAGE,
     "DUTY_CYCLE_LEVEL": PERCENTAGE,
+    "CONCENTRATION": CONCENTRATION_PARTS_PER_MILLION,
 }
 
 HM_DEVICE_CLASS_HA_CAST = {
@@ -85,6 +89,7 @@ HM_DEVICE_CLASS_HA_CAST = {
     "HIGHEST_ILLUMINATION": DEVICE_CLASS_ILLUMINANCE,
     "POWER": DEVICE_CLASS_POWER,
     "CURRENT": DEVICE_CLASS_POWER,
+    "CONCENTRATION": DEVICE_CLASS_CO2,
 }
 
 HM_ICON_HA_CAST = {"WIND_SPEED": "mdi:weather-windy", "BRIGHTNESS": "mdi:invert-colors"}
@@ -107,7 +112,7 @@ class HMSensor(HMDevice, SensorEntity):
     """Representation of a HomeMatic sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         # Does a cast exist for this class?
         name = self._hmdevice.__class__.__name__
@@ -118,7 +123,7 @@ class HMSensor(HMDevice, SensorEntity):
         return self._hm_get_state()
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return HM_UNIT_HA_CAST.get(self._state)
 

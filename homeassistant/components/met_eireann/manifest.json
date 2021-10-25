@@ -3,7 +3,7 @@
   "name": "Met Éireann",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/met_eireann",
-  "requirements": ["pyMetEireann==0.2"],
+  "requirements": ["pyMetEireann==2021.8.0"],
   "codeowners": ["@DylanGore"],
   "iot_class": "cloud_polling"
 }

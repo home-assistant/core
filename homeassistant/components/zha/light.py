@@ -481,8 +481,7 @@ class Light(BaseLight, ZhaEntity):
                 attributes, from_cache=False
             )
 
-            color_mode = results.get("color_mode")
-            if color_mode is not None:
+            if (color_mode := results.get("color_mode")) is not None:
                 if color_mode == LightColorMode.COLOR_TEMP:
                     color_temp = results.get("color_temperature")
                     if color_temp is not None and color_mode:
@@ -523,7 +522,7 @@ class Light(BaseLight, ZhaEntity):
 @STRICT_MATCH(
     channel_names=CHANNEL_ON_OFF,
     aux_channels={CHANNEL_COLOR, CHANNEL_LEVEL},
-    manufacturers="Philips",
+    manufacturers={"Philips", "Signify Netherlands B.V."},
 )
 class HueLight(Light):
     """Representation of a HUE light which does not report attributes."""

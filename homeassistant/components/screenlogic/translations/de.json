@@ -18,7 +18,7 @@
             },
             "gateway_select": {
                 "data": {
-                    "selected_gateway": ""
+                    "selected_gateway": "Gateway"
                 },
                 "description": "Die folgenden ScreenLogic-Gateways wurden erkannt. Bitte w\u00e4hle eines aus, um es zu konfigurieren oder w\u00e4hle ein ScreenLogic-Gateway zum manuellen Konfigurieren.",
                 "title": "ScreenLogic"

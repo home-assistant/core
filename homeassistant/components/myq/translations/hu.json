@@ -14,14 +14,15 @@
                 "data": {
                     "password": "Jelsz\u00f3"
                 },
-                "description": "A(z) {username} jelszava m\u00e1r nem \u00e9rv\u00e9nyes.",
+                "description": "{username} jelszava m\u00e1r nem \u00e9rv\u00e9nyes.",
                 "title": "Hiteles\u00edtse \u00fajra MyQ-fi\u00f3kj\u00e1t"
             },
             "user": {
                 "data": {
                     "password": "Jelsz\u00f3",
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
-                }
+                },
+                "title": "Csatlakozzon a MyQ Gateway-hez"
             }
         }
     }

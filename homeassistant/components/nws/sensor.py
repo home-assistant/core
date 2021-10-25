@@ -14,13 +14,14 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.dt import utcnow
 from homeassistant.util.pressure import convert as convert_pressure
 from homeassistant.util.speed import convert as convert_speed
 
-from . import base_unique_id
+from . import base_unique_id, device_info
 from .const import (
     ATTRIBUTION,
     CONF_STATION,
@@ -56,6 +57,7 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
     """An NWS Sensor Entity."""
 
     entity_description: NWSSensorEntityDescription
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     def __init__(
         self,
@@ -74,16 +76,16 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
 
         self._attr_name = f"{station} {description.name}"
         if not hass.config.units.is_metric:
-            self._attr_unit_of_measurement = description.unit_convert
+            self._attr_native_unit_of_measurement = description.unit_convert
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         value = self._nws.observation.get(self.entity_description.key)
         if value is None:
             return None
         # Set alias to unit property -> prevent unnecessary hasattr calls
-        unit_of_measurement = self.unit_of_measurement
+        unit_of_measurement = self.native_unit_of_measurement
         if unit_of_measurement == SPEED_MILES_PER_HOUR:
             return round(
                 convert_speed(value, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR)
@@ -97,11 +99,6 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
         if unit_of_measurement == PERCENTAGE:
             return round(value)
         return value
-
-    @property
-    def device_state_attributes(self):
-        """Return the attribution."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
     def unique_id(self):
@@ -124,3 +121,8 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return False
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return device_info(self._latitude, self._longitude)

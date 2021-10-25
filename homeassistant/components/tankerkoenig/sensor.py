@@ -110,12 +110,12 @@ class FuelPriceSensor(CoordinatorEntity, SensorEntity):
         return ICON
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return unit of measurement."""
         return CURRENCY_EURO
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         # key Fuel_type is not available when the fuel station is closed, use "get" instead of "[]" to avoid exceptions
         return self.coordinator.data[self._station_id].get(self._fuel_type)

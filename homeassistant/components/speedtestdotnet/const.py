@@ -1,17 +1,49 @@
-"""Consts used by Speedtest.net."""
-from typing import Final
+"""Constants used by Speedtest.net."""
+from __future__ import annotations
 
+from dataclasses import dataclass
+from typing import Callable, Final
+
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorEntityDescription,
+)
 from homeassistant.const import DATA_RATE_MEGABITS_PER_SECOND, TIME_MILLISECONDS
 
 DOMAIN: Final = "speedtestdotnet"
 
 SPEED_TEST_SERVICE: Final = "speedtest"
 
-SENSOR_TYPES: Final = {
-    "ping": ["Ping", TIME_MILLISECONDS],
-    "download": ["Download", DATA_RATE_MEGABITS_PER_SECOND],
-    "upload": ["Upload", DATA_RATE_MEGABITS_PER_SECOND],
-}
+
+@dataclass
+class SpeedtestSensorEntityDescription(SensorEntityDescription):
+    """Class describing Speedtest sensor entities."""
+
+    value: Callable = round
+
+
+SENSOR_TYPES: Final[tuple[SpeedtestSensorEntityDescription, ...]] = (
+    SpeedtestSensorEntityDescription(
+        key="ping",
+        name="Ping",
+        native_unit_of_measurement=TIME_MILLISECONDS,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SpeedtestSensorEntityDescription(
+        key="download",
+        name="Download",
+        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        state_class=STATE_CLASS_MEASUREMENT,
+        value=lambda value: round(value / 10 ** 6, 2),
+    ),
+    SpeedtestSensorEntityDescription(
+        key="upload",
+        name="Upload",
+        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        state_class=STATE_CLASS_MEASUREMENT,
+        value=lambda value: round(value / 10 ** 6, 2),
+    ),
+)
 
 CONF_SERVER_NAME: Final = "server_name"
 CONF_SERVER_ID: Final = "server_id"

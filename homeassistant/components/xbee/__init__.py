@@ -115,9 +115,8 @@ class XBeeConfig:
         If an address has been provided, unhexlify it, otherwise return None
         as we're talking to our local XBee device.
         """
-        address = self._config.get("address")
-        if address is not None:
-            address = unhexlify(address)
+        if (address := self._config.get("address")) is not None:
+            return unhexlify(address)
         return address
 
     @property
@@ -369,7 +368,7 @@ class XBeeDigitalOut(XBeeDigitalIn):
 class XBeeAnalogIn(SensorEntity):
     """Representation of a GPIO pin configured as an analog input."""
 
-    _attr_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(self, config, device):
         """Initialize the XBee analog in device."""
@@ -416,7 +415,7 @@ class XBeeAnalogIn(SensorEntity):
         return self._config.should_poll
 
     @property
-    def state(self):
+    def sensor_state(self):
         """Return the state of the entity."""
         return self._value
 

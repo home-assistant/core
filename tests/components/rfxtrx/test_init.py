@@ -6,56 +6,9 @@ from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.components.rfxtrx.const import EVENT_RFXTRX_EVENT
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.components.rfxtrx.conftest import create_rfx_test_cfg
-
-
-async def test_valid_config(hass):
-    """Test configuration."""
-    assert await async_setup_component(
-        hass,
-        "rfxtrx",
-        {
-            "rfxtrx": {
-                "device": "/dev/serial/by-id/usb"
-                + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
-            }
-        },
-    )
-
-
-async def test_valid_config2(hass):
-    """Test configuration."""
-    assert await async_setup_component(
-        hass,
-        "rfxtrx",
-        {
-            "rfxtrx": {
-                "device": "/dev/serial/by-id/usb"
-                + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
-                "debug": True,
-            }
-        },
-    )
-
-
-async def test_invalid_config(hass):
-    """Test configuration."""
-    assert not await async_setup_component(hass, "rfxtrx", {"rfxtrx": {}})
-
-    assert not await async_setup_component(
-        hass,
-        "rfxtrx",
-        {
-            "rfxtrx": {
-                "device": "/dev/serial/by-id/usb"
-                + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
-                "invalid_key": True,
-            }
-        },
-    )
 
 
 async def test_fire_event(hass, rfxtrx):

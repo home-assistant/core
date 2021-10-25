@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El compte ja ha estat configurat"
+            "already_configured": "El compte ja est\u00e0 configurat"
         },
         "error": {
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
@@ -9,16 +9,16 @@
         "step": {
             "reauth_confirm": {
                 "data": {
-                    "area_id": "[%key:component::yale_smart_alarm::config::step::user::data::area_id%]",
-                    "name": "[%key:component::yale_smart_alarm::config::step::user::data::name%]",
+                    "area_id": "ID d'\u00e0rea",
+                    "name": "Nom",
                     "password": "Contrasenya",
                     "username": "Nom d'usuari"
                 }
             },
             "user": {
                 "data": {
-                    "area_id": "[%key:component::yale_smart_alarm::config::step::user::data::area_id%]",
-                    "name": "[%key:component::yale_smart_alarm::config::step::user::data::name%]",
+                    "area_id": "ID d'\u00e0rea",
+                    "name": "Nom",
                     "password": "Contrasenya",
                     "username": "Nom d'usuari"
                 }

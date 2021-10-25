@@ -1,4 +1,5 @@
 """Support for Enphase Envoy solar energy monitor."""
+from __future__ import annotations
 
 import logging
 
@@ -14,6 +15,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import COORDINATOR, DOMAIN, NAME, SENSORS
@@ -22,14 +24,15 @@ ICON = "mdi:flash"
 CONST_DEFAULT_HOST = "envoy"
 _LOGGER = logging.getLogger(__name__)
 
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSORS]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_IP_ADDRESS, default=CONST_DEFAULT_HOST): cv.string,
         vol.Optional(CONF_USERNAME, default="envoy"): cv.string,
         vol.Optional(CONF_PASSWORD, default=""): cv.string,
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSORS)): vol.All(
-            cv.ensure_list, [vol.In(list(SENSORS))]
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_KEYS)]
         ),
         vol.Optional(CONF_NAME, default=""): cv.string,
     }
@@ -130,7 +133,7 @@ class Envoy(CoordinatorEntity, SensorEntity):
             return f"{self._device_serial_number}_{self.entity_description.key}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self.entity_description.key != "inverters":
             value = self.coordinator.data.get(self.entity_description.key)
@@ -167,13 +170,13 @@ class Envoy(CoordinatorEntity, SensorEntity):
         return None
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
         if not self._device_serial_number:
             return None
-        return {
-            "identifiers": {(DOMAIN, str(self._device_serial_number))},
-            "name": self._device_name,
-            "model": "Envoy",
-            "manufacturer": "Enphase",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, str(self._device_serial_number))},
+            manufacturer="Enphase",
+            model="Envoy",
+            name=self._device_name,
+        )

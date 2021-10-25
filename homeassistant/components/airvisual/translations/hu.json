@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "A hely m\u00e1r konfigur\u00e1lva van vagy a Node/Pro azonos\u00edt\u00f3 m\u00e1r regisztr\u00e1lva van.",
-            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt"
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
@@ -32,15 +32,31 @@
             },
             "node_pro": {
                 "data": {
-                    "ip_address": "Hoszt",
+                    "ip_address": "C\u00edm",
                     "password": "Jelsz\u00f3"
-                }
+                },
+                "description": "Szem\u00e9lyes AirVisual egys\u00e9g figyel\u00e9se. A jelsz\u00f3 lek\u00e9rhet\u0151 a k\u00e9sz\u00fcl\u00e9k felhaszn\u00e1l\u00f3i fel\u00fclet\u00e9r\u0151l.",
+                "title": "AirVisual Node/Pro konfigur\u00e1l\u00e1sa"
             },
             "reauth_confirm": {
                 "data": {
                     "api_key": "API kulcs"
                 },
                 "title": "Az AirVisual \u00fajb\u00f3li hiteles\u00edt\u00e9se"
+            },
+            "user": {
+                "description": "V\u00e1lassza ki, hogy milyen t\u00edpus\u00fa AirVisual adatokat szeretne figyelni.",
+                "title": "Az AirVisual konfigur\u00e1l\u00e1sa"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "A megfigyelt f\u00f6ldrajz megjelen\u00edt\u00e9se a t\u00e9rk\u00e9pen"
+                },
+                "title": "Az AirVisual konfigur\u00e1l\u00e1sa"
             }
         }
     }

@@ -14,9 +14,9 @@ from aiohomekit.model.characteristics import (
 from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components import zeroconf
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import ATTR_VIA_DEVICE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .config_flow import normalize_hkid
 from .connection import HKDevice
@@ -142,27 +142,27 @@ class HomeKitEntity(Entity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._accessory.available
+        return self._accessory.available and self.service.available
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
         info = self.accessory_info
         accessory_serial = info.value(CharacteristicsTypes.SERIAL_NUMBER)
 
-        device_info = {
-            "identifiers": {(DOMAIN, "serial-number", accessory_serial)},
-            "name": info.value(CharacteristicsTypes.NAME),
-            "manufacturer": info.value(CharacteristicsTypes.MANUFACTURER, ""),
-            "model": info.value(CharacteristicsTypes.MODEL, ""),
-            "sw_version": info.value(CharacteristicsTypes.FIRMWARE_REVISION, ""),
-        }
+        device_info = DeviceInfo(
+            identifiers={(DOMAIN, "serial-number", accessory_serial)},
+            manufacturer=info.value(CharacteristicsTypes.MANUFACTURER, ""),
+            model=info.value(CharacteristicsTypes.MODEL, ""),
+            name=info.value(CharacteristicsTypes.NAME),
+            sw_version=info.value(CharacteristicsTypes.FIRMWARE_REVISION, ""),
+        )
 
         # Some devices only have a single accessory - we don't add a
         # via_device otherwise it would be self referential.
         bridge_serial = self._accessory.connection_info["serial-number"]
         if accessory_serial != bridge_serial:
-            device_info["via_device"] = (DOMAIN, "serial-number", bridge_serial)
+            device_info[ATTR_VIA_DEVICE] = (DOMAIN, "serial-number", bridge_serial)
 
         return device_info
 
@@ -189,11 +189,16 @@ class CharacteristicEntity(HomeKitEntity):
     the service entity.
     """
 
+    def __init__(self, accessory, devinfo, char):
+        """Initialise a generic single characteristic HomeKit entity."""
+        self._char = char
+        super().__init__(accessory, devinfo)
+
     @property
     def unique_id(self) -> str:
         """Return the ID of this device."""
         serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
-        return f"homekit-{serial}-aid:{self._aid}-sid:{self._iid}-cid:{self._iid}"
+        return f"homekit-{serial}-aid:{self._aid}-sid:{self._char.service.iid}-cid:{self._char.iid}"
 
 
 async def async_setup_entry(hass, entry):

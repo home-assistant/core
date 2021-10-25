@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
+from typing import Any, cast
 
 import pyatmo
 
@@ -19,6 +19,7 @@ from .const import (
     EVENT_TYPE_LIGHT_MODE,
     MANUFACTURER,
     SIGNAL_NAME,
+    TYPE_SECURITY,
     WEBHOOK_LIGHT_MODE,
     WEBHOOK_PUSH_TYPE,
 )
@@ -88,6 +89,7 @@ class NetatmoLight(NetatmoBase, LightEntity):
         self._id = camera_id
         self._home_id = home_id
         self._model = camera_type
+        self._netatmo_type = TYPE_SECURITY
         self._device_name: str = self._data.get_camera(camera_id)["name"]
         self._attr_name = f"{MANUFACTURER} {self._device_name}"
         self._is_on = False
@@ -141,7 +143,7 @@ class NetatmoLight(NetatmoBase, LightEntity):
         """Return true if light is on."""
         return self._is_on
 
-    async def async_turn_on(self, **kwargs: dict) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn camera floodlight on."""
         _LOGGER.debug("Turn camera '%s' on", self.name)
         await self._data.async_set_state(
@@ -150,7 +152,7 @@ class NetatmoLight(NetatmoBase, LightEntity):
             floodlight="on",
         )
 
-    async def async_turn_off(self, **kwargs: dict) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn camera floodlight into auto mode."""
         _LOGGER.debug("Turn camera '%s' to auto mode", self.name)
         await self._data.async_set_state(
