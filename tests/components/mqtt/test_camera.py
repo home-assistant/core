@@ -161,11 +161,11 @@ async def test_discovery_removal_camera(hass, mqtt_mock, caplog):
 
 async def test_discovery_update_camera(hass, mqtt_mock, caplog):
     """Test update of discovered camera."""
-    data1 = '{ "name": "Beer", "topic": "test_topic"}'
-    data2 = '{ "name": "Milk", "topic": "test_topic"}'
+    config1 = {"name": "Beer", "topic": "test_topic"}
+    config2 = {"name": "Milk", "topic": "test_topic"}
 
     await help_test_discovery_update(
-        hass, mqtt_mock, caplog, camera.DOMAIN, data1, data2
+        hass, mqtt_mock, caplog, camera.DOMAIN, config1, config2
     )
 
 
