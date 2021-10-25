@@ -35,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class ExtraStateAttributeDetails(NamedTuple):
-    """Extra state attribute properties."""
+    """Extra state attribute details."""
 
     description: str
     metric_key: str
