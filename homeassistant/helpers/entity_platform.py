@@ -481,7 +481,7 @@ class EntityPlatform:
                     if urlparse(configuration_url).scheme in [
                         "http",
                         "https",
-                        "panel",
+                        "homeassistant",
                     ]:
                         processed_dev_info["configuration_url"] = configuration_url
                     else:

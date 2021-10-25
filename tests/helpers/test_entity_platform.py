@@ -967,8 +967,8 @@ async def test_device_info_invalid_url(hass, caplog):
     )
 
 
-async def test_device_info_panel_url(hass, caplog):
-    """Test device info with panel URL."""
+async def test_device_info_homeassistant_url(hass, caplog):
+    """Test device info with homeassistant URL."""
     registry = dr.async_get(hass)
     registry.async_get_or_create(
         config_entry_id="123",
@@ -982,12 +982,12 @@ async def test_device_info_panel_url(hass, caplog):
         """Mock setup entry method."""
         async_add_entities(
             [
-                # Valid device info, with panel url
+                # Valid device info, with homeassistant url
                 MockEntity(
                     unique_id="qwer",
                     device_info={
                         "identifiers": {("mqtt", "1234")},
-                        "configuration_url": "panel://config/mqtt",
+                        "configuration_url": "homeassistant://config/mqtt",
                     },
                 ),
             ]
@@ -1008,7 +1008,7 @@ async def test_device_info_panel_url(hass, caplog):
     device = registry.async_get_device({("mqtt", "1234")})
     assert device is not None
     assert device.identifiers == {("mqtt", "1234")}
-    assert device.configuration_url == "panel://config/mqtt"
+    assert device.configuration_url == "homeassistant://config/mqtt"
 
 
 async def test_entity_disabled_by_integration(hass):
