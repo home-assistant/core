@@ -2,18 +2,47 @@
 import logging
 
 from homeassistant import data_entry_flow
-from homeassistant.components.climacell.const import DOMAIN
+from homeassistant.components.climacell.const import (
+    CONF_TIMESTEP,
+    DEFAULT_TIMESTEP,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
+
+from .const import API_V4_ENTRY_DATA
+
+from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def test_user_flow_minimum_fields(hass: HomeAssistant) -> None:
-    """Test user config flow with minimum fields."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test options config flow for climacell."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=API_V4_ENTRY_DATA,
+        source=SOURCE_USER,
+        unique_id="test",
+        version=1,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.options[CONF_TIMESTEP] == DEFAULT_TIMESTEP
+    assert CONF_TIMESTEP not in entry.data
+
+    result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_TIMESTEP: 1}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "tomorrowio"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == ""
+    assert result["data"][CONF_TIMESTEP] == 1
+    assert entry.options[CONF_TIMESTEP] == 1

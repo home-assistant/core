@@ -48,7 +48,3 @@ class ClimaCellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> ClimaCellOptionsConfigFlow:
         """Get the options flow for this handler."""
         return ClimaCellOptionsConfigFlow(config_entry)
-
-    async def async_step_user(self, user_input: dict[str, Any] = None) -> FlowResult:
-        """Handle the initial step."""
-        return self.async_abort(reason="tomorrowio")

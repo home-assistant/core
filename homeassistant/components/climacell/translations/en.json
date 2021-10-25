@@ -1,10 +1,4 @@
 {
-    "config": {
-        "abort": {
-            "tomorrowio": "This integration has been deprecated in favor of the `tomorrowio` integration. Search for Tomorrow.io instead of Climacell when setting up an integration instead."
-        },
-        "step": {}
-    },
     "options": {
         "step": {
             "init": {
