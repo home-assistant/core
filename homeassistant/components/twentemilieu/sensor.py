@@ -12,13 +12,7 @@ from twentemilieu import (
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_NAME,
-    CONF_ID,
-    DEVICE_CLASS_DATE,
-)
+from homeassistant.const import CONF_ID, DEVICE_CLASS_DATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -99,6 +93,11 @@ class TwenteMilieuSensor(SensorEntity):
         self._waste_type = waste_type
 
         self._state = None
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            manufacturer="Twente Milieu",
+            name="Twente Milieu",
+        )
 
     @property
     def name(self) -> str:
@@ -149,12 +148,3 @@ class TwenteMilieuSensor(SensorEntity):
         next_pickup = await self._twentemilieu.next_pickup(self._waste_type)
         if next_pickup is not None:
             self._state = next_pickup.date().isoformat()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about Twente Milieu."""
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._unique_id)},
-            ATTR_NAME: "Twente Milieu",
-            ATTR_MANUFACTURER: "Twente Milieu",
-        }

@@ -33,6 +33,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -180,27 +181,27 @@ class VizioDevice(MediaPlayerEntity):
         is_on = await self._device.get_power_state(log_api_exception=False)
 
         if is_on is None:
-            if self._attr_available:
+            if self.available:
                 _LOGGER.warning(
                     "Lost connection to %s", self._config_entry.data[CONF_HOST]
                 )
                 self._attr_available = False
             return
 
-        if not self._attr_available:
+        if not self.available:
             _LOGGER.info(
                 "Restored connection to %s", self._config_entry.data[CONF_HOST]
             )
             self._attr_available = True
 
-        if not self._attr_device_info:
-            self._attr_device_info = {
-                "identifiers": {(DOMAIN, self._attr_unique_id)},
-                "name": self._attr_name,
-                "manufacturer": "VIZIO",
-                "model": await self._device.get_model_name(log_api_exception=False),
-                "sw_version": await self._device.get_version(log_api_exception=False),
-            }
+        if not self.device_info:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, self._attr_unique_id)},
+                manufacturer="VIZIO",
+                model=await self._device.get_model_name(log_api_exception=False),
+                name=self.name,
+                sw_version=await self._device.get_version(log_api_exception=False),
+            )
 
         if not is_on:
             self._attr_state = STATE_OFF
