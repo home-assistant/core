@@ -2,8 +2,16 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
+
+
+@pytest.fixture(autouse=True)
+async def setup_script(hass):
+    """Set up script integration."""
+    assert await async_setup_component(hass, "script", {})
 
 
 async def test_delete_script(hass, hass_client):
