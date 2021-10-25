@@ -129,7 +129,7 @@ async def async_setup(hass, config):
         hass, eight
     )
     await heat_coordinator.async_config_entry_first_refresh()
-    await user_coordinator.async_request_refresh()
+    await user_coordinator.async_config_entry_first_refresh()
 
     # Load sub components
     sensors = []
