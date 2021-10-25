@@ -156,6 +156,8 @@ PLATFORM_SCHEMA_LEGACY = (
     .extend(MQTT_VACUUM_SCHEMA.schema)
 )
 
+DISCOVERY_SCHEMA_LEGACY = PLATFORM_SCHEMA_LEGACY.extend({}, extra=vol.REMOVE_EXTRA)
+
 
 async def async_setup_entity_legacy(
     hass, config, async_add_entities, config_entry, discovery_data
@@ -185,7 +187,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
     @staticmethod
     def config_schema():
         """Return the config schema."""
-        return PLATFORM_SCHEMA_LEGACY
+        return DISCOVERY_SCHEMA_LEGACY
 
     def _setup_from_config(self, config):
         supported_feature_strings = config[CONF_SUPPORTED_FEATURES]

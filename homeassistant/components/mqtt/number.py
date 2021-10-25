@@ -59,21 +59,28 @@ def validate_config(config):
     return config
 
 
+_PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): vol.Coerce(float),
+        vol.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): vol.Coerce(float),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+        vol.Optional(CONF_PAYLOAD_RESET, default=DEFAULT_PAYLOAD_RESET): cv.string,
+        vol.Optional(CONF_STEP, default=DEFAULT_STEP): vol.All(
+            vol.Coerce(float), vol.Range(min=1e-3)
+        ),
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    },
+).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
+
 PLATFORM_SCHEMA = vol.All(
-    mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
-        {
-            vol.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): vol.Coerce(float),
-            vol.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): vol.Coerce(float),
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-            vol.Optional(CONF_PAYLOAD_RESET, default=DEFAULT_PAYLOAD_RESET): cv.string,
-            vol.Optional(CONF_STEP, default=DEFAULT_STEP): vol.All(
-                vol.Coerce(float), vol.Range(min=1e-3)
-            ),
-            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-        },
-    ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema),
+    _PLATFORM_SCHEMA_BASE,
+    validate_config,
+)
+
+DISCOVERY_SCHEMA = vol.All(
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
     validate_config,
 )
 
@@ -91,7 +98,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
-    await async_setup_entry_helper(hass, number.DOMAIN, setup, PLATFORM_SCHEMA)
+    await async_setup_entry_helper(hass, number.DOMAIN, setup, DISCOVERY_SCHEMA)
 
 
 async def _async_setup_entity(
@@ -120,7 +127,7 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
     @staticmethod
     def config_schema():
         """Return the config schema."""
-        return PLATFORM_SCHEMA
+        return DISCOVERY_SCHEMA
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
