@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-import logging
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
@@ -33,8 +32,6 @@ from .const import (
     VALLOX_PROFILE_TO_STR_REPORTABLE,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class ValloxSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Vallox sensor."""
@@ -59,7 +56,6 @@ class ValloxSensor(CoordinatorEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         if (metric_key := self.entity_description.metric_key) is None:
-            _LOGGER.debug("Error updating sensor. Empty metric key")
             return None
 
         return self.coordinator.data.get_metric(metric_key)
@@ -100,7 +96,6 @@ class ValloxFilterRemainingSensor(ValloxSensor):
         super_native_value = super().native_value
 
         if not isinstance(super_native_value, (int, float)):
-            _LOGGER.debug("Value has unexpected type: %s", type(super_native_value))
             return None
 
         # Since only a delta of days is received from the device, fix the time so the timestamp does
@@ -120,11 +115,10 @@ class ValloxCellStateSensor(ValloxSensor):
         """Return the value reported by the sensor."""
         super_native_value = super().native_value
 
-        if not isinstance(super_native_value, (int, float)):
-            _LOGGER.debug("Value has unexpected type: %s", type(super_native_value))
+        if not isinstance(super_native_value, int):
             return None
 
-        return VALLOX_CELL_STATE_TO_STR.get(int(super_native_value))
+        return VALLOX_CELL_STATE_TO_STR.get(super_native_value)
 
 
 @dataclass
