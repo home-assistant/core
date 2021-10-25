@@ -1,6 +1,8 @@
 """Support for SimpliSafe alarm control panels."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from simplipy.errors import SimplipyError
 from simplipy.system import SystemStates
 from simplipy.system.v2 import SystemV2
@@ -79,6 +81,43 @@ VOLUME_STRING_MAP = {
     VOLUME_OFF: "off",
 }
 
+STATE_MAP_FROM_REST_API = {
+    SystemStates.alarm: STATE_ALARM_TRIGGERED,
+    SystemStates.away: STATE_ALARM_ARMED_AWAY,
+    SystemStates.away_count: STATE_ALARM_ARMING,
+    SystemStates.exit_delay: STATE_ALARM_ARMING,
+    SystemStates.home: STATE_ALARM_ARMED_HOME,
+    SystemStates.off: STATE_ALARM_DISARMED,
+}
+
+STATE_MAP_FROM_WEBSOCKET_EVENT = {
+    EVENT_ALARM_CANCELED: STATE_ALARM_DISARMED,
+    EVENT_ALARM_TRIGGERED: STATE_ALARM_TRIGGERED,
+    EVENT_ARMED_AWAY: STATE_ALARM_ARMED_AWAY,
+    EVENT_ARMED_AWAY_BY_KEYPAD: STATE_ALARM_ARMED_AWAY,
+    EVENT_ARMED_AWAY_BY_REMOTE: STATE_ALARM_ARMED_AWAY,
+    EVENT_ARMED_HOME: STATE_ALARM_ARMED_HOME,
+    EVENT_AWAY_EXIT_DELAY_BY_KEYPAD: STATE_ALARM_ARMING,
+    EVENT_AWAY_EXIT_DELAY_BY_REMOTE: STATE_ALARM_ARMING,
+    EVENT_DISARMED_BY_MASTER_PIN: STATE_ALARM_DISARMED,
+    EVENT_DISARMED_BY_REMOTE: STATE_ALARM_DISARMED,
+    EVENT_HOME_EXIT_DELAY: STATE_ALARM_ARMING,
+}
+
+WEBSOCKET_EVENTS_TO_LISTEN_FOR = (
+    EVENT_ALARM_CANCELED,
+    EVENT_ALARM_TRIGGERED,
+    EVENT_ARMED_AWAY,
+    EVENT_ARMED_AWAY_BY_KEYPAD,
+    EVENT_ARMED_AWAY_BY_REMOTE,
+    EVENT_ARMED_HOME,
+    EVENT_AWAY_EXIT_DELAY_BY_KEYPAD,
+    EVENT_AWAY_EXIT_DELAY_BY_REMOTE,
+    EVENT_DISARMED_BY_MASTER_PIN,
+    EVENT_DISARMED_BY_REMOTE,
+    EVENT_HOME_EXIT_DELAY,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -96,7 +135,11 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
 
     def __init__(self, simplisafe: SimpliSafe, system: SystemV2 | SystemV3) -> None:
         """Initialize the SimpliSafe alarm."""
-        super().__init__(simplisafe, system)
+        super().__init__(
+            simplisafe,
+            system,
+            additional_websocket_events=WEBSOCKET_EVENTS_TO_LISTEN_FOR,
+        )
 
         self._errors = 0
 
@@ -124,21 +167,6 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
             self._attr_state = STATE_ALARM_DISARMED
         else:
             self._attr_state = None
-
-        for websocket_event_type in (
-            EVENT_ALARM_CANCELED,
-            EVENT_ALARM_TRIGGERED,
-            EVENT_ARMED_AWAY,
-            EVENT_ARMED_AWAY_BY_KEYPAD,
-            EVENT_ARMED_AWAY_BY_REMOTE,
-            EVENT_ARMED_HOME,
-            EVENT_AWAY_EXIT_DELAY_BY_KEYPAD,
-            EVENT_AWAY_EXIT_DELAY_BY_REMOTE,
-            EVENT_DISARMED_BY_MASTER_PIN,
-            EVENT_DISARMED_BY_REMOTE,
-            EVENT_HOME_EXIT_DELAY,
-        ):
-            self.websocket_events_to_listen_for.append(websocket_event_type)
 
     @callback
     def _is_code_valid(self, code: str | None, state: str) -> bool:
@@ -238,44 +266,16 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
 
         self._errors = 0
 
-        if self._system.state == SystemStates.alarm:
-            self._attr_state = STATE_ALARM_TRIGGERED
-        elif self._system.state == SystemStates.away:
-            self._attr_state = STATE_ALARM_ARMED_AWAY
-        elif self._system.state in (SystemStates.away_count, SystemStates.exit_delay):
-            self._attr_state = STATE_ALARM_ARMING
-        elif self._system.state == SystemStates.home:
-            self._attr_state = STATE_ALARM_ARMED_HOME
-        elif self._system.state == SystemStates.off:
-            self._attr_state = STATE_ALARM_DISARMED
+        if state := STATE_MAP_FROM_REST_API.get(self._system.state):
+            self._attr_state = state
         else:
-            LOGGER.error("Unknown system state: %s", self._system.state)
+            LOGGER.error("Unknown system state (REST API): %s", self._system.state)
             self._attr_state = None
 
     @callback
     def async_update_from_websocket_event(self, event: WebsocketEvent) -> None:
         """Update the entity when new data comes from the websocket."""
-        if event.event_type in (
-            EVENT_ALARM_CANCELED,
-            EVENT_DISARMED_BY_MASTER_PIN,
-            EVENT_DISARMED_BY_REMOTE,
-        ):
-            self._attr_state = STATE_ALARM_DISARMED
-        elif event.event_type == EVENT_ALARM_TRIGGERED:
-            self._attr_state = STATE_ALARM_TRIGGERED
-        elif event.event_type in (
-            EVENT_ARMED_AWAY,
-            EVENT_ARMED_AWAY_BY_KEYPAD,
-            EVENT_ARMED_AWAY_BY_REMOTE,
-        ):
-            self._attr_state = STATE_ALARM_ARMED_AWAY
-        elif event.event_type == EVENT_ARMED_HOME:
-            self._attr_state = STATE_ALARM_ARMED_HOME
-        elif event.event_type in (
-            EVENT_AWAY_EXIT_DELAY_BY_KEYPAD,
-            EVENT_AWAY_EXIT_DELAY_BY_REMOTE,
-            EVENT_HOME_EXIT_DELAY,
-        ):
-            self._attr_state = STATE_ALARM_ARMING
-
         self._attr_changed_by = event.changed_by
+        if TYPE_CHECKING:
+            assert event.event_type
+        self._attr_state = STATE_MAP_FROM_WEBSOCKET_EVENT.get(event.event_type)

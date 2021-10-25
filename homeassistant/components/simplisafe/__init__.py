@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Iterable
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any, cast
 
@@ -545,6 +545,7 @@ class SimpliSafeEntity(CoordinatorEntity):
         system: SystemV2 | SystemV3,
         *,
         device: Device | None = None,
+        additional_websocket_events: Iterable[str] | None = None,
     ) -> None:
         """Initialize."""
         assert simplisafe.coordinator
@@ -566,17 +567,13 @@ class SimpliSafeEntity(CoordinatorEntity):
         except ValueError:
             device_type = DeviceTypes.unknown
 
+        event = simplisafe.initial_event_to_use[system.system_id]
+
         self._attr_extra_state_attributes = {
-            ATTR_LAST_EVENT_INFO: simplisafe.initial_event_to_use[system.system_id].get(
-                "info"
-            ),
-            ATTR_LAST_EVENT_SENSOR_NAME: simplisafe.initial_event_to_use[
-                system.system_id
-            ].get("sensorName"),
+            ATTR_LAST_EVENT_INFO: event.get("info"),
+            ATTR_LAST_EVENT_SENSOR_NAME: event.get("sensorName"),
             ATTR_LAST_EVENT_SENSOR_TYPE: device_type.name,
-            ATTR_LAST_EVENT_TIMESTAMP: simplisafe.initial_event_to_use[
-                system.system_id
-            ].get("eventTimestamp"),
+            ATTR_LAST_EVENT_TIMESTAMP: event.get("eventTimestamp"),
             ATTR_SYSTEM_ID: system.system_id,
         }
 
@@ -594,12 +591,14 @@ class SimpliSafeEntity(CoordinatorEntity):
         self._online = True
         self._simplisafe = simplisafe
         self._system = system
-        self.websocket_events_to_listen_for = [
+        self._websocket_events_to_listen_for = [
             EVENT_CONNECTION_LOST,
             EVENT_CONNECTION_RESTORED,
             EVENT_POWER_OUTAGE,
             EVENT_POWER_RESTORED,
         ]
+        if additional_websocket_events:
+            self._websocket_events_to_listen_for += additional_websocket_events
 
     @property
     def available(self) -> bool:
@@ -630,7 +629,7 @@ class SimpliSafeEntity(CoordinatorEntity):
             return
 
         # Ignore this event if this entity hasn't expressed interest in its type:
-        if event.event_type not in self.websocket_events_to_listen_for:
+        if event.event_type not in self._websocket_events_to_listen_for:
             return
 
         # Ignore this event if it belongs to a entity with a different serial
@@ -659,12 +658,14 @@ class SimpliSafeEntity(CoordinatorEntity):
         else:
             sensor_type = None
 
-        self._attr_extra_state_attributes[ATTR_LAST_EVENT_INFO] = event.info
-        self._attr_extra_state_attributes[
-            ATTR_LAST_EVENT_SENSOR_NAME
-        ] = event.sensor_name
-        self._attr_extra_state_attributes[ATTR_LAST_EVENT_SENSOR_TYPE] = sensor_type
-        self._attr_extra_state_attributes[ATTR_LAST_EVENT_TIMESTAMP] = event.timestamp
+        self._attr_extra_state_attributes.update(
+            {
+                ATTR_LAST_EVENT_INFO: event.info,
+                ATTR_LAST_EVENT_SENSOR_NAME: event.sensor_name,
+                ATTR_LAST_EVENT_SENSOR_TYPE: sensor_type,
+                ATTR_LAST_EVENT_TIMESTAMP: event.timestamp,
+            }
+        )
 
         self.async_update_from_websocket_event(event)
         self.async_write_ha_state()
