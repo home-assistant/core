@@ -238,7 +238,7 @@ class HMHub(Entity):
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        return "mdi:gradient"
+        return "mdi:gradient-vertical"
 
     def _update_hub(self, now):
         """Retrieve latest state."""

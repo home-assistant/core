@@ -31,6 +31,7 @@
             },
             "manual": {
                 "data": {
+                    "blid": "BLID",
                     "host": "Host"
                 },
                 "description": "No Roomba or Braava have been discovered on your network.",

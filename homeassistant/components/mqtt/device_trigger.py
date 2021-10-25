@@ -1,13 +1,17 @@
 """Provides device automations for MQTT."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-from typing import Callable
+from typing import Any
 
 import attr
 import voluptuous as vol
 
-from homeassistant.components.automation import AutomationActionType
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.const import (
     CONF_DEVICE,
@@ -26,9 +30,16 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from . import CONF_PAYLOAD, CONF_QOS, DOMAIN, debug_info, trigger as mqtt_trigger
+from . import debug_info, trigger as mqtt_trigger
 from .. import mqtt
-from .const import ATTR_DISCOVERY_HASH, ATTR_DISCOVERY_TOPIC
+from .const import (
+    ATTR_DISCOVERY_HASH,
+    ATTR_DISCOVERY_TOPIC,
+    CONF_PAYLOAD,
+    CONF_QOS,
+    CONF_TOPIC,
+    DOMAIN,
+)
 from .discovery import MQTT_DISCOVERY_DONE, MQTT_DISCOVERY_UPDATED, clear_discovery_hash
 from .mixins import (
     CONF_CONNECTIONS,
@@ -44,7 +55,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_AUTOMATION_TYPE = "automation_type"
 CONF_DISCOVERY_ID = "discovery_id"
 CONF_SUBTYPE = "subtype"
-CONF_TOPIC = "topic"
 DEFAULT_ENCODING = "utf-8"
 DEVICE = "device"
 
@@ -86,7 +96,7 @@ class TriggerInstance:
     """Attached trigger settings."""
 
     action: AutomationActionType = attr.ib()
-    automation_info: dict = attr.ib()
+    automation_info: AutomationTriggerInfo = attr.ib()
     trigger: Trigger = attr.ib()
     remove: CALLBACK_TYPE | None = attr.ib(default=None)
 
@@ -287,7 +297,9 @@ async def async_device_removed(hass: HomeAssistant, device_id: str):
             )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, Any]]:
     """List device triggers for MQTT devices."""
     triggers: list[dict] = []
 
@@ -314,7 +326,7 @@ async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
     action: AutomationActionType,
-    automation_info: dict,
+    automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     if DEVICE_TRIGGERS not in hass.data:

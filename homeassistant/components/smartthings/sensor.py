@@ -561,7 +561,7 @@ class SmartThingsPowerConsumptionSensor(SmartThingsEntity, SensorEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return f"{self._device.device_id}.{self.report_name}"
+        return f"{self._device.device_id}.{self.report_name}_meter"
 
     @property
     def native_value(self):

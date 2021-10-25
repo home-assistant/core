@@ -4,11 +4,12 @@ from __future__ import annotations
 import re
 from typing import Final
 
-COAP: Final = "coap"
+BLOCK: Final = "block"
 DATA_CONFIG_ENTRY: Final = "config_entry"
 DEVICE: Final = "device"
 DOMAIN: Final = "shelly"
 REST: Final = "rest"
+RPC: Final = "rpc"
 
 CONF_COAP_PORT: Final = "coap_port"
 DEFAULT_COAP_PORT: Final = 5683
@@ -20,6 +21,11 @@ LIGHT_TRANSITION_MIN_FIRMWARE_DATE: Final = 20210226
 # max light transition time in milliseconds
 MAX_TRANSITION_TIME: Final = 5000
 
+RGBW_MODELS: Final = (
+    "SHBLB-1",
+    "SHRGBW2",
+)
+
 MODELS_SUPPORTING_LIGHT_TRANSITION: Final = (
     "SHBDUO-1",
     "SHCB-1",
@@ -27,6 +33,14 @@ MODELS_SUPPORTING_LIGHT_TRANSITION: Final = (
     "SHDM-2",
     "SHRGBW2",
     "SHVIN-1",
+)
+
+# Bulbs that support white & color modes
+DUAL_MODE_LIGHT_MODELS: Final = (
+    "SHBDUO-1",
+    "SHBLB-1",
+    "SHCB-1",
+    "SHRGBW2",
 )
 
 # Used in "_async_update_data" as timeout for polling data from devices.
@@ -44,6 +58,9 @@ SLEEP_PERIOD_MULTIPLIER: Final = 1.2
 # Multiplier used to calculate the "update_interval" for non-sleeping devices.
 UPDATE_PERIOD_MULTIPLIER: Final = 2.2
 
+# Reconnect interval for GEN2 devices
+RPC_RECONNECT_INTERVAL = 60
+
 # Shelly Air - Maximum work hours before lamp replacement
 SHAIR_MAX_WORK_HOURS: Final = 9000
 
@@ -60,18 +77,28 @@ INPUTS_EVENTS_DICT: Final = {
 # List of battery devices that maintain a permanent WiFi connection
 BATTERY_DEVICES_WITH_PERMANENT_CONNECTION: Final = ["SHMOS-01"]
 
+# Button/Click events for Block & RPC devices
 EVENT_SHELLY_CLICK: Final = "shelly.click"
 
 ATTR_CLICK_TYPE: Final = "click_type"
 ATTR_CHANNEL: Final = "channel"
 ATTR_DEVICE: Final = "device"
+ATTR_GENERATION: Final = "generation"
 CONF_SUBTYPE: Final = "subtype"
 
 BASIC_INPUTS_EVENTS_TYPES: Final = {"single", "long"}
 
 SHBTN_INPUTS_EVENTS_TYPES: Final = {"single", "double", "triple", "long"}
 
-SUPPORTED_INPUTS_EVENTS_TYPES: Final = {
+RPC_INPUTS_EVENTS_TYPES: Final = {
+    "btn_down",
+    "btn_up",
+    "single_push",
+    "double_push",
+    "long_push",
+}
+
+BLOCK_INPUTS_EVENTS_TYPES: Final = {
     "single",
     "double",
     "triple",
@@ -80,9 +107,15 @@ SUPPORTED_INPUTS_EVENTS_TYPES: Final = {
     "long_single",
 }
 
-SHIX3_1_INPUTS_EVENTS_TYPES = SUPPORTED_INPUTS_EVENTS_TYPES
+SHIX3_1_INPUTS_EVENTS_TYPES = BLOCK_INPUTS_EVENTS_TYPES
 
-INPUTS_EVENTS_SUBTYPES: Final = {"button": 1, "button1": 1, "button2": 2, "button3": 3}
+INPUTS_EVENTS_SUBTYPES: Final = {
+    "button": 1,
+    "button1": 1,
+    "button2": 2,
+    "button3": 3,
+    "button4": 4,
+}
 
 SHBTN_MODELS: Final = ["SHBTN-1", "SHBTN-2"]
 
@@ -109,3 +142,9 @@ KELVIN_MIN_VALUE_WHITE: Final = 2700
 KELVIN_MIN_VALUE_COLOR: Final = 3000
 
 UPTIME_DEVIATION: Final = 5
+
+# Max RPC switch/input key instances
+MAX_RPC_KEY_INSTANCES = 4
+
+# Time to wait before reloading entry upon device config change
+ENTRY_RELOAD_COOLDOWN = 60

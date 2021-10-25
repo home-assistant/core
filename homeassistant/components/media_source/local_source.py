@@ -18,7 +18,7 @@ from .models import BrowseMediaSource, MediaSource, MediaSourceItem, PlayMedia
 
 
 @callback
-def async_setup(hass: HomeAssistant):
+def async_setup(hass: HomeAssistant) -> None:
     """Set up local media source."""
     source = LocalSource(hass)
     hass.data[DOMAIN][DOMAIN] = source
@@ -36,7 +36,7 @@ class LocalSource(MediaSource):
         self.hass = hass
 
     @callback
-    def async_full_path(self, source_dir_id, location) -> Path:
+    def async_full_path(self, source_dir_id: str, location: str) -> Path:
         """Return full path."""
         return Path(self.hass.config.media_dirs[source_dir_id], location)
 
@@ -58,7 +58,7 @@ class LocalSource(MediaSource):
 
         return source_dir_id, location
 
-    async def async_resolve_media(self, item: MediaSourceItem) -> str:
+    async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
         source_dir_id, location = self.async_parse_identifier(item)
         if source_dir_id == "" or source_dir_id not in self.hass.config.media_dirs:
@@ -67,22 +67,22 @@ class LocalSource(MediaSource):
         mime_type, _ = mimetypes.guess_type(
             str(self.async_full_path(source_dir_id, location))
         )
+        assert isinstance(mime_type, str)
         return PlayMedia(f"/media/{item.identifier}", mime_type)
 
-    async def async_browse_media(
-        self, item: MediaSourceItem, media_types: tuple[str] = MEDIA_MIME_TYPES
-    ) -> BrowseMediaSource:
+    async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Return media."""
         try:
             source_dir_id, location = self.async_parse_identifier(item)
         except Unresolvable as err:
             raise BrowseError(str(err)) from err
 
-        return await self.hass.async_add_executor_job(
+        result = await self.hass.async_add_executor_job(
             self._browse_media, source_dir_id, location
         )
+        return result
 
-    def _browse_media(self, source_dir_id: str, location: Path):
+    def _browse_media(self, source_dir_id: str, location: str) -> BrowseMediaSource:
         """Browse media."""
 
         # If only one media dir is configured, use that as the local media root
@@ -122,9 +122,14 @@ class LocalSource(MediaSource):
         if not full_path.is_dir():
             raise BrowseError("Path is not a directory.")
 
-        return self._build_item_response(source_dir_id, full_path)
+        result = self._build_item_response(source_dir_id, full_path)
+        if not result:
+            raise BrowseError("Unknown source directory.")
+        return result
 
-    def _build_item_response(self, source_dir_id: str, path: Path, is_child=False):
+    def _build_item_response(
+        self, source_dir_id: str, path: Path, is_child: bool = False
+    ) -> BrowseMediaSource | None:
         mime_type, _ = mimetypes.guess_type(str(path))
         is_file = path.is_file()
         is_dir = path.is_dir()
@@ -143,9 +148,11 @@ class LocalSource(MediaSource):
         if is_dir:
             title += "/"
 
-        media_class = MEDIA_CLASS_MAP.get(
-            mime_type and mime_type.split("/")[0], MEDIA_CLASS_DIRECTORY
-        )
+        media_class = MEDIA_CLASS_DIRECTORY
+        if mime_type:
+            media_class = MEDIA_CLASS_MAP.get(
+                mime_type.split("/")[0], MEDIA_CLASS_DIRECTORY
+            )
 
         media = BrowseMediaSource(
             domain=DOMAIN,

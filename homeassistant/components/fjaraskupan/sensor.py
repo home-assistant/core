@@ -9,7 +9,10 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+from homeassistant.const import (
+    ENTITY_CATEGORY_DIAGNOSTIC,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -55,8 +58,9 @@ class RssiSensor(CoordinatorEntity[State], SensorEntity):
         self._attr_name = f"{device_info['name']} Signal Strength"
         self._attr_device_class = DEVICE_CLASS_SIGNAL_STRENGTH
         self._attr_state_class = STATE_CLASS_MEASUREMENT
-        self._attr_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+        self._attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
         self._attr_entity_registry_enabled_default = False
+        self._attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     @property
     def native_value(self) -> StateType:

@@ -6,14 +6,10 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.wemo import CONF_DISCOVERY, CONF_STATIC
-from homeassistant.components.wemo.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
-from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import entity_test_helpers
-from .conftest import MOCK_HOST, MOCK_PORT
 
 
 @pytest.fixture
@@ -44,35 +40,11 @@ class InsightTestTemplate:
     EXPECTED_STATE_VALUE: str
     INSIGHT_PARAM_NAME: str
 
-    @pytest.fixture(name="wemo_entity")
+    @pytest.fixture(name="wemo_entity_suffix")
     @classmethod
-    async def async_wemo_entity_fixture(cls, hass, pywemo_device):
-        """Fixture for a Wemo entity in hass."""
-        assert await async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                DOMAIN: {
-                    CONF_DISCOVERY: False,
-                    CONF_STATIC: [f"{MOCK_HOST}:{MOCK_PORT}"],
-                },
-            },
-        )
-        await hass.async_block_till_done()
-
-        entity_registry = er.async_get(hass)
-        correct_entity = None
-        to_remove = []
-        for entry in entity_registry.entities.values():
-            if entry.entity_id.endswith(cls.ENTITY_ID_SUFFIX):
-                correct_entity = entry
-            else:
-                to_remove.append(entry.entity_id)
-
-        for removal in to_remove:
-            entity_registry.async_remove(removal)
-        assert len(entity_registry.entities) == 1
-        return correct_entity
+    def wemo_entity_suffix_fixture(cls):
+        """Select the appropriate entity for the test."""
+        return cls.ENTITY_ID_SUFFIX
 
     # Tests that are in common among wemo platforms. These test methods will be run
     # in the scope of this test module. They will run using the pywemo_model from

@@ -3,7 +3,7 @@ import asyncio
 from datetime import timedelta
 import logging
 
-from pywemo import WeMoDevice
+from pywemo import Insight, WeMoDevice
 from pywemo.exceptions import ActionException
 from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
 
@@ -81,11 +81,26 @@ class DeviceCoordinator(DataUpdateCoordinator):
         else:
             self.async_set_updated_data(None)
 
+    @property
+    def should_poll(self) -> bool:
+        """Return True if polling is needed to update the state for the device.
+
+        The alternative, when this returns False, is to rely on the subscription
+        "push updates" to update the device state in Home Assistant.
+        """
+        if isinstance(self.wemo, Insight) and self.wemo.get_state() == 0:
+            # The WeMo Insight device does not send subscription updates for the
+            # insight_params values when the device is off. Polling is required in
+            # this case so the Sensor entities are properly populated.
+            return True
+
+        registry = self.hass.data[DOMAIN]["registry"]
+        return not (registry.is_subscribed(self.wemo) and self.last_update_success)
+
     async def _async_update_data(self) -> None:
         """Update WeMo state."""
         # No need to poll if the device will push updates.
-        registry = self.hass.data[DOMAIN]["registry"]
-        if registry.is_subscribed(self.wemo) and self.last_update_success:
+        if not self.should_poll:
             return
 
         # If an update is in progress, we don't do anything.

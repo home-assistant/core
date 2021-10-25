@@ -23,7 +23,7 @@ from homeassistant.components.light import (
     COLOR_MODE_XY,
     LightEntity,
 )
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -242,6 +242,7 @@ class KNXLight(KnxEntity, LightEntity):
         self._attr_min_mireds = color_util.color_temperature_kelvin_to_mired(
             self._max_kelvin
         )
+        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_unique_id = self._device_unique_id()
 
     def _device_unique_id(self) -> str:

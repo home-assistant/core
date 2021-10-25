@@ -7,7 +7,7 @@ DEFAULT_NAME = "Growatt"
 
 SERVER_URLS = [
     "https://server.growatt.com/",
-    "https://server-us.growatt.com",
+    "https://server-us.growatt.com/",
     "http://server.smten.com/",
 ]
 
@@ -16,3 +16,5 @@ DEFAULT_URL = SERVER_URLS[0]
 DOMAIN = "growatt_server"
 
 PLATFORMS = ["sensor"]
+
+LOGIN_INVALID_AUTH_CODE = "502"

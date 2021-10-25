@@ -5,7 +5,7 @@
   "documentation": "https://www.home-assistant.io/integrations/smappee",
   "dependencies": ["http"],
   "requirements": [
-    "pysmappee==0.2.25"
+    "pysmappee==0.2.27"
   ],
   "codeowners": [
     "@bsmappee"

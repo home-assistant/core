@@ -87,6 +87,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import EVENT_HOMEASSISTANT_START, callback
 from homeassistant.exceptions import TemplateError
@@ -101,7 +102,7 @@ CONF_ATTRS = "attributes"
 CONF_CHILDREN = "children"
 CONF_COMMANDS = "commands"
 
-OFF_STATES = [STATE_IDLE, STATE_OFF, STATE_UNAVAILABLE]
+OFF_STATES = [STATE_IDLE, STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN]
 
 ATTRS_SCHEMA = cv.schema_with_slug_keys(cv.string)
 CMD_SCHEMA = cv.schema_with_slug_keys(cv.SERVICE_SCHEMA)
@@ -215,9 +216,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
     def _entity_lkp(self, entity_id, state_attr=None):
         """Look up an entity state."""
-        state_obj = self.hass.states.get(entity_id)
-
-        if state_obj is None:
+        if (state_obj := self.hass.states.get(entity_id)) is None:
             return
 
         if state_attr:
@@ -255,8 +254,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
             )
             return
 
-        active_child = self._child_state
-        if active_child is None:
+        if (active_child := self._child_state) is None:
             # No child to call service on
             return
 
@@ -306,8 +304,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         if (master_state == STATE_OFF) or (self._state_template is not None):
             return master_state
 
-        active_child = self._child_state
-        if active_child:
+        if active_child := self._child_state:
             return active_child.state
 
         return master_state if master_state else STATE_OFF

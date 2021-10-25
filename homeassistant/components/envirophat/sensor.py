@@ -126,9 +126,7 @@ SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_DISPLAY_OPTIONS, default=list(SENSOR_KEYS)): [
-            vol.In(SENSOR_KEYS)
-        ],
+        vol.Required(CONF_DISPLAY_OPTIONS, default=SENSOR_KEYS): [vol.In(SENSOR_KEYS)],
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_USE_LEDS, default=False): cv.boolean,
     }

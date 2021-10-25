@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import dataclasses
+import fnmatch
 import logging
 import os
 import sys
@@ -15,12 +16,12 @@ from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers import discovery_flow, system_info
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_usb
 
 from .const import DOMAIN
-from .flow import FlowDispatcher, USBFlow
 from .models import USBDevice
 from .utils import usb_device_from_port
 
@@ -63,12 +64,19 @@ def get_serial_by_id(dev_path: str) -> str:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the USB Discovery integration."""
     usb = await async_get_usb(hass)
-    usb_discovery = USBDiscovery(hass, FlowDispatcher(hass), usb)
+    usb_discovery = USBDiscovery(hass, usb)
     await usb_discovery.async_setup()
     hass.data[DOMAIN] = usb_discovery
     websocket_api.async_register_command(hass, websocket_usb_scan)
 
     return True
+
+
+def _fnmatch_lower(name: str | None, pattern: str) -> bool:
+    """Match a lowercase version of the name."""
+    if name is None:
+        return False
+    return fnmatch.fnmatch(name.lower(), pattern)
 
 
 class USBDiscovery:
@@ -77,12 +85,10 @@ class USBDiscovery:
     def __init__(
         self,
         hass: HomeAssistant,
-        flow_dispatcher: FlowDispatcher,
         usb: list[dict[str, str]],
     ) -> None:
         """Init USB Discovery."""
         self.hass = hass
-        self.flow_dispatcher = flow_dispatcher
         self.usb = usb
         self.seen: set[tuple[str, ...]] = set()
         self.observer_active = False
@@ -95,13 +101,16 @@ class USBDiscovery:
 
     async def async_start(self, event: Event) -> None:
         """Start USB Discovery and run a manual scan."""
-        self.flow_dispatcher.async_start()
         await self._async_scan_serial()
 
     async def _async_start_monitor(self) -> None:
         """Start monitoring hardware with pyudev."""
         if not sys.platform.startswith("linux"):
             return
+        info = await system_info.async_get_system_info(self.hass)
+        if info.get("docker"):
+            return
+
         from pyudev import (  # pylint: disable=import-outside-toplevel
             Context,
             Monitor,
@@ -114,7 +123,13 @@ class USBDiscovery:
             return
 
         monitor = Monitor.from_netlink(context)
-        monitor.filter_by(subsystem="tty")
+        try:
+            monitor.filter_by(subsystem="tty")
+        except ValueError as ex:  # this fails on WSL
+            _LOGGER.debug(
+                "Unable to setup pyudev filtering; This is expected on WSL: %s", ex
+            )
+            return
         observer = MonitorObserver(
             monitor, callback=self._device_discovered, name="usb-observer"
         )
@@ -142,17 +157,44 @@ class USBDiscovery:
         if device_tuple in self.seen:
             return
         self.seen.add(device_tuple)
+        matched = []
         for matcher in self.usb:
             if "vid" in matcher and device.vid != matcher["vid"]:
                 continue
             if "pid" in matcher and device.pid != matcher["pid"]:
                 continue
-            flow: USBFlow = {
-                "domain": matcher["domain"],
-                "context": {"source": config_entries.SOURCE_USB},
-                "data": dataclasses.asdict(device),
-            }
-            self.flow_dispatcher.async_create(flow)
+            if "serial_number" in matcher and not _fnmatch_lower(
+                device.serial_number, matcher["serial_number"]
+            ):
+                continue
+            if "manufacturer" in matcher and not _fnmatch_lower(
+                device.manufacturer, matcher["manufacturer"]
+            ):
+                continue
+            if "description" in matcher and not _fnmatch_lower(
+                device.description, matcher["description"]
+            ):
+                continue
+            matched.append(matcher)
+
+        if not matched:
+            return
+
+        sorted_by_most_targeted = sorted(matched, key=lambda item: -len(item))
+        most_matched_fields = len(sorted_by_most_targeted[0])
+
+        for matcher in sorted_by_most_targeted:
+            # If there is a less targeted match, we only
+            # want the most targeted match
+            if len(matcher) < most_matched_fields:
+                break
+
+            discovery_flow.async_create_flow(
+                self.hass,
+                matcher["domain"],
+                {"source": config_entries.SOURCE_USB},
+                dataclasses.asdict(device),
+            )
 
     @callback
     def _async_process_ports(self, ports: list[ListPortInfo]) -> None:

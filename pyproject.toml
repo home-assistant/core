@@ -17,6 +17,7 @@ forced_separate = [
 combine_as_imports = true
 
 [tool.pylint.MASTER]
+py-version = "3.8"
 ignore = [
     "tests",
 ]
@@ -69,9 +70,11 @@ good-names = [
 # inconsistent-return-statements - doesn't handle raise
 # too-many-ancestors - it's too strict.
 # wrong-import-order - isort guards this
+# consider-using-f-string - str.format sometimes more readable
 # ---
 # Enable once current issues are fixed:
 # consider-using-namedtuple-or-dataclass (Pylint CodeStyle extension)
+# consider-using-assignment-expr (Pylint CodeStyle extension)
 disable = [
     "format",
     "abstract-class-little-used",
@@ -94,7 +97,9 @@ disable = [
     "too-many-boolean-expressions",
     "unused-argument",
     "wrong-import-order",
+    "consider-using-f-string",
     "consider-using-namedtuple-or-dataclass",
+    "consider-using-assignment-expr",
 ]
 enable = [
     #"useless-suppression",  # temporarily every now and then to clean them up
@@ -120,8 +125,10 @@ overgeneral-exceptions = [
 ]
 
 [tool.pylint.TYPING]
-py-version = "3.8"
 runtime-typing = false
+
+[tool.pylint.CODE_STYLE]
+max-line-length-suggestions = 72
 
 [tool.pytest.ini_options]
 testpaths = [

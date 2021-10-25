@@ -1,10 +1,12 @@
 """Test the Energy websocket API."""
+from unittest.mock import AsyncMock, Mock
+
 import pytest
 
 from homeassistant.components.energy import data, is_configured
 from homeassistant.setup import async_setup_component
 
-from tests.common import flush_store
+from tests.common import MockConfigEntry, flush_store, mock_platform
 
 
 @pytest.fixture(autouse=True)
@@ -12,6 +14,26 @@ async def setup_integration(hass):
     """Set up the integration."""
     assert await async_setup_component(
         hass, "energy", {"recorder": {"db_url": "sqlite://"}}
+    )
+
+
+@pytest.fixture
+def mock_energy_platform(hass):
+    """Mock an energy platform."""
+    hass.config.components.add("some_domain")
+    mock_platform(
+        hass,
+        "some_domain.energy",
+        Mock(
+            async_get_solar_forecast=AsyncMock(
+                return_value={
+                    "wh_hours": {
+                        "2021-06-27T13:00:00+00:00": 12,
+                        "2021-06-27T14:00:00+00:00": 8,
+                    }
+                }
+            )
+        ),
     )
 
 
@@ -46,7 +68,9 @@ async def test_get_preferences_default(hass, hass_ws_client, hass_storage) -> No
     assert msg["result"] == data.EnergyManager.default_preferences()
 
 
-async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
+async def test_save_preferences(
+    hass, hass_ws_client, hass_storage, mock_energy_platform
+) -> None:
     """Test we can save preferences."""
     client = await hass_ws_client(hass)
 
@@ -140,7 +164,8 @@ async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
         "cost_sensors": {
             "sensor.heat_pump_meter_2": "sensor.heat_pump_meter_2_cost",
             "sensor.return_to_grid_offpeak": "sensor.return_to_grid_offpeak_compensation",
-        }
+        },
+        "solar_forecast_domains": ["some_domain"],
     }
 
     # Prefs with limited options
@@ -231,4 +256,36 @@ async def test_validate(hass, hass_ws_client) -> None:
     assert msg["result"] == {
         "energy_sources": [],
         "device_consumption": [],
+    }
+
+
+async def test_get_solar_forecast(hass, hass_ws_client, mock_energy_platform) -> None:
+    """Test we get preferences."""
+    entry = MockConfigEntry(domain="some_domain")
+    entry.add_to_hass(hass)
+
+    manager = await data.async_get_manager(hass)
+    manager.data = data.EnergyManager.default_preferences()
+    manager.data["energy_sources"].append(
+        {
+            "type": "solar",
+            "stat_energy_from": "my_solar_production",
+            "config_entry_solar_forecast": [entry.entry_id],
+        }
+    )
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 5, "type": "energy/solar_forecast"})
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["success"]
+    assert msg["result"] == {
+        entry.entry_id: {
+            "wh_hours": {
+                "2021-06-27T13:00:00+00:00": 12,
+                "2021-06-27T14:00:00+00:00": 8,
+            }
+        }
     }

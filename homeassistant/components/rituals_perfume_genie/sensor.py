@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from pyrituals import Diffuser
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
@@ -42,7 +43,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class DiffuserPerfumeSensor(DiffuserEntity):
+class DiffuserPerfumeSensor(DiffuserEntity, SensorEntity):
     """Representation of a diffuser perfume sensor."""
 
     def __init__(
@@ -64,7 +65,7 @@ class DiffuserPerfumeSensor(DiffuserEntity):
         return self._diffuser.perfume
 
 
-class DiffuserFillSensor(DiffuserEntity):
+class DiffuserFillSensor(DiffuserEntity, SensorEntity):
     """Representation of a diffuser fill sensor."""
 
     def __init__(
@@ -86,7 +87,7 @@ class DiffuserFillSensor(DiffuserEntity):
         return self._diffuser.fill
 
 
-class DiffuserBatterySensor(DiffuserEntity):
+class DiffuserBatterySensor(DiffuserEntity, SensorEntity):
     """Representation of a diffuser battery sensor."""
 
     _attr_device_class = DEVICE_CLASS_BATTERY
@@ -104,7 +105,7 @@ class DiffuserBatterySensor(DiffuserEntity):
         return self._diffuser.battery_percentage
 
 
-class DiffuserWifiSensor(DiffuserEntity):
+class DiffuserWifiSensor(DiffuserEntity, SensorEntity):
     """Representation of a diffuser wifi sensor."""
 
     _attr_device_class = DEVICE_CLASS_SIGNAL_STRENGTH

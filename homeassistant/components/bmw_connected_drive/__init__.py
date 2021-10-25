@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry, discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
@@ -74,6 +74,7 @@ _SERVICE_MAP = {
     "light_flash": "trigger_remote_light_flash",
     "sound_horn": "trigger_remote_horn",
     "activate_air_conditioning": "trigger_remote_air_conditioning",
+    "deactivate_air_conditioning": "trigger_remote_air_conditioning_stop",
     "find_vehicle": "trigger_remote_vehicle_finder",
 }
 
@@ -163,7 +164,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry, [platform for platform in PLATFORMS if platform != NOTIFY_DOMAIN]
@@ -329,12 +330,12 @@ class BMWConnectedDriveBaseEntity(Entity):
             "vin": self._vehicle.vin,
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, vehicle.vin)},
-            "name": f'{vehicle.attributes.get("brand")} {vehicle.name}',
-            "model": vehicle.name,
-            "manufacturer": vehicle.attributes.get("brand"),
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, vehicle.vin)},
+            manufacturer=vehicle.attributes.get("brand"),
+            model=vehicle.name,
+            name=f'{vehicle.attributes.get("brand")} {vehicle.name}',
+        )
 
     def update_callback(self):
         """Schedule a state update."""

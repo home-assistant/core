@@ -6,7 +6,7 @@
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
-            "select_single": "V\u00e1lassz egy lehet\u0151s\u00e9get"
+            "select_single": "V\u00e1lasszon egy lehet\u0151s\u00e9get"
         },
         "step": {
             "hubv1": {
@@ -25,7 +25,7 @@
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
                 },
                 "description": "Konfigur\u00e1lja az Insteon Hub 2. verzi\u00f3j\u00e1t.",
-                "title": "Insteon Hub 2. verzi\u00f3"
+                "title": "Insteon Hub Version 2"
             },
             "plm": {
                 "data": {
@@ -38,7 +38,7 @@
                 "data": {
                     "modem_type": "Modem t\u00edpusa."
                 },
-                "description": "V\u00e1laszd ki az Insteon modem t\u00edpus\u00e1t.",
+                "description": "V\u00e1lassza ki az Insteon modem t\u00edpus\u00e1t.",
                 "title": "Insteon"
             }
         }
@@ -47,14 +47,14 @@
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "input_error": "\u00c9rv\u00e9nytelen bejegyz\u00e9sek, ellen\u0151rizze \u00e9rt\u00e9keket.",
-            "select_single": "V\u00e1lassz egy lehet\u0151s\u00e9get"
+            "select_single": "V\u00e1lasszon egy lehet\u0151s\u00e9get"
         },
         "step": {
             "add_override": {
                 "data": {
-                    "address": "Eszk\u00f6z c\u00edme (azaz 1a2b3c)",
-                    "cat": "Eszk\u00f6zkateg\u00f3ria (azaz 0x10)",
-                    "subcat": "Eszk\u00f6z alkateg\u00f3ria (azaz 0x0a)"
+                    "address": "Eszk\u00f6z c\u00edme (pl. 1a2b3c)",
+                    "cat": "Eszk\u00f6zkateg\u00f3ria (pl. 0x10)",
+                    "subcat": "Eszk\u00f6z alkateg\u00f3ria (pl. 0x0a)"
                 },
                 "description": "Eszk\u00f6z-fel\u00fclb\u00edr\u00e1l\u00e1s hozz\u00e1ad\u00e1sa.",
                 "title": "Insteon"

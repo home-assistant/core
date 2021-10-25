@@ -5,7 +5,7 @@
             "kamereon_no_account": "Impossible de trouver le compte Kamereon."
         },
         "error": {
-            "invalid_credentials": "Authentification incorrecte"
+            "invalid_credentials": "Authentification invalide"
         },
         "step": {
             "kamereon": {
@@ -13,6 +13,9 @@
                     "kamereon_account_id": "Identifiant du compte Kamereon"
                 },
                 "title": "S\u00e9lectionner l'identifiant du compte Kamereon"
+            },
+            "reauth_confirm": {
+                "title": "R\u00e9-authentifier l'int\u00e9gration"
             },
             "user": {
                 "data": {

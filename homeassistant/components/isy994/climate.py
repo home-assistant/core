@@ -106,8 +106,7 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        uom = self._node.aux_properties.get(PROP_UOM)
-        if not uom:
+        if not (uom := self._node.aux_properties.get(PROP_UOM)):
             return self.hass.config.units.temperature_unit
         if uom.value == UOM_ISY_CELSIUS:
             return TEMP_CELSIUS
@@ -117,16 +116,14 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
     @property
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
-        humidity = self._node.aux_properties.get(PROP_HUMIDITY)
-        if not humidity:
+        if not (humidity := self._node.aux_properties.get(PROP_HUMIDITY)):
             return None
         return int(humidity.value)
 
     @property
     def hvac_mode(self) -> str | None:
         """Return hvac operation ie. heat, cool mode."""
-        hvac_mode = self._node.aux_properties.get(CMD_CLIMATE_MODE)
-        if not hvac_mode:
+        if not (hvac_mode := self._node.aux_properties.get(CMD_CLIMATE_MODE)):
             return None
 
         # Which state values used depends on the mode property's UOM:

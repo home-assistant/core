@@ -6,8 +6,12 @@ from typing import Any
 from xknx import XKNX
 from xknx.devices import Sensor as XknxSensor
 
-from homeassistant.components.sensor import DEVICE_CLASSES, SensorEntity
-from homeassistant.const import CONF_NAME, CONF_TYPE
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    DEVICE_CLASSES,
+    SensorEntity,
+)
+from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
@@ -61,9 +65,10 @@ class KNXSensor(KnxEntity, SensorEntity):
             else None
         )
         self._attr_force_update = self._device.always_callback
+        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_unique_id = str(self._device.sensor_value.group_address_state)
         self._attr_native_unit_of_measurement = self._device.unit_of_measurement()
-        self._attr_state_class = config.get(SensorSchema.CONF_STATE_CLASS)
+        self._attr_state_class = config.get(CONF_STATE_CLASS)
 
     @property
     def native_value(self) -> StateType:

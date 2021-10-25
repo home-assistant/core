@@ -111,8 +111,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             # check if IP address is set manually
-            host = user_input.get(CONF_HOST)
-            if host:
+            if host := user_input.get(CONF_HOST):
                 self.host = host
                 return await self.async_step_connect()
 

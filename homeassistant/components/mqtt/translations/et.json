@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Teenus on juba seadistatud",
             "single_instance_allowed": "Lubatud on ainult \u00fcks MQTT konfiguratsioon."
         },
         "error": {

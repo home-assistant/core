@@ -12,6 +12,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from .common import async_enable_traffic
+from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 from tests.common import (
     async_fire_time_changed,
@@ -57,9 +58,10 @@ async def mock_devices(hass, zigpy_device_mock, zha_device_joined_restored):
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                "in_clusters": [general.Basic.cluster_id],
-                "out_clusters": [general.OnOff.cluster_id],
-                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_INPUT: [general.Basic.cluster_id],
+                SIG_EP_OUTPUT: [general.OnOff.cluster_id],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
             }
         }
     )

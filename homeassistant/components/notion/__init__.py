@@ -11,12 +11,13 @@ from aionotion.errors import InvalidCredentialsError, NotionError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
     device_registry as dr,
 )
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -38,7 +39,8 @@ CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Notion as a config entry."""
-    hass.data.setdefault(DOMAIN, {DATA_COORDINATOR: {}})
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {}
 
     if not entry.unique_id:
         hass.config_entries.async_update_entry(
@@ -51,12 +53,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         client = await async_get_client(
             entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD], session=session
         )
-    except InvalidCredentialsError:
-        LOGGER.error("Invalid username and/or password")
-        return False
+    except InvalidCredentialsError as err:
+        raise ConfigEntryAuthFailed("Invalid username and/or password") from err
     except NotionError as err:
-        LOGGER.error("Config entry failed: %s", err)
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady("Config entry failed to load") from err
 
     async def async_update() -> dict[str, dict[str, Any]]:
         """Get the latest data from the Notion API."""
@@ -69,14 +69,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         results = await asyncio.gather(*tasks.values(), return_exceptions=True)
         for attr, result in zip(tasks, results):
+            if isinstance(result, InvalidCredentialsError):
+                raise ConfigEntryAuthFailed(
+                    "Invalid username and/or password"
+                ) from result
             if isinstance(result, NotionError):
                 raise UpdateFailed(
                     f"There was a Notion error while updating {attr}: {result}"
-                )
+                ) from result
             if isinstance(result, Exception):
                 raise UpdateFailed(
                     f"There was an unknown error while updating {attr}: {result}"
-                )
+                ) from result
 
             for item in result:
                 if attr == "bridges" and item["id"] not in data["bridges"]:
@@ -86,9 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         return data
 
-    coordinator = hass.data[DOMAIN][DATA_COORDINATOR][
-        entry.entry_id
-    ] = DataUpdateCoordinator(
+    coordinator = DataUpdateCoordinator(
         hass,
         LOGGER,
         name=entry.data[CONF_USERNAME],
@@ -97,6 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     await coordinator.async_config_entry_first_refresh()
+    hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR] = coordinator
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -107,7 +110,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a Notion config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 
@@ -137,27 +140,24 @@ class NotionEntity(CoordinatorEntity):
         sensor_id: str,
         bridge_id: str,
         system_id: str,
-        name: str,
-        device_class: str,
+        description: EntityDescription,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
 
-        self._attr_device_class = device_class
-
         bridge = self.coordinator.data["bridges"].get(bridge_id, {})
         sensor = self.coordinator.data["sensors"][sensor_id]
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, sensor["hardware_id"])},
-            "manufacturer": "Silicon Labs",
-            "model": sensor["hardware_revision"],
-            "name": sensor["name"],
-            "sw_version": sensor["firmware_version"],
-            "via_device": (DOMAIN, bridge.get("hardware_id")),
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, sensor["hardware_id"])},
+            manufacturer="Silicon Labs",
+            model=sensor["hardware_revision"],
+            name=str(sensor["name"]),
+            sw_version=sensor["firmware_version"],
+            via_device=(DOMAIN, bridge.get("hardware_id")),
+        )
 
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        self._attr_name = f'{sensor["name"]}: {name}'
+        self._attr_name = f'{sensor["name"]}: {description.name}'
         self._attr_unique_id = (
             f'{sensor_id}_{coordinator.data["tasks"][task_id]["task_type"]}'
         )
@@ -165,6 +165,7 @@ class NotionEntity(CoordinatorEntity):
         self._sensor_id = sensor_id
         self._system_id = system_id
         self._task_id = task_id
+        self.entity_description = description
 
     @property
     def available(self) -> bool:

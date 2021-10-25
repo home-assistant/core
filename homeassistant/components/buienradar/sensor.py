@@ -699,7 +699,7 @@ class BrSensor(SensorEntity):
     @callback
     def data_updated(self, data):
         """Update data."""
-        if self._load_data(data) and self.hass:
+        if self.hass and self._load_data(data):
             self.async_write_ha_state()
 
     @callback
@@ -786,8 +786,7 @@ class BrSensor(SensorEntity):
 
         if sensor_type == SYMBOL or sensor_type.startswith(CONDITION):
             # update weather symbol & status text
-            condition = data.get(CONDITION)
-            if condition:
+            if condition := data.get(CONDITION):
                 if sensor_type == SYMBOL:
                     new_state = condition.get(EXACTNL)
                 if sensor_type == CONDITION:

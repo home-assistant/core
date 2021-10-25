@@ -1,28 +1,34 @@
 """Constants for the FAA Delays integration."""
+from __future__ import annotations
 
-from homeassistant.const import ATTR_ICON, ATTR_NAME
+from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 
 DOMAIN = "faa_delays"
 
-FAA_BINARY_SENSORS = {
-    "GROUND_DELAY": {
-        ATTR_NAME: "Ground Delay",
-        ATTR_ICON: "mdi:airport",
-    },
-    "GROUND_STOP": {
-        ATTR_NAME: "Ground Stop",
-        ATTR_ICON: "mdi:airport",
-    },
-    "DEPART_DELAY": {
-        ATTR_NAME: "Departure Delay",
-        ATTR_ICON: "mdi:airplane-takeoff",
-    },
-    "ARRIVE_DELAY": {
-        ATTR_NAME: "Arrival Delay",
-        ATTR_ICON: "mdi:airplane-landing",
-    },
-    "CLOSURE": {
-        ATTR_NAME: "Closure",
-        ATTR_ICON: "mdi:airplane:off",
-    },
-}
+FAA_BINARY_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
+    BinarySensorEntityDescription(
+        key="GROUND_DELAY",
+        name="Ground Delay",
+        icon="mdi:airport",
+    ),
+    BinarySensorEntityDescription(
+        key="GROUND_STOP",
+        name="Ground Stop",
+        icon="mdi:airport",
+    ),
+    BinarySensorEntityDescription(
+        key="DEPART_DELAY",
+        name="Departure Delay",
+        icon="mdi:airplane-takeoff",
+    ),
+    BinarySensorEntityDescription(
+        key="ARRIVE_DELAY",
+        name="Arrival Delay",
+        icon="mdi:airplane-landing",
+    ),
+    BinarySensorEntityDescription(
+        key="CLOSURE",
+        name="Closure",
+        icon="mdi:airplane:off",
+    ),
+)

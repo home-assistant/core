@@ -33,12 +33,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Define the config flow to handle options."""
         return RecollectWasteOptionsFlowHandler(config_entry)
 
-    async def async_step_import(
-        self, import_config: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle configuration via YAML import."""
-        return await self.async_step_user(import_config)
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -59,7 +53,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         try:
-            await client.async_get_next_pickup_event()
+            await client.async_get_pickup_events()
         except RecollectError as err:
             LOGGER.error("Error during setup of integration: %s", err)
             return self.async_show_form(

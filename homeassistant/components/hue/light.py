@@ -1,4 +1,6 @@
 """Support for the Philips Hue lights."""
+from __future__ import annotations
+
 from datetime import timedelta
 from functools import partial
 import logging
@@ -29,6 +31,7 @@ from homeassistant.components.light import (
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -282,12 +285,16 @@ class HueLight(CoordinatorEntity, LightEntity):
             self.is_osram = False
             self.is_philips = False
             self.is_innr = False
+            self.is_ewelink = False
+            self.is_livarno = False
             self.gamut_typ = GAMUT_TYPE_UNAVAILABLE
             self.gamut = None
         else:
             self.is_osram = light.manufacturername == "OSRAM"
             self.is_philips = light.manufacturername == "Philips"
             self.is_innr = light.manufacturername == "innr"
+            self.is_ewelink = light.manufacturername == "eWeLink"
+            self.is_livarno = light.manufacturername.startswith("_TZ3000_")
             self.gamut_typ = self.light.colorgamuttype
             self.gamut = self.light.colorgamut
             _LOGGER.debug("Color gamut of %s: %s", self.name, str(self.gamut))
@@ -383,6 +390,8 @@ class HueLight(CoordinatorEntity, LightEntity):
         """Return the warmest color_temp that this light supports."""
         if self.is_group:
             return super().max_mireds
+        if self.is_livarno:
+            return 500
 
         max_mireds = self.light.controlcapabilities.get("ct", {}).get("max")
 
@@ -425,7 +434,7 @@ class HueLight(CoordinatorEntity, LightEntity):
         return [EFFECT_COLORLOOP, EFFECT_RANDOM]
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return the device info."""
         if self.light.type in (
             GROUP_TYPE_LIGHT_GROUP,
@@ -435,22 +444,22 @@ class HueLight(CoordinatorEntity, LightEntity):
         ):
             return None
 
-        info = {
-            "identifiers": {(HUE_DOMAIN, self.device_id)},
-            "name": self.name,
-            "manufacturer": self.light.manufacturername,
+        suggested_area = None
+        if self.light.id in self._rooms:
+            suggested_area = self._rooms[self.light.id]
+
+        return DeviceInfo(
+            identifiers={(HUE_DOMAIN, self.device_id)},
+            manufacturer=self.light.manufacturername,
             # productname added in Hue Bridge API 1.24
             # (published 03/05/2018)
-            "model": self.light.productname or self.light.modelid,
+            model=self.light.productname or self.light.modelid,
+            name=self.name,
             # Not yet exposed as properties in aiohue
-            "sw_version": self.light.raw["swversion"],
-            "via_device": (HUE_DOMAIN, self.bridge.api.config.bridgeid),
-        }
-
-        if self.light.id in self._rooms:
-            info["suggested_area"] = self._rooms[self.light.id]
-
-        return info
+            suggested_area=suggested_area,
+            sw_version=self.light.raw["swversion"],
+            via_device=(HUE_DOMAIN, self.bridge.api.config.bridgeid),
+        )
 
     async def async_added_to_hass(self) -> None:
         """Handle entity being added to Home Assistant."""
@@ -493,7 +502,7 @@ class HueLight(CoordinatorEntity, LightEntity):
         elif flash == FLASH_SHORT:
             command["alert"] = "select"
             del command["on"]
-        elif not self.is_innr:
+        elif not self.is_innr and not self.is_ewelink and not self.is_livarno:
             command["alert"] = "none"
 
         if ATTR_EFFECT in kwargs:
@@ -532,7 +541,7 @@ class HueLight(CoordinatorEntity, LightEntity):
         elif flash == FLASH_SHORT:
             command["alert"] = "select"
             del command["on"]
-        elif not self.is_innr:
+        elif not self.is_innr and not self.is_livarno:
             command["alert"] = "none"
 
         if self.is_group:

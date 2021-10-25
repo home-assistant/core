@@ -5,7 +5,7 @@ from xknx import XKNX
 from xknx.devices import Weather as XknxWeather
 
 from homeassistant.components.weather import WeatherEntity
-from homeassistant.const import CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -78,6 +78,7 @@ class KNXWeather(KnxEntity, WeatherEntity):
         """Initialize of a KNX sensor."""
         super().__init__(_create_weather(xknx, config))
         self._attr_unique_id = str(self._device._temperature.group_address_state)
+        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
 
     @property
     def temperature(self) -> float | None:

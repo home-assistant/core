@@ -15,7 +15,7 @@
             "confirm": {
                 "data": {
                     "password": "Mot de passe",
-                    "username": "Identifiant"
+                    "username": "Nom d'utilisateur"
                 },
                 "description": "Entrez les informations d'identification RTSP pour la cam\u00e9ra Ezviz {serial} avec IP {ip_address}",
                 "title": "Cam\u00e9ra Ezviz d\u00e9couverte"
@@ -24,7 +24,7 @@
                 "data": {
                     "password": "Mot de passe",
                     "url": "URL",
-                    "username": "Identifiant"
+                    "username": "Nom d'utilisateur"
                 },
                 "title": "Connectez-vous \u00e0 Ezviz Cloud"
             },
@@ -32,7 +32,7 @@
                 "data": {
                     "password": "Mot de passe",
                     "url": "URL",
-                    "username": "Identifiant"
+                    "username": "Nom d'utilisateur"
                 },
                 "description": "Sp\u00e9cifiez manuellement l'URL de votre r\u00e9gion",
                 "title": "Connectez-vous \u00e0 l'URL Ezviz personnalis\u00e9e"

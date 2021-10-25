@@ -39,7 +39,7 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
-    trigger_data = automation_info.get("trigger_data", {}) if automation_info else {}
+    trigger_data = automation_info["trigger_data"]
     entities = {}
     removes = []
     job = HassJob(action)
@@ -79,13 +79,11 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
         # Check state of entity. If valid, set up a listener.
         if new_state.domain == "input_datetime":
-            has_date = new_state.attributes["has_date"]
-            if has_date:
+            if has_date := new_state.attributes["has_date"]:
                 year = new_state.attributes["year"]
                 month = new_state.attributes["month"]
                 day = new_state.attributes["day"]
-            has_time = new_state.attributes["has_time"]
-            if has_time:
+            if has_time := new_state.attributes["has_time"]:
                 hour = new_state.attributes["hour"]
                 minute = new_state.attributes["minute"]
                 second = new_state.attributes["second"]

@@ -198,6 +198,9 @@ def get_accessory(hass, driver, state, aid, config):  # noqa: C901
     elif state.domain in ("automation", "input_boolean", "remote", "scene", "script"):
         a_type = "Switch"
 
+    elif state.domain in ("input_select", "select"):
+        a_type = "SelectSwitch"
+
     elif state.domain == "water_heater":
         a_type = "WaterHeater"
 
@@ -224,6 +227,7 @@ class HomeAccessory(Accessory):
         config,
         *args,
         category=CATEGORY_OTHER,
+        device_id=None,
         **kwargs,
     ):
         """Initialize a Accessory object."""
@@ -231,18 +235,29 @@ class HomeAccessory(Accessory):
             driver=driver, display_name=name[:MAX_NAME_LENGTH], aid=aid, *args, **kwargs
         )
         self.config = config or {}
-        domain = split_entity_id(entity_id)[0].replace("_", " ")
+        if device_id:
+            self.device_id = device_id
+            serial_number = device_id
+            domain = None
+        else:
+            self.device_id = None
+            serial_number = entity_id
+            domain = split_entity_id(entity_id)[0].replace("_", " ")
 
         if self.config.get(ATTR_MANUFACTURER) is not None:
             manufacturer = self.config[ATTR_MANUFACTURER]
         elif self.config.get(ATTR_INTEGRATION) is not None:
             manufacturer = self.config[ATTR_INTEGRATION].replace("_", " ").title()
-        else:
+        elif domain:
             manufacturer = f"{MANUFACTURER} {domain}".title()
+        else:
+            manufacturer = MANUFACTURER
         if self.config.get(ATTR_MODEL) is not None:
             model = self.config[ATTR_MODEL]
-        else:
+        elif domain:
             model = domain.title()
+        else:
+            model = MANUFACTURER
         sw_version = None
         if self.config.get(ATTR_SW_VERSION) is not None:
             sw_version = format_sw_version(self.config[ATTR_SW_VERSION])
@@ -252,7 +267,7 @@ class HomeAccessory(Accessory):
         self.set_info_service(
             manufacturer=manufacturer[:MAX_MANUFACTURER_LENGTH],
             model=model[:MAX_MODEL_LENGTH],
-            serial_number=entity_id[:MAX_SERIAL_LENGTH],
+            serial_number=serial_number[:MAX_SERIAL_LENGTH],
             firmware_revision=sw_version[:MAX_VERSION_LENGTH],
         )
 
@@ -260,6 +275,10 @@ class HomeAccessory(Accessory):
         self.entity_id = entity_id
         self.hass = hass
         self._subscriptions = []
+
+        if device_id:
+            return
+
         self._char_battery = None
         self._char_charging = None
         self._char_low_battery = None
@@ -394,8 +413,7 @@ class HomeAccessory(Accessory):
     @ha_callback
     def async_update_linked_battery_callback(self, event):
         """Handle linked battery sensor state change listener callback."""
-        new_state = event.data.get("new_state")
-        if new_state is None:
+        if (new_state := event.data.get("new_state")) is None:
             return
         if self.linked_battery_charging_sensor:
             battery_charging_state = None
@@ -406,8 +424,7 @@ class HomeAccessory(Accessory):
     @ha_callback
     def async_update_linked_battery_charging_callback(self, event):
         """Handle linked battery charging sensor state change listener callback."""
-        new_state = event.data.get("new_state")
-        if new_state is None:
+        if (new_state := event.data.get("new_state")) is None:
             return
         self.async_update_battery(None, new_state.state == STATE_ON)
 
@@ -480,8 +497,7 @@ class HomeAccessory(Accessory):
             )
         )
 
-    @ha_callback
-    def async_stop(self):
+    async def stop(self):
         """Cancel any subscriptions when the bridge is stopped."""
         while self._subscriptions:
             self._subscriptions.pop(0)()
@@ -506,8 +522,7 @@ class HomeBridge(Bridge):
 
     async def async_get_snapshot(self, info):
         """Get snapshot from accessory if supported."""
-        acc = self.accessories.get(info["aid"])
-        if acc is None:
+        if (acc := self.accessories.get(info["aid"])) is None:
             raise ValueError("Requested snapshot for missing accessory")
         if not hasattr(acc, "async_get_snapshot"):
             raise ValueError(
@@ -528,9 +543,9 @@ class HomeDriver(AccessoryDriver):
         self._bridge_name = bridge_name
         self._entry_title = entry_title
 
-    def pair(self, client_uuid, client_public):
+    def pair(self, client_uuid, client_public, client_permissions):
         """Override super function to dismiss setup message if paired."""
-        success = super().pair(client_uuid, client_public)
+        success = super().pair(client_uuid, client_public, client_permissions)
         if success:
             dismiss_setup_message(self.hass, self._entry_id)
         return success
