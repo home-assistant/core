@@ -306,6 +306,7 @@ FLOWS = [
     "upnp",
     "uptimerobot",
     "velbus",
+    "venstar",
     "vera",
     "verisure",
     "vesync",
