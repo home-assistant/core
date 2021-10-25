@@ -27,15 +27,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     config = entry.data
     name = config[CONF_NAME]
 
-    ted_reader = await tedpy.createTED(
-        config[CONF_HOST],
-        async_client=get_async_client(hass),
-    )
+    async with async_timeout.timeout(10):
+        ted_reader = await tedpy.createTED(
+            config[CONF_HOST],
+            async_client=get_async_client(hass),
+        )
 
     async def async_update_data():
         """Fetch data from API endpoint."""
         data = {}
-        async with async_timeout.timeout(30):
+        async with async_timeout.timeout(10):
             try:
                 await ted_reader.update()
             except httpx.HTTPError as err:
