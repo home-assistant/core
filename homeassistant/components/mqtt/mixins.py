@@ -527,7 +527,7 @@ def device_info_from_config(config) -> DeviceInfo | None:
 
     info = DeviceInfo(
         identifiers={(DOMAIN, id_) for id_ in config[CONF_IDENTIFIERS]},
-        connections={tuple(x) for x in config[CONF_CONNECTIONS]},  # type: ignore
+        connections={(conn_[0], conn_[1]) for conn_ in config[CONF_CONNECTIONS]},
     )
 
     if CONF_MANUFACTURER in config:
