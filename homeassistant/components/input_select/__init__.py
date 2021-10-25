@@ -263,33 +263,40 @@ class InputSelect(SelectEntity, RestoreEntity):
     @callback
     def async_offset_index(self, offset: int, cycle: bool) -> None:
         """Offset current index."""
-        if self.current_option is None:
-            self._attr_current_option = self.options[0]
 
         current_index = (
             self.options.index(self.current_option)
             if self.current_option is not None
             else 0
         )
+
         new_index = current_index + offset
         if cycle:
             new_index = new_index % len(self.options)
-        else:
-            if new_index < 0:
-                new_index = 0
-            elif new_index >= len(self.options):
-                new_index = len(self.options) - 1
+        elif new_index < 0:
+            new_index = 0
+        elif new_index >= len(self.options):
+            new_index = len(self.options) - 1
+
         self._attr_current_option = self.options[new_index]
         self.async_write_ha_state()
 
     @callback
     def async_next(self, cycle: bool) -> None:
         """Select next option."""
+        # If there is no current option, first item is the next
+        if self.current_option is None:
+            self.async_select_index(0)
+            return
         self.async_offset_index(1, cycle)
 
     @callback
     def async_previous(self, cycle: bool) -> None:
         """Select previous option."""
+        # If there is no current option, last item is the previous
+        if self.current_option is None:
+            self.async_select_index(-1)
+            return
         self.async_offset_index(-1, cycle)
 
     async def async_set_options(self, options: list[str]) -> None:
