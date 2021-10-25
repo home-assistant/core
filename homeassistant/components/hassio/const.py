@@ -45,6 +45,7 @@ ATTR_UPDATE_AVAILABLE = "update_available"
 ATTR_CPU_PERCENT = "cpu_percent"
 ATTR_MEMORY_PERCENT = "memory_percent"
 ATTR_SLUG = "slug"
+ATTR_STATE = "state"
 ATTR_URL = "url"
 ATTR_REPOSITORY = "repository"
 
