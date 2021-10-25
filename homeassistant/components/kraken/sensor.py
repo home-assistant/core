@@ -32,23 +32,26 @@ async def async_setup_entry(
 ) -> None:
     """Add kraken entities from a config_entry."""
 
-    # Add all entities on startup / first setup
-    entities = []
-    for tracked_asset_pair in config_entry.options[CONF_TRACKED_ASSET_PAIRS]:
-        entities.extend(
-            [
-                KrakenSensor(
-                    hass.data[DOMAIN],
-                    tracked_asset_pair,
-                    description,
-                )
-                for description in SENSOR_TYPES
-            ]
-        )
-    async_add_entities(entities, True)
+    def _async_add_kraken_sensors(tracked_asset_pairs: list[str]) -> None:
+        entities = []
+        for tracked_asset_pair in tracked_asset_pairs:
+            entities.extend(
+                [
+                    KrakenSensor(
+                        hass.data[DOMAIN],
+                        tracked_asset_pair,
+                        description,
+                    )
+                    for description in SENSOR_TYPES
+                ]
+            )
+        async_add_entities(entities, True)
+
+    _async_add_kraken_sensors(config_entry.options[CONF_TRACKED_ASSET_PAIRS])
 
     @callback
     def async_update_sensors(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+        """Add or remove sensors for configured tracked asset pairs."""
         dev_reg = device_registry.async_get(hass)
 
         existing_devices = {
@@ -58,7 +61,7 @@ async def async_setup_entry(
             )
         }
 
-        entities = []
+        asset_pairs_to_add = []
         for tracked_asset_pair in config_entry.options[CONF_TRACKED_ASSET_PAIRS]:
             # Only create new devices
             if (
@@ -66,17 +69,8 @@ async def async_setup_entry(
             ) in existing_devices:
                 existing_devices.pop(device_name)
             else:
-                entities.extend(
-                    [
-                        KrakenSensor(
-                            hass.data[DOMAIN],
-                            tracked_asset_pair,
-                            description,
-                        )
-                        for description in SENSOR_TYPES
-                    ]
-                )
-        async_add_entities(entities, True)
+                asset_pairs_to_add.append(tracked_asset_pair)
+        _async_add_kraken_sensors(asset_pairs_to_add)
 
         # Remove devices for asset pairs which are no longer tracked
         for device_id in existing_devices.values():
