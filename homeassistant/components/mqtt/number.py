@@ -1,4 +1,6 @@
 """Configure number in a device through MQTT topic."""
+from __future__ import annotations
+
 import functools
 import logging
 
@@ -11,7 +13,12 @@ from homeassistant.components.number import (
     DEFAULT_STEP,
     NumberEntity,
 )
-from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_OPTIMISTIC,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_VALUE_TEMPLATE,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
@@ -64,6 +71,7 @@ PLATFORM_SCHEMA = vol.All(
                 vol.Coerce(float), vol.Range(min=1e-3)
             ),
             vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         },
     ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema),
     validate_config,
@@ -194,6 +202,11 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
     def step(self) -> float:
         """Return the increment/decrement step."""
         return self._config[CONF_STEP]
+
+    @property
+    def unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement."""
+        return self._config.get(CONF_UNIT_OF_MEASUREMENT)
 
     @property
     def value(self):
