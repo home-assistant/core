@@ -2,10 +2,9 @@
 import base64
 from unittest.mock import patch
 
-from homeassistant.components import demo, media_player
-from homeassistant.components.media_player.const import SUPPORT_GROUPING
+from homeassistant.components import media_player
 from homeassistant.components.websocket_api.const import TYPE_RESULT
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
 from homeassistant.setup import async_setup_component
 
 
