@@ -3,7 +3,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntityDescription
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorEntityDescription,
+)
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
