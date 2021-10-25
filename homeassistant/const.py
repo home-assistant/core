@@ -352,7 +352,6 @@ ATTR_LOCATION: Final = "location"
 
 ATTR_MODE: Final = "mode"
 
-ATTR_CONFIG_ENTRY_ID: Final = "config_entry_id"
 ATTR_CONFIGURATION_URL: Final = "configuration_url"
 ATTR_CONNECTIONS: Final = "connections"
 ATTR_MANUFACTURER: Final = "manufacturer"
