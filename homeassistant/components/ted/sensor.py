@@ -149,7 +149,7 @@ class TedSensor(CoordinatorEntity, SensorEntity):
         return f"{self._device_id}_{self.entity_description.key}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the resources."""
         return self.coordinator.data.get(self.entity_description.key)
 
