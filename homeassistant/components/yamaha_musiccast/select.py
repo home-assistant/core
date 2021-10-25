@@ -78,6 +78,7 @@ class SelectableCapapility(MusicCastDeviceEntity, SelectEntity):
         """Return the list possible options."""
         return list(self.capability.options.values())
 
+    @property
     def current_option(self):
         """Return the currently selected option."""
-        return self.capability.current
+        return self.capability.options[self.capability.current]
