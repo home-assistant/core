@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_BATTERY_CHARGING,
     DEVICE_CLASS_DOOR,
     DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_MOTION,
@@ -125,6 +126,13 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         TuyaBinarySensorEntityDescription(
             key=DPCode.SOS_STATE,
             device_class=DEVICE_CLASS_SAFETY,
+        ),
+        TAMPER_BINARY_SENSOR,
+    ),
+    "wsdcg": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CHARGE_STATE,
+            device_class=DEVICE_CLASS_BATTERY_CHARGING,
         ),
         TAMPER_BINARY_SENSOR,
     ),

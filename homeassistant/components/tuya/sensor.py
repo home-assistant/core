@@ -201,24 +201,9 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
     # PIR Detector
     # https://developer.tuya.com/en/docs/iot/categorypir?id=Kaiuz3ss11b80
     "pir": BATTERY_SENSORS,
-    # Water Detector
-    # https://developer.tuya.com/en/docs/iot/categorysj?id=Kaiuz3iub2sli
-    "sj": BATTERY_SENSORS,
-    # Emergency Button
-    # https://developer.tuya.com/en/docs/iot/categorysos?id=Kaiuz3oi6agjy
-    "sos": BATTERY_SENSORS,
-    # Vibration Sensor
-    # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
-    "zd": BATTERY_SENSORS,
-    "wsdcg": (
-        SensorEntityDescription(
-            key=DPCode.VA_TEMPERATURE,
-            name="Temperature",
-            device_class=DEVICE_CLASS_TEMPERATURE,
-            state_class=STATE_CLASS_MEASUREMENT,
-        ),
-    ),
-    "pm2.5": (
+    # PM2.5 Sensor
+    # https://developer.tuya.com/en/docs/iot/categorypm25?id=Kaiuz3qof3yfu
+    "pm25": (
         SensorEntityDescription(
             key=DPCode.PM100_VALUE,
             name="PM10",
@@ -241,8 +226,40 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
             state_class=STATE_CLASS_MEASUREMENT,
         ),
     ),
-    "ywbj": BATTERY_SENSORS,
+    # Gas Detector
+    # https://developer.tuya.com/en/docs/iot/categoryrqbj?id=Kaiuz3d162ubw
     "rqbj": BATTERY_SENSORS,
+    # Water Detector
+    # https://developer.tuya.com/en/docs/iot/categorysj?id=Kaiuz3iub2sli
+    "sj": BATTERY_SENSORS,
+    # Emergency Button
+    # https://developer.tuya.com/en/docs/iot/categorysos?id=Kaiuz3oi6agjy
+    "sos": BATTERY_SENSORS,
+    # Temperature and Humidity Sensor
+    # https://developer.tuya.com/en/docs/iot/categorywsdcg?id=Kaiuz3hinij34
+    "wsdcg": (
+        SensorEntityDescription(
+            key=DPCode.VA_TEMPERATURE,
+            name="Temperature",
+            device_class=DEVICE_CLASS_TEMPERATURE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.HUMIDITY_VALUE,
+            name="Humidity",
+            device_class=DEVICE_CLASS_HUMIDITY,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        *BATTERY_SENSORS,
+    ),
+    # Smoke Detector
+    # https://developer.tuya.com/en/docs/iot/categoryywbj?id=Kaiuz3f6sf952
+    "ywbj": BATTERY_SENSORS,
+    # Vibration Sensor
+    # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
+    "zd": BATTERY_SENSORS,
+    # Smart Electricity Meter
+    # https://developer.tuya.com/en/docs/iot/smart-meter?id=Kaiuz4gv6ack7
     "zndb": (
         SensorEntityDescription(
             key=DPCode.FORWARD_ENERGY_TOTAL,
