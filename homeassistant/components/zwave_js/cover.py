@@ -41,6 +41,8 @@ from .entity import ZWaveBaseEntity
 LOGGER = logging.getLogger(__name__)
 
 VENETIAN_BLINDS_TILT = "venetianBlindsTilt"
+FIBARO_MANUFACTURER_ID = 271
+FIBARO_VENETIAN_BLIND_MODE = 2
 
 
 async def async_setup_entry(
@@ -58,10 +60,16 @@ async def async_setup_entry(
         if info.platform_hint == "motorized_barrier":
             entities.append(ZwaveMotorizedBarrier(config_entry, client, info))
         else:
-            if info.node.manufacturer_id == 271:
-                entities.append(ZWaveCoverFibaro(config_entry, client, info))
-            else:
-                entities.append(ZWaveCover(config_entry, client, info))
+            entity = None
+            if info.node.manufacturer_id == FIBARO_MANUFACTURER_ID:
+                config = info.node.get_configuration_values().get(
+                    f"{info.node.node_id}-112-0-10"
+                )
+                if config and config.value == FIBARO_VENETIAN_BLIND_MODE:
+                    entity = ZWaveCoverFibaro(config_entry, client, info)
+            entities.append(
+                entity if entity is not None else ZWaveCover(config_entry, client, info)
+            )
         async_add_entities(entities)
 
     config_entry.async_on_unload(
