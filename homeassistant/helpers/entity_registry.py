@@ -390,6 +390,11 @@ class EntityRegistry:
         new_entity_id: str | UndefinedType = UNDEFINED,
         new_unique_id: str | UndefinedType = UNDEFINED,
         disabled_by: str | None | UndefinedType = UNDEFINED,
+        entity_category: str | None | UndefinedType = UNDEFINED,
+        original_name: str | None | UndefinedType = UNDEFINED,
+        original_icon: str | None | UndefinedType = UNDEFINED,
+        unit_of_measurement: str | None | UndefinedType = UNDEFINED,
+        device_class: str | None | UndefinedType = UNDEFINED,
     ) -> RegistryEntry:
         """Update properties of an entity."""
         return self._async_update_entity(
@@ -401,6 +406,11 @@ class EntityRegistry:
             new_entity_id=new_entity_id,
             new_unique_id=new_unique_id,
             disabled_by=disabled_by,
+            entity_category=entity_category,
+            original_name=original_name,
+            original_icon=original_icon,
+            unit_of_measurement=unit_of_measurement,
+            device_class=device_class,
         )
 
     @callback

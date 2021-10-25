@@ -10,6 +10,7 @@ from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
 
@@ -515,3 +516,58 @@ async def test_register_sensor_limits_state_class(
 
     # This means it was ignored.
     assert reg_resp.status == HTTPStatus.OK
+
+
+async def test_reregister_sensor(hass, create_registrations, webhook_client):
+    """Test that we can add more info in re-registration."""
+    webhook_id = create_registrations[1]["webhook_id"]
+    webhook_url = f"/api/webhook/{webhook_id}"
+
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "Battery State",
+                "state": 100,
+                "type": "sensor",
+                "unique_id": "abcd",
+            },
+        },
+    )
+
+    assert reg_resp.status == HTTPStatus.CREATED
+
+    ent_reg = er.async_get(hass)
+    entry = ent_reg.async_get("sensor.test_1_battery_state")
+    assert entry.original_name == "Test 1 Battery State"
+    assert entry.device_class is None
+    assert entry.unit_of_measurement is None
+    assert entry.entity_category is None
+    assert entry.original_icon == "mdi:cellphone"
+
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "New Name",
+                "state": 100,
+                "type": "sensor",
+                "unique_id": "abcd",
+                "state_class": "total",
+                "device_class": "battery",
+                "entity_category": "diagnostic",
+                "icon": "mdi:new-icon",
+                "unit_of_measurement": "%",
+            },
+        },
+    )
+
+    assert reg_resp.status == HTTPStatus.CREATED
+    entry = ent_reg.async_get("sensor.test_1_battery_state")
+    assert entry.original_name == "Test 1 New Name"
+    assert entry.device_class == "battery"
+    assert entry.unit_of_measurement == "%"
+    assert entry.entity_category == "diagnostic"
+    assert entry.original_icon == "mdi:new-icon"
