@@ -21,6 +21,40 @@ from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 # default instructions set of each category end up being a number.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
+    # Smart Kettle
+    # https://developer.tuya.com/en/docs/iot/fbh?id=K9gf484m21yq7
+    "bh": (
+        NumberEntityDescription(
+            key=DPCode.TEMP_SET,
+            name="Temperature",
+            icon="mdi:thermometer",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.TEMP_SET_F,
+            name="Temperature",
+            icon="mdi:thermometer",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.TEMP_BOILING_C,
+            name="Temperature After Boiling",
+            icon="mdi:thermometer",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.TEMP_BOILING_F,
+            name="Temperature After Boiling",
+            icon="mdi:thermometer",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.WARM_TIME,
+            name="Heat Preservation Time",
+            icon="mdi:timer",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
     # Human Presence Sensor
     # https://developer.tuya.com/en/docs/iot/categoryhps?id=Kaiuz42yhn1hs
     "hps": (
