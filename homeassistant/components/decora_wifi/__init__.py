@@ -50,6 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         and hass.data[DOMAIN][CONF_TEMPORARY].email == email
     ):
         hass.data[DOMAIN][entry.entry_id] = hass.data[DOMAIN].pop(CONF_TEMPORARY)
+
     # If setting up from an existing entry such as on hass restart, login a new session and store it in hass.data.
     else:
         try:
@@ -65,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN][entry.entry_id] = session
 
     # Forward the config entry to each platform which has devices to set up.
-    active_platforms = session.active_platforms
+    active_platforms = hass.data[DOMAIN][entry.entry_id].active_platforms
     hass.config_entries.async_setup_platforms(entry, active_platforms)
     return True
 

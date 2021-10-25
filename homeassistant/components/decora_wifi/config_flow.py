@@ -70,6 +70,7 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors=errors,
             )
         # Login validated. Save the session in temp, then move on to the finish step.
+        self.hass.data.setdefault(DOMAIN, {})
         self.hass.data[DOMAIN][CONF_TEMPORARY] = session
         return await self._finish_step()
 
