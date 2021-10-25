@@ -38,7 +38,11 @@ class SpiderPowerPlugEnergy(SensorEntity):
         """Initialize the Spider Power Plug."""
         self.api = api
         self.power_plug = power_plug
-        self._attr_device_info = DeviceInfo(
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device_info of the device."""
+        return DeviceInfo(
             identifiers={(DOMAIN, self.power_plug.id)},
             manufacturer=self.power_plug.manufacturer,
             model=self.power_plug.model,

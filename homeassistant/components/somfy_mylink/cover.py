@@ -74,11 +74,6 @@ class SomfyShade(RestoreEntity, CoverEntity):
         self._is_opening = None
         self._is_closing = None
         self._device_class = device_class
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, target_id)},
-            manufacturer=MANUFACTURER,
-            name=name,
-        )
 
     @property
     def should_poll(self):
@@ -119,6 +114,15 @@ class SomfyShade(RestoreEntity, CoverEntity):
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
         return self._closed
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device_info of the device."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._target_id)},
+            manufacturer=MANUFACTURER,
+            name=self._name,
+        )
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""

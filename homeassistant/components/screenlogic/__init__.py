@@ -229,6 +229,24 @@ class ScreenlogicEntity(CoordinatorEntity):
         """Return the configured name of the gateway."""
         return self.gateway.name
 
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information for the controller."""
+        controller_type = self.config_data["controller_type"]
+        hardware_type = self.config_data["hardware_type"]
+        try:
+            equipment_model = EQUIPMENT.CONTROLLER_HARDWARE[controller_type][
+                hardware_type
+            ]
+        except KeyError:
+            equipment_model = f"Unknown Model C:{controller_type} H:{hardware_type}"
+        return DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, self.mac)},
+            manufacturer="Pentair",
+            model=equipment_model,
+            name=self.gateway_name,
+        )
+
 
 class ScreenLogicCircuitEntity(ScreenlogicEntity):
     """ScreenLogic circuit entity."""

@@ -251,17 +251,22 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
 
         self._attr_name = f"Spotify {name}"
         self._attr_unique_id = user_id
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information about this entity."""
         model = "Spotify Free"
-        if me is not None:
-            product = me["product"]
+        if self._me is not None:
+            product = self._me["product"]
             model = f"Spotify {product}"
-        self._attr_device_info = DeviceInfo(
+
+        return DeviceInfo(
             configuration_url="https://open.spotify.com",
             entry_type="service",
-            identifiers={(DOMAIN, user_id)},
+            identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer="Spotify AB",
             model=model,
-            name=f"Spotify {name}",
+            name=f"Spotify {self.name}",
         )
 
     @property

@@ -44,7 +44,11 @@ class SpiderThermostat(ClimateEntity):
         """Initialize the thermostat."""
         self.api = api
         self.thermostat = thermostat
-        self._attr_device_info = DeviceInfo(
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device_info of the device."""
+        return DeviceInfo(
             identifiers={(DOMAIN, self.thermostat.id)},
             manufacturer=self.thermostat.manufacturer,
             model=self.thermostat.model,

@@ -14,11 +14,6 @@ class SubaruEntity(CoordinatorEntity):
         self.car_name = vehicle_info[VEHICLE_NAME]
         self.vin = vehicle_info[VEHICLE_VIN]
         self.entity_type = "entity"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, vehicle_info[VEHICLE_VIN])},
-            manufacturer=MANUFACTURER,
-            name=vehicle_info[VEHICLE_NAME],
-        )
 
     @property
     def name(self):
@@ -29,3 +24,12 @@ class SubaruEntity(CoordinatorEntity):
     def unique_id(self) -> str:
         """Return a unique ID."""
         return f"{self.vin}_{self.entity_type}"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device_info of the device."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.vin)},
+            manufacturer=MANUFACTURER,
+            name=self.car_name,
+        )
