@@ -17,8 +17,8 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
-    ENTITY_CATEGORY_DIAGNOSTIC,
     ENERGY_KILO_WATT_HOUR,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
