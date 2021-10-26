@@ -1,6 +1,7 @@
 """Reads vehicle status from BMW connected drive portal."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
 
 from bimmer_connected.account import ConnectedDriveAccount
@@ -282,7 +283,7 @@ class BMWConnectedDriveAccount:
         self.read_only = read_only
         self.account = ConnectedDriveAccount(username, password, region)
         self.name = name
-        self._update_listeners = []
+        self._update_listeners: list[Callable[[], None]] = []
 
         # Set observer position once for older cars to be in range for
         # GPS position (pre-7/2014, <2km) and get new data from API
@@ -311,7 +312,7 @@ class BMWConnectedDriveAccount:
             )
             _LOGGER.exception(exception)
 
-    def add_update_listener(self, listener):
+    def add_update_listener(self, listener: Callable[[], None]) -> None:
         """Add a listener for update notifications."""
         self._update_listeners.append(listener)
 
