@@ -64,6 +64,7 @@ HM_DEVICE_TYPES = {
         "IPSwitchBattery",
         "IPMultiIOPCB",
         "IPGarageSwitch",
+        "IPWHS2",
     ],
     DISCOVER_LIGHTS: [
         "Dimmer",
@@ -178,6 +179,7 @@ HM_DEVICE_TYPES = {
         "IPLanRouter",
         "IPMultiIOPCB",
         "IPLockDLD",
+        "IPWHS2",
     ],
     DISCOVER_COVER: [
         "Blind",

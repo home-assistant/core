@@ -82,7 +82,7 @@ async def _resetup_platform(
         await component.async_setup(hass, root_config)  # type: ignore
         return
 
-    # If its an entity platform, we use the entity_platform
+    # If it's an entity platform, we use the entity_platform
     # async_reset method
     platform = async_get_platform_without_config_entry(
         hass, integration_name, integration_platform
@@ -93,7 +93,7 @@ async def _resetup_platform(
 
     if not root_config[integration_platform]:
         # No config for this platform
-        # and its not loaded.  Nothing to do
+        # and it's not loaded. Nothing to do.
         return
 
     await _async_setup_platform(

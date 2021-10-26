@@ -23,7 +23,13 @@ from homeassistant.const import (
     ENERGY_WATT_HOUR,
     VOLUME_CUBIC_METERS,
 )
-from homeassistant.core import HomeAssistant, State, callback, split_entity_id
+from homeassistant.core import (
+    HomeAssistant,
+    State,
+    callback,
+    split_entity_id,
+    valid_entity_id,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -177,9 +183,13 @@ class SensorManager:
 
         # Make sure the right data is there
         # If the entity existed, we don't pop it from to_remove so it's removed
-        if config.get(adapter.entity_energy_key) is None or (
-            config.get("entity_energy_price") is None
-            and config.get("number_energy_price") is None
+        if (
+            config.get(adapter.entity_energy_key) is None
+            or not valid_entity_id(config[adapter.entity_energy_key])
+            or (
+                config.get("entity_energy_price") is None
+                and config.get("number_energy_price") is None
+            )
         ):
             return
 

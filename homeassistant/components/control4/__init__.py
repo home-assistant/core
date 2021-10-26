@@ -20,6 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -147,7 +148,6 @@ class Control4Entity(CoordinatorEntity):
     def __init__(
         self,
         entry_data: dict,
-        entry: ConfigEntry,
         coordinator: DataUpdateCoordinator,
         name: str,
         idx: int,
@@ -158,9 +158,9 @@ class Control4Entity(CoordinatorEntity):
     ) -> None:
         """Initialize a Control4 entity."""
         super().__init__(coordinator)
-        self.entry = entry
         self.entry_data = entry_data
-        self._name = name
+        self._attr_name = name
+        self._attr_unique_id = str(idx)
         self._idx = idx
         self._controller_unique_id = entry_data[CONF_CONTROLLER_UNIQUE_ID]
         self._device_name = device_name
@@ -169,23 +169,12 @@ class Control4Entity(CoordinatorEntity):
         self._device_id = device_id
 
     @property
-    def name(self):
-        """Return name of entity."""
-        return self._name
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return str(self._idx)
-
-    @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return info of parent Control4 device of entity."""
-        return {
-            "config_entry_id": self.entry.entry_id,
-            "identifiers": {(DOMAIN, self._device_id)},
-            "name": self._device_name,
-            "manufacturer": self._device_manufacturer,
-            "model": self._device_model,
-            "via_device": (DOMAIN, self._controller_unique_id),
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, str(self._device_id))},
+            manufacturer=self._device_manufacturer,
+            model=self._device_model,
+            name=self._device_name,
+            via_device=(DOMAIN, self._controller_unique_id),
+        )

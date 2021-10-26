@@ -541,11 +541,60 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
             False,
             str(int(0x04030201)),
         ),
+        (
+            {
+                CONF_COUNT: 2,
+                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
+                CONF_DATA_TYPE: DataType.FLOAT32,
+                CONF_PRECISION: 2,
+            },
+            [16286, 1617],
+            False,
+            "1.23",
+        ),
     ],
 )
 async def test_all_sensor(hass, mock_do_cycle, expected):
     """Run test for sensor."""
     assert hass.states.get(ENTITY_ID).state == expected
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_SCAN_INTERVAL: 1,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "config_addon,register_words",
+    [
+        (
+            {
+                CONF_COUNT: 1,
+                CONF_DATA_TYPE: DataType.INT16,
+            },
+            [7, 9],
+        ),
+        (
+            {
+                CONF_COUNT: 2,
+                CONF_DATA_TYPE: DataType.INT32,
+            },
+            [7],
+        ),
+    ],
+)
+async def test_wrong_unpack(hass, mock_do_cycle):
+    """Run test for sensor."""
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(

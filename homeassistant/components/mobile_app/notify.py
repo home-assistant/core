@@ -1,6 +1,7 @@
 """Support for mobile_app push notifications."""
 import asyncio
 from functools import partial
+from http import HTTPStatus
 import logging
 
 import aiohttp
@@ -13,12 +14,6 @@ from homeassistant.components.notify import (
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
-)
-from homeassistant.const import (
-    HTTP_ACCEPTED,
-    HTTP_CREATED,
-    HTTP_OK,
-    HTTP_TOO_MANY_REQUESTS,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.util.dt as dt_util
@@ -36,6 +31,7 @@ from .const import (
     ATTR_PUSH_RATE_LIMITS_SUCCESSFUL,
     ATTR_PUSH_TOKEN,
     ATTR_PUSH_URL,
+    ATTR_WEBHOOK_ID,
     DATA_CONFIG_ENTRIES,
     DATA_NOTIFY,
     DATA_PUSH_CHANNEL,
@@ -113,9 +109,7 @@ class MobileAppNotificationService(BaseNotificationService):
         ):
             data[ATTR_TITLE] = kwargs.get(ATTR_TITLE)
 
-        targets = kwargs.get(ATTR_TARGET)
-
-        if not targets:
+        if not (targets := kwargs.get(ATTR_TARGET)):
             targets = push_registrations(self.hass).values()
 
         if kwargs.get(ATTR_DATA) is not None:
@@ -147,6 +141,7 @@ class MobileAppNotificationService(BaseNotificationService):
         reg_info = {
             ATTR_APP_ID: entry_data[ATTR_APP_ID],
             ATTR_APP_VERSION: entry_data[ATTR_APP_VERSION],
+            ATTR_WEBHOOK_ID: target,
         }
         if ATTR_OS_VERSION in entry_data:
             reg_info[ATTR_OS_VERSION] = entry_data[ATTR_OS_VERSION]
@@ -160,7 +155,11 @@ class MobileAppNotificationService(BaseNotificationService):
                 )
                 result = await response.json()
 
-            if response.status in (HTTP_OK, HTTP_CREATED, HTTP_ACCEPTED):
+            if response.status in (
+                HTTPStatus.OK,
+                HTTPStatus.CREATED,
+                HTTPStatus.ACCEPTED,
+            ):
                 log_rate_limits(self.hass, entry_data[ATTR_DEVICE_NAME], result)
                 return
 
@@ -175,7 +174,7 @@ class MobileAppNotificationService(BaseNotificationService):
                     message += "."
                 message += " This message is generated externally to Home Assistant."
 
-            if response.status == HTTP_TOO_MANY_REQUESTS:
+            if response.status == HTTPStatus.TOO_MANY_REQUESTS:
                 _LOGGER.warning(message)
                 log_rate_limits(
                     self.hass, entry_data[ATTR_DEVICE_NAME], result, logging.WARNING

@@ -12,26 +12,49 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import assert_setup_component, load_fixture
 
-REPLY = json.loads(load_fixture("yandex_transport_reply.json"))
+BUS_REPLY = json.loads(load_fixture("yandex_transport_bus_reply.json"))
+SUBURBAN_TRAIN_REPLY = json.loads(load_fixture("yandex_transport_suburban_reply.json"))
 
 
 @pytest.fixture
-def mock_requester():
+def mock_requester_bus():
     """Create a mock for YandexMapsRequester."""
-    with patch("aioymaps.YandexMapsRequester") as requester:
+    with patch(
+        "homeassistant.components.yandex_transport.sensor.YandexMapsRequester"
+    ) as requester:
         instance = requester.return_value
-        instance.get_stop_info = AsyncMock(return_value=REPLY)
+        instance.set_new_session = AsyncMock()
+        instance.get_stop_info = AsyncMock(return_value=BUS_REPLY)
+        yield instance
+
+
+@pytest.fixture
+def mock_requester_suburban_train():
+    """Create a mock for YandexMapsRequester."""
+    with patch(
+        "homeassistant.components.yandex_transport.sensor.YandexMapsRequester"
+    ) as requester:
+        instance = requester.return_value
+        instance.set_new_session = AsyncMock()
+        instance.get_stop_info = AsyncMock(return_value=SUBURBAN_TRAIN_REPLY)
         yield instance
 
 
 STOP_ID = "stop__9639579"
 ROUTES = ["194", "т36", "т47", "м10"]
 NAME = "test_name"
-TEST_CONFIG = {
+TEST_BUS_CONFIG = {
     "sensor": {
         "platform": "yandex_transport",
         "stop_id": "stop__9639579",
         "routes": ROUTES,
+        "name": NAME,
+    }
+}
+TEST_SUBURBAN_CONFIG = {
+    "sensor": {
+        "platform": "yandex_transport",
+        "stop_id": "station__lh_9876336",
         "name": NAME,
     }
 }
@@ -44,7 +67,10 @@ FILTERED_ATTRS = {
     "attribution": "Data provided by maps.yandex.ru",
 }
 
-RESULT_STATE = dt_util.utc_from_timestamp(1583421540).isoformat(timespec="seconds")
+BUS_RESULT_STATE = dt_util.utc_from_timestamp(1583421540).isoformat(timespec="seconds")
+SUBURBAN_RESULT_STATE = dt_util.utc_from_timestamp(1634984640).isoformat(
+    timespec="seconds"
+)
 
 
 async def assert_setup_sensor(hass, config, count=1):
@@ -54,35 +80,42 @@ async def assert_setup_sensor(hass, config, count=1):
         await hass.async_block_till_done()
 
 
-async def test_setup_platform_valid_config(hass, mock_requester):
+async def test_setup_platform_valid_config(hass, mock_requester_bus):
     """Test that sensor is set up properly with valid config."""
-    await assert_setup_sensor(hass, TEST_CONFIG)
+    await assert_setup_sensor(hass, TEST_BUS_CONFIG)
 
 
-async def test_setup_platform_invalid_config(hass, mock_requester):
+async def test_setup_platform_invalid_config(hass, mock_requester_bus):
     """Check an invalid configuration."""
     await assert_setup_sensor(
         hass, {"sensor": {"platform": "yandex_transport", "stopid": 1234}}, count=0
     )
 
 
-async def test_name(hass, mock_requester):
+async def test_name(hass, mock_requester_bus):
     """Return the name if set in the configuration."""
-    await assert_setup_sensor(hass, TEST_CONFIG)
+    await assert_setup_sensor(hass, TEST_BUS_CONFIG)
     state = hass.states.get("sensor.test_name")
-    assert state.name == TEST_CONFIG["sensor"][CONF_NAME]
+    assert state.name == TEST_BUS_CONFIG["sensor"][CONF_NAME]
 
 
-async def test_state(hass, mock_requester):
+async def test_state(hass, mock_requester_bus):
     """Return the contents of _state."""
-    await assert_setup_sensor(hass, TEST_CONFIG)
+    await assert_setup_sensor(hass, TEST_BUS_CONFIG)
     state = hass.states.get("sensor.test_name")
-    assert state.state == RESULT_STATE
+    assert state.state == BUS_RESULT_STATE
 
 
-async def test_filtered_attributes(hass, mock_requester):
+async def test_filtered_attributes(hass, mock_requester_bus):
     """Return the contents of attributes."""
-    await assert_setup_sensor(hass, TEST_CONFIG)
+    await assert_setup_sensor(hass, TEST_BUS_CONFIG)
     state = hass.states.get("sensor.test_name")
     state_attrs = {key: state.attributes[key] for key in FILTERED_ATTRS}
     assert state_attrs == FILTERED_ATTRS
+
+
+async def test_suburban_trains(hass, mock_requester_suburban_train):
+    """Return the contents of _state for suburban."""
+    await assert_setup_sensor(hass, TEST_SUBURBAN_CONFIG)
+    state = hass.states.get("sensor.test_name")
+    assert state.state == SUBURBAN_RESULT_STATE

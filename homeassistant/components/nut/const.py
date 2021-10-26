@@ -44,9 +44,6 @@ DEFAULT_SCAN_INTERVAL = 60
 
 PYNUT_DATA = "data"
 PYNUT_UNIQUE_ID = "unique_id"
-PYNUT_MANUFACTURER = "manufacturer"
-PYNUT_MODEL = "model"
-PYNUT_FIRMWARE = "firmware"
 
 SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
     "ups.status.display": SensorEntityDescription(
@@ -234,6 +231,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_BATTERY,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     "battery.charge.low": SensorEntityDescription(
         key="battery.charge.low",
