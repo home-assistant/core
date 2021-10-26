@@ -238,9 +238,8 @@ class TemplateEntity(Entity):
             template_var_tup = TrackTemplate(template, None)
             is_availability_template = False
             for attribute in attributes:
-                if (
-                    attribute._attribute == "_attr_available"
-                ):  # pylint: disable=protected-access
+                # pylint: disable-next=protected-access
+                if attribute._attribute == "_attr_available":
                     has_availability_template = True
                     is_availability_template = True
                 attribute.async_setup()
