@@ -19,7 +19,6 @@ from orangepi import (
     zero,
     zeroplus,
     zeroplus2,
-
 )
 import voluptuous as vol
 
