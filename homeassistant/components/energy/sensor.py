@@ -38,12 +38,12 @@ import homeassistant.util.dt as dt_util
 from .const import DOMAIN
 from .data import EnergyManager, async_get_manager
 
-GAS_UNITS = [VOLUME_CUBIC_METERS, ENERGY_KILO_WATT_HOUR, ENERGY_WATT_HOUR]
 SUPPORTED_STATE_CLASSES = [
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
 ]
+VALID_ENERGY_UNITS = [VOLUME_CUBIC_METERS, ENERGY_KILO_WATT_HOUR, ENERGY_WATT_HOUR]
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -316,7 +316,7 @@ class EnergyCostSensor(SensorEntity):
                 energy_unit = None
 
         elif self._adapter.source_type == "gas":
-            if energy_unit not in GAS_UNITS:
+            if energy_unit not in VALID_ENERGY_UNITS:
                 energy_unit = None
             if energy_unit == ENERGY_WATT_HOUR:
                 energy_price /= 1000
