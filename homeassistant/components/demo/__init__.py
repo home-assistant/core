@@ -159,7 +159,7 @@ async def _insert_statistics(hass):
     """Insert some fake statistics."""
     now = dt_util.now()
     yesterday = now - datetime.timedelta(days=1)
-    yesterday_midnight = yesterday.replace(minute=0, second=0, microsecond=0)
+    yesterday_midnight = yesterday.replace(hour=0, minute=0, second=0, microsecond=0)
 
     # Import yesterday's temperatures
     metadata = {
