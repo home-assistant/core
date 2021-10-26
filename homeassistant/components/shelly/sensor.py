@@ -223,6 +223,16 @@ SENSORS: Final = {
         value=lambda value: value,
         extra_state_attributes=lambda block: {"self_test": block.selfTest},
     ),
+    ("sensor", "temp"): BlockAttributeDescription(
+        name="Temperature",
+        device_class=sensor.DEVICE_CLASS_TEMPERATURE,
+        available=lambda block: cast(int, block.valveError) != -1,
+    ),
+    ("sensor", "targetTemp"): BlockAttributeDescription(
+        name="Target Temperature",
+        device_class=sensor.DEVICE_CLASS_TEMPERATURE,
+        available=lambda block: cast(int, block.valveError) != -1,
+    ),
 }
 
 REST_SENSORS: Final = {
