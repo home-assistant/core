@@ -18,6 +18,7 @@ from .const import (
 async def async_setup_entry(hass, config, async_add_entities):
     """Create wallbox sensor entities in HASS."""
     coordinator = hass.data[DOMAIN][CONF_CONNECTIONS][config.entry_id]
+    # Check if the user is authorized to change current, if so, add number component:
     try:
         await coordinator.async_set_charging_current(
             coordinator.data[CONF_MAX_CHARGING_CURRENT_KEY]
