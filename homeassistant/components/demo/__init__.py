@@ -1,13 +1,19 @@
 """Set up the demo environment that mimics interaction with devices."""
 import asyncio
+import datetime
 
 from homeassistant import bootstrap, config_entries
+from homeassistant.components.recorder.statistics import (
+    async_add_external_statistics,
+    get_last_statistics,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     EVENT_HOMEASSISTANT_START,
     SOUND_PRESSURE_DB,
 )
 import homeassistant.core as ha
+import homeassistant.util.dt as dt_util
 
 DOMAIN = "demo"
 
@@ -149,6 +155,51 @@ async def async_setup(hass, config):
     return True
 
 
+async def _insert_statistics(hass):
+    """Insert some fake statistics."""
+    now = dt_util.now()
+    yesterday = now - datetime.timedelta(days=1)
+    yesterday_midnight = yesterday.replace(minute=0, second=0, microsecond=0)
+
+    # Import yesterday's temperatures
+    metadata = {
+        "source": DOMAIN,
+        "statistic_id": f"{DOMAIN}:temperature_outdoor",
+        "unit_of_measurement": "°C",
+        "has_mean": True,
+        "has_sum": False,
+    }
+    statistics = []
+    start = yesterday_midnight
+    for _ in range(24):
+        statistics.append({"start": start, "min": 5, "mean": 10, "max": 15})
+        start = start + datetime.timedelta(hours=1)
+    async_add_external_statistics(hass, metadata, statistics)
+
+    # Yesterday's energy consumption
+    metadata = {
+        "source": DOMAIN,
+        "statistic_id": f"{DOMAIN}:energy_consumption",
+        "unit_of_measurement": "kWh",
+        "has_mean": False,
+        "has_sum": True,
+    }
+    statistics = []
+    start = yesterday_midnight
+    statistic_id = f"{DOMAIN}:energy_consumption"
+    sum = 0
+    last_stats = await hass.async_add_executor_job(
+        get_last_statistics, hass, 1, statistic_id, True
+    )
+    if "domain:energy_consumption" in last_stats:
+        sum = last_stats["domain.electricity_total"]["sum"]
+    for _ in range(24):
+        sum = sum + 1
+        statistics.append({"start": start, "sum": sum})
+        start = start + datetime.timedelta(hours=1)
+    async_add_external_statistics(hass, metadata, statistics)
+
+
 async def async_setup_entry(hass, config_entry):
     """Set the config entry up."""
     # Set up demo platforms with config entry
@@ -156,6 +207,7 @@ async def async_setup_entry(hass, config_entry):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
+    await _insert_statistics(hass)
     return True
 
 
