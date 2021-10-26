@@ -1,7 +1,8 @@
 """Tests for the TED config flow."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import httpx
+import tedpy
 
 from homeassistant import config_entries
 from homeassistant.components.ted import DOMAIN
@@ -128,3 +129,27 @@ async def test_import(hass: HomeAssistant) -> None:
         "name": "TED 5000",
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_options_flow(hass):
+    """Test config flow options."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": "1.1.1.1",
+            "name": "TED",
+        },
+        title="TED",
+    )
+    config_entry.add_to_hass(hass)
+
+    ted_mock = AsyncMock(tedpy.TED5000, spyders=[], mtus=[])
+    with patch("tedpy.createTED", return_value=ted_mock):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context={"show_advanced_options": False}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "options"
