@@ -103,13 +103,14 @@ def catch_vlc_errors(func: Func) -> Func:
     """Catch VLC errors."""
 
     @wraps(func)
-    async def wrapper(self: VlcDevice, *args: Any, **kwargs: Any) -> Any:
+    async def wrapper(self, *args: Any, **kwargs: Any) -> Any:
         """Catch UpnpError errors and check availability before and after request."""
         try:
             await func(self, *args, **kwargs)
         except CommandError as err:
             LOGGER.error("Command error: %s", err)
         except ConnectError as err:
+            # pylint: disable=protected-access
             if self._available:
                 LOGGER.error("Connection error: %s", err)
                 self._available = False
