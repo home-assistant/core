@@ -587,7 +587,7 @@ TUYA_COUNTRIES = [
     Country("Curacao", "599"),
     Country("Cyprus", "357", TuyaCloudOpenAPIEndpoint.EUROPE),
     Country("Czech Republic", "420", TuyaCloudOpenAPIEndpoint.EUROPE),
-    Country("Democratic Republic of the Congo", "243", , TuyaCloudOpenAPIEndpoint.EUROPE),
+    Country("Democratic Republic of the Congo", "243", TuyaCloudOpenAPIEndpoint.EUROPE),
     Country("Denmark", "45", TuyaCloudOpenAPIEndpoint.EUROPE),
     Country("Djibouti", "253", TuyaCloudOpenAPIEndpoint.EUROPE),
     Country("Dominica", "1-767", TuyaCloudOpenAPIEndpoint.EUROPE),
