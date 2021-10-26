@@ -593,6 +593,7 @@ homeassistant/components/wled/* @frenck
 homeassistant/components/wolflink/* @adamkrol93
 homeassistant/components/workday/* @fabaff
 homeassistant/components/worldclock/* @fabaff
+homeassistant/components/wunderground/* @TheNogl
 homeassistant/components/xbox/* @hunterjm
 homeassistant/components/xbox_live/* @MartinHjelmare
 homeassistant/components/xiaomi_aqara/* @danielhiversen @syssi
