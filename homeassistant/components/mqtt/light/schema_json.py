@@ -102,7 +102,7 @@ def valid_color_configuration(config):
     return config
 
 
-PLATFORM_SCHEMA_JSON = vol.All(
+_PLATFORM_SCHEMA_BASE = (
     mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_BRIGHTNESS, default=DEFAULT_BRIGHTNESS): cv.boolean,
@@ -143,7 +143,16 @@ PLATFORM_SCHEMA_JSON = vol.All(
         },
     )
     .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
-    .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema),
+    .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
+)
+
+PLATFORM_SCHEMA_JSON = vol.All(
+    _PLATFORM_SCHEMA_BASE,
+    valid_color_configuration,
+)
+
+DISCOVERY_SCHEMA_JSON = vol.All(
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
     valid_color_configuration,
 )
 
@@ -184,7 +193,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     @staticmethod
     def config_schema():
         """Return the config schema."""
-        return PLATFORM_SCHEMA_JSON
+        return DISCOVERY_SCHEMA_JSON
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""

@@ -34,11 +34,18 @@ from homeassistant.components.light import (
     LightEntity,
     preprocess_turn_on_alternatives,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_MODE,
+    ATTR_MODEL,
+    ATTR_SW_VERSION,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_point_in_utc_time
 import homeassistant.util.color as color_util
 
@@ -166,8 +173,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up LIFX from a config entry."""
     # Priority 1: manual config
-    interfaces = hass.data[LIFX_DOMAIN].get(DOMAIN)
-    if not interfaces:
+    if not (interfaces := hass.data[LIFX_DOMAIN].get(DOMAIN)):
         # Priority 2: scanned interfaces
         lifx_ip_addresses = await aiolifx().LifxScan(hass.loop).scan()
         interfaces = [{CONF_SERVER: ip} for ip in lifx_ip_addresses]
@@ -251,17 +257,14 @@ class LIFXManager:
     def start_discovery(self, interface):
         """Start discovery on a network interface."""
         kwargs = {"discovery_interval": DISCOVERY_INTERVAL}
-        broadcast_ip = interface.get(CONF_BROADCAST)
-        if broadcast_ip:
+        if broadcast_ip := interface.get(CONF_BROADCAST):
             kwargs["broadcast_ip"] = broadcast_ip
         lifx_discovery = aiolifx().LifxDiscovery(self.hass.loop, self, **kwargs)
 
         kwargs = {}
-        listen_ip = interface.get(CONF_SERVER)
-        if listen_ip:
+        if listen_ip := interface.get(CONF_SERVER):
             kwargs["listen_ip"] = listen_ip
-        listen_port = interface.get(CONF_PORT)
-        if listen_port:
+        if listen_port := interface.get(CONF_PORT):
             kwargs["listen_port"] = listen_port
         lifx_discovery.start(**kwargs)
 
@@ -453,25 +456,19 @@ class LIFXLight(LightEntity):
         self.lock = asyncio.Lock()
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return information about the device."""
-        info = {
-            "identifiers": {(LIFX_DOMAIN, self.unique_id)},
-            "name": self.name,
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self.bulb.mac_addr)},
-            "manufacturer": "LIFX",
-        }
-
-        version = self.bulb.host_firmware_version
-        if version is not None:
-            info["sw_version"] = version
-
-        product_map = aiolifx().products.product_map
-
-        model = product_map.get(self.bulb.product) or self.bulb.product
-        if model is not None:
-            info["model"] = str(model)
-
+        _map = aiolifx().products.product_map
+        info = DeviceInfo(
+            identifiers={(LIFX_DOMAIN, self.unique_id)},
+            connections={(dr.CONNECTION_NETWORK_MAC, self.bulb.mac_addr)},
+            manufacturer="LIFX",
+            name=self.name,
+        )
+        if model := (_map.get(self.bulb.product) or self.bulb.product) is not None:
+            info[ATTR_MODEL] = str(model)
+        if (version := self.bulb.host_firmware_version) is not None:
+            info[ATTR_SW_VERSION] = version
         return info
 
     @property
@@ -693,8 +690,7 @@ class LIFXStrip(LIFXColor):
         bulb = self.bulb
         num_zones = len(bulb.color_zones)
 
-        zones = kwargs.get(ATTR_ZONES)
-        if zones is None:
+        if (zones := kwargs.get(ATTR_ZONES)) is None:
             # Fast track: setting all zones to the same brightness and color
             # can be treated as a single-zone bulb.
             if hsbk[2] is not None and hsbk[3] is not None:

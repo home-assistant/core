@@ -1,4 +1,5 @@
 """Test the Cloud Google Config."""
+from http import HTTPStatus
 from unittest.mock import Mock, patch
 
 import pytest
@@ -6,7 +7,7 @@ import pytest
 from homeassistant.components.cloud import GACTIONS_SCHEMA
 from homeassistant.components.cloud.google_config import CloudGoogleConfig
 from homeassistant.components.google_assistant import helpers as ga_helpers
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, HTTP_NOT_FOUND
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, State
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.util.dt import utcnow
@@ -71,9 +72,11 @@ async def test_sync_entities(mock_conf, hass, cloud_prefs):
 
     with patch(
         "hass_nabucasa.cloud_api.async_google_actions_request_sync",
-        return_value=Mock(status=HTTP_NOT_FOUND),
+        return_value=Mock(status=HTTPStatus.NOT_FOUND),
     ) as mock_request_sync:
-        assert await mock_conf.async_sync_entities("mock-user-id") == HTTP_NOT_FOUND
+        assert (
+            await mock_conf.async_sync_entities("mock-user-id") == HTTPStatus.NOT_FOUND
+        )
         assert len(mock_conf._store.agent_user_ids) == 0
         assert len(mock_request_sync.mock_calls) == 1
 

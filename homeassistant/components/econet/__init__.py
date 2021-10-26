@@ -16,7 +16,7 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, TEMP_FAHRENHEIT
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import API_CLIENT, DOMAIN, EQUIPMENT
@@ -128,13 +128,13 @@ class EcoNetEntity(Entity):
         return self._econet.connected
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
-        return {
-            "identifiers": {(DOMAIN, self._econet.device_id)},
-            "manufacturer": "Rheem",
-            "name": self._econet.device_name,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._econet.device_id)},
+            manufacturer="Rheem",
+            name=self._econet.device_name,
+        )
 
     @property
     def name(self):

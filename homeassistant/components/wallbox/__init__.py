@@ -1,5 +1,6 @@
 """The Wallbox integration."""
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 import requests
@@ -45,7 +46,7 @@ class WallboxHub:
             self._wallbox.authenticate()
             return True
         except requests.exceptions.HTTPError as wallbox_connection_error:
-            if wallbox_connection_error.response.status_code == 403:
+            if wallbox_connection_error.response.status_code == HTTPStatus.FORBIDDEN:
                 raise InvalidAuth from wallbox_connection_error
             raise ConnectionError from wallbox_connection_error
 
@@ -58,8 +59,7 @@ class WallboxHub:
             filtered_data = {k: data[k] for k in CONF_SENSOR_TYPES if k in data}
 
             for key, value in filtered_data.items():
-                sensor_round = CONF_SENSOR_TYPES[key][CONF_ROUND]
-                if sensor_round:
+                if sensor_round := CONF_SENSOR_TYPES[key][CONF_ROUND]:
                     try:
                         filtered_data[key] = round(value, sensor_round)
                     except TypeError:

@@ -953,8 +953,7 @@ class Script:
         variables: ScriptVariables | None = None,
     ) -> None:
         """Initialize the script."""
-        all_scripts = hass.data.get(DATA_SCRIPTS)
-        if not all_scripts:
+        if not (all_scripts := hass.data.get(DATA_SCRIPTS)):
             all_scripts = hass.data[DATA_SCRIPTS] = []
             hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP, partial(_async_stop_scripts_at_shutdown, hass)
@@ -1273,8 +1272,7 @@ class Script:
             config_cache_key = config.template
         else:
             config_cache_key = frozenset((k, str(v)) for k, v in config.items())
-        cond = self._config_cache.get(config_cache_key)
-        if not cond:
+        if not (cond := self._config_cache.get(config_cache_key)):
             cond = await condition.async_from_config(self._hass, config, False)
             self._config_cache[config_cache_key] = cond
         return cond
@@ -1297,8 +1295,7 @@ class Script:
         return sub_script
 
     def _get_repeat_script(self, step: int) -> Script:
-        sub_script = self._repeat_script.get(step)
-        if not sub_script:
+        if not (sub_script := self._repeat_script.get(step)):
             sub_script = self._prep_repeat_script(step)
             self._repeat_script[step] = sub_script
         return sub_script
@@ -1351,8 +1348,7 @@ class Script:
         return {"choices": choices, "default": default_script}
 
     async def _async_get_choose_data(self, step: int) -> _ChooseData:
-        choose_data = self._choose_data.get(step)
-        if not choose_data:
+        if not (choose_data := self._choose_data.get(step)):
             choose_data = await self._async_prep_choose_data(step)
             self._choose_data[step] = choose_data
         return choose_data

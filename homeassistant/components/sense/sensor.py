@@ -15,6 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -280,13 +281,13 @@ class SenseTrendsSensor(CoordinatorEntity, SensorEntity):
             self._attr_entity_registry_enabled_default = False
             self._attr_state_class = None
             self._attr_device_class = None
-        self._attr_device_info = {
-            "name": f"Sense {sense_monitor_id}",
-            "identifiers": {(DOMAIN, sense_monitor_id)},
-            "model": "Sense",
-            "manufacturer": "Sense Labs, Inc.",
-            "configuration_url": "https://home.sense.com",
-        }
+        self._attr_device_info = DeviceInfo(
+            name=f"Sense {sense_monitor_id}",
+            identifiers={(DOMAIN, sense_monitor_id)},
+            model="Sense",
+            manufacturer="Sense Labs, Inc.",
+            configuration_url="https://home.sense.com",
+        )
 
     @property
     def native_value(self):

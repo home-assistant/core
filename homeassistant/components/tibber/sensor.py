@@ -25,6 +25,7 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
     POWER_WATT,
@@ -172,6 +173,7 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="accumulatedReward",
@@ -444,8 +446,7 @@ class TibberRtDataCoordinator(update_coordinator.DataUpdateCoordinator):
 
     def get_live_measurement(self):
         """Get live measurement data."""
-        errors = self.data.get("errors")
-        if errors:
+        if errors := self.data.get("errors"):
             _LOGGER.error(errors[0])
             return None
         return self.data.get("data", {}).get("liveMeasurement")

@@ -81,10 +81,10 @@ class AtagEntity(CoordinatorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return info for device registry."""
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.data.id)},
-            "name": "Atag Thermostat",
-            "model": "Atag One",
-            "sw_version": self.coordinator.data.apiversion,
-            "manufacturer": "Atag",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.data.id)},
+            manufacturer="Atag",
+            model="Atag One",
+            name="Atag Thermostat",
+            sw_version=self.coordinator.data.apiversion,
+        )

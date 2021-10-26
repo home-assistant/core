@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 from functools import partial
-from typing import Any
+from typing import Any, cast
 
 from regenmaschine import Client
 from regenmaschine.controller import Controller
@@ -24,7 +24,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -123,14 +123,13 @@ def async_get_controller_for_service_call(
     hass: HomeAssistant, call: ServiceCall
 ) -> Controller:
     """Get the controller related to a service call (by device ID)."""
-    controllers: dict[str, Controller] = hass.data[DOMAIN][DATA_CONTROLLER]
     device_id = call.data[CONF_DEVICE_ID]
     device_registry = dr.async_get(hass)
 
     if device_entry := device_registry.async_get(device_id):
         for entry_id in device_entry.config_entries:
-            if entry_id in controllers:
-                return controllers[entry_id]
+            if controller := hass.data[DOMAIN][entry_id][DATA_CONTROLLER]:
+                return cast(Controller, controller)
 
     raise ValueError(f"No controller for device ID: {device_id}")
 
@@ -145,10 +144,10 @@ async def async_update_programs_and_zones(
     """
     await asyncio.gather(
         *[
-            hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
+            hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR][
                 DATA_PROGRAMS
             ].async_refresh(),
-            hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
+            hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR][
                 DATA_ZONES
             ].async_refresh(),
         ]
@@ -157,8 +156,9 @@ async def async_update_programs_and_zones(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up RainMachine as config entry."""
-    hass.data.setdefault(DOMAIN, {DATA_CONTROLLER: {}, DATA_COORDINATOR: {}})
-    hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = {}
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {}
+
     websession = aiohttp_client.async_get_clientsession(hass)
     client = Client(session=websession)
 
@@ -174,8 +174,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # regenmaschine can load multiple controllers at once, but we only grab the one
     # we loaded above:
-    controller = hass.data[DOMAIN][DATA_CONTROLLER][
-        entry.entry_id
+    controller = hass.data[DOMAIN][entry.entry_id][
+        DATA_CONTROLLER
     ] = get_client_controller(client)
 
     entry_updates: dict[str, Any] = {}
@@ -215,6 +215,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return data
 
     controller_init_tasks = []
+    coordinators = {}
+
     for api_category in (
         DATA_PROGRAMS,
         DATA_PROVISION_SETTINGS,
@@ -222,9 +224,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_RESTRICTIONS_UNIVERSAL,
         DATA_ZONES,
     ):
-        coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
-            api_category
-        ] = DataUpdateCoordinator(
+        coordinator = coordinators[api_category] = DataUpdateCoordinator(
             hass,
             LOGGER,
             name=f'{controller.name} ("{api_category}")',
@@ -234,6 +234,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         controller_init_tasks.append(coordinator.async_refresh())
 
     await asyncio.gather(*controller_init_tasks)
+    hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR] = coordinators
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -297,7 +298,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an RainMachine config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     if len(hass.config_entries.async_entries(DOMAIN)) == 1:
         # If this is the last instance of RainMachine, deregister any services defined
@@ -331,19 +332,20 @@ class RainMachineEntity(CoordinatorEntity):
         """Initialize."""
         super().__init__(coordinator)
 
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, controller.mac)},
-            "configuration_url": f"https://{entry.data[CONF_IP_ADDRESS]}:{entry.data[CONF_PORT]}",
-            "connections": {(dr.CONNECTION_NETWORK_MAC, controller.mac)},
-            "name": str(controller.name),
-            "manufacturer": "RainMachine",
-            "model": (
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, controller.mac)},
+            configuration_url=f"https://{entry.data[CONF_IP_ADDRESS]}:{entry.data[CONF_PORT]}",
+            connections={(dr.CONNECTION_NETWORK_MAC, controller.mac)},
+            name=str(controller.name),
+            manufacturer="RainMachine",
+            model=(
                 f"Version {controller.hardware_version} "
                 f"(API: {controller.api_version})"
             ),
-            "sw_version": controller.software_version,
-        }
+            sw_version=controller.software_version,
+        )
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._attr_name = f"{controller.name} {description.name}"
         # The colons are removed from the device MAC simply because that value
         # (unnecessarily) makes up the existing unique ID formula and we want to avoid
         # a breaking change:

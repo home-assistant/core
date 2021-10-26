@@ -352,9 +352,14 @@ ATTR_LOCATION: Final = "location"
 
 ATTR_MODE: Final = "mode"
 
+ATTR_CONFIGURATION_URL: Final = "configuration_url"
+ATTR_CONNECTIONS: Final = "connections"
+ATTR_DEFAULT_NAME: Final = "default_name"
 ATTR_MANUFACTURER: Final = "manufacturer"
 ATTR_MODEL: Final = "model"
+ATTR_SUGGESTED_AREA: Final = "suggested_area"
 ATTR_SW_VERSION: Final = "sw_version"
+ATTR_VIA_DEVICE: Final = "via_device"
 
 ATTR_BATTERY_CHARGING: Final = "battery_charging"
 ATTR_BATTERY_LEVEL: Final = "battery_level"
@@ -419,6 +424,7 @@ POWER_VOLT_AMPERE: Final = "VA"
 # Energy units
 ENERGY_WATT_HOUR: Final = "Wh"
 ENERGY_KILO_WATT_HOUR: Final = "kWh"
+ENERGY_MEGA_WATT_HOUR: Final = "MWh"
 
 # Electric_current units
 ELECTRIC_CURRENT_MILLIAMPERE: Final = "mA"

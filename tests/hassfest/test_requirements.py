@@ -45,7 +45,7 @@ def test_validate_requirements_format_wrongly_pinned(integration: Integration):
 
 def test_validate_requirements_format_ignore_pin_for_custom(integration: Integration):
     """Test requirement ignore pinning for custom."""
-    integration.manifest["requirements"] = ["test_package>=1"]
+    integration.manifest["requirements"] = ["test_package>=1", "test_package"]
     integration.path = Path("")
     assert validate_requirements_format(integration)
     assert len(integration.errors) == 0
@@ -63,6 +63,9 @@ def test_validate_requirements_format_invalid_version(integration: Integration):
 
 def test_validate_requirements_format_successful(integration: Integration):
     """Test requirement with successful result."""
-    integration.manifest["requirements"] = ["test_package==1.2.3"]
+    integration.manifest["requirements"] = [
+        "test_package==1.2.3",
+        "test_package[async]==1.2.3",
+    ]
     assert validate_requirements_format(integration)
     assert len(integration.errors) == 0

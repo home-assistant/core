@@ -469,19 +469,30 @@ def info_from_service(service: AsyncServiceInfo) -> HaServiceInfo | None:
             if isinstance(value, bytes):
                 properties[key] = value.decode("utf-8")
 
-    if not service.addresses:
+    addresses = service.addresses
+
+    if not addresses:
+        return None
+    if (host := _first_non_link_local_or_v6_address(addresses)) is None:
         return None
 
-    address = service.addresses[0]
-
     return {
-        "host": str(ip_address(address)),
+        "host": str(host),
         "port": service.port,
         "hostname": service.server,
         "type": service.type,
         "name": service.name,
         "properties": properties,
     }
+
+
+def _first_non_link_local_or_v6_address(addresses: list[bytes]) -> str | None:
+    """Return the first ipv6 or non-link local ipv4 address."""
+    for address in addresses:
+        ip_addr = ip_address(address)
+        if not ip_addr.is_link_local or ip_addr.version == 6:
+            return str(ip_addr)
+    return None
 
 
 def _suppress_invalid_properties(properties: dict) -> None:

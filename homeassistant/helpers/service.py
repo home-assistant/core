@@ -234,7 +234,12 @@ def async_prepare_call_from_config(
             continue
         try:
             template.attach(hass, config[conf])
-            service_data.update(template.render_complex(config[conf], variables))
+            render = template.render_complex(config[conf], variables)
+            if not isinstance(render, dict):
+                raise HomeAssistantError(
+                    "Error rendering data template: Result is not a Dictionary"
+                )
+            service_data.update(render)
         except TemplateError as ex:
             raise HomeAssistantError(f"Error rendering data template: {ex}") from ex
 
@@ -396,10 +401,11 @@ async def async_extract_config_entry_ids(
 
     # Some devices may have no entities
     for device_id in referenced.referenced_devices:
-        if device_id in dev_reg.devices:
-            device = dev_reg.async_get(device_id)
-            if device is not None:
-                config_entry_ids.update(device.config_entries)
+        if (
+            device_id in dev_reg.devices
+            and (device := dev_reg.async_get(device_id)) is not None
+        ):
+            config_entry_ids.update(device.config_entries)
 
     for entity_id in referenced.referenced | referenced.indirectly_referenced:
         entry = ent_reg.async_get(entity_id)
