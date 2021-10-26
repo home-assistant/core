@@ -226,3 +226,40 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
                     return key
 
         return None
+
+
+class CoverTiltDataTemplate(BaseDiscoverySchemaDataTemplate):
+    """Tilt data template class for Z-Wave Cover entities."""
+
+    tilt_value: ZwaveValueID | None = None
+
+    def __init__(self, tilt_value: ZwaveValueID) -> None:
+        """Initialize a CoverTiltDataTemplate."""
+        super().__init__()
+        self.tilt_value = tilt_value
+
+    def resolve_data(self, value: ZwaveValue) -> dict[str, Any]:
+        """Resolve helper class data for a discovered value."""
+        if not self.tilt_value:
+            raise ValueError("Invalid discovery data template")
+        node = value.node
+        value_id = f"{node.node_id}-{self.tilt_value.command_class}-{self.tilt_value.endpoint}-{self.tilt_value.property_}-{self.tilt_value.property_key}"
+
+        tilt_value_id = node.values.get(value_id)
+
+        data: dict[str, Any] = {
+            "tilt_value": self._get_value_from_id(node, tilt_value_id)
+            if tilt_value_id
+            else None
+        }
+
+        return data
+
+    def values_to_watch(self, resolved_data: dict[str, Any]) -> Iterable[ZwaveValue]:
+        """Return list of all ZwaveValues resolved by helper that should be watched."""
+        return [resolved_data["tilt_value"]]
+
+    @staticmethod
+    def current_tilt_value(resolved_data: dict[str, Any]) -> ZwaveValue | None:
+        """Get current tilt ZwaveValue from resolved data."""
+        return resolved_data["tilt_value"]

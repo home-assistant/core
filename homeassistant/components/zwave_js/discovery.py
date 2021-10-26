@@ -44,6 +44,7 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from .const import LOGGER
 from .discovery_data_template import (
     BaseDiscoverySchemaDataTemplate,
+    CoverTiltDataTemplate,
     DynamicCurrentTempClimateDataTemplate,
     NumericSensorDataTemplate,
     ZwaveValueID,
@@ -258,14 +259,22 @@ DISCOVERY_SCHEMAS = [
             type={"number"},
         ),
     ),
-    # Fibaro Shutter Fibaro FGS222
+    # Fibaro Shutter Fibaro FGR222
     ZWaveDiscoverySchema(
         platform="cover",
-        hint="window_shutter",
+        hint="window_shutter_tilt",
         manufacturer_id={0x010F},
-        product_id={0x1000},
-        product_type={0x0302},
+        product_id={0x1000, 0x1001},
+        product_type={0x0301, 0x0302},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        data_template=CoverTiltDataTemplate(
+            ZwaveValueID(
+                "fibaro",
+                CommandClass.MANUFACTURER_PROPRIETARY,
+                endpoint=0,
+                property_key="venetianBlindsTilt",
+            )
+        ),
     ),
     # Qubino flush shutter
     ZWaveDiscoverySchema(

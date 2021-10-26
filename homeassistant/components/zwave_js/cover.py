@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import TARGET_STATE_PROPERTY, TARGET_VALUE_PROPERTY
@@ -36,13 +36,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
+from .discovery_data_template import CoverTiltDataTemplate
 from .entity import ZWaveBaseEntity
 
 LOGGER = logging.getLogger(__name__)
-
-VENETIAN_BLINDS_TILT = "venetianBlindsTilt"
-FIBARO_MANUFACTURER_ID = 271
-FIBARO_VENETIAN_BLIND_MODE = 2
 
 
 async def async_setup_entry(
@@ -59,17 +56,10 @@ async def async_setup_entry(
         entities: list[ZWaveBaseEntity] = []
         if info.platform_hint == "motorized_barrier":
             entities.append(ZwaveMotorizedBarrier(config_entry, client, info))
+        elif info.platform_hint == "window_shutter_tilt":
+            entities.append(ZWaveTiltCover(config_entry, client, info))
         else:
-            entity = None
-            if info.node.manufacturer_id == FIBARO_MANUFACTURER_ID:
-                config = info.node.get_configuration_values().get(
-                    f"{info.node.node_id}-112-0-10"
-                )
-                if config and config.value == FIBARO_VENETIAN_BLIND_MODE:
-                    entity = ZWaveCoverFibaro(config_entry, client, info)
-            entities.append(
-                entity if entity is not None else ZWaveCover(config_entry, client, info)
-            )
+            entities.append(ZWaveCover(config_entry, client, info))
         async_add_entities(entities)
 
     config_entry.async_on_unload(
@@ -164,7 +154,7 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
             await self.info.node.async_set_value(close_value, False)
 
 
-class ZWaveCoverFibaro(ZWaveCover):
+class ZWaveTiltCover(ZWaveCover):
     """Representation of a Fibaro Z-Wave cover device."""
 
     def __init__(
@@ -175,15 +165,22 @@ class ZWaveCoverFibaro(ZWaveCover):
     ) -> None:
         """Initialize a ZWaveCover entity."""
         super().__init__(config_entry, client, info)
-        self._attr_current_cover_tilt_position = 0
+        self.data_template = cast(
+            CoverTiltDataTemplate, self.info.platform_data_template
+        )
+        if self.data_template.current_tilt_value(self.info.platform_data):
+            self._attr_current_cover_tilt_position = 0
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        self._attr_current_cover_tilt_position = kwargs[ATTR_TILT_POSITION]
-        tilt_value = self.get_zwave_value("fibaro", 145, 0, VENETIAN_BLINDS_TILT)  # type: ignore
-        await self.info.node.async_set_value(
-            tilt_value, percent_to_zwave_position(kwargs[ATTR_TILT_POSITION])
-        )
+        if self.data_template:
+            self._attr_current_cover_tilt_position = kwargs[ATTR_TILT_POSITION]
+            tilt_value = self.data_template.current_tilt_value(self.info.platform_data)
+            if tilt_value:
+                await self.info.node.async_set_value(
+                    tilt_value,
+                    percent_to_zwave_position(kwargs[ATTR_TILT_POSITION]),
+                )
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
