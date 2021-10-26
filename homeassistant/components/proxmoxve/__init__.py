@@ -174,6 +174,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
                 node_coordinators["machines"][container_id] = coordinator
 
+            node_coordinators["updates"] = create_coordinator_node_updates(
+                hass, proxmox, host_name, node_name
+            )
+
     for component in PLATFORMS:
         await hass.async_create_task(
             hass.helpers.discovery.async_load_platform(
@@ -216,6 +220,38 @@ def create_coordinator_container_vm(
     )
 
 
+def create_coordinator_node_updates(
+    hass, proxmox, host_name, node_name
+):
+    """Create and return a DataUpdateCoordinator for a node update status."""
+
+    async def async_update_data():
+        """Call the api and handle the response."""
+
+        def poll_api():
+            """Call the api."""
+            node_updates = call_api_node_updates(proxmox, node_name)
+            return vm_status
+
+        node_updates = await hass.async_add_executor_job(poll_api)
+
+        if node_updates is None:
+            _LOGGER.warning(
+                "Update status not found in node %s", node_name
+            )
+            return None
+
+        return parse_api_node_updates(node_updates)
+
+    return DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=f"proxmox_coordinator_{host_name}_{node_name}",
+        update_method=async_update_data,
+        update_interval=timedelta(seconds=UPDATE_INTERVAL),
+    )
+
+
 def parse_api_container_vm(status):
     """Get the container or vm api data and return it formatted in a dictionary.
 
@@ -226,8 +262,18 @@ def parse_api_container_vm(status):
     return {"status": status["status"], "name": status["name"]}
 
 
+def parse_api_node_updates(status):
+    """Get the node updates api data and return it formatted in a dictionary.
+
+    It is implemented in this way to allow for more data to be added for sensors
+    in the future.
+    """
+
+    return status
+
+
 def call_api_container_vm(proxmox, node_name, vm_id, machine_type):
-    """Make proper api calls."""
+    """Get data from API wrapper about VM/LXC."""
     status = None
 
     try:
@@ -235,6 +281,18 @@ def call_api_container_vm(proxmox, node_name, vm_id, machine_type):
             status = proxmox.nodes(node_name).qemu(vm_id).status.current.get()
         elif machine_type == TYPE_CONTAINER:
             status = proxmox.nodes(node_name).lxc(vm_id).status.current.get()
+    except (ResourceException, requests.exceptions.ConnectionError):
+        return None
+
+    return status
+
+
+def call_api_node_updates(proxmox, node_name):
+    """Get data from API wrapper about node updates status."""
+    status = None
+
+    try:
+        status = proxmox.nodes(node_name).apt.update.get()
     except (ResourceException, requests.exceptions.ConnectionError):
         return None
 

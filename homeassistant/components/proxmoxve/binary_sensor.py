@@ -49,6 +49,12 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
                 )
                 sensors.append(container_sensor)
 
+            coordinator = host_name_coordinators[node_name]["updates"]
+            node_updates_sensor = create_node_updates_binary_sensor(
+                coordinator, host_name, node_name
+            )
+            sensors.append(node_updates_sensor)
+
     add_entities(sensors)
 
 
@@ -62,6 +68,18 @@ def create_machine_binary_sensor(coordinator, host_name, node_name, vm_id, name)
         host_name=host_name,
         node_name=node_name,
         vm_id=vm_id,
+    )
+
+
+def create_node_updates_binary_sensor(coordinator, host_name, node_name):
+    """Create a binary sensor for node update status based on the given data."""
+    return ProxmoxNodeUpdateBinarySensor(
+        coordinator=coordinator,
+        unique_id=f"proxmox_{node_name}_update_required",
+        name=f"{node_name}_update_required",
+        icon="",
+        host_name=host_name,
+        node_name=node_name,
     )
 
 
@@ -90,6 +108,38 @@ class ProxmoxMachineBinarySensor(ProxmoxEntity, BinarySensorEntity):
             return None
 
         return data["status"] == "running"
+
+    @property
+    def available(self):
+        """Return sensor availability."""
+
+        return super().available and self.coordinator.data is not None
+
+
+class ProxmoxNodeUpdateBinarySensor(ProxmoxEntity, BinarySensorEntity):
+    """A binary sensor for reading Proxmox VE node update data."""
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        unique_id,
+        name,
+        icon,
+        host_name,
+        node_name
+    ):
+        """Create the binary sensor for node updates."""
+        super().__init__(
+            coordinator, unique_id, name, icon, host_name, node_name
+        )
+
+    @property
+    def is_on(self):
+        """Return the state of the binary sensor."""
+        if (data := self.coordinator.data) is None:
+            return None
+
+        return len(data) > 0
 
     @property
     def available(self):
