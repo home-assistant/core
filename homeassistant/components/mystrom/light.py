@@ -49,7 +49,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     bulb = MyStromBulb(host, mac)
     try:
         await bulb.get_state()
-        if not (bulb.bulb_type == "rgblamp" or bulb.bulb_type == "strip"):
+        if bulb.bulb_type not in ["rgblamp","strip"]:
             _LOGGER.error(
                 "Device %s (%s) is not a myStrom bulb nor myStrom LED Strip.", host, mac
             )
