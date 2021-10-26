@@ -79,7 +79,7 @@ class AuroraSensor(AuroraDevice, SensorEntity):
         super().__init__(client, data)
         if typename == "instantaneouspower":
             self.type = typename
-            self._attr_unit_of_measurement = POWER_WATT
+            self._attr_native_unit_of_measurement = POWER_WATT
             self._attr_device_class = DEVICE_CLASS_POWER
         elif typename == "temperature":
             self.type = typename
