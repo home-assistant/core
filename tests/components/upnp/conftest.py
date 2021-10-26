@@ -52,6 +52,7 @@ class MockDevice:
         self._udn = udn
         self.traffic_times_polled = 0
         self.status_times_polled = 0
+        self._timestamp = dt.utcnow()
 
     @classmethod
     async def async_create_device(cls, hass, ssdp_location) -> "MockDevice":
@@ -108,7 +109,7 @@ class MockDevice:
         """Get traffic data."""
         self.traffic_times_polled += 1
         return {
-            TIMESTAMP: dt.utcnow(),
+            TIMESTAMP: self._timestamp,
             BYTES_RECEIVED: 0,
             BYTES_SENT: 0,
             PACKETS_RECEIVED: 0,
