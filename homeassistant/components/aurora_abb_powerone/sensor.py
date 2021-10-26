@@ -105,7 +105,20 @@ class AuroraSensor(AuroraDeviceEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(client, data)
+<<<<<<< HEAD
         self.entity_description = entity_description
+=======
+        self.type = type_name
+        if type_name == "instantaneouspower":
+            self._attr_native_unit_of_measurement = POWER_WATT
+            self._attr_device_class = DEVICE_CLASS_POWER
+        elif type_name == "temperature":
+            self._attr_native_unit_of_measurement = TEMP_CELSIUS
+            self._attr_device_class = DEVICE_CLASS_TEMPERATURE
+        else:
+            raise InvalidStateError(f"Unrecognised typename '{type_name}'")
+        self._attr_name = f"{name}"
+>>>>>>> Remove duplicated code.
         self.availableprev = True
 
     def update(self):
