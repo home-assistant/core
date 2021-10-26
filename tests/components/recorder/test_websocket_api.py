@@ -206,7 +206,12 @@ async def test_update_statistics_metadata(hass, hass_ws_client, new_unit):
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == [
-        {"statistic_id": "sensor.test", "unit_of_measurement": "W"}
+        {
+            "statistic_id": "sensor.test",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": "W",
+        }
     ]
 
     await client.send_json(
@@ -225,5 +230,10 @@ async def test_update_statistics_metadata(hass, hass_ws_client, new_unit):
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == [
-        {"statistic_id": "sensor.test", "unit_of_measurement": new_unit}
+        {
+            "statistic_id": "sensor.test",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": new_unit,
+        }
     ]

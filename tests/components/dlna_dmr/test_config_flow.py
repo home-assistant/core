@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_URL,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .conftest import (
     MOCK_DEVICE_LOCATION,
@@ -51,13 +52,38 @@ MOCK_CONFIG_IMPORT_DATA = {
 
 MOCK_ROOT_DEVICE_UDN = "ROOT_DEVICE"
 
-MOCK_DISCOVERY = {
+MOCK_DISCOVERY: DiscoveryInfoType = {
     ssdp.ATTR_SSDP_LOCATION: MOCK_DEVICE_LOCATION,
     ssdp.ATTR_SSDP_UDN: MOCK_DEVICE_UDN,
     ssdp.ATTR_SSDP_ST: MOCK_DEVICE_TYPE,
     ssdp.ATTR_UPNP_UDN: MOCK_ROOT_DEVICE_UDN,
     ssdp.ATTR_UPNP_DEVICE_TYPE: MOCK_DEVICE_TYPE,
     ssdp.ATTR_UPNP_FRIENDLY_NAME: MOCK_DEVICE_NAME,
+    ssdp.ATTR_UPNP_SERVICE_LIST: {
+        "service": [
+            {
+                "SCPDURL": "/AVTransport/scpd.xml",
+                "controlURL": "/AVTransport/control.xml",
+                "eventSubURL": "/AVTransport/event.xml",
+                "serviceId": "urn:upnp-org:serviceId:AVTransport",
+                "serviceType": "urn:schemas-upnp-org:service:AVTransport:1",
+            },
+            {
+                "SCPDURL": "/ConnectionManager/scpd.xml",
+                "controlURL": "/ConnectionManager/control.xml",
+                "eventSubURL": "/ConnectionManager/event.xml",
+                "serviceId": "urn:upnp-org:serviceId:ConnectionManager",
+                "serviceType": "urn:schemas-upnp-org:service:ConnectionManager:1",
+            },
+            {
+                "SCPDURL": "/RenderingControl/scpd.xml",
+                "controlURL": "/RenderingControl/control.xml",
+                "eventSubURL": "/RenderingControl/event.xml",
+                "serviceId": "urn:upnp-org:serviceId:RenderingControl",
+                "serviceType": "urn:schemas-upnp-org:service:RenderingControl:1",
+            },
+        ]
+    },
     ssdp.ATTR_HA_MATCHING_DOMAINS: {DLNA_DOMAIN},
 }
 
@@ -197,6 +223,8 @@ async def test_user_flow_embedded_st(
     embedded_device.udn = MOCK_DEVICE_UDN
     embedded_device.device_type = MOCK_DEVICE_TYPE
     embedded_device.name = MOCK_DEVICE_NAME
+    embedded_device.services = upnp_device.services
+    upnp_device.services = {}
     upnp_device.all_devices.append(embedded_device)
 
     result = await hass.config_entries.flow.async_init(
@@ -552,9 +580,38 @@ async def test_ssdp_flow_upnp_udn(
     assert config_entry_mock.data[CONF_URL] == NEW_DEVICE_LOCATION
 
 
+async def test_ssdp_missing_services(hass: HomeAssistant) -> None:
+    """Test SSDP ignores devices that are missing required services."""
+    # No services defined at all
+    discovery = dict(MOCK_DISCOVERY)
+    del discovery[ssdp.ATTR_UPNP_SERVICE_LIST]
+    result = await hass.config_entries.flow.async_init(
+        DLNA_DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=discovery,
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "not_dmr"
+
+    # AVTransport service is missing
+    discovery = dict(MOCK_DISCOVERY)
+    discovery[ssdp.ATTR_UPNP_SERVICE_LIST] = {
+        "service": [
+            service
+            for service in discovery[ssdp.ATTR_UPNP_SERVICE_LIST]["service"]
+            if service.get("serviceId") != "urn:upnp-org:serviceId:AVTransport"
+        ]
+    }
+    result = await hass.config_entries.flow.async_init(
+        DLNA_DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=discovery
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "not_dmr"
+
+
 async def test_ssdp_ignore_device(hass: HomeAssistant) -> None:
     """Test SSDP discovery ignores certain devices."""
-    discovery = MOCK_DISCOVERY.copy()
+    discovery = dict(MOCK_DISCOVERY)
     discovery[ssdp.ATTR_HA_MATCHING_DOMAINS] = {DLNA_DOMAIN, "other_domain"}
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN,
@@ -564,7 +621,7 @@ async def test_ssdp_ignore_device(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "alternative_integration"
 
-    discovery = MOCK_DISCOVERY.copy()
+    discovery = dict(MOCK_DISCOVERY)
     discovery[ssdp.ATTR_UPNP_DEVICE_TYPE] = "urn:schemas-upnp-org:device:ZonePlayer:1"
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN,

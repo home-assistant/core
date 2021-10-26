@@ -31,6 +31,7 @@ FLOWS = [
     "atag",
     "august",
     "aurora",
+    "aurora_abb_powerone",
     "awair",
     "axis",
     "azure_devops",
