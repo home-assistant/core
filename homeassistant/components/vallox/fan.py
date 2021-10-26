@@ -131,6 +131,14 @@ class ValloxFan(CoordinatorEntity, FanEntity):
             for attr in EXTRA_STATE_ATTRIBUTES
         }
 
+    @property
+    def unique_id(self) -> str | None:
+        """Return a unique ID."""
+        uuid = self.coordinator.data.get_uuid()
+        if not uuid:
+            return None
+        return f"{DOMAIN}-{uuid}-fan"
+
     async def _async_set_preset_mode_internal(self, preset_mode: str) -> bool:
         """
         Set new preset mode.

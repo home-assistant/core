@@ -60,6 +60,14 @@ class ValloxSensor(CoordinatorEntity, SensorEntity):
 
         return self.coordinator.data.get_metric(metric_key)
 
+    @property
+    def unique_id(self) -> str | None:
+        """Return a unique ID."""
+        uuid = self.coordinator.data.get_uuid()
+        if not uuid:
+            return None
+        return f"{DOMAIN}-{uuid}-{self.entity_description.key}"
+
 
 class ValloxProfileSensor(ValloxSensor):
     """Child class for profile reporting."""
