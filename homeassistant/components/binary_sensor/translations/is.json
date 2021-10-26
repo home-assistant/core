@@ -48,6 +48,10 @@
             "off": "Engin vi\u00f0vera",
             "on": "Uppg\u00f6tva\u00f0"
         },
+        "opening": {
+            "off": "Loka\u00f0",
+            "on": "Opi\u00f0"
+        },
         "presence": {
             "off": "Fjarverandi",
             "on": "Heima"

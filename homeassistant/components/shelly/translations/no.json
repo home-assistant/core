@@ -41,7 +41,7 @@
             "btn_up": "{subtype} -knappen opp",
             "double": "{subtype} dobbeltklikket",
             "double_push": "{subtype} dobbelt trykk",
-            "long": "{subtype} lenge klikket",
+            "long": "{subtype} klikket lenge",
             "long_push": "{subtype} langt trykk",
             "long_single": "{subtype} lengre klikk og deretter et enkeltklikk",
             "single": "{subtype} enkeltklikket",
