@@ -26,9 +26,11 @@ async def async_setup_entry(
     api = tradfri_data[KEY_API]
     devices = tradfri_data[DEVICES]
 
-    covers = [dev for dev in devices if dev.has_blind_control]
-    if covers:
-        async_add_entities(TradfriCover(cover, api, gateway_id) for cover in covers)
+    entities = [
+        TradfriCover(dev, api, gateway_id) for dev in devices if dev.has_blind_control
+    ]
+    if len(entities) > 0:
+        async_add_entities(entities)
 
 
 class TradfriCover(TradfriBaseDevice, CoverEntity):
