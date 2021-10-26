@@ -86,7 +86,7 @@ class XiaomiMiioEntity(Entity):
         return self._name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
         info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},

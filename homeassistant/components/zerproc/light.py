@@ -89,11 +89,6 @@ class ZerprocLight(LightEntity):
         self._hs_color = None
         self._brightness = None
         self._available = True
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
-            manufacturer="Zerproc",
-            name=self.name,
-        )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -121,6 +116,15 @@ class ZerprocLight(LightEntity):
     def unique_id(self):
         """Return the ID of this light."""
         return self._light.address
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Device info for this light."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="Zerproc",
+            name=self.name,
+        )
 
     @property
     def icon(self) -> str | None:

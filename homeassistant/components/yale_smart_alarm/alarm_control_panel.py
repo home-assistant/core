@@ -83,9 +83,13 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
         super().__init__(coordinator)
         self._attr_name: str = coordinator.entry.data[CONF_NAME]
         self._attr_unique_id = coordinator.entry.entry_id
-        self._identifier: str = coordinator.entry.data[CONF_USERNAME]
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.entry.data[CONF_USERNAME])},
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information about this entity."""
+        assert isinstance(self.coordinator, YaleDataUpdateCoordinator)
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.entry.data[CONF_USERNAME])},
             manufacturer=MANUFACTURER,
             model=MODEL,
             name=self.name,

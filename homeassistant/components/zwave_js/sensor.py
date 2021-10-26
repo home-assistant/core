@@ -460,14 +460,17 @@ class ZWaveNodeStatusSensor(SensorEntity):
     ) -> None:
         """Initialize a generic Z-Wave device entity."""
         self.config_entry = config_entry
+        self.client = client
         self.node = node
         name: str = (
-            node.name or node.device_config.description or f"Node {node.node_id}"
+            self.node.name
+            or self.node.device_config.description
+            or f"Node {self.node.node_id}"
         )
         # Entity class attributes
         self._attr_name = f"{name}: Node Status"
         self._attr_unique_id = (
-            f"{client.driver.controller.home_id}.{node.node_id}.node_status"
+            f"{self.client.driver.controller.home_id}.{node.node_id}.node_status"
         )
         # device is precreated in main handler
         self._attr_device_info = DeviceInfo(
