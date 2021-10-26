@@ -41,8 +41,33 @@ async def test_ryse_smart_bridge_setup(hass):
     assert device.model == "RYSE Shade"
     assert device.sw_version == "3.0.8"
 
-    bridge = device = device_registry.async_get(device.via_device_id)
+    bridge = device_registry.async_get(device.via_device_id)
     assert bridge.manufacturer == "RYSE Inc."
     assert bridge.name == "RYSE SmartBridge"
     assert bridge.model == "RYSE SmartBridge"
     assert bridge.sw_version == "1.3.0"
+
+    # Check that the cover.ryse_smartshade is correctly found and set up
+    cover_id = "cover.ryse_smartshade"
+    cover = entity_registry.async_get(cover_id)
+    assert cover.unique_id == "homekit-00:00:00:00:00:00-3-48"
+
+    cover_helper = Helper(
+        hass,
+        cover_id,
+        pairing,
+        accessories[0],
+        config_entry,
+    )
+
+    cover_state = await cover_helper.poll_and_get_state()
+    assert cover_state.attributes["friendly_name"] == "RYSE SmartShade"
+    assert cover_state.state == "open"
+
+    device_registry = dr.async_get(hass)
+
+    device = device_registry.async_get(cover.device_id)
+    assert device.manufacturer == "RYSE Inc."
+    assert device.name == "RYSE SmartShade"
+    assert device.model == "RYSE Shade"
+    assert device.sw_version == ""
