@@ -11,7 +11,6 @@ import voluptuous as vol
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_DEVICE_ID,
     CONF_NAME,
     CONF_PASSWORD,
@@ -321,6 +320,7 @@ class BMWConnectedDriveBaseEntity(Entity):
     """Common base for BMW entities."""
 
     _attr_should_poll = False
+    _attr_attribution = ATTRIBUTION
 
     def __init__(self, account, vehicle):
         """Initialize sensor."""
@@ -329,7 +329,6 @@ class BMWConnectedDriveBaseEntity(Entity):
         self._attrs = {
             "car": self._vehicle.name,
             "vin": self._vehicle.vin,
-            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, vehicle.vin)},

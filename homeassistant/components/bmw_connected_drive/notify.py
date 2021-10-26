@@ -45,8 +45,8 @@ class BMWNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message or POI to the car."""
-        for _vehicle in kwargs[ATTR_TARGET]:
-            _LOGGER.debug("Sending message to %s", _vehicle.name)
+        for vehicle in kwargs[ATTR_TARGET]:
+            _LOGGER.debug("Sending message to %s", vehicle.name)
 
             # Extract params from data dict
             title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
@@ -68,8 +68,8 @@ class BMWNotificationService(BaseNotificationService):
                     }
                 )
 
-                _vehicle.remote_services.trigger_send_poi(location_dict)
+                vehicle.remote_services.trigger_send_poi(location_dict)
             else:
-                _vehicle.remote_services.trigger_send_message(
+                vehicle.remote_services.trigger_send_message(
                     {ATTR_TEXT: message, ATTR_SUBJECT: title}
                 )

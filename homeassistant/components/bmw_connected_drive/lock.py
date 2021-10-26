@@ -15,13 +15,13 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the BMW ConnectedDrive binary sensors from config entry."""
     account = hass.data[BMW_DOMAIN][DATA_ENTRIES][config_entry.entry_id][CONF_ACCOUNT]
-    entities = []
 
     if not account.read_only:
-        for vehicle in account.account.vehicles:
-            device = BMWLock(account, vehicle, "lock", "BMW lock")
-            entities.append(device)
-    async_add_entities(entities, True)
+        entities = [
+            BMWLock(account, vehicle, "lock", "BMW lock")
+            for vehicle in account.account.vehicles
+        ]
+        async_add_entities(entities, True)
 
 
 class BMWLock(BMWConnectedDriveBaseEntity, LockEntity):
@@ -58,14 +58,15 @@ class BMWLock(BMWConnectedDriveBaseEntity, LockEntity):
     def update(self):
         """Update state of the lock."""
         _LOGGER.debug("%s: updating data for %s", self._vehicle.name, self._attribute)
-        if self._vehicle.state.door_lock_state in [LockState.LOCKED, LockState.SECURED]:
-            self._attr_is_locked = True
-        else:
-            self._attr_is_locked = False
+        vehicle_state = self._vehicle.state
         if not self.door_lock_state_available:
             self._attr_is_locked = None
+        else:
+            self._attr_is_locked = vehicle_state.door_lock_state in {
+                LockState.LOCKED,
+                LockState.SECURED,
+            }
 
-        vehicle_state = self._vehicle.state
         result = self._attrs.copy()
         if self.door_lock_state_available:
             result["door_lock_state"] = vehicle_state.door_lock_state.value
