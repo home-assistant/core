@@ -15,13 +15,16 @@ from homeassistant.const import (
     CONF_ADDRESS,
     CONF_DEVICE,
     CONF_NAME,
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
     TEMP_CELSIUS,
 )
 from homeassistant.exceptions import InvalidStateError
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
 from .aurora_device import AuroraDevice
 from .const import DEFAULT_ADDRESS, DOMAIN
@@ -58,6 +61,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
     sensortypes = [
         {"parameter": "instantaneouspower", "name": "Power Output"},
         {"parameter": "temperature", "name": "Temperature"},
+        {"parameter": "totalenergy", "name": "Total Energy"},
     ]
     client = hass.data[DOMAIN][config_entry.unique_id]
     data = config_entry.data
@@ -85,6 +89,11 @@ class AuroraSensor(AuroraDevice, SensorEntity):
             self.type = typename
             self._attr_native_unit_of_measurement = TEMP_CELSIUS
             self._attr_device_class = DEVICE_CLASS_TEMPERATURE
+        elif typename == "totalenergy":
+            self.type = typename
+            self._attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+            self._attr_device_class = DEVICE_CLASS_ENERGY
+            self._attr_last_reset = dt_util.utc_from_timestamp(0)
         else:
             raise InvalidStateError(f"Unrecognised typename '{typename}'")
         self._attr_name = f"{name}"
@@ -105,6 +114,9 @@ class AuroraSensor(AuroraDevice, SensorEntity):
             elif self.type == "temperature":
                 temperature_c = self.client.measure(21)
                 self._attr_native_value = round(temperature_c, 1)
+            elif self.type == "totalenergy":
+                energy_wh = self.client.cumulated_energy(5)
+                self._attr_native_value = round(energy_wh / 1000, 2)
             self._attr_available = True
 
         except AuroraError as error:
