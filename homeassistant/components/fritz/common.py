@@ -372,15 +372,10 @@ class FritzBoxTools:
         device_reg = async_get(self.hass)
         device_list = async_entries_for_config_entry(device_reg, config_entry.entry_id)
         for device_entry in device_list:
-            if (
-                len(
-                    async_entries_for_device(
-                        entity_reg,
-                        device_entry.id,
-                        include_disabled_entities=True,
-                    )
-                )
-                == 0
+            if async_entries_for_device(
+                entity_reg,
+                device_entry.id,
+                include_disabled_entities=True,
             ):
                 _LOGGER.info("Removing device: %s", device_entry.name)
                 device_reg.async_remove_device(device_entry.id)
