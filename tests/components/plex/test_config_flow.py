@@ -843,6 +843,45 @@ async def test_client_header_issues(hass, current_request_with_host):
             )
 
 
+async def test_bad_hostname_selection_with_option_flow(
+    hass, entry, mock_plex_server, requests_mock, caplog
+):
+    """Test config options flow selection with an unreachable hostname."""
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert entry.state is ConfigEntryState.LOADED
+
+    original_url = mock_plex_server.url_in_use
+    assert original_url != PLEX_DIRECT_URL
+
+    result = await hass.config_entries.options.async_init(
+        entry.entry_id, context={"source": "test"}, data=None
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "plex_mp_settings"
+
+    requests_mock.get(PLEX_DIRECT_URL, status_code=401)
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_CONFIGURED_HOST: PLEX_DIRECT_URL,
+            CONF_USE_EPISODE_ART: True,
+            CONF_IGNORE_NEW_SHARED_USERS: True,
+            CONF_MONITORED_USERS: list(mock_plex_server.accounts),
+        },
+    )
+    assert result["type"] == "create_entry"
+    await hass.async_block_till_done()
+
+    assert f"Could not connect to {PLEX_DIRECT_URL}" in caplog.text
+
+    new_mock_plex_server = hass.data[DOMAIN][SERVERS][entry.unique_id]
+
+    assert entry.data[PLEX_SERVER_CONFIG][CONF_URL] == original_url
+    assert new_mock_plex_server is mock_plex_server
+    assert new_mock_plex_server.url_in_use == original_url
+
+
 async def test_changing_hostname_with_option_flow(
     hass, entry, mock_plex_server, requests_mock, empty_library, empty_payload, caplog
 ):
@@ -851,6 +890,7 @@ async def test_changing_hostname_with_option_flow(
     assert entry.state is ConfigEntryState.LOADED
 
     original_url = mock_plex_server.url_in_use
+    assert original_url != PLEX_DIRECT_URL
     assert entry.title == original_url
 
     result = await hass.config_entries.options.async_init(
@@ -897,7 +937,7 @@ async def test_changing_hostname_with_option_flow(
 
 
 async def test_changing_hostname_with_option_flow_no_account(
-    hass, entry, setup_plex_server, requests_mock, empty_library, empty_payload, caplog
+    hass, entry, setup_plex_server, requests_mock
 ):
     """Test config options flow selection."""
     requests_mock.get("https://plex.tv/users/account", status_code=401)
