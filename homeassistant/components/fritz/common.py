@@ -346,20 +346,17 @@ class FritzBoxTools:
         )
         entity_removed: bool = False
 
+        device_hosts_mac_list = [device["mac"] for device in device_hosts_list]
+
         for ha_host in ha_device_list:
-            if not _cleanup_entity_filter(ha_host):
+            if (
+                not _cleanup_entity_filter(ha_host)
+                or ha_host.unique_id.split("_")[0] in device_hosts_mac_list
+            ):
                 continue
-            dev_found: bool = False
-            for device_host in device_hosts_list:
-                if ha_host.unique_id.split("_")[0] == device_host["mac"]:
-                    dev_found = True
-                    break
-            if not dev_found:
-                _LOGGER.info(
-                    "Removing entity: %s", ha_host.name or ha_host.original_name
-                )
-                entity_reg.async_remove(ha_host.entity_id)
-                entity_removed = True
+            _LOGGER.info("Removing entity: %s", ha_host.name or ha_host.original_name)
+            entity_reg.async_remove(ha_host.entity_id)
+            entity_removed = True
 
         if entity_removed:
             await self._remove_empty_device(entity_reg, config_entry)
