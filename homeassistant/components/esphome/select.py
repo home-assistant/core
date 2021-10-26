@@ -8,7 +8,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from . import (
+    EsphomeCategoricalEntity,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 
 
 async def async_setup_entry(
@@ -32,7 +36,7 @@ async def async_setup_entry(
 # pylint: disable=invalid-overridden-method
 
 
-class EsphomeSelect(EsphomeEntity[SelectInfo, SelectState], SelectEntity):
+class EsphomeSelect(EsphomeCategoricalEntity[SelectInfo, SelectState], SelectEntity):
     """A select implementation for esphome."""
 
     @property
