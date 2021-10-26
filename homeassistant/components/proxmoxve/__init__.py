@@ -107,10 +107,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
             try:
                 # Construct an API client with the given data for the given host
-                proxmox_client = ProxmoxClient(
+                proxmox_api_wrapper = ProxmoxAPIWrapper(
                     host, port, user, realm, password, verify_ssl
                 )
-                proxmox_client.build_client()
             except AuthenticationError:
                 _LOGGER.warning(
                     "Invalid credentials for proxmox instance %s:%d", host, port
@@ -131,7 +130,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 _LOGGER.warning("Host %s is not reachable", host)
                 continue
 
-            hass.data[PROXMOX_CLIENTS][host] = proxmox_client
+            hass.data[PROXMOX_CLIENTS][host] = proxmox_api_wrapper
 
     await hass.async_add_executor_job(build_client)
 
@@ -143,13 +142,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         host_name = host_config["host"]
         coordinators[host_name] = {}
 
-        proxmox_client = hass.data[PROXMOX_CLIENTS][host_name]
+        proxmox_api_wrapper = hass.data[PROXMOX_CLIENTS][host_name]
 
         # Skip invalid hosts
-        if proxmox_client is None:
+        if proxmox_api_wrapper is None:
             continue
 
-        proxmox = proxmox_client.get_api_client()
+        proxmox = proxmox_api_wrapper.get_api_client()
 
         for node_config in host_config["nodes"]:
             node_name = node_config["node"]
@@ -290,36 +289,23 @@ class ProxmoxEntity(CoordinatorEntity):
         return self.coordinator.last_update_success and self._available
 
 
-class ProxmoxClient:
+class ProxmoxAPIWrapper:
     """A wrapper for the proxmoxer ProxmoxAPI client."""
 
     def __init__(self, host, port, user, realm, password, verify_ssl):
-        """Initialize the ProxmoxClient."""
+        """Initialize the ProxmoxAPIWrapper. Allows inserting the realm within the `user` value."""
 
-        self._host = host
-        self._port = port
-        self._user = user
-        self._realm = realm
-        self._password = password
-        self._verify_ssl = verify_ssl
-
-        self._proxmox = None
-        self._connection_start_time = None
-
-    def build_client(self):
-        """Construct the ProxmoxAPI client. Allows inserting the realm within the `user` value."""
-
-        if "@" in self._user:
-            user_id = self._user
+        if "@" in user:
+            user_id = user
         else:
-            user_id = f"{self._user}@{self._realm}"
+            user_id = f"{user}@{realm}"
 
         self._proxmox = ProxmoxAPI(
-            self._host,
-            port=self._port,
+            host,
+            port=port,
             user=user_id,
-            password=self._password,
-            verify_ssl=self._verify_ssl,
+            password=password,
+            verify_ssl=verify_ssl,
         )
 
     def get_api_client(self):
