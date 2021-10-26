@@ -228,7 +228,7 @@ async def test_sensor(hass):
         assert xbt_usd_opening_price_today.state == "0.0003513"
 
 
-async def test_test_sensors_available_after_restart(hass):
+async def test_sensors_available_after_restart(hass):
     """Test that all sensors are added again after a restart."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
