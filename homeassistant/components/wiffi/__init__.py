@@ -141,7 +141,7 @@ class WiffiEntity(Entity):
     def __init__(self, device, metric, options):
         """Initialize the base elements of a wiffi entity."""
         self._id = generate_unique_id(device, metric)
-        self._attr_device_info = DeviceInfo(
+        self._device_info = DeviceInfo(
             connections={(device_registry.CONNECTION_NETWORK_MAC, device.mac_address)},
             identifiers={(DOMAIN, device.mac_address)},
             manufacturer="stall.biz",
@@ -173,6 +173,11 @@ class WiffiEntity(Entity):
     def should_poll(self):
         """Disable polling because data driven ."""
         return False
+
+    @property
+    def device_info(self):
+        """Return wiffi device info which is shared between all entities of a device."""
+        return self._device_info
 
     @property
     def unique_id(self):

@@ -48,7 +48,6 @@ from homeassistant.const import (
     TIME_SECONDS,
     VOLUME_CUBIC_METERS,
 )
-from homeassistant.helpers.entity import DeviceInfo
 
 from . import VacuumCoordinatorDataAttributes
 from .const import (
@@ -762,7 +761,7 @@ class XiaomiGatewayIlluminanceSensor(SensorEntity):
 
         self._attr_name = f"{gateway_name} {description.name}"
         self._attr_unique_id = f"{gateway_device_id}-{description.key}"
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, gateway_device_id)})
+        self._attr_device_info = {"identifiers": {(DOMAIN, gateway_device_id)}}
         self._gateway = gateway_device
         self.entity_description = description
         self._available = False

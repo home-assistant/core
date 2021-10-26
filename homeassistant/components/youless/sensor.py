@@ -75,7 +75,7 @@ class YoulessBaseSensor(CoordinatorEntity, SensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{device}_{device_group}")},
             manufacturer="YouLess",
-            model=coordinator.data.model,
+            model=self.coordinator.data.model,
             name=friendly_name,
         )
 
