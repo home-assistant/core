@@ -547,6 +547,7 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
                         "Could not parse date string for 'date_utc' sensor: %s",
                         date_str,
                     )
+                    self._attr_native_value = None
             else:
                 self._attr_native_value = getattr(vehicle_last_trip, sensor_key)
         elif self._service == SERVICE_ALL_TRIPS:
@@ -572,6 +573,7 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
                         "Could not parse date string for 'reset_date_utc' sensor: %s",
                         date_str,
                     )
+                    self._attr_native_value = None
             else:
                 self._attr_native_value = getattr(vehicle_all_trips, sensor_key)
 
