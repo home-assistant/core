@@ -1,4 +1,6 @@
 """Numeric derivative of data coming from a source sensor over time."""
+from __future__ import annotations
+
 from decimal import Decimal, DecimalException
 import logging
 
@@ -40,9 +42,13 @@ UNIT_PREFIXES = {
     "µ": 1e-6,
     "m": 1e-3,
     "k": 1e3,
+    "Ki": 1024,
     "M": 1e6,
+    "Mi": 1024e3,
     "G": 1e9,
+    "Gi": 1024e6,
     "T": 1e12,
+    "Ti": 1024e9,
 }
 
 # SI Time prefixes
