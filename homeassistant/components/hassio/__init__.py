@@ -661,6 +661,7 @@ def async_register_addons_in_dev_reg(
             sw_version=addon[ATTR_VERSION],
             name=addon[ATTR_NAME],
             entry_type=ATTR_SERVICE,
+            configuration_url=f"homeassistant://hassio/addon/{addon[ATTR_SLUG]}",
         )
         if manufacturer := addon.get(ATTR_REPOSITORY) or addon.get(ATTR_URL):
             params[ATTR_MANUFACTURER] = manufacturer
