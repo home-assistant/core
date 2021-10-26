@@ -204,7 +204,10 @@ async def test_sonos_play_media(
     assert playback_mock.call_count == 4
 
     # Test with speakers available and invalid playqueue
-    requests_mock.get(f"{mock_plex_server.url_in_use}/playQueues/1235", status_code=HTTPStatus.NOT_FOUND)
+    requests_mock.get(
+        f"{mock_plex_server.url_in_use}/playQueues/1235",
+        status_code=HTTPStatus.NOT_FOUND,
+    )
     content_id_with_playqueue = '{"playqueue_id": 1235}'
     with pytest.raises(HomeAssistantError) as excinfo:
         play_on_sonos(
