@@ -14,6 +14,8 @@ from homeassistant.components.aurora_abb_powerone.const import (
 )
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
 
+from tests.common import MockConfigEntry
+
 
 async def test_form(hass):
     """Test we get the form."""
@@ -153,13 +155,38 @@ async def test_form_invalid_com_ports(hass):
 async def test_import(hass):
     """Test configuration.yaml import used during migration."""
     TESTDATA = {"device": "/dev/ttyUSB7", "address": 3, "name": "MyAuroraPV"}
-    with patch(
-        "homeassistant.components.generic.camera.GenericCamera.async_camera_image",
-        return_value=None,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TESTDATA
-        )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TESTDATA
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_PORT] == "/dev/ttyUSB7"
     assert result["data"][CONF_ADDRESS] == 3
+
+
+async def test_import_already_existing(hass):
+    """Test configuration.yaml import when already configured."""
+    TESTDATA = {"device": "/dev/ttyUSB7", "address": 7, "name": "MyAuroraPV"}
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="MyAuroraPV",
+        unique_id="0123456",
+        data={
+            CONF_PORT: "/dev/ttyUSB7",
+            CONF_ADDRESS: 7,
+            ATTR_FIRMWARE: "1.234",
+            ATTR_MODEL: "9.8.7.6 (A.B.C)",
+            ATTR_SERIAL_NUMBER: "9876543",
+            "title": "PhotoVoltaic Inverters",
+        },
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TESTDATA
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_setup"
