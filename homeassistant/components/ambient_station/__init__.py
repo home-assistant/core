@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from aioambient import Client
+from aioambient import Websocket
 from aioambient.errors import WebsocketError
 
 from homeassistant.config_entries import ConfigEntry
@@ -15,7 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -65,17 +65,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(
             entry, unique_id=entry.data[CONF_APP_KEY]
         )
-    session = aiohttp_client.async_get_clientsession(hass)
 
     try:
         ambient = AmbientStation(
             hass,
             entry,
-            Client(
-                entry.data[CONF_API_KEY],
-                entry.data[CONF_APP_KEY],
-                session=session,
-            ),
+            Websocket(entry.data[CONF_APP_KEY], entry.data[CONF_API_KEY]),
         )
         hass.loop.create_task(ambient.ws_connect())
         hass.data[DOMAIN][entry.entry_id] = ambient
@@ -84,7 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
 
     async def _async_disconnect_websocket(_: Event) -> None:
-        await ambient.client.websocket.disconnect()
+        await ambient.websocket.disconnect()
 
     entry.async_on_unload(
         hass.bus.async_listen_once(
@@ -129,21 +124,23 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class AmbientStation:
     """Define a class to handle the Ambient websocket."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, client: Client) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, websocket: Websocket
+    ) -> None:
         """Initialize."""
         self._entry = entry
         self._entry_setup_complete = False
         self._hass = hass
         self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
-        self.client = client
         self.stations: dict[str, dict] = {}
+        self.websocket = websocket
 
     async def _attempt_connect(self) -> None:
         """Attempt to connect to the socket (retrying later on fail)."""
 
         async def connect(timestamp: int | None = None) -> None:
             """Connect."""
-            await self.client.websocket.connect()
+            await self.websocket.connect()
 
         try:
             await connect()
@@ -197,16 +194,16 @@ class AmbientStation:
                 self._entry_setup_complete = True
             self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
 
-        self.client.websocket.on_connect(on_connect)
-        self.client.websocket.on_data(on_data)
-        self.client.websocket.on_disconnect(on_disconnect)
-        self.client.websocket.on_subscribed(on_subscribed)
+        self.websocket.on_connect(on_connect)
+        self.websocket.on_data(on_data)
+        self.websocket.on_disconnect(on_disconnect)
+        self.websocket.on_subscribed(on_subscribed)
 
         await self._attempt_connect()
 
     async def ws_disconnect(self) -> None:
         """Disconnect from the websocket."""
-        await self.client.websocket.disconnect()
+        await self.websocket.disconnect()
 
 
 class AmbientWeatherEntity(Entity):
