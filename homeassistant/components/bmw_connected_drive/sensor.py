@@ -388,12 +388,18 @@ async def async_setup_entry(
             if service == SERVICE_LAST_TRIP:
                 entities.extend(
                     [
+                        # mypy issues will be fixed in next release
+                        # https://github.com/python/mypy/issues/9096
                         BMWConnectedDriveSensor(
-                            account, vehicle, description2, unit_system, service
+                            account,
+                            vehicle,
+                            description,  # type: ignore[arg-type]
+                            unit_system,
+                            service,
                         )
                         for attribute_name in vehicle.state.last_trip.available_attributes
                         if attribute_name != "date"
-                        and (description2 := SENSOR_TYPES.get(attribute_name))
+                        and (description := SENSOR_TYPES.get(attribute_name))  # type: ignore[no-redef]
                     ]
                 )
                 if "date" in vehicle.state.last_trip.available_attributes:
