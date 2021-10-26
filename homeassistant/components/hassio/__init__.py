@@ -46,6 +46,8 @@ from .const import (
     ATTR_PASSWORD,
     ATTR_REPOSITORY,
     ATTR_SLUG,
+    ATTR_STARTED,
+    ATTR_STATE,
     ATTR_URL,
     ATTR_VERSION,
     DATA_KEY_ADDONS,
@@ -539,12 +541,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 hassio.get_os_info(),
             )
 
-            addon_slugs = [
-                addon[ATTR_SLUG]
+            addons = [
+                addon
                 for addon in hass.data[DATA_SUPERVISOR_INFO].get("addons", [])
+                if addon[ATTR_STATE] == ATTR_STARTED
             ]
             stats_data = await asyncio.gather(
-                *[update_addon_stats(slug) for slug in addon_slugs]
+                *[update_addon_stats(addon[ATTR_SLUG]) for addon in addons]
             )
             hass.data[DATA_ADDONS_STATS] = dict(stats_data)
 
