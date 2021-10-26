@@ -28,7 +28,9 @@ async def async_setup_entry(
 
     covers = [dev for dev in devices if dev.has_blind_control]
     if covers:
-        async_add_entities(TradfriCover(cover, api, gateway_id) for cover in covers)
+        async_add_entities(
+            TradfriCover(hass, cover, api, gateway_id) for cover in covers
+        )
 
 
 class TradfriCover(TradfriBaseDevice, CoverEntity):
@@ -36,15 +38,15 @@ class TradfriCover(TradfriBaseDevice, CoverEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         device: Command,
         api: Callable[[Command | list[Command]], Any],
         gateway_id: str,
     ) -> None:
         """Initialize a cover."""
-        super().__init__(device, api, gateway_id)
         self._attr_unique_id = f"{gateway_id}-{device.id}"
-
-        self._refresh(device)
+        super().__init__(hass, device, api, gateway_id)
+        self._refresh(device, write_ha=False)
 
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
@@ -90,11 +92,10 @@ class TradfriCover(TradfriBaseDevice, CoverEntity):
         """Return if the cover is closed or not."""
         return self.current_cover_position == 0
 
-    def _refresh(self, device: Command) -> None:
+    def _refresh(self, device: Command, write_ha: bool = True) -> None:
         """Refresh the cover data."""
-        super()._refresh(device)
-        self._device = device
-
         # Caching of BlindControl and cover object
+        self._device = device
         self._device_control = device.blind_control
         self._device_data = device.blind_control.blinds[0]
+        super()._refresh(device, write_ha=write_ha)

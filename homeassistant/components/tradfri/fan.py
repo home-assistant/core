@@ -34,7 +34,8 @@ async def async_setup_entry(
     purifiers = [dev for dev in devices if dev.has_air_purifier_control]
     if purifiers:
         async_add_entities(
-            TradfriAirPurifierFan(purifier, api, gateway_id) for purifier in purifiers
+            TradfriAirPurifierFan(hass, purifier, api, gateway_id)
+            for purifier in purifiers
         )
 
 
@@ -60,12 +61,13 @@ class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         device: Command,
         api: Callable[[Command | list[Command]], Any],
         gateway_id: str,
     ) -> None:
         """Initialize a switch."""
-        super().__init__(device, api, gateway_id)
+        super().__init__(hass, device, api, gateway_id)
         self._attr_unique_id = f"{gateway_id}-{device.id}"
 
     @property
@@ -166,10 +168,9 @@ class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
             return
         await self._api(self._device_control.set_mode(0))
 
-    def _refresh(self, device: Command) -> None:
+    def _refresh(self, device: Command, write_ha: bool = True) -> None:
         """Refresh the purifier data."""
-        super()._refresh(device)
-
         # Caching of air purifier control and purifier object
         self._device_control = device.air_purifier_control
         self._device_data = device.air_purifier_control.air_purifiers[0]
+        super()._refresh(device, write_ha=write_ha)
