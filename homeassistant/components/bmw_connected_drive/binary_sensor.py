@@ -6,9 +6,9 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from bimmer_connected.state import ChargingState, LockState
+from bimmer_connected.state import ChargingState, LockState, VehicleState
 from bimmer_connected.vehicle import ConnectedDriveVehicle
-from bimmer_connected.vehicle_status import ConditionBasedServiceReport, VehicleStatus
+from bimmer_connected.vehicle_status import ConditionBasedServiceReport
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_OPENING,
@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _are_doors_closed(
-    vehicle_state: VehicleStatus, extra_attributes: dict[str, Any], *args: Any
+    vehicle_state: VehicleState, extra_attributes: dict[str, Any], *args: Any
 ) -> bool:
     # device class opening: On means open, Off means closed
     _LOGGER.debug("Status of lid: %s", vehicle_state.all_lids_closed)
@@ -44,7 +44,7 @@ def _are_doors_closed(
 
 
 def _are_windows_closed(
-    vehicle_state: VehicleStatus, extra_attributes: dict[str, Any], *args: Any
+    vehicle_state: VehicleState, extra_attributes: dict[str, Any], *args: Any
 ) -> bool:
     # device class opening: On means open, Off means closed
     for window in vehicle_state.windows:
@@ -53,7 +53,7 @@ def _are_windows_closed(
 
 
 def _are_doors_locked(
-    vehicle_state: VehicleStatus, extra_attributes: dict[str, Any], *args: Any
+    vehicle_state: VehicleState, extra_attributes: dict[str, Any], *args: Any
 ) -> bool:
     # device class lock: On means unlocked, Off means locked
     # Possible values: LOCKED, SECURED, SELECTIVE_LOCKED, UNLOCKED
@@ -63,7 +63,7 @@ def _are_doors_locked(
 
 
 def _are_parking_lights_on(
-    vehicle_state: VehicleStatus, extra_attributes: dict[str, Any], *args: Any
+    vehicle_state: VehicleState, extra_attributes: dict[str, Any], *args: Any
 ) -> bool:
     # device class light: On means light detected, Off means no light
     extra_attributes["lights_parking"] = vehicle_state.parking_lights.value
@@ -71,7 +71,7 @@ def _are_parking_lights_on(
 
 
 def _are_problems_detected(
-    vehicle_state: VehicleStatus,
+    vehicle_state: VehicleState,
     extra_attributes: dict[str, Any],
     unit_system: UnitSystem,
 ) -> bool:
@@ -82,7 +82,7 @@ def _are_problems_detected(
 
 
 def _check_control_messages(
-    vehicle_state: VehicleStatus, extra_attributes: dict[str, Any], *args: Any
+    vehicle_state: VehicleState, extra_attributes: dict[str, Any], *args: Any
 ) -> bool:
     # device class problem: On means problem detected, Off means no problem
     check_control_messages = vehicle_state.check_control_messages
@@ -96,7 +96,7 @@ def _check_control_messages(
 
 
 def _is_vehicle_charging(
-    vehicle_state: VehicleStatus, extra_attributes: dict[str, Any], *args: Any
+    vehicle_state: VehicleState, extra_attributes: dict[str, Any], *args: Any
 ) -> bool:
     # device class power: On means power detected, Off means no power
     extra_attributes["charging_status"] = vehicle_state.charging_status.value
@@ -107,7 +107,7 @@ def _is_vehicle_charging(
 
 
 def _is_vehicle_plugged_in(
-    vehicle_state: VehicleStatus, extra_attributes: dict[str, Any], *args: Any
+    vehicle_state: VehicleState, extra_attributes: dict[str, Any], *args: Any
 ) -> bool:
     # device class plug: On means device is plugged in,
     #                    Off means device is unplugged
@@ -133,7 +133,7 @@ def _format_cbs_report(
 class BMWRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[VehicleStatus, dict[str, Any], UnitSystem], bool]
+    value_fn: Callable[[VehicleState, dict[str, Any], UnitSystem], bool]
 
 
 @dataclass
