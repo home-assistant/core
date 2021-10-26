@@ -233,13 +233,17 @@ class TemplateEntity(Entity):
 
     async def _async_template_startup(self, *_) -> None:
         template_var_tups = []
+        availability_tracker = None
         for template, attributes in self._template_attrs.items():
-            template_var_tups.append(TrackTemplate(template, None))
+            template_var_tup = TrackTemplate(template, None)
+            template_var_tups.append(template_var_tup)
             for attribute in attributes:
+                if attribute._attribute == "_attr_available":
+                    availability_tracker = template_var_tup
                 attribute.async_setup()
 
         result_info = async_track_template_result(
-            self.hass, template_var_tups, self._handle_results
+            self.hass, template_var_tups, availability_tracker, self._handle_results
         )
         self.async_on_remove(result_info.async_remove)
         self._async_update = result_info.async_refresh

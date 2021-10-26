@@ -196,6 +196,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
             result = async_track_template_result(
                 self.hass,
                 [TrackTemplate(self._state_template, None)],
+                None,
                 _async_on_template_update,
             )
             self.hass.bus.async_listen_once(

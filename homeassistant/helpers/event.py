@@ -7,6 +7,7 @@ import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import functools as ft
+import itertools
 import logging
 import time
 from typing import Any, Callable, List, cast
@@ -752,7 +753,7 @@ def async_track_template(
         )
 
     info = async_track_template_result(
-        hass, [TrackTemplate(template, variables)], _template_changed_listener
+        hass, [TrackTemplate(template, variables)], None, _template_changed_listener
     )
 
     return info.async_remove
@@ -768,17 +769,21 @@ class _TrackTemplateResultInfo:
         self,
         hass: HomeAssistant,
         track_templates: Iterable[TrackTemplate],
+        master_template: TrackTemplate | None,
         action: Callable,
     ) -> None:
         """Handle removal / refresh of tracker init."""
         self.hass = hass
         self._job = HassJob(action)
 
-        for track_template_ in track_templates:
-            track_template_.template.hass = hass
+        templates = itertools.chain(track_templates, (master_template,))
+        for track_template_ in templates:
+            if track_template_ is not None:
+                track_template_.template.hass = hass
         self._track_templates = track_templates
+        self._master_template = master_template
 
-        self._last_result: dict[Template, str | TemplateError] = {}
+        self._last_result: dict[Template, bool | str | TemplateError] = {}
 
         self._rate_limit = KeyedRateLimit(hass)
         self._info: dict[Template, RenderInfo] = {}
@@ -787,7 +792,10 @@ class _TrackTemplateResultInfo:
 
     def async_setup(self, raise_on_template_error: bool, strict: bool = False) -> None:
         """Activation of template tracking."""
-        for track_template_ in self._track_templates:
+        templates = itertools.chain(self._track_templates, (self._master_template,))
+        for track_template_ in templates:
+            if track_template_ is None:
+                continue
             template = track_template_.template
             variables = track_template_.variables
             self._info[template] = info = template.async_render_to_info(
@@ -874,7 +882,7 @@ class _TrackTemplateResultInfo:
     ) -> bool | TrackTemplateResult:
         """Re-render the template if conditions match.
 
-        Returns False if the template was not be re-rendered
+        Returns False if the template was not re-rendered.
 
         Returns True if the template re-rendered and did not
         change.
@@ -953,8 +961,36 @@ class _TrackTemplateResultInfo:
         info_changed = False
         now = event.time_fired if not replayed and event else dt_util.utcnow()
 
+        master_update: bool | TrackTemplateResult = False
+
+        # Render the master template first
+        if self._master_template:
+            master_update = self._render_template_if_ready(
+                self._master_template, now, event
+            )
+            if isinstance(master_update, TrackTemplateResult):
+                if (
+                    self._last_result.get(self._master_template.template) is not True
+                    and master_update.result is True
+                ):
+                    # Master template changed from not True to True, force re-render
+                    # of all templates in the group
+                    event = None
+                self._last_result[self._master_template.template] = master_update.result
+
         for track_template_ in track_templates or self._track_templates:
-            update = self._render_template_if_ready(track_template_, now, event)
+            # If the master template did not render to True, don't update other templates
+            if (
+                self._master_template is not None
+                and self._last_result.get(self._master_template.template) is not True
+                and track_template_ is not self._master_template
+            ):
+                continue
+
+            if track_template_ is self._master_template:
+                update = master_update
+            else:
+                update = self._render_template_if_ready(track_template_, now, event)
             if not update:
                 continue
 
@@ -1017,6 +1053,7 @@ TrackTemplateResultListener = Callable[
 def async_track_template_result(
     hass: HomeAssistant,
     track_templates: Iterable[TrackTemplate],
+    master_template: TrackTemplate | None,
     action: TrackTemplateResultListener,
     raise_on_template_error: bool = False,
     strict: bool = False,
@@ -1056,7 +1093,7 @@ def async_track_template_result(
     Info object used to unregister the listener, and refresh the template.
 
     """
-    tracker = _TrackTemplateResultInfo(hass, track_templates, action)
+    tracker = _TrackTemplateResultInfo(hass, track_templates, master_template, action)
     tracker.async_setup(raise_on_template_error, strict=strict)
     return tracker
 
