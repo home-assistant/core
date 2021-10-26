@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from functools import cached_property
 import logging
 from typing import Any, NamedTuple
 
@@ -131,7 +132,7 @@ class ValloxFan(CoordinatorEntity, FanEntity):
             for attr in EXTRA_STATE_ATTRIBUTES
         }
 
-    @property
+    @cached_property
     def unique_id(self) -> str | None:
         """Return a unique ID."""
         uuid = self.coordinator.data.get_uuid()
