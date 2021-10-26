@@ -122,13 +122,14 @@ class SignalUpdateCallback:
         device_entry = device_registry.async_get_device({(DOMAIN, device_id)})
         if not device_entry:
             return
-        for event in events:
-            if not (event_type := EVENT_NAME_MAP.get(event)):
+        for api_event_type, image_event in events.items():
+            if not (event_type := EVENT_NAME_MAP.get(api_event_type)):
                 continue
             message = {
                 "device_id": device_entry.id,
                 "type": event_type,
                 "timestamp": event_message.timestamp,
+                "nest_event_id": image_event.event_id,
             }
             self._hass.bus.async_fire(NEST_EVENT, message)
 
