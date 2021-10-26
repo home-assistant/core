@@ -106,7 +106,7 @@ class XboxRemote(CoordinatorEntity, RemoteEntity):
             ".+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)",
             self._console.console_type,
         )
-        self._attr_device_info = DeviceInfo(
+        return DeviceInfo(
             identifiers={(DOMAIN, self._console.id)},
             manufacturer="Microsoft",
             model=" ".join([m.group(0) for m in matches]),
