@@ -101,7 +101,7 @@ class AuroraSensor(AuroraDevice, SensorEntity):
         client: AuroraSerialClient,
         data: Mapping[str, Any],
         entity_description: SensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(client, data)
         self.entity_description = entity_description
