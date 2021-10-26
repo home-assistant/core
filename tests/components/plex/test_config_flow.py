@@ -880,12 +880,10 @@ async def test_changing_hostname_with_option_flow(
             CONF_IGNORE_PLEX_WEB_CLIENTS: False,
         },
     }
-    assert f"Configured hostname changed to {PLEX_DIRECT_URL}" in caplog.text
 
     requests_mock.get(f"{PLEX_DIRECT_URL}/library", text=empty_library)
     requests_mock.get(f"{PLEX_DIRECT_URL}/library/sections", text=empty_payload)
 
-    await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
 
     assert f"Changing hostname from {original_url} to {PLEX_DIRECT_URL}" in caplog.text

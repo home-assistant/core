@@ -15,7 +15,12 @@ import requests.exceptions
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_URL, CONF_VERIFY_SSL, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_TOKEN,
+    CONF_URL,
+    CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dev_reg, entity_registry as ent_reg
@@ -74,7 +79,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):  # noqa: C901
+async def async_setup_entry(hass, entry):
     """Set up Plex from a config entry."""
     server_config = entry.data[PLEX_SERVER_CONFIG]
 
@@ -87,26 +92,6 @@ async def async_setup_entry(hass, entry):  # noqa: C901
         options = dict(entry.options)
         options.setdefault(MP_DOMAIN, {})
         hass.config_entries.async_update_entry(entry, options=options)
-
-    # Update config entry with config option override
-    desired_hostname = entry.options.get(CONF_CONFIGURED_HOST)
-    if desired_hostname and desired_hostname != server_config[CONF_URL]:
-        _LOGGER.debug(
-            "Changing hostname from %s to %s", server_config[CONF_URL], desired_hostname
-        )
-        new_title = entry.title
-        if not entry.title or entry.title == server_config[CONF_URL]:
-            new_title = desired_hostname
-        new_server_config = {
-            **server_config,
-            CONF_URL: desired_hostname,
-        }
-        hass.config_entries.async_update_entry(
-            entry,
-            data={**entry.data, PLEX_SERVER_CONFIG: new_server_config},
-            title=new_title,
-        )
-        server_config = entry.data[PLEX_SERVER_CONFIG]
 
     plex_server = PlexServer(
         hass,
@@ -256,10 +241,51 @@ async def async_unload_entry(hass, entry):
 async def async_options_updated(hass, entry):
     """Triggered by config entry options updates."""
     server_id = entry.data[CONF_SERVER_IDENTIFIER]
+    server_config = entry.data[PLEX_SERVER_CONFIG]
 
     # Guard incomplete setup during reauth flows
     if server_id in hass.data[PLEX_DOMAIN][SERVERS]:
         hass.data[PLEX_DOMAIN][SERVERS][server_id].options = entry.options
+
+    def test_plex_connection(hostname):
+        try:
+            _ = plexapi.server.PlexServer(
+                hostname, server_config[CONF_TOKEN], timeout=5
+            )
+        except Exception as exc:  # pylint: disable=broad-except
+            _LOGGER.error("Could not connect to %s: %s", hostname, exc)
+            return False
+        return True
+
+    # Update config entry if hostname changed and reload integration
+    desired_hostname = entry.options.get(CONF_CONFIGURED_HOST)
+    if desired_hostname and desired_hostname != server_config[CONF_URL]:
+        if not await hass.async_add_executor_job(
+            test_plex_connection, desired_hostname
+        ):
+            hass.config_entries.async_update_entry(
+                entry,
+                options={**entry.options, CONF_CONFIGURED_HOST: None},
+            )
+            return
+
+        _LOGGER.debug(
+            "Changing hostname from %s to %s", server_config[CONF_URL], desired_hostname
+        )
+        server_config[CONF_URL] = desired_hostname
+        new_title = entry.title
+        if not entry.title or entry.title != server_config[CONF_URL]:
+            new_title = desired_hostname
+        new_server_config = {
+            **server_config,
+            CONF_URL: desired_hostname,
+        }
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, PLEX_SERVER_CONFIG: new_server_config},
+            title=new_title,
+        )
+        await hass.config_entries.async_reload(entry.entry_id)
 
 
 @callback

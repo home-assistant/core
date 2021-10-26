@@ -352,14 +352,7 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
         plex_server = self.hass.data[DOMAIN][SERVERS][self.server_id]
 
         if user_input is not None:
-            new_host = user_input[CONF_CONFIGURED_HOST]
-            if new_host != self.current_host_used:
-                _LOGGER.warning(
-                    "Configured hostname changed to %s, reload the integration to take effect",
-                    new_host,
-                )
-
-            self.options[CONF_CONFIGURED_HOST] = new_host
+            self.options[CONF_CONFIGURED_HOST] = user_input[CONF_CONFIGURED_HOST]
             self.options[MP_DOMAIN][CONF_USE_EPISODE_ART] = user_input[
                 CONF_USE_EPISODE_ART
             ]
@@ -398,10 +391,6 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
                     available_connections[host] = f"{host} [{conn_type}]"
         else:
             available_connections[self.current_host_used] = self.current_host_used
-        desired_or_current = (
-            self.options.get(CONF_CONFIGURED_HOST) or self.current_host_used
-        )
-        default_connection = available_connections.get(desired_or_current)
 
         default_accounts = plex_server.accounts
         known_accounts = set(plex_server.option_monitored_users)
@@ -425,7 +414,7 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Required(
                         CONF_CONFIGURED_HOST,
-                        default=default_connection,
+                        default=self.current_host_used,
                     ): vol.In(available_connections),
                     vol.Required(
                         CONF_USE_EPISODE_ART,
