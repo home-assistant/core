@@ -24,6 +24,8 @@ from .const import (
     DOMAIN,
     ENTITY_MAP,
     HOMEKIT_ACCESSORY_DISPATCH,
+    IDENTIFIER_ACCESSORY_ID,
+    IDENTIFIER_SERIAL_NUMBER,
 )
 from .device_trigger import async_fire_triggers, async_setup_triggers_for_entry
 
@@ -207,14 +209,19 @@ class HKDevice:
                 service_type=ServicesTypes.ACCESSORY_INFORMATION,
             )
 
+            serial_number = info.value(CharacteristicsTypes.SERIAL_NUMBER)
+            if serial_number and accessory.aid != 1:
+                identifiers = (DOMAIN, IDENTIFIER_SERIAL_NUMBER, serial_number)
+            elif accessory.aid != 1:
+                # Some accessories do not have a serial number
+                identifiers = (
+                    DOMAIN,
+                    IDENTIFIER_ACCESSORY_ID,
+                    f"{self._unique_id}_{accessory.aid}",
+                )
+
             device_info = DeviceInfo(
-                identifiers={
-                    (
-                        DOMAIN,
-                        "serial-number",
-                        info.value(CharacteristicsTypes.SERIAL_NUMBER),
-                    )
-                },
+                identifiers=identifiers,
                 name=info.value(CharacteristicsTypes.NAME),
                 manufacturer=info.value(CharacteristicsTypes.MANUFACTURER, ""),
                 model=info.value(CharacteristicsTypes.MODEL, ""),
@@ -225,7 +232,7 @@ class HKDevice:
                 # Accessory 1 is the root device (sometimes the only device, sometimes a bridge)
                 # Link the root device to the pairing id for the connection.
                 device_info[ATTR_IDENTIFIERS].add(
-                    (DOMAIN, "accessory-id", self.unique_id)
+                    (DOMAIN, IDENTIFIER_ACCESSORY_ID, self.unique_id)
                 )
             else:
                 # Every pairing has an accessory 1
@@ -233,7 +240,7 @@ class HKDevice:
                 # Every other accessory should use it as its via device.
                 device_info[ATTR_VIA_DEVICE] = (
                     DOMAIN,
-                    "serial-number",
+                    IDENTIFIER_SERIAL_NUMBER,
                     self.connection_info["serial-number"],
                 )
 
