@@ -29,7 +29,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-from .aurora_device import AuroraDevice
+from .aurora_device import AuroraDeviceEntity
 from .const import DEFAULT_ADDRESS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -94,7 +94,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
     async_add_entities(entities, True)
 
 
-class AuroraSensor(AuroraDevice, SensorEntity):
+class AuroraSensor(AuroraDeviceEntity, SensorEntity):
     """Representation of a Sensor on a Aurora ABB PowerOne Solar inverter."""
 
     def __init__(
