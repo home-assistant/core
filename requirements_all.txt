@@ -255,7 +255,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.2
 
 # homeassistant.components.unifi
-aiounifi==27
+aiounifi==28
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
