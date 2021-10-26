@@ -7,6 +7,7 @@ import math
 
 import aiolifx as aiolifx_module
 import aiolifx_effects as aiolifx_effects_module
+from getmac import get_mac_address
 import voluptuous as vol
 
 from homeassistant import util
@@ -397,6 +398,13 @@ class LIFXManager:
                     entity = LIFXWhite(bulb, self.effects_conductor)
 
                 _LOGGER.debug("%s register READY", entity.who)
+                if bulb.mac_addr != entity.lifx_mac_addr:
+                    _LOGGER.debug(
+                        "%s reports mac_addr: %s but uses %s",
+                        entity.who,
+                        bulb.mac_addr,
+                        entity.lifx_mac_addr,
+                    )
                 self.entities[bulb.mac_addr] = entity
                 self.async_add_entities([entity], True)
 
@@ -450,6 +458,7 @@ class LIFXLight(LightEntity):
     def __init__(self, bulb, effects_conductor):
         """Initialize the light."""
         self.bulb = bulb
+        self.lifx_mac_addr = dr.format_mac(get_mac_address(ip=self.bulb.ip_addr))
         self.effects_conductor = effects_conductor
         self.registered = True
         self.postponed_update = None
@@ -459,13 +468,14 @@ class LIFXLight(LightEntity):
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
         _map = aiolifx().products.product_map
+
         info = DeviceInfo(
             identifiers={(LIFX_DOMAIN, self.unique_id)},
-            connections={(dr.CONNECTION_NETWORK_MAC, self.bulb.mac_addr)},
+            connections={(dr.CONNECTION_NETWORK_MAC, self.lifx_mac_addr)},
             manufacturer="LIFX",
             name=self.name,
         )
-        if model := (_map.get(self.bulb.product) or self.bulb.product) is not None:
+        if (model := (_map.get(self.bulb.product) or self.bulb.product)) is not None:
             info[ATTR_MODEL] = str(model)
         if (version := self.bulb.host_firmware_version) is not None:
             info[ATTR_SW_VERSION] = version
