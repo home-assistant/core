@@ -59,7 +59,7 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
     @property
     def preset_modes(self) -> list[str] | None:
         """Return a list of all possible presets."""
-        return list(PRESET_MODES.keys())
+        return list(PRESET_MODES)
 
     @property
     def preset_mode(self) -> str | None:
@@ -78,7 +78,7 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         await self._channel.set_temp(temp)
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the new preset mode."""
