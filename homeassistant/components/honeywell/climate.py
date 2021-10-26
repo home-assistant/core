@@ -364,19 +364,17 @@ class HoneywellUSThermostat(ClimateEntity):
             )
 
     def _turn_hold_mode_on(self) -> None:
-        """Turn permanent hold on.
-
-        """
+        """Turn permanent hold on."""
         try:
             # Get current mode
             mode = self._device.system_mode
-        except SomeComfortError:
+        except somecomfort.SomeComfortError:
             _LOGGER.error("Can not get system mode")
             return
         try:
             # Set permanent hold
             setattr(self._device, f"hold_{mode}", True)
-        except SomeComfortError:
+        except somecomfort.SomeComfortError:
             _LOGGER.error("Couldn't set permanent hold")
 
     def _turn_away_mode_off(self) -> None:
