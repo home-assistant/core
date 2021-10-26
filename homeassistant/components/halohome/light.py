@@ -33,9 +33,6 @@ class HaloLight(LightEntity):
         """Create a new HaloLight object."""
         self._device = device
         self._attr_is_on = False
-        self._attr_brightness = None
-        self._attr_color_temp = None
-
         self._attr_name = device.device_name
         self._attr_unique_id = device.pid
 
