@@ -3,7 +3,7 @@
   "name": "HALO Home",
   "documentation": "https://www.home-assistant.io/integrations/halohome/",
   "codeowners": ["@nayaverdier"],
-  "requirements": ["halohome==0.2.0"],
+  "requirements": ["halohome==0.3.0"],
   "config_flow": true,
   "iot_class": "assumed_state"
 }

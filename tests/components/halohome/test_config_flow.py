@@ -14,6 +14,8 @@ from tests.common import MockConfigEntry
 HOST = "http://127.0.0.1"
 MODULE = "homeassistant.components.halohome"
 USERNAME = "example@example.com"
+USER_ID = 12345678
+TITLE = f"HALO Home ({USER_ID})"
 PASSWORD = "TestPassword"
 CONFIG_ENTRY = {
     CONF_USERNAME: USERNAME,
@@ -22,10 +24,17 @@ CONFIG_ENTRY = {
 }
 
 
+class MockConnection:
+    """A mocked Connection object for the halohome library."""
+
+    user_id = USER_ID
+
+
 def _patch_connect(raise_error: bool = False):
     async def _connect(email: str, password: str, host: str):
         if raise_error:
             raise halohome.HaloHomeError("Test login error")
+        return MockConnection()
 
     return patch("halohome.connect", new=_connect)
 
@@ -50,7 +59,7 @@ async def test_manual_setup(hass: HomeAssistant):
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == CONFIG_ENTRY
-    assert result["title"] == USERNAME
+    assert result["title"] == TITLE
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -59,7 +68,7 @@ async def test_manual_setup_already_exists(hass: HomeAssistant):
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG_ENTRY,
-        unique_id=USERNAME,
+        unique_id=str(USER_ID),
     )
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(

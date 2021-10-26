@@ -1,5 +1,6 @@
 """Create a config flow for the HALO Home integration."""
 import logging
+from typing import Optional
 
 import halohome
 import voluptuous as vol
@@ -21,15 +22,15 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def _valid_input(user_input: dict) -> bool:
+async def _get_user_id(user_input: dict) -> Optional[str]:
     try:
-        await halohome.connect(
+        connection = await halohome.connect(
             user_input[CONF_USERNAME], user_input[CONF_PASSWORD], user_input[CONF_HOST]
         )
-        return True
+        return str(connection.user_id)
     except halohome.HaloHomeError:
         _LOGGER.info("halohome: Failed to login to HALO Home")
-        return False
+        return None
 
 
 class HaloHomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -39,14 +40,15 @@ class HaloHomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the user configuration flow."""
         errors = None
 
-        if user_input is not None and await _valid_input(user_input):
-            username = user_input[CONF_USERNAME]
-            await self.async_set_unique_id(username)
-            self._abort_if_unique_id_configured()
+        if user_input is not None:
+            if (user_id := await _get_user_id(user_input)) is not None:
+                await self.async_set_unique_id(user_id)
+                self._abort_if_unique_id_configured()
 
-            return self.async_create_entry(title=username, data=user_input)
-        elif user_input is not None:
-            errors = {"base": "cannot_connect"}
+                title = f"HALO Home ({user_id})"
+                return self.async_create_entry(title=title, data=user_input)
+            else:
+                errors = {"base": "cannot_connect"}
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
