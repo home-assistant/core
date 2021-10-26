@@ -48,7 +48,7 @@ PIN_MODES = {
     "winplus": winplus.BOARD,
     "zero": zero.BOARD,
     "zeroplus": zeroplus.BOARD,
-    "zeroplus2": zeroplus2.BOARD,    
+    "zeroplus2": zeroplus2.BOARD,
 
 }
 
