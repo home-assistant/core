@@ -25,7 +25,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt
 
 from . import (
-    EsphomeCategoricalEntity,
+    EsphomeEntity,
     EsphomeEnumMapper,
     esphome_state_property,
     platform_async_setup_entry,
@@ -69,7 +69,7 @@ _STATE_CLASSES: EsphomeEnumMapper[SensorStateClass, str | None] = EsphomeEnumMap
 )
 
 
-class EsphomeSensor(EsphomeCategoricalEntity[SensorInfo, SensorState], SensorEntity):
+class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
     """A sensor implementation for esphome."""
 
     @property
@@ -118,9 +118,7 @@ class EsphomeSensor(EsphomeCategoricalEntity[SensorInfo, SensorState], SensorEnt
         return _STATE_CLASSES.from_esphome(self._static_info.state_class)
 
 
-class EsphomeTextSensor(
-    EsphomeCategoricalEntity[TextSensorInfo, TextSensorState], SensorEntity
-):
+class EsphomeTextSensor(EsphomeEntity[TextSensorInfo, TextSensorState], SensorEntity):
     """A text sensor implementation for ESPHome."""
 
     @esphome_state_property

@@ -10,11 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import (
-    EsphomeCategoricalEntity,
-    esphome_state_property,
-    platform_async_setup_entry,
-)
+from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 
 
 async def async_setup_entry(
@@ -36,7 +32,7 @@ async def async_setup_entry(
 # pylint: disable=invalid-overridden-method
 
 
-class EsphomeSwitch(EsphomeCategoricalEntity[SwitchInfo, SwitchState], SwitchEntity):
+class EsphomeSwitch(EsphomeEntity[SwitchInfo, SwitchState], SwitchEntity):
     """A switch implementation for ESPHome."""
 
     @property

@@ -643,6 +643,15 @@ class EsphomeEnumMapper(Generic[_EnumT, _ValT]):
 ICON_SCHEMA = vol.Schema(cv.icon)
 
 
+ENTITY_CATEGORIES: EsphomeEnumMapper[EntityCategory, str | None] = EsphomeEnumMapper(
+    {
+        EntityCategory.NONE: None,
+        EntityCategory.CONFIG: ENTITY_CATEGORY_CONFIG,
+        EntityCategory.DIAGNOSTIC: ENTITY_CATEGORY_DIAGNOSTIC,
+    }
+)
+
+
 class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     """Define a base esphome entity."""
 
@@ -784,19 +793,6 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return not self._static_info.disabled_by_default
-
-
-ENTITY_CATEGORIES: EsphomeEnumMapper[EntityCategory, str | None] = EsphomeEnumMapper(
-    {
-        EntityCategory.NONE: None,
-        EntityCategory.CONFIG: ENTITY_CATEGORY_CONFIG,
-        EntityCategory.DIAGNOSTIC: ENTITY_CATEGORY_DIAGNOSTIC,
-    }
-)
-
-
-class EsphomeCategoricalEntity(EsphomeEntity[_InfoT, _StateT]):
-    """Define a base esphome entity that has an entity_category."""
 
     @property
     def entity_category(self) -> str | None:

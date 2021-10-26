@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import EsphomeCategoricalEntity, platform_async_setup_entry
+from . import EsphomeEntity, platform_async_setup_entry
 
 
 async def async_setup_entry(
@@ -27,7 +27,7 @@ async def async_setup_entry(
 
 
 class EsphomeBinarySensor(
-    EsphomeCategoricalEntity[BinarySensorInfo, BinarySensorState], BinarySensorEntity
+    EsphomeEntity[BinarySensorInfo, BinarySensorState], BinarySensorEntity
 ):
     """A binary sensor implementation for ESPHome."""
 
