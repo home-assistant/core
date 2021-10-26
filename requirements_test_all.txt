@@ -600,7 +600,7 @@ mficlient==0.3.0
 micloud==0.4
 
 # homeassistant.components.mill
-millheater==0.6.2
+millheater==0.7.3
 
 # homeassistant.components.minio
 minio==4.0.9
