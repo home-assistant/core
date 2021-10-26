@@ -235,6 +235,9 @@ async-upnp-client==0.22.10
 # homeassistant.components.aurora
 auroranoaa==0.0.2
 
+# homeassistant.components.aurora_abb_powerone
+aurorapy==0.2.6
+
 # homeassistant.components.stream
 av==8.0.3
 
