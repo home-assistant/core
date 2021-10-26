@@ -317,7 +317,7 @@ class CoverGroup(GroupEntity, CoverEntity):
         )
         self._attr_supported_features = supported_features
 
-        if not self._attr_assumed_state:
+        if not self.assumed_state:
             for entity_id in self._entities:
                 if (state := self.hass.states.get(entity_id)) is None:
                     continue

@@ -218,7 +218,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         delay = kwargs[ATTR_DELAY_SECS]
         service = f"{RM_DOMAIN}.{SERVICE_SEND_COMMAND}"
 
-        if not self._attr_is_on:
+        if not self.is_on:
             _LOGGER.warning(
                 "%s canceled: %s entity is turned off", service, self.entity_id
             )
@@ -273,7 +273,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         toggle = kwargs[ATTR_ALTERNATIVE]
         service = f"{RM_DOMAIN}.{SERVICE_LEARN_COMMAND}"
 
-        if not self._attr_is_on:
+        if not self.is_on:
             _LOGGER.warning(
                 "%s canceled: %s entity is turned off", service, self.entity_id
             )
@@ -431,7 +431,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         device = kwargs[ATTR_DEVICE]
         service = f"{RM_DOMAIN}.{SERVICE_DELETE_COMMAND}"
 
-        if not self._attr_is_on:
+        if not self.is_on:
             _LOGGER.warning(
                 "%s canceled: %s entity is turned off",
                 service,

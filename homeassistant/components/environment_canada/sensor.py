@@ -125,9 +125,7 @@ class ECSensor(SensorEntity):
             self._state = str(value).capitalize()
         elif value is not None and len(value) > 255:
             self._state = value[:255]
-            _LOGGER.info(
-                "Value for %s truncated to 255 characters", self._attr_unique_id
-            )
+            _LOGGER.info("Value for %s truncated to 255 characters", self.unique_id)
         else:
             self._state = value
 

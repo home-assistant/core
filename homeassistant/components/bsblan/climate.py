@@ -106,7 +106,7 @@ class BSBLanClimate(ClimateEntity):
             self._attr_hvac_mode = self._store_hvac_mode
         else:
             # Store hvac mode.
-            self._store_hvac_mode = self._attr_hvac_mode
+            self._store_hvac_mode = self.hvac_mode
             await self.async_set_data(preset_mode=preset_mode)
 
     async def async_set_hvac_mode(self, hvac_mode):

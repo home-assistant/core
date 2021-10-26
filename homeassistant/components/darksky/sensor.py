@@ -807,7 +807,7 @@ class DarkSkyAlertSensor(SensorEntity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        if self._attr_native_value is not None and self._attr_native_value > 0:
+        if self.native_value is not None and self.native_value > 0:
             return "mdi:alert-circle"
         return "mdi:alert-circle-outline"
 

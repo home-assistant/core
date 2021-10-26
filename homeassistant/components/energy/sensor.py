@@ -348,7 +348,7 @@ class EnergyCostSensor(SensorEntity):
             self._reset(energy_state_copy)
         # Update with newly incurred cost
         old_energy_value = float(self._last_energy_sensor_state.state)
-        cur_value = cast(float, self._attr_native_value)
+        cur_value = cast(float, self.native_value)
         self._attr_native_value = cur_value + (energy - old_energy_value) * energy_price
 
         self._last_energy_sensor_state = energy_state

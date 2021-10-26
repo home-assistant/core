@@ -136,7 +136,7 @@ class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
         """Call when entity about to be added to hass."""
         # If not None, we got an initial value.
         await super().async_added_to_hass()
-        if self._attr_native_value is not None:
+        if self.native_value is not None:
             return
 
         state = await self.async_get_last_state()

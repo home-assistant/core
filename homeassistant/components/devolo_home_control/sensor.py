@@ -110,7 +110,7 @@ class DevoloGenericMultiLevelDeviceEntity(DevoloMultiLevelDeviceEntity):
 
         self._value = self._multi_level_sensor_property.value
 
-        if self._attr_device_class is None:
+        if self.device_class is None:
             self._attr_name += f" {self._multi_level_sensor_property.sensor_type}"
 
         if element_uid.startswith("devolo.VoltageMultiLevelSensor:"):
@@ -173,13 +173,13 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID of the entity."""
-        return f"{self._attr_unique_id}_{self._sensor_type}"
+        return f"{self.unique_id}_{self._sensor_type}"
 
     def _sync(self, message: tuple) -> None:
         """Update the consumption sensor state."""
-        if message[0] == self._attr_unique_id:
+        if message[0] == self.unique_id:
             self._value = getattr(
-                self._device_instance.consumption_property[self._attr_unique_id],
+                self._device_instance.consumption_property[self.unique_id],
                 self._sensor_type,
             )
         else:

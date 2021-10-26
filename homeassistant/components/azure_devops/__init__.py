@@ -65,7 +65,7 @@ class AzureDevOpsEntity(Entity):
         if await self._azure_devops_update():
             self._attr_available = True
         else:
-            if self._attr_available:
+            if self.available:
                 _LOGGER.debug(
                     "An error occurred while updating Azure DevOps sensor",
                     exc_info=True,

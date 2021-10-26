@@ -114,12 +114,12 @@ class DiscogsSensor(SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the device state attributes of the sensor."""
-        if self._attr_native_value is None or self._attrs is None:
+        if self.native_value is None or self._attrs is None:
             return None
 
         if (
             self.entity_description.key == SENSOR_RANDOM_RECORD_TYPE
-            and self._attr_native_value is not None
+            and self.native_value is not None
         ):
             return {
                 "cat_no": self._attrs["labels"][0]["catno"],

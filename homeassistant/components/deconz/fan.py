@@ -156,7 +156,7 @@ class DeconzFan(DeconzDevice, FanEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        return self._attr_supported_features
+        return self.supported_features
 
     @callback
     def async_update_callback(self) -> None:

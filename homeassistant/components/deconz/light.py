@@ -128,10 +128,10 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
         if device.xy is not None:
             self._attr_supported_color_modes.add(COLOR_MODE_XY)
 
-        if not self._attr_supported_color_modes and device.brightness is not None:
+        if not self.supported_color_modes and device.brightness is not None:
             self._attr_supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
 
-        if not self._attr_supported_color_modes:
+        if not self.supported_color_modes:
             self._attr_supported_color_modes.add(COLOR_MODE_ONOFF)
 
         if device.brightness is not None:
@@ -193,7 +193,7 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
             data["color_temperature"] = kwargs[ATTR_COLOR_TEMP]
 
         if ATTR_HS_COLOR in kwargs:
-            if COLOR_MODE_XY in self._attr_supported_color_modes:
+            if COLOR_MODE_XY in self.supported_color_modes:
                 data["xy"] = color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
             else:
                 data["hue"] = int(kwargs[ATTR_HS_COLOR][0] / 360 * 65535)

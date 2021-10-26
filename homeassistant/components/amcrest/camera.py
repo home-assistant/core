@@ -405,13 +405,13 @@ class AmcrestCam(Camera):
                     self._model = resp
                 else:
                     self._model = "unknown"
-            if self._attr_unique_id is None:
+            if self.unique_id is None:
                 serial_number = self._api.serial_number.strip()
                 if serial_number:
                     self._attr_unique_id = (
                         f"{serial_number}-{self._resolution}-{self._channel}"
                     )
-                    _LOGGER.debug("Assigned unique_id=%s", self._attr_unique_id)
+                    _LOGGER.debug("Assigned unique_id=%s", self.unique_id)
             self.is_streaming = self._get_video()
             self._is_recording = self._get_recording()
             self._motion_detection_enabled = self._get_motion_detection()

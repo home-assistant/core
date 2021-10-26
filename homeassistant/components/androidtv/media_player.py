@@ -610,12 +610,12 @@ class AndroidTVDevice(ADBDevice):
         ) = await self.aftv.update(self._get_sources)
 
         self._attr_state = ANDROIDTV_STATES.get(state)
-        if self._attr_state is None:
+        if self.state is None:
             self._attr_available = False
 
         if running_apps:
             self._attr_source = self._attr_app_name = self._app_id_to_name.get(
-                self._attr_app_id, self._attr_app_id
+                self.app_id, self.app_id
             )
             sources = [
                 self._app_id_to_name.get(
@@ -645,12 +645,12 @@ class AndroidTVDevice(ADBDevice):
     @adb_decorator()
     async def async_volume_down(self):
         """Send volume down command."""
-        self._attr_volume_level = await self.aftv.volume_down(self._attr_volume_level)
+        self._attr_volume_level = await self.aftv.volume_down(self.volume_level)
 
     @adb_decorator()
     async def async_volume_up(self):
         """Send volume up command."""
-        self._attr_volume_level = await self.aftv.volume_up(self._attr_volume_level)
+        self._attr_volume_level = await self.aftv.volume_up(self.volume_level)
 
 
 class FireTVDevice(ADBDevice):
@@ -679,13 +679,11 @@ class FireTVDevice(ADBDevice):
         ) = await self.aftv.update(self._get_sources)
 
         self._attr_state = ANDROIDTV_STATES.get(state)
-        if self._attr_state is None:
+        if self.state is None:
             self._attr_available = False
 
         if running_apps:
-            self._attr_source = self._app_id_to_name.get(
-                self._attr_app_id, self._attr_app_id
-            )
+            self._attr_source = self._app_id_to_name.get(self.app_id, self.app_id)
             sources = [
                 self._app_id_to_name.get(
                     app_id, app_id if not self._exclude_unnamed_apps else None

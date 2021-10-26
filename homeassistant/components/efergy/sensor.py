@@ -216,10 +216,10 @@ class EfergySensor(EfergyEntity, SensorEntity):
                 self.entity_description.key, period=self.period, sid=self.sid
             )
         except (exceptions.DataError, exceptions.ConnectError) as ex:
-            if self._attr_available:
+            if self.available:
                 self._attr_available = False
                 _LOGGER.error("Error getting data: %s", ex)
             return
-        if not self._attr_available:
+        if not self.available:
             self._attr_available = True
             _LOGGER.info("Connection has resumed")

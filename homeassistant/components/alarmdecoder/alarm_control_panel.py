@@ -135,7 +135,7 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
         """Send arm away command."""
         self._client.arm_away(
             code=code,
-            code_arm_required=self._attr_code_arm_required,
+            code_arm_required=self.code_arm_required,
             auto_bypass=self._auto_bypass,
         )
 
@@ -143,7 +143,7 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
         """Send arm home command."""
         self._client.arm_home(
             code=code,
-            code_arm_required=self._attr_code_arm_required,
+            code_arm_required=self.code_arm_required,
             auto_bypass=self._auto_bypass,
         )
 
@@ -151,7 +151,7 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
         """Send arm night command."""
         self._client.arm_night(
             code=code,
-            code_arm_required=self._attr_code_arm_required,
+            code_arm_required=self.code_arm_required,
             alt_night_mode=self._alt_night_mode,
             auto_bypass=self._auto_bypass,
         )

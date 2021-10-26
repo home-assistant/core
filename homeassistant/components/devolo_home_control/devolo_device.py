@@ -36,7 +36,7 @@ class DevoloDeviceEntity(Entity):
             identifiers={(DOMAIN, self._device_instance.uid)},
             manufacturer=device_instance.brand,
             model=device_instance.name,
-            name=self._attr_name,
+            name=self.name,
             suggested_area=device_instance.settings_property[
                 "general_device_settings"
             ].zone,
@@ -61,7 +61,7 @@ class DevoloDeviceEntity(Entity):
 
     def _sync(self, message: tuple) -> None:
         """Update the state."""
-        if message[0] == self._attr_unique_id:
+        if message[0] == self.unique_id:
             self._value = message[1]
         else:
             self._generic_message(message)

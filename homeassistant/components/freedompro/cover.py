@@ -85,7 +85,7 @@ class Device(CoordinatorEntity, CoverEntity):
             state = device["state"]
             if "position" in state:
                 self._attr_current_cover_position = state["position"]
-                if self._attr_current_cover_position == 0:
+                if self.current_cover_position == 0:
                     self._attr_is_closed = True
                 else:
                     self._attr_is_closed = False

@@ -256,7 +256,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                     )
                 else:
                     self._target_temp = float(old_state.attributes[ATTR_TEMPERATURE])
-            if old_state.attributes.get(ATTR_PRESET_MODE) in self._attr_preset_modes:
+            if old_state.attributes.get(ATTR_PRESET_MODE) in self.preset_modes:
                 self._attr_preset_mode = old_state.attributes.get(ATTR_PRESET_MODE)
             if not self._hvac_mode and old_state.state:
                 self._hvac_mode = old_state.state
@@ -522,11 +522,11 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
 
     async def async_set_preset_mode(self, preset_mode: str):
         """Set new preset mode."""
-        if preset_mode not in (self._attr_preset_modes or []):
+        if preset_mode not in (self.preset_modes or []):
             raise ValueError(
-                f"Got unsupported preset_mode {preset_mode}. Must be one of {self._attr_preset_modes}"
+                f"Got unsupported preset_mode {preset_mode}. Must be one of {self.preset_modes}"
             )
-        if preset_mode == self._attr_preset_mode:
+        if preset_mode == self.preset_mode:
             # I don't think we need to call async_write_ha_state if we didn't change the state
             return
         if preset_mode == PRESET_AWAY:

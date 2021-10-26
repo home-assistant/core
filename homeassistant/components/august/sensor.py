@@ -276,7 +276,7 @@ class AugustBatterySensor(AugustEntityMixin, SensorEntity, Generic[T]):
     def _update_from_data(self):
         """Get the latest state of the sensor."""
         self._attr_native_value = self.entity_description.value_fn(self._detail)
-        self._attr_available = self._attr_native_value is not None
+        self._attr_available = self.native_value is not None
 
     @property
     def old_unique_id(self) -> str:
