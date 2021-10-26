@@ -86,9 +86,9 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
         self._attr_name = heater.name
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, heater.device_id)},
-            name=self.name,
             manufacturer=MANUFACTURER,
             model=f"generation {1 if heater.is_gen1 else 2}",
+            name=self.name,
         )
         if heater.is_gen1:
             self._attr_hvac_modes = [HVAC_MODE_HEAT]

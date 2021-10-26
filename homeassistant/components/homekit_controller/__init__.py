@@ -131,8 +131,14 @@ class HomeKitEntity(Entity):
     @property
     def unique_id(self) -> str:
         """Return the ID of this device."""
-        serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
-        return f"homekit-{serial}-{self._iid}"
+        info = self.accessory_info
+        serial = info.value(CharacteristicsTypes.SERIAL_NUMBER)
+        if serial:
+            return f"homekit-{serial}-{self._iid}"
+        # Some accessories do not have a serial number
+        return (
+            f'homekit-{self.pairing_data["AccessoryPairingID"]}-{self._aid}-{self._iid}'
+        )
 
     @property
     def name(self) -> str:
@@ -149,9 +155,18 @@ class HomeKitEntity(Entity):
         """Return the device info."""
         info = self.accessory_info
         accessory_serial = info.value(CharacteristicsTypes.SERIAL_NUMBER)
+        if accessory_serial:
+            # Some accessories do not have a serial number
+            identifiers = (DOMAIN, "serial-number", accessory_serial)
+        else:
+            identifiers = (
+                DOMAIN,
+                "accessory-id",
+                f'{self.pairing_data["AccessoryPairingID"]}_{self._aid}',
+            )
 
         device_info = DeviceInfo(
-            identifiers={(DOMAIN, "serial-number", accessory_serial)},
+            identifiers={identifiers},
             manufacturer=info.value(CharacteristicsTypes.MANUFACTURER, ""),
             model=info.value(CharacteristicsTypes.MODEL, ""),
             name=info.value(CharacteristicsTypes.NAME),

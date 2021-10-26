@@ -44,9 +44,9 @@ class MillHeaterEnergySensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{heater.device_id}_{sensor_type}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, heater.device_id)},
-            name=self.name,
             manufacturer=MANUFACTURER,
             model=f"generation {1 if heater.is_gen1 else 2}",
+            name=self.name,
         )
         self._update_attr(heater)
 
