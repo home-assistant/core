@@ -1,11 +1,17 @@
 """Support for SimpliSafe locks."""
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from simplipy.device.lock import Lock, LockStates
 from simplipy.errors import SimplipyError
 from simplipy.system.v3 import SystemV3
+from simplipy.websocket import (
+    EVENT_LOCK_ERROR,
+    EVENT_LOCK_LOCKED,
+    EVENT_LOCK_UNLOCKED,
+    WebsocketEvent,
+)
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
@@ -17,6 +23,14 @@ from .const import DATA_CLIENT, DOMAIN, LOGGER
 
 ATTR_LOCK_LOW_BATTERY = "lock_low_battery"
 ATTR_PIN_PAD_LOW_BATTERY = "pin_pad_low_battery"
+
+STATE_MAP_FROM_WEBSOCKET_EVENT = {
+    EVENT_LOCK_ERROR: None,
+    EVENT_LOCK_LOCKED: True,
+    EVENT_LOCK_UNLOCKED: False,
+}
+
+WEBSOCKET_EVENTS_TO_LISTEN_FOR = (EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED)
 
 
 async def async_setup_entry(
@@ -42,7 +56,12 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
 
     def __init__(self, simplisafe: SimpliSafe, system: SystemV3, lock: Lock) -> None:
         """Initialize."""
-        super().__init__(simplisafe, system, device=lock)
+        super().__init__(
+            simplisafe,
+            system,
+            device=lock,
+            additional_websocket_events=WEBSOCKET_EVENTS_TO_LISTEN_FOR,
+        )
 
         self._device: Lock
 
@@ -80,3 +99,10 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
 
         self._attr_is_jammed = self._device.state == LockStates.jammed
         self._attr_is_locked = self._device.state == LockStates.locked
+
+    @callback
+    def async_update_from_websocket_event(self, event: WebsocketEvent) -> None:
+        """Update the entity when new data comes from the websocket."""
+        if TYPE_CHECKING:
+            assert event.event_type
+        self._attr_is_locked = STATE_MAP_FROM_WEBSOCKET_EVENT[event.event_type]

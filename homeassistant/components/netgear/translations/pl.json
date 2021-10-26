@@ -6,11 +6,11 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Nazwa hosta lub adres IP (Opcjonalne)",
+                    "host": "Nazwa hosta lub adres IP (opcjonalnie)",
                     "password": "Has\u0142o",
-                    "port": "Port (Opcjonalnie)",
+                    "port": "Port (opcjonalnie)",
                     "ssl": "Certyfikat SSL",
-                    "username": "Nazwa u\u017cytkownika (Opcjonalnie)"
+                    "username": "Nazwa u\u017cytkownika (opcjonalnie)"
                 },
                 "title": "Netgear"
             }

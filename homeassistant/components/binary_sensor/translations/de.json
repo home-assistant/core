@@ -43,7 +43,7 @@
             "is_problem": "{entity_name} hat ein Problem festgestellt",
             "is_smoke": "{entity_name} hat Rauch detektiert",
             "is_sound": "{entity_name} hat Ger\u00e4usche detektiert",
-            "is_tampered": "{Einheit_Name} erkennt Manipulationen",
+            "is_tampered": "{entity_name} erkennt Manipulationen",
             "is_unsafe": "{entity_name} ist unsicher",
             "is_update": "{entity_name} hat ein Update verf\u00fcgbar",
             "is_vibration": "{entity_name} erkennt Vibrationen."

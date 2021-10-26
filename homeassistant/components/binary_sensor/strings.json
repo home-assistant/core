@@ -32,6 +32,8 @@
       "is_not_present": "{entity_name} is not present",
       "is_problem": "{entity_name} is detecting problem",
       "is_no_problem": "{entity_name} is not detecting problem",
+      "is_running": "{entity_name} is running",
+      "is_not_running": "{entity_name} is not running",
       "is_unsafe": "{entity_name} is unsafe",
       "is_not_unsafe": "{entity_name} is safe",
       "is_smoke": "{entity_name} is detecting smoke",
@@ -80,6 +82,8 @@
       "not_present": "{entity_name} not present",
       "problem": "{entity_name} started detecting problem",
       "no_problem": "{entity_name} stopped detecting problem",
+      "running": "{entity_name} started running",
+      "not_running": "{entity_name} is no longer running",
       "unsafe": "{entity_name} became unsafe",
       "not_unsafe": "{entity_name} became safe",
       "smoke": "{entity_name} started detecting smoke",
@@ -170,6 +174,10 @@
     "problem": {
       "off": "OK",
       "on": "Problem"
+    },
+    "running": {
+      "off": "Not running",
+      "on": "Running"
     },
     "safety": {
       "off": "Safe",

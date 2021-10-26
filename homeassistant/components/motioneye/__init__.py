@@ -477,4 +477,4 @@ class MotionEyeEntity(CoordinatorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        return {"identifiers": {self._device_identifier}}
+        return DeviceInfo(identifiers={self._device_identifier})

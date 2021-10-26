@@ -9,7 +9,7 @@
     "pyserial-asyncio==0.5",
     "zha-quirks==0.0.62",
     "zigpy-deconz==0.13.0",
-    "zigpy==0.38.0",
+    "zigpy==0.39.0",
     "zigpy-xbee==0.14.0",
     "zigpy-zigate==0.7.3",
     "zigpy-znp==0.5.4"
