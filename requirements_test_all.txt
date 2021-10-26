@@ -1024,7 +1024,7 @@ pyotgw==1.1b1
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.otp
-pyotp==2.3.0
+pyotp==2.6.0
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
