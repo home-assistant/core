@@ -329,12 +329,6 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
     "rqbj": (
         SensorEntityDescription(
             key=DPCode.GAS_SENSOR_VALUE,
-            name="Gas",
-            device_class=DEVICE_CLASS_GAS,
-            state_class=STATE_CLASS_MEASUREMENT,
-        ),
-        BATTERY_SENSORS,
-        SensorEntityDescription(
             icon="mdi:gas-cylinder",
             device_class=STATE_CLASS_MEASUREMENT,
         ),
