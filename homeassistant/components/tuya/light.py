@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import json
+import logging
 from typing import Any
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
@@ -10,11 +11,13 @@ from tuya_iot import TuyaDevice, TuyaDeviceManager
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
+    ATTR_EFFECT,
     ATTR_HS_COLOR,
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_HS,
     COLOR_MODE_ONOFF,
+    SUPPORT_EFFECT,
     LightEntity,
     LightEntityDescription,
 )
@@ -26,8 +29,18 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
 from .base import IntegerTypeData, TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, WorkMode
+from .const import (
+    COLOR_SUPPORTED_SCENES,
+    DEFAULT_SCENE_DATA_V2,
+    DOMAIN,
+    TUYA_DISCOVERY_NEW,
+    WHITE_SUPPORTED_SCENES,
+    DPCode,
+    WorkMode,
+)
 from .util import remap_value
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -40,6 +53,7 @@ class TuyaLightEntityDescription(LightEntityDescription):
     color_data: DPCode | tuple[DPCode, ...] | None = None
     color_mode: DPCode | None = None
     color_temp: DPCode | tuple[DPCode, ...] | None = None
+    scene_data: DPCode | tuple[DPCode, ...] | None = None
 
 
 LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
@@ -74,6 +88,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             brightness=(DPCode.BRIGHT_VALUE_V2, DPCode.BRIGHT_VALUE),
             color_temp=(DPCode.TEMP_VALUE_V2, DPCode.TEMP_VALUE),
             color_data=(DPCode.COLOUR_DATA_V2, DPCode.COLOUR_DATA),
+            scene_data=(DPCode.SCENE_DATA_V2, DPCode.SCENE_DATA),
         ),
     ),
     # Ceiling Fan Light
@@ -325,6 +340,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
     _color_data_type: ColorTypeData | None = None
     _color_temp_dpcode: DPCode | None = None
     _color_temp_type: IntegerTypeData | None = None
+    _effect_dpcode: DPCode | None = None
 
     def __init__(
         self,
@@ -385,6 +401,18 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 ),
                 None,
             )
+        # Determine DPCodes for scene's / effects
+        if isinstance(description.scene_data, DPCode):
+            self._effect_dpcode = description.scene_data
+        elif isinstance(description.scene_data, tuple):
+            self._effect_dpcode = next(
+                (
+                    dpcode
+                    for dpcode in description.scene_data
+                    if dpcode in device.function
+                ),
+                None,
+            )
 
         # Update internals based on found brightness dpcode
         if self._brightness_dpcode:
@@ -434,6 +462,12 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 ):
                     self._color_data_type = DEFAULT_COLOR_TYPE_DATA_V2
 
+        if self._effect_dpcode:
+            if COLOR_MODE_HS in self._attr_supported_color_modes:
+                self._attr_effect_list = list(COLOR_SUPPORTED_SCENES)
+            else:
+                self._attr_effect_list = list(WHITE_SUPPORTED_SCENES)
+
     @property
     def is_on(self) -> bool:
         """Return true if light is on."""
@@ -442,7 +476,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on or control the light."""
         commands = [{"code": self.entity_description.key, "value": True}]
-
+        _LOGGER.debug("turn on kwargs -> %s", kwargs)
         if self._color_data_type and (
             ATTR_HS_COLOR in kwargs
             or (ATTR_BRIGHTNESS in kwargs and self.color_mode == COLOR_MODE_HS)
@@ -557,7 +591,16 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                     "value": round(self._brightness_type.remap_value_from(brightness)),
                 },
             ]
+        if ATTR_EFFECT in kwargs and self._attr_effect_list:
+            commands += [
+                {
+                    "code": self._effect_dpcode,
+                    "value": DEFAULT_SCENE_DATA_V2[kwargs[ATTR_EFFECT]],
+                }
+            ]
 
+        for command in commands:
+            _LOGGER.debug("turn on commands -> %s", command)
         self._send_command(commands)
 
     def turn_off(self, **kwargs: Any) -> None:
@@ -677,3 +720,21 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             s_value=status["s"],
             v_value=status["v"],
         )
+
+    @property
+    def supported_features(self) -> int:
+        """Return the SUPPORT_EFFECT feature if available."""
+        features = 0
+        if self._attr_effect_list:
+            features |= SUPPORT_EFFECT
+        return features
+
+    @property
+    def effect(self) -> str | None:
+        """Return the Current effect in use."""
+        if self.device.status[DPCode.WORK_MODE] == WorkMode.SCENE and isinstance(
+            self._attr_effect_list, list
+        ):
+            curren_effect_data = json.loads(self.device.status[self._effect_dpcode])
+            return self._attr_effect_list[curren_effect_data["scene_num"] - 1]
+        return None
