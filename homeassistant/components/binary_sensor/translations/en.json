@@ -31,6 +31,7 @@
             "is_not_plugged_in": "{entity_name} is unplugged",
             "is_not_powered": "{entity_name} is not powered",
             "is_not_present": "{entity_name} is not present",
+            "is_not_running": "{entity_name} is not running",
             "is_not_tampered": "{entity_name} is not detecting tampering",
             "is_not_unsafe": "{entity_name} is safe",
             "is_occupied": "{entity_name} is occupied",
@@ -41,6 +42,7 @@
             "is_powered": "{entity_name} is powered",
             "is_present": "{entity_name} is present",
             "is_problem": "{entity_name} is detecting problem",
+            "is_running": "{entity_name} is running",
             "is_smoke": "{entity_name} is detecting smoke",
             "is_sound": "{entity_name} is detecting sound",
             "is_tampered": "{entity_name} is detecting tampering",
@@ -81,6 +83,7 @@
             "not_plugged_in": "{entity_name} unplugged",
             "not_powered": "{entity_name} not powered",
             "not_present": "{entity_name} not present",
+            "not_running": "{entity_name} is no longer running",
             "not_unsafe": "{entity_name} became safe",
             "occupied": "{entity_name} became occupied",
             "opened": "{entity_name} opened",
@@ -88,6 +91,7 @@
             "powered": "{entity_name} powered",
             "present": "{entity_name} present",
             "problem": "{entity_name} started detecting problem",
+            "running": "{entity_name} started running",
             "smoke": "{entity_name} started detecting smoke",
             "sound": "{entity_name} started detecting sound",
             "turned_off": "{entity_name} turned off",
@@ -173,6 +177,10 @@
         "problem": {
             "off": "OK",
             "on": "Problem"
+        },
+        "running": {
+            "off": "Not running",
+            "on": "Running"
         },
         "safety": {
             "off": "Safe",
