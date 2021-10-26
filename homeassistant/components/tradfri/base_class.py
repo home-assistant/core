@@ -8,6 +8,8 @@ from typing import Any
 
 from pytradfri.command import Command
 from pytradfri.device import Device
+from pytradfri.device.air_purifier import AirPurifier
+from pytradfri.device.air_purifier_control import AirPurifierControl
 from pytradfri.device.blind import Blind
 from pytradfri.device.blind_control import BlindControl
 from pytradfri.device.light import Light
@@ -58,10 +60,10 @@ class TradfriBaseClass(Entity):
         """Initialize a device."""
         self._api = handle_error(api)
         self._device: Device = device
-        self._device_control: BlindControl | LightControl | SocketControl | SignalRepeaterControl | None = (
+        self._device_control: BlindControl | LightControl | SocketControl | SignalRepeaterControl | AirPurifierControl | None = (
             None
         )
-        self._device_data: Socket | Light | Blind | None = None
+        self._device_data: Socket | Light | Blind | AirPurifier | None = None
         self._gateway_id = gateway_id
         self._refresh(device)
 

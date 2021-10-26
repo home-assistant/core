@@ -1,10 +1,13 @@
 """The tests for hls streams."""
 import asyncio
+from collections import deque
 from http import HTTPStatus
 import itertools
+import math
 import re
 from urllib.parse import urlparse
 
+from dateutil import parser
 import pytest
 
 from homeassistant.components.stream import create_stream
@@ -19,7 +22,7 @@ from homeassistant.components.stream.const import (
 from homeassistant.components.stream.core import Part
 from homeassistant.setup import async_setup_component
 
-from .test_hls import SEGMENT_DURATION, STREAM_SOURCE, HlsClient, make_playlist
+from .test_hls import STREAM_SOURCE, HlsClient, make_playlist
 
 from tests.components.stream.common import (
     FAKE_TIME,
@@ -27,7 +30,8 @@ from tests.components.stream.common import (
     generate_h264_video,
 )
 
-TEST_PART_DURATION = 1
+SEGMENT_DURATION = 6
+TEST_PART_DURATION = 0.75
 NUM_PART_SEGMENTS = int(-(-SEGMENT_DURATION // TEST_PART_DURATION))
 PART_INDEPENDENT_PERIOD = int(1 / TEST_PART_DURATION) or 1
 BYTERANGE_LENGTH = 1
@@ -98,7 +102,7 @@ def make_segment_with_parts(
             "#EXT-X-PROGRAM-DATE-TIME:"
             + FAKE_TIME.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
             + "Z",
-            f"#EXTINF:{SEGMENT_DURATION:.3f},",
+            f"#EXTINF:{math.ceil(SEGMENT_DURATION/TEST_PART_DURATION)*TEST_PART_DURATION:.3f},",
             f"./segment/{segment}.m4s",
         ]
     )
@@ -124,15 +128,18 @@ async def test_ll_hls_stream(hass, hls_stream, stream_worker_sync):
             "stream": {
                 CONF_LL_HLS: True,
                 CONF_SEGMENT_DURATION: SEGMENT_DURATION,
-                CONF_PART_DURATION: TEST_PART_DURATION,
+                # Use a slight mismatch in PART_DURATION to mimic
+                # misalignments with source DTSs
+                CONF_PART_DURATION: TEST_PART_DURATION - 0.01,
             }
         },
     )
 
     stream_worker_sync.pause()
 
+    num_playlist_segments = 3
     # Setup demo HLS track
-    source = generate_h264_video(duration=SEGMENT_DURATION + 1)
+    source = generate_h264_video(duration=num_playlist_segments * SEGMENT_DURATION + 2)
     stream = create_stream(hass, source, {})
 
     # Request stream
@@ -152,7 +159,9 @@ async def test_ll_hls_stream(hass, hls_stream, stream_worker_sync):
 
     # Fetch playlist
     playlist_url = "/" + master_playlist.splitlines()[-1]
-    playlist_response = await hls_client.get(playlist_url)
+    playlist_response = await hls_client.get(
+        playlist_url + f"?_HLS_msn={num_playlist_segments-1}"
+    )
     assert playlist_response.status == HTTPStatus.OK
 
     # Fetch segments
@@ -181,27 +190,55 @@ async def test_ll_hls_stream(hass, hls_stream, stream_worker_sync):
             return False
         return True
 
-    # Fetch all completed part segments
+    # Parse playlist
     part_re = re.compile(
-        r'#EXT-X-PART:DURATION=[0-9].[0-9]{5,5},URI="(?P<part_url>.+?)",BYTERANGE="(?P<byterange_length>[0-9]+?)@(?P<byterange_start>[0-9]+?)"(,INDEPENDENT=YES)?'
+        r'#EXT-X-PART:DURATION=(?P<part_duration>[0-9]{1,}.[0-9]{3,}),URI="(?P<part_url>.+?)"(,INDEPENDENT=YES)?'
     )
+    datetime_re = re.compile(r"#EXT-X-PROGRAM-DATE-TIME:(?P<datetime>.+)")
+    inf_re = re.compile(r"#EXTINF:(?P<segment_duration>[0-9]{1,}.[0-9]{3,}),")
+    # keep track of which tests were done (indexed by re)
+    tested = {regex: False for regex in (part_re, datetime_re, inf_re)}
+    # keep track of times and durations along playlist for checking consistency
+    part_durations = []
+    segment_duration = 0
+    datetimes = deque()
     for line in playlist.splitlines():
         match = part_re.match(line)
         if match:
+            # Fetch all completed part segments
+            part_durations.append(float(match.group("part_duration")))
             part_segment_url = "/" + match.group("part_url")
-            byterange_end = (
-                int(match.group("byterange_length"))
-                + int(match.group("byterange_start"))
-                - 1
-            )
             part_segment_response = await hls_client.get(
                 part_segment_url,
-                headers={
-                    "Range": f'bytes={match.group("byterange_start")}-{byterange_end}'
-                },
             )
-            assert part_segment_response.status == HTTPStatus.PARTIAL_CONTENT
+            assert part_segment_response.status == HTTPStatus.OK
             assert check_part_is_moof_mdat(await part_segment_response.read())
+            tested[part_re] = True
+            continue
+        match = datetime_re.match(line)
+        if match:
+            datetimes.append(parser.parse(match.group("datetime")))
+            # Check that segment durations are consistent with PROGRAM-DATE-TIME
+            if len(datetimes) > 1:
+                datetime_duration = (
+                    datetimes[-1] - datetimes.popleft()
+                ).total_seconds()
+                if segment_duration:
+                    assert math.isclose(
+                        datetime_duration, segment_duration, rel_tol=1e-3
+                    )
+                    tested[datetime_re] = True
+            continue
+        match = inf_re.match(line)
+        if match:
+            segment_duration = float(match.group("segment_duration"))
+            # Check that segment durations are consistent with part durations
+            if len(part_durations) > 1:
+                assert math.isclose(sum(part_durations), segment_duration, rel_tol=1e-3)
+                tested[inf_re] = True
+                part_durations.clear()
+    # make sure all playlist tests were performed
+    assert all(tested.values())
 
     stream_worker_sync.resume()
 
@@ -252,6 +289,7 @@ async def test_ll_hls_playlist_view(hass, hls_stream, stream_worker_sync):
             for i in range(2)
         ],
         hint=make_hint(2, 0),
+        segment_duration=SEGMENT_DURATION,
         part_target_duration=hls.stream_settings.part_target_duration,
     )
 
@@ -273,6 +311,7 @@ async def test_ll_hls_playlist_view(hass, hls_stream, stream_worker_sync):
             for i in range(3)
         ],
         hint=make_hint(3, 0),
+        segment_duration=SEGMENT_DURATION,
         part_target_duration=hls.stream_settings.part_target_duration,
     )
 

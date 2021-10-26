@@ -46,12 +46,12 @@ class LitterRobotEntity(CoordinatorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information for a Litter-Robot."""
-        return {
-            "identifiers": {(DOMAIN, self.robot.serial)},
-            "name": self.robot.name,
-            "manufacturer": "Litter-Robot",
-            "model": self.robot.model,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.robot.serial)},
+            manufacturer="Litter-Robot",
+            model=self.robot.model,
+            name=self.robot.name,
+        )
 
 
 class LitterRobotControlEntity(LitterRobotEntity):

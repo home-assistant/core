@@ -152,9 +152,7 @@ VALUE_TEMPLATE_KEYS = [
     CONF_XY_VALUE_TEMPLATE,
 ]
 
-PLATFORM_SCHEMA_BASIC = vol.All(
-    # CONF_VALUE_TEMPLATE is deprecated, support will be removed in 2021.10
-    cv.deprecated(CONF_VALUE_TEMPLATE, CONF_STATE_VALUE_TEMPLATE),
+_PLATFORM_SCHEMA_BASE = (
     mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_BRIGHTNESS_COMMAND_TOPIC): mqtt.valid_publish_topic,
@@ -212,10 +210,22 @@ PLATFORM_SCHEMA_BASIC = vol.All(
             vol.Optional(CONF_XY_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(CONF_XY_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_XY_VALUE_TEMPLATE): cv.template,
-        }
+        },
     )
     .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
-    .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema),
+    .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
+)
+
+PLATFORM_SCHEMA_BASIC = vol.All(
+    # CONF_VALUE_TEMPLATE is deprecated, support will be removed in 2021.10
+    cv.deprecated(CONF_VALUE_TEMPLATE, CONF_STATE_VALUE_TEMPLATE),
+    _PLATFORM_SCHEMA_BASE,
+)
+
+DISCOVERY_SCHEMA_BASIC = vol.All(
+    # CONF_VALUE_TEMPLATE is deprecated, support will be removed in 2021.10
+    cv.deprecated(CONF_VALUE_TEMPLATE, CONF_STATE_VALUE_TEMPLATE),
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
 )
 
 
@@ -268,7 +278,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     @staticmethod
     def config_schema():
         """Return the config schema."""
-        return PLATFORM_SCHEMA_BASIC
+        return DISCOVERY_SCHEMA_BASIC
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""

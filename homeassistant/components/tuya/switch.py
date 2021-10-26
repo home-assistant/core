@@ -34,7 +34,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         ),
         SwitchEntityDescription(
             key=DPCode.WARM,
-            name="Heat preservation",
+            name="Heat Preservation",
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
@@ -186,6 +186,22 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             key=DPCode.WET,
             name="Humidification",
             icon="mdi:water-percent",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
+    # Air conditioner
+    # https://developer.tuya.com/en/docs/iot/categorykt?id=Kaiuz0z71ov2n
+    "kt": (
+        SwitchEntityDescription(
+            key=DPCode.ANION,
+            name="Ionizer",
+            icon="mdi:minus-circle-outline",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.LOCK,
+            name="Child Lock",
+            icon="mdi:account-lock",
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),

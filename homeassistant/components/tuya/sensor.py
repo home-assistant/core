@@ -38,6 +38,7 @@ from homeassistant.helpers.typing import StateType
 from . import HomeAssistantTuyaData
 from .base import EnumTypeData, IntegerTypeData, TuyaEntity
 from .const import (
+    DEVICE_CLASS_TUYA_STATUS,
     DEVICE_CLASS_UNITS,
     DOMAIN,
     TUYA_DISCOVERY_NEW,
@@ -68,6 +69,13 @@ BATTERY_SENSORS: tuple[SensorEntityDescription, ...] = (
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
+    SensorEntityDescription(
+        key=DPCode.VA_BATTERY,
+        name="Battery",
+        device_class=DEVICE_CLASS_BATTERY,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
 )
 
 # All descriptions can be found here. Mostly the Integer data types in the
@@ -75,6 +83,27 @@ BATTERY_SENSORS: tuple[SensorEntityDescription, ...] = (
 # end up being a sensor.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
+    # Smart Kettle
+    # https://developer.tuya.com/en/docs/iot/fbh?id=K9gf484m21yq7
+    "bh": (
+        SensorEntityDescription(
+            key=DPCode.TEMP_CURRENT,
+            name="Current Temperature",
+            device_class=DEVICE_CLASS_TEMPERATURE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.TEMP_CURRENT_F,
+            name="Current Temperature",
+            device_class=DEVICE_CLASS_TEMPERATURE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.STATUS,
+            name="Status",
+            device_class=DEVICE_CLASS_TUYA_STATUS,
+        ),
+    ),
     # CO2 Detector
     # https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
     "co2bj": (
@@ -368,6 +397,41 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
+    # Temperature and Humidity Sensor
+    # https://developer.tuya.com/en/docs/iot/categorywsdcg?id=Kaiuz3hinij34
+    "wsdcg": (
+        SensorEntityDescription(
+            key=DPCode.VA_TEMPERATURE,
+            name="Temperature",
+            device_class=DEVICE_CLASS_TEMPERATURE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.TEMP_CURRENT,
+            name="Temperature",
+            device_class=DEVICE_CLASS_TEMPERATURE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.VA_HUMIDITY,
+            name="Humidity",
+            device_class=DEVICE_CLASS_HUMIDITY,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.HUMIDITY_VALUE,
+            name="Humidity",
+            device_class=DEVICE_CLASS_HUMIDITY,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.BRIGHT_VALUE,
+            name="Luminosity",
+            device_class=DEVICE_CLASS_ILLUMINANCE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        *BATTERY_SENSORS,
+    ),
     # Pressure Sensor
     # https://developer.tuya.com/en/docs/iot/categoryylcg?id=Kaiuz3kc2e4gm
     "ylcg": (
@@ -473,6 +537,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         # match Home Assistants requirements.
         if (
             self.device_class is not None
+            and not self.device_class.startswith(DOMAIN)
             and description.native_unit_of_measurement is None
         ):
             # We cannot have a device class, if the UOM isn't set or the

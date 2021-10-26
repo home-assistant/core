@@ -493,6 +493,7 @@ async def test_device_registry_calls(hass):
         "addons": [
             {
                 "name": "test",
+                "state": "started",
                 "slug": "test",
                 "installed": True,
                 "update_available": False,
@@ -503,6 +504,7 @@ async def test_device_registry_calls(hass):
             },
             {
                 "name": "test2",
+                "state": "started",
                 "slug": "test2",
                 "installed": True,
                 "update_available": False,
@@ -537,6 +539,7 @@ async def test_device_registry_calls(hass):
         "addons": [
             {
                 "name": "test2",
+                "state": "started",
                 "slug": "test2",
                 "installed": True,
                 "update_available": False,
@@ -568,6 +571,7 @@ async def test_device_registry_calls(hass):
             {
                 "name": "test2",
                 "slug": "test2",
+                "state": "started",
                 "installed": True,
                 "update_available": False,
                 "version": "1.0.0",
@@ -577,6 +581,7 @@ async def test_device_registry_calls(hass):
             {
                 "name": "test3",
                 "slug": "test3",
+                "state": "stopped",
                 "installed": True,
                 "update_available": False,
                 "version": "1.0.0",
