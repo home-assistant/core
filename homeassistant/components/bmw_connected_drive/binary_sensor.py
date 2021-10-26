@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, cast
 
 from bimmer_connected.state import ChargingState, LockState, VehicleState
 from bimmer_connected.vehicle import ConnectedDriveVehicle
@@ -67,7 +67,7 @@ def _are_parking_lights_on(
 ) -> bool:
     # device class light: On means light detected, Off means no light
     extra_attributes["lights_parking"] = vehicle_state.parking_lights.value
-    return vehicle_state.are_parking_lights_on
+    return cast(bool, vehicle_state.are_parking_lights_on)
 
 
 def _are_problems_detected(
@@ -92,7 +92,7 @@ def _check_control_messages(
         extra_attributes["check_control_messages"] = cbs_list
     else:
         extra_attributes["check_control_messages"] = "OK"
-    return vehicle_state.has_check_control_messages
+    return cast(bool, vehicle_state.has_check_control_messages)
 
 
 def _is_vehicle_charging(
@@ -103,7 +103,7 @@ def _is_vehicle_charging(
     extra_attributes[
         "last_charging_end_result"
     ] = vehicle_state.last_charging_end_result
-    return vehicle_state.charging_status == ChargingState.CHARGING
+    return cast(bool, vehicle_state.charging_status == ChargingState.CHARGING)
 
 
 def _is_vehicle_plugged_in(
@@ -112,7 +112,7 @@ def _is_vehicle_plugged_in(
     # device class plug: On means device is plugged in,
     #                    Off means device is unplugged
     extra_attributes["connection_status"] = vehicle_state.connection_status
-    return vehicle_state.connection_status == "CONNECTED"
+    return cast(str, vehicle_state.connection_status) == "CONNECTED"
 
 
 def _format_cbs_report(
