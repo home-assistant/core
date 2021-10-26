@@ -184,20 +184,6 @@ class ScreenlogicEntity(CoordinatorEntity):
         super().__init__(coordinator)
         self._data_key = data_key
         self._enabled_default = enabled
-        controller_type = self.config_data["controller_type"]
-        hardware_type = self.config_data["hardware_type"]
-        try:
-            equipment_model = EQUIPMENT.CONTROLLER_HARDWARE[controller_type][
-                hardware_type
-            ]
-        except KeyError:
-            equipment_model = f"Unknown Model C:{controller_type} H:{hardware_type}"
-        self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, self.mac)},
-            manufacturer="Pentair",
-            model=equipment_model,
-            name=self.gateway_name,
-        )
 
     @property
     def entity_registry_enabled_default(self):
