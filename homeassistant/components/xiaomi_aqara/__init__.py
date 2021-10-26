@@ -284,7 +284,7 @@ class XiaomiDevice(Entity):
                 model=self._model,
             )
         else:
-            DeviceInfo(
+            device_info = DeviceInfo(
                 connections={(dr.CONNECTION_ZIGBEE, self._device_id)},
                 identifiers={(DOMAIN, self._device_id)},
                 manufacturer="Xiaomi Aqara",
