@@ -339,26 +339,26 @@ class FritzBoxTools:
             await self.hass.helpers.entity_registry.async_get_registry()
         )
 
-        ha_device_list: list[
+        ha_entity_reg_list: list[
             RegistryEntry
         ] = self.hass.helpers.entity_registry.async_entries_for_config_entry(
             entity_reg, config_entry.entry_id
         )
-        entity_removed: bool = False
+        entity_to_remove: bool = False
 
         device_hosts_mac_list = [device["mac"] for device in device_hosts_list]
 
-        for ha_host in ha_device_list:
+        for entry in ha_entity_reg_list:
             if (
-                not _cleanup_entity_filter(ha_host)
-                or ha_host.unique_id.split("_")[0] in device_hosts_mac_list
+                not _cleanup_entity_filter(entry)
+                or entry.unique_id.split("_")[0] in device_hosts_mac_list
             ):
                 continue
-            _LOGGER.info("Removing entity: %s", ha_host.name or ha_host.original_name)
-            entity_reg.async_remove(ha_host.entity_id)
-            entity_removed = True
+            _LOGGER.info("Removing entity: %s", entry.name or entry.original_name)
+            entity_reg.async_remove(entry.entity_id)
+            entity_to_remove = True
 
-        if entity_removed:
+        if entity_to_remove:
             await self._remove_empty_device(entity_reg, config_entry)
 
     async def _remove_empty_device(
