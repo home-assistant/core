@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 import zhaquirks.sinope.thermostat
-import zhaquirks.tuya.valve
+import zhaquirks.tuya.ts0601_trv
 import zigpy.profiles
 import zigpy.zcl.clusters
 from zigpy.zcl.clusters.hvac import Thermostat
