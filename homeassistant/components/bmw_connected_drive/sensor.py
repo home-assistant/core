@@ -543,7 +543,7 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
                 if parsed_date := dt_util.parse_datetime(date_str):
                     self._attr_native_value = parsed_date.isoformat()
                 else:
-                    _LOGGER.warning(
+                    _LOGGER.debug(
                         "Could not parse date string for 'date_utc' sensor: %s",
                         date_str,
                     )
@@ -569,7 +569,7 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
                 if parsed_date := dt_util.parse_datetime(date_str):
                     self._attr_native_value = parsed_date.isoformat()
                 else:
-                    _LOGGER.warning(
+                    _LOGGER.debug(
                         "Could not parse date string for 'reset_date_utc' sensor: %s",
                         date_str,
                     )
