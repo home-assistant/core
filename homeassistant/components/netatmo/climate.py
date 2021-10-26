@@ -244,7 +244,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             EVENT_TYPE_CANCEL_SET_POINT,
             EVENT_TYPE_SCHEDULE,
         ):
-            self._listeners.append(
+            self.data_handler.config_entry.async_on_unload(
                 async_dispatcher_connect(
                     self.hass,
                     f"signal-{DOMAIN}-webhook-{event_type}",
@@ -485,7 +485,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             return
 
         self._room_status = self._home_status.rooms.get(self._id)
-        self._room_data = self._data.rooms.get(self._home_id, {}).get(self._id)
+        self._room_data = self._data.rooms.get(self._home_id, {}).get(self._id, {})
 
         if not self._room_status or not self._room_data:
             if self._connected:

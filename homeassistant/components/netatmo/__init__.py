@@ -229,8 +229,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await hass.data[DOMAIN][entry.entry_id][AUTH].async_dropwebhook()
         _LOGGER.info("Unregister Netatmo webhook")
 
-    await hass.data[DOMAIN][entry.entry_id][DATA_HANDLER].async_cleanup()
-
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
