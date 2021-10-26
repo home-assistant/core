@@ -162,6 +162,9 @@ def gen_strings_schema(config: Config, integration: Integration):
                 ),
                 slug_validator=vol.Any("_", cv.slug),
             ),
+            vol.Optional("device_class"): cv.schema_with_slug_keys(
+                cv.string_with_no_html, slug_validator=vol.Any("_", cv.slug)
+            ),
         }
     )
 
@@ -196,7 +199,7 @@ def gen_platform_strings_schema(config: Config, integration: Integration):
     """
 
     def device_class_validator(value):
-        """Key validator for platorm states.
+        """Key validator for platform states.
 
         Platform states are only allowed to provide states for device classes they prefix.
         """
