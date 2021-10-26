@@ -10,6 +10,7 @@ from homeassistant.components.remote import (
     DEFAULT_DELAY_SECS,
     RemoteEntity,
 )
+from homeassistant.helpers.entity import DeviceInfo
 
 from . import LOGGER, PhilipsTVDataUpdateCoordinator
 from .const import CONF_SYSTEM, DOMAIN
@@ -67,17 +68,17 @@ class PhilipsTVRemote(RemoteEntity):
         return self._unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
-        return {
-            "name": self._system["name"],
-            "identifiers": {
+        return DeviceInfo(
+            identifiers={
                 (DOMAIN, self._unique_id),
             },
-            "model": self._system.get("model"),
-            "manufacturer": "Philips",
-            "sw_version": self._system.get("softwareversion"),
-        }
+            manufacturer="Philips",
+            model=self._system.get("model"),
+            name=self._system["name"],
+            sw_version=self._system.get("softwareversion"),
+        )
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""

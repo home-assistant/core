@@ -235,6 +235,9 @@ async-upnp-client==0.22.10
 # homeassistant.components.aurora
 auroranoaa==0.0.2
 
+# homeassistant.components.aurora_abb_powerone
+aurorapy==0.2.6
+
 # homeassistant.components.stream
 av==8.0.3
 
@@ -387,7 +390,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.24.12
+flux_led==0.24.13
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -1239,7 +1242,7 @@ sharkiqpy==0.1.8
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==12.0.0
+simplisafe-python==12.0.2
 
 # homeassistant.components.slack
 slackclient==2.5.0
@@ -1445,7 +1448,7 @@ zigpy-zigate==0.7.3
 zigpy-znp==0.5.4
 
 # homeassistant.components.zha
-zigpy==0.38.0
+zigpy==0.39.0
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.31.3

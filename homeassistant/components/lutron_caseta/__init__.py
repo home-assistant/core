@@ -333,10 +333,10 @@ class LutronCasetaDevice(Entity):
         """Return the device info."""
         return DeviceInfo(
             identifiers={(DOMAIN, self.serial)},
-            name=self.name,
-            suggested_area=self._device["name"].split("_")[0],
             manufacturer=MANUFACTURER,
             model=f"{self._device['model']} ({self._device['type']})",
+            name=self.name,
+            suggested_area=self._device["name"].split("_")[0],
             via_device=(DOMAIN, self._bridge_device["serial"]),
         )
 

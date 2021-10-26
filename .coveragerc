@@ -83,7 +83,6 @@ omit =
     homeassistant/components/aurora/binary_sensor.py
     homeassistant/components/aurora/const.py
     homeassistant/components/aurora/sensor.py
-    homeassistant/components/aurora_abb_powerone/sensor.py
     homeassistant/components/avea/light.py
     homeassistant/components/avion/light.py
     homeassistant/components/azure_devops/__init__.py
@@ -1168,6 +1167,7 @@ omit =
     homeassistant/components/velbus/sensor.py
     homeassistant/components/velbus/switch.py
     homeassistant/components/velux/*
+    homeassistant/components/venstar/__init__.py
     homeassistant/components/venstar/climate.py
     homeassistant/components/verisure/__init__.py
     homeassistant/components/verisure/alarm_control_panel.py

@@ -576,6 +576,9 @@ async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration
 
 
 async def _async_get_integration(hass: HomeAssistant, domain: str) -> Integration:
+    if "." in domain:
+        raise ValueError(f"Invalid domain {domain}")
+
     # Instead of using resolve_from_root we use the cache of custom
     # components to find the integration.
     if integration := (await async_get_custom_components(hass)).get(domain):
