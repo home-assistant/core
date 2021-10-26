@@ -227,7 +227,7 @@ async def device_climate_moes(device_climate_mock):
     """MOES thermostat."""
 
     return await device_climate_mock(
-        CLIMATE_MOES, manuf=MANUF_MOES, quirk=zhaquirks.tuya.valve.MoesHY368_Type1
+        CLIMATE_MOES, manuf=MANUF_MOES, quirk=zhaquirks.tuya.ts0601_trv.MoesHY368_Type1
     )
 
 
