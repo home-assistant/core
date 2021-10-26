@@ -88,16 +88,6 @@ async def test_setup_platform_valid_config(hass):
     assert power
     assert power.state == "45.7"
 
-    # try to set up a second time - should abort.
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        data=TEST_CONFIG,
-        context={"source": SOURCE_IMPORT},
-    )
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_setup"
-
 
 async def test_sensors(hass):
     """Test data coming back from inverter."""
