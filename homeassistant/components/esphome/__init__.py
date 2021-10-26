@@ -13,6 +13,7 @@ from aioesphomeapi import (
     APIIntEnum,
     APIVersion,
     DeviceInfo as EsphomeDeviceInfo,
+    EntityCategory,
     EntityInfo,
     EntityState,
     HomeassistantServiceCall,
@@ -32,6 +33,8 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_PASSWORD,
     CONF_PORT,
+    ENTITY_CATEGORY_CONFIG,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
@@ -640,6 +643,15 @@ class EsphomeEnumMapper(Generic[_EnumT, _ValT]):
 ICON_SCHEMA = vol.Schema(cv.icon)
 
 
+ENTITY_CATEGORIES: EsphomeEnumMapper[EntityCategory, str | None] = EsphomeEnumMapper(
+    {
+        EntityCategory.NONE: None,
+        EntityCategory.CONFIG: ENTITY_CATEGORY_CONFIG,
+        EntityCategory.DIAGNOSTIC: ENTITY_CATEGORY_DIAGNOSTIC,
+    }
+)
+
+
 class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     """Define a base esphome entity."""
 
@@ -781,3 +793,10 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return not self._static_info.disabled_by_default
+
+    @property
+    def entity_category(self) -> str | None:
+        """Return the category of the entity, if any."""
+        if not self._static_info.entity_category:
+            return None
+        return ENTITY_CATEGORIES.from_esphome(self._static_info.entity_category)
