@@ -13,7 +13,11 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.smartthings import binary_sensor
 from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    ENTITY_CATEGORY_DIAGNOSTIC,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -100,3 +104,23 @@ async def test_unload_config_entry(hass, device_factory):
         hass.states.get("binary_sensor.motion_sensor_1_motion").state
         == STATE_UNAVAILABLE
     )
+
+
+async def test_entity_category(hass, device_factory):
+    """Tests the state attributes properly match the light types."""
+    device1 = device_factory(
+        "Motion Sensor 1", [Capability.motion_sensor], {Attribute.motion: "inactive"}
+    )
+    device2 = device_factory(
+        "Tamper Sensor 2", [Capability.tamper_alert], {Attribute.tamper: "inactive"}
+    )
+    await setup_platform(hass, BINARY_SENSOR_DOMAIN, devices=[device1, device2])
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get("binary_sensor.motion_sensor_1_motion")
+    assert entry
+    assert entry.entity_category is None
+
+    entry = entity_registry.async_get("binary_sensor.tamper_sensor_2_tamper")
+    assert entry
+    assert entry.entity_category == ENTITY_CATEGORY_DIAGNOSTIC
