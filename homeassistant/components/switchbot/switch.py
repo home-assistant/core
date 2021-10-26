@@ -127,6 +127,15 @@ class SwitchBotBotEntity(SwitchbotEntity, SwitchEntity, RestoreEntity):
         """Turn device on."""
         _LOGGER.info("Turn Switchbot bot on %s", self._mac)
 
+        if not self.data["data"]["switchMode"]:
+            async with self.coordinator.api_lock:
+                self._last_run_success = bool(
+                    await self.hass.async_add_executor_job(self._device.press)
+                )
+
+            if self._last_run_success:
+                self._attr_is_on = True
+
         async with self.coordinator.api_lock:
             self._last_run_success = bool(
                 await self.hass.async_add_executor_job(self._device.turn_on)
@@ -135,6 +144,15 @@ class SwitchBotBotEntity(SwitchbotEntity, SwitchEntity, RestoreEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         _LOGGER.info("Turn Switchbot bot off %s", self._mac)
+
+        if not self.data["data"]["switchMode"]:
+            async with self.coordinator.api_lock:
+                self._last_run_success = bool(
+                    await self.hass.async_add_executor_job(self._device.press)
+                )
+
+            if self._last_run_success:
+                self._attr_is_on = False
 
         async with self.coordinator.api_lock:
             self._last_run_success = bool(
@@ -152,7 +170,7 @@ class SwitchBotBotEntity(SwitchbotEntity, SwitchEntity, RestoreEntity):
     def is_on(self) -> bool:
         """Return true if device is on."""
         if not self.data["data"]["switchMode"]:
-            return
+            return self._attr_is_on
         return self.data["data"]["isOn"]
 
     @property
