@@ -314,12 +314,19 @@ def test_external_statistics(hass_recorder, caplog):
 
     zero = dt_util.utcnow()
     period1 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+    period2 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=2)
 
-    external_statistics = {
+    external_statistics1 = {
         "start": period1,
         "last_reset": None,
         "state": 0,
         "sum": 2,
+    }
+    external_statistics2 = {
+        "start": period2,
+        "last_reset": None,
+        "state": 1,
+        "sum": 3,
     }
 
     external_metadata = {
@@ -331,7 +338,9 @@ def test_external_statistics(hass_recorder, caplog):
         "unit_of_measurement": "kWh",
     }
 
-    async_add_external_statistics(hass, external_metadata, (external_statistics,))
+    async_add_external_statistics(
+        hass, external_metadata, (external_statistics1, external_statistics2)
+    )
     wait_recording_done(hass)
     stats = statistics_during_period(hass, zero, period="hour")
     assert stats == {
@@ -346,7 +355,18 @@ def test_external_statistics(hass_recorder, caplog):
                 "last_reset": None,
                 "state": approx(0.0),
                 "sum": approx(2.0),
-            }
+            },
+            {
+                "statistic_id": "test:total_energy_import",
+                "start": period2.isoformat(),
+                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": None,
+                "state": approx(1.0),
+                "sum": approx(3.0),
+            },
         ]
     }
     statistic_ids = list_statistic_ids(hass)
@@ -376,6 +396,43 @@ def test_external_statistics(hass_recorder, caplog):
     # Update the previously inserted statistics
     external_statistics = {
         "start": period1,
+        "last_reset": None,
+        "state": 5,
+        "sum": 6,
+    }
+    async_add_external_statistics(hass, external_metadata, (external_statistics,))
+    wait_recording_done(hass)
+    stats = statistics_during_period(hass, zero, period="hour")
+    assert stats == {
+        "test:total_energy_import": [
+            {
+                "statistic_id": "test:total_energy_import",
+                "start": period1.isoformat(),
+                "end": (period1 + timedelta(hours=1)).isoformat(),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": None,
+                "state": approx(5.0),
+                "sum": approx(6.0),
+            },
+            {
+                "statistic_id": "test:total_energy_import",
+                "start": period2.isoformat(),
+                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": None,
+                "state": approx(1.0),
+                "sum": approx(3.0),
+            },
+        ]
+    }
+
+    # Update the previously inserted statistics
+    external_statistics = {
+        "start": period1,
         "max": 1,
         "mean": 2,
         "min": 3,
@@ -398,7 +455,18 @@ def test_external_statistics(hass_recorder, caplog):
                 "last_reset": None,
                 "state": approx(4.0),
                 "sum": approx(5.0),
-            }
+            },
+            {
+                "statistic_id": "test:total_energy_import",
+                "start": period2.isoformat(),
+                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": None,
+                "state": approx(1.0),
+                "sum": approx(3.0),
+            },
         ]
     }
 
