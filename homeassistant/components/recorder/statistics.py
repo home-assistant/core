@@ -182,8 +182,8 @@ def async_setup(hass: HomeAssistant) -> None:
         entity_id = event.data["entity_id"]
         with session_scope(hass=hass) as session:
             session.query(StatisticsMeta).filter(
-                StatisticsMeta.statistic_id == old_entity_id
-                and StatisticsMeta.source == DOMAIN
+                (StatisticsMeta.statistic_id == old_entity_id)
+                & (StatisticsMeta.source == DOMAIN)
             ).update({StatisticsMeta.statistic_id: entity_id})
 
     @callback
@@ -457,12 +457,12 @@ def _update_statistics(
     try:
         session.query(table).filter_by(id=stat_id).update(
             {
-                table.mean: statistic["mean"],
-                table.min: statistic["min"],
-                table.max: statistic["max"],
-                table.last_reset: statistic["last_reset"],
-                table.state: statistic["state"],
-                table.sum: statistic["sum"],
+                table.mean: statistic.get("mean"),
+                table.min: statistic.get("min"),
+                table.max: statistic.get("max"),
+                table.last_reset: statistic.get("last_reset"),
+                table.state: statistic.get("state"),
+                table.sum: statistic.get("sum"),
             },
             synchronize_session=False,
         )
@@ -992,7 +992,7 @@ def _statistics_exists(
     """Return id if a statistics entry already exists."""
     result = (
         session.query(table.id)
-        .filter(table.metadata_id == metadata_id and table.start == start)
+        .filter((table.metadata_id == metadata_id) & (table.start == start))
         .first()
     )
     return result["id"] if result else None
