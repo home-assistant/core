@@ -1,6 +1,6 @@
 """Utility meter from sensors providing raw data."""
 from datetime import datetime
-from decimal import Decimal, DecimalException
+from decimal import Decimal, DecimalException, InvalidOperation
 import logging
 
 from croniter import croniter
@@ -291,7 +291,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         if state:
             try:
                 self._state = Decimal(state.state)
-            except decimal.InvalidOperation:
+            except InvalidOperation:
                 _LOGGER.error(
                     "Could not restore state <%s>. Resetting utility_meter.%s",
                     state.state,
