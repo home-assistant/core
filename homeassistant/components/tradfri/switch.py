@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .base_class import TradfriBaseDevice
-from .const import CONF_GATEWAY_ID, DEVICES, DOMAIN, KEY_API
+from .const import CONF_GATEWAY_ID, DEVICES, DOMAIN, ENTITIES, KEY_API
 
 
 async def async_setup_entry(
@@ -26,11 +26,13 @@ async def async_setup_entry(
     api = tradfri_data[KEY_API]
     devices = tradfri_data[DEVICES]
 
-    switches = [dev for dev in devices if dev.has_socket_control]
-    if switches:
-        async_add_entities(
-            TradfriSwitch(switch, api, gateway_id) for switch in switches
-        )
+    entities = []
+    for dev in devices:
+        if dev.has_socket_control:
+            entities.append(TradfriSwitch(dev, api, gateway_id))
+    if len(entities) > 0:
+        tradfri_data[ENTITIES].extend(entities)
+        async_add_entities(entities)
 
 
 class TradfriSwitch(TradfriBaseDevice, SwitchEntity):

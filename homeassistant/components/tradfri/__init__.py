@@ -31,6 +31,7 @@ from .const import (
     DEFAULT_ALLOW_TRADFRI_GROUPS,
     DEVICES,
     DOMAIN,
+    ENTITIES,
     GROUPS,
     KEY_API,
     PLATFORMS,
@@ -118,6 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     tradfri_data[FACTORY] = factory
     tradfri_data[DEVICES] = devices
     tradfri_data[GROUPS] = groups
+    tradfri_data[ENTITIES] = []
 
     dev_reg = await hass.helpers.device_registry.async_get_registry()
     dev_reg.async_get_or_create(
@@ -137,10 +139,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if hass.is_stopping:
             return
 
+        gw_status = True
         try:
             await api(gateway.get_gateway_info())
         except RequestError:
             _LOGGER.error("Keep-alive failed")
+            gw_status = False
+
+        for entity in tradfri_data[ENTITIES]:
+            entity.set_hub_available(gw_status)
 
     listeners.append(
         async_track_time_interval(hass, async_keep_alive, timedelta(seconds=60))

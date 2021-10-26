@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .base_class import TradfriBaseDevice
-from .const import ATTR_MODEL, CONF_GATEWAY_ID, DEVICES, DOMAIN, KEY_API
+from .const import ATTR_MODEL, CONF_GATEWAY_ID, DEVICES, DOMAIN, ENTITIES, KEY_API
 
 
 async def async_setup_entry(
@@ -26,9 +26,13 @@ async def async_setup_entry(
     api = tradfri_data[KEY_API]
     devices = tradfri_data[DEVICES]
 
-    covers = [dev for dev in devices if dev.has_blind_control]
-    if covers:
-        async_add_entities(TradfriCover(cover, api, gateway_id) for cover in covers)
+    entities = []
+    for dev in devices:
+        if dev.has_blind_control:
+            entities.append(TradfriCover(dev, api, gateway_id))
+    if len(entities) > 0:
+        tradfri_data[ENTITIES].extend(entities)
+        async_add_entities(entities)
 
 
 class TradfriCover(TradfriBaseDevice, CoverEntity):
