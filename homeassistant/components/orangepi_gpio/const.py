@@ -48,7 +48,6 @@ PIN_MODES = {
     "zero": zero.BOARD,
     "zeroplus": zeroplus.BOARD,
     "zeroplus2": zeroplus2.BOARD,
-
 }
 
 _SENSORS_SCHEMA = vol.Schema({cv.positive_int: cv.string})
