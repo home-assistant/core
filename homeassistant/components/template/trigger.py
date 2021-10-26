@@ -135,7 +135,6 @@ async def async_attach_trigger(
     info = async_track_template_result(
         hass,
         [TrackTemplate(value_template, automation_info["variables"])],
-        None,
         template_listener,
     )
     unsub = info.async_remove

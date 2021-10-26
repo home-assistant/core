@@ -231,7 +231,6 @@ class BayesianBinarySensor(BinarySensorEntity):
             info = async_track_template_result(
                 self.hass,
                 [TrackTemplate(template, None)],
-                None,
                 _async_template_result_changed,
             )
 

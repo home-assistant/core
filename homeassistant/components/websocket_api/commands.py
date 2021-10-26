@@ -371,7 +371,6 @@ async def handle_render_template(
         info = async_track_template_result(
             hass,
             [TrackTemplate(template_obj, variables)],
-            None,
             _template_listener,
             raise_on_template_error=True,
             strict=msg["strict"],

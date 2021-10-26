@@ -952,7 +952,7 @@ async def test_track_template_result(hass):
         specific_runs.append(int(track_result.result))
 
     async_track_template_result(
-        hass, [TrackTemplate(template_condition, None)], None, specific_run_callback
+        hass, [TrackTemplate(template_condition, None)], specific_run_callback
     )
 
     @ha.callback
@@ -963,7 +963,7 @@ async def test_track_template_result(hass):
         )
 
     async_track_template_result(
-        hass, [TrackTemplate(template_condition, None)], None, wildcard_run_callback
+        hass, [TrackTemplate(template_condition, None)], wildcard_run_callback
     )
 
     async def wildercard_run_callback(event, updates):
@@ -975,7 +975,6 @@ async def test_track_template_result(hass):
     async_track_template_result(
         hass,
         [TrackTemplate(template_condition_var, {"test": 5})],
-        None,
         wildercard_run_callback,
     )
     await hass.async_block_till_done()
@@ -1026,164 +1025,6 @@ async def test_track_template_result(hass):
 async def test_track_template_result_master_template(hass):
     """Test tracking template with master template listening to same entity."""
     specific_runs = []
-    wildcard_runs = []
-    wildercard_runs = []
-
-    template_availability = Template("{{ is_number(states('sensor.test')) }}", hass)
-    template_condition = Template("{{states.sensor.test.state}}", hass)
-    template_condition_var = Template(
-        "{{(states.sensor.test.state|int) + test }}", hass
-    )
-
-    def specific_run_callback(event, updates):
-        track_result = updates.pop()
-        specific_runs.append(int(track_result.result))
-
-    async_track_template_result(
-        hass,
-        [TrackTemplate(template_condition, None)],
-        TrackTemplate(template_availability, None),
-        specific_run_callback,
-    )
-
-    @ha.callback
-    def wildcard_run_callback(event, updates):
-        track_result = updates.pop()
-        wildcard_runs.append(
-            (int(track_result.last_result or 0), int(track_result.result))
-        )
-
-    async_track_template_result(
-        hass,
-        [TrackTemplate(template_condition, None)],
-        TrackTemplate(template_availability, None),
-        wildcard_run_callback,
-    )
-
-    async def wildercard_run_callback(event, updates):
-        track_result = updates.pop()
-        wildercard_runs.append(
-            (int(track_result.last_result or 0), int(track_result.result))
-        )
-
-    async_track_template_result(
-        hass,
-        [TrackTemplate(template_condition_var, {"test": 5})],
-        TrackTemplate(template_availability, None),
-        wildercard_run_callback,
-    )
-    await hass.async_block_till_done()
-
-    hass.states.async_set("sensor.test", "unavailable")
-    await hass.async_block_till_done()
-
-    hass.states.async_set("sensor.test", 5)
-    await hass.async_block_till_done()
-
-    assert specific_runs == [5]
-    assert wildcard_runs == [(0, 5)]
-    assert wildercard_runs == [(0, 10)]
-
-    hass.states.async_set("sensor.test", "unknown")
-    await hass.async_block_till_done()
-
-    hass.states.async_set("sensor.test", 30)
-    await hass.async_block_till_done()
-
-    assert specific_runs == [5, 30]
-    assert wildcard_runs == [(0, 5), (5, 30)]
-    assert wildercard_runs == [(0, 10), (10, 35)]
-
-    hass.states.async_set("sensor.test", "other")
-    await hass.async_block_till_done()
-
-    hass.states.async_set("sensor.test", 30)
-    await hass.async_block_till_done()
-
-    assert len(specific_runs) == 2
-    assert len(wildcard_runs) == 2
-    assert len(wildercard_runs) == 2
-
-
-async def test_track_template_result_master_template_2(hass):
-    """Test tracking template with master template listening to different entities."""
-    specific_runs = []
-    wildcard_runs = []
-    wildercard_runs = []
-
-    template_availability = Template(
-        "{{ states('sensor.test2') != 'unavailable' }}", hass
-    )
-    template_condition = Template("{{states.sensor.test.state}}", hass)
-    template_condition_var = Template(
-        "{{(states.sensor.test.state|int) + test }}", hass
-    )
-
-    def specific_run_callback(event, updates):
-        track_result = updates.pop()
-        specific_runs.append(int(track_result.result))
-
-    async_track_template_result(
-        hass,
-        [TrackTemplate(template_condition, None)],
-        TrackTemplate(template_availability, None),
-        specific_run_callback,
-    )
-
-    @ha.callback
-    def wildcard_run_callback(event, updates):
-        track_result = updates.pop()
-        wildcard_runs.append(
-            (int(track_result.last_result or 0), int(track_result.result))
-        )
-
-    async_track_template_result(
-        hass,
-        [TrackTemplate(template_condition, None)],
-        TrackTemplate(template_availability, None),
-        wildcard_run_callback,
-    )
-
-    async def wildercard_run_callback(event, updates):
-        track_result = updates.pop()
-        wildercard_runs.append(
-            (int(track_result.last_result or 0), int(track_result.result))
-        )
-
-    async_track_template_result(
-        hass,
-        [TrackTemplate(template_condition_var, {"test": 5})],
-        TrackTemplate(template_availability, None),
-        wildercard_run_callback,
-    )
-    await hass.async_block_till_done()
-
-    hass.states.async_set("sensor.test2", "unavailable")
-    await hass.async_block_till_done()
-
-    hass.states.async_set("sensor.test", 5)
-    hass.states.async_set("sensor.test2", "available")
-    await hass.async_block_till_done()
-
-    assert specific_runs == [5]
-    assert wildcard_runs == [(0, 5)]
-    assert wildercard_runs == [(0, 10)]
-
-    hass.states.async_set("sensor.test2", "unknown")
-    await hass.async_block_till_done()
-
-    hass.states.async_set("sensor.test2", "available")
-    hass.states.async_set("sensor.test", 30)
-    await hass.async_block_till_done()
-
-    assert specific_runs == [5, 30]
-    assert wildcard_runs == [(0, 5), (5, 30)]
-    assert wildercard_runs == [(0, 10), (10, 35)]
-
-
-async def test_track_template_result_master_template_3(hass):
-    """Test tracking template with master template, where the master template is part of the group."""
-    specific_runs = []
     specific_runs_availability = []
     wildcard_runs = []
     wildcard_runs_availability = []
@@ -1203,12 +1044,14 @@ async def test_track_template_result_master_template_3(hass):
             elif track_result.template is template_availability:
                 specific_runs_availability.append(track_result.result)
 
-    availability_tracker = TrackTemplate(template_availability, None)
     async_track_template_result(
         hass,
-        [TrackTemplate(template_condition, None), availability_tracker],
-        availability_tracker,
+        [
+            TrackTemplate(template_availability, None),
+            TrackTemplate(template_condition, None),
+        ],
         specific_run_callback,
+        has_master_template=True,
     )
 
     @ha.callback
@@ -1223,9 +1066,12 @@ async def test_track_template_result_master_template_3(hass):
 
     async_track_template_result(
         hass,
-        [TrackTemplate(template_condition, None), availability_tracker],
-        availability_tracker,
+        [
+            TrackTemplate(template_availability, None),
+            TrackTemplate(template_condition, None),
+        ],
         wildcard_run_callback,
+        has_master_template=True,
     )
 
     async def wildercard_run_callback(event, updates):
@@ -1239,9 +1085,12 @@ async def test_track_template_result_master_template_3(hass):
 
     async_track_template_result(
         hass,
-        [TrackTemplate(template_condition_var, {"test": 5}), availability_tracker],
-        availability_tracker,
+        [
+            TrackTemplate(template_availability, None),
+            TrackTemplate(template_condition_var, {"test": 5}),
+        ],
         wildercard_run_callback,
+        has_master_template=True,
     )
     await hass.async_block_till_done()
 
@@ -1317,6 +1166,120 @@ async def test_track_template_result_master_template_3(hass):
     assert len(wildercard_runs_availability) == 6
 
 
+async def test_track_template_result_master_template_2(hass):
+    """Test tracking template with master template listening to different entities."""
+    specific_runs = []
+    specific_runs_availability = []
+    wildcard_runs = []
+    wildcard_runs_availability = []
+    wildercard_runs = []
+    wildercard_runs_availability = []
+
+    template_availability = Template(
+        "{{ states('sensor.test2') != 'unavailable' }}", hass
+    )
+    template_condition = Template("{{states.sensor.test.state}}", hass)
+    template_condition_var = Template(
+        "{{(states.sensor.test.state|int) + test }}", hass
+    )
+
+    def specific_run_callback(event, updates):
+        for track_result in updates:
+            if track_result.template is template_condition:
+                specific_runs.append(int(track_result.result))
+            elif track_result.template is template_availability:
+                specific_runs_availability.append(track_result.result)
+
+    async_track_template_result(
+        hass,
+        [
+            TrackTemplate(template_availability, None),
+            TrackTemplate(template_condition, None),
+        ],
+        specific_run_callback,
+        has_master_template=True,
+    )
+
+    @ha.callback
+    def wildcard_run_callback(event, updates):
+        for track_result in updates:
+            if track_result.template is template_condition:
+                wildcard_runs.append(
+                    (int(track_result.last_result or 0), int(track_result.result))
+                )
+            elif track_result.template is template_availability:
+                wildcard_runs_availability.append(track_result.result)
+
+    async_track_template_result(
+        hass,
+        [
+            TrackTemplate(template_availability, None),
+            TrackTemplate(template_condition, None),
+        ],
+        wildcard_run_callback,
+        has_master_template=True,
+    )
+
+    async def wildercard_run_callback(event, updates):
+        for track_result in updates:
+            if track_result.template is template_condition_var:
+                wildercard_runs.append(
+                    (int(track_result.last_result or 0), int(track_result.result))
+                )
+            elif track_result.template is template_availability:
+                wildercard_runs_availability.append(track_result.result)
+
+    async_track_template_result(
+        hass,
+        [
+            TrackTemplate(template_availability, None),
+            TrackTemplate(template_condition_var, {"test": 5}),
+        ],
+        wildercard_run_callback,
+        has_master_template=True,
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test2", "unavailable")
+    await hass.async_block_till_done()
+
+    assert specific_runs_availability == [False]
+    assert wildcard_runs_availability == [False]
+    assert wildercard_runs_availability == [False]
+    assert specific_runs == []
+    assert wildcard_runs == []
+    assert wildercard_runs == []
+
+    hass.states.async_set("sensor.test", 5)
+    hass.states.async_set("sensor.test2", "available")
+    await hass.async_block_till_done()
+
+    assert specific_runs_availability == [False, True]
+    assert wildcard_runs_availability == [False, True]
+    assert wildercard_runs_availability == [False, True]
+    assert specific_runs == [5]
+    assert wildcard_runs == [(0, 5)]
+    assert wildercard_runs == [(0, 10)]
+
+    hass.states.async_set("sensor.test2", "unknown")
+    await hass.async_block_till_done()
+
+    assert specific_runs_availability == [False, True]
+    assert wildcard_runs_availability == [False, True]
+    assert wildercard_runs_availability == [False, True]
+
+    hass.states.async_set("sensor.test2", "available")
+    hass.states.async_set("sensor.test", 30)
+    await hass.async_block_till_done()
+
+    assert specific_runs_availability == [False, True]
+    assert wildcard_runs_availability == [False, True]
+    assert wildercard_runs_availability == [False, True]
+    assert specific_runs == [5, 30]
+    assert wildcard_runs == [(0, 5), (5, 30)]
+    assert wildercard_runs == [(0, 10), (10, 35)]
+
+
 async def test_track_template_result_complex(hass):
     """Test tracking template."""
     specific_runs = []
@@ -1343,7 +1306,6 @@ async def test_track_template_result_complex(hass):
     info = async_track_template_result(
         hass,
         [TrackTemplate(template_complex, None, timedelta(seconds=0))],
-        None,
         specific_run_callback,
     )
     await hass.async_block_till_done()
@@ -1496,7 +1458,7 @@ async def test_track_template_result_with_wildcard(hass):
     hass.states.async_set("cover.office_skylight", "open")
 
     info = async_track_template_result(
-        hass, [TrackTemplate(template_complex, None)], None, specific_run_callback
+        hass, [TrackTemplate(template_complex, None)], specific_run_callback
     )
     await hass.async_block_till_done()
 
@@ -1544,7 +1506,7 @@ async def test_track_template_result_with_group(hass):
         specific_runs.append(updates.pop().result)
 
     info = async_track_template_result(
-        hass, [TrackTemplate(template_complex, None)], None, specific_run_callback
+        hass, [TrackTemplate(template_complex, None)], specific_run_callback
     )
     await hass.async_block_till_done()
 
@@ -1601,7 +1563,7 @@ async def test_track_template_result_and_conditional(hass):
         specific_runs.append(updates.pop().result)
 
     info = async_track_template_result(
-        hass, [TrackTemplate(template, None)], None, specific_run_callback
+        hass, [TrackTemplate(template, None)], specific_run_callback
     )
     await hass.async_block_till_done()
     assert info.listeners == {
@@ -1677,7 +1639,6 @@ async def test_track_template_result_iterator(hass):
                 timedelta(seconds=0),
             )
         ],
-        None,
         iterator_callback,
     )
     await hass.async_block_till_done()
@@ -1706,7 +1667,6 @@ async def test_track_template_result_iterator(hass):
                 timedelta(seconds=0),
             )
         ],
-        None,
         filter_callback,
     )
     await hass.async_block_till_done()
@@ -1751,7 +1711,7 @@ async def test_track_template_result_errors(hass, caplog):
         )
 
     async_track_template_result(
-        hass, [TrackTemplate(template_syntax_error, None)], None, syntax_error_listener
+        hass, [TrackTemplate(template_syntax_error, None)], syntax_error_listener
     )
     await hass.async_block_till_done()
 
@@ -1773,7 +1733,6 @@ async def test_track_template_result_errors(hass, caplog):
     async_track_template_result(
         hass,
         [TrackTemplate(template_not_exist, None)],
-        None,
         not_exist_runs_error_listener,
     )
     await hass.async_block_till_done()
@@ -1824,7 +1783,7 @@ async def test_static_string(hass):
         refresh_runs.append(updates.pop().result)
 
     info = async_track_template_result(
-        hass, [TrackTemplate(template_refresh, None)], None, refresh_listener
+        hass, [TrackTemplate(template_refresh, None)], refresh_listener
     )
     await hass.async_block_till_done()
     info.async_refresh()
@@ -1846,7 +1805,6 @@ async def test_track_template_rate_limit(hass):
     info = async_track_template_result(
         hass,
         [TrackTemplate(template_refresh, None, timedelta(seconds=0.1))],
-        None,
         refresh_listener,
     )
     await hass.async_block_till_done()
@@ -1900,7 +1858,6 @@ async def test_track_template_rate_limit_suppress_listener(hass):
     info = async_track_template_result(
         hass,
         [TrackTemplate(template_refresh, None, timedelta(seconds=0.1))],
-        None,
         refresh_listener,
     )
     await hass.async_block_till_done()
@@ -1996,7 +1953,6 @@ async def test_track_template_rate_limit_five(hass):
     info = async_track_template_result(
         hass,
         [TrackTemplate(template_refresh, None, timedelta(seconds=5))],
-        None,
         refresh_listener,
     )
     await hass.async_block_till_done()
@@ -2031,7 +1987,6 @@ async def test_track_template_has_default_rate_limit(hass):
     info = async_track_template_result(
         hass,
         [TrackTemplate(template_refresh, None)],
-        None,
         refresh_listener,
     )
     await hass.async_block_till_done()
@@ -2069,7 +2024,6 @@ async def test_track_template_unavailable_sates_has_default_rate_limit(hass):
     info = async_track_template_result(
         hass,
         [TrackTemplate(template_refresh, None)],
-        None,
         refresh_listener,
     )
     await hass.async_block_till_done()
@@ -2109,7 +2063,6 @@ async def test_specifically_referenced_entity_is_not_rate_limited(hass):
     info = async_track_template_result(
         hass,
         [TrackTemplate(template_refresh, None, timedelta(seconds=5))],
-        None,
         refresh_listener,
     )
     await hass.async_block_till_done()
@@ -2155,7 +2108,6 @@ async def test_track_two_templates_with_different_rate_limits(hass):
             TrackTemplate(template_one, None, timedelta(seconds=0.1)),
             TrackTemplate(template_five, None, timedelta(seconds=5)),
         ],
-        None,
         refresh_listener,
     )
 
@@ -2211,7 +2163,7 @@ async def test_string(hass):
         refresh_runs.append(updates.pop().result)
 
     info = async_track_template_result(
-        hass, [TrackTemplate(template_refresh, None)], None, refresh_listener
+        hass, [TrackTemplate(template_refresh, None)], refresh_listener
     )
     await hass.async_block_till_done()
     info.async_refresh()
@@ -2231,7 +2183,7 @@ async def test_track_template_result_refresh_cancel(hass):
         refresh_runs.append(updates.pop().result)
 
     info = async_track_template_result(
-        hass, [TrackTemplate(template_refresh, None)], None, refresh_listener
+        hass, [TrackTemplate(template_refresh, None)], refresh_listener
     )
     await hass.async_block_till_done()
 
@@ -2261,7 +2213,6 @@ async def test_track_template_result_refresh_cancel(hass):
     info = async_track_template_result(
         hass,
         [TrackTemplate(template_refresh, {"value": "duck"})],
-        None,
         refresh_listener,
     )
     await hass.async_block_till_done()
@@ -2299,7 +2250,6 @@ async def test_async_track_template_result_multiple_templates(hass):
             TrackTemplate(template_3, None),
             TrackTemplate(template_4, None),
         ],
-        None,
         refresh_listener,
     )
 
@@ -2357,7 +2307,6 @@ async def test_async_track_template_result_multiple_templates_mixing_domain(hass
             TrackTemplate(template_3, None),
             TrackTemplate(template_4, None, timedelta(seconds=0)),
         ],
-        None,
         refresh_listener,
     )
 
@@ -2418,7 +2367,6 @@ async def test_async_track_template_result_raise_on_template_error(hass):
                     None,
                 ),
             ],
-            None,
             ha.callback(lambda event, updates: None),
             raise_on_template_error=True,
         )
@@ -2435,7 +2383,7 @@ async def test_track_template_with_time(hass):
         specific_runs.append(updates.pop().result)
 
     info = async_track_template_result(
-        hass, [TrackTemplate(template_complex, None)], None, specific_run_callback
+        hass, [TrackTemplate(template_complex, None)], specific_run_callback
     )
     await hass.async_block_till_done()
 
@@ -2465,7 +2413,7 @@ async def test_track_template_with_time_default(hass):
         specific_runs.append(updates.pop().result)
 
     info = async_track_template_result(
-        hass, [TrackTemplate(template_complex, None)], None, specific_run_callback
+        hass, [TrackTemplate(template_complex, None)], specific_run_callback
     )
     await hass.async_block_till_done()
 
@@ -2514,7 +2462,7 @@ async def test_track_template_with_time_that_leaves_scope(hass):
             specific_runs.append(updates.pop().result)
 
         info = async_track_template_result(
-            hass, [TrackTemplate(template_complex, None)], None, specific_run_callback
+            hass, [TrackTemplate(template_complex, None)], specific_run_callback
         )
         await hass.async_block_till_done()
 
@@ -2591,7 +2539,6 @@ async def test_async_track_template_result_multiple_templates_mixing_listeners(h
                 TrackTemplate(template_1, None),
                 TrackTemplate(template_2, None),
             ],
-            None,
             refresh_listener,
         )
 
