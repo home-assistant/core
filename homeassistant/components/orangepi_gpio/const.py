@@ -10,6 +10,8 @@ from orangepi import (
     pc2,
     pcplus,
     pi3,
+    pi4,
+    pi4B,
     plus2e,
     prime,
     r1,
@@ -17,8 +19,7 @@ from orangepi import (
     zero,
     zeroplus,
     zeroplus2,
-    pi4,
-    pi4B,
+
 )
 import voluptuous as vol
 
@@ -29,25 +30,26 @@ CONF_PIN_MODE = "pin_mode"
 CONF_PORTS = "ports"
 DEFAULT_INVERT_LOGIC = False
 PIN_MODES = {
+    "duo": duo.BOARD,
     "lite": lite.BOARD,
     "lite2": lite2.BOARD,
+    "neocore2": neocore2.BOARD,
     "one": one.BOARD,
     "oneplus": oneplus.BOARD,
     "pc": pc.BOARD,
     "pc2": pc2.BOARD,
     "pcplus": pcplus.BOARD,
     "pi3": pi3.BOARD,
+    "pi4": pi4.BOARD,
+    "pi4B": pi4B.BOARD,
     "plus2e": plus2e.BOARD,
     "prime": prime.BOARD,
     "r1": r1.BOARD,
     "winplus": winplus.BOARD,
     "zero": zero.BOARD,
     "zeroplus": zeroplus.BOARD,
-    "zeroplus2": zeroplus2.BOARD,
-    "duo": duo.BOARD,
-    "neocore2": neocore2.BOARD,
-    "pi4": pi4.BOARD,
-    "pi4B": pi4B.BOARD,
+    "zeroplus2": zeroplus2.BOARD,    
+
 }
 
 _SENSORS_SCHEMA = vol.Schema({cv.positive_int: cv.string})
