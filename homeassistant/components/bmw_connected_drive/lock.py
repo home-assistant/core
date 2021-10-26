@@ -1,20 +1,35 @@
 """Support for BMW car locks with BMW ConnectedDrive."""
 import logging
+from typing import Any
 
 from bimmer_connected.state import LockState
+from bimmer_connected.vehicle import ConnectedDriveVehicle
 
 from homeassistant.components.lock import LockEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN as BMW_DOMAIN, BMWConnectedDriveBaseEntity
+from . import (
+    DOMAIN as BMW_DOMAIN,
+    BMWConnectedDriveAccount,
+    BMWConnectedDriveBaseEntity,
+)
 from .const import CONF_ACCOUNT, DATA_ENTRIES
 
 DOOR_LOCK_STATE = "door_lock_state"
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the BMW ConnectedDrive binary sensors from config entry."""
-    account = hass.data[BMW_DOMAIN][DATA_ENTRIES][config_entry.entry_id][CONF_ACCOUNT]
+    account: BMWConnectedDriveAccount = hass.data[BMW_DOMAIN][DATA_ENTRIES][
+        config_entry.entry_id
+    ][CONF_ACCOUNT]
 
     if not account.read_only:
         entities = [
@@ -27,7 +42,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class BMWLock(BMWConnectedDriveBaseEntity, LockEntity):
     """Representation of a BMW vehicle lock."""
 
-    def __init__(self, account, vehicle, attribute: str, sensor_name):
+    def __init__(
+        self,
+        account: BMWConnectedDriveAccount,
+        vehicle: ConnectedDriveVehicle,
+        attribute: str,
+        sensor_name: str,
+    ) -> None:
         """Initialize the lock."""
         super().__init__(account, vehicle)
 
@@ -37,7 +58,7 @@ class BMWLock(BMWConnectedDriveBaseEntity, LockEntity):
         self._sensor_name = sensor_name
         self.door_lock_state_available = DOOR_LOCK_STATE in vehicle.available_attributes
 
-    def lock(self, **kwargs):
+    def lock(self, **kwargs: Any) -> None:
         """Lock the car."""
         _LOGGER.debug("%s: locking doors", self._vehicle.name)
         # Optimistic state set here because it takes some time before the
@@ -46,7 +67,7 @@ class BMWLock(BMWConnectedDriveBaseEntity, LockEntity):
         self.schedule_update_ha_state()
         self._vehicle.remote_services.trigger_remote_door_lock()
 
-    def unlock(self, **kwargs):
+    def unlock(self, **kwargs: Any) -> None:
         """Unlock the car."""
         _LOGGER.debug("%s: unlocking doors", self._vehicle.name)
         # Optimistic state set here because it takes some time before the
@@ -55,7 +76,7 @@ class BMWLock(BMWConnectedDriveBaseEntity, LockEntity):
         self.schedule_update_ha_state()
         self._vehicle.remote_services.trigger_remote_door_unlock()
 
-    def update(self):
+    def update(self) -> None:
         """Update state of the lock."""
         _LOGGER.debug("%s: updating data for %s", self._vehicle.name, self._attribute)
         vehicle_state = self._vehicle.state

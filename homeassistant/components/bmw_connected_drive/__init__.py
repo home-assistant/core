@@ -3,9 +3,11 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
+from typing import Any
 
 from bimmer_connected.account import ConnectedDriveAccount
 from bimmer_connected.country_selector import get_region_from_name
+from bimmer_connected.vehicle import ConnectedDriveVehicle
 import voluptuous as vol
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
@@ -17,7 +19,7 @@ from homeassistant.const import (
     CONF_REGION,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry, discovery
 import homeassistant.helpers.config_validation as cv
@@ -98,7 +100,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 @callback
-def _async_migrate_options_from_data_if_missing(hass, entry):
+def _async_migrate_options_from_data_if_missing(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
     data = dict(entry.data)
     options = dict(entry.options)
 
@@ -123,7 +127,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except OSError as ex:
         raise ConfigEntryNotReady from ex
 
-    async def _async_update_all(service_call=None):
+    async def _async_update_all(service_call: ServiceCall | None = None) -> None:
         """Update all BMW accounts."""
         await hass.async_add_executor_job(_update_all)
 
@@ -191,18 +195,20 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def update_listener(hass, config_entry):
+async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-def setup_account(entry: ConfigEntry, hass, name: str) -> BMWConnectedDriveAccount:
+def setup_account(
+    entry: ConfigEntry, hass: HomeAssistant, name: str
+) -> BMWConnectedDriveAccount:
     """Set up a new BMWConnectedDriveAccount based on the config."""
-    username = entry.data[CONF_USERNAME]
-    password = entry.data[CONF_PASSWORD]
-    region = entry.data[CONF_REGION]
-    read_only = entry.options[CONF_READ_ONLY]
-    use_location = entry.options[CONF_USE_LOCATION]
+    username: str = entry.data[CONF_USERNAME]
+    password: str = entry.data[CONF_PASSWORD]
+    region: str = entry.data[CONF_REGION]
+    read_only: bool = entry.options[CONF_READ_ONLY]
+    use_location: bool = entry.options[CONF_USE_LOCATION]
 
     _LOGGER.debug("Adding new account %s", name)
 
@@ -213,12 +219,12 @@ def setup_account(entry: ConfigEntry, hass, name: str) -> BMWConnectedDriveAccou
         username, password, region, name, read_only, *pos
     )
 
-    def execute_service(call):
+    def execute_service(call: ServiceCall) -> None:
         """Execute a service for a vehicle."""
-        vin = call.data.get(ATTR_VIN)
-        device_id = call.data.get(CONF_DEVICE_ID)
+        vin: str | None = call.data.get(ATTR_VIN)
+        device_id: str | None = call.data.get(CONF_DEVICE_ID)
 
-        vehicle = None
+        vehicle: ConnectedDriveVehicle | None = None
 
         if not vin and device_id:
             device = device_registry.async_get(hass).async_get(device_id)
@@ -230,8 +236,8 @@ def setup_account(entry: ConfigEntry, hass, name: str) -> BMWConnectedDriveAccou
             for e in hass.data[DOMAIN][DATA_ENTRIES].values()
             if not e[CONF_ACCOUNT].read_only
         ]:
-            vehicle = entry_data[CONF_ACCOUNT].account.get_vehicle(vin)
-            if vehicle:
+            account: ConnectedDriveAccount = entry_data[CONF_ACCOUNT].account
+            if vehicle := account.get_vehicle(vin):
                 break
         if not vehicle:
             _LOGGER.error("Could not find a vehicle for VIN %s", vin)
@@ -273,8 +279,8 @@ class BMWConnectedDriveAccount:
         region_str: str,
         name: str,
         read_only: bool,
-        lat=None,
-        lon=None,
+        lat: float | None = None,
+        lon: float | None = None,
     ) -> None:
         """Initialize account."""
         region = get_region_from_name(region_str)
@@ -290,7 +296,7 @@ class BMWConnectedDriveAccount:
             self.account.set_observer_position(lat, lon)
             self.account.update_vehicle_states()
 
-    def update(self, *_):
+    def update(self, *_: Any) -> None:
         """Update the state of all vehicles.
 
         Notify all listeners about the update.
@@ -322,11 +328,15 @@ class BMWConnectedDriveBaseEntity(Entity):
     _attr_should_poll = False
     _attr_attribution = ATTRIBUTION
 
-    def __init__(self, account, vehicle):
+    def __init__(
+        self,
+        account: BMWConnectedDriveAccount,
+        vehicle: ConnectedDriveVehicle,
+    ) -> None:
         """Initialize sensor."""
         self._account = account
         self._vehicle = vehicle
-        self._attrs = {
+        self._attrs: dict[str, Any] = {
             "car": self._vehicle.name,
             "vin": self._vehicle.vin,
         }
@@ -337,11 +347,11 @@ class BMWConnectedDriveBaseEntity(Entity):
             name=f'{vehicle.attributes.get("brand")} {vehicle.name}',
         )
 
-    def update_callback(self):
+    def update_callback(self) -> None:
         """Schedule a state update."""
         self.schedule_update_ha_state(True)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Add callback after being added to hass.
 
         Show latest data after startup.
