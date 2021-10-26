@@ -14,7 +14,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ADDONS_COORDINATOR
-from .const import ATTR_STATE, ATTR_UPDATE_AVAILABLE, DATA_KEY_ADDONS, DATA_KEY_OS
+from .const import (
+    ATTR_STARTED,
+    ATTR_STATE,
+    ATTR_UPDATE_AVAILABLE,
+    DATA_KEY_ADDONS,
+    DATA_KEY_OS,
+)
 from .entity import HassioAddonEntity, HassioOSEntity
 
 
@@ -37,7 +43,7 @@ ENTITY_DESCRIPTIONS = (
         entity_registry_enabled_default=False,
         key=ATTR_STATE,
         name="Running",
-        target="started",
+        target=ATTR_STARTED,
     ),
 )
 
