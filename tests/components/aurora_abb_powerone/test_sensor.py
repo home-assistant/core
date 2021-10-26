@@ -39,6 +39,7 @@ def _simulated_returns(index, global_measure=None):
     returns = {
         3: 45.678,  # power
         21: 9.876,  # temperature
+        5: 12345,  # energy
     }
     return returns[index]
 
@@ -66,7 +67,12 @@ async def test_setup_platform_valid_config(hass):
     with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
         "aurorapy.client.AuroraSerialClient.measure",
         side_effect=_simulated_returns,
-    ), assert_setup_component(1, "sensor"):
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.cumulated_energy",
+        side_effect=_simulated_returns,
+    ), assert_setup_component(
+        1, "sensor"
+    ):
         assert await async_setup_component(hass, "sensor", TEST_CONFIG)
         await hass.async_block_till_done()
     power = hass.states.get("sensor.power_output")
@@ -91,6 +97,9 @@ async def test_sensors(hass):
     with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
         "aurorapy.client.AuroraSerialClient.measure",
         side_effect=_simulated_returns,
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.cumulated_energy",
+        side_effect=_simulated_returns,
     ):
         mock_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -103,6 +112,10 @@ async def test_sensors(hass):
         temperature = hass.states.get("sensor.temperature")
         assert temperature
         assert temperature.state == "9.9"
+
+        energy = hass.states.get("sensor.total_energy")
+        assert energy
+        assert energy.state == "12.35"
 
 
 async def test_sensor_invalid_type(hass):
