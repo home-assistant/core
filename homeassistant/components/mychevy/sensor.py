@@ -159,7 +159,7 @@ class EVSensor(SensorEntity):
         """Update state."""
         if self._car is not None:
             self._state = getattr(self._car, self._attr, None)
-            if self._unit_of_measurement == "miles":
+            if self.native_unit_of_measurement == "miles":
                 self._state = round(self._state)
             for attr in self._extra_attrs:
                 self._state_attributes[attr] = getattr(self._car, attr)
@@ -174,11 +174,6 @@ class EVSensor(SensorEntity):
     def extra_state_attributes(self):
         """Return all the state attributes."""
         return self._state_attributes
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement the state is expressed in."""
-        return self._unit_of_measurement
 
     @property
     def should_poll(self):
