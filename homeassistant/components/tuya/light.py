@@ -29,7 +29,15 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
 from .base import IntegerTypeData, TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, WorkMode
+from .const import (
+    COLOR_SUPPORTED_SCENES,
+    DEFAULT_SCENE_DATA_V2,
+    DOMAIN,
+    TUYA_DISCOVERY_NEW,
+    WHITE_SUPPORTED_SCENES,
+    DPCode,
+    WorkMode,
+)
 from .util import remap_value
 
 _LOGGER = logging.getLogger(__name__)
@@ -80,7 +88,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             brightness=(DPCode.BRIGHT_VALUE_V2, DPCode.BRIGHT_VALUE),
             color_temp=(DPCode.TEMP_VALUE_V2, DPCode.TEMP_VALUE),
             color_data=(DPCode.COLOUR_DATA_V2, DPCode.COLOUR_DATA),
-            scene_data=DPCode.SCENE_DATA_V2,
+            scene_data=(DPCode.SCENE_DATA_V2, DPCode.SCENE_DATA),
         ),
     ),
     # Ceiling Fan Light
@@ -332,6 +340,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
     _color_data_type: ColorTypeData | None = None
     _color_temp_dpcode: DPCode | None = None
     _color_temp_type: IntegerTypeData | None = None
+    _effect_dpcode: DPCode | None = None
 
     def __init__(
         self,
@@ -395,6 +404,15 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         # Determine DPCodes for scene's / effects
         if isinstance(description.scene_data, DPCode):
             self._effect_dpcode = description.scene_data
+        elif isinstance(description.scene_data, tuple):
+            self._effect_dpcode = next(
+                (
+                    dpcode
+                    for dpcode in description.scene_data
+                    if dpcode in device.function
+                ),
+                None,
+            )
 
         # Update internals based on found brightness dpcode
         if self._brightness_dpcode:
@@ -443,12 +461,12 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                     self._brightness_type and self._brightness_type.max > 255
                 ):
                     self._color_data_type = DEFAULT_COLOR_TYPE_DATA_V2
+
         if self._effect_dpcode:
-            curren_effect_data = json.loads(device.status[self._effect_dpcode])
-            for key, value in DEFAULT_SCENE_DATA_V2.items():
-                if value["scene_num"] == curren_effect_data["scene_num"]:
-                    self._attr_effect = key
-            self._attr_effect_list = list(DEFAULT_SCENE_DATA_V2.keys())
+            if COLOR_MODE_HS in self._attr_supported_color_modes:
+                self._attr_effect_list = list(COLOR_SUPPORTED_SCENES)
+            else:
+                self._attr_effect_list = list(WHITE_SUPPORTED_SCENES)
 
     @property
     def is_on(self) -> bool:
@@ -714,6 +732,9 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
     @property
     def effect(self) -> str | None:
         """Return the Current effect in use."""
-        if self.device.status[DPCode.WORK_MODE] == WorkMode.SCENE:
-            return self._attr_effect
+        if self.device.status[DPCode.WORK_MODE] == WorkMode.SCENE and isinstance(
+            self._attr_effect_list, list
+        ):
+            curren_effect_data = json.loads(self.device.status[self._effect_dpcode])
+            return self._attr_effect_list[curren_effect_data["scene_num"] - 1]
         return None

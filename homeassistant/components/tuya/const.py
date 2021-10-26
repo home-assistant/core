@@ -242,6 +242,7 @@ class DPCode(str, Enum):
     RECORD_MODE = "record_mode"
     RECORD_SWITCH = "record_switch"  # Recording switch
     RELAY_STATUS = "relay_status"
+    SCENE_DATA = "scene_data"
     SCENE_DATA_V2 = "scene_data_v2"
     SEEK = "seek"
     SENSITIVITY = "sensitivity"  # Sensitivity
@@ -774,3 +775,238 @@ TUYA_COUNTRIES = [
     Country("Zambia", "260"),
     Country("Zimbabwe", "263"),
 ]
+
+DEFAULT_SCENE_DATA_V2 = {
+    "Night": {
+        "scene_num": 1,
+        "scene_units": [
+            {
+                "bright": 200,
+                "h": 0,
+                "s": 0,
+                "temperature": 0,
+                "unit_change_mode": "static",
+                "unit_gradient_duration": 13,
+                "unit_switch_duration": 14,
+                "v": 0,
+            }
+        ],
+    },
+    "Read": {
+        "scene_num": 2,
+        "scene_units": [
+            {
+                "bright": 1000,
+                "h": 0,
+                "s": 0,
+                "temperature": 500,
+                "unit_change_mode": "static",
+                "unit_gradient_duration": 13,
+                "unit_switch_duration": 14,
+                "v": 0,
+            }
+        ],
+    },
+    "Meeting": {
+        "scene_num": 3,
+        "scene_units": [
+            {
+                "bright": 1000,
+                "h": 0,
+                "s": 0,
+                "temperature": 1000,
+                "unit_change_mode": "static",
+                "unit_gradient_duration": 13,
+                "unit_switch_duration": 14,
+                "v": 0,
+            }
+        ],
+    },
+    "Leisure": {
+        "scene_num": 4,
+        "scene_units": [
+            {
+                "bright": 500,
+                "h": 0,
+                "s": 0,
+                "temperature": 500,
+                "unit_change_mode": "static",
+                "unit_gradient_duration": 13,
+                "unit_switch_duration": 14,
+                "v": 0,
+            }
+        ],
+    },
+    "Soft": {
+        "scene_num": 5,
+        "scene_units": [
+            {
+                "bright": 0,
+                "h": 120,
+                "s": 1000,
+                "temperature": 0,
+                "unit_change_mode": "gradient",
+                "unit_gradient_duration": 70,
+                "unit_switch_duration": 70,
+                "v": 1000,
+            },
+            {
+                "bright": 0,
+                "h": 120,
+                "s": 1000,
+                "temperature": 0,
+                "unit_change_mode": "gradient",
+                "unit_gradient_duration": 70,
+                "unit_switch_duration": 70,
+                "v": 10,
+            },
+        ],
+    },
+    "Rainbow": {
+        "scene_num": 6,
+        "scene_units": [
+            {
+                "bright": 0,
+                "h": 0,
+                "s": 1000,
+                "temperature": 0,
+                "unit_change_mode": "jump",
+                "unit_gradient_duration": 70,
+                "unit_switch_duration": 70,
+                "v": 1000,
+            },
+            {
+                "bright": 0,
+                "h": 120,
+                "s": 1000,
+                "temperature": 0,
+                "unit_change_mode": "jump",
+                "unit_gradient_duration": 70,
+                "unit_switch_duration": 70,
+                "v": 1000,
+            },
+            {
+                "bright": 0,
+                "h": 240,
+                "s": 1000,
+                "temperature": 0,
+                "unit_change_mode": "jump",
+                "unit_gradient_duration": 70,
+                "unit_switch_duration": 70,
+                "v": 1000,
+            },
+        ],
+    },
+    "Shine": {
+        "scene_num": 7,
+        "scene_units": [
+            {
+                "bright": 0,
+                "h": 0,
+                "s": 1000,
+                "temperature": 0,
+                "unit_change_mode": "jump",
+                "unit_gradient_duration": 70,
+                "unit_switch_duration": 70,
+                "v": 1000,
+            },
+            {
+                "bright": 0,
+                "h": 120,
+                "s": 1000,
+                "temperature": 0,
+                "unit_change_mode": "jump",
+                "unit_gradient_duration": 70,
+                "unit_switch_duration": 70,
+                "v": 1000,
+            },
+            {
+                "bright": 0,
+                "h": 240,
+                "s": 1000,
+                "temperature": 0,
+                "unit_change_mode": "jump",
+                "unit_gradient_duration": 70,
+                "unit_switch_duration": 70,
+                "v": 1000,
+            },
+        ],
+    },
+    "Beautiful": {
+        "scene_num": 8,
+        "scene_units": [
+            {
+                "bright": 0,
+                "h": 0,
+                "s": 1000,
+                "temperature": 0,
+                "unit_change_mode": "gradient",
+                "unit_gradient_duration": 70,
+                "unit_switch_duration": 70,
+                "v": 1000,
+            },
+            {
+                "bright": 0,
+                "h": 120,
+                "s": 1000,
+                "temperature": 0,
+                "unit_change_mode": "gradient",
+                "unit_gradient_duration": 70,
+                "unit_switch_duration": 70,
+                "v": 1000,
+            },
+            {
+                "bright": 0,
+                "h": 240,
+                "s": 1000,
+                "temperature": 0,
+                "unit_change_mode": "gradient",
+                "unit_gradient_duration": 70,
+                "unit_switch_duration": 70,
+                "v": 1000,
+            },
+            {
+                "bright": 0,
+                "h": 61,
+                "s": 1000,
+                "temperature": 0,
+                "unit_change_mode": "gradient",
+                "unit_gradient_duration": 70,
+                "unit_switch_duration": 70,
+                "v": 1000,
+            },
+            {
+                "bright": 0,
+                "h": 174,
+                "s": 1000,
+                "temperature": 0,
+                "unit_change_mode": "gradient",
+                "unit_gradient_duration": 70,
+                "unit_switch_duration": 70,
+                "v": 1000,
+            },
+            {
+                "bright": 0,
+                "h": 275,
+                "s": 1000,
+                "temperature": 0,
+                "unit_change_mode": "gradient",
+                "unit_gradient_duration": 70,
+                "unit_switch_duration": 70,
+                "v": 1000,
+            },
+        ],
+    },
+}
+
+WHITE_SUPPORTED_SCENES = ("Night", "Read", "Meeting", "Leisure")
+COLOR_SUPPORTED_SCENES = (
+    "Night",
+    "Read",
+    "Meeting",
+    "Leisure",
+    "Soft",
+    "Rainbow",
+    "Shine",
+    "Beautiful",
+)
