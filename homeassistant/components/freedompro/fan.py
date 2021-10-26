@@ -49,12 +49,12 @@ class FreedomproFan(CoordinatorEntity, FanEntity):
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        return self.is_on
+        return self._attr_is_on
 
     @property
     def percentage(self):
         """Return the current speed percentage."""
-        return self.percentage
+        return self._attr_percentage
 
     @property
     def supported_features(self):
