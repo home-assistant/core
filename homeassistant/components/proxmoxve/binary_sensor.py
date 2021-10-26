@@ -31,7 +31,7 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
                     continue
 
                 vm_name = coordinator_data["name"]
-                vm_sensor = create_binary_sensor(
+                vm_sensor = create_machine_binary_sensor(
                     coordinator, host_name, node_name, vm_id, vm_name
                 )
                 sensors.append(vm_sensor)
@@ -44,7 +44,7 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
                     continue
 
                 container_name = coordinator_data["name"]
-                container_sensor = create_binary_sensor(
+                container_sensor = create_machine_binary_sensor(
                     coordinator, host_name, node_name, container_id, container_name
                 )
                 sensors.append(container_sensor)
@@ -52,9 +52,9 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-def create_binary_sensor(coordinator, host_name, node_name, vm_id, name):
-    """Create a binary sensor based on the given data."""
-    return ProxmoxBinarySensor(
+def create_machine_binary_sensor(coordinator, host_name, node_name, vm_id, name):
+    """Create a binary sensor for a VM/LXC based on the given data."""
+    return ProxmoxMachineBinarySensor(
         coordinator=coordinator,
         unique_id=f"proxmox_{node_name}_{vm_id}_running",
         name=f"{node_name}_{name}_running",
@@ -65,8 +65,8 @@ def create_binary_sensor(coordinator, host_name, node_name, vm_id, name):
     )
 
 
-class ProxmoxBinarySensor(ProxmoxEntity, BinarySensorEntity):
-    """A binary sensor for reading Proxmox VE data."""
+class ProxmoxMachineBinarySensor(ProxmoxEntity, BinarySensorEntity):
+    """A binary sensor for reading Proxmox VE VM/LXC data."""
 
     def __init__(
         self,
