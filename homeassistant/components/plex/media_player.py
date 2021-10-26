@@ -34,7 +34,6 @@ from homeassistant.helpers.network import is_internal_request
 from .const import (
     COMMON_PLAYERS,
     CONF_SERVER_IDENTIFIER,
-    DISPATCHERS,
     DOMAIN as PLEX_DOMAIN,
     NAME_FORMAT,
     PLEX_NEW_MP_SIGNAL,
@@ -70,10 +69,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     def async_new_media_players(new_entities):
         _async_add_entities(hass, registry, async_add_entities, server_id, new_entities)
 
-    unsub = async_dispatcher_connect(
-        hass, PLEX_NEW_MP_SIGNAL.format(server_id), async_new_media_players
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, PLEX_NEW_MP_SIGNAL.format(server_id), async_new_media_players
+        )
     )
-    hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
     _LOGGER.debug("New entity listener created")
 
 

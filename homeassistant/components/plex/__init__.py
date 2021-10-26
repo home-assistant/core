@@ -30,7 +30,6 @@ from .const import (
     CONF_CONFIGURED_HOST,
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
-    DISPATCHERS,
     DOMAIN as PLEX_DOMAIN,
     GDM_DEBOUNCER,
     GDM_SCANNER,
@@ -53,7 +52,7 @@ async def async_setup(hass, config):
     """Set up the Plex component."""
     hass.data.setdefault(
         PLEX_DOMAIN,
-        {SERVERS: {}, DISPATCHERS: {}, WEBSOCKETS: {}, PLATFORMS_COMPLETED: {}},
+        {SERVERS: {}, WEBSOCKETS: {}, PLATFORMS_COMPLETED: {}},
     )
 
     await async_setup_services(hass)
@@ -157,15 +156,15 @@ async def async_setup_entry(hass, entry):  # noqa: C901
     hass.data[PLEX_DOMAIN][SERVERS][server_id] = plex_server
     hass.data[PLEX_DOMAIN][PLATFORMS_COMPLETED][server_id] = set()
 
-    entry.add_update_listener(async_options_updated)
+    entry.async_on_unload(entry.add_update_listener(async_options_updated))
 
-    unsub = async_dispatcher_connect(
-        hass,
-        PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id),
-        plex_server.async_update_platforms,
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id),
+            plex_server.async_update_platforms,
+        )
     )
-    hass.data[PLEX_DOMAIN][DISPATCHERS].setdefault(server_id, [])
-    hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
 
     @callback
     def plex_websocket_callback(msgtype, data, error):
@@ -217,10 +216,9 @@ async def async_setup_entry(hass, entry):  # noqa: C901
     def close_websocket_session(_):
         websocket.close()
 
-    unsub = hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, close_websocket_session
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_websocket_session)
     )
-    hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
 
     for platform in PLATFORMS:
         task = hass.async_create_task(
@@ -247,10 +245,6 @@ async def async_unload_entry(hass, entry):
 
     websocket = hass.data[PLEX_DOMAIN][WEBSOCKETS].pop(server_id)
     websocket.close()
-
-    dispatchers = hass.data[PLEX_DOMAIN][DISPATCHERS].pop(server_id)
-    for unsub in dispatchers:
-        unsub()
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
