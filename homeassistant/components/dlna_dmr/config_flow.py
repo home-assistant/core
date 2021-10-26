@@ -216,6 +216,19 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if _is_ignored_device(discovery_info):
             return self.async_abort(reason="alternative_integration")
 
+        # Abort if the device doesn't support all services required for a DmrDevice.
+        # Use the discovery_info instead of DmrDevice.is_profile_device to avoid
+        # contacting the device again.
+        discovery_service_list = discovery_info.get(ssdp.ATTR_UPNP_SERVICE_LIST)
+        if not discovery_service_list:
+            return self.async_abort(reason="not_dmr")
+        discovery_service_ids = {
+            service.get("serviceId")
+            for service in discovery_service_list.get("service") or []
+        }
+        if not DmrDevice.SERVICE_IDS.issubset(discovery_service_ids):
+            return self.async_abort(reason="not_dmr")
+
         # Abort if a migration flow for the device's location is in progress
         for progress in self._async_in_progress(include_uninitialized=True):
             if progress["context"].get("unique_id") == self._location:
@@ -277,10 +290,10 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except UpnpError as err:
             raise ConnectError("cannot_connect") from err
 
-        try:
-            device = find_device_of_type(device, DmrDevice.DEVICE_TYPES)
-        except UpnpError as err:
-            raise ConnectError("not_dmr") from err
+        if not DmrDevice.is_profile_device(device):
+            raise ConnectError("not_dmr")
+
+        device = find_device_of_type(device, DmrDevice.DEVICE_TYPES)
 
         if not self._udn:
             self._udn = device.udn
