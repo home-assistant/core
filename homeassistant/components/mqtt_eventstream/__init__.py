@@ -3,6 +3,7 @@ import json
 
 import voluptuous as vol
 
+from homeassistant.components import mqtt
 from homeassistant.components.mqtt import valid_publish_topic, valid_subscribe_topic
 from homeassistant.const import (
     ATTR_SERVICE_DATA,
@@ -53,7 +54,6 @@ BLOCKED_EVENTS = [
 
 async def async_setup(hass, config):
     """Set up the MQTT eventstream component."""
-    mqtt = hass.components.mqtt
     conf = config.get(DOMAIN, {})
     pub_topic = conf.get(CONF_PUBLISH_TOPIC)
     sub_topic = conf.get(CONF_SUBSCRIBE_TOPIC)
@@ -81,7 +81,7 @@ async def async_setup(hass, config):
 
         event_info = {"event_type": event.event_type, "event_data": event.data}
         msg = json.dumps(event_info, cls=JSONEncoder)
-        await mqtt.async_publish(pub_topic, msg)
+        await mqtt.async_publish(hass, pub_topic, msg)
 
     # Only listen for local events if you are going to publish them.
     if pub_topic:
@@ -116,6 +116,6 @@ async def async_setup(hass, config):
 
     # Only subscribe if you specified a topic.
     if sub_topic:
-        await mqtt.async_subscribe(sub_topic, _event_receiver)
+        await mqtt.async_subscribe(hass, sub_topic, _event_receiver)
 
     return True
