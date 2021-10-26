@@ -122,7 +122,7 @@ class EVSensor(SensorEntity):
         self._name = config.name
         self._attr = config.attr
         self._extra_attrs = config.extra_attrs
-        self._unit_of_measurement = config.unit_of_measurement
+        self._attr_native_unit_of_measurement = config.unit_of_measurement
         self._icon = config.icon
         self._state = None
         self._state_attributes = {}

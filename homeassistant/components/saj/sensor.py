@@ -203,12 +203,12 @@ class SAJsensor(SensorEntity):
     @property
     def device_class(self):
         """Return the device class the sensor belongs to."""
-        if self.unit_of_measurement == POWER_WATT:
+        if self.native_unit_of_measurement == POWER_WATT:
             return DEVICE_CLASS_POWER
-        if self.unit_of_measurement == ENERGY_KILO_WATT_HOUR:
+        if self.native_unit_of_measurement == ENERGY_KILO_WATT_HOUR:
             return DEVICE_CLASS_ENERGY
         if (
-            self.unit_of_measurement == TEMP_CELSIUS
+            self.native_unit_of_measurement == TEMP_CELSIUS
             or self._sensor.unit == TEMP_FAHRENHEIT
         ):
             return DEVICE_CLASS_TEMPERATURE

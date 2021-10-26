@@ -74,7 +74,7 @@ class CurrentEnergyUsageSensor(SensorEntity):
             self._available = True
 
             _LOGGER.debug(
-                "%s = %s %s", self.name, self._state, self.unit_of_measurement
+                "%s = %s %s", self.name, self._state, self.native_unit_of_measurement
             )
         except MeterError as err:
             self._available = False

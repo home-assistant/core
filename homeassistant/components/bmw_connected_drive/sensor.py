@@ -520,11 +520,11 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
         sensor_key = self.entity_description.key
         if sensor_key == "charging_status":
             self._attr_native_value = getattr(vehicle_state, sensor_key).value
-        elif self.unit_of_measurement == VOLUME_GALLONS:
+        elif self.native_unit_of_measurement == VOLUME_GALLONS:
             value = getattr(vehicle_state, sensor_key)
             value_converted = self.hass.config.units.volume(value, VOLUME_LITERS)
             self._attr_native_value = round(value_converted)
-        elif self.unit_of_measurement == LENGTH_MILES:
+        elif self.native_unit_of_measurement == LENGTH_MILES:
             value = getattr(vehicle_state, sensor_key)
             value_converted = self.hass.config.units.length(value, LENGTH_KILOMETERS)
             self._attr_native_value = round(value_converted)

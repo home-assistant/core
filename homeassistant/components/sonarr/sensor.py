@@ -173,7 +173,7 @@ class SonarrSensor(SonarrEntity, SensorEntity):
 
                 attrs[
                     disk.path
-                ] = f"{free:.2f}/{total:.2f}{self.unit_of_measurement} ({usage:.2f}%)"
+                ] = f"{free:.2f}/{total:.2f}{self.native_unit_of_measurement} ({usage:.2f}%)"
         elif key == "commands" and self.data.get(key) is not None:
             for command in self.data[key]:
                 attrs[command.name] = command.state
