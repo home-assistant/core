@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from homematicip.aio.auth import AsyncAuth
 from homematicip.aio.home import AsyncHome
@@ -59,6 +60,7 @@ class HomematicipAuth:
 
     async def get_auth(self, hass: HomeAssistant, hapid, pin):
         """Create a HomematicIP access point object."""
+        # pylint: disable=no-self-use
         auth = AsyncAuth(hass.loop, async_get_clientsession(hass))
         try:
             await auth.init(hapid)

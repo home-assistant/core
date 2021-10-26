@@ -32,6 +32,7 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     FREQUENCY_HERTZ,
     LENGTH_CENTIMETERS,
     LIGHT_LUX,
@@ -230,10 +231,22 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
         return class_or_icon.get(STATE_CLASS)
 
     @property
+    def entity_category(self) -> str | None:
+        """Return the category of the entity, if any."""
+        if self._tasmota_entity.quantity in status_sensor.SENSORS:
+            return ENTITY_CATEGORY_DIAGNOSTIC
+        return None
+
+    @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        # Hide status sensors to not overwhelm users
-        if self._tasmota_entity.quantity in status_sensor.SENSORS:
+        # Hide fast changing status sensors
+        if self._tasmota_entity.quantity in (
+            hc.SENSOR_STATUS_IP,
+            hc.SENSOR_STATUS_RSSI,
+            hc.SENSOR_STATUS_SIGNAL,
+            hc.SENSOR_STATUS_VERSION,
+        ):
             return False
         return True
 

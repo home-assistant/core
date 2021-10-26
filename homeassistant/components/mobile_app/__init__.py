@@ -1,25 +1,23 @@
 """Integrates Native Apps to Home Assistant."""
 from contextlib import suppress
 
-import voluptuous as vol
-
-from homeassistant.components import cloud, notify as hass_notify, websocket_api
+from homeassistant.components import cloud, notify as hass_notify
 from homeassistant.components.webhook import (
     async_register as webhook_register,
     async_unregister as webhook_unregister,
 )
 from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, discovery
 from homeassistant.helpers.typing import ConfigType
 
+from . import websocket_api
 from .const import (
     ATTR_DEVICE_NAME,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_OS_VERSION,
     CONF_CLOUDHOOK_URL,
-    CONF_USER_ID,
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
     DATA_DEVICES,
@@ -66,7 +64,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         discovery.async_load_platform(hass, "notify", DOMAIN, {}, config)
     )
 
-    websocket_api.async_register_command(hass, handle_push_notification_channel)
+    websocket_api.async_setup_commands(hass)
 
     return True
 
@@ -127,52 +125,3 @@ async def async_remove_entry(hass, entry):
     if CONF_CLOUDHOOK_URL in entry.data:
         with suppress(cloud.CloudNotAvailable):
             await cloud.async_delete_cloudhook(hass, entry.data[CONF_WEBHOOK_ID])
-
-
-@callback
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "mobile_app/push_notification_channel",
-        vol.Required("webhook_id"): str,
-    }
-)
-def handle_push_notification_channel(hass, connection, msg):
-    """Set up a direct push notification channel."""
-    webhook_id = msg["webhook_id"]
-
-    # Validate that the webhook ID is registered to the user of the websocket connection
-    config_entry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES].get(webhook_id)
-
-    if config_entry is None:
-        connection.send_error(
-            msg["id"], websocket_api.ERR_NOT_FOUND, "Webhook ID not found"
-        )
-        return
-
-    if config_entry.data[CONF_USER_ID] != connection.user.id:
-        connection.send_error(
-            msg["id"],
-            websocket_api.ERR_UNAUTHORIZED,
-            "User not linked to this webhook ID",
-        )
-        return
-
-    registered_channels = hass.data[DOMAIN][DATA_PUSH_CHANNEL]
-
-    if webhook_id in registered_channels:
-        registered_channels.pop(webhook_id)
-
-    @callback
-    def forward_push_notification(data):
-        """Forward events to websocket."""
-        connection.send_message(websocket_api.messages.event_message(msg["id"], data))
-
-    @callback
-    def unsub():
-        # pylint: disable=comparison-with-callable
-        if registered_channels.get(webhook_id) == forward_push_notification:
-            registered_channels.pop(webhook_id)
-
-    registered_channels[webhook_id] = forward_push_notification
-    connection.subscriptions[msg["id"]] = unsub
-    connection.send_result(msg["id"])

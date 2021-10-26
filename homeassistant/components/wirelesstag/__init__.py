@@ -199,8 +199,7 @@ class WirelessTagBaseSensor(Entity):
             return
 
         updated_tags = self._api.load_tags()
-        updated_tag = updated_tags[self._uuid]
-        if updated_tag is None:
+        if (updated_tag := updated_tags[self._uuid]) is None:
             _LOGGER.error('Unable to update tag: "%s"', self.name)
             return
 

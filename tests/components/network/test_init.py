@@ -1,4 +1,5 @@
 """Test the Network Configuration."""
+from ipaddress import IPv4Address
 from unittest.mock import MagicMock, Mock, patch
 
 import ifaddr
@@ -552,3 +553,51 @@ async def test_async_get_source_ip_cannot_determine_target(hass, hass_storage):
         await hass.async_block_till_done()
 
         assert await network.async_get_source_ip(hass, MDNS_TARGET_IP) == "192.168.1.5"
+
+
+async def test_async_get_ipv4_broadcast_addresses_default(hass, hass_storage):
+    """Test getting ipv4 broadcast addresses when only the default address is enabled."""
+    hass_storage[STORAGE_KEY] = {
+        "version": STORAGE_VERSION,
+        "key": STORAGE_KEY,
+        "data": {ATTR_CONFIGURED_ADAPTERS: ["eth1"]},
+    }
+
+    with patch(
+        "homeassistant.components.network.util.socket.socket",
+        return_value=_mock_socket(["192.168.1.5"]),
+    ), patch(
+        "homeassistant.components.network.util.ifaddr.get_adapters",
+        return_value=_generate_mock_adapters(),
+    ):
+        assert await async_setup_component(hass, network.DOMAIN, {network.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    assert await network.async_get_ipv4_broadcast_addresses(hass) == {
+        IPv4Address("255.255.255.255")
+    }
+
+
+async def test_async_get_ipv4_broadcast_addresses_multiple(hass, hass_storage):
+    """Test getting ipv4 broadcast addresses when multiple adapters are enabled."""
+    hass_storage[STORAGE_KEY] = {
+        "version": STORAGE_VERSION,
+        "key": STORAGE_KEY,
+        "data": {ATTR_CONFIGURED_ADAPTERS: ["eth1", "vtun0"]},
+    }
+
+    with patch(
+        "homeassistant.components.network.util.socket.socket",
+        return_value=_mock_socket([_LOOPBACK_IPADDR]),
+    ), patch(
+        "homeassistant.components.network.util.ifaddr.get_adapters",
+        return_value=_generate_mock_adapters(),
+    ):
+        assert await async_setup_component(hass, network.DOMAIN, {network.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    assert await network.async_get_ipv4_broadcast_addresses(hass) == {
+        IPv4Address("255.255.255.255"),
+        IPv4Address("192.168.1.255"),
+        IPv4Address("169.254.255.255"),
+    }

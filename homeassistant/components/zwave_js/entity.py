@@ -15,6 +15,7 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .helpers import get_device_id, get_unique_id
+from .migrate import async_add_migration_entity_value
 
 LOGGER = logging.getLogger(__name__)
 
@@ -25,6 +26,8 @@ EVENT_ALIVE = "alive"
 
 class ZWaveBaseEntity(Entity):
     """Generic Entity Class for a Z-Wave Device."""
+
+    _attr_should_poll = False
 
     def __init__(
         self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
@@ -107,6 +110,11 @@ class ZWaveBaseEntity(Entity):
                 f"{DOMAIN}_{self.unique_id}_poll_value",
                 self.async_poll_value,
             )
+        )
+
+        # Add legacy Z-Wave migration data.
+        await async_add_migration_entity_value(
+            self.hass, self.config_entry, self.entity_id, self.info
         )
 
     def generate_name(
@@ -237,8 +245,3 @@ class ZWaveBaseEntity(Entity):
         ):
             self.watched_value_ids.add(return_value.value_id)
         return return_value
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False

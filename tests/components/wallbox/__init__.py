@@ -1,5 +1,6 @@
 """Tests for the Wallbox integration."""
 
+from http import HTTPStatus
 import json
 
 import requests_mock
@@ -71,17 +72,17 @@ async def setup_integration(hass):
         mock_request.get(
             "https://api.wall-box.com/auth/token/user",
             json=authorisation_response,
-            status_code=200,
+            status_code=HTTPStatus.OK,
         )
         mock_request.get(
             "https://api.wall-box.com/chargers/status/12345",
             json=test_response,
-            status_code=200,
+            status_code=HTTPStatus.OK,
         )
         mock_request.put(
             "https://api.wall-box.com/v2/charger/12345",
             json=json.loads(json.dumps({CONF_MAX_CHARGING_CURRENT_KEY: 20})),
-            status_code=200,
+            status_code=HTTPStatus.OK,
         )
 
         entry.add_to_hass(hass)
@@ -97,17 +98,17 @@ async def setup_integration_connection_error(hass):
         mock_request.get(
             "https://api.wall-box.com/auth/token/user",
             json=authorisation_response,
-            status_code=403,
+            status_code=HTTPStatus.FORBIDDEN,
         )
         mock_request.get(
             "https://api.wall-box.com/chargers/status/12345",
             json=test_response,
-            status_code=403,
+            status_code=HTTPStatus.FORBIDDEN,
         )
         mock_request.put(
             "https://api.wall-box.com/v2/charger/12345",
             json=json.loads(json.dumps({CONF_MAX_CHARGING_CURRENT_KEY: 20})),
-            status_code=403,
+            status_code=HTTPStatus.FORBIDDEN,
         )
 
         entry.add_to_hass(hass)
@@ -123,17 +124,17 @@ async def setup_integration_read_only(hass):
         mock_request.get(
             "https://api.wall-box.com/auth/token/user",
             json=authorisation_response,
-            status_code=200,
+            status_code=HTTPStatus.OK,
         )
         mock_request.get(
             "https://api.wall-box.com/chargers/status/12345",
             json=test_response,
-            status_code=200,
+            status_code=HTTPStatus.OK,
         )
         mock_request.put(
             "https://api.wall-box.com/v2/charger/12345",
             json=test_response,
-            status_code=403,
+            status_code=HTTPStatus.FORBIDDEN,
         )
 
         entry.add_to_hass(hass)

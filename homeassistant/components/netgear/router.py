@@ -1,8 +1,10 @@
 """Represent the Netgear router and its devices."""
+from __future__ import annotations
+
 from abc import abstractmethod
+from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import Callable
 
 from pynetgear import Netgear
 
@@ -21,7 +23,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
@@ -62,7 +64,7 @@ def async_setup_netgear_entry(
     hass: HomeAssistantType,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    entity_class_generator: Callable[["NetgearRouter", dict], list],
+    entity_class_generator: Callable[[NetgearRouter, dict], list],
 ) -> None:
     """Set up device tracker for Netgear component."""
     router = hass.data[DOMAIN][entry.unique_id]
@@ -118,7 +120,7 @@ class NetgearRouter:
         self.device_name = None
         self.firmware_version = None
 
-        self._method_version = 1
+        self.method_version = 1
         consider_home_int = entry.options.get(
             CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
         )
@@ -144,8 +146,9 @@ class NetgearRouter:
         self.model = self._info.get("ModelName")
         self.firmware_version = self._info.get("Firmwareversion")
 
-        if self.model in MODELS_V2:
-            self._method_version = 2
+        for model in MODELS_V2:
+            if self.model.startswith(model):
+                self.method_version = 2
 
     async def async_setup(self) -> None:
         """Set up a Netgear router."""
@@ -183,7 +186,7 @@ class NetgearRouter:
 
     async def async_get_attached_devices(self) -> list:
         """Get the devices connected to the router."""
-        if self._method_version == 1:
+        if self.method_version == 1:
             return await self.hass.async_add_executor_job(
                 self._api.get_attached_devices
             )
@@ -196,11 +199,14 @@ class NetgearRouter:
         ntg_devices = await self.async_get_attached_devices()
         now = dt_util.utcnow()
 
+        if ntg_devices is None:
+            return
+
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("Netgear scan result: \n%s", ntg_devices)
+
         for ntg_device in ntg_devices:
             device_mac = format_mac(ntg_device.mac)
-
-            if self._method_version == 2 and not ntg_device.link_rate:
-                continue
 
             if not self.devices.get(device_mac):
                 new_device = True
@@ -267,14 +273,14 @@ class NetgearDeviceEntity(Entity):
         return self._name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        return {
-            "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
-            "name": self._device_name,
-            "model": self._device["device_model"],
-            "via_device": (DOMAIN, self._router.unique_id),
-        }
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self._mac)},
+            default_name=self._device_name,
+            default_model=self._device["device_model"],
+            via_device=(DOMAIN, self._router.unique_id),
+        )
 
     @property
     def should_poll(self) -> bool:

@@ -1,7 +1,7 @@
 """Helpers for config validation using voluptuous."""
 from __future__ import annotations
 
-from collections.abc import Hashable
+from collections.abc import Callable, Hashable
 from datetime import (
     date as date_sys,
     datetime as datetime_sys,
@@ -15,7 +15,7 @@ from numbers import Number
 import os
 import re
 from socket import _GLOBAL_DEFAULT_TIMEOUT  # type: ignore # private, not in typeshed
-from typing import Any, Callable, Dict, TypeVar, cast
+from typing import Any, Dict, TypeVar, cast
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -929,8 +929,10 @@ SERVICE_SCHEMA = vol.All(
             vol.Exclusive(CONF_SERVICE_TEMPLATE, "service name"): vol.Any(
                 service, dynamic_template
             ),
-            vol.Optional("data"): vol.All(dict, template_complex),
-            vol.Optional("data_template"): vol.All(dict, template_complex),
+            vol.Optional("data"): vol.Any(template, vol.All(dict, template_complex)),
+            vol.Optional("data_template"): vol.Any(
+                template, vol.All(dict, template_complex)
+            ),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
             vol.Optional(CONF_TARGET): vol.Any(ENTITY_SERVICE_FIELDS, dynamic_template),
         }

@@ -11,9 +11,9 @@
             "user": {
                 "data": {
                     "host": "Ana Bilgisayar",
-                    "name": "Kolay ad",
+                    "name": "Kolay Ad\u0131",
                     "password": "API parolas\u0131 (parola yoksa bo\u015f b\u0131rak\u0131n)",
-                    "port": "API ba\u011flant\u0131 noktas\u0131"
+                    "port": "API Port"
                 }
             }
         }

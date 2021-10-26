@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.const import ATTR_NAME
-from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DOMAIN, HassioDataUpdateCoordinator
@@ -26,7 +26,7 @@ class HassioAddonEntity(CoordinatorEntity):
         self._addon_slug = addon[ATTR_SLUG]
         self._attr_name = f"{addon[ATTR_NAME]}: {entity_description.name}"
         self._attr_unique_id = f"{addon[ATTR_SLUG]}_{entity_description.key}"
-        self._attr_device_info = {"identifiers": {(DOMAIN, addon[ATTR_SLUG])}}
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, addon[ATTR_SLUG])})
 
 
 class HassioOSEntity(CoordinatorEntity):
@@ -42,4 +42,4 @@ class HassioOSEntity(CoordinatorEntity):
         self.entity_description = entity_description
         self._attr_name = f"Home Assistant Operating System: {entity_description.name}"
         self._attr_unique_id = f"home_assistant_os_{entity_description.key}"
-        self._attr_device_info = {"identifiers": {(DOMAIN, "OS")}}
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, "OS")})

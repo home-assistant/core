@@ -88,8 +88,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if user_input[CONF_MODE] == CONF_MANUAL:
                 try:
-                    device = user_input[CONF_IP_ADDRESS]
-                    if device:
+                    if device := user_input[CONF_IP_ADDRESS]:
                         self.m_device = device
                 except KeyError:
                     errors[CONF_IP_ADDRESS] = "no_ipaddress"

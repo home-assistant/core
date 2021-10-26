@@ -3,14 +3,14 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from homeassistant import config_entries, core, setup
+from homeassistant import config_entries, core
 from homeassistant.components.sonos.const import DATA_SONOS_DISCOVERY_MANAGER, DOMAIN
 
 
 @patch("homeassistant.components.sonos.config_flow.soco.discover", return_value=True)
 async def test_user_form(discover_mock: MagicMock, hass: core.HomeAssistant):
     """Test we get the user initiated form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -38,13 +38,14 @@ async def test_user_form(discover_mock: MagicMock, hass: core.HomeAssistant):
 
 async def test_zeroconf_form(hass: core.HomeAssistant):
     """Test we pass sonos devices to the discovery manager."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     mock_manager = hass.data[DATA_SONOS_DISCOVERY_MANAGER] = MagicMock()
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data={
             "host": "192.168.4.2",
+            "name": "Sonos-aaa@Living Room._sonos._tcp.local.",
             "hostname": "Sonos-aaa",
             "properties": {"bootseq": "1234"},
         },
@@ -77,7 +78,7 @@ async def test_zeroconf_form(hass: core.HomeAssistant):
 async def test_zeroconf_form_not_sonos(hass: core.HomeAssistant):
     """Test we abort on non-sonos devices."""
     mock_manager = hass.data[DATA_SONOS_DISCOVERY_MANAGER] = MagicMock()
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},

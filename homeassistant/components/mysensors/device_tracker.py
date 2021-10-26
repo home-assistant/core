@@ -1,7 +1,8 @@
 """Support for tracking MySensors devices."""
 from __future__ import annotations
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from homeassistant.components import mysensors
 from homeassistant.components.device_tracker import DOMAIN

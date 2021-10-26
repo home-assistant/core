@@ -19,9 +19,6 @@ SIG_CROWNSTONE_STATE_UPDATE: Final = "crownstone.crownstone_state_update"
 SIG_CROWNSTONE_UPDATE: Final = "crownstone.crownstone_update"
 SIG_UART_STATE_CHANGE: Final = "crownstone.uart_state_change"
 
-# Abilities state
-ABILITY_STATE: Final[dict[bool, str]] = {True: "Enabled", False: "Disabled"}
-
 # Config flow
 CONF_USB_PATH: Final = "usb_path"
 CONF_USB_MANUAL_PATH: Final = "usb_manual_path"

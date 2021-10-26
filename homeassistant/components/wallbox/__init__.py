@@ -1,5 +1,6 @@
 """The Wallbox integration."""
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 import requests
@@ -48,7 +49,7 @@ class WallboxCoordinator(DataUpdateCoordinator):
             self._wallbox.authenticate()
             return True
         except requests.exceptions.HTTPError as wallbox_connection_error:
-            if wallbox_connection_error.response.status_code == 403:
+            if wallbox_connection_error.response.status_code == HTTPStatus.FORBIDDEN:
                 raise InvalidAuth from wallbox_connection_error
             raise ConnectionError from wallbox_connection_error
 
@@ -74,8 +75,7 @@ class WallboxCoordinator(DataUpdateCoordinator):
             filtered_data = {k: data[k] for k in CONF_SENSOR_TYPES if k in data}
 
             for key, value in filtered_data.items():
-                sensor_round = CONF_SENSOR_TYPES[key][CONF_ROUND]
-                if sensor_round:
+                if sensor_round := CONF_SENSOR_TYPES[key][CONF_ROUND]:
                     try:
                         filtered_data[key] = round(value, sensor_round)
                     except TypeError:
@@ -138,7 +138,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

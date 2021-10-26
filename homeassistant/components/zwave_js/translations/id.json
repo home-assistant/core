@@ -8,7 +8,9 @@
             "addon_start_failed": "Gagal memulai add-on Z-Wave JS.",
             "already_configured": "Perangkat sudah dikonfigurasi",
             "already_in_progress": "Alur konfigurasi sedang berlangsung",
-            "cannot_connect": "Gagal terhubung"
+            "cannot_connect": "Gagal terhubung",
+            "discovery_requires_supervisor": "Fitur penemuan membutuhkan supervisor.",
+            "not_zwave_device": "Perangkat yang ditemukan bukanperangkat Z-Wave."
         },
         "error": {
             "addon_start_failed": "Gagal memulai add-on Z-Wave JS. Periksa konfigurasi.",
@@ -16,6 +18,7 @@
             "invalid_ws_url": "URL websocket tidak valid",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
+        "flow_title": "{name}",
         "progress": {
             "install_addon": "Harap tunggu hingga penginstalan add-on Z-Wave JS selesai. Ini bisa memakan waktu beberapa saat.",
             "start_addon": "Harap tunggu hingga add-on Z-Wave JS selesai. Ini mungkin perlu waktu beberapa saat."
@@ -49,6 +52,16 @@
             "start_addon": {
                 "title": "Add-on Z-Wave JS sedang dimulai."
             }
+        }
+    },
+    "device_automation": {
+        "condition_type": {
+            "config_parameter": "Nilai parameter konfigurasi {subtype}",
+            "node_status": "Status node",
+            "value": "Nilai saat ini dari Nilai Z-Wave"
+        },
+        "trigger_type": {
+            "state.node_status": "Status node berubah"
         }
     },
     "options": {

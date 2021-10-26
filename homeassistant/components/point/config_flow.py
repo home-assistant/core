@@ -131,7 +131,7 @@ class PointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         _LOGGER.debug(
             "Should close all flows below %s",
-            self.hass.config_entries.flow.async_progress(),
+            self._async_in_progress(),
         )
         # Remove notification if no other discovery config entries in progress
 

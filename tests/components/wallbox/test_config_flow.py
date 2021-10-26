@@ -1,4 +1,5 @@
 """Test the Wallbox config flow."""
+from http import HTTPStatus
 import json
 
 import requests_mock
@@ -83,12 +84,12 @@ async def test_form_cannot_authenticate(hass):
         mock_request.get(
             "https://api.wall-box.com/auth/token/user",
             json=authorisation_response,
-            status_code=403,
+            status_code=HTTPStatus.FORBIDDEN,
         )
         mock_request.get(
             "https://api.wall-box.com/chargers/status/12345",
             json=test_response,
-            status_code=403,
+            status_code=HTTPStatus.FORBIDDEN,
         )
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -113,12 +114,12 @@ async def test_form_cannot_connect(hass):
         mock_request.get(
             "https://api.wall-box.com/auth/token/user",
             json=authorisation_response_unauthorised,
-            status_code=404,
+            status_code=HTTPStatus.NOT_FOUND,
         )
         mock_request.get(
             "https://api.wall-box.com/chargers/status/12345",
             json=test_response,
-            status_code=404,
+            status_code=HTTPStatus.NOT_FOUND,
         )
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -143,12 +144,12 @@ async def test_form_validate_input(hass):
         mock_request.get(
             "https://api.wall-box.com/auth/token/user",
             json=authorisation_response,
-            status_code=200,
+            status_code=HTTPStatus.OK,
         )
         mock_request.get(
             "https://api.wall-box.com/chargers/status/12345",
             json=test_response,
-            status_code=200,
+            status_code=HTTPStatus.OK,
         )
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

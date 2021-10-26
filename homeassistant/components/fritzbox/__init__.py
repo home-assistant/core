@@ -66,8 +66,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             devices = fritz.get_devices()
 
         data = {}
+        fritz.update_devices()
         for device in devices:
-            device.update()
+            # assume device as unavailable, see #55799
+            if (
+                device.has_powermeter
+                and device.present
+                and hasattr(device, "voltage")
+                and device.voltage <= 0
+                and device.power <= 0
+                and device.energy <= 0
+            ):
+                LOGGER.debug("Assume device %s as unavailable", device.name)
+                device.present = False
+
             data[device.ain] = device
         return data
 
@@ -161,13 +173,13 @@ class FritzBoxEntity(CoordinatorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
-        return {
-            "name": self.device.name,
-            "identifiers": {(DOMAIN, self.ain)},
-            "manufacturer": self.device.manufacturer,
-            "model": self.device.productname,
-            "sw_version": self.device.fw_version,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.ain)},
+            manufacturer=self.device.manufacturer,
+            model=self.device.productname,
+            name=self.device.name,
+            sw_version=self.device.fw_version,
+        )
 
     @property
     def extra_state_attributes(self) -> FritzExtraAttributes:

@@ -23,7 +23,13 @@ from homeassistant.const import (
     ENERGY_WATT_HOUR,
     VOLUME_CUBIC_METERS,
 )
-from homeassistant.core import HomeAssistant, State, callback, split_entity_id
+from homeassistant.core import (
+    HomeAssistant,
+    State,
+    callback,
+    split_entity_id,
+    valid_entity_id,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -177,9 +183,13 @@ class SensorManager:
 
         # Make sure the right data is there
         # If the entity existed, we don't pop it from to_remove so it's removed
-        if config.get(adapter.entity_energy_key) is None or (
-            config.get("entity_energy_price") is None
-            and config.get("number_energy_price") is None
+        if (
+            config.get(adapter.entity_energy_key) is None
+            or not valid_entity_id(config[adapter.entity_energy_key])
+            or (
+                config.get("entity_energy_price") is None
+                and config.get("number_energy_price") is None
+            )
         ):
             return
 
@@ -221,7 +231,6 @@ class EnergyCostSensor(SensorEntity):
         self._attr_state_class = STATE_CLASS_TOTAL
         self._config = config
         self._last_energy_sensor_state: State | None = None
-        self._cur_value = 0.0
         # add_finished is set when either of async_added_to_hass or add_to_platform_abort
         # is called
         self.add_finished = asyncio.Event()
@@ -229,7 +238,6 @@ class EnergyCostSensor(SensorEntity):
     def _reset(self, energy_state: State) -> None:
         """Reset the cost sensor."""
         self._attr_native_value = 0.0
-        self._cur_value = 0.0
         self._attr_last_reset = dt_util.utcnow()
         self._last_energy_sensor_state = energy_state
         self.async_write_ha_state()
@@ -332,6 +340,7 @@ class EnergyCostSensor(SensorEntity):
             cast(str, self._config[self._adapter.entity_energy_key]),
             energy,
             float(self._last_energy_sensor_state.state),
+            self._last_energy_sensor_state,
         ):
             # Energy meter was reset, reset cost sensor too
             energy_state_copy = copy.copy(energy_state)
@@ -339,8 +348,8 @@ class EnergyCostSensor(SensorEntity):
             self._reset(energy_state_copy)
         # Update with newly incurred cost
         old_energy_value = float(self._last_energy_sensor_state.state)
-        self._cur_value += (energy - old_energy_value) * energy_price
-        self._attr_native_value = round(self._cur_value, 2)
+        cur_value = cast(float, self._attr_native_value)
+        self._attr_native_value = cur_value + (energy - old_energy_value) * energy_price
 
         self._last_energy_sensor_state = energy_state
 

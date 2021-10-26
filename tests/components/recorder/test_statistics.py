@@ -52,8 +52,6 @@ def test_compile_hourly_statistics(hass_recorder):
         "last_reset": None,
         "state": None,
         "sum": None,
-        "sum_decrease": None,
-        "sum_increase": None,
     }
     expected_2 = {
         "statistic_id": "sensor.test1",
@@ -65,8 +63,6 @@ def test_compile_hourly_statistics(hass_recorder):
         "last_reset": None,
         "state": None,
         "sum": None,
-        "sum_decrease": None,
-        "sum_increase": None,
     }
     expected_stats1 = [
         {**expected_1, "statistic_id": "sensor.test1"},
@@ -111,21 +107,29 @@ def test_compile_hourly_statistics(hass_recorder):
 @pytest.fixture
 def mock_sensor_statistics():
     """Generate some fake statistics."""
-    sensor_stats = {
-        "meta": {"unit_of_measurement": "dogs", "has_mean": True, "has_sum": False},
-        "stat": {},
-    }
 
-    def get_fake_stats():
+    def sensor_stats(entity_id, start):
+        """Generate fake statistics."""
         return {
-            "sensor.test1": sensor_stats,
-            "sensor.test2": sensor_stats,
-            "sensor.test3": sensor_stats,
+            "meta": {
+                "statistic_id": entity_id,
+                "unit_of_measurement": "dogs",
+                "has_mean": True,
+                "has_sum": False,
+            },
+            "stat": ({"start": start},),
         }
+
+    def get_fake_stats(_hass, start, _end):
+        return [
+            sensor_stats("sensor.test1", start),
+            sensor_stats("sensor.test2", start),
+            sensor_stats("sensor.test3", start),
+        ]
 
     with patch(
         "homeassistant.components.sensor.recorder.compile_statistics",
-        return_value=get_fake_stats(),
+        side_effect=get_fake_stats,
     ):
         yield
 
@@ -136,12 +140,12 @@ def mock_from_stats():
     counter = 0
     real_from_stats = StatisticsShortTerm.from_stats
 
-    def from_stats(metadata_id, start, stats):
+    def from_stats(metadata_id, stats):
         nonlocal counter
         if counter == 0 and metadata_id == 2:
             counter += 1
             return None
-        return real_from_stats(metadata_id, start, stats)
+        return real_from_stats(metadata_id, stats)
 
     with patch(
         "homeassistant.components.recorder.statistics.StatisticsShortTerm.from_stats",
@@ -155,9 +159,6 @@ def test_compile_periodic_statistics_exception(
     hass_recorder, mock_sensor_statistics, mock_from_stats
 ):
     """Test exception handling when compiling periodic statistics."""
-
-    def mock_from_stats():
-        raise ValueError
 
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
@@ -177,8 +178,6 @@ def test_compile_periodic_statistics_exception(
         "last_reset": None,
         "state": None,
         "sum": None,
-        "sum_decrease": None,
-        "sum_increase": None,
     }
     expected_2 = {
         "statistic_id": "sensor.test1",
@@ -190,8 +189,6 @@ def test_compile_periodic_statistics_exception(
         "last_reset": None,
         "state": None,
         "sum": None,
-        "sum_decrease": None,
-        "sum_increase": None,
     }
     expected_stats1 = [
         {**expected_1, "statistic_id": "sensor.test1"},
@@ -250,8 +247,6 @@ def test_rename_entity(hass_recorder):
         "last_reset": None,
         "state": None,
         "sum": None,
-        "sum_decrease": None,
-        "sum_increase": None,
     }
     expected_stats1 = [
         {**expected_1, "statistic_id": "sensor.test1"},

@@ -1,6 +1,4 @@
 """Support for Velbus thermostat."""
-import logging
-
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
@@ -10,8 +8,6 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from . import VelbusEntity
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -65,8 +61,7 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
 
     def set_temperature(self, **kwargs):
         """Set new target temperatures."""
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        if temp is None:
+        if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         self._channel.set_temp(temp)
         self.schedule_update_ha_state()

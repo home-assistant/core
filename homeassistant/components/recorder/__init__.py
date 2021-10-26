@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import concurrent.futures
 from datetime import datetime, timedelta
 import logging
@@ -9,7 +10,7 @@ import queue
 import sqlite3
 import threading
 import time
-from typing import Any, Callable, NamedTuple
+from typing import Any, NamedTuple
 
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, func, select
 from sqlalchemy.exc import SQLAlchemyError
@@ -248,6 +249,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     exclude = conf[CONF_EXCLUDE]
     exclude_t = exclude.get(CONF_EVENT_TYPES, [])
+    if EVENT_STATE_CHANGED in exclude_t:
+        _LOGGER.warning(
+            "State change events are excluded, recorder will not record state changes."
+            "This will become an error in Home Assistant Core 2022.2"
+        )
     instance = hass.data[DATA_INSTANCE] = Recorder(
         hass=hass,
         auto_purge=auto_purge,
@@ -321,6 +327,19 @@ def _async_register_services(hass, instance):
         async_handle_disable_service,
         schema=SERVICE_DISABLE_SCHEMA,
     )
+
+
+class ClearStatisticsTask(NamedTuple):
+    """Object to store statistics_ids which for which to remove statistics."""
+
+    statistic_ids: list[str]
+
+
+class UpdateStatisticsMetadataTask(NamedTuple):
+    """Object to store statistics_id and unit for update of statistics metadata."""
+
+    statistic_id: str
+    unit_of_measurement: str | None
 
 
 class PurgeTask(NamedTuple):
@@ -399,6 +418,7 @@ class Recorder(threading.Thread):
         self.async_migration_event = asyncio.Event()
         self.migration_in_progress = False
         self._queue_watcher = None
+        self._db_supports_row_number = True
 
         self.enabled = True
 
@@ -448,9 +468,7 @@ class Recorder(threading.Thread):
         if event.event_type in self.exclude_t:
             return False
 
-        entity_id = event.data.get(ATTR_ENTITY_ID)
-
-        if entity_id is None:
+        if (entity_id := event.data.get(ATTR_ENTITY_ID)) is None:
             return True
 
         if isinstance(entity_id, str):
@@ -481,8 +499,7 @@ class Recorder(threading.Thread):
 
     def do_adhoc_statistics(self, **kwargs):
         """Trigger an adhoc statistics run."""
-        start = kwargs.get("start")
-        if not start:
+        if not (start := kwargs.get("start")):
             start = statistics.get_start_time()
         self.queue.put(StatisticsTask(start))
 
@@ -569,6 +586,16 @@ class Recorder(threading.Thread):
         """Trigger the hourly statistics run."""
         start = statistics.get_start_time()
         self.queue.put(StatisticsTask(start))
+
+    @callback
+    def async_clear_statistics(self, statistic_ids):
+        """Clear statistics for a list of statistic_ids."""
+        self.queue.put(ClearStatisticsTask(statistic_ids))
+
+    @callback
+    def async_update_statistics_metadata(self, statistic_id, unit_of_measurement):
+        """Update statistics metadata for a statistic_id."""
+        self.queue.put(UpdateStatisticsMetadataTask(statistic_id, unit_of_measurement))
 
     @callback
     def _async_setup_periodic_tasks(self):
@@ -763,6 +790,14 @@ class Recorder(threading.Thread):
         if isinstance(event, StatisticsTask):
             self._run_statistics(event.start)
             return
+        if isinstance(event, ClearStatisticsTask):
+            statistics.clear_statistics(self, event.statistic_ids)
+            return
+        if isinstance(event, UpdateStatisticsMetadataTask):
+            statistics.update_statistics_metadata(
+                self, event.statistic_id, event.unit_of_measurement
+            )
+            return
         if isinstance(event, WaitTask):
             self._queue_watch.set()
             return
@@ -940,6 +975,7 @@ class Recorder(threading.Thread):
         def setup_recorder_connection(dbapi_connection, connection_record):
             """Dbapi specific connection settings."""
             setup_connection_for_dialect(
+                self,
                 self.engine.dialect.name,
                 dbapi_connection,
                 not self._completed_first_database_setup,

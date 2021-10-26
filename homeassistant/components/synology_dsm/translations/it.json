@@ -39,6 +39,13 @@
                 "description": "Motivo: {details}",
                 "title": "Synology DSM Autenticare nuovamente l'integrazione"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Nome utente"
+                },
+                "title": "Autenticare nuovamente l'integrazione Synology DSM "
+            },
             "user": {
                 "data": {
                     "host": "Host",

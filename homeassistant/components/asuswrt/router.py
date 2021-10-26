@@ -1,9 +1,10 @@
 """Represent the AsusWrt router."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from aioasuswrt.asuswrt import AsusWrt
 
@@ -373,7 +374,7 @@ class AsusWrtRouter:
         """Update router options."""
         req_reload = False
         for name, new_opt in new_options.items():
-            if name in (CONF_REQ_RELOAD):
+            if name in CONF_REQ_RELOAD:
                 old_opt = self._options.get(name)
                 if not old_opt or old_opt != new_opt:
                     req_reload = True
@@ -385,13 +386,14 @@ class AsusWrtRouter:
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        return {
-            "identifiers": {(DOMAIN, "AsusWRT")},
-            "name": self._host,
-            "model": self._model,
-            "manufacturer": "Asus",
-            "sw_version": self._sw_v,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, "AsusWRT")},
+            name=self._host,
+            model=self._model,
+            manufacturer="Asus",
+            sw_version=self._sw_v,
+            configuration_url=f"http://{self._host}",
+        )
 
     @property
     def signal_device_new(self) -> str:

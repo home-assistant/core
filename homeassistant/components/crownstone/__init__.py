@@ -12,6 +12,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Initiate setup for a Crownstone config entry."""
     manager = CrownstoneEntryManager(hass, entry)
 
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = manager
+
     return await manager.async_setup()
 
 

@@ -26,6 +26,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.requirements import (
     RequirementsNotFound,
+    async_clear_install_history,
     async_get_integration_with_requirements,
 )
 import homeassistant.util.yaml.loader as yaml_loader
@@ -71,6 +72,7 @@ async def async_check_ha_config_file(  # noqa: C901
     This method is a coroutine.
     """
     result = HomeAssistantConfig()
+    async_clear_install_history(hass)
 
     def _pack_error(
         package: str, component: str, config: ConfigType, message: str
@@ -125,8 +127,12 @@ async def async_check_ha_config_file(  # noqa: C901
     for domain in components:
         try:
             integration = await async_get_integration_with_requirements(hass, domain)
-        except (RequirementsNotFound, loader.IntegrationNotFound) as ex:
-            result.add_error(f"Component error: {domain} - {ex}")
+        except loader.IntegrationNotFound as ex:
+            if not hass.config.safe_mode:
+                result.add_error(f"Integration error: {domain} - {ex}")
+            continue
+        except RequirementsNotFound as ex:
+            result.add_error(f"Integration error: {domain} - {ex}")
             continue
 
         try:
@@ -210,8 +216,11 @@ async def async_check_ha_config_file(  # noqa: C901
                     hass, p_name
                 )
                 platform = p_integration.get_platform(domain)
+            except loader.IntegrationNotFound as ex:
+                if not hass.config.safe_mode:
+                    result.add_error(f"Platform error {domain}.{p_name} - {ex}")
+                continue
             except (
-                loader.IntegrationNotFound,
                 RequirementsNotFound,
                 ImportError,
             ) as ex:

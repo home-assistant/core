@@ -1,7 +1,7 @@
 """Provide functionality to stream HLS."""
 from __future__ import annotations
 
-import logging
+from http import HTTPStatus
 from typing import TYPE_CHECKING, cast
 
 from aiohttp import web
@@ -23,8 +23,6 @@ from .fmp4utils import get_codec_string
 
 if TYPE_CHECKING:
     from . import Stream
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -196,7 +194,7 @@ class HlsPlaylistView(StreamView):
         """Return a HTTP Bad Request response."""
         return web.Response(
             body=None,
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             # From Appendix B.1 of the RFC:
             # Successful responses to blocking Playlist requests should be cached
             # for six Target Durations. Unsuccessful responses (such as 404s) should
@@ -214,7 +212,7 @@ class HlsPlaylistView(StreamView):
         """Return a HTTP Not Found response."""
         return web.Response(
             body=None,
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             headers={
                 "Cache-Control": f"max-age={(4 if blocking else 1)*target_duration:.0f}"
             },
@@ -354,7 +352,7 @@ class HlsPartView(StreamView):
         ):
             return web.Response(
                 body=None,
-                status=404,
+                status=HTTPStatus.NOT_FOUND,
                 headers={"Cache-Control": f"max-age={track.target_duration:.0f}"},
             )
         # If the part is ready or has been hinted,
@@ -402,7 +400,7 @@ class HlsSegmentView(StreamView):
         ):
             return web.Response(
                 body=None,
-                status=404,
+                status=HTTPStatus.NOT_FOUND,
                 headers={"Cache-Control": f"max-age={track.target_duration:.0f}"},
             )
         return web.Response(

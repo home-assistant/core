@@ -49,7 +49,6 @@ class SuplaSwitch(SuplaChannel, SwitchEntity):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        state = self.channel_data.get("state")
-        if state:
+        if state := self.channel_data.get("state"):
             return state["on"]
         return False
