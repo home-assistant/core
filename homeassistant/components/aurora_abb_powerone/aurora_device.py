@@ -22,7 +22,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class AuroraDevice(Entity):
+class AuroraDeviceEntity(Entity):
     """Representation of an Aurora ABB PowerOne device."""
 
     def __init__(self, client: AuroraSerialClient, data: Mapping[str, Any]) -> None:
