@@ -16,33 +16,33 @@ async def test_ryse_smart_bridge_setup(hass):
 
     entity_registry = er.async_get(hass)
 
-    # Check that the fan is correctly found and set up
-    fan_id = "fan.living_room_fan"
-    fan = entity_registry.async_get(fan_id)
-    assert fan.unique_id == "homekit-fan.living_room_fan-8"
+    # Check that the cover.master_bath_south is correctly found and set up
+    cover_id = "cover.master_bath_south"
+    cover = entity_registry.async_get(cover_id)
+    assert cover.unique_id == "homekit-1.0.0-48"
 
-    fan_helper = Helper(
+    cover_helper = Helper(
         hass,
-        "fan.living_room_fan",
+        cover_id,
         pairing,
         accessories[0],
         config_entry,
     )
 
-    fan_state = await fan_helper.poll_and_get_state()
-    assert fan_state.attributes["friendly_name"] == "Living Room Fan"
-    assert fan_state.state == "off"
+    cover_state = await cover_helper.poll_and_get_state()
+    assert cover_state.attributes["friendly_name"] == "Master Bath South"
+    assert cover_state.state == "closed"
 
     device_registry = dr.async_get(hass)
 
-    device = device_registry.async_get(fan.device_id)
-    assert device.manufacturer == "Home Assistant"
-    assert device.name == "Living Room Fan"
-    assert device.model == "Fan"
-    assert device.sw_version == "0.104.0.dev0"
+    device = device_registry.async_get(cover.device_id)
+    assert device.manufacturer == "RYSE Inc."
+    assert device.name == "Master Bath South"
+    assert device.model == "RYSE Shade"
+    assert device.sw_version == "3.0.8"
 
     bridge = device = device_registry.async_get(device.via_device_id)
-    assert bridge.manufacturer == "Home Assistant"
-    assert bridge.name == "Home Assistant Bridge"
-    assert bridge.model == "Bridge"
-    assert bridge.sw_version == "0.104.0.dev0"
+    assert bridge.manufacturer == "RYSE Inc."
+    assert bridge.name == "RYSE SmartBridge"
+    assert bridge.model == "RYSE SmartBridge"
+    assert bridge.sw_version == "1.3.0"

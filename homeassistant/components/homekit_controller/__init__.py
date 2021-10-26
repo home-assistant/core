@@ -144,7 +144,7 @@ class HomeKitEntity(Entity):
         if serial:
             return f"homekit-{serial}-{self._iid}"
         # Some accessories do not have a serial number
-        return f'homekit-{self._accessory.pairing_data["AccessoryPairingID"]}-{self._aid}-{self._iid}'
+        return f"homekit-{self._accessory.unique_id}-{self._aid}-{self._iid}"
 
     @property
     def name(self) -> str:
@@ -168,7 +168,7 @@ class HomeKitEntity(Entity):
             identifier = (
                 DOMAIN,
                 IDENTIFIER_ACCESSORY_ID,
-                f'{self._accessory.pairing_data["AccessoryPairingID"]}_{self._aid}',
+                f"{self._accessory.unique_id}_{self._aid}",
             )
 
         device_info = DeviceInfo(
