@@ -33,12 +33,6 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Netatmo camera light platform."""
-    if "access_camera" not in entry.data["token"]["scope"]:
-        _LOGGER.info(
-            "Cameras are currently not supported with this authentication method"
-        )
-        return
-
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
     await data_handler.register_data_class(
@@ -99,7 +93,7 @@ class NetatmoLight(NetatmoBase, LightEntity):
         """Entity created."""
         await super().async_added_to_hass()
 
-        self._listeners.append(
+        self.data_handler.config_entry.async_on_unload(
             async_dispatcher_connect(
                 self.hass,
                 f"signal-{DOMAIN}-webhook-{EVENT_TYPE_LIGHT_MODE}",

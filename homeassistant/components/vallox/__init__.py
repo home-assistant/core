@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import ipaddress
 import logging
-from typing import Any
+from typing import Any, NamedTuple
 
 from vallox_websocket_api import PROFILE as VALLOX_PROFILE, Vallox
 from vallox_websocket_api.exceptions import ValloxApiException
@@ -63,28 +63,36 @@ SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED = vol.Schema(
     }
 )
 
+
+class ServiceMethodDetails(NamedTuple):
+    """Details for SERVICE_TO_METHOD mapping."""
+
+    method: str
+    schema: vol.Schema
+
+
 SERVICE_SET_PROFILE = "set_profile"
 SERVICE_SET_PROFILE_FAN_SPEED_HOME = "set_profile_fan_speed_home"
 SERVICE_SET_PROFILE_FAN_SPEED_AWAY = "set_profile_fan_speed_away"
 SERVICE_SET_PROFILE_FAN_SPEED_BOOST = "set_profile_fan_speed_boost"
 
 SERVICE_TO_METHOD = {
-    SERVICE_SET_PROFILE: {
-        "method": "async_set_profile",
-        "schema": SERVICE_SCHEMA_SET_PROFILE,
-    },
-    SERVICE_SET_PROFILE_FAN_SPEED_HOME: {
-        "method": "async_set_profile_fan_speed_home",
-        "schema": SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
-    },
-    SERVICE_SET_PROFILE_FAN_SPEED_AWAY: {
-        "method": "async_set_profile_fan_speed_away",
-        "schema": SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
-    },
-    SERVICE_SET_PROFILE_FAN_SPEED_BOOST: {
-        "method": "async_set_profile_fan_speed_boost",
-        "schema": SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
-    },
+    SERVICE_SET_PROFILE: ServiceMethodDetails(
+        method="async_set_profile",
+        schema=SERVICE_SCHEMA_SET_PROFILE,
+    ),
+    SERVICE_SET_PROFILE_FAN_SPEED_HOME: ServiceMethodDetails(
+        method="async_set_profile_fan_speed_home",
+        schema=SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
+    ),
+    SERVICE_SET_PROFILE_FAN_SPEED_AWAY: ServiceMethodDetails(
+        method="async_set_profile_fan_speed_away",
+        schema=SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
+    ),
+    SERVICE_SET_PROFILE_FAN_SPEED_BOOST: ServiceMethodDetails(
+        method="async_set_profile_fan_speed_boost",
+        schema=SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
+    ),
 }
 
 
@@ -143,10 +151,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     service_handler = ValloxServiceHandler(client, coordinator)
-    for vallox_service, method in SERVICE_TO_METHOD.items():
-        schema = method["schema"]
+    for vallox_service, service_details in SERVICE_TO_METHOD.items():
         hass.services.async_register(
-            DOMAIN, vallox_service, service_handler.async_handle, schema=schema
+            DOMAIN,
+            vallox_service,
+            service_handler.async_handle,
+            schema=service_details.schema,
         )
 
     hass.data[DOMAIN] = {"client": client, "coordinator": coordinator, "name": name}
@@ -248,17 +258,17 @@ class ValloxServiceHandler:
 
     async def async_handle(self, call: ServiceCall) -> None:
         """Dispatch a service call."""
-        method = SERVICE_TO_METHOD.get(call.service)
+        service_details = SERVICE_TO_METHOD.get(call.service)
         params = call.data.copy()
 
-        if method is None:
+        if service_details is None:
             return
 
-        if not hasattr(self, method["method"]):
-            _LOGGER.error("Service not implemented: %s", method["method"])
+        if not hasattr(self, service_details.method):
+            _LOGGER.error("Service not implemented: %s", service_details.method)
             return
 
-        result = await getattr(self, method["method"])(**params)
+        result = await getattr(self, service_details.method)(**params)
 
         # This state change affects other entities like sensors. Force an immediate update that can
         # be observed by all parties involved.
