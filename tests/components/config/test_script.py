@@ -7,9 +7,11 @@ import pytest
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
 
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+
 
 @pytest.fixture(autouse=True)
-async def setup_script(hass):
+async def setup_script(hass, stub_blueprint_populate):  # noqa: F811
     """Set up script integration."""
     assert await async_setup_component(hass, "script", {})
 

@@ -13,7 +13,9 @@ from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa:
 
 
 @pytest.fixture
-async def setup_automation(hass, automation_config):
+async def setup_automation(
+    hass, automation_config, stub_blueprint_populate  # noqa: F811
+):
     """Set up automation integration."""
     assert await async_setup_component(
         hass, "automation", {"automation": automation_config}
