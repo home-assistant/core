@@ -187,7 +187,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._device_path = device_path
         self._radio_type = (
-            RadioType.ezsp.name if "efr32" in local_name else RadioType.znp.name
+            RadioType.ezsp.name if "efr32" in local_name else RadioType.zigate.name if "zigate" in local_name else RadioType.znp.name
         )
 
         return await self.async_step_port_config()
