@@ -9,12 +9,13 @@ import tedpy
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import DOMAIN
+from .const import DOMAIN, OPTION_DEFAULTS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,4 +99,52 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=self._async_generate_schema(),
             errors=errors,
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get options flow for this handler."""
+        return TedOptionsFlowHandler(config_entry)
+
+
+class TedOptionsFlowHandler(config_entries.OptionsFlow):
+    """Config flow options for TED."""
+
+    def __init__(self, entry: ConfigEntry) -> None:
+        """Initialize TED options flow."""
+        self.config_entry = entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the TED options."""
+        return await self.async_step_options()
+
+    def create_option_schema_field(self, name):
+        """Create the schema for a specific TED option with the appropriate default value."""
+        return vol.Required(
+            name, default=self.config_entry.options.get(name, OPTION_DEFAULTS[name])
+        )
+
+    async def async_step_options(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="options",
+            data_schema=vol.Schema(
+                {
+                    self.create_option_schema_field("show_spyder_consumption"): bool,
+                    self.create_option_schema_field(
+                        "show_spyder_daily_consumption"
+                    ): bool,
+                    self.create_option_schema_field(
+                        "show_spyder_mtd_consumption"
+                    ): bool,
+                }
+            ),
         )

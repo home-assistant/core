@@ -15,5 +15,18 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "options": {
+                "data": {
+                    "show_spyder_consumption": "Create Spyder Current Consumption entities",
+                    "show_spyder_daily_consumption": "Create Spyder Daily Consumption entities",
+                    "show_spyder_mtd_consumption": "Create Spyder Month-to-Date Consumption entities"
+                },
+                "description": "Configure TED integration",
+                "title": "TED options"
+            }
+        }
     }
 }

@@ -15,7 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import COORDINATOR, DOMAIN, NAME
+from .const import COORDINATOR, DOMAIN, NAME, OPTION_DEFAULTS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,22 +32,6 @@ SENSORS = (
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         state_class=STATE_CLASS_MEASUREMENT,
         device_class=DEVICE_CLASS_ENERGY,
-    ),
-    SensorEntityDescription(
-        key="mtd_consumption",
-        name="Month to Date Energy Consumption",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-)
-
-SPYDER_SENSORS = (
-    SensorEntityDescription(
-        key="consumption",
-        name="Current Energy Consumption",
-        native_unit_of_measurement=POWER_WATT,
-        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key="mtd_consumption",
@@ -79,6 +63,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     coordinator = data[COORDINATOR]
     name = data[NAME]
 
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
     entities = []
     for sensor_description in SENSORS:
         if coordinator.data["is_5000"] and sensor_description.key != "consumption":
@@ -89,20 +74,30 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 sensor_description, entity_name, config_entry.unique_id, coordinator
             )
         )
+
     for spyder_id, spyder in coordinator.data["spyders"].items():
         spyder_name = spyder["name"]
-        for sensor_description in SPYDER_SENSORS:
+        for sensor_description in SENSORS:
+            option = "show_spyder_" + sensor_description.key
             entity_name = f"{spyder_name} {sensor_description.name}"
-            entities.append(
-                TedBreakdownSensor(
-                    "spyders",
-                    spyder_id,
-                    sensor_description,
-                    entity_name,
-                    config_entry.unique_id,
-                    coordinator,
-                )
+            sensor = TedBreakdownSensor(
+                "spyders",
+                spyder_id,
+                sensor_description,
+                entity_name,
+                config_entry.unique_id,
+                coordinator,
             )
+            if config_entry.options.get(option, OPTION_DEFAULTS[option]):
+                entities.append(sensor)
+            else:
+                entity_id = entity_registry.async_get_entity_id(
+                    "sensor", DOMAIN, sensor.unique_id
+                )
+                if entity_id:
+                    _LOGGER.debug("Removing entity: %s", sensor.unique_id)
+                    entity_registry.async_remove(entity_id)
+
     for mtu_id, mtu in coordinator.data["mtus"].items():
         mtu_name = mtu["name"]
         for sensor_description in MTU_SENSORS:
