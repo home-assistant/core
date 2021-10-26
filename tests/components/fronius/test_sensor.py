@@ -65,7 +65,6 @@ def mock_responses(aioclient_mock: AiohttpClientMocker, night: bool = False) -> 
 
 async def test_symo_inverter(hass, aioclient_mock):
     """Test Fronius Symo inverter entities."""
-    async_fire_time_changed(hass, dt.utcnow())
 
     def assert_state(entity_id, expected_state):
         state = hass.states.get(entity_id)
