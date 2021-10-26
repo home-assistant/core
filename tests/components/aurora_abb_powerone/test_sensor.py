@@ -14,6 +14,7 @@ from homeassistant.components.aurora_abb_powerone.const import (
     DOMAIN,
 )
 from homeassistant.components.aurora_abb_powerone.sensor import AuroraSensor
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
 from homeassistant.exceptions import InvalidStateError
@@ -134,7 +135,18 @@ async def test_sensor_invalid_type(hass):
         client = hass.data[DOMAIN][mock_entry.unique_id]
         data = mock_entry.data
     with pytest.raises(InvalidStateError):
-        entities.append(AuroraSensor(client, data, "WrongSensor", "wrongparameter"))
+        entities.append(
+            AuroraSensor(
+                client,
+                data,
+                SensorEntityDescription(
+                    key="wrongsensor",
+                    device_class="gas",
+                    native_unit_of_measurement="mph",
+                    name="WrongSensor",
+                ),
+            )
+        )
 
 
 async def test_sensor_dark(hass):

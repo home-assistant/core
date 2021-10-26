@@ -1,6 +1,8 @@
 """Support for Aurora ABB PowerOne Solar Photvoltaic (PV) inverter."""
 
+from collections.abc import Mapping
 import logging
+from typing import Any
 
 from aurorapy.client import AuroraError, AuroraSerialClient
 import voluptuous as vol
@@ -9,6 +11,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
+    SensorEntityDescription,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
@@ -31,6 +34,26 @@ from .const import DEFAULT_ADDRESS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+SENSOR_TYPES = [
+    SensorEntityDescription(
+        key="instantaneouspower",
+        device_class=DEVICE_CLASS_POWER,
+        native_unit_of_measurement=POWER_WATT,
+        name="Power Output",
+    ),
+    SensorEntityDescription(
+        key="temp",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        name="Temperature",
+    ),
+    SensorEntityDescription(
+        key="totalenergy",
+        device_class=DEVICE_CLASS_ENERGY,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        name="Total Energy",
+    ),
+]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -58,16 +81,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
     """Set up aurora_abb_powerone sensor based on a config entry."""
     entities = []
 
-    sensortypes = [
-        {"parameter": "instantaneouspower", "name": "Power Output"},
-        {"parameter": "temperature", "name": "Temperature"},
-        {"parameter": "totalenergy", "name": "Total Energy"},
-    ]
     client = hass.data[DOMAIN][config_entry.unique_id]
     data = config_entry.data
 
-    for sens in sensortypes:
-        entities.append(AuroraSensor(client, data, sens["name"], sens["parameter"]))
+    for sens in SENSOR_TYPES:
+        entities.append(AuroraSensor(client, data, sens))
 
     _LOGGER.debug("async_setup_entry adding %d entities", len(entities))
     async_add_entities(entities, True)
@@ -78,25 +96,21 @@ class AuroraSensor(AuroraDevice, SensorEntity):
 
     _attr_state_class = STATE_CLASS_MEASUREMENT
 
-    def __init__(self, client: AuroraSerialClient, data, name, typename):
+    def __init__(
+        self,
+        client: AuroraSerialClient,
+        data: Mapping[str, Any],
+        entity_description: SensorEntityDescription,
+    ):
         """Initialize the sensor."""
         super().__init__(client, data)
-        if typename == "instantaneouspower":
-            self.type = typename
-            self._attr_native_unit_of_measurement = POWER_WATT
-            self._attr_device_class = DEVICE_CLASS_POWER
-        elif typename == "temperature":
-            self.type = typename
-            self._attr_native_unit_of_measurement = TEMP_CELSIUS
-            self._attr_device_class = DEVICE_CLASS_TEMPERATURE
-        elif typename == "totalenergy":
-            self.type = typename
-            self._attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
-            self._attr_device_class = DEVICE_CLASS_ENERGY
+        self.entity_description = entity_description
+        if entity_description.key == "totalenergy":
             self._attr_last_reset = dt_util.utc_from_timestamp(0)
-        else:
-            raise InvalidStateError(f"Unrecognised typename '{typename}'")
-        self._attr_name = f"{name}"
+        elif entity_description.key not in [s.key for s in SENSOR_TYPES]:
+            raise InvalidStateError(
+                f"Unrecognised sensor type  '{entity_description.key}'"
+            )
         self.availableprev = True
 
     def update(self):
@@ -107,14 +121,14 @@ class AuroraSensor(AuroraDevice, SensorEntity):
         try:
             self.availableprev = self._attr_available
             self.client.connect()
-            if self.type == "instantaneouspower":
+            if self.entity_description.key == "instantaneouspower":
                 # read ADC channel 3 (grid power output)
                 power_watts = self.client.measure(3, True)
                 self._attr_native_value = round(power_watts, 1)
-            elif self.type == "temperature":
+            elif self.entity_description.key == "temp":
                 temperature_c = self.client.measure(21)
                 self._attr_native_value = round(temperature_c, 1)
-            elif self.type == "totalenergy":
+            elif self.entity_description.key == "totalenergy":
                 energy_wh = self.client.cumulated_energy(5)
                 self._attr_native_value = round(energy_wh / 1000, 2)
             self._attr_available = True
