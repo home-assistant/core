@@ -46,6 +46,7 @@ DEFAULT_SAVE_ON_CHANGE = False
 DEFAULT_NIGHTLIGHT_SWITCH = False
 
 CONF_MODEL = "model"
+CONF_DETECTED_MODEL = "detected_model"
 CONF_TRANSITION = "transition"
 CONF_SAVE_ON_CHANGE = "save_on_change"
 CONF_MODE_MUSIC = "use_music_mode"
@@ -203,15 +204,15 @@ async def _async_initialize(
 
     if (
         device.capabilities
-        and entry.options.get(CONF_MODEL) != device.capabilities["model"]
+        and entry.data.get(CONF_DETECTED_MODEL) != device.capabilities["model"]
     ):
         hass.config_entries.async_update_entry(
-            entry, options={**entry.options, CONF_MODEL: device.capabilities["model"]}
+            entry,
+            data={**entry.data, CONF_DETECTED_MODEL: device.capabilities["model"]},
         )
 
     # fetch initial state
     await device.async_update()
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
 
 @callback
@@ -228,10 +229,13 @@ def _async_normalize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> No
             data={
                 CONF_HOST: entry.data.get(CONF_HOST),
                 CONF_ID: entry.data.get(CONF_ID) or entry.unique_id,
+                CONF_DETECTED_MODEL: entry.data.get(CONF_DETECTED_MODEL),
             },
             options={
                 CONF_NAME: entry.data.get(CONF_NAME, ""),
-                CONF_MODEL: entry.data.get(CONF_MODEL, ""),
+                CONF_MODEL: entry.data.get(
+                    CONF_MODEL, entry.data.get(CONF_DETECTED_MODEL, "")
+                ),
                 CONF_TRANSITION: entry.data.get(CONF_TRANSITION, DEFAULT_TRANSITION),
                 CONF_MODE_MUSIC: entry.data.get(CONF_MODE_MUSIC, DEFAULT_MODE_MUSIC),
                 CONF_SAVE_ON_CHANGE: entry.data.get(
@@ -270,6 +274,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from ex
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    # Wait to install the reload listener until everything was successfully initialized
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     return True
 
@@ -658,10 +665,19 @@ class YeelightDevice:
 class YeelightEntity(Entity):
     """Represents single Yeelight entity."""
 
+    _attr_should_poll = False
+
     def __init__(self, device: YeelightDevice, entry: ConfigEntry) -> None:
         """Initialize the entity."""
         self._device = device
         self._unique_id = entry.unique_id or entry.entry_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._unique_id)},
+            name=self._device.name,
+            manufacturer="Yeelight",
+            model=self._device.model,
+            sw_version=self._device.fw_version,
+        )
 
     @property
     def unique_id(self) -> str:
@@ -669,25 +685,9 @@ class YeelightEntity(Entity):
         return self._unique_id
 
     @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, self._unique_id)},
-            "name": self._device.name,
-            "manufacturer": "Yeelight",
-            "model": self._device.model,
-            "sw_version": self._device.fw_version,
-        }
-
-    @property
     def available(self) -> bool:
         """Return if bulb is available."""
         return self._device.available
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
 
     async def async_update(self) -> None:
         """Update the entity."""
@@ -698,7 +698,7 @@ async def _async_get_device(
     hass: HomeAssistant, host: str, entry: ConfigEntry
 ) -> YeelightDevice:
     # Get model from config and capabilities
-    model = entry.options.get(CONF_MODEL)
+    model = entry.options.get(CONF_MODEL) or entry.data.get(CONF_DETECTED_MODEL)
 
     # Set up device
     bulb = AsyncBulb(host, model=model or None)
