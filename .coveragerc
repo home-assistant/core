@@ -457,7 +457,6 @@ omit =
     homeassistant/components/hp_ilo/sensor.py
     homeassistant/components/htu21d/sensor.py
     homeassistant/components/huawei_lte/*
-    homeassistant/components/huawei_router/device_tracker.py
     homeassistant/components/hue/light.py
     homeassistant/components/hunterdouglas_powerview/__init__.py
     homeassistant/components/hunterdouglas_powerview/scene.py
