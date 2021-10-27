@@ -8,7 +8,7 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL = timedelta(minutes=1)
+SCAN_INTERVAL = timedelta(minutes=2)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
