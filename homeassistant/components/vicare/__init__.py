@@ -42,7 +42,6 @@ class ViCareRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_getter: Callable[[Device], bool]
-    unit_getter: Callable[[Device], bool | None]
 
 
 CONFIG_SCHEMA = vol.Schema(

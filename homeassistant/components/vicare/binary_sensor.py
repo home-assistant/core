@@ -41,7 +41,6 @@ CIRCUIT_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
         name="Circulation pump active",
         device_class=DEVICE_CLASS_POWER,
         value_getter=lambda api: api.getCirculationPumpActive(),
-        unit_getter=lambda api: None,
     ),
 )
 
@@ -51,7 +50,6 @@ BURNER_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
         name="Burner active",
         device_class=DEVICE_CLASS_POWER,
         value_getter=lambda api: api.getActive(),
-        unit_getter=lambda api: None,
     ),
 )
 
@@ -61,7 +59,6 @@ COMPRESSOR_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
         name="Compressor active",
         device_class=DEVICE_CLASS_POWER,
         value_getter=lambda api: api.getActive(),
-        unit_getter=lambda api: None,
     ),
 )
 
