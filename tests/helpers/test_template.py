@@ -758,6 +758,19 @@ def test_from_json(hass):
     assert actual_result == expected_result
 
 
+def test_average(hass):
+    """Test the average filter."""
+    assert template.Template("{{ [1, 2, 3] | average }}", hass).async_render() == 2
+    assert template.Template("{{ average([1, 2, 3]) }}", hass).async_render() == 2
+    assert template.Template("{{ average(1, 2, 3) }}", hass).async_render() == 2
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ 1 | average }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ average() }}", hass).async_render()
+
+
 def test_min(hass):
     """Test the min filter."""
     assert template.Template("{{ [1, 2, 3] | min }}", hass).async_render() == 1
@@ -3206,21 +3219,3 @@ async def test_undefined_variable(hass, caplog):
         "Template variable warning: 'no_such_variable' is undefined when rendering '{{ no_such_variable }}'"
         in caplog.text
     )
-
-
-async def test_missing_entity(hass, caplog):
-    """Test a warning is logged on missing entity."""
-    hass.states.async_set("binary_sensor.active", "on")
-    valid_template = template.Template(
-        "{{ is_state('binary_sensor.active', 'on') }}", hass
-    )
-    invalid_template = template.Template(
-        "{{ is_state('binary_sensor.abcde', 'on') }}", hass
-    )
-    assert valid_template.async_render() is True
-    assert invalid_template.async_render() is False
-    assert (
-        "Template warning: entity 'binary_sensor.active' doesn't exist"
-        not in caplog.text
-    )
-    assert "Template warning: entity 'binary_sensor.abcde' doesn't exist" in caplog.text

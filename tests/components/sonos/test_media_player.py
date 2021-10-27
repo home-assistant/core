@@ -95,6 +95,4 @@ async def test_entity_basic(hass, config_entry, discover):
     attributes = state.attributes
     assert attributes["friendly_name"] == "Zone A"
     assert attributes["is_volume_muted"] is False
-    assert attributes["night_sound"] is True
-    assert attributes["speech_enhance"] is True
     assert attributes["volume_level"] == 0.19

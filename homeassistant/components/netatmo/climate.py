@@ -23,6 +23,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
+    ATTR_SUGGESTED_AREA,
     ATTR_TEMPERATURE,
     PRECISION_HALVES,
     STATE_OFF,
@@ -115,8 +116,6 @@ DEFAULT_MAX_TEMP = 30
 
 NA_THERM = "NATherm1"
 NA_VALVE = "NRV"
-
-SUGGESTED_AREA = "suggested_area"
 
 
 async def async_setup_entry(
@@ -245,7 +244,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             EVENT_TYPE_CANCEL_SET_POINT,
             EVENT_TYPE_SCHEDULE,
         ):
-            self._listeners.append(
+            self.data_handler.config_entry.async_on_unload(
                 async_dispatcher_connect(
                     self.hass,
                     f"signal-{DOMAIN}-webhook-{event_type}",
@@ -486,7 +485,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             return
 
         self._room_status = self._home_status.rooms.get(self._id)
-        self._room_data = self._data.rooms.get(self._home_id, {}).get(self._id)
+        self._room_data = self._data.rooms.get(self._home_id, {}).get(self._id, {})
 
         if not self._room_status or not self._room_data:
             if self._connected:
@@ -616,5 +615,5 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device info for the thermostat."""
         device_info: DeviceInfo = super().device_info
-        device_info["suggested_area"] = self._room_data["name"]
+        device_info[ATTR_SUGGESTED_AREA] = self._room_data["name"]
         return device_info

@@ -1,6 +1,5 @@
 """The tests for the MQTT switch platform."""
 import copy
-import json
 from unittest.mock import patch
 
 import pytest
@@ -339,15 +338,13 @@ async def test_discovery_update_switch_topic_template(hass, mqtt_mock, caplog):
         ([("switch/state2", '{"state2":{"state":"OFF"}}')], "off", None),
     ]
 
-    data1 = json.dumps(config1)
-    data2 = json.dumps(config2)
     await help_test_discovery_update(
         hass,
         mqtt_mock,
         caplog,
         switch.DOMAIN,
-        data1,
-        data2,
+        config1,
+        config2,
         state_data1=state_data1,
         state_data2=state_data2,
     )
@@ -374,15 +371,13 @@ async def test_discovery_update_switch_template(hass, mqtt_mock, caplog):
         ([("switch/state1", '{"state2":{"state":"OFF"}}')], "off", None),
     ]
 
-    data1 = json.dumps(config1)
-    data2 = json.dumps(config2)
     await help_test_discovery_update(
         hass,
         mqtt_mock,
         caplog,
         switch.DOMAIN,
-        data1,
-        data2,
+        config1,
+        config2,
         state_data1=state_data1,
         state_data2=state_data2,
     )

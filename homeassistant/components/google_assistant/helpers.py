@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from asyncio import gather
 from collections.abc import Mapping
+from http import HTTPStatus
 import logging
 import pprint
 
@@ -203,7 +204,7 @@ class AbstractConfig(ABC):
         # Remove any pending sync
         self._google_sync_unsub.pop(agent_user_id, lambda: None)()
         status = await self._async_request_sync_devices(agent_user_id)
-        if status == 404:
+        if status == HTTPStatus.NOT_FOUND:
             await self.async_disconnect_agent_user(agent_user_id)
         return status
 

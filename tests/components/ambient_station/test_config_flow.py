@@ -22,9 +22,10 @@ def get_devices_response():
 @pytest.fixture
 def mock_aioambient(get_devices_response):
     """Mock the aioambient library."""
-    with patch("homeassistant.components.ambient_station.config_flow.Client") as Client:
-        Client().api.get_devices.return_value = get_devices_response
-        yield Client
+    with patch("homeassistant.components.ambient_station.config_flow.API") as API:
+        api = API()
+        api.get_devices.return_value = get_devices_response
+        yield api
 
 
 async def test_duplicate_error(hass):

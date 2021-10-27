@@ -20,6 +20,7 @@ homeassistant.components.ampio.*
 homeassistant.components.automation.*
 homeassistant.components.binary_sensor.*
 homeassistant.components.bluetooth_tracker.*
+homeassistant.components.bmw_connected_drive.*
 homeassistant.components.bond.*
 homeassistant.components.braviatv.*
 homeassistant.components.brother.*
@@ -58,6 +59,7 @@ homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
 homeassistant.components.hyperion.*
 homeassistant.components.image_processing.*
+homeassistant.components.input_select.*
 homeassistant.components.integration.*
 homeassistant.components.iqvia.*
 homeassistant.components.jewish_calendar.*
@@ -72,6 +74,7 @@ homeassistant.components.mailbox.*
 homeassistant.components.media_player.*
 homeassistant.components.modbus.*
 homeassistant.components.modem_callerid.*
+homeassistant.components.media_source.*
 homeassistant.components.mysensors.*
 homeassistant.components.nam.*
 homeassistant.components.nanoleaf.*

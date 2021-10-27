@@ -163,7 +163,6 @@ class RoonDevice(MediaPlayerEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        dev_model = "player"
         if self.player_data.get("source_controls"):
             dev_model = self.player_data["source_controls"][0].get("display_name")
         return DeviceInfo(

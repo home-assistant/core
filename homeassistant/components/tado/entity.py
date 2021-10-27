@@ -63,15 +63,15 @@ class TadoZoneEntity(Entity):
         self.zone_id = zone_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
-        return {
-            "identifiers": {(DOMAIN, self._device_zone_id)},
-            "name": self.zone_name,
-            "manufacturer": DEFAULT_NAME,
-            "model": TADO_ZONE,
-            "suggested_area": self.zone_name,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_zone_id)},
+            name=self.zone_name,
+            manufacturer=DEFAULT_NAME,
+            model=TADO_ZONE,
+            suggested_area=self.zone_name,
+        )
 
     @property
     def should_poll(self):

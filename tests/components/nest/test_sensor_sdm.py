@@ -64,7 +64,7 @@ async def test_thermostat_device(hass):
 
     humidity = hass.states.get("sensor.my_sensor_humidity")
     assert humidity is not None
-    assert humidity.state == "35.0"
+    assert humidity.state == "35"
     assert humidity.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert humidity.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_HUMIDITY
     assert humidity.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
@@ -230,3 +230,28 @@ async def test_device_with_unknown_type(hass):
     assert device.name == "My Sensor"
     assert device.model is None
     assert device.identifiers == {("nest", "some-device-id")}
+
+
+async def test_temperature_rounding(hass):
+    """Test the rounding of overly precise temperatures."""
+    devices = {
+        "some-device-id": Device.MakeDevice(
+            {
+                "name": "some-device-id",
+                "type": THERMOSTAT_TYPE,
+                "traits": {
+                    "sdm.devices.traits.Info": {
+                        "customName": "My Sensor",
+                    },
+                    "sdm.devices.traits.Temperature": {
+                        "ambientTemperatureCelsius": 25.15678,
+                    },
+                },
+            },
+            auth=None,
+        )
+    }
+    await async_setup_sensor(hass, devices)
+
+    temperature = hass.states.get("sensor.my_sensor_temperature")
+    assert temperature.state == "25.2"
