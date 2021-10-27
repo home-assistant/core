@@ -15,7 +15,7 @@
       "cannot_open_serial_port": "Cannot open serial port, please check and try again"
     },
     "abort": {
-      "already_configured": "Device is already configured",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_serial_ports": "No com ports found.  Need a valid RS485 device to communicate."
     }
   }
