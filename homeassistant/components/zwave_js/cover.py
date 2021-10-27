@@ -116,10 +116,7 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
 
         # Entity class attributes
         self._attr_device_class = DEVICE_CLASS_WINDOW
-        if (
-            self.info.platform_hint == "window_shutter"
-            or self.info.platform_hint == "window_shutter_tilt"
-        ):
+        if self.info.platform_hint in ("window_shutter", "window_shutter_tilt"):
             self._attr_device_class = DEVICE_CLASS_SHUTTER
         if self.info.platform_hint == "window_blind":
             self._attr_device_class = DEVICE_CLASS_BLIND
