@@ -40,7 +40,7 @@ from homeassistant.components.stream.core import StreamSettings
 from homeassistant.components.stream.worker import SegmentBuffer, stream_worker
 from homeassistant.setup import async_setup_component
 
-from tests.components.stream.common import generate_h264_video
+from tests.components.stream.common import generate_h264_video, generate_h265_video
 from tests.components.stream.test_ll_hls import TEST_PART_DURATION
 
 STREAM_SOURCE = "some-stream-source"
@@ -200,6 +200,9 @@ class FakePyAvBuffer:
 
             def __str__(self) -> str:
                 return f"FakeAvOutputStream<{template.name}>"
+
+            def name(self) -> str:
+                return "avc1"
 
         if template.name == AUDIO_STREAM_FORMAT:
             return FakeAvOutputStream(self.audio_packets)
@@ -767,6 +770,41 @@ async def test_has_keyframe(hass, record_worker_sync):
             )
             av_part.close()
             assert part.has_keyframe == media_has_keyframe
+
+    await record_worker_sync.join()
+
+    stream.stop()
+
+
+async def test_h265_video_is_hvc1(hass, record_worker_sync):
+    """Test that a h265 video gets muxed as hvc1."""
+    await async_setup_component(
+        hass,
+        "stream",
+        {
+            "stream": {
+                CONF_LL_HLS: True,
+                CONF_SEGMENT_DURATION: SEGMENT_DURATION,
+                CONF_PART_DURATION: TEST_PART_DURATION,
+            }
+        },
+    )
+
+    source = generate_h265_video()
+    stream = create_stream(hass, source, {})
+
+    # use record_worker_sync to grab output segments
+    with patch.object(hass.config, "is_allowed_path", return_value=True):
+        await stream.async_record("/example/path")
+
+    complete_segments = list(await record_worker_sync.get_segments())[:-1]
+    assert len(complete_segments) >= 1
+
+    segment = complete_segments[0]
+    part = segment.parts[0]
+    av_part = av.open(io.BytesIO(segment.init + part.data))
+    assert av_part.streams.video[0].codec_tag == "hvc1"
+    av_part.close()
 
     await record_worker_sync.join()
 
