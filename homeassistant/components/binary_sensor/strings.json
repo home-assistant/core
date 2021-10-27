@@ -207,5 +207,18 @@
       "off": "[%key:common::state::off%]",
       "on": "[%key:common::state::on%]"
     }
+  },
+  "device_class": {
+    "cold": "cold",
+    "gas": "gas",
+    "heat": "heat",
+    "moisture": "moisture",
+    "motion": "motion",
+    "occupancy": "occupancy",
+    "power": "power",
+    "problem": "problem",
+    "smoke": "smoke",
+    "sound": "sound",
+    "vibration": "vibration"
   }
 }

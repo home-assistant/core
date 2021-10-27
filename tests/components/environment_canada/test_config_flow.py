@@ -1,5 +1,5 @@
 """Test the Environment Canada (EC) config flow."""
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import xml.etree.ElementTree as et
 
 import aiohttp
@@ -44,10 +44,10 @@ def mocked_ec(
     if update:
         ec_mock.update = update
     else:
-        ec_mock.update = Mock()
+        ec_mock.update = AsyncMock()
 
     return patch(
-        "homeassistant.components.environment_canada.config_flow.ECData",
+        "homeassistant.components.environment_canada.config_flow.ECWeather",
         return_value=ec_mock,
     )
 
@@ -94,24 +94,6 @@ async def test_create_same_entry_twice(hass):
         assert result["reason"] == "already_configured"
 
 
-async def test_too_many_attempts(hass):
-    """Test hitting rate limit."""
-    with mocked_ec(metadata={}), patch(
-        "homeassistant.components.environment_canada.async_setup_entry",
-        return_value=True,
-    ):
-        flow = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            flow["flow_id"],
-            {},
-        )
-        await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {"base": "too_many_attempts"}
-
-
 @pytest.mark.parametrize(
     "error",
     [
@@ -126,7 +108,7 @@ async def test_exception_handling(hass, error):
     """Test exception handling."""
     exc, base_error = error
     with patch(
-        "homeassistant.components.environment_canada.config_flow.ECData",
+        "homeassistant.components.environment_canada.config_flow.ECWeather",
         side_effect=exc,
     ):
         flow = await hass.config_entries.flow.async_init(

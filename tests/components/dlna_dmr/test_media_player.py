@@ -8,7 +8,11 @@ from types import MappingProxyType
 from typing import Any
 from unittest.mock import ANY, DEFAULT, Mock, patch
 
-from async_upnp_client.exceptions import UpnpConnectionError, UpnpError
+from async_upnp_client.exceptions import (
+    UpnpConnectionError,
+    UpnpError,
+    UpnpResponseError,
+)
 from async_upnp_client.profiles.dlna import TransportState
 import pytest
 
@@ -350,6 +354,33 @@ async def test_event_subscribe_failure(
 
     # Clear mocks for tear down checks
     dmr_device_mock.async_subscribe_services.reset_mock()
+
+    # Unload config entry to clean up
+    assert await hass.config_entries.async_remove(config_entry_mock.entry_id) == {
+        "require_restart": False
+    }
+
+
+async def test_event_subscribe_rejected(
+    hass: HomeAssistant,
+    config_entry_mock: MockConfigEntry,
+    dmr_device_mock: Mock,
+) -> None:
+    """Test _device_connect continues when the device rejects a subscription.
+
+    Device state will instead be obtained via polling in async_update.
+    """
+    dmr_device_mock.async_subscribe_services.side_effect = UpnpResponseError(501)
+
+    mock_entity_id = await setup_mock_component(hass, config_entry_mock)
+    mock_state = hass.states.get(mock_entity_id)
+    assert mock_state is not None
+
+    # Device should be connected
+    assert mock_state.state == ha_const.STATE_IDLE
+
+    # Device should not be unsubscribed
+    dmr_device_mock.async_unsubscribe_services.assert_not_awaited()
 
     # Unload config entry to clean up
     assert await hass.config_entries.async_remove(config_entry_mock.entry_id) == {

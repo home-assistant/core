@@ -1,11 +1,17 @@
 """Support for Eight Sleep binary sensors."""
 import logging
 
+from pyeight.eight import EightSleep
+from pyeight.user import EightUser
+
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_OCCUPANCY,
     BinarySensorEntity,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import (
     CONF_BINARY_SENSORS,
@@ -19,7 +25,12 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType = None,
+) -> None:
     """Set up the eight sleep binary sensor."""
     if discovery_info is None:
         return
@@ -40,7 +51,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class EightHeatSensor(EightSleepEntity, BinarySensorEntity):
     """Representation of a Eight Sleep heat-based sensor."""
 
-    def __init__(self, name, coordinator, eight, sensor):
+    def __init__(
+        self,
+        name: str,
+        coordinator: DataUpdateCoordinator,
+        eight: EightSleep,
+        sensor: str,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, eight)
 
@@ -50,7 +67,7 @@ class EightHeatSensor(EightSleepEntity, BinarySensorEntity):
 
         self._side = self._sensor.split("_")[0]
         self._userid = self._eight.fetch_userid(self._side)
-        self._usrobj = self._eight.users[self._userid]
+        self._usrobj: EightUser = self._eight.users[self._userid]
 
         self._attr_name = f"{name} {self._mapped_name}"
         self._attr_device_class = DEVICE_CLASS_OCCUPANCY
@@ -63,12 +80,12 @@ class EightHeatSensor(EightSleepEntity, BinarySensorEntity):
         )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return self._state
+        return bool(self._state)
 
     @callback
-    def _handle_coordinator_update(self):
+    def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._state = self._usrobj.bed_presence
         super()._handle_coordinator_update()
