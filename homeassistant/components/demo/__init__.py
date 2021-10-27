@@ -156,7 +156,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def _generate_mean_statistics(start, end, init_value, max_diff):
+def _generate_mean_statistics(start, end, init_value, max_diff):
     statistics = []
     mean = init_value
     now = start
@@ -175,7 +175,7 @@ async def _generate_mean_statistics(start, end, init_value, max_diff):
     return statistics
 
 
-async def _generate_sum_statistics(start, end, init_value, max_diff):
+def _generate_sum_statistics(start, end, init_value, max_diff):
     statistics = []
     now = start
     sum_ = init_value
