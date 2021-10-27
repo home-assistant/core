@@ -133,7 +133,7 @@ class SolarEdgeSensorEntity(CoordinatorEntity, SensorEntity):
         """Return a unique ID."""
         if not self.data_service.site_id:
             return None
-        return f"{self.data_service.site_id}_{self.entity_description.json_key}"
+        return f"{self.data_service.site_id}_{self.entity_description.key}"
 
 
 class SolarEdgeOverviewSensor(SolarEdgeSensorEntity):
