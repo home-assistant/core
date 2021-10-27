@@ -147,9 +147,7 @@ class OneWireHub:
         for device_path in self.owproxy.dir(path):
             device_id = os.path.split(os.path.split(device_path)[0])[1]
             device_family = self.owproxy.read(f"{device_path}family").decode()
-            _LOGGER.debug("read `%sfamily`: %s", device_path, device_family)
-            device_type = self.owproxy.read(f"{device_path}type").decode()
-            _LOGGER.debug("read `%stype`: %s", device_path, device_type)
+            device_type = self._get_device_type_owserver(device_path)
             device_info: DeviceInfo = {
                 ATTR_IDENTIFIERS: {(DOMAIN, device_id)},
                 ATTR_MANUFACTURER: DEVICE_MANUFACTURER.get(
@@ -175,6 +173,17 @@ class OneWireHub:
                     )
 
         return devices
+
+    def _get_device_type_owserver(self, device_path: str) -> str:
+        """Get device model."""
+        if TYPE_CHECKING:
+            assert self.owproxy
+        device_type = self.owproxy.read(f"{device_path}type").decode()
+        if device_type == "EDS":
+            device_type = self.owproxy.read(f"{device_path}device_type").decode()
+        if TYPE_CHECKING:
+            assert isinstance(device_type, str)
+        return device_type
 
     def has_device_in_cache(self, device: DeviceEntry) -> bool:
         """Check if device was present in the cache."""
