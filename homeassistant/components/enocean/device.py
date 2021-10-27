@@ -30,7 +30,6 @@ class EnOceanEntity(Entity):
 
     def _message_received_callback(self, packet):
         """Handle incoming packets."""
-
         if packet.sender_int == combine_hex(self.dev_id):
             self.value_changed(packet)
 

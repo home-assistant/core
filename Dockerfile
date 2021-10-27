@@ -8,7 +8,10 @@ ENV \
 WORKDIR /usr/src
 
 # Need to install not-yet merged enocean module manually
-RUN git clone -b dev/esp2_support https://github.com/toggm/enocean.git enocean && cd enocean && pip3 install .
+RUN \ 
+    git clone -b dev/esp2_support https://github.com/toggm/enocean.git enocean  \
+    && cd enocean \
+    && pip3 install .
 
 ## Setup Home Assistant
 COPY . homeassistant/

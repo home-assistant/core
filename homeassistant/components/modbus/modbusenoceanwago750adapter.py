@@ -14,7 +14,7 @@ from homeassistant.components.modbus.const import (
 from .modbus import ModbusHub
 from .modbusenoceanadapter import ModbusEnoceanAdapter
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger("enocean.communicators.ModbusEnOceanWago750Adapter")
 
 
 class ModbusEnOceanWago750Adapter(ModbusEnoceanAdapter):

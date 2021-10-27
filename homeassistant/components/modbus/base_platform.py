@@ -393,32 +393,34 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
         self._lazy_errors = self._lazy_error_count
         self._attr_available = True
         if result.bits:
-            _LOGGER.debug(
-                "update switch slave=%s, input_type=%s, address=%s -> result=%s",
-                slaveId,
-                input_type,
-                address,
-                result.bits[address],
-            )
-            self._attr_is_on = bool(result.bits[address] & 1)
-        elif result.registers:
-            _LOGGER.debug(
-                "update switch slave=%s, input_type=%s, address=%s -> result=%s",
-                slaveId,
-                input_type,
-                address,
-                result.registers,
-            )
-            value = int(result.registers[address])
-            if value == self._state_on:
-                self._attr_is_on = True
-            elif value == self._state_off:
-                self._attr_is_on = False
-            elif value is not None:
-                _LOGGER.error(
-                    "Unexpected response from modbus device slave %s register %s, got 0x%2x",
-                    self._slave,
-                    self._verify_address,
-                    value,
+            if len(result.bits) > address:
+                _LOGGER.debug(
+                    "update switch slave=%s, input_type=%s, address=%s -> result=%s",
+                    slaveId,
+                    input_type,
+                    address,
+                    result.bits[address],
                 )
+                self._attr_is_on = bool(result.bits[address] & 1)
+        elif result.registers:
+            if len(result.registers) > address:
+                _LOGGER.debug(
+                    "update switch slave=%s, input_type=%s, address=%s -> result=%s",
+                    slaveId,
+                    input_type,
+                    address,
+                    result.registers,
+                )
+                value = int(result.registers[address])
+                if value == self._state_on:
+                    self._attr_is_on = True
+                elif value == self._state_off:
+                    self._attr_is_on = False
+                elif value is not None:
+                    _LOGGER.error(
+                        "Unexpected response from modbus device slave %s register %s, got 0x%2x",
+                        self._slave,
+                        self._verify_address,
+                        value,
+                    )
         self.async_write_ha_state()
