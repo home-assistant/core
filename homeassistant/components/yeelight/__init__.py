@@ -723,9 +723,13 @@ async def _async_get_device(
     await device.async_update()
 
     if (
+        # Must have last_properties
         not device.bulb.last_properties
-        or "power" not in device.bulb.last_properties
-        or "bright" not in device.bulb.last_properties
+        # Must have at least a power property
+        or (
+            "main_power" not in device.bulb.last_properties
+            and "power" not in device.bulb.last_properties
+        )
     ):
         raise ConfigEntryNotReady(
             "Could not fetch initial state; try power cycling the device"
