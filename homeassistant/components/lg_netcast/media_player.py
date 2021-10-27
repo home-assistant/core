@@ -151,7 +151,7 @@ class LgTVDevice(MediaPlayerEntity):
     def __update_volume(self):
         volume_info = self._client.get_volume()
         if volume_info:
-            [(volume, muted)] = volume_info
+            (volume, muted) = volume_info
             self._volume = volume
             self._muted = muted
 
