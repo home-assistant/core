@@ -60,7 +60,6 @@ _SRV_GOTO = "goto_preset"
 _SRV_CBW = "set_color_bw"
 _SRV_TOUR_ON = "start_tour"
 _SRV_TOUR_OFF = "stop_tour"
-_SRV_PRIVACY_MODE = "privacy_mode"
 
 _SRV_PTZ_CTRL = "ptz_control"
 _ATTR_PTZ_TT = "travel_time"
@@ -117,7 +116,6 @@ CAMERA_SERVICES = {
     _SRV_CBW: (_SRV_CBW_SCHEMA, "async_set_color_bw", (_ATTR_COLOR_BW,)),
     _SRV_TOUR_ON: (_SRV_SCHEMA, "async_start_tour", ()),
     _SRV_TOUR_OFF: (_SRV_SCHEMA, "async_stop_tour", ()),
-    _SRV_PRIVACY_MODE: (_PRIV_MODE_SCHEMA, "async_set_privacy", (_ATTR_PRIVACY_MODE,)),
     _SRV_PTZ_CTRL: (
         _SRV_PTZ_SCHEMA,
         "async_ptz_control",
@@ -187,7 +185,6 @@ class AmcrestCam(Camera):
         self._audio_enabled: bool | None = None
         self._motion_recording_enabled: bool | None = None
         self._color_bw: str | None = None
-        self._privacy_mode: bool | None = None
         self._rtsp_url: str | None = None
         self._snapshot_task: asyncio.tasks.Task | None = None
         self._unsub_dispatcher: list[Callable[[], None]] = []
@@ -314,8 +311,6 @@ class AmcrestCam(Camera):
             )
         if self._color_bw is not None:
             attr[_ATTR_COLOR_BW] = self._color_bw
-        if self._privacy_mode is not None:
-            attr[_ATTR_PRIVACY_MODE] = _BOOL_TO_STATE.get(self._privacy_mode)
         return attr
 
     @property
@@ -426,7 +421,6 @@ class AmcrestCam(Camera):
             self._motion_recording_enabled = self._get_motion_recording()
             self._color_bw = self._get_color_mode()
             self._rtsp_url = self._api.rtsp_url(typeno=self._resolution)
-            self._privacy_mode = self._get_privacy_mode()
         except AmcrestError as error:
             log_update_error(_LOGGER, "get", self.name, "camera attributes", error)
             self._update_succeeded = False
@@ -492,10 +486,6 @@ class AmcrestCam(Camera):
     async def async_stop_tour(self) -> None:
         """Call the job and stop camera tour."""
         await self.hass.async_add_executor_job(self._start_tour, False)
-
-    async def async_set_privacy(self, privacy_mode: bool) -> None:
-        """Set privacy mode in the camera."""
-        await self.hass.async_add_executor_job(self._set_pm, privacy_mode)
 
     async def async_ptz_control(self, movement: str, travel_time: float) -> None:
         """Move or zoom camera in specified direction."""
@@ -661,18 +651,3 @@ class AmcrestCam(Camera):
             log_update_error(
                 _LOGGER, "start" if start else "stop", self.name, "camera tour", error
             )
-
-    def _set_pm(self, mode: bool) -> None:
-        """Set privacy mode and change the setting."""
-        self._change_setting(mode, "privacy mode", "_privacy_mode")
-
-    def _set_privacy_mode(self, mode: bool) -> None:
-        """Set privacy mode."""
-        lower_str = str(mode).lower()
-        self._api.command(
-            f"configManager.cgi?action=setConfig&LeLensMask[0].Enable={lower_str}"
-        )
-
-    def _get_privacy_mode(self) -> bool:
-        """Get privacy mode."""
-        return self._api.privacy_config().splitlines()[0].split("=")[1] == "true"
