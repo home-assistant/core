@@ -324,7 +324,7 @@ class EnergyCostSensor(SensorEntity):
         if energy_unit == ENERGY_WATT_HOUR:
             energy_price /= 1000
         elif energy_unit == ENERGY_MEGA_WATT_HOUR:
-            energy_unit *= 1000
+            energy_price *= 1000
 
         if energy_unit is None:
             if not self._wrong_unit_reported:
