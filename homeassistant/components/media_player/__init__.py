@@ -896,10 +896,13 @@ class MediaPlayerEntity(Entity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        if self.state == STATE_OFF:
-            return None
-
         state_attr = {}
+
+        if self.support_grouping:
+            state_attr[ATTR_GROUP_MEMBERS] = self.group_members
+
+        if self.state == STATE_OFF:
+            return state_attr
 
         for attr in ATTR_TO_PROPERTY:
             value = getattr(self, attr)
@@ -908,9 +911,6 @@ class MediaPlayerEntity(Entity):
 
         if self.media_image_remotely_accessible:
             state_attr["entity_picture_local"] = self.media_image_local
-
-        if self.support_grouping:
-            state_attr[ATTR_GROUP_MEMBERS] = self.group_members
 
         return state_attr
 
