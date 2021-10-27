@@ -210,7 +210,7 @@ class ZWaveTiltCover(ZWaveCover):
                 tilt_value,
                 percent_to_zwave_tilt(kwargs[ATTR_TILT_POSITION]),
             )
-            await asyncio.sleep(2)
+            await asyncio.sleep(2.5)
             await self.info.node.async_refresh_cc_values(tilt_value.command_class)
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:

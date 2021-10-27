@@ -268,7 +268,7 @@ DISCOVERY_SCHEMAS = [
         product_type={0x0301, 0x0302},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
         data_template=CoverTiltDataTemplate(
-            tilt_value=ZwaveValueID(
+            tilt_value_id=ZwaveValueID(
                 "fibaro",
                 CommandClass.MANUFACTURER_PROPRIETARY,
                 endpoint=0,
