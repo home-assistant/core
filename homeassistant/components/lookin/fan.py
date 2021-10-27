@@ -1,13 +1,14 @@
 """The lookin integration fan platform."""
 from __future__ import annotations
 
+import logging
 from typing import Any, Final
 
-from aiolookin import Remote
+from aiolookin import Remote, SensorID
 
 from homeassistant.components.fan import SUPPORT_OSCILLATE, FanEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -15,6 +16,10 @@ from .entity import LookinPowerEntity
 from .models import LookinData
 
 FAN_SUPPORT_FLAGS: Final = SUPPORT_OSCILLATE
+LOGGER = logging.getLogger(__name__)
+
+ON_VALUE = "1000"
+OFF_VALUE = "0000"
 
 
 async def async_setup_entry(
@@ -76,6 +81,26 @@ class LookinFanBase(LookinPowerEntity, FanEntity):
         await self._async_send_command(self._power_off_command)
         self._is_on = False
         self.async_write_ha_state()
+
+    @callback
+    def _async_push_update(self, msg: dict[str, str]) -> None:
+        """Process an update pushed via UDP."""
+        LOGGER.debug("Processing push message for %s: %s", self.entity_id, msg)
+        if msg["value"] == ON_VALUE:
+            self._is_on = True
+        elif msg["value"] == OFF_VALUE:
+            self._is_on = False
+        else:
+            return
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Call when the entity is added to hass."""
+        self.async_on_remove(
+            self._lookin_udp_subs.subscribe_sensor(
+                self._lookin_device.id, SensorID.IR, self._uuid, self._async_push_update
+            )
+        )
 
 
 class LookinFan(LookinFanBase):
