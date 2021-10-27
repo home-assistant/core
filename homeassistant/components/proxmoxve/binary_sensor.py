@@ -146,3 +146,17 @@ class ProxmoxNodeUpdateBinarySensor(ProxmoxEntity, BinarySensorEntity):
         """Return sensor availability."""
 
         return super().available and self.coordinator.data is not None
+
+    @property
+    def extra_state_attributes(self) -> dict | None:
+        """Return the optional state attributes."""
+
+        if self.coordinator.data is None:
+            return None
+
+        data = {}
+
+        for update_item in self.coordinator.data:
+            data[update_item["Package"]] = update_item["Version"]
+
+        return data
