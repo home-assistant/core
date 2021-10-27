@@ -1,5 +1,5 @@
 """Support for LG TV running on NetCast 3 or 4."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 import time
 
@@ -106,11 +106,8 @@ class LgTVDevice(MediaPlayerDevice):
         try:
             with self._client as client:
                 self._state = STATE_PLAYING
-                volume_info = client.query_data("volume_info")
-                if volume_info:
-                    volume_info = volume_info[0]
-                    self._volume = float(volume_info.find("level").text)
-                    self._muted = volume_info.find("mute").text == "true"
+
+                self.update_volume()
 
                 channel_info = client.query_data("cur_channel")
                 if channel_info:
@@ -136,6 +133,11 @@ class LgTVDevice(MediaPlayerDevice):
                     self._source_names = [n for n, k in sorted_sources]
         except (LgNetCastError, RequestException):
             self._state = STATE_OFF
+
+    def update_volume(self):
+        volume, muted = self._client.get_volume()
+        self._volume = volume
+        self._muted = muted
 
     @property
     def name(self):
@@ -206,16 +208,8 @@ class LgTVDevice(MediaPlayerDevice):
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        volume_difference = int((volume - self.volume_level) * 100)
-        step_function = self.volume_up if volume_difference > 0 else self.volume_down
-        for i in range(abs(volume_difference)):
-            step_function()
-            time.sleep(
-                0.35
-            )  # tv jumps over volume steps after quick consecutive presses
-        self.update(no_throttle=True)
-        if self.volume_level != volume:  # some presses tend to get lost
-            self.set_volume_level(volume)
+        self._client.set_volume(float(volume * 100))
+        self.update_volume()
 
     def mute_volume(self, mute):
         """Send mute command."""
