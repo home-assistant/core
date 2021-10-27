@@ -170,7 +170,7 @@ class AdvantageAirZone(AdvantageAirClimateEntity):
     def hvac_mode(self):
         """Return the current state as HVAC mode."""
         if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
-            return HVAC_MODE_FAN_ONLY
+            return HVAC_MODE_HEAT_COOL
         return HVAC_MODE_OFF
 
     @property
