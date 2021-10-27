@@ -380,6 +380,34 @@ async def test_async_listen_error_late_discovery(hass, caplog):
     assert config_entry.data[CONF_DETECTED_MODEL] == MODEL
 
 
+async def test_fail_to_fetch_initial_state(hass, caplog):
+    """Test failing to fetch initial state results in a retry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS, **CONFIG_ENTRY_DATA}
+    )
+    config_entry.add_to_hass(hass)
+
+    mocked_bulb = _mocked_bulb()
+    del mocked_bulb.last_properties["power"]
+    del mocked_bulb.last_properties["main_power"]
+
+    with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    await hass.async_block_till_done()
+    assert "Could not fetch initial state; try power cycling the device" in caplog.text
+
+    with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+
 async def test_unload_before_discovery(hass, caplog):
     """Test unloading before discovery."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
