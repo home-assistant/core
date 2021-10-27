@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SENSORS,
+    CONF_SOURCE,
     CONF_SWITCHES,
     CONF_USERNAME,
 )
@@ -31,12 +32,14 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    BINSENSOR_PORTS,
     CONF_CLIMATES,
     CONF_CONNECTIONS,
     CONF_DIM_MODE,
     CONF_DOMAIN_DATA,
     CONF_HARDWARE_SERIAL,
     CONF_HARDWARE_TYPE,
+    CONF_OUTPUT,
     CONF_RESOURCE,
     CONF_SCENES,
     CONF_SK_NUM_TRIES,
@@ -44,6 +47,13 @@ from .const import (
     CONNECTION,
     DEFAULT_NAME,
     DOMAIN,
+    LED_PORTS,
+    LOGICOP_PORTS,
+    OUTPUT_PORTS,
+    S0_INPUTS,
+    SETPOINTS,
+    THRESHOLDS,
+    VARIABLES,
 )
 
 # typing
@@ -91,6 +101,29 @@ def get_resource(domain_name: str, domain_data: ConfigType) -> str:
         return f'{domain_data["source"]}.{domain_data["setpoint"]}'
     if domain_name == "scene":
         return f'{domain_data["register"]}.{domain_data["scene"]}'
+    raise ValueError("Unknown domain")
+
+
+def get_device_model(domain_name: str, domain_data: ConfigType) -> str:
+    """Return the model for the specified domain_data."""
+    if domain_name in ("switch", "light"):
+        return "Output" if domain_data[CONF_OUTPUT] in OUTPUT_PORTS else "Relay"
+    if domain_name in ("binary_sensor", "sensor"):
+        if domain_data[CONF_SOURCE] in BINSENSOR_PORTS:
+            return "Binary Sensor"
+        if domain_data[CONF_SOURCE] in VARIABLES + SETPOINTS + THRESHOLDS + S0_INPUTS:
+            return "Variable"
+        if domain_data[CONF_SOURCE] in LED_PORTS:
+            return "Led"
+        if domain_data[CONF_SOURCE] in LOGICOP_PORTS:
+            return "Logical Operation"
+        return "Key"
+    if domain_name == "cover":
+        return "Motor"
+    if domain_name == "climate":
+        return "Regulator"
+    if domain_name == "scene":
+        return "Scene"
     raise ValueError("Unknown domain")
 
 

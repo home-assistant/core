@@ -22,7 +22,14 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_DIM_MODE, CONF_SK_NUM_TRIES, CONNECTION, DOMAIN, PLATFORMS
+from .const import (
+    CONF_DIM_MODE,
+    CONF_DOMAIN_DATA,
+    CONF_SK_NUM_TRIES,
+    CONNECTION,
+    DOMAIN,
+    PLATFORMS,
+)
 from .helpers import (
     AddressType,
     DeviceConnectionType,
@@ -31,6 +38,7 @@ from .helpers import (
     async_register_lcn_host_device,
     async_update_config_entry,
     generate_unique_id,
+    get_device_model,
     import_lcn_config,
 )
 from .schemas import CONFIG_SCHEMA  # noqa: F401
@@ -186,15 +194,13 @@ class LcnEntity(Entity):
     def device_info(self) -> DeviceInfo | None:
         """Return device specific attributes."""
         address = f"{'g' if self.address[2] else 'm'}{self.address[0]:03d}{self.address[1]:03d}"
-        hw_model = (
-            f"LCN {self.config[CONF_DOMAIN]} ({address}.{self.config[CONF_RESOURCE]})"
-        )
+        model = f"LCN {get_device_model(self.config[CONF_DOMAIN], self.config[CONF_DOMAIN_DATA])}"
 
         return {
             "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
+            "name": f"{address}.{self.config[CONF_RESOURCE]}",
+            "model": model,
             "manufacturer": "Issendorff",
-            "model": hw_model,
             "via_device": (
                 DOMAIN,
                 generate_unique_id(self.entry_id, self.config[CONF_ADDRESS]),
