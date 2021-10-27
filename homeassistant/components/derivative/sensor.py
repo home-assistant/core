@@ -1,6 +1,4 @@
 """Numeric derivative of data coming from a source sensor over time."""
-from __future__ import annotations
-
 from decimal import Decimal, DecimalException
 import logging
 
