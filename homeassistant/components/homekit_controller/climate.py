@@ -495,7 +495,7 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
         """Return the maximum humidity."""
         max_humidity = self.service[CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET].maxValue
         if max_humidity is not None:
-            return super().max_humidity
+            return max_humidity
         return super().max_humidity
 
     @property
