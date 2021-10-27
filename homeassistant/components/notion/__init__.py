@@ -119,7 +119,7 @@ async def async_register_new_bridge(
     hass: HomeAssistant, bridge: dict, entry: ConfigEntry
 ) -> None:
     """Register a new bridge."""
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, bridge["hardware_id"])},
@@ -193,7 +193,7 @@ class NotionEntity(CoordinatorEntity):
 
         self._bridge_id = sensor["bridge"]["id"]
 
-        device_registry = await dr.async_get_registry(self.hass)
+        device_registry = dr.async_get(self.hass)
         this_device = device_registry.async_get_device(
             {(DOMAIN, sensor["hardware_id"])}
         )

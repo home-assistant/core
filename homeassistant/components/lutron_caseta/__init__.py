@@ -202,7 +202,7 @@ def _async_merge_lip_leap_data(lip_devices, bridge):
 
 async def _async_register_bridge_device(hass, config_entry_id, bridge_device):
     """Register the bridge device in the device registry."""
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         name=bridge_device["name"],
         manufacturer=MANUFACTURER,
@@ -216,7 +216,7 @@ async def _async_register_button_devices(
     hass, config_entry_id, bridge_device, button_devices_by_id
 ):
     """Register button devices (Pico Remotes) in the device registry."""
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     button_devices_by_dr_id = {}
 
     for device in button_devices_by_id.values():

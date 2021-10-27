@@ -53,7 +53,7 @@ class SIAHub:
     async def async_setup_hub(self) -> None:
         """Add a device to the device_registry, register shutdown listener, load reactions."""
         self.update_accounts()
-        device_registry = await dr.async_get_registry(self._hass)
+        device_registry = dr.async_get(self._hass)
         for acc in self._accounts:
             account = acc[CONF_ACCOUNT]
             device_registry.async_get_or_create(

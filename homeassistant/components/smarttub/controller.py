@@ -109,7 +109,7 @@ class SmartTubController:
 
     async def async_register_devices(self, entry):
         """Register devices with the device registry for all spas."""
-        device_registry = await dr.async_get_registry(self._hass)
+        device_registry = dr.async_get(self._hass)
         for spa in self.spas:
             device_registry.async_get_or_create(
                 config_entry_id=entry.entry_id,

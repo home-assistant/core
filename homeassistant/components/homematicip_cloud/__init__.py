@@ -93,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # Register hap as device in registry.
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
 
     home = hap.home
     hapname = home.label if home.label != entry.unique_id else f"Home-{home.label}"
@@ -126,7 +126,7 @@ async def async_remove_obsolete_entities(
     if hap.home.currentAPVersion < "2.2.12":
         return
 
-    entity_registry = await er.async_get_registry(hass)
+    entity_registry = er.async_get(hass)
     er_entries = async_entries_for_config_entry(entity_registry, entry.entry_id)
     for er_entry in er_entries:
         if er_entry.unique_id.startswith("HomematicipAccesspointStatus"):

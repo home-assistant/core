@@ -276,7 +276,7 @@ def async_setup_services(hass: HomeAssistant):  # noqa: C901
 
     async def async_cleanup_registry_entries(service) -> None:
         """Remove extra entities that are no longer part of the integration."""
-        entity_registry = await er.async_get_registry(hass)
+        entity_registry = er.async_get(hass)
         config_ids = []
         current_unique_ids = []
 

@@ -205,7 +205,7 @@ async def async_register_base_station(
     hass: HomeAssistant, entry: ConfigEntry, system: SystemV2 | SystemV3
 ) -> None:
     """Register a new bridge."""
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, system.system_id)},

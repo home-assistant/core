@@ -262,7 +262,7 @@ def _async_isy_to_configuration_url(isy: ISY) -> str:
 async def _async_get_or_create_isy_device_in_registry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry, isy
 ) -> None:
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     url = _async_isy_to_configuration_url(isy)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
