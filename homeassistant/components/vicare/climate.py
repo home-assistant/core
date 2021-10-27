@@ -212,7 +212,7 @@ class ViCareClimate(ClimateEntity):
                     "heating_curve_shift"
                 ] = self._circuit.getHeatingCurveShift()
 
-            self._attributes["modes"] = self._circuit.getModes()
+            self._attributes["vicare_modes"] = self._circuit.getModes()
 
             self._current_action = False
             # Update the specific device attributes
@@ -338,7 +338,7 @@ class ViCareClimate(ClimateEntity):
 
     def set_vicare_mode(self, vicare_mode):
         """Service function to set vicare modes directly."""
-        if vicare_mode not in self._attributes["modes"]:
+        if vicare_mode not in self._attributes["vicare_modes"]:
             raise ValueError(f"Cannot set invalid vicare mode: {vicare_mode}.")
 
         self._circuit.setMode(vicare_mode)
