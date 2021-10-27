@@ -253,7 +253,7 @@ class TemplateEntity(Entity):
             self.hass,
             template_var_tups,
             self._handle_results,
-            has_master_template=has_availability_template,
+            has_super_template=has_availability_template,
         )
         self.async_on_remove(result_info.async_remove)
         self._async_update = result_info.async_refresh
