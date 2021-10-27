@@ -18,10 +18,12 @@ from aiounifi.events import (
 from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
+from homeassistant.const import ATTR_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 import homeassistant.util.dt as dt_util
 
 from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
@@ -405,17 +407,17 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
         return not self.device.disabled and self.controller.available
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
-        info = {
-            "connections": {(CONNECTION_NETWORK_MAC, self.device.mac)},
-            "manufacturer": ATTR_MANUFACTURER,
-            "model": self.device.model,
-            "sw_version": self.device.version,
-        }
+        info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self.device.mac)},
+            manufacturer=ATTR_MANUFACTURER,
+            model=self.device.model,
+            sw_version=self.device.version,
+        )
 
         if self.device.name:
-            info["name"] = self.device.name
+            info[ATTR_NAME] = self.device.name
 
         return info
 
