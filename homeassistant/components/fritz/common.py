@@ -359,7 +359,7 @@ class FritzBoxTools:
             entities_removed = True
 
         if entities_removed:
-            await self._remove_empty_devices(entity_reg, config_entry)
+            self._async_remove_empty_devices(entity_reg, config_entry)
 
     async def _remove_empty_devices(
         self, entity_reg: EntityRegistry, config_entry: ConfigEntry
