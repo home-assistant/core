@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione.",
+            "webhook_not_internet_accessible": "L'istanza di Home Assistant deve essere accessibile da Internet per ricevere messaggi webhook."
+        },
+        "create_entry": {
+            "default": "Per inviare eventi a Home Assistant, \u00e8 necessario impostare la funzione webhook in Traccar.\n\nUsa il seguente URL: `{webhook_url}`.\n\nVedi [la documentazione]({docs_url}) per ulteriori dettagli."
+        },
+        "step": {
+            "user": {
+                "description": "Sei sicuro di voler configurare Traccar?",
+                "title": "Imposta Traccar"
+            }
+        }
+    }
+}

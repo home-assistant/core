@@ -1,0 +1,60 @@
+{
+    "config": {
+        "abort": {
+            "port_name_in_use": "Un accessorio o un bridge con lo stesso nome o porta \u00e8 gi\u00e0 configurato."
+        },
+        "step": {
+            "pairing": {
+                "description": "Per completare l'associazione, seguire le istruzioni in \"Notifiche\" sotto \"Associazione HomeKit\".",
+                "title": "Associa HomeKit"
+            },
+            "user": {
+                "data": {
+                    "include_domains": "Domini da includere"
+                },
+                "description": "Scegli i domini da includere. Tutte le entit\u00e0 supportate nel dominio saranno incluse. Verr\u00e0 creata un'istanza HomeKit separata in modalit\u00e0 accessoria per ogni lettore multimediale TV, telecomando basato sulle attivit\u00e0, serratura e telecamera.",
+                "title": "Seleziona i domini da includere"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "advanced": {
+                "data": {
+                    "auto_start": "Avvio automatico (disabilitare se stai chiamando manualmente il servizio homekit.start)",
+                    "devices": "Dispositivi (Attivatori)"
+                },
+                "description": "Gli interruttori programmabili vengono creati per ogni dispositivo selezionato. Quando si attiva un trigger del dispositivo, HomeKit pu\u00f2 essere configurato per eseguire un'automazione o una scena.",
+                "title": "Configurazione Avanzata"
+            },
+            "cameras": {
+                "data": {
+                    "camera_audio": "Telecamere che supportano l'audio",
+                    "camera_copy": "Telecamere che supportano flussi H.264 nativi"
+                },
+                "description": "Controllare tutte le telecamere che supportano i flussi H.264 nativi. Se la videocamera non emette uno stream H.264, il sistema provveder\u00e0 a transcodificare il video in H.264 per HomeKit. La transcodifica richiede una CPU performante ed \u00e8 improbabile che funzioni su computer a scheda singola.",
+                "title": "Configurazione della telecamera"
+            },
+            "include_exclude": {
+                "data": {
+                    "entities": "Entit\u00e0",
+                    "mode": "Modalit\u00e0"
+                },
+                "description": "Scegliere le entit\u00e0 da includere. In modalit\u00e0 accessorio, \u00e8 inclusa una sola entit\u00e0. In modalit\u00e0 di inclusione bridge, tutte le entit\u00e0 nel dominio saranno incluse, a meno che non siano selezionate entit\u00e0 specifiche. In modalit\u00e0 di esclusione bridge, tutte le entit\u00e0 nel dominio saranno incluse, ad eccezione delle entit\u00e0 escluse. Per prestazioni ottimali, sar\u00e0 creata una HomeKit separata accessoria per ogni lettore multimediale TV, telecomando basato sulle attivit\u00e0, serratura e videocamera.",
+                "title": "Seleziona le entit\u00e0 da includere"
+            },
+            "init": {
+                "data": {
+                    "include_domains": "Domini da includere",
+                    "mode": "Modalit\u00e0"
+                },
+                "description": "HomeKit pu\u00f2 essere configurato esponendo un bridge o un singolo accessorio. In modalit\u00e0 accessorio, pu\u00f2 essere utilizzata solo una singola entit\u00e0. La modalit\u00e0 accessorio \u00e8 necessaria per il corretto funzionamento dei lettori multimediali con la classe di apparecchi TV. Le entit\u00e0 nei \"Domini da includere\" saranno esposte ad HomeKit. Sar\u00e0 possibile selezionare quali entit\u00e0 includere o escludere da questo elenco nella schermata successiva.",
+                "title": "Seleziona i domini da includere."
+            },
+            "yaml": {
+                "description": "Questa voce \u00e8 controllata tramite YAML",
+                "title": "Modifica le opzioni di HomeKit"
+            }
+        }
+    }
+}

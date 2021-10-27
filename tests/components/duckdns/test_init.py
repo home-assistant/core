@@ -1,13 +1,14 @@
 """Test the DuckDNS component."""
 from datetime import timedelta
 import logging
+
 import pytest
 
+from homeassistant.components import duckdns
+from homeassistant.components.duckdns import async_track_time_interval_backoff
 from homeassistant.loader import bind_hass
 from homeassistant.setup import async_setup_component
-from homeassistant.components import duckdns
 from homeassistant.util.dt import utcnow
-from homeassistant.components.duckdns import async_track_time_interval_backoff
 
 from tests.common import async_fire_time_changed
 
@@ -86,7 +87,7 @@ async def test_setup_backoff(hass, aioclient_mock):
     tme = utcnow()
     await hass.async_block_till_done()
 
-    _LOGGER.debug("Backoff...")
+    _LOGGER.debug("Backoff")
     for idx in range(1, len(intervals)):
         tme += intervals[idx]
         async_fire_time_changed(hass, tme)
@@ -155,10 +156,10 @@ async def test_async_track_time_interval_backoff(hass):
 
     assert call_count == 1
 
-    _LOGGER.debug("Backoff...")
+    _LOGGER.debug("Backoff")
     for idx in range(1, len(intervals)):
         tme += intervals[idx]
-        async_fire_time_changed(hass, tme)
+        async_fire_time_changed(hass, tme + timedelta(seconds=0.1))
         await hass.async_block_till_done()
 
         assert call_count == idx + 1
@@ -166,7 +167,7 @@ async def test_async_track_time_interval_backoff(hass):
     _LOGGER.debug("Max backoff reached - intervals[-1]")
     for _idx in range(1, 10):
         tme += intervals[-1]
-        async_fire_time_changed(hass, tme)
+        async_fire_time_changed(hass, tme + timedelta(seconds=0.1))
         await hass.async_block_till_done()
 
         assert call_count == idx + 1 + _idx
@@ -175,14 +176,14 @@ async def test_async_track_time_interval_backoff(hass):
     call_count = 0
     ret_val = True
     tme += intervals[-1]
-    async_fire_time_changed(hass, tme)
+    async_fire_time_changed(hass, tme + timedelta(seconds=0.1))
     await hass.async_block_till_done()
     assert call_count == 1
 
     _LOGGER.debug("No backoff - intervals[0]")
     for _idx in range(2, 10):
         tme += intervals[0]
-        async_fire_time_changed(hass, tme)
+        async_fire_time_changed(hass, tme + timedelta(seconds=0.1))
         await hass.async_block_till_done()
 
         assert call_count == _idx

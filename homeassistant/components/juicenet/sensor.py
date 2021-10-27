@@ -1,109 +1,117 @@
 """Support for monitoring juicenet/juicepoint/juicebox based EVSE sensors."""
-import logging
+from __future__ import annotations
 
-from homeassistant.const import ENERGY_WATT_HOUR, POWER_WATT, TEMP_CELSIUS
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.const import (
+    DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_VOLTAGE,
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
+    ENERGY_WATT_HOUR,
+    POWER_WATT,
+    TEMP_CELSIUS,
+    TIME_SECONDS,
+)
 
-from . import DOMAIN, JuicenetDevice
+from .const import DOMAIN, JUICENET_API, JUICENET_COORDINATOR
+from .entity import JuiceNetDevice
 
-_LOGGER = logging.getLogger(__name__)
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="status",
+        name="Charging Status",
+    ),
+    SensorEntityDescription(
+        key="temperature",
+        name="Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="voltage",
+        name="Voltage",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        device_class=DEVICE_CLASS_VOLTAGE,
+    ),
+    SensorEntityDescription(
+        key="amps",
+        name="Amps",
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        device_class=DEVICE_CLASS_CURRENT,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="watts",
+        name="Watts",
+        native_unit_of_measurement=POWER_WATT,
+        device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="charge_time",
+        name="Charge time",
+        native_unit_of_measurement=TIME_SECONDS,
+        icon="mdi:timer-outline",
+    ),
+    SensorEntityDescription(
+        key="energy_added",
+        name="Energy added",
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+    ),
+)
 
-SENSOR_TYPES = {
-    "status": ["Charging Status", None],
-    "temperature": ["Temperature", TEMP_CELSIUS],
-    "voltage": ["Voltage", "V"],
-    "amps": ["Amps", "A"],
-    "watts": ["Watts", POWER_WATT],
-    "charge_time": ["Charge time", "s"],
-    "energy_added": ["Energy added", ENERGY_WATT_HOUR],
-}
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the JuiceNet Sensors."""
+    juicenet_data = hass.data[DOMAIN][config_entry.entry_id]
+    api = juicenet_data[JUICENET_API]
+    coordinator = juicenet_data[JUICENET_COORDINATOR]
+
+    entities = [
+        JuiceNetSensorDevice(device, coordinator, description)
+        for device in api.devices
+        for description in SENSOR_TYPES
+    ]
+    async_add_entities(entities)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Juicenet sensor."""
-    api = hass.data[DOMAIN]["api"]
+class JuiceNetSensorDevice(JuiceNetDevice, SensorEntity):
+    """Implementation of a JuiceNet sensor."""
 
-    dev = []
-    for device in api.get_devices():
-        for variable in SENSOR_TYPES:
-            dev.append(JuicenetSensorDevice(device, variable, hass))
-
-    add_entities(dev)
-
-
-class JuicenetSensorDevice(JuicenetDevice, Entity):
-    """Implementation of a Juicenet sensor."""
-
-    def __init__(self, device, sensor_type, hass):
+    def __init__(self, device, coordinator, description: SensorEntityDescription):
         """Initialise the sensor."""
-        super().__init__(device, sensor_type, hass)
-        self._name = SENSOR_TYPES[sensor_type][0]
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return "{} {}".format(self.device.name(), self._name)
+        super().__init__(device, description.key, coordinator)
+        self.entity_description = description
+        self._attr_name = f"{self.device.name} {description.name}"
 
     @property
     def icon(self):
         """Return the icon of the sensor."""
         icon = None
-        if self.type == "status":
-            status = self.device.getStatus()
+        if self.entity_description.key == "status":
+            status = self.device.status
             if status == "standby":
                 icon = "mdi:power-plug-off"
             elif status == "plugged":
                 icon = "mdi:power-plug"
             elif status == "charging":
                 icon = "mdi:battery-positive"
-        elif self.type == "temperature":
-            icon = "mdi:thermometer"
-        elif self.type == "voltage":
-            icon = "mdi:flash"
-        elif self.type == "amps":
-            icon = "mdi:flash"
-        elif self.type == "watts":
-            icon = "mdi:flash"
-        elif self.type == "charge_time":
-            icon = "mdi:timer"
-        elif self.type == "energy_added":
-            icon = "mdi:flash"
+        else:
+            icon = self.entity_description.icon
         return icon
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
-
-    @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
-        state = None
-        if self.type == "status":
-            state = self.device.getStatus()
-        elif self.type == "temperature":
-            state = self.device.getTemperature()
-        elif self.type == "voltage":
-            state = self.device.getVoltage()
-        elif self.type == "amps":
-            state = self.device.getAmps()
-        elif self.type == "watts":
-            state = self.device.getWatts()
-        elif self.type == "charge_time":
-            state = self.device.getChargeTime()
-        elif self.type == "energy_added":
-            state = self.device.getEnergyAdded()
-        else:
-            state = "Unknown"
-        return state
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        attributes = {}
-        if self.type == "status":
-            man_dev_id = self.device.id()
-            if man_dev_id:
-                attributes["manufacturer_device_id"] = man_dev_id
-        return attributes
+        return getattr(self.device, self.entity_description.key, None)

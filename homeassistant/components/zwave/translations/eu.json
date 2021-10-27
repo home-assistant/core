@@ -1,0 +1,14 @@
+{
+    "state": {
+        "_": {
+            "dead": "Hilda",
+            "initializing": "Hasieratzen",
+            "ready": "Prest",
+            "sleeping": "Lotan"
+        },
+        "query_stage": {
+            "dead": "Ez du erantzuten ({query_stage})",
+            "initializing": "Hasieratzen ({query_stage})"
+        }
+    }
+}

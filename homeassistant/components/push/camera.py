@@ -1,22 +1,24 @@
 """Camera platform that receives images through HTTP POST."""
-import logging
-import asyncio
+from __future__ import annotations
 
+import asyncio
 from collections import deque
 from datetime import timedelta
-import voluptuous as vol
+import logging
+
 import aiohttp
 import async_timeout
+import voluptuous as vol
 
 from homeassistant.components.camera import (
-    Camera,
     PLATFORM_SCHEMA,
     STATE_IDLE,
     STATE_RECORDING,
+    Camera,
 )
 from homeassistant.components.camera.const import DOMAIN
-from homeassistant.core import callback
 from homeassistant.const import CONF_NAME, CONF_TIMEOUT, CONF_WEBHOOK_ID
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_utc_time
 import homeassistant.util.dt as dt_util
@@ -144,7 +146,7 @@ class PushCamera(Camera):
             self._state = STATE_IDLE
             self._expired_listener = None
             _LOGGER.debug("Reset state")
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         if self._expired_listener:
             self._expired_listener()
@@ -153,9 +155,11 @@ class PushCamera(Camera):
             self.hass, reset_state, dt_util.utcnow() + self._timeout
         )
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response."""
         if self.queue:
             if self._state == STATE_IDLE:
@@ -175,7 +179,7 @@ class PushCamera(Camera):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             name: value

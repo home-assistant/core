@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Nie znaleziono urz\u0105dze\u0144 w sieci",
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
+        },
+        "step": {
+            "confirm": {
+                "description": "Czy chcesz rozpocz\u0105\u0107 konfiguracj\u0119?"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "long_press": "przycisk Wemo zostanie przytrzymany przez 2 sekundy"
+        }
+    }
+}

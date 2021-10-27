@@ -1,100 +1,109 @@
 """Support for UK Met Office weather service."""
-import logging
-
-import datapoint as dp
-import voluptuous as vol
-
-from homeassistant.components.weather import PLATFORM_SCHEMA, WeatherEntity
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
-    TEMP_CELSIUS,
+from homeassistant.components.weather import (
+    ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_TEMP,
+    ATTR_FORECAST_TIME,
+    ATTR_FORECAST_WIND_BEARING,
+    ATTR_FORECAST_WIND_SPEED,
+    WeatherEntity,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.const import LENGTH_KILOMETERS, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .sensor import ATTRIBUTION, CONDITION_CLASSES, MetOfficeCurrentData
-
-_LOGGER = logging.getLogger(__name__)
-
-DEFAULT_NAME = "Met Office"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Inclusive(
-            CONF_LATITUDE, "coordinates", "Latitude and longitude must exist together"
-        ): cv.latitude,
-        vol.Inclusive(
-            CONF_LONGITUDE, "coordinates", "Latitude and longitude must exist together"
-        ): cv.longitude,
-    }
+from .const import (
+    ATTRIBUTION,
+    CONDITION_CLASSES,
+    DEFAULT_NAME,
+    DOMAIN,
+    METOFFICE_COORDINATES,
+    METOFFICE_DAILY_COORDINATOR,
+    METOFFICE_HOURLY_COORDINATOR,
+    METOFFICE_NAME,
+    MODE_3HOURLY_LABEL,
+    MODE_DAILY,
+    MODE_DAILY_LABEL,
+    VISIBILITY_CLASSES,
+    VISIBILITY_DISTANCE_CLASSES,
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Met Office weather platform."""
-    name = config.get(CONF_NAME)
-    datapoint = dp.connection(api_key=config.get(CONF_API_KEY))
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigType, async_add_entities
+) -> None:
+    """Set up the Met Office weather sensor platform."""
+    hass_data = hass.data[DOMAIN][entry.entry_id]
 
-    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-
-    if None in (latitude, longitude):
-        _LOGGER.error("Latitude or longitude not set in Home Assistant config")
-        return
-
-    try:
-        site = datapoint.get_nearest_site(latitude=latitude, longitude=longitude)
-    except dp.exceptions.APIException as err:
-        _LOGGER.error("Received error from Met Office Datapoint: %s", err)
-        return
-
-    if not site:
-        _LOGGER.error("Unable to get nearest Met Office forecast site")
-        return
-
-    data = MetOfficeCurrentData(hass, datapoint, site)
-    try:
-        data.update()
-    except (ValueError, dp.exceptions.APIException) as err:
-        _LOGGER.error("Received error from Met Office Datapoint: %s", err)
-        return
-
-    add_entities([MetOfficeWeather(site, data, name)], True)
+    async_add_entities(
+        [
+            MetOfficeWeather(hass_data[METOFFICE_HOURLY_COORDINATOR], hass_data, True),
+            MetOfficeWeather(hass_data[METOFFICE_DAILY_COORDINATOR], hass_data, False),
+        ],
+        False,
+    )
 
 
-class MetOfficeWeather(WeatherEntity):
+def _build_forecast_data(timestep):
+    data = {}
+    data[ATTR_FORECAST_TIME] = timestep.date.isoformat()
+    if timestep.weather:
+        data[ATTR_FORECAST_CONDITION] = _get_weather_condition(timestep.weather.value)
+    if timestep.precipitation:
+        data[ATTR_FORECAST_PRECIPITATION] = timestep.precipitation.value
+    if timestep.temperature:
+        data[ATTR_FORECAST_TEMP] = timestep.temperature.value
+    if timestep.wind_direction:
+        data[ATTR_FORECAST_WIND_BEARING] = timestep.wind_direction.value
+    if timestep.wind_speed:
+        data[ATTR_FORECAST_WIND_SPEED] = timestep.wind_speed.value
+    return data
+
+
+def _get_weather_condition(metoffice_code):
+    for hass_name, metoffice_codes in CONDITION_CLASSES.items():
+        if metoffice_code in metoffice_codes:
+            return hass_name
+    return None
+
+
+class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
     """Implementation of a Met Office weather condition."""
 
-    def __init__(self, site, data, name):
-        """Initialise the platform with a data instance and site."""
-        self._name = name
-        self.data = data
-        self.site = site
+    def __init__(self, coordinator, hass_data, use_3hourly):
+        """Initialise the platform with a data instance."""
+        super().__init__(coordinator)
 
-    def update(self):
-        """Update current conditions."""
-        self.data.update()
+        mode_label = MODE_3HOURLY_LABEL if use_3hourly else MODE_DAILY_LABEL
+        self._name = f"{DEFAULT_NAME} {hass_data[METOFFICE_NAME]} {mode_label}"
+        self._unique_id = hass_data[METOFFICE_COORDINATES]
+        if not use_3hourly:
+            self._unique_id = f"{self._unique_id}_{MODE_DAILY}"
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self._name} {self.site.name}"
+        return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique of the sensor."""
+        return self._unique_id
 
     @property
     def condition(self):
         """Return the current condition."""
-        return [
-            k for k, v in CONDITION_CLASSES.items() if self.data.data.weather.value in v
-        ][0]
+        if self.coordinator.data.now:
+            return _get_weather_condition(self.coordinator.data.now.weather.value)
+        return None
 
     @property
     def temperature(self):
         """Return the platform temperature."""
-        return self.data.data.temperature.value
+        if self.coordinator.data.now.temperature:
+            return self.coordinator.data.now.temperature.value
+        return None
 
     @property
     def temperature_unit(self):
@@ -102,24 +111,64 @@ class MetOfficeWeather(WeatherEntity):
         return TEMP_CELSIUS
 
     @property
+    def visibility(self):
+        """Return the platform visibility."""
+        _visibility = None
+        weather_now = self.coordinator.data.now
+        if hasattr(weather_now, "visibility"):
+            visibility_class = VISIBILITY_CLASSES.get(weather_now.visibility.value)
+            visibility_distance = VISIBILITY_DISTANCE_CLASSES.get(
+                weather_now.visibility.value
+            )
+            _visibility = f"{visibility_class} - {visibility_distance}"
+        return _visibility
+
+    @property
+    def visibility_unit(self):
+        """Return the unit of measurement."""
+        return LENGTH_KILOMETERS
+
+    @property
     def pressure(self):
         """Return the mean sea-level pressure."""
+        weather_now = self.coordinator.data.now
+        if weather_now and weather_now.pressure:
+            return weather_now.pressure.value
         return None
 
     @property
     def humidity(self):
         """Return the relative humidity."""
-        return self.data.data.humidity.value
+        weather_now = self.coordinator.data.now
+        if weather_now and weather_now.humidity:
+            return weather_now.humidity.value
+        return None
 
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        return self.data.data.wind_speed.value
+        weather_now = self.coordinator.data.now
+        if weather_now and weather_now.wind_speed:
+            return weather_now.wind_speed.value
+        return None
 
     @property
     def wind_bearing(self):
         """Return the wind bearing."""
-        return self.data.data.wind_direction.value
+        weather_now = self.coordinator.data.now
+        if weather_now and weather_now.wind_direction:
+            return weather_now.wind_direction.value
+        return None
+
+    @property
+    def forecast(self):
+        """Return the forecast array."""
+        if self.coordinator.data.forecast is None:
+            return None
+        return [
+            _build_forecast_data(timestep)
+            for timestep in self.coordinator.data.forecast
+        ]
 
     @property
     def attribution(self):

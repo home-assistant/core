@@ -1,0 +1,44 @@
+{
+    "device_automation": {
+        "action_type": {
+            "arm_away": "Schakel {entity_name} in voor vertrek",
+            "arm_home": "Schakel {entity_name} in voor thuis",
+            "arm_night": "Schakel {entity_name} in voor 's nachts",
+            "arm_vacation": "Schakel {entity_name} in voor vakantie",
+            "disarm": "Schakel {entity_name} uit",
+            "trigger": "Laat {entity_name} afgaan"
+        },
+        "condition_type": {
+            "is_armed_away": "{entity_name} ingeschakeld voor vertrek",
+            "is_armed_home": "{entity_name} ingeschakeld voor thuis",
+            "is_armed_night": "{entity_name} is ingeschakeld voor 's nachts",
+            "is_armed_vacation": "{entity_name} is ingeschakeld voor vakantie",
+            "is_disarmed": "{entity_name} is uitgeschakeld",
+            "is_triggered": "{entity_name} gaat af"
+        },
+        "trigger_type": {
+            "armed_away": "{entity_name} ingeschakeld voor vertrek",
+            "armed_home": "{entity_name} ingeschakeld voor thuis",
+            "armed_night": "{entity_name} ingeschakeld voor 's nachts",
+            "armed_vacation": "{entity_name} schakelde in voor vakantie",
+            "disarmed": "{entity_name} uitgeschakeld",
+            "triggered": "{entity_name} afgegaan"
+        }
+    },
+    "state": {
+        "_": {
+            "armed": "Ingeschakeld",
+            "armed_away": "Ingeschakeld voor vertrek",
+            "armed_custom_bypass": "Ingeschakeld met overbrugging",
+            "armed_home": "Ingeschakeld voor thuis",
+            "armed_night": "Ingeschakeld voor 's nachts",
+            "armed_vacation": "Vakantie ingeschakeld",
+            "arming": "Schakelt in",
+            "disarmed": "Uitgeschakeld",
+            "disarming": "Schakelt uit",
+            "pending": "In wacht",
+            "triggered": "Gaat af"
+        }
+    },
+    "title": "Alarmbedieningspaneel"
+}

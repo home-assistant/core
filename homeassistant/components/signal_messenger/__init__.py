@@ -1,0 +1,1 @@
+"""The signalmessenger component."""

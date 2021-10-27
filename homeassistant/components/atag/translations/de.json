@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "unauthorized": "Pairing verweigert, Ger\u00e4t auf Authentifizierungsanforderung pr\u00fcfen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "title": "Verbinden mit dem Ger\u00e4t"
+            }
+        }
+    }
+}

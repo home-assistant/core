@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "\u010casov\u00fd limit autoriza\u010dn\u00edho URL vypr\u0161el",
+            "missing_configuration": "Komponenta nen\u00ed nastavena. Postupujte podle dokumentace.",
+            "no_url_available": "Nen\u00ed k dispozici \u017e\u00e1dn\u00e1 adresa URL. Informace o t\u00e9to chyb\u011b naleznete [v sekci n\u00e1pov\u011bdy]({docs_url})",
+            "reauth_successful": "Op\u011btovn\u00e9 ov\u011b\u0159en\u00ed bylo \u00fasp\u011b\u0161n\u00e9",
+            "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace.",
+            "unknown_authorize_url_generation": "Nezn\u00e1m\u00e1 chyba p\u0159i generov\u00e1n\u00ed autoriza\u010dn\u00ed URL adresy."
+        },
+        "create_entry": {
+            "default": "\u00dasp\u011b\u0161n\u011b ov\u011b\u0159eno"
+        },
+        "error": {
+            "internal_error": "Intern\u00ed chyba ov\u011b\u0159en\u00ed k\u00f3du",
+            "invalid_pin": "Neplatn\u00fd PIN k\u00f3d",
+            "timeout": "\u010casov\u00fd limit ov\u011b\u0159ov\u00e1n\u00ed k\u00f3du vypr\u0161el",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "flow_impl": "Poskytovatel"
+                },
+                "description": "Vyberte metodu ov\u011b\u0159en\u00ed",
+                "title": "Poskytovatel ov\u011b\u0159en\u00ed"
+            },
+            "link": {
+                "data": {
+                    "code": "PIN k\u00f3d"
+                },
+                "description": "Chcete-li propojit \u00fa\u010det Nest, [autorizujte sv\u016fj \u00fa\u010det]({url}). \n\n Po autorizaci zkop\u00edrujte n\u00ed\u017ee uveden\u00fd k\u00f3d PIN.",
+                "title": "Propojit s Nest \u00fa\u010dtem"
+            },
+            "pick_implementation": {
+                "title": "Vyberte metodu ov\u011b\u0159en\u00ed"
+            },
+            "reauth_confirm": {
+                "title": "Znovu ov\u011b\u0159it integraci"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "Detekov\u00e1n pohyb"
+        }
+    }
+}

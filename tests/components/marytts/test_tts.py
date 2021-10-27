@@ -2,17 +2,18 @@
 import asyncio
 import os
 import shutil
+from unittest.mock import patch
 
-import homeassistant.components.tts as tts
-from homeassistant.setup import setup_component
 from homeassistant.components.media_player.const import (
-    SERVICE_PLAY_MEDIA,
+    ATTR_MEDIA_CONTENT_ID,
     DOMAIN as DOMAIN_MP,
+    SERVICE_PLAY_MEDIA,
 )
+import homeassistant.components.tts as tts
+from homeassistant.config import async_process_ha_core_config
+from homeassistant.setup import setup_component
 
-from tests.common import get_test_home_assistant, assert_setup_component, mock_service
-
-from tests.components.tts.test_init import mutagen_mock  # noqa
+from tests.common import assert_setup_component, get_test_home_assistant, mock_service
 
 
 class TestTTSMaryTTSPlatform:
@@ -22,14 +23,22 @@ class TestTTSMaryTTSPlatform:
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-        self.url = "http://localhost:59125/process?"
-        self.url_param = {
+        asyncio.run_coroutine_threadsafe(
+            async_process_ha_core_config(
+                self.hass, {"internal_url": "http://example.local:8123"}
+            ),
+            self.hass.loop,
+        )
+
+        self.host = "localhost"
+        self.port = 59125
+        self.params = {
             "INPUT_TEXT": "HomeAssistant",
             "INPUT_TYPE": "TEXT",
-            "AUDIO": "WAVE",
-            "VOICE": "cmu-slt-hsmm",
             "OUTPUT_TYPE": "AUDIO",
             "LOCALE": "en_US",
+            "AUDIO": "WAVE_FILE",
+            "VOICE": "cmu-slt-hsmm",
         }
 
     def teardown_method(self):
@@ -47,60 +56,88 @@ class TestTTSMaryTTSPlatform:
         with assert_setup_component(1, tts.DOMAIN):
             setup_component(self.hass, tts.DOMAIN, config)
 
-    def test_service_say(self, aioclient_mock):
+    def test_service_say(self):
         """Test service call say."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
-
-        aioclient_mock.get(self.url, params=self.url_param, status=200, content=b"test")
 
         config = {tts.DOMAIN: {"platform": "marytts"}}
 
         with assert_setup_component(1, tts.DOMAIN):
             setup_component(self.hass, tts.DOMAIN, config)
 
-        self.hass.services.call(
-            tts.DOMAIN, "marytts_say", {tts.ATTR_MESSAGE: "HomeAssistant"}
-        )
-        self.hass.block_till_done()
+        with patch(
+            "homeassistant.components.marytts.tts.MaryTTS.speak",
+            return_value=b"audio",
+        ) as mock_speak:
+            self.hass.services.call(
+                tts.DOMAIN,
+                "marytts_say",
+                {
+                    "entity_id": "media_player.something",
+                    tts.ATTR_MESSAGE: "HomeAssistant",
+                },
+            )
+            self.hass.block_till_done()
 
-        assert len(aioclient_mock.mock_calls) == 1
+        mock_speak.assert_called_once()
+        mock_speak.assert_called_with("HomeAssistant", {})
+
         assert len(calls) == 1
+        assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".wav") != -1
 
-    def test_service_say_timeout(self, aioclient_mock):
-        """Test service call say."""
+    def test_service_say_with_effect(self):
+        """Test service call say with effects."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        aioclient_mock.get(
-            self.url, params=self.url_param, status=200, exc=asyncio.TimeoutError()
-        )
+        config = {
+            tts.DOMAIN: {"platform": "marytts", "effect": {"Volume": "amount:2.0;"}}
+        }
+
+        with assert_setup_component(1, tts.DOMAIN):
+            setup_component(self.hass, tts.DOMAIN, config)
+
+        with patch(
+            "homeassistant.components.marytts.tts.MaryTTS.speak",
+            return_value=b"audio",
+        ) as mock_speak:
+            self.hass.services.call(
+                tts.DOMAIN,
+                "marytts_say",
+                {
+                    "entity_id": "media_player.something",
+                    tts.ATTR_MESSAGE: "HomeAssistant",
+                },
+            )
+            self.hass.block_till_done()
+
+        mock_speak.assert_called_once()
+        mock_speak.assert_called_with("HomeAssistant", {"Volume": "amount:2.0;"})
+
+        assert len(calls) == 1
+        assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".wav") != -1
+
+    def test_service_say_http_error(self):
+        """Test service call say."""
+        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
         config = {tts.DOMAIN: {"platform": "marytts"}}
 
         with assert_setup_component(1, tts.DOMAIN):
             setup_component(self.hass, tts.DOMAIN, config)
 
-        self.hass.services.call(
-            tts.DOMAIN, "marytts_say", {tts.ATTR_MESSAGE: "HomeAssistant"}
-        )
-        self.hass.block_till_done()
+        with patch(
+            "homeassistant.components.marytts.tts.MaryTTS.speak",
+            side_effect=Exception(),
+        ) as mock_speak:
+            self.hass.services.call(
+                tts.DOMAIN,
+                "marytts_say",
+                {
+                    "entity_id": "media_player.something",
+                    tts.ATTR_MESSAGE: "HomeAssistant",
+                },
+            )
+            self.hass.block_till_done()
 
-        assert len(calls) == 0
-        assert len(aioclient_mock.mock_calls) == 1
-
-    def test_service_say_http_error(self, aioclient_mock):
-        """Test service call say."""
-        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
-
-        aioclient_mock.get(self.url, params=self.url_param, status=403, content=b"test")
-
-        config = {tts.DOMAIN: {"platform": "marytts"}}
-
-        with assert_setup_component(1, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
-
-        self.hass.services.call(
-            tts.DOMAIN, "marytts_say", {tts.ATTR_MESSAGE: "HomeAssistant"}
-        )
-        self.hass.block_till_done()
-
+        mock_speak.assert_called_once()
         assert len(calls) == 0

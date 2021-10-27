@@ -1,10 +1,8 @@
 {
   "domain": "raincloud",
-  "name": "Raincloud",
+  "name": "Melnor RainCloud",
   "documentation": "https://www.home-assistant.io/integrations/raincloud",
-  "requirements": [
-    "raincloudy==0.0.7"
-  ],
-  "dependencies": [],
-  "codeowners": ["@vanstinator"]
+  "requirements": ["raincloudy==0.0.7"],
+  "codeowners": ["@vanstinator"],
+  "iot_class": "cloud_polling"
 }

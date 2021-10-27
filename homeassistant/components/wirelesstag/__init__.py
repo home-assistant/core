@@ -1,18 +1,22 @@
 """Support for Wireless Sensor Tags."""
 import logging
 
-from requests.exceptions import HTTPError, ConnectTimeout
+from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
+from wirelesstagpy import WirelessTags, WirelessTagsException
+
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_VOLTAGE,
-    CONF_USERNAME,
     CONF_PASSWORD,
+    CONF_USERNAME,
+    ELECTRIC_POTENTIAL_VOLT,
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant import util
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,11 +66,6 @@ class WirelessTagPlatform:
         self.tags = {}
         self._local_base_url = None
 
-    @property
-    def tag_manager_macs(self):
-        """Return list of tag managers mac addresses in user account."""
-        return self.api.mac_addresses
-
     def load_tags(self):
         """Load tags from remote server."""
         self.tags = self.api.load_tags()
@@ -86,99 +85,44 @@ class WirelessTagPlatform:
         if disarm_func is not None:
             disarm_func(switch.tag_id, switch.tag_manager_mac)
 
-    def make_notifications(self, binary_sensors, mac):
-        """Create configurations for push notifications."""
-        _LOGGER.info("Creating configurations for push notifications.")
-        configs = []
+    def start_monitoring(self):
+        """Start monitoring push events."""
 
-        bi_url = self.binary_event_callback_url
-        for bi_sensor in binary_sensors:
-            configs.extend(bi_sensor.event.build_notifications(bi_url, mac))
-
-        update_url = self.update_callback_url
-        from wirelesstagpy import NotificationConfig as NC
-
-        update_config = NC.make_config_for_update_event(update_url, mac)
-
-        configs.append(update_config)
-        return configs
-
-    def install_push_notifications(self, binary_sensors):
-        """Register local push notification from tag manager."""
-        _LOGGER.info("Registering local push notifications.")
-        for mac in self.tag_manager_macs:
-            configs = self.make_notifications(binary_sensors, mac)
-            # install notifications for all tags in tag manager
-            # specified by mac
-            result = self.api.install_push_notification(0, configs, True, mac)
-            if not result:
-                self.hass.components.persistent_notification.create(
-                    "Error: failed to install local push notifications <br />",
-                    title="Wireless Sensor Tag Setup Local Push Notifications",
-                    notification_id="wirelesstag_failed_push_notification",
-                )
-            else:
-                _LOGGER.info(
-                    "Installed push notifications for all\
-                             tags in %s.",
-                    mac,
-                )
-
-    @property
-    def local_base_url(self):
-        """Define base url of hass in local network."""
-        if self._local_base_url is None:
-            self._local_base_url = "http://{}".format(util.get_local_ip())
-
-            port = self.hass.config.api.port
-            if port is not None:
-                self._local_base_url += f":{port}"
-        return self._local_base_url
-
-    @property
-    def update_callback_url(self):
-        """Return url for local push notifications(update event)."""
-        return f"{self.local_base_url}/api/events/wirelesstag_update_tags"
-
-    @property
-    def binary_event_callback_url(self):
-        """Return url for local push notifications(binary event)."""
-        return f"{self.local_base_url}/api/events/wirelesstag_binary_event"
-
-    def handle_update_tags_event(self, event):
-        """Handle push event from wireless tag manager."""
-        _LOGGER.info("push notification for update arrived: %s", event)
-        try:
-            tag_id = event.data.get("id")
-            mac = event.data.get("mac")
-            dispatcher_send(self.hass, SIGNAL_TAG_UPDATE.format(tag_id, mac), event)
-        except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.error(
-                "Unable to handle tag update event:\
-                          %s error: %s",
-                str(event),
-                str(ex),
+        def push_callback(tags_spec, event_spec):
+            """Handle push update."""
+            _LOGGER.debug(
+                "Push notification arrived: %s, events: %s", tags_spec, event_spec
             )
+            for uuid, tag in tags_spec.items():
+                try:
+                    tag_id = tag.tag_id
+                    mac = tag.tag_manager_mac
+                    _LOGGER.debug("Push notification for tag update arrived: %s", tag)
+                    dispatcher_send(
+                        self.hass, SIGNAL_TAG_UPDATE.format(tag_id, mac), tag
+                    )
+                    if uuid in event_spec:
+                        events = event_spec[uuid]
+                        for event in events:
+                            _LOGGER.debug(
+                                "Push notification for binary event arrived: %s", event
+                            )
+                            dispatcher_send(
+                                self.hass,
+                                SIGNAL_BINARY_EVENT_UPDATE.format(
+                                    tag_id, event.type, mac
+                                ),
+                                tag,
+                            )
+                except Exception as ex:  # pylint: disable=broad-except
+                    _LOGGER.error(
+                        "Unable to handle tag update:\
+                                %s error: %s",
+                        str(tag),
+                        str(ex),
+                    )
 
-    def handle_binary_event(self, event):
-        """Handle push notifications for binary (on/off) events."""
-        _LOGGER.info("Push notification for binary event arrived: %s", event)
-        try:
-            tag_id = event.data.get("id")
-            event_type = event.data.get("type")
-            mac = event.data.get("mac")
-            dispatcher_send(
-                self.hass,
-                SIGNAL_BINARY_EVENT_UPDATE.format(tag_id, event_type, mac),
-                event,
-            )
-        except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.error(
-                "Unable to handle tag binary event:\
-                          %s error: %s",
-                str(event),
-                str(ex),
-            )
+        self.api.start_monitoring(push_callback)
 
 
 def setup(hass, config):
@@ -188,27 +132,20 @@ def setup(hass, config):
     password = conf.get(CONF_PASSWORD)
 
     try:
-        from wirelesstagpy import WirelessTags, WirelessTagsException
-
         wirelesstags = WirelessTags(username=username, password=password)
 
         platform = WirelessTagPlatform(hass, wirelesstags)
         platform.load_tags()
+        platform.start_monitoring()
         hass.data[DOMAIN] = platform
     except (ConnectTimeout, HTTPError, WirelessTagsException) as ex:
         _LOGGER.error("Unable to connect to wirelesstag.net service: %s", str(ex))
         hass.components.persistent_notification.create(
-            "Error: {}<br />" "Please restart hass after fixing this." "".format(ex),
+            f"Error: {ex}<br />Please restart hass after fixing this.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )
         return False
-
-    # listen to custom events
-    hass.bus.listen(
-        "wirelesstag_update_tags", hass.data[DOMAIN].handle_update_tags_event
-    )
-    hass.bus.listen("wirelesstag_binary_event", hass.data[DOMAIN].handle_binary_event)
 
     return True
 
@@ -225,11 +162,6 @@ class WirelessTagBaseSensor(Entity):
         self.tag_manager_mac = self._tag.tag_manager_mac
         self._name = self._tag.name
         self._state = None
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
 
     @property
     def name(self):
@@ -267,8 +199,7 @@ class WirelessTagBaseSensor(Entity):
             return
 
         updated_tags = self._api.load_tags()
-        updated_tag = updated_tags[self._uuid]
-        if updated_tag is None:
+        if (updated_tag := updated_tags[self._uuid]) is None:
             _LOGGER.error('Unable to update tag: "%s"', self.name)
             return
 
@@ -276,12 +207,12 @@ class WirelessTagBaseSensor(Entity):
         self._state = self.updated_state_value()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_BATTERY_LEVEL: int(self._tag.battery_remaining * 100),
-            ATTR_VOLTAGE: f"{self._tag.battery_volts:.2f}V",
-            ATTR_TAG_SIGNAL_STRENGTH: f"{self._tag.signal_strength}dBm",
+            ATTR_VOLTAGE: f"{self._tag.battery_volts:.2f}{ELECTRIC_POTENTIAL_VOLT}",
+            ATTR_TAG_SIGNAL_STRENGTH: f"{self._tag.signal_strength}{SIGNAL_STRENGTH_DECIBELS_MILLIWATT}",
             ATTR_TAG_OUT_OF_RANGE: not self._tag.is_in_range,
-            ATTR_TAG_POWER_CONSUMPTION: f"{self._tag.power_consumption:.2f}%",
+            ATTR_TAG_POWER_CONSUMPTION: f"{self._tag.power_consumption:.2f}{PERCENTAGE}",
         }

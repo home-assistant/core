@@ -1,0 +1,375 @@
+fan_reset_filter:
+  name: Fan reset filter
+  description: Reset the filter lifetime and usage.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      selector:
+        entity:
+          integration: xiaomi_miio
+          domain: fan
+
+fan_set_extra_features:
+  name: Fan set extra features
+  description: Manipulates a storage register which advertises extra features. The Mi Home app evaluates the value. A feature called "turbo mode" is unlocked in the app on value 1.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      selector:
+        entity:
+          integration: xiaomi_miio
+          domain: fan
+    features:
+      name: Features
+      description: Integer, known values are 0 (default) and 1 (turbo mode).
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 1
+
+light_set_scene:
+  name: Light set scene
+  description: Set a fixed scene.
+  fields:
+    entity_id:
+      description: Name of the light entity.
+      selector:
+        entity:
+          integration: xiaomi_miio
+          domain: light
+    scene:
+      name: Scene
+      description: Number of the fixed scene.
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 6
+
+light_set_delayed_turn_off:
+  name: Light set delayed turn off
+  description: Delayed turn off.
+  fields:
+    entity_id:
+      description: Name of the light entity.
+      selector:
+        entity:
+          integration: xiaomi_miio
+          domain: light
+    time_period:
+      name: Time period
+      description: Time period for the delayed turn off.
+      required: true
+      example: "5, '0:05', {'minutes': 5}"
+      selector:
+        object:
+
+light_reminder_on:
+  name: Light reminder on
+  description: Enable the eye fatigue reminder/notification (EYECARE SMART LAMP 2 ONLY).
+  fields:
+    entity_id:
+      description: "Name of the entity to act on."
+      selector:
+        entity:
+          integration: xiaomi_miio
+          domain: light
+
+light_reminder_off:
+  name: Light reminder off
+  description: Disable the eye fatigue reminder/notification (EYECARE SMART LAMP 2 ONLY).
+  fields:
+    entity_id:
+      description: "Name of the entity to act on."
+      selector:
+        entity:
+          integration: xiaomi_miio
+          domain: light
+
+light_night_light_mode_on:
+  name: Night light mode on
+  description: Turn the eyecare mode on (EYECARE SMART LAMP 2 ONLY).
+  fields:
+    entity_id:
+      description: "Name of the entity to act on."
+      selector:
+        entity:
+          integration: xiaomi_miio
+          domain: light
+
+light_night_light_mode_off:
+  name: Night light mode off
+  description: Turn the eyecare mode fan_set_dry_off (EYECARE SMART LAMP 2 ONLY).
+  fields:
+    entity_id:
+      description: "Name of the entity to act on."
+      selector:
+        entity:
+          integration: xiaomi_miio
+          domain: light
+
+light_eyecare_mode_on:
+  name: Light eyecare mode on
+  description: Enable the eye fatigue reminder/notification (EYECARE SMART LAMP 2 ONLY).
+  fields:
+    entity_id:
+      description: "Name of the entity to act on."
+      selector:
+        entity:
+          integration: xiaomi_miio
+          domain: light
+
+light_eyecare_mode_off:
+  name: Light eyecare mode off
+  description: Disable the eye fatigue reminder/notification (EYECARE SMART LAMP 2 ONLY).
+  fields:
+    entity_id:
+      description: "Name of the entity to act on."
+      selector:
+        entity:
+          integration: xiaomi_miio
+          domain: light
+
+remote_learn_command:
+  name: Remote learn command
+  description: 'Learn an IR command, press "Call Service", point the remote at the IR device, and the learned command will be shown as a notification in Overview.'
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: remote
+  fields:
+    slot:
+      name: Slot
+      description: "Define the slot used to save the IR command."
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 1000000
+    timeout:
+      name: Timeout
+      description: "Define the timeout, before which the command must be learned."
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
+
+remote_set_led_on:
+  name: Remote set LED on
+  description: 'Turn on blue LED.'
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: remote
+
+remote_set_led_off:
+  name: Remote set LED off
+  description: 'Turn off blue LED.'
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: remote
+
+switch_set_wifi_led_on:
+  name: Switch set Wi-fi LED on
+  description: Turn the wifi led on.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      selector:
+        entity:
+          integration: xiaomi_miio
+          domain: switch
+
+switch_set_wifi_led_off:
+  name: Switch set Wi-fi LED off
+  description: Turn the wifi led off.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      selector:
+        entity:
+          integration: xiaomi_miio
+          domain: switch
+
+switch_set_power_price:
+  name: Switch set power price
+  description: Set the power price.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      selector:
+        entity:
+          integration: xiaomi_miio
+          domain: switch
+    mode:
+      name: Mode
+      description: Power price.
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 999
+
+switch_set_power_mode:
+  name: Switch set power mode
+  description: Set the power mode.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      selector:
+        entity:
+          integration: xiaomi_miio
+          domain: switch
+    mode:
+      name: Mode
+      description: Power mode.
+      required: true
+      selector:
+        select:
+          options:
+            - 'green'
+            - 'normal'
+
+vacuum_remote_control_start:
+  name: Vacuum remote control start
+  description: Start remote control of the vacuum cleaner. You can then move it with `remote_control_move`, when done call `remote_control_stop`.
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: vacuum
+
+vacuum_remote_control_stop:
+  name: Vacuum remote control stop
+  description: Stop remote control mode of the vacuum cleaner.
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: vacuum
+
+vacuum_remote_control_move:
+  name: Vacuum remote control move
+  description: Remote control the vacuum cleaner, make sure you first set it in remote control mode with `remote_control_start`.
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: vacuum
+  fields:
+    velocity:
+      name: Velocity
+      description: Speed.
+      selector:
+        number:
+          min: -0.29
+          max: 0.29
+          step: 0.01
+    rotation:
+      name: Rotation
+      description: Rotation, between -179 degrees and 179 degrees.
+      selector:
+        number:
+          min: -179
+          max: 179
+          unit_of_measurement: '°'
+    duration:
+      name: Duration
+      description: Duration of the movement.
+      selector:
+        number:
+          min: 1
+          max: 86400
+          unit_of_measurement: seconds
+
+vacuum_remote_control_move_step:
+  name: Vacuum remote control move step
+  description: Remote control the vacuum cleaner, only makes one move and then stops.
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: vacuum
+  fields:
+    velocity:
+      name: Velocity
+      description: Speed.
+      selector:
+        number:
+          min: -0.29
+          max: 0.29
+          step: 0.01
+    rotation:
+      name: Rotation
+      description: Rotation.
+      selector:
+        number:
+          min: -179
+          max: 179
+          unit_of_measurement: '°'
+    duration:
+      name: Duration
+      description: Duration of the movement.
+      selector:
+        number:
+          min: 1
+          max: 86400
+          unit_of_measurement: seconds
+
+vacuum_clean_zone:
+  name: Vacuum clean zone
+  description: Start the cleaning operation in the selected areas for the number of repeats indicated.
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: vacuum
+  fields:
+    zone:
+      name: Zone
+      description: Array of zones. Each zone is an array of 4 integer values.
+      example: "[[23510,25311,25110,26362]]"
+      selector:
+        object:
+    repeats:
+      name: Repeats
+      description: Number of cleaning repeats for each zone.
+      selector:
+        number:
+          min: 1
+          max: 3
+
+vacuum_goto:
+  name: Vacuum go to
+  description: Go to the specified coordinates.
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: vacuum
+  fields:
+    x_coord:
+      name: X coordinate
+      description: x-coordinate.
+      example: 27500
+      selector:
+        text:
+    y_coord:
+      name: Y coordinate
+      description: y-coordinate.
+      example: 32000
+      selector:
+        text:
+
+vacuum_clean_segment:
+  name: Vacuum clean segment
+  description: Start cleaning of the specified segment(s).
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: vacuum
+  fields:
+    segments:
+      name: Segments
+      description: Segments.
+      example: "[1,2]"
+      selector:
+        object:

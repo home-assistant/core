@@ -1,12 +1,11 @@
 {
   "domain": "ssdp",
-  "name": "SSDP",
+  "name": "Simple Service Discovery Protocol (SSDP)",
   "documentation": "https://www.home-assistant.io/integrations/ssdp",
-  "requirements": [
-    "netdisco==2.6.0"
-  ],
-  "dependencies": [
-  ],
-  "codeowners": [
-  ]
+  "requirements": ["async-upnp-client==0.22.10"],
+  "dependencies": ["network"],
+  "after_dependencies": ["zeroconf"],
+  "codeowners": [],
+  "quality_scale": "internal",
+  "iot_class": "local_push"
 }

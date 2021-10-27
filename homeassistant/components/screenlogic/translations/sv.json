@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad"
+        },
+        "error": {
+            "cannot_connect": "Kunde inte ansluta"
+        },
+        "step": {
+            "gateway_entry": {
+                "data": {
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

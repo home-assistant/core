@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+        },
+        "error": {
+            "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "[%key:common::config_flow::data::api_key%]",
+                    "language": "Language",
+                    "latitude": "[%key:common::config_flow::data::latitude%]",
+                    "longitude": "[%key:common::config_flow::data::longitude%]",
+                    "mode": "[%key:common::config_flow::data::mode%]",
+                    "name": "Name of the integration"
+                },
+                "description": "Set up OpenWeatherMap integration. To generate API key go to https://openweathermap.org/appid",
+                "title": "OpenWeatherMap"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "language": "Language",
+                    "mode": "[%key:common::config_flow::data::mode%]"
+                }
+            }
+        }
+    }
+}

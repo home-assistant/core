@@ -1,0 +1,49 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_in_progress": "\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557\uff0c\u8acb\u518d\u8a66\u4e00\u6b21\u3002\u95dc\u9589\u4e3b\u96fb\u6e90\u3001\u5c07\u4e59\u592a\u7db2\u8def\u65b7\u7dda\u5f8c\u91cd\u65b0\u9023\u7dda\uff0c\u53ef\u80fd\u6703\u6709\u6240\u5e6b\u52a9",
+            "not_denonavr_manufacturer": "\u4e26\u975e Denon AVR \u7db2\u8def\u63a5\u6536\u5668\uff0c\u6240\u63a2\u7d22\u4e4b\u88fd\u9020\u5ee0\u5546\u4e0d\u7b26\u5408",
+            "not_denonavr_missing": "\u4e26\u975e Denon AVR \u7db2\u8def\u63a5\u6536\u5668\uff0c\u63a2\u7d22\u8cc7\u8a0a\u4e0d\u5b8c\u6574"
+        },
+        "error": {
+            "discovery_error": "\u7121\u6cd5\u627e\u5230 Denon AVR \u7db2\u8def\u63a5\u6536\u5668"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "\u8acb\u78ba\u8a8d\u65b0\u589e\u63a5\u6536\u5668",
+                "title": "Denon AVR \u7db2\u8def\u63a5\u6536\u5668"
+            },
+            "select": {
+                "data": {
+                    "select_host": "\u63a5\u6536\u5668 IP \u4f4d\u5740"
+                },
+                "description": "\u8acb\u518d\u6b21\u57f7\u884c\u8a2d\u5b9a\uff0c\u5047\u5982\u9084\u8981\u65b0\u589e\u5176\u4ed6\u63a5\u6536\u5668",
+                "title": "\u9078\u64c7\u6240\u8981\u9023\u7dda\u7684\u63a5\u6536\u5668\u3002"
+            },
+            "user": {
+                "data": {
+                    "host": "IP \u4f4d\u5740"
+                },
+                "description": "\u9023\u7dda\u81f3\u63a5\u6536\u5668\u3002\u5047\u5982\u672a\u8a2d\u5b9a IP \u4f4d\u5740\uff0c\u5c07\u4f7f\u7528\u81ea\u52d5\u63a2\u7d22\u3002",
+                "title": "Denon AVR \u7db2\u8def\u63a5\u6536\u5668"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_all_sources": "\u986f\u793a\u6240\u6709\u4f86\u6e90",
+                    "update_audyssey": "\u66f4\u65b0 Audyssey \u8a2d\u5b9a",
+                    "zone2": "\u8a2d\u5b9a\u5340\u57df 2",
+                    "zone3": "\u8a2d\u5b9a\u5340\u57df 3"
+                },
+                "description": "\u6307\u5b9a\u9078\u9805\u8a2d\u5b9a",
+                "title": "Denon AVR \u7db2\u8def\u63a5\u6536\u5668"
+            }
+        }
+    }
+}

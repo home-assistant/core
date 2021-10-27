@@ -1,23 +1,31 @@
 """Support for monitoring an SABnzbd NZB client."""
-import logging
-from datetime import timedelta
+from __future__ import annotations
 
+from dataclasses import dataclass
+from datetime import timedelta
+import logging
+
+from pysabnzbd import SabnzbdApi, SabnzbdApiException
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.discovery import SERVICE_SABNZBD
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import (
-    CONF_HOST,
     CONF_API_KEY,
+    CONF_HOST,
     CONF_NAME,
     CONF_PATH,
     CONF_PORT,
     CONF_SENSORS,
     CONF_SSL,
+    DATA_GIGABYTES,
+    DATA_MEGABYTES,
+    DATA_RATE_MEGABYTES_PER_SECOND,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.json import load_json, save_json
@@ -27,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "sabnzbd"
 DATA_SABNZBD = "sabznbd"
 
-_CONFIGURING = {}
+_CONFIGURING: dict[str, str] = {}
 
 ATTR_SPEED = "speed"
 BASE_URL_FORMAT = "{}://{}:{}/"
@@ -46,19 +54,87 @@ SERVICE_SET_SPEED = "set_speed"
 
 SIGNAL_SABNZBD_UPDATED = "sabnzbd_updated"
 
-SENSOR_TYPES = {
-    "current_status": ["Status", None, "status"],
-    "speed": ["Speed", "MB/s", "kbpersec"],
-    "queue_size": ["Queue", "MB", "mb"],
-    "queue_remaining": ["Left", "MB", "mbleft"],
-    "disk_size": ["Disk", "GB", "diskspacetotal1"],
-    "disk_free": ["Disk Free", "GB", "diskspace1"],
-    "queue_count": ["Queue Count", None, "noofslots_total"],
-    "day_size": ["Daily Total", "GB", "day_size"],
-    "week_size": ["Weekly Total", "GB", "week_size"],
-    "month_size": ["Monthly Total", "GB", "month_size"],
-    "total_size": ["Total", "GB", "total_size"],
-}
+
+@dataclass
+class SabnzbdRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    field_name: str
+
+
+@dataclass
+class SabnzbdSensorEntityDescription(SensorEntityDescription, SabnzbdRequiredKeysMixin):
+    """Describes Sabnzbd sensor entity."""
+
+
+SENSOR_TYPES: tuple[SabnzbdSensorEntityDescription, ...] = (
+    SabnzbdSensorEntityDescription(
+        key="current_status",
+        name="Status",
+        field_name="status",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="speed",
+        name="Speed",
+        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
+        field_name="kbpersec",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="queue_size",
+        name="Queue",
+        native_unit_of_measurement=DATA_MEGABYTES,
+        field_name="mb",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="queue_remaining",
+        name="Left",
+        native_unit_of_measurement=DATA_MEGABYTES,
+        field_name="mbleft",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="disk_size",
+        name="Disk",
+        native_unit_of_measurement=DATA_GIGABYTES,
+        field_name="diskspacetotal1",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="disk_free",
+        name="Disk Free",
+        native_unit_of_measurement=DATA_GIGABYTES,
+        field_name="diskspace1",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="queue_count",
+        name="Queue Count",
+        field_name="noofslots_total",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="day_size",
+        name="Daily Total",
+        native_unit_of_measurement=DATA_GIGABYTES,
+        field_name="day_size",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="week_size",
+        name="Weekly Total",
+        native_unit_of_measurement=DATA_GIGABYTES,
+        field_name="week_size",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="month_size",
+        name="Monthly Total",
+        native_unit_of_measurement=DATA_GIGABYTES,
+        field_name="month_size",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="total_size",
+        name="Total",
+        native_unit_of_measurement=DATA_GIGABYTES,
+        field_name="total_size",
+    ),
+)
+
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 SPEED_LIMIT_SCHEMA = vol.Schema(
     {vol.Optional(ATTR_SPEED, default=DEFAULT_SPEED_LIMIT): cv.string}
@@ -74,7 +150,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                 vol.Optional(CONF_SENSORS): vol.All(
-                    cv.ensure_list, [vol.In(SENSOR_TYPES)]
+                    cv.ensure_list, [vol.In(SENSOR_KEYS)]
                 ),
                 vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
             }
@@ -86,7 +162,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_check_sabnzbd(sab_api):
     """Check if we can reach SABnzbd."""
-    from pysabnzbd import SabnzbdApiException
 
     try:
         await sab_api.check_available()
@@ -100,7 +175,6 @@ async def async_configure_sabnzbd(
     hass, config, use_ssl, name=DEFAULT_NAME, api_key=None
 ):
     """Try to configure Sabnzbd and request api key if configuration fails."""
-    from pysabnzbd import SabnzbdApi
 
     host = config[CONF_HOST]
     port = config[CONF_PORT]
@@ -108,7 +182,9 @@ async def async_configure_sabnzbd(
     uri_scheme = "https" if use_ssl else "http"
     base_url = BASE_URL_FORMAT.format(uri_scheme, host, port)
     if api_key is None:
-        conf = await hass.async_add_job(load_json, hass.config.path(CONFIG_FILE))
+        conf = await hass.async_add_executor_job(
+            load_json, hass.config.path(CONFIG_FILE)
+        )
         api_key = conf.get(base_url, {}).get(CONF_API_KEY, "")
 
     sab_api = SabnzbdApi(
@@ -130,9 +206,8 @@ async def async_setup(hass, config):
 
     discovery.async_listen(hass, SERVICE_SABNZBD, sabnzbd_discovered)
 
-    conf = config.get(DOMAIN)
-    if conf is not None:
-        use_ssl = conf.get(CONF_SSL)
+    if (conf := config.get(DOMAIN)) is not None:
+        use_ssl = conf[CONF_SSL]
         name = conf.get(CONF_NAME)
         api_key = conf.get(CONF_API_KEY)
         await async_configure_sabnzbd(hass, conf, use_ssl, name, api_key)
@@ -174,7 +249,6 @@ def async_setup_sabnzbd(hass, sab_api, config, name):
 
     async def async_update_sabnzbd(now):
         """Refresh SABnzbd queue data."""
-        from pysabnzbd import SabnzbdApiException
 
         try:
             await sab_api.refresh_data()
@@ -188,7 +262,6 @@ def async_setup_sabnzbd(hass, sab_api, config, name):
 @callback
 def async_request_configuration(hass, config, host, web_root):
     """Request configuration steps from the user."""
-    from pysabnzbd import SabnzbdApi
 
     configurator = hass.components.configurator
     # We got an error if this method is called while we are configuring
@@ -239,7 +312,6 @@ class SabnzbdApiData:
 
     async def async_pause_queue(self):
         """Pause Sabnzbd queue."""
-        from pysabnzbd import SabnzbdApiException
 
         try:
             return await self.sab_api.pause_queue()
@@ -249,7 +321,6 @@ class SabnzbdApiData:
 
     async def async_resume_queue(self):
         """Resume Sabnzbd queue."""
-        from pysabnzbd import SabnzbdApiException
 
         try:
             return await self.sab_api.resume_queue()
@@ -259,7 +330,6 @@ class SabnzbdApiData:
 
     async def async_set_queue_speed(self, limit):
         """Set speed limit for the Sabnzbd queue."""
-        from pysabnzbd import SabnzbdApiException
 
         try:
             return await self.sab_api.set_speed_limit(limit)

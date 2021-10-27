@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "IQVIA",
     "step": {
       "user": {
         "title": "IQVIA",
@@ -11,8 +10,10 @@
       }
     },
     "error": {
-      "identifier_exists": "ZIP code already registered",
       "invalid_zip_code": "ZIP code is invalid"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   }
 }

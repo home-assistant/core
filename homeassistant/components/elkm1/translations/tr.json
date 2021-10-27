@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "address_already_configured": "Bu adrese sahip bir ElkM1 zaten yap\u0131land\u0131r\u0131lm\u0131\u015ft\u0131r",
+            "already_configured": "Bu \u00f6nek ile bir ElkM1 zaten yap\u0131land\u0131r\u0131lm\u0131\u015ft\u0131r"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Parola",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                }
+            }
+        }
+    }
+}

@@ -1,17 +1,10 @@
 """Support for Z-Wave sensors."""
-import logging
+from homeassistant.components.sensor import DEVICE_CLASS_BATTERY, DOMAIN, SensorEntity
+from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
-from homeassistant.components.sensor import DOMAIN, DEVICE_CLASS_BATTERY
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from . import const, ZWaveDeviceEntity
 
-_LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old method of setting up Z-Wave sensors."""
-    pass
+from . import ZWaveDeviceEntity, const
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -44,7 +37,7 @@ def get_device(node, values, **kwargs):
     return None
 
 
-class ZWaveSensor(ZWaveDeviceEntity):
+class ZWaveSensor(ZWaveDeviceEntity, SensorEntity):
     """Representation of a Z-Wave sensor."""
 
     def __init__(self, values):
@@ -63,12 +56,12 @@ class ZWaveSensor(ZWaveDeviceEntity):
         return True
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement the value is expressed in."""
         return self._units
 
@@ -77,7 +70,7 @@ class ZWaveMultilevelSensor(ZWaveSensor):
     """Representation of a multi level sensor Z-Wave sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self._units in ("C", "F"):
             return round(self._state, 1)
@@ -87,7 +80,14 @@ class ZWaveMultilevelSensor(ZWaveSensor):
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def device_class(self):
+        """Return the class of this device."""
+        if self._units in ["C", "F"]:
+            return DEVICE_CLASS_TEMPERATURE
+        return None
+
+    @property
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         if self._units == "C":
             return TEMP_CELSIUS
@@ -107,8 +107,6 @@ class ZWaveAlarmSensor(ZWaveSensor):
 
     COMMAND_CLASS_ALARM is what we get here.
     """
-
-    pass
 
 
 class ZWaveBatterySensor(ZWaveSensor):

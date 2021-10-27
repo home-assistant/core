@@ -1,0 +1,17 @@
+{
+    "state": {
+        "_": {
+            "closed": "Zav\u0159eno",
+            "home": "Doma",
+            "locked": "Zam\u010deno",
+            "not_home": "Pry\u010d",
+            "off": "Vypnuto",
+            "ok": "V po\u0159\u00e1dku",
+            "on": "Zapnuto",
+            "open": "Otev\u0159eno",
+            "problem": "Probl\u00e9m",
+            "unlocked": "Odem\u010deno"
+        }
+    },
+    "title": "Skupina"
+}

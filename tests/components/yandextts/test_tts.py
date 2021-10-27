@@ -1,17 +1,21 @@
 """The tests for the Yandex SpeechKit speech platform."""
 import asyncio
+from http import HTTPStatus
 import os
 import shutil
 
-import homeassistant.components.tts as tts
-from homeassistant.setup import setup_component
 from homeassistant.components.media_player.const import (
-    SERVICE_PLAY_MEDIA,
     DOMAIN as DOMAIN_MP,
+    SERVICE_PLAY_MEDIA,
 )
-from tests.common import get_test_home_assistant, assert_setup_component, mock_service
+import homeassistant.components.tts as tts
+from homeassistant.config import async_process_ha_core_config
+from homeassistant.setup import setup_component
 
-from tests.components.tts.test_init import mutagen_mock  # noqa
+from tests.common import assert_setup_component, get_test_home_assistant, mock_service
+from tests.components.tts.test_init import (  # noqa: F401, pylint: disable=unused-import
+    mutagen_mock,
+)
 
 
 class TestTTSYandexPlatform:
@@ -21,6 +25,13 @@ class TestTTSYandexPlatform:
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self._base_url = "https://tts.voicetech.yandex.net/generate?"
+
+        asyncio.run_coroutine_threadsafe(
+            async_process_ha_core_config(
+                self.hass, {"internal_url": "http://example.local:8123"}
+            ),
+            self.hass.loop,
+        )
 
     def teardown_method(self):
         """Stop everything that was started."""
@@ -58,7 +69,7 @@ class TestTTSYandexPlatform:
             "speed": 1,
         }
         aioclient_mock.get(
-            self._base_url, status=200, content=b"test", params=url_param
+            self._base_url, status=HTTPStatus.OK, content=b"test", params=url_param
         )
 
         config = {tts.DOMAIN: {"platform": "yandextts", "api_key": "1234567xx"}}
@@ -67,7 +78,9 @@ class TestTTSYandexPlatform:
             setup_component(self.hass, tts.DOMAIN, config)
 
         self.hass.services.call(
-            tts.DOMAIN, "yandextts_say", {tts.ATTR_MESSAGE: "HomeAssistant"}
+            tts.DOMAIN,
+            "yandextts_say",
+            {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
         )
         self.hass.block_till_done()
 
@@ -88,7 +101,7 @@ class TestTTSYandexPlatform:
             "speed": 1,
         }
         aioclient_mock.get(
-            self._base_url, status=200, content=b"test", params=url_param
+            self._base_url, status=HTTPStatus.OK, content=b"test", params=url_param
         )
 
         config = {
@@ -103,7 +116,9 @@ class TestTTSYandexPlatform:
             setup_component(self.hass, tts.DOMAIN, config)
 
         self.hass.services.call(
-            tts.DOMAIN, "yandextts_say", {tts.ATTR_MESSAGE: "HomeAssistant"}
+            tts.DOMAIN,
+            "yandextts_say",
+            {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
         )
         self.hass.block_till_done()
 
@@ -124,7 +139,7 @@ class TestTTSYandexPlatform:
             "speed": 1,
         }
         aioclient_mock.get(
-            self._base_url, status=200, content=b"test", params=url_param
+            self._base_url, status=HTTPStatus.OK, content=b"test", params=url_param
         )
 
         config = {tts.DOMAIN: {"platform": "yandextts", "api_key": "1234567xx"}}
@@ -135,7 +150,11 @@ class TestTTSYandexPlatform:
         self.hass.services.call(
             tts.DOMAIN,
             "yandextts_say",
-            {tts.ATTR_MESSAGE: "HomeAssistant", tts.ATTR_LANGUAGE: "ru-RU"},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "HomeAssistant",
+                tts.ATTR_LANGUAGE: "ru-RU",
+            },
         )
         self.hass.block_till_done()
 
@@ -156,7 +175,10 @@ class TestTTSYandexPlatform:
             "speed": 1,
         }
         aioclient_mock.get(
-            self._base_url, status=200, exc=asyncio.TimeoutError(), params=url_param
+            self._base_url,
+            status=HTTPStatus.OK,
+            exc=asyncio.TimeoutError(),
+            params=url_param,
         )
 
         config = {tts.DOMAIN: {"platform": "yandextts", "api_key": "1234567xx"}}
@@ -165,7 +187,9 @@ class TestTTSYandexPlatform:
             setup_component(self.hass, tts.DOMAIN, config)
 
         self.hass.services.call(
-            tts.DOMAIN, "yandextts_say", {tts.ATTR_MESSAGE: "HomeAssistant"}
+            tts.DOMAIN,
+            "yandextts_say",
+            {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
         )
         self.hass.block_till_done()
 
@@ -186,7 +210,10 @@ class TestTTSYandexPlatform:
             "speed": 1,
         }
         aioclient_mock.get(
-            self._base_url, status=403, content=b"test", params=url_param
+            self._base_url,
+            status=HTTPStatus.FORBIDDEN,
+            content=b"test",
+            params=url_param,
         )
 
         config = {tts.DOMAIN: {"platform": "yandextts", "api_key": "1234567xx"}}
@@ -195,7 +222,9 @@ class TestTTSYandexPlatform:
             setup_component(self.hass, tts.DOMAIN, config)
 
         self.hass.services.call(
-            tts.DOMAIN, "yandextts_say", {tts.ATTR_MESSAGE: "HomeAssistant"}
+            tts.DOMAIN,
+            "yandextts_say",
+            {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
         )
         self.hass.block_till_done()
 
@@ -215,7 +244,7 @@ class TestTTSYandexPlatform:
             "speed": 1,
         }
         aioclient_mock.get(
-            self._base_url, status=200, content=b"test", params=url_param
+            self._base_url, status=HTTPStatus.OK, content=b"test", params=url_param
         )
 
         config = {
@@ -230,7 +259,9 @@ class TestTTSYandexPlatform:
             setup_component(self.hass, tts.DOMAIN, config)
 
         self.hass.services.call(
-            tts.DOMAIN, "yandextts_say", {tts.ATTR_MESSAGE: "HomeAssistant"}
+            tts.DOMAIN,
+            "yandextts_say",
+            {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
         )
         self.hass.block_till_done()
 
@@ -251,7 +282,7 @@ class TestTTSYandexPlatform:
             "speed": 1,
         }
         aioclient_mock.get(
-            self._base_url, status=200, content=b"test", params=url_param
+            self._base_url, status=HTTPStatus.OK, content=b"test", params=url_param
         )
 
         config = {
@@ -266,7 +297,9 @@ class TestTTSYandexPlatform:
             setup_component(self.hass, tts.DOMAIN, config)
 
         self.hass.services.call(
-            tts.DOMAIN, "yandextts_say", {tts.ATTR_MESSAGE: "HomeAssistant"}
+            tts.DOMAIN,
+            "yandextts_say",
+            {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
         )
         self.hass.block_till_done()
 
@@ -287,7 +320,7 @@ class TestTTSYandexPlatform:
             "speed": "0.1",
         }
         aioclient_mock.get(
-            self._base_url, status=200, content=b"test", params=url_param
+            self._base_url, status=HTTPStatus.OK, content=b"test", params=url_param
         )
 
         config = {
@@ -298,7 +331,9 @@ class TestTTSYandexPlatform:
             setup_component(self.hass, tts.DOMAIN, config)
 
         self.hass.services.call(
-            tts.DOMAIN, "yandextts_say", {tts.ATTR_MESSAGE: "HomeAssistant"}
+            tts.DOMAIN,
+            "yandextts_say",
+            {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
         )
         self.hass.block_till_done()
 
@@ -319,7 +354,7 @@ class TestTTSYandexPlatform:
             "speed": 2,
         }
         aioclient_mock.get(
-            self._base_url, status=200, content=b"test", params=url_param
+            self._base_url, status=HTTPStatus.OK, content=b"test", params=url_param
         )
 
         config = {
@@ -330,7 +365,9 @@ class TestTTSYandexPlatform:
             setup_component(self.hass, tts.DOMAIN, config)
 
         self.hass.services.call(
-            tts.DOMAIN, "yandextts_say", {tts.ATTR_MESSAGE: "HomeAssistant"}
+            tts.DOMAIN,
+            "yandextts_say",
+            {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
         )
         self.hass.block_till_done()
 
@@ -351,7 +388,7 @@ class TestTTSYandexPlatform:
             "speed": 2,
         }
         aioclient_mock.get(
-            self._base_url, status=200, content=b"test", params=url_param
+            self._base_url, status=HTTPStatus.OK, content=b"test", params=url_param
         )
         config = {tts.DOMAIN: {"platform": "yandextts", "api_key": "1234567xx"}}
 
@@ -362,6 +399,7 @@ class TestTTSYandexPlatform:
             tts.DOMAIN,
             "yandextts_say",
             {
+                "entity_id": "media_player.something",
                 tts.ATTR_MESSAGE: "HomeAssistant",
                 "options": {"emotion": "evil", "speed": 2},
             },

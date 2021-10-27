@@ -5,7 +5,7 @@ import hikvision.api
 from hikvision.error import HikvisionError, MissingParamError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -16,7 +16,6 @@ from homeassistant.const import (
     STATE_ON,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import ToggleEntity
 
 # This is the last working version, please test before updating
 
@@ -60,7 +59,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([HikvisionMotionSwitch(name, hikvision_cam)])
 
 
-class HikvisionMotionSwitch(ToggleEntity):
+class HikvisionMotionSwitch(SwitchEntity):
     """Representation of a switch to toggle on/off motion detection."""
 
     def __init__(self, name, hikvision_cam):
@@ -70,19 +69,9 @@ class HikvisionMotionSwitch(ToggleEntity):
         self._state = STATE_OFF
 
     @property
-    def should_poll(self):
-        """Poll for status regularly."""
-        return True
-
-    @property
     def name(self):
         """Return the name of the device if any."""
         return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device if any."""
-        return self._state
 
     @property
     def is_on(self):

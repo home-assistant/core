@@ -1,0 +1,32 @@
+update_state:
+  name: Update state
+  description: >
+    Fetch the last state of the devices from the StarLine server.
+set_scan_interval:
+  name: Set scan interval
+  description: >
+    Set update frequency.
+  fields:
+    scan_interval:
+      name: Scan interval
+      description: Update frequency.
+      selector:
+        number:
+          min: 10
+          max: 86400
+          step: 5
+          unit_of_measurement: seconds
+set_scan_obd_interval:
+  name: Set scan OBD interval
+  description: >
+    Set OBD info update frequency.
+  fields:
+    scan_interval:
+      name: Scan interval
+      description: Update frequency.
+      selector:
+        number:
+          min: 180
+          max: 86400
+          step: 5
+          unit_of_measurement: seconds

@@ -1,0 +1,94 @@
+update:
+  name: Update
+  description: Update iCloud devices.
+  fields:
+    account:
+      name: Account
+      description: Your iCloud account username (email) or account name.
+      required: true
+      example: "steve@apple.com"
+      selector:
+        text:
+
+play_sound:
+  name: Play sound
+  description: Play sound on an Apple device.
+  fields:
+    account:
+      name: Account
+      description: Your iCloud account username (email) or account name.
+      required: true
+      example: "steve@apple.com"
+      selector:
+        text:
+    device_name:
+      name: Device Name
+      description: The name of the Apple device to play a sound.
+      required: true
+      example: "stevesiphone"
+      selector:
+        text:
+
+display_message:
+  name: Display message
+  description: Display a message on an Apple device.
+  fields:
+    account:
+      name: Account
+      description: Your iCloud account username (email) or account name.
+      required: true
+      example: "steve@apple.com"
+      selector:
+        text:
+    device_name:
+      name: Device Name
+      description: The name of the Apple device to display the message.
+      required: true
+      example: "stevesiphone"
+      selector:
+        text:
+    message:
+      name: Message
+      description: The content of your message.
+      required: true
+      example: "Hey Steve !"
+      selector:
+        text:
+    sound:
+      name: Sound
+      description: To make a sound when displaying the message.
+      selector:
+        boolean:
+
+lost_device:
+  name: Lost device
+  description: Make an Apple device in lost state.
+  fields:
+    account:
+      name: Account
+      description: Your iCloud account username (email) or account name.
+      required: true
+      example: "steve@apple.com"
+      selector:
+        text:
+    device_name:
+      name: Device Name
+      description: The name of the Apple device to set lost.
+      required: true
+      example: "stevesiphone"
+      selector:
+        text:
+    number:
+      name: Number
+      description: The phone number to call in lost mode (must contain country code).
+      required: true
+      example: "+33450020100"
+      selector:
+        text:
+    message:
+      name: Message
+      description: The message to display in lost mode.
+      required: true
+      example: "Call me"
+      selector:
+        text:

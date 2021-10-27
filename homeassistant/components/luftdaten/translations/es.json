@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "El servicio ya est\u00e1 configurado",
+            "cannot_connect": "No se pudo conectar",
+            "invalid_sensor": "Sensor no disponible o no v\u00e1lido"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "show_on_map": "Mostrar en el mapa",
+                    "station_id": "Sensro ID de Luftdaten"
+                },
+                "title": "Definir Luftdaten"
+            }
+        }
+    }
+}

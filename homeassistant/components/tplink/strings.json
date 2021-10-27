@@ -1,15 +1,28 @@
 {
   "config": {
-    "title": "TP-Link Smart Home",
+    "flow_title": "{name} {model} ({host})",
     "step": {
-      "confirm": {
-        "title": "TP-Link Smart Home",
-        "description": "Do you want to setup TP-Link smart devices?"
+      "user": {
+        "description": "If you leave the host empty, discovery will be used to find devices.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      },
+      "pick_device": {
+        "data": {
+          "device": "Device"
+        }
+      },
+      "discovery_confirm": {
+        "description": "Do you want to setup {name} {model} ({host})?"
       }
     },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
     "abort": {
-      "single_instance_allowed": "Only a single configuration is necessary.",
-      "no_devices_found": "No TP-Link devices found on the network."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
   }
 }

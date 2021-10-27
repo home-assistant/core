@@ -1,14 +1,13 @@
 """NextBus sensor."""
-import logging
 from itertools import chain
+import logging
 
+from py_nextbus import NextBusClient
 import voluptuous as vol
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import CONF_NAME, DEVICE_CLASS_TIMESTAMP
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP
-from homeassistant.helpers.entity import Entity
 from homeassistant.util.dt import utc_from_timestamp
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,8 +17,6 @@ DOMAIN = "nextbus"
 CONF_AGENCY = "agency"
 CONF_ROUTE = "route"
 CONF_STOP = "stop"
-
-ICON = "mdi:bus"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -94,8 +91,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     stop = config[CONF_STOP]
     name = config.get(CONF_NAME)
 
-    from py_nextbus import NextBusClient
-
     client = NextBusClient(output_format="json")
 
     # Ensures that the tags provided are valid, also logs out valid values
@@ -106,7 +101,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([NextBusDepartureSensor(client, agency, route, stop, name)], True)
 
 
-class NextBusDepartureSensor(Entity):
+class NextBusDepartureSensor(SensorEntity):
     """Sensor class that displays upcoming NextBus times.
 
     To function, this requires knowing the agency tag as well as the tags for
@@ -116,6 +111,9 @@ class NextBusDepartureSensor(Entity):
     request to the service to get these values. Perhaps it can be simplifed in
     the future using fuzzy logic and matching.
     """
+
+    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_icon = "mdi:bus"
 
     def __init__(self, client, agency, route, stop, name=None):
         """Initialize sensor with all required config."""
@@ -148,32 +146,20 @@ class NextBusDepartureSensor(Entity):
         return self._name
 
     @property
-    def device_class(self):
-        """Return the device class."""
-        return DEVICE_CLASS_TIMESTAMP
-
-    @property
-    def state(self):
+    def native_value(self):
         """Return current state of the sensor."""
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return additional state attributes."""
         return self._attributes
-
-    @property
-    def icon(self):
-        """Return icon to be used for this sensor."""
-        # Would be nice if we could determine if the line is a train or bus
-        # however that doesn't seem to be available to us. Using bus for now.
-        return ICON
 
     def update(self):
         """Update sensor with new departures times."""
         # Note: using Multi because there is a bug with the single stop impl
         results = self._client.get_predictions_for_multi_stops(
-            [{"stop_tag": int(self.stop), "route_tag": self.route}], self.agency
+            [{"stop_tag": self.stop, "route_tag": self.route}], self.agency
         )
 
         self._log_debug("Predictions results: %s", results)
@@ -203,13 +189,13 @@ class NextBusDepartureSensor(Entity):
         messages = listify(results.get("message", []))
         self._log_debug("Messages: %s", messages)
         self._attributes["message"] = " -- ".join(
-            (message.get("text", "") for message in messages)
+            message.get("text", "") for message in messages
         )
 
         # List out all directions in the attributes
         directions = listify(results.get("direction", []))
         self._attributes["direction"] = ", ".join(
-            (direction.get("title", "") for direction in directions)
+            direction.get("title", "") for direction in directions
         )
 
         # Chain all predictions together
@@ -227,7 +213,9 @@ class NextBusDepartureSensor(Entity):
             return
 
         # Generate list of upcoming times
-        self._attributes["upcoming"] = ", ".join(p["minutes"] for p in predictions)
+        self._attributes["upcoming"] = ", ".join(
+            sorted(p["minutes"] for p in predictions)
+        )
 
         latest_prediction = maybe_first(predictions)
         self._state = utc_from_timestamp(

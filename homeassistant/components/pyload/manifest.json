@@ -1,8 +1,7 @@
 {
   "domain": "pyload",
-  "name": "Pyload",
+  "name": "pyLoad",
   "documentation": "https://www.home-assistant.io/integrations/pyload",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

@@ -1,0 +1,52 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "K\u00f6pr\u00fc zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor"
+        },
+        "step": {
+            "manual_input": {
+                "data": {
+                    "host": "Ana Bilgisayar",
+                    "port": "Port"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Ke\u015ffedilen deCONZ a\u011f ge\u00e7idini se\u00e7in"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "side_4": "Yan 4",
+            "side_5": "Yan 5",
+            "side_6": "Yan 6"
+        },
+        "trigger_type": {
+            "remote_awakened": "Cihaz uyand\u0131",
+            "remote_double_tap": "\" {subtype} \" cihaz\u0131na iki kez hafif\u00e7e vuruldu",
+            "remote_double_tap_any_side": "Cihaz herhangi bir tarafta \u00e7ift dokundu",
+            "remote_falling": "Serbest d\u00fc\u015f\u00fc\u015fte cihaz",
+            "remote_flip_180_degrees": "Cihaz 180 derece d\u00f6nd\u00fcr\u00fcld\u00fc",
+            "remote_flip_90_degrees": "Cihaz 90 derece d\u00f6nd\u00fcr\u00fcld\u00fc",
+            "remote_moved": "Cihaz \" {subtype} \" yukar\u0131 ta\u015f\u0131nd\u0131",
+            "remote_moved_any_side": "Cihaz herhangi bir taraf\u0131 yukar\u0131 gelecek \u015fekilde ta\u015f\u0131nd\u0131",
+            "remote_rotate_from_side_1": "Cihaz, \"1. taraftan\" \" {subtype} \" e d\u00f6nd\u00fcr\u00fcld\u00fc",
+            "remote_rotate_from_side_2": "Cihaz, \"2. taraftan\" \" {subtype} \" e d\u00f6nd\u00fcr\u00fcld\u00fc",
+            "remote_rotate_from_side_3": "Cihaz \"3. taraftan\" \" {subtype} \" e d\u00f6nd\u00fcr\u00fcld\u00fc",
+            "remote_rotate_from_side_4": "Cihaz, \"4. taraf\" dan \" {subtype} \" e d\u00f6nd\u00fcr\u00fcld\u00fc",
+            "remote_rotate_from_side_5": "Cihaz, \"5. taraf\" dan \" {subtype} \" e d\u00f6nd\u00fcr\u00fcld\u00fc",
+            "remote_turned_clockwise": "Cihaz saat y\u00f6n\u00fcnde d\u00f6nd\u00fc",
+            "remote_turned_counter_clockwise": "Cihaz saat y\u00f6n\u00fcn\u00fcn tersine d\u00f6nd\u00fc"
+        }
+    },
+    "options": {
+        "step": {
+            "deconz_devices": {
+                "title": "deCONZ se\u00e7enekleri"
+            }
+        }
+    }
+}

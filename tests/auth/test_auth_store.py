@@ -1,7 +1,6 @@
 """Tests for the auth store."""
 import asyncio
-
-import asynctest
+from unittest.mock import patch
 
 from homeassistant.auth import auth_store
 
@@ -38,6 +37,7 @@ async def test_loading_no_group_data_format(hass, hass_storage):
                     "last_used_at": "2018-10-03T13:43:19.774712+00:00",
                     "token": "some-token",
                     "user_id": "user-id",
+                    "version": "1.2.3",
                 },
                 {
                     "access_token_expiration": 1800.0,
@@ -88,12 +88,14 @@ async def test_loading_no_group_data_format(hass, hass_storage):
     assert len(owner.refresh_tokens) == 1
     owner_token = list(owner.refresh_tokens.values())[0]
     assert owner_token.id == "user-token-id"
+    assert owner_token.version == "1.2.3"
 
     assert system.system_generated is True
     assert system.groups == []
     assert len(system.refresh_tokens) == 1
     system_token = list(system.refresh_tokens.values())[0]
     assert system_token.id == "system-token-id"
+    assert system_token.version is None
 
 
 async def test_loading_all_access_group_data_format(hass, hass_storage):
@@ -130,6 +132,7 @@ async def test_loading_all_access_group_data_format(hass, hass_storage):
                     "last_used_at": "2018-10-03T13:43:19.774712+00:00",
                     "token": "some-token",
                     "user_id": "user-id",
+                    "version": "1.2.3",
                 },
                 {
                     "access_token_expiration": 1800.0,
@@ -140,6 +143,7 @@ async def test_loading_all_access_group_data_format(hass, hass_storage):
                     "last_used_at": "2018-10-03T13:43:19.774712+00:00",
                     "token": "some-token",
                     "user_id": "system-id",
+                    "version": None,
                 },
                 {
                     "access_token_expiration": 1800.0,
@@ -180,12 +184,14 @@ async def test_loading_all_access_group_data_format(hass, hass_storage):
     assert len(owner.refresh_tokens) == 1
     owner_token = list(owner.refresh_tokens.values())[0]
     assert owner_token.id == "user-token-id"
+    assert owner_token.version == "1.2.3"
 
     assert system.system_generated is True
     assert system.groups == []
     assert len(system.refresh_tokens) == 1
     system_token = list(system.refresh_tokens.values())[0]
     assert system_token.id == "system-token-id"
+    assert system_token.version is None
 
 
 async def test_loading_empty_data(hass, hass_storage):
@@ -229,12 +235,12 @@ async def test_system_groups_store_id_and_name(hass, hass_storage):
 async def test_loading_race_condition(hass):
     """Test only one storage load called when concurrent loading occurred ."""
     store = auth_store.AuthStore(hass)
-    with asynctest.patch(
+    with patch(
         "homeassistant.helpers.entity_registry.async_get_registry"
-    ) as mock_ent_registry, asynctest.patch(
+    ) as mock_ent_registry, patch(
         "homeassistant.helpers.device_registry.async_get_registry"
-    ) as mock_dev_registry, asynctest.patch(
-        "homeassistant.helpers.storage.Store.async_load"
+    ) as mock_dev_registry, patch(
+        "homeassistant.helpers.storage.Store.async_load", return_value=None
     ) as mock_load:
         results = await asyncio.gather(store.async_get_users(), store.async_get_users())
 

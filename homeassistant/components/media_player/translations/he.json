@@ -1,0 +1,29 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_idle": "{entity_name} \u05de\u05de\u05ea\u05d9\u05df",
+            "is_off": "{entity_name} \u05db\u05d1\u05d5\u05d9",
+            "is_on": "{entity_name} \u05e4\u05d5\u05e2\u05dc",
+            "is_paused": "{entity_name} \u05de\u05d5\u05e9\u05d4\u05d4",
+            "is_playing": "{entity_name} \u05de\u05ea\u05e0\u05d2\u05df"
+        },
+        "trigger_type": {
+            "idle": "{entity_name} \u05d4\u05d5\u05e4\u05da \u05dc\u05de\u05de\u05ea\u05d9\u05df",
+            "paused": "{entity_name} \u05de\u05d5\u05e9\u05d4\u05d4",
+            "playing": "{entity_name} \u05de\u05ea\u05d7\u05d9\u05dc \u05dc\u05e0\u05d2\u05df",
+            "turned_off": "{entity_name} \u05db\u05d5\u05d1\u05d4",
+            "turned_on": "{entity_name} \u05d4\u05d5\u05e4\u05e2\u05dc"
+        }
+    },
+    "state": {
+        "_": {
+            "idle": "\u05de\u05de\u05ea\u05d9\u05df",
+            "off": "\u05db\u05d1\u05d5\u05d9",
+            "on": "\u05de\u05d5\u05e4\u05e2\u05dc",
+            "paused": "\u05de\u05d5\u05e9\u05d4\u05d4",
+            "playing": "\u05de\u05e0\u05d2\u05df",
+            "standby": "\u05de\u05e6\u05d1 \u05d4\u05de\u05ea\u05e0\u05d4"
+        }
+    },
+    "title": "\u05e0\u05d2\u05df \u05de\u05d3\u05d9\u05d4"
+}

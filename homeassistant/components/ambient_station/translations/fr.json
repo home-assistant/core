@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Le service est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "invalid_key": "Cl\u00e9 API invalide",
+            "no_devices": "Aucun appareil trouv\u00e9 dans le compte"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Cl\u00e9 d'API",
+                    "app_key": "Cl\u00e9 d'application"
+                },
+                "title": "Veuillez saisir vos informations"
+            }
+        }
+    }
+}

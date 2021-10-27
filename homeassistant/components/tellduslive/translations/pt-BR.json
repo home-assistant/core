@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Tempo limite de gera\u00e7\u00e3o de url de autoriza\u00e7\u00e3o.",
+            "unknown": "Ocorreu um erro desconhecido"
+        },
+        "step": {
+            "auth": {
+                "description": "Para vincular sua conta do TelldusLive: \n 1. Clique no link abaixo \n 2. Fa\u00e7a o login no Telldus Live \n 3. Autorize **{app_name}** (clique em **Sim**). \n 4. Volte aqui e clique em **ENVIAR**. \n\n [Vincular conta TelldusLive]({auth_url})",
+                "title": "Autenticar no TelldusLive"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Vazio",
+                "title": "Escolha o ponto final."
+            }
+        }
+    }
+}

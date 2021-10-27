@@ -1,7 +1,7 @@
 """Support for Satel Integra modifiable outputs represented as switches."""
 import logging
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -9,8 +9,8 @@ from . import (
     CONF_DEVICE_CODE,
     CONF_SWITCHABLE_OUTPUTS,
     CONF_ZONE_NAME,
-    SIGNAL_OUTPUTS_UPDATED,
     DATA_SATEL,
+    SIGNAL_OUTPUTS_UPDATED,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,7 +39,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devices)
 
 
-class SatelIntegraSwitch(SwitchDevice):
+class SatelIntegraSwitch(SwitchEntity):
     """Representation of an Satel switch."""
 
     def __init__(self, controller, device_number, device_name, code):
@@ -65,21 +65,21 @@ class SatelIntegraSwitch(SwitchDevice):
             _LOGGER.debug("New state: %s", new_state)
             if new_state != self._state:
                 self._state = new_state
-                self.async_schedule_update_ha_state()
+                self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        _LOGGER.debug("Switch: %s status: %s," " turning on", self._name, self._state)
+        _LOGGER.debug("Switch: %s status: %s, turning on", self._name, self._state)
         await self._satel.set_output(self._code, self._device_number, True)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
         _LOGGER.debug(
-            "Switch name: %s status: %s," " turning off", self._name, self._state
+            "Switch name: %s status: %s, turning off", self._name, self._state
         )
         await self._satel.set_output(self._code, self._device_number, False)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def is_on(self):

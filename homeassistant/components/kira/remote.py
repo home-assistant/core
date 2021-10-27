@@ -6,11 +6,9 @@ from homeassistant.components import remote
 from homeassistant.const import CONF_DEVICE, CONF_NAME
 from homeassistant.helpers.entity import Entity
 
-DOMAIN = "kira"
+from . import CONF_REMOTE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_REMOTE = "remote"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -48,9 +46,8 @@ class KiraRemote(Entity):
             _LOGGER.info("Sending Command: %s to %s", *code_tuple)
             self._kira.sendCode(code_tuple)
 
-    def async_send_command(self, command, **kwargs):
-        """Send a command to a device.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(ft.partial(self.send_command, command, **kwargs))
+    async def async_send_command(self, command, **kwargs):
+        """Send a command to a device."""
+        return await self.hass.async_add_executor_job(
+            ft.partial(self.send_command, command, **kwargs)
+        )

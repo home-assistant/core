@@ -3,6 +3,7 @@ import logging
 import random
 import string
 
+from sucks import EcoVacsAPI, VacBot
 import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
@@ -44,8 +45,6 @@ def setup(hass, config):
 
     hass.data[ECOVACS_DEVICES] = []
 
-    from sucks import EcoVacsAPI, VacBot
-
     ecovacs_api = EcoVacsAPI(
         ECOVACS_API_DEVICEID,
         config[DOMAIN].get(CONF_USERNAME),
@@ -60,8 +59,8 @@ def setup(hass, config):
     for device in devices:
         _LOGGER.info(
             "Discovered Ecovacs device on account: %s with nickname %s",
-            device["did"],
-            device["nick"],
+            device.get("did"),
+            device.get("nick"),
         )
         vacbot = VacBot(
             ecovacs_api.uid,
@@ -78,7 +77,8 @@ def setup(hass, config):
         """Shut down open connections to Ecovacs XMPP server."""
         for device in hass.data[ECOVACS_DEVICES]:
             _LOGGER.info(
-                "Shutting down connection to Ecovacs device %s", device.vacuum["did"]
+                "Shutting down connection to Ecovacs device %s",
+                device.vacuum.get("did"),
             )
             device.disconnect()
 

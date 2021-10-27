@@ -1,0 +1,22 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u8fde\u63a5\u5931\u8d25",
+            "invalid_auth": "\u9a8c\u8bc1\u7801\u9519\u8bef"
+        },
+        "flow_title": "{username}",
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "\u5bc6\u7801"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "\u5bc6\u7801",
+                    "username": "\u7528\u6237\u540d"
+                }
+            }
+        }
+    }
+}

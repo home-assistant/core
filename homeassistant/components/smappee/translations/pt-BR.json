@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Dispositivo j\u00e1 configurado"
+        },
+        "step": {
+            "local": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    }
+}

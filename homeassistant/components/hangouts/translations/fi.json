@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "Tapahtui tuntematon virhe."
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "2FA-pin"
+                },
+                "description": "Tyhj\u00e4",
+                "title": "Kaksivaiheinen tunnistus"
+            },
+            "user": {
+                "data": {
+                    "email": "S\u00e4hk\u00f6postiosoite",
+                    "password": "Salasana"
+                },
+                "description": "Tyhj\u00e4",
+                "title": "Google Hangouts -kirjautuminen"
+            }
+        }
+    }
+}

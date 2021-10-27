@@ -1,11 +1,8 @@
 {
   "domain": "envirophat",
-  "name": "Envirophat",
+  "name": "Enviro pHAT",
   "documentation": "https://www.home-assistant.io/integrations/envirophat",
-  "requirements": [
-    "envirophat==0.0.6",
-    "smbus-cffi==0.5.1"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["envirophat==0.0.6", "smbus-cffi==0.5.1"],
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

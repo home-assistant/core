@@ -1,11 +1,10 @@
 """Tests for the intent helpers."""
 
+import pytest
 import voluptuous as vol
 
-import pytest
-
 from homeassistant.core import State
-from homeassistant.helpers import intent, config_validation as cv
+from homeassistant.helpers import config_validation as cv, intent
 
 
 class MockIntentHandler(intent.IntentHandler):
@@ -39,3 +38,21 @@ def test_async_validate_slots():
     handler1.async_validate_slots(
         {"name": {"value": "kitchen"}, "probability": {"value": "0.5"}}
     )
+
+
+def test_fuzzy_match():
+    """Test _fuzzymatch."""
+    state1 = State("light.living_room_northwest", "off")
+    state2 = State("light.living_room_north", "off")
+    state3 = State("light.living_room_northeast", "off")
+    state4 = State("light.living_room_west", "off")
+    state5 = State("light.living_room", "off")
+    states = [state1, state2, state3, state4, state5]
+
+    state = intent._fuzzymatch("Living Room", states, lambda state: state.name)
+    assert state == state5
+
+    state = intent._fuzzymatch(
+        "Living Room Northwest", states, lambda state: state.name
+    )
+    assert state == state1

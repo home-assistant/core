@@ -1,11 +1,16 @@
 """Support for an Intergas boiler via an InComfort/Intouch Lan2RF gateway."""
+from __future__ import annotations
+
 import asyncio
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from aiohttp import ClientResponseError
 
-from homeassistant.components.water_heater import ENTITY_ID_FORMAT, WaterHeaterDevice
+from homeassistant.components.water_heater import (
+    DOMAIN as WATER_HEATER_DOMAIN,
+    WaterHeaterEntity,
+)
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -27,7 +32,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([IncomfortWaterHeater(client, h) for h in heaters])
 
 
-class IncomfortWaterHeater(IncomfortEntity, WaterHeaterDevice):
+class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
     """Representation of an InComfort/Intouch water_heater device."""
 
     def __init__(self, client, heater) -> None:
@@ -35,7 +40,7 @@ class IncomfortWaterHeater(IncomfortEntity, WaterHeaterDevice):
         super().__init__()
 
         self._unique_id = f"{heater.serial_no}"
-        self.entity_id = ENTITY_ID_FORMAT.format(DOMAIN)
+        self.entity_id = f"{WATER_HEATER_DOMAIN}.{DOMAIN}"
         self._name = "Boiler"
 
         self._client = client
@@ -47,7 +52,7 @@ class IncomfortWaterHeater(IncomfortEntity, WaterHeaterDevice):
         return "mdi:thermometer-lines"
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return {k: v for k, v in self._heater.status.items() if k in HEATER_ATTRS}
 
@@ -62,13 +67,13 @@ class IncomfortWaterHeater(IncomfortEntity, WaterHeaterDevice):
 
     @property
     def min_temp(self) -> float:
-        """Return max valid temperature that can be set."""
-        return 80.0
+        """Return min valid temperature that can be set."""
+        return 30.0
 
     @property
     def max_temp(self) -> float:
         """Return max valid temperature that can be set."""
-        return 30.0
+        return 80.0
 
     @property
     def temperature_unit(self) -> str:

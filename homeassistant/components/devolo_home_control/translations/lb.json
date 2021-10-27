@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kont ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mydevolo_url": "mydevolo URL",
+                    "password": "Passwuert",
+                    "username": "E-Mail / devolo ID"
+                }
+            }
+        }
+    }
+}

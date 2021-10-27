@@ -1,19 +1,21 @@
 """Implement the Ingress Panel feature for Hass.io Add-ons."""
 import asyncio
+from http import HTTPStatus
 import logging
 
 from aiohttp import web
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.const import ATTR_ICON
+from homeassistant.core import HomeAssistant
 
-from .const import ATTR_PANELS, ATTR_TITLE, ATTR_ICON, ATTR_ADMIN, ATTR_ENABLE
+from .const import ATTR_ADMIN, ATTR_ENABLE, ATTR_PANELS, ATTR_TITLE
 from .handler import HassioAPIError
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_addon_panel(hass: HomeAssistantType, hassio):
+async def async_setup_addon_panel(hass: HomeAssistant, hassio):
     """Add-on Ingress Panel setup."""
     hassio_addon_panel = HassIOAddonPanel(hass, hassio)
     hass.http.register_view(hassio_addon_panel)
@@ -52,7 +54,7 @@ class HassIOAddonPanel(HomeAssistantView):
         # Panel exists for add-on slug
         if addon not in panels or not panels[addon][ATTR_ENABLE]:
             _LOGGER.error("Panel is not enable for %s", addon)
-            return web.Response(status=400)
+            return web.Response(status=HTTPStatus.BAD_REQUEST)
         data = panels[addon]
 
         # Register panel
@@ -74,12 +76,9 @@ class HassIOAddonPanel(HomeAssistantView):
         return {}
 
 
-def _register_panel(hass, addon, data):
-    """Init coroutine to register the panel.
-
-    Return coroutine.
-    """
-    return hass.components.panel_custom.async_register_panel(
+async def _register_panel(hass, addon, data):
+    """Init coroutine to register the panel."""
+    await hass.components.panel_custom.async_register_panel(
         frontend_url_path=addon,
         webcomponent_name="hassio-main",
         sidebar_title=data[ATTR_TITLE],

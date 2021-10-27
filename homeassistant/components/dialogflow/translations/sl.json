@@ -1,0 +1,13 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "Za po\u0161iljanje dogodkov Home Assistant-u, boste morali nastaviti [webhook z Dialogflow]({twilio_url}).\n\nIzpolnite naslednje informacije:\n\n- URL: `{webhook_url}`\n- Metoda: POST\n- Vrsta vsebine: application/x-www-form-urlencoded\n\nGlej [dokumentacijo]({docs_url}) za nadaljna navodila."
+        },
+        "step": {
+            "user": {
+                "description": "Ali ste prepri\u010dani, da \u017eelite nastaviti dialogflow?",
+                "title": "Nastavite Dialogflow Webhook"
+            }
+        }
+    }
+}

@@ -1,0 +1,23 @@
+{
+    "mfa_setup": {
+        "notify": {
+            "error": {
+                "invalid_code": "Virheellinen koodi. Yrit\u00e4 uudelleen."
+            },
+            "step": {
+                "setup": {
+                    "title": "Varmista asetukset"
+                }
+            },
+            "title": "Ilmoita kertaluonteinen salasana"
+        },
+        "totp": {
+            "step": {
+                "init": {
+                    "title": "M\u00e4\u00e4rit\u00e4 kaksivaiheinen todennus TOTP:n avulla"
+                }
+            },
+            "title": "TOTP"
+        }
+    }
+}

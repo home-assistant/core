@@ -1,12 +1,8 @@
 {
   "domain": "ness_alarm",
-  "name": "Ness alarm",
+  "name": "Ness Alarm",
   "documentation": "https://www.home-assistant.io/integrations/ness_alarm",
-  "requirements": [
-    "nessclient==0.9.15"
-  ],
-  "dependencies": [],
-  "codeowners": [
-    "@nickw444"
-  ]
+  "requirements": ["nessclient==0.9.15"],
+  "codeowners": ["@nickw444"],
+  "iot_class": "local_push"
 }

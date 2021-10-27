@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u017de konfigurirano",
+            "authorize_url_timeout": "\u010casovna omejitev pri ustvarjanju overitvenega URL je potekla.",
+            "missing_configuration": "Ta komponenta ni konfigurirana. Sledite dokumentaciji.",
+            "no_url_available": "URL ni na voljo. Za ve\u010d podatkov o tej napaki preverite [razdelek za pomo\u010d]({docs_url})",
+            "reauth_successful": "Ponovno overjanje je uspelo"
+        },
+        "create_entry": {
+            "default": "Glejte [neato dokumentacija] ({docs_url})."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Izberite na\u010din overjanja"
+            },
+            "reauth_confirm": {
+                "title": "Bi radi zagnali namestitev?"
+            }
+        }
+    },
+    "title": "Neato Botvac"
+}

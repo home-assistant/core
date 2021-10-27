@@ -69,14 +69,12 @@ class ImageProcessingSsocr(ImageProcessingEntity):
         if name:
             self._name = name
         else:
-            self._name = "SevenSegment OCR {0}".format(
-                split_entity_id(camera_entity)[1]
-            )
+            self._name = f"SevenSegment OCR {split_entity_id(camera_entity)[1]}"
         self._state = None
 
         self.filepath = os.path.join(
             self.hass.config.config_dir,
-            "ssocr-{0}.png".format(self._name.replace(" ", "_")),
+            "ssocr-{}.png".format(self._name.replace(" ", "_")),
         )
         crop = [
             "crop",
@@ -126,14 +124,14 @@ class ImageProcessingSsocr(ImageProcessingEntity):
         img = Image.open(stream)
         img.save(self.filepath, "png")
 
-        ocr = subprocess.Popen(
+        with subprocess.Popen(
             self._command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        out = ocr.communicate()
-        if out[0] != b"":
-            self._state = out[0].strip().decode("utf-8")
-        else:
-            self._state = None
-            _LOGGER.warning(
-                "Unable to detect value: %s", out[1].strip().decode("utf-8")
-            )
+        ) as ocr:
+            out = ocr.communicate()
+            if out[0] != b"":
+                self._state = out[0].strip().decode("utf-8")
+            else:
+                self._state = None
+                _LOGGER.warning(
+                    "Unable to detect value: %s", out[1].strip().decode("utf-8")
+                )

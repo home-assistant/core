@@ -1,0 +1,10 @@
+{
+  "domain": "p1_monitor",
+  "name": "P1 Monitor",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/p1_monitor",
+  "requirements": ["p1monitor==1.0.0"],
+  "codeowners": ["@klaasnicolaas"],
+  "quality_scale": "platinum",
+  "iot_class": "local_polling"
+}

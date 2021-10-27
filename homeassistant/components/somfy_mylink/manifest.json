@@ -1,10 +1,15 @@
 {
-    "domain": "somfy_mylink",
-    "name": "Somfy MyLink",
-    "documentation": "https://www.home-assistant.io/integrations/somfy_mylink",
-    "requirements": [
-      "somfy-mylink-synergy==1.0.6"
-    ],
-    "dependencies": [],
-    "codeowners": []
-  }
+  "domain": "somfy_mylink",
+  "name": "Somfy MyLink",
+  "documentation": "https://www.home-assistant.io/integrations/somfy_mylink",
+  "requirements": ["somfy-mylink-synergy==1.0.6"],
+  "codeowners": [],
+  "config_flow": true,
+  "dhcp": [
+    {
+      "hostname": "somfy_*",
+      "macaddress": "B8B7F1*"
+    }
+  ],
+  "iot_class": "assumed_state"
+}

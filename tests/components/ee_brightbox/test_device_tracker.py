@@ -1,12 +1,17 @@
 """Tests for the EE BrightBox device scanner."""
 from datetime import datetime
+from unittest.mock import patch
 
-from asynctest import patch
+# Integration is disabled
+# from eebrightbox import EEBrightBoxException
 import pytest
 
 from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_PLATFORM
 from homeassistant.setup import async_setup_component
+
+# Integration is disabled
+pytest.skip("Integration has been disabled in the manifest", allow_module_level=True)
 
 
 def _configure_mock_get_devices(eebrightbox_mock):
@@ -41,10 +46,9 @@ def _configure_mock_get_devices(eebrightbox_mock):
 
 
 def _configure_mock_failed_config_check(eebrightbox_mock):
-    from eebrightbox import EEBrightBoxException
-
     eebrightbox_instance = eebrightbox_mock.return_value
-    eebrightbox_instance.__enter__.side_effect = EEBrightBoxException(
+    # Integration is disabled
+    eebrightbox_instance.__enter__.side_effect = EEBrightBoxException(  # noqa: F821
         "Failed to connect to the router"
     )
 
@@ -55,7 +59,7 @@ def mock_dev_track(mock_device_tracker_conf):
     pass
 
 
-@patch("eebrightbox.EEBrightBox")
+@patch("homeassistant.components.ee_brightbox.device_tracker.EEBrightBox")
 async def test_missing_credentials(eebrightbox_mock, hass):
     """Test missing credentials."""
     _configure_mock_get_devices(eebrightbox_mock)
@@ -73,7 +77,7 @@ async def test_missing_credentials(eebrightbox_mock, hass):
     assert hass.states.get("device_tracker.hostnameff") is None
 
 
-@patch("eebrightbox.EEBrightBox")
+@patch("homeassistant.components.ee_brightbox.device_tracker.EEBrightBox")
 async def test_invalid_credentials(eebrightbox_mock, hass):
     """Test invalid credentials."""
     _configure_mock_failed_config_check(eebrightbox_mock)
@@ -93,7 +97,7 @@ async def test_invalid_credentials(eebrightbox_mock, hass):
     assert hass.states.get("device_tracker.hostnameff") is None
 
 
-@patch("eebrightbox.EEBrightBox")
+@patch("homeassistant.components.ee_brightbox.device_tracker.EEBrightBox")
 async def test_get_devices(eebrightbox_mock, hass):
     """Test valid configuration."""
     _configure_mock_get_devices(eebrightbox_mock)

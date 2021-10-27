@@ -2,9 +2,10 @@
 from datetime import timedelta
 import logging
 
+from tapsaff import TapsAff
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -34,7 +35,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([TapsAffSensor(taps_aff_data, name)], True)
 
 
-class TapsAffSensor(BinarySensorDevice):
+class TapsAffSensor(BinarySensorEntity):
     """Implementation of a Taps Aff binary sensor."""
 
     def __init__(self, taps_aff_data, name):
@@ -62,7 +63,6 @@ class TapsAffData:
 
     def __init__(self, location):
         """Initialize the data object."""
-        from tapsaff import TapsAff
 
         self._is_taps_aff = None
         self.taps_aff = TapsAff(location)

@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "invalid_auth": "Authentification invalide"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Email",
+                    "password": "Mot de passe"
+                },
+                "description": "Voulez-vous commencer la configuration ?",
+                "title": "PoolSense"
+            }
+        }
+    }
+}

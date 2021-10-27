@@ -1,6 +1,9 @@
 """Support for Xeoma Cameras."""
+from __future__ import annotations
+
 import logging
 
+from pyxeoma.xeoma import Xeoma, XeomaError
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
@@ -40,7 +43,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Discover and setup Xeoma Cameras."""
-    from pyxeoma.xeoma import Xeoma, XeomaError
 
     host = config[CONF_HOST]
     login = config.get(CONF_USERNAME)
@@ -109,9 +111,10 @@ class XeomaCamera(Camera):
         self._password = password
         self._last_image = None
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
-        from pyxeoma.xeoma import XeomaError
 
         try:
             image = await self._xeoma.async_get_camera_image(

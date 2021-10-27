@@ -1,0 +1,10 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "\u8fde\u63a5\u5931\u8d25"
+        },
+        "error": {
+            "cannot_connect": "\u8fde\u63a5\u5931\u8d25"
+        }
+    }
+}

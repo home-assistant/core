@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana"
+        },
+        "error": {
+            "invalid_key": "Nieprawid\u0142owy klucz API",
+            "no_devices": "Nie znaleziono urz\u0105dze\u0144 na koncie"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Klucz API",
+                    "app_key": "Klucz aplikacji"
+                },
+                "title": "Wprowad\u017a dane"
+            }
+        }
+    }
+}

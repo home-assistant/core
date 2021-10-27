@@ -1,11 +1,8 @@
 {
   "domain": "generic_thermostat",
-  "name": "Generic thermostat",
+  "name": "Generic Thermostat",
   "documentation": "https://www.home-assistant.io/integrations/generic_thermostat",
-  "requirements": [],
-  "dependencies": [
-    "sensor",
-    "switch"
-  ],
-  "codeowners": []
+  "dependencies": ["sensor", "switch"],
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

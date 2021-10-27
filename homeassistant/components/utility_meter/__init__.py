@@ -1,34 +1,37 @@
 """Support for tracking consumption over given periods of time."""
-import logging
 from datetime import timedelta
+import logging
 
+from croniter import croniter
 import voluptuous as vol
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_NAME
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+
 from .const import (
-    DOMAIN,
-    SIGNAL_RESET_METER,
-    METER_TYPES,
-    CONF_METER_TYPE,
-    CONF_METER_OFFSET,
-    CONF_METER_NET_CONSUMPTION,
-    CONF_SOURCE_SENSOR,
-    CONF_TARIFF_ENTITY,
-    CONF_TARIFF,
-    CONF_TARIFFS,
-    CONF_METER,
-    DATA_UTILITY,
-    SERVICE_RESET,
-    SERVICE_SELECT_TARIFF,
-    SERVICE_SELECT_NEXT_TARIFF,
     ATTR_TARIFF,
+    CONF_CRON_PATTERN,
+    CONF_METER,
+    CONF_METER_NET_CONSUMPTION,
+    CONF_METER_OFFSET,
+    CONF_METER_TYPE,
+    CONF_SOURCE_SENSOR,
+    CONF_TARIFF,
+    CONF_TARIFF_ENTITY,
+    CONF_TARIFFS,
+    DATA_TARIFF_SENSORS,
+    DATA_UTILITY,
+    DOMAIN,
+    METER_TYPES,
+    SERVICE_RESET,
+    SERVICE_SELECT_NEXT_TARIFF,
+    SERVICE_SELECT_TARIFF,
+    SIGNAL_RESET_METER,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,21 +42,46 @@ ATTR_TARIFFS = "tariffs"
 
 DEFAULT_OFFSET = timedelta(hours=0)
 
-SERVICE_SELECT_TARIFF_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_TARIFF): cv.string}
-)
 
-METER_CONFIG_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {
-        vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_METER_TYPE): vol.In(METER_TYPES),
-        vol.Optional(CONF_METER_OFFSET, default=DEFAULT_OFFSET): vol.All(
-            cv.time_period, cv.positive_timedelta
-        ),
-        vol.Optional(CONF_METER_NET_CONSUMPTION, default=False): cv.boolean,
-        vol.Optional(CONF_TARIFFS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-    }
+def validate_cron_pattern(pattern):
+    """Check that the pattern is well-formed."""
+    if croniter.is_valid(pattern):
+        return pattern
+    raise vol.Invalid("Invalid pattern")
+
+
+def period_or_cron(config):
+    """Check that if cron pattern is used, then meter type and offsite must be removed."""
+    if CONF_CRON_PATTERN in config and CONF_METER_TYPE in config:
+        raise vol.Invalid(f"Use <{CONF_CRON_PATTERN}> or <{CONF_METER_TYPE}>")
+    if (
+        CONF_CRON_PATTERN in config
+        and CONF_METER_OFFSET in config
+        and config[CONF_METER_OFFSET] != DEFAULT_OFFSET
+    ):
+        raise vol.Invalid(
+            f"When <{CONF_CRON_PATTERN}> is used <{CONF_METER_OFFSET}> has no meaning"
+        )
+    return config
+
+
+METER_CONFIG_SCHEMA = vol.Schema(
+    vol.All(
+        {
+            vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
+            vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_METER_TYPE): vol.In(METER_TYPES),
+            vol.Optional(CONF_METER_OFFSET, default=DEFAULT_OFFSET): vol.All(
+                cv.time_period, cv.positive_timedelta
+            ),
+            vol.Optional(CONF_METER_NET_CONSUMPTION, default=False): cv.boolean,
+            vol.Optional(CONF_TARIFFS, default=[]): vol.All(
+                cv.ensure_list, [cv.string]
+            ),
+            vol.Optional(CONF_CRON_PATTERN): validate_cron_pattern,
+        },
+        period_or_cron,
+    )
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -71,6 +99,7 @@ async def async_setup(hass, config):
         _LOGGER.debug("Setup %s.%s", DOMAIN, meter)
 
         hass.data[DATA_UTILITY][meter] = conf
+        hass.data[DATA_UTILITY][meter][DATA_TARIFF_SENSORS] = []
 
         if not conf[CONF_TARIFFS]:
             # only one entity is required
@@ -79,7 +108,7 @@ async def async_setup(hass, config):
                     hass,
                     SENSOR_DOMAIN,
                     DOMAIN,
-                    [{CONF_METER: meter, CONF_NAME: meter}],
+                    [{CONF_METER: meter, CONF_NAME: conf.get(CONF_NAME, meter)}],
                     config,
                 )
             )
@@ -110,16 +139,16 @@ async def async_setup(hass, config):
             register_services = True
 
     if register_services:
+        component.async_register_entity_service(SERVICE_RESET, {}, "async_reset_meters")
+
         component.async_register_entity_service(
-            SERVICE_RESET, ENTITY_SERVICE_SCHEMA, "async_reset_meters"
+            SERVICE_SELECT_TARIFF,
+            {vol.Required(ATTR_TARIFF): cv.string},
+            "async_select_tariff",
         )
 
         component.async_register_entity_service(
-            SERVICE_SELECT_TARIFF, SERVICE_SELECT_TARIFF_SCHEMA, "async_select_tariff"
-        )
-
-        component.async_register_entity_service(
-            SERVICE_SELECT_NEXT_TARIFF, ENTITY_SERVICE_SCHEMA, "async_next_tariff"
+            SERVICE_SELECT_NEXT_TARIFF, {}, "async_next_tariff"
         )
 
     return True
@@ -168,7 +197,7 @@ class TariffSelect(RestoreEntity):
         return self._current_tariff
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_TARIFFS: self._tariffs}
 
@@ -187,11 +216,11 @@ class TariffSelect(RestoreEntity):
             )
             return
         self._current_tariff = tariff
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_next_tariff(self):
         """Offset current index."""
         current_index = self._tariffs.index(self._current_tariff)
         new_index = (current_index + 1) % len(self._tariffs)
         self._current_tariff = self._tariffs[new_index]
-        await self.async_update_ha_state()
+        self.async_write_ha_state()

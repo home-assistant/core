@@ -1,0 +1,10 @@
+{
+    "config": {
+        "flow_title": "ESPHome: {name}",
+        "step": {
+            "discovery_confirm": {
+                "title": "Fann ESPhome node"
+            }
+        }
+    }
+}

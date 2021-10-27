@@ -1,0 +1,65 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji",
+            "missing_configuration": "Komponent nie jest skonfigurowany. Post\u0119puj zgodnie z dokumentacj\u0105.",
+            "no_url_available": "Brak dost\u0119pnego adresu URL. Aby uzyska\u0107 informacje na temat tego b\u0142\u0119du, [sprawd\u017a sekcj\u0119 pomocy] ({docs_url})",
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
+        },
+        "create_entry": {
+            "default": "Pomy\u015blnie uwierzytelniono"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Wybierz metod\u0119 uwierzytelniania"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "away": "poza domem",
+            "hg": "ochrona przed mrozem",
+            "schedule": "harmonogram"
+        },
+        "trigger_type": {
+            "alarm_started": "{entity_name} wykryje alarm",
+            "animal": "{entity_name} wykryje zwierz\u0119",
+            "cancel_set_point": "{entity_name} wznowi sw\u00f3j harmonogram",
+            "human": "{entity_name} wykryje cz\u0142owieka",
+            "movement": "{entity_name} wykryje ruch",
+            "outdoor": "{entity_name} wykryje zdarzenie zewn\u0119trzne",
+            "person": "{entity_name} wykryje osob\u0119",
+            "person_away": "{entity_name} wykryje, \u017ce osoba wysz\u0142a",
+            "set_point": "temperatura docelowa {entity_name} zostanie ustawiona r\u0119cznie",
+            "therm_mode": "{entity_name} prze\u0142\u0105czy si\u0119 na \"{subtype}\"",
+            "turned_off": "{entity_name} zostanie wy\u0142\u0105czony",
+            "turned_on": "{entity_name} zostanie w\u0142\u0105czony",
+            "vehicle": "{entity_name} wykryje pojazd"
+        }
+    },
+    "options": {
+        "step": {
+            "public_weather": {
+                "data": {
+                    "area_name": "Nazwa obszaru",
+                    "lat_ne": "Szeroko\u015b\u0107 geograficzna \u2014 cz\u0119\u015b\u0107 p\u00f3\u0142nocno-wschodnia",
+                    "lat_sw": "Szeroko\u015b\u0107 geograficzna \u2014 cz\u0119\u015b\u0107 po\u0142udniowo-zachodnia",
+                    "lon_ne": "D\u0142ugo\u015b\u0107 geograficzna \u2014 cz\u0119\u015b\u0107 p\u00f3\u0142nocno-wschodnia",
+                    "lon_sw": "D\u0142ugo\u015b\u0107 geograficzna \u2014 cz\u0119\u015b\u0107 po\u0142udniowo-zachodnia",
+                    "mode": "Obliczenia",
+                    "show_on_map": "Poka\u017c na mapie"
+                },
+                "description": "Skonfiguruj publiczny czujnik pogody dla obszaru.",
+                "title": "Netatmo publiczny czujnik pogody"
+            },
+            "public_weather_areas": {
+                "data": {
+                    "new_area": "Nazwa obszaru",
+                    "weather_areas": "Obszary pogodowe"
+                },
+                "description": "Skonfiguruj publiczne czujniki pogody.",
+                "title": "Netatmo publiczny czujnik pogody"
+            }
+        }
+    }
+}

@@ -1,15 +1,15 @@
 """The tests for the microsoft face identify platform."""
-from unittest.mock import patch, PropertyMock
+from unittest.mock import PropertyMock, patch
 
-from homeassistant.core import callback
-from homeassistant.const import ATTR_ENTITY_PICTURE, STATE_UNKNOWN
-from homeassistant.setup import setup_component
 import homeassistant.components.image_processing as ip
 import homeassistant.components.microsoft_face as mf
+from homeassistant.const import ATTR_ENTITY_PICTURE, STATE_UNKNOWN
+from homeassistant.core import callback
+from homeassistant.setup import setup_component
 
 from tests.common import (
-    get_test_home_assistant,
     assert_setup_component,
+    get_test_home_assistant,
     load_fixture,
     mock_coro,
 )
@@ -28,7 +28,7 @@ class TestMicrosoftFaceIdentifySetup:
         self.hass.stop()
 
     @patch(
-        "homeassistant.components.microsoft_face." "MicrosoftFace.update_store",
+        "homeassistant.components.microsoft_face.MicrosoftFace.update_store",
         return_value=mock_coro(),
     )
     def test_setup_platform(self, store_mock):
@@ -45,11 +45,12 @@ class TestMicrosoftFaceIdentifySetup:
 
         with assert_setup_component(1, ip.DOMAIN):
             setup_component(self.hass, ip.DOMAIN, config)
+            self.hass.block_till_done()
 
         assert self.hass.states.get("image_processing.microsoftface_demo_camera")
 
     @patch(
-        "homeassistant.components.microsoft_face." "MicrosoftFace.update_store",
+        "homeassistant.components.microsoft_face.MicrosoftFace.update_store",
         return_value=mock_coro(),
     )
     def test_setup_platform_name(self, store_mock):
@@ -66,6 +67,7 @@ class TestMicrosoftFaceIdentifySetup:
 
         with assert_setup_component(1, ip.DOMAIN):
             setup_component(self.hass, ip.DOMAIN, config)
+            self.hass.block_till_done()
 
         assert self.hass.states.get("image_processing.test_local")
 
@@ -87,7 +89,7 @@ class TestMicrosoftFaceIdentify:
             mf.DOMAIN: {"api_key": "12345678abcdef6"},
         }
 
-        self.endpoint_url = "https://westus.{0}".format(mf.FACE_API_URL)
+        self.endpoint_url = f"https://westus.{mf.FACE_API_URL}"
 
     def teardown_method(self):
         """Stop everything that was started."""
@@ -114,11 +116,10 @@ class TestMicrosoftFaceIdentify:
         )
 
         setup_component(self.hass, ip.DOMAIN, self.config)
+        self.hass.block_till_done()
 
         state = self.hass.states.get("camera.demo_camera")
-        url = "{0}{1}".format(
-            self.hass.config.api.base_url, state.attributes.get(ATTR_ENTITY_PICTURE)
-        )
+        url = f"{self.hass.config.internal_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
 
         face_events = []
 

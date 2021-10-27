@@ -2,9 +2,10 @@
 import collections
 import logging
 
+from satel_integra.satel_integra import AsyncSatel
 import voluptuous as vol
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -61,9 +62,7 @@ PARTITION_SCHEMA = vol.Schema(
 def is_alarm_code_necessary(value):
     """Check if alarm code must be configured."""
     if value.get(CONF_SWITCHABLE_OUTPUTS) and CONF_DEVICE_CODE not in value:
-        raise vol.Invalid(
-            "You need to specify alarm " " code to use switchable_outputs"
-        )
+        raise vol.Invalid("You need to specify alarm code to use switchable_outputs")
 
     return value
 
@@ -102,8 +101,6 @@ async def async_setup(hass, config):
     port = conf.get(CONF_PORT)
     partitions = conf.get(CONF_DEVICE_PARTITIONS)
 
-    from satel_integra.satel_integra import AsyncSatel
-
     monitored_outputs = collections.OrderedDict(
         list(outputs.items()) + list(switchable_outputs.items())
     )
@@ -117,10 +114,11 @@ async def async_setup(hass, config):
     if not result:
         return False
 
-    async def _close():
+    @callback
+    def _close(*_):
         controller.close()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close())
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close)
 
     _LOGGER.debug("Arm home config: %s, mode: %s ", conf, conf.get(CONF_ARM_HOME_MODE))
 
@@ -153,7 +151,7 @@ async def async_setup(hass, config):
 
     @callback
     def alarm_status_update_callback():
-        """Send status update received from alarm to home assistant."""
+        """Send status update received from alarm to Home Assistant."""
         _LOGGER.debug("Sending request to update panel state")
         async_dispatcher_send(hass, SIGNAL_PANEL_MESSAGE)
 

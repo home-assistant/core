@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Standort ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_address": "Adresse nicht im Einzugsgebiet von Twente Milieu gefunden."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "house_letter": "Hausbrief/zusatz",
+                    "house_number": "Hausnummer",
+                    "post_code": "Postleitzahl"
+                },
+                "description": "Richte Twente Milieu mit Informationen zur Abfallsammlung unter deiner Adresse ein.",
+                "title": "Twente Milieu"
+            }
+        }
+    }
+}

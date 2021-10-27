@@ -1,0 +1,63 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_battery_level": "obecny poziom na\u0142adowania baterii {entity_name}",
+            "is_carbon_dioxide": "obecny poziom st\u0119\u017cenia dwutlenku w\u0119gla w {entity_name}",
+            "is_carbon_monoxide": "obecny poziom st\u0119\u017cenia tlenku w\u0119gla w {entity_name}",
+            "is_current": "obecne nat\u0119\u017cenie pr\u0105du {entity_name}",
+            "is_energy": "obecna energia {entity_name}",
+            "is_gas": "obecny poziom gazu {entity_name}",
+            "is_humidity": "obecna wilgotno\u015b\u0107 {entity_name}",
+            "is_illuminance": "obecne nat\u0119\u017cenie o\u015bwietlenia {entity_name}",
+            "is_nitrogen_dioxide": "obecny poziom st\u0119\u017cenia dwutlenku azotu {entity_name}",
+            "is_nitrogen_monoxide": "obecny poziom st\u0119\u017cenia tlenku azotu {entity_name}",
+            "is_nitrous_oxide": "obecny poziom st\u0119\u017cenia podtlenku azotu {entity_name}",
+            "is_ozone": "obecny poziom st\u0119\u017cenia ozonu {entity_name}",
+            "is_pm1": "obecny poziom st\u0119\u017cenia PM1 {entity_name}",
+            "is_pm10": "obecny poziom st\u0119\u017cenia PM10 {entity_name}",
+            "is_pm25": "obecny poziom st\u0119\u017cenia PM2.5 {entity_name}",
+            "is_power": "obecna moc {entity_name}",
+            "is_power_factor": "obecny wsp\u00f3\u0142czynnik mocy {entity_name}",
+            "is_pressure": "obecne ci\u015bnienie {entity_name}",
+            "is_signal_strength": "obecna si\u0142a sygna\u0142u {entity_name}",
+            "is_sulphur_dioxide": "obecny poziom st\u0119\u017cenia dwutlenku siarki {entity_name}",
+            "is_temperature": "obecna temperatura {entity_name}",
+            "is_value": "obecna warto\u015b\u0107 {entity_name}",
+            "is_volatile_organic_compounds": "obecny poziom st\u0119\u017cenia lotnych zwi\u0105zk\u00f3w organicznych {entity_name}",
+            "is_voltage": "obecne napi\u0119cie {entity_name}"
+        },
+        "trigger_type": {
+            "battery_level": "zmieni si\u0119 poziom baterii {entity_name}",
+            "carbon_dioxide": "{entity_name} wykryje zmian\u0119 st\u0119\u017cenia dwutlenku w\u0119gla",
+            "carbon_monoxide": "{entity_name} wykryje zmian\u0119 st\u0119\u017cenia tlenku w\u0119gla",
+            "current": "zmieni si\u0119 nat\u0119\u017cenie pr\u0105du w {entity_name}",
+            "energy": "zmieni si\u0119 energia {entity_name}",
+            "gas": "{entity_name} wykryje zmian\u0119 poziomu gazu",
+            "humidity": "zmieni si\u0119 wilgotno\u015b\u0107 {entity_name}",
+            "illuminance": "zmieni si\u0119 nat\u0119\u017cenie o\u015bwietlenia {entity_name}",
+            "nitrogen_dioxide": "zmieni si\u0119 st\u0119\u017cenie dwutlenku azotu w {entity_name}",
+            "nitrogen_monoxide": "{entity_name} wykryje zmian\u0119 st\u0119\u017cenia tlenku azotu",
+            "nitrous_oxide": "{entity_name} wykryje zmian\u0119 st\u0119\u017cenia podtlenku azotu",
+            "ozone": "{entity_name} wykryje zmian\u0119 st\u0119\u017cenia ozonu",
+            "pm1": "{entity_name} wykryje zmian\u0119 st\u0119\u017cenia PM1",
+            "pm10": "{entity_name} wykryje zmian\u0119 st\u0119\u017cenia PM10",
+            "pm25": "{entity_name} wykryje zmian\u0119 st\u0119\u017cenia PM2.5",
+            "power": "zmieni si\u0119 moc {entity_name}",
+            "power_factor": "zmieni si\u0119 wsp\u00f3\u0142czynnik mocy w {entity_name}",
+            "pressure": "zmieni si\u0119 ci\u015bnienie {entity_name}",
+            "signal_strength": "zmieni si\u0119 si\u0142a sygna\u0142u {entity_name}",
+            "sulphur_dioxide": "{entity_name} wykryje zmian\u0119 st\u0119\u017cenia dwutlenku siarki",
+            "temperature": "zmieni si\u0119 temperatura {entity_name}",
+            "value": "zmieni si\u0119 warto\u015b\u0107 {entity_name}",
+            "volatile_organic_compounds": "{entity_name} wykryje zmian\u0119 st\u0119\u017cenia lotnych zwi\u0105zk\u00f3w organicznych",
+            "voltage": "zmieni si\u0119 napi\u0119cie w {entity_name}"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "wy\u0142.",
+            "on": "w\u0142."
+        }
+    },
+    "title": "Sensor"
+}

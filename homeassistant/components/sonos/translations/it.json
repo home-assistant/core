@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Nessun dispositivo trovato sulla rete",
+            "not_sonos_device": "Il dispositivo rilevato non \u00e8 un dispositivo Sonos",
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
+        },
+        "step": {
+            "confirm": {
+                "description": "Vuoi configurare Sonos?"
+            }
+        }
+    }
+}

@@ -1,15 +1,9 @@
 {
   "domain": "ios",
-  "name": "Ios",
+  "name": "Home Assistant iOS",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ios",
-  "requirements": [],
-  "dependencies": [
-    "device_tracker",
-    "http",
-    "zeroconf"
-  ],
-  "codeowners": [
-    "@robbiet480"
-  ]
+  "dependencies": ["device_tracker", "http", "zeroconf"],
+  "codeowners": ["@robbiet480"],
+  "iot_class": "cloud_push"
 }

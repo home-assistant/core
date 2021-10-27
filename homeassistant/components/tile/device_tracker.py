@@ -1,146 +1,154 @@
-"""Support for Tile® Bluetooth trackers."""
+"""Support for Tile device trackers."""
+from __future__ import annotations
+
+from collections.abc import Awaitable, Callable
 import logging
-from datetime import timedelta
+from typing import Any
 
-import voluptuous as vol
+from pytile.tile import Tile
 
-from homeassistant.components.device_tracker import PLATFORM_SCHEMA
-from homeassistant.const import CONF_USERNAME, CONF_MONITORED_VARIABLES, CONF_PASSWORD
-from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util import slugify
-from homeassistant.util.json import load_json, save_json
+from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.components.device_tracker.const import SOURCE_TYPE_GPS
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
+
+from . import DATA_COORDINATOR, DATA_TILE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-CLIENT_UUID_CONFIG_FILE = ".tile.conf"
-DEVICE_TYPES = ["PHONE", "TILE"]
 
 ATTR_ALTITUDE = "altitude"
 ATTR_CONNECTION_STATE = "connection_state"
 ATTR_IS_DEAD = "is_dead"
 ATTR_IS_LOST = "is_lost"
+ATTR_LAST_LOST_TIMESTAMP = "last_lost_timestamp"
 ATTR_RING_STATE = "ring_state"
-ATTR_VOIP_STATE = "voip_state"
-ATTR_TILE_ID = "tile_identifier"
 ATTR_TILE_NAME = "tile_name"
+ATTR_VOIP_STATE = "voip_state"
 
-CONF_SHOW_INACTIVE = "show_inactive"
-
+DEFAULT_ATTRIBUTION = "Data provided by Tile"
 DEFAULT_ICON = "mdi:view-grid"
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=2)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_SHOW_INACTIVE, default=False): cv.boolean,
-        vol.Optional(CONF_MONITORED_VARIABLES, default=DEVICE_TYPES): vol.All(
-            cv.ensure_list, [vol.In(DEVICE_TYPES)]
-        ),
-    }
-)
 
 
-async def async_setup_scanner(hass, config, async_see, discovery_info=None):
-    """Validate the configuration and return a Tile scanner."""
-    from pytile import async_login
-
-    websession = aiohttp_client.async_get_clientsession(hass)
-
-    config_file = hass.config.path(
-        ".{}{}".format(slugify(config[CONF_USERNAME]), CLIENT_UUID_CONFIG_FILE)
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up Tile device trackers."""
+    async_add_entities(
+        [
+            TileDeviceTracker(
+                entry,
+                hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR][tile_uuid],
+                tile,
+            )
+            for tile_uuid, tile in hass.data[DOMAIN][entry.entry_id][DATA_TILE].items()
+        ]
     )
-    config_data = await hass.async_add_job(load_json, config_file)
-    if config_data:
-        client = await async_login(
-            config[CONF_USERNAME],
-            config[CONF_PASSWORD],
-            websession,
-            client_uuid=config_data["client_uuid"],
-        )
-    else:
-        client = await async_login(
-            config[CONF_USERNAME], config[CONF_PASSWORD], websession
-        )
 
-        config_data = {"client_uuid": client.client_uuid}
-        await hass.async_add_job(save_json, config_file, config_data)
 
-    scanner = TileScanner(
-        client,
-        hass,
-        async_see,
-        config[CONF_MONITORED_VARIABLES],
-        config[CONF_SHOW_INACTIVE],
+async def async_setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_see: Callable[..., Awaitable[None]],
+    discovery_info: dict[str, Any] | None = None,
+) -> bool:
+    """Detect a legacy configuration and import it."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_USERNAME: config[CONF_USERNAME],
+                CONF_PASSWORD: config[CONF_PASSWORD],
+            },
+        )
     )
-    return await scanner.async_init()
+
+    _LOGGER.info(
+        "Your Tile configuration has been imported into the UI; "
+        "please remove it from configuration.yaml"
+    )
+
+    return True
 
 
-class TileScanner:
-    """Define an object to retrieve Tile data."""
+class TileDeviceTracker(CoordinatorEntity, TrackerEntity):
+    """Representation of a network infrastructure device."""
 
-    def __init__(self, client, hass, async_see, types, show_inactive):
+    _attr_icon = DEFAULT_ICON
+
+    def __init__(
+        self, entry: ConfigEntry, coordinator: DataUpdateCoordinator, tile: Tile
+    ) -> None:
         """Initialize."""
-        self._async_see = async_see
-        self._client = client
-        self._hass = hass
-        self._show_inactive = show_inactive
-        self._types = types
+        super().__init__(coordinator)
 
-    async def async_init(self):
-        """Further initialize connection to the Tile servers."""
-        from pytile.errors import TileError
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._attr_name = tile.name
+        self._attr_unique_id = f"{entry.data[CONF_USERNAME]}_{tile.uuid}"
+        self._entry = entry
+        self._tile = tile
 
-        try:
-            await self._client.async_init()
-        except TileError as err:
-            _LOGGER.error("Unable to set up Tile scanner: %s", err)
-            return False
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and not self._tile.dead
 
-        await self._async_update()
+    @property
+    def location_accuracy(self) -> int:
+        """Return the location accuracy of the device.
 
-        async_track_time_interval(self._hass, self._async_update, DEFAULT_SCAN_INTERVAL)
+        Value in meters.
+        """
+        if not self._tile.accuracy:
+            return super().location_accuracy
+        return int(self._tile.accuracy)
 
-        return True
+    @property
+    def latitude(self) -> float | None:
+        """Return latitude value of the device."""
+        if not self._tile.latitude:
+            return None
+        return self._tile.latitude
 
-    async def _async_update(self, now=None):
-        """Update info from Tile."""
-        from pytile.errors import SessionExpiredError, TileError
+    @property
+    def longitude(self) -> float | None:
+        """Return longitude value of the device."""
+        if not self._tile.longitude:
+            return None
+        return self._tile.longitude
 
-        _LOGGER.debug("Updating Tile data")
+    @property
+    def source_type(self) -> str:
+        """Return the source type, eg gps or router, of the device."""
+        return SOURCE_TYPE_GPS
 
-        try:
-            await self._client.async_init()
-            tiles = await self._client.tiles.all(
-                whitelist=self._types, show_inactive=self._show_inactive
-            )
-        except SessionExpiredError:
-            _LOGGER.info("Session expired; trying again shortly")
-            return
-        except TileError as err:
-            _LOGGER.error("There was an error while updating: %s", err)
-            return
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Respond to a DataUpdateCoordinator update."""
+        self._update_from_latest_data()
+        self.async_write_ha_state()
 
-        if not tiles:
-            _LOGGER.warning("No Tiles found")
-            return
+    @callback
+    def _update_from_latest_data(self) -> None:
+        """Update the entity from the latest data."""
+        self._attr_extra_state_attributes.update(
+            {
+                ATTR_ALTITUDE: self._tile.altitude,
+                ATTR_IS_LOST: self._tile.lost,
+                ATTR_LAST_LOST_TIMESTAMP: self._tile.lost_timestamp,
+                ATTR_RING_STATE: self._tile.ring_state,
+                ATTR_VOIP_STATE: self._tile.voip_state,
+            }
+        )
 
-        for tile in tiles:
-            await self._async_see(
-                dev_id="tile_{0}".format(slugify(tile["tile_uuid"])),
-                gps=(
-                    tile["last_tile_state"]["latitude"],
-                    tile["last_tile_state"]["longitude"],
-                ),
-                attributes={
-                    ATTR_ALTITUDE: tile["last_tile_state"]["altitude"],
-                    ATTR_CONNECTION_STATE: tile["last_tile_state"]["connection_state"],
-                    ATTR_IS_DEAD: tile["is_dead"],
-                    ATTR_IS_LOST: tile["last_tile_state"]["is_lost"],
-                    ATTR_RING_STATE: tile["last_tile_state"]["ring_state"],
-                    ATTR_VOIP_STATE: tile["last_tile_state"]["voip_state"],
-                    ATTR_TILE_ID: tile["tile_uuid"],
-                    ATTR_TILE_NAME: tile["name"],
-                },
-                icon=DEFAULT_ICON,
-            )
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self._update_from_latest_data()

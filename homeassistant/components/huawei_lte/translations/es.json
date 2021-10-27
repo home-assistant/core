@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Este dispositivo ya ha sido configurado",
+            "already_in_progress": "Este dispositivo ya se est\u00e1 configurando",
+            "not_huawei_lte": "No es un dispositivo Huawei LTE"
+        },
+        "error": {
+            "connection_timeout": "Tiempo de espera de la conexi\u00f3n superado",
+            "incorrect_password": "Contrase\u00f1a incorrecta",
+            "incorrect_username": "Nombre de usuario incorrecto",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "invalid_url": "URL no v\u00e1lida",
+            "login_attempts_exceeded": "Se han superado los intentos de inicio de sesi\u00f3n m\u00e1ximos, int\u00e9ntelo de nuevo m\u00e1s tarde.",
+            "response_error": "Error desconocido del dispositivo",
+            "unknown": "Error inesperado"
+        },
+        "flow_title": "Huawei LTE: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "url": "URL",
+                    "username": "Nombre de usuario"
+                },
+                "description": "Introduzca los detalles de acceso al dispositivo. La especificaci\u00f3n del nombre de usuario y la contrase\u00f1a es opcional, pero permite admitir m\u00e1s funciones de integraci\u00f3n. Por otro lado, el uso de una conexi\u00f3n autorizada puede causar problemas para acceder a la interfaz web del dispositivo desde fuera de Home Assistant mientras la integraci\u00f3n est\u00e1 activa, y viceversa.",
+                "title": "Configurar Huawei LTE"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "name": "Nombre del servicio de notificaci\u00f3n (el cambio requiere reiniciar)",
+                    "recipient": "Destinatarios de notificaciones por SMS",
+                    "track_new_devices": "Rastrea nuevos dispositivos",
+                    "track_wired_clients": "Seguir clientes de red cableados",
+                    "unauthenticated_mode": "Modo no autenticado (el cambio requiere recarga)"
+                }
+            }
+        }
+    }
+}

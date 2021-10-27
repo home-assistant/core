@@ -1,6 +1,9 @@
 """Support for Join notifications."""
 import logging
+
+from pyjoin import get_devices, send_notification
 import voluptuous as vol
+
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TITLE,
@@ -8,12 +11,11 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_DEVICE_ID
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DEVICE_ID = "device_id"
 CONF_DEVICE_IDS = "device_ids"
 CONF_DEVICE_NAMES = "device_names"
 
@@ -33,12 +35,9 @@ def get_service(hass, config, discovery_info=None):
     device_id = config.get(CONF_DEVICE_ID)
     device_ids = config.get(CONF_DEVICE_IDS)
     device_names = config.get(CONF_DEVICE_NAMES)
-    if api_key:
-        from pyjoin import get_devices
-
-        if not get_devices(api_key):
-            _LOGGER.error("Error connecting to Join. Check the API key")
-            return False
+    if api_key and not get_devices(api_key):
+        _LOGGER.error("Error connecting to Join. Check the API key")
+        return False
     if device_id is None and device_ids is None and device_names is None:
         _LOGGER.error(
             "No device was provided. Please specify device_id"
@@ -60,8 +59,6 @@ class JoinNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        from pyjoin import send_notification
-
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         data = kwargs.get(ATTR_DATA) or {}
         send_notification(
@@ -79,5 +76,6 @@ class JoinNotificationService(BaseNotificationService):
             tts=data.get("tts"),
             tts_language=data.get("tts_language"),
             vibration=data.get("vibration"),
+            actions=data.get("actions"),
             api_key=self._api_key,
         )

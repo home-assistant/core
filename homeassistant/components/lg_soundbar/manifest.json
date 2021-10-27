@@ -1,10 +1,8 @@
 {
   "domain": "lg_soundbar",
-  "name": "Lg soundbar",
+  "name": "LG Soundbars",
   "documentation": "https://www.home-assistant.io/integrations/lg_soundbar",
-  "requirements": [
-    "temescal==0.1"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["temescal==0.3"],
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

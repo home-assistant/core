@@ -1,17 +1,15 @@
 """Tests for the command_line auth provider."""
 
-from unittest.mock import Mock
 import os
+from unittest.mock import AsyncMock
 import uuid
 
 import pytest
 
 from homeassistant import data_entry_flow
-from homeassistant.auth import auth_store, models as auth_models, AuthManager
+from homeassistant.auth import AuthManager, auth_store, models as auth_models
 from homeassistant.auth.providers import command_line
 from homeassistant.const import CONF_TYPE
-
-from tests.common import mock_coro
 
 
 @pytest.fixture
@@ -63,7 +61,7 @@ async def test_match_existing_credentials(store, provider):
         data={"username": "good-user"},
         is_new=False,
     )
-    provider.async_credentials = Mock(return_value=mock_coro([existing]))
+    provider.async_credentials = AsyncMock(return_value=[existing])
     credentials = await provider.async_get_or_create_credentials(
         {"username": "good-user", "password": "irrelevant"}
     )

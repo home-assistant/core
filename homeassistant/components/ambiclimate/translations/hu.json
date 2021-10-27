@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "access_token": "Ismeretlen hiba a hozz\u00e1f\u00e9r\u00e9si token gener\u00e1l\u00e1s\u00e1ban.",
+            "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van",
+            "missing_configuration": "A komponens nincs konfigur\u00e1lva. K\u00e9rem, k\u00f6vesse a dokument\u00e1ci\u00f3t."
+        },
+        "create_entry": {
+            "default": "Sikeres hiteles\u00edt\u00e9s"
+        },
+        "error": {
+            "follow_link": "K\u00e9rem, k\u00f6vesse a hivatkoz\u00e1st \u00e9s hiteles\u00edtse mag\u00e1t miel\u0151tt megnyomn\u00e1 a K\u00fcld\u00e9s gombot",
+            "no_token": "Nem hiteles\u00edtett Ambiclimate"
+        },
+        "step": {
+            "auth": {
+                "description": "K\u00e9rj\u00fck, k\u00f6vesse ezt a [link]({authorization_url}}) \u00e9s ** Enged\u00e9lyezze ** a hozz\u00e1f\u00e9r\u00e9st Ambiclimate -fi\u00f3kj\u00e1hoz, majd t\u00e9rjen vissza, \u00e9s nyomja meg az al\u00e1bbi ** K\u00fcld\u00e9s ** gombot.\n(Gy\u0151z\u0151dj\u00f6n meg arr\u00f3l, hogy a megadott visszah\u00edv\u00e1si URL {cb_url})",
+                "title": "Ambiclimate hiteles\u00edt\u00e9se"
+            }
+        }
+    }
+}

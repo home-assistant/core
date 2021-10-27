@@ -1,79 +1,46 @@
 """Support for MyQ-Enabled Garage Doors."""
-import logging
-
-from pymyq import login
+from pymyq.const import DEVICE_TYPE_GATE as MYQ_DEVICE_TYPE_GATE
 from pymyq.errors import MyQError
-import voluptuous as vol
 
 from homeassistant.components.cover import (
-    CoverDevice,
-    PLATFORM_SCHEMA,
+    DEVICE_CLASS_GARAGE,
+    DEVICE_CLASS_GATE,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
+    CoverEntity,
 )
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_TYPE,
-    CONF_USERNAME,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
-)
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
+from homeassistant.exceptions import HomeAssistantError
 
-_LOGGER = logging.getLogger(__name__)
-
-MYQ_TO_HASS = {
-    "closed": STATE_CLOSED,
-    "closing": STATE_CLOSING,
-    "open": STATE_OPEN,
-    "opening": STATE_OPENING,
-}
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        # This parameter is no longer used; keeping it to avoid a breaking change in
-        # a hotfix, but in a future main release, this should be removed:
-        vol.Optional(CONF_TYPE): cv.string,
-    }
-)
+from . import MyQEntity
+from .const import DOMAIN, MYQ_COORDINATOR, MYQ_GATEWAY, MYQ_TO_HASS
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the platform."""
-    websession = aiohttp_client.async_get_clientsession(hass)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up mysq covers."""
+    data = hass.data[DOMAIN][config_entry.entry_id]
+    myq = data[MYQ_GATEWAY]
+    coordinator = data[MYQ_COORDINATOR]
 
-    username = config[CONF_USERNAME]
-    password = config[CONF_PASSWORD]
-
-    try:
-        myq = await login(username, password, websession)
-    except MyQError as err:
-        _LOGGER.error("There was an error while logging in: %s", err)
-        return
-
-    async_add_entities([MyQDevice(device) for device in myq.covers.values()], True)
+    async_add_entities(
+        [MyQCover(coordinator, device) for device in myq.covers.values()]
+    )
 
 
-class MyQDevice(CoverDevice):
+class MyQCover(MyQEntity, CoverEntity):
     """Representation of a MyQ cover."""
 
-    def __init__(self, device):
+    _attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
+
+    def __init__(self, coordinator, device):
         """Initialize with API object, device id."""
+        super().__init__(coordinator, device)
         self._device = device
-
-    @property
-    def device_class(self):
-        """Define this cover as a garage door."""
-        return "garage"
-
-    @property
-    def name(self):
-        """Return the name of the garage door if any."""
-        return self._device.name
+        if device.device_type == MYQ_DEVICE_TYPE_GATE:
+            self._attr_device_class = DEVICE_CLASS_GATE
+        else:
+            self._attr_device_class = DEVICE_CLASS_GARAGE
+        self._attr_unique_id = device.device_id
 
     @property
     def is_closed(self):
@@ -86,28 +53,57 @@ class MyQDevice(CoverDevice):
         return MYQ_TO_HASS.get(self._device.state) == STATE_CLOSING
 
     @property
+    def is_open(self):
+        """Return if the cover is opening or not."""
+        return MYQ_TO_HASS.get(self._device.state) == STATE_OPEN
+
+    @property
     def is_opening(self):
         """Return if the cover is opening or not."""
         return MYQ_TO_HASS.get(self._device.state) == STATE_OPENING
 
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_OPEN | SUPPORT_CLOSE
-
-    @property
-    def unique_id(self):
-        """Return a unique, HASS-friendly identifier for this entity."""
-        return self._device.device_id
-
     async def async_close_cover(self, **kwargs):
         """Issue close command to cover."""
-        await self._device.close()
+        if self.is_closing or self.is_closed:
+            return
+
+        try:
+            wait_task = await self._device.close(wait_for_state=False)
+        except MyQError as err:
+            raise HomeAssistantError(
+                f"Closing of cover {self._device.name} failed with error: {err}"
+            ) from err
+
+        # Write closing state to HASS
+        self.async_write_ha_state()
+
+        result = wait_task if isinstance(wait_task, bool) else await wait_task
+
+        # Write final state to HASS
+        self.async_write_ha_state()
+
+        if not result:
+            raise HomeAssistantError(f"Closing of cover {self._device.name} failed")
 
     async def async_open_cover(self, **kwargs):
         """Issue open command to cover."""
-        await self._device.open()
+        if self.is_opening or self.is_open:
+            return
 
-    async def async_update(self):
-        """Update status of cover."""
-        await self._device.update()
+        try:
+            wait_task = await self._device.open(wait_for_state=False)
+        except MyQError as err:
+            raise HomeAssistantError(
+                f"Opening of cover {self._device.name} failed with error: {err}"
+            ) from err
+
+        # Write opening state to HASS
+        self.async_write_ha_state()
+
+        result = wait_task if isinstance(wait_task, bool) else await wait_task
+
+        # Write final state to HASS
+        self.async_write_ha_state()
+
+        if not result:
+            raise HomeAssistantError(f"Opening of cover {self._device.name} failed")

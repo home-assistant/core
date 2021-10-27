@@ -19,20 +19,19 @@ _LOGGER = logging.getLogger(__name__)
 @callback
 def solarlog_entries(hass: HomeAssistant):
     """Return the hosts already configured."""
-    return set(
+    return {
         entry.data[CONF_HOST] for entry in hass.config_entries.async_entries(DOMAIN)
-    )
+    }
 
 
 class SolarLogConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for solarlog."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._errors = {}
+        self._errors: dict = {}
 
     def _host_in_configuration_exists(self, host) -> bool:
         """Return True if host exists in configuration."""
@@ -54,7 +53,7 @@ class SolarLogConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return False
 
     async def async_step_user(self, user_input=None):
-        """Step when user intializes a integration."""
+        """Step when user initializes a integration."""
         self._errors = {}
         if user_input is not None:
             # set some defaults in case we need to return to the form

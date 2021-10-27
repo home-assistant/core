@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "\u7db2\u8def\u4e0a\u627e\u4e0d\u5230\u88dd\u7f6e"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "id": "\u4e3b\u6a5f ID"
+                },
+                "title": "\u9078\u64c7\u6240\u8981\u65b0\u589e\u7684 Hub"
+            }
+        }
+    }
+}

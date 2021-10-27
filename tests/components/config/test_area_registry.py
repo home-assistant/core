@@ -2,6 +2,7 @@
 import pytest
 
 from homeassistant.components.config import area_registry
+
 from tests.common import mock_area_registry
 
 
@@ -54,7 +55,7 @@ async def test_create_area_with_name_already_in_use(hass, client, registry):
 
     assert not msg["success"]
     assert msg["error"]["code"] == "invalid_info"
-    assert msg["error"]["message"] == "Name is already in use"
+    assert msg["error"]["message"] == "The name mock (mock) is already in use"
     assert len(registry.areas) == 1
 
 
@@ -146,5 +147,5 @@ async def test_update_area_with_name_already_in_use(hass, client, registry):
 
     assert not msg["success"]
     assert msg["error"]["code"] == "invalid_info"
-    assert msg["error"]["message"] == "Name is already in use"
+    assert msg["error"]["message"] == "The name mock 2 (mock2) is already in use"
     assert len(registry.areas) == 2

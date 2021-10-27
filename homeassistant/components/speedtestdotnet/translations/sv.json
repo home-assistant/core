@@ -1,0 +1,11 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "server_name": "V\u00e4lj testserver"
+                }
+            }
+        }
+    }
+}

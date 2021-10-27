@@ -1,19 +1,18 @@
 """Support for Lutron Homeworks lights."""
 import logging
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light
+from pyhomeworks.pyhomeworks import HW_LIGHT_CHANGED
+
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    SUPPORT_BRIGHTNESS,
+    LightEntity,
+)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import (
-    CONF_ADDR,
-    CONF_DIMMERS,
-    CONF_RATE,
-    ENTITY_SIGNAL,
-    HOMEWORKS_CONTROLLER,
-    HomeworksDevice,
-)
+from . import CONF_ADDR, CONF_DIMMERS, CONF_RATE, HOMEWORKS_CONTROLLER, HomeworksDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +32,7 @@ def setup_platform(hass, config, add_entities, discover_info=None):
     add_entities(devs, True)
 
 
-class HomeworksLight(HomeworksDevice, Light):
+class HomeworksLight(HomeworksDevice, LightEntity):
     """Homeworks Light."""
 
     def __init__(self, controller, addr, name, rate):
@@ -45,9 +44,11 @@ class HomeworksLight(HomeworksDevice, Light):
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        signal = ENTITY_SIGNAL.format(self._addr)
+        signal = f"homeworks_entity_{self._addr}"
         _LOGGER.debug("connecting %s", signal)
-        async_dispatcher_connect(self.hass, signal, self._update_callback)
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, signal, self._update_callback)
+        )
         self._controller.request_dimmer_level(self._addr)
 
     @property
@@ -81,7 +82,7 @@ class HomeworksLight(HomeworksDevice, Light):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Supported attributes."""
         return {"homeworks_address": self._addr}
 
@@ -93,10 +94,9 @@ class HomeworksLight(HomeworksDevice, Light):
     @callback
     def _update_callback(self, msg_type, values):
         """Process device specific messages."""
-        from pyhomeworks.pyhomeworks import HW_LIGHT_CHANGED
 
         if msg_type == HW_LIGHT_CHANGED:
             self._level = int((values[1] * 255.0) / 100.0)
             if self._level != 0:
                 self._prev_level = self._level
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()

@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "link": {
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani: {name} ({host})?",
+                "title": "A Logitech Harmony Hub be\u00e1ll\u00edt\u00e1sa"
+            },
+            "user": {
+                "data": {
+                    "host": "C\u00edm",
+                    "name": "Hub neve"
+                },
+                "title": "A Logitech Harmony Hub be\u00e1ll\u00edt\u00e1sa"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "activity": "Az alap\u00e9rtelmezett tev\u00e9kenys\u00e9g, amelyet akkor kell v\u00e9grehajtani, ha nincs megadva.",
+                    "delay_secs": "A parancsok k\u00fcld\u00e9se k\u00f6z\u00f6tti k\u00e9s\u00e9s."
+                },
+                "description": "Harmony Hub be\u00e1ll\u00edt\u00e1sok"
+            }
+        }
+    }
+}

@@ -50,7 +50,7 @@ def log_message(source, *parts):
     """Build log message."""
     message = source.__class__.__name__
     for part in parts:
-        message += ": " + str(part)
+        message += f": {part!s}"
     return message
 
 
@@ -95,7 +95,7 @@ class I2CHatsDIScanner:
                     state = (value >> channel) & 0x01
                     old_state = (old_value >> channel) & 0x01
                     if state != old_state:
-                        callback = callbacks.get(channel, None)
+                        callback = callbacks.get(channel)
                         if callback is not None:
                             callback(state)
             setattr(digital_inputs, self._OLD_VALUE, value)
@@ -118,8 +118,7 @@ class I2CHatsManager(threading.Thread):
     def register_board(self, board, address):
         """Register I2C-HAT."""
         with self._lock:
-            i2c_hat = self._i2c_hats.get(address)
-            if i2c_hat is None:
+            if (i2c_hat := self._i2c_hats.get(address)) is None:
                 # This is a Pi module and can't be installed in CI without
                 # breaking the build.
                 # pylint: disable=import-outside-toplevel,import-error
@@ -214,7 +213,7 @@ class I2CHatsManager(threading.Thread):
                 value = i2c_hat.di.value
                 return (value >> channel) & 0x01
             except ResponseException as ex:
-                raise I2CHatsException(str(ex))
+                raise I2CHatsException(str(ex)) from ex
 
     def write_dq(self, address, channel, value):
         """Write a value to a I2C-HAT digital output."""
@@ -228,7 +227,7 @@ class I2CHatsManager(threading.Thread):
             try:
                 i2c_hat.dq.channels[channel] = value
             except ResponseException as ex:
-                raise I2CHatsException(str(ex))
+                raise I2CHatsException(str(ex)) from ex
 
     def read_dq(self, address, channel):
         """Read a value from a I2C-HAT digital output."""
@@ -242,4 +241,4 @@ class I2CHatsManager(threading.Thread):
             try:
                 return i2c_hat.dq.channels[channel]
             except ResponseException as ex:
-                raise I2CHatsException(str(ex))
+                raise I2CHatsException(str(ex)) from ex

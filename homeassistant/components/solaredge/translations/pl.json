@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "could_not_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z API solaredge",
+            "invalid_api_key": "Nieprawid\u0142owy klucz API",
+            "site_not_active": "Strona nie jest aktywna"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Klucz API",
+                    "name": "Nazwa tej instalacji",
+                    "site_id": "SolarEdge site-id"
+                },
+                "title": "Zdefiniuj parametry API dla tej instalacji"
+            }
+        }
+    }
+}

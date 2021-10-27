@@ -1,8 +1,7 @@
 {
   "domain": "imap_email_content",
-  "name": "Imap email content",
+  "name": "IMAP Email Content",
   "documentation": "https://www.home-assistant.io/integrations/imap_email_content",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_push"
 }

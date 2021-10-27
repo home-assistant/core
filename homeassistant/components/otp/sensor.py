@@ -1,17 +1,13 @@
 """Support for One-Time Password (OTP)."""
-import logging
 import time
 
 import pyotp
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_TOKEN
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "OTP Sensor"
 
@@ -37,7 +33,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 
 # Only TOTP supported at the moment, HOTP might be added later
-class TOTPSensor(Entity):
+class TOTPSensor(SensorEntity):
     """Representation of a TOTP sensor."""
 
     def __init__(self, name, token):
@@ -54,7 +50,7 @@ class TOTPSensor(Entity):
     @callback
     def _call_loop(self):
         self._state = self._otp.now()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
         # Update must occur at even TIME_STEP, e.g. 12:00:00, 12:00:30,
         # 12:01:00, etc. in order to have synced time (see RFC6238)
@@ -67,7 +63,7 @@ class TOTPSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "no_units": "Det gick inte att hitta n\u00e5gra HVAC-enheter i CoolMasterNet-v\u00e4rden."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "cool": "St\u00f6d svalt l\u00e4ge",
+                    "dry": "St\u00f6d torrl\u00e4ge",
+                    "fan_only": "St\u00f6d endast fl\u00e4ktl\u00e4ge",
+                    "heat": "St\u00f6d v\u00e4rmel\u00e4ge",
+                    "heat_cool": "St\u00f6d automatiskt v\u00e4rme/kyl-l\u00e4ge",
+                    "host": "V\u00e4rd",
+                    "off": "Kan st\u00e4ngas av"
+                },
+                "title": "St\u00e4ll in dina CoolMasterNet-anslutningsdetaljer."
+            }
+        }
+    }
+}

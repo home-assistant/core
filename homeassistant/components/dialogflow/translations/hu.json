@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges.",
+            "webhook_not_internet_accessible": "A Home Assistant p\u00e9ld\u00e1ny\u00e1nak el\u00e9rhet\u0151nek kell lennie az internet fel\u0151l a webhook \u00fczenetek fogad\u00e1s\u00e1hoz."
+        },
+        "create_entry": {
+            "default": "Ha esem\u00e9nyeket szeretne k\u00fcldeni a Home Assistant alkalmaz\u00e1snak, be kell \u00e1ll\u00edtania a [Dialogflow webhook integr\u00e1ci\u00f3j\u00e1t]({dialogflow_url}). \n\n T\u00f6ltse ki a k\u00f6vetkez\u0151 inform\u00e1ci\u00f3kat: \n\n - URL: `{webhook_url}`\n - M\u00f3dszer: POST\n - Tartalom t\u00edpusa: application/json \n\n Tov\u00e1bbi r\u00e9szletek\u00e9rt l\u00e1sd a [dokument\u00e1ci\u00f3t]({docs_url})."
+        },
+        "step": {
+            "user": {
+                "description": "Biztos benne, hogy be szeretn\u00e9 \u00e1ll\u00edtani a Dialogflowt?",
+                "title": "Dialogflow Webhook be\u00e1ll\u00edt\u00e1sa"
+            }
+        }
+    }
+}

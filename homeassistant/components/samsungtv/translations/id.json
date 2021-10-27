@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "already_in_progress": "Alur konfigurasi sedang berlangsung",
+            "auth_missing": "Home Assistant tidak diizinkan untuk tersambung ke TV Samsung ini. Periksa Manajer Perangkat Eksternal TV Anda untuk mengotorisasi Home Assistant.",
+            "cannot_connect": "Gagal terhubung",
+            "id_missing": "Perangkat Samsung ini tidak memiliki SerialNumber.",
+            "missing_config_entry": "Perangkat Samsung ini tidak memiliki entri konfigurasi.",
+            "not_supported": "Perangkat TV Samsung ini saat ini tidak didukung.",
+            "reauth_successful": "Autentikasi ulang berhasil",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "error": {
+            "auth_missing": "Home Assistant tidak diizinkan untuk tersambung ke TV Samsung ini. Periksa Manajer Perangkat Eksternal TV Anda untuk mengotorisasi Home Assistant."
+        },
+        "flow_title": "{device}",
+        "step": {
+            "confirm": {
+                "description": "Apakah Anda ingin menyiapkan {device}? Jika Anda belum pernah menyambungkan Home Assistant sebelumnya, Anda akan melihat dialog di TV yang meminta otorisasi.",
+                "title": "TV Samsung"
+            },
+            "reauth_confirm": {
+                "description": "Setelah mengirimkan, setujui pada popup di {device} yang meminta otorisasi dalam waktu 30 detik."
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nama"
+                },
+                "description": "Masukkan informasi TV Samsung Anda. Jika Anda belum pernah menyambungkan Home Assistant sebelumnya, Anda akan melihat dialog di TV yang meminta otorisasi."
+            }
+        }
+    }
+}

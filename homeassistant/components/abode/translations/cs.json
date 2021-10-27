@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Op\u011btovn\u00e9 ov\u011b\u0159en\u00ed bylo \u00fasp\u011b\u0161n\u00e9",
+            "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace."
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
+            "invalid_mfa_code": "Neplatn\u00fd k\u00f3d MFA"
+        },
+        "step": {
+            "mfa": {
+                "data": {
+                    "mfa_code": "K\u00f3d MFA (6 \u010d\u00edslic)"
+                },
+                "title": "Zadejte k\u00f3d MFA pro Abode"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Heslo",
+                    "username": "E-mail"
+                },
+                "title": "Vypl\u0148te sv\u00e9 p\u0159ihla\u0161ovac\u00ed \u00fadaje do Abode"
+            },
+            "user": {
+                "data": {
+                    "password": "Heslo",
+                    "username": "E-mail"
+                },
+                "title": "Vypl\u0148te p\u0159ihla\u0161ovac\u00ed \u00fadaje Abode"
+            }
+        }
+    }
+}

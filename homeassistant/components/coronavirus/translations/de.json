@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Der Dienst ist bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "country": "Land"
+                },
+                "title": "W\u00e4hle ein Land aus, das \u00fcberwacht werden soll"
+            }
+        }
+    }
+}

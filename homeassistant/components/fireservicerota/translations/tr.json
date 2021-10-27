@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Hesap zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
+        },
+        "create_entry": {
+            "default": "Ba\u015far\u0131yla do\u011fruland\u0131"
+        },
+        "error": {
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "\u015eifre"
+                },
+                "description": "Kimlik do\u011frulama jetonlar\u0131 ge\u00e7ersiz, yeniden olu\u015fturmak i\u00e7in oturum a\u00e7\u0131n."
+            },
+            "user": {
+                "data": {
+                    "password": "\u015eifre",
+                    "url": "Web sitesi",
+                    "username": "Kullan\u0131c\u0131 ad\u0131"
+                }
+            }
+        }
+    }
+}

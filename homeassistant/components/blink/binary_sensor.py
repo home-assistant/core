@@ -1,48 +1,60 @@
 """Support for Blink system camera control."""
-from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.const import CONF_MONITORED_CONDITIONS
+from __future__ import annotations
 
-from . import BINARY_SENSORS, BLINK_DATA
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_MOTION,
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
+
+from .const import DOMAIN, TYPE_BATTERY, TYPE_CAMERA_ARMED, TYPE_MOTION_DETECTED
+
+BINARY_SENSORS_TYPES: tuple[BinarySensorEntityDescription, ...] = (
+    BinarySensorEntityDescription(
+        key=TYPE_BATTERY,
+        name="Battery",
+        device_class=DEVICE_CLASS_BATTERY,
+    ),
+    BinarySensorEntityDescription(
+        key=TYPE_CAMERA_ARMED,
+        name="Camera Armed",
+    ),
+    BinarySensorEntityDescription(
+        key=TYPE_MOTION_DETECTED,
+        name="Motion Detected",
+        device_class=DEVICE_CLASS_MOTION,
+    ),
+)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config, async_add_entities):
     """Set up the blink binary sensors."""
-    if discovery_info is None:
-        return
-    data = hass.data[BLINK_DATA]
+    data = hass.data[DOMAIN][config.entry_id]
 
-    devs = []
-    for camera in data.cameras:
-        for sensor_type in discovery_info[CONF_MONITORED_CONDITIONS]:
-            devs.append(BlinkBinarySensor(data, camera, sensor_type))
-    add_entities(devs, True)
+    entities = [
+        BlinkBinarySensor(data, camera, description)
+        for camera in data.cameras
+        for description in BINARY_SENSORS_TYPES
+    ]
+    async_add_entities(entities)
 
 
-class BlinkBinarySensor(BinarySensorDevice):
+class BlinkBinarySensor(BinarySensorEntity):
     """Representation of a Blink binary sensor."""
 
-    def __init__(self, data, camera, sensor_type):
+    def __init__(self, data, camera, description: BinarySensorEntityDescription):
         """Initialize the sensor."""
         self.data = data
-        self._type = sensor_type
-        name, icon = BINARY_SENSORS[sensor_type]
-        self._name = f"{BLINK_DATA} {camera} {name}"
-        self._icon = icon
+        self.entity_description = description
+        self._attr_name = f"{DOMAIN} {camera} {description.name}"
         self._camera = data.cameras[camera]
-        self._state = None
-        self._unique_id = f"{self._camera.serial}-{self._type}"
-
-    @property
-    def name(self):
-        """Return the name of the blink sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return the status of the sensor."""
-        return self._state
+        self._attr_unique_id = f"{self._camera.serial}-{description.key}"
 
     def update(self):
         """Update sensor state."""
         self.data.refresh()
-        self._state = self._camera.attributes[self._type]
+        state = self._camera.attributes[self.entity_description.key]
+        if self.entity_description.key == TYPE_BATTERY:
+            state = state != "ok"
+        self._attr_is_on = state

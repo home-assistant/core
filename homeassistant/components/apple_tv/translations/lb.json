@@ -1,0 +1,60 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Apparat ass scho konfigur\u00e9iert",
+            "already_in_progress": "Konfiguratioun's Oflaf ass schon am gaang",
+            "invalid_config": "Konfiguratioun fir d\u00ebsen Apparat ass net komplett. Prob\u00e9ier fir et nach emol dob\u00e4i ze setzen.",
+            "no_devices_found": "Keng Apparater am Netzwierk fonnt",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "error": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "no_devices_found": "Keng Apparater am Netzwierk fonnt",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "flow_title": "Apple TV: {name}",
+        "step": {
+            "confirm": {
+                "description": "Du bass um Punkt fir den Apple TV mam Numm \"{name}\" am  Home Assistant dob\u00e4izesetzen.\n\n**Fir de Prozess ofzeschl\u00e9issen, muss Du vill\u00e4icht m\u00e9i PIN-Coden aginn.**\n\nNot\u00e9ier w.e.g dass Du d\u00e4in Apple TV mat d\u00ebser Integratioun  *net\" ausschalten kanns. N\u00ebmmen de Mediaspiller am Home Assistant schalt aus!",
+                "title": "Apple TV dob\u00e4isetzen best\u00e4tegen"
+            },
+            "pair_no_pin": {
+                "description": "Kopplung ass n\u00e9ideg fir de `{protocol}` Service. G\u00ebff de PIN {pin} op dengem Apple TV an fir w\u00e9iderzefueren",
+                "title": "Kopplung"
+            },
+            "pair_with_pin": {
+                "data": {
+                    "pin": "PIN Code"
+                },
+                "description": "Kopplung ass n\u00e9ideg fir de `{protocol}` Protokoll. G\u00ebff de PIN code un deen um Ecran ugewise g\u00ebtt. Nullen op der 1ter Plaatz ginn ewechgelooss, dh g\u00ebff 123 wann de gewise Code 0123 ass.",
+                "title": "Kopplung"
+            },
+            "reconfigure": {
+                "description": "D\u00ebsen Apple TV huet e puer Verbindungsschwieregkeeten a muss nei konfigur\u00e9iert ginn.",
+                "title": "Apparat Rekonfiguratioun"
+            },
+            "service_problem": {
+                "title": "Feeler beim dob\u00e4isetze vum Service"
+            },
+            "user": {
+                "data": {
+                    "device_input": "Apparat"
+                },
+                "description": "F\u00e4nk un andeems Du den Numm vum Apparat  (z. B. Kichen oder Schlofkummer) oder IP Adress vum Apple TV deen soll dob\u00e4igesat ginn ag\u00ebss.\n\nFalls d\u00e4in Apparat nez ugewise g\u00ebtt oder iergendwelch Problemer hues, prob\u00e9ier d'IP Adress vum Apparat anzeginn.\n\n{devices}",
+                "title": "Neien Apple TV ariichten"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "start_off": "Schlalt den Apparat net un wann den Home Assistant start"
+                },
+                "description": "Allgemeng Apparat Astellungen konfigur\u00e9ieren"
+            }
+        }
+    },
+    "title": "Apple TV"
+}

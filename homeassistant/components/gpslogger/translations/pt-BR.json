@@ -1,0 +1,13 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "Para enviar eventos para o Home Assistant, voc\u00ea precisar\u00e1 configurar o recurso webhook no GPSLogger. \n\n Preencha as seguintes informa\u00e7\u00f5es: \n\n - URL: ` {webhook_url} ` \n - M\u00e9todo: POST \n\n Veja [a documenta\u00e7\u00e3o] ( {docs_url} ) para mais detalhes."
+        },
+        "step": {
+            "user": {
+                "description": "Tem a certeza que deseja configurar o GPSLogger Webhook?",
+                "title": "Configurar o GPSLogger Webhook"
+            }
+        }
+    }
+}

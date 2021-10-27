@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigureret"
+        },
+        "error": {
+            "cannot_connect": "Kunne ikke oprette forbindelse. Pr\u00f8v igen",
+            "invalid_auth": "Ugyldig godkendelse",
+            "unknown": "Uventet fejl"
+        },
+        "step": {
+            "validation": {
+                "data": {
+                    "code": "Bekr\u00e6ftelseskode"
+                },
+                "description": "Kontroller dit {login_method} ({username}), og angiv bekr\u00e6ftelseskoden nedenfor",
+                "title": "Tofaktorgodkendelse"
+            }
+        }
+    }
+}

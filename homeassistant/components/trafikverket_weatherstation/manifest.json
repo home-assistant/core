@@ -1,10 +1,8 @@
 {
   "domain": "trafikverket_weatherstation",
-  "name": "Trafikverket weatherstation",
+  "name": "Trafikverket Weather Station",
   "documentation": "https://www.home-assistant.io/integrations/trafikverket_weatherstation",
-  "requirements": [
-    "pytrafikverket==0.1.5.9"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["pytrafikverket==0.1.6.2"],
+  "codeowners": ["@endor-force"],
+  "iot_class": "cloud_polling"
 }

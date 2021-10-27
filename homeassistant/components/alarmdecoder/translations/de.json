@@ -1,0 +1,74 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "create_entry": {
+            "default": "Erfolgreich mit AlarmDecoder verbunden."
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "step": {
+            "protocol": {
+                "data": {
+                    "device_baudrate": "Ger\u00e4te-Baudrate",
+                    "device_path": "Ger\u00e4tepfad",
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "title": "Verbindungseinstellungen konfigurieren"
+            },
+            "user": {
+                "data": {
+                    "protocol": "Protokoll"
+                },
+                "title": "W\u00e4hle das AlarmDecoder-Protokoll"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "int": "Das Feld unten muss eine ganze Zahl sein.",
+            "loop_range": "RF Loop muss eine ganze Zahl zwischen 1 und 4 sein.",
+            "loop_rfid": "RF Loop kann nicht ohne RF Serial verwendet werden.",
+            "relay_inclusive": "Relaisadresse und Relaiskanal sind abh\u00e4ngig voneinander und m\u00fcssen zusammen aufgenommen werden."
+        },
+        "step": {
+            "arm_settings": {
+                "data": {
+                    "alt_night_mode": "Alternativer Nachtmodus",
+                    "auto_bypass": "Automatischer Bypass bei Scharfschaltung",
+                    "code_arm_required": "Code f\u00fcr Scharfschaltung erforderlich"
+                },
+                "title": "AlarmDecoder konfigurieren"
+            },
+            "init": {
+                "data": {
+                    "edit_select": "Bearbeiten"
+                },
+                "description": "Was m\u00f6chtest du bearbeiten?",
+                "title": "AlarmDecoder konfigurieren"
+            },
+            "zone_details": {
+                "data": {
+                    "zone_loop": "RF Loop",
+                    "zone_name": "Zonenname",
+                    "zone_relayaddr": "Relais-Adresse",
+                    "zone_relaychan": "Relaiskanal",
+                    "zone_rfid": "RF Serial",
+                    "zone_type": "Zonentyp"
+                },
+                "description": "Gib Details f\u00fcr Zone {zone_number} ein. Um Zone {zone_number} zu l\u00f6schen, lass den Zonennamen leer.",
+                "title": "AlarmDecoder konfigurieren"
+            },
+            "zone_select": {
+                "data": {
+                    "zone_number": "Zonennummer"
+                },
+                "description": "Gib die die Zonennummer ein, die du hinzuf\u00fcgen, bearbeiten oder entfernen m\u00f6chtest.",
+                "title": "AlarmDecoder konfigurieren"
+            }
+        }
+    }
+}

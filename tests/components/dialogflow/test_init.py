@@ -1,12 +1,13 @@
 """The tests for the Dialogflow component."""
-import json
 import copy
-from unittest.mock import Mock
+from http import HTTPStatus
+import json
 
 import pytest
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dialogflow, intent_script
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 
@@ -34,7 +35,7 @@ async def calls(hass, fixture):
 
 
 @pytest.fixture
-async def fixture(hass, aiohttp_client):
+async def fixture(hass, hass_client_no_auth):
     """Initialize a Home Assistant server for testing this module."""
     await async_setup_component(hass, dialogflow.DOMAIN, {"dialogflow": {}})
     await async_setup_component(
@@ -78,9 +79,13 @@ async def fixture(hass, aiohttp_client):
         },
     )
 
-    hass.config.api = Mock(base_url="http://example.com")
+    await async_process_ha_core_config(
+        hass,
+        {"internal_url": "http://example.local:8123"},
+    )
+
     result = await hass.config_entries.flow.async_init(
-        "dialogflow", context={"source": "user"}
+        "dialogflow", context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM, result
 
@@ -88,7 +93,7 @@ async def fixture(hass, aiohttp_client):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     webhook_id = result["result"].data["webhook_id"]
 
-    return await aiohttp_client(hass.http.app), webhook_id
+    return await hass_client_no_auth(), webhook_id
 
 
 class _Data:
@@ -165,10 +170,10 @@ async def test_intent_action_incomplete_v1(fixture):
     data["result"]["actionIncomplete"] = True
 
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
-    assert 200 == response.status
-    assert "" == await response.text()
+    assert response.status == HTTPStatus.OK
+    assert await response.text() == ""
 
 
 async def test_intent_action_incomplete_v2(fixture):
@@ -178,10 +183,10 @@ async def test_intent_action_incomplete_v2(fixture):
     data["queryResult"]["allRequiredParamsPresent"] = False
 
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
-    assert 200 == response.status
-    assert "" == await response.text()
+    assert response.status == HTTPStatus.OK
+    assert await response.text() == ""
 
 
 async def test_intent_slot_filling_v1(fixture):
@@ -220,10 +225,10 @@ async def test_intent_slot_filling_v1(fixture):
     data["result"]["metadata"].update(webhookForSlotFillingUsed="true")
 
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
-    assert 200 == response.status
-    assert "" == await response.text()
+    assert response.status == HTTPStatus.OK
+    assert await response.text() == ""
 
 
 async def test_intent_request_with_parameters_v1(fixture):
@@ -231,11 +236,11 @@ async def test_intent_request_with_parameters_v1(fixture):
     mock_client, webhook_id = fixture
     data = Data.v1
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
-    assert 200 == response.status
+    assert response.status == HTTPStatus.OK
     text = (await response.json()).get("speech")
-    assert "You told us your sign is virgo." == text
+    assert text == "You told us your sign is virgo."
 
 
 async def test_intent_request_with_parameters_v2(fixture):
@@ -243,11 +248,11 @@ async def test_intent_request_with_parameters_v2(fixture):
     mock_client, webhook_id = fixture
     data = Data.v2
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
-    assert 200 == response.status
+    assert response.status == HTTPStatus.OK
     text = (await response.json()).get("fulfillmentText")
-    assert "You told us your sign is virgo." == text
+    assert text == "You told us your sign is virgo."
 
 
 async def test_intent_request_with_parameters_but_empty_v1(fixture):
@@ -256,11 +261,11 @@ async def test_intent_request_with_parameters_but_empty_v1(fixture):
     data = Data.v1
     data["result"].update(parameters={"ZodiacSign": ""})
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
-    assert 200 == response.status
+    assert response.status == HTTPStatus.OK
     text = (await response.json()).get("speech")
-    assert "You told us your sign is ." == text
+    assert text == "You told us your sign is ."
 
 
 async def test_intent_request_with_parameters_but_empty_v2(fixture):
@@ -269,11 +274,11 @@ async def test_intent_request_with_parameters_but_empty_v2(fixture):
     data = Data.v2
     data["queryResult"].update(parameters={"ZodiacSign": ""})
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
-    assert 200 == response.status
+    assert response.status == HTTPStatus.OK
     text = (await response.json()).get("fulfillmentText")
-    assert "You told us your sign is ." == text
+    assert text == "You told us your sign is ."
 
 
 async def test_intent_request_without_slots_v1(hass, fixture):
@@ -288,22 +293,22 @@ async def test_intent_request_without_slots_v1(hass, fixture):
     )
 
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
-    assert 200 == response.status
+    assert response.status == HTTPStatus.OK
     text = (await response.json()).get("speech")
 
-    assert "Anne Therese is at unknown and Paulus is at unknown" == text
+    assert text == "Anne Therese is at unknown and Paulus is at unknown"
 
     hass.states.async_set("device_tracker.paulus", "home")
     hass.states.async_set("device_tracker.anne_therese", "home")
 
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
-    assert 200 == response.status
+    assert response.status == HTTPStatus.OK
     text = (await response.json()).get("speech")
-    assert "You are both home, you silly" == text
+    assert text == "You are both home, you silly"
 
 
 async def test_intent_request_without_slots_v2(hass, fixture):
@@ -318,22 +323,22 @@ async def test_intent_request_without_slots_v2(hass, fixture):
     )
 
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
-    assert 200 == response.status
+    assert response.status == HTTPStatus.OK
     text = (await response.json()).get("fulfillmentText")
 
-    assert "Anne Therese is at unknown and Paulus is at unknown" == text
+    assert text == "Anne Therese is at unknown and Paulus is at unknown"
 
     hass.states.async_set("device_tracker.paulus", "home")
     hass.states.async_set("device_tracker.anne_therese", "home")
 
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
-    assert 200 == response.status
+    assert response.status == HTTPStatus.OK
     text = (await response.json()).get("fulfillmentText")
-    assert "You are both home, you silly" == text
+    assert text == "You are both home, you silly"
 
 
 async def test_intent_request_calling_service_v1(fixture, calls):
@@ -347,15 +352,15 @@ async def test_intent_request_calling_service_v1(fixture, calls):
     data["result"]["action"] = "CallServiceIntent"
     call_count = len(calls)
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
-    assert 200 == response.status
-    assert call_count + 1 == len(calls)
+    assert response.status == HTTPStatus.OK
+    assert len(calls) == call_count + 1
     call = calls[-1]
-    assert "test" == call.domain
-    assert "dialogflow" == call.service
-    assert ["switch.test"] == call.data.get("entity_id")
-    assert "virgo" == call.data.get("hello")
+    assert call.domain == "test"
+    assert call.service == "dialogflow"
+    assert call.data.get("entity_id") == ["switch.test"]
+    assert call.data.get("hello") == "virgo"
 
 
 async def test_intent_request_calling_service_v2(fixture, calls):
@@ -369,15 +374,15 @@ async def test_intent_request_calling_service_v2(fixture, calls):
     data["queryResult"]["action"] = "CallServiceIntent"
     call_count = len(calls)
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
-    assert 200 == response.status
-    assert call_count + 1 == len(calls)
+    assert response.status == HTTPStatus.OK
+    assert len(calls) == call_count + 1
     call = calls[-1]
-    assert "test" == call.domain
-    assert "dialogflow" == call.service
-    assert ["switch.test"] == call.data.get("entity_id")
-    assert "virgo" == call.data.get("hello")
+    assert call.domain == "test"
+    assert call.service == "dialogflow"
+    assert call.data.get("entity_id") == ["switch.test"]
+    assert call.data.get("hello") == "virgo"
 
 
 async def test_intent_with_no_action_v1(fixture):
@@ -387,11 +392,11 @@ async def test_intent_with_no_action_v1(fixture):
     del data["result"]["action"]
     assert "action" not in data["result"]
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
-    assert 200 == response.status
+    assert response.status == HTTPStatus.OK
     text = (await response.json()).get("speech")
-    assert "You have not defined an action in your Dialogflow intent." == text
+    assert text == "You have not defined an action in your Dialogflow intent."
 
 
 async def test_intent_with_no_action_v2(fixture):
@@ -401,11 +406,11 @@ async def test_intent_with_no_action_v2(fixture):
     del data["queryResult"]["action"]
     assert "action" not in data["queryResult"]
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
-    assert 200 == response.status
+    assert response.status == HTTPStatus.OK
     text = (await response.json()).get("fulfillmentText")
-    assert "You have not defined an action in your Dialogflow intent." == text
+    assert text == "You have not defined an action in your Dialogflow intent."
 
 
 async def test_intent_with_unknown_action_v1(fixture):
@@ -414,11 +419,11 @@ async def test_intent_with_unknown_action_v1(fixture):
     data = Data.v1
     data["result"]["action"] = "unknown"
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
-    assert 200 == response.status
+    assert response.status == HTTPStatus.OK
     text = (await response.json()).get("speech")
-    assert "This intent is not yet configured within Home Assistant." == text
+    assert text == "This intent is not yet configured within Home Assistant."
 
 
 async def test_intent_with_unknown_action_v2(fixture):
@@ -427,8 +432,8 @@ async def test_intent_with_unknown_action_v2(fixture):
     data = Data.v2
     data["queryResult"]["action"] = "unknown"
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
-    assert 200 == response.status
+    assert response.status == HTTPStatus.OK
     text = (await response.json()).get("fulfillmentText")
-    assert "This intent is not yet configured within Home Assistant." == text
+    assert text == "This intent is not yet configured within Home Assistant."

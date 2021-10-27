@@ -1,4 +1,5 @@
 """Support for Tomato routers."""
+from http import HTTPStatus
 import json
 import logging
 import re
@@ -6,26 +7,26 @@ import re
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import (
     CONF_HOST,
+    CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
-    CONF_VERIFY_SSL,
-    CONF_PASSWORD,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
+import homeassistant.helpers.config_validation as cv
 
 CONF_HTTP_ID = "http_id"
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT): cv.port,
@@ -102,7 +103,7 @@ class TomatoDeviceScanner(DeviceScanner):
 
             # Calling and parsing the Tomato api here. We only need the
             # wldev and dhcpd_lease values.
-            if response.status_code == 200:
+            if response.status_code == HTTPStatus.OK:
 
                 for param, value in self.parse_api_pattern.findall(response.text):
 
@@ -110,13 +111,10 @@ class TomatoDeviceScanner(DeviceScanner):
                         self.last_results[param] = json.loads(value.replace("'", '"'))
                 return True
 
-            if response.status_code == 401:
+            if response.status_code == HTTPStatus.UNAUTHORIZED:
                 # Authentication error
                 _LOGGER.exception(
-                    (
-                        "Failed to authenticate, "
-                        "please check your username and password"
-                    )
+                    "Failed to authenticate, please check your username and password"
                 )
                 return False
 
@@ -124,7 +122,7 @@ class TomatoDeviceScanner(DeviceScanner):
             # We get this if we could not connect to the router or
             # an invalid http_id was supplied.
             _LOGGER.exception(
-                "Failed to connect to the router or " "invalid http_id supplied"
+                "Failed to connect to the router or invalid http_id supplied"
             )
             return False
 

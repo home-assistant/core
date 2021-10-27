@@ -1,0 +1,54 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "See SimpliSafe'i konto on juba kasutusel.",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus",
+            "wrong_account": "Esitatud kasutaja mandaadid ei \u00fchti selle SimpliSafe kontoga."
+        },
+        "error": {
+            "identifier_exists": "Konto on juba registreeritud",
+            "invalid_auth": "Tuvastamise viga",
+            "still_awaiting_mfa": "Ootan endiselt MFA e-posti klikki",
+            "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "input_auth_code": {
+                "data": {
+                    "auth_code": "Tuvastuskood"
+                },
+                "description": "Sisesta tuvastuskood SimpliSafe veebirakenduse URL-ist:",
+                "title": "L\u00f5peta tuvastamine"
+            },
+            "mfa": {
+                "description": "Kontrolli oma e-posti: link SimpliSafe-lt. P\u00e4rast lingi kontrollimist naase siia, et viia l\u00f5pule sidumise installimine.",
+                "title": "SimpliSafe mitmeastmeline autentimine"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Salas\u00f5na"
+                },
+                "description": "Juurdep\u00e4\u00e4suluba on aegunud v\u00f5i on see t\u00fchistatud. Konto taassidumiseks sisesta salas\u00f5na.",
+                "title": "Taastuvasta SimpliSafe'i konto"
+            },
+            "user": {
+                "data": {
+                    "code": "Kood (kasutatakse Home Assistant'i kasutajaliideses)",
+                    "password": "Salas\u00f5na",
+                    "username": "E-post"
+                },
+                "description": "Alates 2021. aastast on SimpliSafe oma veebirakenduse kaudu \u00fcle l\u00e4inud uuele tuvastusmehhanismile. Tehniliste piirangute t\u00f5ttu on selle protsessi l\u00f5pus k\u00e4sitsi tehtud samm; palun loe enne alustamist l\u00e4bi [dokumentatsioon] (http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code). \n\n Kui oled valmis, kl\u00f5psa SimpliSafe'i veebirakenduse avamiseks ja oma mandaadi sisestamiseks {url} Kui protsess on l\u00f5pule j\u00f5udnud, naase siia ja kl\u00f5psa nuppu Esita.",
+                "title": "Sisesta oma teave."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Kood (kasutatakse Home Assistant'i kasutajaliideses)"
+                },
+                "title": "Seadista SimpliSafe"
+            }
+        }
+    }
+}

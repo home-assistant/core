@@ -1,13 +1,16 @@
 """Support for the for Danfoss Air HRV sensors."""
 import logging
 
+from pydanfossair.commands import ReadCommand
+
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN as DANFOSS_AIR_DOMAIN
 
@@ -16,8 +19,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available Danfoss Air sensors etc."""
-    from pydanfossair.commands import ReadCommand
-
     data = hass.data[DANFOSS_AIR_DOMAIN]
 
     sensors = [
@@ -26,50 +27,81 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             TEMP_CELSIUS,
             ReadCommand.exhaustTemperature,
             DEVICE_CLASS_TEMPERATURE,
+            STATE_CLASS_MEASUREMENT,
         ],
         [
             "Danfoss Air Outdoor Temperature",
             TEMP_CELSIUS,
             ReadCommand.outdoorTemperature,
             DEVICE_CLASS_TEMPERATURE,
+            STATE_CLASS_MEASUREMENT,
         ],
         [
             "Danfoss Air Supply Temperature",
             TEMP_CELSIUS,
             ReadCommand.supplyTemperature,
             DEVICE_CLASS_TEMPERATURE,
+            STATE_CLASS_MEASUREMENT,
         ],
         [
             "Danfoss Air Extract Temperature",
             TEMP_CELSIUS,
             ReadCommand.extractTemperature,
             DEVICE_CLASS_TEMPERATURE,
+            STATE_CLASS_MEASUREMENT,
         ],
-        ["Danfoss Air Remaining Filter", "%", ReadCommand.filterPercent, None],
-        ["Danfoss Air Humidity", "%", ReadCommand.humidity, DEVICE_CLASS_HUMIDITY],
-        ["Danfoss Air Fan Step", "%", ReadCommand.fan_step, None],
-        ["Dandoss Air Exhaust Fan Speed", "RPM", ReadCommand.exhaust_fan_speed, None],
-        ["Dandoss Air Supply Fan Speed", "RPM", ReadCommand.supply_fan_speed, None],
         [
-            "Dandoss Air Dial Battery",
-            "%",
+            "Danfoss Air Remaining Filter",
+            PERCENTAGE,
+            ReadCommand.filterPercent,
+            None,
+            None,
+        ],
+        [
+            "Danfoss Air Humidity",
+            PERCENTAGE,
+            ReadCommand.humidity,
+            DEVICE_CLASS_HUMIDITY,
+            STATE_CLASS_MEASUREMENT,
+        ],
+        ["Danfoss Air Fan Step", PERCENTAGE, ReadCommand.fan_step, None, None],
+        [
+            "Danfoss Air Exhaust Fan Speed",
+            "RPM",
+            ReadCommand.exhaust_fan_speed,
+            None,
+            None,
+        ],
+        [
+            "Danfoss Air Supply Fan Speed",
+            "RPM",
+            ReadCommand.supply_fan_speed,
+            None,
+            None,
+        ],
+        [
+            "Danfoss Air Dial Battery",
+            PERCENTAGE,
             ReadCommand.battery_percent,
             DEVICE_CLASS_BATTERY,
+            None,
         ],
     ]
 
     dev = []
 
     for sensor in sensors:
-        dev.append(DanfossAir(data, sensor[0], sensor[1], sensor[2], sensor[3]))
+        dev.append(
+            DanfossAir(data, sensor[0], sensor[1], sensor[2], sensor[3], sensor[4])
+        )
 
     add_entities(dev, True)
 
 
-class DanfossAir(Entity):
+class DanfossAir(SensorEntity):
     """Representation of a Sensor."""
 
-    def __init__(self, data, name, sensor_unit, sensor_type, device_class):
+    def __init__(self, data, name, sensor_unit, sensor_type, device_class, state_class):
         """Initialize the sensor."""
         self._data = data
         self._name = name
@@ -77,6 +109,7 @@ class DanfossAir(Entity):
         self._type = sensor_type
         self._unit = sensor_unit
         self._device_class = device_class
+        self._attr_state_class = state_class
 
     @property
     def name(self):
@@ -89,12 +122,12 @@ class DanfossAir(Entity):
         return self._device_class
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit
 

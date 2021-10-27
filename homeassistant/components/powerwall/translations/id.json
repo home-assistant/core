@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "reauth_successful": "Autentikasi ulang berhasil"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan",
+            "wrong_version": "Powerwall Anda menggunakan versi perangkat lunak yang tidak didukung. Pertimbangkan untuk memutakhirkan atau melaporkan masalah ini agar dapat diatasi."
+        },
+        "flow_title": "{ip_address}",
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Alamat IP",
+                    "password": "Kata Sandi"
+                },
+                "description": "Kata sandi umumnya adalah 5 karakter terakhir dari nomor seri untuk Backup Gateway dan dapat ditemukan di aplikasi Tesla atau 5 karakter terakhir kata sandi yang ditemukan di dalam pintu untuk Backup Gateway 2.",
+                "title": "Hubungkan ke powerwall"
+            }
+        }
+    }
+}

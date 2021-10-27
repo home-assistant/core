@@ -1,8 +1,10 @@
 """Models for manifest validator."""
-import json
-from typing import List, Dict, Any
-import pathlib
+from __future__ import annotations
+
 import importlib
+import json
+import pathlib
+from typing import Any
 
 import attr
 
@@ -11,25 +13,27 @@ import attr
 class Error:
     """Error validating an integration."""
 
-    plugin = attr.ib(type=str)
-    error = attr.ib(type=str)
-    fixable = attr.ib(type=bool, default=False)
+    plugin: str = attr.ib()
+    error: str = attr.ib()
+    fixable: bool = attr.ib(default=False)
 
     def __str__(self) -> str:
         """Represent error as string."""
-        return "[{}] {}".format(self.plugin.upper(), self.error)
+        return f"[{self.plugin.upper()}] {self.error}"
 
 
 @attr.s
 class Config:
     """Config for the run."""
 
-    root = attr.ib(type=pathlib.Path)
-    action = attr.ib(type=str)
-    errors = attr.ib(type=List[Error], factory=list)
-    cache = attr.ib(type=Dict[str, Any], factory=dict)
+    specific_integrations: pathlib.Path | None = attr.ib()
+    root: pathlib.Path = attr.ib()
+    action: str = attr.ib()
+    requirements: bool = attr.ib()
+    errors: list[Error] = attr.ib(factory=list)
+    cache: dict[str, Any] = attr.ib(factory=dict)
 
-    def add_error(self, *args, **kwargs):
+    def add_error(self, *args: Any, **kwargs: Any) -> None:
         """Add an error."""
         self.errors.append(Error(*args, **kwargs))
 
@@ -50,9 +54,9 @@ class Integration:
             init = fil / "__init__.py"
             if not init.exists():
                 print(
-                    "Warning: {} missing, skipping directory. "
+                    f"Warning: {init} missing, skipping directory. "
                     "If this is your development environment, "
-                    "you can safely delete this folder.".format(init)
+                    "you can safely delete this folder."
                 )
                 continue
 
@@ -62,18 +66,58 @@ class Integration:
 
         return integrations
 
-    path = attr.ib(type=pathlib.Path)
-    manifest = attr.ib(type=dict, default=None)
-    errors = attr.ib(type=List[Error], factory=list)
+    path: pathlib.Path = attr.ib()
+    manifest: dict[str, Any] | None = attr.ib(default=None)
+    errors: list[Error] = attr.ib(factory=list)
+    warnings: list[Error] = attr.ib(factory=list)
 
     @property
     def domain(self) -> str:
         """Integration domain."""
         return self.path.name
 
-    def add_error(self, *args, **kwargs):
+    @property
+    def core(self) -> bool:
+        """Core integration."""
+        return self.path.as_posix().startswith("homeassistant/components")
+
+    @property
+    def disabled(self) -> str | None:
+        """Return if integration is disabled."""
+        return self.manifest.get("disabled")
+
+    @property
+    def name(self) -> str:
+        """Return name of the integration."""
+        return self.manifest["name"]
+
+    @property
+    def quality_scale(self) -> str:
+        """Return quality scale of the integration."""
+        return self.manifest.get("quality_scale")
+
+    @property
+    def config_flow(self) -> str:
+        """Return if the integration has a config flow."""
+        return self.manifest.get("config_flow")
+
+    @property
+    def requirements(self) -> list[str]:
+        """List of requirements."""
+        return self.manifest.get("requirements", [])
+
+    @property
+    def dependencies(self) -> list[str]:
+        """List of dependencies."""
+        return self.manifest.get("dependencies", [])
+
+    def add_error(self, *args: Any, **kwargs: Any) -> None:
         """Add an error."""
         self.errors.append(Error(*args, **kwargs))
+
+    def add_warning(self, *args: Any, **kwargs: Any) -> None:
+        """Add an warning."""
+        self.warnings.append(Error(*args, **kwargs))
 
     def load_manifest(self) -> None:
         """Load manifest."""

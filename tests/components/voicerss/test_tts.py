@@ -1,19 +1,20 @@
 """The tests for the VoiceRSS speech platform."""
 import asyncio
+from http import HTTPStatus
 import os
 import shutil
 
-import homeassistant.components.tts as tts
 from homeassistant.components.media_player.const import (
-    SERVICE_PLAY_MEDIA,
     ATTR_MEDIA_CONTENT_ID,
     DOMAIN as DOMAIN_MP,
+    SERVICE_PLAY_MEDIA,
 )
+import homeassistant.components.tts as tts
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.setup import setup_component
 
-from tests.common import get_test_home_assistant, assert_setup_component, mock_service
-
-from tests.components.tts.test_init import mutagen_mock  # noqa
+from tests.common import assert_setup_component, get_test_home_assistant, mock_service
+from tests.components.tts.test_init import mutagen_mock  # noqa: F401
 
 
 class TestTTSVoiceRSSPlatform:
@@ -22,6 +23,13 @@ class TestTTSVoiceRSSPlatform:
     def setup_method(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+
+        asyncio.run_coroutine_threadsafe(
+            async_process_ha_core_config(
+                self.hass, {"internal_url": "http://example.local:8123"}
+            ),
+            self.hass.loop,
+        )
 
         self.url = "https://api.voicerss.org/"
         self.form_data = {
@@ -58,7 +66,9 @@ class TestTTSVoiceRSSPlatform:
         """Test service call say."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        aioclient_mock.post(self.url, data=self.form_data, status=200, content=b"test")
+        aioclient_mock.post(
+            self.url, data=self.form_data, status=HTTPStatus.OK, content=b"test"
+        )
 
         config = {tts.DOMAIN: {"platform": "voicerss", "api_key": "1234567xx"}}
 
@@ -68,7 +78,10 @@ class TestTTSVoiceRSSPlatform:
         self.hass.services.call(
             tts.DOMAIN,
             "voicerss_say",
-            {tts.ATTR_MESSAGE: "I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "I person is on front of your door.",
+            },
         )
         self.hass.block_till_done()
 
@@ -82,7 +95,9 @@ class TestTTSVoiceRSSPlatform:
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
         self.form_data["hl"] = "de-de"
-        aioclient_mock.post(self.url, data=self.form_data, status=200, content=b"test")
+        aioclient_mock.post(
+            self.url, data=self.form_data, status=HTTPStatus.OK, content=b"test"
+        )
 
         config = {
             tts.DOMAIN: {
@@ -98,7 +113,10 @@ class TestTTSVoiceRSSPlatform:
         self.hass.services.call(
             tts.DOMAIN,
             "voicerss_say",
-            {tts.ATTR_MESSAGE: "I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "I person is on front of your door.",
+            },
         )
         self.hass.block_till_done()
 
@@ -111,7 +129,9 @@ class TestTTSVoiceRSSPlatform:
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
         self.form_data["hl"] = "de-de"
-        aioclient_mock.post(self.url, data=self.form_data, status=200, content=b"test")
+        aioclient_mock.post(
+            self.url, data=self.form_data, status=HTTPStatus.OK, content=b"test"
+        )
 
         config = {tts.DOMAIN: {"platform": "voicerss", "api_key": "1234567xx"}}
 
@@ -122,6 +142,7 @@ class TestTTSVoiceRSSPlatform:
             tts.DOMAIN,
             "voicerss_say",
             {
+                "entity_id": "media_player.something",
                 tts.ATTR_MESSAGE: "I person is on front of your door.",
                 tts.ATTR_LANGUAGE: "de-de",
             },
@@ -146,7 +167,10 @@ class TestTTSVoiceRSSPlatform:
         self.hass.services.call(
             tts.DOMAIN,
             "voicerss_say",
-            {tts.ATTR_MESSAGE: "I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "I person is on front of your door.",
+            },
         )
         self.hass.block_till_done()
 
@@ -168,7 +192,10 @@ class TestTTSVoiceRSSPlatform:
         self.hass.services.call(
             tts.DOMAIN,
             "voicerss_say",
-            {tts.ATTR_MESSAGE: "I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "I person is on front of your door.",
+            },
         )
         self.hass.block_till_done()
 
@@ -183,7 +210,7 @@ class TestTTSVoiceRSSPlatform:
         aioclient_mock.post(
             self.url,
             data=self.form_data,
-            status=200,
+            status=HTTPStatus.OK,
             content=b"The subscription does not support SSML!",
         )
 
@@ -195,7 +222,10 @@ class TestTTSVoiceRSSPlatform:
         self.hass.services.call(
             tts.DOMAIN,
             "voicerss_say",
-            {tts.ATTR_MESSAGE: "I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "I person is on front of your door.",
+            },
         )
         self.hass.block_till_done()
 

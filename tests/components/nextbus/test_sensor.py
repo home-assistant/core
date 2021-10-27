@@ -1,13 +1,14 @@
 """The tests for the nexbus sensor component."""
 from copy import deepcopy
+from unittest.mock import patch
 
 import pytest
 
-import homeassistant.components.sensor as sensor
 import homeassistant.components.nextbus.sensor as nextbus
+import homeassistant.components.sensor as sensor
+from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component, async_setup_component, MockDependency
-
+from tests.common import assert_setup_component
 
 VALID_AGENCY = "sf-muni"
 VALID_ROUTE = "F"
@@ -49,19 +50,22 @@ async def assert_setup_sensor(hass, config, count=1):
     """Set up the sensor and assert it's been created."""
     with assert_setup_component(count):
         assert await async_setup_component(hass, sensor.DOMAIN, config)
+        await hass.async_block_till_done()
 
 
 @pytest.fixture
 def mock_nextbus():
     """Create a mock py_nextbus module."""
-    with MockDependency("py_nextbus") as py_nextbus:
-        yield py_nextbus
+    with patch(
+        "homeassistant.components.nextbus.sensor.NextBusClient"
+    ) as NextBusClient:
+        yield NextBusClient
 
 
 @pytest.fixture
 def mock_nextbus_predictions(mock_nextbus):
     """Create a mock of NextBusClient predictions."""
-    instance = mock_nextbus.NextBusClient.return_value
+    instance = mock_nextbus.return_value
     instance.get_predictions_for_multi_stops.return_value = BASIC_RESULTS
 
     yield instance.get_predictions_for_multi_stops
@@ -70,7 +74,7 @@ def mock_nextbus_predictions(mock_nextbus):
 @pytest.fixture
 def mock_nextbus_lists(mock_nextbus):
     """Mock all list functions in nextbus to test validate logic."""
-    instance = mock_nextbus.NextBusClient.return_value
+    instance = mock_nextbus.return_value
     instance.get_agency_list.return_value = {
         "agency": [{"tag": "sf-muni", "title": "San Francisco Muni"}]
     }
@@ -94,17 +98,18 @@ async def test_invalid_config(hass, mock_nextbus, mock_nextbus_lists):
 
 async def test_validate_tags(hass, mock_nextbus, mock_nextbus_lists):
     """Test that additional validation against the API is successful."""
-    client = mock_nextbus.NextBusClient()
     # with self.subTest('Valid everything'):
-    assert nextbus.validate_tags(client, VALID_AGENCY, VALID_ROUTE, VALID_STOP)
+    assert nextbus.validate_tags(mock_nextbus(), VALID_AGENCY, VALID_ROUTE, VALID_STOP)
     # with self.subTest('Invalid agency'):
-    assert not nextbus.validate_tags(client, "not-valid", VALID_ROUTE, VALID_STOP)
+    assert not nextbus.validate_tags(
+        mock_nextbus(), "not-valid", VALID_ROUTE, VALID_STOP
+    )
 
     # with self.subTest('Invalid route'):
-    assert not nextbus.validate_tags(client, VALID_AGENCY, "0", VALID_STOP)
+    assert not nextbus.validate_tags(mock_nextbus(), VALID_AGENCY, "0", VALID_STOP)
 
     # with self.subTest('Invalid stop'):
-    assert not nextbus.validate_tags(client, VALID_AGENCY, VALID_ROUTE, 0)
+    assert not nextbus.validate_tags(mock_nextbus(), VALID_AGENCY, VALID_ROUTE, 0)
 
 
 async def test_verify_valid_state(
@@ -113,7 +118,7 @@ async def test_verify_valid_state(
     """Verify all attributes are set from a valid response."""
     await assert_setup_sensor(hass, CONFIG_BASIC)
     mock_nextbus_predictions.assert_called_once_with(
-        [{"stop_tag": int(VALID_STOP), "route_tag": VALID_ROUTE}], VALID_AGENCY
+        [{"stop_tag": VALID_STOP, "route_tag": VALID_ROUTE}], VALID_AGENCY
     )
 
     state = hass.states.get(SENSOR_ID_SHORT)
@@ -203,7 +208,7 @@ async def test_direction_list(
                 },
                 {
                     "title": "Outbound 2",
-                    "prediction": {"minutes": "4", "epochTime": "1553807374000"},
+                    "prediction": {"minutes": "0", "epochTime": "1553807374000"},
                 },
             ],
         }
@@ -218,7 +223,7 @@ async def test_direction_list(
     assert state.attributes["route"] == VALID_ROUTE_TITLE
     assert state.attributes["stop"] == VALID_STOP_TITLE
     assert state.attributes["direction"] == "Outbound, Outbound 2"
-    assert state.attributes["upcoming"] == "1, 2, 3, 4"
+    assert state.attributes["upcoming"] == "0, 1, 2, 3"
 
 
 async def test_custom_name(

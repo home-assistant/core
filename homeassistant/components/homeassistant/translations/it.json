@@ -1,0 +1,18 @@
+{
+    "system_health": {
+        "info": {
+            "arch": "Architettura della CPU",
+            "dev": "Sviluppo",
+            "docker": "Docker",
+            "hassio": "Supervisor",
+            "installation_type": "Tipo di installazione",
+            "os_name": "Famiglia del Sistema Operativo",
+            "os_version": "Versione del Sistema Operativo",
+            "python_version": "Versione Python",
+            "timezone": "Fuso orario",
+            "user": "Utente",
+            "version": "Versione",
+            "virtualenv": "Ambiente virtuale"
+        }
+    }
+}

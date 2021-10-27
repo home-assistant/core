@@ -1,0 +1,52 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji",
+            "missing_configuration": "Komponent nie jest skonfigurowany. Post\u0119puj zgodnie z dokumentacj\u0105.",
+            "no_url_available": "Brak dost\u0119pnego adresu URL. Aby uzyska\u0107 informacje na temat tego b\u0142\u0119du, [sprawd\u017a sekcj\u0119 pomocy] ({docs_url})",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119",
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja.",
+            "unknown_authorize_url_generation": "Nieznany b\u0142\u0105d podczas generowania URL autoryzacji"
+        },
+        "create_entry": {
+            "default": "Pomy\u015blnie uwierzytelniono"
+        },
+        "error": {
+            "internal_error": "Wewn\u0119trzny b\u0142\u0105d sprawdzania poprawno\u015bci kodu",
+            "invalid_pin": "Nieprawid\u0142owy kod PIN",
+            "timeout": "Przekroczono limit czasu sprawdzania poprawno\u015bci kodu",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "flow_impl": "Dostawca"
+                },
+                "description": "Wybierz metod\u0119 uwierzytelniania",
+                "title": "Dostawca uwierzytelnienia"
+            },
+            "link": {
+                "data": {
+                    "code": "Kod PIN"
+                },
+                "description": "Aby po\u0142\u0105czy\u0107 z kontem Nest, [wykonaj autoryzacj\u0119]({url}). \n\n Po autoryzacji skopiuj i wklej podany kod PIN poni\u017cej.",
+                "title": "Po\u0142\u0105czenie z kontem Nest"
+            },
+            "pick_implementation": {
+                "title": "Wybierz metod\u0119 uwierzytelniania"
+            },
+            "reauth_confirm": {
+                "description": "Integracja Nest wymaga ponownego uwierzytelnienia Twojego konta",
+                "title": "Ponownie uwierzytelnij integracj\u0119"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "nast\u0105pi wykrycie ruchu",
+            "camera_person": "nast\u0105pi wykrycie osoby",
+            "camera_sound": "nast\u0105pi wykrycie d\u017awi\u0119ku",
+            "doorbell_chime": "dzwonek zostanie wci\u015bni\u0119ty"
+        }
+    }
+}

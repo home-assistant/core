@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is al geconfigureerd",
+            "existing_instance_updated": "Bestaande configuratie bijgewerkt."
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken"
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Wilt u Home Assistant configureren om verbinding te maken met AdGuard Home van de Home Assistant add-on: {addon}?",
+                "title": "AdGuard Home via Home Assistant add-on"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Wachtwoord",
+                    "port": "Poort",
+                    "ssl": "AdGuard Home maakt gebruik van een SSL certificaat",
+                    "username": "Gebruikersnaam",
+                    "verify_ssl": "AdGuard Home maakt gebruik van een goed certificaat"
+                },
+                "description": "Stel uw AdGuard Home-instantie in om toezicht en controle mogelijk te maken."
+            }
+        }
+    }
+}

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Brua er allereie konfigurert",
+            "no_bridges": "Oppdaga ingen deCONZ-bruer"
+        },
+        "error": {
+            "no_key": "Kunne ikkje f\u00e5 ein API-n\u00f8kkel"
+        },
+        "step": {
+            "link": {
+                "description": "L\u00e5s opp deCONZ-gatewayen din for \u00e5 registrere den med Home Assistant.\n\n1. G\u00e5 til systeminnstillingane til deCONZ\n2. Trykk p\u00e5 \"L\u00e5s opp gateway\"-knappen",
+                "title": "Link med deCONZ"
+            }
+        }
+    }
+}

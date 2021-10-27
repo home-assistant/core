@@ -1,15 +1,16 @@
 """Temperature helpers for Home Assistant."""
-from numbers import Number
-from typing import Optional
+from __future__ import annotations
 
+from numbers import Number
+
+from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS
 from homeassistant.core import HomeAssistant
 from homeassistant.util.temperature import convert as convert_temperature
-from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS
 
 
 def display_temp(
-    hass: HomeAssistant, temperature: Optional[float], unit: str, precision: float
-) -> Optional[float]:
+    hass: HomeAssistant, temperature: float | None, unit: str, precision: float
+) -> float | None:
     """Convert temperature into preferred units/precision for display."""
     temperature_unit = unit
     ha_unit = hass.config.units.temperature_unit
@@ -22,8 +23,7 @@ def display_temp(
     if not isinstance(temperature, Number):
         raise TypeError(f"Temperature is not a number: {temperature}")
 
-    # type ignore: https://github.com/python/mypy/issues/7207
-    if temperature_unit != ha_unit:  # type: ignore
+    if temperature_unit != ha_unit:
         temperature = convert_temperature(temperature, temperature_unit, ha_unit)
 
     # Round in the units appropriate

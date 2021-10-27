@@ -1,0 +1,29 @@
+{
+  "title": "Vacuum",
+  "device_automation": {
+    "condition_type": {
+      "is_docked": "{entity_name} is docked",
+      "is_cleaning": "{entity_name} is cleaning"
+    },
+    "trigger_type": {
+      "cleaning": "{entity_name} started cleaning",
+      "docked": "{entity_name} docked"
+    },
+    "action_type": {
+      "clean": "Let {entity_name} clean",
+      "dock": "Let {entity_name} return to the dock"
+    }
+  },
+  "state": {
+    "_": {
+      "cleaning": "Cleaning",
+      "docked": "Docked",
+      "error": "Error",
+      "idle": "[%key:common::state::idle%]",
+      "off": "[%key:common::state::off%]",
+      "on": "[%key:common::state::on%]",
+      "paused": "[%key:common::state::paused%]",
+      "returning": "Returning to dock"
+    }
+  }
+}

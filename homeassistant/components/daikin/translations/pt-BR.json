@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado",
+            "cannot_connect": "Falha na conex\u00e3o"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Digite o endere\u00e7o IP do seu AC Daikin.",
+                "title": "Configurar o AC Daikin"
+            }
+        }
+    }
+}

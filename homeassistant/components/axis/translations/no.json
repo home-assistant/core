@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "link_local_address": "Linking av lokale adresser st\u00f8ttes ikke",
+            "not_axis_device": "Oppdaget enhet ikke en Axis enhet"
+        },
+        "error": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning"
+        },
+        "flow_title": "{name} ( {host} )",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "password": "Passord",
+                    "port": "Port",
+                    "username": "Brukernavn"
+                },
+                "title": "Sett opp Axis enhet"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "configure_stream": {
+                "data": {
+                    "stream_profile": "Velg str\u00f8mprofil som skal brukes"
+                },
+                "title": "Axis videostr\u00f8m alternativer"
+            }
+        }
+    }
+}

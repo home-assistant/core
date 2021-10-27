@@ -1,4 +1,5 @@
 """Clicksend platform for notify component."""
+from http import HTTPStatus
 import json
 import logging
 
@@ -6,6 +7,7 @@ from aiohttp.hdrs import CONTENT_TYPE
 import requests
 import voluptuous as vol
 
+from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_RECIPIENT,
@@ -14,8 +16,6 @@ from homeassistant.const import (
     CONTENT_TYPE_JSON,
 )
 import homeassistant.helpers.config_validation as cv
-
-from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ class ClicksendNotificationService(BaseNotificationService):
             auth=(self.username, self.api_key),
             timeout=TIMEOUT,
         )
-        if resp.status_code == 200:
+        if resp.status_code == HTTPStatus.OK:
             return
 
         obj = json.loads(resp.text)
@@ -101,6 +101,4 @@ def _authenticate(config):
         auth=(config[CONF_USERNAME], config[CONF_API_KEY]),
         timeout=TIMEOUT,
     )
-    if resp.status_code != 200:
-        return False
-    return True
+    return resp.status_code == HTTPStatus.OK

@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "link_local_address": "Les adresses locales ne sont pas prises en charge",
+            "not_doorbird_device": "Cet appareil n'est pas un DoorBird"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_auth": "Authentification invalide",
+            "unknown": "Erreur inattendue"
+        },
+        "flow_title": "DoorBird {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "name": "Nom de l'appareil",
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                },
+                "title": "Connectez-vous au DoorBird"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "events": "Liste d'\u00e9v\u00e9nements s\u00e9par\u00e9s par des virgules."
+                },
+                "description": "Ajoutez un nom d'\u00e9v\u00e9nement s\u00e9par\u00e9 par des virgules pour chaque \u00e9v\u00e9nement que vous souhaitez suivre. Apr\u00e8s les avoir saisis ici, utilisez l'application DoorBird pour les affecter \u00e0 un \u00e9v\u00e9nement sp\u00e9cifique. Consultez la documentation sur https://www.home-assistant.io/integrations/doorbird/#events. Exemple: somebody_pressed_the_button, motion"
+            }
+        }
+    }
+}

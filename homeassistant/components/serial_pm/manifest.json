@@ -1,10 +1,8 @@
 {
   "domain": "serial_pm",
-  "name": "Serial pm",
+  "name": "Serial Particulate Matter",
   "documentation": "https://www.home-assistant.io/integrations/serial_pm",
-  "requirements": [
-    "pmsensor==0.4"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["pmsensor==0.4"],
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

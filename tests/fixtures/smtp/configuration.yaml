@@ -1,0 +1,5 @@
+notify:
+  - name: smtp_reloaded
+    platform: smtp
+    sender: test@example.com
+    recipient: test@example.com

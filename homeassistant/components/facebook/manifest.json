@@ -1,8 +1,7 @@
 {
   "domain": "facebook",
-  "name": "Facebook",
+  "name": "Facebook Messenger",
   "documentation": "https://www.home-assistant.io/integrations/facebook",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_push"
 }

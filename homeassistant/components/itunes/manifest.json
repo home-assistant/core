@@ -1,8 +1,7 @@
 {
   "domain": "itunes",
-  "name": "Itunes",
+  "name": "Apple iTunes",
   "documentation": "https://www.home-assistant.io/integrations/itunes",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

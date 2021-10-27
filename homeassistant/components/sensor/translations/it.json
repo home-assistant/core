@@ -1,0 +1,63 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_battery_level": "Livello della batteria attuale di {entity_name}",
+            "is_carbon_dioxide": "Livello di concentrazione di anidride carbonica attuale in {entity_name}",
+            "is_carbon_monoxide": "Livello attuale di concentrazione di monossido di carbonio in {entity_name}",
+            "is_current": "Corrente attuale di {entity_name}",
+            "is_energy": "Energia attuale di {entity_name}",
+            "is_gas": "Attuale gas di {entity_name}",
+            "is_humidity": "Umidit\u00e0 attuale di {entity_name}",
+            "is_illuminance": "Illuminazione attuale di {entity_name}",
+            "is_nitrogen_dioxide": "Attuale livello di concentrazione di biossido di azoto di {entity_name}",
+            "is_nitrogen_monoxide": "Attuale livello di concentrazione di monossido di azoto di {entity_name}",
+            "is_nitrous_oxide": "Attuale livello di concentrazione di ossidi di azoto di {entity_name}",
+            "is_ozone": "Attuale livello di concentrazione di ozono di {entity_name}",
+            "is_pm1": "Attuale livello di concentrazione di PM1 di {entity_name}",
+            "is_pm10": "Attuale livello di concentrazione di PM10 di {entity_name}",
+            "is_pm25": "Attuale livello di concentrazione di PM2.5 di {entity_name}",
+            "is_power": "Alimentazione attuale di {entity_name}",
+            "is_power_factor": "Fattore di potenza attuale di {entity_name}",
+            "is_pressure": "Pressione attuale di {entity_name}",
+            "is_signal_strength": "Potenza del segnale attuale di {entity_name}",
+            "is_sulphur_dioxide": "Attuale livello di concentrazione di anidride solforosa di {entity_name}",
+            "is_temperature": "Temperatura attuale di {entity_name}",
+            "is_value": "Valore attuale di {entity_name}",
+            "is_volatile_organic_compounds": "Attuale livello di concentrazione di composti organici volatili di {entity_name}",
+            "is_voltage": "Tensione attuale di {entity_name}"
+        },
+        "trigger_type": {
+            "battery_level": "variazioni del livello di batteria di {entity_name} ",
+            "carbon_dioxide": "Variazioni della concentrazione di anidride carbonica di {entity_name}",
+            "carbon_monoxide": "Variazioni nella concentrazione di monossido di carbonio di {entity_name}",
+            "current": "variazioni di corrente di {entity_name}",
+            "energy": "variazioni di energia di {entity_name}",
+            "gas": "Variazioni di gas di {entity_name}",
+            "humidity": "variazioni di umidit\u00e0 di {entity_name} ",
+            "illuminance": "variazioni dell'illuminazione di {entity_name}",
+            "nitrogen_dioxide": "Variazioni della concentrazione di biossido di azoto di {entity_name}",
+            "nitrogen_monoxide": "Variazioni della concentrazione di monossido di azoto di {entity_name}",
+            "nitrous_oxide": "Variazioni della concentrazione di ossidi di azoto di {entity_name}",
+            "ozone": "Variazioni della concentrazione di ozono di {entity_name}",
+            "pm1": "Variazioni della concentrazione di PM1 di {entity_name}",
+            "pm10": "Variazioni della concentrazione di PM10 di {entity_name}",
+            "pm25": "Variazioni della concentrazione di PM2.5 di {entity_name}",
+            "power": "variazioni di alimentazione di {entity_name}",
+            "power_factor": "variazioni del fattore di potenza di {entity_name}",
+            "pressure": "variazioni della pressione di {entity_name}",
+            "signal_strength": "variazioni della potenza del segnale di {entity_name}",
+            "sulphur_dioxide": "Variazioni della concentrazione di anidride solforosa di {entity_name}",
+            "temperature": "variazioni di temperatura di {entity_name}",
+            "value": "{entity_name} valori cambiati",
+            "volatile_organic_compounds": "Variazioni della concentrazione di composti organici volatili di {entity_name}",
+            "voltage": "variazioni di tensione di {entity_name}"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Spento",
+            "on": "Acceso"
+        }
+    },
+    "title": "Sensore"
+}

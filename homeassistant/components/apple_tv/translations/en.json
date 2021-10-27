@@ -1,0 +1,64 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "backoff": "Device does not accept pairing reqests at this time (you might have entered an invalid PIN code too many times), try again later.",
+            "device_did_not_pair": "No attempt to finish pairing process was made from the device.",
+            "invalid_config": "The configuration for this device is incomplete. Please try adding it again.",
+            "no_devices_found": "No devices found on the network",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "already_configured": "Device is already configured",
+            "invalid_auth": "Invalid authentication",
+            "no_devices_found": "No devices found on the network",
+            "no_usable_service": "A device was found but could not identify any way to establish a connection to it. If you keep seeing this message, try specifying its IP address or restarting your Apple TV.",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "You are about to add the Apple TV named `{name}` to Home Assistant.\n\n**To complete the process, you may have to enter multiple PIN codes.**\n\nPlease note that you will *not* be able to power off your Apple TV with this integration. Only the media player in Home Assistant will turn off!",
+                "title": "Confirm adding Apple TV"
+            },
+            "pair_no_pin": {
+                "description": "Pairing is required for the `{protocol}` service. Please enter PIN {pin} on your Apple TV to continue.",
+                "title": "Pairing"
+            },
+            "pair_with_pin": {
+                "data": {
+                    "pin": "PIN Code"
+                },
+                "description": "Pairing is required for the `{protocol}` protocol. Please enter the PIN code displayed on screen. Leading zeros shall be omitted, i.e. enter 123 if the displayed code is 0123.",
+                "title": "Pairing"
+            },
+            "reconfigure": {
+                "description": "This Apple TV is experiencing some connection difficulties and must be reconfigured.",
+                "title": "Device reconfiguration"
+            },
+            "service_problem": {
+                "description": "A problem occurred while pairing protocol `{protocol}`. It will be ignored.",
+                "title": "Failed to add service"
+            },
+            "user": {
+                "data": {
+                    "device_input": "Device"
+                },
+                "description": "Start by entering the device name (e.g. Kitchen or Bedroom) or IP address of the Apple TV you want to add. If any devices were automatically found on your network, they are shown below.\n\nIf you cannot see your device or experience any issues, try specifying the device IP address.\n\n{devices}",
+                "title": "Setup a new Apple TV"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "start_off": "Do not turn device on when starting Home Assistant"
+                },
+                "description": "Configure general device settings"
+            }
+        }
+    },
+    "title": "Apple TV"
+}

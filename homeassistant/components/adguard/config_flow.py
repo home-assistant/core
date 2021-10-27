@@ -1,12 +1,11 @@
 """Config flow to configure the AdGuard Home integration."""
-from distutils.version import LooseVersion
-import logging
+from __future__ import annotations
+
+from typing import Any
 
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.components.adguard.const import DOMAIN, MIN_ADGUARD_HOME_VERSION
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (
     CONF_HOST,
@@ -16,25 +15,22 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class AdGuardHomeFlowHandler(ConfigFlow):
+class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a AdGuard Home config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     _hassio_discovery = None
 
-    def __init__(self):
-        """Initialize AgGuard Home flow."""
-        pass
-
-    async def _show_setup_form(self, errors=None):
+    async def _show_setup_form(
+        self, errors: dict[str, str] | None = None
+    ) -> FlowResult:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
@@ -51,8 +47,11 @@ class AdGuardHomeFlowHandler(ConfigFlow):
             errors=errors or {},
         )
 
-    async def _show_hassio_form(self, errors=None):
+    async def _show_hassio_form(
+        self, errors: dict[str, str] | None = None
+    ) -> FlowResult:
         """Show the Hass.io confirmation form to the user."""
+        assert self._hassio_discovery
         return self.async_show_form(
             step_id="hassio_confirm",
             description_placeholders={"addon": self._hassio_discovery["addon"]},
@@ -60,43 +59,38 @@ class AdGuardHomeFlowHandler(ConfigFlow):
             errors=errors or {},
         )
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initiated by the user."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         if user_input is None:
             return await self._show_setup_form(user_input)
+
+        self._async_abort_entries_match(
+            {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+        )
 
         errors = {}
 
         session = async_get_clientsession(self.hass, user_input[CONF_VERIFY_SSL])
 
+        username: str | None = user_input.get(CONF_USERNAME)
+        password: str | None = user_input.get(CONF_PASSWORD)
         adguard = AdGuardHome(
             user_input[CONF_HOST],
             port=user_input[CONF_PORT],
-            username=user_input.get(CONF_USERNAME),
-            password=user_input.get(CONF_PASSWORD),
+            username=username,  # type:ignore[arg-type]
+            password=password,  # type:ignore[arg-type]
             tls=user_input[CONF_SSL],
             verify_ssl=user_input[CONF_VERIFY_SSL],
-            loop=self.hass.loop,
             session=session,
         )
 
         try:
-            version = await adguard.version()
+            await adguard.version()
         except AdGuardHomeConnectionError:
-            errors["base"] = "connection_error"
+            errors["base"] = "cannot_connect"
             return await self._show_setup_form(errors)
-
-        if LooseVersion(MIN_ADGUARD_HOME_VERSION) > LooseVersion(version):
-            return self.async_abort(
-                reason="adguard_home_outdated",
-                description_placeholders={
-                    "current_version": version,
-                    "minimal_version": MIN_ADGUARD_HOME_VERSION,
-                },
-            )
 
         return self.async_create_entry(
             title=user_input[CONF_HOST],
@@ -110,46 +104,20 @@ class AdGuardHomeFlowHandler(ConfigFlow):
             },
         )
 
-    async def async_step_hassio(self, user_input=None):
+    async def async_step_hassio(self, discovery_info: dict[str, Any]) -> FlowResult:
         """Prepare configuration for a Hass.io AdGuard Home add-on.
 
         This flow is triggered by the discovery component.
         """
-        entries = self._async_current_entries()
+        await self._async_handle_discovery_without_unique_id()
 
-        if not entries:
-            self._hassio_discovery = user_input
-            return await self.async_step_hassio_confirm()
+        self._hassio_discovery = discovery_info
+        return await self.async_step_hassio_confirm()
 
-        cur_entry = entries[0]
-
-        if (
-            cur_entry.data[CONF_HOST] == user_input[CONF_HOST]
-            and cur_entry.data[CONF_PORT] == user_input[CONF_PORT]
-        ):
-            return self.async_abort(reason="single_instance_allowed")
-
-        is_loaded = cur_entry.state == config_entries.ENTRY_STATE_LOADED
-
-        if is_loaded:
-            await self.hass.config_entries.async_unload(cur_entry.entry_id)
-
-        self.hass.config_entries.async_update_entry(
-            cur_entry,
-            data={
-                **cur_entry.data,
-                CONF_HOST: user_input[CONF_HOST],
-                CONF_PORT: user_input[CONF_PORT],
-            },
-        )
-
-        if is_loaded:
-            await self.hass.config_entries.async_setup(cur_entry.entry_id)
-
-        return self.async_abort(reason="existing_instance_updated")
-
-    async def async_step_hassio_confirm(self, user_input=None):
-        """Confirm Hass.io discovery."""
+    async def async_step_hassio_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm Supervisor discovery."""
         if user_input is None:
             return await self._show_hassio_form()
 
@@ -157,28 +125,19 @@ class AdGuardHomeFlowHandler(ConfigFlow):
 
         session = async_get_clientsession(self.hass, False)
 
+        assert self._hassio_discovery
         adguard = AdGuardHome(
             self._hassio_discovery[CONF_HOST],
             port=self._hassio_discovery[CONF_PORT],
             tls=False,
-            loop=self.hass.loop,
             session=session,
         )
 
         try:
-            version = await adguard.version()
+            await adguard.version()
         except AdGuardHomeConnectionError:
-            errors["base"] = "connection_error"
+            errors["base"] = "cannot_connect"
             return await self._show_hassio_form(errors)
-
-        if LooseVersion(MIN_ADGUARD_HOME_VERSION) > LooseVersion(version):
-            return self.async_abort(
-                reason="adguard_home_addon_outdated",
-                description_placeholders={
-                    "current_version": version,
-                    "minimal_version": MIN_ADGUARD_HOME_VERSION,
-                },
-            )
 
         return self.async_create_entry(
             title=self._hassio_discovery["addon"],

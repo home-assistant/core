@@ -1,20 +1,20 @@
 """Support for openexchangerates.org exchange rates service."""
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_NAME,
-    CONF_BASE,
-    CONF_QUOTE,
     ATTR_ATTRIBUTION,
+    CONF_API_KEY,
+    CONF_BASE,
+    CONF_NAME,
+    CONF_QUOTE,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     rest = OpenexchangeratesData(_RESOURCE, parameters, quote)
     response = requests.get(_RESOURCE, params=parameters, timeout=10)
 
-    if response.status_code != 200:
+    if response.status_code != HTTPStatus.OK:
         _LOGGER.error("Check your OpenExchangeRates API key")
         return False
 
@@ -57,7 +57,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([OpenexchangeratesSensor(rest, name, quote)], True)
 
 
-class OpenexchangeratesSensor(Entity):
+class OpenexchangeratesSensor(SensorEntity):
     """Representation of an Open Exchange Rates sensor."""
 
     def __init__(self, rest, name, quote):
@@ -73,12 +73,12 @@ class OpenexchangeratesSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other attributes of the sensor."""
         attr = self.rest.data
         attr[ATTR_ATTRIBUTION] = ATTRIBUTION

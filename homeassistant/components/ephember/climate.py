@@ -15,7 +15,7 @@ from pyephember.pyephember import (
 )
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -70,7 +70,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return
 
 
-class EphEmberThermostat(ClimateDevice):
+class EphEmberThermostat(ClimateEntity):
     """Representation of a EphEmber thermostat."""
 
     def __init__(self, ember, zone):
@@ -161,8 +161,7 @@ class EphEmberThermostat(ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
 
         if self._hot_water:
@@ -199,10 +198,10 @@ class EphEmberThermostat(ClimateDevice):
 
     @staticmethod
     def map_mode_hass_eph(operation_mode):
-        """Map from home assistant mode to eph mode."""
+        """Map from Home Assistant mode to eph mode."""
         return getattr(ZoneMode, HA_STATE_TO_EPH.get(operation_mode), None)
 
     @staticmethod
     def map_mode_eph_hass(operation_mode):
-        """Map from eph mode to home assistant mode."""
+        """Map from eph mode to Home Assistant mode."""
         return EPH_TO_HA_STATE.get(operation_mode.name, HVAC_MODE_HEAT_COOL)

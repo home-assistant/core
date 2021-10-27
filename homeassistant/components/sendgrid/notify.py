@@ -1,17 +1,9 @@
 """SendGrid notification service."""
+from http import HTTPStatus
 import logging
 
-import voluptuous as vol
-
 from sendgrid import SendGridAPIClient
-
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_RECIPIENT,
-    CONF_SENDER,
-    CONTENT_TYPE_TEXT_PLAIN,
-)
-import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_TITLE,
@@ -19,6 +11,13 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_RECIPIENT,
+    CONF_SENDER,
+    CONTENT_TYPE_TEXT_PLAIN,
+)
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,5 +66,5 @@ class SendgridNotificationService(BaseNotificationService):
         }
 
         response = self._sg.client.mail.send.post(request_body=data)
-        if response.status_code != 202:
+        if response.status_code != HTTPStatus.ACCEPTED:
             _LOGGER.error("Unable to send notification")

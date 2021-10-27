@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La ubicaci\u00f3n ya est\u00e1 configurada"
+        },
+        "error": {
+            "invalid_api_key": "Clave API no v\u00e1lida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Clave API",
+                    "latitude": "Latitud",
+                    "longitude": "Longitud",
+                    "name": "Nombre de la integraci\u00f3n"
+                },
+                "description": "Configurar la integraci\u00f3n de AEMET OpenData. Para generar la clave API, ve a https://opendata.aemet.es/centrodedescargas/altaUsuario",
+                "title": "AEMET OpenData"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "station_updates": "Obtener datos de las estaciones meteorol\u00f3gicas de AEMET"
+                }
+            }
+        }
+    }
+}

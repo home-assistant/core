@@ -1,22 +1,23 @@
 """Support for Ubiquiti mFi sensors."""
 import logging
 
+from mficlient.client import FailedToLogin, MFiClient
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    TEMP_CELSIUS,
-    STATE_ON,
-    STATE_OFF,
     CONF_HOST,
-    CONF_SSL,
-    CONF_VERIFY_SSL,
+    CONF_PASSWORD,
     CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+    DEVICE_CLASS_TEMPERATURE,
+    STATE_OFF,
+    STATE_ON,
+    TEMP_CELSIUS,
 )
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,8 +58,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     default_port = 6443 if use_tls else 6080
     port = int(config.get(CONF_PORT, default_port))
 
-    from mficlient.client import FailedToLogin, MFiClient
-
     try:
         client = MFiClient(
             host, username, password, port=port, use_tls=use_tls, verify=verify_tls
@@ -75,7 +74,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class MfiSensor(Entity):
+class MfiSensor(SensorEntity):
     """Representation of a mFi sensor."""
 
     def __init__(self, port, hass):
@@ -85,11 +84,11 @@ class MfiSensor(Entity):
 
     @property
     def name(self):
-        """Return the name of th sensor."""
+        """Return the name of the sensor."""
         return self._port.label
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         try:
             tag = self._port.tag
@@ -103,7 +102,20 @@ class MfiSensor(Entity):
         return round(self._port.value, digits)
 
     @property
-    def unit_of_measurement(self):
+    def device_class(self):
+        """Return the device class of the sensor."""
+        try:
+            tag = self._port.tag
+        except ValueError:
+            return None
+
+        if tag == "temperature":
+            return DEVICE_CLASS_TEMPERATURE
+
+        return None
+
+    @property
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         try:
             tag = self._port.tag

@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_pin": "Vale PIN kood",
+            "pairing_failure": "Sidumine nurjus: {error_id}",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "pair": {
+                "data": {
+                    "pin": "PIN kood"
+                },
+                "description": "Sisesta teleris kuvatav PIN-kood",
+                "title": "Paarita"
+            },
+            "user": {
+                "data": {
+                    "api_version": "API versioon",
+                    "host": "Host"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "Seadmel palutakse sisse l\u00fclituda"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_notify": "Luba teavitusteenused."
+                }
+            }
+        }
+    }
+}

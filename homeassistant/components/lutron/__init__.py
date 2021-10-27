@@ -1,15 +1,18 @@
 """Component for interacting with a Lutron RadioRA 2 system."""
 import logging
 
+from pylutron import Button, Lutron
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import ATTR_ID, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
 DOMAIN = "lutron"
+
+PLATFORMS = ["light", "cover", "switch", "scene", "binary_sensor"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,6 +22,7 @@ LUTRON_DEVICES = "lutron_devices"
 
 # Attribute on events that indicates what action was taken with the button.
 ATTR_ACTION = "action"
+ATTR_FULL_ID = "full_id"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -35,9 +39,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 def setup(hass, base_config):
-    """Set up the Lutron component."""
-    from pylutron import Lutron
-
+    """Set up the Lutron integration."""
     hass.data[LUTRON_BUTTONS] = []
     hass.data[LUTRON_CONTROLLER] = None
     hass.data[LUTRON_DEVICES] = {
@@ -72,6 +74,8 @@ def setup(hass, base_config):
                 if button.name != "Unknown Button" and button.button_type in (
                     "SingleAction",
                     "Toggle",
+                    "SingleSceneRaiseLower",
+                    "MasterRaiseLower",
                 ):
                     # Associate an LED with a button if there is one
                     led = next(
@@ -82,14 +86,16 @@ def setup(hass, base_config):
                         (area.name, keypad.name, button, led)
                     )
 
-                hass.data[LUTRON_BUTTONS].append(LutronButton(hass, keypad, button))
+                hass.data[LUTRON_BUTTONS].append(
+                    LutronButton(hass, area.name, keypad, button)
+                )
         if area.occupancy_group is not None:
             hass.data[LUTRON_DEVICES]["binary_sensor"].append(
                 (area.name, area.occupancy_group)
             )
 
-    for component in ("light", "cover", "switch", "scene", "binary_sensor"):
-        discovery.load_platform(hass, component, DOMAIN, {}, base_config)
+    for platform in PLATFORMS:
+        discovery.load_platform(hass, platform, DOMAIN, {}, base_config)
     return True
 
 
@@ -122,6 +128,14 @@ class LutronDevice(Entity):
         """No polling needed."""
         return False
 
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        # Temporary fix for https://github.com/thecynic/pylutron/issues/70
+        if self._lutron_device.uuid is None:
+            return None
+        return f"{self._controller.guid}_{self._lutron_device.uuid}"
+
 
 class LutronButton:
     """Representation of a button on a Lutron keypad.
@@ -131,22 +145,27 @@ class LutronButton:
     represented as an entity; it simply fires events.
     """
 
-    def __init__(self, hass, keypad, button):
+    def __init__(self, hass, area_name, keypad, button):
         """Register callback for activity on the button."""
         name = f"{keypad.name}: {button.name}"
+        if button.name == "Unknown Button":
+            name += f" {button.number}"
         self._hass = hass
         self._has_release_event = (
             button.button_type is not None and "RaiseLower" in button.button_type
         )
         self._id = slugify(name)
+        self._keypad = keypad
+        self._area_name = area_name
+        self._button_name = button.name
+        self._button = button
         self._event = "lutron_event"
+        self._full_id = slugify(f"{area_name} {name}")
 
         button.subscribe(self.button_callback, None)
 
     def button_callback(self, button, context, event, params):
         """Fire an event about a button being pressed or released."""
-        from pylutron import Button
-
         # Events per button type:
         #   RaiseLower -> pressed/released
         #   SingleAction -> single
@@ -160,5 +179,5 @@ class LutronButton:
             action = "single"
 
         if action:
-            data = {ATTR_ID: self._id, ATTR_ACTION: action}
+            data = {ATTR_ID: self._id, ATTR_ACTION: action, ATTR_FULL_ID: self._full_id}
             self._hass.bus.fire(self._event, data)

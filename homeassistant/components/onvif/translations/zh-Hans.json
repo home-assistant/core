@@ -1,0 +1,71 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u8bbe\u5907\u5df2\u88ab\u914d\u7f6e",
+            "already_in_progress": "\u914d\u7f6e\u6d41\u5df2\u5728\u8fdb\u884c\u4e2d",
+            "no_h264": "\u65e0\u53ef\u7528\u7684 H264 \u76f4\u64ad\u6d41\u3002\u8bf7\u68c0\u67e5\u8be5\u8bbe\u5907\u4e0a\u7684\u914d\u7f6e\u6587\u4ef6\u3002",
+            "no_mac": "\u65e0\u6cd5\u4e3a ONVIF \u914d\u7f6e\u8bbe\u5907\u552f\u4e00 ID",
+            "onvif_error": "\u914d\u7f6e ONVIF \u8bbe\u5907\u65f6\u51fa\u9519\u3002\u68c0\u67e5\u65e5\u5fd7\u4ee5\u83b7\u53d6\u66f4\u591a\u4fe1\u606f\u3002"
+        },
+        "error": {
+            "cannot_connect": "\u8fde\u63a5\u5931\u8d25"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "password": "\u5bc6\u7801",
+                    "username": "\u7528\u6237\u540d"
+                },
+                "title": "\u914d\u7f6e\u8ba4\u8bc1\u4fe1\u606f"
+            },
+            "configure": {
+                "data": {
+                    "host": "\u4e3b\u673a\u5730\u5740",
+                    "password": "\u5bc6\u7801",
+                    "port": "\u7aef\u53e3",
+                    "username": "\u7528\u6237\u540d"
+                },
+                "title": "\u914d\u7f6e ONVIF \u8bbe\u5907"
+            },
+            "configure_profile": {
+                "data": {
+                    "include": "\u521b\u5efa\u6444\u50cf\u673a\u5b9e\u4f53"
+                },
+                "description": "\u4ee5 {resolution} \u5206\u8fa8\u7387\u521b\u5efa {profile} \u6444\u50cf\u673a\u5b9e\u4f53\uff1f",
+                "title": "\u914d\u7f6e \u914d\u7f6e\u6587\u4ef6"
+            },
+            "device": {
+                "data": {
+                    "host": "\u9009\u62e9\u5df2\u88ab\u53d1\u73b0\u7684 ONVIF \u8bbe\u5907"
+                },
+                "title": "\u9009\u62e9 ONVIF \u8bbe\u5907"
+            },
+            "manual_input": {
+                "data": {
+                    "host": "\u4e3b\u673a\u5730\u5740",
+                    "name": "\u540d\u79f0",
+                    "port": "\u7aef\u53e3"
+                },
+                "title": "\u914d\u7f6e ONVIF \u8bbe\u5907"
+            },
+            "user": {
+                "data": {
+                    "auto": "\u81ea\u52a8\u641c\u7d22"
+                },
+                "description": "\u901a\u8fc7\u70b9\u51fb\u63d0\u4ea4\u6309\u94ae\uff0cHome Assistant \u5c06\u4f1a\u5c1d\u8bd5\u641c\u7d22\u60a8\u7684\u7f51\u7edc\u4e2d\u652f\u6301 Profile S \u7684 ONVIF \u8bbe\u5907\u3002\n\n\u9700\u8981\u6ce8\u610f\u7684\u662f\uff0c\u6709\u4e9b\u751f\u4ea7\u5546\u51fa\u5382\u65f6\u9ed8\u8ba4\u4f1a\u5c06 ONVIF \u529f\u80fd\u5173\u95ed\u3002\u8bf7\u786e\u8ba4\u60a8\u7684\u6444\u50cf\u5934\u5df2\u6253\u5f00\u8be5\u529f\u80fd\u3002",
+                "title": "\u914d\u7f6e ONVIF \u8bbe\u5907"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "onvif_devices": {
+                "data": {
+                    "extra_arguments": "\u9644\u52a0 FFmpeg \u53c2\u6570",
+                    "rtsp_transport": "RTSP \u4f20\u8f93\u901a\u8baf\u534f\u8bae"
+                },
+                "title": "ONVIF \u8bbe\u5907\u9009\u9879"
+            }
+        }
+    }
+}

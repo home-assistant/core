@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<device-info>  
+    <udn>015e5108-9000-1046-8035-b0a737964dfb</udn>  
+    <serial-number>1GU48T017973</serial-number>  
+    <device-id>1GU48T017973</device-id>  
+    <vendor-name>Roku</vendor-name>
+    <model-number>4200X</model-number>
+    <model-name>Roku 3</model-name>
+    <model-region>US</model-region>  
+    <supports-ethernet>true</supports-ethernet>  
+    <wifi-mac>b0:a7:37:96:4d:fb</wifi-mac>  
+    <ethernet-mac>b0:a7:37:96:4d:fa</ethernet-mac>  
+    <network-type>ethernet</network-type>
+    <user-device-name>My Roku 3</user-device-name>  
+    <software-version>7.5.0</software-version>  
+    <software-build>09021</software-build>  
+    <secure-device>true</secure-device>  
+    <language>en</language>  
+    <country>US</country>  
+    <locale>en_US</locale>
+    <time-zone>US/Pacific</time-zone>
+    <time-zone-offset>-480</time-zone-offset>  
+    <power-mode>PowerOn</power-mode>
+    <supports-suspend>false</supports-suspend>
+    <supports-find-remote>false</supports-find-remote>  
+    <supports-audio-guide>false</supports-audio-guide>  
+    <developer-enabled>true</developer-enabled>
+    <keyed-developer-id>70f6ed9c90cf60718a26f3a7c3e5af1c3ec29558</keyed-developer-id>
+    <search-enabled>true</search-enabled>
+    <voice-search-enabled>true</voice-search-enabled>
+    <notifications-enabled>true</notifications-enabled>
+    <notifications-first-use>false</notifications-first-use>
+    <supports-private-listening>false</supports-private-listening>
+    <headphones-connected>false</headphones-connected>
+</device-info>

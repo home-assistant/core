@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Lokacija je \u017ee nastavljena"
+        },
+        "error": {
+            "invalid_api_key": "Neveljaven API klju\u010d"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "OpenUV API Klju\u010d",
+                    "elevation": "Nadmorska vi\u0161ina",
+                    "latitude": "Zemljepisna \u0161irina",
+                    "longitude": "Zemljepisna dol\u017eina"
+                },
+                "title": "Izpolnite svoje podatke"
+            }
+        }
+    }
+}

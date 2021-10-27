@@ -2,6 +2,9 @@
 
 from unittest.mock import Mock
 
+import pytest
+from voluptuous.error import MultipleInvalid
+
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.rflink import (
     CONF_RECONNECT_INTERVAL,
@@ -104,10 +107,8 @@ async def test_send_no_wait(hass, monkeypatch):
     # setup mocking rflink module
     _, _, protocol, _ = await mock_rflink(hass, config, domain, monkeypatch)
 
-    hass.async_create_task(
-        hass.services.async_call(
-            domain, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "switch.test"}
-        )
+    await hass.services.async_call(
+        domain, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "switch.test"}
     )
     await hass.async_block_till_done()
     assert protocol.send_command.call_args_list[0][0][0] == "protocol_0_0"
@@ -130,10 +131,8 @@ async def test_cover_send_no_wait(hass, monkeypatch):
     # setup mocking rflink module
     _, _, protocol, _ = await mock_rflink(hass, config, domain, monkeypatch)
 
-    hass.async_create_task(
-        hass.services.async_call(
-            domain, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: "cover.test"}
-        )
+    await hass.services.async_call(
+        domain, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: "cover.test"}
     )
     await hass.async_block_till_done()
     assert protocol.send_command.call_args_list[0][0][0] == "RTS_0100F2_0"
@@ -148,12 +147,10 @@ async def test_send_command(hass, monkeypatch):
     # setup mocking rflink module
     _, _, protocol, _ = await mock_rflink(hass, config, domain, monkeypatch)
 
-    hass.async_create_task(
-        hass.services.async_call(
-            domain,
-            SERVICE_SEND_COMMAND,
-            {"device_id": "newkaku_0000c6c2_1", "command": "on"},
-        )
+    await hass.services.async_call(
+        domain,
+        SERVICE_SEND_COMMAND,
+        {"device_id": "newkaku_0000c6c2_1", "command": "on"},
     )
     await hass.async_block_till_done()
     assert protocol.send_command_ack.call_args_list[0][0][0] == "newkaku_0000c6c2_1"
@@ -169,16 +166,17 @@ async def test_send_command_invalid_arguments(hass, monkeypatch):
     _, _, protocol, _ = await mock_rflink(hass, config, domain, monkeypatch)
 
     # one argument missing
-    hass.async_create_task(
-        hass.services.async_call(domain, SERVICE_SEND_COMMAND, {"command": "on"})
-    )
-    hass.async_create_task(
-        hass.services.async_call(
+    with pytest.raises(MultipleInvalid):
+        await hass.services.async_call(domain, SERVICE_SEND_COMMAND, {"command": "on"})
+
+    with pytest.raises(MultipleInvalid):
+        await hass.services.async_call(
             domain, SERVICE_SEND_COMMAND, {"device_id": "newkaku_0000c6c2_1"}
         )
-    )
+
     # no arguments
-    hass.async_create_task(hass.services.async_call(domain, SERVICE_SEND_COMMAND, {}))
+    with pytest.raises(MultipleInvalid):
+        await hass.services.async_call(domain, SERVICE_SEND_COMMAND, {})
 
     await hass.async_block_till_done()
     assert protocol.send_command_ack.call_args_list == []
@@ -190,6 +188,48 @@ async def test_send_command_invalid_arguments(hass, monkeypatch):
         {"device_id": "newkaku_0000c6c2_1", "command": "no_command"},
     )
     assert not success, "send command should not succeed for unknown command"
+
+
+async def test_send_command_event_propagation(hass, monkeypatch):
+    """Test event propagation for send_command service."""
+    domain = "light"
+    config = {
+        "rflink": {"port": "/dev/ttyABC0"},
+        domain: {
+            "platform": "rflink",
+            "devices": {
+                "protocol_0_1": {"name": "test1"},
+            },
+        },
+    }
+
+    # setup mocking rflink module
+    _, _, protocol, _ = await mock_rflink(hass, config, domain, monkeypatch)
+
+    # default value = 'off'
+    assert hass.states.get(f"{domain}.test1").state == "off"
+
+    await hass.services.async_call(
+        "rflink",
+        SERVICE_SEND_COMMAND,
+        {"device_id": "protocol_0_1", "command": "on"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert protocol.send_command_ack.call_args_list[0][0][0] == "protocol_0_1"
+    assert protocol.send_command_ack.call_args_list[0][0][1] == "on"
+    assert hass.states.get(f"{domain}.test1").state == "on"
+
+    await hass.services.async_call(
+        "rflink",
+        SERVICE_SEND_COMMAND,
+        {"device_id": "protocol_0_1", "command": "alloff"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert protocol.send_command_ack.call_args_list[1][0][0] == "protocol_0_1"
+    assert protocol.send_command_ack.call_args_list[1][0][1] == "alloff"
+    assert hass.states.get(f"{domain}.test1").state == "off"
 
 
 async def test_reconnecting_after_disconnect(hass, monkeypatch):
@@ -315,7 +355,7 @@ async def test_race_condition(hass, monkeypatch):
     await hass.async_block_till_done()
 
     # test  state of new sensor
-    new_sensor = hass.states.get(domain + ".test3")
+    new_sensor = hass.states.get(f"{domain}.test3")
     assert new_sensor
     assert new_sensor.state == "off"
 
@@ -325,7 +365,7 @@ async def test_race_condition(hass, monkeypatch):
     assert tmp_entity not in hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_COMMAND]["test3"]
 
     # test  state of new sensor
-    new_sensor = hass.states.get(domain + ".test3")
+    new_sensor = hass.states.get(f"{domain}.test3")
     assert new_sensor
     assert new_sensor.state == "on"
 
@@ -333,6 +373,7 @@ async def test_race_condition(hass, monkeypatch):
 async def test_not_connected(hass, monkeypatch):
     """Test Error when sending commands to a disconnected device."""
     import pytest
+
     from homeassistant.core import HomeAssistantError
 
     test_device = RflinkCommand("DUMMY_DEVICE")

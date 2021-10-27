@@ -1,18 +1,17 @@
-"""Support for Blockchain.info sensors."""
+"""Support for Blockchain.com sensors."""
 from datetime import timedelta
 import logging
 
 from pyblockchain import get_balance, validate_address
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Data provided by blockchain.info"
+ATTRIBUTION = "Data provided by blockchain.com"
 
 CONF_ADDRESSES = "addresses"
 
@@ -31,10 +30,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Blockchain.info sensors."""
+    """Set up the Blockchain.com sensors."""
 
-    addresses = config.get(CONF_ADDRESSES)
-    name = config.get(CONF_NAME)
+    addresses = config[CONF_ADDRESSES]
+    name = config[CONF_NAME]
 
     for address in addresses:
         if not validate_address(address):
@@ -44,42 +43,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([BlockchainSensor(name, addresses)], True)
 
 
-class BlockchainSensor(Entity):
-    """Representation of a Blockchain.info sensor."""
+class BlockchainSensor(SensorEntity):
+    """Representation of a Blockchain.com sensor."""
+
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_icon = ICON
+    _attr_native_unit_of_measurement = "BTC"
 
     def __init__(self, name, addresses):
         """Initialize the sensor."""
-        self._name = name
+        self._attr_name = name
         self.addresses = addresses
-        self._state = None
-        self._unit_of_measurement = "BTC"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement this sensor expresses itself in."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     def update(self):
         """Get the latest state of the sensor."""
-
-        self._state = get_balance(self.addresses)
+        self._attr_native_value = get_balance(self.addresses)

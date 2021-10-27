@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konfiguration des Profils aktualisiert.",
+            "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
+            "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen.",
+            "no_url_available": "Keine URL verf\u00fcgbar. Informationen zu diesem Fehler findest du [im Hilfebereich]({docs_url})."
+        },
+        "create_entry": {
+            "default": "Erfolgreiche Authentifizierung mit Withings."
+        },
+        "error": {
+            "already_configured": "Konto wurde bereits konfiguriert"
+        },
+        "flow_title": "{profile}",
+        "step": {
+            "pick_implementation": {
+                "title": "W\u00e4hle die Authentifizierungsmethode"
+            },
+            "profile": {
+                "data": {
+                    "profile": "Profilname"
+                },
+                "description": "Gib einen eindeutigen Profilnamen f\u00fcr diese Daten an. Normalerweise ist dies der Name des Profils, das du im vorherigen Schritt ausgew\u00e4hlt hast.",
+                "title": "Benutzerprofil"
+            },
+            "reauth": {
+                "description": "Das Profil \"{profile}\" muss neu authentifiziert werden, um weiterhin Withings-Daten zu empfangen.",
+                "title": "Integration erneut authentifizieren"
+            }
+        }
+    }
+}

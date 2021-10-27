@@ -1,0 +1,42 @@
+{
+  "config": {
+    "flow_title": "{name} ({host})",
+    "step": {
+      "user": {
+        "title": "Set up forked-daapd device",
+        "data": {
+          "name": "Friendly name",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "API port",
+          "password": "API password (leave blank if no password)"
+        }
+      }
+    },
+    "error": {
+      "forbidden": "Unable to connect. Please check your forked-daapd network permissions.",
+      "websocket_not_enabled": "forked-daapd server websocket not enabled.",
+      "wrong_host_or_port": "Unable to connect. Please check host and port.",
+      "wrong_password": "Incorrect password.",
+      "wrong_server_type": "The forked-daapd integration requires a forked-daapd server with version >= 27.0.",
+      "unknown_error": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "not_forked_daapd": "Device is not a forked-daapd server."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure forked-daapd options",
+        "description": "Set various options for the forked-daapd integration.",
+        "data": {
+          "librespot_java_port": "Port for librespot-java pipe control (if used)",
+          "max_playlists": "Max number of playlists used as sources",
+          "tts_volume": "TTS volume (float in range [0,1])",
+          "tts_pause_time": "Seconds to pause before and after TTS"
+        }
+      }
+    }
+  }
+}

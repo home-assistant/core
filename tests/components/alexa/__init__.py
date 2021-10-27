@@ -1,19 +1,27 @@
 """Tests for the Alexa integration."""
+import re
 from uuid import uuid4
 
-from homeassistant.core import Context
 from homeassistant.components.alexa import config, smart_home
+from homeassistant.core import Context, callback
 
 from tests.common import async_mock_service
 
 TEST_URL = "https://api.amazonalexa.com/v3/events"
 TEST_TOKEN_URL = "https://api.amazon.com/auth/o2/token"
+TEST_LOCALE = "en-US"
 
 
 class MockConfig(config.AbstractConfig):
     """Mock Alexa config."""
 
-    entity_config = {"binary_sensor.test_doorbell": {"display_categories": "DOORBELL"}}
+    entity_config = {
+        "binary_sensor.test_doorbell": {"display_categories": "DOORBELL"},
+        "binary_sensor.test_contact_forced": {"display_categories": "CONTACT_SENSOR"},
+        "binary_sensor.test_motion_forced": {"display_categories": "MOTION_SENSOR"},
+        "binary_sensor.test_motion_camera_event": {"display_categories": "CAMERA"},
+        "camera.test": {"display_categories": "CAMERA"},
+    }
 
     @property
     def supports_auth(self):
@@ -25,6 +33,16 @@ class MockConfig(config.AbstractConfig):
         """Endpoint for report state."""
         return TEST_URL
 
+    @property
+    def locale(self):
+        """Return config locale."""
+        return TEST_LOCALE
+
+    @callback
+    def user_identifier(self):
+        """Return an identifier for the user that represents this config."""
+        return "mock-user-id"
+
     def should_expose(self, entity_id):
         """If an entity should be exposed."""
         return True
@@ -35,7 +53,6 @@ class MockConfig(config.AbstractConfig):
 
     async def async_accept_grant(self, code):
         """Accept a grant."""
-        pass
 
 
 DEFAULT_CONFIG = MockConfig(None)
@@ -146,7 +163,8 @@ async def assert_scene_controller_works(
     )
     assert response["event"]["payload"]["cause"]["type"] == "VOICE_INTERACTION"
     assert "timestamp" in response["event"]["payload"]
-
+    pattern = r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.0Z"
+    assert re.search(pattern, response["event"]["payload"]["timestamp"])
     if deactivate_service:
         await assert_request_calls_service(
             "Alexa.SceneController",
@@ -159,6 +177,7 @@ async def assert_scene_controller_works(
         cause_type = response["event"]["payload"]["cause"]["type"]
         assert cause_type == "VOICE_INTERACTION"
         assert "timestamp" in response["event"]["payload"]
+        assert re.search(pattern, response["event"]["payload"]["timestamp"])
 
 
 async def reported_properties(hass, endpoint):
@@ -193,4 +212,4 @@ class ReportedProperties:
                 assert prop["value"] == value
                 return prop
 
-        assert False, "property %s:%s not in %r" % (namespace, name, self.properties)
+        assert False, f"property {namespace}:{name} not in {self.properties!r}"

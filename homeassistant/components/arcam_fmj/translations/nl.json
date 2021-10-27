@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "already_in_progress": "De configuratiestroom is al aan de gang",
+            "cannot_connect": "Kan geen verbinding maken"
+        },
+        "error": {
+            "one": "Leeg",
+            "other": "Leeg"
+        },
+        "flow_title": "{host}",
+        "step": {
+            "confirm": {
+                "description": "Wil je Arcam FMJ op `{host}` toevoegen aan Home Assistant?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Poort"
+                },
+                "description": "Voer de hostnaam of het IP-adres van het apparaat in."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "{entity_name} is gevraagd in te schakelen"
+        }
+    }
+}

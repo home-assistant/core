@@ -1,15 +1,16 @@
 """Support for Orvibo S20 Wifi Smart Switches."""
 import logging
 
+from orvibo.s20 import S20, S20Exception, discover
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
+    CONF_DISCOVERY,
     CONF_HOST,
+    CONF_MAC,
     CONF_NAME,
     CONF_SWITCHES,
-    CONF_MAC,
-    CONF_DISCOVERY,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -37,14 +38,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up S20 switches."""
-    from orvibo.s20 import discover, S20, S20Exception
 
     switch_data = {}
     switches = []
     switch_conf = config.get(CONF_SWITCHES, [config])
 
     if config.get(CONF_DISCOVERY):
-        _LOGGER.info("Discovering S20 switches ...")
+        _LOGGER.info("Discovering S20 switches")
         switch_data.update(discover())
 
     for switch in switch_conf:
@@ -62,22 +62,16 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     add_entities_callback(switches)
 
 
-class S20Switch(SwitchDevice):
+class S20Switch(SwitchEntity):
     """Representation of an S20 switch."""
 
     def __init__(self, name, s20):
         """Initialize the S20 device."""
-        from orvibo.s20 import S20Exception
 
         self._name = name
         self._s20 = s20
         self._state = False
         self._exc = S20Exception
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
 
     @property
     def name(self):

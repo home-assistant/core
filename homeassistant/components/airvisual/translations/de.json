@@ -1,0 +1,63 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Diese Node/Pro ID oder Standort ist bereits konfiguriert.",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "general_error": "Unerwarteter Fehler",
+            "invalid_api_key": "Ung\u00fcltiger API-Schl\u00fcssel",
+            "location_not_found": "Standort nicht gefunden"
+        },
+        "step": {
+            "geography_by_coords": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel",
+                    "latitude": "Breitengrad",
+                    "longitude": "L\u00e4ngengrad"
+                },
+                "description": "Verwende die AirVisual Cloud API, um einen L\u00e4ngengrad/Breitengrad zu \u00fcberwachen.",
+                "title": "Konfiguriere einen Standort"
+            },
+            "geography_by_name": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel",
+                    "city": "Stadt",
+                    "country": "Land",
+                    "state": "Bundesland"
+                },
+                "description": "Verwende die AirVisual Cloud API, um ein(e) Stadt/Bundesland/Land zu \u00fcberwachen.",
+                "title": "Konfiguriere einen Standort"
+            },
+            "node_pro": {
+                "data": {
+                    "ip_address": "Host",
+                    "password": "Passwort"
+                },
+                "description": "\u00dcberwache eine pers\u00f6nliche AirVisual-Einheit. Das Passwort kann von der Benutzeroberfl\u00e4che des Ger\u00e4ts abgerufen werden.",
+                "title": "Konfiguriere einen AirVisual Node/Pro"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel"
+                },
+                "title": "AirVisual erneut authentifizieren"
+            },
+            "user": {
+                "description": "W\u00e4hle aus, welche Art von AirVisual-Daten du \u00fcberwachen m\u00f6chtest.",
+                "title": "Konfiguriere AirVisual"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Zeige die \u00fcberwachte Geografie auf der Karte an"
+                },
+                "title": "Konfiguriere AirVisual"
+            }
+        }
+    }
+}

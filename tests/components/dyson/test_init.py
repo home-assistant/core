@@ -1,227 +1,100 @@
 """Test the parent Dyson component."""
-import unittest
-from unittest import mock
+import copy
+from unittest.mock import MagicMock, patch
 
-from homeassistant.components import dyson
-from tests.common import get_test_home_assistant
+from homeassistant.components.dyson import DOMAIN
+from homeassistant.const import CONF_DEVICES
+from homeassistant.core import HomeAssistant
 
+from .common import (
+    BASE_PATH,
+    CONFIG,
+    ENTITY_NAME,
+    IP_ADDRESS,
+    async_get_360eye_device,
+    async_get_purecool_device,
+    async_get_purecoollink_device,
+)
 
-def _get_dyson_account_device_available():
-    """Return a valid device provide by Dyson web services."""
-    device = mock.Mock()
-    device.serial = "XX-XXXXX-XX"
-    device.connect = mock.Mock(return_value=True)
-    device.auto_connect = mock.Mock(return_value=True)
-    return device
-
-
-def _get_dyson_account_device_not_available():
-    """Return an invalid device provide by Dyson web services."""
-    device = mock.Mock()
-    device.serial = "XX-XXXXX-XX"
-    device.connect = mock.Mock(return_value=False)
-    device.auto_connect = mock.Mock(return_value=False)
-    return device
+from tests.common import async_setup_component
 
 
-def _get_dyson_account_device_error():
-    """Return an invalid device raising OSError while connecting."""
-    device = mock.Mock()
-    device.serial = "XX-XXXXX-XX"
-    device.connect = mock.Mock(side_effect=OSError("Network error"))
-    return device
+async def test_setup_manual(hass: HomeAssistant):
+    """Test set up the component with manually configured device IPs."""
+    SERIAL_TEMPLATE = "XX-XXXXX-X{}"
+
+    # device1 works
+    device1 = async_get_purecoollink_device()
+    device1.serial = SERIAL_TEMPLATE.format(1)
+
+    # device2 failed to connect
+    device2 = async_get_purecool_device()
+    device2.serial = SERIAL_TEMPLATE.format(2)
+    device2.connect = MagicMock(return_value=False)
+
+    # device3 throws exception during connection
+    device3 = async_get_360eye_device()
+    device3.serial = SERIAL_TEMPLATE.format(3)
+    device3.connect = MagicMock(side_effect=OSError)
+
+    # device4 not configured in configuration
+    device4 = async_get_360eye_device()
+    device4.serial = SERIAL_TEMPLATE.format(4)
+
+    devices = [device1, device2, device3, device4]
+    config = copy.deepcopy(CONFIG)
+    config[DOMAIN][CONF_DEVICES] = [
+        {
+            "device_id": SERIAL_TEMPLATE.format(i),
+            "device_ip": IP_ADDRESS,
+        }
+        for i in [1, 2, 3, 5]  # 1 device missing and 1 device not existed
+    ]
+
+    with patch(f"{BASE_PATH}.DysonAccount.login", return_value=True) as login, patch(
+        f"{BASE_PATH}.DysonAccount.devices", return_value=devices
+    ) as devices_method, patch(
+        f"{BASE_PATH}.PLATFORMS", ["fan", "vacuum"]
+    ):  # Patch platforms to get rid of sensors
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+    login.assert_called_once_with()
+    devices_method.assert_called_once_with()
+
+    # Only one fan and zero vacuum is set up successfully
+    assert hass.states.async_entity_ids() == [f"fan.{ENTITY_NAME}"]
+    device1.connect.assert_called_once_with(IP_ADDRESS)
+    device2.connect.assert_called_once_with(IP_ADDRESS)
+    device3.connect.assert_called_once_with(IP_ADDRESS)
+    device4.connect.assert_not_called()
 
 
-class DysonTest(unittest.TestCase):
-    """Dyson parent component test class."""
+async def test_setup_autoconnect(hass: HomeAssistant):
+    """Test set up the component with auto connect."""
+    # device1 works
+    device1 = async_get_purecoollink_device()
 
-    def setUp(self):  # pylint: disable=invalid-name
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
+    # device2 failed to auto connect
+    device2 = async_get_purecool_device()
+    device2.auto_connect = MagicMock(return_value=False)
 
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Stop everything that was started."""
-        self.hass.stop()
+    devices = [device1, device2]
+    config = copy.deepcopy(CONFIG)
+    config[DOMAIN].pop(CONF_DEVICES)
 
-    @mock.patch("libpurecool.dyson.DysonAccount.login", return_value=False)
-    def test_dyson_login_failed(self, mocked_login):
-        """Test if Dyson connection failed."""
-        dyson.setup(
-            self.hass,
-            {
-                dyson.DOMAIN: {
-                    dyson.CONF_USERNAME: "email",
-                    dyson.CONF_PASSWORD: "password",
-                    dyson.CONF_LANGUAGE: "FR",
-                }
-            },
-        )
-        assert mocked_login.call_count == 1
+    with patch(f"{BASE_PATH}.DysonAccount.login", return_value=True), patch(
+        f"{BASE_PATH}.DysonAccount.devices", return_value=devices
+    ), patch(
+        f"{BASE_PATH}.PLATFORMS", ["fan"]
+    ):  # Patch platforms to get rid of sensors
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
 
-    @mock.patch("libpurecool.dyson.DysonAccount.devices", return_value=[])
-    @mock.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
-    def test_dyson_login(self, mocked_login, mocked_devices):
-        """Test valid connection to dyson web service."""
-        dyson.setup(
-            self.hass,
-            {
-                dyson.DOMAIN: {
-                    dyson.CONF_USERNAME: "email",
-                    dyson.CONF_PASSWORD: "password",
-                    dyson.CONF_LANGUAGE: "FR",
-                }
-            },
-        )
-        assert mocked_login.call_count == 1
-        assert mocked_devices.call_count == 1
-        assert len(self.hass.data[dyson.DYSON_DEVICES]) == 0
+    assert hass.states.async_entity_ids_count() == 1
 
-    @mock.patch("homeassistant.helpers.discovery.load_platform")
-    @mock.patch(
-        "libpurecool.dyson.DysonAccount.devices",
-        return_value=[_get_dyson_account_device_available()],
-    )
-    @mock.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
-    def test_dyson_custom_conf(self, mocked_login, mocked_devices, mocked_discovery):
-        """Test device connection using custom configuration."""
-        dyson.setup(
-            self.hass,
-            {
-                dyson.DOMAIN: {
-                    dyson.CONF_USERNAME: "email",
-                    dyson.CONF_PASSWORD: "password",
-                    dyson.CONF_LANGUAGE: "FR",
-                    dyson.CONF_DEVICES: [
-                        {"device_id": "XX-XXXXX-XX", "device_ip": "192.168.0.1"}
-                    ],
-                }
-            },
-        )
-        assert mocked_login.call_count == 1
-        assert mocked_devices.call_count == 1
-        assert len(self.hass.data[dyson.DYSON_DEVICES]) == 1
-        assert mocked_discovery.call_count == 5
 
-    @mock.patch(
-        "libpurecool.dyson.DysonAccount.devices",
-        return_value=[_get_dyson_account_device_not_available()],
-    )
-    @mock.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
-    def test_dyson_custom_conf_device_not_available(self, mocked_login, mocked_devices):
-        """Test device connection with an invalid device."""
-        dyson.setup(
-            self.hass,
-            {
-                dyson.DOMAIN: {
-                    dyson.CONF_USERNAME: "email",
-                    dyson.CONF_PASSWORD: "password",
-                    dyson.CONF_LANGUAGE: "FR",
-                    dyson.CONF_DEVICES: [
-                        {"device_id": "XX-XXXXX-XX", "device_ip": "192.168.0.1"}
-                    ],
-                }
-            },
-        )
-        assert mocked_login.call_count == 1
-        assert mocked_devices.call_count == 1
-        assert len(self.hass.data[dyson.DYSON_DEVICES]) == 0
-
-    @mock.patch(
-        "libpurecool.dyson.DysonAccount.devices",
-        return_value=[_get_dyson_account_device_error()],
-    )
-    @mock.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
-    def test_dyson_custom_conf_device_error(self, mocked_login, mocked_devices):
-        """Test device connection with device raising an exception."""
-        dyson.setup(
-            self.hass,
-            {
-                dyson.DOMAIN: {
-                    dyson.CONF_USERNAME: "email",
-                    dyson.CONF_PASSWORD: "password",
-                    dyson.CONF_LANGUAGE: "FR",
-                    dyson.CONF_DEVICES: [
-                        {"device_id": "XX-XXXXX-XX", "device_ip": "192.168.0.1"}
-                    ],
-                }
-            },
-        )
-        assert mocked_login.call_count == 1
-        assert mocked_devices.call_count == 1
-        assert len(self.hass.data[dyson.DYSON_DEVICES]) == 0
-
-    @mock.patch("homeassistant.helpers.discovery.load_platform")
-    @mock.patch(
-        "libpurecool.dyson.DysonAccount.devices",
-        return_value=[_get_dyson_account_device_available()],
-    )
-    @mock.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
-    def test_dyson_custom_conf_with_unknown_device(
-        self, mocked_login, mocked_devices, mocked_discovery
-    ):
-        """Test device connection with custom conf and unknown device."""
-        dyson.setup(
-            self.hass,
-            {
-                dyson.DOMAIN: {
-                    dyson.CONF_USERNAME: "email",
-                    dyson.CONF_PASSWORD: "password",
-                    dyson.CONF_LANGUAGE: "FR",
-                    dyson.CONF_DEVICES: [
-                        {"device_id": "XX-XXXXX-XY", "device_ip": "192.168.0.1"}
-                    ],
-                }
-            },
-        )
-        assert mocked_login.call_count == 1
-        assert mocked_devices.call_count == 1
-        assert len(self.hass.data[dyson.DYSON_DEVICES]) == 0
-        assert mocked_discovery.call_count == 0
-
-    @mock.patch("homeassistant.helpers.discovery.load_platform")
-    @mock.patch(
-        "libpurecool.dyson.DysonAccount.devices",
-        return_value=[_get_dyson_account_device_available()],
-    )
-    @mock.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
-    def test_dyson_discovery(self, mocked_login, mocked_devices, mocked_discovery):
-        """Test device connection using discovery."""
-        dyson.setup(
-            self.hass,
-            {
-                dyson.DOMAIN: {
-                    dyson.CONF_USERNAME: "email",
-                    dyson.CONF_PASSWORD: "password",
-                    dyson.CONF_LANGUAGE: "FR",
-                    dyson.CONF_TIMEOUT: 5,
-                    dyson.CONF_RETRY: 2,
-                }
-            },
-        )
-        assert mocked_login.call_count == 1
-        assert mocked_devices.call_count == 1
-        assert len(self.hass.data[dyson.DYSON_DEVICES]) == 1
-        assert mocked_discovery.call_count == 5
-
-    @mock.patch(
-        "libpurecool.dyson.DysonAccount.devices",
-        return_value=[_get_dyson_account_device_not_available()],
-    )
-    @mock.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
-    def test_dyson_discovery_device_not_available(self, mocked_login, mocked_devices):
-        """Test device connection with discovery and invalid device."""
-        dyson.setup(
-            self.hass,
-            {
-                dyson.DOMAIN: {
-                    dyson.CONF_USERNAME: "email",
-                    dyson.CONF_PASSWORD: "password",
-                    dyson.CONF_LANGUAGE: "FR",
-                    dyson.CONF_TIMEOUT: 5,
-                    dyson.CONF_RETRY: 2,
-                }
-            },
-        )
-        assert mocked_login.call_count == 1
-        assert mocked_devices.call_count == 1
-        assert len(self.hass.data[dyson.DYSON_DEVICES]) == 0
+async def test_login_failed(hass: HomeAssistant):
+    """Test login failure during setup."""
+    with patch(f"{BASE_PATH}.DysonAccount.login", return_value=False):
+        assert not await async_setup_component(hass, DOMAIN, CONFIG)
+        await hass.async_block_till_done()

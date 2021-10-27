@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u0426\u0435\u0439 \u043f\u0440\u0438\u0441\u0442\u0440\u0456\u0439 \u0432\u0436\u0435 \u0434\u043e\u0434\u0430\u043d\u043e \u0432 Home Assistant.",
+            "unknown": "\u041d\u0435\u043e\u0447\u0456\u043a\u0443\u0432\u0430\u043d\u0430 \u043f\u043e\u043c\u0438\u043b\u043a\u0430"
+        },
+        "error": {
+            "cannot_connect": "\u041d\u0435 \u0432\u0434\u0430\u043b\u043e\u0441\u044f \u043f\u0456\u0434'\u0454\u0434\u043d\u0430\u0442\u0438\u0441\u044f"
+        },
+        "flow_title": "Roku: {name}",
+        "step": {
+            "discovery_confirm": {
+                "description": "\u0412\u0438 \u0445\u043e\u0447\u0435\u0442\u0435 \u043d\u0430\u043b\u0430\u0448\u0442\u0443\u0432\u0430\u0442\u0438 {name}?",
+                "title": "Roku"
+            },
+            "ssdp_confirm": {
+                "description": "\u0425\u043e\u0447\u0435\u0442\u0435 \u043d\u0430\u043b\u0430\u0448\u0442\u0443\u0432\u0430\u0442\u0438 {name}?",
+                "title": "Roku"
+            },
+            "user": {
+                "data": {
+                    "host": "\u0425\u043e\u0441\u0442"
+                },
+                "description": "\u0412\u0432\u0435\u0434\u0456\u0442\u044c \u0456\u043d\u0444\u043e\u0440\u043c\u0430\u0446\u0456\u044e \u043f\u0440\u043e Roku."
+            }
+        }
+    }
+}

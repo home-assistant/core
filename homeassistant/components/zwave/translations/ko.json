@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "single_instance_allowed": "\uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ud558\ub098\uc758 \uc778\uc2a4\ud134\uc2a4\ub9cc \uad6c\uc131\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4."
+        },
+        "error": {
+            "option_error": "Z-Wave \uc720\ud6a8\uc131 \uac80\uc0ac\uc5d0 \uc2e4\ud328\ud588\uc2b5\ub2c8\ub2e4. USB \uc2a4\ud2f1\uc758 \uacbd\ub85c\uac00 \uc815\ud655\ud569\ub2c8\uae4c?"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "network_key": "\ub124\ud2b8\uc6cc\ud06c \ud0a4 (\uacf5\ub780\uc73c\ub85c \ube44\uc6cc\ub450\uba74 \uc790\ub3d9 \uc0dd\uc131\ud569\ub2c8\ub2e4)",
+                    "usb_path": "USB \uc7a5\uce58 \uacbd\ub85c"
+                },
+                "description": "\uc774 \ud1b5\ud569 \uad6c\uc131\uc694\uc18c\ub294 \ub354 \uc774\uc0c1 \uc9c0\uc6d0\ub418\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4. \uc0c8\ub85c\uc6b4 \uc124\uce58\uc758 \uacbd\uc6b0 Z-Wave JS \ub97c \uc0ac\uc6a9\ud574\uc8fc\uc138\uc694.\n\n\uad6c\uc131 \ubcc0\uc218\uc5d0 \ub300\ud55c \uc815\ubcf4\ub294 https://www.home-assistant.io/docs/z-wave/installation/ \uc744 \ucc38\uc870\ud574\uc8fc\uc138\uc694"
+            }
+        }
+    },
+    "state": {
+        "_": {
+            "dead": "\uc751\ub2f5\uc5c6\uc74c",
+            "initializing": "\ucd08\uae30\ud654\uc911",
+            "ready": "\uc900\ube44",
+            "sleeping": "\uc808\uc804\ubaa8\ub4dc"
+        },
+        "query_stage": {
+            "dead": "\uc751\ub2f5\uc5c6\uc74c",
+            "initializing": "\ucd08\uae30\ud654\uc911"
+        }
+    }
+}

@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "El servicio ya est\u00e1 configurado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "Elevaci\u00f3n",
+                    "latitude": "Latitud",
+                    "longitude": "Longitud",
+                    "name": "Nombre"
+                },
+                "description": "Introduce tu ubicaci\u00f3n para utilizar los datos meteorol\u00f3gicos de la API p\u00fablica de previsi\u00f3n meteorol\u00f3gica de Met \u00c9ireann",
+                "title": "Ubicaci\u00f3n"
+            }
+        }
+    }
+}

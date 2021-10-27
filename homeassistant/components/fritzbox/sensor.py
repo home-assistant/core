@@ -1,71 +1,124 @@
-"""Support for AVM Fritz!Box smarthome temperature sensor only devices."""
-import logging
+"""Support for AVM FRITZ!SmartHome temperature sensor only devices."""
+from __future__ import annotations
 
-import requests
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Final
 
-from homeassistant.const import TEMP_CELSIUS
-from homeassistant.helpers.entity import Entity
+from pyfritzhome.fritzhomedevice import FritzhomeDevice
 
-from . import ATTR_STATE_DEVICE_LOCKED, ATTR_STATE_LOCKED, DOMAIN as FRITZBOX_DOMAIN
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_TEMPERATURE,
+    ENERGY_KILO_WATT_HOUR,
+    PERCENTAGE,
+    POWER_WATT,
+    TEMP_CELSIUS,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-_LOGGER = logging.getLogger(__name__)
+from . import FritzBoxEntity
+from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
+from .model import FritzEntityDescriptionMixinBase
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Fritzbox smarthome sensor platform."""
-    _LOGGER.debug("Initializing fritzbox temperature sensors")
-    devices = []
-    fritz_list = hass.data[FRITZBOX_DOMAIN]
+@dataclass
+class FritzEntityDescriptionMixinSensor(FritzEntityDescriptionMixinBase):
+    """Sensor description mixin for Fritz!Smarthome entities."""
 
-    for fritz in fritz_list:
-        device_list = fritz.get_devices()
-        for device in device_list:
-            if (
-                device.has_temperature_sensor
-                and not device.has_switch
-                and not device.has_thermostat
-            ):
-                devices.append(FritzBoxTempSensor(device, fritz))
-
-    add_entities(devices)
+    native_value: Callable[[FritzhomeDevice], float | int | None]
 
 
-class FritzBoxTempSensor(Entity):
-    """The entity class for Fritzbox temperature sensors."""
+@dataclass
+class FritzSensorEntityDescription(
+    SensorEntityDescription, FritzEntityDescriptionMixinSensor
+):
+    """Description for Fritz!Smarthome sensor entities."""
 
-    def __init__(self, device, fritz):
-        """Initialize the switch."""
-        self._device = device
-        self._fritz = fritz
+
+SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
+    FritzSensorEntityDescription(
+        key="temperature",
+        name="Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        suitable=lambda device: (
+            device.has_temperature_sensor and not device.has_thermostat
+        ),
+        native_value=lambda device: device.temperature,  # type: ignore[no-any-return]
+    ),
+    FritzSensorEntityDescription(
+        key="humidity",
+        name="Humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=DEVICE_CLASS_HUMIDITY,
+        state_class=STATE_CLASS_MEASUREMENT,
+        suitable=lambda device: device.rel_humidity is not None,
+        native_value=lambda device: device.rel_humidity,  # type: ignore[no-any-return]
+    ),
+    FritzSensorEntityDescription(
+        key="battery",
+        name="Battery",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=DEVICE_CLASS_BATTERY,
+        suitable=lambda device: device.battery_level is not None,
+        native_value=lambda device: device.battery_level,  # type: ignore[no-any-return]
+    ),
+    FritzSensorEntityDescription(
+        key="power_consumption",
+        name="Power Consumption",
+        native_unit_of_measurement=POWER_WATT,
+        device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
+        suitable=lambda device: device.has_powermeter,  # type: ignore[no-any-return]
+        native_value=lambda device: device.power / 1000 if device.power else 0.0,
+    ),
+    FritzSensorEntityDescription(
+        key="total_energy",
+        name="Total Energy",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        suitable=lambda device: device.has_powermeter,  # type: ignore[no-any-return]
+        native_value=lambda device: device.energy / 1000 if device.energy else 0.0,
+    ),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the FRITZ!SmartHome sensor from ConfigEntry."""
+    coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
+
+    async_add_entities(
+        [
+            FritzBoxSensor(coordinator, ain, description)
+            for ain, device in coordinator.data.items()
+            for description in SENSOR_TYPES
+            if description.suitable(device)
+        ]
+    )
+
+
+class FritzBoxSensor(FritzBoxEntity, SensorEntity):
+    """The entity class for FRITZ!SmartHome sensors."""
+
+    entity_description: FritzSensorEntityDescription
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self._device.name
-
-    @property
-    def state(self):
+    def native_value(self) -> float | int | None:
         """Return the state of the sensor."""
-        return self._device.temperature
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    def update(self):
-        """Get latest data and states from the device."""
-        try:
-            self._device.update()
-        except requests.exceptions.HTTPError as ex:
-            _LOGGER.warning("Fritzhome connection error: %s", ex)
-            self._fritz.login()
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the device."""
-        attrs = {
-            ATTR_STATE_DEVICE_LOCKED: self._device.device_lock,
-            ATTR_STATE_LOCKED: self._device.lock,
-        }
-        return attrs
+        return self.entity_description.native_value(self.device)

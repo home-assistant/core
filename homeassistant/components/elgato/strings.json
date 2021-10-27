@@ -1,0 +1,25 @@
+{
+  "config": {
+    "flow_title": "{serial_number}",
+    "step": {
+      "user": {
+        "description": "Set up your Elgato Light to integrate with Home Assistant.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        }
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to add the Elgato Light with serial number `{serial_number}` to Home Assistant?",
+        "title": "Discovered Elgato Light device"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  }
+}

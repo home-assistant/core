@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_host": "\u00c9rv\u00e9nytelen hosztn\u00e9v vagy IP-c\u00edm"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "C\u00edm"
+                },
+                "description": "\u00c1ll\u00edtsa be a Dune HD integr\u00e1ci\u00f3t. Ha probl\u00e9m\u00e1i vannak a konfigur\u00e1ci\u00f3val, l\u00e1togasson el a k\u00f6vetkez\u0151 oldalra: https://www.home-assistant.io/integrations/dunehd \n\n Gy\u0151z\u0151dj\u00f6n meg arr\u00f3l, hogy a lej\u00e1tsz\u00f3 be van kapcsolva.",
+                "title": "Dune HD"
+            }
+        }
+    }
+}

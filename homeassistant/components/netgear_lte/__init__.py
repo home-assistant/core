@@ -8,6 +8,9 @@ import attr
 import eternalegypt
 import voluptuous as vol
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
@@ -17,14 +20,11 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import callback
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_send,
     async_dispatcher_connect,
+    async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
@@ -193,12 +193,9 @@ async def async_setup(hass, config):
                 for sms_id in service.data[ATTR_SMS_ID]:
                     await modem_data.modem.delete_sms(sms_id)
             elif service.service == SERVICE_SET_OPTION:
-                failover = service.data.get(ATTR_FAILOVER)
-                if failover:
+                if failover := service.data.get(ATTR_FAILOVER):
                     await modem_data.modem.set_failover_mode(failover)
-
-                autoconnect = service.data.get(ATTR_AUTOCONNECT)
-                if autoconnect:
+                if autoconnect := service.data.get(ATTR_AUTOCONNECT):
                     await modem_data.modem.set_autoconnect_mode(autoconnect)
             elif service.service == SERVICE_CONNECT_LTE:
                 await modem_data.modem.connect_lte()
@@ -306,17 +303,19 @@ async def _login(hass, modem_data, password):
     await modem_data.async_update()
     hass.data[DATA_KEY].modem_data[modem_data.host] = modem_data
 
-    async def cleanup(event):
-        """Clean up resources."""
-        await modem_data.modem.logout()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
-
     async def _update(now):
         """Periodic update."""
         await modem_data.async_update()
 
-    async_track_time_interval(hass, _update, SCAN_INTERVAL)
+    update_unsub = async_track_time_interval(hass, _update, SCAN_INTERVAL)
+
+    async def cleanup(event):
+        """Clean up resources."""
+        update_unsub()
+        await modem_data.modem.logout()
+        del hass.data[DATA_KEY].modem_data[modem_data.host]
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
 
 
 async def _retry_login(hass, modem_data, password):
@@ -352,8 +351,10 @@ class LTEEntity(Entity):
 
     async def async_added_to_hass(self):
         """Register callback."""
-        async_dispatcher_connect(
-            self.hass, DISPATCHER_NETGEAR_LTE, self.async_write_ha_state
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, DISPATCHER_NETGEAR_LTE, self.async_write_ha_state
+            )
         )
 
     async def async_update(self):

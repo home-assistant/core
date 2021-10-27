@@ -1,198 +1,169 @@
 """The test for the NuHeat thermostat module."""
-import unittest
-from unittest.mock import Mock, patch
+from datetime import timedelta
+from unittest.mock import patch
 
-from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+from homeassistant.components.nuheat.const import DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID
+import homeassistant.util.dt as dt_util
+
+from .mocks import (
+    MOCK_CONFIG_ENTRY,
+    _get_mock_nuheat,
+    _get_mock_thermostat_run,
+    _get_mock_thermostat_schedule_hold_available,
+    _get_mock_thermostat_schedule_hold_unavailable,
+    _get_mock_thermostat_schedule_temporary_hold,
 )
-import homeassistant.components.nuheat.climate as nuheat
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 
-from tests.common import get_test_home_assistant
-
-SCHEDULE_HOLD = 3
-SCHEDULE_RUN = 1
-SCHEDULE_TEMPORARY_HOLD = 2
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-class TestNuHeat(unittest.TestCase):
-    """Tests for NuHeat climate."""
+async def test_climate_thermostat_run(hass):
+    """Test a thermostat with the schedule running."""
+    mock_thermostat = _get_mock_thermostat_run()
+    mock_nuheat = _get_mock_nuheat(get_thermostat=mock_thermostat)
 
-    # pylint: disable=protected-access, no-self-use
+    with patch(
+        "homeassistant.components.nuheat.nuheat.NuHeat",
+        return_value=mock_nuheat,
+    ):
+        config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_ENTRY)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    def setUp(self):  # pylint: disable=invalid-name
-        """Set up test variables."""
-        serial_number = "12345"
-        temperature_unit = "F"
+    state = hass.states.get("climate.master_bathroom")
+    assert state.state == "auto"
+    expected_attributes = {
+        "current_temperature": 22.2,
+        "friendly_name": "Master bathroom",
+        "hvac_action": "heating",
+        "hvac_modes": ["auto", "heat"],
+        "max_temp": 69.4,
+        "min_temp": 5.0,
+        "preset_mode": "Run Schedule",
+        "preset_modes": ["Run Schedule", "Temporary Hold", "Permanent Hold"],
+        "supported_features": 17,
+        "temperature": 22.2,
+    }
+    # Only test for a subset of attributes in case
+    # HA changes the implementation and a new one appears
+    assert all(item in state.attributes.items() for item in expected_attributes.items())
 
-        thermostat = Mock(
-            serial_number=serial_number,
-            room="Master bathroom",
-            online=True,
-            heating=True,
-            temperature=2222,
-            celsius=22,
-            fahrenheit=72,
-            max_celsius=69,
-            max_fahrenheit=157,
-            min_celsius=5,
-            min_fahrenheit=41,
-            schedule_mode=SCHEDULE_RUN,
-            target_celsius=22,
-            target_fahrenheit=72,
-        )
 
-        thermostat.get_data = Mock()
-        thermostat.resume_schedule = Mock()
+async def test_climate_thermostat_schedule_hold_unavailable(hass):
+    """Test a thermostat with the schedule hold that is offline."""
+    mock_thermostat = _get_mock_thermostat_schedule_hold_unavailable()
+    mock_nuheat = _get_mock_nuheat(get_thermostat=mock_thermostat)
 
-        self.api = Mock()
-        self.api.get_thermostat.return_value = thermostat
+    with patch(
+        "homeassistant.components.nuheat.nuheat.NuHeat",
+        return_value=mock_nuheat,
+    ):
+        config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_ENTRY)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
-        self.hass = get_test_home_assistant()
-        self.thermostat = nuheat.NuHeatThermostat(
-            self.api, serial_number, temperature_unit
-        )
+    state = hass.states.get("climate.guest_bathroom")
 
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Stop hass."""
-        self.hass.stop()
+    assert state.state == "unavailable"
+    expected_attributes = {
+        "friendly_name": "Guest bathroom",
+        "hvac_modes": ["auto", "heat"],
+        "max_temp": 180.6,
+        "min_temp": -6.1,
+        "preset_modes": ["Run Schedule", "Temporary Hold", "Permanent Hold"],
+        "supported_features": 17,
+    }
+    # Only test for a subset of attributes in case
+    # HA changes the implementation and a new one appears
+    assert all(item in state.attributes.items() for item in expected_attributes.items())
 
-    @patch("homeassistant.components.nuheat.climate.NuHeatThermostat")
-    def test_setup_platform(self, mocked_thermostat):
-        """Test setup_platform."""
-        mocked_thermostat.return_value = self.thermostat
-        thermostat = mocked_thermostat(self.api, "12345", "F")
-        thermostats = [thermostat]
 
-        self.hass.data[nuheat.NUHEAT_DOMAIN] = (self.api, ["12345"])
+async def test_climate_thermostat_schedule_hold_available(hass):
+    """Test a thermostat with the schedule hold that is online."""
+    mock_thermostat = _get_mock_thermostat_schedule_hold_available()
+    mock_nuheat = _get_mock_nuheat(get_thermostat=mock_thermostat)
 
-        config = {}
-        add_entities = Mock()
-        discovery_info = {}
+    with patch(
+        "homeassistant.components.nuheat.nuheat.NuHeat",
+        return_value=mock_nuheat,
+    ):
+        config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_ENTRY)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
-        nuheat.setup_platform(self.hass, config, add_entities, discovery_info)
-        add_entities.assert_called_once_with(thermostats, True)
+    state = hass.states.get("climate.available_bathroom")
 
-    @patch("homeassistant.components.nuheat.climate.NuHeatThermostat")
-    def test_resume_program_service(self, mocked_thermostat):
-        """Test resume program service."""
-        mocked_thermostat.return_value = self.thermostat
-        thermostat = mocked_thermostat(self.api, "12345", "F")
-        thermostat.resume_program = Mock()
-        thermostat.schedule_update_ha_state = Mock()
-        thermostat.entity_id = "climate.master_bathroom"
+    assert state.state == "auto"
+    expected_attributes = {
+        "current_temperature": 38.9,
+        "friendly_name": "Available bathroom",
+        "hvac_action": "idle",
+        "hvac_modes": ["auto", "heat"],
+        "max_temp": 180.6,
+        "min_temp": -6.1,
+        "preset_mode": "Run Schedule",
+        "preset_modes": ["Run Schedule", "Temporary Hold", "Permanent Hold"],
+        "supported_features": 17,
+        "temperature": 26.1,
+    }
+    # Only test for a subset of attributes in case
+    # HA changes the implementation and a new one appears
+    assert all(item in state.attributes.items() for item in expected_attributes.items())
 
-        self.hass.data[nuheat.NUHEAT_DOMAIN] = (self.api, ["12345"])
-        nuheat.setup_platform(self.hass, {}, Mock(), {})
 
-        # Explicit entity
-        self.hass.services.call(
-            nuheat.NUHEAT_DOMAIN,
-            nuheat.SERVICE_RESUME_PROGRAM,
-            {"entity_id": "climate.master_bathroom"},
-            True,
-        )
+async def test_climate_thermostat_schedule_temporary_hold(hass):
+    """Test a thermostat with the temporary schedule hold that is online."""
+    mock_thermostat = _get_mock_thermostat_schedule_temporary_hold()
+    mock_nuheat = _get_mock_nuheat(get_thermostat=mock_thermostat)
 
-        thermostat.resume_program.assert_called_with()
-        thermostat.schedule_update_ha_state.assert_called_with(True)
+    with patch(
+        "homeassistant.components.nuheat.nuheat.NuHeat",
+        return_value=mock_nuheat,
+    ):
+        config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_ENTRY)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
-        thermostat.resume_program.reset_mock()
-        thermostat.schedule_update_ha_state.reset_mock()
+    state = hass.states.get("climate.temp_bathroom")
 
-        # All entities
-        self.hass.services.call(
-            nuheat.NUHEAT_DOMAIN, nuheat.SERVICE_RESUME_PROGRAM, {}, True
-        )
+    assert state.state == "auto"
+    expected_attributes = {
+        "current_temperature": 94.4,
+        "friendly_name": "Temp bathroom",
+        "hvac_action": "idle",
+        "hvac_modes": ["auto", "heat"],
+        "max_temp": 180.6,
+        "min_temp": -0.6,
+        "preset_mode": "Run Schedule",
+        "preset_modes": ["Run Schedule", "Temporary Hold", "Permanent Hold"],
+        "supported_features": 17,
+        "temperature": 37.2,
+    }
+    # Only test for a subset of attributes in case
+    # HA changes the implementation and a new one appears
+    assert all(item in state.attributes.items() for item in expected_attributes.items())
 
-        thermostat.resume_program.assert_called_with()
-        thermostat.schedule_update_ha_state.assert_called_with(True)
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        service_data={ATTR_ENTITY_ID: "climate.temp_bathroom", "temperature": 90},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
 
-    def test_name(self):
-        """Test name property."""
-        assert self.thermostat.name == "Master bathroom"
+    # opportunistic set
+    state = hass.states.get("climate.temp_bathroom")
+    assert state.attributes["preset_mode"] == "Temporary Hold"
+    assert state.attributes["temperature"] == 50.0
 
-    def test_supported_features(self):
-        """Test name property."""
-        features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
-        assert self.thermostat.supported_features == features
-
-    def test_temperature_unit(self):
-        """Test temperature unit."""
-        assert self.thermostat.temperature_unit == TEMP_FAHRENHEIT
-        self.thermostat._temperature_unit = "C"
-        assert self.thermostat.temperature_unit == TEMP_CELSIUS
-
-    def test_current_temperature(self):
-        """Test current temperature."""
-        assert self.thermostat.current_temperature == 72
-        self.thermostat._temperature_unit = "C"
-        assert self.thermostat.current_temperature == 22
-
-    def test_current_operation(self):
-        """Test current operation."""
-        assert self.thermostat.hvac_mode == HVAC_MODE_HEAT
-        self.thermostat._thermostat.heating = False
-        assert self.thermostat.hvac_mode == HVAC_MODE_OFF
-
-    def test_min_temp(self):
-        """Test min temp."""
-        assert self.thermostat.min_temp == 41
-        self.thermostat._temperature_unit = "C"
-        assert self.thermostat.min_temp == 5
-
-    def test_max_temp(self):
-        """Test max temp."""
-        assert self.thermostat.max_temp == 157
-        self.thermostat._temperature_unit = "C"
-        assert self.thermostat.max_temp == 69
-
-    def test_target_temperature(self):
-        """Test target temperature."""
-        assert self.thermostat.target_temperature == 72
-        self.thermostat._temperature_unit = "C"
-        assert self.thermostat.target_temperature == 22
-
-    def test_operation_list(self):
-        """Test the operation list."""
-        assert self.thermostat.hvac_modes == [HVAC_MODE_HEAT, HVAC_MODE_OFF]
-
-    def test_resume_program(self):
-        """Test resume schedule."""
-        self.thermostat.resume_program()
-        self.thermostat._thermostat.resume_schedule.assert_called_once_with()
-        assert self.thermostat._force_update
-
-    def test_set_temperature(self):
-        """Test set temperature."""
-        self.thermostat.set_temperature(temperature=85)
-        assert self.thermostat._thermostat.target_fahrenheit == 85
-        assert self.thermostat._force_update
-
-        self.thermostat._temperature_unit = "C"
-        self.thermostat.set_temperature(temperature=23)
-        assert self.thermostat._thermostat.target_celsius == 23
-        assert self.thermostat._force_update
-
-    @patch.object(nuheat.NuHeatThermostat, "_throttled_update")
-    def test_update_without_throttle(self, throttled_update):
-        """Test update without throttle."""
-        self.thermostat._force_update = True
-        self.thermostat.update()
-        throttled_update.assert_called_once_with(no_throttle=True)
-        assert not self.thermostat._force_update
-
-    @patch.object(nuheat.NuHeatThermostat, "_throttled_update")
-    def test_update_with_throttle(self, throttled_update):
-        """Test update with throttle."""
-        self.thermostat._force_update = False
-        self.thermostat.update()
-        throttled_update.assert_called_once_with()
-        assert not self.thermostat._force_update
-
-    def test_throttled_update(self):
-        """Test update with throttle."""
-        self.thermostat._throttled_update()
-        self.thermostat._thermostat.get_data.assert_called_once_with()
+    # and the api poll returns it to the mock
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3))
+    await hass.async_block_till_done()
+    state = hass.states.get("climate.temp_bathroom")
+    assert state.attributes["preset_mode"] == "Run Schedule"
+    assert state.attributes["temperature"] == 37.2

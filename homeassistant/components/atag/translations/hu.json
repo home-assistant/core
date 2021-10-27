@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "unauthorized": "A p\u00e1ros\u00edt\u00e1s megtagadva, ellen\u0151rizze az eszk\u00f6z hiteles\u00edt\u00e9si k\u00e9r\u00e9s\u00e9t"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "C\u00edm",
+                    "port": "Port"
+                },
+                "title": "Csatlakoz\u00e1s az eszk\u00f6zh\u00f6z"
+            }
+        }
+    }
+}

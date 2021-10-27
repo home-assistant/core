@@ -1,6 +1,4 @@
 """Support for Aqualink pool lights."""
-import logging
-
 from iaqualink import AqualinkLightEffect
 
 from homeassistant.components.light import (
@@ -9,21 +7,19 @@ from homeassistant.components.light import (
     DOMAIN,
     SUPPORT_BRIGHTNESS,
     SUPPORT_EFFECT,
-    Light,
+    LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from . import AqualinkEntity, refresh_system
 from .const import DOMAIN as AQUALINK_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up discovered lights."""
     devs = []
@@ -32,7 +28,7 @@ async def async_setup_entry(
     async_add_entities(devs, True)
 
 
-class HassAqualinkLight(AqualinkEntity, Light):
+class HassAqualinkLight(AqualinkEntity, LightEntity):
     """Representation of a light."""
 
     @property
@@ -52,14 +48,11 @@ class HassAqualinkLight(AqualinkEntity, Light):
         This handles brightness and light effects for lights that do support
         them.
         """
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-        effect = kwargs.get(ATTR_EFFECT)
-
         # For now I'm assuming lights support either effects or brightness.
-        if effect:
+        if effect := kwargs.get(ATTR_EFFECT):
             effect = AqualinkLightEffect[effect].value
             await self.dev.set_effect(effect)
-        elif brightness:
+        elif brightness := kwargs.get(ATTR_BRIGHTNESS):
             # Aqualink supports percentages in 25% increments.
             pct = int(round(brightness * 4.0 / 255)) * 25
             await self.dev.set_brightness(pct)

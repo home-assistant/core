@@ -2,10 +2,9 @@
 import logging
 
 import sharp_aquos_rc
-
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -80,11 +79,11 @@ SOURCES = {
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sharp Aquos TV platform."""
 
-    name = config.get(CONF_NAME)
-    port = config.get(CONF_PORT)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    power_on_enabled = config.get("power_on_enabled")
+    name = config[CONF_NAME]
+    port = config[CONF_PORT]
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
+    power_on_enabled = config["power_on_enabled"]
 
     if discovery_info:
         _LOGGER.debug("%s", discovery_info)
@@ -97,7 +96,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities([SharpAquosTVDevice(name, remote, power_on_enabled)])
         return True
 
-    host = config.get(CONF_HOST)
+    host = config[CONF_HOST]
     remote = sharp_aquos_rc.TV(host, port, username, password, 15, 1)
 
     add_entities([SharpAquosTVDevice(name, remote, power_on_enabled)])
@@ -122,36 +121,33 @@ def _retry(func):
     return wrapper
 
 
-class SharpAquosTVDevice(MediaPlayerDevice):
+class SharpAquosTVDevice(MediaPlayerEntity):
     """Representation of a Aquos TV."""
+
+    _attr_source_list = list(SOURCES.values())
+    _attr_supported_features = SUPPORT_SHARPTV
 
     def __init__(self, name, remote, power_on_enabled=False):
         """Initialize the aquos device."""
-        global SUPPORT_SHARPTV
         self._power_on_enabled = power_on_enabled
-        if self._power_on_enabled:
-            SUPPORT_SHARPTV = SUPPORT_SHARPTV | SUPPORT_TURN_ON
+        if power_on_enabled:
+            self._attr_supported_features |= SUPPORT_TURN_ON
         # Save a reference to the imported class
-        self._name = name
+        self._attr_name = name
         # Assume that the TV is not muted
-        self._muted = False
-        self._state = None
         self._remote = remote
-        self._volume = 0
-        self._source = None
-        self._source_list = list(SOURCES.values())
 
     def set_state(self, state):
         """Set TV state."""
-        self._state = state
+        self._attr_state = state
 
     @_retry
     def update(self):
         """Retrieve the latest data."""
         if self._remote.power() == 1:
-            self._state = STATE_ON
+            self._attr_state = STATE_ON
         else:
-            self._state = STATE_OFF
+            self._attr_state = STATE_OFF
         # Set TV to be able to remotely power on
         if self._power_on_enabled:
             self._remote.power_on_command_settings(2)
@@ -159,48 +155,13 @@ class SharpAquosTVDevice(MediaPlayerDevice):
             self._remote.power_on_command_settings(0)
         # Get mute state
         if self._remote.mute() == 2:
-            self._muted = False
+            self._attr_is_volume_muted = False
         else:
-            self._muted = True
+            self._attr_is_volume_muted = True
         # Get source
-        self._source = SOURCES.get(self._remote.input())
+        self._attr_source = SOURCES.get(self._remote.input())
         # Get volume
-        self._volume = self._remote.volume() / 60
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def source(self):
-        """Return the current source."""
-        return self._source
-
-    @property
-    def source_list(self):
-        """Return the source list."""
-        return self._source_list
-
-    @property
-    def volume_level(self):
-        """Volume level of the media player (0..1)."""
-        return self._volume
-
-    @property
-    def is_volume_muted(self):
-        """Boolean if volume is currently muted."""
-        return self._muted
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_SHARPTV
+        self._attr_volume_level = self._remote.volume() / 60
 
     @_retry
     def turn_off(self):
@@ -210,12 +171,12 @@ class SharpAquosTVDevice(MediaPlayerDevice):
     @_retry
     def volume_up(self):
         """Volume up the media player."""
-        self._remote.volume(int(self._volume * 60) + 2)
+        self._remote.volume(int(self.volume_level * 60) + 2)
 
     @_retry
     def volume_down(self):
         """Volume down media player."""
-        self._remote.volume(int(self._volume * 60) - 2)
+        self._remote.volume(int(self.volume_level * 60) - 2)
 
     @_retry
     def set_volume_level(self, volume):

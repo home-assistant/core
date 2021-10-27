@@ -1,9 +1,12 @@
 """Support for Blink system camera."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.components.camera import Camera
+from homeassistant.helpers import entity_platform
 
-from . import BLINK_DATA, DEFAULT_BRAND
+from .const import DEFAULT_BRAND, DOMAIN, SERVICE_TRIGGER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -11,16 +14,17 @@ ATTR_VIDEO_CLIP = "video"
 ATTR_IMAGE = "image"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config, async_add_entities):
     """Set up a Blink Camera."""
-    if discovery_info is None:
-        return
-    data = hass.data[BLINK_DATA]
-    devs = []
-    for name, camera in data.cameras.items():
-        devs.append(BlinkCamera(data, name, camera))
+    data = hass.data[DOMAIN][config.entry_id]
+    entities = [
+        BlinkCamera(data, name, camera) for name, camera in data.cameras.items()
+    ]
 
-    add_entities(devs)
+    async_add_entities(entities)
+
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(SERVICE_TRIGGER, {}, "trigger_camera")
 
 
 class BlinkCamera(Camera):
@@ -30,26 +34,13 @@ class BlinkCamera(Camera):
         """Initialize a camera."""
         super().__init__()
         self.data = data
-        self._name = f"{BLINK_DATA} {name}"
+        self._attr_name = f"{DOMAIN} {name}"
         self._camera = camera
-        self._unique_id = f"{camera.serial}-camera"
-        self.response = None
-        self.current_image = None
-        self.last_image = None
-        _LOGGER.debug("Initialized blink camera %s", self._name)
+        self._attr_unique_id = f"{camera.serial}-camera"
+        _LOGGER.debug("Initialized blink camera %s", self.name)
 
     @property
-    def name(self):
-        """Return the camera name."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique camera id."""
-        return self._unique_id
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the camera attributes."""
         return self._camera.attributes
 
@@ -71,6 +62,13 @@ class BlinkCamera(Camera):
         """Return the camera brand."""
         return DEFAULT_BRAND
 
-    def camera_image(self):
+    def trigger_camera(self):
+        """Trigger camera to take a snapshot."""
+        self._camera.snap_picture()
+        self.data.refresh()
+
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         return self._camera.image_from_cache.content

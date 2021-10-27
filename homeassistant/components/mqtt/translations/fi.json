@@ -1,0 +1,23 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Yhdist\u00e4minen ep\u00e4onnistui"
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "V\u00e4litt\u00e4j\u00e4",
+                    "discovery": "Ota etsint\u00e4 k\u00e4ytt\u00f6\u00f6n",
+                    "password": "Salasana",
+                    "port": "Portti",
+                    "username": "K\u00e4ytt\u00e4j\u00e4tunnus"
+                }
+            },
+            "hassio_confirm": {
+                "data": {
+                    "discovery": "Ota etsint\u00e4 k\u00e4ytt\u00f6\u00f6n"
+                }
+            }
+        }
+    }
+}

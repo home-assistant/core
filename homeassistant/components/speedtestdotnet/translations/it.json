@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione.",
+            "wrong_server_id": "L'ID Server non \u00e8 valido"
+        },
+        "step": {
+            "user": {
+                "description": "Vuoi iniziare la configurazione?"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "manual": "Disabilitare l'aggiornamento automatico",
+                    "scan_interval": "Frequenza di aggiornamento (minuti)",
+                    "server_name": "Selezionare il server di prova"
+                }
+            }
+        }
+    }
+}

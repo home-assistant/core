@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Um\u00edst\u011bn\u00ed je ji\u017e nastaveno"
+        },
+        "error": {
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Zem\u011bpisn\u00e1 \u0161\u00ed\u0159ka",
+                    "longitude": "Zem\u011bpisn\u00e1 d\u00e9lka"
+                },
+                "title": "Nastaven\u00ed Flu Near You"
+            }
+        }
+    }
+}

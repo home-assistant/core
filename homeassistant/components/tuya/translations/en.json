@@ -1,0 +1,83 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "login_error": "Login error ({code}): {msg}"
+        },
+        "flow_title": "Tuya configuration",
+        "step": {
+            "login": {
+                "data": {
+                    "access_id": "Access ID",
+                    "access_secret": "Access Secret",
+                    "country_code": "Country Code",
+                    "endpoint": "Availability Zone",
+                    "password": "Password",
+                    "tuya_app_type": "Mobile App",
+                    "username": "Account"
+                },
+                "description": "Enter your Tuya credential",
+                "title": "Tuya"
+            },
+            "user": {
+                "data": {
+                    "access_id": "Tuya IoT Access ID",
+                    "access_secret": "Tuya IoT Access Secret",
+                    "country_code": "Country",
+                    "password": "Password",
+                    "platform": "The app where your account is registered",
+                    "region": "Region",
+                    "tuya_project_type": "Tuya cloud project type",
+                    "username": "Account"
+                },
+                "description": "Enter your Tuya credentials",
+                "title": "Tuya Integration"
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "cannot_connect": "Failed to connect"
+        },
+        "error": {
+            "dev_multi_type": "Multiple selected devices to configure must be of the same type",
+            "dev_not_config": "Device type not configurable",
+            "dev_not_found": "Device not found"
+        },
+        "step": {
+            "device": {
+                "data": {
+                    "brightness_range_mode": "Brightness range used by device",
+                    "curr_temp_divider": "Current Temperature value divider (0 = use default)",
+                    "max_kelvin": "Max color temperature supported in kelvin",
+                    "max_temp": "Max target temperature (use min and max = 0 for default)",
+                    "min_kelvin": "Min color temperature supported in kelvin",
+                    "min_temp": "Min target temperature (use min and max = 0 for default)",
+                    "set_temp_divided": "Use divided Temperature value for set temperature command",
+                    "support_color": "Force color support",
+                    "temp_divider": "Temperature values divider (0 = use default)",
+                    "temp_step_override": "Target Temperature step",
+                    "tuya_max_coltemp": "Max color temperature reported by device",
+                    "unit_of_measurement": "Temperature unit used by device"
+                },
+                "description": "Configure options to adjust displayed information for {device_type} device `{device_name}`",
+                "title": "Configure Tuya Device"
+            },
+            "init": {
+                "data": {
+                    "discovery_interval": "Discovery device polling interval in seconds",
+                    "list_devices": "Select the devices to configure or leave empty to save configuration",
+                    "query_device": "Select device that will use query method for faster status update",
+                    "query_interval": "Query device polling interval in seconds"
+                },
+                "description": "Do not set pollings interval values too low or the calls will fail generating error message in the log",
+                "title": "Configure Tuya Options"
+            }
+        }
+    }
+}

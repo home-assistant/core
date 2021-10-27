@@ -1,12 +1,13 @@
 """Denon HEOS Media Player."""
+from __future__ import annotations
+
 from functools import reduce, wraps
 import logging
 from operator import ior
-from typing import Sequence
 
 from pyheos import HeosError, const as heos_const
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
     DOMAIN,
@@ -28,7 +29,8 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util.dt import utcnow
 
 from .const import DATA_SOURCE_MANAGER, DOMAIN as HEOS_DOMAIN, SIGNAL_HEOS_UPDATED
@@ -60,13 +62,8 @@ CONTROL_TO_SUPPORT = {
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Platform uses config entry setup."""
-    pass
-
-
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ):
     """Add media players for a config entry."""
     players = hass.data[HEOS_DOMAIN][DOMAIN]
@@ -90,7 +87,7 @@ def log_command_error(command: str):
     return decorator
 
 
-class HeosMediaPlayer(MediaPlayerDevice):
+class HeosMediaPlayer(MediaPlayerEntity):
     """The HEOS player."""
 
     def __init__(self, player):
@@ -115,7 +112,6 @@ class HeosMediaPlayer(MediaPlayerDevice):
 
     async def async_added_to_hass(self):
         """Device added to hass."""
-        self._source_manager = self.hass.data[HEOS_DOMAIN][DATA_SOURCE_MANAGER]
         # Update state when attributes of the player change
         self._signals.append(
             self._player.heos.dispatcher.connect(
@@ -167,7 +163,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
     @log_command_error("play media")
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
-        if media_type == MEDIA_TYPE_URL:
+        if media_type in (MEDIA_TYPE_URL, MEDIA_TYPE_MUSIC):
             await self._player.play_url(media_id)
             return
 
@@ -242,6 +238,9 @@ class HeosMediaPlayer(MediaPlayerDevice):
         current_support = [CONTROL_TO_SUPPORT[control] for control in controls]
         self._supported_features = reduce(ior, current_support, BASE_SUPPORTED_FEATURES)
 
+        if self._source_manager is None:
+            self._source_manager = self.hass.data[HEOS_DOMAIN][DATA_SOURCE_MANAGER]
+
     async def async_will_remove_from_hass(self):
         """Disconnect the device when removed."""
         for signal_remove in self._signals:
@@ -254,18 +253,18 @@ class HeosMediaPlayer(MediaPlayerDevice):
         return self._player.available
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> DeviceInfo:
         """Get attributes about the device."""
-        return {
-            "identifiers": {(HEOS_DOMAIN, self._player.player_id)},
-            "name": self._player.name,
-            "model": self._player.model,
-            "manufacturer": "HEOS",
-            "sw_version": self._player.version,
-        }
+        return DeviceInfo(
+            identifiers={(HEOS_DOMAIN, self._player.player_id)},
+            manufacturer="HEOS",
+            model=self._player.model,
+            name=self._player.name,
+            sw_version=self._player.version,
+        )
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Get additional attribute about the state."""
         return {
             "media_album_id": self._player.now_playing_media.album_id,
@@ -362,7 +361,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
         return self._source_manager.get_current_source(self._player.now_playing_media)
 
     @property
-    def source_list(self) -> Sequence[str]:
+    def source_list(self) -> list[str]:
         """List of available input sources."""
         return self._source_manager.source_list
 

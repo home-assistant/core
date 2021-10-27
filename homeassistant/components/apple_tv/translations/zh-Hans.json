@@ -1,0 +1,60 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "\u8bbe\u5907\u5df2\u88ab\u914d\u7f6e",
+            "already_in_progress": "\u914d\u7f6e\u6d41\u7a0b\u5df2\u5728\u8fdb\u884c\u4e2d",
+            "backoff": "\u8bbe\u5907\u76ee\u524d\u6682\u4e0d\u63a5\u53d7\u914d\u5bf9\u8bf7\u6c42\uff08\u53ef\u80fd\u591a\u6b21\u8f93\u5165\u65e0\u6548 PIN \u7801\uff09\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5\u3002",
+            "invalid_config": "\u6b64\u8bbe\u5907\u7684\u914d\u7f6e\u4fe1\u606f\u4e0d\u5b8c\u6574\u3002\u8bf7\u5c1d\u8bd5\u91cd\u65b0\u6dfb\u52a0\u3002",
+            "no_devices_found": "\u672a\u5728\u6b64\u7f51\u7edc\u53d1\u73b0\u76f8\u5173\u8bbe\u5907",
+            "unknown": "\u672a\u77e5\u9519\u8bef"
+        },
+        "error": {
+            "already_configured": "\u8bbe\u5907\u5df2\u88ab\u914d\u7f6e",
+            "invalid_auth": "\u51ed\u636e\u65e0\u6548",
+            "no_devices_found": "\u672a\u5728\u6b64\u7f51\u7edc\u53d1\u73b0\u76f8\u5173\u8bbe\u5907",
+            "no_usable_service": "\u5df2\u76f8\u5173\u627e\u5230\u8bbe\u5907\uff0c\u4f46\u65e0\u6cd5\u8bc6\u522b\u5e76\u4e0e\u5176\u5efa\u7acb\u8fde\u63a5\u3002\u82e5\u60a8\u4e00\u76f4\u6536\u5230\u6b64\u8b66\u544a\u6d88\u606f\uff0c\u8bf7\u5c1d\u8bd5\u4e3a\u5176\u6307\u5b9a\u56fa\u5b9a IP \u5730\u5740\u6216\u91cd\u65b0\u542f\u52a8\u60a8\u7684 Apple TV\u3002",
+            "unknown": "\u672a\u77e5\u9519\u8bef"
+        },
+        "step": {
+            "confirm": {
+                "description": "\u60a8\u5373\u5c06\u6dfb\u52a0 Apple TV (\u540d\u79f0\u4e3a\u201c{name}\u201d)\u5230 Home Assistant\u3002 \n\n **\u8981\u5b8c\u6210\u6b64\u8fc7\u7a0b\uff0c\u53ef\u80fd\u9700\u8981\u8f93\u5165\u591a\u4e2a PIN \u7801\u3002** \n\n\u8bf7\u6ce8\u610f\uff0c\u6b64\u96c6\u6210*\u4e0d\u80fd*\u5173\u95ed Apple TV \u7684\u7535\u6e90\uff0c\u53ea\u4f1a\u5173\u95ed Home Assistant \u4e2d\u7684\u5a92\u4f53\u64ad\u653e\u5668\uff01",
+                "title": "\u786e\u8ba4\u6dfb\u52a0 Apple TV"
+            },
+            "pair_no_pin": {
+                "description": "`{protocol}` \u670d\u52a1\u9700\u8981\u914d\u5bf9\u3002\u8bf7\u5728\u60a8\u7684 Apple TV \u4e0a\u8f93\u5165 PIN {pin}",
+                "title": "\u914d\u5bf9\u4e2d"
+            },
+            "pair_with_pin": {
+                "data": {
+                    "pin": "PIN\u7801"
+                },
+                "title": "\u914d\u5bf9\u4e2d"
+            },
+            "reconfigure": {
+                "description": "\u8be5 Apple TV \u9047\u5230\u4e00\u4e9b\u8fde\u63a5\u95ee\u9898\uff0c\u987b\u91cd\u65b0\u914d\u7f6e\u3002",
+                "title": "\u8bbe\u5907\u91cd\u65b0\u914d\u7f6e"
+            },
+            "service_problem": {
+                "title": "\u6dfb\u52a0\u670d\u52a1\u5931\u8d25"
+            },
+            "user": {
+                "data": {
+                    "device_input": "\u8bbe\u5907\u5730\u5740"
+                },
+                "description": "\u8981\u5f00\u59cb\uff0c\u8bf7\u8f93\u5165\u8981\u6dfb\u52a0\u7684 Apple TV \u7684\u8bbe\u5907\u540d\u79f0\u6216 IP \u5730\u5740\u3002\u5728\u7f51\u7edc\u4e0a\u81ea\u52a8\u53d1\u73b0\u7684\u8bbe\u5907\u4f1a\u663e\u793a\u5728\u4e0b\u65b9\u3002 \n\n\u5982\u679c\u6ca1\u6709\u53d1\u73b0\u8bbe\u5907\u6216\u9047\u5230\u4efb\u4f55\u95ee\u9898\uff0c\u8bf7\u5c1d\u8bd5\u6307\u5b9a\u8bbe\u5907 IP \u5730\u5740\u3002 \n\n {devices}",
+                "title": "\u8bbe\u7f6e\u65b0\u7684 Apple TV"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "start_off": "\u542f\u52a8 Home Assistant \u65f6\u4e0d\u6253\u5f00\u8bbe\u5907"
+                },
+                "description": "\u914d\u7f6e\u8bbe\u5907\u901a\u7528\u8bbe\u7f6e"
+            }
+        }
+    },
+    "title": "Apple TV"
+}

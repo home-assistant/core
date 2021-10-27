@@ -1,51 +1,50 @@
 """Support for Insteon covers via PowerLinc Modem."""
-import logging
 import math
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    DOMAIN as COVER_DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
-    CoverDevice,
+    CoverEntity,
 )
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import InsteonEntity
-
-_LOGGER = logging.getLogger(__name__)
+from .const import SIGNAL_ADD_ENTITIES
+from .insteon_entity import InsteonEntity
+from .utils import async_add_insteon_entities
 
 SUPPORTED_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Insteon platform."""
-    if not discovery_info:
-        return
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Insteon covers from a config entry."""
 
-    insteon_modem = hass.data["insteon"].get("modem")
+    @callback
+    def async_add_insteon_cover_entities(discovery_info=None):
+        """Add the Insteon entities for the platform."""
+        async_add_insteon_entities(
+            hass, COVER_DOMAIN, InsteonCoverEntity, async_add_entities, discovery_info
+        )
 
-    address = discovery_info["address"]
-    device = insteon_modem.devices[address]
-    state_key = discovery_info["state_key"]
-
-    _LOGGER.debug(
-        "Adding device %s entity %s to Cover platform",
-        device.address.hex,
-        device.states[state_key].name,
-    )
-
-    new_entity = InsteonCoverDevice(device, state_key)
-
-    async_add_entities([new_entity])
+    signal = f"{SIGNAL_ADD_ENTITIES}_{COVER_DOMAIN}"
+    async_dispatcher_connect(hass, signal, async_add_insteon_cover_entities)
+    async_add_insteon_cover_entities()
 
 
-class InsteonCoverDevice(InsteonEntity, CoverDevice):
-    """A Class for an Insteon device."""
+class InsteonCoverEntity(InsteonEntity, CoverEntity):
+    """A Class for an Insteon cover entity."""
 
     @property
     def current_cover_position(self):
         """Return the current cover position."""
-        return int(math.ceil(self._insteon_device_state.value * 100 / 255))
+        if self._insteon_device_group.value is not None:
+            pos = self._insteon_device_group.value
+        else:
+            pos = 0
+        return int(math.ceil(pos * 100 / 255))
 
     @property
     def supported_features(self):
@@ -58,17 +57,19 @@ class InsteonCoverDevice(InsteonEntity, CoverDevice):
         return bool(self.current_cover_position)
 
     async def async_open_cover(self, **kwargs):
-        """Open device."""
-        self._insteon_device_state.open()
+        """Open cover."""
+        await self._insteon_device.async_open()
 
     async def async_close_cover(self, **kwargs):
-        """Close device."""
-        self._insteon_device_state.close()
+        """Close cover."""
+        await self._insteon_device.async_close()
 
     async def async_set_cover_position(self, **kwargs):
         """Set the cover position."""
         position = int(kwargs[ATTR_POSITION] * 255 / 100)
         if position == 0:
-            self._insteon_device_state.close()
+            await self._insteon_device.async_close()
         else:
-            self._insteon_device_state.set_position(position)
+            await self._insteon_device.async_open(
+                open_level=position, group=self._insteon_device_group.group
+            )

@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "\uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ud558\ub098\uc758 \uc778\uc2a4\ud134\uc2a4\ub9cc \uad6c\uc131\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4."
+        },
+        "error": {
+            "invalid_known_hosts": "\uc54c\ub824\uc9c4 \ud638\uc2a4\ud2b8\ub294 \uc27c\ud45c\ub85c \uad6c\ubd84\ub41c \ud638\uc2a4\ud2b8 \ubaa9\ub85d\uc774\uc5b4\uc57c \ud569\ub2c8\ub2e4."
+        },
+        "step": {
+            "config": {
+                "data": {
+                    "known_hosts": "mDNS \uac80\uc0c9\uc774 \uc791\ub3d9\ud558\uc9c0 \uc54a\ub294 \uacbd\uc6b0 \uc54c\ub824\uc9c4 \ud638\uc2a4\ud2b8\uc758 \uc120\ud0dd\uc801 \ubaa9\ub85d\uc785\ub2c8\ub2e4."
+                },
+                "description": "Google Cast \uad6c\uc131\uc744 \uc785\ub825\ud574\uc8fc\uc138\uc694.",
+                "title": "Google Cast"
+            },
+            "confirm": {
+                "description": "\uc124\uc815\uc744 \uc2dc\uc791\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_known_hosts": "\uc54c\ub824\uc9c4 \ud638\uc2a4\ud2b8\ub294 \uc27c\ud45c\ub85c \uad6c\ubd84\ub41c \ud638\uc2a4\ud2b8 \ubaa9\ub85d\uc774\uc5b4\uc57c \ud569\ub2c8\ub2e4."
+        }
+    }
+}

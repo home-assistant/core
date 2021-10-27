@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "location": "Lokacija",
+                    "name": "Ime",
+                    "ssl": "Uporablja SSL certifikat",
+                    "verify_ssl": "Preverite SSL certifikat"
+                }
+            }
+        }
+    }
+}

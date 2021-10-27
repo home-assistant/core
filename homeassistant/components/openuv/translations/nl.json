@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Locatie is al geconfigureerd."
+        },
+        "error": {
+            "invalid_api_key": "Ongeldige API-sleutel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-sleutel",
+                    "elevation": "Hoogte",
+                    "latitude": "Breedtegraad",
+                    "longitude": "Lengtegraad"
+                },
+                "title": "Vul uw gegevens in"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "from_window": "Uv-index starten voor het beschermingsvenster",
+                    "to_window": "Uv-index voor het beveiligingsvenster be\u00ebindigen"
+                },
+                "title": "Configureer OpenUV"
+            }
+        }
+    }
+}

@@ -1,0 +1,3 @@
+randomize_device_tracker_data:
+  name: Randomize device tracker data
+  description: Demonstrates using a device tracker to see where devices are located

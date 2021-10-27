@@ -7,7 +7,11 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.sensor import ENTITY_ID_FORMAT, PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    ENTITY_ID_FORMAT,
+    PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_ID,
@@ -25,7 +29,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import distance, location
 
@@ -57,7 +61,7 @@ SCAN_INTERVAL = timedelta(minutes=5)  # Timely, and doesn't suffocate the API
 STATIONS_URI = "v2/networks/{uid}?fields=network.stations"
 
 CITYBIKES_ATTRIBUTION = (
-    "Information provided by the CityBikes Project " "(https://citybik.es/#about)"
+    "Information provided by the CityBikes Project (https://citybik.es/#about)"
 )
 
 CITYBIKES_NETWORKS = "citybikes_networks"
@@ -125,8 +129,6 @@ STATIONS_RESPONSE_SCHEMA = vol.Schema(
 class CityBikesRequestError(Exception):
     """Error to indicate a CityBikes API request has failed."""
 
-    pass
-
 
 async def async_citybikes_request(hass, uri, schema):
     """Perform a request to CityBikes API endpoint, and parse the response."""
@@ -143,9 +145,7 @@ async def async_citybikes_request(hass, uri, schema):
     except ValueError:
         _LOGGER.error("Received non-JSON data from CityBikes API endpoint")
     except vol.Invalid as err:
-        _LOGGER.error(
-            "Received unexpected JSON from CityBikes" " API endpoint: %s", err
-        )
+        _LOGGER.error("Received unexpected JSON from CityBikes API endpoint: %s", err)
     raise CityBikesRequestError
 
 
@@ -229,8 +229,8 @@ class CityBikesNetworks:
                     result = network[ATTR_ID]
 
             return result
-        except CityBikesRequestError:
-            raise PlatformNotReady
+        except CityBikesRequestError as err:
+            raise PlatformNotReady from err
         finally:
             self.networks_loading.release()
 
@@ -255,60 +255,42 @@ class CityBikesNetwork:
             )
             self.stations = network[ATTR_NETWORK][ATTR_STATIONS_LIST]
             self.ready.set()
-        except CityBikesRequestError:
+        except CityBikesRequestError as err:
             if now is not None:
                 self.ready.clear()
             else:
-                raise PlatformNotReady
+                raise PlatformNotReady from err
 
 
-class CityBikesStation(Entity):
+class CityBikesStation(SensorEntity):
     """CityBikes API Sensor."""
+
+    _attr_native_unit_of_measurement = "bikes"
+    _attr_icon = "mdi:bike"
 
     def __init__(self, network, station_id, entity_id):
         """Initialize the sensor."""
         self._network = network
         self._station_id = station_id
-        self._station_data = {}
         self.entity_id = entity_id
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._station_data.get(ATTR_FREE_BIKES)
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._station_data.get(ATTR_NAME)
 
     async def async_update(self):
         """Update station state."""
         for station in self._network.stations:
             if station[ATTR_ID] == self._station_id:
-                self._station_data = station
+                station_data = station
                 break
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        if self._station_data:
-            return {
+        self._attr_name = station_data.get(ATTR_NAME)
+        self._attr_native_value = station_data.get(ATTR_FREE_BIKES)
+        self._attr_extra_state_attributes = (
+            {
                 ATTR_ATTRIBUTION: CITYBIKES_ATTRIBUTION,
-                ATTR_UID: self._station_data.get(ATTR_EXTRA, {}).get(ATTR_UID),
-                ATTR_LATITUDE: self._station_data[ATTR_LATITUDE],
-                ATTR_LONGITUDE: self._station_data[ATTR_LONGITUDE],
-                ATTR_EMPTY_SLOTS: self._station_data[ATTR_EMPTY_SLOTS],
-                ATTR_TIMESTAMP: self._station_data[ATTR_TIMESTAMP],
+                ATTR_UID: station_data.get(ATTR_EXTRA, {}).get(ATTR_UID),
+                ATTR_LATITUDE: station_data[ATTR_LATITUDE],
+                ATTR_LONGITUDE: station_data[ATTR_LONGITUDE],
+                ATTR_EMPTY_SLOTS: station_data[ATTR_EMPTY_SLOTS],
+                ATTR_TIMESTAMP: station_data[ATTR_TIMESTAMP],
             }
-        return {ATTR_ATTRIBUTION: CITYBIKES_ATTRIBUTION}
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return "bikes"
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return "mdi:bike"
+            if station_data
+            else {ATTR_ATTRIBUTION: CITYBIKES_ATTRIBUTION}
+        )

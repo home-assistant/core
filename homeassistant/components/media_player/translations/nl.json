@@ -1,0 +1,29 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_idle": "{entity_name} is niet actief",
+            "is_off": "{entity_name} is uitgeschakeld",
+            "is_on": "{entity_name} is ingeschakeld",
+            "is_paused": "{entity_name} is gepauzeerd",
+            "is_playing": "{entity_name} wordt afgespeeld"
+        },
+        "trigger_type": {
+            "idle": "{entity_name} wordt inactief",
+            "paused": "{entity_name} is gepauzeerd",
+            "playing": "{entity_name} begint te spelen",
+            "turned_off": "{entity_name} uitgeschakeld",
+            "turned_on": "{entity_name} ingeschakeld"
+        }
+    },
+    "state": {
+        "_": {
+            "idle": "Inactief",
+            "off": "Uit",
+            "on": "Aan",
+            "paused": "Gepauzeerd",
+            "playing": "Afspelen",
+            "standby": "Stand-by"
+        }
+    },
+    "title": "Mediaspeler"
+}

@@ -1,0 +1,20 @@
+{
+    "config": {
+        "error": {
+            "invalid_credentials": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel",
+                    "api_user": "Habitica API-Benutzer-ID",
+                    "name": "Override f\u00fcr den Benutzernamen von Habitica. Wird f\u00fcr Serviceaufrufe verwendet",
+                    "url": "URL"
+                },
+                "description": "Verbinde dein Habitica-Profil, um die \u00dcberwachung des Profils und der Aufgaben deines Benutzers zu erm\u00f6glichen. Beachte, dass api_id und api_key von https://habitica.com/user/settings/api bezogen werden m\u00fcssen."
+            }
+        }
+    },
+    "title": "Habitica"
+}

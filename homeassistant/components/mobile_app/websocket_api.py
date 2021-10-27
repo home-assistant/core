@@ -1,122 +1,121 @@
-"""Websocket API for mobile_app."""
+"""Mobile app websocket API."""
+from __future__ import annotations
+
+from functools import wraps
+
 import voluptuous as vol
 
-from homeassistant.components.cloud import async_delete_cloudhook
-from homeassistant.components.websocket_api import (
-    ActiveConnection,
-    async_register_command,
-    async_response,
-    error_message,
-    result_message,
-    websocket_command,
-    ws_require_user,
-)
-from homeassistant.components.websocket_api.const import (
-    ERR_INVALID_FORMAT,
-    ERR_NOT_FOUND,
-    ERR_UNAUTHORIZED,
-)
-from homeassistant.const import CONF_WEBHOOK_ID
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.components import websocket_api
+from homeassistant.core import callback
 
-from .const import (
-    CONF_CLOUDHOOK_URL,
-    CONF_USER_ID,
-    DATA_CONFIG_ENTRIES,
-    DATA_DELETED_IDS,
-    DATA_STORE,
-    DOMAIN,
-)
-from .helpers import safe_registration, savable_state
+from .const import CONF_USER_ID, DATA_CONFIG_ENTRIES, DATA_PUSH_CHANNEL, DOMAIN
+from .push_notification import PushChannel
 
 
-def register_websocket_handlers(hass: HomeAssistantType) -> bool:
-    """Register the websocket handlers."""
-    async_register_command(hass, websocket_get_user_registrations)
-
-    async_register_command(hass, websocket_delete_registration)
-
-    return True
+@callback
+def async_setup_commands(hass):
+    """Set up the mobile app websocket API."""
+    websocket_api.async_register_command(hass, handle_push_notification_channel)
+    websocket_api.async_register_command(hass, handle_push_notification_confirm)
 
 
-@ws_require_user()
-@async_response
-@websocket_command(
+def _ensure_webhook_access(func):
+    """Decorate WS function to ensure user owns the webhook ID."""
+
+    @callback
+    @wraps(func)
+    def with_webhook_access(hass, connection, msg):
+        # Validate that the webhook ID is registered to the user of the websocket connection
+        config_entry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES].get(msg["webhook_id"])
+
+        if config_entry is None:
+            connection.send_error(
+                msg["id"], websocket_api.ERR_NOT_FOUND, "Webhook ID not found"
+            )
+            return
+
+        if config_entry.data[CONF_USER_ID] != connection.user.id:
+            connection.send_error(
+                msg["id"],
+                websocket_api.ERR_UNAUTHORIZED,
+                "User not linked to this webhook ID",
+            )
+            return
+
+        func(hass, connection, msg)
+
+    return with_webhook_access
+
+
+@callback
+@_ensure_webhook_access
+@websocket_api.websocket_command(
     {
-        vol.Required("type"): "mobile_app/get_user_registrations",
-        vol.Optional(CONF_USER_ID): cv.string,
+        vol.Required("type"): "mobile_app/push_notification_confirm",
+        vol.Required("webhook_id"): str,
+        vol.Required("confirm_id"): str,
     }
 )
-async def websocket_get_user_registrations(
-    hass: HomeAssistantType, connection: ActiveConnection, msg: dict
-) -> None:
-    """Return all registrations or just registrations for given user ID."""
-    user_id = msg.get(CONF_USER_ID, connection.user.id)
-
-    if user_id != connection.user.id and not connection.user.is_admin:
-        # If user ID is provided and is not current user ID and current user
-        # isn't an admin user
-        connection.send_error(msg["id"], ERR_UNAUTHORIZED, "Unauthorized")
-        return
-
-    user_registrations = []
-
-    for config_entry in hass.config_entries.async_entries(domain=DOMAIN):
-        registration = config_entry.data
-        if connection.user.is_admin or registration[CONF_USER_ID] is user_id:
-            user_registrations.append(safe_registration(registration))
-
-    connection.send_message(result_message(msg["id"], user_registrations))
-
-
-@ws_require_user()
-@async_response
-@websocket_command(
-    {
-        vol.Required("type"): "mobile_app/delete_registration",
-        vol.Required(CONF_WEBHOOK_ID): cv.string,
-    }
-)
-async def websocket_delete_registration(
-    hass: HomeAssistantType, connection: ActiveConnection, msg: dict
-) -> None:
-    """Delete the registration for the given webhook_id."""
-    user = connection.user
-
-    webhook_id = msg.get(CONF_WEBHOOK_ID)
-    if webhook_id is None:
-        connection.send_error(msg["id"], ERR_INVALID_FORMAT, "Webhook ID not provided")
-        return
-
-    config_entry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
-
-    registration = config_entry.data
-
-    if registration is None:
+def handle_push_notification_confirm(hass, connection, msg):
+    """Confirm receipt of a push notification."""
+    channel: PushChannel | None = hass.data[DOMAIN][DATA_PUSH_CHANNEL].get(
+        msg["webhook_id"]
+    )
+    if channel is None:
         connection.send_error(
-            msg["id"], ERR_NOT_FOUND, "Webhook ID not found in storage"
+            msg["id"],
+            websocket_api.ERR_NOT_FOUND,
+            "Push notification channel not found",
         )
         return
 
-    if registration[CONF_USER_ID] != user.id and not user.is_admin:
-        return error_message(
-            msg["id"], ERR_UNAUTHORIZED, "User is not registration owner"
+    if channel.async_confirm_notification(msg["confirm_id"]):
+        connection.send_result(msg["id"])
+    else:
+        connection.send_error(
+            msg["id"],
+            websocket_api.ERR_NOT_FOUND,
+            "Push notification channel not found",
         )
 
-    await hass.config_entries.async_remove(config_entry.entry_id)
 
-    hass.data[DOMAIN][DATA_DELETED_IDS].append(webhook_id)
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "mobile_app/push_notification_channel",
+        vol.Required("webhook_id"): str,
+        vol.Optional("support_confirm", default=False): bool,
+    }
+)
+@_ensure_webhook_access
+@websocket_api.async_response
+async def handle_push_notification_channel(hass, connection, msg):
+    """Set up a direct push notification channel."""
+    webhook_id = msg["webhook_id"]
+    registered_channels: dict[str, PushChannel] = hass.data[DOMAIN][DATA_PUSH_CHANNEL]
 
-    store = hass.data[DOMAIN][DATA_STORE]
+    if webhook_id in registered_channels:
+        await registered_channels[webhook_id].async_teardown()
 
-    try:
-        await store.async_save(savable_state(hass))
-    except HomeAssistantError:
-        return error_message(msg["id"], "internal_error", "Error deleting registration")
+    @callback
+    def on_channel_teardown():
+        """Handle teardown."""
+        if registered_channels.get(webhook_id) == channel:
+            registered_channels.pop(webhook_id)
 
-    if CONF_CLOUDHOOK_URL in registration and "cloud" in hass.config.components:
-        await async_delete_cloudhook(hass, webhook_id)
+        # Remove subscription from connection if still exists
+        connection.subscriptions.pop(msg["id"], None)
 
-    connection.send_message(result_message(msg["id"], "ok"))
+    channel = registered_channels[webhook_id] = PushChannel(
+        hass,
+        webhook_id,
+        msg["support_confirm"],
+        lambda data: connection.send_message(
+            websocket_api.messages.event_message(msg["id"], data)
+        ),
+        on_channel_teardown,
+    )
+
+    connection.subscriptions[msg["id"]] = lambda: hass.async_create_task(
+        channel.async_teardown()
+    )
+    connection.send_result(msg["id"])

@@ -2,9 +2,6 @@
   "domain": "vacuum",
   "name": "Vacuum",
   "documentation": "https://www.home-assistant.io/integrations/vacuum",
-  "requirements": [],
-  "dependencies": [
-    "group"
-  ],
-  "codeowners": []
+  "codeowners": [],
+  "quality_scale": "internal"
 }

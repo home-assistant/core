@@ -1,18 +1,16 @@
 """The tests for the pilight component."""
-import logging
-import unittest
-from unittest.mock import patch
-import socket
 from datetime import timedelta
+import logging
+import socket
+from unittest.mock import patch
 
-import pytest
+from voluptuous import MultipleInvalid
 
-from homeassistant import core as ha
-from homeassistant.setup import setup_component
 from homeassistant.components import pilight
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import get_test_home_assistant, assert_setup_component
+from tests.common import assert_setup_component, async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,11 +35,10 @@ class PilightDaemonSim:
 
     def __init__(self, host, port):
         """Init pilight client, ignore parameters."""
-        pass
 
     def send_code(self, call):  # pylint: disable=no-self-use
         """Handle pilight.send service callback."""
-        _LOGGER.error("PilightDaemonSim payload: " + str(call))
+        _LOGGER.error("PilightDaemonSim payload: %s", call)
 
     def start(self):
         """Handle homeassistant.start callback.
@@ -61,355 +58,344 @@ class PilightDaemonSim:
     def set_callback(self, function):
         """Handle pilight.pilight_received event callback."""
         self.callback = function
-        _LOGGER.error("PilightDaemonSim callback: " + str(function))
+        _LOGGER.error("PilightDaemonSim callback: %s", function)
 
 
-@pytest.mark.skip("Flaky")
-class TestPilight(unittest.TestCase):
-    """Test the Pilight component."""
+@patch("homeassistant.components.pilight._LOGGER.error")
+async def test_connection_failed_error(mock_error, hass):
+    """Try to connect at 127.0.0.1:5001 with socket error."""
+    with assert_setup_component(4), patch(
+        "pilight.pilight.Client", side_effect=socket.error
+    ) as mock_client:
+        assert not await async_setup_component(
+            hass, pilight.DOMAIN, {pilight.DOMAIN: {}}
+        )
+        mock_client.assert_called_once_with(
+            host=pilight.DEFAULT_HOST, port=pilight.DEFAULT_PORT
+        )
+        assert mock_error.call_count == 1
 
-    def setUp(self):  # pylint: disable=invalid-name
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.skip_teardown_stop = False
 
-    def tearDown(self):
-        """Stop everything that was started."""
-        if not self.skip_teardown_stop:
-            self.hass.stop()
+@patch("homeassistant.components.pilight._LOGGER.error")
+async def test_connection_timeout_error(mock_error, hass):
+    """Try to connect at 127.0.0.1:5001 with socket timeout."""
+    with assert_setup_component(4), patch(
+        "pilight.pilight.Client", side_effect=socket.timeout
+    ) as mock_client:
+        assert not await async_setup_component(
+            hass, pilight.DOMAIN, {pilight.DOMAIN: {}}
+        )
+        mock_client.assert_called_once_with(
+            host=pilight.DEFAULT_HOST, port=pilight.DEFAULT_PORT
+        )
+        assert mock_error.call_count == 1
 
-    @patch("homeassistant.components.pilight._LOGGER.error")
-    def test_connection_failed_error(self, mock_error):
-        """Try to connect at 127.0.0.1:5001 with socket error."""
-        with assert_setup_component(4):
-            with patch(
-                "pilight.pilight.Client", side_effect=socket.error
-            ) as mock_client:
-                assert not setup_component(
-                    self.hass, pilight.DOMAIN, {pilight.DOMAIN: {}}
-                )
-                mock_client.assert_called_once_with(
-                    host=pilight.DEFAULT_HOST, port=pilight.DEFAULT_PORT
-                )
-                assert 1 == mock_error.call_count
 
-    @patch("homeassistant.components.pilight._LOGGER.error")
-    def test_connection_timeout_error(self, mock_error):
-        """Try to connect at 127.0.0.1:5001 with socket timeout."""
-        with assert_setup_component(4):
-            with patch(
-                "pilight.pilight.Client", side_effect=socket.timeout
-            ) as mock_client:
-                assert not setup_component(
-                    self.hass, pilight.DOMAIN, {pilight.DOMAIN: {}}
-                )
-                mock_client.assert_called_once_with(
-                    host=pilight.DEFAULT_HOST, port=pilight.DEFAULT_PORT
-                )
-                assert 1 == mock_error.call_count
+@patch("pilight.pilight.Client", PilightDaemonSim)
+async def test_send_code_no_protocol(hass):
+    """Try to send data without protocol information, should give error."""
+    with assert_setup_component(4):
+        assert await async_setup_component(hass, pilight.DOMAIN, {pilight.DOMAIN: {}})
 
-    @patch("pilight.pilight.Client", PilightDaemonSim)
-    @patch("homeassistant.core._LOGGER.error")
-    @patch("tests.components.test_pilight._LOGGER.error")
-    def test_send_code_no_protocol(self, mock_pilight_error, mock_error):
-        """Try to send data without protocol information, should give error."""
-        with assert_setup_component(4):
-            assert setup_component(self.hass, pilight.DOMAIN, {pilight.DOMAIN: {}})
-
-            # Call without protocol info, should be ignored with error
-            self.hass.services.call(
+        # Call without protocol info, should raise an error
+        try:
+            await hass.services.async_call(
                 pilight.DOMAIN,
                 pilight.SERVICE_NAME,
                 service_data={"noprotocol": "test", "value": 42},
                 blocking=True,
             )
-            self.hass.block_till_done()
-            error_log_call = mock_error.call_args_list[-1]
-            assert "required key not provided @ data['protocol']" in str(error_log_call)
-
-    @patch("pilight.pilight.Client", PilightDaemonSim)
-    @patch("tests.components.test_pilight._LOGGER.error")
-    def test_send_code(self, mock_pilight_error):
-        """Try to send proper data."""
-        with assert_setup_component(4):
-            assert setup_component(self.hass, pilight.DOMAIN, {pilight.DOMAIN: {}})
-
-            # Call with protocol info, should not give error
-            service_data = {"protocol": "test", "value": 42}
-            self.hass.services.call(
-                pilight.DOMAIN,
-                pilight.SERVICE_NAME,
-                service_data=service_data,
-                blocking=True,
-            )
-            self.hass.block_till_done()
-            error_log_call = mock_pilight_error.call_args_list[-1]
-            service_data["protocol"] = [service_data["protocol"]]
-            assert str(service_data) in str(error_log_call)
-
-    @patch("pilight.pilight.Client", PilightDaemonSim)
-    @patch("homeassistant.components.pilight._LOGGER.error")
-    def test_send_code_fail(self, mock_pilight_error):
-        """Check IOError exception error message."""
-        with assert_setup_component(4):
-            with patch("pilight.pilight.Client.send_code", side_effect=IOError):
-                assert setup_component(self.hass, pilight.DOMAIN, {pilight.DOMAIN: {}})
-
-                # Call with protocol info, should not give error
-                service_data = {"protocol": "test", "value": 42}
-                self.hass.services.call(
-                    pilight.DOMAIN,
-                    pilight.SERVICE_NAME,
-                    service_data=service_data,
-                    blocking=True,
-                )
-                self.hass.block_till_done()
-                error_log_call = mock_pilight_error.call_args_list[-1]
-                assert "Pilight send failed" in str(error_log_call)
-
-    @patch("pilight.pilight.Client", PilightDaemonSim)
-    @patch("tests.components.test_pilight._LOGGER.error")
-    def test_send_code_delay(self, mock_pilight_error):
-        """Try to send proper data with delay afterwards."""
-        with assert_setup_component(4):
-            assert setup_component(
-                self.hass,
-                pilight.DOMAIN,
-                {pilight.DOMAIN: {pilight.CONF_SEND_DELAY: 5.0}},
-            )
-
-            # Call with protocol info, should not give error
-            service_data1 = {"protocol": "test11", "value": 42}
-            service_data2 = {"protocol": "test22", "value": 42}
-            self.hass.services.call(
-                pilight.DOMAIN,
-                pilight.SERVICE_NAME,
-                service_data=service_data1,
-                blocking=True,
-            )
-            self.hass.services.call(
-                pilight.DOMAIN,
-                pilight.SERVICE_NAME,
-                service_data=service_data2,
-                blocking=True,
-            )
-            service_data1["protocol"] = [service_data1["protocol"]]
-            service_data2["protocol"] = [service_data2["protocol"]]
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
-            self.hass.block_till_done()
-            error_log_call = mock_pilight_error.call_args_list[-1]
-            assert str(service_data1) in str(error_log_call)
-
-            new_time = dt_util.utcnow() + timedelta(seconds=5)
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: new_time})
-            self.hass.block_till_done()
-            error_log_call = mock_pilight_error.call_args_list[-1]
-            assert str(service_data2) in str(error_log_call)
-
-    @patch("pilight.pilight.Client", PilightDaemonSim)
-    @patch("tests.components.test_pilight._LOGGER.error")
-    def test_start_stop(self, mock_pilight_error):
-        """Check correct startup and stop of pilight daemon."""
-        with assert_setup_component(4):
-            assert setup_component(self.hass, pilight.DOMAIN, {pilight.DOMAIN: {}})
-
-            # Test startup
-            self.hass.start()
-            self.hass.block_till_done()
-            error_log_call = mock_pilight_error.call_args_list[-2]
-            assert "PilightDaemonSim callback" in str(error_log_call)
-            error_log_call = mock_pilight_error.call_args_list[-1]
-            assert "PilightDaemonSim start" in str(error_log_call)
-
-            # Test stop
-            self.skip_teardown_stop = True
-            self.hass.stop()
-            error_log_call = mock_pilight_error.call_args_list[-1]
-            assert "PilightDaemonSim stop" in str(error_log_call)
-
-    @patch("pilight.pilight.Client", PilightDaemonSim)
-    @patch("homeassistant.core._LOGGER.info")
-    def test_receive_code(self, mock_info):
-        """Check if code receiving via pilight daemon works."""
-        with assert_setup_component(4):
-            assert setup_component(self.hass, pilight.DOMAIN, {pilight.DOMAIN: {}})
-
-            # Test startup
-            self.hass.start()
-            self.hass.block_till_done()
-
-            expected_message = dict(
-                {
-                    "protocol": PilightDaemonSim.test_message["protocol"],
-                    "uuid": PilightDaemonSim.test_message["uuid"],
-                },
-                **PilightDaemonSim.test_message["message"],
-            )
-            error_log_call = mock_info.call_args_list[-1]
-
-            # Check if all message parts are put on event bus
-            for key, value in expected_message.items():
-                assert str(key) in str(error_log_call)
-                assert str(value) in str(error_log_call)
-
-    @patch("pilight.pilight.Client", PilightDaemonSim)
-    @patch("homeassistant.core._LOGGER.info")
-    def test_whitelist_exact_match(self, mock_info):
-        """Check whitelist filter with matched data."""
-        with assert_setup_component(4):
-            whitelist = {
-                "protocol": [PilightDaemonSim.test_message["protocol"]],
-                "uuid": [PilightDaemonSim.test_message["uuid"]],
-                "id": [PilightDaemonSim.test_message["message"]["id"]],
-                "unit": [PilightDaemonSim.test_message["message"]["unit"]],
-            }
-            assert setup_component(
-                self.hass, pilight.DOMAIN, {pilight.DOMAIN: {"whitelist": whitelist}}
-            )
-
-            self.hass.start()
-            self.hass.block_till_done()
-
-            expected_message = dict(
-                {
-                    "protocol": PilightDaemonSim.test_message["protocol"],
-                    "uuid": PilightDaemonSim.test_message["uuid"],
-                },
-                **PilightDaemonSim.test_message["message"],
-            )
-            info_log_call = mock_info.call_args_list[-1]
-
-            # Check if all message parts are put on event bus
-            for key, value in expected_message.items():
-                assert str(key) in str(info_log_call)
-                assert str(value) in str(info_log_call)
-
-    @patch("pilight.pilight.Client", PilightDaemonSim)
-    @patch("homeassistant.core._LOGGER.info")
-    def test_whitelist_partial_match(self, mock_info):
-        """Check whitelist filter with partially matched data, should work."""
-        with assert_setup_component(4):
-            whitelist = {
-                "protocol": [PilightDaemonSim.test_message["protocol"]],
-                "id": [PilightDaemonSim.test_message["message"]["id"]],
-            }
-            assert setup_component(
-                self.hass, pilight.DOMAIN, {pilight.DOMAIN: {"whitelist": whitelist}}
-            )
-
-            self.hass.start()
-            self.hass.block_till_done()
-
-            expected_message = dict(
-                {
-                    "protocol": PilightDaemonSim.test_message["protocol"],
-                    "uuid": PilightDaemonSim.test_message["uuid"],
-                },
-                **PilightDaemonSim.test_message["message"],
-            )
-            info_log_call = mock_info.call_args_list[-1]
-
-            # Check if all message parts are put on event bus
-            for key, value in expected_message.items():
-                assert str(key) in str(info_log_call)
-                assert str(value) in str(info_log_call)
-
-    @patch("pilight.pilight.Client", PilightDaemonSim)
-    @patch("homeassistant.core._LOGGER.info")
-    def test_whitelist_or_match(self, mock_info):
-        """Check whitelist filter with several subsection, should work."""
-        with assert_setup_component(4):
-            whitelist = {
-                "protocol": [
-                    PilightDaemonSim.test_message["protocol"],
-                    "other_protocol",
-                ],
-                "id": [PilightDaemonSim.test_message["message"]["id"]],
-            }
-            assert setup_component(
-                self.hass, pilight.DOMAIN, {pilight.DOMAIN: {"whitelist": whitelist}}
-            )
-
-            self.hass.start()
-            self.hass.block_till_done()
-
-            expected_message = dict(
-                {
-                    "protocol": PilightDaemonSim.test_message["protocol"],
-                    "uuid": PilightDaemonSim.test_message["uuid"],
-                },
-                **PilightDaemonSim.test_message["message"],
-            )
-            info_log_call = mock_info.call_args_list[-1]
-
-            # Check if all message parts are put on event bus
-            for key, value in expected_message.items():
-                assert str(key) in str(info_log_call)
-                assert str(value) in str(info_log_call)
-
-    @patch("pilight.pilight.Client", PilightDaemonSim)
-    @patch("homeassistant.core._LOGGER.info")
-    def test_whitelist_no_match(self, mock_info):
-        """Check whitelist filter with unmatched data, should not work."""
-        with assert_setup_component(4):
-            whitelist = {
-                "protocol": ["wrong_protocol"],
-                "id": [PilightDaemonSim.test_message["message"]["id"]],
-            }
-            assert setup_component(
-                self.hass, pilight.DOMAIN, {pilight.DOMAIN: {"whitelist": whitelist}}
-            )
-
-            self.hass.start()
-            self.hass.block_till_done()
-
-            info_log_call = mock_info.call_args_list[-1]
-
-            assert not ("Event pilight_received" in info_log_call)
+            await hass.async_block_till_done()
+        except MultipleInvalid as error:
+            assert "required key not provided @ data['protocol']" in str(error)
 
 
-class TestPilightCallrateThrottler(unittest.TestCase):
-    """Test the Throttler used to throttle calls to send_code."""
+@patch("homeassistant.components.pilight._LOGGER.error")
+@patch("homeassistant.components.pilight._LOGGER", _LOGGER)
+@patch("pilight.pilight.Client", PilightDaemonSim)
+async def test_send_code(mock_pilight_error, hass):
+    """Try to send proper data."""
+    with assert_setup_component(4):
+        assert await async_setup_component(hass, pilight.DOMAIN, {pilight.DOMAIN: {}})
 
-    def setUp(self):  # pylint: disable=invalid-name
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
+        # Call with protocol info, should not give error
+        service_data = {"protocol": "test", "value": 42}
+        await hass.services.async_call(
+            pilight.DOMAIN,
+            pilight.SERVICE_NAME,
+            service_data=service_data,
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        error_log_call = mock_pilight_error.call_args_list[-1]
+        service_data["protocol"] = [service_data["protocol"]]
+        assert str(service_data) in str(error_log_call)
 
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
 
-    def test_call_rate_delay_throttle_disabled(self):
-        """Test that the limiter is a noop if no delay set."""
-        runs = []
+@patch("pilight.pilight.Client", PilightDaemonSim)
+@patch("homeassistant.components.pilight._LOGGER.error")
+async def test_send_code_fail(mock_pilight_error, hass):
+    """Check IOError exception error message."""
+    with assert_setup_component(4), patch(
+        "pilight.pilight.Client.send_code", side_effect=IOError
+    ):
+        assert await async_setup_component(hass, pilight.DOMAIN, {pilight.DOMAIN: {}})
 
-        limit = pilight.CallRateDelayThrottle(self.hass, 0.0)
-        action = limit.limited(lambda x: runs.append(x))
+        # Call with protocol info, should not give error
+        service_data = {"protocol": "test", "value": 42}
+        await hass.services.async_call(
+            pilight.DOMAIN,
+            pilight.SERVICE_NAME,
+            service_data=service_data,
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        error_log_call = mock_pilight_error.call_args_list[-1]
+        assert "Pilight send failed" in str(error_log_call)
 
-        for i in range(3):
-            action(i)
 
-        assert runs == [0, 1, 2]
+@patch("homeassistant.components.pilight._LOGGER.error")
+@patch("homeassistant.components.pilight._LOGGER", _LOGGER)
+@patch("pilight.pilight.Client", PilightDaemonSim)
+async def test_send_code_delay(mock_pilight_error, hass):
+    """Try to send proper data with delay afterwards."""
+    with assert_setup_component(4):
+        assert await async_setup_component(
+            hass,
+            pilight.DOMAIN,
+            {pilight.DOMAIN: {pilight.CONF_SEND_DELAY: 5.0}},
+        )
 
-    def test_call_rate_delay_throttle_enabled(self):
-        """Test that throttling actually work."""
-        runs = []
-        delay = 5.0
+        # Call with protocol info, should not give error
+        service_data1 = {"protocol": "test11", "value": 42}
+        service_data2 = {"protocol": "test22", "value": 42}
+        await hass.services.async_call(
+            pilight.DOMAIN,
+            pilight.SERVICE_NAME,
+            service_data=service_data1,
+            blocking=True,
+        )
+        await hass.services.async_call(
+            pilight.DOMAIN,
+            pilight.SERVICE_NAME,
+            service_data=service_data2,
+            blocking=True,
+        )
+        service_data1["protocol"] = [service_data1["protocol"]]
+        service_data2["protocol"] = [service_data2["protocol"]]
 
-        limit = pilight.CallRateDelayThrottle(self.hass, delay)
-        action = limit.limited(lambda x: runs.append(x))
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done()
+        error_log_call = mock_pilight_error.call_args_list[-1]
+        assert str(service_data1) in str(error_log_call)
 
-        for i in range(3):
-            action(i)
+        new_time = dt_util.utcnow() + timedelta(seconds=5)
+        async_fire_time_changed(hass, new_time)
+        await hass.async_block_till_done()
+        error_log_call = mock_pilight_error.call_args_list[-1]
+        assert str(service_data2) in str(error_log_call)
 
-        assert runs == []
 
-        exp = []
-        now = dt_util.utcnow()
-        for i in range(3):
-            exp.append(i)
-            shifted_time = now + (timedelta(seconds=delay + 0.1) * i)
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: shifted_time})
-            self.hass.block_till_done()
-            assert runs == exp
+@patch("homeassistant.components.pilight._LOGGER.error")
+@patch("homeassistant.components.pilight._LOGGER", _LOGGER)
+@patch("pilight.pilight.Client", PilightDaemonSim)
+async def test_start_stop(mock_pilight_error, hass):
+    """Check correct startup and stop of pilight daemon."""
+    with assert_setup_component(4):
+        assert await async_setup_component(hass, pilight.DOMAIN, {pilight.DOMAIN: {}})
+
+        # Test startup
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+        error_log_call = mock_pilight_error.call_args_list[-2]
+        assert "PilightDaemonSim callback" in str(error_log_call)
+        error_log_call = mock_pilight_error.call_args_list[-1]
+        assert "PilightDaemonSim start" in str(error_log_call)
+
+        # Test stop
+        with patch.object(hass.loop, "stop"):
+            await hass.async_stop()
+        error_log_call = mock_pilight_error.call_args_list[-1]
+        assert "PilightDaemonSim stop" in str(error_log_call)
+
+
+@patch("pilight.pilight.Client", PilightDaemonSim)
+@patch("homeassistant.core._LOGGER.debug")
+async def test_receive_code(mock_debug, hass):
+    """Check if code receiving via pilight daemon works."""
+    with assert_setup_component(4):
+        assert await async_setup_component(hass, pilight.DOMAIN, {pilight.DOMAIN: {}})
+
+        # Test startup
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+        expected_message = dict(
+            {
+                "protocol": PilightDaemonSim.test_message["protocol"],
+                "uuid": PilightDaemonSim.test_message["uuid"],
+            },
+            **PilightDaemonSim.test_message["message"],
+        )
+        debug_log_call = mock_debug.call_args_list[-3]
+
+        # Check if all message parts are put on event bus
+        for key, value in expected_message.items():
+            assert str(key) in str(debug_log_call)
+            assert str(value) in str(debug_log_call)
+
+
+@patch("pilight.pilight.Client", PilightDaemonSim)
+@patch("homeassistant.core._LOGGER.debug")
+async def test_whitelist_exact_match(mock_debug, hass):
+    """Check whitelist filter with matched data."""
+    with assert_setup_component(4):
+        whitelist = {
+            "protocol": [PilightDaemonSim.test_message["protocol"]],
+            "uuid": [PilightDaemonSim.test_message["uuid"]],
+            "id": [PilightDaemonSim.test_message["message"]["id"]],
+            "unit": [PilightDaemonSim.test_message["message"]["unit"]],
+        }
+        assert await async_setup_component(
+            hass, pilight.DOMAIN, {pilight.DOMAIN: {"whitelist": whitelist}}
+        )
+
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+        expected_message = dict(
+            {
+                "protocol": PilightDaemonSim.test_message["protocol"],
+                "uuid": PilightDaemonSim.test_message["uuid"],
+            },
+            **PilightDaemonSim.test_message["message"],
+        )
+        debug_log_call = mock_debug.call_args_list[-3]
+
+        # Check if all message parts are put on event bus
+        for key, value in expected_message.items():
+            assert str(key) in str(debug_log_call)
+            assert str(value) in str(debug_log_call)
+
+
+@patch("pilight.pilight.Client", PilightDaemonSim)
+@patch("homeassistant.core._LOGGER.debug")
+async def test_whitelist_partial_match(mock_debug, hass):
+    """Check whitelist filter with partially matched data, should work."""
+    with assert_setup_component(4):
+        whitelist = {
+            "protocol": [PilightDaemonSim.test_message["protocol"]],
+            "id": [PilightDaemonSim.test_message["message"]["id"]],
+        }
+        assert await async_setup_component(
+            hass, pilight.DOMAIN, {pilight.DOMAIN: {"whitelist": whitelist}}
+        )
+
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+        expected_message = dict(
+            {
+                "protocol": PilightDaemonSim.test_message["protocol"],
+                "uuid": PilightDaemonSim.test_message["uuid"],
+            },
+            **PilightDaemonSim.test_message["message"],
+        )
+        debug_log_call = mock_debug.call_args_list[-3]
+
+        # Check if all message parts are put on event bus
+        for key, value in expected_message.items():
+            assert str(key) in str(debug_log_call)
+            assert str(value) in str(debug_log_call)
+
+
+@patch("pilight.pilight.Client", PilightDaemonSim)
+@patch("homeassistant.core._LOGGER.debug")
+async def test_whitelist_or_match(mock_debug, hass):
+    """Check whitelist filter with several subsection, should work."""
+    with assert_setup_component(4):
+        whitelist = {
+            "protocol": [
+                PilightDaemonSim.test_message["protocol"],
+                "other_protocol",
+            ],
+            "id": [PilightDaemonSim.test_message["message"]["id"]],
+        }
+        assert await async_setup_component(
+            hass, pilight.DOMAIN, {pilight.DOMAIN: {"whitelist": whitelist}}
+        )
+
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+        expected_message = dict(
+            {
+                "protocol": PilightDaemonSim.test_message["protocol"],
+                "uuid": PilightDaemonSim.test_message["uuid"],
+            },
+            **PilightDaemonSim.test_message["message"],
+        )
+        debug_log_call = mock_debug.call_args_list[-3]
+
+        # Check if all message parts are put on event bus
+        for key, value in expected_message.items():
+            assert str(key) in str(debug_log_call)
+            assert str(value) in str(debug_log_call)
+
+
+@patch("pilight.pilight.Client", PilightDaemonSim)
+@patch("homeassistant.core._LOGGER.debug")
+async def test_whitelist_no_match(mock_debug, hass):
+    """Check whitelist filter with unmatched data, should not work."""
+    with assert_setup_component(4):
+        whitelist = {
+            "protocol": ["wrong_protocol"],
+            "id": [PilightDaemonSim.test_message["message"]["id"]],
+        }
+        assert await async_setup_component(
+            hass, pilight.DOMAIN, {pilight.DOMAIN: {"whitelist": whitelist}}
+        )
+
+        await hass.async_start()
+        await hass.async_block_till_done()
+        debug_log_call = mock_debug.call_args_list[-3]
+
+        assert "Event pilight_received" not in debug_log_call
+
+
+async def test_call_rate_delay_throttle_enabled(hass):
+    """Test that throttling actually work."""
+    runs = []
+    delay = 5.0
+
+    limit = pilight.CallRateDelayThrottle(hass, delay)
+    action = limit.limited(lambda x: runs.append(x))
+
+    for i in range(3):
+        await hass.async_add_executor_job(action, i)
+
+    await hass.async_block_till_done()
+    assert runs == [0]
+
+    exp = []
+    now = dt_util.utcnow()
+    for i in range(3):
+        exp.append(i)
+        shifted_time = now + (timedelta(seconds=delay + 0.1) * i)
+        async_fire_time_changed(hass, shifted_time)
+        await hass.async_block_till_done()
+        assert runs == exp
+
+
+def test_call_rate_delay_throttle_disabled(hass):
+    """Test that the limiter is a noop if no delay set."""
+    runs = []
+
+    limit = pilight.CallRateDelayThrottle(hass, 0.0)
+    action = limit.limited(lambda x: runs.append(x))
+
+    for i in range(3):
+        action(i)
+
+    assert runs == [0, 1, 2]

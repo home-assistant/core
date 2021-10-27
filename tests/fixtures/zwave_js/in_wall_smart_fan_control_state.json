@@ -1,0 +1,352 @@
+{
+    "nodeId": 17,
+    "index": 0,
+    "installerIcon": 1024,
+    "userIcon": 1024,
+    "status": 4,
+    "ready": true,
+    "deviceClass": {
+      "basic": {"key": 4, "label":"Routing Slave"},
+      "generic": {"key": 17, "label":"Multilevel Switch"},
+      "specific": {"key": 8, "label":"Fan Switch"},
+      "mandatorySupportedCCs": [],
+      "mandatoryControlCCs": []
+    },
+    "isListening": true,
+    "isFrequentListening": false,
+    "isRouting": true,
+    "maxBaudRate": 40000,
+    "isSecure": false,
+    "version": 4,
+    "isBeaming": true,
+    "manufacturerId": 99,
+    "productId": 12593,
+    "productType": 18756,
+    "firmwareVersion": "5.22",
+    "zwavePlusVersion": 1,
+    "nodeType": 0,
+    "roleType": 5,
+    "deviceConfig": {
+      "manufacturerId": 99,
+      "manufacturer": "GE/Jasco",
+      "label": "ZW4002",
+      "description": "In-Wall Smart Fan Control",
+      "devices": [
+        {
+          "productType": "0x4944",
+          "productId": "0x3131"
+        }
+      ],
+      "firmwareVersion": {
+        "min": "0.0",
+        "max": "255.255"
+      },
+      "associations": {},
+      "paramInformation": {
+        "_map": {}
+      }
+    },
+    "label": "ZW4002",
+    "neighbors": [
+      1,
+      2,
+      6,
+      8,
+      9,
+      10,
+      11,
+      14,
+      15,
+      16,
+      18,
+      19,
+      20,
+      21,
+      23,
+      26,
+      27,
+      30,
+      31,
+      33,
+      36,
+      37,
+      38,
+      39,
+      41,
+      42
+    ],
+    "interviewAttempts": 1,
+    "endpoints": [
+      {
+        "nodeId": 17,
+        "index": 0,
+        "installerIcon": 1024,
+        "userIcon": 1024
+      }
+    ],
+    "commandClasses": [],
+    "values": [
+      {
+        "commandClassName": "Multilevel Switch",
+        "commandClass": 38,
+        "endpoint": 0,
+        "property": "targetValue",
+        "propertyName": "targetValue",
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "min": 0,
+          "max": 99,
+          "label": "Target value"
+        }
+      },
+      {
+        "commandClassName": "Multilevel Switch",
+        "commandClass": 38,
+        "endpoint": 0,
+        "property": "duration",
+        "propertyName": "duration",
+        "metadata": {
+          "type": "duration",
+          "readable": true,
+          "writeable": true,
+          "label": "Transition duration"
+        }
+      },
+      {
+        "commandClassName": "Multilevel Switch",
+        "commandClass": 38,
+        "endpoint": 0,
+        "property": "currentValue",
+        "propertyName": "currentValue",
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": false,
+          "min": 0,
+          "max": 99,
+          "label": "Current value"
+        },
+        "value": 0
+      },
+      {
+        "commandClassName": "Multilevel Switch",
+        "commandClass": 38,
+        "endpoint": 0,
+        "property": "Up",
+        "propertyName": "Up",
+        "metadata": {
+          "type": "boolean",
+          "readable": true,
+          "writeable": true,
+          "label": "Perform a level change (Up)",
+          "ccSpecific": {
+            "switchType": 2
+          }
+        }
+      },
+      {
+        "commandClassName": "Multilevel Switch",
+        "commandClass": 38,
+        "endpoint": 0,
+        "property": "Down",
+        "propertyName": "Down",
+        "metadata": {
+          "type": "boolean",
+          "readable": true,
+          "writeable": true,
+          "label": "Perform a level change (Down)",
+          "ccSpecific": {
+            "switchType": 2
+          }
+        }
+      },
+      {
+        "commandClassName": "Scene Activation",
+        "commandClass": 43,
+        "endpoint": 0,
+        "property": "sceneId",
+        "propertyName": "sceneId",
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "min": 1,
+          "max": 255,
+          "label": "Scene ID"
+        }
+      },
+      {
+        "commandClassName": "Scene Activation",
+        "commandClass": 43,
+        "endpoint": 0,
+        "property": "dimmingDuration",
+        "propertyName": "dimmingDuration",
+        "metadata": {
+          "type": "any",
+          "readable": true,
+          "writeable": true,
+          "label": "Dimming duration"
+        }
+      },
+      {
+        "commandClassName": "Configuration",
+        "commandClass": 112,
+        "endpoint": 0,
+        "property": 3,
+        "propertyName": "Night Light",
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 1,
+          "min": 0,
+          "max": 255,
+          "default": 0,
+          "format": 1,
+          "allowManualEntry": false,
+          "states": {
+            "0": "LED on when switch is OFF",
+            "1": "LED on when switch is ON",
+            "2": "LED always off"
+          },
+          "label": "Night Light",
+          "description": "Defines the behavior of the blue LED",
+          "isFromConfig": true
+        },
+        "value": 0
+      },
+      {
+        "commandClassName": "Configuration",
+        "commandClass": 112,
+        "endpoint": 0,
+        "property": 4,
+        "propertyName": "Invert Switch",
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "valueSize": 1,
+          "min": 0,
+          "max": 255,
+          "default": 0,
+          "format": 1,
+          "allowManualEntry": false,
+          "states": {
+            "0": "No",
+            "1": "Yes"
+          },
+          "label": "Invert Switch",
+          "description": "Invert the ON/OFF Switch State",
+          "isFromConfig": true
+        },
+        "value": 0
+      },
+      {
+        "commandClassName": "Manufacturer Specific",
+        "commandClass": 114,
+        "endpoint": 0,
+        "property": "manufacturerId",
+        "propertyName": "manufacturerId",
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": false,
+          "min": 0,
+          "max": 65535,
+          "label": "Manufacturer ID"
+        },
+        "value": 99
+      },
+      {
+        "commandClassName": "Manufacturer Specific",
+        "commandClass": 114,
+        "endpoint": 0,
+        "property": "productType",
+        "propertyName": "productType",
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": false,
+          "min": 0,
+          "max": 65535,
+          "label": "Product type"
+        },
+        "value": 18756
+      },
+      {
+        "commandClassName": "Manufacturer Specific",
+        "commandClass": 114,
+        "endpoint": 0,
+        "property": "productId",
+        "propertyName": "productId",
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": false,
+          "min": 0,
+          "max": 65535,
+          "label": "Product ID"
+        },
+        "value": 12593
+      },
+      {
+        "commandClassName": "Version",
+        "commandClass": 134,
+        "endpoint": 0,
+        "property": "libraryType",
+        "propertyName": "libraryType",
+        "metadata": {
+          "type": "any",
+          "readable": true,
+          "writeable": false,
+          "label": "Library type"
+        },
+        "value": 3
+      },
+      {
+        "commandClassName": "Version",
+        "commandClass": 134,
+        "endpoint": 0,
+        "property": "protocolVersion",
+        "propertyName": "protocolVersion",
+        "metadata": {
+          "type": "any",
+          "readable": true,
+          "writeable": false,
+          "label": "Z-Wave protocol version"
+        },
+        "value": "4.54"
+      },
+      {
+        "commandClassName": "Version",
+        "commandClass": 134,
+        "endpoint": 0,
+        "property": "firmwareVersions",
+        "propertyName": "firmwareVersions",
+        "metadata": {
+          "type": "any",
+          "readable": true,
+          "writeable": false,
+          "label": "Z-Wave chip firmware versions"
+        },
+        "value": [
+          "5.22"
+        ]
+      },
+      {
+        "commandClassName": "Version",
+        "commandClass": 134,
+        "endpoint": 0,
+        "property": "hardwareVersion",
+        "propertyName": "hardwareVersion",
+        "metadata": {
+          "type": "any",
+          "readable": true,
+          "writeable": false,
+          "label": "Z-Wave chip hardware version"
+        }
+      }
+    ]
+  }

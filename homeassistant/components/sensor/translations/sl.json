@@ -1,0 +1,31 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_battery_level": "Trenutna raven baterije {entity_name}",
+            "is_humidity": "Trenutna vla\u017enost {entity_name}",
+            "is_illuminance": "Trenutna svetilnost {entity_name}",
+            "is_power": "Trenutna mo\u010d {entity_name}",
+            "is_pressure": "Trenutni tlak {entity_name}",
+            "is_signal_strength": "Trenutna jakost signala {entity_name}",
+            "is_temperature": "Trenutna temperatura {entity_name}",
+            "is_value": "Trenutna vrednost {entity_name}"
+        },
+        "trigger_type": {
+            "battery_level": "{entity_name} spremembe ravni baterije",
+            "humidity": "{entity_name} spremembe vla\u017enosti",
+            "illuminance": "{entity_name} spremembe osvetlitve",
+            "power": "{entity_name} spremembe mo\u010di",
+            "pressure": "{entity_name} spremembe tlaka",
+            "signal_strength": "{entity_name} spremembe mo\u010di signala",
+            "temperature": "{entity_name} spremembe temperatur",
+            "value": "{entity_name} spremembe vrednosti"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Izklju\u010den",
+            "on": "Vklopljen"
+        }
+    },
+    "title": "Senzor"
+}

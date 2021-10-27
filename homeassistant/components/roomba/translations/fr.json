@@ -1,0 +1,63 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "cannot_connect": "\u00c9chec de connexion",
+            "not_irobot_device": "L'appareil d\u00e9couvert n'est pas un appareil iRobot",
+            "short_blid": "La BLID a \u00e9t\u00e9 tronqu\u00e9"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion"
+        },
+        "flow_title": "iRobot {name} ( {host} )",
+        "step": {
+            "init": {
+                "data": {
+                    "host": "H\u00f4te"
+                },
+                "description": "S\u00e9lectionnez un Roomba ou un Braava.",
+                "title": "Se connecter automatiquement \u00e0 l'appareil"
+            },
+            "link": {
+                "description": "Appuyez sur le bouton Accueil et maintenez-le enfonc\u00e9 jusqu'\u00e0 ce que l'appareil \u00e9mette un son (environ deux secondes).",
+                "title": "R\u00e9cup\u00e9rer le mot de passe"
+            },
+            "link_manual": {
+                "data": {
+                    "password": "Mot de passe"
+                },
+                "description": "Le mot de passe n'a pas pu \u00eatre r\u00e9cup\u00e9r\u00e9 automatiquement \u00e0 partir de l'appareil. Veuillez suivre les \u00e9tapes d\u00e9crites dans la documentation \u00e0 {auth_help_url}",
+                "title": "Entrer le mot de passe"
+            },
+            "manual": {
+                "data": {
+                    "blid": "BLID",
+                    "host": "H\u00f4te"
+                },
+                "description": "Aucun Roomba ou Braava d\u00e9couvert sur votre r\u00e9seau. Le BLID est la partie du nom d'h\u00f4te du p\u00e9riph\u00e9rique apr\u00e8s `iRobot-`. Veuillez suivre les \u00e9tapes d\u00e9crites dans la documentation \u00e0 {auth_help_url}\u00b4",
+                "title": "Se connecter manuellement \u00e0 l'appareil"
+            },
+            "user": {
+                "data": {
+                    "blid": "BLID",
+                    "continuous": "En continu",
+                    "delay": "D\u00e9lai",
+                    "host": "H\u00f4te",
+                    "password": "Mot de passe"
+                },
+                "description": "La r\u00e9cup\u00e9ration du BLID et du mot de passe est actuellement un processus manuel. Veuillez suivre les \u00e9tapes d\u00e9crites dans la documentation \u00e0 l'adresse: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
+                "title": "Se connecter \u00e0 l'appareil"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "continuous": "Continue",
+                    "delay": "D\u00e9lai"
+                }
+            }
+        }
+    }
+}

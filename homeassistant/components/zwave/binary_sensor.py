@@ -1,20 +1,17 @@
 """Support for Z-Wave binary sensors."""
-import logging
 import datetime
-import homeassistant.util.dt as dt_util
+import logging
+
+from homeassistant.components.binary_sensor import DOMAIN, BinarySensorEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import track_point_in_time
-from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
-from . import workaround, ZWaveDeviceEntity
+import homeassistant.util.dt as dt_util
+
+from . import ZWaveDeviceEntity, workaround
 from .const import COMMAND_CLASS_SENSOR_BINARY
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old method of setting up Z-Wave binary sensors."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -42,7 +39,7 @@ def get_device(values, **kwargs):
     return None
 
 
-class ZWaveBinarySensor(BinarySensorDevice, ZWaveDeviceEntity):
+class ZWaveBinarySensor(BinarySensorEntity, ZWaveDeviceEntity):
     """Representation of a binary sensor within Z-Wave."""
 
     def __init__(self, values, device_class):

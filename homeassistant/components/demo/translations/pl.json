@@ -1,0 +1,29 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "few": "kilka",
+                    "many": "wiele",
+                    "one": "jedna",
+                    "other": "inne"
+                }
+            },
+            "options_1": {
+                "data": {
+                    "bool": "Warto\u015b\u0107 logiczna",
+                    "constant": "Sta\u0142a",
+                    "int": "Warto\u015b\u0107 numeryczna"
+                }
+            },
+            "options_2": {
+                "data": {
+                    "multi": "Wielokrotny wyb\u00f3r",
+                    "select": "Wybierz opcj\u0119",
+                    "string": "Warto\u015b\u0107 tekstowa"
+                }
+            }
+        }
+    },
+    "title": "Demo"
+}

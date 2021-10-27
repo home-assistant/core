@@ -3,8 +3,9 @@ import logging
 import socket
 
 import voluptuous as vol
+from ziggo_mediabox_xl import ZiggoMediaboxXL
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -44,7 +45,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Ziggo Mediabox XL platform."""
-    from ziggo_mediabox_xl import ZiggoMediaboxXL
 
     hass.data[DATA_KNOWN_DEVICES] = known_devices = set()
 
@@ -85,14 +85,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     ZiggoMediaboxXLDevice(mediabox, host, name, connection_successful)
                 )
                 known_devices.add(ip_addr)
-        except socket.error as error:
+        except OSError as error:
             _LOGGER.error("Can't connect to %s: %s", host, error)
     else:
         _LOGGER.info("Ignoring duplicate Ziggo Mediabox XL %s", host)
     add_entities(hosts, True)
 
 
-class ZiggoMediaboxXLDevice(MediaPlayerDevice):
+class ZiggoMediaboxXLDevice(MediaPlayerEntity):
     """Representation of a Ziggo Mediabox XL Device."""
 
     def __init__(self, mediabox, host, name, available):
@@ -115,7 +115,7 @@ class ZiggoMediaboxXLDevice(MediaPlayerDevice):
                 self._available = True
             else:
                 self._available = False
-        except socket.error:
+        except OSError:
             _LOGGER.error("Couldn't fetch state from %s", self._host)
             self._available = False
 
@@ -123,7 +123,7 @@ class ZiggoMediaboxXLDevice(MediaPlayerDevice):
         """Send keys to the device and handle exceptions."""
         try:
             self._mediabox.send_keys(keys)
-        except socket.error:
+        except OSError:
             _LOGGER.error("Couldn't send keys to %s", self._host)
 
     @property

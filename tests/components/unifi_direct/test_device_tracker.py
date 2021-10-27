@@ -1,33 +1,31 @@
 """The tests for the Unifi direct device tracker platform."""
-import os
 from datetime import timedelta
-from asynctest import mock, patch
+import os
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 import voluptuous as vol
 
-from homeassistant.setup import async_setup_component
-from homeassistant.components.device_tracker.legacy import YAML_DEVICES
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
-    CONF_TRACK_NEW,
-    CONF_AWAY_HIDE,
     CONF_NEW_DEVICE_DEFAULTS,
+    CONF_TRACK_NEW,
 )
+from homeassistant.components.device_tracker.legacy import YAML_DEVICES
 from homeassistant.components.unifi_direct.device_tracker import (
-    DOMAIN,
     CONF_PORT,
+    DOMAIN,
     PLATFORM_SCHEMA,
+    UnifiDeviceScanner,
     _response_to_json,
     get_scanner,
 )
-from homeassistant.const import CONF_PLATFORM, CONF_PASSWORD, CONF_USERNAME, CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
+from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component, mock_component, load_fixture
+from tests.common import assert_setup_component, load_fixture, mock_component
 
-scanner_path = (
-    "homeassistant.components.unifi_direct.device_tracker." + "UnifiDeviceScanner"
-)
+scanner_path = "homeassistant.components.unifi_direct.device_tracker.UnifiDeviceScanner"
 
 
 @pytest.fixture(autouse=True)
@@ -40,7 +38,7 @@ def setup_comp(hass):
         os.remove(yaml_devices)
 
 
-@patch(scanner_path, return_value=mock.MagicMock())
+@patch(scanner_path, return_value=MagicMock(spec=UnifiDeviceScanner))
 async def test_get_scanner(unifi_mock, hass):
     """Test creating an Unifi direct scanner with a password."""
     conf_dict = {
@@ -51,7 +49,7 @@ async def test_get_scanner(unifi_mock, hass):
             CONF_PASSWORD: "fake_pass",
             CONF_TRACK_NEW: True,
             CONF_CONSIDER_HOME: timedelta(seconds=180),
-            CONF_NEW_DEVICE_DEFAULTS: {CONF_TRACK_NEW: True, CONF_AWAY_HIDE: False},
+            CONF_NEW_DEVICE_DEFAULTS: {CONF_TRACK_NEW: True},
         }
     }
 
@@ -59,7 +57,7 @@ async def test_get_scanner(unifi_mock, hass):
         assert await async_setup_component(hass, DOMAIN, conf_dict)
 
     conf_dict[DOMAIN][CONF_PORT] = 22
-    assert unifi_mock.call_args == mock.call(conf_dict[DOMAIN])
+    assert unifi_mock.call_args == call(conf_dict[DOMAIN])
 
 
 @patch("pexpect.pxssh.pxssh")
@@ -79,9 +77,9 @@ async def test_get_device_name(mock_ssh, hass):
     mock_ssh.return_value.before = load_fixture("unifi_direct.txt")
     scanner = get_scanner(hass, conf_dict)
     devices = scanner.scan_devices()
-    assert 23 == len(devices)
-    assert "iPhone" == scanner.get_device_name("98:00:c6:56:34:12")
-    assert "iPhone" == scanner.get_device_name("98:00:C6:56:34:12")
+    assert len(devices) == 23
+    assert scanner.get_device_name("98:00:c6:56:34:12") == "iPhone"
+    assert scanner.get_device_name("98:00:C6:56:34:12") == "iPhone"
 
 
 @patch("pexpect.pxssh.pxssh.logout")

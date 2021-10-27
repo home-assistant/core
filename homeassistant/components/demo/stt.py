@@ -1,21 +1,22 @@
 """Support for the demo for speech to text service."""
-from typing import List
+from __future__ import annotations
 
 from aiohttp import StreamReader
 
 from homeassistant.components.stt import Provider, SpeechMetadata, SpeechResult
 from homeassistant.components.stt.const import (
-    AudioBitrates,
-    AudioFormats,
-    AudioSamplerates,
+    AudioBitRates,
+    AudioChannels,
     AudioCodecs,
+    AudioFormats,
+    AudioSampleRates,
     SpeechResultState,
 )
 
 SUPPORT_LANGUAGES = ["en", "de"]
 
 
-async def async_get_engine(hass, config):
+async def async_get_engine(hass, config, discovery_info=None):
     """Set up Demo speech component."""
     return DemoProvider()
 
@@ -24,29 +25,34 @@ class DemoProvider(Provider):
     """Demo speech API provider."""
 
     @property
-    def supported_languages(self) -> List[str]:
+    def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
         return SUPPORT_LANGUAGES
 
     @property
-    def supported_formats(self) -> List[AudioFormats]:
+    def supported_formats(self) -> list[AudioFormats]:
         """Return a list of supported formats."""
         return [AudioFormats.WAV]
 
     @property
-    def supported_codecs(self) -> List[AudioCodecs]:
+    def supported_codecs(self) -> list[AudioCodecs]:
         """Return a list of supported codecs."""
         return [AudioCodecs.PCM]
 
     @property
-    def supported_bitrates(self) -> List[AudioBitrates]:
-        """Return a list of supported bitrates."""
-        return [AudioBitrates.BITRATE_16]
+    def supported_bit_rates(self) -> list[AudioBitRates]:
+        """Return a list of supported bit rates."""
+        return [AudioBitRates.BITRATE_16]
 
     @property
-    def supported_samplerates(self) -> List[AudioSamplerates]:
-        """Return a list of supported samplerates."""
-        return [AudioSamplerates.SAMPLERATE_16000, AudioSamplerates.SAMPLERATE_44100]
+    def supported_sample_rates(self) -> list[AudioSampleRates]:
+        """Return a list of supported sample rates."""
+        return [AudioSampleRates.SAMPLERATE_16000, AudioSampleRates.SAMPLERATE_44100]
+
+    @property
+    def supported_channels(self) -> list[AudioChannels]:
+        """Return a list of supported channels."""
+        return [AudioChannels.CHANNEL_STEREO]
 
     async def async_process_audio_stream(
         self, metadata: SpeechMetadata, stream: StreamReader

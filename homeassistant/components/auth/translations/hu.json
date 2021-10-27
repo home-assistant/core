@@ -1,0 +1,35 @@
+{
+    "mfa_setup": {
+        "notify": {
+            "abort": {
+                "no_available_service": "Nincs el\u00e9rhet\u0151 \u00e9rtes\u00edt\u00e9si szolg\u00e1ltat\u00e1s."
+            },
+            "error": {
+                "invalid_code": "\u00c9rv\u00e9nytelen k\u00f3d, pr\u00f3b\u00e1ld \u00fajra."
+            },
+            "step": {
+                "init": {
+                    "description": "K\u00e9rem, v\u00e1lasszon egyet az \u00e9rtes\u00edt\u00e9si szolg\u00e1ltat\u00e1sok k\u00f6z\u00fcl:",
+                    "title": "\u00c1ll\u00edtsa be az \u00e9rtes\u00edt\u00e9si \u00f6sszetev\u0151 \u00e1ltal megadott egyszeri jelsz\u00f3t"
+                },
+                "setup": {
+                    "description": "Az egyszeri jelsz\u00f3 el lett k\u00fcldve **notify.{notify_service}** szolg\u00e1ltat\u00e1ssal. K\u00e9rem, adja meg al\u00e1bb:",
+                    "title": "Be\u00e1ll\u00edt\u00e1s ellen\u0151rz\u00e9se"
+                }
+            },
+            "title": "Egyszeri Jelsz\u00f3 \u00c9rtes\u00edt\u00e9s"
+        },
+        "totp": {
+            "error": {
+                "invalid_code": "\u00c9rv\u00e9nytelen k\u00f3d, pr\u00f3b\u00e1lja \u00fajra. Ha ez a hiba folyamatosan el\u0151fordul, akkor gy\u0151z\u0151dj\u00f6n meg r\u00f3la, hogy a Home Assistant rendszer\u00e9nek \u00f3r\u00e1ja pontosan j\u00e1r."
+            },
+            "step": {
+                "init": {
+                    "description": "Ahhoz, hogy haszn\u00e1lhassa a k\u00e9tfaktoros hiteles\u00edt\u00e9st id\u0151alap\u00fa egyszeri jelszavakkal, szkennelje be a QR k\u00f3dot a hiteles\u00edt\u00e9si applik\u00e1ci\u00f3j\u00e1val. Ha m\u00e9g nincs ilyenje, akkor aj\u00e1nljuk figyelm\u00e9be a [Google Hiteles\u00edt\u0151](https://support.google.com/accounts/answer/1066447)t vagy az [Authy](https://authy.com/)-t.\n\n{qr_code}\n\nA k\u00f3d beolvas\u00e1sa ut\u00e1n adja meg a hat sz\u00e1mjegy\u0171 k\u00f3dot az applik\u00e1ci\u00f3b\u00f3l a telep\u00edt\u00e9s ellen\u0151rz\u00e9s\u00e9hez. Ha probl\u00e9m\u00e1ba \u00fctk\u00f6zne a QR k\u00f3d beolvas\u00e1s\u00e1n\u00e1l, akkor ind\u00edtson egy k\u00e9zi be\u00e1ll\u00edt\u00e1st a **`{code}`** k\u00f3ddal.",
+                    "title": "K\u00e9tfaktoros hiteles\u00edt\u00e9s be\u00e1ll\u00edt\u00e1sa TOTP haszn\u00e1lat\u00e1val"
+                }
+            },
+            "title": "TOTP"
+        }
+    }
+}

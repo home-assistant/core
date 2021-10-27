@@ -1,4 +1,6 @@
 """Proxy camera platform that enables image processing of camera data."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import io
@@ -7,7 +9,13 @@ import logging
 from PIL import Image
 import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
+from homeassistant.components.camera import (
+    PLATFORM_SCHEMA,
+    Camera,
+    async_get_image,
+    async_get_mjpeg_stream,
+    async_get_still_stream,
+)
 from homeassistant.const import CONF_ENTITY_ID, CONF_MODE, CONF_NAME
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -64,13 +72,15 @@ def _precheck_image(image, opts):
         raise ValueError()
     try:
         img = Image.open(io.BytesIO(image))
-    except OSError:
+    except OSError as err:
         _LOGGER.warning("Failed to open image")
-        raise ValueError()
+        raise ValueError() from err
     imgfmt = str(img.format)
     if imgfmt not in ("PNG", "JPEG"):
         _LOGGER.warning("Image is of unsupported type: %s", imgfmt)
         raise ValueError()
+    if img.mode != "RGB":
+        img = img.convert("RGB")
     return img
 
 
@@ -92,7 +102,7 @@ def _resize_image(image, opts):
         new_width = old_width
 
     scale = new_width / float(old_width)
-    new_height = int((float(old_height) * float(scale)))
+    new_height = int(float(old_height) * float(scale))
 
     img = img.resize((new_width, new_height), Image.ANTIALIAS)
     imgbuf = io.BytesIO()
@@ -182,8 +192,8 @@ class ProxyCamera(Camera):
         super().__init__()
         self.hass = hass
         self._proxied_camera = config.get(CONF_ENTITY_ID)
-        self._name = config.get(CONF_NAME) or "{} - {}".format(
-            DEFAULT_BASENAME, self._proxied_camera
+        self._name = (
+            config.get(CONF_NAME) or f"{DEFAULT_BASENAME} - {self._proxied_camera}"
         )
         self._image_opts = ImageOpts(
             config.get(CONF_MAX_IMAGE_WIDTH),
@@ -211,13 +221,17 @@ class ProxyCamera(Camera):
         self._last_image = None
         self._mode = config.get(CONF_MODE)
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return camera image."""
         return asyncio.run_coroutine_threadsafe(
             self.async_camera_image(), self.hass.loop
         ).result()
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         now = dt_util.utcnow()
 
@@ -227,7 +241,7 @@ class ProxyCamera(Camera):
             return self._last_image
 
         self._last_image_time = now
-        image = await self.hass.components.camera.async_get_image(self._proxied_camera)
+        image = await async_get_image(self.hass, self._proxied_camera)
         if not image:
             _LOGGER.error("Error getting original camera image")
             return self._last_image
@@ -236,22 +250,22 @@ class ProxyCamera(Camera):
             job = _resize_image
         else:
             job = _crop_image
-        image = await self.hass.async_add_executor_job(
+        image_bytes: bytes = await self.hass.async_add_executor_job(
             job, image.content, self._image_opts
         )
 
         if self._cache_images:
-            self._last_image = image
-        return image
+            self._last_image = image_bytes
+        return image_bytes
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from camera images."""
         if not self._stream_opts:
-            return await self.hass.components.camera.async_get_mjpeg_stream(
-                request, self._proxied_camera
+            return await async_get_mjpeg_stream(
+                self.hass, request, self._proxied_camera
             )
 
-        return await self.hass.components.camera.async_get_still_stream(
+        return await async_get_still_stream(
             request, self._async_stream_image, self.content_type, self.frame_interval
         )
 
@@ -263,13 +277,11 @@ class ProxyCamera(Camera):
     async def _async_stream_image(self):
         """Return a still image response from the camera."""
         try:
-            image = await self.hass.components.camera.async_get_image(
-                self._proxied_camera
-            )
+            image = await async_get_image(self.hass, self._proxied_camera)
             if not image:
                 return None
-        except HomeAssistantError:
-            raise asyncio.CancelledError()
+        except HomeAssistantError as err:
+            raise asyncio.CancelledError() from err
 
         if self._mode == MODE_RESIZE:
             job = _resize_image

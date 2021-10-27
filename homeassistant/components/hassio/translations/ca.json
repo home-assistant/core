@@ -1,0 +1,18 @@
+{
+    "system_health": {
+        "info": {
+            "board": "Placa",
+            "disk_total": "Total disc",
+            "disk_used": "Emmagatzematge utilitzat",
+            "docker_version": "Versi\u00f3 de Docker",
+            "healthy": "Saludable",
+            "host_os": "Sistema operatiu amfitri\u00f3",
+            "installed_addons": "Complements instal\u00b7lats",
+            "supervisor_api": "API del Supervisor",
+            "supervisor_version": "Versi\u00f3 del Supervisor",
+            "supported": "Compatible",
+            "update_channel": "Canal d'actualitzaci\u00f3",
+            "version_api": "Versi\u00f3 d'APIs"
+        }
+    }
+}

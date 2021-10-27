@@ -1,0 +1,29 @@
+{
+    "device_automation": {
+        "action_type": {
+            "clean": "\u05d0\u05e4\u05e9\u05e8 \u05dc-{entity_name} \u05dc\u05e0\u05e7\u05d5\u05ea",
+            "dock": "\u05d0\u05e4\u05e9\u05e8 \u05dc-{entity_name} \u05dc\u05d7\u05d6\u05d5\u05e8 \u05dc\u05ea\u05d7\u05e0\u05ea \u05d8\u05e2\u05d9\u05e0\u05d4"
+        },
+        "condition_type": {
+            "is_cleaning": "{entity_name} \u05de\u05e0\u05e7\u05d4",
+            "is_docked": "{entity_name} \u05d1\u05ea\u05d7\u05d9\u05e0\u05ea \u05e2\u05d2\u05d9\u05e0\u05d4"
+        },
+        "trigger_type": {
+            "cleaning": "{entity_name} \u05de\u05ea\u05d7\u05d9\u05dc \u05dc\u05e0\u05e7\u05d5\u05ea",
+            "docked": "{entity_name} \u05d1\u05ea\u05d7\u05d9\u05e0\u05ea \u05e2\u05d2\u05d9\u05e0\u05d4"
+        }
+    },
+    "state": {
+        "_": {
+            "cleaning": "\u05de\u05e0\u05e7\u05d4",
+            "docked": "\u05d1\u05ea\u05d7\u05d9\u05e0\u05ea \u05d8\u05e2\u05d9\u05e0\u05d4",
+            "error": "\u05e9\u05d2\u05d9\u05d0\u05d4",
+            "idle": "\u05de\u05de\u05ea\u05d9\u05df",
+            "off": "\u05db\u05d1\u05d5\u05d9",
+            "on": "\u05de\u05d5\u05e4\u05e2\u05dc",
+            "paused": "\u05de\u05d5\u05e9\u05d4\u05d4",
+            "returning": "\u05d7\u05d5\u05d6\u05e8 \u05dc\u05ea\u05d7\u05e0\u05ea \u05e2\u05d2\u05d9\u05e0\u05d4"
+        }
+    },
+    "title": "\u05e9\u05d5\u05d0\u05d1 \u05d0\u05d1\u05e7"
+}

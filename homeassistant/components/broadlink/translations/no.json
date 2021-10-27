@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_host": "Ugyldig vertsnavn eller IP-adresse",
+            "not_supported": "Enheten st\u00f8ttes ikke",
+            "unknown": "Uventet feil"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_host": "Ugyldig vertsnavn eller IP-adresse",
+            "unknown": "Uventet feil"
+        },
+        "flow_title": "{name} ({model} p\u00e5 {host})",
+        "step": {
+            "auth": {
+                "title": "Godkjenning til enheten"
+            },
+            "finish": {
+                "data": {
+                    "name": "Navn"
+                },
+                "title": "Velg et navn p\u00e5 enheten"
+            },
+            "reset": {
+                "description": "{name} ({model} p\u00e5 {host}) er l\u00e5st. Du m\u00e5 l\u00e5se opp enheten for \u00e5 godkjenne og fullf\u00f8re konfigurasjonen. Bruksanvisning:\n 1. \u00c5pne Broadlink-appen\n 2. Klikk p\u00e5 enheten\n 3. Klikk p\u00e5 `...` \u00f8verst til h\u00f8yre\n 4. Bla til bunnen av siden\n 5. Deaktiver l\u00e5sen",
+                "title": "L\u00e5s opp enheten"
+            },
+            "unlock": {
+                "data": {
+                    "unlock": "Ja, gj\u00f8r det."
+                },
+                "description": "{name} ({model} p\u00e5 {host}) er l\u00e5st. Dette kan f\u00f8re til godkjenningsproblemer i Home Assistant. Vil du l\u00e5se den opp?",
+                "title": "L\u00e5s opp enheten (valgfritt)"
+            },
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "timeout": "Tidsavbrudd"
+                },
+                "title": "Koble til enheten"
+            }
+        }
+    }
+}

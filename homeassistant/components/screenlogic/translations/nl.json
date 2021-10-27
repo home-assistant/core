@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "gateway_entry": {
+                "data": {
+                    "ip_address": "IP-adres",
+                    "port": "Poort"
+                },
+                "description": "Voer uw ScreenLogic Gateway informatie in.",
+                "title": "ScreenLogic"
+            },
+            "gateway_select": {
+                "data": {
+                    "selected_gateway": "Gateway"
+                },
+                "description": "De volgende ScreenLogic gateways werden ontdekt. Selecteer er een om te configureren, of kies ervoor om handmatig een ScreenLogic gateway te configureren.",
+                "title": "ScreenLogic"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Seconden tussen scans"
+                },
+                "description": "Geef instellingen op voor {gateway_name}",
+                "title": "ScreenLogic"
+            }
+        }
+    }
+}

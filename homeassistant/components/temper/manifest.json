@@ -1,10 +1,8 @@
 {
   "domain": "temper",
-  "name": "Temper",
+  "name": "TEMPer",
   "documentation": "https://www.home-assistant.io/integrations/temper",
-  "requirements": [
-    "temperusb==1.5.3"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["temperusb==1.5.3"],
+  "codeowners": [],
+  "iot_class": "local_push"
 }

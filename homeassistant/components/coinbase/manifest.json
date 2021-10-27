@@ -5,6 +5,9 @@
   "requirements": [
     "coinbase==2.1.0"
   ],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@tombrien"
+  ],
+  "config_flow": true,
+  "iot_class": "cloud_polling"
 }

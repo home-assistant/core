@@ -2,7 +2,7 @@
 import datetime
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import ATTR_LAST_TRIP_TIME
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -40,7 +40,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devices)
 
 
-class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
+class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorEntity):
     """Representation of an Envisalink binary sensor."""
 
     def __init__(self, hass, zone_number, zone_name, zone_type, info, controller):
@@ -56,7 +56,7 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
         async_dispatcher_connect(self.hass, SIGNAL_ZONE_UPDATE, self._update_callback)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attr = {}
 
@@ -94,4 +94,4 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
     def _update_callback(self, zone):
         """Update the zone's state, if needed."""
         if zone is None or int(zone) == self._zone_number:
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()

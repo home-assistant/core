@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u05ea\u05e6\u05d5\u05e8\u05ea \u05d4\u05d4\u05ea\u05e7\u05df \u05db\u05d1\u05e8 \u05e0\u05e7\u05d1\u05e2\u05d4",
+            "no_devices_found": "\u05dc\u05d0 \u05e0\u05de\u05e6\u05d0\u05d5 \u05de\u05db\u05e9\u05d9\u05e8\u05d9\u05dd \u05d1\u05e8\u05e9\u05ea"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "unique_id": "\u05d4\u05ea\u05e7\u05df",
+                    "usn": "\u05de\u05db\u05e9\u05d9\u05e8"
+                }
+            }
+        }
+    }
+}

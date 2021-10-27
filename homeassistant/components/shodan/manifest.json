@@ -2,11 +2,7 @@
   "domain": "shodan",
   "name": "Shodan",
   "documentation": "https://www.home-assistant.io/integrations/shodan",
-  "requirements": [
-    "shodan==1.19.0"
-  ],
-  "dependencies": [],
-  "codeowners": [
-    "@fabaff"
-  ]
+  "requirements": ["shodan==1.25.0"],
+  "codeowners": ["@fabaff"],
+  "iot_class": "cloud_polling"
 }

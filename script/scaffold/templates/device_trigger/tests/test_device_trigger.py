@@ -1,19 +1,19 @@
 """The tests for NEW_NAME device triggers."""
 import pytest
 
+from homeassistant.components import automation
 from homeassistant.components.NEW_DOMAIN import DOMAIN
-from homeassistant.const import STATE_ON, STATE_OFF
-from homeassistant.setup import async_setup_component
-import homeassistant.components.automation as automation
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers import device_registry
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
     assert_lists_same,
+    async_get_device_automations,
     async_mock_service,
     mock_device_registry,
     mock_registry,
-    async_get_device_automations,
 )
 
 
@@ -31,7 +31,7 @@ def entity_reg(hass):
 
 @pytest.fixture
 def calls(hass):
-    """Track calls to a mock serivce."""
+    """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
@@ -87,7 +87,8 @@ async def test_if_fires_on_state_change(hass, calls):
                             "some": (
                                 "turn_on - {{ trigger.platform}} - "
                                 "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                                "{{ trigger.to_state.state}} - {{ trigger.for }} - "
+                                "{{ trigger.id}}"
                             )
                         },
                     },
@@ -106,7 +107,8 @@ async def test_if_fires_on_state_change(hass, calls):
                             "some": (
                                 "turn_off - {{ trigger.platform}} - "
                                 "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                                "{{ trigger.to_state.state}} - {{ trigger.for }} - "
+                                "{{ trigger.id}}"
                             )
                         },
                     },
@@ -119,14 +121,14 @@ async def test_if_fires_on_state_change(hass, calls):
     hass.states.async_set("NEW_DOMAIN.entity", STATE_ON)
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0].data["some"] == "turn_on - device - {} - off - on - None".format(
-        "NEW_DOMAIN.entity"
-    )
+    assert calls[0].data[
+        "some"
+    ] == "turn_on - device - {} - off - on - None - 0".format("NEW_DOMAIN.entity")
 
     # Fake that the entity is turning off.
     hass.states.async_set("NEW_DOMAIN.entity", STATE_OFF)
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert calls[1].data["some"] == "turn_off - device - {} - on - off - None".format(
-        "NEW_DOMAIN.entity"
-    )
+    assert calls[1].data[
+        "some"
+    ] == "turn_off - device - {} - on - off - None - 0".format("NEW_DOMAIN.entity")

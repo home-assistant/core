@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "unknown": "Tundmatu viga"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_pin_code": "Sisestatud PIN kood oli vale"
+        },
+        "step": {
+            "pairing": {
+                "data": {
+                    "pin": "PIN kood"
+                },
+                "description": "Sisesta teleris kuvatud PIN kood",
+                "title": "Sidumine"
+            },
+            "user": {
+                "data": {
+                    "host": "IP aadress",
+                    "name": "Nimi"
+                },
+                "description": "Sisesta oma Panasonic Viera TV IP-aadress",
+                "title": "Teleri seadistamine"
+            }
+        }
+    }
+}

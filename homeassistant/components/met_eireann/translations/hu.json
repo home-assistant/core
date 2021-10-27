@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "A szolg\u00e1ltat\u00e1s m\u00e1r konfigur\u00e1lva van"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "Magass\u00e1g",
+                    "latitude": "Sz\u00e9less\u00e9g",
+                    "longitude": "Hossz\u00fas\u00e1g",
+                    "name": "N\u00e9v"
+                },
+                "description": "Adja meg tart\u00f3zkod\u00e1si hely\u00e9t a Met \u00c9ireann Public Weather Forecast API id\u0151j\u00e1r\u00e1si adatainak haszn\u00e1lat\u00e1hoz",
+                "title": "Elhelyezked\u00e9s"
+            }
+        }
+    }
+}

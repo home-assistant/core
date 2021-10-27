@@ -2,7 +2,6 @@
 import os
 import time
 
-
 # mypy: allow-untyped-calls, allow-untyped-defs
 
 
@@ -16,8 +15,8 @@ def install_osx():
 
     template_path = os.path.join(os.path.dirname(__file__), "launchd.plist")
 
-    with open(template_path, "r", encoding="utf-8") as inp:
-        plist = inp.read()
+    with open(template_path, encoding="utf-8") as tinp:
+        plist = tinp.read()
 
     plist = plist.replace("$HASS_PATH$", hass_path)
     plist = plist.replace("$USER$", user)
@@ -28,10 +27,10 @@ def install_osx():
         with open(path, "w", encoding="utf-8") as outp:
             outp.write(plist)
     except OSError as err:
-        print("Unable to write to " + path, err)
+        print(f"Unable to write to {path}", err)
         return
 
-    os.popen("launchctl load -w -F " + path)
+    os.popen(f"launchctl load -w -F {path}")
 
     print(
         "Home Assistant has been installed. \
@@ -42,7 +41,7 @@ def install_osx():
 def uninstall_osx():
     """Unload from launchd on OS X."""
     path = os.path.expanduser("~/Library/LaunchAgents/org.homeassistant.plist")
-    os.popen("launchctl unload " + path)
+    os.popen(f"launchctl unload {path}")
 
     print("Home Assistant has been uninstalled.")
 

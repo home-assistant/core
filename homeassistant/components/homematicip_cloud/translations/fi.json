@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Laite on jo m\u00e4\u00e4ritetty",
+            "connection_aborted": "Yhdist\u00e4minen ep\u00e4onnistui",
+            "unknown": "Tapahtui tuntematon virhe."
+        },
+        "error": {
+            "invalid_sgtin_or_pin": "Virheellinen PIN-koodi, yrit\u00e4 uudelleen.",
+            "press_the_button": "Paina sinist\u00e4 painiketta."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "pin": "PIN-koodi"
+                }
+            }
+        }
+    }
+}

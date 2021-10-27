@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Potekla je \u010dasovna omejitev generiranja odobritnevega URL-ja.",
+            "missing_configuration": "Ta komponenta ni nastavljena, prosimo sledite dokumentaciji."
+        },
+        "create_entry": {
+            "default": "Uspe\u0161no overjeno z Netatmo."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Izberite medoto za preverjanje pristnosti"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "public_weather": {
+                "data": {
+                    "area_name": "Ime obmo\u010dja"
+                }
+            },
+            "public_weather_areas": {
+                "title": "Javni vremenski senzor Netatmo"
+            }
+        }
+    }
+}

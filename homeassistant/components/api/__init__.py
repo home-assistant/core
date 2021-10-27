@@ -1,5 +1,6 @@
 """Rest API for Home Assistant."""
 import asyncio
+from http import HTTPStatus
 import json
 import logging
 
@@ -8,14 +9,12 @@ from aiohttp.web_exceptions import HTTPBadRequest
 import async_timeout
 import voluptuous as vol
 
+from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.bootstrap import DATA_LOGGING
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     EVENT_TIME_CHANGED,
-    HTTP_BAD_REQUEST,
-    HTTP_CREATED,
-    HTTP_NOT_FOUND,
     MATCH_ALL,
     URL_API,
     URL_API_COMPONENTS,
@@ -25,24 +24,24 @@ from homeassistant.const import (
     URL_API_EVENTS,
     URL_API_SERVICES,
     URL_API_STATES,
-    URL_API_STATES_ENTITY,
     URL_API_STREAM,
     URL_API_TEMPLATE,
-    __version__,
 )
 import homeassistant.core as ha
-from homeassistant.auth.permissions.const import POLICY_READ
-from homeassistant.exceptions import TemplateError, Unauthorized, ServiceNotFound
+from homeassistant.exceptions import ServiceNotFound, TemplateError, Unauthorized
 from homeassistant.helpers import template
-from homeassistant.helpers.service import async_get_all_descriptions
-from homeassistant.helpers.state import AsyncTrackStates
 from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.service import async_get_all_descriptions
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_BASE_URL = "base_url"
+ATTR_EXTERNAL_URL = "external_url"
+ATTR_INTERNAL_URL = "internal_url"
 ATTR_LOCATION_NAME = "location_name"
+ATTR_INSTALLATION_TYPE = "installation_type"
 ATTR_REQUIRES_API_PASSWORD = "requires_api_password"
+ATTR_UUID = "uuid"
 ATTR_VERSION = "version"
 
 DOMAIN = "api"
@@ -50,7 +49,7 @@ STREAM_PING_PAYLOAD = "ping"
 STREAM_PING_INTERVAL = 50  # seconds
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Register the API with the HTTP interface."""
     hass.http.register_view(APIStatusView)
     hass.http.register_view(APIEventStream)
@@ -91,14 +90,14 @@ class APIEventStream(HomeAssistantView):
 
     async def get(self, request):
         """Provide a streaming interface for the event bus."""
+        # pylint: disable=no-self-use
         if not request["hass_user"].is_admin:
             raise Unauthorized()
         hass = request.app["hass"]
         stop_obj = object()
         to_write = asyncio.Queue()
 
-        restrict = request.query.get("restrict")
-        if restrict:
+        if restrict := request.query.get("restrict"):
             restrict = restrict.split(",") + [EVENT_HOMEASSISTANT_STOP]
 
         async def forward_events(event):
@@ -167,23 +166,28 @@ class APIConfigView(HomeAssistantView):
 
 
 class APIDiscoveryView(HomeAssistantView):
-    """View to provide Discovery information."""
+    """
+    View to provide Discovery information.
+
+    DEPRECATED: To be removed in 2022.1
+    """
 
     requires_auth = False
     url = URL_API_DISCOVERY_INFO
     name = "api:discovery"
 
-    @ha.callback
-    def get(self, request):
+    async def get(self, request):
         """Get discovery information."""
-        hass = request.app["hass"]
         return self.json(
             {
-                ATTR_BASE_URL: hass.config.api.base_url,
-                ATTR_LOCATION_NAME: hass.config.location_name,
-                # always needs authentication
+                ATTR_UUID: "",
+                ATTR_BASE_URL: "",
+                ATTR_EXTERNAL_URL: "",
+                ATTR_INTERNAL_URL: "",
+                ATTR_LOCATION_NAME: "",
+                ATTR_INSTALLATION_TYPE: "",
                 ATTR_REQUIRES_API_PASSWORD: True,
-                ATTR_VERSION: __version__,
+                ATTR_VERSION: "",
             }
         )
 
@@ -220,10 +224,9 @@ class APIEntityStateView(HomeAssistantView):
         if not user.permissions.check_entity(entity_id, POLICY_READ):
             raise Unauthorized(entity_id=entity_id)
 
-        state = request.app["hass"].states.get(entity_id)
-        if state:
+        if state := request.app["hass"].states.get(entity_id):
             return self.json(state)
-        return self.json_message("Entity not found.", HTTP_NOT_FOUND)
+        return self.json_message("Entity not found.", HTTPStatus.NOT_FOUND)
 
     async def post(self, request, entity_id):
         """Update state of entity."""
@@ -233,12 +236,10 @@ class APIEntityStateView(HomeAssistantView):
         try:
             data = await request.json()
         except ValueError:
-            return self.json_message("Invalid JSON specified.", HTTP_BAD_REQUEST)
+            return self.json_message("Invalid JSON specified.", HTTPStatus.BAD_REQUEST)
 
-        new_state = data.get("state")
-
-        if new_state is None:
-            return self.json_message("No state specified.", HTTP_BAD_REQUEST)
+        if (new_state := data.get("state")) is None:
+            return self.json_message("No state specified.", HTTPStatus.BAD_REQUEST)
 
         attributes = data.get("attributes")
         force_update = data.get("force_update", False)
@@ -251,10 +252,10 @@ class APIEntityStateView(HomeAssistantView):
         )
 
         # Read the state back for our response
-        status_code = HTTP_CREATED if is_new_state else 200
+        status_code = HTTPStatus.CREATED if is_new_state else HTTPStatus.OK
         resp = self.json(hass.states.get(entity_id), status_code)
 
-        resp.headers.add("Location", URL_API_STATES_ENTITY.format(entity_id))
+        resp.headers.add("Location", f"/api/states/{entity_id}")
 
         return resp
 
@@ -265,7 +266,7 @@ class APIEntityStateView(HomeAssistantView):
             raise Unauthorized(entity_id=entity_id)
         if request.app["hass"].states.async_remove(entity_id):
             return self.json_message("Entity removed.")
-        return self.json_message("Entity not found.", HTTP_NOT_FOUND)
+        return self.json_message("Entity not found.", HTTPStatus.NOT_FOUND)
 
 
 class APIEventListenersView(HomeAssistantView):
@@ -295,12 +296,12 @@ class APIEventView(HomeAssistantView):
             event_data = json.loads(body) if body else None
         except ValueError:
             return self.json_message(
-                "Event data should be valid JSON.", HTTP_BAD_REQUEST
+                "Event data should be valid JSON.", HTTPStatus.BAD_REQUEST
             )
 
         if event_data is not None and not isinstance(event_data, dict):
             return self.json_message(
-                "Event data should be a JSON object", HTTP_BAD_REQUEST
+                "Event data should be a JSON object", HTTPStatus.BAD_REQUEST
             )
 
         # Special case handling for event STATE_CHANGED
@@ -342,20 +343,29 @@ class APIDomainServicesView(HomeAssistantView):
 
         Returns a list of changed states.
         """
-        hass = request.app["hass"]
+        hass: ha.HomeAssistant = request.app["hass"]
         body = await request.text()
         try:
             data = json.loads(body) if body else None
         except ValueError:
-            return self.json_message("Data should be valid JSON.", HTTP_BAD_REQUEST)
+            return self.json_message(
+                "Data should be valid JSON.", HTTPStatus.BAD_REQUEST
+            )
 
-        with AsyncTrackStates(hass) as changed_states:
-            try:
-                await hass.services.async_call(
-                    domain, service, data, True, self.context(request)
-                )
-            except (vol.Invalid, ServiceNotFound):
-                raise HTTPBadRequest()
+        context = self.context(request)
+
+        try:
+            await hass.services.async_call(
+                domain, service, data, blocking=True, context=context
+            )
+        except (vol.Invalid, ServiceNotFound) as ex:
+            raise HTTPBadRequest() from ex
+
+        changed_states = []
+
+        for state in hass.states.async_all():
+            if state.context is context:
+                changed_states.append(state)
 
         return self.json(changed_states)
 
@@ -385,10 +395,10 @@ class APITemplateView(HomeAssistantView):
         try:
             data = await request.json()
             tpl = template.Template(data["template"], request.app["hass"])
-            return tpl.async_render(data.get("variables"))
+            return tpl.async_render(variables=data.get("variables"), parse_result=False)
         except (ValueError, TemplateError) as ex:
             return self.json_message(
-                f"Error rendering template: {ex}", HTTP_BAD_REQUEST
+                f"Error rendering template: {ex}", HTTPStatus.BAD_REQUEST
             )
 
 
@@ -400,6 +410,7 @@ class APIErrorLog(HomeAssistantView):
 
     async def get(self, request):
         """Retrieve API error log."""
+        # pylint: disable=no-self-use
         if not request["hass_user"].is_admin:
             raise Unauthorized()
         return web.FileResponse(request.app["hass"].data[DATA_LOGGING])
@@ -411,6 +422,7 @@ async def async_services_json(hass):
     return [{"domain": key, "services": value} for key, value in descriptions.items()]
 
 
+@ha.callback
 def async_events_json(hass):
     """Generate event data to JSONify."""
     return [

@@ -1,5 +1,5 @@
 """Provides device actions for ZHA devices."""
-from typing import List
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -12,6 +12,8 @@ from . import DOMAIN
 from .api import SERVICE_WARNING_DEVICE_SQUAWK, SERVICE_WARNING_DEVICE_WARN
 from .core.const import CHANNEL_IAS_WD
 from .core.helpers import async_get_zha_device
+
+# mypy: disallow-any-generics
 
 ACTION_SQUAWK = "squawk"
 ACTION_WARN = "warn"
@@ -54,14 +56,24 @@ async def async_call_action_from_config(
     )
 
 
-async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_actions(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device actions."""
-    zha_device = await async_get_zha_device(hass, device_id)
+    try:
+        zha_device = await async_get_zha_device(hass, device_id)
+    except (KeyError, AttributeError):
+        return []
+    cluster_channels = [
+        ch.name
+        for pool in zha_device.channels.pools
+        for ch in pool.claimed_channels.values()
+    ]
     actions = [
         action
-        for channel in DEVICE_ACTIONS
-        for action in DEVICE_ACTIONS[channel]
-        if channel in zha_device.cluster_channels
+        for channel, channel_actions in DEVICE_ACTIONS.items()
+        for action in channel_actions
+        if channel in cluster_channels
     ]
     for action in actions:
         action[CONF_DEVICE_ID] = device_id
@@ -76,7 +88,10 @@ async def _execute_service_based_action(
 ) -> None:
     action_type = config[CONF_TYPE]
     service_name = SERVICE_NAMES[action_type]
-    zha_device = await async_get_zha_device(hass, config[CONF_DEVICE_ID])
+    try:
+        zha_device = await async_get_zha_device(hass, config[CONF_DEVICE_ID])
+    except (KeyError, AttributeError):
+        return
 
     service_data = {ATTR_IEEE: str(zha_device.ieee)}
 

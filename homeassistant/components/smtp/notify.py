@@ -10,6 +10,14 @@ import smtplib
 
 import voluptuous as vol
 
+from homeassistant.components.notify import (
+    ATTR_DATA,
+    ATTR_TARGET,
+    ATTR_TITLE,
+    ATTR_TITLE_DEFAULT,
+    PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
@@ -19,15 +27,10 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.reload import setup_reload_service
 import homeassistant.util.dt as dt_util
 
-from homeassistant.components.notify import (
-    ATTR_DATA,
-    ATTR_TITLE,
-    ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
-    BaseNotificationService,
-)
+from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,6 +71,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_service(hass, config, discovery_info=None):
     """Get the mail notification service."""
+    setup_reload_service(hass, DOMAIN, PLATFORMS)
     mail_service = MailNotificationService(
         config.get(CONF_SERVER),
         config.get(CONF_PORT),
@@ -139,7 +143,7 @@ class MailNotificationService(BaseNotificationService):
         except (smtplib.socket.gaierror, ConnectionRefusedError):
             _LOGGER.exception(
                 "SMTP server not found or refused connection (%s:%s). "
-                "Please check the IP address, hostname, and availability of your SMTP server.",
+                "Please check the IP address, hostname, and availability of your SMTP server",
                 self._server,
                 self._port,
             )
@@ -166,9 +170,8 @@ class MailNotificationService(BaseNotificationService):
         build a multipart HTML if html config is defined.
         """
         subject = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-        data = kwargs.get(ATTR_DATA)
 
-        if data:
+        if data := kwargs.get(ATTR_DATA):
             if ATTR_HTML in data:
                 msg = _build_html_msg(
                     message, data[ATTR_HTML], images=data.get(ATTR_IMAGES, [])
@@ -179,23 +182,26 @@ class MailNotificationService(BaseNotificationService):
             msg = _build_text_msg(message)
 
         msg["Subject"] = subject
-        msg["To"] = ",".join(self.recipients)
+
+        if not (recipients := kwargs.get(ATTR_TARGET)):
+            recipients = self.recipients
+        msg["To"] = recipients if isinstance(recipients, str) else ",".join(recipients)
         if self._sender_name:
             msg["From"] = f"{self._sender_name} <{self._sender}>"
         else:
             msg["From"] = self._sender
-        msg["X-Mailer"] = "HomeAssistant"
+        msg["X-Mailer"] = "Home Assistant"
         msg["Date"] = email.utils.format_datetime(dt_util.now())
         msg["Message-Id"] = email.utils.make_msgid()
 
-        return self._send_email(msg)
+        return self._send_email(msg, recipients)
 
-    def _send_email(self, msg):
+    def _send_email(self, msg, recipients):
         """Send the message."""
         mail = self.connect()
         for _ in range(self.tries):
             try:
-                mail.sendmail(self._sender, self.recipients, msg.as_string())
+                mail.sendmail(self._sender, recipients, msg.as_string())
                 break
             except smtplib.SMTPServerDisconnected:
                 _LOGGER.warning(
@@ -216,6 +222,29 @@ def _build_text_msg(message):
     return MIMEText(message)
 
 
+def _attach_file(atch_name, content_id):
+    """Create a message attachment."""
+    try:
+        with open(atch_name, "rb") as attachment_file:
+            file_bytes = attachment_file.read()
+    except FileNotFoundError:
+        _LOGGER.warning("Attachment %s not found. Skipping", atch_name)
+        return None
+
+    try:
+        attachment = MIMEImage(file_bytes)
+    except TypeError:
+        _LOGGER.warning(
+            "Attachment %s has an unknown MIME type. " "Falling back to file",
+            atch_name,
+        )
+        attachment = MIMEApplication(file_bytes, Name=atch_name)
+        attachment["Content-Disposition"] = f'attachment; filename="{atch_name}"'
+
+    attachment.add_header("Content-ID", f"<{content_id}>")
+    return attachment
+
+
 def _build_multipart_msg(message, images):
     """Build Multipart message with in-line images."""
     _LOGGER.debug("Building multipart email with embedded attachment(s)")
@@ -229,26 +258,9 @@ def _build_multipart_msg(message, images):
     for atch_num, atch_name in enumerate(images):
         cid = f"image{atch_num}"
         body_text.append(f'<img src="cid:{cid}"><br>')
-        try:
-            with open(atch_name, "rb") as attachment_file:
-                file_bytes = attachment_file.read()
-                try:
-                    attachment = MIMEImage(file_bytes)
-                    msg.attach(attachment)
-                    attachment.add_header("Content-ID", f"<{cid}>")
-                except TypeError:
-                    _LOGGER.warning(
-                        "Attachment %s has an unknown MIME type. "
-                        "Falling back to file",
-                        atch_name,
-                    )
-                    attachment = MIMEApplication(file_bytes, Name=atch_name)
-                    attachment["Content-Disposition"] = (
-                        "attachment; " 'filename="%s"' % atch_name
-                    )
-                    msg.attach(attachment)
-        except FileNotFoundError:
-            _LOGGER.warning("Attachment %s not found. Skipping", atch_name)
+        attachment = _attach_file(atch_name, cid)
+        if attachment:
+            msg.attach(attachment)
 
     body_html = MIMEText("".join(body_text), "html")
     msg_alt.attach(body_html)
@@ -264,15 +276,9 @@ def _build_html_msg(text, html, images):
     alternative.attach(MIMEText(html, ATTR_HTML, _charset="utf-8"))
     msg.attach(alternative)
 
-    for atch_num, atch_name in enumerate(images):
+    for atch_name in images:
         name = os.path.basename(atch_name)
-        try:
-            with open(atch_name, "rb") as attachment_file:
-                attachment = MIMEImage(attachment_file.read(), filename=name)
+        attachment = _attach_file(atch_name, name)
+        if attachment:
             msg.attach(attachment)
-            attachment.add_header("Content-ID", f"<{name}>")
-        except FileNotFoundError:
-            _LOGGER.warning(
-                "Attachment %s [#%s] not found. Skipping", atch_name, atch_num
-            )
     return msg

@@ -1,20 +1,15 @@
 """Platform for Time of Flight sensor VL53L1X from STMicroelectronics."""
 
 import asyncio
-import logging
 from functools import partial
 
+from VL53L1X2 import VL53L1X  # pylint: disable=import-error
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components import rpi_gpio
-from homeassistant.const import CONF_NAME
-from homeassistant.helpers.entity import Entity
-
-_LOGGER = logging.getLogger(__name__)
-
-LENGTH_MILLIMETERS = "mm"
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import CONF_NAME, LENGTH_MILLIMETERS
+import homeassistant.helpers.config_validation as cv
 
 CONF_I2C_ADDRESS = "i2c_address"
 CONF_I2C_BUS = "i2c_bus"
@@ -51,7 +46,6 @@ def init_tof_1(xshut):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Reset and initialize the VL53L1X ToF Sensor from STMicroelectronics."""
-    from VL53L1X2 import VL53L1X  # pylint: disable=import-error
 
     name = config.get(CONF_NAME)
     bus_number = config.get(CONF_I2C_BUS)
@@ -70,7 +64,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(dev, True)
 
 
-class VL53L1XSensor(Entity):
+class VL53L1XSensor(SensorEntity):
     """Implementation of VL53L1X sensor."""
 
     def __init__(self, vl53l1x_sensor, name, unit, i2c_address):
@@ -88,12 +82,12 @@ class VL53L1XSensor(Entity):
         return self._name
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
         return self._unit_of_measurement
 

@@ -2,11 +2,7 @@
   "domain": "swiss_public_transport",
   "name": "Swiss public transport",
   "documentation": "https://www.home-assistant.io/integrations/swiss_public_transport",
-  "requirements": [
-    "python_opendata_transport==0.1.4"
-  ],
-  "dependencies": [],
-  "codeowners": [
-    "@fabaff"
-  ]
+  "requirements": ["python_opendata_transport==0.2.1"],
+  "codeowners": ["@fabaff"],
+  "iot_class": "cloud_polling"
 }

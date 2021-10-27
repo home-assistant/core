@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Re-autentificare efectuata cu succes"
+        }
+    }
+}

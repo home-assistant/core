@@ -2,9 +2,9 @@
 import logging
 import os
 
-import voluptuous as vol
 from pyps4_2ndscreen.ddp import async_create_ddp_endpoint
 from pyps4_2ndscreen.media_art import COUNTRIES
+import voluptuous as vol
 
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_TYPE,
@@ -18,15 +18,21 @@ from homeassistant.const import (
     CONF_REGION,
     CONF_TOKEN,
 )
-from homeassistant.core import split_entity_id
+from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry, config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.util import location
 from homeassistant.util.json import load_json, save_json
 
-from .config_flow import PlayStation4FlowHandler  # noqa: pylint: disable=unused-import
-from .const import ATTR_MEDIA_IMAGE_URL, COMMANDS, DOMAIN, GAMES_FILE, PS4_DATA
+from .config_flow import PlayStation4FlowHandler  # noqa: F401
+from .const import (
+    ATTR_MEDIA_IMAGE_URL,
+    COMMANDS,
+    COUNTRYCODE_NAMES,
+    DOMAIN,
+    GAMES_FILE,
+    PS4_DATA,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,6 +44,8 @@ PS4_COMMAND_SCHEMA = vol.Schema(
         vol.Required(ATTR_COMMAND): vol.In(list(COMMANDS)),
     }
 )
+
+PLATFORMS = ["media_player"]
 
 
 class PS4Data:
@@ -60,18 +68,15 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass, entry):
     """Set up PS4 from a config entry."""
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "media_player")
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Unload a PS4 config entry."""
-    await hass.config_entries.async_forward_entry_unload(entry, "media_player")
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_migrate_entry(hass, entry):
@@ -93,7 +98,7 @@ async def async_migrate_entry(hass, entry):
             hass.helpers.aiohttp_client.async_get_clientsession()
         )
         if loc:
-            country = loc.country_name
+            country = COUNTRYCODE_NAMES.get(loc.country_code)
             if country in COUNTRIES:
                 for device in data["devices"]:
                     device[CONF_REGION] = country
@@ -139,11 +144,9 @@ async def async_migrate_entry(hass, entry):
                 config_entries.async_update_entry(entry)
                 return True
 
-    msg = """{} for the PlayStation 4 Integration.
+    msg = f"""{reason[version]} for the PlayStation 4 Integration.
             Please remove the PS4 Integration and re-configure
-            [here](/config/integrations).""".format(
-        reason[version]
-    )
+            [here](/config/integrations)."""
 
     hass.components.persistent_notification.async_create(
         title="PlayStation 4 Integration Configuration Requires Update",
@@ -159,11 +162,11 @@ def format_unique_id(creds, mac_address):
     return f"{mac_address}_{suffix}"
 
 
-def load_games(hass: HomeAssistantType) -> dict:
+def load_games(hass: HomeAssistant, unique_id: str) -> dict:
     """Load games for sources."""
-    g_file = hass.config.path(GAMES_FILE)
+    g_file = hass.config.path(GAMES_FILE.format(unique_id))
     try:
-        games = load_json(g_file, dict)
+        games = load_json(g_file)
     except HomeAssistantError as error:
         games = {}
         _LOGGER.error("Failed to load games file: %s", error)
@@ -174,20 +177,20 @@ def load_games(hass: HomeAssistantType) -> dict:
 
     # If file exists
     if os.path.isfile(g_file):
-        games = _reformat_data(hass, games)
+        games = _reformat_data(hass, games, unique_id)
     return games
 
 
-def save_games(hass: HomeAssistantType, games: dict):
+def save_games(hass: HomeAssistant, games: dict, unique_id: str):
     """Save games to file."""
-    g_file = hass.config.path(GAMES_FILE)
+    g_file = hass.config.path(GAMES_FILE.format(unique_id))
     try:
         save_json(g_file, games)
     except OSError as error:
         _LOGGER.error("Could not save game list, %s", error)
 
 
-def _reformat_data(hass: HomeAssistantType, games: dict) -> dict:
+def _reformat_data(hass: HomeAssistant, games: dict, unique_id: str) -> dict:
     """Reformat data to correct format."""
     data_reformatted = False
 
@@ -206,11 +209,11 @@ def _reformat_data(hass: HomeAssistantType, games: dict) -> dict:
             _LOGGER.debug("Reformatting media data for item: %s, %s", game, data)
 
     if data_reformatted:
-        save_games(hass, games)
+        save_games(hass, games, unique_id)
     return games
 
 
-def service_handle(hass: HomeAssistantType):
+def service_handle(hass: HomeAssistant):
     """Handle for services."""
 
     async def async_service_command(call):

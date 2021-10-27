@@ -2,7 +2,9 @@
   "domain": "person",
   "name": "Person",
   "documentation": "https://www.home-assistant.io/integrations/person",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "dependencies": ["image"],
+  "after_dependencies": ["device_tracker"],
+  "codeowners": [],
+  "quality_scale": "internal",
+  "iot_class": "calculated"
 }

@@ -1,17 +1,13 @@
 """Support for KEBA charging station binary sensors."""
-import logging
-
-from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_PLUG,
     DEVICE_CLASS_CONNECTIVITY,
+    DEVICE_CLASS_PLUG,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_SAFETY,
+    BinarySensorEntity,
 )
 
 from . import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -22,22 +18,29 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     keba = hass.data[DOMAIN]
 
     sensors = [
-        KebaBinarySensor(keba, "Online", "Wallbox", DEVICE_CLASS_CONNECTIVITY),
-        KebaBinarySensor(keba, "Plug", "Plug", DEVICE_CLASS_PLUG),
-        KebaBinarySensor(keba, "State", "Charging state", DEVICE_CLASS_POWER),
-        KebaBinarySensor(keba, "Tmo FS", "Failsafe Mode", DEVICE_CLASS_SAFETY),
+        KebaBinarySensor(
+            keba, "Online", "Status", "device_state", DEVICE_CLASS_CONNECTIVITY
+        ),
+        KebaBinarySensor(keba, "Plug", "Plug", "plug_state", DEVICE_CLASS_PLUG),
+        KebaBinarySensor(
+            keba, "State", "Charging State", "charging_state", DEVICE_CLASS_POWER
+        ),
+        KebaBinarySensor(
+            keba, "Tmo FS", "Failsafe Mode", "failsafe_mode_state", DEVICE_CLASS_SAFETY
+        ),
     ]
     async_add_entities(sensors)
 
 
-class KebaBinarySensor(BinarySensorDevice):
+class KebaBinarySensor(BinarySensorEntity):
     """Representation of a binary sensor of a KEBA charging station."""
 
-    def __init__(self, keba, key, sensor_name, device_class):
+    def __init__(self, keba, key, name, entity_type, device_class):
         """Initialize the KEBA Sensor."""
         self._key = key
         self._keba = keba
-        self._name = sensor_name
+        self._name = name
+        self._entity_type = entity_type
         self._device_class = device_class
         self._is_on = None
         self._attributes = {}
@@ -50,12 +53,12 @@ class KebaBinarySensor(BinarySensorDevice):
     @property
     def unique_id(self):
         """Return the unique ID of the binary sensor."""
-        return f"{self._keba.device_name}_{self._name}"
+        return f"{self._keba.device_id}_{self._entity_type}"
 
     @property
     def name(self):
         """Return the name of the device."""
-        return self._name
+        return f"{self._keba.device_name} {self._name}"
 
     @property
     def device_class(self):
@@ -68,7 +71,7 @@ class KebaBinarySensor(BinarySensorDevice):
         return self._is_on
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the binary sensor."""
         return self._attributes
 

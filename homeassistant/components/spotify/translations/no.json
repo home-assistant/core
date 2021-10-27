@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Tidsavbrudd genererer godkjennelses-URL.",
+            "missing_configuration": "Spotify-integrasjonen er ikke konfigurert. F\u00f8lg dokumentasjonen.",
+            "no_url_available": "Ingen URL tilgjengelig. For informasjon om denne feilen, [sjekk hjelpseksjonen]({docs_url})",
+            "reauth_account_mismatch": "Spotify-kontoen som er godkjent samsvarer ikke med kontoen som trenger godkjenning p\u00e5 nytt"
+        },
+        "create_entry": {
+            "default": "Vellykket godkjenning med Spotify."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Velg godkjenningsmetode"
+            },
+            "reauth_confirm": {
+                "description": "Spotify-integreringen m\u00e5 godkjennes p\u00e5 nytt med Spotify for konto: {account}",
+                "title": "Godkjenne integrering p\u00e5 nytt"
+            }
+        }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Spotify API-endepunkt n\u00e5s"
+        }
+    }
+}

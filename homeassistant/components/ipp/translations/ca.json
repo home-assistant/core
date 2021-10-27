@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "connection_upgrade": "No s'ha pogut connectar amb la impressora, es necessita actualitzar la connexi\u00f3.",
+            "ipp_error": "S'ha produ\u00eft un error IPP.",
+            "ipp_version_error": "La versi\u00f3 IPP no \u00e9s compatible amb la impressora.",
+            "parse_error": "No s'ha pogut analitzar la resposta de la impressora.",
+            "unique_id_required": "Falta la identificaci\u00f3 \u00fanica al dispositiu, necess\u00e0ria per al descobriment."
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "connection_upgrade": "No s'ha pogut connectar amb la impressora. Prova-ho novament amb l'opci\u00f3 SSL/TLS activada."
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "base_path": "Ruta relativa a la impressora",
+                    "host": "Amfitri\u00f3",
+                    "port": "Port",
+                    "ssl": "Utilitza un certificat SSL",
+                    "verify_ssl": "Verifica el certificat SSL"
+                },
+                "description": "Configura la integraci\u00f3 amb Home Assistant d'una impressora amb protocol d'impressi\u00f3 per Internet (IPP).",
+                "title": "Enlla\u00e7 d'impressora"
+            },
+            "zeroconf_confirm": {
+                "description": "Vols configurar {name}?",
+                "title": "Impressora descoberta"
+            }
+        }
+    }
+}

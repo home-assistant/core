@@ -1,16 +1,24 @@
 """Support for Joaoapps Join services."""
 import logging
 
+from pyjoin import (
+    get_devices,
+    ring_device,
+    send_file,
+    send_notification,
+    send_sms,
+    send_url,
+    set_wallpaper,
+)
 import voluptuous as vol
 
+from homeassistant.const import CONF_API_KEY, CONF_DEVICE_ID, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_NAME, CONF_API_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "joaoapps_join"
 
-CONF_DEVICE_ID = "device_id"
 CONF_DEVICE_IDS = "device_ids"
 CONF_DEVICE_NAMES = "device_names"
 
@@ -35,14 +43,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def register_device(hass, api_key, name, device_id, device_ids, device_names):
     """Register services for each join device listed."""
-    from pyjoin import (
-        ring_device,
-        set_wallpaper,
-        send_sms,
-        send_file,
-        send_url,
-        send_notification,
-    )
 
     def ring_service(service):
         """Service to ring devices."""
@@ -104,29 +104,26 @@ def register_device(hass, api_key, name, device_id, device_ids, device_names):
             api_key=api_key,
         )
 
-    hass.services.register(DOMAIN, name + "ring", ring_service)
-    hass.services.register(DOMAIN, name + "set_wallpaper", set_wallpaper_service)
-    hass.services.register(DOMAIN, name + "send_sms", send_sms_service)
-    hass.services.register(DOMAIN, name + "send_file", send_file_service)
-    hass.services.register(DOMAIN, name + "send_url", send_url_service)
-    hass.services.register(DOMAIN, name + "send_tasker", send_tasker_service)
+    hass.services.register(DOMAIN, f"{name}ring", ring_service)
+    hass.services.register(DOMAIN, f"{name}set_wallpaper", set_wallpaper_service)
+    hass.services.register(DOMAIN, f"{name}send_sms", send_sms_service)
+    hass.services.register(DOMAIN, f"{name}send_file", send_file_service)
+    hass.services.register(DOMAIN, f"{name}send_url", send_url_service)
+    hass.services.register(DOMAIN, f"{name}send_tasker", send_tasker_service)
 
 
 def setup(hass, config):
     """Set up the Join services."""
-    from pyjoin import get_devices
-
     for device in config[DOMAIN]:
         api_key = device.get(CONF_API_KEY)
         device_id = device.get(CONF_DEVICE_ID)
         device_ids = device.get(CONF_DEVICE_IDS)
         device_names = device.get(CONF_DEVICE_NAMES)
         name = device.get(CONF_NAME)
-        name = name.lower().replace(" ", "_") + "_" if name else ""
-        if api_key:
-            if not get_devices(api_key):
-                _LOGGER.error("Error connecting to Join, check API key")
-                return False
+        name = f"{name.lower().replace(' ', '_')}_" if name else ""
+        if api_key and not get_devices(api_key):
+            _LOGGER.error("Error connecting to Join, check API key")
+            return False
         if device_id is None and device_ids is None and device_names is None:
             _LOGGER.error(
                 "No device was provided. Please specify device_id"

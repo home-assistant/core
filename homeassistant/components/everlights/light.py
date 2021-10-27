@@ -1,7 +1,8 @@
 """Support for EverLights lights."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Tuple
 
 import pyeverlights
 import voluptuous as vol
@@ -14,7 +15,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_EFFECT,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_HOSTS
 from homeassistant.exceptions import PlatformNotReady
@@ -32,15 +33,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOSTS): vol.All(cv.ensure_list, [cv.string])}
 )
 
-NAME_FORMAT = "EverLights {} Zone {}"
-
 
 def color_rgb_to_int(red: int, green: int, blue: int) -> int:
     """Return a RGB color as an integer."""
     return red * 256 * 256 + green * 256 + blue
 
 
-def color_int_to_rgb(value: int) -> Tuple[int, int, int]:
+def color_int_to_rgb(value: int) -> tuple[int, int, int]:
     """Return an RGB tuple from an integer."""
     return (value >> 16, (value >> 8) & 0xFF, value & 0xFF)
 
@@ -57,8 +56,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
             effects = await api.get_all_patterns()
 
-        except pyeverlights.ConnectionError:
-            raise PlatformNotReady
+        except pyeverlights.ConnectionError as err:
+            raise PlatformNotReady from err
 
         else:
             lights.append(EverLightsLight(api, pyeverlights.ZONE_1, status, effects))
@@ -67,7 +66,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(lights)
 
 
-class EverLightsLight(Light):
+class EverLightsLight(LightEntity):
     """Representation of a Flux light."""
 
     def __init__(self, api, channel, status, effects):
@@ -96,7 +95,7 @@ class EverLightsLight(Light):
     @property
     def name(self):
         """Return the name of the device."""
-        return NAME_FORMAT.format(self._mac, self._channel)
+        return f"EverLights {self._mac} Zone {self._channel}"
 
     @property
     def is_on(self):
@@ -162,9 +161,9 @@ class EverLightsLight(Light):
             self._status = await self._api.get_status()
         except pyeverlights.ConnectionError:
             if self._available:
-                _LOGGER.warning("EverLights control box connection lost.")
+                _LOGGER.warning("EverLights control box connection lost")
             self._available = False
         else:
             if not self._available:
-                _LOGGER.warning("EverLights control box connection restored.")
+                _LOGGER.warning("EverLights control box connection restored")
             self._available = True

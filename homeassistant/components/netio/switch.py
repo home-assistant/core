@@ -1,22 +1,26 @@
 """The Netio switch component."""
-import logging
+from __future__ import annotations
+
 from collections import namedtuple
 from datetime import timedelta
+import logging
+from typing import Any
 
+from pynetio import Netio
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant import util
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     CONF_HOST,
+    CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
-    CONF_PASSWORD,
     EVENT_HOMEASSISTANT_STOP,
     STATE_ON,
 )
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,8 +32,8 @@ CONF_OUTLETS = "outlets"
 
 DEFAULT_PORT = 1234
 DEFAULT_USERNAME = "admin"
-Device = namedtuple("device", ["netio", "entities"])
-DEVICES = {}
+Device = namedtuple("Device", ["netio", "entities"])
+DEVICES: dict[str, Any] = {}
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
@@ -50,7 +54,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Netio platform."""
-    from pynetio import Netio
 
     host = config.get(CONF_HOST)
     username = config.get(CONF_USERNAME)
@@ -79,7 +82,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 def dispose(event):
     """Close connections to Netio Devices."""
-    for _, value in DEVICES.items():
+    for value in DEVICES.values():
         value.netio.stop()
 
 
@@ -92,18 +95,17 @@ class NetioApiView(HomeAssistantView):
     @callback
     def get(self, request, host):
         """Request handler."""
-        hass = request.app["hass"]
         data = request.query
         states, consumptions, cumulated_consumptions, start_dates = [], [], [], []
 
         for i in range(1, 5):
             out = "output%d" % i
-            states.append(data.get("%s_state" % out) == STATE_ON)
-            consumptions.append(float(data.get("%s_consumption" % out, 0)))
+            states.append(data.get(f"{out}_state") == STATE_ON)
+            consumptions.append(float(data.get(f"{out}_consumption", 0)))
             cumulated_consumptions.append(
-                float(data.get("%s_cumulatedConsumption" % out, 0)) / 1000
+                float(data.get(f"{out}_cumulatedConsumption", 0)) / 1000
             )
-            start_dates.append(data.get("%s_consumptionStart" % out, ""))
+            start_dates.append(data.get(f"{out}_consumptionStart", ""))
 
         _LOGGER.debug(
             "%s: %s, %s, %s since %s",
@@ -121,12 +123,12 @@ class NetioApiView(HomeAssistantView):
         ndev.start_dates = start_dates
 
         for dev in DEVICES[host].entities:
-            hass.async_create_task(dev.async_update_ha_state())
+            dev.async_write_ha_state()
 
         return self.json(True)
 
 
-class NetioSwitch(SwitchDevice):
+class NetioSwitch(SwitchEntity):
     """Provide a Netio linked switch."""
 
     def __init__(self, netio, outlet, name):
@@ -170,7 +172,7 @@ class NetioSwitch(SwitchDevice):
         self.netio.update()
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return optional state attributes."""
         return {
             ATTR_TOTAL_CONSUMPTION_KWH: self.cumulated_consumption_kwh,

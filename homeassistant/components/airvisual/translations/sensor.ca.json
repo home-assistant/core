@@ -1,0 +1,20 @@
+{
+    "state": {
+        "airvisual__pollutant_label": {
+            "co": "Mon\u00f2xid de carboni",
+            "n2": "Di\u00f2xid de nitrogen",
+            "o3": "Oz\u00f3",
+            "p1": "PM10",
+            "p2": "PM2.5",
+            "s2": "Di\u00f2xid de sofre"
+        },
+        "airvisual__pollutant_level": {
+            "good": "Bo",
+            "hazardous": "Perill\u00f3s",
+            "moderate": "Moderat",
+            "unhealthy": "Poc saludable",
+            "unhealthy_sensitive": "Poc saludable per a grups sensibles",
+            "very_unhealthy": "Molt poc saludable"
+        }
+    }
+}

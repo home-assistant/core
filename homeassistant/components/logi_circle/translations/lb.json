@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kont ass scho registr\u00e9iert",
+            "external_error": "Ausnam vun engem anere Floss.",
+            "external_setup": "Logi Circle gouf vun engem anere Floss erfollegr\u00e4ich konfigur\u00e9iert.",
+            "missing_configuration": "Komponent net konfigur\u00e9iert. Folleg w.e.g der Dokumentatioun."
+        },
+        "error": {
+            "authorize_url_timeout": "Z\u00e4itiwwerschreidung beim erstellen vun der Authorisatiouns URL.",
+            "follow_link": "Follegt w.e.g dem Link an authentifiz\u00e9iert iech ier de op Ofsch\u00e9cken dr\u00e9ckt.",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun"
+        },
+        "step": {
+            "auth": {
+                "description": "Follegt dem Link \u00ebnnendr\u00ebnner an **accept\u00e9iert** den Acc\u00e8s zu \u00e4rem Logi Circle Kont , a kommt dann zer\u00e9ck heihin an dr\u00e9ck op **ofsch\u00e9cken** hei \u00ebnnen.\n\n[Link]({authorization_url})",
+                "title": "Mat Logi Circle authentifiz\u00e9ieren"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Ubidder"
+                },
+                "description": "Wielt den Authentifikatioun Ubidder deen sech mat Logi Circle verbanne soll.",
+                "title": "Authentifikatioun Ubidder"
+            }
+        }
+    }
+}

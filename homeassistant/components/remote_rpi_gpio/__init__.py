@@ -1,7 +1,6 @@
 """Support for controlling GPIO pins of a Raspberry Pi."""
-import logging
-
-_LOGGER = logging.getLogger(__name__)
+from gpiozero import LED, DigitalInputDevice
+from gpiozero.pins.pigpio import PiGPIOFactory
 
 CONF_BOUNCETIME = "bouncetime"
 CONF_INVERT_LOGIC = "invert_logic"
@@ -21,19 +20,17 @@ def setup(hass, config):
 
 def setup_output(address, port, invert_logic):
     """Set up a GPIO as output."""
-    from gpiozero import LED
-    from gpiozero.pins.pigpio import PiGPIOFactory
 
     try:
-        return LED(port, active_high=invert_logic, pin_factory=PiGPIOFactory(address))
+        return LED(
+            port, active_high=not invert_logic, pin_factory=PiGPIOFactory(address)
+        )
     except (ValueError, IndexError, KeyError):
         return None
 
 
 def setup_input(address, port, pull_mode, bouncetime):
     """Set up a GPIO as input."""
-    from gpiozero import Button
-    from gpiozero.pins.pigpio import PiGPIOFactory
 
     if pull_mode == "UP":
         pull_gpio_up = True
@@ -41,7 +38,7 @@ def setup_input(address, port, pull_mode, bouncetime):
         pull_gpio_up = False
 
     try:
-        return Button(
+        return DigitalInputDevice(
             port,
             pull_up=pull_gpio_up,
             bounce_time=bouncetime,
@@ -59,6 +56,6 @@ def write_output(switch, value):
         switch.off()
 
 
-def read_input(button):
+def read_input(sensor):
     """Read a value from a GPIO."""
-    return button.is_pressed
+    return sensor.value

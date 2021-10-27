@@ -1,113 +1,105 @@
 """Support for Speedtest.net internet speed testing sensor."""
-import logging
+from __future__ import annotations
 
+from typing import Any, cast
+
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.speedtestdotnet import SpeedTestDataCoordinator
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DATA_UPDATED, DOMAIN as SPEEDTESTDOTNET_DOMAIN, SENSOR_TYPES
-
-_LOGGER = logging.getLogger(__name__)
-
-ATTR_BYTES_RECEIVED = "bytes_received"
-ATTR_BYTES_SENT = "bytes_sent"
-ATTR_SERVER_COUNTRY = "server_country"
-ATTR_SERVER_HOST = "server_host"
-ATTR_SERVER_ID = "server_id"
-ATTR_SERVER_LATENCY = "latency"
-ATTR_SERVER_NAME = "server_name"
-
-ATTRIBUTION = "Data retrieved from Speedtest.net by Ookla"
-
-ICON = "mdi:speedometer"
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info):
-    """Set up the Speedtest.net sensor."""
-    data = hass.data[SPEEDTESTDOTNET_DOMAIN]
-    async_add_entities([SpeedtestSensor(data, sensor) for sensor in discovery_info])
+from .const import (
+    ATTR_BYTES_RECEIVED,
+    ATTR_BYTES_SENT,
+    ATTR_SERVER_COUNTRY,
+    ATTR_SERVER_ID,
+    ATTR_SERVER_NAME,
+    ATTRIBUTION,
+    DEFAULT_NAME,
+    DOMAIN,
+    ICON,
+    SENSOR_TYPES,
+    SpeedtestSensorEntityDescription,
+)
 
 
-class SpeedtestSensor(RestoreEntity):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Speedtestdotnet sensors."""
+    speedtest_coordinator = hass.data[DOMAIN]
+    async_add_entities(
+        SpeedtestSensor(speedtest_coordinator, description)
+        for description in SENSOR_TYPES
+    )
+
+
+class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
     """Implementation of a speedtest.net sensor."""
 
-    def __init__(self, speedtest_data, sensor_type):
+    coordinator: SpeedTestDataCoordinator
+    entity_description: SpeedtestSensorEntityDescription
+    _attr_icon = ICON
+
+    def __init__(
+        self,
+        coordinator: SpeedTestDataCoordinator,
+        description: SpeedtestSensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
-        self._name = SENSOR_TYPES[sensor_type][0]
-        self.speedtest_client = speedtest_data
-        self.type = sensor_type
-        self._state = None
-        self._data = None
-        self._unit_of_measurement = SENSOR_TYPES[self.type][1]
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_name = f"{DEFAULT_NAME} {description.name}"
+        self._attr_unique_id = description.key
+        self._state: StateType = None
+        self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.config_entry.entry_id)},
+            name=DEFAULT_NAME,
+            entry_type="service",
+            configuration_url="https://www.speedtest.net/",
+        )
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return "{} {}".format("Speedtest", self._name)
-
-    @property
-    def state(self):
-        """Return the state of the device."""
+    def native_value(self) -> StateType:
+        """Return native value for entity."""
+        if self.coordinator.data:
+            state = self.coordinator.data[self.entity_description.key]
+            self._state = cast(StateType, self.entity_description.value(state))
         return self._state
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Return icon."""
-        return ICON
-
-    @property
-    def should_poll(self):
-        """Return the polling requirement for this sensor."""
-        return False
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
-        if self._data is not None:
-            return attributes.update(
+        if self.coordinator.data:
+            self._attrs.update(
                 {
-                    ATTR_BYTES_RECEIVED: self._data["bytes_received"],
-                    ATTR_BYTES_SENT: self._data["bytes_sent"],
-                    ATTR_SERVER_COUNTRY: self._data["server"]["country"],
-                    ATTR_SERVER_ID: self._data["server"]["id"],
-                    ATTR_SERVER_LATENCY: self._data["server"]["latency"],
-                    ATTR_SERVER_NAME: self._data["server"]["name"],
+                    ATTR_SERVER_NAME: self.coordinator.data["server"]["name"],
+                    ATTR_SERVER_COUNTRY: self.coordinator.data["server"]["country"],
+                    ATTR_SERVER_ID: self.coordinator.data["server"]["id"],
                 }
             )
-        return attributes
 
-    async def async_added_to_hass(self):
+            if self.entity_description.key == "download":
+                self._attrs[ATTR_BYTES_RECEIVED] = self.coordinator.data[
+                    ATTR_BYTES_RECEIVED
+                ]
+            elif self.entity_description.key == "upload":
+                self._attrs[ATTR_BYTES_SENT] = self.coordinator.data[ATTR_BYTES_SENT]
+
+        return self._attrs
+
+    async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         state = await self.async_get_last_state()
-        if not state:
-            return
-        self._state = state.state
-
-        async_dispatcher_connect(
-            self.hass, DATA_UPDATED, self._schedule_immediate_update
-        )
-
-    def update(self):
-        """Get the latest data and update the states."""
-        self._data = self.speedtest_client.data
-        if self._data is None:
-            return
-
-        if self.type == "ping":
-            self._state = self._data["ping"]
-        elif self.type == "download":
-            self._state = round(self._data["download"] / 10 ** 6, 2)
-        elif self.type == "upload":
-            self._state = round(self._data["upload"] / 10 ** 6, 2)
-
-    @callback
-    def _schedule_immediate_update(self):
-        self.async_schedule_update_ha_state(True)
+        if state:
+            self._state = state.state

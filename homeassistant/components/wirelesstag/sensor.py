@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class WirelessTagSensor(WirelessTagBaseSensor):
+class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
     """Representation of a Sensor."""
 
     def __init__(self, api, tag, sensor_type, config):
@@ -58,16 +58,18 @@ class WirelessTagSensor(WirelessTagBaseSensor):
         # sensor.wirelesstag_bedroom_temperature
         # and not as sensor.bedroom for temperature and
         # sensor.bedroom_2 for humidity
-        self._entity_id = "{}.{}_{}_{}".format(
-            "sensor", WIRELESSTAG_DOMAIN, self.underscored_name, self._sensor_type
+        self._entity_id = (
+            f"sensor.{WIRELESSTAG_DOMAIN}_{self.underscored_name}_{self._sensor_type}"
         )
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass,
-            SIGNAL_TAG_UPDATE.format(self.tag_id, self.tag_manager_mac),
-            self._update_tag_info_callback,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_TAG_UPDATE.format(self.tag_id, self.tag_manager_mac),
+                self._update_tag_info_callback,
+            )
         )
 
     @property
@@ -81,7 +83,7 @@ class WirelessTagSensor(WirelessTagBaseSensor):
         return self.name.lower().replace(" ", "_")
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -91,7 +93,7 @@ class WirelessTagSensor(WirelessTagBaseSensor):
         return self._sensor_type
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._sensor.unit
 
@@ -106,9 +108,9 @@ class WirelessTagSensor(WirelessTagBaseSensor):
         return self._tag.sensor[self._sensor_type]
 
     @callback
-    def _update_tag_info_callback(self, event):
+    def _update_tag_info_callback(self, new_tag):
         """Handle push notification sent by tag manager."""
-        _LOGGER.debug("Entity to update state: %s event data: %s", self, event.data)
-        new_value = self._sensor.value_from_update_event(event.data)
-        self._state = self.decorate_value(new_value)
-        self.async_schedule_update_ha_state()
+        _LOGGER.debug("Entity to update state: %s with new tag: %s", self, new_tag)
+        self._tag = new_tag
+        self._state = self.updated_state_value()
+        self.async_write_ha_state()

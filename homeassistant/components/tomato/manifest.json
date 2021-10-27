@@ -2,7 +2,6 @@
   "domain": "tomato",
   "name": "Tomato",
   "documentation": "https://www.home-assistant.io/integrations/tomato",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

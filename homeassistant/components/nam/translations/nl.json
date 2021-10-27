@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "device_unsupported": "Het apparaat wordt niet ondersteund."
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "unknown": "Onverwachte fout"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm_discovery": {
+                "description": "Wilt u Nettigo Air Monitor instellen bij {host} ?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Stel Nettigo Air Monitor integratie in."
+            }
+        }
+    }
+}

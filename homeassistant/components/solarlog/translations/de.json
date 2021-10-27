@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Das Pr\u00e4fix, das f\u00fcr deine Solar-Log-Sensoren verwendet werden soll"
+                },
+                "title": "Definiere deine Solar-Log-Verbindung"
+            }
+        }
+    }
+}

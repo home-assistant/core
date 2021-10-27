@@ -1,14 +1,8 @@
 {
   "domain": "miflora",
-  "name": "Miflora",
+  "name": "Mi Flora",
   "documentation": "https://www.home-assistant.io/integrations/miflora",
-  "requirements": [
-    "bluepy==1.1.4",
-    "miflora==0.4.0"
-  ],
-  "dependencies": [],
-  "codeowners": [
-    "@danielhiversen",
-    "@ChristianKuehnel"
-  ]
+  "requirements": ["bluepy==1.3.0", "miflora==0.7.0"],
+  "codeowners": ["@danielhiversen", "@basnijholt"],
+  "iot_class": "local_polling"
 }

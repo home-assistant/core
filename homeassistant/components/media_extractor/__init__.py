@@ -2,6 +2,8 @@
 import logging
 
 import voluptuous as vol
+from youtube_dl import YoutubeDL
+from youtube_dl.utils import DownloadError, ExtractorError
 
 from homeassistant.components.media_player import MEDIA_PLAYER_PLAY_MEDIA_SCHEMA
 from homeassistant.components.media_player.const import (
@@ -44,7 +46,10 @@ def setup(hass, config):
         MediaExtractor(hass, config[DOMAIN], call.data).extract_and_send()
 
     hass.services.register(
-        DOMAIN, SERVICE_PLAY_MEDIA, play_media, schema=MEDIA_PLAYER_PLAY_MEDIA_SCHEMA
+        DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        play_media,
+        schema=cv.make_entity_service_schema(MEDIA_PLAYER_PLAY_MEDIA_SCHEMA),
     )
 
     return True
@@ -53,13 +58,9 @@ def setup(hass, config):
 class MEDownloadException(Exception):
     """Media extractor download exception."""
 
-    pass
-
 
 class MEQueryException(Exception):
     """Media extractor query exception."""
-
-    pass
 
 
 class MediaExtractor:
@@ -98,16 +99,13 @@ class MediaExtractor:
 
     def get_stream_selector(self):
         """Return format selector for the media URL."""
-        from youtube_dl import YoutubeDL
-        from youtube_dl.utils import DownloadError, ExtractorError
-
         ydl = YoutubeDL({"quiet": True, "logger": _LOGGER})
 
         try:
             all_media = ydl.extract_info(self.get_media_url(), process=False)
-        except DownloadError:
+        except DownloadError as err:
             # This exception will be logged by youtube-dl itself
-            raise MEDownloadException()
+            raise MEDownloadException() from err
 
         if "entries" in all_media:
             _LOGGER.warning("Playlists are not supported, looking for the first video")
@@ -125,9 +123,9 @@ class MediaExtractor:
             try:
                 ydl.params["format"] = query
                 requested_stream = ydl.process_ie_result(selected_media, download=False)
-            except (ExtractorError, DownloadError):
+            except (ExtractorError, DownloadError) as err:
                 _LOGGER.error("Could not extract stream for the query: %s", query)
-                raise MEQueryException()
+                raise MEQueryException() from err
 
             return requested_stream["url"]
 

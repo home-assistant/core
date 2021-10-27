@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "incomplete_discovery": "Entdeckung net komplett",
+            "no_devices_found": "Keng Apparater am Netzwierk fonnt."
+        },
+        "error": {
+            "one": "Een",
+            "other": "Aaner"
+        },
+        "flow_title": "UPnP/IGD: {name}",
+        "step": {
+            "ssdp_confirm": {
+                "description": "Soll d\u00ebsen UPnP/IGD Apparat konfigur\u00e9iert ginn?"
+            },
+            "user": {
+                "data": {
+                    "scan_interval": "Update Intervall (Sekonnen, minimum 30)",
+                    "usn": "Apparat"
+                }
+            }
+        }
+    }
+}

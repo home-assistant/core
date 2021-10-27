@@ -1,6 +1,8 @@
 """Support for IBM Watson TTS integration."""
 import logging
 
+from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
+from ibm_watson import TextToSpeechV1
 import voluptuous as vol
 
 from homeassistant.components.tts import PLATFORM_SCHEMA, Provider
@@ -10,9 +12,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_URL = "watson_url"
 CONF_APIKEY = "watson_apikey"
-ATTR_CREDENTIALS = "credentials"
 
-DEFAULT_URL = "https://stream.watsonplatform.net/text-to-speech/api"
+DEFAULT_URL = "https://api.us-south.text-to-speech.watson.cloud.ibm.com"
 
 CONF_VOICE = "voice"
 CONF_OUTPUT_FORMAT = "output_format"
@@ -20,39 +21,83 @@ CONF_TEXT_TYPE = "text"
 
 # List from https://tinyurl.com/watson-tts-docs
 SUPPORTED_VOICES = [
-    "de-DE_BirgitVoice",
+    "ar-AR_OmarVoice",
+    "ar-MS_OmarVoice",
     "de-DE_BirgitV2Voice",
     "de-DE_BirgitV3Voice",
-    "de-DE_DieterVoice",
+    "de-DE_BirgitVoice",
     "de-DE_DieterV2Voice",
     "de-DE_DieterV3Voice",
+    "de-DE_DieterVoice",
+    "de-DE_ErikaV3Voice",
+    "en-AU_CraigVoice",
+    "en-AU_MadisonVoice",
+    "en-GB_KateV3Voice",
+    "en-GB_KateVoice",
+    "en-GB_CharlotteV3Voice",
+    "en-GB_JamesV3Voice",
+    "en-GB_KateV3Voice",
+    "en-GB_KateVoice",
+    "en-US_AllisonV2Voice",
+    "en-US_AllisonV3Voice",
+    "en-US_AllisonVoice",
+    "en-US_EmilyV3Voice",
+    "en-US_HenryV3Voice",
+    "en-US_KevinV3Voice",
+    "en-US_LisaV2Voice",
+    "en-US_LisaV3Voice",
+    "en-US_LisaVoice",
+    "en-US_MichaelV2Voice",
+    "en-US_MichaelV3Voice",
+    "en-US_MichaelVoice",
+    "en-US_OliviaV3Voice",
+    "es-ES_EnriqueV3Voice",
+    "es-ES_EnriqueVoice",
+    "es-ES_LauraV3Voice",
+    "es-ES_LauraVoice",
+    "es-LA_SofiaV3Voice",
+    "es-LA_SofiaVoice",
+    "es-US_SofiaV3Voice",
+    "es-US_SofiaVoice",
+    "fr-CA_LouiseV3Voice",
+    "fr-FR_NicolasV3Voice",
+    "fr-FR_ReneeV3Voice",
+    "fr-FR_ReneeVoice",
+    "it-IT_FrancescaV2Voice",
+    "it-IT_FrancescaV3Voice",
+    "it-IT_FrancescaVoice",
+    "ja-JP_EmiV3Voice",
+    "ja-JP_EmiVoice",
+    "ko-KR_HyunjunVoice",
+    "ko-KR_SiWooVoice",
+    "ko-KR_YoungmiVoice",
+    "ko-KR_YunaVoice",
+    "nl-NL_EmmaVoice",
+    "nl-NL_LiamVoice",
+    "pt-BR_IsabelaV3Voice",
+    "pt-BR_IsabelaVoice",
+    "zh-CN_LiNaVoice",
+    "zh-CN_WangWeiVoice",
+    "zh-CN_ZhangJingVoice",
+]
+
+DEPRECATED_VOICES = [
+    "ar-AR_OmarVoice",
+    "de-DE_BirgitVoice",
+    "de-DE_DieterVoice",
     "en-GB_KateVoice",
     "en-GB_KateV3Voice",
     "en-US_AllisonVoice",
-    "en-US_AllisonV2Voice",
-    "en-US_AllisonV3Voice",
     "en-US_LisaVoice",
-    "en-US_LisaV2Voice",
-    "en-US_LisaV3Voice",
     "en-US_MichaelVoice",
-    "en-US_MichaelV2Voice",
-    "en-US_MichaelV3Voice",
     "es-ES_EnriqueVoice",
-    "es-ES_EnriqueV3Voice",
     "es-ES_LauraVoice",
-    "es-ES_LauraV3Voice",
     "es-LA_SofiaVoice",
-    "es-LA_SofiaV3Voice",
     "es-US_SofiaVoice",
-    "es-US_SofiaV3Voice",
     "fr-FR_ReneeVoice",
-    "fr-FR_ReneeV3Voice",
     "it-IT_FrancescaVoice",
-    "it-IT_FrancescaV2Voice",
-    "it-IT_FrancescaV3Voice",
     "ja-JP_EmiVoice",
     "pt-BR_IsabelaVoice",
-    "pt-BR_IsabelaV3Voice",
 ]
 
 SUPPORTED_OUTPUT_FORMATS = [
@@ -75,7 +120,7 @@ CONTENT_TYPE_EXTENSIONS = {
     "audio/wav": "wav",
 }
 
-DEFAULT_VOICE = "en-US_AllisonVoice"
+DEFAULT_VOICE = "en-US_AllisonV3Voice"
 DEFAULT_OUTPUT_FORMAT = "audio/mp3"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -90,10 +135,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_engine(hass, config):
+def get_engine(hass, config, discovery_info=None):
     """Set up IBM Watson TTS component."""
-    from ibm_watson import TextToSpeechV1
-    from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 
     authenticator = IAMAuthenticator(config[CONF_APIKEY])
     service = TextToSpeechV1(authenticator)
@@ -103,6 +146,12 @@ def get_engine(hass, config):
     default_voice = config[CONF_VOICE]
     output_format = config[CONF_OUTPUT_FORMAT]
     service.set_default_headers({"x-watson-learning-opt-out": "true"})
+
+    if default_voice in DEPRECATED_VOICES:
+        _LOGGER.warning(
+            "Watson TTS voice %s is deprecated, it may be removed in the future",
+            default_voice,
+        )
 
     return WatsonTTSProvider(service, supported_languages, default_voice, output_format)
 
@@ -142,7 +191,7 @@ class WatsonTTSProvider(Provider):
     def get_tts_audio(self, message, language=None, options=None):
         """Request TTS file from Watson TTS."""
         response = self.service.synthesize(
-            message, accept=self.output_format, voice=self.default_voice
+            text=message, accept=self.output_format, voice=options[CONF_VOICE]
         ).get_result()
 
         return (CONTENT_TYPE_EXTENSIONS[self.output_format], response.content)

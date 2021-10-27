@@ -1,0 +1,129 @@
+[
+  {
+    "series": {
+      "title": "The Andy Griffith Show",
+      "sortTitle": "andy griffith show",
+      "seasonCount": 8,
+      "status": "ended",
+      "overview": "Down-home humor and an endearing cast of characters helped make The Andy Griffith Show one of the most beloved comedies in the history of TV. The show centered around widower Andy Taylor, who divided his time between raising his young son Opie, and his job as sheriff of the sleepy North Carolina town, Mayberry. Andy and Opie live with Andy's Aunt Bee, who serves as a surrogate mother to both father and son. Andy's nervous cousin, Barney Fife, is his deputy sheriff whose incompetence is tolerated because Mayberry is virtually crime-free.",
+      "network": "CBS",
+      "airTime": "21:30",
+      "images": [
+        {
+          "coverType": "fanart",
+          "url": "https://artworks.thetvdb.com/banners/fanart/original/77754-5.jpg"
+        },
+        {
+          "coverType": "banner",
+          "url": "https://artworks.thetvdb.com/banners/graphical/77754-g.jpg"
+        },
+        {
+          "coverType": "poster",
+          "url": "https://artworks.thetvdb.com/banners/posters/77754-4.jpg"
+        }
+      ],
+      "seasons": [
+        {
+          "seasonNumber": 0,
+          "monitored": false
+        },
+        {
+          "seasonNumber": 1,
+          "monitored": false
+        },
+        {
+          "seasonNumber": 2,
+          "monitored": true
+        },
+        {
+          "seasonNumber": 3,
+          "monitored": false
+        },
+        {
+          "seasonNumber": 4,
+          "monitored": false
+        },
+        {
+          "seasonNumber": 5,
+          "monitored": true
+        },
+        {
+          "seasonNumber": 6,
+          "monitored": true
+        },
+        {
+          "seasonNumber": 7,
+          "monitored": true
+        },
+        {
+          "seasonNumber": 8,
+          "monitored": true
+        }
+      ],
+      "year": 1960,
+      "path": "F:\\The Andy Griffith Show",
+      "profileId": 5,
+      "seasonFolder": true,
+      "monitored": true,
+      "useSceneNumbering": false,
+      "runtime": 25,
+      "tvdbId": 77754,
+      "tvRageId": 5574,
+      "tvMazeId": 3853,
+      "firstAired": "1960-02-15T06:00:00Z",
+      "lastInfoSync": "2016-02-05T16:40:11.614176Z",
+      "seriesType": "standard",
+      "cleanTitle": "theandygriffithshow",
+      "imdbId": "",
+      "titleSlug": "the-andy-griffith-show",
+      "certification": "TV-G",
+      "genres": [
+        "Comedy"
+      ],
+      "tags": [],
+      "added": "2008-02-04T13:44:24.204583Z",
+      "ratings": {
+        "votes": 547,
+        "value": 8.6
+      },
+      "qualityProfileId": 5,
+      "id": 17
+    },
+    "episode": {
+      "seriesId": 17,
+      "episodeFileId": 0,
+      "seasonNumber": 1,
+      "episodeNumber": 1,
+      "title": "The New Housekeeper",
+      "airDate": "1960-10-03",
+      "airDateUtc": "1960-10-03T01:00:00Z",
+      "overview": "Sheriff Andy Taylor and his young son Opie are in need of a new housekeeper. Andy's Aunt Bee looks like the perfect candidate and moves in, but her presence causes friction with Opie.",
+      "hasFile": false,
+      "monitored": false,
+      "absoluteEpisodeNumber": 1,
+      "unverifiedSceneNumbering": false,
+      "id": 889
+    },
+    "quality": {
+      "quality": {
+        "id": 7,
+        "name": "SD"
+      },
+      "revision": {
+        "version": 1,
+        "real": 0
+      }
+    },
+    "size": 4472186820,
+    "title": "The.Andy.Griffith.Show.S01E01.x264-GROUP",
+    "sizeleft": 0,
+    "timeleft": "00:00:00",
+    "estimatedCompletionTime": "2016-02-05T22:46:52.440104Z",
+    "status": "Downloading",
+    "trackedDownloadStatus": "Ok",
+    "statusMessages": [],
+    "downloadId": "SABnzbd_nzo_Mq2f_b",
+    "protocol": "usenet",
+    "id": 1503378561
+  }
+]

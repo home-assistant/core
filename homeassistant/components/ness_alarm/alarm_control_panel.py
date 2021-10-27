@@ -2,7 +2,14 @@
 
 import logging
 
+from nessclient import ArmingState
+
 import homeassistant.components.alarm_control_panel as alarm
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+    SUPPORT_ALARM_TRIGGER,
+)
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMING,
@@ -27,7 +34,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([device])
 
 
-class NessAlarmPanel(alarm.AlarmControlPanel):
+class NessAlarmPanel(alarm.AlarmControlPanelEntity):
     """Representation of a Ness alarm panel."""
 
     def __init__(self, client, name):
@@ -38,8 +45,10 @@ class NessAlarmPanel(alarm.AlarmControlPanel):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_ARMING_STATE_CHANGED, self._handle_arming_state_change
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_ARMING_STATE_CHANGED, self._handle_arming_state_change
+            )
         )
 
     @property
@@ -62,6 +71,11 @@ class NessAlarmPanel(alarm.AlarmControlPanel):
         """Return the state of the device."""
         return self._state
 
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_TRIGGER
+
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
         await self._client.disarm(code)
@@ -81,7 +95,6 @@ class NessAlarmPanel(alarm.AlarmControlPanel):
     @callback
     def _handle_arming_state_change(self, arming_state):
         """Handle arming state update."""
-        from nessclient import ArmingState
 
         if arming_state == ArmingState.UNKNOWN:
             self._state = None
@@ -100,4 +113,4 @@ class NessAlarmPanel(alarm.AlarmControlPanel):
         else:
             _LOGGER.warning("Unhandled arming state: %s", arming_state)
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

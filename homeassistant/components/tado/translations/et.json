@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "no_homes": "Selle Tado kontoga pole \u00fchtegi kodu seotud.",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "title": "Tado kontoga \u00fchenduse loomine"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "fallback": "Luba varure\u017eiim."
+                },
+                "description": "P\u00e4rast tsooni k\u00e4sitsi reguleerimist l\u00fclitub varure\u017eiim j\u00e4rgmisel ajakava l\u00fclitil nutikasse ajakavasse.",
+                "title": "Kohanda Tado suvandeid."
+            }
+        }
+    }
+}

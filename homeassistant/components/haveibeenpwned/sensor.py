@@ -1,15 +1,15 @@
 """Support for haveibeenpwned (email breaches) sensor."""
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 from aiohttp.hdrs import USER_AGENT
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_EMAIL, CONF_API_KEY, ATTR_ATTRIBUTION
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_EMAIL
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_point_in_time
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
@@ -48,7 +48,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices)
 
 
-class HaveIBeenPwnedSensor(Entity):
+class HaveIBeenPwnedSensor(SensorEntity):
     """Implementation of a HaveIBeenPwned sensor."""
 
     def __init__(self, data, email):
@@ -64,30 +64,28 @@ class HaveIBeenPwnedSensor(Entity):
         return f"Breaches {self._email}"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the attributes of the sensor."""
         val = {ATTR_ATTRIBUTION: ATTRIBUTION}
         if self._email not in self._data.data:
             return val
 
         for idx, value in enumerate(self._data.data[self._email]):
-            tmpname = "breach {}".format(idx + 1)
-            tmpvalue = "{} {}".format(
-                value["Title"],
-                dt_util.as_local(dt_util.parse_datetime(value["AddedDate"])).strftime(
-                    DATE_STR_FORMAT
-                ),
+            tmpname = f"breach {idx + 1}"
+            datetime_local = dt_util.as_local(
+                dt_util.parse_datetime(value["AddedDate"])
             )
+            tmpvalue = f"{value['Title']} {datetime_local.strftime(DATE_STR_FORMAT)}"
             val[tmpname] = tmpvalue
 
         return val
@@ -160,7 +158,7 @@ class HaveIBeenPwnedData:
             _LOGGER.error("Failed fetching data for %s", self._email)
             return
 
-        if req.status_code == 200:
+        if req.status_code == HTTPStatus.OK:
             self.data[self._email] = sorted(
                 req.json(), key=lambda k: k["AddedDate"], reverse=True
             )
@@ -169,7 +167,7 @@ class HaveIBeenPwnedData:
             # the forced updates try this current email again
             self.set_next_email()
 
-        elif req.status_code == 404:
+        elif req.status_code == HTTPStatus.NOT_FOUND:
             self.data[self._email] = []
 
             # only goto next email if we had data so that
@@ -178,7 +176,7 @@ class HaveIBeenPwnedData:
 
         else:
             _LOGGER.error(
-                "Failed fetching data for %s" "(HTTP Status_code = %d)",
+                "Failed fetching data for %s (HTTP Status_code = %d)",
                 self._email,
                 req.status_code,
             )

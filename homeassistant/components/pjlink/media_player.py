@@ -1,9 +1,9 @@
 """Support for controlling projector via the PJLink protocol."""
-import logging
-
+from pypjlink import MUTE_AUDIO, Projector
+from pypjlink.projector import ProjectorError
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
@@ -20,12 +20,11 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
-
 CONF_ENCODING = "encoding"
 
 DEFAULT_PORT = 4352
 DEFAULT_ENCODING = "utf-8"
+DEFAULT_TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -68,7 +67,7 @@ def format_input_source(input_source_name, input_source_number):
     return f"{input_source_name} {input_source_number}"
 
 
-class PjLinkDevice(MediaPlayerDevice):
+class PjLinkDevice(MediaPlayerEntity):
     """Representation of a PJLink device."""
 
     def __init__(self, host, port, name, encoding, password):
@@ -90,15 +89,15 @@ class PjLinkDevice(MediaPlayerDevice):
 
     def projector(self):
         """Create PJLink Projector instance."""
-        from pypjlink import Projector
 
-        projector = Projector.from_address(self._host, self._port, self._encoding)
+        projector = Projector.from_address(
+            self._host, self._port, self._encoding, DEFAULT_TIMEOUT
+        )
         projector.authenticate(self._password)
         return projector
 
     def update(self):
         """Get the latest state from the device."""
-        from pypjlink.projector import ProjectorError
 
         with self.projector() as projector:
             try:
@@ -169,8 +168,6 @@ class PjLinkDevice(MediaPlayerDevice):
     def mute_volume(self, mute):
         """Mute (true) of unmute (false) media player."""
         with self.projector() as projector:
-            from pypjlink import MUTE_AUDIO
-
             projector.set_mute(MUTE_AUDIO, mute)
 
     def select_source(self, source):

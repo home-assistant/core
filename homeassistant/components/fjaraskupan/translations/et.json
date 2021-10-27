@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "V\u00f5rgust ei leitud \u00fchtegi seadet",
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
+        },
+        "step": {
+            "confirm": {
+                "description": "Kas soovid seadistada Fj\u00e4r\u00e5skupani?"
+            }
+        }
+    }
+}

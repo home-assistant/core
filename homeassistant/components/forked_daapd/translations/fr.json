@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "not_forked_daapd": "Le p\u00e9riph\u00e9rique n'est pas un serveur forked-daapd."
+        },
+        "error": {
+            "forbidden": "Impossible de se connecter. Veuillez v\u00e9rifier vos autorisations r\u00e9seau forked-daapd.",
+            "unknown_error": "Erreur inattendue",
+            "websocket_not_enabled": "le socket web du serveur forked-daapd n'est pas activ\u00e9.",
+            "wrong_host_or_port": "Impossible de se connecter. Veuillez v\u00e9rifier l'h\u00f4te et le port.",
+            "wrong_password": "Mot de passe incorrect.",
+            "wrong_server_type": "L'int\u00e9gration forked-daapd n\u00e9cessite un serveur forked-daapd avec la version > = 27.0."
+        },
+        "flow_title": "serveur forked-daapd: {name} ( {host} )",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "name": "Nom familier",
+                    "password": "Mot de passe API (laissez vide si aucun mot de passe)",
+                    "port": "Port API"
+                },
+                "title": "Configurer le p\u00e9riph\u00e9rique forked-daapd"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "librespot_java_port": "Port pour le contr\u00f4le du pipe librespot-java (si utilis\u00e9)",
+                    "max_playlists": "Nombre maximal de listes de lecture utilis\u00e9es comme sources",
+                    "tts_pause_time": "Secondes pour faire une pause avant et apr\u00e8s TTS",
+                    "tts_volume": "Volume TTS (d\u00e9cimal dans la plage [0,1])"
+                },
+                "description": "D\u00e9finissez diverses options pour l'int\u00e9gration forked-daapd.",
+                "title": "Configurer les options forked-daapd"
+            }
+        }
+    }
+}

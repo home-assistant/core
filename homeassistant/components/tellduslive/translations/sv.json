@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Timeout n\u00e4r genererar auktorisera url.",
+            "unknown": "Ok\u00e4nt fel intr\u00e4ffade"
+        },
+        "step": {
+            "auth": {
+                "description": "F\u00f6r att l\u00e4nka ditt \"Telldus Live!\" konto: \n 1. Klicka p\u00e5 l\u00e4nken nedan \n 2. Logga in p\u00e5 Telldus Live!\n 3. Godk\u00e4nn **{app_name}** (klicka **Yes**). \n 4. Kom tillbaka hit och klicka p\u00e5 **SUBMIT**. \n\n [L\u00e4nk till Telldus Live konto]({auth_url})",
+                "title": "Autentisera mot Telldus Live!"
+            },
+            "user": {
+                "data": {
+                    "host": "V\u00e4rddatorn"
+                },
+                "description": "?",
+                "title": "V\u00e4lj endpoint."
+            }
+        }
+    }
+}

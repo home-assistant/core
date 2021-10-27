@@ -1,11 +1,10 @@
 """Test the NamecheapDNS component."""
-import asyncio
 from datetime import timedelta
 
 import pytest
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import namecheapdns
+from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from tests.common import async_fire_time_changed
@@ -33,8 +32,7 @@ def setup_namecheapdns(hass, aioclient_mock):
     )
 
 
-@asyncio.coroutine
-def test_setup(hass, aioclient_mock):
+async def test_setup(hass, aioclient_mock):
     """Test setup works if update passes."""
     aioclient_mock.get(
         namecheapdns.UPDATE_URL,
@@ -42,7 +40,7 @@ def test_setup(hass, aioclient_mock):
         text="<interface-response><ErrCount>0</ErrCount></interface-response>",
     )
 
-    result = yield from async_setup_component(
+    result = await async_setup_component(
         hass,
         namecheapdns.DOMAIN,
         {"namecheapdns": {"host": HOST, "domain": DOMAIN, "password": PASSWORD}},
@@ -51,12 +49,11 @@ def test_setup(hass, aioclient_mock):
     assert aioclient_mock.call_count == 1
 
     async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert aioclient_mock.call_count == 2
 
 
-@asyncio.coroutine
-def test_setup_fails_if_update_fails(hass, aioclient_mock):
+async def test_setup_fails_if_update_fails(hass, aioclient_mock):
     """Test setup fails if first update fails."""
     aioclient_mock.get(
         namecheapdns.UPDATE_URL,
@@ -64,7 +61,7 @@ def test_setup_fails_if_update_fails(hass, aioclient_mock):
         text="<interface-response><ErrCount>1</ErrCount></interface-response>",
     )
 
-    result = yield from async_setup_component(
+    result = await async_setup_component(
         hass,
         namecheapdns.DOMAIN,
         {"namecheapdns": {"host": HOST, "domain": DOMAIN, "password": PASSWORD}},

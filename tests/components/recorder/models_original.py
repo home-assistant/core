@@ -4,8 +4,8 @@ This file contains the original models definitions before schema tracking was
 implemented. It is used to test the schema migration logic.
 """
 
-import json
 from datetime import datetime
+import json
 import logging
 
 from sqlalchemy import (
@@ -19,11 +19,11 @@ from sqlalchemy import (
     Text,
     distinct,
 )
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 
-import homeassistant.util.dt as dt_util
 from homeassistant.core import Event, EventOrigin, State, split_entity_id
 from homeassistant.helpers.json import JSONEncoder
+import homeassistant.util.dt as dt_util
 
 # SQLAlchemy Schema
 # pylint: disable=invalid-name
@@ -170,5 +170,5 @@ def _process_timestamp(ts):
     if ts is None:
         return None
     if ts.tzinfo is None:
-        return dt_util.UTC.localize(ts)
+        return ts.replace(tzinfo=dt_util.UTC)
     return dt_util.as_utc(ts)

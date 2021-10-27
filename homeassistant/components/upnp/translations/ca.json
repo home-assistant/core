@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "incomplete_discovery": "Descoberta incompleta",
+            "no_devices_found": "No s'han trobat dispositius a la xarxa"
+        },
+        "error": {
+            "one": "un",
+            "other": "altre"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "ssdp_confirm": {
+                "description": "Vols configurar aquest dispositiu UPnP/IGD?"
+            },
+            "user": {
+                "data": {
+                    "scan_interval": "Interval d'actualitzaci\u00f3 (en segons, m\u00ednim 30)",
+                    "unique_id": "Dispositiu",
+                    "usn": "Dispositiu"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Interval d'actualitzaci\u00f3 (en segons, m\u00ednim 30)"
+                }
+            }
+        }
+    }
+}

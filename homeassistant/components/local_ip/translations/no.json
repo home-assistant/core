@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
+        },
+        "step": {
+            "user": {
+                "description": "Vil du starte oppsettet?",
+                "title": "Lokal IP-adresse"
+            }
+        }
+    },
+    "title": "Lokal IP-adresse"
+}

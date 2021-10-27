@@ -1,63 +1,47 @@
 """Config flow to configure the IQVIA component."""
+from __future__ import annotations
 
-from collections import OrderedDict
-import voluptuous as vol
+from typing import Any
 
 from pyiqvia import Client
 from pyiqvia.errors import InvalidZipError
+import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
 from .const import CONF_ZIP_CODE, DOMAIN
 
 
-@callback
-def configured_instances(hass):
-    """Return a set of configured IQVIA instances."""
-    return set(
-        entry.data[CONF_ZIP_CODE] for entry in hass.config_entries.async_entries(DOMAIN)
-    )
-
-
-@config_entries.HANDLERS.register(DOMAIN)
-class IQVIAFlowHandler(config_entries.ConfigFlow):
+class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle an IQVIA config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the config flow."""
-        self.data_schema = OrderedDict()
-        self.data_schema[vol.Required(CONF_ZIP_CODE)] = str
+        self.data_schema = vol.Schema({vol.Required(CONF_ZIP_CODE): str})
 
-    async def _show_form(self, errors=None):
-        """Show the form to the user."""
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(self.data_schema),
-            errors=errors if errors else {},
-        )
-
-    async def async_step_import(self, import_config):
-        """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
-
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the start of the config flow."""
         if not user_input:
-            return await self._show_form()
+            return self.async_show_form(step_id="user", data_schema=self.data_schema)
 
-        if user_input[CONF_ZIP_CODE] in configured_instances(self.hass):
-            return await self._show_form({CONF_ZIP_CODE: "identifier_exists"})
+        await self.async_set_unique_id(user_input[CONF_ZIP_CODE])
+        self._abort_if_unique_id_configured()
 
         websession = aiohttp_client.async_get_clientsession(self.hass)
 
         try:
-            Client(user_input[CONF_ZIP_CODE], websession)
+            Client(user_input[CONF_ZIP_CODE], session=websession)
         except InvalidZipError:
-            return await self._show_form({CONF_ZIP_CODE: "invalid_zip_code"})
+            return self.async_show_form(
+                step_id="user",
+                data_schema=self.data_schema,
+                errors={CONF_ZIP_CODE: "invalid_zip_code"},
+            )
 
         return self.async_create_entry(title=user_input[CONF_ZIP_CODE], data=user_input)

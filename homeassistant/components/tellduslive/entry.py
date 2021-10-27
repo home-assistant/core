@@ -2,10 +2,18 @@
 from datetime import datetime
 import logging
 
-from homeassistant.const import ATTR_BATTERY_LEVEL, DEVICE_DEFAULT_NAME
+from tellduslive import BATTERY_LOW, BATTERY_OK, BATTERY_UNKNOWN
+
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_VIA_DEVICE,
+    DEVICE_DEFAULT_NAME,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import SIGNAL_UPDATE_ENTITY
 
@@ -41,7 +49,7 @@ class TelldusLiveEntity(Entity):
         """Return the property of the device might have changed."""
         if self.device.name:
             self._name = self.device.name
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def device_id(self):
@@ -79,7 +87,7 @@ class TelldusLiveEntity(Entity):
         return self._client.is_available(self.device_id)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {}
         if self._battery_level:
@@ -91,8 +99,6 @@ class TelldusLiveEntity(Entity):
     @property
     def _battery_level(self):
         """Return the battery level of a device."""
-        from tellduslive import BATTERY_LOW, BATTERY_UNKNOWN, BATTERY_OK
-
         if self.device.battery == BATTERY_LOW:
             return 1
         if self.device.battery == BATTERY_UNKNOWN:
@@ -116,20 +122,17 @@ class TelldusLiveEntity(Entity):
         return self._id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
         device = self._client.device_info(self.device.device_id)
-        device_info = {
-            "identifiers": {("tellduslive", self.device.device_id)},
-            "name": self.device.name,
-        }
-        model = device.get("model")
-        if model is not None:
-            device_info["model"] = model.title()
-        protocol = device.get("protocol")
-        if protocol is not None:
-            device_info["manufacturer"] = protocol.title()
-        client = device.get("client")
-        if client is not None:
-            device_info["via_device"] = ("tellduslive", client)
+        device_info = DeviceInfo(
+            identifiers={("tellduslive", self.device.device_id)},
+            name=self.device.name,
+        )
+        if (model := device.get("model")) is not None:
+            device_info[ATTR_MODEL] = model.title()
+        if (protocol := device.get("protocol")) is not None:
+            device_info[ATTR_MANUFACTURER] = protocol.title()
+        if (client := device.get("client")) is not None:
+            device_info[ATTR_VIA_DEVICE] = ("tellduslive", client)
         return device_info

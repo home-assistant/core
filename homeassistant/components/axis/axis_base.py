@@ -2,7 +2,7 @@
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN as AXIS_DOMAIN
 
@@ -13,73 +13,50 @@ class AxisEntityBase(Entity):
     def __init__(self, device):
         """Initialize the Axis event."""
         self.device = device
-        self.unsub_dispatcher = []
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(AXIS_DOMAIN, device.unique_id)}
+        )
 
     async def async_added_to_hass(self):
         """Subscribe device events."""
-        self.unsub_dispatcher.append(
+        self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, self.device.event_reachable, self.update_callback
+                self.hass, self.device.signal_reachable, self.update_callback
             )
         )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Unsubscribe device events when removed."""
-        for unsub_dispatcher in self.unsub_dispatcher:
-            unsub_dispatcher()
 
     @property
     def available(self):
         """Return True if device is available."""
         return self.device.available
 
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return {"identifiers": {(AXIS_DOMAIN, self.device.serial)}}
-
     @callback
     def update_callback(self, no_delay=None):
         """Update the entities state."""
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
 
 class AxisEventBase(AxisEntityBase):
     """Base common to all Axis entities from event stream."""
+
+    _attr_should_poll = False
 
     def __init__(self, event, device):
         """Initialize the Axis event."""
         super().__init__(device)
         self.event = event
 
+        self._attr_name = f"{device.name} {event.TYPE} {event.id}"
+        self._attr_unique_id = f"{device.unique_id}-{event.topic}-{event.id}"
+
+        self._attr_device_class = event.CLASS
+
     async def async_added_to_hass(self) -> None:
         """Subscribe sensors events."""
         self.event.register_callback(self.update_callback)
-
         await super().async_added_to_hass()
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
         self.event.remove_callback(self.update_callback)
-
-        await super().async_will_remove_from_hass()
-
-    @property
-    def device_class(self):
-        """Return the class of the event."""
-        return self.event.CLASS
-
-    @property
-    def name(self):
-        """Return the name of the event."""
-        return f"{self.device.name} {self.event.TYPE} {self.event.id}"
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this device."""
-        return f"{self.device.serial}-{self.event.topic}-{self.event.id}"

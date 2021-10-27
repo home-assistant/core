@@ -1,28 +1,31 @@
 """Device tracker platform that adds support for OwnTracks over MQTT."""
-import logging
-
+from homeassistant.components.device_tracker import (
+    ATTR_BATTERY,
+    ATTR_GPS,
+    ATTR_GPS_ACCURACY,
+    ATTR_LOCATION_NAME,
+)
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_GPS
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL,
+    ATTR_DEVICE_ID,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     ATTR_ALTITUDE,
-    ATTR_BATTERY,
     ATTR_COURSE,
-    ATTR_DEVICE_ID,
     ATTR_DEVICE_NAME,
-    ATTR_GPS,
-    ATTR_GPS_ACCURACY,
-    ATTR_LOCATION_NAME,
     ATTR_SPEED,
     ATTR_VERTICAL_ACCURACY,
     SIGNAL_LOCATION_UPDATE,
 )
 from .helpers import device_info
 
-_LOGGER = logging.getLogger(__name__)
 ATTR_KEYS = (ATTR_ALTITUDE, ATTR_COURSE, ATTR_SPEED, ATTR_VERTICAL_ACCURACY)
 
 
@@ -53,12 +56,11 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         return self._data.get(ATTR_BATTERY)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific attributes."""
         attrs = {}
         for key in ATTR_KEYS:
-            value = self._data.get(key)
-            if value is not None:
+            if (value := self._data.get(key)) is not None:
                 attrs[key] = value
 
         return attrs
@@ -71,9 +73,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
     @property
     def latitude(self):
         """Return latitude value of the device."""
-        gps = self._data.get(ATTR_GPS)
-
-        if gps is None:
+        if (gps := self._data.get(ATTR_GPS)) is None:
             return None
 
         return gps[0]
@@ -81,9 +81,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
     @property
     def longitude(self):
         """Return longitude value of the device."""
-        gps = self._data.get(ATTR_GPS)
-
-        if gps is None:
+        if (gps := self._data.get(ATTR_GPS)) is None:
             return None
 
         return gps[1]
@@ -91,17 +89,14 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
     @property
     def location_name(self):
         """Return a location name for the current location of the device."""
-        return self._data.get(ATTR_LOCATION_NAME)
+        if location_name := self._data.get(ATTR_LOCATION_NAME):
+            return location_name
+        return None
 
     @property
     def name(self):
         """Return the name of the device."""
         return self._entry.data[ATTR_DEVICE_NAME]
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def source_type(self):

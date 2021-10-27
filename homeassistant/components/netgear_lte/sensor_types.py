@@ -1,6 +1,11 @@
 """Define possible sensor types."""
 
 from homeassistant.components.binary_sensor import DEVICE_CLASS_CONNECTIVITY
+from homeassistant.const import (
+    DATA_MEBIBYTES,
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+)
 
 SENSOR_SMS = "sms"
 SENSOR_SMS_TOTAL = "sms_total"
@@ -9,10 +14,10 @@ SENSOR_USAGE = "usage"
 SENSOR_UNITS = {
     SENSOR_SMS: "unread",
     SENSOR_SMS_TOTAL: "messages",
-    SENSOR_USAGE: "MiB",
-    "radio_quality": "%",
-    "rx_level": "dBm",
-    "tx_level": "dBm",
+    SENSOR_USAGE: DATA_MEBIBYTES,
+    "radio_quality": PERCENTAGE,
+    "rx_level": SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    "tx_level": SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     "upstream": None,
     "connection_text": None,
     "connection_type": None,

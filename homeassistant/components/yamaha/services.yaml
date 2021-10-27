@@ -1,0 +1,50 @@
+enable_output:
+  name: Enable output
+  description: Enable or disable an output port
+  target:
+    entity:
+      integration: yamaha
+      domain: media_player
+  fields:
+    port:
+      name: Port
+      description: Name of port to enable/disable.
+      required: true
+      example: "hdmi1"
+      selector:
+        text:
+    enabled:
+      name: Enabled
+      description: Indicate if port should be enabled or not.
+      required: true
+      selector:
+        boolean:
+menu_cursor:
+  name: Menu cursor
+  description: Control the cursor in a menu
+  target:
+    entity:
+      integration: yamaha
+      domain: media_player
+  fields:
+    cursor:
+      name: Cursor
+      description: Name of the cursor key to press ('up', 'down', 'left', 'right', 'select', 'return')
+      example: down
+      selector:
+        text:
+select_scene:
+  name: Select scene
+  description: "Select a scene on the receiver"
+  target:
+    entity:
+      integration: yamaha
+      domain: media_player
+  fields:
+    scene:
+      name: Scene
+      description: Name of the scene. Standard for RX-V437 is 'BD/DVD Movie Viewing', 'TV Viewing', 'NET Audio Listening' or 'Radio Listening'
+      required: true
+      example: "TV Viewing"
+      selector:
+        text:

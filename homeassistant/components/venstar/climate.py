@@ -1,60 +1,57 @@
 """Support for Venstar WiFi Thermostats."""
-import logging
-
-from venstarcolortouch import VenstarColorTouch
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_OFF,
+    FAN_AUTO,
+    FAN_ON,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_OFF,
-    SUPPORT_FAN_MODE,
-    FAN_ON,
-    FAN_AUTO,
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
     PRESET_AWAY,
     PRESET_NONE,
+    SUPPORT_FAN_MODE,
+    SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_HUMIDITY,
+    SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
     CONF_PASSWORD,
+    CONF_PIN,
     CONF_SSL,
     CONF_TIMEOUT,
     CONF_USERNAME,
-    PRECISION_WHOLE,
+    PRECISION_HALVES,
     STATE_ON,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
 import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
-
-ATTR_FAN_STATE = "fan_state"
-ATTR_HVAC_STATE = "hvac_mode"
-
-CONF_HUMIDIFIER = "humidifier"
-
-DEFAULT_SSL = False
-
-VALID_FAN_STATES = [STATE_ON, HVAC_MODE_AUTO]
-VALID_THERMOSTAT_MODES = [HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_OFF, HVAC_MODE_AUTO]
-
-HOLD_MODE_OFF = "off"
-HOLD_MODE_TEMPERATURE = "temperature"
+from . import VenstarEntity
+from .const import (
+    _LOGGER,
+    ATTR_FAN_STATE,
+    ATTR_HVAC_STATE,
+    CONF_HUMIDIFIER,
+    DEFAULT_SSL,
+    DOMAIN,
+    HOLD_MODE_TEMPERATURE,
+    VALID_FAN_STATES,
+    VALID_THERMOSTAT_MODES,
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -66,50 +63,46 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             vol.Coerce(int), vol.Range(min=1)
         ),
         vol.Optional(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_PIN): cv.string,
     }
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Venstar thermostat."""
+    client = hass.data[DOMAIN][config_entry.entry_id]
+    async_add_entities([VenstarThermostat(config_entry, client)], True)
 
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    host = config.get(CONF_HOST)
-    timeout = config.get(CONF_TIMEOUT)
-    humidifier = config.get(CONF_HUMIDIFIER)
 
-    if config.get(CONF_SSL):
-        proto = "https"
-    else:
-        proto = "http"
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the Venstar thermostat platform.
 
-    client = VenstarColorTouch(
-        addr=host, timeout=timeout, user=username, password=password, proto=proto
+    Venstar uses config flow for configuration now. If an entry exists in
+    configuration.yaml, the import flow will attempt to import it and create
+    a config entry.
+    """
+    _LOGGER.warning(
+        "Loading venstar via platform config is deprecated; The configuration"
+        " has been migrated to a config entry and can be safely removed"
     )
+    # No config entry exists and configuration.yaml config exists, trigger the import flow.
+    if not hass.config_entries.async_entries(DOMAIN):
+        await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
 
-    add_entities([VenstarThermostat(client, humidifier)], True)
 
-
-class VenstarThermostat(ClimateDevice):
+class VenstarThermostat(VenstarEntity, ClimateEntity):
     """Representation of a Venstar thermostat."""
 
-    def __init__(self, client, humidifier):
+    def __init__(self, config, client):
         """Initialize the thermostat."""
-        self._client = client
-        self._humidifier = humidifier
+        super().__init__(config, client)
         self._mode_map = {
             HVAC_MODE_HEAT: self._client.MODE_HEAT,
             HVAC_MODE_COOL: self._client.MODE_COOL,
             HVAC_MODE_AUTO: self._client.MODE_AUTO,
         }
-
-    def update(self):
-        """Update the data from the thermostat."""
-        info_success = self._client.update_info()
-        sensor_success = self._client.update_sensors()
-        if not info_success or not sensor_success:
-            _LOGGER.error("Failed to update data")
 
     @property
     def supported_features(self):
@@ -119,24 +112,19 @@ class VenstarThermostat(ClimateDevice):
         if self._client.mode == self._client.MODE_AUTO:
             features |= SUPPORT_TARGET_TEMPERATURE_RANGE
 
-        if self._humidifier and hasattr(self._client, "hum_active"):
+        if self._client.hum_setpoint is not None:
             features |= SUPPORT_TARGET_HUMIDITY
 
         return features
-
-    @property
-    def name(self):
-        """Return the name of the thermostat."""
-        return self._client.name
 
     @property
     def precision(self):
         """Return the precision of the system.
 
         Venstar temperature values are passed back and forth in the
-        API as whole degrees C or F.
+        API in C or F, with half-degree accuracy.
         """
-        return PRECISION_WHOLE
+        return PRECISION_HALVES
 
     @property
     def temperature_unit(self):
@@ -195,7 +183,7 @@ class VenstarThermostat(ClimateDevice):
         return FAN_AUTO
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the optional state attributes."""
         return {
             ATTR_FAN_STATE: self._client.fanstate,
@@ -278,7 +266,7 @@ class VenstarThermostat(ClimateDevice):
         temperature = kwargs.get(ATTR_TEMPERATURE)
 
         if operation_mode and self._mode_map.get(operation_mode) != self._client.mode:
-            set_temp = self._set_operation_mode(self._mode_map.get(operation_mode))
+            set_temp = self._set_operation_mode(operation_mode)
 
         if set_temp:
             if (

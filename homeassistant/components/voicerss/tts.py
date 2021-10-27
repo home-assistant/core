@@ -1,5 +1,6 @@
 """Support for the voicerss speech service."""
 import asyncio
+from http import HTTPStatus
 import logging
 
 import aiohttp
@@ -28,32 +29,55 @@ ERROR_MSG = [
 ]
 
 SUPPORT_LANGUAGES = [
+    "ar-eg",
+    "ar-sa",
+    "bg-bg",
     "ca-es",
     "zh-cn",
     "zh-hk",
     "zh-tw",
+    "hr-hr",
+    "cs-cz",
     "da-dk",
+    "nl-be",
     "nl-nl",
     "en-au",
     "en-ca",
     "en-gb",
     "en-in",
+    "en-ie",
     "en-us",
     "fi-fi",
     "fr-ca",
     "fr-fr",
+    "fr-ch",
+    "de-at",
     "de-de",
+    "de-ch",
+    "el-gr",
+    "he-il",
+    "hi-in",
+    "hu-hu",
+    "id-id",
     "it-it",
     "ja-jp",
     "ko-kr",
+    "ms-my",
     "nb-no",
     "pl-pl",
     "pt-br",
     "pt-pt",
+    "ro-ro",
     "ru-ru",
+    "sk-sk",
+    "sl-si",
     "es-mx",
     "es-es",
     "sv-se",
+    "ta-in",
+    "th-th",
+    "tr-tr",
+    "vi-vn",
 ]
 
 SUPPORT_CODECS = ["mp3", "wav", "aac", "ogg", "caf"]
@@ -131,7 +155,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_get_engine(hass, config):
+async def async_get_engine(hass, config, discovery_info=None):
     """Set up VoiceRSS TTS component."""
     return VoiceRSSProvider(hass, config)
 
@@ -175,9 +199,9 @@ class VoiceRSSProvider(Provider):
             with async_timeout.timeout(10):
                 request = await websession.post(VOICERSS_API_URL, data=form_data)
 
-                if request.status != 200:
+                if request.status != HTTPStatus.OK:
                     _LOGGER.error(
-                        "Error %d on load url %s.", request.status, request.url
+                        "Error %d on load url %s", request.status, request.url
                     )
                     return (None, None)
                 data = await request.read()

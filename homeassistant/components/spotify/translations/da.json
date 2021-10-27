@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Timeout ved generering af godkendelses-url.",
+            "missing_configuration": "Spotify-integrationen er ikke konfigureret. F\u00f8lg venligst dokumentationen."
+        },
+        "create_entry": {
+            "default": "Godkendt med Spotify."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "V\u00e6lg godkendelsesmetode"
+            }
+        }
+    }
+}

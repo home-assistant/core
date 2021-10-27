@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "invalid_host": "Entri host tidak dalam format URL lengkap, misalnya, http://192.168.10.100:80",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "URL",
+                    "password": "Kata Sandi",
+                    "tls": "Versi TLS dari pengontrol ISY.",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Entri host harus dalam format URL lengkap, misalnya, http://192.168.10.100:80",
+                "title": "Hubungkan ke ISY994 Anda"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ignore_string": "Abaikan String",
+                    "restore_light_state": "Pulihkan Kecerahan Cahaya",
+                    "sensor_string": "String Sensor Node",
+                    "variable_sensor_string": "String Sensor Variabel"
+                },
+                "description": "Mengatur opsi untuk Integrasi ISY: \n \u2022 String Sensor Node: Setiap perangkat atau folder yang berisi 'String Sensor Node' dalam nama akan diperlakukan sebagai sensor atau sensor biner. \n \u2022 Abaikan String: Setiap perangkat dengan 'Abaikan String' dalam nama akan diabaikan. \n \u2022 String Sensor Variabel: Variabel apa pun yang berisi 'String Sensor Variabel' akan ditambahkan sebagai sensor. \n \u2022 Pulihkan Kecerahan Cahaya: Jika diaktifkan, kecerahan sebelumnya akan dipulihkan saat menyalakan lampu alih-alih bawaan perangkat On-Level.",
+                "title": "Opsi ISY994"
+            }
+        }
+    }
+}

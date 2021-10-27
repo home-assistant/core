@@ -1,17 +1,17 @@
 """Support for Digital Loggers DIN III Relays."""
-import logging
 from datetime import timedelta
+import logging
 
 import dlipower
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
-    CONF_USERNAME,
     CONF_PASSWORD,
     CONF_TIMEOUT,
+    CONF_USERNAME,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
@@ -47,12 +47,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Find and return DIN III Relay switch."""
 
-    host = config.get(CONF_HOST)
-    controller_name = config.get(CONF_NAME)
-    user = config.get(CONF_USERNAME)
-    pswd = config.get(CONF_PASSWORD)
-    tout = config.get(CONF_TIMEOUT)
-    cycl = config.get(CONF_CYCLETIME)
+    host = config[CONF_HOST]
+    controller_name = config[CONF_NAME]
+    user = config[CONF_USERNAME]
+    pswd = config[CONF_PASSWORD]
+    tout = config[CONF_TIMEOUT]
+    cycl = config[CONF_CYCLETIME]
 
     power_switch = dlipower.PowerSwitch(
         hostname=host, userid=user, password=pswd, timeout=tout, cycletime=cycl
@@ -72,7 +72,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(outlets)
 
 
-class DINRelay(SwitchDevice):
+class DINRelay(SwitchEntity):
     """Representation of an individual DIN III relay port."""
 
     def __init__(self, controller_name, parent_device, outlet):
@@ -94,11 +94,6 @@ class DINRelay(SwitchDevice):
     def is_on(self):
         """Return true if relay is on."""
         return self._state
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
 
     def turn_on(self, **kwargs):
         """Instruct the relay to turn on."""

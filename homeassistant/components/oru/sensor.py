@@ -2,15 +2,12 @@
 from datetime import timedelta
 import logging
 
+from oru import Meter, MeterError
 import voluptuous as vol
 
-from oru import Meter
-from oru import MeterError
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ENERGY_KILO_WATT_HOUR
-from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,8 +38,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     _LOGGER.debug("Oru meter_number = %s", meter_number)
 
 
-class CurrentEnergyUsageSensor(Entity):
+class CurrentEnergyUsageSensor(SensorEntity):
     """Representation of the sensor."""
+
+    _attr_icon = SENSOR_ICON
+    _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
 
     def __init__(self, meter):
         """Initialize the sensor."""
@@ -52,7 +52,7 @@ class CurrentEnergyUsageSensor(Entity):
 
     @property
     def unique_id(self):
-        """Return a unique, HASS-friendly identifier for this entity."""
+        """Return a unique, Home Assistant friendly identifier for this entity."""
         return self.meter.meter_id
 
     @property
@@ -61,19 +61,9 @@ class CurrentEnergyUsageSensor(Entity):
         return SENSOR_NAME
 
     @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return SENSOR_ICON
-
-    @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return ENERGY_KILO_WATT_HOUR
 
     def update(self):
         """Fetch new state data for the sensor."""

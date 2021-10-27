@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich.",
+            "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
+            "connection_error": "Verbindung fehlgeschlagen",
+            "missing_configuration": "Die Soma-Komponente ist nicht konfiguriert. Bitte folge der Dokumentation.",
+            "result_error": "SOMA Connect hat mit einem Fehlerstatus geantwortet."
+        },
+        "create_entry": {
+            "default": "Erfolgreich authentifiziert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "description": "Bitte gib die Verbindungsinformationen f\u00fcr SOMA Connect ein.",
+                "title": "SOMA Connect"
+            }
+        }
+    }
+}

@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Layanan sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Kunci API",
+                    "latitude": "Lintang",
+                    "longitude": "Bujur",
+                    "station": "Kode stasiun METAR"
+                },
+                "description": "Jika kode stasiun METAR tidak ditentukan, informasi lintang dan bujur akan digunakan untuk menemukan stasiun terdekat. Untuk saat ini, Kunci API bisa berupa nilai sebarang. Disarankan untuk menggunakan alamat email yang valid.",
+                "title": "Hubungkan ke National Weather Service"
+            }
+        }
+    }
+}

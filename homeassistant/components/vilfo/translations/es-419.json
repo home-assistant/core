@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Este enrutador Vilfo ya est\u00e1 configurado."
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar. Verifique la informaci\u00f3n que proporcion\u00f3 e intente nuevamente.",
+            "invalid_auth": "Autenticaci\u00f3n inv\u00e1lida Verifique el token de acceso e intente nuevamente.",
+            "unknown": "Se produjo un error inesperado al configurar la integraci\u00f3n."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Token de acceso para la API del enrutador Vilfo",
+                    "host": "Nombre de host o IP del enrutador"
+                },
+                "description": "Configure la integraci\u00f3n del enrutador Vilfo. Necesita su nombre de host/IP de Vilfo Router y un token de acceso API. Para obtener informaci\u00f3n adicional sobre esta integraci\u00f3n y c\u00f3mo obtener esos detalles, visite: https://www.home-assistant.io/integrations/vilfo",
+                "title": "Conectar con el Router Vilfo"
+            }
+        }
+    }
+}

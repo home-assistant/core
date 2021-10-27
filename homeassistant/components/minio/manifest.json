@@ -2,11 +2,7 @@
   "domain": "minio",
   "name": "Minio",
   "documentation": "https://www.home-assistant.io/integrations/minio",
-  "requirements": [
-    "minio==4.0.9"
-  ],
-  "dependencies": [],
-  "codeowners": [
-    "@tkislan"
-  ]
+  "requirements": ["minio==4.0.9"],
+  "codeowners": ["@tkislan"],
+  "iot_class": "cloud_push"
 }

@@ -3,14 +3,14 @@
 import logging
 import threading
 
-import geopy.distance
 import aprslib
-from aprslib import ConnectionError as AprsConnectionError
-from aprslib import LoginError
-
+from aprslib import ConnectionError as AprsConnectionError, LoginError
+import geopy.distance
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import (
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+)
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
@@ -46,7 +46,7 @@ FILTER_PORT = 14580
 
 MSG_FORMATS = ["compressed", "uncompressed", "mic-e"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_CALLSIGNS): cv.ensure_list,
         vol.Required(CONF_USERNAME): cv.string,
@@ -59,7 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def make_filter(callsigns: list) -> str:
     """Make a server-side filter from a list of callsigns."""
-    return " ".join("b/{0}".format(cs.upper()) for cs in callsigns)
+    return " ".join(f"b/{sign.upper()}" for sign in callsigns)
 
 
 def gps_accuracy(gps, posambiguity: int) -> int:
@@ -99,7 +99,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, aprs_disconnect)
 
     if not aprs_listener.start_event.wait(timeout):
-        _LOGGER.error("Timeout waiting for APRS to connect.")
+        _LOGGER.error("Timeout waiting for APRS to connect")
         return
 
     if not aprs_listener.start_success:
@@ -143,7 +143,7 @@ class AprsListenerThread(threading.Thread):
 
         try:
             _LOGGER.info(
-                "Opening connection to %s with callsign %s.", self.host, self.callsign
+                "Opening connection to %s with callsign %s", self.host, self.callsign
             )
             self.ais.connect()
             self.start_complete(
@@ -154,7 +154,7 @@ class AprsListenerThread(threading.Thread):
             self.start_complete(False, str(err))
         except OSError:
             _LOGGER.info(
-                "Closing connection to %s with callsign %s.", self.host, self.callsign
+                "Closing connection to %s with callsign %s", self.host, self.callsign
             )
 
     def stop(self):
@@ -178,7 +178,7 @@ class AprsListenerThread(threading.Thread):
                     _LOGGER.warning(
                         "APRS message contained invalid posambiguity: %s", str(pos_amb)
                     )
-            for attr in [ATTR_ALTITUDE, ATTR_COMMENT, ATTR_COURSE, ATTR_SPEED]:
+            for attr in (ATTR_ALTITUDE, ATTR_COMMENT, ATTR_COURSE, ATTR_SPEED):
                 if attr in msg:
                     attrs[attr] = msg[attr]
 

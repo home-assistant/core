@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "description": "Vuelva a autenticarse con su cuenta de Ambee."
+                }
+            }
+        }
+    }
+}

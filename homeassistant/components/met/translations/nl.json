@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "no_home": "Er zijn geen thuisco\u00f6rdinaten ingesteld in de Home Assistant-configuratie"
+        },
+        "error": {
+            "already_configured": "Service is al geconfigureerd"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "Hoogte",
+                    "latitude": "Breedtegraad",
+                    "longitude": "Lengtegraad",
+                    "name": "Naam"
+                },
+                "description": "Meteorologisch institutt",
+                "title": "Locatie"
+            }
+        }
+    }
+}

@@ -8,7 +8,7 @@ from aiohttp.hdrs import CONTENT_TYPE
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.const import CONF_API_KEY, CONF_TIMEOUT, ATTR_NAME
+from homeassistant.const import ATTR_NAME, CONF_API_KEY, CONF_TIMEOUT, CONTENT_TYPE_JSON
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -96,7 +96,7 @@ async def async_setup(hass, config):
             face.store[g_id] = {}
 
             entities[g_id] = MicrosoftFaceGroupEntity(hass, face, g_id, name)
-            await entities[g_id].async_update_ha_state()
+            entities[g_id].async_write_ha_state()
         except HomeAssistantError as err:
             _LOGGER.error("Can't create group '%s' with error: %s", g_id, err)
 
@@ -113,7 +113,7 @@ async def async_setup(hass, config):
             face.store.pop(g_id)
 
             entity = entities.pop(g_id)
-            hass.states.async_remove(entity.entity_id)
+            hass.states.async_remove(entity.entity_id, service.context)
         except HomeAssistantError as err:
             _LOGGER.error("Can't delete group '%s' with error: %s", g_id, err)
 
@@ -145,7 +145,7 @@ async def async_setup(hass, config):
             )
 
             face.store[g_id][name] = user_data["personId"]
-            await entities[g_id].async_update_ha_state()
+            entities[g_id].async_write_ha_state()
         except HomeAssistantError as err:
             _LOGGER.error("Can't create person '%s' with error: %s", name, err)
 
@@ -163,7 +163,7 @@ async def async_setup(hass, config):
             await face.call_api("delete", f"persongroups/{g_id}/persons/{p_id}")
 
             face.store[g_id].pop(name)
-            await entities[g_id].async_update_ha_state()
+            entities[g_id].async_write_ha_state()
         except HomeAssistantError as err:
             _LOGGER.error("Can't delete person '%s' with error: %s", p_id, err)
 
@@ -189,7 +189,9 @@ async def async_setup(hass, config):
                 binary=True,
             )
         except HomeAssistantError as err:
-            _LOGGER.error("Can't delete person '%s' with error: %s", p_id, err)
+            _LOGGER.error(
+                "Can't add an image of a person '%s' with error: %s", p_id, err
+            )
 
     hass.services.async_register(
         DOMAIN, SERVICE_FACE_PERSON, async_face_person, schema=SCHEMA_FACE_SERVICE
@@ -229,7 +231,7 @@ class MicrosoftFaceGroupEntity(Entity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         attr = {}
         for name, p_id in self._api.store[self._id].items():
@@ -239,7 +241,7 @@ class MicrosoftFaceGroupEntity(Entity):
 
 
 class MicrosoftFace:
-    """Microsoft Face api for HomeAssistant."""
+    """Microsoft Face api for Home Assistant."""
 
     def __init__(self, hass, server_loc, api_key, timeout, entities):
         """Initialize Microsoft Face api."""
@@ -273,7 +275,9 @@ class MicrosoftFace:
             for person in persons:
                 self._store[g_id][person["name"]] = person["personId"]
 
-            tasks.append(self._entities[g_id].async_update_ha_state())
+            tasks.append(
+                asyncio.create_task(self._entities[g_id].async_update_ha_state())
+            )
 
         if tasks:
             await asyncio.wait(tasks)
@@ -288,7 +292,7 @@ class MicrosoftFace:
             headers[CONTENT_TYPE] = "application/octet-stream"
             payload = data
         else:
-            headers[CONTENT_TYPE] = "application/json"
+            headers[CONTENT_TYPE] = CONTENT_TYPE_JSON
             if data is not None:
                 payload = json.dumps(data).encode()
             else:

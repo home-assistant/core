@@ -1,23 +1,19 @@
 """Internal discovery service for  iZone AC."""
-
-import logging
 import pizone
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     DATA_DISCOVERY_SERVICE,
-    DISPATCH_CONTROLLER_DISCOVERED,
     DISPATCH_CONTROLLER_DISCONNECTED,
+    DISPATCH_CONTROLLER_DISCOVERED,
     DISPATCH_CONTROLLER_RECONNECTED,
     DISPATCH_CONTROLLER_UPDATE,
     DISPATCH_ZONE_UPDATE,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class DiscoveryService(pizone.Listener):
@@ -43,18 +39,17 @@ class DiscoveryService(pizone.Listener):
         async_dispatcher_send(self.hass, DISPATCH_CONTROLLER_RECONNECTED, ctrl)
 
     def controller_update(self, ctrl: pizone.Controller) -> None:
-        """System update message is recieved from the controller."""
+        """System update message is received from the controller."""
         async_dispatcher_send(self.hass, DISPATCH_CONTROLLER_UPDATE, ctrl)
 
     def zone_update(self, ctrl: pizone.Controller, zone: pizone.Zone) -> None:
-        """Zone update message is recieved from the controller."""
+        """Zone update message is received from the controller."""
         async_dispatcher_send(self.hass, DISPATCH_ZONE_UPDATE, ctrl, zone)
 
 
-async def async_start_discovery_service(hass: HomeAssistantType):
+async def async_start_discovery_service(hass: HomeAssistant):
     """Set up the pizone internal discovery."""
-    disco = hass.data.get(DATA_DISCOVERY_SERVICE)
-    if disco:
+    if disco := hass.data.get(DATA_DISCOVERY_SERVICE):
         # Already started
         return disco
 
@@ -77,10 +72,9 @@ async def async_start_discovery_service(hass: HomeAssistantType):
     return disco
 
 
-async def async_stop_discovery_service(hass: HomeAssistantType):
+async def async_stop_discovery_service(hass: HomeAssistant):
     """Stop the discovery service."""
-    disco = hass.data.get(DATA_DISCOVERY_SERVICE)
-    if not disco:
+    if not (disco := hass.data.get(DATA_DISCOVERY_SERVICE)):
         return
 
     await disco.pi_disco.close()

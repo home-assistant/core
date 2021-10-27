@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba je ji\u017e nastavena"
+        },
+        "error": {
+            "cannot_connect": "P\u0159ipojen\u00ed k serveru se nezda\u0159ilo. Zkontrolujte hostitele a port a akci opakujte. Tak\u00e9 se ujist\u011bte, \u017ee na serveru pou\u017e\u00edv\u00e1te alespo\u0148 Minecraft verze 1.7.",
+            "invalid_ip": "IP adresa je neplatn\u00e1 (nelze ur\u010dit MAC adresu). Opravte ji a akci opakujte.",
+            "invalid_port": "Port mus\u00ed b\u00fdt v rozsahu od 1024 do 65535. Opravte jej a zkuste to znovu."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostitel",
+                    "name": "Jm\u00e9no"
+                },
+                "description": "Nastavte instanci serveru Minecraft tak, aby umo\u017e\u0148oval monitorov\u00e1n\u00ed.",
+                "title": "Propojte sv\u016fj server Minecraft"
+            }
+        }
+    }
+}

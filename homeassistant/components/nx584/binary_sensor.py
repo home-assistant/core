@@ -3,13 +3,15 @@ import logging
 import threading
 import time
 
+from nx584 import client as nx584_client
 import requests
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_OPENING,
     DEVICE_CLASSES,
-    BinarySensorDevice,
     PLATFORM_SCHEMA,
+    BinarySensorEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 import homeassistant.helpers.config_validation as cv
@@ -39,7 +41,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NX584 binary sensor platform."""
-    from nx584 import client as nx584_client
 
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -59,7 +60,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return False
 
     zone_sensors = {
-        zone["number"]: NX584ZoneSensor(zone, zone_types.get(zone["number"], "opening"))
+        zone["number"]: NX584ZoneSensor(
+            zone, zone_types.get(zone["number"], DEVICE_CLASS_OPENING)
+        )
         for zone in zones
         if zone["number"] not in exclude
     }
@@ -72,7 +75,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
-class NX584ZoneSensor(BinarySensorDevice):
+class NX584ZoneSensor(BinarySensorEntity):
     """Representation of a NX584 zone as a sensor."""
 
     def __init__(self, zone, zone_type):
@@ -101,6 +104,11 @@ class NX584ZoneSensor(BinarySensorDevice):
         # True means "faulted" or "open" or "abnormal state"
         return self._zone["state"]
 
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        return {"zone_number": self._zone["number"]}
+
 
 class NX584Watcher(threading.Thread):
     """Event listener thread to process NX584 events."""
@@ -114,9 +122,8 @@ class NX584Watcher(threading.Thread):
 
     def _process_zone_event(self, event):
         zone = event["zone"]
-        zone_sensor = self._zone_sensors.get(zone)
         # pylint: disable=protected-access
-        if not zone_sensor:
+        if not (zone_sensor := self._zone_sensors.get(zone)):
             return
         zone_sensor._zone["state"] = event["zone_state"]
         zone_sensor.schedule_update_ha_state()

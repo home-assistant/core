@@ -1,6 +1,5 @@
 """Config Flow for PlayStation 4."""
 from collections import OrderedDict
-import logging
 
 from pyps4_2ndscreen.errors import CredentialTimeout
 from pyps4_2ndscreen.helpers import Helper
@@ -18,25 +17,30 @@ from homeassistant.const import (
 )
 from homeassistant.util import location
 
-from .const import CONFIG_ENTRY_VERSION, DEFAULT_ALIAS, DEFAULT_NAME, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    CONFIG_ENTRY_VERSION,
+    COUNTRYCODE_NAMES,
+    DEFAULT_ALIAS,
+    DEFAULT_NAME,
+    DOMAIN,
+)
 
 CONF_MODE = "Config Mode"
 CONF_AUTO = "Auto Discover"
 CONF_MANUAL = "Manual Entry"
 
+LOCAL_UDP_PORT = 1988
 UDP_PORT = 987
 TCP_PORT = 997
 PORT_MSG = {UDP_PORT: "port_987_bind_error", TCP_PORT: "port_997_bind_error"}
 
+PIN_LENGTH = 8
 
-@config_entries.HANDLERS.register(DOMAIN)
-class PlayStation4FlowHandler(config_entries.ConfigFlow):
+
+class PlayStation4FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a PlayStation 4 config flow."""
 
     VERSION = CONFIG_ENTRY_VERSION
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize the config flow."""
@@ -84,8 +88,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
         if user_input is not None:
             if user_input[CONF_MODE] == CONF_MANUAL:
                 try:
-                    device = user_input[CONF_IP_ADDRESS]
-                    if device:
+                    if device := user_input[CONF_IP_ADDRESS]:
                         self.m_device = device
                 except KeyError:
                     errors[CONF_IP_ADDRESS] = "no_ipaddress"
@@ -108,8 +111,9 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
         if user_input is None:
             # Search for device.
+            # If LOCAL_UDP_PORT cannot be used, a random port will be selected.
             devices = await self.hass.async_add_executor_job(
-                self.helper.has_devices, self.m_device
+                self.helper.has_devices, self.m_device, LOCAL_UDP_PORT
             )
 
             # Abort if can't find device.
@@ -119,7 +123,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
             self.device_list = [device["host-ip"] for device in devices]
 
             # Check that devices found aren't configured per account.
-            entries = self.hass.config_entries.async_entries(DOMAIN)
+            entries = self._async_current_entries()
             if entries:
                 # Retrieve device data from all entries if creds match.
                 conf_devices = [
@@ -137,21 +141,27 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
                 # If list is empty then all devices are configured.
                 if not self.device_list:
-                    return self.async_abort(reason="devices_configured")
+                    return self.async_abort(reason="already_configured")
 
         # Login to PS4 with user data.
         if user_input is not None:
             self.region = user_input[CONF_REGION]
             self.name = user_input[CONF_NAME]
-            self.pin = str(user_input[CONF_CODE])
+            # Assume pin had leading zeros, before coercing to int.
+            self.pin = str(user_input[CONF_CODE]).zfill(PIN_LENGTH)
             self.host = user_input[CONF_IP_ADDRESS]
 
             is_ready, is_login = await self.hass.async_add_executor_job(
-                self.helper.link, self.host, self.creds, self.pin, DEFAULT_ALIAS
+                self.helper.link,
+                self.host,
+                self.creds,
+                self.pin,
+                DEFAULT_ALIAS,
+                LOCAL_UDP_PORT,
             )
 
             if is_ready is False:
-                errors["base"] = "not_ready"
+                errors["base"] = "cannot_connect"
             elif is_login is False:
                 errors["base"] = "login_failed"
             else:
@@ -173,7 +183,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
                 self.hass.helpers.aiohttp_client.async_get_clientsession()
             )
         if self.location:
-            country = self.location.country_name
+            country = COUNTRYCODE_NAMES.get(self.location.country_code)
             if country in COUNTRIES:
                 default_region = country
 
@@ -184,7 +194,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
             list(regions)
         )
         link_schema[vol.Required(CONF_CODE)] = vol.All(
-            vol.Strip, vol.Length(min=8, max=8), vol.Coerce(int)
+            vol.Strip, vol.Length(max=PIN_LENGTH), vol.Coerce(int)
         )
         link_schema[vol.Required(CONF_NAME, default=DEFAULT_NAME)] = str
 

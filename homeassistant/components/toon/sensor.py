@@ -1,304 +1,446 @@
 """Support for Toon sensors."""
-import logging
+from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
+from dataclasses import dataclass
 
-from . import (
-    ToonData,
-    ToonEntity,
-    ToonElectricityMeterDeviceEntity,
-    ToonGasMeterDeviceEntity,
-    ToonSolarDeviceEntity,
-    ToonBoilerDeviceEntity,
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+    SensorEntityDescription,
 )
-from .const import CURRENCY_EUR, DATA_TOON, DOMAIN, VOLUME_CM3, VOLUME_M3, RATIO_PERCENT
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_GAS,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_TEMPERATURE,
+    ENERGY_KILO_WATT_HOUR,
+    PERCENTAGE,
+    POWER_WATT,
+    TEMP_CELSIUS,
+    VOLUME_CUBIC_METERS,
+)
+from homeassistant.core import HomeAssistant
 
-_LOGGER = logging.getLogger(__name__)
+from .const import CURRENCY_EUR, DOMAIN, VOLUME_CM3, VOLUME_LMIN
+from .coordinator import ToonDataUpdateCoordinator
+from .models import (
+    ToonBoilerDeviceEntity,
+    ToonDisplayDeviceEntity,
+    ToonElectricityMeterDeviceEntity,
+    ToonEntity,
+    ToonGasMeterDeviceEntity,
+    ToonRequiredKeysMixin,
+    ToonSolarDeviceEntity,
+    ToonWaterMeterDeviceEntity,
+)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up Toon sensors based on a config entry."""
-    toon = hass.data[DATA_TOON][entry.entry_id]
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    sensors = [
-        ToonElectricityMeterDeviceSensor(
-            toon, "power", "value", "Current Power Usage", "mdi:power-plug", POWER_WATT
-        ),
-        ToonElectricityMeterDeviceSensor(
-            toon,
-            "power",
-            "average",
-            "Average Power Usage",
-            "mdi:power-plug",
-            POWER_WATT,
-        ),
-        ToonElectricityMeterDeviceSensor(
-            toon,
-            "power",
-            "daily_value",
-            "Power Usage Today",
-            "mdi:power-plug",
-            ENERGY_KILO_WATT_HOUR,
-        ),
-        ToonElectricityMeterDeviceSensor(
-            toon,
-            "power",
-            "daily_cost",
-            "Power Cost Today",
-            "mdi:power-plug",
-            CURRENCY_EUR,
-        ),
-        ToonElectricityMeterDeviceSensor(
-            toon,
-            "power",
-            "average_daily",
-            "Average Daily Power Usage",
-            "mdi:power-plug",
-            ENERGY_KILO_WATT_HOUR,
-        ),
-        ToonElectricityMeterDeviceSensor(
-            toon,
-            "power",
-            "meter_reading",
-            "Power Meter Feed IN Tariff 1",
-            "mdi:power-plug",
-            ENERGY_KILO_WATT_HOUR,
-        ),
-        ToonElectricityMeterDeviceSensor(
-            toon,
-            "power",
-            "meter_reading_low",
-            "Power Meter Feed IN Tariff 2",
-            "mdi:power-plug",
-            ENERGY_KILO_WATT_HOUR,
-        ),
+    entities = [
+        description.cls(coordinator, description) for description in SENSOR_ENTITIES
     ]
 
-    if toon.gas:
-        sensors.extend(
+    if coordinator.data.agreement.is_toon_solar:
+        entities.extend(
             [
-                ToonGasMeterDeviceSensor(
-                    toon,
-                    "gas",
-                    "value",
-                    "Current Gas Usage",
-                    "mdi:gas-cylinder",
-                    VOLUME_CM3,
-                ),
-                ToonGasMeterDeviceSensor(
-                    toon,
-                    "gas",
-                    "average",
-                    "Average Gas Usage",
-                    "mdi:gas-cylinder",
-                    VOLUME_CM3,
-                ),
-                ToonGasMeterDeviceSensor(
-                    toon,
-                    "gas",
-                    "daily_usage",
-                    "Gas Usage Today",
-                    "mdi:gas-cylinder",
-                    VOLUME_M3,
-                ),
-                ToonGasMeterDeviceSensor(
-                    toon,
-                    "gas",
-                    "average_daily",
-                    "Average Daily Gas Usage",
-                    "mdi:gas-cylinder",
-                    VOLUME_M3,
-                ),
-                ToonGasMeterDeviceSensor(
-                    toon,
-                    "gas",
-                    "meter_reading",
-                    "Gas Meter",
-                    "mdi:gas-cylinder",
-                    VOLUME_M3,
-                ),
-                ToonGasMeterDeviceSensor(
-                    toon,
-                    "gas",
-                    "daily_cost",
-                    "Gas Cost Today",
-                    "mdi:gas-cylinder",
-                    CURRENCY_EUR,
-                ),
+                description.cls(coordinator, description)
+                for description in SENSOR_ENTITIES_SOLAR
             ]
         )
 
-    if toon.solar:
-        sensors.extend(
+    if coordinator.data.thermostat.have_opentherm_boiler:
+        entities.extend(
             [
-                ToonSolarDeviceSensor(
-                    toon,
-                    "solar",
-                    "value",
-                    "Current Solar Production",
-                    "mdi:solar-power",
-                    POWER_WATT,
-                ),
-                ToonSolarDeviceSensor(
-                    toon,
-                    "solar",
-                    "maximum",
-                    "Max Solar Production",
-                    "mdi:solar-power",
-                    POWER_WATT,
-                ),
-                ToonSolarDeviceSensor(
-                    toon,
-                    "solar",
-                    "produced",
-                    "Solar Production to Grid",
-                    "mdi:solar-power",
-                    POWER_WATT,
-                ),
-                ToonSolarDeviceSensor(
-                    toon,
-                    "solar",
-                    "average_produced",
-                    "Average Solar Production to Grid",
-                    "mdi:solar-power",
-                    POWER_WATT,
-                ),
-                ToonElectricityMeterDeviceSensor(
-                    toon,
-                    "solar",
-                    "meter_reading_produced",
-                    "Power Meter Feed OUT Tariff 1",
-                    "mdi:solar-power",
-                    ENERGY_KILO_WATT_HOUR,
-                ),
-                ToonElectricityMeterDeviceSensor(
-                    toon,
-                    "solar",
-                    "meter_reading_low_produced",
-                    "Power Meter Feed OUT Tariff 2",
-                    "mdi:solar-power",
-                    ENERGY_KILO_WATT_HOUR,
-                ),
+                description.cls(coordinator, description)
+                for description in SENSOR_ENTITIES_BOILER
             ]
         )
 
-    if toon.thermostat_info.have_ot_boiler:
-        sensors.extend(
-            [
-                ToonBoilerDeviceSensor(
-                    toon,
-                    "thermostat_info",
-                    "current_modulation_level",
-                    "Boiler Modulation Level",
-                    "mdi:percent",
-                    RATIO_PERCENT,
-                )
-            ]
-        )
-
-    async_add_entities(sensors, True)
+    async_add_entities(entities, True)
 
 
-class ToonSensor(ToonEntity):
+class ToonSensor(ToonEntity, SensorEntity):
     """Defines a Toon sensor."""
+
+    entity_description: ToonSensorEntityDescription
 
     def __init__(
         self,
-        toon: ToonData,
-        section: str,
-        measurement: str,
-        name: str,
-        icon: str,
-        unit_of_measurement: str,
+        coordinator: ToonDataUpdateCoordinator,
+        description: ToonSensorEntityDescription,
     ) -> None:
         """Initialize the Toon sensor."""
-        self._state = None
-        self._unit_of_measurement = unit_of_measurement
-        self.section = section
-        self.measurement = measurement
+        self.entity_description = description
+        super().__init__(coordinator)
 
-        super().__init__(toon, name, icon)
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        return "_".join(
-            [DOMAIN, self.toon.agreement.id, "sensor", self.section, self.measurement]
+        self._attr_unique_id = (
+            # This unique ID is a bit ugly and contains unneeded information.
+            # It is here for legacy / backward compatible reasons.
+            f"{DOMAIN}_{coordinator.data.agreement.agreement_id}_sensor_{description.key}"
         )
 
     @property
-    def state(self):
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit this state is expressed in."""
-        return self._unit_of_measurement
-
-    def update(self) -> None:
-        """Get the latest data from the sensor."""
-        section = getattr(self.toon, self.section)
-        value = None
-
-        if not section:
-            return
-
-        if self.section == "power" and self.measurement == "daily_value":
-            value = round(
-                (float(section.daily_usage) + float(section.daily_usage_low)) / 1000.0,
-                2,
-            )
-
-        if value is None:
-            value = getattr(section, self.measurement)
-
-        if self.section == "power" and self.measurement in [
-            "meter_reading",
-            "meter_reading_low",
-            "average_daily",
-        ]:
-            value = round(float(value) / 1000.0, 2)
-
-        if self.section == "solar" and self.measurement in [
-            "meter_reading_produced",
-            "meter_reading_low_produced",
-        ]:
-            value = float(value) / 1000.0
-
-        if self.section == "gas" and self.measurement in [
-            "average_daily",
-            "daily_usage",
-            "meter_reading",
-        ]:
-            value = round(float(value) / 1000.0, 2)
-
-        self._state = max(0, value)
+        section = getattr(self.coordinator.data, self.entity_description.section)
+        return getattr(section, self.entity_description.measurement)
 
 
 class ToonElectricityMeterDeviceSensor(ToonSensor, ToonElectricityMeterDeviceEntity):
     """Defines a Electricity Meter sensor."""
 
-    pass
-
 
 class ToonGasMeterDeviceSensor(ToonSensor, ToonGasMeterDeviceEntity):
     """Defines a Gas Meter sensor."""
 
-    pass
+
+class ToonWaterMeterDeviceSensor(ToonSensor, ToonWaterMeterDeviceEntity):
+    """Defines a Water Meter sensor."""
 
 
 class ToonSolarDeviceSensor(ToonSensor, ToonSolarDeviceEntity):
     """Defines a Solar sensor."""
 
-    pass
-
 
 class ToonBoilerDeviceSensor(ToonSensor, ToonBoilerDeviceEntity):
     """Defines a Boiler sensor."""
 
-    pass
+
+class ToonDisplayDeviceSensor(ToonSensor, ToonDisplayDeviceEntity):
+    """Defines a Display sensor."""
+
+
+@dataclass
+class ToonSensorRequiredKeysMixin(ToonRequiredKeysMixin):
+    """Mixin for sensor required keys."""
+
+    cls: type[ToonSensor]
+
+
+@dataclass
+class ToonSensorEntityDescription(SensorEntityDescription, ToonSensorRequiredKeysMixin):
+    """Describes Toon sensor entity."""
+
+
+SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
+    ToonSensorEntityDescription(
+        key="current_display_temperature",
+        name="Temperature",
+        section="thermostat",
+        measurement="current_display_temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        entity_registry_enabled_default=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+        cls=ToonDisplayDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
+        key="gas_average",
+        name="Average Gas Usage",
+        section="gas_usage",
+        measurement="average",
+        native_unit_of_measurement=VOLUME_CM3,
+        icon="mdi:gas-cylinder",
+        cls=ToonGasMeterDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
+        key="gas_average_daily",
+        name="Average Daily Gas Usage",
+        section="gas_usage",
+        measurement="day_average",
+        device_class=DEVICE_CLASS_GAS,
+        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        entity_registry_enabled_default=False,
+        cls=ToonGasMeterDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
+        key="gas_daily_usage",
+        name="Gas Usage Today",
+        section="gas_usage",
+        measurement="day_usage",
+        device_class=DEVICE_CLASS_GAS,
+        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        cls=ToonGasMeterDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
+        key="gas_daily_cost",
+        name="Gas Cost Today",
+        section="gas_usage",
+        measurement="day_cost",
+        native_unit_of_measurement=CURRENCY_EUR,
+        icon="mdi:gas-cylinder",
+        cls=ToonGasMeterDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
+        key="gas_meter_reading",
+        name="Gas Meter",
+        section="gas_usage",
+        measurement="meter",
+        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        device_class=DEVICE_CLASS_GAS,
+        cls=ToonGasMeterDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
+        key="gas_value",
+        name="Current Gas Usage",
+        section="gas_usage",
+        measurement="current",
+        native_unit_of_measurement=VOLUME_CM3,
+        icon="mdi:gas-cylinder",
+        cls=ToonGasMeterDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
+        key="power_average",
+        name="Average Power Usage",
+        section="power_usage",
+        measurement="average",
+        native_unit_of_measurement=POWER_WATT,
+        device_class=DEVICE_CLASS_POWER,
+        entity_registry_enabled_default=False,
+        cls=ToonElectricityMeterDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
+        key="power_average_daily",
+        name="Average Daily Energy Usage",
+        section="power_usage",
+        measurement="day_average",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        entity_registry_enabled_default=False,
+        cls=ToonElectricityMeterDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
+        key="power_daily_cost",
+        name="Energy Cost Today",
+        section="power_usage",
+        measurement="day_cost",
+        native_unit_of_measurement=CURRENCY_EUR,
+        icon="mdi:power-plug",
+        cls=ToonElectricityMeterDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
+        key="power_daily_value",
+        name="Energy Usage Today",
+        section="power_usage",
+        measurement="day_usage",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        cls=ToonElectricityMeterDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
+        key="power_meter_reading",
+        name="Electricity Meter Feed IN Tariff 1",
+        section="power_usage",
+        measurement="meter_high",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        cls=ToonElectricityMeterDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
+        key="power_meter_reading_low",
+        name="Electricity Meter Feed IN Tariff 2",
+        section="power_usage",
+        measurement="meter_low",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        cls=ToonElectricityMeterDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
+        key="power_value",
+        name="Current Power Usage",
+        section="power_usage",
+        measurement="current",
+        native_unit_of_measurement=POWER_WATT,
+        device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
+        cls=ToonElectricityMeterDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
+        key="solar_meter_reading_produced",
+        name="Electricity Meter Feed OUT Tariff 1",
+        section="power_usage",
+        measurement="meter_produced_high",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        cls=ToonElectricityMeterDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
+        key="solar_meter_reading_low_produced",
+        name="Electricity Meter Feed OUT Tariff 2",
+        section="power_usage",
+        measurement="meter_produced_low",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        cls=ToonElectricityMeterDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
+        key="water_average",
+        name="Average Water Usage",
+        section="water_usage",
+        measurement="average",
+        native_unit_of_measurement=VOLUME_LMIN,
+        icon="mdi:water",
+        entity_registry_enabled_default=False,
+        cls=ToonWaterMeterDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
+        key="water_average_daily",
+        name="Average Daily Water Usage",
+        section="water_usage",
+        measurement="day_average",
+        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        icon="mdi:water",
+        entity_registry_enabled_default=False,
+        cls=ToonWaterMeterDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
+        key="water_daily_usage",
+        name="Water Usage Today",
+        section="water_usage",
+        measurement="day_usage",
+        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        icon="mdi:water",
+        entity_registry_enabled_default=False,
+        cls=ToonWaterMeterDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
+        key="water_meter_reading",
+        name="Water Meter",
+        section="water_usage",
+        measurement="meter",
+        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        icon="mdi:water",
+        entity_registry_enabled_default=False,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        cls=ToonWaterMeterDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
+        key="water_value",
+        name="Current Water Usage",
+        section="water_usage",
+        measurement="current",
+        native_unit_of_measurement=VOLUME_LMIN,
+        icon="mdi:water-pump",
+        entity_registry_enabled_default=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+        cls=ToonWaterMeterDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
+        key="water_daily_cost",
+        name="Water Cost Today",
+        section="water_usage",
+        measurement="day_cost",
+        native_unit_of_measurement=CURRENCY_EUR,
+        icon="mdi:water-pump",
+        entity_registry_enabled_default=False,
+        cls=ToonWaterMeterDeviceSensor,
+    ),
+)
+
+SENSOR_ENTITIES_SOLAR: tuple[ToonSensorEntityDescription, ...] = (
+    ToonSensorEntityDescription(
+        key="solar_value",
+        name="Current Solar Power Production",
+        section="power_usage",
+        measurement="current_solar",
+        native_unit_of_measurement=POWER_WATT,
+        device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
+        cls=ToonSolarDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
+        key="solar_maximum",
+        name="Max Solar Power Production Today",
+        section="power_usage",
+        measurement="day_max_solar",
+        native_unit_of_measurement=POWER_WATT,
+        device_class=DEVICE_CLASS_POWER,
+        cls=ToonSolarDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
+        key="solar_produced",
+        name="Solar Power Production to Grid",
+        section="power_usage",
+        measurement="current_produced",
+        native_unit_of_measurement=POWER_WATT,
+        device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
+        cls=ToonSolarDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
+        key="power_usage_day_produced_solar",
+        name="Solar Energy Produced Today",
+        section="power_usage",
+        measurement="day_produced_solar",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        cls=ToonSolarDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
+        key="power_usage_day_to_grid_usage",
+        name="Energy Produced To Grid Today",
+        section="power_usage",
+        measurement="day_to_grid_usage",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        entity_registry_enabled_default=False,
+        cls=ToonSolarDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
+        key="power_usage_day_from_grid_usage",
+        name="Energy Usage From Grid Today",
+        section="power_usage",
+        measurement="day_from_grid_usage",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        entity_registry_enabled_default=False,
+        cls=ToonSolarDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
+        key="solar_average_produced",
+        name="Average Solar Power Production to Grid",
+        section="power_usage",
+        measurement="average_produced",
+        native_unit_of_measurement=POWER_WATT,
+        device_class=DEVICE_CLASS_POWER,
+        entity_registry_enabled_default=False,
+        cls=ToonSolarDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
+        key="power_usage_current_covered_by_solar",
+        name="Current Power Usage Covered By Solar",
+        section="power_usage",
+        measurement="current_covered_by_solar",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:solar-power",
+        state_class=STATE_CLASS_MEASUREMENT,
+        cls=ToonSolarDeviceSensor,
+    ),
+)
+
+SENSOR_ENTITIES_BOILER: tuple[ToonSensorEntityDescription, ...] = (
+    ToonSensorEntityDescription(
+        key="thermostat_info_current_modulation_level",
+        name="Boiler Modulation Level",
+        section="thermostat",
+        measurement="current_modulation_level",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:percent",
+        entity_registry_enabled_default=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+        cls=ToonBoilerDeviceSensor,
+    ),
+)

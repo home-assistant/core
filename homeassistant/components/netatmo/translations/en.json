@@ -1,0 +1,70 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Timeout generating authorize URL.",
+            "missing_configuration": "The component is not configured. Please follow the documentation.",
+            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+            "reauth_successful": "Re-authentication was successful",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "create_entry": {
+            "default": "Successfully authenticated"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Pick Authentication Method"
+            },
+            "reauth_confirm": {
+                "description": "The Netatmo integration needs to re-authenticate your account",
+                "title": "Reauthenticate Integration"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "away": "away",
+            "hg": "frost guard",
+            "schedule": "schedule"
+        },
+        "trigger_type": {
+            "alarm_started": "{entity_name} detected an alarm",
+            "animal": "{entity_name} detected an animal",
+            "cancel_set_point": "{entity_name} has resumed its schedule",
+            "human": "{entity_name} detected a human",
+            "movement": "{entity_name} detected movement",
+            "outdoor": "{entity_name} detected an outdoor event",
+            "person": "{entity_name} detected a person",
+            "person_away": "{entity_name} detected a person has left",
+            "set_point": "Target temperature {entity_name} set manually",
+            "therm_mode": "{entity_name} switched to \"{subtype}\"",
+            "turned_off": "{entity_name} turned off",
+            "turned_on": "{entity_name} turned on",
+            "vehicle": "{entity_name} detected a vehicle"
+        }
+    },
+    "options": {
+        "step": {
+            "public_weather": {
+                "data": {
+                    "area_name": "Name of the area",
+                    "lat_ne": "Latitude North-East corner",
+                    "lat_sw": "Latitude South-West corner",
+                    "lon_ne": "Longitude North-East corner",
+                    "lon_sw": "Longitude South-West corner",
+                    "mode": "Calculation",
+                    "show_on_map": "Show on map"
+                },
+                "description": "Configure a public weather sensor for an area.",
+                "title": "Netatmo public weather sensor"
+            },
+            "public_weather_areas": {
+                "data": {
+                    "new_area": "Area name",
+                    "weather_areas": "Weather areas"
+                },
+                "description": "Configure public weather sensors.",
+                "title": "Netatmo public weather sensor"
+            }
+        }
+    }
+}

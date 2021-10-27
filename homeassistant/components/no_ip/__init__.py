@@ -1,17 +1,19 @@
 """Integrate with NO-IP Dynamic DNS service."""
 import asyncio
 import base64
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 import aiohttp
-from aiohttp.hdrs import USER_AGENT, AUTHORIZATION
+from aiohttp.hdrs import AUTHORIZATION, USER_AGENT
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.const import CONF_DOMAIN, CONF_TIMEOUT, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_DOMAIN, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,14 +53,14 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the NO-IP component."""
     domain = config[DOMAIN].get(CONF_DOMAIN)
     user = config[DOMAIN].get(CONF_USERNAME)
     password = config[DOMAIN].get(CONF_PASSWORD)
     timeout = config[DOMAIN].get(CONF_TIMEOUT)
 
-    auth_str = base64.b64encode(f"{user}:{password}".encode("utf-8"))
+    auth_str = base64.b64encode(f"{user}:{password}".encode())
 
     session = hass.helpers.aiohttp_client.async_get_clientsession()
 
@@ -67,7 +69,7 @@ async def async_setup(hass, config):
     if not result:
         return False
 
-    async def update_domain_interval(now):
+    async def update_domain_interval(now: datetime) -> None:
         """Update the NO-IP entry."""
         await _update_no_ip(hass, session, domain, auth_str, timeout)
 
@@ -76,14 +78,20 @@ async def async_setup(hass, config):
     return True
 
 
-async def _update_no_ip(hass, session, domain, auth_str, timeout):
+async def _update_no_ip(
+    hass: HomeAssistant,
+    session: aiohttp.ClientSession,
+    domain: str,
+    auth_str: bytes,
+    timeout: int,
+) -> bool:
     """Update NO-IP."""
     url = UPDATE_URL
 
     params = {"hostname": domain}
 
     headers = {
-        AUTHORIZATION: "Basic {}".format(auth_str.decode("utf-8")),
+        AUTHORIZATION: f"Basic {auth_str.decode('utf-8')}",
         USER_AGENT: HA_USER_AGENT,
     }
 

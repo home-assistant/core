@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "missing_configuration": "A komponens nincs konfigur\u00e1lva. K\u00e9rem, k\u00f6vesse a dokument\u00e1ci\u00f3t.",
+            "no_url_available": "Nincs el\u00e9rhet\u0151 URL. A hib\u00e1r\u00f3l tov\u00e1bbi inform\u00e1ci\u00f3t [a s\u00fag\u00f3ban]({docs_url}) tal\u00e1lsz.",
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani Home Assistantot Almondhoz val\u00f3 csatlakoz\u00e1shoz, {addon} kieg\u00e9sz\u00edt\u0151 \u00e1ltal?",
+                "title": "Almond - Home Assistant kieg\u00e9sz\u00edt\u0151 \u00e1ltal"
+            },
+            "pick_implementation": {
+                "title": "V\u00e1lassz hiteles\u00edt\u00e9si m\u00f3dszert"
+            }
+        }
+    }
+}

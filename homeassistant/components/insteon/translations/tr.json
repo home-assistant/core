@@ -1,0 +1,89 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr."
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "step": {
+            "hubv1": {
+                "data": {
+                    "host": "\u0130p Adresi",
+                    "port": "Port"
+                },
+                "title": "Insteon Hub S\u00fcr\u00fcm 1"
+            },
+            "hubv2": {
+                "data": {
+                    "host": "\u0130p Adresi",
+                    "password": "Parola",
+                    "port": "Port",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                },
+                "description": "Insteon Hub S\u00fcr\u00fcm 2'yi yap\u0131land\u0131r\u0131n.",
+                "title": "Insteon Hub S\u00fcr\u00fcm 2"
+            },
+            "plm": {
+                "description": "Insteon PowerLink Modemini (PLM) yap\u0131land\u0131r\u0131n."
+            },
+            "user": {
+                "data": {
+                    "modem_type": "Modem t\u00fcr\u00fc."
+                },
+                "description": "Insteon modem tipini se\u00e7in.",
+                "title": "Insteon"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "input_error": "Ge\u00e7ersiz giri\u015fler, l\u00fctfen de\u011ferlerinizi kontrol edin."
+        },
+        "step": {
+            "add_x10": {
+                "data": {
+                    "unitcode": "Birim kodu (1-16)"
+                },
+                "description": "Insteon Hub parolas\u0131n\u0131 de\u011fi\u015ftirin.",
+                "title": "Insteon"
+            },
+            "change_hub_config": {
+                "data": {
+                    "host": "\u0130p Adresi",
+                    "password": "Parola",
+                    "port": "Port",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                },
+                "title": "Insteon"
+            },
+            "init": {
+                "data": {
+                    "add_override": "Bir cihaz\u0131 ge\u00e7ersiz k\u0131lma ekleyin.",
+                    "add_x10": "Bir X10 cihaz\u0131 ekleyin.",
+                    "change_hub_config": "Hub yap\u0131land\u0131rmas\u0131n\u0131 de\u011fi\u015ftirin.",
+                    "remove_override": "Bir cihaz\u0131 ge\u00e7ersiz k\u0131lma i\u015flemini kald\u0131r\u0131n.",
+                    "remove_x10": "Bir X10 cihaz\u0131n\u0131 \u00e7\u0131kar\u0131n."
+                },
+                "description": "Yap\u0131land\u0131rmak i\u00e7in bir se\u00e7enek se\u00e7in.",
+                "title": "Insteon"
+            },
+            "remove_override": {
+                "data": {
+                    "address": "Kald\u0131r\u0131lacak bir cihaz adresi se\u00e7in"
+                },
+                "description": "Bir cihaz\u0131 ge\u00e7ersiz k\u0131lmay\u0131 kald\u0131rma",
+                "title": "Insteon"
+            },
+            "remove_x10": {
+                "data": {
+                    "address": "Kald\u0131r\u0131lacak bir cihaz adresi se\u00e7in"
+                },
+                "description": "Bir X10 cihaz\u0131n\u0131 kald\u0131r\u0131n",
+                "title": "Insteon"
+            }
+        }
+    }
+}

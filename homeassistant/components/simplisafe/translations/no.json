@@ -1,0 +1,54 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Denne SimpliSafe-kontoen er allerede i bruk.",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
+            "wrong_account": "Brukerlegitimasjonen som er oppgitt, samsvarer ikke med denne SimpliSafe -kontoen."
+        },
+        "error": {
+            "identifier_exists": "Konto er allerede registrert",
+            "invalid_auth": "Ugyldig godkjenning",
+            "still_awaiting_mfa": "Forventer fortsatt MFA-e-postklikk",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "input_auth_code": {
+                "data": {
+                    "auth_code": "Autorisasjonskode"
+                },
+                "description": "Skriv inn autorisasjonskoden fra SimpliSafe -webappens URL:",
+                "title": "Fullf\u00f8r autorisasjon"
+            },
+            "mfa": {
+                "description": "Sjekk e-posten din for en lenke fra SimpliSafe. Etter \u00e5 ha bekreftet lenken, g\u00e5 tilbake hit for \u00e5 fullf\u00f8re installasjonen av integrasjonen.",
+                "title": "SimpliSafe flertrinnsbekreftelse"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passord"
+                },
+                "description": "Tilgangen din har utl\u00f8pt eller blitt tilbakekalt. Skriv inn passordet ditt for \u00e5 koble kontoen din til p\u00e5 nytt.",
+                "title": "Godkjenne integrering p\u00e5 nytt"
+            },
+            "user": {
+                "data": {
+                    "code": "Kode (brukt i Home Assistant brukergrensesnittet)",
+                    "password": "Passord",
+                    "username": "E-post"
+                },
+                "description": "Fra og med 2021 har SimpliSafe flyttet til en ny godkjenningsmekanisme via nettappen. P\u00e5 grunn av tekniske begrensninger er det et manuelt trinn p\u00e5 slutten av denne prosessen; S\u00f8rg for at du leser [dokumentasjonen] (http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) f\u00f8r du starter. \n\n N\u00e5r du er klar, klikker du [her] ( {url} ) for \u00e5 \u00e5pne SimpliSafe -webappen og legge inn legitimasjonen din. N\u00e5r prosessen er fullf\u00f8rt, g\u00e5r du tilbake hit og klikker Send.",
+                "title": "Fyll ut informasjonen din."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Kode (brukt i Home Assistant brukergrensesnittet)"
+                },
+                "title": "Konfigurer SimpliSafe"
+            }
+        }
+    }
+}

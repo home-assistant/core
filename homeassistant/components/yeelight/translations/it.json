@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "no_devices_found": "Nessun dispositivo trovato sulla rete"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi"
+        },
+        "flow_title": "{model} {id} ({host})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Vuoi configurare {model} ({host})?"
+            },
+            "pick_device": {
+                "data": {
+                    "device": "Dispositivo"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Se lasci l'host vuoto, il rilevamento verr\u00e0 utilizzato per trovare i dispositivi."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "model": "Modello (opzionale)",
+                    "nightlight_switch": "Usa l'interruttore luce notturna",
+                    "save_on_change": "Salva stato su modifica",
+                    "transition": "Tempo di transizione (ms)",
+                    "use_music_mode": "Abilita la modalit\u00e0 musica"
+                },
+                "description": "Se lasci il modello vuoto, verr\u00e0 rilevato automaticamente."
+            }
+        }
+    }
+}

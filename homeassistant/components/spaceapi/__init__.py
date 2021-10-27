@@ -1,5 +1,5 @@
 """Support for the SpaceAPI."""
-import logging
+from contextlib import suppress
 
 import voluptuous as vol
 
@@ -8,6 +8,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
     ATTR_LOCATION,
+    ATTR_NAME,
     ATTR_STATE,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ADDRESS,
@@ -20,8 +21,6 @@ from homeassistant.const import (
 import homeassistant.core as ha
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_ADDRESS = "address"
 ATTR_SPACEFED = "spacefed"
@@ -39,7 +38,6 @@ ATTR_CONTACT = "contact"
 ATTR_ISSUE_REPORT_CHANNELS = "issue_report_channels"
 ATTR_LASTCHANGE = "lastchange"
 ATTR_LOGO = "logo"
-ATTR_NAME = "name"
 ATTR_OPEN = "open"
 ATTR_SENSORS = "sensors"
 ATTR_SPACE = "space"
@@ -251,8 +249,7 @@ class APISpaceApiView(HomeAssistantView):
     @staticmethod
     def get_sensor_data(hass, spaceapi, sensor):
         """Get data from a sensor."""
-        sensor_state = hass.states.get(sensor)
-        if not sensor_state:
+        if not (sensor_state := hass.states.get(sensor)):
             return None
         sensor_data = {ATTR_NAME: sensor_state.name, ATTR_VALUE: sensor_state.state}
         if ATTR_SENSOR_LOCATION in sensor_state.attributes:
@@ -281,9 +278,8 @@ class APISpaceApiView(HomeAssistantView):
             pass
 
         state_entity = spaceapi["state"][ATTR_ENTITY_ID]
-        space_state = hass.states.get(state_entity)
 
-        if space_state is not None:
+        if (space_state := hass.states.get(state_entity)) is not None:
             state = {
                 ATTR_OPEN: space_state.state != "off",
                 ATTR_LASTCHANGE: dt_util.as_timestamp(space_state.last_updated),
@@ -291,13 +287,11 @@ class APISpaceApiView(HomeAssistantView):
         else:
             state = {ATTR_OPEN: "null", ATTR_LASTCHANGE: 0}
 
-        try:
+        with suppress(KeyError):
             state[ATTR_ICON] = {
                 ATTR_OPEN: spaceapi["state"][CONF_ICON_OPEN],
                 ATTR_CLOSE: spaceapi["state"][CONF_ICON_CLOSED],
             }
-        except KeyError:
-            pass
 
         data = {
             ATTR_API: SPACEAPI_VERSION,
@@ -310,40 +304,26 @@ class APISpaceApiView(HomeAssistantView):
             ATTR_URL: spaceapi[CONF_URL],
         }
 
-        try:
+        with suppress(KeyError):
             data[ATTR_CAM] = spaceapi[CONF_CAM]
-        except KeyError:
-            pass
 
-        try:
+        with suppress(KeyError):
             data[ATTR_SPACEFED] = spaceapi[CONF_SPACEFED]
-        except KeyError:
-            pass
 
-        try:
+        with suppress(KeyError):
             data[ATTR_STREAM] = spaceapi[CONF_STREAM]
-        except KeyError:
-            pass
 
-        try:
+        with suppress(KeyError):
             data[ATTR_FEEDS] = spaceapi[CONF_FEEDS]
-        except KeyError:
-            pass
 
-        try:
+        with suppress(KeyError):
             data[ATTR_CACHE] = spaceapi[CONF_CACHE]
-        except KeyError:
-            pass
 
-        try:
+        with suppress(KeyError):
             data[ATTR_PROJECTS] = spaceapi[CONF_PROJECTS]
-        except KeyError:
-            pass
 
-        try:
+        with suppress(KeyError):
             data[ATTR_RADIO_SHOW] = spaceapi[CONF_RADIO_SHOW]
-        except KeyError:
-            pass
 
         if is_sensors is not None:
             sensors = {}

@@ -1,0 +1,32 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "id_exists": "\u9598\u9053\u5668 ID \u5df2\u5b58\u5728"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "device": "\u8def\u5f91\u6216 URL",
+                    "id": "ID",
+                    "name": "\u540d\u7a31"
+                },
+                "title": "OpenTherm \u9598\u9053\u5668"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "floor_temperature": "\u6a13\u5c64\u6eab\u5ea6",
+                    "read_precision": "\u8b80\u53d6\u7cbe\u6e96\u5ea6",
+                    "set_precision": "\u8a2d\u5b9a\u7cbe\u6e96\u5ea6",
+                    "temporary_override_mode": "\u81e8\u6642 Setpoint \u8986\u84cb\u6a21\u5f0f"
+                },
+                "description": "OpenTherm \u9598\u9053\u5668\u9078\u9805"
+            }
+        }
+    }
+}

@@ -1,0 +1,13 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "Para enviar eventos para o Home Assistant, voc\u00ea precisar\u00e1 usar a a\u00e7\u00e3o \"Fazer uma solicita\u00e7\u00e3o Web\" no [applet IFTTT Webhook] ( {applet_url} ). \n\n Preencha as seguintes informa\u00e7\u00f5es: \n\n - URL: ` {webhook_url} ` \n - M\u00e9todo: POST \n - Tipo de Conte\u00fado: application / json \n\n Veja [a documenta\u00e7\u00e3o] ( {docs_url} ) sobre como configurar automa\u00e7\u00f5es para manipular dados de entrada."
+        },
+        "step": {
+            "user": {
+                "description": "Tem certeza de que deseja configurar o IFTTT?",
+                "title": "Configurar o IFTTT Webhook Applet"
+            }
+        }
+    }
+}

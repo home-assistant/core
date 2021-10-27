@@ -2,9 +2,7 @@
   "domain": "group",
   "name": "Group",
   "documentation": "https://www.home-assistant.io/integrations/group",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": [
-    "@home-assistant/core"
-  ]
+  "codeowners": ["@home-assistant/core"],
+  "quality_scale": "internal",
+  "iot_class": "calculated"
 }

@@ -1,20 +1,14 @@
 """Philips Hue lights platform tests."""
 import asyncio
-from collections import deque
-import logging
 from unittest.mock import Mock
 
 import aiohue
-from aiohue.lights import Lights
-from aiohue.groups import Groups
-import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import hue
 from homeassistant.components.hue import light as hue_light
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import color
-
-_LOGGER = logging.getLogger(__name__)
 
 HUE_LIGHT_NS = "homeassistant.components.light.hue."
 GROUP_RESPONSE = {
@@ -53,6 +47,17 @@ GROUP_RESPONSE = {
         "state": {"any_on": True, "all_on": False},
     },
 }
+LIGHT_1_CAPABILITIES = {
+    "certified": True,
+    "control": {
+        "mindimlevel": 5000,
+        "maxlumen": 600,
+        "colorgamuttype": "A",
+        "colorgamut": [[0.704, 0.296], [0.2151, 0.7106], [0.138, 0.08]],
+        "ct": {"min": 153, "max": 500},
+    },
+    "streaming": {"renderer": True, "proxy": False},
+}
 LIGHT_1_ON = {
     "state": {
         "on": True,
@@ -66,12 +71,7 @@ LIGHT_1_ON = {
         "colormode": "xy",
         "reachable": True,
     },
-    "capabilities": {
-        "control": {
-            "colorgamuttype": "A",
-            "colorgamut": [[0.704, 0.296], [0.2151, 0.7106], [0.138, 0.08]],
-        }
-    },
+    "capabilities": LIGHT_1_CAPABILITIES,
     "type": "Extended color light",
     "name": "Hue Lamp 1",
     "modelid": "LCT001",
@@ -92,18 +92,23 @@ LIGHT_1_OFF = {
         "colormode": "xy",
         "reachable": True,
     },
-    "capabilities": {
-        "control": {
-            "colorgamuttype": "A",
-            "colorgamut": [[0.704, 0.296], [0.2151, 0.7106], [0.138, 0.08]],
-        }
-    },
+    "capabilities": LIGHT_1_CAPABILITIES,
     "type": "Extended color light",
     "name": "Hue Lamp 1",
     "modelid": "LCT001",
     "swversion": "66009461",
     "manufacturername": "Philips",
     "uniqueid": "456",
+}
+LIGHT_2_CAPABILITIES = {
+    "certified": True,
+    "control": {
+        "mindimlevel": 5000,
+        "maxlumen": 600,
+        "colorgamuttype": "A",
+        "colorgamut": [[0.704, 0.296], [0.2151, 0.7106], [0.138, 0.08]],
+    },
+    "streaming": {"renderer": True, "proxy": False},
 }
 LIGHT_2_OFF = {
     "state": {
@@ -118,12 +123,7 @@ LIGHT_2_OFF = {
         "colormode": "hs",
         "reachable": True,
     },
-    "capabilities": {
-        "control": {
-            "colorgamuttype": "A",
-            "colorgamut": [[0.704, 0.296], [0.2151, 0.7106], [0.138, 0.08]],
-        }
-    },
+    "capabilities": LIGHT_2_CAPABILITIES,
     "type": "Extended color light",
     "name": "Hue Lamp 2",
     "modelid": "LCT001",
@@ -144,12 +144,7 @@ LIGHT_2_ON = {
         "colormode": "hs",
         "reachable": True,
     },
-    "capabilities": {
-        "control": {
-            "colorgamuttype": "A",
-            "colorgamut": [[0.704, 0.296], [0.2151, 0.7106], [0.138, 0.08]],
-        }
-    },
+    "capabilities": LIGHT_2_CAPABILITIES,
     "type": "Extended color light",
     "name": "Hue Lamp 2 new",
     "modelid": "LCT001",
@@ -175,55 +170,18 @@ LIGHT_GAMUT = color.GamutType(
 LIGHT_GAMUT_TYPE = "A"
 
 
-@pytest.fixture
-def mock_bridge(hass):
-    """Mock a Hue bridge."""
-    bridge = Mock(
-        available=True,
-        authorized=True,
-        allow_unreachable=False,
-        allow_groups=False,
-        api=Mock(),
-        spec=hue.HueBridge,
-    )
-    bridge.mock_requests = []
-    # We're using a deque so we can schedule multiple responses
-    # and also means that `popleft()` will blow up if we get more updates
-    # than expected.
-    bridge.mock_light_responses = deque()
-    bridge.mock_group_responses = deque()
-
-    async def mock_request(method, path, **kwargs):
-        kwargs["method"] = method
-        kwargs["path"] = path
-        bridge.mock_requests.append(kwargs)
-
-        if path == "lights":
-            return bridge.mock_light_responses.popleft()
-        if path == "groups":
-            return bridge.mock_group_responses.popleft()
-        return None
-
-    bridge.api.config.apiversion = "9.9.9"
-    bridge.api.lights = Lights({}, mock_request)
-    bridge.api.groups = Groups({}, mock_request)
-
-    return bridge
-
-
 async def setup_bridge(hass, mock_bridge):
     """Load the Hue light platform with the provided bridge."""
     hass.config.components.add(hue.DOMAIN)
-    hass.data[hue.DOMAIN] = {"mock-host": mock_bridge}
     config_entry = config_entries.ConfigEntry(
         1,
         hue.DOMAIN,
         "Mock Title",
         {"host": "mock-host"},
         "test",
-        config_entries.CONN_CLASS_LOCAL_POLL,
-        system_options={},
     )
+    mock_bridge.config_entry = config_entry
+    hass.data[hue.DOMAIN] = {config_entry.entry_id: mock_bridge}
     await hass.config_entries.async_forward_entry_setup(config_entry, "light")
     # To flush out the service call to update the group
     await hass.async_block_till_done()
@@ -252,15 +210,17 @@ async def test_no_lights_or_groups(hass, mock_bridge):
 async def test_lights(hass, mock_bridge):
     """Test the update_lights function with some lights."""
     mock_bridge.mock_light_responses.append(LIGHT_RESPONSE)
+    mock_bridge.mock_group_responses.append(GROUP_RESPONSE)
+
     await setup_bridge(hass, mock_bridge)
-    assert len(mock_bridge.mock_requests) == 1
-    # 1 All Lights group, 2 lights
-    assert len(hass.states.async_all()) == 3
+    assert len(mock_bridge.mock_requests) == 2
+    # 2 lights
+    assert len(hass.states.async_all()) == 2
 
     lamp_1 = hass.states.get("light.hue_lamp_1")
     assert lamp_1 is not None
     assert lamp_1.state == "on"
-    assert lamp_1.attributes["brightness"] == 144
+    assert lamp_1.attributes["brightness"] == 145
     assert lamp_1.attributes["hs_color"] == (36.067, 69.804)
 
     lamp_2 = hass.states.get("light.hue_lamp_2")
@@ -271,12 +231,14 @@ async def test_lights(hass, mock_bridge):
 async def test_lights_color_mode(hass, mock_bridge):
     """Test that lights only report appropriate color mode."""
     mock_bridge.mock_light_responses.append(LIGHT_RESPONSE)
+    mock_bridge.mock_group_responses.append(GROUP_RESPONSE)
+
     await setup_bridge(hass, mock_bridge)
 
     lamp_1 = hass.states.get("light.hue_lamp_1")
     assert lamp_1 is not None
     assert lamp_1.state == "on"
-    assert lamp_1.attributes["brightness"] == 144
+    assert lamp_1.attributes["brightness"] == 145
     assert lamp_1.attributes["hs_color"] == (36.067, 69.804)
     assert "color_temp" not in lamp_1.attributes
 
@@ -290,15 +252,15 @@ async def test_lights_color_mode(hass, mock_bridge):
     await hass.services.async_call(
         "light", "turn_on", {"entity_id": "light.hue_lamp_2"}, blocking=True
     )
-    # 2x light update, 1 turn on request
-    assert len(mock_bridge.mock_requests) == 3
+    # 2x light update, 1 group update, 1 turn on request
+    assert len(mock_bridge.mock_requests) == 4
 
     lamp_1 = hass.states.get("light.hue_lamp_1")
     assert lamp_1 is not None
     assert lamp_1.state == "on"
-    assert lamp_1.attributes["brightness"] == 144
+    assert lamp_1.attributes["brightness"] == 145
     assert lamp_1.attributes["color_temp"] == 467
-    assert "hs_color" not in lamp_1.attributes
+    assert "hs_color" in lamp_1.attributes
 
 
 async def test_groups(hass, mock_bridge):
@@ -306,21 +268,29 @@ async def test_groups(hass, mock_bridge):
     mock_bridge.allow_groups = True
     mock_bridge.mock_light_responses.append({})
     mock_bridge.mock_group_responses.append(GROUP_RESPONSE)
+    mock_bridge.api.groups._v2_resources = [
+        {"id_v1": "/groups/1", "id": "group-1-mock-id", "type": "room"},
+        {"id_v1": "/groups/2", "id": "group-2-mock-id", "type": "room"},
+    ]
 
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 2
-    # 1 all lights group, 2 hue group lights
-    assert len(hass.states.async_all()) == 3
+    # 2 hue group lights
+    assert len(hass.states.async_all()) == 2
 
     lamp_1 = hass.states.get("light.group_1")
     assert lamp_1 is not None
     assert lamp_1.state == "on"
-    assert lamp_1.attributes["brightness"] == 254
+    assert lamp_1.attributes["brightness"] == 255
     assert lamp_1.attributes["color_temp"] == 250
 
     lamp_2 = hass.states.get("light.group_2")
     assert lamp_2 is not None
     assert lamp_2.state == "on"
+
+    ent_reg = er.async_get(hass)
+    assert ent_reg.async_get("light.group_1").unique_id == "group-1-mock-id"
+    assert ent_reg.async_get("light.group_2").unique_id == "group-2-mock-id"
 
 
 async def test_new_group_discovered(hass, mock_bridge):
@@ -331,7 +301,7 @@ async def test_new_group_discovered(hass, mock_bridge):
 
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 2
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 2
 
     new_group_response = dict(GROUP_RESPONSE)
     new_group_response["3"] = {
@@ -359,24 +329,25 @@ async def test_new_group_discovered(hass, mock_bridge):
     await hass.services.async_call(
         "light", "turn_on", {"entity_id": "light.group_1"}, blocking=True
     )
-    # 2x group update, 2x light update, 1 turn on request
-    assert len(mock_bridge.mock_requests) == 5
-    assert len(hass.states.async_all()) == 4
+    # 2x group update, 1x light update, 1 turn on request
+    assert len(mock_bridge.mock_requests) == 4
+    assert len(hass.states.async_all()) == 3
 
     new_group = hass.states.get("light.group_3")
     assert new_group is not None
     assert new_group.state == "on"
-    assert new_group.attributes["brightness"] == 153
+    assert new_group.attributes["brightness"] == 154
     assert new_group.attributes["color_temp"] == 250
 
 
 async def test_new_light_discovered(hass, mock_bridge):
     """Test if 2nd update has a new light."""
     mock_bridge.mock_light_responses.append(LIGHT_RESPONSE)
+    mock_bridge.mock_group_responses.append(GROUP_RESPONSE)
 
     await setup_bridge(hass, mock_bridge)
-    assert len(mock_bridge.mock_requests) == 1
-    assert len(hass.states.async_all()) == 3
+    assert len(mock_bridge.mock_requests) == 2
+    assert len(hass.states.async_all()) == 2
 
     new_light_response = dict(LIGHT_RESPONSE)
     new_light_response["3"] = {
@@ -392,12 +363,7 @@ async def test_new_light_discovered(hass, mock_bridge):
             "colormode": "hs",
             "reachable": True,
         },
-        "capabilities": {
-            "control": {
-                "colorgamuttype": "A",
-                "colorgamut": [[0.704, 0.296], [0.2151, 0.7106], [0.138, 0.08]],
-            }
-        },
+        "capabilities": LIGHT_1_CAPABILITIES,
         "type": "Extended color light",
         "name": "Hue Lamp 3",
         "modelid": "LCT001",
@@ -412,9 +378,9 @@ async def test_new_light_discovered(hass, mock_bridge):
     await hass.services.async_call(
         "light", "turn_on", {"entity_id": "light.hue_lamp_1"}, blocking=True
     )
-    # 2x light update, 1 turn on request
-    assert len(mock_bridge.mock_requests) == 3
-    assert len(hass.states.async_all()) == 4
+    # 2x light update, 1 group update, 1 turn on request
+    assert len(mock_bridge.mock_requests) == 4
+    assert len(hass.states.async_all()) == 3
 
     light = hass.states.get("light.hue_lamp_3")
     assert light is not None
@@ -429,7 +395,7 @@ async def test_group_removed(hass, mock_bridge):
 
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 2
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 2
 
     mock_bridge.mock_light_responses.append({})
     mock_bridge.mock_group_responses.append({"1": GROUP_RESPONSE["1"]})
@@ -439,9 +405,9 @@ async def test_group_removed(hass, mock_bridge):
         "light", "turn_on", {"entity_id": "light.group_1"}, blocking=True
     )
 
-    # 2x group update, 2x light update, 1 turn on request
-    assert len(mock_bridge.mock_requests) == 5
-    assert len(hass.states.async_all()) == 2
+    # 2x group update, 1x light update, 1 turn on request
+    assert len(mock_bridge.mock_requests) == 4
+    assert len(hass.states.async_all()) == 1
 
     group = hass.states.get("light.group_1")
     assert group is not None
@@ -453,10 +419,11 @@ async def test_group_removed(hass, mock_bridge):
 async def test_light_removed(hass, mock_bridge):
     """Test if 2nd update has removed light."""
     mock_bridge.mock_light_responses.append(LIGHT_RESPONSE)
+    mock_bridge.mock_group_responses.append(GROUP_RESPONSE)
 
     await setup_bridge(hass, mock_bridge)
-    assert len(mock_bridge.mock_requests) == 1
-    assert len(hass.states.async_all()) == 3
+    assert len(mock_bridge.mock_requests) == 2
+    assert len(hass.states.async_all()) == 2
 
     mock_bridge.mock_light_responses.clear()
     mock_bridge.mock_light_responses.append({"1": LIGHT_RESPONSE.get("1")})
@@ -466,9 +433,9 @@ async def test_light_removed(hass, mock_bridge):
         "light", "turn_on", {"entity_id": "light.hue_lamp_1"}, blocking=True
     )
 
-    # 2x light update, 1 turn on request
-    assert len(mock_bridge.mock_requests) == 3
-    assert len(hass.states.async_all()) == 2
+    # 2x light update, 1 group update, 1 turn on request
+    assert len(mock_bridge.mock_requests) == 4
+    assert len(hass.states.async_all()) == 1
 
     light = hass.states.get("light.hue_lamp_1")
     assert light is not None
@@ -485,13 +452,13 @@ async def test_other_group_update(hass, mock_bridge):
 
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 2
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 2
 
     group_2 = hass.states.get("light.group_2")
     assert group_2 is not None
     assert group_2.name == "Group 2"
     assert group_2.state == "on"
-    assert group_2.attributes["brightness"] == 153
+    assert group_2.attributes["brightness"] == 154
     assert group_2.attributes["color_temp"] == 250
 
     updated_group_response = dict(GROUP_RESPONSE)
@@ -520,9 +487,9 @@ async def test_other_group_update(hass, mock_bridge):
     await hass.services.async_call(
         "light", "turn_on", {"entity_id": "light.group_1"}, blocking=True
     )
-    # 2x group update, 2x light update, 1 turn on request
-    assert len(mock_bridge.mock_requests) == 5
-    assert len(hass.states.async_all()) == 3
+    # 2x group update, 1x light update, 1 turn on request
+    assert len(mock_bridge.mock_requests) == 4
+    assert len(hass.states.async_all()) == 2
 
     group_2 = hass.states.get("light.group_2")
     assert group_2 is not None
@@ -533,10 +500,11 @@ async def test_other_group_update(hass, mock_bridge):
 async def test_other_light_update(hass, mock_bridge):
     """Test changing one light that will impact state of other light."""
     mock_bridge.mock_light_responses.append(LIGHT_RESPONSE)
+    mock_bridge.mock_group_responses.append(GROUP_RESPONSE)
 
     await setup_bridge(hass, mock_bridge)
-    assert len(mock_bridge.mock_requests) == 1
-    assert len(hass.states.async_all()) == 3
+    assert len(mock_bridge.mock_requests) == 2
+    assert len(hass.states.async_all()) == 2
 
     lamp_2 = hass.states.get("light.hue_lamp_2")
     assert lamp_2 is not None
@@ -557,12 +525,7 @@ async def test_other_light_update(hass, mock_bridge):
             "colormode": "hs",
             "reachable": True,
         },
-        "capabilities": {
-            "control": {
-                "colorgamuttype": "A",
-                "colorgamut": [[0.704, 0.296], [0.2151, 0.7106], [0.138, 0.08]],
-            }
-        },
+        "capabilities": LIGHT_2_CAPABILITIES,
         "type": "Extended color light",
         "name": "Hue Lamp 2 new",
         "modelid": "LCT001",
@@ -577,9 +540,9 @@ async def test_other_light_update(hass, mock_bridge):
     await hass.services.async_call(
         "light", "turn_on", {"entity_id": "light.hue_lamp_1"}, blocking=True
     )
-    # 2x light update, 1 turn on request
-    assert len(mock_bridge.mock_requests) == 3
-    assert len(hass.states.async_all()) == 3
+    # 2x light update, 1 group update, 1 turn on request
+    assert len(mock_bridge.mock_requests) == 4
+    assert len(hass.states.async_all()) == 2
 
     lamp_2 = hass.states.get("light.hue_lamp_2")
     assert lamp_2 is not None
@@ -595,13 +558,11 @@ async def test_update_timeout(hass, mock_bridge):
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 0
     assert len(hass.states.async_all()) == 0
-    assert mock_bridge.available is False
 
 
 async def test_update_unauthorized(hass, mock_bridge):
     """Test bridge marked as not authorized if unauthorized during update."""
     mock_bridge.api.lights.update = Mock(side_effect=aiohue.Unauthorized)
-    mock_bridge.api.groups.update = Mock(side_effect=aiohue.Unauthorized)
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 0
     assert len(hass.states.async_all()) == 0
@@ -611,6 +572,8 @@ async def test_update_unauthorized(hass, mock_bridge):
 async def test_light_turn_on_service(hass, mock_bridge):
     """Test calling the turn on service on a light."""
     mock_bridge.mock_light_responses.append(LIGHT_RESPONSE)
+    mock_bridge.mock_group_responses.append(GROUP_RESPONSE)
+
     await setup_bridge(hass, mock_bridge)
     light = hass.states.get("light.hue_lamp_2")
     assert light is not None
@@ -627,17 +590,17 @@ async def test_light_turn_on_service(hass, mock_bridge):
         {"entity_id": "light.hue_lamp_2", "brightness": 100, "color_temp": 300},
         blocking=True,
     )
-    # 2x light update, 1 turn on request
-    assert len(mock_bridge.mock_requests) == 3
+    # 2x light update, 1 group update, 1 turn on request
+    assert len(mock_bridge.mock_requests) == 4
 
-    assert mock_bridge.mock_requests[1]["json"] == {
+    assert mock_bridge.mock_requests[2]["json"] == {
         "bri": 100,
         "on": True,
         "ct": 300,
         "alert": "none",
     }
 
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 2
 
     light = hass.states.get("light.hue_lamp_2")
     assert light is not None
@@ -651,9 +614,9 @@ async def test_light_turn_on_service(hass, mock_bridge):
         blocking=True,
     )
 
-    assert len(mock_bridge.mock_requests) == 5
+    assert len(mock_bridge.mock_requests) == 6
 
-    assert mock_bridge.mock_requests[3]["json"] == {
+    assert mock_bridge.mock_requests[4]["json"] == {
         "on": True,
         "xy": (0.138, 0.08),
         "alert": "none",
@@ -663,6 +626,8 @@ async def test_light_turn_on_service(hass, mock_bridge):
 async def test_light_turn_off_service(hass, mock_bridge):
     """Test calling the turn on service on a light."""
     mock_bridge.mock_light_responses.append(LIGHT_RESPONSE)
+    mock_bridge.mock_group_responses.append(GROUP_RESPONSE)
+
     await setup_bridge(hass, mock_bridge)
     light = hass.states.get("light.hue_lamp_1")
     assert light is not None
@@ -676,12 +641,13 @@ async def test_light_turn_off_service(hass, mock_bridge):
     await hass.services.async_call(
         "light", "turn_off", {"entity_id": "light.hue_lamp_1"}, blocking=True
     )
-    # 2x light update, 1 turn on request
-    assert len(mock_bridge.mock_requests) == 3
 
-    assert mock_bridge.mock_requests[1]["json"] == {"on": False, "alert": "none"}
+    # 2x light update, 1 for group update, 1 turn on request
+    assert len(mock_bridge.mock_requests) == 4
 
-    assert len(hass.states.async_all()) == 3
+    assert mock_bridge.mock_requests[2]["json"] == {"on": False, "alert": "none"}
+
+    assert len(hass.states.async_all()) == 2
 
     light = hass.states.get("light.hue_lamp_1")
     assert light is not None
@@ -697,9 +663,11 @@ def test_available():
             colorgamuttype=LIGHT_GAMUT_TYPE,
             colorgamut=LIGHT_GAMUT,
         ),
-        request_bridge_update=None,
+        coordinator=Mock(last_update_success=True),
         bridge=Mock(allow_unreachable=False),
         is_group=False,
+        supported_features=hue_light.SUPPORT_HUE_EXTENDED,
+        rooms={},
     )
 
     assert light.available is False
@@ -711,9 +679,11 @@ def test_available():
             colorgamuttype=LIGHT_GAMUT_TYPE,
             colorgamut=LIGHT_GAMUT,
         ),
-        request_bridge_update=None,
+        coordinator=Mock(last_update_success=True),
         bridge=Mock(allow_unreachable=True),
         is_group=False,
+        supported_features=hue_light.SUPPORT_HUE_EXTENDED,
+        rooms={},
     )
 
     assert light.available is True
@@ -725,9 +695,11 @@ def test_available():
             colorgamuttype=LIGHT_GAMUT_TYPE,
             colorgamut=LIGHT_GAMUT,
         ),
-        request_bridge_update=None,
+        coordinator=Mock(last_update_success=True),
         bridge=Mock(allow_unreachable=False),
         is_group=True,
+        supported_features=hue_light.SUPPORT_HUE_EXTENDED,
+        rooms={},
     )
 
     assert light.available is True
@@ -742,9 +714,11 @@ def test_hs_color():
             colorgamuttype=LIGHT_GAMUT_TYPE,
             colorgamut=LIGHT_GAMUT,
         ),
-        request_bridge_update=None,
+        coordinator=Mock(last_update_success=True),
         bridge=Mock(),
         is_group=False,
+        supported_features=hue_light.SUPPORT_HUE_EXTENDED,
+        rooms={},
     )
 
     assert light.hs_color is None
@@ -756,9 +730,11 @@ def test_hs_color():
             colorgamuttype=LIGHT_GAMUT_TYPE,
             colorgamut=LIGHT_GAMUT,
         ),
-        request_bridge_update=None,
+        coordinator=Mock(last_update_success=True),
         bridge=Mock(),
         is_group=False,
+        supported_features=hue_light.SUPPORT_HUE_EXTENDED,
+        rooms={},
     )
 
     assert light.hs_color is None
@@ -770,9 +746,213 @@ def test_hs_color():
             colorgamuttype=LIGHT_GAMUT_TYPE,
             colorgamut=LIGHT_GAMUT,
         ),
-        request_bridge_update=None,
+        coordinator=Mock(last_update_success=True),
         bridge=Mock(),
         is_group=False,
+        supported_features=hue_light.SUPPORT_HUE_EXTENDED,
+        rooms={},
     )
 
     assert light.hs_color == color.color_xy_to_hs(0.4, 0.5, LIGHT_GAMUT)
+
+
+async def test_group_features(hass, mock_bridge):
+    """Test group features."""
+
+    color_temp_type = "Color temperature light"
+    extended_color_type = "Extended color light"
+
+    group_response = {
+        "1": {
+            "name": "Group 1",
+            "lights": ["1", "2"],
+            "type": "LightGroup",
+            "action": {
+                "on": True,
+                "bri": 254,
+                "hue": 10000,
+                "sat": 254,
+                "effect": "none",
+                "xy": [0.5, 0.5],
+                "ct": 250,
+                "alert": "select",
+                "colormode": "ct",
+            },
+            "state": {"any_on": True, "all_on": False},
+        },
+        "2": {
+            "name": "Living Room",
+            "lights": ["2", "3"],
+            "type": "Room",
+            "action": {
+                "on": True,
+                "bri": 153,
+                "hue": 4345,
+                "sat": 254,
+                "effect": "none",
+                "xy": [0.5, 0.5],
+                "ct": 250,
+                "alert": "select",
+                "colormode": "ct",
+            },
+            "state": {"any_on": True, "all_on": False},
+        },
+        "3": {
+            "name": "Dining Room",
+            "lights": ["4"],
+            "type": "Room",
+            "action": {
+                "on": True,
+                "bri": 153,
+                "hue": 4345,
+                "sat": 254,
+                "effect": "none",
+                "xy": [0.5, 0.5],
+                "ct": 250,
+                "alert": "select",
+                "colormode": "ct",
+            },
+            "state": {"any_on": True, "all_on": False},
+        },
+    }
+
+    light_1 = {
+        "state": {
+            "on": True,
+            "bri": 144,
+            "ct": 467,
+            "alert": "none",
+            "effect": "none",
+            "reachable": True,
+        },
+        "capabilities": {
+            "control": {
+                "colorgamuttype": "A",
+                "colorgamut": [[0.704, 0.296], [0.2151, 0.7106], [0.138, 0.08]],
+            }
+        },
+        "type": color_temp_type,
+        "name": "Hue Lamp 1",
+        "modelid": "LCT001",
+        "swversion": "66009461",
+        "manufacturername": "Philips",
+        "uniqueid": "456",
+    }
+    light_2 = {
+        "state": {
+            "on": False,
+            "bri": 0,
+            "ct": 0,
+            "alert": "none",
+            "effect": "none",
+            "colormode": "xy",
+            "reachable": True,
+        },
+        "capabilities": {
+            "control": {
+                "colorgamuttype": "A",
+                "colorgamut": [[0.704, 0.296], [0.2151, 0.7106], [0.138, 0.08]],
+            }
+        },
+        "type": color_temp_type,
+        "name": "Hue Lamp 2",
+        "modelid": "LCT001",
+        "swversion": "66009461",
+        "manufacturername": "Philips",
+        "uniqueid": "4567",
+    }
+    light_3 = {
+        "state": {
+            "on": False,
+            "bri": 0,
+            "hue": 0,
+            "sat": 0,
+            "xy": [0, 0],
+            "ct": 0,
+            "alert": "none",
+            "effect": "none",
+            "colormode": "hs",
+            "reachable": True,
+        },
+        "capabilities": {
+            "control": {
+                "colorgamuttype": "A",
+                "colorgamut": [[0.704, 0.296], [0.2151, 0.7106], [0.138, 0.08]],
+            }
+        },
+        "type": extended_color_type,
+        "name": "Hue Lamp 3",
+        "modelid": "LCT001",
+        "swversion": "66009461",
+        "manufacturername": "Philips",
+        "uniqueid": "123",
+    }
+    light_4 = {
+        "state": {
+            "on": True,
+            "bri": 100,
+            "hue": 13088,
+            "sat": 210,
+            "xy": [0.5, 0.4],
+            "ct": 420,
+            "alert": "none",
+            "effect": "none",
+            "colormode": "hs",
+            "reachable": True,
+        },
+        "capabilities": {
+            "control": {
+                "colorgamuttype": "A",
+                "colorgamut": [[0.704, 0.296], [0.2151, 0.7106], [0.138, 0.08]],
+            }
+        },
+        "type": extended_color_type,
+        "name": "Hue Lamp 4",
+        "modelid": "LCT001",
+        "swversion": "66009461",
+        "manufacturername": "Philips",
+        "uniqueid": "1234",
+    }
+    light_response = {
+        "1": light_1,
+        "2": light_2,
+        "3": light_3,
+        "4": light_4,
+    }
+
+    mock_bridge.allow_groups = True
+    mock_bridge.mock_light_responses.append(light_response)
+    mock_bridge.mock_group_responses.append(group_response)
+    await setup_bridge(hass, mock_bridge)
+    assert len(mock_bridge.mock_requests) == 2
+
+    color_temp_feature = hue_light.SUPPORT_HUE["Color temperature light"]
+    extended_color_feature = hue_light.SUPPORT_HUE["Extended color light"]
+
+    group_1 = hass.states.get("light.group_1")
+    assert group_1.attributes["supported_features"] == color_temp_feature
+
+    group_2 = hass.states.get("light.living_room")
+    assert group_2.attributes["supported_features"] == extended_color_feature
+
+    group_3 = hass.states.get("light.dining_room")
+    assert group_3.attributes["supported_features"] == extended_color_feature
+
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+
+    entry = entity_registry.async_get("light.hue_lamp_1")
+    device_entry = device_registry.async_get(entry.device_id)
+    assert device_entry.suggested_area is None
+
+    entry = entity_registry.async_get("light.hue_lamp_2")
+    device_entry = device_registry.async_get(entry.device_id)
+    assert device_entry.suggested_area == "Living Room"
+
+    entry = entity_registry.async_get("light.hue_lamp_3")
+    device_entry = device_registry.async_get(entry.device_id)
+    assert device_entry.suggested_area == "Living Room"
+
+    entry = entity_registry.async_get("light.hue_lamp_4")
+    device_entry = device_registry.async_get(entry.device_id)
+    assert device_entry.suggested_area == "Dining Room"

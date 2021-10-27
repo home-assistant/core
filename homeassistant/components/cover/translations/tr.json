@@ -1,0 +1,18 @@
+{
+    "device_automation": {
+        "action_type": {
+            "close": "{entity_name} kapat",
+            "open": "{entity_name} a\u00e7\u0131n"
+        }
+    },
+    "state": {
+        "_": {
+            "closed": "Kapal\u0131",
+            "closing": "Kapan\u0131yor",
+            "open": "A\u00e7\u0131k",
+            "opening": "A\u00e7\u0131l\u0131yor",
+            "stopped": "Durduruldu"
+        }
+    },
+    "title": "Panjur"
+}

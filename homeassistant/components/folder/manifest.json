@@ -2,7 +2,6 @@
   "domain": "folder",
   "name": "Folder",
   "documentation": "https://www.home-assistant.io/integrations/folder",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

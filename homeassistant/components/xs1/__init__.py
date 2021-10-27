@@ -38,7 +38,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-XS1_COMPONENTS = ["climate", "sensor", "switch"]
+PLATFORMS = ["climate", "sensor", "switch"]
 
 # Lock used to limit the amount of concurrent update requests
 # as the XS1 Gateway can only handle a very
@@ -47,7 +47,7 @@ UPDATE_LOCK = asyncio.Lock()
 
 
 def setup(hass, config):
-    """Set up XS1 Component."""
+    """Set up XS1 integration."""
     _LOGGER.debug("Initializing XS1")
 
     host = config[DOMAIN][CONF_HOST]
@@ -63,12 +63,12 @@ def setup(hass, config):
         )
     except ConnectionError as error:
         _LOGGER.error(
-            "Failed to create XS1 API client " "because of a connection error: %s",
+            "Failed to create XS1 API client because of a connection error: %s",
             error,
         )
         return False
 
-    _LOGGER.debug("Establishing connection to XS1 gateway and retrieving data...")
+    _LOGGER.debug("Establishing connection to XS1 gateway and retrieving data")
 
     hass.data[DOMAIN] = {}
 
@@ -78,10 +78,10 @@ def setup(hass, config):
     hass.data[DOMAIN][ACTUATORS] = actuators
     hass.data[DOMAIN][SENSORS] = sensors
 
-    _LOGGER.debug("Loading components for XS1 platform...")
-    # Load components for supported devices
-    for component in XS1_COMPONENTS:
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
+    _LOGGER.debug("Loading platforms for XS1 integration")
+    # Load platforms for supported devices
+    for platform in PLATFORMS:
+        discovery.load_platform(hass, platform, DOMAIN, {}, config)
 
     return True
 

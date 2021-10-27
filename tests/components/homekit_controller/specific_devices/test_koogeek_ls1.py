@@ -3,17 +3,19 @@
 from datetime import timedelta
 from unittest import mock
 
+from aiohomekit.exceptions import AccessoryDisconnectedError, EncryptionError
+from aiohomekit.testing import FakePairing
 import pytest
 
-from homekit.exceptions import AccessoryDisconnectedError, EncryptionError
-import homeassistant.util.dt as dt_util
 from homeassistant.components.light import SUPPORT_BRIGHTNESS, SUPPORT_COLOR
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+import homeassistant.util.dt as dt_util
+
 from tests.common import async_fire_time_changed
 from tests.components.homekit_controller.common import (
+    Helper,
     setup_accessories_from_file,
     setup_test_accessories,
-    FakePairing,
-    Helper,
 )
 
 LIGHT_ON = ("lightbulb", "on")
@@ -24,7 +26,7 @@ async def test_koogeek_ls1_setup(hass):
     accessories = await setup_accessories_from_file(hass, "koogeek_ls1.json")
     config_entry, pairing = await setup_test_accessories(hass, accessories)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     # Assert that the entity is correctly added to the entity registry
     entry = entity_registry.async_get("light.koogeek_ls1_20833f")
@@ -43,7 +45,7 @@ async def test_koogeek_ls1_setup(hass):
         SUPPORT_BRIGHTNESS | SUPPORT_COLOR
     )
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
 
     device = device_registry.async_get(entry.device_id)
     assert device.manufacturer == "Koogeek"
@@ -58,7 +60,7 @@ async def test_recover_from_failure(hass, utcnow, failure_cls):
     """
     Test that entity actually recovers from a network connection drop.
 
-    See https://github.com/home-assistant/home-assistant/issues/18949
+    See https://github.com/home-assistant/core/issues/18949
     """
     accessories = await setup_accessories_from_file(hass, "koogeek_ls1.json")
     config_entry, pairing = await setup_test_accessories(hass, accessories)

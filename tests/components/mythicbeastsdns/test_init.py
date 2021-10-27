@@ -1,9 +1,9 @@
 """Test the Mythic Beasts DNS component."""
 import logging
-import asynctest
+from unittest.mock import patch
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import mythicbeastsdns
+from homeassistant.setup import async_setup_component
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ async def mbddns_update_mock(domain, password, host, ttl=60, session=None):
     return True
 
 
-@asynctest.mock.patch("mbddns.update", new=mbddns_update_mock)
+@patch("mbddns.update", new=mbddns_update_mock)
 async def test_update(hass):
     """Run with correct values and check true is returned."""
     result = await async_setup_component(
@@ -36,7 +36,7 @@ async def test_update(hass):
     assert result
 
 
-@asynctest.mock.patch("mbddns.update", new=mbddns_update_mock)
+@patch("mbddns.update", new=mbddns_update_mock)
 async def test_update_fails_if_wrong_token(hass):
     """Run with incorrect token and check false is returned."""
     result = await async_setup_component(
@@ -53,7 +53,7 @@ async def test_update_fails_if_wrong_token(hass):
     assert not result
 
 
-@asynctest.mock.patch("mbddns.update", new=mbddns_update_mock)
+@patch("mbddns.update", new=mbddns_update_mock)
 async def test_update_fails_if_invalid_host(hass):
     """Run with invalid characters in host and check false is returned."""
     result = await async_setup_component(

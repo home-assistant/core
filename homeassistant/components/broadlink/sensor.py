@@ -1,161 +1,153 @@
-"""Support for the Broadlink RM2 Pro (only temperature) and A1 devices."""
-import binascii
-import logging
-from datetime import timedelta
+"""Support for Broadlink sensors."""
+from __future__ import annotations
 
-import broadlink
+import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_VOLTAGE,
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     CONF_HOST,
-    CONF_MAC,
-    CONF_MONITORED_CONDITIONS,
-    CONF_NAME,
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
+    ENERGY_KILO_WATT_HOUR,
+    PERCENTAGE,
+    POWER_WATT,
     TEMP_CELSIUS,
-    CONF_TIMEOUT,
-    CONF_SCAN_INTERVAL,
 )
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
+from homeassistant.helpers import config_validation as cv
+
+from .const import DOMAIN
+from .entity import BroadlinkEntity
+from .helpers import import_device
 
 _LOGGER = logging.getLogger(__name__)
 
-DEVICE_DEFAULT_NAME = "Broadlink sensor"
-DEFAULT_TIMEOUT = 10
-SCAN_INTERVAL = timedelta(seconds=300)
-
-SENSOR_TYPES = {
-    "temperature": ["Temperature", TEMP_CELSIUS],
-    "air_quality": ["Air Quality", " "],
-    "humidity": ["Humidity", "%"],
-    "light": ["Light", " "],
-    "noise": ["Noise", " "],
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="temperature",
+        name="Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="air_quality",
+        name="Air Quality",
+    ),
+    SensorEntityDescription(
+        key="humidity",
+        name="Humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=DEVICE_CLASS_HUMIDITY,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="light",
+        name="Light",
+        device_class=DEVICE_CLASS_ILLUMINANCE,
+    ),
+    SensorEntityDescription(
+        key="noise",
+        name="Noise",
+    ),
+    SensorEntityDescription(
+        key="power",
+        name="Current power",
+        native_unit_of_measurement=POWER_WATT,
+        device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="volt",
+        name="Voltage",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        device_class=DEVICE_CLASS_VOLTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="current",
+        name="Current",
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        device_class=DEVICE_CLASS_CURRENT,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="overload",
+        name="Overload",
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        device_class=DEVICE_CLASS_CURRENT,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="totalconsum",
+        name="Total consumption",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+    ),
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): vol.Coerce(str),
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
-        ),
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_MAC): cv.string,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    }
+    {vol.Required(CONF_HOST): cv.string}, extra=vol.ALLOW_EXTRA
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Broadlink device sensors."""
-    host = config.get(CONF_HOST)
-    mac = config.get(CONF_MAC).encode().replace(b":", b"")
-    mac_addr = binascii.unhexlify(mac)
-    name = config.get(CONF_NAME)
-    timeout = config.get(CONF_TIMEOUT)
-    update_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
-    broadlink_data = BroadlinkData(update_interval, host, mac_addr, timeout)
-    dev = []
-    for variable in config[CONF_MONITORED_CONDITIONS]:
-        dev.append(BroadlinkSensor(name, broadlink_data, variable))
-    add_entities(dev, True)
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Import the device and discontinue platform.
+
+    This is for backward compatibility.
+    Do not use this method.
+    """
+    import_device(hass, config[CONF_HOST])
+    _LOGGER.warning(
+        "The sensor platform is deprecated, please remove it from your configuration"
+    )
 
 
-class BroadlinkSensor(Entity):
-    """Representation of a Broadlink device sensor."""
-
-    def __init__(self, name, broadlink_data, sensor_type):
-        """Initialize the sensor."""
-        self._name = "{} {}".format(name, SENSOR_TYPES[sensor_type][0])
-        self._state = None
-        self._is_available = False
-        self._type = sensor_type
-        self._broadlink_data = broadlink_data
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._is_available
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return self._unit_of_measurement
-
-    def update(self):
-        """Get the latest data from the sensor."""
-        self._broadlink_data.update()
-        if self._broadlink_data.data is None:
-            self._state = None
-            self._is_available = False
-            return
-        self._state = self._broadlink_data.data[self._type]
-        self._is_available = True
-
-
-class BroadlinkData:
-    """Representation of a Broadlink data object."""
-
-    def __init__(self, interval, ip_addr, mac_addr, timeout):
-        """Initialize the data object."""
-        self.data = None
-        self.ip_addr = ip_addr
-        self.mac_addr = mac_addr
-        self.timeout = timeout
-        self._connect()
-        self._schema = vol.Schema(
-            {
-                vol.Optional("temperature"): vol.Range(min=-50, max=150),
-                vol.Optional("humidity"): vol.Range(min=0, max=100),
-                vol.Optional("light"): vol.Any(0, 1, 2, 3),
-                vol.Optional("air_quality"): vol.Any(0, 1, 2, 3),
-                vol.Optional("noise"): vol.Any(0, 1, 2),
-            }
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Broadlink sensor."""
+    device = hass.data[DOMAIN].devices[config_entry.entry_id]
+    sensor_data = device.update_manager.coordinator.data
+    sensors = [
+        BroadlinkSensor(device, description)
+        for description in SENSOR_TYPES
+        if description.key in sensor_data
+        and (
+            # These devices have optional sensors.
+            # We don't create entities if the value is 0.
+            sensor_data[description.key] != 0
+            or device.api.type not in {"RM4PRO", "RM4MINI"}
         )
-        self.update = Throttle(interval)(self._update)
-        if not self._auth():
-            _LOGGER.warning("Failed to connect to device")
+    ]
+    async_add_entities(sensors)
 
-    def _connect(self):
 
-        self._device = broadlink.a1((self.ip_addr, 80), self.mac_addr, None)
-        self._device.timeout = self.timeout
+class BroadlinkSensor(BroadlinkEntity, SensorEntity):
+    """Representation of a Broadlink sensor."""
 
-    def _update(self, retry=3):
-        try:
-            data = self._device.check_sensors_raw()
-            if data is not None:
-                self.data = self._schema(data)
-                return
-        except OSError as error:
-            if retry < 1:
-                self.data = None
-                _LOGGER.error(error)
-                return
-        except (vol.Invalid, vol.MultipleInvalid):
-            pass  # Continue quietly if device returned malformed data
-        if retry > 0 and self._auth():
-            self._update(retry - 1)
+    def __init__(self, device, description: SensorEntityDescription):
+        """Initialize the sensor."""
+        super().__init__(device)
+        self.entity_description = description
 
-    def _auth(self, retry=3):
-        try:
-            auth = self._device.auth()
-        except OSError:
-            auth = False
-        if not auth and retry > 0:
-            self._connect()
-            return self._auth(retry - 1)
-        return auth
+        self._attr_name = f"{device.name} {description.name}"
+        self._attr_native_value = self._coordinator.data[description.key]
+        self._attr_unique_id = f"{device.unique_id}-{description.key}"
+
+    def _update_state(self, data):
+        """Update the state of the entity."""
+        self._attr_native_value = data[self.entity_description.key]

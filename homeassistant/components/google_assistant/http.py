@@ -1,41 +1,44 @@
 """Support for Google Actions Smart Home Control."""
 import asyncio
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 from uuid import uuid4
-import jwt
 
-from aiohttp import ClientResponseError, ClientError
+from aiohttp import ClientError, ClientResponseError
 from aiohttp.web import Request, Response
+import jwt
 
 # Typing imports
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.core import callback, ServiceCall
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
+from homeassistant.const import (
+    CLOUD_NEVER_EXPOSED_ENTITIES,
+    ENTITY_CATEGORY_CONFIG,
+    ENTITY_CATEGORY_DIAGNOSTIC,
+)
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    GOOGLE_ASSISTANT_API_ENDPOINT,
-    CONF_API_KEY,
-    CONF_EXPOSE_BY_DEFAULT,
-    CONF_EXPOSED_DOMAINS,
+    CONF_CLIENT_EMAIL,
     CONF_ENTITY_CONFIG,
     CONF_EXPOSE,
+    CONF_EXPOSE_BY_DEFAULT,
+    CONF_EXPOSED_DOMAINS,
+    CONF_PRIVATE_KEY,
     CONF_REPORT_STATE,
     CONF_SECURE_DEVICES_PIN,
     CONF_SERVICE_ACCOUNT,
-    CONF_CLIENT_EMAIL,
-    CONF_PRIVATE_KEY,
-    DOMAIN,
-    HOMEGRAPH_TOKEN_URL,
+    GOOGLE_ASSISTANT_API_ENDPOINT,
     HOMEGRAPH_SCOPE,
+    HOMEGRAPH_TOKEN_URL,
     REPORT_STATE_BASE_URL,
     REQUEST_SYNC_BASE_URL,
-    SERVICE_REQUEST_SYNC,
+    SOURCE_CLOUD,
 )
-from .smart_home import async_handle_message
 from .helpers import AbstractConfig
+from .smart_home import async_handle_message
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,12 +53,12 @@ def _get_homegraph_jwt(time, iss, key):
         "iat": now,
         "exp": now + 3600,
     }
-    return jwt.encode(jwt_raw, key, algorithm="RS256").decode("utf-8")
+    return jwt.encode(jwt_raw, key, algorithm="RS256")
 
 
 async def _get_homegraph_token(hass, jwt_signed):
     headers = {
-        "Authorization": "Bearer {}".format(jwt_signed),
+        "Authorization": f"Bearer {jwt_signed}",
         "Content-Type": "application/x-www-form-urlencoded",
     }
     data = {
@@ -85,11 +88,6 @@ class GoogleConfig(AbstractConfig):
         return True
 
     @property
-    def agent_user_id(self):
-        """Return Agent User Id to use for query responses."""
-        return None
-
-    @property
     def entity_config(self):
         """Return entity config."""
         return self._config.get(CONF_ENTITY_CONFIG) or {}
@@ -102,7 +100,6 @@ class GoogleConfig(AbstractConfig):
     @property
     def should_report_state(self):
         """Return if states should be proactively reported."""
-        # pylint: disable=no-self-use
         return self._config.get(CONF_REPORT_STATE)
 
     def should_expose(self, state) -> bool:
@@ -117,22 +114,49 @@ class GoogleConfig(AbstractConfig):
         if state.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
             return False
 
+        entity_registry = er.async_get(self.hass)
+        registry_entry = entity_registry.async_get(state.entity_id)
+        if registry_entry:
+            auxiliary_entity = registry_entry.entity_category in (
+                ENTITY_CATEGORY_CONFIG,
+                ENTITY_CATEGORY_DIAGNOSTIC,
+            )
+        else:
+            auxiliary_entity = False
+
         explicit_expose = self.entity_config.get(state.entity_id, {}).get(CONF_EXPOSE)
 
         domain_exposed_by_default = (
             expose_by_default and state.domain in exposed_domains
         )
 
-        # Expose an entity if the entity's domain is exposed by default and
+        # Expose an entity by default if the entity's domain is exposed by default
+        # and the entity is not a config or diagnostic entity
+        entity_exposed_by_default = domain_exposed_by_default and not auxiliary_entity
+
+        # Expose an entity if the entity's is exposed by default and
         # the configuration doesn't explicitly exclude it from being
         # exposed, or if the entity is explicitly exposed
-        is_default_exposed = domain_exposed_by_default and explicit_expose is not False
+        is_default_exposed = entity_exposed_by_default and explicit_expose is not False
 
         return is_default_exposed or explicit_expose
+
+    def get_agent_user_id(self, context):
+        """Get agent user ID making request."""
+        return context.user_id
 
     def should_2fa(self, state):
         """If an entity should have 2FA checked."""
         return True
+
+    async def _async_request_sync_devices(self, agent_user_id: str):
+        if CONF_SERVICE_ACCOUNT in self._config:
+            return await self.async_call_homegraph_api(
+                REQUEST_SYNC_BASE_URL, {"agentUserId": agent_user_id}
+            )
+
+        _LOGGER.error("No configuration for request_sync available")
+        return HTTPStatus.INTERNAL_SERVER_ERROR
 
     async def _async_update_token(self, force=False):
         if CONF_SERVICE_ACCOUNT not in self._config:
@@ -153,12 +177,12 @@ class GoogleConfig(AbstractConfig):
             self._access_token_renew = now + timedelta(seconds=token["expires_in"])
 
     async def async_call_homegraph_api(self, url, data):
-        """Call a homegraph api with authenticaiton."""
+        """Call a homegraph api with authentication."""
         session = async_get_clientsession(self.hass)
 
         async def _call():
             headers = {
-                "Authorization": "Bearer {}".format(self._access_token),
+                "Authorization": f"Bearer {self._access_token}",
                 "X-GFE-SSL": "yes",
             }
             async with session.post(url, headers=headers, json=data) as res:
@@ -166,61 +190,35 @@ class GoogleConfig(AbstractConfig):
                     "Response on %s with data %s was %s", url, data, await res.text()
                 )
                 res.raise_for_status()
+                return res.status
 
         try:
             await self._async_update_token()
             try:
-                await _call()
+                return await _call()
             except ClientResponseError as error:
-                if error.status == 401:
+                if error.status == HTTPStatus.UNAUTHORIZED:
                     _LOGGER.warning(
                         "Request for %s unauthorized, renewing token and retrying", url
                     )
                     await self._async_update_token(True)
-                    await _call()
-                else:
-                    raise
+                    return await _call()
+                raise
         except ClientResponseError as error:
             _LOGGER.error("Request for %s failed: %d", url, error.status)
+            return error.status
         except (asyncio.TimeoutError, ClientError):
             _LOGGER.error("Could not contact %s", url)
+            return HTTPStatus.INTERNAL_SERVER_ERROR
 
-    async def async_report_state(self, message):
+    async def async_report_state(self, message, agent_user_id: str):
         """Send a state report to Google."""
         data = {
             "requestId": uuid4().hex,
-            "agentUserId": (await self.hass.auth.async_get_owner()).id,
+            "agentUserId": agent_user_id,
             "payload": message,
         }
         await self.async_call_homegraph_api(REPORT_STATE_BASE_URL, data)
-
-
-@callback
-def async_register_http(hass, cfg):
-    """Register HTTP views for Google Assistant."""
-    config = GoogleConfig(hass, cfg)
-    hass.http.register_view(GoogleAssistantView(config))
-    if config.should_report_state:
-        config.async_enable_report_state()
-
-    async def request_sync_service_handler(call: ServiceCall):
-        """Handle request sync service calls."""
-        agent_user_id = call.data.get("agent_user_id") or call.context.user_id
-
-        if agent_user_id is None:
-            _LOGGER.warning(
-                "No agent_user_id supplied for request_sync. Call as a user or pass in user id as agent_user_id."
-            )
-            return
-        await config.async_call_homegraph_api(
-            REQUEST_SYNC_BASE_URL, {"agentUserId": agent_user_id}
-        )
-
-    # Register service only if api key is provided
-    if CONF_API_KEY not in cfg and CONF_SERVICE_ACCOUNT in cfg:
-        hass.services.async_register(
-            DOMAIN, SERVICE_REQUEST_SYNC, request_sync_service_handler
-        )
 
 
 class GoogleAssistantView(HomeAssistantView):
@@ -238,6 +236,10 @@ class GoogleAssistantView(HomeAssistantView):
         """Handle Google Assistant requests."""
         message: dict = await request.json()
         result = await async_handle_message(
-            request.app["hass"], self.config, request["hass_user"].id, message
+            request.app["hass"],
+            self.config,
+            request["hass_user"].id,
+            message,
+            SOURCE_CLOUD,
         )
         return self.json(result)

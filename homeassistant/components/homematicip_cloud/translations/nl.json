@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "connection_aborted": "Kan geen verbinding maken",
+            "unknown": "Onverwachte fout"
+        },
+        "error": {
+            "invalid_sgtin_or_pin": "Ongeldige SGTIN of PIN-code, probeer het opnieuw.",
+            "press_the_button": "Druk op de blauwe knop.",
+            "register_failed": "Kan niet registreren, gelieve opnieuw te proberen.",
+            "timeout_button": "Blauwe knop druk op timeout, probeer het opnieuw."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "hapid": "Accesspoint ID (SGTIN)",
+                    "name": "Naam (optioneel, gebruikt als naamvoorvoegsel voor alle apparaten)",
+                    "pin": "PIN-code"
+                },
+                "title": "Kies HomematicIP accesspoint"
+            },
+            "link": {
+                "description": "Druk op de blauwe knop op het accesspoint en de verzendknop om HomematicIP bij Home Assistant te registreren. \n\n![Locatie van knop op bridge](/static/images/config_flows/\nconfig_homematicip_cloud.png)",
+                "title": "Link accesspoint"
+            }
+        }
+    }
+}

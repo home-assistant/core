@@ -1,12 +1,8 @@
 {
   "domain": "cups",
-  "name": "Cups",
+  "name": "CUPS",
   "documentation": "https://www.home-assistant.io/integrations/cups",
-  "requirements": [
-    "pycups==1.9.73"
-  ],
-  "dependencies": [],
-  "codeowners": [
-    "@fabaff"
-  ]
+  "requirements": ["pycups==1.9.73"],
+  "codeowners": ["@fabaff"],
+  "iot_class": "local_polling"
 }

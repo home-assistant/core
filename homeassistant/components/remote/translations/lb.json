@@ -1,0 +1,24 @@
+{
+    "device_automation": {
+        "action_type": {
+            "toggle": "{entity_name} \u00ebmschalten",
+            "turn_off": "{entity_name} ausschalten",
+            "turn_on": "{entity_name} uschalten"
+        },
+        "condition_type": {
+            "is_off": "{entity_name} ass ausgeschalt",
+            "is_on": "{entity_name} ass un"
+        },
+        "trigger_type": {
+            "turned_off": "{entity_name} gouf ausgeschalt",
+            "turned_on": "{entity_name} gouf ugeschalt"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Aus",
+            "on": "Un"
+        }
+    },
+    "title": "T\u00e9l\u00e9commande"
+}

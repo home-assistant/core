@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "already_in_progress": "La configuration est d\u00e9j\u00e0 en cours",
+            "not_huawei_lte": "Pas un appareil Huawei LTE"
+        },
+        "error": {
+            "connection_timeout": "D\u00e9lai de connexion d\u00e9pass\u00e9",
+            "incorrect_password": "Mot de passe incorrect",
+            "incorrect_username": "Nom d'utilisateur incorrect",
+            "invalid_auth": "Authentification invalide",
+            "invalid_url": "URL invalide",
+            "login_attempts_exceeded": "Nombre maximal de tentatives de connexion d\u00e9pass\u00e9, veuillez r\u00e9essayer ult\u00e9rieurement",
+            "response_error": "Erreur inconnue de l'appareil",
+            "unknown": "Erreur inattendue"
+        },
+        "flow_title": "Huawei LTE: {nom}",
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Mot de passe",
+                    "url": "URL",
+                    "username": "Nom d'utilisateur"
+                },
+                "description": "Entrez les d\u00e9tails d'acc\u00e8s au p\u00e9riph\u00e9rique. La sp\u00e9cification du nom d'utilisateur et du mot de passe est facultative, mais permet de prendre en charge davantage de fonctionnalit\u00e9s d'int\u00e9gration. En revanche, l\u2019utilisation d\u2019une connexion autoris\u00e9e peut entra\u00eener des probl\u00e8mes d\u2019acc\u00e8s \u00e0 l\u2019interface Web du p\u00e9riph\u00e9rique depuis l\u2019assistant externe lorsque l\u2019int\u00e9gration est active et inversement.",
+                "title": "Configurer Huawei LTE"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "name": "Nom du service de notification (red\u00e9marrage requis)",
+                    "recipient": "Destinataires des notifications SMS",
+                    "track_new_devices": "Suivre les nouveaux appareils",
+                    "track_wired_clients": "Suivre les clients du r\u00e9seau filaire",
+                    "unauthenticated_mode": "Mode non authentifi\u00e9 (le changement n\u00e9cessite un rechargement)"
+                }
+            }
+        }
+    }
+}

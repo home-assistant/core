@@ -2,6 +2,7 @@
 import asyncio
 from contextlib import suppress
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 from aiohttp import web
@@ -15,7 +16,6 @@ from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_prepare_setup_platform
-
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -84,7 +84,7 @@ async def async_setup(hass, config):
         await component.async_add_entities([mailbox_entity])
 
     setup_tasks = [
-        async_setup_platform(p_type, p_config)
+        asyncio.create_task(async_setup_platform(p_type, p_config))
         for p_type, p_config in config_per_platform(config, DOMAIN)
     ]
 
@@ -142,6 +142,7 @@ class Mailbox:
         self.hass = hass
         self.name = name
 
+    @callback
     def async_update(self):
         """Send event notification of updated mailbox."""
         self.hass.bus.async_fire(EVENT)
@@ -169,15 +170,13 @@ class Mailbox:
         """Return a list of the current messages."""
         raise NotImplementedError()
 
-    def async_delete(self, msgid):
+    async def async_delete(self, msgid):
         """Delete the specified messages."""
         raise NotImplementedError()
 
 
 class StreamError(Exception):
     """Media streaming exception."""
-
-    pass
 
 
 class MailboxView(HomeAssistantView):
@@ -201,7 +200,7 @@ class MailboxPlatformsView(MailboxView):
     url = "/api/mailbox/platforms"
     name = "api:mailbox:platforms"
 
-    async def get(self, request):
+    async def get(self, request: web.Request) -> web.Response:
         """Retrieve list of platforms."""
         platforms = []
         for mailbox in self.mailboxes:
@@ -237,7 +236,7 @@ class MailboxDeleteView(MailboxView):
     async def delete(self, request, platform, msgid):
         """Delete items."""
         mailbox = self.get_mailbox(platform)
-        mailbox.async_delete(msgid)
+        await mailbox.async_delete(msgid)
 
 
 class MailboxMediaView(MailboxView):
@@ -255,10 +254,9 @@ class MailboxMediaView(MailboxView):
                 try:
                     stream = await mailbox.async_get_media(msgid)
                 except StreamError as err:
-                    error_msg = "Error getting media: %s" % (err)
-                    _LOGGER.error(error_msg)
-                    return web.Response(status=500)
+                    _LOGGER.error("Error getting media: %s", err)
+                    return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
             if stream:
                 return web.Response(body=stream, content_type=mailbox.media_type)
 
-        return web.Response(status=500)
+        return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)

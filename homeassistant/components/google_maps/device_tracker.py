@@ -1,4 +1,6 @@
 """Support for Google Maps location sharing."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -6,7 +8,10 @@ from locationsharinglib import Service
 from locationsharinglib.locationsharinglibexceptions import InvalidCookies
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import PLATFORM_SCHEMA, SOURCE_TYPE_GPS
+from homeassistant.components.device_tracker import (
+    PLATFORM_SCHEMA as PLATFORM_SCHEMA_BASE,
+    SOURCE_TYPE_GPS,
+)
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
@@ -30,7 +35,9 @@ CONF_MAX_GPS_ACCURACY = "max_gps_accuracy"
 
 CREDENTIALS_FILE = ".google_maps_location_sharing.cookies"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+# the parent "device_tracker" have marked the schemas as legacy, so this
+# need to be refactored as part of a bigger rewrite.
+PLATFORM_SCHEMA = PLATFORM_SCHEMA_BASE.extend(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Optional(CONF_MAX_GPS_ACCURACY, default=100000): vol.Coerce(float),
@@ -53,10 +60,9 @@ class GoogleMapsScanner:
         self.username = config[CONF_USERNAME]
         self.max_gps_accuracy = config[CONF_MAX_GPS_ACCURACY]
         self.scan_interval = config.get(CONF_SCAN_INTERVAL) or timedelta(seconds=60)
+        self._prev_seen: dict[str, str] = {}
 
-        credfile = "{}.{}".format(
-            hass.config.path(CREDENTIALS_FILE), slugify(self.username)
-        )
+        credfile = f"{hass.config.path(CREDENTIALS_FILE)}.{slugify(self.username)}"
         try:
             self.service = Service(credfile, self.username)
             self._update_info()
@@ -67,14 +73,14 @@ class GoogleMapsScanner:
 
         except InvalidCookies:
             _LOGGER.error(
-                "The cookie file provided does not provide a valid session. Please create another one and try again."
+                "The cookie file provided does not provide a valid session. Please create another one and try again"
             )
             self.success_init = False
 
     def _update_info(self, now=None):
         for person in self.service.get_all_people():
             try:
-                dev_id = "google_maps_{0}".format(slugify(person.id))
+                dev_id = f"google_maps_{slugify(person.id)}"
             except TypeError:
                 _LOGGER.warning("No location(s) shared with this account")
                 return
@@ -92,11 +98,22 @@ class GoogleMapsScanner:
                 )
                 continue
 
+            last_seen = dt_util.as_utc(person.datetime)
+            if last_seen < self._prev_seen.get(dev_id, last_seen):
+                _LOGGER.warning(
+                    "Ignoring %s update because timestamp "
+                    "is older than last timestamp",
+                    person.nickname,
+                )
+                _LOGGER.debug("%s < %s", last_seen, self._prev_seen[dev_id])
+                continue
+            self._prev_seen[dev_id] = last_seen
+
             attrs = {
                 ATTR_ADDRESS: person.address,
                 ATTR_FULL_NAME: person.full_name,
                 ATTR_ID: person.id,
-                ATTR_LAST_SEEN: dt_util.as_utc(person.datetime),
+                ATTR_LAST_SEEN: last_seen,
                 ATTR_NICKNAME: person.nickname,
                 ATTR_BATTERY_CHARGING: person.charging,
                 ATTR_BATTERY_LEVEL: person.battery_level,

@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "cannot_connect": "\u00c9chec de connexion"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_auth": "Authentification invalide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Cl\u00e9 d'API",
+                    "host": "H\u00f4te",
+                    "password": "Mot de passe"
+                },
+                "description": "Saisissez l'adresse IP de votre Daikin AC. \n\n Notez que Cl\u00e9 d'API et Mot de passe sont utilis\u00e9s respectivement par les p\u00e9riph\u00e9riques BRP072Cxx et SKYFi.",
+                "title": "Configurer Daikin AC"
+            }
+        }
+    }
+}

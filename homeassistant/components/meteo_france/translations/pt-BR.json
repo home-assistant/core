@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cidade j\u00e1 configurada",
+            "unknown": "Erro desconhecido: tente novamente mais tarde"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "city": "Cidade"
+                }
+            }
+        }
+    }
+}

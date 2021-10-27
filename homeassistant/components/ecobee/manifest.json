@@ -1,9 +1,9 @@
 {
-    "domain": "ecobee",
-    "name": "Ecobee",
-    "config_flow": true,
-    "documentation": "https://www.home-assistant.io/integrations/ecobee",
-    "dependencies": [],
-    "requirements": ["python-ecobee-api==0.1.4"],
-    "codeowners": ["@marthoc"]
+  "domain": "ecobee",
+  "name": "ecobee",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/ecobee",
+  "requirements": ["python-ecobee-api==0.2.11"],
+  "codeowners": ["@marthoc"],
+  "iot_class": "cloud_polling"
 }

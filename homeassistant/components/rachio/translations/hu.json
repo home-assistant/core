@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API kulcs"
+                },
+                "description": "Sz\u00fcks\u00e9ge lesz az API-kulcsra a https://app.rach.io/ webhelyen. L\u00e9pjen a Be\u00e1ll\u00edt\u00e1sok elemre, majd kattintson az \u201eAPI KEY GET\u201d lek\u00e9r\u00e9s\u00e9re.",
+                "title": "Csatlakozzon a Rachio k\u00e9sz\u00fcl\u00e9khez"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "manual_run_mins": "A fut\u00e1s id\u0151tartama percben a z\u00f3nakapcsol\u00f3 aktiv\u00e1l\u00e1sakor"
+                }
+            }
+        }
+    }
+}

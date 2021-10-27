@@ -26,7 +26,7 @@ class DemoMailbox(Mailbox):
         txt = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
         for idx in range(0, 10):
             msgtime = int(dt.as_timestamp(dt.utcnow()) - 3600 * 24 * (10 - idx))
-            msgtxt = "Message {}. {}".format(idx + 1, txt * (1 + idx * (idx % 2)))
+            msgtxt = f"Message {idx + 1}. {txt * (1 + idx * (idx % 2))}"
             msgsha = sha1(msgtxt.encode("utf-8")).hexdigest()
             msg = {
                 "info": {
@@ -71,7 +71,7 @@ class DemoMailbox(Mailbox):
             reverse=True,
         )
 
-    def async_delete(self, msgid):
+    async def async_delete(self, msgid):
         """Delete the specified messages."""
         if msgid in self._messages:
             _LOGGER.info("Deleting: %s", msgid)

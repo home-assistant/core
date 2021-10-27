@@ -2,10 +2,10 @@
 
 import voluptuous as vol
 
+from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config import async_check_ha_config_file
-from homeassistant.components import websocket_api
-from homeassistant.const import CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL
+from homeassistant.const import CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import location
 
@@ -44,6 +44,9 @@ class CheckConfigView(HomeAssistantView):
         vol.Optional("unit_system"): cv.unit_system,
         vol.Optional("location_name"): str,
         vol.Optional("time_zone"): cv.time_zone,
+        vol.Optional("external_url"): vol.Any(cv.url_no_path, None),
+        vol.Optional("internal_url"): vol.Any(cv.url_no_path, None),
+        vol.Optional("currency"): cv.currency,
     }
 )
 async def websocket_update_config(hass, connection, msg):
@@ -86,5 +89,8 @@ async def websocket_detect_config(hass, connection, msg):
 
     if location_info.time_zone:
         info["time_zone"] = location_info.time_zone
+
+    if location_info.currency:
+        info["currency"] = location_info.currency
 
     connection.send_result(msg["id"], info)

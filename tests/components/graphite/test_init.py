@@ -4,16 +4,17 @@ import unittest
 from unittest import mock
 from unittest.mock import patch
 
-from homeassistant.setup import setup_component
-import homeassistant.core as ha
 import homeassistant.components.graphite as graphite
 from homeassistant.const import (
-    EVENT_STATE_CHANGED,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
-    STATE_ON,
+    EVENT_STATE_CHANGED,
     STATE_OFF,
+    STATE_ON,
 )
+import homeassistant.core as ha
+from homeassistant.setup import setup_component
+
 from tests.common import get_test_home_assistant
 
 
@@ -23,7 +24,7 @@ class TestGraphite(unittest.TestCase):
     def setup_method(self, method):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.gf = graphite.GraphiteFeeder(self.hass, "foo", 123, "ha")
+        self.gf = graphite.GraphiteFeeder(self.hass, "foo", 123, "tcp", "ha")
 
     def teardown_method(self, method):
         """Stop everything that was started."""
@@ -44,9 +45,22 @@ class TestGraphite(unittest.TestCase):
 
         assert setup_component(self.hass, graphite.DOMAIN, config)
         assert mock_gf.call_count == 1
-        assert mock_gf.call_args == mock.call(self.hass, "foo", 123, "me")
+        assert mock_gf.call_args == mock.call(self.hass, "foo", 123, "tcp", "me")
         assert mock_socket.call_count == 1
         assert mock_socket.call_args == mock.call(socket.AF_INET, socket.SOCK_STREAM)
+
+    @patch("socket.socket")
+    @patch("homeassistant.components.graphite.GraphiteFeeder")
+    def test_full_udp_config(self, mock_gf, mock_socket):
+        """Test setup with full configuration and UDP protocol."""
+        config = {
+            "graphite": {"host": "foo", "port": 123, "protocol": "udp", "prefix": "me"}
+        }
+
+        assert setup_component(self.hass, graphite.DOMAIN, config)
+        assert mock_gf.call_count == 1
+        assert mock_gf.call_args == mock.call(self.hass, "foo", 123, "udp", "me")
+        assert mock_socket.call_count == 0
 
     @patch("socket.socket")
     @patch("homeassistant.components.graphite.GraphiteFeeder")
@@ -62,7 +76,7 @@ class TestGraphite(unittest.TestCase):
     def test_subscribe(self):
         """Test the subscription."""
         fake_hass = mock.MagicMock()
-        gf = graphite.GraphiteFeeder(fake_hass, "foo", 123, "ha")
+        gf = graphite.GraphiteFeeder(fake_hass, "foo", 123, "tcp", "ha")
         fake_hass.bus.listen_once.has_calls(
             [
                 mock.call(EVENT_HOMEASSISTANT_START, gf.start_listen),
@@ -171,9 +185,9 @@ class TestGraphite(unittest.TestCase):
         assert sock.connect.call_count == 1
         assert sock.connect.call_args == mock.call(("foo", 123))
         assert sock.sendall.call_count == 1
-        assert sock.sendall.call_args == mock.call("foo".encode("ascii"))
+        assert sock.sendall.call_args == mock.call(b"foo")
         assert sock.send.call_count == 1
-        assert sock.send.call_args == mock.call("\n".encode("ascii"))
+        assert sock.send.call_args == mock.call(b"\n")
         assert sock.close.call_count == 1
         assert sock.close.call_args == mock.call()
 
@@ -206,11 +220,12 @@ class TestGraphite(unittest.TestCase):
             runs.append(1)
             return event
 
-        with mock.patch.object(self.gf, "_queue") as mock_queue:
-            with mock.patch.object(self.gf, "_report_attributes") as mock_r:
-                mock_queue.get.side_effect = fake_get
-                self.gf.run()
-                # Twice for two events, once for the stop
-                assert 3 == mock_queue.task_done.call_count
-                assert mock_r.call_count == 1
-                assert mock_r.call_args == mock.call("entity", event.data["new_state"])
+        with mock.patch.object(self.gf, "_queue") as mock_queue, mock.patch.object(
+            self.gf, "_report_attributes"
+        ) as mock_r:
+            mock_queue.get.side_effect = fake_get
+            self.gf.run()
+            # Twice for two events, once for the stop
+            assert mock_queue.task_done.call_count == 3
+            assert mock_r.call_count == 1
+            assert mock_r.call_args == mock.call("entity", event.data["new_state"])

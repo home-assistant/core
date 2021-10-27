@@ -1,65 +1,56 @@
 """The tests for the DTE Energy Bridge."""
-
-import unittest
-
 import requests_mock
 
-from homeassistant.setup import setup_component
-
-from tests.common import get_test_home_assistant
+from homeassistant.setup import async_setup_component
 
 DTE_ENERGY_BRIDGE_CONFIG = {"platform": "dte_energy_bridge", "ip": "192.168.1.1"}
 
 
-class TestDteEnergyBridgeSetup(unittest.TestCase):
-    """Test the DTE Energy Bridge platform."""
+async def test_setup_with_config(hass):
+    """Test the platform setup with configuration."""
+    assert await async_setup_component(
+        hass, "sensor", {"dte_energy_bridge": DTE_ENERGY_BRIDGE_CONFIG}
+    )
+    await hass.async_block_till_done()
 
-    def setUp(self):
-        """Initialize values for this testcase class."""
-        self.hass = get_test_home_assistant()
 
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
-
-    def test_setup_with_config(self):
-        """Test the platform setup with configuration."""
-        assert setup_component(
-            self.hass, "sensor", {"dte_energy_bridge": DTE_ENERGY_BRIDGE_CONFIG}
-        )
-
-    @requests_mock.Mocker()
-    def test_setup_correct_reading(self, mock_req):
-        """Test DTE Energy bridge returns a correct value."""
+async def test_setup_correct_reading(hass):
+    """Test DTE Energy bridge returns a correct value."""
+    with requests_mock.Mocker() as mock_req:
         mock_req.get(
             "http://{}/instantaneousdemand".format(DTE_ENERGY_BRIDGE_CONFIG["ip"]),
             text=".411 kW",
         )
-        assert setup_component(
-            self.hass, "sensor", {"sensor": DTE_ENERGY_BRIDGE_CONFIG}
+        assert await async_setup_component(
+            hass, "sensor", {"sensor": DTE_ENERGY_BRIDGE_CONFIG}
         )
-        assert "0.411" == self.hass.states.get("sensor.current_energy_usage").state
+        await hass.async_block_till_done()
+    assert hass.states.get("sensor.current_energy_usage").state == "0.411"
 
-    @requests_mock.Mocker()
-    def test_setup_incorrect_units_reading(self, mock_req):
-        """Test DTE Energy bridge handles a value with incorrect units."""
+
+async def test_setup_incorrect_units_reading(hass):
+    """Test DTE Energy bridge handles a value with incorrect units."""
+    with requests_mock.Mocker() as mock_req:
         mock_req.get(
             "http://{}/instantaneousdemand".format(DTE_ENERGY_BRIDGE_CONFIG["ip"]),
             text="411 kW",
         )
-        assert setup_component(
-            self.hass, "sensor", {"sensor": DTE_ENERGY_BRIDGE_CONFIG}
+        assert await async_setup_component(
+            hass, "sensor", {"sensor": DTE_ENERGY_BRIDGE_CONFIG}
         )
-        assert "0.411" == self.hass.states.get("sensor.current_energy_usage").state
+        await hass.async_block_till_done()
+    assert hass.states.get("sensor.current_energy_usage").state == "0.411"
 
-    @requests_mock.Mocker()
-    def test_setup_bad_format_reading(self, mock_req):
-        """Test DTE Energy bridge handles an invalid value."""
+
+async def test_setup_bad_format_reading(hass):
+    """Test DTE Energy bridge handles an invalid value."""
+    with requests_mock.Mocker() as mock_req:
         mock_req.get(
             "http://{}/instantaneousdemand".format(DTE_ENERGY_BRIDGE_CONFIG["ip"]),
             text="411",
         )
-        assert setup_component(
-            self.hass, "sensor", {"sensor": DTE_ENERGY_BRIDGE_CONFIG}
+        assert await async_setup_component(
+            hass, "sensor", {"sensor": DTE_ENERGY_BRIDGE_CONFIG}
         )
-        assert "unknown" == self.hass.states.get("sensor.current_energy_usage").state
+        await hass.async_block_till_done()
+    assert hass.states.get("sensor.current_energy_usage").state == "unknown"

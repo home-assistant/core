@@ -1,20 +1,21 @@
 """The tests for Device tracker device conditions."""
 import pytest
 
-from homeassistant.components.device_tracker import DOMAIN
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME
-from homeassistant.setup import async_setup_component
 import homeassistant.components.automation as automation
+from homeassistant.components.device_tracker import DOMAIN
+from homeassistant.const import STATE_HOME
 from homeassistant.helpers import device_registry
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
     assert_lists_same,
+    async_get_device_automations,
     async_mock_service,
     mock_device_registry,
     mock_registry,
-    async_get_device_automations,
 )
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -31,7 +32,7 @@ def entity_reg(hass):
 
 @pytest.fixture
 def calls(hass):
-    """Track calls to a mock serivce."""
+    """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
@@ -118,7 +119,7 @@ async def test_if_state(hass, calls):
     assert len(calls) == 1
     assert calls[0].data["some"] == "is_home - event - test_event1"
 
-    hass.states.async_set("device_tracker.entity", STATE_NOT_HOME)
+    hass.states.async_set("device_tracker.entity", "school")
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()

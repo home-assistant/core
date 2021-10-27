@@ -2,6 +2,7 @@
 from homeassistant import auth, data_entry_flow
 from homeassistant.auth.mfa_modules import auth_mfa_module_from_config
 from homeassistant.auth.models import Credentials
+
 from tests.common import MockUser
 
 
@@ -130,7 +131,7 @@ async def test_login(hass):
         result["flow_id"], {"pin": "123456"}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"].id == "mock-user"
+    assert result["data"].id == "mock-id"
 
 
 async def test_setup_flow(hass):

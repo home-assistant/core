@@ -1,50 +1,80 @@
 """Support for INSTEON dimmers via PowerLinc Modem."""
-import logging
+from pyinsteon.groups import (
+    CO_SENSOR,
+    DOOR_SENSOR,
+    HEARTBEAT,
+    LEAK_SENSOR_WET,
+    LIGHT_SENSOR,
+    LOW_BATTERY,
+    MOTION_SENSOR,
+    OPEN_CLOSE_SENSOR,
+    SENSOR_MALFUNCTION,
+    SMOKE_SENSOR,
+    TEST_SENSOR,
+)
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_DOOR,
+    DEVICE_CLASS_GAS,
+    DEVICE_CLASS_LIGHT,
+    DEVICE_CLASS_MOISTURE,
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_PROBLEM,
+    DEVICE_CLASS_SAFETY,
+    DEVICE_CLASS_SMOKE,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorEntity,
+)
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import InsteonEntity
-
-_LOGGER = logging.getLogger(__name__)
+from .const import SIGNAL_ADD_ENTITIES
+from .insteon_entity import InsteonEntity
+from .utils import async_add_insteon_entities
 
 SENSOR_TYPES = {
-    "openClosedSensor": "opening",
-    "ioLincSensor": "opening",
-    "motionSensor": "motion",
-    "doorSensor": "door",
-    "wetLeakSensor": "moisture",
-    "lightSensor": "light",
-    "batterySensor": "battery",
+    OPEN_CLOSE_SENSOR: DEVICE_CLASS_OPENING,
+    MOTION_SENSOR: DEVICE_CLASS_MOTION,
+    DOOR_SENSOR: DEVICE_CLASS_DOOR,
+    LEAK_SENSOR_WET: DEVICE_CLASS_MOISTURE,
+    LIGHT_SENSOR: DEVICE_CLASS_LIGHT,
+    LOW_BATTERY: DEVICE_CLASS_BATTERY,
+    CO_SENSOR: DEVICE_CLASS_GAS,
+    SMOKE_SENSOR: DEVICE_CLASS_SMOKE,
+    TEST_SENSOR: DEVICE_CLASS_SAFETY,
+    SENSOR_MALFUNCTION: DEVICE_CLASS_PROBLEM,
+    HEARTBEAT: DEVICE_CLASS_PROBLEM,
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the INSTEON device class for the hass platform."""
-    insteon_modem = hass.data["insteon"].get("modem")
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Insteon binary sensors from a config entry."""
 
-    address = discovery_info["address"]
-    device = insteon_modem.devices[address]
-    state_key = discovery_info["state_key"]
-    name = device.states[state_key].name
-    if name != "dryLeakSensor":
-        _LOGGER.debug(
-            "Adding device %s entity %s to Binary Sensor platform",
-            device.address.hex,
-            device.states[state_key].name,
+    @callback
+    def async_add_insteon_binary_sensor_entities(discovery_info=None):
+        """Add the Insteon entities for the platform."""
+        async_add_insteon_entities(
+            hass,
+            BINARY_SENSOR_DOMAIN,
+            InsteonBinarySensorEntity,
+            async_add_entities,
+            discovery_info,
         )
 
-        new_entity = InsteonBinarySensor(device, state_key)
+    signal = f"{SIGNAL_ADD_ENTITIES}_{BINARY_SENSOR_DOMAIN}"
+    async_dispatcher_connect(hass, signal, async_add_insteon_binary_sensor_entities)
+    async_add_insteon_binary_sensor_entities()
 
-        async_add_entities([new_entity])
 
+class InsteonBinarySensorEntity(InsteonEntity, BinarySensorEntity):
+    """A Class for an Insteon binary sensor entity."""
 
-class InsteonBinarySensor(InsteonEntity, BinarySensorDevice):
-    """A Class for an Insteon device entity."""
-
-    def __init__(self, device, state_key):
+    def __init__(self, device, group):
         """Initialize the INSTEON binary sensor."""
-        super().__init__(device, state_key)
-        self._sensor_type = SENSOR_TYPES.get(self._insteon_device_state.name)
+        super().__init__(device, group)
+        self._sensor_type = SENSOR_TYPES.get(self._insteon_device_group.name)
 
     @property
     def device_class(self):
@@ -54,9 +84,4 @@ class InsteonBinarySensor(InsteonEntity, BinarySensorDevice):
     @property
     def is_on(self):
         """Return the boolean response if the node is on."""
-        on_val = bool(self._insteon_device_state.value)
-
-        if self._insteon_device_state.name in ["lightSensor", "ioLincSensor"]:
-            return not on_val
-
-        return on_val
+        return bool(self._insteon_device_group.value)

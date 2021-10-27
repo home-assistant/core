@@ -1,19 +1,109 @@
 """Support for Daikin AC sensors."""
-import logging
+from __future__ import annotations
 
-from homeassistant.const import CONF_ICON, CONF_NAME, CONF_TYPE
-from homeassistant.helpers.entity import Entity
-from homeassistant.util.unit_system import UnitSystem
+from collections.abc import Callable
+from dataclasses import dataclass
 
-from . import DOMAIN as DAIKIN_DOMAIN
-from .const import (
-    ATTR_INSIDE_TEMPERATURE,
-    ATTR_OUTSIDE_TEMPERATURE,
-    SENSOR_TYPE_TEMPERATURE,
-    SENSOR_TYPES,
+from pydaikin.daikin_base import Appliance
+
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.const import (
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_TEMPERATURE,
+    ENERGY_KILO_WATT_HOUR,
+    FREQUENCY_HERTZ,
+    PERCENTAGE,
+    POWER_KILO_WATT,
+    TEMP_CELSIUS,
 )
 
-_LOGGER = logging.getLogger(__name__)
+from . import DOMAIN as DAIKIN_DOMAIN, DaikinApi
+from .const import (
+    ATTR_COMPRESSOR_FREQUENCY,
+    ATTR_COOL_ENERGY,
+    ATTR_HEAT_ENERGY,
+    ATTR_HUMIDITY,
+    ATTR_INSIDE_TEMPERATURE,
+    ATTR_OUTSIDE_TEMPERATURE,
+    ATTR_TARGET_HUMIDITY,
+    ATTR_TOTAL_POWER,
+)
+
+
+@dataclass
+class DaikinRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    value_func: Callable[[Appliance], float | None]
+
+
+@dataclass
+class DaikinSensorEntityDescription(SensorEntityDescription, DaikinRequiredKeysMixin):
+    """Describes Daikin sensor entity."""
+
+
+SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
+    DaikinSensorEntityDescription(
+        key=ATTR_INSIDE_TEMPERATURE,
+        name="Inside Temperature",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        value_func=lambda device: device.inside_temperature,
+    ),
+    DaikinSensorEntityDescription(
+        key=ATTR_OUTSIDE_TEMPERATURE,
+        name="Outside Temperature",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        value_func=lambda device: device.outside_temperature,
+    ),
+    DaikinSensorEntityDescription(
+        key=ATTR_HUMIDITY,
+        name="Humidity",
+        device_class=DEVICE_CLASS_HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        value_func=lambda device: device.humidity,
+    ),
+    DaikinSensorEntityDescription(
+        key=ATTR_TARGET_HUMIDITY,
+        name="Target Humidity",
+        device_class=DEVICE_CLASS_HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        value_func=lambda device: device.humidity,
+    ),
+    DaikinSensorEntityDescription(
+        key=ATTR_TOTAL_POWER,
+        name="Total Power Consumption",
+        device_class=DEVICE_CLASS_POWER,
+        native_unit_of_measurement=POWER_KILO_WATT,
+        value_func=lambda device: round(device.current_total_power_consumption, 2),
+    ),
+    DaikinSensorEntityDescription(
+        key=ATTR_COOL_ENERGY,
+        name="Cool Energy Consumption",
+        icon="mdi:snowflake",
+        device_class=DEVICE_CLASS_ENERGY,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        value_func=lambda device: round(device.last_hour_cool_energy_consumption, 2),
+    ),
+    DaikinSensorEntityDescription(
+        key=ATTR_HEAT_ENERGY,
+        name="Heat Energy Consumption",
+        icon="mdi:fire",
+        device_class=DEVICE_CLASS_ENERGY,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        value_func=lambda device: round(device.last_hour_heat_energy_consumption, 2),
+    ),
+    DaikinSensorEntityDescription(
+        key=ATTR_COMPRESSOR_FREQUENCY,
+        name="Compressor Frequency",
+        icon="mdi:fan",
+        native_unit_of_measurement=FREQUENCY_HERTZ,
+        value_func=lambda device: device.compressor_frequency,
+    ),
+)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -22,7 +112,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     Can only be called when a user accidentally mentions the platform in their
     config. But even in that case it would have been ignored.
     """
-    pass
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -31,58 +120,46 @@ async def async_setup_entry(hass, entry, async_add_entities):
     sensors = [ATTR_INSIDE_TEMPERATURE]
     if daikin_api.device.support_outside_temperature:
         sensors.append(ATTR_OUTSIDE_TEMPERATURE)
-    async_add_entities(
-        [
-            DaikinClimateSensor(daikin_api, sensor, hass.config.units)
-            for sensor in sensors
-        ]
-    )
+    if daikin_api.device.support_energy_consumption:
+        sensors.append(ATTR_TOTAL_POWER)
+        sensors.append(ATTR_COOL_ENERGY)
+        sensors.append(ATTR_HEAT_ENERGY)
+    if daikin_api.device.support_humidity:
+        sensors.append(ATTR_HUMIDITY)
+        sensors.append(ATTR_TARGET_HUMIDITY)
+    if daikin_api.device.support_compressor_frequency:
+        sensors.append(ATTR_COMPRESSOR_FREQUENCY)
+
+    entities = [
+        DaikinSensor(daikin_api, description)
+        for description in SENSOR_TYPES
+        if description.key in sensors
+    ]
+    async_add_entities(entities)
 
 
-class DaikinClimateSensor(Entity):
+class DaikinSensor(SensorEntity):
     """Representation of a Sensor."""
 
-    def __init__(self, api, monitored_state, units: UnitSystem, name=None) -> None:
+    entity_description: DaikinSensorEntityDescription
+
+    def __init__(
+        self, api: DaikinApi, description: DaikinSensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
+        self.entity_description = description
         self._api = api
-        self._sensor = SENSOR_TYPES.get(monitored_state)
-        if name is None:
-            name = "{} {}".format(self._sensor[CONF_NAME], api.name)
-
-        self._name = "{} {}".format(name, monitored_state.replace("_", " "))
-        self._device_attribute = monitored_state
-
-        if self._sensor[CONF_TYPE] == SENSOR_TYPE_TEMPERATURE:
-            self._unit_of_measurement = units.temperature_unit
+        self._attr_name = f"{api.name} {description.name}"
 
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return f"{self._api.mac}-{self._device_attribute}"
+        return f"{self._api.device.mac}-{self.entity_description.key}"
 
     @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._sensor[CONF_ICON]
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        if self._device_attribute == ATTR_INSIDE_TEMPERATURE:
-            return self._api.device.inside_temperature
-        if self._device_attribute == ATTR_OUTSIDE_TEMPERATURE:
-            return self._api.device.outside_temperature
-        return None
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit_of_measurement
+        return self.entity_description.value_func(self._api.device)
 
     async def async_update(self):
         """Retrieve latest state."""

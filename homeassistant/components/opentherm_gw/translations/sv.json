@@ -1,0 +1,28 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Gateway redan konfigurerad",
+            "id_exists": "Gateway-id finns redan"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "device": "S\u00f6kv\u00e4g eller URL",
+                    "id": "ID",
+                    "name": "Namn"
+                },
+                "title": "OpenTherm Gateway"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "floor_temperature": "Golvetemperatur"
+                },
+                "description": "Alternativ f\u00f6r OpenTherm Gateway"
+            }
+        }
+    }
+}

@@ -2,21 +2,36 @@
 from collections import OrderedDict
 import uuid
 
-from homeassistant.components.automation import DOMAIN, PLATFORM_SCHEMA
-from homeassistant.components.automation.config import async_validate_config_item
-from homeassistant.const import CONF_ID, SERVICE_RELOAD
+from homeassistant.components.automation.config import (
+    DOMAIN,
+    PLATFORM_SCHEMA,
+    async_validate_config_item,
+)
 from homeassistant.config import AUTOMATION_CONFIG_PATH
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_ID, SERVICE_RELOAD
+from homeassistant.helpers import config_validation as cv, entity_registry
 
-from . import EditIdBasedConfigView
+from . import ACTION_DELETE, EditIdBasedConfigView
 
 
 async def async_setup(hass):
     """Set up the Automation config API."""
 
-    async def hook(hass):
+    async def hook(action, config_key):
         """post_write_hook for Config View that reloads automations."""
         await hass.services.async_call(DOMAIN, SERVICE_RELOAD)
+
+        if action != ACTION_DELETE:
+            return
+
+        ent_reg = await entity_registry.async_get_registry(hass)
+
+        entity_id = ent_reg.async_get_entity_id(DOMAIN, DOMAIN, config_key)
+
+        if entity_id is None:
+            return
+
+        ent_reg.async_remove(entity_id)
 
     hass.http.register_view(
         EditAutomationConfigView(

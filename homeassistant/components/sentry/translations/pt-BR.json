@@ -1,0 +1,13 @@
+{
+    "config": {
+        "error": {
+            "bad_dsn": "DSN inv\u00e1lido",
+            "unknown": "Erro inesperado"
+        },
+        "step": {
+            "user": {
+                "description": "Digite seu DSN Sentry"
+            }
+        }
+    }
+}

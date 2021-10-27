@@ -1,0 +1,54 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ez a SimpliSafe-fi\u00f3k m\u00e1r haszn\u00e1latban van.",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt.",
+            "wrong_account": "A megadott felhaszn\u00e1l\u00f3i hiteles\u00edt\u0151 adatok nem j\u00f3k ehhez a SimpliSafe fi\u00f3khoz."
+        },
+        "error": {
+            "identifier_exists": "Fi\u00f3k m\u00e1r regisztr\u00e1lva van",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "still_awaiting_mfa": "M\u00e9g v\u00e1r az MFA e-mail kattint\u00e1sra",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "input_auth_code": {
+                "data": {
+                    "auth_code": "Enged\u00e9lyez\u00e9si k\u00f3d"
+                },
+                "description": "Adja meg a SimpliSafe webes alkalmaz\u00e1s URL-c\u00edm\u00e9n tal\u00e1lhat\u00f3 enged\u00e9lyez\u00e9si k\u00f3dot:",
+                "title": "Enged\u00e9lyez\u00e9s befejez\u00e9se"
+            },
+            "mfa": {
+                "description": "Ellen\u0151rizze e-mailj\u00e9ben a SimpliSafe linkj\u00e9t. A link ellen\u0151rz\u00e9se ut\u00e1n t\u00e9rjen vissza ide, \u00e9s fejezze be az integr\u00e1ci\u00f3 telep\u00edt\u00e9s\u00e9t.",
+                "title": "SimpliSafe t\u00f6bbt\u00e9nyez\u0151s hiteles\u00edt\u00e9s"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Jelsz\u00f3"
+                },
+                "description": "Hozz\u00e1f\u00e9r\u00e9se lej\u00e1rt vagy visszavont\u00e1k. Adja meg jelszav\u00e1t a fi\u00f3k \u00fajb\u00f3li \u00f6sszekapcsol\u00e1s\u00e1hoz.",
+                "title": "Integr\u00e1ci\u00f3 \u00fajrahiteles\u00edt\u00e9se"
+            },
+            "user": {
+                "data": {
+                    "code": "K\u00f3d (a Home Assistant felhaszn\u00e1l\u00f3i fel\u00fclet\u00e9n haszn\u00e1latos)",
+                    "password": "Jelsz\u00f3",
+                    "username": "E-mail"
+                },
+                "description": "2021-t\u0151l kezd\u0151d\u0151en a SimpliSafe egy \u00faj hiteles\u00edt\u00e9si mechanizmusra v\u00e1ltott a webalkalmaz\u00e1son kereszt\u00fcl. A technikai korl\u00e1toz\u00e1sok miatt a folyamat v\u00e9g\u00e9n van egy k\u00e9zi l\u00e9p\u00e9s; k\u00e9rj\u00fck, indul\u00e1s el\u0151tt olvassa el a [dokument\u00e1ci\u00f3t](http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code).\n\nHa k\u00e9szen \u00e1ll, kattintson [ide]({url}) a SimpliSafe webalkalmaz\u00e1s megnyit\u00e1s\u00e1hoz \u00e9s a hiteles\u00edt\u0151 adatok bevitel\u00e9hez. Amikor a folyamat befejez\u0151d\u00f6tt, t\u00e9rjen vissza ide, \u00e9s kattintson a K\u00fcld\u00e9s gombra.",
+                "title": "T\u00f6ltse ki az adatait"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "K\u00f3d (a Home Assistant felhaszn\u00e1l\u00f3i fel\u00fclet\u00e9n haszn\u00e1latos)"
+                },
+                "title": "A SimpliSafe konfigur\u00e1l\u00e1sa"
+            }
+        }
+    }
+}

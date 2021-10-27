@@ -1,22 +1,23 @@
 """Support for Linksys Smart Wifi routers."""
+from http import HTTPStatus
 import logging
 
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST
+import homeassistant.helpers.config_validation as cv
 
 DEFAULT_TIMEOUT = 10
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
 
 
 def get_scanner(hass, config):
@@ -37,7 +38,7 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
 
         # Check if the access point is accessible
         response = self._make_request()
-        if not response.status_code == 200:
+        if response.status_code != HTTPStatus.OK:
             raise ConnectionError("Cannot connect to Linksys Access Point")
 
     def scan_devices(self):
@@ -56,7 +57,7 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
 
         self.last_results = {}
         response = self._make_request()
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             _LOGGER.error(
                 "Got HTTP status code %d when getting device list", response.status_code
             )
@@ -66,13 +67,11 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
             result = data["responses"][0]
             devices = result["output"]["devices"]
             for device in devices:
-                macs = device["knownMACAddresses"]
-                if not macs:
+                if not (macs := device["knownMACAddresses"]):
                     _LOGGER.warning("Skipping device without known MAC address")
                     continue
                 mac = macs[-1]
-                connections = device["connections"]
-                if not connections:
+                if not device["connections"]:
                     _LOGGER.debug("Device %s is not connected", mac)
                     continue
 

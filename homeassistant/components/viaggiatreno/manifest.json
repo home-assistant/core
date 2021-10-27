@@ -1,8 +1,7 @@
 {
   "domain": "viaggiatreno",
-  "name": "Viaggiatreno",
+  "name": "Trenitalia ViaggiaTreno",
   "documentation": "https://www.home-assistant.io/integrations/viaggiatreno",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

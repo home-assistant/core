@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A szolg\u00e1ltat\u00e1s m\u00e1r konfigur\u00e1lva van",
+            "import_failed": "Nem siker\u00fclt import\u00e1lni a konfigur\u00e1ci\u00f3t"
+        },
+        "error": {
+            "connection_refused": "A kapcsolat megtagadva a gazdag\u00e9phez val\u00f3 csatlakoz\u00e1skor",
+            "connection_timeout": "Id\u0151t\u00fall\u00e9p\u00e9s, ehhez a c\u00edmhez kapcsol\u00f3d\u00e1skor",
+            "resolve_failed": "Ez a c\u00edm nem oldhat\u00f3 fel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "C\u00edm",
+                    "name": "A tan\u00fas\u00edtv\u00e1ny neve",
+                    "port": "Port"
+                },
+                "title": "Hat\u00e1rozza meg a vizsg\u00e1land\u00f3 tan\u00fas\u00edtv\u00e1nyt"
+            }
+        }
+    },
+    "title": "Tan\u00fas\u00edtv\u00e1ny lej\u00e1rata"
+}

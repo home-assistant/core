@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Service ass scho konfigur\u00e9iert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "H\u00e9icht",
+                    "latitude": "Breedegrad",
+                    "longitude": "L\u00e4ngegrad",
+                    "name": "Numm"
+                },
+                "description": "Meterologeschen Institut",
+                "title": "Standuert"
+            }
+        }
+    }
+}

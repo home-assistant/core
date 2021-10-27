@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import (
@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
@@ -43,8 +43,8 @@ def get_scanner(hass, config):
         config[CONF_HOST],
         config[CONF_USERNAME],
         config[CONF_PASSWORD],
-        config.get(CONF_SSL),
-        config.get(CONF_VERIFY_SSL),
+        config[CONF_SSL],
+        config[CONF_VERIFY_SSL],
     )
     if not controller.is_logged_in():
         return None
@@ -89,5 +89,5 @@ class CiscoMEDeviceScanner(DeviceScanner):
         """Check the Cisco ME controller for devices."""
         self.last_results = self.controller.get_associated_devices()
         _LOGGER.debug(
-            "Cisco Mobility Express controller returned:" " %s", self.last_results
+            "Cisco Mobility Express controller returned: %s", self.last_results
         )

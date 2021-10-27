@@ -1,18 +1,13 @@
 """The tests for the openalpr cloud platform."""
 import asyncio
-from unittest.mock import patch, PropertyMock
+from unittest.mock import PropertyMock, patch
 
-from homeassistant.core import callback
-from homeassistant.setup import setup_component
 from homeassistant.components import camera, image_processing as ip
 from homeassistant.components.openalpr_cloud.image_processing import OPENALPR_API_URL
+from homeassistant.core import callback
+from homeassistant.setup import setup_component
 
-from tests.common import (
-    get_test_home_assistant,
-    assert_setup_component,
-    load_fixture,
-    mock_coro,
-)
+from tests.common import assert_setup_component, get_test_home_assistant, load_fixture
 from tests.components.image_processing import common
 
 
@@ -41,6 +36,7 @@ class TestOpenAlprCloudSetup:
 
         with assert_setup_component(1, ip.DOMAIN):
             setup_component(self.hass, ip.DOMAIN, config)
+            self.hass.block_till_done()
 
         assert self.hass.states.get("image_processing.openalpr_demo_camera")
 
@@ -58,6 +54,7 @@ class TestOpenAlprCloudSetup:
 
         with assert_setup_component(1, ip.DOMAIN):
             setup_component(self.hass, ip.DOMAIN, config)
+            self.hass.block_till_done()
 
         assert self.hass.states.get("image_processing.test_local")
 
@@ -113,6 +110,7 @@ class TestOpenAlprCloud:
             new_callable=PropertyMock(return_value=False),
         ):
             setup_component(self.hass, ip.DOMAIN, config)
+            self.hass.block_till_done()
 
         self.alpr_events = []
 
@@ -145,7 +143,7 @@ class TestOpenAlprCloud:
 
         with patch(
             "homeassistant.components.camera.async_get_image",
-            return_value=mock_coro(camera.Image("image/jpeg", b"image")),
+            return_value=camera.Image("image/jpeg", b"image"),
         ):
             common.scan(self.hass, entity_id="image_processing.test_local")
             self.hass.block_till_done()
@@ -178,7 +176,7 @@ class TestOpenAlprCloud:
 
         with patch(
             "homeassistant.components.camera.async_get_image",
-            return_value=mock_coro(camera.Image("image/jpeg", b"image")),
+            return_value=camera.Image("image/jpeg", b"image"),
         ):
             common.scan(self.hass, entity_id="image_processing.test_local")
             self.hass.block_till_done()
@@ -194,7 +192,7 @@ class TestOpenAlprCloud:
 
         with patch(
             "homeassistant.components.camera.async_get_image",
-            return_value=mock_coro(camera.Image("image/jpeg", b"image")),
+            return_value=camera.Image("image/jpeg", b"image"),
         ):
             common.scan(self.hass, entity_id="image_processing.test_local")
             self.hass.block_till_done()

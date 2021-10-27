@@ -1,2 +1,3 @@
 speedtest:
-  description: Immediately take a speedest with Fast.com
+  name: Speed test
+  description: Immediately execute a speed test with Fast.com

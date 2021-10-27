@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Tuvastamise viga",
+            "service": "Viga SmartHabiga \u00fchendumisel. Teenus v\u00f5ib olla h\u00e4iritud. Kontrolli oma \u00fchendust.",
+            "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-post",
+                    "password": "Salas\u00f5na"
+                },
+                "description": "Tehnilistel p\u00f5hjustel kasuta kindlasti oma Home Assistanti seadistustele vastavat sekundaarset kontot. Selle saad luua rakendusest SmartHab.",
+                "title": "Seadista SmartHab"
+            }
+        }
+    }
+}

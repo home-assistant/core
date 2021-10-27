@@ -3,18 +3,19 @@ import logging
 
 from homeassistant import core
 from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    ENTITY_CATEGORY_CONFIG,
+    ENTITY_CATEGORY_DIAGNOSTIC,
+)
+from homeassistant.helpers import entity_registry as er
 
 from .auth import Auth
 from .config import AbstractConfig
-from .const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    CONF_ENDPOINT,
-    CONF_ENTITY_CONFIG,
-    CONF_FILTER,
-)
-from .state_report import async_enable_proactive_mode
+from .const import CONF_ENDPOINT, CONF_ENTITY_CONFIG, CONF_FILTER, CONF_LOCALE
 from .smart_home import async_handle_message
+from .state_report import async_enable_proactive_mode
 
 _LOGGER = logging.getLogger(__name__)
 SMART_HOME_HTTP_ENDPOINT = "/api/alexa/smart_home"
@@ -53,9 +54,30 @@ class AlexaConfig(AbstractConfig):
         """Return entity config."""
         return self._config.get(CONF_ENTITY_CONFIG) or {}
 
+    @property
+    def locale(self):
+        """Return config locale."""
+        return self._config.get(CONF_LOCALE)
+
+    @core.callback
+    def user_identifier(self):
+        """Return an identifier for the user that represents this config."""
+        return ""
+
     def should_expose(self, entity_id):
         """If an entity should be exposed."""
-        return self._config[CONF_FILTER](entity_id)
+        if not self._config[CONF_FILTER].empty_filter:
+            return self._config[CONF_FILTER](entity_id)
+
+        entity_registry = er.async_get(self.hass)
+        if registry_entry := entity_registry.async_get(entity_id):
+            auxiliary_entity = registry_entry.entity_category in (
+                ENTITY_CATEGORY_CONFIG,
+                ENTITY_CATEGORY_DIAGNOSTIC,
+            )
+        else:
+            auxiliary_entity = False
+        return not auxiliary_entity
 
     @core.callback
     def async_invalidate_access_token(self):

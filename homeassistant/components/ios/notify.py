@@ -1,4 +1,5 @@
 """Support for iOS push notifications."""
+from http import HTTPStatus
 import logging
 
 import requests
@@ -37,7 +38,7 @@ def log_rate_limits(hass, target, resp, level=20):
         rate_limits["successful"],
         rate_limits["maximum"],
         rate_limits["errors"],
-        str(resetsAtTime).split(".")[0],
+        str(resetsAtTime).split(".", maxsplit=1)[0],
     )
 
 
@@ -48,12 +49,6 @@ def get_service(hass, config, discovery_info=None):
         hass.config.components.add("notify.ios")
 
     if not ios.devices_with_push(hass):
-        _LOGGER.error(
-            "The notify.ios platform was loaded but no "
-            "devices exist! Please check the documentation at "
-            "https://home-assistant.io/ecosystem/ios/notifications"
-            "/ for more information"
-        )
         return None
 
     return iOSNotificationService()
@@ -74,14 +69,14 @@ class iOSNotificationService(BaseNotificationService):
         """Send a message to the Lambda APNS gateway."""
         data = {ATTR_MESSAGE: message}
 
-        if kwargs.get(ATTR_TITLE) is not None:
-            # Remove default title from notifications.
-            if kwargs.get(ATTR_TITLE) != ATTR_TITLE_DEFAULT:
-                data[ATTR_TITLE] = kwargs.get(ATTR_TITLE)
+        # Remove default title from notifications.
+        if (
+            kwargs.get(ATTR_TITLE) is not None
+            and kwargs.get(ATTR_TITLE) != ATTR_TITLE_DEFAULT
+        ):
+            data[ATTR_TITLE] = kwargs.get(ATTR_TITLE)
 
-        targets = kwargs.get(ATTR_TARGET)
-
-        if not targets:
+        if not (targets := kwargs.get(ATTR_TARGET)):
             targets = ios.enabled_push_ids(self.hass)
 
         if kwargs.get(ATTR_DATA) is not None:
@@ -96,13 +91,13 @@ class iOSNotificationService(BaseNotificationService):
 
             req = requests.post(PUSH_URL, json=data, timeout=10)
 
-            if req.status_code != 201:
+            if req.status_code != HTTPStatus.CREATED:
                 fallback_error = req.json().get("errorMessage", "Unknown error")
                 fallback_message = (
-                    "Internal server error, " "please try again later: " "{}"
-                ).format(fallback_error)
+                    f"Internal server error, please try again later: {fallback_error}"
+                )
                 message = req.json().get("message", fallback_message)
-                if req.status_code == 429:
+                if req.status_code == HTTPStatus.TOO_MANY_REQUESTS:
                     _LOGGER.warning(message)
                     log_rate_limits(self.hass, target, req.json(), 30)
                 else:

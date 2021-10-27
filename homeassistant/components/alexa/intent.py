@@ -40,6 +40,16 @@ def async_setup(hass):
     hass.http.register_view(AlexaIntentsView)
 
 
+async def async_setup_intents(hass):
+    """
+    Do intents setup.
+
+    Right now this module does not expose any, but the intent component breaks
+    without it.
+    """
+    pass  # pylint: disable=unnecessary-pass
+
+
 class UnknownRequest(HomeAssistantError):
     """When an unknown Alexa request is passed in."""
 
@@ -110,9 +120,7 @@ async def async_handle_message(hass, message):
     req = message.get("request")
     req_type = req["type"]
 
-    handler = HANDLERS.get(req_type)
-
-    if not handler:
+    if not (handler := HANDLERS.get(req_type)):
         raise UnknownRequest(f"Received unknown request {req_type}")
 
     return await handler(hass, message)
@@ -201,7 +209,7 @@ def resolve_slot_synonyms(key, request):
             _LOGGER.debug(
                 "Found multiple synonym resolutions for slot value: {%s: %s}",
                 key,
-                request["value"],
+                resolved_value,
             )
 
     return resolved_value
@@ -261,7 +269,7 @@ class AlexaResponse:
 
         self.reprompt = {
             "type": speech_type.value,
-            key: text.async_render(self.variables),
+            key: text.async_render(self.variables, parse_result=False),
         }
 
     def as_dict(self):

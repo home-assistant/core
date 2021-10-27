@@ -1,19 +1,15 @@
 """Support for HomeMatic binary sensors."""
-import logging
-
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_OPENING,
     DEVICE_CLASS_PRESENCE,
     DEVICE_CLASS_SMOKE,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
-from homeassistant.components.homematic import ATTR_DISCOVERY_TYPE, DISCOVER_BATTERY
 
-from . import ATTR_DISCOVER_DEVICES, HMDevice
-
-_LOGGER = logging.getLogger(__name__)
+from .const import ATTR_DISCOVER_DEVICES, ATTR_DISCOVERY_TYPE, DISCOVER_BATTERY
+from .entity import HMDevice
 
 SENSOR_TYPES_CLASS = {
     "IPShutterContact": DEVICE_CLASS_OPENING,
@@ -29,6 +25,9 @@ SENSOR_TYPES_CLASS = {
     "SmokeV2": DEVICE_CLASS_SMOKE,
     "TiltSensor": None,
     "WeatherSensor": None,
+    "IPContact": DEVICE_CLASS_OPENING,
+    "MotionIPV2": DEVICE_CLASS_MOTION,
+    "IPRemoteMotionV2": DEVICE_CLASS_MOTION,
 }
 
 
@@ -44,10 +43,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         else:
             devices.append(HMBinarySensor(conf))
 
-    add_entities(devices)
+    add_entities(devices, True)
 
 
-class HMBinarySensor(HMDevice, BinarySensorDevice):
+class HMBinarySensor(HMDevice, BinarySensorEntity):
     """Representation of a binary HomeMatic device."""
 
     @property
@@ -72,13 +71,10 @@ class HMBinarySensor(HMDevice, BinarySensorDevice):
             self._data.update({self._state: None})
 
 
-class HMBatterySensor(HMDevice, BinarySensorDevice):
+class HMBatterySensor(HMDevice, BinarySensorEntity):
     """Representation of an HomeMatic low battery sensor."""
 
-    @property
-    def device_class(self):
-        """Return battery as a device class."""
-        return DEVICE_CLASS_BATTERY
+    _attr_device_class = DEVICE_CLASS_BATTERY
 
     @property
     def is_on(self):

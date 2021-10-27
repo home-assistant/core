@@ -1,0 +1,23 @@
+{
+  "config": {
+    "flow_title": "{device} ({ip_address})",
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "title": "Setup Gogogate2 or ismartgate",
+        "description": "Provide requisite information below.",
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    }
+  }
+}

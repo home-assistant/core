@@ -2,10 +2,11 @@
 from http.client import HTTPException
 import logging
 
+from pycsspeechtts import pycsspeechtts
 import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
-from homeassistant.const import CONF_API_KEY, CONF_TYPE
+from homeassistant.const import CONF_API_KEY, CONF_REGION, CONF_TYPE, PERCENTAGE
 import homeassistant.helpers.config_validation as cv
 
 CONF_GENDER = "gender"
@@ -14,15 +15,15 @@ CONF_RATE = "rate"
 CONF_VOLUME = "volume"
 CONF_PITCH = "pitch"
 CONF_CONTOUR = "contour"
-CONF_REGION = "region"
-
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_LANGUAGES = [
     "ar-eg",
     "ar-sa",
+    "bg-bg",
     "ca-es",
     "cs-cz",
+    "cy-gb",
     "da-dk",
     "de-at",
     "de-ch",
@@ -31,23 +32,42 @@ SUPPORTED_LANGUAGES = [
     "en-au",
     "en-ca",
     "en-gb",
+    "en-hk",
     "en-ie",
     "en-in",
+    "en-nz",
+    "en-ph",
+    "en-sg",
     "en-us",
+    "en-za",
+    "es-ar",
+    "es-co",
     "es-es",
     "es-mx",
+    "es-us",
+    "et-ee",
     "fi-fi",
+    "fr-be",
     "fr-ca",
     "fr-ch",
     "fr-fr",
+    "ga-ie",
+    "gu-in",
     "he-il",
     "hi-in",
+    "hr-hr",
     "hu-hu",
     "id-id",
     "it-it",
     "ja-jp",
     "ko-kr",
+    "lt-lt",
+    "lv-lv",
+    "mr-in",
+    "ms-my",
+    "mt-mt",
     "nb-no",
+    "nl-be",
     "nl-nl",
     "pl-pl",
     "pt-br",
@@ -55,9 +75,16 @@ SUPPORTED_LANGUAGES = [
     "ro-ro",
     "ru-ru",
     "sk-sk",
+    "sl-si",
     "sv-se",
+    "sw-ke",
+    "ta-in",
+    "te-in",
     "th-th",
     "tr-tr",
+    "uk-ua",
+    "ur-pk",
+    "vi-vn",
     "zh-cn",
     "zh-hk",
     "zh-tw",
@@ -94,7 +121,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_engine(hass, config):
+def get_engine(hass, config, discovery_info=None):
     """Set up Microsoft speech component."""
     return MicrosoftProvider(
         config[CONF_API_KEY],
@@ -121,8 +148,8 @@ class MicrosoftProvider(Provider):
         self._gender = gender
         self._type = ttype
         self._output = DEFAULT_OUTPUT
-        self._rate = f"{rate}%"
-        self._volume = f"{volume}%"
+        self._rate = f"{rate}{PERCENTAGE}"
+        self._volume = f"{volume}{PERCENTAGE}"
         self._pitch = pitch
         self._contour = contour
         self._region = region
@@ -142,7 +169,6 @@ class MicrosoftProvider(Provider):
         """Load TTS from Microsoft."""
         if language is None:
             language = self._lang
-        from pycsspeechtts import pycsspeechtts
 
         try:
             trans = pycsspeechtts.TTSTranslator(self._apikey, self._region)

@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Standort ist bereits konfiguriert"
+        },
+        "error": {
+            "invalid_api_key": "Ung\u00fcltiger API-Schl\u00fcssel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel",
+                    "elevation": "H\u00f6he",
+                    "latitude": "Breitengrad",
+                    "longitude": "L\u00e4ngengrad"
+                },
+                "title": "Gib deine Informationen ein"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "from_window": "Anfangs-UV-Index f\u00fcr das Schutzfenster",
+                    "to_window": "End-UV-Index f\u00fcr das Schutzfenster"
+                },
+                "title": "OpenUV konfigurieren"
+            }
+        }
+    }
+}

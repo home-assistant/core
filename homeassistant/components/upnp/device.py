@@ -1,165 +1,197 @@
-"""Hass representation of an UPnP/IGD."""
-import asyncio
-from ipaddress import IPv4Address
+"""Home Assistant representation of an UPnP/IGD."""
+from __future__ import annotations
 
-import aiohttp
+import asyncio
+from collections.abc import Mapping
+from typing import Any
+from urllib.parse import urlparse
+
+from async_upnp_client import UpnpDevice, UpnpFactory
+from async_upnp_client.aiohttp import AiohttpSessionRequester
+from async_upnp_client.exceptions import UpnpError
 from async_upnp_client.profiles.igd import IgdDevice
 
+from homeassistant.components import ssdp
+from homeassistant.components.ssdp import SsdpChange
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+import homeassistant.util.dt as dt_util
 
-from .const import LOGGER as _LOGGER
-from .const import DOMAIN, CONF_LOCAL_IP
+from .const import (
+    BYTES_RECEIVED,
+    BYTES_SENT,
+    LOGGER as _LOGGER,
+    PACKETS_RECEIVED,
+    PACKETS_SENT,
+    ROUTER_IP,
+    ROUTER_UPTIME,
+    TIMESTAMP,
+    WAN_STATUS,
+)
 
 
 class Device:
-    """Hass representation of an UPnP/IGD."""
+    """Home Assistant representation of a UPnP/IGD device."""
 
-    def __init__(self, igd_device):
-        """Initializer."""
+    def __init__(self, hass: HomeAssistant, igd_device: IgdDevice) -> None:
+        """Initialize UPnP/IGD device."""
+        self.hass = hass
         self._igd_device = igd_device
-        self._mapped_ports = []
+        self.coordinator: DataUpdateCoordinator = None
 
     @classmethod
-    async def async_discover(cls, hass: HomeAssistantType):
-        """Discovery UPNP/IGD devices."""
-        _LOGGER.debug("Discovering UPnP/IGD devices")
-        local_ip = None
-        if DOMAIN in hass.data and "config" in hass.data[DOMAIN]:
-            local_ip = hass.data[DOMAIN]["config"].get(CONF_LOCAL_IP)
-        if local_ip:
-            local_ip = IPv4Address(local_ip)
-
-        discovery_infos = await IgdDevice.async_search(source_ip=local_ip, timeout=10)
-
-        # add extra info and store devices
-        devices = []
-        for discovery_info in discovery_infos:
-            discovery_info["udn"] = discovery_info["_udn"]
-            discovery_info["ssdp_description"] = discovery_info["location"]
-            discovery_info["source"] = "async_upnp_client"
-            _LOGGER.debug("Discovered device: %s", discovery_info)
-
-            devices.append(discovery_info)
-
-        return devices
-
-    @classmethod
-    async def async_create_device(cls, hass: HomeAssistantType, ssdp_description: str):
-        """Create UPnP/IGD device."""
-        # build async_upnp_client requester
-        from async_upnp_client.aiohttp import AiohttpSessionRequester
-
+    async def async_create_upnp_device(
+        cls, hass: HomeAssistant, ssdp_location: str
+    ) -> UpnpDevice:
+        """Create UPnP device."""
+        # Build async_upnp_client requester.
         session = async_get_clientsession(hass)
-        requester = AiohttpSessionRequester(session, True)
+        requester = AiohttpSessionRequester(session, True, 20)
 
-        # create async_upnp_client device
-        from async_upnp_client import UpnpFactory
-
+        # Create async_upnp_client device.
         factory = UpnpFactory(requester, disable_state_variable_validation=True)
-        upnp_device = await factory.async_create_device(ssdp_description)
+        return await factory.async_create_device(ssdp_location)
 
+    @classmethod
+    async def async_create_device(
+        cls, hass: HomeAssistant, ssdp_location: str
+    ) -> Device:
+        """Create UPnP/IGD device."""
+        upnp_device = await Device.async_create_upnp_device(hass, ssdp_location)
+
+        # Create profile wrapper.
         igd_device = IgdDevice(upnp_device, None)
+        device = cls(hass, igd_device)
 
-        return cls(igd_device)
+        # Register SSDP callback for updates.
+        usn = f"{upnp_device.udn}::{upnp_device.device_type}"
+        await ssdp.async_register_callback(
+            hass, device.async_ssdp_callback, {ssdp.ATTR_SSDP_USN: usn}
+        )
+
+        return device
+
+    async def async_ssdp_callback(
+        self, headers: Mapping[str, Any], change: SsdpChange
+    ) -> None:
+        """SSDP callback, update if needed."""
+        if change != SsdpChange.UPDATE or ssdp.ATTR_SSDP_LOCATION not in headers:
+            return
+
+        location = headers[ssdp.ATTR_SSDP_LOCATION]
+        device = self._igd_device.device
+        if location == device.device_url:
+            return
+
+        new_upnp_device = Device.async_create_upnp_device(self.hass, location)
+        device.reinit(new_upnp_device)
 
     @property
-    def udn(self):
+    def udn(self) -> str:
         """Get the UDN."""
         return self._igd_device.udn
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Get the name."""
         return self._igd_device.name
 
     @property
-    def manufacturer(self):
+    def manufacturer(self) -> str:
         """Get the manufacturer."""
         return self._igd_device.manufacturer
 
     @property
-    def model_name(self):
+    def model_name(self) -> str:
         """Get the model name."""
         return self._igd_device.model_name
 
-    async def async_add_port_mappings(self, ports, local_ip):
-        """Add port mappings."""
-        if local_ip == "127.0.0.1":
-            _LOGGER.error("Could not create port mapping, our IP is 127.0.0.1")
+    @property
+    def device_type(self) -> str:
+        """Get the device type."""
+        return self._igd_device.device_type
 
-        # determine local ip, ensure sane IP
-        local_ip = IPv4Address(local_ip)
+    @property
+    def usn(self) -> str:
+        """Get the USN."""
+        return f"{self.udn}::{self.device_type}"
 
-        # create port mappings
-        for external_port, internal_port in ports.items():
-            await self._async_add_port_mapping(external_port, local_ip, internal_port)
-            self._mapped_ports.append(external_port)
+    @property
+    def unique_id(self) -> str:
+        """Get the unique id."""
+        return self.usn
 
-    async def _async_add_port_mapping(self, external_port, local_ip, internal_port):
-        """Add a port mapping."""
-        # create port mapping
-        from async_upnp_client import UpnpError
+    @property
+    def hostname(self) -> str:
+        """Get the hostname."""
+        url = self._igd_device.device.device_url
+        parsed = urlparse(url)
+        return parsed.hostname
 
-        _LOGGER.info(
-            "Creating port mapping %s:%s:%s (TCP)",
-            external_port,
-            local_ip,
-            internal_port,
+    def __str__(self) -> str:
+        """Get string representation."""
+        return f"IGD Device: {self.name}/{self.udn}::{self.device_type}"
+
+    async def async_get_traffic_data(self) -> Mapping[str, Any]:
+        """
+        Get all traffic data in one go.
+
+        Traffic data consists of:
+        - total bytes sent
+        - total bytes received
+        - total packets sent
+        - total packats received
+
+        Data is timestamped.
+        """
+        _LOGGER.debug("Getting traffic statistics from device: %s", self)
+
+        values = await asyncio.gather(
+            self._igd_device.async_get_total_bytes_received(),
+            self._igd_device.async_get_total_bytes_sent(),
+            self._igd_device.async_get_total_packets_received(),
+            self._igd_device.async_get_total_packets_sent(),
         )
-        try:
-            await self._igd_device.async_add_port_mapping(
-                remote_host=None,
-                external_port=external_port,
-                protocol="TCP",
-                internal_port=internal_port,
-                internal_client=local_ip,
-                enabled=True,
-                description="Home Assistant",
-                lease_duration=None,
-            )
 
-            self._mapped_ports.append(external_port)
-        except (asyncio.TimeoutError, aiohttp.ClientError, UpnpError):
-            _LOGGER.error(
-                "Could not add port mapping: %s:%s:%s",
-                external_port,
-                local_ip,
-                internal_port,
-            )
+        return {
+            TIMESTAMP: dt_util.utcnow(),
+            BYTES_RECEIVED: values[0],
+            BYTES_SENT: values[1],
+            PACKETS_RECEIVED: values[2],
+            PACKETS_SENT: values[3],
+        }
 
-    async def async_delete_port_mappings(self):
-        """Remove a port mapping."""
-        for port in self._mapped_ports:
-            await self._async_delete_port_mapping(port)
+    async def async_get_status(self) -> Mapping[str, Any]:
+        """Get connection status, uptime, and external IP."""
+        _LOGGER.debug("Getting status for device: %s", self)
 
-    async def _async_delete_port_mapping(self, external_port):
-        """Remove a port mapping."""
-        from async_upnp_client import UpnpError
+        values = await asyncio.gather(
+            self._igd_device.async_get_status_info(),
+            self._igd_device.async_get_external_ip_address(),
+            return_exceptions=True,
+        )
+        result = []
+        for idx, value in enumerate(values):
+            if isinstance(value, UpnpError):
+                # Not all routers support some of these items although based
+                # on defined standard they should.
+                _LOGGER.debug(
+                    "Exception occurred while trying to get status %s for device %s: %s",
+                    "status" if idx == 1 else "external IP address",
+                    self,
+                    str(value),
+                )
+                result.append(None)
+                continue
 
-        _LOGGER.info("Deleting port mapping %s (TCP)", external_port)
-        try:
-            await self._igd_device.async_delete_port_mapping(
-                remote_host=None, external_port=external_port, protocol="TCP"
-            )
+            if isinstance(value, Exception):
+                raise value
 
-            self._mapped_ports.remove(external_port)
-        except (asyncio.TimeoutError, aiohttp.ClientError, UpnpError):
-            _LOGGER.error("Could not delete port mapping")
+            result.append(value)
 
-    async def async_get_total_bytes_received(self):
-        """Get total bytes received."""
-        return await self._igd_device.async_get_total_bytes_received()
-
-    async def async_get_total_bytes_sent(self):
-        """Get total bytes sent."""
-        return await self._igd_device.async_get_total_bytes_sent()
-
-    async def async_get_total_packets_received(self):
-        """Get total packets received."""
-        # pylint: disable=invalid-name
-        return await self._igd_device.async_get_total_packets_received()
-
-    async def async_get_total_packets_sent(self):
-        """Get total packets sent."""
-        return await self._igd_device.async_get_total_packets_sent()
+        return {
+            WAN_STATUS: result[0][0] if result[0] is not None else None,
+            ROUTER_UPTIME: result[0][2] if result[0] is not None else None,
+            ROUTER_IP: result[1],
+        }

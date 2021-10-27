@@ -1,0 +1,22 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "no_units": "Nem tal\u00e1lhat\u00f3 HVAC egys\u00e9g a CoolMasterNet gazdag\u00e9pben."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "cool": "T\u00e1mogatott a h\u0171t\u00e9si m\u00f3d(ok)",
+                    "dry": "T\u00e1mogassa a p\u00e1r\u00e1tlan\u00edt\u00f3 m\u00f3d(ok)",
+                    "fan_only": "T\u00e1mogaott csak ventil\u00e1tor m\u00f3d(ok)",
+                    "heat": "T\u00e1mogatott f\u0171t\u00e9si m\u00f3d(ok)",
+                    "heat_cool": "T\u00e1mogatott f\u0171t\u00e9si/h\u0171t\u00e9si m\u00f3d(ok)",
+                    "host": "C\u00edm",
+                    "off": "Ki lehet kapcsolni"
+                },
+                "title": "\u00c1ll\u00edtsa be a CoolMasterNet kapcsolat r\u00e9szleteit."
+            }
+        }
+    }
+}

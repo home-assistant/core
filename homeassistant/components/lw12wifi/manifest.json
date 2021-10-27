@@ -1,10 +1,8 @@
 {
   "domain": "lw12wifi",
-  "name": "Lw12wifi",
+  "name": "LAGUTE LW-12",
   "documentation": "https://www.home-assistant.io/integrations/lw12wifi",
-  "requirements": [
-    "lw12==0.9.2"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["lw12==0.9.2"],
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

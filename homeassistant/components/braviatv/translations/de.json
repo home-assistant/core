@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "no_ip_control": "IP-Steuerung ist auf deinen Fernseher deaktiviert oder der Fernseher wird nicht unterst\u00fctzt."
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_host": "Ung\u00fcltiger Hostname oder IP-Adresse",
+            "unsupported_model": "Dein TV-Modell wird nicht unterst\u00fctzt."
+        },
+        "step": {
+            "authorize": {
+                "data": {
+                    "pin": "PIN-Code"
+                },
+                "description": "Gib den auf dem Sony Bravia-Fernseher angezeigten PIN-Code ein. \n\nWenn der PIN-Code nicht angezeigt wird, musst du die Registrierung von Home Assistant auf deinem Fernseher aufheben, gehe daf\u00fcr zu: Einstellungen -> Netzwerk -> Remote - Ger\u00e4teeinstellungen -> Registrierung des entfernten Ger\u00e4ts aufheben.",
+                "title": "Autorisiere Sony Bravia TV"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Richte die Sony Bravia TV-Integration ein. Wenn du Probleme mit der Konfiguration hast, gehe zu: https://www.home-assistant.io/integrations/braviatv \n\nStelle sicher, dass dein Fernseher eingeschaltet ist.",
+                "title": "Sony Bravia TV"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "ignored_sources": "Liste der ignorierten Quellen"
+                },
+                "title": "Optionen f\u00fcr Sony Bravia TV"
+            }
+        }
+    }
+}

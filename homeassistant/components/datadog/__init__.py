@@ -1,6 +1,7 @@
 """Support for sending data to Datadog."""
 import logging
 
+from datadog import initialize, statsd
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -42,13 +43,12 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the Datadog component."""
-    from datadog import initialize, statsd
 
     conf = config[DOMAIN]
-    host = conf.get(CONF_HOST)
-    port = conf.get(CONF_PORT)
-    sample_rate = conf.get(CONF_RATE)
-    prefix = conf.get(CONF_PREFIX)
+    host = conf[CONF_HOST]
+    port = conf[CONF_PORT]
+    sample_rate = conf[CONF_RATE]
+    prefix = conf[CONF_PREFIX]
 
     initialize(statsd_host=host, statsd_port=port)
 
@@ -61,8 +61,8 @@ def setup(hass, config):
             title="Home Assistant",
             text=f"%%% \n **{name}** {message} \n %%%",
             tags=[
-                "entity:{}".format(event.data.get("entity_id")),
-                "domain:{}".format(event.data.get("domain")),
+                f"entity:{event.data.get('entity_id')}",
+                f"domain:{event.data.get('domain')}",
             ],
         )
 
@@ -75,16 +75,14 @@ def setup(hass, config):
         if state is None or state.state == STATE_UNKNOWN:
             return
 
-        if state.attributes.get("hidden") is True:
-            return
-
         states = dict(state.attributes)
         metric = f"{prefix}.{state.domain}"
         tags = [f"entity:{state.entity_id}"]
 
         for key, value in states.items():
             if isinstance(value, (float, int)):
-                attribute = "{}.{}".format(metric, key.replace(" ", "_"))
+                attribute = f"{metric}.{key.replace(' ', '_')}"
+                value = int(value) if isinstance(value, bool) else value
                 statsd.gauge(attribute, value, sample_rate=sample_rate, tags=tags)
 
                 _LOGGER.debug("Sent metric %s: %s (tags: %s)", attribute, value, tags)

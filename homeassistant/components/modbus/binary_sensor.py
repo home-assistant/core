@@ -1,78 +1,71 @@
-"""Support for Modbus Coil sensors."""
-import logging
+"""Support for Modbus Coil and Discrete Input sensors."""
+from __future__ import annotations
 
-import voluptuous as vol
+from datetime import datetime
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_SLAVE
-from homeassistant.helpers import config_validation as cv
+from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.const import CONF_BINARY_SENSORS, CONF_NAME, STATE_ON
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN
+from . import get_hub
+from .base_platform import BasePlatform
 
-_LOGGER = logging.getLogger(__name__)
-
-CONF_COIL = "coil"
-CONF_COILS = "coils"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_COILS): [
-            {
-                vol.Required(CONF_COIL): cv.positive_int,
-                vol.Required(CONF_NAME): cv.string,
-                vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
-                vol.Optional(CONF_SLAVE): cv.positive_int,
-            }
-        ]
-    }
-)
+PARALLEL_UPDATES = 1
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Modbus binary sensors."""
     sensors = []
-    for coil in config.get(CONF_COILS):
-        hub = hass.data[MODBUS_DOMAIN][coil.get(CONF_HUB)]
-        sensors.append(
-            ModbusCoilSensor(
-                hub, coil.get(CONF_NAME), coil.get(CONF_SLAVE), coil.get(CONF_COIL)
-            )
-        )
 
-    add_entities(sensors)
+    if discovery_info is None:  # pragma: no cover
+        return
+
+    for entry in discovery_info[CONF_BINARY_SENSORS]:
+        hub = get_hub(hass, discovery_info[CONF_NAME])
+        sensors.append(ModbusBinarySensor(hub, entry))
+
+    async_add_entities(sensors)
 
 
-class ModbusCoilSensor(BinarySensorDevice):
-    """Modbus coil sensor."""
+class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
+    """Modbus binary sensor."""
 
-    def __init__(self, hub, name, slave, coil):
-        """Initialize the Modbus coil sensor."""
-        self._hub = hub
-        self._name = name
-        self._slave = int(slave) if slave else None
-        self._coil = int(coil)
-        self._value = None
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await self.async_base_added_to_hass()
+        state = await self.async_get_last_state()
+        if state:
+            self._attr_is_on = state.state == STATE_ON
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return the state of the sensor."""
-        return self._value
-
-    def update(self):
+    async def async_update(self, now: datetime | None = None) -> None:
         """Update the state of the sensor."""
-        result = self._hub.read_coils(self._slave, self._coil, 1)
-        try:
-            self._value = result.bits[0]
-        except AttributeError:
-            _LOGGER.error(
-                "No response from hub %s, slave %s, coil %s",
-                self._hub.name,
-                self._slave,
-                self._coil,
-            )
+
+        # do not allow multiple active calls to the same platform
+        if self._call_active:
+            return
+        self._call_active = True
+        result = await self._hub.async_pymodbus_call(
+            self._slave, self._address, 1, self._input_type
+        )
+        self._call_active = False
+        if result is None:
+            if self._lazy_errors:
+                self._lazy_errors -= 1
+                return
+            self._lazy_errors = self._lazy_error_count
+            self._attr_available = False
+            self.async_write_ha_state()
+            return
+
+        self._lazy_errors = self._lazy_error_count
+        self._attr_is_on = result.bits[0] & 1
+        self._attr_available = True
+        self.async_write_ha_state()

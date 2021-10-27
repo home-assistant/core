@@ -1,4 +1,6 @@
 """Support for Netgear Arlo IP cameras."""
+from __future__ import annotations
+
 import logging
 
 from haffmpeg.camera import CameraMjpeg
@@ -7,7 +9,6 @@ import voluptuous as vol
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import ATTR_BATTERY_LEVEL
-from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -56,38 +57,42 @@ class ArloCam(Camera):
         """Initialize an Arlo camera."""
         super().__init__()
         self._camera = camera
-        self._name = self._camera.name
+        self._attr_name = camera.name
         self._motion_status = False
         self._ffmpeg = hass.data[DATA_FFMPEG]
         self._ffmpeg_arguments = device_info.get(CONF_FFMPEG_ARGUMENTS)
         self._last_refresh = None
         self.attrs = {}
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         return self._camera.last_image_from_cache
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_ARLO, self._update_callback)
-
-    @callback
-    def _update_callback(self):
-        """Call update method."""
-        self.async_schedule_update_ha_state()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_UPDATE_ARLO, self.async_write_ha_state
+            )
+        )
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
+        video = await self.hass.async_add_executor_job(
+            getattr, self._camera, "last_video"
+        )
 
-        video = self._camera.last_video
         if not video:
-            error_msg = "Video not found for {0}. Is it older than {1} days?".format(
-                self.name, self._camera.min_days_vdo_cache
+            error_msg = (
+                f"Video not found for {self.name}. "
+                f"Is it older than {self._camera.min_days_vdo_cache} days?"
             )
             _LOGGER.error(error_msg)
             return
 
-        stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
+        stream = CameraMjpeg(self._ffmpeg.binary)
         await stream.open_camera(video.video_url, extra_cmd=self._ffmpeg_arguments)
 
         try:
@@ -102,12 +107,7 @@ class ArloCam(Camera):
             await stream.close()
 
     @property
-    def name(self):
-        """Return the name of this camera."""
-        return self._name
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             name: value
@@ -145,13 +145,12 @@ class ArloCam(Camera):
     def set_base_station_mode(self, mode):
         """Set the mode in the base station."""
         # Get the list of base stations identified by library
-        base_stations = self.hass.data[DATA_ARLO].base_stations
 
         # Some Arlo cameras does not have base station
         # So check if there is base station detected first
         # if yes, then choose the primary base station
         # Set the mode on the chosen base station
-        if base_stations:
+        if base_stations := self.hass.data[DATA_ARLO].base_stations:
             primary_base_station = base_stations[0]
             primary_base_station.mode = mode
 

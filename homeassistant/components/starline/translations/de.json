@@ -1,0 +1,41 @@
+{
+    "config": {
+        "error": {
+            "error_auth_app": "Falsche Anwendungs-ID oder Secret",
+            "error_auth_mfa": "Ung\u00fcltiger Code",
+            "error_auth_user": "Falscher Benutzername oder falsches Passwort"
+        },
+        "step": {
+            "auth_app": {
+                "data": {
+                    "app_id": "App-ID",
+                    "app_secret": "Geheimnis"
+                },
+                "description": "Anwendungs-ID und Geheimcode aus dem [StarLine Entwicklerkonto](https://my.starline.ru/developer)",
+                "title": "Anmeldeinformationen der Anwendung"
+            },
+            "auth_captcha": {
+                "data": {
+                    "captcha_code": "Code aus dem Bild"
+                },
+                "description": "{captcha_img}",
+                "title": "Captcha"
+            },
+            "auth_mfa": {
+                "data": {
+                    "mfa_code": "SMS Code"
+                },
+                "description": "Gib den an das Telefon gesendeten Code ein {Telefon_Nummer}",
+                "title": "2-Faktor-Authentifizierung"
+            },
+            "auth_user": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "description": "StarLine Konto E-Mail und Passwort",
+                "title": "Anmeldeinformationen"
+            }
+        }
+    }
+}

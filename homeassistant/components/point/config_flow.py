@@ -4,13 +4,15 @@ from collections import OrderedDict
 import logging
 
 import async_timeout
+from pypoint import PointSession
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import callback
 
-from .const import CLIENT_ID, CLIENT_SECRET, DOMAIN
+from .const import DOMAIN
 
 AUTH_CALLBACK_PATH = "/api/minut"
 AUTH_CALLBACK_NAME = "api:minut"
@@ -33,17 +35,15 @@ def register_flow_implementation(hass, domain, client_id, client_secret):
         hass.data[DATA_FLOW_IMPL] = OrderedDict()
 
     hass.data[DATA_FLOW_IMPL][domain] = {
-        CLIENT_ID: client_id,
-        CLIENT_SECRET: client_secret,
+        CONF_CLIENT_ID: client_id,
+        CONF_CLIENT_SECRET: client_secret,
     }
 
 
-@config_entries.HANDLERS.register("point")
-class PointFlowHandler(config_entries.ConfigFlow):
+class PointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize flow."""
@@ -51,7 +51,7 @@ class PointFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_import(self, user_input=None):
         """Handle external yaml configuration."""
-        if self.hass.config_entries.async_entries(DOMAIN):
+        if self._async_current_entries():
             return self.async_abort(reason="already_setup")
 
         self.flow_impl = DOMAIN
@@ -62,7 +62,7 @@ class PointFlowHandler(config_entries.ConfigFlow):
         """Handle a flow start."""
         flows = self.hass.data.get(DATA_FLOW_IMPL, {})
 
-        if self.hass.config_entries.async_entries(DOMAIN):
+        if self._async_current_entries():
             return self.async_abort(reason="already_setup")
 
         if not flows:
@@ -84,7 +84,7 @@ class PointFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_auth(self, user_input=None):
         """Create an entry for auth."""
-        if self.hass.config_entries.async_entries(DOMAIN):
+        if self._async_current_entries():
             return self.async_abort(reason="external_setup")
 
         errors = {}
@@ -99,8 +99,7 @@ class PointFlowHandler(config_entries.ConfigFlow):
             return self.async_abort(reason="authorize_url_timeout")
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected error generating auth url")
-            return self.async_abort(reason="authorize_url_fail")
-
+            return self.async_abort(reason="unknown_authorize_url_generation")
         return self.async_show_form(
             step_id="auth",
             description_placeholders={"authorization_url": url},
@@ -109,12 +108,14 @@ class PointFlowHandler(config_entries.ConfigFlow):
 
     async def _get_authorization_url(self):
         """Create Minut Point session and get authorization url."""
-        from pypoint import PointSession
-
         flow = self.hass.data[DATA_FLOW_IMPL][self.flow_impl]
-        client_id = flow[CLIENT_ID]
-        client_secret = flow[CLIENT_SECRET]
-        point_session = PointSession(client_id, client_secret=client_secret)
+        client_id = flow[CONF_CLIENT_ID]
+        client_secret = flow[CONF_CLIENT_SECRET]
+        point_session = PointSession(
+            self.hass.helpers.aiohttp_client.async_get_clientsession(),
+            client_id,
+            client_secret,
+        )
 
         self.hass.http.register_view(MinutAuthCallbackView())
 
@@ -122,7 +123,7 @@ class PointFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_code(self, code=None):
         """Received code for authentication."""
-        if self.hass.config_entries.async_entries(DOMAIN):
+        if self._async_current_entries():
             return self.async_abort(reason="already_setup")
 
         if code is None:
@@ -130,7 +131,7 @@ class PointFlowHandler(config_entries.ConfigFlow):
 
         _LOGGER.debug(
             "Should close all flows below %s",
-            self.hass.config_entries.flow.async_progress(),
+            self._async_in_progress(),
         )
         # Remove notification if no other discovery config entries in progress
 
@@ -138,30 +139,31 @@ class PointFlowHandler(config_entries.ConfigFlow):
 
     async def _async_create_session(self, code):
         """Create point session and entries."""
-        from pypoint import PointSession
 
         flow = self.hass.data[DATA_FLOW_IMPL][DOMAIN]
-        client_id = flow[CLIENT_ID]
-        client_secret = flow[CLIENT_SECRET]
-        point_session = PointSession(client_id, client_secret=client_secret)
-        token = await self.hass.async_add_executor_job(
-            point_session.get_access_token, code
+        client_id = flow[CONF_CLIENT_ID]
+        client_secret = flow[CONF_CLIENT_SECRET]
+        point_session = PointSession(
+            self.hass.helpers.aiohttp_client.async_get_clientsession(),
+            client_id,
+            client_secret,
         )
+        token = await point_session.get_access_token(code)
         _LOGGER.debug("Got new token")
         if not point_session.is_authorized:
             _LOGGER.error("Authentication Error")
             return self.async_abort(reason="auth_error")
 
         _LOGGER.info("Successfully authenticated Point")
-        user_email = point_session.user().get("email") or ""
+        user_email = (await point_session.user()).get("email") or ""
 
         return self.async_create_entry(
             title=user_email,
             data={
                 "token": token,
                 "refresh_args": {
-                    "client_id": client_id,
-                    "client_secret": client_secret,
+                    CONF_CLIENT_ID: client_id,
+                    CONF_CLIENT_SECRET: client_secret,
                 },
             },
         )

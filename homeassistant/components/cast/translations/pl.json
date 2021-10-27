@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
+        },
+        "error": {
+            "invalid_known_hosts": "Znane hosty musz\u0105 by\u0107 list\u0105 host\u00f3w oddzielonych przecinkami."
+        },
+        "step": {
+            "config": {
+                "data": {
+                    "known_hosts": "Znane hosta."
+                },
+                "description": "Znane hosta - lista rozdzielonych przecinkami nazw host\u00f3w lub adres\u00f3w IP urz\u0105dze\u0144 przesy\u0142aj\u0105cych. U\u017cyj, je\u015bli wykrywanie mDNS nie dzia\u0142a.",
+                "title": "Google Cast"
+            },
+            "confirm": {
+                "description": "Czy chcesz rozpocz\u0105\u0107 konfiguracj\u0119?"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_known_hosts": "Znane hosty musz\u0105 by\u0107 list\u0105 host\u00f3w oddzielonych przecinkami."
+        },
+        "step": {
+            "advanced_options": {
+                "data": {
+                    "ignore_cec": "Ignoruj CEC",
+                    "uuid": "Dozwolone identyfikatory UUID"
+                },
+                "description": "Dozwolone identyfikatory UUID - lista oddzielonych przecinkami identyfikator\u00f3w UUID urz\u0105dze\u0144 przesy\u0142aj\u0105cych, kt\u00f3re mo\u017cna doda\u0107 do Home Assistanta. U\u017cywaj tylko wtedy, gdy nie chcesz dodawa\u0107 wszystkich dost\u0119pnych urz\u0105dze\u0144 przesy\u0142aj\u0105cych.\nIgnoruj CEC - lista Chromecast\u00f3w oddzielonych przecinkami, kt\u00f3re powinny ignorowa\u0107 dane CEC przy okre\u015blaniu aktywnego wej\u015bcia. Zostanie to przekazane do pychromecast.IGNORE_CEC.",
+                "title": "Zaawansowana konfiguracja Google Cast"
+            },
+            "basic_options": {
+                "data": {
+                    "known_hosts": "Znane hosta"
+                },
+                "description": "Znane hosta - lista rozdzielonych przecinkami nazw host\u00f3w lub adres\u00f3w IP urz\u0105dze\u0144 przesy\u0142aj\u0105cych. U\u017cyj, je\u015bli wykrywanie mDNS nie dzia\u0142a.",
+                "title": "Konfiguracja Google Cast"
+            }
+        }
+    }
+}

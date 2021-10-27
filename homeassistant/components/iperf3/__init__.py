@@ -1,11 +1,16 @@
 """Support for Iperf3 network measurement tool."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
 import iperf3
 import voluptuous as vol
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_HOSTS,
@@ -13,6 +18,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_PROTOCOL,
     CONF_SCAN_INTERVAL,
+    DATA_RATE_MEGABITS_PER_SECOND,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -39,12 +45,19 @@ ATTR_UPLOAD = "upload"
 ATTR_VERSION = "Version"
 ATTR_HOST = "host"
 
-UNIT_OF_MEASUREMENT = "Mbit/s"
-
-SENSOR_TYPES = {
-    ATTR_DOWNLOAD: [ATTR_DOWNLOAD.capitalize(), UNIT_OF_MEASUREMENT],
-    ATTR_UPLOAD: [ATTR_UPLOAD.capitalize(), UNIT_OF_MEASUREMENT],
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=ATTR_DOWNLOAD,
+        name=ATTR_DOWNLOAD.capitalize(),
+        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+    ),
+    SensorEntityDescription(
+        key=ATTR_UPLOAD,
+        name=ATTR_UPLOAD.capitalize(),
+        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+    ),
+)
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 PROTOCOLS = ["tcp", "udp"]
 
@@ -63,9 +76,9 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Required(CONF_HOSTS): vol.All(cv.ensure_list, [HOST_CONFIG_SCHEMA]),
-                vol.Optional(
-                    CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)
-                ): vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES))]),
+                vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(
+                    cv.ensure_list, [vol.In(SENSOR_KEYS)]
+                ),
                 vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL): vol.All(
                     cv.time_period, cv.positive_timedelta
                 ),
@@ -85,17 +98,7 @@ async def async_setup(hass, config):
 
     conf = config[DOMAIN]
     for host in conf[CONF_HOSTS]:
-        host_name = host[CONF_HOST]
-
-        client = iperf3.Client()
-        client.duration = host[CONF_DURATION]
-        client.server_hostname = host_name
-        client.port = host[CONF_PORT]
-        client.num_streams = host[CONF_PARALLEL]
-        client.protocol = host[CONF_PROTOCOL]
-        client.verbose = False
-
-        data = hass.data[DOMAIN][host_name] = Iperf3Data(hass, client)
+        data = hass.data[DOMAIN][host[CONF_HOST]] = Iperf3Data(hass, host)
 
         if not conf[CONF_MANUAL]:
             async_track_time_interval(hass, data.update, conf[CONF_SCAN_INTERVAL])
@@ -123,26 +126,37 @@ async def async_setup(hass, config):
 class Iperf3Data:
     """Get the latest data from iperf3."""
 
-    def __init__(self, hass, client):
+    def __init__(self, hass, host):
         """Initialize the data object."""
         self._hass = hass
-        self._client = client
+        self._host = host
         self.data = {ATTR_DOWNLOAD: None, ATTR_UPLOAD: None, ATTR_VERSION: None}
+
+    def create_client(self):
+        """Create a new iperf3 client to use for measurement."""
+        client = iperf3.Client()
+        client.duration = self._host[CONF_DURATION]
+        client.server_hostname = self._host[CONF_HOST]
+        client.port = self._host[CONF_PORT]
+        client.num_streams = self._host[CONF_PARALLEL]
+        client.protocol = self._host[CONF_PROTOCOL]
+        client.verbose = False
+        return client
 
     @property
     def protocol(self):
         """Return the protocol used for this connection."""
-        return self._client.protocol
+        return self._host[CONF_PROTOCOL]
 
     @property
     def host(self):
         """Return the host connected to."""
-        return self._client.server_hostname
+        return self._host[CONF_HOST]
 
     @property
     def port(self):
         """Return the port on the host connected to."""
-        return self._client.port
+        return self._host[CONF_PORT]
 
     def update(self, now=None):
         """Get the latest data from iperf3."""
@@ -165,9 +179,10 @@ class Iperf3Data:
 
     def _run_test(self, test_type):
         """Run and return the iperf3 data."""
-        self._client.reverse = test_type == ATTR_DOWNLOAD
+        client = self.create_client()
+        client.reverse = test_type == ATTR_DOWNLOAD
         try:
-            result = self._client.run()
+            result = client.run()
         except (AttributeError, OSError, ValueError) as error:
             _LOGGER.error("Iperf3 error: %s", error)
             return None

@@ -1,0 +1,73 @@
+{
+    "config": {
+        "abort": {
+            "accessory_not_found_error": "Impossibile aggiungere l'abbinamento in quanto non \u00e8 pi\u00f9 possibile trovare il dispositivo.",
+            "already_configured": "L'accessorio \u00e8 gi\u00e0 configurato con questo controller.",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "already_paired": "Questo accessorio \u00e8 gi\u00e0 associato a un altro dispositivo. Si prega di resettare l'accessorio e riprovare.",
+            "ignored_model": "Il supporto di HomeKit per questo modello \u00e8 bloccato poich\u00e9 \u00e8 disponibile un'integrazione nativa con pi\u00f9 funzionalit\u00e0.",
+            "invalid_config_entry": "Questo dispositivo viene visualizzato come pronto per l'associazione, ma c'\u00e8 gi\u00e0 una voce di configurazione in conflitto in Home Assistant che prima deve essere rimossa.",
+            "invalid_properties": "Propriet\u00e0 non valide annunciate dal dispositivo.",
+            "no_devices": "Non \u00e8 stato possibile trovare dispositivi non associati"
+        },
+        "error": {
+            "authentication_error": "Codice HomeKit errato. Per favore, controllate e riprovate.",
+            "insecure_setup_code": "Il codice di installazione richiesto non \u00e8 sicuro a causa della sua natura banale. Questo accessorio non soddisfa i requisiti di sicurezza di base.",
+            "max_peers_error": "Il dispositivo ha rifiutato di aggiungere l'abbinamento in quanto non dispone di una memoria libera per esso.",
+            "pairing_failed": "Si \u00e8 verificato un errore non gestito durante il tentativo di abbinamento con questo dispositivo. Potrebbe trattarsi di un errore temporaneo o il dispositivo potrebbe non essere attualmente supportato.",
+            "unable_to_pair": "Impossibile abbinare, per favore riprova.",
+            "unknown_error": "Il dispositivo ha riportato un errore sconosciuto. L'abbinamento non \u00e8 riuscito."
+        },
+        "flow_title": "{name}",
+        "step": {
+            "busy_error": {
+                "description": "Interrompere l'associazione su tutti i controller o provare a riavviare il dispositivo, quindi continuare a riprendere l'associazione.",
+                "title": "Il dispositivo \u00e8 gi\u00e0 associato a un altro controller"
+            },
+            "max_tries_error": {
+                "description": "Il dispositivo ha ricevuto pi\u00f9 di 100 tentativi di autenticazione non riusciti. Prova a riavviare il dispositivo, quindi continua a riprendere l'associazione.",
+                "title": "Numero massimo di tentativi di autenticazione superato"
+            },
+            "pair": {
+                "data": {
+                    "allow_insecure_setup_codes": "Consenti l'associazione con codici di installazione non sicuri.",
+                    "pairing_code": "Codice di abbinamento"
+                },
+                "description": "Il controller HomeKit comunica con {name} sulla rete locale utilizzando una connessione crittografata sicura senza un controller HomeKit separato o iCloud. Inserisci il tuo codice di associazione HomeKit (nel formato XXX-XX-XXX) per utilizzare questo accessorio. Questo codice si trova solitamente sul dispositivo stesso o nella confezione.",
+                "title": "Associazione con un dispositivo tramite il Protocollo degli Accessori HomeKit"
+            },
+            "protocol_error": {
+                "description": "Il dispositivo potrebbe non essere in modalit\u00e0 di associazione e potrebbe richiedere una pressione di un pulsante fisico o virtuale. Assicurati che il dispositivo sia in modalit\u00e0 di associazione o prova a riavviarlo, quindi continua a riprendere l'associazione.",
+                "title": "Errore di comunicazione con l'accessorio"
+            },
+            "user": {
+                "data": {
+                    "device": "Dispositivo"
+                },
+                "description": "Il controller HomeKit comunica sulla rete locale utilizzando una connessione crittografata sicura senza un controller HomeKit separato o iCloud. Seleziona il dispositivo che desideri associare:",
+                "title": "Selezione del dispositivo"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button1": "Pulsante 1",
+            "button10": "Pulsante 10",
+            "button2": "Pulsante 2",
+            "button3": "Pulsante 3",
+            "button4": "Pulsante 4",
+            "button5": "Pulsante 5",
+            "button6": "Pulsante 6",
+            "button7": "Pulsante 7",
+            "button8": "Pulsante 8",
+            "button9": "Pulsante 9",
+            "doorbell": "Campanello"
+        },
+        "trigger_type": {
+            "double_press": "\"{subtype}\" premuto due volte",
+            "long_press": "\"{subtype}\" premuto e tenuto premuto",
+            "single_press": "\"{subtype}\" premuto"
+        }
+    },
+    "title": "Controller HomeKit"
+}

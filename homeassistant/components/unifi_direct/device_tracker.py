@@ -1,16 +1,17 @@
 """Support for Unifi AP direct access."""
-import logging
 import json
+import logging
 
+from pexpect import exceptions, pxssh
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ UNIFI_COMMAND = 'mca-dump | tr -d "\n"'
 UNIFI_SSID_TABLE = "vap_table"
 UNIFI_CLIENT_TABLE = "sta_table"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
@@ -74,7 +75,6 @@ class UnifiDeviceScanner(DeviceScanner):
 
     def _connect(self):
         """Connect to the Unifi AP SSH server."""
-        from pexpect import pxssh, exceptions
 
         self.ssh = pxssh.pxssh()
         try:
@@ -98,7 +98,6 @@ class UnifiDeviceScanner(DeviceScanner):
         self.connected = False
 
     def _get_update(self):
-        from pexpect import pxssh, exceptions
 
         try:
             if not self.connected:
@@ -134,5 +133,5 @@ def _response_to_json(response):
 
         return active_clients
     except (ValueError, TypeError):
-        _LOGGER.error("Failed to decode response from AP.")
+        _LOGGER.error("Failed to decode response from AP")
         return {}

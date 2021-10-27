@@ -1,10 +1,8 @@
 {
   "domain": "iss",
-  "name": "Iss",
+  "name": "International Space Station (ISS)",
   "documentation": "https://www.home-assistant.io/integrations/iss",
-  "requirements": [
-    "pyiss==1.0.1"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["pyiss==1.0.1"],
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

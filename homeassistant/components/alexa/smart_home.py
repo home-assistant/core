@@ -3,14 +3,12 @@ import logging
 
 import homeassistant.core as ha
 
-from .const import API_DIRECTIVE, API_HEADER
-from .errors import AlexaError, AlexaBridgeUnreachableError
+from .const import API_DIRECTIVE, API_HEADER, EVENT_ALEXA_SMART_HOME
+from .errors import AlexaBridgeUnreachableError, AlexaError
 from .handlers import HANDLERS
 from .messages import AlexaDirective
 
 _LOGGER = logging.getLogger(__name__)
-
-EVENT_ALEXA_SMART_HOME = "alexa_smart_home"
 
 
 async def async_handle_message(hass, config, request, context=None, enabled=True):

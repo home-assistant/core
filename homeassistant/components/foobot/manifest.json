@@ -2,9 +2,7 @@
   "domain": "foobot",
   "name": "Foobot",
   "documentation": "https://www.home-assistant.io/integrations/foobot",
-  "requirements": [
-    "foobot_async==0.3.1"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["foobot_async==1.0.0"],
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

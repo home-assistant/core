@@ -1,8 +1,7 @@
 """The tests for Home Assistant ffmpeg."""
-import asyncio
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
 
-import homeassistant.components.ffmpeg as ffmpeg
+from homeassistant.components import ffmpeg
 from homeassistant.components.ffmpeg import (
     DOMAIN,
     SERVICE_RESTART,
@@ -11,9 +10,9 @@ from homeassistant.components.ffmpeg import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import callback
-from homeassistant.setup import setup_component, async_setup_component
+from homeassistant.setup import async_setup_component, setup_component
 
-from tests.common import get_test_home_assistant, assert_setup_component
+from tests.common import assert_setup_component, get_test_home_assistant
 
 
 @callback
@@ -61,14 +60,12 @@ class MockFFmpegDev(ffmpeg.FFmpegBase):
         self.called_restart = False
         self.called_entities = None
 
-    @asyncio.coroutine
-    def _async_start_ffmpeg(self, entity_ids):
+    async def _async_start_ffmpeg(self, entity_ids):
         """Mock start."""
         self.called_start = True
         self.called_entities = entity_ids
 
-    @asyncio.coroutine
-    def _async_stop_ffmpeg(self, entity_ids):
+    async def _async_stop_ffmpeg(self, entity_ids):
         """Mock stop."""
         self.called_stop = True
         self.called_entities = entity_ids
@@ -102,91 +99,140 @@ class TestFFmpegSetup:
         assert self.hass.services.has_service(ffmpeg.DOMAIN, "restart")
 
 
-@asyncio.coroutine
-def test_setup_component_test_register(hass):
+async def test_setup_component_test_register(hass):
     """Set up ffmpeg component test register."""
     with assert_setup_component(1):
-        yield from async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
 
     hass.bus.async_listen_once = MagicMock()
     ffmpeg_dev = MockFFmpegDev(hass)
-    yield from ffmpeg_dev.async_added_to_hass()
+    await ffmpeg_dev.async_added_to_hass()
 
     assert hass.bus.async_listen_once.called
     assert hass.bus.async_listen_once.call_count == 2
 
 
-@asyncio.coroutine
-def test_setup_component_test_register_no_startup(hass):
+async def test_setup_component_test_register_no_startup(hass):
     """Set up ffmpeg component test register without startup."""
     with assert_setup_component(1):
-        yield from async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
 
     hass.bus.async_listen_once = MagicMock()
     ffmpeg_dev = MockFFmpegDev(hass, False)
-    yield from ffmpeg_dev.async_added_to_hass()
+    await ffmpeg_dev.async_added_to_hass()
 
     assert hass.bus.async_listen_once.called
     assert hass.bus.async_listen_once.call_count == 1
 
 
-@asyncio.coroutine
-def test_setup_component_test_service_start(hass):
+async def test_setup_component_test_service_start(hass):
     """Set up ffmpeg component test service start."""
     with assert_setup_component(1):
-        yield from async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
 
     ffmpeg_dev = MockFFmpegDev(hass, False)
-    yield from ffmpeg_dev.async_added_to_hass()
+    await ffmpeg_dev.async_added_to_hass()
 
     async_start(hass)
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert ffmpeg_dev.called_start
 
 
-@asyncio.coroutine
-def test_setup_component_test_service_stop(hass):
+async def test_setup_component_test_service_stop(hass):
     """Set up ffmpeg component test service stop."""
     with assert_setup_component(1):
-        yield from async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
 
     ffmpeg_dev = MockFFmpegDev(hass, False)
-    yield from ffmpeg_dev.async_added_to_hass()
+    await ffmpeg_dev.async_added_to_hass()
 
     async_stop(hass)
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert ffmpeg_dev.called_stop
 
 
-@asyncio.coroutine
-def test_setup_component_test_service_restart(hass):
+async def test_setup_component_test_service_restart(hass):
     """Set up ffmpeg component test service restart."""
     with assert_setup_component(1):
-        yield from async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
 
     ffmpeg_dev = MockFFmpegDev(hass, False)
-    yield from ffmpeg_dev.async_added_to_hass()
+    await ffmpeg_dev.async_added_to_hass()
 
     async_restart(hass)
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert ffmpeg_dev.called_stop
     assert ffmpeg_dev.called_start
 
 
-@asyncio.coroutine
-def test_setup_component_test_service_start_with_entity(hass):
+async def test_setup_component_test_service_start_with_entity(hass):
     """Set up ffmpeg component test service start."""
     with assert_setup_component(1):
-        yield from async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
 
     ffmpeg_dev = MockFFmpegDev(hass, False)
-    yield from ffmpeg_dev.async_added_to_hass()
+    await ffmpeg_dev.async_added_to_hass()
 
     async_start(hass, "test.ffmpeg_device")
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert ffmpeg_dev.called_start
     assert ffmpeg_dev.called_entities == ["test.ffmpeg_device"]
+
+
+async def test_async_get_image_with_width_height(hass):
+    """Test fetching an image with a specific width and height."""
+    with assert_setup_component(1):
+        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+
+    get_image_mock = AsyncMock()
+    with patch(
+        "homeassistant.components.ffmpeg.ImageFrame",
+        return_value=Mock(get_image=get_image_mock),
+    ):
+        await ffmpeg.async_get_image(hass, "rtsp://fake", width=640, height=480)
+
+    assert get_image_mock.call_args_list == [
+        call("rtsp://fake", output_format="mjpeg", extra_cmd="-s 640x480")
+    ]
+
+
+async def test_async_get_image_with_extra_cmd_overlapping_width_height(hass):
+    """Test fetching an image with and extra_cmd with width and height and a specific width and height."""
+    with assert_setup_component(1):
+        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+
+    get_image_mock = AsyncMock()
+    with patch(
+        "homeassistant.components.ffmpeg.ImageFrame",
+        return_value=Mock(get_image=get_image_mock),
+    ):
+        await ffmpeg.async_get_image(
+            hass, "rtsp://fake", extra_cmd="-s 1024x768", width=640, height=480
+        )
+
+    assert get_image_mock.call_args_list == [
+        call("rtsp://fake", output_format="mjpeg", extra_cmd="-s 1024x768")
+    ]
+
+
+async def test_async_get_image_with_extra_cmd_width_height(hass):
+    """Test fetching an image with and extra_cmd and a specific width and height."""
+    with assert_setup_component(1):
+        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+
+    get_image_mock = AsyncMock()
+    with patch(
+        "homeassistant.components.ffmpeg.ImageFrame",
+        return_value=Mock(get_image=get_image_mock),
+    ):
+        await ffmpeg.async_get_image(
+            hass, "rtsp://fake", extra_cmd="-vf any", width=640, height=480
+        )
+
+    assert get_image_mock.call_args_list == [
+        call("rtsp://fake", output_format="mjpeg", extra_cmd="-vf any -s 640x480")
+    ]

@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Enheten er allerede konfigurert",
+            "already_configured_local_device": "Lokal(e) enhet(er) er allerede konfigurert. Fjern de f\u00f8rst f\u00f8r du konfigurerer en skyenhet.",
+            "authorize_url_timeout": "Tidsavbrudd ved oppretting av godkjenningsadresse",
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_mdns": "Ikke-st\u00f8ttet enhet for Smappee-integrasjonen.",
+            "missing_configuration": "Komponenten er ikke konfigurert, vennligst f\u00f8lg dokumentasjonen",
+            "no_url_available": "Ingen URL tilgjengelig. For informasjon om denne feilen, [sjekk hjelpseksjonen]({docs_url})"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "environment": {
+                "data": {
+                    "environment": "Milj\u00f8"
+                },
+                "description": "Konfigurer Smappee til \u00e5 integreres med Home Assistant."
+            },
+            "local": {
+                "data": {
+                    "host": "Vert"
+                },
+                "description": "Angi verten for \u00e5 starte den lokale Smappee-integreringen"
+            },
+            "pick_implementation": {
+                "title": "Velg godkjenningsmetode"
+            },
+            "zeroconf_confirm": {
+                "description": "Vil du legge Smappee-enheten med serienummer ` {serialnumber} ` til Home Assistant?",
+                "title": "Oppdaget Smappee-enhet"
+            }
+        }
+    }
+}

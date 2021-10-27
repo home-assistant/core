@@ -1,0 +1,18 @@
+{
+    "state": {
+        "zodiac__sign": {
+            "aquarius": "Waterman",
+            "aries": "Ram",
+            "cancer": "Kreeft",
+            "capricorn": "Steenbok",
+            "gemini": "Tweelingen",
+            "leo": "Leo",
+            "libra": "Weegschaal",
+            "pisces": "Vissen",
+            "sagittarius": "Boogschutter",
+            "scorpio": "Schorpioen",
+            "taurus": "Stier",
+            "virgo": "Maagd"
+        }
+    }
+}

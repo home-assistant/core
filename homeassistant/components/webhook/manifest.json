@@ -2,9 +2,7 @@
   "domain": "webhook",
   "name": "Webhook",
   "documentation": "https://www.home-assistant.io/integrations/webhook",
-  "requirements": [],
-  "dependencies": [
-    "http"
-  ],
-  "codeowners": []
+  "dependencies": ["http"],
+  "codeowners": [],
+  "quality_scale": "internal"
 }

@@ -1,23 +1,27 @@
 """Support for Lutron Caseta scenes."""
-import logging
+from typing import Any
 
 from homeassistant.components.scene import Scene
 
-from . import LUTRON_CASETA_SMARTBRIDGE
-
-_LOGGER = logging.getLogger(__name__)
+from .const import BRIDGE_LEAP, DOMAIN as CASETA_DOMAIN
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Lutron Caseta lights."""
-    devs = []
-    bridge = hass.data[LUTRON_CASETA_SMARTBRIDGE]
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Lutron Caseta scene platform.
+
+    Adds scenes from the Caseta bridge associated with the config_entry as
+    scene entities.
+    """
+    entities = []
+    data = hass.data[CASETA_DOMAIN][config_entry.entry_id]
+    bridge = data[BRIDGE_LEAP]
     scenes = bridge.get_scenes()
-    for scene in scenes:
-        dev = LutronCasetaScene(scenes[scene], bridge)
-        devs.append(dev)
 
-    async_add_entities(devs, True)
+    for scene in scenes:
+        entity = LutronCasetaScene(scenes[scene], bridge)
+        entities.append(entity)
+
+    async_add_entities(entities, True)
 
 
 class LutronCasetaScene(Scene):
@@ -34,6 +38,6 @@ class LutronCasetaScene(Scene):
         """Return the name of the scene."""
         return self._scene_name
 
-    async def async_activate(self):
+    async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
-        self._bridge.activate_scene(self._scene_id)
+        await self._bridge.activate_scene(self._scene_id)

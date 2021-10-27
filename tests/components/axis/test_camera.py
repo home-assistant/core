@@ -1,81 +1,80 @@
 """Axis camera platform tests."""
 
-from unittest.mock import Mock
+from unittest.mock import patch
 
-from homeassistant import config_entries
-from homeassistant.components import axis
+from homeassistant.components import camera
+from homeassistant.components.axis.const import (
+    CONF_STREAM_PROFILE,
+    DOMAIN as AXIS_DOMAIN,
+)
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.const import STATE_IDLE
 from homeassistant.setup import async_setup_component
 
-import homeassistant.components.camera as camera
-
-
-ENTRY_CONFIG = {
-    axis.CONF_DEVICE: {
-        axis.config_flow.CONF_HOST: "1.2.3.4",
-        axis.config_flow.CONF_USERNAME: "user",
-        axis.config_flow.CONF_PASSWORD: "pass",
-        axis.config_flow.CONF_PORT: 80,
-    },
-    axis.config_flow.CONF_MAC: "1234ABCD",
-    axis.config_flow.CONF_MODEL: "model",
-    axis.config_flow.CONF_NAME: "model 0",
-}
-
-ENTRY_OPTIONS = {
-    axis.CONF_CAMERA: False,
-    axis.CONF_EVENTS: True,
-    axis.CONF_TRIGGER_TIME: 0,
-}
-
-
-async def setup_device(hass):
-    """Load the Axis binary sensor platform."""
-    from axis import AxisDevice
-
-    loop = Mock()
-
-    config_entry = config_entries.ConfigEntry(
-        1,
-        axis.DOMAIN,
-        "Mock Title",
-        ENTRY_CONFIG,
-        "test",
-        config_entries.CONN_CLASS_LOCAL_PUSH,
-        system_options={},
-        options=ENTRY_OPTIONS,
-    )
-    device = axis.AxisNetworkDevice(hass, config_entry)
-    device.api = AxisDevice(loop=loop, **config_entry.data[axis.CONF_DEVICE])
-    hass.data[axis.DOMAIN] = {device.serial: device}
-    device.api.enable_events(event_callback=device.async_event_callback)
-
-    await hass.config_entries.async_forward_entry_setup(config_entry, "camera")
-    # To flush out the service call to update the group
-    await hass.async_block_till_done()
-
-    return device
+from .test_device import ENTRY_OPTIONS, NAME, setup_axis_integration
 
 
 async def test_platform_manually_configured(hass):
     """Test that nothing happens when platform is manually configured."""
     assert (
         await async_setup_component(
-            hass, camera.DOMAIN, {"camera": {"platform": axis.DOMAIN}}
+            hass, CAMERA_DOMAIN, {CAMERA_DOMAIN: {"platform": AXIS_DOMAIN}}
         )
         is True
     )
 
-    assert axis.DOMAIN not in hass.data
+    assert AXIS_DOMAIN not in hass.data
 
 
 async def test_camera(hass):
     """Test that Axis camera platform is loaded properly."""
-    await setup_device(hass)
+    await setup_axis_integration(hass)
 
-    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids(CAMERA_DOMAIN)) == 1
 
-    assert len(hass.states.async_all()) == 1
+    entity_id = f"{CAMERA_DOMAIN}.{NAME}"
 
-    cam = hass.states.get("camera.model_0")
-    assert cam.state == "idle"
-    assert cam.name == "model 0"
+    cam = hass.states.get(entity_id)
+    assert cam.state == STATE_IDLE
+    assert cam.name == NAME
+
+    camera_entity = camera._get_camera_from_entity_id(hass, entity_id)
+    assert camera_entity.image_source == "http://1.2.3.4:80/axis-cgi/jpg/image.cgi"
+    assert camera_entity.mjpeg_source == "http://1.2.3.4:80/axis-cgi/mjpg/video.cgi"
+    assert (
+        await camera_entity.stream_source()
+        == "rtsp://root:pass@1.2.3.4/axis-media/media.amp?videocodec=h264"
+    )
+
+
+async def test_camera_with_stream_profile(hass):
+    """Test that Axis camera entity is using the correct path with stream profike."""
+    with patch.dict(ENTRY_OPTIONS, {CONF_STREAM_PROFILE: "profile_1"}):
+        await setup_axis_integration(hass)
+
+    assert len(hass.states.async_entity_ids(CAMERA_DOMAIN)) == 1
+
+    entity_id = f"{CAMERA_DOMAIN}.{NAME}"
+
+    cam = hass.states.get(entity_id)
+    assert cam.state == STATE_IDLE
+    assert cam.name == NAME
+
+    camera_entity = camera._get_camera_from_entity_id(hass, entity_id)
+    assert camera_entity.image_source == "http://1.2.3.4:80/axis-cgi/jpg/image.cgi"
+    assert (
+        camera_entity.mjpeg_source
+        == "http://1.2.3.4:80/axis-cgi/mjpg/video.cgi?streamprofile=profile_1"
+    )
+    assert (
+        await camera_entity.stream_source()
+        == "rtsp://root:pass@1.2.3.4/axis-media/media.amp?videocodec=h264&streamprofile=profile_1"
+    )
+
+
+async def test_camera_disabled(hass):
+    """Test that Axis camera platform is loaded properly but does not create camera entity."""
+    with patch("axis.vapix.Params.image_format", new=None):
+        await setup_axis_integration(hass)
+
+    assert len(hass.states.async_entity_ids(CAMERA_DOMAIN)) == 0

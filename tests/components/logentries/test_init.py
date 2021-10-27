@@ -1,81 +1,74 @@
 """The tests for the Logentries component."""
 
-import unittest
-from unittest import mock
+from unittest.mock import MagicMock, call, patch
 
-from homeassistant.setup import setup_component
+import pytest
+
 import homeassistant.components.logentries as logentries
-from homeassistant.const import STATE_ON, STATE_OFF, EVENT_STATE_CHANGED
+from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON
+from homeassistant.setup import async_setup_component
 
-from tests.common import get_test_home_assistant
+
+async def test_setup_config_full(hass):
+    """Test setup with all data."""
+    config = {"logentries": {"token": "secret"}}
+    hass.bus.listen = MagicMock()
+    assert await async_setup_component(hass, logentries.DOMAIN, config)
+    assert hass.bus.listen.called
+    assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
 
 
-class TestLogentries(unittest.TestCase):
-    """Test the Logentries component."""
+async def test_setup_config_defaults(hass):
+    """Test setup with defaults."""
+    config = {"logentries": {"token": "token"}}
+    hass.bus.listen = MagicMock()
+    assert await async_setup_component(hass, logentries.DOMAIN, config)
+    assert hass.bus.listen.called
+    assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
 
-    def setUp(self):  # pylint: disable=invalid-name
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
 
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Stop everything that was started."""
-        self.hass.stop()
+@pytest.fixture
+def mock_dump():
+    """Mock json dumps."""
+    with patch("json.dumps") as mock_dump:
+        yield mock_dump
 
-    def test_setup_config_full(self):
-        """Test setup with all data."""
-        config = {"logentries": {"token": "secret"}}
-        self.hass.bus.listen = mock.MagicMock()
-        assert setup_component(self.hass, logentries.DOMAIN, config)
-        assert self.hass.bus.listen.called
-        assert EVENT_STATE_CHANGED == self.hass.bus.listen.call_args_list[0][0][0]
 
-    def test_setup_config_defaults(self):
-        """Test setup with defaults."""
-        config = {"logentries": {"token": "token"}}
-        self.hass.bus.listen = mock.MagicMock()
-        assert setup_component(self.hass, logentries.DOMAIN, config)
-        assert self.hass.bus.listen.called
-        assert EVENT_STATE_CHANGED == self.hass.bus.listen.call_args_list[0][0][0]
+@pytest.fixture
+def mock_requests():
+    """Mock requests."""
+    with patch.object(logentries, "requests") as mock_requests:
+        yield mock_requests
 
-    def _setup(self, mock_requests):
-        """Test the setup."""
-        self.mock_post = mock_requests.post
-        self.mock_request_exception = Exception
-        mock_requests.exceptions.RequestException = self.mock_request_exception
-        config = {"logentries": {"token": "token"}}
-        self.hass.bus.listen = mock.MagicMock()
-        setup_component(self.hass, logentries.DOMAIN, config)
-        self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
 
-    @mock.patch.object(logentries, "requests")
-    @mock.patch("json.dumps")
-    def test_event_listener(self, mock_dump, mock_requests):
-        """Test event listener."""
-        mock_dump.side_effect = lambda x: x
-        self._setup(mock_requests)
+async def test_event_listener(hass, mock_dump, mock_requests):
+    """Test event listener."""
+    mock_dump.side_effect = lambda x: x
+    mock_post = mock_requests.post
+    mock_requests.exceptions.RequestException = Exception
+    config = {"logentries": {"token": "token"}}
+    hass.bus.listen = MagicMock()
+    assert await async_setup_component(hass, logentries.DOMAIN, config)
+    handler_method = hass.bus.listen.call_args_list[0][0][1]
 
-        valid = {"1": 1, "1.0": 1.0, STATE_ON: 1, STATE_OFF: 0, "foo": "foo"}
-        for in_, out in valid.items():
-            state = mock.MagicMock(
-                state=in_, domain="fake", object_id="entity", attributes={}
-            )
-            event = mock.MagicMock(data={"new_state": state}, time_fired=12345)
-            body = [
-                {
-                    "domain": "fake",
-                    "entity_id": "entity",
-                    "attributes": {},
-                    "time": "12345",
-                    "value": out,
-                }
-            ]
-            payload = {
-                "host": "https://webhook.logentries.com/noformat/" "logs/token",
-                "event": body,
+    valid = {"1": 1, "1.0": 1.0, STATE_ON: 1, STATE_OFF: 0, "foo": "foo"}
+    for in_, out in valid.items():
+        state = MagicMock(state=in_, domain="fake", object_id="entity", attributes={})
+        event = MagicMock(data={"new_state": state}, time_fired=12345)
+        body = [
+            {
+                "domain": "fake",
+                "entity_id": "entity",
+                "attributes": {},
+                "time": "12345",
+                "value": out,
             }
-            self.handler_method(event)
-            assert self.mock_post.call_count == 1
-            assert self.mock_post.call_args == mock.call(
-                payload["host"], data=payload, timeout=10
-            )
-            self.mock_post.reset_mock()
+        ]
+        payload = {
+            "host": "https://webhook.logentries.com/noformat/logs/token",
+            "event": body,
+        }
+        handler_method(event)
+        assert mock_post.call_count == 1
+        assert mock_post.call_args == call(payload["host"], data=payload, timeout=10)
+        mock_post.reset_mock()

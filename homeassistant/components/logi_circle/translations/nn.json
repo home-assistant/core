@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "auth": {
+                "title": "Godkjenn med Logi Circle"
+            },
+            "user": {
+                "description": "Vel kva for ein autentiseringsleverand\u00f8r du vil godkjenne med Logi Circle"
+            }
+        }
+    }
+}

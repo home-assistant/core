@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP"
+                },
+                "description": "Wprowad\u017a nazw\u0119 hosta lub adres IP urz\u0105dzenia Heos (najlepiej pod\u0142\u0105czonego przewodowo do sieci).",
+                "title": "Po\u0142\u0105czenie z Heos"
+            }
+        }
+    }
+}

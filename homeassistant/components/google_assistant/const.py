@@ -1,21 +1,24 @@
 """Constants for Google Assistant."""
 from homeassistant.components import (
+    alarm_control_panel,
     binary_sensor,
     camera,
     climate,
     cover,
     fan,
     group,
+    humidifier,
     input_boolean,
+    input_select,
     light,
     lock,
     media_player,
     scene,
     script,
+    select,
     sensor,
     switch,
     vacuum,
-    alarm_control_panel,
 )
 
 DOMAIN = "google_assistant"
@@ -28,9 +31,7 @@ CONF_EXPOSE_BY_DEFAULT = "expose_by_default"
 CONF_EXPOSED_DOMAINS = "exposed_domains"
 CONF_PROJECT_ID = "project_id"
 CONF_ALIASES = "aliases"
-CONF_API_KEY = "api_key"
 CONF_ROOM_HINT = "room"
-CONF_ALLOW_UNLOCK = "allow_unlock"
 CONF_SECURE_DEVICES_PIN = "secure_devices_pin"
 CONF_REPORT_STATE = "report_state"
 CONF_SERVICE_ACCOUNT = "service_account"
@@ -39,47 +40,56 @@ CONF_PRIVATE_KEY = "private_key"
 
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
+    "alarm_control_panel",
+    "binary_sensor",
     "climate",
     "cover",
     "fan",
     "group",
+    "humidifier",
     "input_boolean",
+    "input_select",
     "light",
+    "lock",
     "media_player",
     "scene",
     "script",
+    "select",
+    "sensor",
     "switch",
     "vacuum",
-    "lock",
-    "binary_sensor",
-    "sensor",
-    "alarm_control_panel",
 ]
 
 PREFIX_TYPES = "action.devices.types."
-TYPE_CAMERA = PREFIX_TYPES + "CAMERA"
-TYPE_LIGHT = PREFIX_TYPES + "LIGHT"
-TYPE_SWITCH = PREFIX_TYPES + "SWITCH"
-TYPE_VACUUM = PREFIX_TYPES + "VACUUM"
-TYPE_SCENE = PREFIX_TYPES + "SCENE"
-TYPE_FAN = PREFIX_TYPES + "FAN"
-TYPE_THERMOSTAT = PREFIX_TYPES + "THERMOSTAT"
-TYPE_LOCK = PREFIX_TYPES + "LOCK"
-TYPE_BLINDS = PREFIX_TYPES + "BLINDS"
-TYPE_GARAGE = PREFIX_TYPES + "GARAGE"
-TYPE_OUTLET = PREFIX_TYPES + "OUTLET"
-TYPE_SENSOR = PREFIX_TYPES + "SENSOR"
-TYPE_DOOR = PREFIX_TYPES + "DOOR"
-TYPE_TV = PREFIX_TYPES + "TV"
-TYPE_SPEAKER = PREFIX_TYPES + "SPEAKER"
-TYPE_ALARM = PREFIX_TYPES + "SECURITYSYSTEM"
+TYPE_CAMERA = f"{PREFIX_TYPES}CAMERA"
+TYPE_LIGHT = f"{PREFIX_TYPES}LIGHT"
+TYPE_SWITCH = f"{PREFIX_TYPES}SWITCH"
+TYPE_VACUUM = f"{PREFIX_TYPES}VACUUM"
+TYPE_SCENE = f"{PREFIX_TYPES}SCENE"
+TYPE_FAN = f"{PREFIX_TYPES}FAN"
+TYPE_THERMOSTAT = f"{PREFIX_TYPES}THERMOSTAT"
+TYPE_LOCK = f"{PREFIX_TYPES}LOCK"
+TYPE_AWNING = f"{PREFIX_TYPES}AWNING"
+TYPE_BLINDS = f"{PREFIX_TYPES}BLINDS"
+TYPE_SHUTTER = f"{PREFIX_TYPES}SHUTTER"
+TYPE_GARAGE = f"{PREFIX_TYPES}GARAGE"
+TYPE_OUTLET = f"{PREFIX_TYPES}OUTLET"
+TYPE_SENSOR = f"{PREFIX_TYPES}SENSOR"
+TYPE_DOOR = f"{PREFIX_TYPES}DOOR"
+TYPE_TV = f"{PREFIX_TYPES}TV"
+TYPE_SPEAKER = f"{PREFIX_TYPES}SPEAKER"
+TYPE_ALARM = f"{PREFIX_TYPES}SECURITYSYSTEM"
+TYPE_SETTOP = f"{PREFIX_TYPES}SETTOP"
+TYPE_HUMIDIFIER = f"{PREFIX_TYPES}HUMIDIFIER"
+TYPE_DEHUMIDIFIER = f"{PREFIX_TYPES}DEHUMIDIFIER"
+TYPE_RECEIVER = f"{PREFIX_TYPES}AUDIO_VIDEO_RECEIVER"
 
 SERVICE_REQUEST_SYNC = "request_sync"
 HOMEGRAPH_URL = "https://homegraph.googleapis.com/"
 HOMEGRAPH_SCOPE = "https://www.googleapis.com/auth/homegraph"
 HOMEGRAPH_TOKEN_URL = "https://accounts.google.com/o/oauth2/token"
-REQUEST_SYNC_BASE_URL = HOMEGRAPH_URL + "v1/devices:requestSync"
-REPORT_STATE_BASE_URL = HOMEGRAPH_URL + "v1/devices:reportStateAndNotification"
+REQUEST_SYNC_BASE_URL = f"{HOMEGRAPH_URL}v1/devices:requestSync"
+REPORT_STATE_BASE_URL = f"{HOMEGRAPH_URL}v1/devices:reportStateAndNotification"
 
 # Error codes used for SmartHomeError class
 # https://developers.google.com/actions/reference/smarthome/errors-exceptions
@@ -90,9 +100,12 @@ ERR_NOT_SUPPORTED = "notSupported"
 ERR_PROTOCOL_ERROR = "protocolError"
 ERR_UNKNOWN_ERROR = "unknownError"
 ERR_FUNCTION_NOT_SUPPORTED = "functionNotSupported"
+ERR_UNSUPPORTED_INPUT = "unsupportedInput"
+ERR_NO_AVAILABLE_CHANNEL = "noAvailableChannel"
 
 ERR_ALREADY_DISARMED = "alreadyDisarmed"
 ERR_ALREADY_ARMED = "alreadyArmed"
+ERR_ALREADY_STOPPED = "alreadyStopped"
 
 ERR_CHALLENGE_NEEDED = "challengeNeeded"
 ERR_CHALLENGE_NOT_SETUP = "challengeFailedNotSetup"
@@ -106,25 +119,32 @@ EVENT_QUERY_RECEIVED = "google_assistant_query"
 EVENT_SYNC_RECEIVED = "google_assistant_sync"
 
 DOMAIN_TO_GOOGLE_TYPES = {
+    alarm_control_panel.DOMAIN: TYPE_ALARM,
     camera.DOMAIN: TYPE_CAMERA,
     climate.DOMAIN: TYPE_THERMOSTAT,
     cover.DOMAIN: TYPE_BLINDS,
     fan.DOMAIN: TYPE_FAN,
     group.DOMAIN: TYPE_SWITCH,
+    humidifier.DOMAIN: TYPE_HUMIDIFIER,
     input_boolean.DOMAIN: TYPE_SWITCH,
+    input_select.DOMAIN: TYPE_SENSOR,
     light.DOMAIN: TYPE_LIGHT,
     lock.DOMAIN: TYPE_LOCK,
-    media_player.DOMAIN: TYPE_SWITCH,
+    media_player.DOMAIN: TYPE_SETTOP,
     scene.DOMAIN: TYPE_SCENE,
     script.DOMAIN: TYPE_SCENE,
+    sensor.DOMAIN: TYPE_SENSOR,
+    select.DOMAIN: TYPE_SENSOR,
     switch.DOMAIN: TYPE_SWITCH,
     vacuum.DOMAIN: TYPE_VACUUM,
-    alarm_control_panel.DOMAIN: TYPE_ALARM,
 }
 
 DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (cover.DOMAIN, cover.DEVICE_CLASS_GARAGE): TYPE_GARAGE,
+    (cover.DOMAIN, cover.DEVICE_CLASS_GATE): TYPE_GARAGE,
     (cover.DOMAIN, cover.DEVICE_CLASS_DOOR): TYPE_DOOR,
+    (cover.DOMAIN, cover.DEVICE_CLASS_AWNING): TYPE_AWNING,
+    (cover.DOMAIN, cover.DEVICE_CLASS_SHUTTER): TYPE_SHUTTER,
     (switch.DOMAIN, switch.DEVICE_CLASS_SWITCH): TYPE_SWITCH,
     (switch.DOMAIN, switch.DEVICE_CLASS_OUTLET): TYPE_OUTLET,
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_DOOR): TYPE_DOOR,
@@ -134,9 +154,20 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_WINDOW): TYPE_SENSOR,
     (media_player.DOMAIN, media_player.DEVICE_CLASS_TV): TYPE_TV,
     (media_player.DOMAIN, media_player.DEVICE_CLASS_SPEAKER): TYPE_SPEAKER,
+    (media_player.DOMAIN, media_player.DEVICE_CLASS_RECEIVER): TYPE_RECEIVER,
     (sensor.DOMAIN, sensor.DEVICE_CLASS_TEMPERATURE): TYPE_SENSOR,
+    (sensor.DOMAIN, sensor.DEVICE_CLASS_HUMIDITY): TYPE_SENSOR,
+    (humidifier.DOMAIN, humidifier.DEVICE_CLASS_HUMIDIFIER): TYPE_HUMIDIFIER,
+    (humidifier.DOMAIN, humidifier.DEVICE_CLASS_DEHUMIDIFIER): TYPE_DEHUMIDIFIER,
 }
 
 CHALLENGE_ACK_NEEDED = "ackNeeded"
 CHALLENGE_PIN_NEEDED = "pinNeeded"
 CHALLENGE_FAILED_PIN_NEEDED = "challengeFailedPinNeeded"
+
+STORE_AGENT_USER_IDS = "agent_user_ids"
+
+SOURCE_CLOUD = "cloud"
+SOURCE_LOCAL = "local"
+
+NOT_EXPOSE_LOCAL = {TYPE_ALARM, TYPE_LOCK}

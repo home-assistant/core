@@ -1,7 +1,7 @@
 """Support to export sensor values via RSS feed."""
 from html import escape
-from aiohttp import web
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
@@ -39,12 +39,11 @@ CONFIG_SCHEMA = vol.Schema(
 def setup(hass, config):
     """Set up the RSS feed template component."""
     for (feeduri, feedconfig) in config[DOMAIN].items():
-        url = "/api/rss_template/%s" % feeduri
+        url = f"/api/rss_template/{feeduri}"
 
         requires_auth = feedconfig.get("requires_api_password")
 
-        title = feedconfig.get("title")
-        if title is not None:
+        if (title := feedconfig.get("title")) is not None:
             title.hass = hass
 
         items = feedconfig.get("items")
@@ -82,20 +81,22 @@ class RssView(HomeAssistantView):
 
         response += "<rss>\n"
         if self._title is not None:
-            response += "  <title>%s</title>\n" % escape(self._title.async_render())
+            response += "  <title>%s</title>\n" % escape(
+                self._title.async_render(parse_result=False)
+            )
 
         for item in self._items:
             response += "  <item>\n"
             if "title" in item:
                 response += "    <title>"
-                response += escape(item["title"].async_render())
+                response += escape(item["title"].async_render(parse_result=False))
                 response += "</title>\n"
             if "description" in item:
                 response += "    <description>"
-                response += escape(item["description"].async_render())
+                response += escape(item["description"].async_render(parse_result=False))
                 response += "</description>\n"
             response += "  </item>\n"
 
         response += "</rss>\n"
 
-        return web.Response(body=response, content_type=CONTENT_TYPE_XML, status=200)
+        return web.Response(body=response, content_type=CONTENT_TYPE_XML)

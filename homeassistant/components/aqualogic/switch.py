@@ -1,17 +1,12 @@
 """Support for AquaLogic switches."""
-import logging
-
 from aqualogic.core import States
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_MONITORED_CONDITIONS
-from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN, UPDATE_TOPIC
-
-_LOGGER = logging.getLogger(__name__)
 
 SWITCH_TYPES = {
     "lights": "Lights",
@@ -40,20 +35,20 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     switches = []
 
     processor = hass.data[DOMAIN]
-    for switch_type in config.get(CONF_MONITORED_CONDITIONS):
+    for switch_type in config[CONF_MONITORED_CONDITIONS]:
         switches.append(AquaLogicSwitch(processor, switch_type))
 
     async_add_entities(switches)
 
 
-class AquaLogicSwitch(SwitchDevice):
+class AquaLogicSwitch(SwitchEntity):
     """Switch implementation for the AquaLogic component."""
+
+    _attr_should_poll = False
 
     def __init__(self, processor, switch_type):
         """Initialize switch."""
-
         self._processor = processor
-        self._type = switch_type
         self._state_name = {
             "lights": States.LIGHTS,
             "filter": States.FILTER,
@@ -66,47 +61,32 @@ class AquaLogicSwitch(SwitchDevice):
             "aux_6": States.AUX_6,
             "aux_7": States.AUX_7,
         }[switch_type]
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return "AquaLogic {}".format(SWITCH_TYPES[self._type])
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
+        self._attr_name = f"AquaLogic {SWITCH_TYPES[switch_type]}"
 
     @property
     def is_on(self):
         """Return true if device is on."""
-        panel = self._processor.panel
-        if panel is None:
+        if (panel := self._processor.panel) is None:
             return False
         state = panel.get_state(self._state_name)
         return state
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        panel = self._processor.panel
-        if panel is None:
+        if (panel := self._processor.panel) is None:
             return
         panel.set_state(self._state_name, True)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        panel = self._processor.panel
-        if panel is None:
+        if (panel := self._processor.panel) is None:
             return
         panel.set_state(self._state_name, False)
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            UPDATE_TOPIC, self.async_update_callback
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                UPDATE_TOPIC, self.async_write_ha_state
+            )
         )
-
-    @callback
-    def async_update_callback(self):
-        """Update callback."""
-        self.async_schedule_update_ha_state()

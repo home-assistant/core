@@ -1,5 +1,6 @@
 """Support for BloomSky weather station."""
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 from aiohttp.hdrs import AUTHORIZATION
@@ -13,8 +14,7 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-BLOOMSKY = None
-BLOOMSKY_TYPE = ["camera", "binary_sensor", "sensor"]
+PLATFORMS = ["camera", "binary_sensor", "sensor"]
 
 DOMAIN = "bloomsky"
 
@@ -28,17 +28,18 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 def setup(hass, config):
-    """Set up the BloomSky component."""
+    """Set up the BloomSky integration."""
     api_key = config[DOMAIN][CONF_API_KEY]
 
-    global BLOOMSKY
     try:
-        BLOOMSKY = BloomSky(api_key, hass.config.units.is_metric)
+        bloomsky = BloomSky(api_key, hass.config.units.is_metric)
     except RuntimeError:
         return False
 
-    for component in BLOOMSKY_TYPE:
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
+    hass.data[DOMAIN] = bloomsky
+
+    for platform in PLATFORMS:
+        discovery.load_platform(hass, platform, DOMAIN, {}, config)
 
     return True
 
@@ -55,7 +56,7 @@ class BloomSky:
         self._endpoint_argument = "unit=intl" if is_metric else ""
         self.devices = {}
         self.is_metric = is_metric
-        _LOGGER.debug("Initial BloomSky device load...")
+        _LOGGER.debug("Initial BloomSky device load")
         self.refresh_devices()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -67,12 +68,12 @@ class BloomSky:
             headers={AUTHORIZATION: self._api_key},
             timeout=10,
         )
-        if response.status_code == 401:
+        if response.status_code == HTTPStatus.UNAUTHORIZED:
             raise RuntimeError("Invalid API_KEY")
-        if response.status_code == 405:
+        if response.status_code == HTTPStatus.METHOD_NOT_ALLOWED:
             _LOGGER.error("You have no bloomsky devices configured")
             return
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             _LOGGER.error("Invalid HTTP response: %s", response.status_code)
             return
         # Create dictionary keyed off of the device unique id

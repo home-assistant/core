@@ -1,0 +1,27 @@
+{
+    "device_automation": {
+        "action_type": {
+            "brightness_decrease": "{entity_name}: \u0443\u043c\u0435\u043d\u044c\u0448\u0438\u0442\u044c \u044f\u0440\u043a\u043e\u0441\u0442\u044c",
+            "brightness_increase": "{entity_name}: \u0443\u0432\u0435\u043b\u0438\u0447\u0438\u0442\u044c \u044f\u0440\u043a\u043e\u0441\u0442\u044c",
+            "flash": "{entity_name}: \u0432\u043a\u043b\u044e\u0447\u0438\u0442\u044c \u043c\u0438\u0433\u0430\u043d\u0438\u0435",
+            "toggle": "{entity_name}: \u043f\u0435\u0440\u0435\u043a\u043b\u044e\u0447\u0438\u0442\u044c",
+            "turn_off": "{entity_name}: \u0432\u044b\u043a\u043b\u044e\u0447\u0438\u0442\u044c",
+            "turn_on": "{entity_name}: \u0432\u043a\u043b\u044e\u0447\u0438\u0442\u044c"
+        },
+        "condition_type": {
+            "is_off": "{entity_name} \u0432 \u0432\u044b\u043a\u043b\u044e\u0447\u0435\u043d\u043d\u043e\u043c \u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0438",
+            "is_on": "{entity_name} \u0432\u043e \u0432\u043a\u043b\u044e\u0447\u0435\u043d\u043d\u043e\u043c \u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0438"
+        },
+        "trigger_type": {
+            "turned_off": "{entity_name} \u0432\u044b\u043a\u043b\u044e\u0447\u0430\u0435\u0442\u0441\u044f",
+            "turned_on": "{entity_name} \u0432\u043a\u043b\u044e\u0447\u0430\u0435\u0442\u0441\u044f"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "\u0412\u044b\u043a\u043b\u044e\u0447\u0435\u043d\u043e",
+            "on": "\u0412\u043a\u043b\u044e\u0447\u0435\u043d\u043e"
+        }
+    },
+    "title": "\u041e\u0441\u0432\u0435\u0449\u0435\u043d\u0438\u0435"
+}

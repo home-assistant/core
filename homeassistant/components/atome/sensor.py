@@ -1,23 +1,27 @@
 """Linky Atome."""
-import logging
 from datetime import timedelta
+import logging
 
+from pyatome.client import AtomeClient, PyAtomeError
 import voluptuous as vol
-from pyatome.client import AtomeClient
-from pyatome.client import PyAtomeError
 
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+)
 from homeassistant.const import (
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
-    CONF_NAME,
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
-    POWER_WATT,
     ENERGY_KILO_WATT_HOUR,
+    POWER_WATT,
 )
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,8 +44,6 @@ DAILY_TYPE = "day"
 WEEKLY_TYPE = "week"
 MONTHLY_TYPE = "month"
 YEARLY_TYPE = "year"
-
-ICON = "mdi:flash"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -79,7 +81,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class AtomeData:
     """Stores data retrieved from Neurio sensor."""
 
-    def __init__(self, client: AtomeClient):
+    def __init__(self, client: AtomeClient) -> None:
         """Initialize the data."""
         self.atome_client = client
         self._live_power = None
@@ -144,7 +146,7 @@ class AtomeData:
             values = self.atome_client.get_consumption(DAILY_TYPE)
             self._day_usage = values["total"] / 1000
             self._day_price = values["price"]
-            _LOGGER.debug("Updating Atome daily data. Got: %d.", self._day_usage)
+            _LOGGER.debug("Updating Atome daily data. Got: %d", self._day_usage)
 
         except KeyError as error:
             _LOGGER.error("Missing last value in values: %s: %s", values, error)
@@ -166,7 +168,7 @@ class AtomeData:
             values = self.atome_client.get_consumption(WEEKLY_TYPE)
             self._week_usage = values["total"] / 1000
             self._week_price = values["price"]
-            _LOGGER.debug("Updating Atome weekly data. Got: %d.", self._week_usage)
+            _LOGGER.debug("Updating Atome weekly data. Got: %d", self._week_usage)
 
         except KeyError as error:
             _LOGGER.error("Missing last value in values: %s: %s", values, error)
@@ -188,7 +190,7 @@ class AtomeData:
             values = self.atome_client.get_consumption(MONTHLY_TYPE)
             self._month_usage = values["total"] / 1000
             self._month_price = values["price"]
-            _LOGGER.debug("Updating Atome monthly data. Got: %d.", self._month_usage)
+            _LOGGER.debug("Updating Atome monthly data. Got: %d", self._month_usage)
 
         except KeyError as error:
             _LOGGER.error("Missing last value in values: %s: %s", values, error)
@@ -210,58 +212,30 @@ class AtomeData:
             values = self.atome_client.get_consumption(YEARLY_TYPE)
             self._year_usage = values["total"] / 1000
             self._year_price = values["price"]
-            _LOGGER.debug("Updating Atome yearly data. Got: %d.", self._year_usage)
+            _LOGGER.debug("Updating Atome yearly data. Got: %d", self._year_usage)
 
         except KeyError as error:
             _LOGGER.error("Missing last value in values: %s: %s", values, error)
 
 
-class AtomeSensor(Entity):
+class AtomeSensor(SensorEntity):
     """Representation of a sensor entity for Atome."""
 
     def __init__(self, data, name, sensor_type):
         """Initialize the sensor."""
-        self._name = name
+        self._attr_name = name
         self._data = data
-        self._state = None
-        self._attributes = {}
 
         self._sensor_type = sensor_type
 
         if sensor_type == LIVE_TYPE:
-            self._unit_of_measurement = POWER_WATT
+            self._attr_device_class = DEVICE_CLASS_POWER
+            self._attr_native_unit_of_measurement = POWER_WATT
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
         else:
-            self._unit_of_measurement = ENERGY_KILO_WATT_HOUR
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return self._attributes
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return DEVICE_CLASS_POWER
+            self._attr_device_class = DEVICE_CLASS_ENERGY
+            self._attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
 
     def update(self):
         """Update device state."""
@@ -269,11 +243,13 @@ class AtomeSensor(Entity):
         update_function()
 
         if self._sensor_type == LIVE_TYPE:
-            self._state = self._data.live_power
-            self._attributes["subscribed_power"] = self._data.subscribed_power
-            self._attributes["is_connected"] = self._data.is_connected
+            self._attr_native_value = self._data.live_power
+            self._attr_extra_state_attributes = {
+                "subscribed_power": self._data.subscribed_power,
+                "is_connected": self._data.is_connected,
+            }
         else:
-            self._state = getattr(self._data, f"{self._sensor_type}_usage")
-            self._attributes["price"] = getattr(
-                self._data, f"{self._sensor_type}_price"
-            )
+            self._attr_native_value = getattr(self._data, f"{self._sensor_type}_usage")
+            self._attr_extra_state_attributes = {
+                "price": getattr(self._data, f"{self._sensor_type}_price")
+            }

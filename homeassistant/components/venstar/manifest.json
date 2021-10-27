@@ -1,10 +1,11 @@
 {
   "domain": "venstar",
   "name": "Venstar",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/venstar",
   "requirements": [
-    "venstarcolortouch==0.9"
+    "venstarcolortouch==0.14"
   ],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@garbled1"],
+  "iot_class": "local_polling"
 }

@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 
@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class RainCloudSwitch(RainCloudEntity, SwitchDevice):
+class RainCloudSwitch(RainCloudEntity, SwitchEntity):
     """A switch implementation for raincloud device."""
 
     def __init__(self, default_watering_timer, *args):
@@ -83,7 +83,7 @@ class RainCloudSwitch(RainCloudEntity, SwitchDevice):
             self._state = self.data.auto_watering
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,

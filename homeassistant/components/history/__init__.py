@@ -1,26 +1,34 @@
 """Provide pre-made queries on top of the recorder component."""
-from collections import defaultdict
-from datetime import timedelta
-from itertools import groupby
+from __future__ import annotations
+
+from collections.abc import Iterable
+from datetime import datetime as dt, timedelta
+from http import HTTPStatus
 import logging
 import time
+from typing import cast
 
+from aiohttp import web
+from sqlalchemy import not_, or_
 import voluptuous as vol
 
-from homeassistant.const import (
-    HTTP_BAD_REQUEST,
-    CONF_DOMAINS,
-    CONF_ENTITIES,
-    CONF_EXCLUDE,
-    CONF_INCLUDE,
+from homeassistant.components import websocket_api
+from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.recorder import history, models as history_models
+from homeassistant.components.recorder.statistics import (
+    list_statistic_ids,
+    statistics_during_period,
+)
+from homeassistant.components.recorder.util import session_scope
+from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE
+from homeassistant.core import HomeAssistant
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.deprecation import deprecated_class, deprecated_function
+from homeassistant.helpers.entityfilter import (
+    CONF_ENTITY_GLOBS,
+    INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
 )
 import homeassistant.util.dt as dt_util
-from homeassistant.components import recorder, script
-from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import ATTR_HIDDEN
-from homeassistant.components.recorder.util import session_scope, execute
-import homeassistant.helpers.config_validation as cv
-
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -29,262 +37,144 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "history"
 CONF_ORDER = "use_include_order"
 
+GLOB_TO_SQL_CHARS = {
+    42: "%",  # *
+    46: "_",  # .
+}
+
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: recorder.FILTER_SCHEMA.extend(
+        DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
             {vol.Optional(CONF_ORDER, default=False): cv.boolean}
         )
     },
     extra=vol.ALLOW_EXTRA,
 )
 
-SIGNIFICANT_DOMAINS = ("thermostat", "climate", "water_heater")
-IGNORE_DOMAINS = ("zone", "scene")
+
+@deprecated_function("homeassistant.components.recorder.history.get_significant_states")
+def get_significant_states(hass, *args, **kwargs):
+    """Wrap get_significant_states_with_session with an sql session."""
+    return history.get_significant_states(hass, *args, **kwargs)
 
 
-def get_significant_states(
-    hass,
-    start_time,
-    end_time=None,
-    entity_ids=None,
-    filters=None,
-    include_start_time_state=True,
-):
-    """
-    Return states changes during UTC period start_time - end_time.
-
-    Significant states are all states where there is a state change,
-    as well as all states from certain domains (for instance
-    thermostat so that we get current temperature in our graphs).
-    """
-    timer_start = time.perf_counter()
-    from homeassistant.components.recorder.models import States
-
-    with session_scope(hass=hass) as session:
-        query = session.query(States).filter(
-            (
-                States.domain.in_(SIGNIFICANT_DOMAINS)
-                | (States.last_changed == States.last_updated)
-            )
-            & (States.last_updated > start_time)
-        )
-
-        if filters:
-            query = filters.apply(query, entity_ids)
-
-        if end_time is not None:
-            query = query.filter(States.last_updated < end_time)
-
-        query = query.order_by(States.last_updated)
-
-        states = (
-            state
-            for state in execute(query)
-            if (_is_significant(state) and not state.attributes.get(ATTR_HIDDEN, False))
-        )
-
-    if _LOGGER.isEnabledFor(logging.DEBUG):
-        elapsed = time.perf_counter() - timer_start
-        _LOGGER.debug("get_significant_states took %fs", elapsed)
-
-    return states_to_json(
-        hass, states, start_time, entity_ids, filters, include_start_time_state
-    )
-
-
+@deprecated_function(
+    "homeassistant.components.recorder.history.state_changes_during_period"
+)
 def state_changes_during_period(hass, start_time, end_time=None, entity_id=None):
     """Return states changes during UTC period start_time - end_time."""
-    from homeassistant.components.recorder.models import States
-
-    with session_scope(hass=hass) as session:
-        query = session.query(States).filter(
-            (States.last_changed == States.last_updated)
-            & (States.last_updated > start_time)
-        )
-
-        if end_time is not None:
-            query = query.filter(States.last_updated < end_time)
-
-        if entity_id is not None:
-            query = query.filter_by(entity_id=entity_id.lower())
-
-        entity_ids = [entity_id] if entity_id is not None else None
-
-        states = execute(query.order_by(States.last_updated))
-
-    return states_to_json(hass, states, start_time, entity_ids)
-
-
-def get_last_state_changes(hass, number_of_states, entity_id):
-    """Return the last number_of_states."""
-    from homeassistant.components.recorder.models import States
-
-    start_time = dt_util.utcnow()
-
-    with session_scope(hass=hass) as session:
-        query = session.query(States).filter(
-            (States.last_changed == States.last_updated)
-        )
-
-        if entity_id is not None:
-            query = query.filter_by(entity_id=entity_id.lower())
-
-        entity_ids = [entity_id] if entity_id is not None else None
-
-        states = execute(
-            query.order_by(States.last_updated.desc()).limit(number_of_states)
-        )
-
-    return states_to_json(
-        hass, reversed(states), start_time, entity_ids, include_start_time_state=False
+    return history.state_changes_during_period(
+        hass, start_time, end_time=None, entity_id=None
     )
 
 
+@deprecated_function("homeassistant.components.recorder.history.get_last_state_changes")
+def get_last_state_changes(hass, number_of_states, entity_id):
+    """Return the last number_of_states."""
+    return history.get_last_state_changes(hass, number_of_states, entity_id)
+
+
+@deprecated_function("homeassistant.components.recorder.history.get_states")
 def get_states(hass, utc_point_in_time, entity_ids=None, run=None, filters=None):
     """Return the states at a specific point in time."""
-    from homeassistant.components.recorder.models import States
-
-    if run is None:
-        run = recorder.run_information(hass, utc_point_in_time)
-
-        # History did not run before utc_point_in_time
-        if run is None:
-            return []
-
-    from sqlalchemy import and_, func
-
-    with session_scope(hass=hass) as session:
-        query = session.query(States)
-
-        if entity_ids and len(entity_ids) == 1:
-            # Use an entirely different (and extremely fast) query if we only
-            # have a single entity id
-            query = (
-                query.filter(
-                    States.last_updated >= run.start,
-                    States.last_updated < utc_point_in_time,
-                    States.entity_id.in_(entity_ids),
-                )
-                .order_by(States.last_updated.desc())
-                .limit(1)
-            )
-
-        else:
-            # We have more than one entity to look at (most commonly we want
-            # all entities,) so we need to do a search on all states since the
-            # last recorder run started.
-
-            most_recent_states_by_date = session.query(
-                States.entity_id.label("max_entity_id"),
-                func.max(States.last_updated).label("max_last_updated"),
-            ).filter(
-                (States.last_updated >= run.start)
-                & (States.last_updated < utc_point_in_time)
-            )
-
-            if entity_ids:
-                most_recent_states_by_date.filter(States.entity_id.in_(entity_ids))
-
-            most_recent_states_by_date = most_recent_states_by_date.group_by(
-                States.entity_id
-            )
-
-            most_recent_states_by_date = most_recent_states_by_date.subquery()
-
-            most_recent_state_ids = session.query(
-                func.max(States.state_id).label("max_state_id")
-            ).join(
-                most_recent_states_by_date,
-                and_(
-                    States.entity_id == most_recent_states_by_date.c.max_entity_id,
-                    States.last_updated
-                    == most_recent_states_by_date.c.max_last_updated,
-                ),
-            )
-
-            most_recent_state_ids = most_recent_state_ids.group_by(States.entity_id)
-
-            most_recent_state_ids = most_recent_state_ids.subquery()
-
-            query = query.join(
-                most_recent_state_ids,
-                States.state_id == most_recent_state_ids.c.max_state_id,
-            ).filter(~States.domain.in_(IGNORE_DOMAINS))
-
-            if filters:
-                query = filters.apply(query, entity_ids)
-
-        return [
-            state
-            for state in execute(query)
-            if not state.attributes.get(ATTR_HIDDEN, False)
-        ]
+    return history.get_states(
+        hass, utc_point_in_time, entity_ids=None, run=None, filters=None
+    )
 
 
-def states_to_json(
-    hass, states, start_time, entity_ids, filters=None, include_start_time_state=True
-):
-    """Convert SQL results into JSON friendly data structure.
-
-    This takes our state list and turns it into a JSON friendly data
-    structure {'entity_id': [list of states], 'entity_id2': [list of states]}
-
-    We also need to go back and create a synthetic zero data point for
-    each list of states, otherwise our graphs won't start on the Y
-    axis correctly.
-    """
-    result = defaultdict(list)
-    # Set all entity IDs to empty lists in result set to maintain the order
-    if entity_ids is not None:
-        for ent_id in entity_ids:
-            result[ent_id] = []
-
-    # Get the states at the start time
-    timer_start = time.perf_counter()
-    if include_start_time_state:
-        for state in get_states(hass, start_time, entity_ids, filters=filters):
-            state.last_changed = start_time
-            state.last_updated = start_time
-            result[state.entity_id].append(state)
-
-    if _LOGGER.isEnabledFor(logging.DEBUG):
-        elapsed = time.perf_counter() - timer_start
-        _LOGGER.debug("getting %d first datapoints took %fs", len(result), elapsed)
-
-    # Append all changes to it
-    for ent_id, group in groupby(states, lambda state: state.entity_id):
-        result[ent_id].extend(group)
-
-    # Filter out the empty lists if some states had 0 results.
-    return {key: val for key, val in result.items() if val}
-
-
+@deprecated_function("homeassistant.components.recorder.history.get_state")
 def get_state(hass, utc_point_in_time, entity_id, run=None):
     """Return a state at a specific point in time."""
-    states = list(get_states(hass, utc_point_in_time, (entity_id,), run))
-    return states[0] if states else None
+    return history.get_state(hass, utc_point_in_time, entity_id, run=None)
 
 
 async def async_setup(hass, config):
     """Set up the history hooks."""
-    filters = Filters()
     conf = config.get(DOMAIN, {})
-    exclude = conf.get(CONF_EXCLUDE)
-    if exclude:
-        filters.excluded_entities = exclude.get(CONF_ENTITIES, [])
-        filters.excluded_domains = exclude.get(CONF_DOMAINS, [])
-    include = conf.get(CONF_INCLUDE)
-    if include:
-        filters.included_entities = include.get(CONF_ENTITIES, [])
-        filters.included_domains = include.get(CONF_DOMAINS, [])
+
+    filters = sqlalchemy_filter_from_include_exclude_conf(conf)
+
     use_include_order = conf.get(CONF_ORDER)
 
     hass.http.register_view(HistoryPeriodView(filters, use_include_order))
     hass.components.frontend.async_register_built_in_panel(
-        "history", "history", "hass:poll-box"
+        "history", "history", "hass:chart-box"
     )
+    hass.components.websocket_api.async_register_command(
+        ws_get_statistics_during_period
+    )
+    hass.components.websocket_api.async_register_command(ws_get_list_statistic_ids)
 
     return True
+
+
+@deprecated_class("homeassistant.components.recorder.models.LazyState")
+class LazyState(history_models.LazyState):
+    """A lazy version of core State."""
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "history/statistics_during_period",
+        vol.Required("start_time"): str,
+        vol.Optional("end_time"): str,
+        vol.Optional("statistic_ids"): [str],
+        vol.Required("period"): vol.Any("hour", "5minute"),
+    }
+)
+@websocket_api.async_response
+async def ws_get_statistics_during_period(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Handle statistics websocket command."""
+    start_time_str = msg["start_time"]
+    end_time_str = msg.get("end_time")
+
+    start_time = dt_util.parse_datetime(start_time_str)
+    if start_time:
+        start_time = dt_util.as_utc(start_time)
+    else:
+        connection.send_error(msg["id"], "invalid_start_time", "Invalid start_time")
+        return
+
+    if end_time_str:
+        end_time = dt_util.parse_datetime(end_time_str)
+        if end_time:
+            end_time = dt_util.as_utc(end_time)
+        else:
+            connection.send_error(msg["id"], "invalid_end_time", "Invalid end_time")
+            return
+    else:
+        end_time = None
+
+    statistics = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        start_time,
+        end_time,
+        msg.get("statistic_ids"),
+        msg.get("period"),
+    )
+    connection.send_result(msg["id"], statistics)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "history/list_statistic_ids",
+        vol.Optional("statistic_type"): vol.Any("sum", "mean"),
+    }
+)
+@websocket_api.async_response
+async def ws_get_list_statistic_ids(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Fetch a list of available statistic_id."""
+    statistic_ids = await hass.async_add_executor_job(
+        list_statistic_ids,
+        hass,
+        msg.get("statistic_type"),
+    )
+    connection.send_result(msg["id"], statistic_ids)
 
 
 class HistoryPeriodView(HomeAssistantView):
@@ -299,51 +189,96 @@ class HistoryPeriodView(HomeAssistantView):
         self.filters = filters
         self.use_include_order = use_include_order
 
-    async def get(self, request, datetime=None):
+    async def get(
+        self, request: web.Request, datetime: str | None = None
+    ) -> web.Response:
         """Return history over a period of time."""
-        timer_start = time.perf_counter()
+        datetime_ = None
         if datetime:
-            datetime = dt_util.parse_datetime(datetime)
+            datetime_ = dt_util.parse_datetime(datetime)
 
-            if datetime is None:
-                return self.json_message("Invalid datetime", HTTP_BAD_REQUEST)
+            if datetime_ is None:
+                return self.json_message("Invalid datetime", HTTPStatus.BAD_REQUEST)
 
         now = dt_util.utcnow()
 
         one_day = timedelta(days=1)
-        if datetime:
-            start_time = dt_util.as_utc(datetime)
+        if datetime_:
+            start_time = dt_util.as_utc(datetime_)
         else:
             start_time = now - one_day
 
         if start_time > now:
             return self.json([])
 
-        end_time = request.query.get("end_time")
-        if end_time:
-            end_time = dt_util.parse_datetime(end_time)
+        if end_time_str := request.query.get("end_time"):
+            end_time = dt_util.parse_datetime(end_time_str)
             if end_time:
                 end_time = dt_util.as_utc(end_time)
             else:
-                return self.json_message("Invalid end_time", HTTP_BAD_REQUEST)
+                return self.json_message("Invalid end_time", HTTPStatus.BAD_REQUEST)
         else:
             end_time = start_time + one_day
-        entity_ids = request.query.get("filter_entity_id")
-        if entity_ids:
-            entity_ids = entity_ids.lower().split(",")
+        entity_ids_str = request.query.get("filter_entity_id")
+        entity_ids = None
+        if entity_ids_str:
+            entity_ids = entity_ids_str.lower().split(",")
         include_start_time_state = "skip_initial_state" not in request.query
+        significant_changes_only = (
+            request.query.get("significant_changes_only", "1") != "0"
+        )
+
+        minimal_response = "minimal_response" in request.query
 
         hass = request.app["hass"]
 
-        result = await hass.async_add_job(
-            get_significant_states,
-            hass,
-            start_time,
-            end_time,
-            entity_ids,
-            self.filters,
-            include_start_time_state,
+        if (
+            not include_start_time_state
+            and entity_ids
+            and not _entities_may_have_state_changes_after(hass, entity_ids, start_time)
+        ):
+            return self.json([])
+
+        return cast(
+            web.Response,
+            await hass.async_add_executor_job(
+                self._sorted_significant_states_json,
+                hass,
+                start_time,
+                end_time,
+                entity_ids,
+                include_start_time_state,
+                significant_changes_only,
+                minimal_response,
+            ),
         )
+
+    def _sorted_significant_states_json(
+        self,
+        hass,
+        start_time,
+        end_time,
+        entity_ids,
+        include_start_time_state,
+        significant_changes_only,
+        minimal_response,
+    ):
+        """Fetch significant stats from the database as json."""
+        timer_start = time.perf_counter()
+
+        with session_scope(hass=hass) as session:
+            result = history.get_significant_states_with_session(
+                hass,
+                session,
+                start_time,
+                end_time,
+                entity_ids,
+                self.filters,
+                include_start_time_state,
+                significant_changes_only,
+                minimal_response,
+            )
+
         result = list(result.values())
         if _LOGGER.isEnabledFor(logging.DEBUG):
             elapsed = time.perf_counter() - timer_start
@@ -351,7 +286,7 @@ class HistoryPeriodView(HomeAssistantView):
 
         # Optionally reorder the result to respect the ordering given
         # by any entities explicitly included in the configuration.
-        if self.use_include_order:
+        if self.filters and self.use_include_order:
             sorted_result = []
             for order_entity in self.filters.included_entities:
                 for state_list in result:
@@ -362,7 +297,22 @@ class HistoryPeriodView(HomeAssistantView):
             sorted_result.extend(result)
             result = sorted_result
 
-        return await hass.async_add_job(self.json, result)
+        return self.json(result)
+
+
+def sqlalchemy_filter_from_include_exclude_conf(conf):
+    """Build a sql filter from config."""
+    filters = Filters()
+    if exclude := conf.get(CONF_EXCLUDE):
+        filters.excluded_entities = exclude.get(CONF_ENTITIES, [])
+        filters.excluded_domains = exclude.get(CONF_DOMAINS, [])
+        filters.excluded_entity_globs = exclude.get(CONF_ENTITY_GLOBS, [])
+    if include := conf.get(CONF_INCLUDE):
+        filters.included_entities = include.get(CONF_ENTITIES, [])
+        filters.included_domains = include.get(CONF_DOMAINS, [])
+        filters.included_entity_globs = include.get(CONF_ENTITY_GLOBS, [])
+
+    return filters if filters.has_config else None
 
 
 class Filters:
@@ -372,68 +322,87 @@ class Filters:
         """Initialise the include and exclude filters."""
         self.excluded_entities = []
         self.excluded_domains = []
+        self.excluded_entity_globs = []
+
         self.included_entities = []
         self.included_domains = []
+        self.included_entity_globs = []
 
-    def apply(self, query, entity_ids=None):
-        """Apply the include/exclude filter on domains and entities on query.
+    def apply(self, query):
+        """Apply the entity filter."""
+        if not self.has_config:
+            return query
 
-        Following rules apply:
-        * only the include section is configured - just query the specified
-          entities or domains.
-        * only the exclude section is configured - filter the specified
-          entities and domains from all the entities in the system.
-        * if include and exclude is defined - select the entities specified in
-          the include and filter out the ones from the exclude list.
-        """
-        from homeassistant.components.recorder.models import States
+        return query.filter(self.entity_filter())
 
-        # specific entities requested - do not in/exclude anything
-        if entity_ids is not None:
-            return query.filter(States.entity_id.in_(entity_ids))
-        query = query.filter(~States.domain.in_(IGNORE_DOMAINS))
-
-        filter_query = None
-        # filter if only excluded domain is configured
-        if self.excluded_domains and not self.included_domains:
-            filter_query = ~States.domain.in_(self.excluded_domains)
-            if self.included_entities:
-                filter_query &= States.entity_id.in_(self.included_entities)
-        # filter if only included domain is configured
-        elif not self.excluded_domains and self.included_domains:
-            filter_query = States.domain.in_(self.included_domains)
-            if self.included_entities:
-                filter_query |= States.entity_id.in_(self.included_entities)
-        # filter if included and excluded domain is configured
-        elif self.excluded_domains and self.included_domains:
-            filter_query = ~States.domain.in_(self.excluded_domains)
-            if self.included_entities:
-                filter_query &= States.domain.in_(
-                    self.included_domains
-                ) | States.entity_id.in_(self.included_entities)
-            else:
-                filter_query &= States.domain.in_(
-                    self.included_domains
-                ) & ~States.domain.in_(self.excluded_domains)
-        # no domain filter just included entities
-        elif (
-            not self.excluded_domains
-            and not self.included_domains
-            and self.included_entities
+    @property
+    def has_config(self):
+        """Determine if there is any filter configuration."""
+        if (
+            self.excluded_entities
+            or self.excluded_domains
+            or self.excluded_entity_globs
+            or self.included_entities
+            or self.included_domains
+            or self.included_entity_globs
         ):
-            filter_query = States.entity_id.in_(self.included_entities)
-        if filter_query is not None:
-            query = query.filter(filter_query)
-        # finally apply excluded entities filter if configured
+            return True
+
+        return False
+
+    def bake(self, baked_query):
+        """Update a baked query.
+
+        Works the same as apply on a baked_query.
+        """
+        if not self.has_config:
+            return
+
+        baked_query += lambda q: q.filter(self.entity_filter())
+
+    def entity_filter(self):
+        """Generate the entity filter query."""
+        includes = []
+        if self.included_domains:
+            includes.append(history_models.States.domain.in_(self.included_domains))
+        if self.included_entities:
+            includes.append(history_models.States.entity_id.in_(self.included_entities))
+        for glob in self.included_entity_globs:
+            includes.append(_glob_to_like(glob))
+
+        excludes = []
+        if self.excluded_domains:
+            excludes.append(history_models.States.domain.in_(self.excluded_domains))
         if self.excluded_entities:
-            query = query.filter(~States.entity_id.in_(self.excluded_entities))
-        return query
+            excludes.append(history_models.States.entity_id.in_(self.excluded_entities))
+        for glob in self.excluded_entity_globs:
+            excludes.append(_glob_to_like(glob))
+
+        if not includes and not excludes:
+            return None
+
+        if includes and not excludes:
+            return or_(*includes)
+
+        if not includes and excludes:
+            return not_(or_(*excludes))
+
+        return or_(*includes) & not_(or_(*excludes))
 
 
-def _is_significant(state):
-    """Test if state is significant for history charts.
+def _glob_to_like(glob_str):
+    """Translate glob to sql."""
+    return history_models.States.entity_id.like(glob_str.translate(GLOB_TO_SQL_CHARS))
 
-    Will only test for things that are not filtered out in SQL.
-    """
-    # scripts that are not cancellable will never change state
-    return state.domain != "script" or state.attributes.get(script.ATTR_CAN_CANCEL)
+
+def _entities_may_have_state_changes_after(
+    hass: HomeAssistant, entity_ids: Iterable, start_time: dt
+) -> bool:
+    """Check the state machine to see if entities have changed since start time."""
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+
+        if state is None or state.last_changed > start_time:
+            return True
+
+    return False

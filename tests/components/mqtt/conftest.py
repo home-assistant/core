@@ -1,12 +1,3 @@
 """Test fixtures for mqtt component."""
-import pytest
-
-from tests.common import async_mock_mqtt_component
-
-
-@pytest.fixture
-def mqtt_mock(loop, hass):
-    """Fixture to mock MQTT."""
-    client = loop.run_until_complete(async_mock_mqtt_component(hass))
-    client.reset_mock()
-    return client
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+from tests.components.light.conftest import mock_light_profiles  # noqa: F401

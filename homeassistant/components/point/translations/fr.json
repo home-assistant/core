@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible.",
+            "authorize_url_timeout": "D\u00e9lai de g\u00e9n\u00e9ration de l'URL d'authentification d\u00e9pass\u00e9.",
+            "external_setup": "Point correctement configur\u00e9 \u00e0 partir d\u2019un autre flux.",
+            "no_flows": "Le composant n'est pas configur\u00e9. Veuillez suivre la documentation.",
+            "unknown_authorize_url_generation": "Erreur inconnue lors de la g\u00e9n\u00e9ration d'une URL d'autorisation."
+        },
+        "create_entry": {
+            "default": "Authentification r\u00e9ussie"
+        },
+        "error": {
+            "follow_link": "Veuillez suivre le lien et vous authentifier avant d'appuyer sur Soumettre.",
+            "no_token": "Jeton d'acc\u00e8s non valide"
+        },
+        "step": {
+            "auth": {
+                "description": "Suivez le lien ci-dessous et **acceptez** l'acc\u00e8s \u00e0 votre compte Minut, puis revenez et appuyez sur **Envoyer** ci-dessous. \n\n [Lien] ( {authorization_url} )",
+                "title": "Point d'authentification"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Fournisseur"
+                },
+                "description": "Voulez-vous commencer la configuration ?",
+                "title": "S\u00e9lectionner une m\u00e9thode d'authentification"
+            }
+        }
+    }
+}

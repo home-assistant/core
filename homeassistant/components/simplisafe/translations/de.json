@@ -1,0 +1,54 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dieses SimpliSafe-Konto wird bereits verwendet.",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
+            "wrong_account": "Die angegebenen Benutzeranmeldeinformationen stimmen nicht mit diesem SimpliSafe-Konto \u00fcberein."
+        },
+        "error": {
+            "identifier_exists": "Konto bereits registriert",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "still_awaiting_mfa": "Immernoch warten auf MFA-E-Mail-Klick",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "input_auth_code": {
+                "data": {
+                    "auth_code": "Autorisierungscode"
+                },
+                "description": "Gib den Autorisierungscode von der URL der SimpliSafe-Webanwendung ein:",
+                "title": "Autorisierung abschlie\u00dfen"
+            },
+            "mfa": {
+                "description": "Pr\u00fcfe deine E-Mail auf einen Link von SimpliSafe. Kehre nach der Verifizierung des Links hierher zur\u00fcck, um die Installation der Integration abzuschlie\u00dfen.",
+                "title": "SimpliSafe Multi-Faktor-Authentifizierung"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passwort"
+                },
+                "description": "Dein Zugriffstoken ist abgelaufen oder wurde widerrufen. Gib dein Passwort ein, um dein Konto erneut zu verkn\u00fcpfen.",
+                "title": "Integration erneut authentifizieren"
+            },
+            "user": {
+                "data": {
+                    "code": "Code (wird in der Benutzeroberfl\u00e4che von Home Assistant verwendet)",
+                    "password": "Passwort",
+                    "username": "E-Mail"
+                },
+                "description": "Ab 2021 hat SimpliSafe auf einen neuen Authentifizierungsmechanismus \u00fcber seine Web-App umgestellt. Aufgrund technischer Einschr\u00e4nkungen gibt es am Ende dieses Prozesses einen manuellen Schritt; bitte stelle sicher, dass du die [Dokumentation](http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) liest, bevor du beginnst.\n\nWenn du bereit bist, klicke [hier]({url}), um die SimpliSafe-Webanwendung zu \u00f6ffnen und deine Anmeldedaten einzugeben. Wenn der Vorgang abgeschlossen ist, kehre hierher zur\u00fcck und klicke auf Senden.",
+                "title": "Gib deine Informationen ein"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Code (wird in der Benutzeroberfl\u00e4che von Home Assistant verwendet)"
+                },
+                "title": "Konfiguriere SimpliSafe"
+            }
+        }
+    }
+}

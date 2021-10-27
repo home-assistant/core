@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "address_already_configured": "Selle aadressiga ElkM1 on juba seadistatud",
+            "already_configured": "Selle eesliitega ElkM1 on juba seadistatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "address": "IP-aadress v\u00f5i domeen v\u00f5i jadaport, kui \u00fchendatakse jadaliidese kaudu.",
+                    "password": "Salas\u00f5na",
+                    "prefix": "Unikaalne eesliide (j\u00e4ta t\u00fchjaks kui on ainult \u00fcks ElkM1).",
+                    "protocol": "Protokoll",
+                    "temperature_unit": "ElkM1'i temperatuuri\u00fchik.",
+                    "username": "Kasutajanimi"
+                },
+                "description": "Aadressistring peab olema kujul \"aadress[:port]\" \"secure\" ja \"non-secure\" puhul. N\u00e4ide: \"192.168.1.1\". Port on valikuline ja vaikimisi 2101 \"secure\" ja 2601 \"non-secure puhul\". Jadaprotokolli puhul peab aadress olema kujul \"tty[:baud]\". N\u00e4ide: \"/dev/ttyS1\". Baud on valikuline ja vaikimisi 115200.",
+                "title": "\u00dchendu Elk-M1 Control"
+            }
+        }
+    }
+}

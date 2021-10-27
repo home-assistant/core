@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Le service est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "invalid_zip_code": "Code postal invalide"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "zip_code": "Code postal"
+                },
+                "description": "Entrez votre code postal am\u00e9ricain ou canadien.",
+                "title": "IQVIA"
+            }
+        }
+    }
+}

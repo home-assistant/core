@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt"
+        },
+        "error": {
+            "cannot_authenticate": "Authentifizierung nicht m\u00f6glich, ist das Gateway mit einem anderen Server wie z.B. Homekit gekoppelt?",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_key": "Registrierung mit angegebenem Schl\u00fcssel fehlgeschlagen. Wenn dies weiterhin geschieht, starte den Gateway neu.",
+            "timeout": "Timeout bei der \u00dcberpr\u00fcfung des Codes."
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "host": "Host",
+                    "security_code": "Sicherheitscode"
+                },
+                "description": "Du findest den Sicherheitscode auf der R\u00fcckseite deines Gateways.",
+                "title": "Sicherheitscode eingeben"
+            }
+        }
+    }
+}

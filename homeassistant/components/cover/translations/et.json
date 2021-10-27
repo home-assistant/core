@@ -1,0 +1,39 @@
+{
+    "device_automation": {
+        "action_type": {
+            "close": "Sule aknakate {entity_name}",
+            "close_tilt": "Sule aknakatte {entity_name} kaldribid",
+            "open": "Ava aknakate {entity_name}",
+            "open_tilt": "Ava aknakatte {entity_name} kaldribid",
+            "set_position": "M\u00e4\u00e4ra aknakatte {entity_name} asend",
+            "set_tilt_position": "M\u00e4\u00e4ra aknakatte {entity_name} kaldribide asend",
+            "stop": "Peata aknakatte {entity_name} liikumine"
+        },
+        "condition_type": {
+            "is_closed": "Aknakate {entity_name} on suletud",
+            "is_closing": "Aknakate {entity_name} sulgub",
+            "is_open": "Aknakate {entity_name} on avatud",
+            "is_opening": "Aknakate {entity_name} avaneb",
+            "is_position": "Aknakatte {entity_name} praegune asend on",
+            "is_tilt_position": "Aknakatte {entity_name} praegune kalle on"
+        },
+        "trigger_type": {
+            "closed": "Aknakate {entity_name} sulgus",
+            "closing": "Aknakate {entity_name} sulgub",
+            "opened": "Aknakate {entity_name} avanes",
+            "opening": "Aknakate {entity_name} avaneb",
+            "position": "Aknakatte {entity_name} asend muutub",
+            "tilt_position": "Aknakatte {entity_name} kalle muutub"
+        }
+    },
+    "state": {
+        "_": {
+            "closed": "Suletud",
+            "closing": "Aknakate sulgub",
+            "open": "Avatud",
+            "opening": "Avaneb",
+            "stopped": "Aknakate peatatus"
+        }
+    },
+    "title": "Kardin"
+}

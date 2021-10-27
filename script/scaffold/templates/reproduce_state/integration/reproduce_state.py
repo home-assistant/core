@@ -1,17 +1,18 @@
 """Reproduce an NEW_NAME state."""
+from __future__ import annotations
+
 import asyncio
 import logging
-from typing import Iterable, Optional
+from typing import Any, Iterable
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    STATE_ON,
-    STATE_OFF,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
 )
-from homeassistant.core import Context, State
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import Context, HomeAssistant, State
 
 from . import DOMAIN
 
@@ -22,7 +23,11 @@ VALID_STATES = {STATE_ON, STATE_OFF}
 
 
 async def _async_reproduce_state(
-    hass: HomeAssistantType, state: State, context: Optional[Context] = None
+    hass: HomeAssistant,
+    state: State,
+    *,
+    context: Context | None = None,
+    reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce a single state."""
     cur_state = hass.states.get(state.entity_id)
@@ -63,16 +68,25 @@ async def _async_reproduce_state(
 
 
 async def async_reproduce_states(
-    hass: HomeAssistantType, states: Iterable[State], context: Optional[Context] = None
+    hass: HomeAssistant,
+    states: Iterable[State],
+    *,
+    context: Context | None = None,
+    reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce NEW_NAME states."""
     # TODO pick one and remove other one
 
     # Reproduce states in parallel.
     await asyncio.gather(
-        *(_async_reproduce_state(hass, state, context) for state in states)
+        *(
+            _async_reproduce_state(
+                hass, state, context=context, reproduce_options=reproduce_options
+            )
+            for state in states
+        )
     )
 
     # Alternative: Reproduce states in sequence
     # for state in states:
-    #     await _async_reproduce_state(hass, state, context)
+    #     await _async_reproduce_state(hass, state, context=context, reproduce_options=reproduce_options)

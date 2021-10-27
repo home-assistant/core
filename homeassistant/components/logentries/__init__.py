@@ -1,13 +1,13 @@
 """Support for sending data to Logentries webhook endpoint."""
 import json
 import logging
-import requests
 
+import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_TOKEN, EVENT_STATE_CHANGED
 from homeassistant.helpers import state as state_helper
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,8 +28,7 @@ def setup(hass, config):
 
     def logentries_event_listener(event):
         """Listen for new messages on the bus and sends them to Logentries."""
-        state = event.data.get("new_state")
-        if state is None:
+        if (state := event.data.get("new_state")) is None:
             return
         try:
             _state = state_helper.state_as_number(state)

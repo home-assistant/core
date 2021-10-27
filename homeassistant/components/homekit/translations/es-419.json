@@ -1,0 +1,49 @@
+{
+    "config": {
+        "abort": {
+            "port_name_in_use": "Un puente con el mismo nombre o puerto ya est\u00e1 configurado."
+        },
+        "step": {
+            "pairing": {
+                "description": "Tan pronto como el puente {name} est\u00e9 listo, el emparejamiento estar\u00e1 disponible en \"Notificaciones\" como \"Configuraci\u00f3n del puente HomeKit\".",
+                "title": "Emparejar HomeKit Bridge"
+            },
+            "user": {
+                "data": {
+                    "include_domains": "Dominios para incluir"
+                },
+                "description": "Un HomeKit Bridge le permitir\u00e1 acceder a sus entidades de Home Assistant en HomeKit. Los puentes HomeKit est\u00e1n limitados a 150 accesorios por instancia, incluido el puente mismo. Si desea unir m\u00e1s de la cantidad m\u00e1xima de accesorios, se recomienda que use m\u00faltiples puentes HomeKit para diferentes dominios. La configuraci\u00f3n detallada de la entidad solo est\u00e1 disponible a trav\u00e9s de YAML para el puente primario.",
+                "title": "Activar HomeKit Bridge"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "advanced": {
+                "data": {
+                    "auto_start": "Inicio autom\u00e1tico (deshabilitar si se usa Z-Wave u otro sistema de inicio diferido)"
+                },
+                "description": "Esta configuraci\u00f3n solo necesita ser ajustada si el puente HomeKit no es funcional.",
+                "title": "Configuraci\u00f3n avanzada"
+            },
+            "cameras": {
+                "data": {
+                    "camera_copy": "C\u00e1maras compatibles con transmisiones H.264 nativas"
+                },
+                "description": "Verifique todas las c\u00e1maras que admiten transmisiones H.264 nativas. Si la c\u00e1mara no emite una transmisi\u00f3n H.264, el sistema transcodificar\u00e1 el video a H.264 para HomeKit. La transcodificaci\u00f3n requiere una CPU de alto rendimiento y es poco probable que funcione en computadoras de placa \u00fanica.",
+                "title": "Seleccione el c\u00f3dec de video de la c\u00e1mara."
+            },
+            "init": {
+                "data": {
+                    "include_domains": "Dominios para incluir"
+                },
+                "description": "Las entidades en los \"Dominios para incluir\" se vincular\u00e1n a HomeKit. Podr\u00e1 seleccionar qu\u00e9 entidades excluir de esta lista en la siguiente pantalla.",
+                "title": "Seleccione dominios para puentear."
+            },
+            "yaml": {
+                "description": "Esta entrada se controla a trav\u00e9s de YAML",
+                "title": "Ajuste las opciones de puente de HomeKit"
+            }
+        }
+    }
+}

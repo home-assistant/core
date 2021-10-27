@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "not_songpal_device": "Not a Songpal device"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "init": {
+                "description": "Do you want to set up {name} ({host})?"
+            },
+            "user": {
+                "data": {
+                    "endpoint": "Endpoint"
+                }
+            }
+        }
+    }
+}

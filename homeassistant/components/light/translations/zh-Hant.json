@@ -1,0 +1,27 @@
+{
+    "device_automation": {
+        "action_type": {
+            "brightness_decrease": "\u964d\u4f4e{entity_name}\u4eae\u5ea6",
+            "brightness_increase": "\u589e\u52a0{entity_name}\u4eae\u5ea6",
+            "flash": "\u9583\u52d5 {entity_name}",
+            "toggle": "\u5207\u63db{entity_name}",
+            "turn_off": "\u95dc\u9589{entity_name}",
+            "turn_on": "\u958b\u555f{entity_name}"
+        },
+        "condition_type": {
+            "is_off": "{entity_name}\u70ba\u95dc\u9589",
+            "is_on": "{entity_name}j\u70ba\u958b\u555f"
+        },
+        "trigger_type": {
+            "turned_off": "{entity_name}\u5df2\u95dc\u9589",
+            "turned_on": "{entity_name}\u5df2\u958b\u555f"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "\u5df2\u95dc\u71c8",
+            "on": "\u5df2\u958b\u71c8"
+        }
+    },
+    "title": "\u71c8\u5149"
+}

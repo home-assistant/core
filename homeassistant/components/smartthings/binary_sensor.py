@@ -1,9 +1,21 @@
 """Support for binary sensors through the SmartThings cloud API."""
-from typing import Optional, Sequence
+from __future__ import annotations
+
+from collections.abc import Sequence
 
 from pysmartthings import Attribute, Capability
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOISTURE,
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_MOVING,
+    DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_PRESENCE,
+    DEVICE_CLASS_PROBLEM,
+    DEVICE_CLASS_SOUND,
+    BinarySensorEntity,
+)
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
@@ -20,21 +32,19 @@ CAPABILITY_TO_ATTRIB = {
     Capability.water_sensor: Attribute.water,
 }
 ATTRIB_TO_CLASS = {
-    Attribute.acceleration: "moving",
-    Attribute.contact: "opening",
-    Attribute.filter_status: "problem",
-    Attribute.motion: "motion",
-    Attribute.presence: "presence",
-    Attribute.sound: "sound",
-    Attribute.tamper: "problem",
-    Attribute.valve: "opening",
-    Attribute.water: "moisture",
+    Attribute.acceleration: DEVICE_CLASS_MOVING,
+    Attribute.contact: DEVICE_CLASS_OPENING,
+    Attribute.filter_status: DEVICE_CLASS_PROBLEM,
+    Attribute.motion: DEVICE_CLASS_MOTION,
+    Attribute.presence: DEVICE_CLASS_PRESENCE,
+    Attribute.sound: DEVICE_CLASS_SOUND,
+    Attribute.tamper: DEVICE_CLASS_PROBLEM,
+    Attribute.valve: DEVICE_CLASS_OPENING,
+    Attribute.water: DEVICE_CLASS_MOISTURE,
 }
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Platform uses config entry setup."""
-    pass
+ATTRIB_TO_ENTTIY_CATEGORY = {
+    Attribute.tamper: ENTITY_CATEGORY_DIAGNOSTIC,
+}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -48,14 +58,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors)
 
 
-def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
+def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
     """Return all capabilities supported if minimum required are present."""
     return [
         capability for capability in CAPABILITY_TO_ATTRIB if capability in capabilities
     ]
 
 
-class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorDevice):
+class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorEntity):
     """Define a SmartThings Binary Sensor."""
 
     def __init__(self, device, attribute):
@@ -82,3 +92,8 @@ class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorDevice):
     def device_class(self):
         """Return the class of this device."""
         return ATTRIB_TO_CLASS[self._attribute]
+
+    @property
+    def entity_category(self):
+        """Return the entity category of this device."""
+        return ATTRIB_TO_ENTTIY_CATEGORY.get(self._attribute)

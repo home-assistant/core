@@ -1,10 +1,18 @@
 {
   "domain": "enphase_envoy",
-  "name": "Enphase envoy",
+  "name": "Enphase Envoy",
   "documentation": "https://www.home-assistant.io/integrations/enphase_envoy",
   "requirements": [
-    "envoy_reader==0.8.6"
+    "envoy_reader==0.20.0"
   ],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@gtdiehl"
+  ],
+  "config_flow": true,
+  "zeroconf": [
+    {
+      "type": "_enphase-envoy._tcp.local."
+    }
+  ],
+  "iot_class": "local_polling"
 }

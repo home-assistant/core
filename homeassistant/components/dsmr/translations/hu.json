@@ -1,0 +1,57 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "cannot_communicate": "Nem siker\u00fclt csatlakozni.",
+            "cannot_connect": "Nem siker\u00fclt csatlakozni"
+        },
+        "error": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "cannot_communicate": "Nem siker\u00fclt kommunik\u00e1lni",
+            "cannot_connect": "Nem siker\u00fclt csatlakozni",
+            "one": "\u00dcres",
+            "other": "\u00dcres"
+        },
+        "step": {
+            "one": "\u00dcres",
+            "other": "\u00dcres",
+            "setup_network": {
+                "data": {
+                    "dsmr_version": "DSMR verzi\u00f3 kiv\u00e1laszt\u00e1sa",
+                    "host": "C\u00edm",
+                    "port": "Port"
+                },
+                "title": "V\u00e1lassza ki a csatlakoz\u00e1si c\u00edmet"
+            },
+            "setup_serial": {
+                "data": {
+                    "dsmr_version": "DSMR verzi\u00f3 kiv\u00e1laszt\u00e1sa",
+                    "port": "Eszk\u00f6z kiv\u00e1laszt\u00e1sa"
+                },
+                "title": "Eszk\u00f6z"
+            },
+            "setup_serial_manual_path": {
+                "data": {
+                    "port": "USB eszk\u00f6z \u00fatvonala"
+                },
+                "title": "\u00datvonal"
+            },
+            "user": {
+                "data": {
+                    "type": "Kapcsolat t\u00edpusa"
+                },
+                "title": "V\u00e1lassza ki a kapcsolat t\u00edpus\u00e1t"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "time_between_update": "Minim\u00e1lis id\u0151 az entit\u00e1sfriss\u00edt\u00e9sek k\u00f6z\u00f6tt [mp]"
+                },
+                "title": "DSMR opci\u00f3k"
+            }
+        }
+    }
+}

@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "Fallo al conectar",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "user": {
+                "description": "\u00bfConfigurar la integraci\u00f3n VPN de Mullvad?"
+            }
+        }
+    }
+}

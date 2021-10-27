@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Silta on jo m\u00e4\u00e4ritetty"
+        },
+        "error": {
+            "cannot_connect": "Yhdist\u00e4minen ep\u00e4onnistui"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "host": "Palvelin",
+                    "security_code": "Turvakoodi"
+                },
+                "title": "Kirjoita suojakoodi"
+            }
+        }
+    }
+}

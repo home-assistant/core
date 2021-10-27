@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto on juba seadistatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
+        },
+        "error": {
+            "invalid_auth": "Tuvastamise viga",
+            "no_devices": "Kontolt ei leitud \u00fchtegi seadet",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Salas\u00f5na"
+                },
+                "description": "Sisesta uuesti {username} salas\u00f5na.",
+                "title": "Taastuvasta sidumine"
+            },
+            "user": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "title": "Sisesta oma teave"
+            }
+        }
+    }
+}

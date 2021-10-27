@@ -1,23 +1,24 @@
 """Config flow to configure Logi Circle component."""
 import asyncio
 from collections import OrderedDict
+from http import HTTPStatus
 
 import async_timeout
+from logi_circle import LogiCircle
+from logi_circle.exception import AuthorizationFailed
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import CONF_SENSORS
-from homeassistant.core import callback
-
-from .const import (
+from homeassistant.const import (
     CONF_API_KEY,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
-    CONF_REDIRECT_URI,
-    DEFAULT_CACHEDB,
-    DOMAIN,
+    CONF_SENSORS,
 )
+from homeassistant.core import callback
+
+from .const import CONF_REDIRECT_URI, DEFAULT_CACHEDB, DOMAIN
 
 _TIMEOUT = 15  # seconds
 
@@ -53,12 +54,10 @@ def register_flow_implementation(
     }
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class LogiCircleFlowHandler(config_entries.ConfigFlow):
+class LogiCircleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for Logi Circle component."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize flow."""
@@ -66,8 +65,7 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_import(self, user_input=None):
         """Handle external yaml configuration."""
-        if self.hass.config_entries.async_entries(DOMAIN):
-            return self.async_abort(reason="already_setup")
+        self._async_abort_entries_match()
 
         self.flow_impl = DOMAIN
 
@@ -77,11 +75,10 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
         """Handle a flow start."""
         flows = self.hass.data.get(DATA_FLOW_IMPL, {})
 
-        if self.hass.config_entries.async_entries(DOMAIN):
-            return self.async_abort(reason="already_setup")
+        self._async_abort_entries_match()
 
         if not flows:
-            return self.async_abort(reason="no_flows")
+            return self.async_abort(reason="missing_configuration")
 
         if len(flows) == 1:
             self.flow_impl = list(flows)[0]
@@ -98,7 +95,7 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_auth(self, user_input=None):
         """Create an entry for auth."""
-        if self.hass.config_entries.async_entries(DOMAIN):
+        if self._async_current_entries():
             return self.async_abort(reason="external_setup")
 
         external_error = self.hass.data[DATA_FLOW_IMPL][DOMAIN][EXTERNAL_ERRORS]
@@ -120,8 +117,6 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
 
     def _get_authorization_url(self):
         """Create temporary Circle session and generate authorization url."""
-        from logi_circle import LogiCircle
-
         flow = self.hass.data[DATA_FLOW_IMPL][self.flow_impl]
         client_id = flow[CONF_CLIENT_ID]
         client_secret = flow[CONF_CLIENT_SECRET]
@@ -141,16 +136,12 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_code(self, code=None):
         """Received code for authentication."""
-        if self.hass.config_entries.async_entries(DOMAIN):
-            return self.async_abort(reason="already_setup")
+        self._async_abort_entries_match()
 
         return await self._async_create_session(code)
 
     async def _async_create_session(self, code):
         """Create Logi Circle session and entries."""
-        from logi_circle import LogiCircle
-        from logi_circle.exception import AuthorizationFailed
-
         flow = self.hass.data[DATA_FLOW_IMPL][DOMAIN]
         client_id = flow[CONF_CLIENT_ID]
         client_secret = flow[CONF_CLIENT_SECRET]
@@ -170,10 +161,12 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
             with async_timeout.timeout(_TIMEOUT):
                 await logi_session.authorize(code)
         except AuthorizationFailed:
-            (self.hass.data[DATA_FLOW_IMPL][DOMAIN][EXTERNAL_ERRORS]) = "auth_error"
+            (self.hass.data[DATA_FLOW_IMPL][DOMAIN][EXTERNAL_ERRORS]) = "invalid_auth"
             return self.async_abort(reason="external_error")
         except asyncio.TimeoutError:
-            (self.hass.data[DATA_FLOW_IMPL][DOMAIN][EXTERNAL_ERRORS]) = "auth_timeout"
+            (
+                self.hass.data[DATA_FLOW_IMPL][DOMAIN][EXTERNAL_ERRORS]
+            ) = "authorize_url_timeout"
             return self.async_abort(reason="external_error")
 
         account_id = (await logi_session.account)["accountId"]
@@ -208,5 +201,6 @@ class LogiCircleAuthCallbackView(HomeAssistantView):
             )
             return self.json_message("Authorisation code saved")
         return self.json_message(
-            "Authorisation code missing " "from query string", status_code=400
+            "Authorisation code missing from query string",
+            status_code=HTTPStatus.BAD_REQUEST,
         )

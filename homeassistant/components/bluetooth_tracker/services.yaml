@@ -1,0 +1,3 @@
+update:
+  name: Update
+  description: Trigger manual tracker update

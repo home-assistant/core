@@ -13,7 +13,7 @@ from homeassistant.util import Throttle
 
 DOMAIN = "mychevy"
 UPDATE_TOPIC = DOMAIN
-ERROR_TOPIC = DOMAIN + "_error"
+ERROR_TOPIC = f"{DOMAIN}_error"
 
 MYCHEVY_SUCCESS = "success"
 MYCHEVY_ERROR = "error"
@@ -145,11 +145,11 @@ class MyChevyHub(threading.Thread):
                 _LOGGER.info("Starting mychevy loop")
                 self.update()
                 self.hass.helpers.dispatcher.dispatcher_send(UPDATE_TOPIC)
-                time.sleep(MIN_TIME_BETWEEN_UPDATES.seconds)
+                time.sleep(MIN_TIME_BETWEEN_UPDATES.total_seconds())
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception(
                     "Error updating mychevy data. "
                     "This probably means the OnStar link is down again"
                 )
                 self.hass.helpers.dispatcher.dispatcher_send(ERROR_TOPIC)
-                time.sleep(ERROR_SLEEP_TIME.seconds)
+                time.sleep(ERROR_SLEEP_TIME.total_seconds())

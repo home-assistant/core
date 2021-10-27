@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A hely m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "invalid_api_key": "\u00c9rv\u00e9nytelen API kulcs"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API kulcs",
+                    "elevation": "Magass\u00e1g",
+                    "latitude": "Sz\u00e9less\u00e9g",
+                    "longitude": "Hossz\u00fas\u00e1g"
+                },
+                "title": "T\u00f6ltse ki az adatait"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "from_window": "Kezd\u0151 UV index a v\u00e9d\u0151ablakhoz",
+                    "to_window": "A v\u00e9d\u0151ablak UV-index\u00e9nek v\u00e9ge"
+                },
+                "title": "Konfigur\u00e1lja az OpenUV-t"
+            }
+        }
+    }
+}

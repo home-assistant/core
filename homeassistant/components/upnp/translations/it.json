@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "incomplete_discovery": "Individuazione incompleta",
+            "no_devices_found": "Nessun dispositivo trovato sulla rete"
+        },
+        "error": {
+            "one": "Vuoto",
+            "other": "Vuoto"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "init": {
+                "one": "Pi\u00f9",
+                "other": "Altri"
+            },
+            "ssdp_confirm": {
+                "description": "Vuoi configurare questo dispositivo UPnP/IGD?"
+            },
+            "user": {
+                "data": {
+                    "scan_interval": "Intervallo di aggiornamento (secondi, minimo 30)",
+                    "unique_id": "Dispositivo",
+                    "usn": "Dispositivo"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Intervallo di aggiornamento (secondi, minimo 30)"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u670d\u52d9\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "radius": "\u534a\u5f91"
+                },
+                "title": "\u586b\u5beb\u7be9\u9078\u5668\u8cc7\u8a0a\u3002"
+            }
+        }
+    }
+}

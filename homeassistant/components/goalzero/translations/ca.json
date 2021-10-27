@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "invalid_host": "Nom de l'amfitri\u00f3 o adre\u00e7a IP inv\u00e0lids",
+            "unknown": "Error inesperat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_host": "Nom de l'amfitri\u00f3 o adre\u00e7a IP inv\u00e0lids",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "confirm_discovery": {
+                "description": "Es recomana que la reserva DHCP del router estigui configurada. Si no ho est\u00e0, pot ser que el dispositiu no estigui disponible mentre Home Assistant no detecti la nova IP. Consulta el manual del router.",
+                "title": "Goal Zero Yeti"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "name": "Nom"
+                },
+                "description": "En primer lloc, has de descarregar-te l'aplicaci\u00f3 Goal Zero: https://www.goalzero.com/product-features/yeti-app/ \n\nSegueix les instruccions per connectar el Yeti al teu Wi-Fi. Es recomana que la reserva DHCP del router estigui configurada, si no ho est\u00e0, pot ser que el dispositiu no estigui disponible mentre Home Assistant no detecti la nova IP. Consulta el manual del router.",
+                "title": "Goal Zero Yeti"
+            }
+        }
+    }
+}

@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba je ji\u017e nastavena",
+            "already_in_progress": "Konfigurace ji\u017e prob\u00edh\u00e1",
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "reauth_successful": "Op\u011btovn\u00e9 ov\u011b\u0159en\u00ed bylo \u00fasp\u011b\u0161n\u00e9"
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_access_token": "Neplatn\u00fd p\u0159\u00edstupov\u00fd token"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "create_token": "Automaticky vytvo\u0159it nov\u00fd token"
+                }
+            },
+            "create_token_external": {
+                "title": "P\u0159ijmout nov\u00fd token v u\u017eivatelsk\u00e9m rozhran\u00ed Hyperion"
+            },
+            "user": {
+                "data": {
+                    "host": "Hostitel",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

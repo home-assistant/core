@@ -1,244 +1,242 @@
-"""Support for the Awair indoor air quality monitor."""
+"""Support for Awair sensors."""
+from __future__ import annotations
 
-from datetime import timedelta
-import logging
-import math
-
-from python_awair import AwairClient
+from python_awair.devices import AwairDevice
 import voluptuous as vol
 
+from homeassistant.components.awair import AwairDataUpdateCoordinator, AwairResult
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_CONNECTIONS,
+    ATTR_NAME,
     CONF_ACCESS_TOKEN,
-    CONF_DEVICES,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
-    TEMP_CELSIUS,
 )
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle, dt
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    API_DUST,
+    API_PM25,
+    API_SCORE,
+    API_TEMP,
+    API_VOC,
+    ATTRIBUTION,
+    DOMAIN,
+    DUST_ALIASES,
+    LOGGER,
+    SENSOR_TYPE_SCORE,
+    SENSOR_TYPES,
+    SENSOR_TYPES_DUST,
+    AwairSensorEntityDescription,
+)
 
-ATTR_SCORE = "score"
-ATTR_TIMESTAMP = "timestamp"
-ATTR_LAST_API_UPDATE = "last_api_update"
-ATTR_COMPONENT = "component"
-ATTR_VALUE = "value"
-ATTR_SENSORS = "sensors"
-
-CONF_UUID = "uuid"
-
-DEVICE_CLASS_PM2_5 = "PM2.5"
-DEVICE_CLASS_PM10 = "PM10"
-DEVICE_CLASS_CARBON_DIOXIDE = "CO2"
-DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS = "VOC"
-DEVICE_CLASS_SCORE = "score"
-
-SENSOR_TYPES = {
-    "TEMP": {
-        "device_class": DEVICE_CLASS_TEMPERATURE,
-        "unit_of_measurement": TEMP_CELSIUS,
-        "icon": "mdi:thermometer",
-    },
-    "HUMID": {
-        "device_class": DEVICE_CLASS_HUMIDITY,
-        "unit_of_measurement": "%",
-        "icon": "mdi:water-percent",
-    },
-    "CO2": {
-        "device_class": DEVICE_CLASS_CARBON_DIOXIDE,
-        "unit_of_measurement": "ppm",
-        "icon": "mdi:periodic-table-co2",
-    },
-    "VOC": {
-        "device_class": DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
-        "unit_of_measurement": "ppb",
-        "icon": "mdi:cloud",
-    },
-    # Awair docs don't actually specify the size they measure for 'dust',
-    # but 2.5 allows the sensor to show up in HomeKit
-    "DUST": {
-        "device_class": DEVICE_CLASS_PM2_5,
-        "unit_of_measurement": "µg/m3",
-        "icon": "mdi:cloud",
-    },
-    "PM25": {
-        "device_class": DEVICE_CLASS_PM2_5,
-        "unit_of_measurement": "µg/m3",
-        "icon": "mdi:cloud",
-    },
-    "PM10": {
-        "device_class": DEVICE_CLASS_PM10,
-        "unit_of_measurement": "µg/m3",
-        "icon": "mdi:cloud",
-    },
-    "score": {
-        "device_class": DEVICE_CLASS_SCORE,
-        "unit_of_measurement": "%",
-        "icon": "mdi:percent",
-    },
-}
-
-AWAIR_QUOTA = 300
-
-# This is the minimum time between throttled update calls.
-# Don't bother asking us for state more often than that.
-SCAN_INTERVAL = timedelta(minutes=5)
-
-AWAIR_DEVICE_SCHEMA = vol.Schema({vol.Required(CONF_UUID): cv.string})
-
-PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_ACCESS_TOKEN): cv.string,
-        vol.Optional(CONF_DEVICES): vol.All(cv.ensure_list, [AWAIR_DEVICE_SCHEMA]),
-    }
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_ACCESS_TOKEN): cv.string},
+    extra=vol.ALLOW_EXTRA,
 )
 
 
-# Awair *heavily* throttles calls that get user information,
-# and calls that get the list of user-owned devices - they
-# allow 30 per DAY. So, we permit a user to provide a static
-# list of devices, and they may provide the same set of information
-# that the devices() call would return. However, the only thing
-# used at this time is the `uuid` value.
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Connect to the Awair API and find devices."""
-
-    token = config[CONF_ACCESS_TOKEN]
-    client = AwairClient(token, session=async_get_clientsession(hass))
-
-    try:
-        all_devices = []
-        devices = config.get(CONF_DEVICES, await client.devices())
-
-        # Try to throttle dynamically based on quota and number of devices.
-        throttle_minutes = math.ceil(60 / ((AWAIR_QUOTA / len(devices)) / 24))
-        throttle = timedelta(minutes=throttle_minutes)
-
-        for device in devices:
-            _LOGGER.debug("Found awair device: %s", device)
-            awair_data = AwairData(client, device[CONF_UUID], throttle)
-            await awair_data.async_update()
-            for sensor in SENSOR_TYPES:
-                if sensor in awair_data.data:
-                    awair_sensor = AwairSensor(awair_data, device, sensor, throttle)
-                    all_devices.append(awair_sensor)
-
-        async_add_entities(all_devices, True)
-        return
-    except AwairClient.AuthError:
-        _LOGGER.error("Awair API access_token invalid")
-    except AwairClient.RatelimitError:
-        _LOGGER.error("Awair API ratelimit exceeded.")
-    except (
-        AwairClient.QueryError,
-        AwairClient.NotFoundError,
-        AwairClient.GenericError,
-    ) as error:
-        _LOGGER.error("Unexpected Awair API error: %s", error)
-
-    raise PlatformNotReady
+    """Import Awair configuration from YAML."""
+    LOGGER.warning(
+        "Loading Awair via platform setup is deprecated; Please remove it from your configuration"
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
 
 
-class AwairSensor(Entity):
-    """Implementation of an Awair device."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+):
+    """Set up Awair sensor entity based on a config entry."""
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    entities = []
 
-    def __init__(self, data, device, sensor_type, throttle):
-        """Initialize the sensor."""
-        self._uuid = device[CONF_UUID]
-        self._device_class = SENSOR_TYPES[sensor_type]["device_class"]
-        self._name = f"Awair {self._device_class}"
-        unit = SENSOR_TYPES[sensor_type]["unit_of_measurement"]
-        self._unit_of_measurement = unit
-        self._data = data
-        self._type = sensor_type
-        self._throttle = throttle
+    data: list[AwairResult] = coordinator.data.values()
+    for result in data:
+        if result.air_data:
+            entities.append(AwairSensor(result.device, coordinator, SENSOR_TYPE_SCORE))
+            device_sensors = result.air_data.sensors.keys()
+            entities.extend(
+                [
+                    AwairSensor(result.device, coordinator, description)
+                    for description in (*SENSOR_TYPES, *SENSOR_TYPES_DUST)
+                    if description.key in device_sensors
+                ]
+            )
+
+            # The "DUST" sensor for Awair is a combo pm2.5/pm10 sensor only
+            # present on first-gen devices in lieu of separate pm2.5/pm10 sensors.
+            # We handle that by creating fake pm2.5/pm10 sensors that will always
+            # report identical values, and we let users decide how they want to use
+            # that data - because we can't really tell what kind of particles the
+            # "DUST" sensor actually detected. However, it's still useful data.
+            if API_DUST in device_sensors:
+                entities.extend(
+                    [
+                        AwairSensor(result.device, coordinator, description)
+                        for description in SENSOR_TYPES_DUST
+                    ]
+                )
+
+    async_add_entities(entities)
+
+
+class AwairSensor(CoordinatorEntity, SensorEntity):
+    """Defines an Awair sensor entity."""
+
+    entity_description: AwairSensorEntityDescription
+
+    def __init__(
+        self,
+        device: AwairDevice,
+        coordinator: AwairDataUpdateCoordinator,
+        description: AwairSensorEntityDescription,
+    ) -> None:
+        """Set up an individual AwairSensor."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._device = device
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         """Return the name of the sensor."""
-        return self._name
+        if self._device.name:
+            return f"{self._device.name} {self.entity_description.name}"
+
+        return self.entity_description.name
 
     @property
-    def device_class(self):
-        """Return the device class."""
-        return self._device_class
+    def unique_id(self) -> str:
+        """Return the uuid as the unique_id."""
+        unique_id_tag = self.entity_description.unique_id_tag
+
+        # This integration used to create a sensor that was labelled as a "PM2.5"
+        # sensor for first-gen Awair devices, but its unique_id reflected the truth:
+        # under the hood, it was a "DUST" sensor. So we preserve that specific unique_id
+        # for users with first-gen devices that are upgrading.
+        if (
+            self.entity_description.key == API_PM25
+            and API_DUST in self._air_data.sensors
+        ):
+            unique_id_tag = "DUST"
+
+        return f"{self._device.uuid}_{unique_id_tag}"
 
     @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return SENSOR_TYPES[self._type]["icon"]
+    def available(self) -> bool:
+        """Determine if the sensor is available based on API results."""
+        # If the last update was successful...
+        if self.coordinator.last_update_success and self._air_data:
+            # and the results included our sensor type...
+            sensor_type = self.entity_description.key
+            if sensor_type in self._air_data.sensors:
+                # then we are available.
+                return True
+
+            # or, we're a dust alias
+            if sensor_type in DUST_ALIASES and API_DUST in self._air_data.sensors:
+                return True
+
+            # or we are API_SCORE
+            if sensor_type == API_SCORE:
+                # then we are available.
+                return True
+
+        # Otherwise, we are not.
+        return False
 
     @property
-    def state(self):
-        """Return the state of the device."""
-        return self._data.data[self._type]
+    def native_value(self) -> float:
+        """Return the state, rounding off to reasonable values."""
+        state: float
+        sensor_type = self.entity_description.key
+
+        # Special-case for "SCORE", which we treat as the AQI
+        if sensor_type == API_SCORE:
+            state = self._air_data.score
+        elif sensor_type in DUST_ALIASES and API_DUST in self._air_data.sensors:
+            state = self._air_data.sensors.dust
+        else:
+            state = self._air_data.sensors[sensor_type]
+
+        if sensor_type in {API_VOC, API_SCORE}:
+            return round(state)
+
+        if sensor_type == API_TEMP:
+            return round(state, 1)
+
+        return round(state, 2)
 
     @property
-    def device_state_attributes(self):
-        """Return additional attributes."""
-        return self._data.attrs
+    def extra_state_attributes(self) -> dict:
+        """Return the Awair Index alongside state attributes.
 
-    # The Awair device should be reporting metrics in quite regularly.
-    # Based on the raw data from the API, it looks like every ~10 seconds
-    # is normal. Here we assert that the device is not available if the
-    # last known API timestamp is more than (3 * throttle) minutes in the
-    # past. It implies that either hass is somehow unable to query the API
-    # for new data or that the device is not checking in. Either condition
-    # fits the definition for 'not available'. We pick (3 * throttle) minutes
-    # to allow for transient errors to correct themselves.
+        The Awair Index is a subjective score ranging from 0-4 (inclusive) that
+        is is used by the Awair app when displaying the relative "safety" of a
+        given measurement. Each value is mapped to a color indicating the safety:
+
+            0: green
+            1: yellow
+            2: light-orange
+            3: orange
+            4: red
+
+        The API indicates that both positive and negative values may be returned,
+        but the negative values are mapped to identical colors as the positive values.
+        Knowing that, we just return the absolute value of a given index so that
+        users don't have to handle positive/negative values that ultimately "mean"
+        the same thing.
+
+        https://docs.developer.getawair.com/?version=latest#awair-score-and-index
+        """
+        sensor_type = self.entity_description.key
+        attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        if sensor_type in self._air_data.indices:
+            attrs["awair_index"] = abs(self._air_data.indices[sensor_type])
+        elif sensor_type in DUST_ALIASES and API_DUST in self._air_data.indices:
+            attrs["awair_index"] = abs(self._air_data.indices.dust)
+
+        return attrs
+
     @property
-    def available(self):
-        """Device availability based on the last update timestamp."""
-        if ATTR_LAST_API_UPDATE not in self.device_state_attributes:
-            return False
+    def device_info(self) -> DeviceInfo:
+        """Device information."""
+        info = DeviceInfo(
+            identifiers={(DOMAIN, self._device.uuid)},
+            manufacturer="Awair",
+            model=self._device.model,
+        )
 
-        last_api_data = self.device_state_attributes[ATTR_LAST_API_UPDATE]
-        return (dt.utcnow() - last_api_data) < (3 * self._throttle)
+        if self._device.name:
+            info[ATTR_NAME] = self._device.name
+
+        if self._device.mac_address:
+            info[ATTR_CONNECTIONS] = {
+                (dr.CONNECTION_NETWORK_MAC, self._device.mac_address)
+            }
+
+        return info
 
     @property
-    def unique_id(self):
-        """Return the unique id of this entity."""
-        return f"{self._uuid}_{self._type}"
+    def _air_data(self) -> AwairResult | None:
+        """Return the latest data for our device, or None."""
+        result: AwairResult | None = self.coordinator.data.get(self._device.uuid)
+        if result:
+            return result.air_data
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity."""
-        return self._unit_of_measurement
-
-    async def async_update(self):
-        """Get the latest data."""
-        await self._data.async_update()
-
-
-class AwairData:
-    """Get data from Awair API."""
-
-    def __init__(self, client, uuid, throttle):
-        """Initialize the data object."""
-        self._client = client
-        self._uuid = uuid
-        self.data = {}
-        self.attrs = {}
-        self.async_update = Throttle(throttle)(self._async_update)
-
-    async def _async_update(self):
-        """Get the data from Awair API."""
-        resp = await self._client.air_data_latest(self._uuid)
-
-        if not resp:
-            return
-
-        timestamp = dt.parse_datetime(resp[0][ATTR_TIMESTAMP])
-        self.attrs[ATTR_LAST_API_UPDATE] = timestamp
-        self.data[ATTR_SCORE] = resp[0][ATTR_SCORE]
-
-        # The air_data_latest call only returns one item, so this should
-        # be safe to only process one entry.
-        for sensor in resp[0][ATTR_SENSORS]:
-            self.data[sensor[ATTR_COMPONENT]] = round(sensor[ATTR_VALUE], 1)
-
-        _LOGGER.debug("Got Awair Data for %s: %s", self._uuid, self.data)
+        return None

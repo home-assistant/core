@@ -12,8 +12,6 @@ from homeassistant.auth.providers import (
     homeassistant as hass_auth,
 )
 
-from tests.common import mock_coro
-
 
 @pytest.fixture
 def data(hass):
@@ -156,9 +154,7 @@ async def test_get_or_create_credentials(hass, data):
     provider = manager.auth_providers[0]
     provider.data = data
     credentials1 = await provider.async_get_or_create_credentials({"username": "hello"})
-    with patch.object(
-        provider, "async_credentials", return_value=mock_coro([credentials1])
-    ):
+    with patch.object(provider, "async_credentials", return_value=[credentials1]):
         credentials2 = await provider.async_get_or_create_credentials(
             {"username": "hello "}
         )
@@ -264,17 +260,13 @@ async def test_legacy_get_or_create_credentials(hass, legacy_data):
     provider.data = legacy_data
     credentials1 = await provider.async_get_or_create_credentials({"username": "hello"})
 
-    with patch.object(
-        provider, "async_credentials", return_value=mock_coro([credentials1])
-    ):
+    with patch.object(provider, "async_credentials", return_value=[credentials1]):
         credentials2 = await provider.async_get_or_create_credentials(
             {"username": "hello"}
         )
     assert credentials1 is credentials2
 
-    with patch.object(
-        provider, "async_credentials", return_value=mock_coro([credentials1])
-    ):
+    with patch.object(provider, "async_credentials", return_value=[credentials1]):
         credentials3 = await provider.async_get_or_create_credentials(
             {"username": "hello "}
         )
@@ -284,7 +276,7 @@ async def test_legacy_get_or_create_credentials(hass, legacy_data):
 async def test_race_condition_in_data_loading(hass):
     """Test race condition in the hass_auth.Data loading.
 
-    Ref issue: https://github.com/home-assistant/home-assistant/issues/21569
+    Ref issue: https://github.com/home-assistant/core/issues/21569
     """
     counter = 0
 

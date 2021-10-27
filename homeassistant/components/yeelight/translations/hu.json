@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
+        "flow_title": "{model} {id} ({host})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani a {model} ({host}) szolg\u00e1ltat\u00e1st?"
+            },
+            "pick_device": {
+                "data": {
+                    "device": "Eszk\u00f6z"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "C\u00edm"
+                },
+                "description": "Ha nem ad meg c\u00edmet, akkor az eszk\u00f6z\u00f6k keres\u00e9se a felder\u00edt\u00e9ssel t\u00f6rt\u00e9nik."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "model": "Modell (opcion\u00e1lis)",
+                    "nightlight_switch": "Haszn\u00e1lja az \u00c9jszakai kapcsol\u00f3t",
+                    "save_on_change": "\u00c1llapot ment\u00e9se m\u00f3dos\u00edt\u00e1s ut\u00e1n",
+                    "transition": "\u00c1tmeneti id\u0151 (ms)",
+                    "use_music_mode": "Zene m\u00f3d enged\u00e9lyez\u00e9se"
+                },
+                "description": "Ha modellt \u00fcresen hagyja, a rendszer automatikusan \u00e9rz\u00e9keli."
+            }
+        }
+    }
+}

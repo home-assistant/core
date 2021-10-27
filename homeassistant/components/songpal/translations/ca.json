@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "not_songpal_device": "No \u00e9s un dispositiu Songpal"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "init": {
+                "description": "Vols configurar {name} ({host})?"
+            },
+            "user": {
+                "data": {
+                    "endpoint": "Endpoint"
+                }
+            }
+        }
+    }
+}

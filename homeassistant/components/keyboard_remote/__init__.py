@@ -1,13 +1,16 @@
 """Receive signals from a keyboard and use it as a remote control."""
 # pylint: disable=import-error
-import logging
 import asyncio
+from contextlib import suppress
+import logging
+import os
 
-from evdev import InputDevice, categorize, ecodes, list_devices
 import aionotify
+from evdev import InputDevice, categorize, ecodes, list_devices
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
+
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,6 +23,7 @@ ICON = "mdi:remote"
 
 KEY_CODE = "key_code"
 KEY_VALUE = {"key_up": 0, "key_down": 1, "key_hold": 2}
+KEY_VALUE_NAME = {value: key for key, value in KEY_VALUE.items()}
 KEYBOARD_REMOTE_COMMAND_RECEIVED = "keyboard_remote_command_received"
 KEYBOARD_REMOTE_CONNECTED = "keyboard_remote_connected"
 KEYBOARD_REMOTE_DISCONNECTED = "keyboard_remote_disconnected"
@@ -118,9 +122,11 @@ class KeyboardRemote:
         # add initial devices (do this AFTER starting watcher in order to
         # avoid race conditions leading to missing device connections)
         initial_start_monitoring = set()
-        descriptors = list_devices(DEVINPUT)
+        descriptors = await self.hass.async_add_executor_job(list_devices, DEVINPUT)
         for descriptor in descriptors:
-            dev, handler = self.get_device_handler(descriptor)
+            dev, handler = await self.hass.async_add_executor_job(
+                self.get_device_handler, descriptor
+            )
 
             if handler is None:
                 continue
@@ -156,7 +162,7 @@ class KeyboardRemote:
         # devices are often added and then correct permissions set after
         try:
             dev = InputDevice(descriptor)
-        except (OSError, PermissionError):
+        except OSError:
             return (None, None)
 
         handler = None
@@ -164,6 +170,15 @@ class KeyboardRemote:
             handler = self.handlers_by_descriptor[descriptor]
         elif dev.name in self.handlers_by_name:
             handler = self.handlers_by_name[dev.name]
+        else:
+            # check for symlinked paths matching descriptor
+            for test_descriptor, test_handler in self.handlers_by_descriptor.items():
+                if test_handler.dev is not None:
+                    fullpath = test_handler.dev.path
+                else:
+                    fullpath = os.path.realpath(test_descriptor)
+                if fullpath == descriptor:
+                    handler = test_handler
 
         return (dev, handler)
 
@@ -185,7 +200,9 @@ class KeyboardRemote:
                     (event.flags & aionotify.Flags.CREATE)
                     or (event.flags & aionotify.Flags.ATTRIB)
                 ) and not descriptor_active:
-                    dev, handler = self.get_device_handler(descriptor)
+                    dev, handler = await self.hass.async_add_executor_job(
+                        self.get_device_handler, descriptor
+                    )
                     if handler is None:
                         continue
                     self.active_handlers_by_descriptor[descriptor] = handler
@@ -220,7 +237,12 @@ class KeyboardRemote:
             while True:
                 self.hass.bus.async_fire(
                     KEYBOARD_REMOTE_COMMAND_RECEIVED,
-                    {KEY_CODE: code, DEVICE_DESCRIPTOR: path, DEVICE_NAME: name},
+                    {
+                        KEY_CODE: code,
+                        TYPE: "key_hold",
+                        DEVICE_DESCRIPTOR: path,
+                        DEVICE_NAME: name,
+                    },
                 )
                 await asyncio.sleep(repeat)
 
@@ -240,10 +262,8 @@ class KeyboardRemote:
         async def async_stop_monitoring(self):
             """Stop event monitoring task and issue event."""
             if self.monitor_task is not None:
-                try:
-                    self.dev.ungrab()
-                except OSError:
-                    pass
+                with suppress(OSError):
+                    await self.hass.async_add_executor_job(self.dev.ungrab)
                 # monitoring of the device form the event loop and closing of the
                 # device has to occur before cancelling the task to avoid
                 # triggering unhandled exceptions inside evdev coroutines
@@ -271,7 +291,7 @@ class KeyboardRemote:
 
             try:
                 _LOGGER.debug("Start device monitoring")
-                dev.grab()
+                await self.hass.async_add_executor_job(dev.grab)
                 async for event in dev.async_read_loop():
                     if event.type is ecodes.EV_KEY:
                         if event.value in self.key_values:
@@ -280,6 +300,7 @@ class KeyboardRemote:
                                 KEYBOARD_REMOTE_COMMAND_RECEIVED,
                                 {
                                     KEY_CODE: event.code,
+                                    TYPE: KEY_VALUE_NAME[event.value],
                                     DEVICE_DESCRIPTOR: dev.path,
                                     DEVICE_NAME: dev.name,
                                 },
@@ -298,11 +319,13 @@ class KeyboardRemote:
                                     self.emulate_key_hold_repeat,
                                 )
                             )
-                        elif event.value == KEY_VALUE["key_up"]:
-                            if event.code in repeat_tasks:
-                                repeat_tasks[event.code].cancel()
-                                del repeat_tasks[event.code]
-            except (OSError, PermissionError, asyncio.CancelledError):
+                        elif (
+                            event.value == KEY_VALUE["key_up"]
+                            and event.code in repeat_tasks
+                        ):
+                            repeat_tasks[event.code].cancel()
+                            del repeat_tasks[event.code]
+            except (OSError, asyncio.CancelledError):
                 # cancel key repeat tasks
                 for task in repeat_tasks.values():
                     task.cancel()

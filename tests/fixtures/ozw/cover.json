@@ -1,0 +1,25 @@
+{
+    "topic": "OpenZWave/1/node/37/instance/1/commandclass/38/value/625573905/",
+    "payload": {
+        "Label": "Instance 1: Level",
+        "Value": 0,
+        "Units": "",
+        "ValueSet": true,
+        "ValuePolled": false,
+        "ChangeVerified": false,
+        "Min": 0,
+        "Max": 255,
+        "Type": "Byte",
+        "Instance": 1,
+        "CommandClass": "COMMAND_CLASS_SWITCH_MULTILEVEL",
+        "Index": 0,
+        "Node": 37,
+        "Genre": "User",
+        "Help": "The Current Level of the Device",
+        "ValueIDKey": 625573905,
+        "ReadOnly": false,
+        "WriteOnly": false,
+        "Event": "valueChanged",
+        "TimeStamp": 1593370642
+    }
+}

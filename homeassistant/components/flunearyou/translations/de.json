@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Standort ist bereits konfiguriert"
+        },
+        "error": {
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Breitengrad",
+                    "longitude": "L\u00e4ngengrad"
+                },
+                "description": "\u00dcberwache benutzerbasierte und CDC-Berichte f\u00fcr ein Koordinatenpaar.",
+                "title": "Konfiguriere Grippe in deiner N\u00e4he"
+            }
+        }
+    }
+}

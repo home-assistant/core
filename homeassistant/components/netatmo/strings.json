@@ -1,0 +1,70 @@
+{
+  "config": {
+    "step": {
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Netatmo integration needs to re-authenticate your account"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    }
+  },
+  "options": {
+    "step": {
+      "public_weather": {
+        "data": {
+          "area_name": "Name of the area",
+          "lat_ne": "[%key:common::config_flow::data::latitude%] North-East corner",
+          "lon_ne": "[%key:common::config_flow::data::longitude%] North-East corner",
+          "lat_sw": "[%key:common::config_flow::data::latitude%] South-West corner",
+          "lon_sw": "[%key:common::config_flow::data::longitude%] South-West corner",
+          "mode": "Calculation",
+          "show_on_map": "Show on map"
+        },
+        "description": "Configure a public weather sensor for an area.",
+        "title": "Netatmo public weather sensor"
+      },
+      "public_weather_areas": {
+        "data": {
+          "new_area": "Area name",
+          "weather_areas": "Weather areas"
+        },
+        "description": "Configure public weather sensors.",
+        "title": "Netatmo public weather sensor"
+      }
+    }
+  },
+  "device_automation": {
+    "trigger_subtype": {
+      "away": "away",
+      "schedule": "schedule",
+      "hg": "frost guard"
+    },
+    "trigger_type": {
+      "turned_off": "{entity_name} turned off",
+      "turned_on": "{entity_name} turned on",
+      "human": "{entity_name} detected a human",
+      "movement": "{entity_name} detected movement",
+      "person": "{entity_name} detected a person",
+      "person_away": "{entity_name} detected a person has left",
+      "animal": "{entity_name} detected an animal",
+      "outdoor": "{entity_name} detected an outdoor event",
+      "vehicle": "{entity_name} detected a vehicle",
+      "alarm_started": "{entity_name} detected an alarm",
+      "set_point": "Target temperature {entity_name} set manually",
+      "cancel_set_point": "{entity_name} has resumed its schedule",
+      "therm_mode": "{entity_name} switched to \"{subtype}\""
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "already_in_progress": "Konfiguratioun's Oflaf ass schon am gaang",
+            "mqtt_required": "MQTT Integratioun ass net ageriicht",
+            "single_instance_allowed": "Scho konfigur\u00e9iert. N\u00ebmmen eng eenzeg Konfiguratioun ass m\u00e9iglech."
+        },
+        "step": {
+            "start_addon": {
+                "data": {
+                    "network_key": "Netzwierk Schl\u00ebssel"
+                }
+            }
+        }
+    }
+}

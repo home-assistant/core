@@ -1,6 +1,7 @@
 """Twitter platform for notify component."""
 from datetime import datetime, timedelta
 from functools import partial
+from http import HTTPStatus
 import json
 import logging
 import mimetypes
@@ -9,15 +10,14 @@ import os
 from TwitterAPI import TwitterAPI
 import voluptuous as vol
 
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_point_in_time
-
 from homeassistant.components.notify import (
     ATTR_DATA,
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_point_in_time
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ class TwitterNotificationService(BaseNotificationService):
         if self.user:
             user_resp = self.api.request("users/lookup", {"screen_name": self.user})
             user_id = user_resp.json()[0]["id"]
-            if user_resp.status_code != 200:
+            if user_resp.status_code != HTTPStatus.OK:
                 self.log_error_resp(user_resp)
             else:
                 _LOGGER.debug("Message posted: %s", user_resp.json())
@@ -109,7 +109,7 @@ class TwitterNotificationService(BaseNotificationService):
                 "statuses/update", {"status": message, "media_ids": media_id}
             )
 
-        if resp.status_code != 200:
+        if resp.status_code != HTTPStatus.OK:
             self.log_error_resp(resp)
         else:
             _LOGGER.debug("Message posted: %s", resp.json())
@@ -172,7 +172,7 @@ class TwitterNotificationService(BaseNotificationService):
         while bytes_sent < total_bytes:
             chunk = file.read(4 * 1024 * 1024)
             resp = self.upload_media_append(chunk, media_id, segment_id)
-            if resp.status_code not in range(200, 299):
+            if not HTTPStatus.OK <= resp.status_code < HTTPStatus.MULTIPLE_CHOICES:
                 self.log_error_resp_append(resp)
                 return None
             segment_id = segment_id + 1
@@ -201,8 +201,8 @@ class TwitterNotificationService(BaseNotificationService):
             {"command": "STATUS", "media_id": media_id},
             method_override="GET",
         )
-        if resp.status_code != 200:
-            _LOGGER.error("media processing error: %s", resp.json())
+        if resp.status_code != HTTPStatus.OK:
+            _LOGGER.error("Media processing error: %s", resp.json())
         processing_info = resp.json()["processing_info"]
 
         _LOGGER.debug("media processing %s status: %s", media_id, processing_info)

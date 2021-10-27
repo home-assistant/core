@@ -1,8 +1,8 @@
 {
   "domain": "sky_hub",
-  "name": "Sky hub",
+  "name": "Sky Hub",
   "documentation": "https://www.home-assistant.io/integrations/sky_hub",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["pyskyqhub==0.1.3"],
+  "codeowners": ["@rogerselwyn"],
+  "iot_class": "local_polling"
 }

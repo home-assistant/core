@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "install_app": "\u958b\u555f\u624b\u6a5f App \u4ee5\u9032\u884c Home Assistant \u6574\u5408\u8a2d\u5b9a\u3002\u8acb\u53c3\u95b1 [\u6587\u4ef6]({apps_url}) \u7372\u5f97\u652f\u63f4\u7684\u624b\u6a5f App \u5217\u8868\u3002"
+        },
+        "step": {
+            "confirm": {
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a\u624b\u6a5f App \u5143\u4ef6\uff1f"
+            }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "notify": "\u50b3\u9001\u901a\u77e5"
+        }
+    },
+    "title": "\u624b\u6a5f App"
+}

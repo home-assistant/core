@@ -1,0 +1,19 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_home": "{entity_name} \u5728\u5bb6",
+            "is_not_home": "{entity_name} \u4e0d\u5728\u5bb6"
+        },
+        "trigger_type": {
+            "enters": "{entity_name} \u8fdb\u5165\u6307\u5b9a\u533a\u57df",
+            "leaves": "{entity_name} \u79bb\u5f00\u6307\u5b9a\u533a\u57df"
+        }
+    },
+    "state": {
+        "_": {
+            "home": "\u5728\u5bb6",
+            "not_home": "\u79bb\u5f00"
+        }
+    },
+    "title": "\u8bbe\u5907\u8ddf\u8e2a\u5668"
+}

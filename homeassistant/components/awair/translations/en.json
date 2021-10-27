@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "no_devices_found": "No devices found on the network",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "invalid_access_token": "Invalid access token",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "access_token": "Access Token",
+                    "email": "Email"
+                },
+                "description": "Please re-enter your Awair developer access token."
+            },
+            "user": {
+                "data": {
+                    "access_token": "Access Token",
+                    "email": "Email"
+                },
+                "description": "You must register for an Awair developer access token at: https://developer.getawair.com/onboard/login"
+            }
+        }
+    }
+}

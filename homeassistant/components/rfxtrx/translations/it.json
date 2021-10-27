@@ -1,0 +1,90 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione.",
+            "cannot_connect": "Impossibile connettersi"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "one": "Pi\u00f9",
+            "other": "Altri"
+        },
+        "step": {
+            "one": "Pi\u00f9",
+            "other": "Altri",
+            "setup_network": {
+                "data": {
+                    "host": "Host",
+                    "port": "Porta"
+                },
+                "title": "Selezionare l'indirizzo di connessione"
+            },
+            "setup_serial": {
+                "data": {
+                    "device": "Selezionare il dispositivo"
+                },
+                "title": "Dispositivo"
+            },
+            "setup_serial_manual_path": {
+                "data": {
+                    "device": "Percorso del dispositivo USB"
+                },
+                "title": "Percorso"
+            },
+            "user": {
+                "data": {
+                    "type": "Tipo di connessione"
+                },
+                "title": "Selezionare il tipo di connessione"
+            }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "send_command": "Invia comando: {subtype}",
+            "send_status": "Invia aggiornamento di stato: {subtype}"
+        },
+        "trigger_type": {
+            "command": "Comando ricevuto: {subtype}",
+            "status": "Stato ricevuto: {subtype}"
+        }
+    },
+    "one": "Pi\u00f9",
+    "options": {
+        "error": {
+            "already_configured_device": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "invalid_event_code": "Codice evento non valido",
+            "invalid_input_2262_off": "Immissione non valida per il comando disattivato",
+            "invalid_input_2262_on": "Immissione non valida per il comando attivato",
+            "invalid_input_off_delay": "Immissione non valida per il ritardo di spegnimento",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "prompt_options": {
+                "data": {
+                    "automatic_add": "Attivare l'aggiunta automatica",
+                    "debug": "Attivare il debug",
+                    "device": "Selezionare il dispositivo da configurare",
+                    "event_code": "Inserire il codice dell'evento da aggiungere",
+                    "remove_device": "Selezionare il dispositivo da cancellare"
+                },
+                "title": "Opzioni Rfxtrx"
+            },
+            "set_device_options": {
+                "data": {
+                    "command_off": "Valore dei bit di dati per il comando disattivato",
+                    "command_on": "Valore dei bit di dati per il comando attivato",
+                    "data_bit": "Numero di bit di dati",
+                    "fire_event": "Abilita evento dispositivo",
+                    "off_delay": "Ritardo di spegnimento",
+                    "off_delay_enabled": "Attivare il ritardo di spegnimento",
+                    "replace_device": "Selezionare il dispositivo da sostituire",
+                    "signal_repetitions": "Numero di ripetizioni del segnale",
+                    "venetian_blind_mode": "Modalit\u00e0 veneziana"
+                },
+                "title": "Configurare le opzioni del dispositivo"
+            }
+        }
+    },
+    "other": "Altri"
+}

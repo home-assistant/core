@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Este roteador Vilfo j\u00e1 est\u00e1 configurado."
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar. Por favor, verifique as informa\u00e7\u00f5es fornecidas por voc\u00ea e tente novamente.",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida. Verifique o token de acesso e tente novamente.",
+            "unknown": "Ocorreu um erro inesperado ao configurar a integra\u00e7\u00e3o."
+        },
+        "step": {
+            "user": {
+                "title": "Conecte-se ao roteador Vilfo"
+            }
+        }
+    }
+}

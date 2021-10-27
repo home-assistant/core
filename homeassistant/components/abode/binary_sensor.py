@@ -1,24 +1,17 @@
 """Support for Abode Security System binary sensors."""
-import logging
-
 import abodepy.helpers.constants as CONST
-import abodepy.helpers.timeline as TIMELINE
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_WINDOW,
+    BinarySensorEntity,
+)
 
-from . import AbodeAutomation, AbodeDevice
+from . import AbodeDevice
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Platform uses config entry setup."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up a sensor for an Abode device."""
+    """Set up Abode binary sensor devices."""
     data = hass.data[DOMAIN]
 
     device_types = [
@@ -29,22 +22,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         CONST.TYPE_OPENING,
     ]
 
-    devices = []
+    entities = []
 
     for device in data.abode.get_devices(generic_type=device_types):
-        devices.append(AbodeBinarySensor(data, device))
+        entities.append(AbodeBinarySensor(data, device))
 
-    for automation in data.abode.get_automations(generic_type=CONST.TYPE_QUICK_ACTION):
-        devices.append(
-            AbodeQuickActionBinarySensor(
-                data, automation, TIMELINE.AUTOMATION_EDIT_GROUP
-            )
-        )
-
-    async_add_entities(devices)
+    async_add_entities(entities)
 
 
-class AbodeBinarySensor(AbodeDevice, BinarySensorDevice):
+class AbodeBinarySensor(AbodeDevice, BinarySensorEntity):
     """A binary sensor implementation for Abode device."""
 
     @property
@@ -55,17 +41,6 @@ class AbodeBinarySensor(AbodeDevice, BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of the binary sensor."""
+        if self._device.get_value("is_window") == "1":
+            return DEVICE_CLASS_WINDOW
         return self._device.generic_type
-
-
-class AbodeQuickActionBinarySensor(AbodeAutomation, BinarySensorDevice):
-    """A binary sensor implementation for Abode quick action automations."""
-
-    def trigger(self):
-        """Trigger a quick automation."""
-        self._automation.trigger()
-
-    @property
-    def is_on(self):
-        """Return True if the binary sensor is on."""
-        return self._automation.is_active

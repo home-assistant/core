@@ -1,0 +1,18 @@
+{
+    "system_health": {
+        "info": {
+            "arch": "CPU \u67b6\u69cb",
+            "dev": "\u958b\u767c\u7248",
+            "docker": "Docker",
+            "hassio": "Supervisor",
+            "installation_type": "\u5b89\u88dd\u985e\u578b",
+            "os_name": "\u4f5c\u696d\u7cfb\u7d71\u5bb6\u65cf",
+            "os_version": "\u4f5c\u696d\u7cfb\u7d71\u7248\u672c",
+            "python_version": "Python \u7248\u672c",
+            "timezone": "\u6642\u5340",
+            "user": "\u4f7f\u7528\u8005",
+            "version": "\u7248\u672c",
+            "virtualenv": "\u865b\u64ec\u74b0\u5883"
+        }
+    }
+}

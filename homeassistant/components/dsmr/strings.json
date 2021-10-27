@@ -1,0 +1,53 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "type": "Connection type"
+        },
+        "title": "Select connection type"
+      },
+      "setup_network": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "dsmr_version": "Select DSMR version"
+        },
+        "title": "Select connection address"
+      },
+      "setup_serial": {
+        "data": {
+          "port": "Select device",
+          "dsmr_version": "Select DSMR version"
+        },
+        "title": "Device"
+      },
+      "setup_serial_manual_path": {
+        "data": {
+          "port": "[%key:common::config_flow::data::usb_path%]"
+        },
+        "title": "Path"
+      }
+    },
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "cannot_communicate": "Failed to communicate"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "cannot_communicate": "Failed to communicate"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "time_between_update": "Minimum time between entity updates [s]"
+        },
+        "title": "DSMR Options"
+      }
+    }
+  }
+}

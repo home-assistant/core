@@ -1,0 +1,38 @@
+{
+    "topic": "OpenZWave/1/node/37/instance/1/commandclass/113/value/1970325463777300/",
+    "payload": {
+        "Label": "Home Security",
+        "Value": {
+            "List": [
+                {
+                    "Value": 0,
+                    "Label": "Clear"
+                },
+                {
+                    "Value": 8,
+                    "Label": "Motion Detected at Unknown Location"
+                }
+            ],
+            "Selected": "Motion Detected at Unknown Location",
+            "Selected_id": 8
+        },
+        "Units": "",
+        "Min": 0,
+        "Max": 0,
+        "Type": "List",
+        "Instance": 1,
+        "CommandClass": "COMMAND_CLASS_NOTIFICATION",
+        "Index": 7,
+        "Node": 37,
+        "Genre": "User",
+        "Help": "Home Security Alerts",
+        "ValueIDKey": 1970325463777300,
+        "ReadOnly": false,
+        "WriteOnly": false,
+        "ValueSet": false,
+        "ValuePolled": false,
+        "ChangeVerified": false,
+        "Event": "valueAdded",
+        "TimeStamp": 1579566891
+    }
+}

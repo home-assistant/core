@@ -1,0 +1,18 @@
+# Describes the format for available openhome services
+
+invoke_pin:
+  name: Invoke PIN
+  description: Invoke a pin on the specified device.
+  target:
+    entity:
+      integration: openhome
+      domain: media_player
+  fields:
+    pin:
+      name: PIN
+      description: Which pin to invoke
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 1000

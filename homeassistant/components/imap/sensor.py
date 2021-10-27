@@ -6,7 +6,7 @@ from aioimaplib import IMAP4_SSL, AioImapException
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -16,7 +16,6 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,11 +57,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if not await sensor.connection():
         raise PlatformNotReady
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, sensor.shutdown())
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, sensor.shutdown)
     async_add_entities([sensor], True)
 
 
-class ImapSensor(Entity):
+class ImapSensor(SensorEntity):
     """Representation of an IMAP sensor."""
 
     def __init__(self, name, user, password, server, port, charset, folder, search):
@@ -96,7 +95,7 @@ class ImapSensor(Entity):
         return ICON
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the number of emails found."""
         return self._email_count
 
@@ -130,7 +129,7 @@ class ImapSensor(Entity):
             try:
                 if await self.connection():
                     await self.refresh_email_count()
-                    await self.async_update_ha_state()
+                    self.async_write_ha_state()
 
                     idle = await self._connection.idle_start()
                     await self._connection.wait_server_push()
@@ -138,7 +137,7 @@ class ImapSensor(Entity):
                     with async_timeout.timeout(10):
                         await idle
                 else:
-                    await self.async_update_ha_state()
+                    self.async_write_ha_state()
             except (AioImapException, asyncio.TimeoutError):
                 self.disconnected()
 
@@ -162,7 +161,7 @@ class ImapSensor(Entity):
                 self._email_count = len(lines[0].split())
             else:
                 _LOGGER.error(
-                    "Can't parse IMAP server response to search " "'%s':  %s / %s",
+                    "Can't parse IMAP server response to search '%s':  %s / %s",
                     self._search,
                     result,
                     lines[0],
@@ -173,7 +172,7 @@ class ImapSensor(Entity):
         _LOGGER.warning("Lost %s (will attempt to reconnect)", self._server)
         self._connection = None
 
-    async def shutdown(self):
+    async def shutdown(self, *_):
         """Close resources."""
         if self._connection:
             if self._connection.has_pending_idle():

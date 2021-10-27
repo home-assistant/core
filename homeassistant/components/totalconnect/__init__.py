@@ -1,59 +1,50 @@
 """The totalconnect component."""
-import logging
-
-import voluptuous as vol
 from total_connect_client import TotalConnectClient
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers import discovery
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
+import homeassistant.helpers.config_validation as cv
+
+from .const import CONF_USERCODES, DOMAIN
+
+PLATFORMS = ["alarm_control_panel", "binary_sensor"]
+
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
-_LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "totalconnect"
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-TOTALCONNECT_PLATFORMS = ["alarm_control_panel"]
-
-
-def setup(hass, config):
-    """Set up TotalConnect component."""
-    conf = config[DOMAIN]
-
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up upon config entry in user interface."""
+    conf = entry.data
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
 
-    client = TotalConnectClient.TotalConnectClient(username, password)
+    if CONF_USERCODES not in conf:
+        # should only happen for those who used UI before we added usercodes
+        raise ConfigEntryAuthFailed("No usercodes in TotalConnect configuration")
 
-    if client.token is False:
-        _LOGGER.error("TotalConnect authentication failed")
-        return False
+    temp_codes = conf[CONF_USERCODES]
+    usercodes = {int(code): temp_codes[code] for code in temp_codes}
+    client = await hass.async_add_executor_job(
+        TotalConnectClient.TotalConnectClient, username, password, usercodes
+    )
 
-    hass.data[DOMAIN] = TotalConnectSystem(username, password, client)
+    if not client.is_valid_credentials():
+        raise ConfigEntryAuthFailed("TotalConnect authentication failed")
 
-    for platform in TOTALCONNECT_PLATFORMS:
-        discovery.load_platform(hass, platform, DOMAIN, {}, config)
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = client
+
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-class TotalConnectSystem:
-    """TotalConnect System class."""
+async def async_unload_entry(hass, entry: ConfigEntry):
+    """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
 
-    def __init__(self, username, password, client):
-        """Initialize the TotalConnect system."""
-        self._username = username
-        self._password = password
-        self.client = client
+    return unload_ok

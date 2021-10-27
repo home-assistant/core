@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "no_results": "Ingen resultater. Pr\u00f8v med en annen stasjon/adresse"
+        },
+        "step": {
+            "station": {
+                "data": {
+                    "station": "Stasjon/adresse"
+                },
+                "title": "Angi stasjon/adresse"
+            },
+            "station_select": {
+                "data": {
+                    "station": "Stasjon/adresse"
+                },
+                "title": "Velg Stasjon/adresse"
+            },
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                },
+                "title": "Koble til HVV API"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "filter": "Velg linjer",
+                    "offset": "Offset (minutter)",
+                    "real_time": "Bruk sanntidsdata"
+                },
+                "description": "Endre alternativer for denne avgangssensoren",
+                "title": "Alternativer"
+            }
+        }
+    }
+}

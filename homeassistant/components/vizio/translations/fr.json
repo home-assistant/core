@@ -1,0 +1,54 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "cannot_connect": "\u00c9chec de connexion",
+            "updated_entry": "Cette entr\u00e9e a d\u00e9j\u00e0 \u00e9t\u00e9 configur\u00e9e mais le nom et/ou les options d\u00e9finis dans la configuration ne correspondent pas \u00e0 la configuration pr\u00e9c\u00e9demment import\u00e9e, de sorte que l'entr\u00e9e de configuration a \u00e9t\u00e9 mise \u00e0 jour en cons\u00e9quence."
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "complete_pairing_failed": "Impossible de terminer l'appairage. Assurez-vous que le code PIN que vous avez fourni est correct, que le t\u00e9l\u00e9viseur est toujours aliment\u00e9 et connect\u00e9 au r\u00e9seau avant de tenter \u00e0 nouveau.",
+            "existing_config_entry_found": "Une entr\u00e9e de configuration existante Appareil VIZIO Smartcast avec le m\u00eame num\u00e9ro de s\u00e9rie a d\u00e9j\u00e0 \u00e9t\u00e9 configur\u00e9e. Vous devez supprimer l'entr\u00e9e existante pour configurer celle-ci."
+        },
+        "step": {
+            "pair_tv": {
+                "data": {
+                    "pin": "Code PIN"
+                },
+                "description": "Votre t\u00e9l\u00e9viseur devrait afficher un code. Saisissez ce code dans le formulaire, puis passez \u00e0 l'\u00e9tape suivante pour terminer le couplage.",
+                "title": "Processus de couplage complet"
+            },
+            "pairing_complete": {
+                "description": "Votre Appareil VIZIO Smartcast est maintenant connect\u00e9 \u00e0 Home Assistant.",
+                "title": "Appairage termin\u00e9"
+            },
+            "pairing_complete_import": {
+                "description": "Votre Appareil VIZIO Smartcast est maintenant connect\u00e9 \u00e0 Home Assistant.\n\nVotre Jeton d'acc\u00e8s est '**{access_token}**'.",
+                "title": "Appairage termin\u00e9"
+            },
+            "user": {
+                "data": {
+                    "access_token": "Jeton d'acc\u00e8s",
+                    "device_class": "Type d'appareil",
+                    "host": "H\u00f4te",
+                    "name": "Nom"
+                },
+                "description": "Un jeton d'acc\u00e8s n'est n\u00e9cessaire que pour les t\u00e9l\u00e9viseurs. Si vous configurez un t\u00e9l\u00e9viseur et que vous n'avez pas encore de jeton d'acc\u00e8s, laissez-le vide pour passer par un processus de couplage.",
+                "title": "Appareil VIZIO Smartcast"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "apps_to_include_or_exclude": "Applications \u00e0 inclure ou \u00e0 exclure",
+                    "include_or_exclude": "Inclure ou exclure des applications?",
+                    "volume_step": "Taille du pas de volume"
+                },
+                "description": "Si vous avez une Smart TV, vous pouvez \u00e9ventuellement filtrer votre liste de sources en choisissant les applications \u00e0 inclure ou \u00e0 exclure dans votre liste de sources.",
+                "title": "Mettre \u00e0 jour les options de Vizo SmartCast"
+            }
+        }
+    }
+}

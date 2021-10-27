@@ -1,8 +1,7 @@
 {
   "domain": "lannouncer",
-  "name": "Lannouncer",
+  "name": "LANnouncer",
   "documentation": "https://www.home-assistant.io/integrations/lannouncer",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_push"
 }

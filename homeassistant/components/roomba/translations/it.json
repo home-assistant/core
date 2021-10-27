@@ -1,0 +1,63 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "cannot_connect": "Impossibile connettersi",
+            "not_irobot_device": "Il dispositivo rilevato non \u00e8 un dispositivo iRobot",
+            "short_blid": "Il BLID \u00e8 stato troncato"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Seleziona un Roomba o un Braava.",
+                "title": "Connettiti automaticamente al dispositivo"
+            },
+            "link": {
+                "description": "Tieni premuto il pulsante Home su {name} fino a quando il dispositivo non genera un suono (circa due secondi), quindi invialo entro 30 secondi.",
+                "title": "Recupera password"
+            },
+            "link_manual": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "La password non pu\u00f2 essere recuperata automaticamente dal dispositivo. Segui le istruzioni indicate sulla documentazione a: {auth_help_url}",
+                "title": "Inserisci la password"
+            },
+            "manual": {
+                "data": {
+                    "blid": "BLID",
+                    "host": "Host"
+                },
+                "description": "Nessun Roomba o Braava \u00e8 stato rilevato sulla rete.",
+                "title": "Connettiti manualmente al dispositivo"
+            },
+            "user": {
+                "data": {
+                    "blid": "BLID",
+                    "continuous": "Continuo",
+                    "delay": "Ritardo",
+                    "host": "Host",
+                    "password": "Password"
+                },
+                "description": "Seleziona un Roomba o un Braava.",
+                "title": "Connetti automaticamente al dispositivo"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "continuous": "Continuo",
+                    "delay": "Ritardo"
+                }
+            }
+        }
+    }
+}

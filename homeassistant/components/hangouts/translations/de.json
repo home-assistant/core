@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Der Dienst ist bereits konfiguriert",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "error": {
+            "invalid_2fa": "Ung\u00fcltige 2-Faktor Authentifizierung, bitte versuche es erneut.",
+            "invalid_2fa_method": "Ung\u00fcltige 2FA Methode (mit Telefon verifizieren)",
+            "invalid_login": "Ung\u00fcltiges Login, bitte versuche es erneut."
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "2FA PIN"
+                },
+                "description": "Leer",
+                "title": "2-Faktor-Authentifizierung"
+            },
+            "user": {
+                "data": {
+                    "authorization_code": "Autorisierungscode (f\u00fcr die manuelle Authentifizierung erforderlich)",
+                    "email": "E-Mail",
+                    "password": "Passwort"
+                },
+                "description": "Leer",
+                "title": "Google Hangouts Login"
+            }
+        }
+    }
+}

@@ -1,10 +1,8 @@
 {
   "domain": "comfoconnect",
-  "name": "Comfoconnect",
+  "name": "Zehnder ComfoAir Q",
   "documentation": "https://www.home-assistant.io/integrations/comfoconnect",
-  "requirements": [
-    "pycomfoconnect==0.3"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["pycomfoconnect==0.4"],
+  "codeowners": ["@michaelarnauts"],
+  "iot_class": "local_push"
 }

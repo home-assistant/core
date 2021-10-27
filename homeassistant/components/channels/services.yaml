@@ -1,0 +1,33 @@
+seek_forward:
+  name: Seek forward
+  description: Seek forward by a set number of seconds.
+  target:
+    entity:
+      integration: channels
+      domain: media_player
+
+seek_backward:
+  name: Seek backward
+  description: Seek backward by a set number of seconds.
+  target:
+    entity:
+      integration: channels
+      domain: media_player
+
+seek_by:
+  name: Seek by
+  description: Seek by an inputted number of seconds.
+  target:
+    entity:
+      integration: channels
+      domain: media_player
+  fields:
+    seconds:
+      name: Seconds
+      description: Number of seconds to seek by. Negative numbers seek backwards.
+      required: true
+      selector:
+        number:
+          min: -3600
+          max: 3600
+          unit_of_measurement: seconds

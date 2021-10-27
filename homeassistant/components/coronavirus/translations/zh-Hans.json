@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u6b64\u56fd\u5bb6/\u5730\u533a\u5df2\u914d\u7f6e\u5b8c\u6210\u3002",
+            "cannot_connect": "\u8fde\u63a5\u5931\u8d25"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "country": "\u56fd\u5bb6/\u5730\u533a"
+                },
+                "title": "\u8bf7\u9009\u62e9\u8981\u76d1\u63a7\u7684\u56fd\u5bb6/\u5730\u533a"
+            }
+        }
+    }
+}

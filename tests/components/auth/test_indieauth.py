@@ -6,7 +6,6 @@ import pytest
 
 from homeassistant.components.auth import indieauth
 
-from tests.common import mock_coro
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -113,9 +112,7 @@ async def test_verify_redirect_uri():
         None, "http://ex.com", "http://ex.com/callback"
     )
 
-    with patch.object(
-        indieauth, "fetch_redirect_uris", side_effect=lambda *_: mock_coro([])
-    ):
+    with patch.object(indieauth, "fetch_redirect_uris", return_value=[]):
         # Different domain
         assert not await indieauth.verify_redirect_uri(
             None, "http://ex.com", "http://different.com/callback"
@@ -166,3 +163,23 @@ async def test_find_link_tag_max_size(hass, mock_session):
     redirect_uris = await indieauth.fetch_redirect_uris(hass, "http://127.0.0.1:8000")
 
     assert redirect_uris == ["http://127.0.0.1:8000/wine"]
+
+
+@pytest.mark.parametrize(
+    "client_id",
+    ["https://home-assistant.io/android", "https://home-assistant.io/iOS"],
+)
+async def test_verify_redirect_uri_android_ios(client_id):
+    """Test that we verify redirect uri correctly for Android/iOS."""
+    with patch.object(indieauth, "fetch_redirect_uris", return_value=[]):
+        assert await indieauth.verify_redirect_uri(
+            None, client_id, "homeassistant://auth-callback"
+        )
+
+        assert not await indieauth.verify_redirect_uri(
+            None, client_id, "homeassistant://something-else"
+        )
+
+        assert not await indieauth.verify_redirect_uri(
+            None, "https://incorrect.com", "homeassistant://auth-callback"
+        )

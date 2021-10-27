@@ -1,0 +1,161 @@
+light_fade_start:
+  name: Start light fade
+  description: Start fading a light either up or down from current brightness.
+  target:
+    entity:
+      integration: upb
+      domain: light
+  fields:
+    brightness:
+      name: Brightness
+      description: Number indicating brightness, where 0 turns the light off, 1 is the minimum brightness and 255 is the maximum brightness.
+      selector:
+        number:
+          min: 0
+          max: 255
+    brightness_pct:
+      name: Brightness percentage
+      description: Number indicating percentage of full brightness, where 0 turns the light off, 1 is the minimum brightness and 100 is the maximum brightness.
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: '%'
+    rate:
+      name: Rate
+      description: Rate for light to transition to new brightness
+      default: -1
+      selector:
+        number:
+          min: -1
+          max: 3600
+          step: 0.01
+          unit_of_measurement: seconds
+
+light_fade_stop:
+  name: Stop light fade
+  description: Stop a light fade.
+  target:
+    entity:
+      integration: upb
+      domain: light
+
+light_blink:
+  name: Blink light
+  description: Blink a light
+  target:
+    entity:
+      integration: upb
+      domain: light
+  fields:
+    rate:
+      name: Rate
+      description: Amount of time that the link flashes on.
+      default: 0.5
+      selector:
+        number:
+          min: 0
+          max: 4.25
+          step: 0.01
+          unit_of_measurement: seconds
+
+link_deactivate:
+  name: Deactivate link
+  description: Deactivate a UPB scene.
+  target:
+    entity:
+      integration: upb
+      domain: light
+
+link_goto:
+  name: Go to link
+  description: Set scene to brightness.
+  target:
+    entity:
+      integration: upb
+      domain: scene
+  fields:
+    brightness:
+      name: Brightness
+      description: Number indicating brightness, where 0 turns the scene off, 1 is the minimum brightness and 255 is the maximum brightness.
+      selector:
+        number:
+          min: 0
+          max: 255
+    brightness_pct:
+      name: Brightness percentage
+      description: Number indicating percentage of full brightness, where 0 turns the scene off, 1 is the minimum brightness and 100 is the maximum brightness.
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: '%'
+    rate:
+      name: Rate
+      description: Amount of time for scene to transition to new brightness
+      selector:
+        number:
+          min: -1
+          max: 3600
+          step: 0.01
+          unit_of_measurement: seconds
+
+link_fade_start:
+  name: Start link fade
+  description: Start fading a link either up or down from current brightness.
+  target:
+    entity:
+      integration: upb
+      domain: scene
+  fields:
+    brightness:
+      name: Brightness
+      description: Number indicating brightness, where 0 turns the scene off, 1 is the minimum brightness and 255 is the maximum brightness.
+      selector:
+        number:
+          min: 0
+          max: 255
+    brightness_pct:
+      name: Brightness percentage
+      description: Number indicating percentage of full brightness, where 0 turns the scene off, 1 is the minimum brightness and 100 is the maximum brightness.
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: '%'
+    rate:
+      name: Rate
+      description: Amount of time for scene to transition to new brightness
+      selector:
+        number:
+          min: -1
+          max: 3600
+          step: 0.01
+          unit_of_measurement: seconds
+
+link_fade_stop:
+  name: Stop link fade
+  description: Stop a link fade.
+  target:
+    entity:
+      integration: upb
+      domain: scene
+
+link_blink:
+  name: Blink link
+  description: Blink a link.
+  target:
+    entity:
+      integration: upb
+      domain: scene
+  fields:
+    blink_rate:
+      name: Blink rate
+      description: Amount of time that the link flashes on.
+      default: 0.5
+      selector:
+        number:
+          min: 0
+          max: 4.25
+          step: 0.01
+          unit_of_measurement: seconds

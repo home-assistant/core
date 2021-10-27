@@ -1,0 +1,17 @@
+{
+    "system_health": {
+        "info": {
+            "alexa_enabled": "Alexa aktivert",
+            "can_reach_cert_server": "N\u00e5 sertifikatserver",
+            "can_reach_cloud": "N\u00e5 Home Assistant Cloud",
+            "can_reach_cloud_auth": "N\u00e5 godkjenningsserver",
+            "google_enabled": "Google aktivert",
+            "logged_in": "Logget inn",
+            "relayer_connected": "Relayer tilkoblet",
+            "remote_connected": "Ekstern tilkobling",
+            "remote_enabled": "Ekstern aktivert",
+            "remote_server": "Ekstern server",
+            "subscription_expiration": "Abonnementets utl\u00f8p"
+        }
+    }
+}

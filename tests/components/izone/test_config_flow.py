@@ -5,9 +5,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.izone.const import IZONE, DISPATCH_CONTROLLER_DISCOVERED
-
-from tests.common import mock_coro
+from homeassistant.components.izone.const import DISPATCH_CONTROLLER_DISCOVERED, IZONE
 
 
 @pytest.fixture
@@ -24,7 +22,7 @@ def _mock_start_discovery(hass, mock_disco):
 
     def do_disovered(*args):
         async_dispatcher_send(hass, DISPATCH_CONTROLLER_DISCOVERED, True)
-        return mock_coro(mock_disco)
+        return mock_disco
 
     return do_disovered
 
@@ -33,10 +31,10 @@ async def test_not_found(hass, mock_disco):
     """Test not finding iZone controller."""
 
     with patch(
-        "homeassistant.components.izone.discovery.async_start_discovery_service"
+        "homeassistant.components.izone.config_flow.async_start_discovery_service"
     ) as start_disco, patch(
-        "homeassistant.components.izone.discovery.async_stop_discovery_service",
-        return_value=mock_coro(),
+        "homeassistant.components.izone.config_flow.async_stop_discovery_service",
+        return_value=None,
     ) as stop_disco:
         start_disco.side_effect = _mock_start_discovery(hass, mock_disco)
         result = await hass.config_entries.flow.async_init(
@@ -60,12 +58,12 @@ async def test_found(hass, mock_disco):
 
     with patch(
         "homeassistant.components.izone.climate.async_setup_entry",
-        return_value=mock_coro(True),
+        return_value=True,
     ) as mock_setup, patch(
-        "homeassistant.components.izone.discovery.async_start_discovery_service"
+        "homeassistant.components.izone.config_flow.async_start_discovery_service"
     ) as start_disco, patch(
         "homeassistant.components.izone.async_start_discovery_service",
-        return_value=mock_coro(),
+        return_value=None,
     ):
         start_disco.side_effect = _mock_start_discovery(hass, mock_disco)
         result = await hass.config_entries.flow.async_init(

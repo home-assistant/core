@@ -1,81 +1,147 @@
 """Support for deCONZ binary sensors."""
-from pydeconz.sensor import Presence, Vibration
+from pydeconz.sensor import (
+    Alarm,
+    CarbonMonoxide,
+    Fire,
+    GenericFlag,
+    OpenClose,
+    Presence,
+    Vibration,
+    Water,
+)
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_GAS,
+    DEVICE_CLASS_MOISTURE,
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_SMOKE,
+    DEVICE_CLASS_TAMPER,
+    DEVICE_CLASS_VIBRATION,
+    DOMAIN,
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
+from homeassistant.const import ATTR_TEMPERATURE, ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import ATTR_DARK, ATTR_ON, NEW_SENSOR
+from .const import ATTR_DARK, ATTR_ON
 from .deconz_device import DeconzDevice
-from .gateway import get_gateway_from_config_entry, DeconzEntityHandler
+from .gateway import get_gateway_from_config_entry
+
+DECONZ_BINARY_SENSORS = (
+    Alarm,
+    CarbonMonoxide,
+    Fire,
+    GenericFlag,
+    OpenClose,
+    Presence,
+    Vibration,
+    Water,
+)
 
 ATTR_ORIENTATION = "orientation"
 ATTR_TILTANGLE = "tiltangle"
 ATTR_VIBRATIONSTRENGTH = "vibrationstrength"
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up deCONZ platforms."""
+ENTITY_DESCRIPTIONS = {
+    CarbonMonoxide: BinarySensorEntityDescription(
+        key="carbonmonoxide",
+        device_class=DEVICE_CLASS_GAS,
+    ),
+    Fire: BinarySensorEntityDescription(
+        key="fire",
+        device_class=DEVICE_CLASS_SMOKE,
+    ),
+    OpenClose: BinarySensorEntityDescription(
+        key="openclose",
+        device_class=DEVICE_CLASS_OPENING,
+    ),
+    Presence: BinarySensorEntityDescription(
+        key="presence",
+        device_class=DEVICE_CLASS_MOTION,
+    ),
+    Vibration: BinarySensorEntityDescription(
+        key="vibration",
+        device_class=DEVICE_CLASS_VIBRATION,
+    ),
+    Water: BinarySensorEntityDescription(
+        key="water",
+        device_class=DEVICE_CLASS_MOISTURE,
+    ),
+}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ binary sensor."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
-
-    entity_handler = DeconzEntityHandler(gateway)
+    gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_sensor(sensors, new=True):
+    def async_add_sensor(sensors=gateway.api.sensors.values()):
         """Add binary sensor from deCONZ."""
         entities = []
 
         for sensor in sensors:
 
-            if new and sensor.BINARY:
-                new_sensor = DeconzBinarySensor(sensor, gateway)
-                entity_handler.add_entity(new_sensor)
-                entities.append(new_sensor)
+            if not gateway.option_allow_clip_sensor and sensor.type.startswith("CLIP"):
+                continue
 
-        async_add_entities(entities, True)
+            if (
+                isinstance(sensor, DECONZ_BINARY_SENSORS)
+                and sensor.unique_id not in gateway.entities[DOMAIN]
+            ):
+                entities.append(DeconzBinarySensor(sensor, gateway))
 
-    gateway.listeners.append(
+            if sensor.tampered is not None:
+                known_tampering_sensors = set(gateway.entities[DOMAIN])
+                new_tampering_sensor = DeconzTampering(sensor, gateway)
+                if new_tampering_sensor.unique_id not in known_tampering_sensors:
+                    entities.append(new_tampering_sensor)
+
+        if entities:
+            async_add_entities(entities)
+
+    config_entry.async_on_unload(
         async_dispatcher_connect(
-            hass, gateway.async_signal_new_device(NEW_SENSOR), async_add_sensor
+            hass,
+            gateway.signal_new_sensor,
+            async_add_sensor,
         )
     )
 
-    async_add_sensor(gateway.api.sensors.values())
+    async_add_sensor(
+        [gateway.api.sensors[key] for key in sorted(gateway.api.sensors, key=int)]
+    )
 
 
-class DeconzBinarySensor(DeconzDevice, BinarySensorDevice):
+class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
     """Representation of a deCONZ binary sensor."""
 
+    TYPE = DOMAIN
+
+    def __init__(self, device, gateway):
+        """Initialize deCONZ binary sensor."""
+        super().__init__(device, gateway)
+
+        if entity_description := ENTITY_DESCRIPTIONS.get(type(device)):
+            self.entity_description = entity_description
+
     @callback
-    def async_update_callback(self, force_update=False):
+    def async_update_callback(self):
         """Update the sensor's state."""
-        changed = set(self._device.changed_keys)
         keys = {"on", "reachable", "state"}
-        if force_update or any(key in changed for key in keys):
-            self.async_schedule_update_ha_state()
+        if self._device.changed_keys.intersection(keys):
+            super().async_update_callback()
 
     @property
     def is_on(self):
         """Return true if sensor is on."""
-        return self._device.is_tripped
+        return self._device.state
 
     @property
-    def device_class(self):
-        """Return the class of the sensor."""
-        return self._device.SENSOR_CLASS
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return self._device.SENSOR_ICON
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         attr = {}
 
@@ -85,12 +151,46 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorDevice):
         if self._device.secondary_temperature is not None:
             attr[ATTR_TEMPERATURE] = self._device.secondary_temperature
 
-        if self._device.type in Presence.ZHATYPE and self._device.dark is not None:
-            attr[ATTR_DARK] = self._device.dark
+        if isinstance(self._device, Presence):
 
-        elif self._device.type in Vibration.ZHATYPE:
+            if self._device.dark is not None:
+                attr[ATTR_DARK] = self._device.dark
+
+        elif isinstance(self._device, Vibration):
             attr[ATTR_ORIENTATION] = self._device.orientation
-            attr[ATTR_TILTANGLE] = self._device.tiltangle
-            attr[ATTR_VIBRATIONSTRENGTH] = self._device.vibrationstrength
+            attr[ATTR_TILTANGLE] = self._device.tilt_angle
+            attr[ATTR_VIBRATIONSTRENGTH] = self._device.vibration_strength
 
         return attr
+
+
+class DeconzTampering(DeconzDevice, BinarySensorEntity):
+    """Representation of a deCONZ tampering sensor."""
+
+    TYPE = DOMAIN
+
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_device_class = DEVICE_CLASS_TAMPER
+
+    def __init__(self, device, gateway):
+        """Initialize deCONZ binary sensor."""
+        super().__init__(device, gateway)
+
+        self._attr_name = f"{self._device.name} Tampered"
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique identifier for this device."""
+        return f"{self.serial}-tampered"
+
+    @callback
+    def async_update_callback(self) -> None:
+        """Update the sensor's state."""
+        keys = {"tampered", "reachable"}
+        if self._device.changed_keys.intersection(keys):
+            super().async_update_callback()
+
+    @property
+    def is_on(self) -> bool:
+        """Return the state of the sensor."""
+        return self._device.tampered

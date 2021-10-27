@@ -2,7 +2,6 @@
   "domain": "pioneer",
   "name": "Pioneer",
   "documentation": "https://www.home-assistant.io/integrations/pioneer",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

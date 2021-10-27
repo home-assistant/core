@@ -1,26 +1,20 @@
 """Support for binary sensor using RPi GPIO."""
-import logging
-
+import requests
 import voluptuous as vol
 
-import requests
-
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_HOST
-from homeassistant.components.binary_sensor import BinarySensorDevice, PLATFORM_SCHEMA
-
 import homeassistant.helpers.config_validation as cv
 
 from . import (
     CONF_BOUNCETIME,
-    CONF_PULL_MODE,
     CONF_INVERT_LOGIC,
+    CONF_PULL_MODE,
     DEFAULT_BOUNCETIME,
     DEFAULT_INVERT_LOGIC,
     DEFAULT_PULL_MODE,
 )
 from .. import remote_rpi_gpio
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_PORTS = "ports"
 
@@ -48,37 +42,37 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     devices = []
     for port_num, port_name in ports.items():
         try:
-            button = remote_rpi_gpio.setup_input(
+            remote_sensor = remote_rpi_gpio.setup_input(
                 address, port_num, pull_mode, bouncetime
             )
         except (ValueError, IndexError, KeyError, OSError):
             return
-        new_sensor = RemoteRPiGPIOBinarySensor(port_name, button, invert_logic)
+        new_sensor = RemoteRPiGPIOBinarySensor(port_name, remote_sensor, invert_logic)
         devices.append(new_sensor)
 
     add_entities(devices, True)
 
 
-class RemoteRPiGPIOBinarySensor(BinarySensorDevice):
+class RemoteRPiGPIOBinarySensor(BinarySensorEntity):
     """Represent a binary sensor that uses a Remote Raspberry Pi GPIO."""
 
-    def __init__(self, name, button, invert_logic):
+    def __init__(self, name, sensor, invert_logic):
         """Initialize the RPi binary sensor."""
         self._name = name
         self._invert_logic = invert_logic
         self._state = False
-        self._button = button
+        self._sensor = sensor
 
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
 
         def read_gpio():
             """Read state from GPIO."""
-            self._state = remote_rpi_gpio.read_input(self._button)
+            self._state = remote_rpi_gpio.read_input(self._sensor)
             self.schedule_update_ha_state()
 
-        self._button.when_released = read_gpio
-        self._button.when_pressed = read_gpio
+        self._sensor.when_deactivated = read_gpio
+        self._sensor.when_activated = read_gpio
 
     @property
     def should_poll(self):
@@ -103,6 +97,6 @@ class RemoteRPiGPIOBinarySensor(BinarySensorDevice):
     def update(self):
         """Update the GPIO state."""
         try:
-            self._state = remote_rpi_gpio.read_input(self._button)
+            self._state = remote_rpi_gpio.read_input(self._sensor)
         except requests.exceptions.ConnectionError:
             return

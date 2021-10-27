@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548"
+        },
+        "flow_title": "{device} ({ip_address})",
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP \u4f4d\u5740",
+                    "password": "\u5bc6\u78bc",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "description": "\u8acb\u65bc\u4e0b\u65b9\u63d0\u4f9b\u6240\u9700\u8cc7\u8a0a\u3002",
+                "title": "\u8a2d\u5b9a Gogogate2 \u6216 ismartgate"
+            }
+        }
+    }
+}

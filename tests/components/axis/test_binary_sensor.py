@@ -1,110 +1,71 @@
 """Axis binary sensor platform tests."""
 
-from unittest.mock import Mock
-
-from homeassistant import config_entries
-from homeassistant.components import axis
+from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOTION,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+)
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 
-import homeassistant.components.binary_sensor as binary_sensor
-
-EVENTS = [
-    {
-        "operation": "Initialized",
-        "topic": "tns1:Device/tnsaxis:Sensor/PIR",
-        "source": "sensor",
-        "source_idx": "0",
-        "type": "state",
-        "value": "0",
-    },
-    {
-        "operation": "Initialized",
-        "topic": "tnsaxis:CameraApplicationPlatform/VMD/Camera1Profile1",
-        "type": "active",
-        "value": "1",
-    },
-]
-
-ENTRY_CONFIG = {
-    axis.CONF_DEVICE: {
-        axis.config_flow.CONF_HOST: "1.2.3.4",
-        axis.config_flow.CONF_USERNAME: "user",
-        axis.config_flow.CONF_PASSWORD: "pass",
-        axis.config_flow.CONF_PORT: 80,
-    },
-    axis.config_flow.CONF_MAC: "1234ABCD",
-    axis.config_flow.CONF_MODEL: "model",
-    axis.config_flow.CONF_NAME: "model 0",
-}
-
-ENTRY_OPTIONS = {
-    axis.CONF_CAMERA: False,
-    axis.CONF_EVENTS: True,
-    axis.CONF_TRIGGER_TIME: 0,
-}
-
-
-async def setup_device(hass):
-    """Load the Axis binary sensor platform."""
-    from axis import AxisDevice
-
-    loop = Mock()
-
-    config_entry = config_entries.ConfigEntry(
-        1,
-        axis.DOMAIN,
-        "Mock Title",
-        ENTRY_CONFIG,
-        "test",
-        config_entries.CONN_CLASS_LOCAL_PUSH,
-        system_options={},
-        options=ENTRY_OPTIONS,
-    )
-    device = axis.AxisNetworkDevice(hass, config_entry)
-    device.api = AxisDevice(loop=loop, **config_entry.data[axis.CONF_DEVICE])
-    hass.data[axis.DOMAIN] = {device.serial: device}
-    device.api.enable_events(event_callback=device.async_event_callback)
-
-    await hass.config_entries.async_forward_entry_setup(config_entry, "binary_sensor")
-    # To flush out the service call to update the group
-    await hass.async_block_till_done()
-
-    return device
+from .test_device import NAME, setup_axis_integration
 
 
 async def test_platform_manually_configured(hass):
     """Test that nothing happens when platform is manually configured."""
     assert (
         await async_setup_component(
-            hass, binary_sensor.DOMAIN, {"binary_sensor": {"platform": axis.DOMAIN}}
+            hass,
+            BINARY_SENSOR_DOMAIN,
+            {BINARY_SENSOR_DOMAIN: {"platform": AXIS_DOMAIN}},
         )
         is True
     )
 
-    assert axis.DOMAIN not in hass.data
+    assert AXIS_DOMAIN not in hass.data
 
 
 async def test_no_binary_sensors(hass):
     """Test that no sensors in Axis results in no sensor entities."""
-    await setup_device(hass)
+    await setup_axis_integration(hass)
 
-    assert len(hass.states.async_all()) == 0
+    assert not hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)
 
 
-async def test_binary_sensors(hass):
+async def test_binary_sensors(hass, mock_rtsp_event):
     """Test that sensors are loaded properly."""
-    device = await setup_device(hass)
+    await setup_axis_integration(hass)
 
-    for event in EVENTS:
-        device.api.stream.event.manage_event(event)
+    mock_rtsp_event(
+        topic="tns1:Device/tnsaxis:Sensor/PIR",
+        data_type="state",
+        data_value="0",
+        source_name="sensor",
+        source_idx="0",
+    )
+    mock_rtsp_event(
+        topic="tnsaxis:CameraApplicationPlatform/VMD/Camera1Profile1",
+        data_type="active",
+        data_value="1",
+    )
+    # Unsupported event
+    mock_rtsp_event(
+        topic="tns1:PTZController/tnsaxis:PTZPresets/Channel_1",
+        data_type="on_preset",
+        data_value="1",
+        source_name="PresetToken",
+        source_idx="0",
+    )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 2
 
-    pir = hass.states.get("binary_sensor.model_0_pir_0")
-    assert pir.state == "off"
-    assert pir.name == "model 0 PIR 0"
+    pir = hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{NAME}_pir_0")
+    assert pir.state == STATE_OFF
+    assert pir.name == f"{NAME} PIR 0"
+    assert pir.attributes["device_class"] == DEVICE_CLASS_MOTION
 
-    vmd4 = hass.states.get("binary_sensor.model_0_vmd4_camera1profile1")
-    assert vmd4.state == "on"
-    assert vmd4.name == "model 0 VMD4 Camera1Profile1"
+    vmd4 = hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{NAME}_vmd4_profile_1")
+    assert vmd4.state == STATE_ON
+    assert vmd4.name == f"{NAME} VMD4 Profile 1"
+    assert vmd4.attributes["device_class"] == DEVICE_CLASS_MOTION

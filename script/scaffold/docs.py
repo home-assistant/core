@@ -1,7 +1,6 @@
 """Print links to relevant docs."""
 from .model import Info
 
-
 DATA = {
     "config_flow": {
         "title": "Config Flow",
@@ -35,6 +34,11 @@ DATA = {
         "title": "Reproduce State",
         "docs": "https://developers.home-assistant.io/docs/en/reproduce_state_index.html",
         "extra": "You will now need to update the code to make sure that every attribute that can occur in the state will cause the right service to be called.",
+    },
+    "significant_change": {
+        "title": "Significant Change",
+        "docs": "https://developers.home-assistant.io/docs/en/significant_change_index.html",
+        "extra": "You will now need to update the code to make sure that entities with different device classes are correctly considered.",
     },
 }
 
@@ -70,8 +74,9 @@ def print_relevant_docs(template: str, info: Info) -> None:
         print()
 
     print(
-        f"The next step is to look at the files and deal with all areas marked as TODO."
+        "The next step is to look at the files and deal with all areas marked as TODO."
     )
 
     if "extra" in data:
+        print()
         print(data["extra"])

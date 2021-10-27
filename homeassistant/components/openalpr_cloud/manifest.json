@@ -1,8 +1,7 @@
 {
   "domain": "openalpr_cloud",
-  "name": "Openalpr cloud",
+  "name": "OpenALPR Cloud",
   "documentation": "https://www.home-assistant.io/integrations/openalpr_cloud",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_push"
 }

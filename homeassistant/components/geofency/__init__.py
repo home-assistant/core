@@ -1,5 +1,5 @@
 """Support for Geofency."""
-import logging
+from http import HTTPStatus
 
 from aiohttp import web
 import voluptuous as vol
@@ -10,18 +10,16 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     ATTR_NAME,
     CONF_WEBHOOK_ID,
-    HTTP_OK,
-    HTTP_UNPROCESSABLE_ENTITY,
     STATE_NOT_HOME,
 )
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import slugify
+
 from .const import DOMAIN
 
-
-_LOGGER = logging.getLogger(__name__)
+PLATFORMS = [DEVICE_TRACKER]
 
 CONF_MOBILE_BEACONS = "mobile_beacons"
 
@@ -91,7 +89,9 @@ async def handle_webhook(hass, webhook_id, request):
     try:
         data = WEBHOOK_SCHEMA(dict(await request.post()))
     except vol.MultipleInvalid as error:
-        return web.Response(text=error.error_message, status=HTTP_UNPROCESSABLE_ENTITY)
+        return web.Response(
+            text=error.error_message, status=HTTPStatus.UNPROCESSABLE_ENTITY
+        )
 
     if _is_mobile_beacon(data, hass.data[DOMAIN]["beacons"]):
         return _set_location(hass, data, None)
@@ -114,7 +114,7 @@ def _is_mobile_beacon(data, mobile_beacons):
 def _device_name(data):
     """Return name of device tracker."""
     if ATTR_BEACON_ID in data:
-        return "{}_{}".format(BEACON_DEV_PREFIX, data["name"])
+        return f"{BEACON_DEV_PREFIX}_{data['name']}"
     return data["device"]
 
 
@@ -131,7 +131,7 @@ def _set_location(hass, data, location_name):
         data,
     )
 
-    return web.Response(text=f"Setting location for {device}", status=HTTP_OK)
+    return web.Response(text=f"Setting location for {device}")
 
 
 async def async_setup_entry(hass, entry):
@@ -140,9 +140,7 @@ async def async_setup_entry(hass, entry):
         DOMAIN, "Geofency", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, DEVICE_TRACKER)
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
@@ -150,9 +148,7 @@ async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
     hass.data[DOMAIN]["unsub_device_tracker"].pop(entry.entry_id)()
-    await hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-# pylint: disable=invalid-name
 async_remove_entry = config_entry_flow.webhook_async_remove_entry

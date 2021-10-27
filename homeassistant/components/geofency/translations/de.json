@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich.",
+            "webhook_not_internet_accessible": "Deine Home Assistant-Instanz muss \u00fcber das Internet erreichbar sein, um Webhook-Nachrichten empfangen zu k\u00f6nnen."
+        },
+        "create_entry": {
+            "default": "Um Ereignisse an den Home Assistant zu senden, musst das Webhook Feature in Geofency konfiguriert werden.\n\n F\u00fcge die folgenden Informationen ein: \n\n - URL: ` {webhook_url} ` \n - Methode: POST \n \n Weitere Informationen finden sich in der [Dokumentation]({docs_url})."
+        },
+        "step": {
+            "user": {
+                "description": "M\u00f6chtest du den Geofency Webhook wirklich einrichten?",
+                "title": "Richte den Geofency Webhook ein"
+            }
+        }
+    }
+}

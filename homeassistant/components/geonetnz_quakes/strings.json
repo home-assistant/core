@@ -1,17 +1,11 @@
 {
   "config": {
-    "title": "GeoNet NZ Quakes",
     "step": {
       "user": {
         "title": "Fill in your filter details.",
-        "data": {
-          "radius": "Radius",
-          "mmi": "MMI"
-        }
+        "data": { "radius": "Radius", "mmi": "MMI" }
       }
     },
-    "error": {
-      "identifier_exists": "Location already registered"
-    }
+    "abort": { "already_configured": "[%key:common::config_flow::abort::already_configured_service%]" }
   }
 }

@@ -1,0 +1,74 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Layanan sudah dikonfigurasi",
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung"
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Broker",
+                    "discovery": "Aktifkan penemuan",
+                    "password": "Kata Sandi",
+                    "port": "Port",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Masukkan informasi koneksi broker MQTT Anda."
+            },
+            "hassio_confirm": {
+                "data": {
+                    "discovery": "Aktifkan penemuan"
+                },
+                "description": "Ingin mengonfigurasi Home Assistant untuk terhubung ke broker MQTT yang disediakan oleh add-on {addon}?",
+                "title": "MQTT Broker via add-on Home Assistant"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Tombol pertama",
+            "button_2": "Tombol kedua",
+            "button_3": "Tombol ketiga",
+            "button_4": "Tombol keempat",
+            "button_5": "Tombol kelima",
+            "button_6": "Tombol keenam",
+            "turn_off": "Matikan",
+            "turn_on": "Nyalakan"
+        },
+        "trigger_type": {
+            "button_double_press": "\"{subtype}\" diklik dua kali",
+            "button_long_press": "\"{subtype}\" terus ditekan",
+            "button_long_release": "\"{subtype}\" dilepaskan setelah ditekan lama",
+            "button_quadruple_press": "\"{subtype}\" diklik empat kali",
+            "button_quintuple_press": "\"{subtype}\" diklik lima kali",
+            "button_short_press": "\"{subtype}\" ditekan",
+            "button_short_release": "\"{subtype}\" dilepas",
+            "button_triple_press": "\"{subtype}\" diklik tiga kali"
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Gagal terhubung"
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Broker",
+                    "password": "Kata Sandi",
+                    "port": "Port",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Masukkan informasi koneksi broker MQTT Anda."
+            },
+            "options": {
+                "data": {
+                    "discovery": "Aktifkan penemuan"
+                },
+                "description": "Pilih opsi MQTT."
+            }
+        }
+    }
+}

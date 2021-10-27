@@ -1,9 +1,8 @@
 """Support for track controls on the Sisyphus Kinetic Art Table."""
-import logging
-
 import aiohttp
+from sisyphus_control import Track
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -26,8 +25,6 @@ from homeassistant.exceptions import PlatformNotReady
 
 from . import DATA_SISYPHUS
 
-_LOGGER = logging.getLogger(__name__)
-
 MEDIA_TYPE_TRACK = "sisyphus_track"
 
 SUPPORTED_FEATURES = (
@@ -43,20 +40,19 @@ SUPPORTED_FEATURES = (
 )
 
 
-# pylint: disable=unused-argument
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a media player entity for a Sisyphus table."""
     host = discovery_info[CONF_HOST]
     try:
         table_holder = hass.data[DATA_SISYPHUS][host]
         table = await table_holder.get_table()
-    except aiohttp.ClientError:
-        raise PlatformNotReady()
+    except aiohttp.ClientError as err:
+        raise PlatformNotReady() from err
 
     add_entities([SisyphusPlayer(table_holder.name, host, table)], True)
 
 
-class SisyphusPlayer(MediaPlayerDevice):
+class SisyphusPlayer(MediaPlayerEntity):
     """Representation of a Sisyphus table as a media player device."""
 
     def __init__(self, name, host, table):
@@ -67,7 +63,11 @@ class SisyphusPlayer(MediaPlayerDevice):
 
     async def async_added_to_hass(self):
         """Add listeners after this object has been initialized."""
-        self._table.add_listener(lambda: self.async_schedule_update_ha_state(False))
+        self._table.add_listener(self.async_write_ha_state)
+
+    async def async_update(self):
+        """Force update table state."""
+        await self._table.refresh()
 
     @property
     def unique_id(self):
@@ -134,6 +134,24 @@ class SisyphusPlayer(MediaPlayerDevice):
         return self._table.active_track.id if self._table.active_track else None
 
     @property
+    def media_duration(self):
+        """Return the total time it will take to run this track at the current speed."""
+        return self._table.active_track_total_time.total_seconds()
+
+    @property
+    def media_position(self):
+        """Return the current position within the track."""
+        return (
+            self._table.active_track_total_time
+            - self._table.active_track_remaining_time
+        ).total_seconds()
+
+    @property
+    def media_position_updated_at(self):
+        """Return the last time we got a position update."""
+        return self._table.active_track_remaining_time_as_of
+
+    @property
     def supported_features(self):
         """Return the features supported by this table."""
         return SUPPORTED_FEATURES
@@ -141,7 +159,6 @@ class SisyphusPlayer(MediaPlayerDevice):
     @property
     def media_image_url(self):
         """Return the URL for a thumbnail image of the current track."""
-        from sisyphus_control import Track
 
         if self._table.active_track:
             return self._table.active_track.get_thumbnail_url(Track.ThumbnailSize.LARGE)

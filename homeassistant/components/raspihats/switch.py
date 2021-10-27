@@ -105,9 +105,9 @@ class I2CHatSwitch(ToggleEntity):
 
     def _log_message(self, message):
         """Create log message."""
-        string = self._name + " "
-        string += self._board + "I2CHat@" + hex(self._address) + " "
-        string += "channel:" + str(self._channel) + message
+        string = f"{self._name} "
+        string += f"{self._board}I2CHat@{hex(self._address)} "
+        string += f"channel:{str(self._channel)}{message}"
         return string
 
     @property
@@ -127,7 +127,7 @@ class I2CHatSwitch(ToggleEntity):
             state = self.I2C_HATS_MANAGER.read_dq(self._address, self._channel)
             return state != self._invert_logic
         except I2CHatsException as ex:
-            _LOGGER.error(self._log_message("Is ON check failed, " + str(ex)))
+            _LOGGER.error(self._log_message(f"Is ON check failed, {ex!s}"))
             return False
 
     def turn_on(self, **kwargs):
@@ -137,7 +137,7 @@ class I2CHatSwitch(ToggleEntity):
             self.I2C_HATS_MANAGER.write_dq(self._address, self._channel, state)
             self.schedule_update_ha_state()
         except I2CHatsException as ex:
-            _LOGGER.error(self._log_message("Turn ON failed, " + str(ex)))
+            _LOGGER.error(self._log_message(f"Turn ON failed, {ex!s}"))
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
@@ -146,4 +146,4 @@ class I2CHatSwitch(ToggleEntity):
             self.I2C_HATS_MANAGER.write_dq(self._address, self._channel, state)
             self.schedule_update_ha_state()
         except I2CHatsException as ex:
-            _LOGGER.error(self._log_message("Turn OFF failed:, " + str(ex)))
+            _LOGGER.error(self._log_message(f"Turn OFF failed, {ex!s}"))

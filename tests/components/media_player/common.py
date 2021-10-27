@@ -18,6 +18,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ENTITY_MATCH_ALL,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -36,115 +37,192 @@ from homeassistant.const import (
 from homeassistant.loader import bind_hass
 
 
-@bind_hass
-def turn_on(hass, entity_id=None):
+async def async_turn_on(hass, entity_id=ENTITY_MATCH_ALL):
     """Turn on specified media player or all."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
+    await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data, blocking=True)
 
 
 @bind_hass
-def turn_off(hass, entity_id=None):
+def turn_on(hass, entity_id=ENTITY_MATCH_ALL):
+    """Turn on specified media player or all."""
+    hass.add_job(async_turn_on, hass, entity_id)
+
+
+async def async_turn_off(hass, entity_id=ENTITY_MATCH_ALL):
     """Turn off specified media player or all."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
+    await hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data, blocking=True)
 
 
 @bind_hass
-def toggle(hass, entity_id=None):
+def turn_off(hass, entity_id=ENTITY_MATCH_ALL):
+    """Turn off specified media player or all."""
+    hass.add_job(async_turn_off, hass, entity_id)
+
+
+async def async_toggle(hass, entity_id=ENTITY_MATCH_ALL):
     """Toggle specified media player or all."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
+    await hass.services.async_call(DOMAIN, SERVICE_TOGGLE, data, blocking=True)
 
 
 @bind_hass
-def volume_up(hass, entity_id=None):
+def toggle(hass, entity_id=ENTITY_MATCH_ALL):
+    """Toggle specified media player or all."""
+    hass.add_job(async_toggle, hass, entity_id)
+
+
+async def async_volume_up(hass, entity_id=ENTITY_MATCH_ALL):
     """Send the media player the command for volume up."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_VOLUME_UP, data)
+    await hass.services.async_call(DOMAIN, SERVICE_VOLUME_UP, data, blocking=True)
 
 
 @bind_hass
-def volume_down(hass, entity_id=None):
+def volume_up(hass, entity_id=ENTITY_MATCH_ALL):
+    """Send the media player the command for volume up."""
+    hass.add_job(async_volume_up, hass, entity_id)
+
+
+async def async_volume_down(hass, entity_id=ENTITY_MATCH_ALL):
     """Send the media player the command for volume down."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_VOLUME_DOWN, data)
+    await hass.services.async_call(DOMAIN, SERVICE_VOLUME_DOWN, data, blocking=True)
 
 
 @bind_hass
-def mute_volume(hass, mute, entity_id=None):
+def volume_down(hass, entity_id=ENTITY_MATCH_ALL):
+    """Send the media player the command for volume down."""
+    hass.add_job(async_volume_down, hass, entity_id)
+
+
+async def async_mute_volume(hass, mute, entity_id=ENTITY_MATCH_ALL):
     """Send the media player the command for muting the volume."""
     data = {ATTR_MEDIA_VOLUME_MUTED: mute}
 
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
 
-    hass.services.call(DOMAIN, SERVICE_VOLUME_MUTE, data)
+    await hass.services.async_call(DOMAIN, SERVICE_VOLUME_MUTE, data, blocking=True)
 
 
 @bind_hass
-def set_volume_level(hass, volume, entity_id=None):
+def mute_volume(hass, mute, entity_id=ENTITY_MATCH_ALL):
+    """Send the media player the command for muting the volume."""
+    hass.add_job(async_mute_volume, hass, mute, entity_id)
+
+
+async def async_set_volume_level(hass, volume, entity_id=ENTITY_MATCH_ALL):
     """Send the media player the command for setting the volume."""
     data = {ATTR_MEDIA_VOLUME_LEVEL: volume}
 
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
 
-    hass.services.call(DOMAIN, SERVICE_VOLUME_SET, data)
+    await hass.services.async_call(DOMAIN, SERVICE_VOLUME_SET, data, blocking=True)
 
 
 @bind_hass
-def media_play_pause(hass, entity_id=None):
+def set_volume_level(hass, volume, entity_id=ENTITY_MATCH_ALL):
+    """Send the media player the command for setting the volume."""
+    hass.add_job(async_set_volume_level, hass, volume, entity_id)
+
+
+async def async_media_play_pause(hass, entity_id=ENTITY_MATCH_ALL):
     """Send the media player the command for play/pause."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_MEDIA_PLAY_PAUSE, data)
+    await hass.services.async_call(
+        DOMAIN, SERVICE_MEDIA_PLAY_PAUSE, data, blocking=True
+    )
 
 
 @bind_hass
-def media_play(hass, entity_id=None):
+def media_play_pause(hass, entity_id=ENTITY_MATCH_ALL):
+    """Send the media player the command for play/pause."""
+    hass.add_job(async_media_play_pause, hass, entity_id)
+
+
+async def async_media_play(hass, entity_id=ENTITY_MATCH_ALL):
     """Send the media player the command for play/pause."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_MEDIA_PLAY, data)
+    await hass.services.async_call(DOMAIN, SERVICE_MEDIA_PLAY, data, blocking=True)
 
 
 @bind_hass
-def media_pause(hass, entity_id=None):
+def media_play(hass, entity_id=ENTITY_MATCH_ALL):
+    """Send the media player the command for play/pause."""
+    hass.add_job(async_media_play, hass, entity_id)
+
+
+async def async_media_pause(hass, entity_id=ENTITY_MATCH_ALL):
     """Send the media player the command for pause."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_MEDIA_PAUSE, data)
+    await hass.services.async_call(DOMAIN, SERVICE_MEDIA_PAUSE, data, blocking=True)
 
 
 @bind_hass
-def media_stop(hass, entity_id=None):
+def media_pause(hass, entity_id=ENTITY_MATCH_ALL):
+    """Send the media player the command for pause."""
+    hass.add_job(async_media_pause, hass, entity_id)
+
+
+async def async_media_stop(hass, entity_id=ENTITY_MATCH_ALL):
     """Send the media player the command for stop."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_MEDIA_STOP, data)
+    await hass.services.async_call(DOMAIN, SERVICE_MEDIA_STOP, data, blocking=True)
 
 
 @bind_hass
-def media_next_track(hass, entity_id=None):
+def media_stop(hass, entity_id=ENTITY_MATCH_ALL):
+    """Send the media player the command for stop."""
+    hass.add_job(async_media_stop, hass, entity_id)
+
+
+async def async_media_next_track(hass, entity_id=ENTITY_MATCH_ALL):
     """Send the media player the command for next track."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_MEDIA_NEXT_TRACK, data)
+    await hass.services.async_call(
+        DOMAIN, SERVICE_MEDIA_NEXT_TRACK, data, blocking=True
+    )
 
 
 @bind_hass
-def media_previous_track(hass, entity_id=None):
+def media_next_track(hass, entity_id=ENTITY_MATCH_ALL):
+    """Send the media player the command for next track."""
+    hass.add_job(async_media_next_track, hass, entity_id)
+
+
+async def async_media_previous_track(hass, entity_id=ENTITY_MATCH_ALL):
     """Send the media player the command for prev track."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK, data)
+    await hass.services.async_call(
+        DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK, data, blocking=True
+    )
 
 
 @bind_hass
-def media_seek(hass, position, entity_id=None):
+def media_previous_track(hass, entity_id=ENTITY_MATCH_ALL):
+    """Send the media player the command for prev track."""
+    hass.add_job(async_media_previous_track, hass, entity_id)
+
+
+async def async_media_seek(hass, position, entity_id=ENTITY_MATCH_ALL):
     """Send the media player the command to seek in current playing media."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     data[ATTR_MEDIA_SEEK_POSITION] = position
-    hass.services.call(DOMAIN, SERVICE_MEDIA_SEEK, data)
+    await hass.services.async_call(DOMAIN, SERVICE_MEDIA_SEEK, data, blocking=True)
 
 
 @bind_hass
-def play_media(hass, media_type, media_id, entity_id=None, enqueue=None):
+def media_seek(hass, position, entity_id=ENTITY_MATCH_ALL):
+    """Send the media player the command to seek in current playing media."""
+    hass.add_job(async_media_seek, hass, position, entity_id)
+
+
+async def async_play_media(
+    hass, media_type, media_id, entity_id=ENTITY_MATCH_ALL, enqueue=None
+):
     """Send the media player the command for playing media."""
     data = {ATTR_MEDIA_CONTENT_TYPE: media_type, ATTR_MEDIA_CONTENT_ID: media_id}
 
@@ -154,22 +232,38 @@ def play_media(hass, media_type, media_id, entity_id=None, enqueue=None):
     if enqueue:
         data[ATTR_MEDIA_ENQUEUE] = enqueue
 
-    hass.services.call(DOMAIN, SERVICE_PLAY_MEDIA, data)
+    await hass.services.async_call(DOMAIN, SERVICE_PLAY_MEDIA, data, blocking=True)
 
 
 @bind_hass
-def select_source(hass, source, entity_id=None):
+def play_media(hass, media_type, media_id, entity_id=ENTITY_MATCH_ALL, enqueue=None):
+    """Send the media player the command for playing media."""
+    hass.add_job(async_play_media, hass, media_type, media_id, entity_id, enqueue)
+
+
+async def async_select_source(hass, source, entity_id=ENTITY_MATCH_ALL):
     """Send the media player the command to select input source."""
     data = {ATTR_INPUT_SOURCE: source}
 
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
 
-    hass.services.call(DOMAIN, SERVICE_SELECT_SOURCE, data)
+    await hass.services.async_call(DOMAIN, SERVICE_SELECT_SOURCE, data, blocking=True)
 
 
 @bind_hass
-def clear_playlist(hass, entity_id=None):
+def select_source(hass, source, entity_id=ENTITY_MATCH_ALL):
+    """Send the media player the command to select input source."""
+    hass.add_job(async_select_source, hass, source, entity_id)
+
+
+async def async_clear_playlist(hass, entity_id=ENTITY_MATCH_ALL):
     """Send the media player the command for clear playlist."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_CLEAR_PLAYLIST, data)
+    await hass.services.async_call(DOMAIN, SERVICE_CLEAR_PLAYLIST, data, blocking=True)
+
+
+@bind_hass
+def clear_playlist(hass, entity_id=ENTITY_MATCH_ALL):
+    """Send the media player the command for clear playlist."""
+    hass.add_job(async_clear_playlist, hass, entity_id)
