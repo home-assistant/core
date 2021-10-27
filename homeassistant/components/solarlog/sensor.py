@@ -1,7 +1,7 @@
 """Platform for solarlog sensors."""
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers import update_coordinator
-from homeassistant.helpers.entity import StateType
+from homeassistant.helpers.entity import DeviceInfo, StateType
 
 from . import SolarlogData
 from .const import DOMAIN, SENSOR_TYPES, SolarLogSensorEntityDescription
@@ -30,11 +30,11 @@ class SolarlogSensor(update_coordinator.CoordinatorEntity, SensorEntity):
         self.entity_description = description
         self._attr_name = f"{coordinator.name} {description.name}"
         self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, coordinator.unique_id)},
-            "name": coordinator.name,
-            "manufacturer": "Solar-Log",
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.unique_id)},
+            manufacturer="Solar-Log",
+            name=coordinator.name,
+        )
 
     @property
     def native_value(self) -> StateType:
