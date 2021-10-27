@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from itertools import chain
 import re
 from typing import Tuple, Type, Union, cast
 
@@ -111,7 +112,9 @@ def get_device_model(domain_name: str, domain_data: ConfigType) -> str:
     if domain_name in ("binary_sensor", "sensor"):
         if domain_data[CONF_SOURCE] in BINSENSOR_PORTS:
             return "Binary Sensor"
-        if domain_data[CONF_SOURCE] in VARIABLES + SETPOINTS + THRESHOLDS + S0_INPUTS:
+        if domain_data[CONF_SOURCE] in chain(
+            VARIABLES, SETPOINTS, THRESHOLDS, S0_INPUTS
+        ):
             return "Variable"
         if domain_data[CONF_SOURCE] in LED_PORTS:
             return "Led"
@@ -243,11 +246,9 @@ def import_lcn_config(lcn_config: ConfigType) -> list[ConfigType]:
     return list(data.values())
 
 
-async def async_register_lcn_host_device(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> None:
+def register_lcn_host_device(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Register LCN host for given config_entry in device registry."""
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
 
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -258,7 +259,7 @@ async def async_register_lcn_host_device(
     )
 
 
-async def async_register_lcn_address_devices(
+def register_lcn_address_devices(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:
     """Register LCN modules and groups defined in config_entry as devices in device registry.
@@ -266,7 +267,7 @@ async def async_register_lcn_address_devices(
     The name of all given device_connections is collected and the devices
     are updated.
     """
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
 
     host_identifiers = (DOMAIN, config_entry.entry_id)
 
@@ -315,18 +316,20 @@ async def async_update_device_config(
             device_config[CONF_HARDWARE_TYPE] = device_connection.hardware_type.value
 
     # fetch name if device is module
-    if device_config[CONF_NAME] == "":
-        device_name = ""
-        if not is_group:
-            device_name = await device_connection.request_name()
-        if is_group or device_name == "":
-            module_type = "Group" if is_group else "Module"
-            device_name = (
-                f"{module_type} "
-                f"{device_config[CONF_ADDRESS][0]:03d}/"
-                f"{device_config[CONF_ADDRESS][1]:03d}"
-            )
-        device_config[CONF_NAME] = device_name
+    if device_config[CONF_NAME] != "":
+        return
+
+    device_name = ""
+    if not is_group:
+        device_name = await device_connection.request_name()
+    if is_group or device_name == "":
+        module_type = "Group" if is_group else "Module"
+        device_name = (
+            f"{module_type} "
+            f"{device_config[CONF_ADDRESS][0]:03d}/"
+            f"{device_config[CONF_ADDRESS][1]:03d}"
+        )
+    device_config[CONF_NAME] = device_name
 
 
 async def async_update_config_entry(

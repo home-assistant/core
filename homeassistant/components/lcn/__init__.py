@@ -18,7 +18,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
 
@@ -34,12 +33,12 @@ from .helpers import (
     AddressType,
     DeviceConnectionType,
     InputType,
-    async_register_lcn_address_devices,
-    async_register_lcn_host_device,
     async_update_config_entry,
     generate_unique_id,
     get_device_model,
     import_lcn_config,
+    register_lcn_address_devices,
+    register_lcn_host_device,
 )
 from .schemas import CONFIG_SCHEMA  # noqa: F401
 from .services import SERVICES
@@ -113,19 +112,9 @@ async def async_setup_entry(
     # Update config_entry with LCN device serials
     await async_update_config_entry(hass, config_entry)
 
-    # Cleanup entity and device registry, if we imported from configuration.yaml to
-    # remove orphans when entities were removed from configuration
-    if config_entry.source == config_entries.SOURCE_IMPORT:
-        entity_registry = await er.async_get_registry(hass)
-        entity_registry.async_clear_config_entry(config_entry.entry_id)
-
-        device_registry = await dr.async_get_registry(hass)
-        device_registry.async_clear_config_entry(config_entry.entry_id)
-        config_entry.source = config_entries.SOURCE_USER
-
     # register/update devices for host, modules and groups in device registry
-    await async_register_lcn_host_device(hass, config_entry)
-    await async_register_lcn_address_devices(hass, config_entry)
+    register_lcn_host_device(hass, config_entry)
+    register_lcn_address_devices(hass, config_entry)
 
     # forward config_entry to components
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
