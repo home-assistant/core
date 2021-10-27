@@ -7,12 +7,12 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 
-from .const import CONF_IS_TOU, DEFAULT_NAME, SRP_ENERGY_DOMAIN
+from .const import CONF_IS_TOU, DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=SRP_ENERGY_DOMAIN):
+class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SRP Energy."""
 
     VERSION = 1
