@@ -663,10 +663,20 @@ async def test_cost_sensor_price_entity_total_no_reset(
     assert statistics["stat"]["sum"] == 18.0
 
 
-async def test_cost_sensor_handle_wh(hass, hass_storage) -> None:
+@pytest.mark.parametrize(
+    "energy_unit,factor",
+    [
+        (ENERGY_WATT_HOUR, 1000),
+        (ENERGY_KILO_WATT_HOUR, 1),
+        (ENERGY_MEGA_WATT_HOUR, 0.001),
+    ],
+)
+async def test_cost_sensor_handle_energy_units(
+    hass, hass_storage, energy_unit, factor
+) -> None:
     """Test energy cost price from sensor entity."""
     energy_attributes = {
-        ATTR_UNIT_OF_MEASUREMENT: ENERGY_WATT_HOUR,
+        ATTR_UNIT_OF_MEASUREMENT: energy_unit,
         ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
     }
     energy_data = data.EnergyManager.default_preferences()
@@ -697,7 +707,7 @@ async def test_cost_sensor_handle_wh(hass, hass_storage) -> None:
     # Initial state: 10kWh
     hass.states.async_set(
         "sensor.energy_consumption",
-        10000,
+        10 * factor,
         energy_attributes,
     )
 
@@ -710,7 +720,7 @@ async def test_cost_sensor_handle_wh(hass, hass_storage) -> None:
     # Energy use bumped by 10 kWh
     hass.states.async_set(
         "sensor.energy_consumption",
-        20000,
+        20 * factor,
         energy_attributes,
     )
     await hass.async_block_till_done()
@@ -719,11 +729,25 @@ async def test_cost_sensor_handle_wh(hass, hass_storage) -> None:
     assert state.state == "5.0"
 
 
-async def test_cost_sensor_handle_mwh(hass, hass_storage) -> None:
+@pytest.mark.parametrize(
+    "price_unit,factor",
+    [
+        (f"EUR/{ENERGY_WATT_HOUR}", 0.001),
+        (f"EUR/{ENERGY_KILO_WATT_HOUR}", 1),
+        (f"EUR/{ENERGY_MEGA_WATT_HOUR}", 1000),
+    ],
+)
+async def test_cost_sensor_handle_price_units(
+    hass, hass_storage, price_unit, factor
+) -> None:
     """Test energy cost price from sensor entity."""
     energy_attributes = {
-        ATTR_UNIT_OF_MEASUREMENT: ENERGY_MEGA_WATT_HOUR,
+        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
         ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+    }
+    price_attributes = {
+        ATTR_UNIT_OF_MEASUREMENT: price_unit,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     }
     energy_data = data.EnergyManager.default_preferences()
     energy_data["energy_sources"].append(
@@ -734,8 +758,8 @@ async def test_cost_sensor_handle_mwh(hass, hass_storage) -> None:
                     "stat_energy_from": "sensor.energy_consumption",
                     "entity_energy_from": "sensor.energy_consumption",
                     "stat_cost": None,
-                    "entity_energy_price": None,
-                    "number_energy_price": 2.0,
+                    "entity_energy_price": "sensor.energy_price",
+                    "number_energy_price": None,
                 }
             ],
             "flow_to": [],
@@ -750,10 +774,11 @@ async def test_cost_sensor_handle_mwh(hass, hass_storage) -> None:
 
     now = dt_util.utcnow()
 
-    # Initial state: 0.5MWh
+    # Initial state: 10kWh
+    hass.states.async_set("sensor.energy_price", "2", price_attributes)
     hass.states.async_set(
         "sensor.energy_consumption",
-        0.5,
+        10 * factor,
         energy_attributes,
     )
 
@@ -763,16 +788,16 @@ async def test_cost_sensor_handle_mwh(hass, hass_storage) -> None:
     state = hass.states.get("sensor.energy_consumption_cost")
     assert state.state == "0.0"
 
-    # Energy use bumped by 1 MWh
+    # Energy use bumped by 10 kWh
     hass.states.async_set(
         "sensor.energy_consumption",
-        1.5,
+        20 * factor,
         energy_attributes,
     )
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.energy_consumption_cost")
-    assert state.state == "2.0"
+    assert state.state == "20.0"
 
 
 async def test_cost_sensor_handle_gas(hass, hass_storage) -> None:
