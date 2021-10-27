@@ -292,19 +292,13 @@ class EnergyCostSensor(SensorEntity):
             except ValueError:
                 return
 
-            if (
-                self._adapter.source_type == "grid"
-                and energy_price_state.attributes.get(
-                    ATTR_UNIT_OF_MEASUREMENT, ""
-                ).endswith(f"/{ENERGY_WATT_HOUR}")
+            if energy_price_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, "").endswith(
+                f"/{ENERGY_WATT_HOUR}"
             ):
                 energy_price *= 1000.0
 
-            if (
-                self._adapter.source_type == "grid"
-                and energy_price_state.attributes.get(
-                    ATTR_UNIT_OF_MEASUREMENT, ""
-                ).endswith(f"/{ENERGY_MEGA_WATT_HOUR}")
+            if energy_price_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, "").endswith(
+                f"/{ENERGY_MEGA_WATT_HOUR}"
             ):
                 energy_price /= 1000.0
 
