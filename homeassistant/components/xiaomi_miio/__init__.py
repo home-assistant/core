@@ -377,7 +377,7 @@ async def async_setup_gateway_entry(
 
     gateway_model = f"{gateway_info.model}-{gateway_info.hardware_version}"
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, gateway_info.mac_address)},
