@@ -200,7 +200,7 @@ async def async_setup_entry(
     _LOGGER.info(repr(isy.clock))
 
     hass_isy_data[ISY994_ISY] = isy
-    await _async_get_or_create_isy_device_in_registry(hass, entry, isy)
+    _async_get_or_create_isy_device_in_registry(hass, entry, isy)
 
     # Load platforms for the devices in the ISY controller that we support.
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -259,7 +259,8 @@ def _async_isy_to_configuration_url(isy: ISY) -> str:
     return f"{proto}://{connection_info['addr']}:{connection_info['port']}"
 
 
-async def _async_get_or_create_isy_device_in_registry(
+@callback
+def _async_get_or_create_isy_device_in_registry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry, isy
 ) -> None:
     device_registry = dr.async_get(hass)
