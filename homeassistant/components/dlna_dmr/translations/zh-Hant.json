@@ -8,12 +8,12 @@
             "discovery_error": "DLNA \u88dd\u7f6e\u63a2\u7d22\u5931\u6557",
             "incomplete_config": "\u6240\u7f3a\u5c11\u7684\u8a2d\u5b9a\u70ba\u5fc5\u9808\u8b8a\u6578",
             "non_unique_id": "\u627e\u5230\u591a\u7d44\u88dd\u7f6e\u4f7f\u7528\u4e86\u76f8\u540c\u552f\u4e00 ID",
-            "not_dmr": "\u88dd\u7f6e\u4e26\u975e Digital Media Renderer"
+            "not_dmr": "\u88dd\u7f6e\u70ba\u975e\u652f\u63f4 Digital Media Renderer"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "could_not_connect": "DLNA \u88dd\u7f6e\u9023\u7dda\u5931\u6557\u3002",
-            "not_dmr": "\u88dd\u7f6e\u4e26\u975e Digital Media Renderer"
+            "not_dmr": "\u88dd\u7f6e\u70ba\u975e\u652f\u63f4 Digital Media Renderer"
         },
         "flow_title": "{name}",
         "step": {
