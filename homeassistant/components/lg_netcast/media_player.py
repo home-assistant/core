@@ -18,8 +18,8 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_STEP,
     SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
@@ -113,7 +113,7 @@ class LgTVDevice(MediaPlayerEntity):
             with self._client as client:
                 self._state = STATE_PLAYING
 
-                self.update_volume()
+                self.__update_volume()
 
                 channel_info = client.query_data("cur_channel")
                 if channel_info:
@@ -148,7 +148,7 @@ class LgTVDevice(MediaPlayerEntity):
         except (LgNetCastError, RequestException):
             self._state = STATE_OFF
 
-    def update_volume(self):
+    def __update_volume(self):
         volume, muted = self._client.get_volume()
         self._volume = volume
         self._muted = muted
@@ -237,7 +237,7 @@ class LgTVDevice(MediaPlayerEntity):
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         self._client.set_volume(float(volume * 100))
-        self.update_volume()
+        self.__update_volume()
 
     def mute_volume(self, mute):
         """Send mute command."""
