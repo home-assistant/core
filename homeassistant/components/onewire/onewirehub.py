@@ -25,7 +25,15 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity import DeviceInfo
 
-from .const import CONF_MOUNT_DIR, CONF_TYPE_OWSERVER, CONF_TYPE_SYSBUS, DOMAIN
+from .const import (
+    CONF_MOUNT_DIR,
+    CONF_TYPE_OWSERVER,
+    CONF_TYPE_SYSBUS,
+    DOMAIN,
+    MANUFACTURER_EDS,
+    MANUFACTURER_HOBBYBOARDS,
+    MANUFACTURER_MAXIM,
+)
 from .model import (
     OWDeviceDescription,
     OWDirectDeviceDescription,
@@ -35,6 +43,11 @@ from .model import (
 DEVICE_COUPLERS = {
     # Family : [branches]
     "1F": ["aux", "main"]
+}
+
+DEVICE_MANUFACTURER = {
+    "7E": MANUFACTURER_EDS,
+    "EF": MANUFACTURER_HOBBYBOARDS,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -108,12 +121,14 @@ class OneWireHub:
         devices: list[OWDeviceDescription] = []
         assert self.pi1proxy
         for interface in self.pi1proxy.find_all_sensors():
-            family = interface.mac_address[:2]
-            device_id = f"{family}-{interface.mac_address[2:]}"
+            device_family = interface.mac_address[:2]
+            device_id = f"{device_family}-{interface.mac_address[2:]}"
             device_info: DeviceInfo = {
                 ATTR_IDENTIFIERS: {(DOMAIN, device_id)},
-                ATTR_MANUFACTURER: "Maxim Integrated",
-                ATTR_MODEL: family,
+                ATTR_MANUFACTURER: DEVICE_MANUFACTURER.get(
+                    device_family, MANUFACTURER_MAXIM
+                ),
+                ATTR_MODEL: device_family,
                 ATTR_NAME: device_id,
             }
             device = OWDirectDeviceDescription(
@@ -137,7 +152,9 @@ class OneWireHub:
             _LOGGER.debug("read `%stype`: %s", device_path, device_type)
             device_info: DeviceInfo = {
                 ATTR_IDENTIFIERS: {(DOMAIN, device_id)},
-                ATTR_MANUFACTURER: "Maxim Integrated",
+                ATTR_MANUFACTURER: DEVICE_MANUFACTURER.get(
+                    device_family, MANUFACTURER_MAXIM
+                ),
                 ATTR_MODEL: device_type,
                 ATTR_NAME: device_id,
             }
