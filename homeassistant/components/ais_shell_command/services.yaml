@@ -36,6 +36,19 @@ execute_command:
       example: 'touch /data/data/pl.sviete.dom/files/home/1.txt'
       selector:
         text:
+    entity_id:
+      description: Encja do której ma być zwrócony wynik komendy
+      selector:
+        entity:
+    friendly_name:
+      description: Przyjazna nazwa encji do której zwracamy wynik
+      selector:
+        text:
+    icon:
+      description: Ikona encji do której zwracamy wynik
+      selector:
+        text:
+
 
 execute_script:
   description: Uruchomienie skryptu w konsoli

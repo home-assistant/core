@@ -484,7 +484,7 @@ async def _execute_command(hass, call):
     output, err = process.communicate()
     if ret_entity is not None:
         hass.states.async_set(
-            ret_entity, output, {"friendly_name": friendly_name, "icon": icon}
+            ret_entity, output.decode("utf-8"), {"friendly_name": friendly_name, "icon": icon}
         )
 
 
