@@ -1,6 +1,7 @@
 """Support for Z-Wave cover devices."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any, cast
 
@@ -171,18 +172,26 @@ class ZWaveTiltCover(ZWaveCover):
         self.data_template = cast(
             CoverTiltDataTemplate, self.info.platform_data_template
         )
-        if self.data_template.current_tilt_value(self.info.platform_data):
-            self._attr_current_cover_tilt_position = 0
+
+    @property
+    def current_cover_tilt_position(self) -> int | None:
+        """Return current position of cover tilt.
+
+        None is unknown, 0 is closed, 100 is fully open.
+        """
+        value = self.data_template.current_tilt_value(self.info.platform_data)
+        return value.value if value else None
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        self._attr_current_cover_tilt_position = kwargs[ATTR_TILT_POSITION]
         tilt_value = self.data_template.current_tilt_value(self.info.platform_data)
         if tilt_value:
             await self.info.node.async_set_value(
                 tilt_value,
                 percent_to_zwave_position(kwargs[ATTR_TILT_POSITION]),
             )
+            await asyncio.sleep(2)
+            await self.info.node.async_refresh_cc_values(tilt_value.command_class)
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
