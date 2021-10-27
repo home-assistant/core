@@ -7,6 +7,7 @@ import math
 
 import aiolifx as aiolifx_module
 import aiolifx_effects as aiolifx_effects_module
+from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
 from homeassistant import util
@@ -450,6 +451,7 @@ class LIFXLight(LightEntity):
     def __init__(self, bulb, effects_conductor):
         """Initialize the light."""
         self.bulb = bulb
+        self.real_mac_addr = self.bulb.mac_addr
         self.effects_conductor = effects_conductor
         self.registered = True
         self.postponed_update = None
@@ -459,16 +461,26 @@ class LIFXLight(LightEntity):
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
         _map = aiolifx().products.product_map
+
+        # The last byte of the bulb MAC address is incremented by 1 in FW3.70 and higher
+        # In the case where the last byte is "ff", it rolls back to 00
+        if AwesomeVersion(self.bulb.host_firmware_version) >= AwesomeVersion("3.70"):
+            octets = [int(octet, 16) for octet in self.bulb.mac_addr.split(":")]
+            octets[5] = (octets[5] + 1) % 256
+            self.real_mac_addr = ":".join(f"{octet:02x}" for octet in octets)
+
         info = DeviceInfo(
             identifiers={(LIFX_DOMAIN, self.unique_id)},
-            connections={(dr.CONNECTION_NETWORK_MAC, self.bulb.mac_addr)},
+            connections={(dr.CONNECTION_NETWORK_MAC, self.real_mac_addr)},
             manufacturer="LIFX",
             name=self.name,
         )
-        if model := (_map.get(self.bulb.product) or self.bulb.product) is not None:
+
+        if (model := (_map.get(self.bulb.product) or self.bulb.product)) is not None:
             info[ATTR_MODEL] = str(model)
         if (version := self.bulb.host_firmware_version) is not None:
             info[ATTR_SW_VERSION] = version
+
         return info
 
     @property
