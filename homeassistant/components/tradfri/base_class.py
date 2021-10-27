@@ -59,31 +59,38 @@ class TradfriBaseClass(Entity):
     ) -> None:
         """Initialize a device."""
         self._api = handle_error(api)
+        self._attr_name = device.name
+        self._attr_available = device.reachable
         self._device: Device = device
         self._device_control: BlindControl | LightControl | SocketControl | SignalRepeaterControl | AirPurifierControl | None = (
             None
         )
         self._device_data: Socket | Light | Blind | AirPurifier | None = None
         self._gateway_id = gateway_id
-        self._refresh(device)
+
+    async def _async_run_observe(self, cmd: Command) -> None:
+        """Run observe in a coroutine."""
+        try:
+            await self._api(cmd)
+        except PytradfriError as err:
+            self._attr_available = False
+            self.async_write_ha_state()
+            _LOGGER.warning("Observation failed, trying again", exc_info=err)
+            self._async_start_observe()
 
     @callback
     def _async_start_observe(self, exc: Exception | None = None) -> None:
         """Start observation of device."""
         if exc:
+            self._attr_available = False
             self.async_write_ha_state()
             _LOGGER.warning("Observation failed for %s", self._attr_name, exc_info=exc)
-
-        try:
-            cmd = self._device.observe(
-                callback=self._observe_update,
-                err_callback=self._async_start_observe,
-                duration=0,
-            )
-            self.hass.async_create_task(self._api(cmd))
-        except PytradfriError as err:
-            _LOGGER.warning("Observation failed, trying again", exc_info=err)
-            self._async_start_observe()
+        cmd = self._device.observe(
+            callback=self._observe_update,
+            err_callback=self._async_start_observe,
+            duration=0,
+        )
+        self.hass.async_create_task(self._async_run_observe(cmd))
 
     async def async_added_to_hass(self) -> None:
         """Start thread when added to hass."""
@@ -93,12 +100,14 @@ class TradfriBaseClass(Entity):
     def _observe_update(self, device: Device) -> None:
         """Receive new state data for this device."""
         self._refresh(device)
-        self.async_write_ha_state()
 
-    def _refresh(self, device: Device) -> None:
+    def _refresh(self, device: Device, write_ha: bool = True) -> None:
         """Refresh the device data."""
         self._device = device
         self._attr_name = device.name
+        self._attr_available = device.reachable
+        if write_ha:
+            self.async_write_ha_state()
 
 
 class TradfriBaseDevice(TradfriBaseClass):
@@ -119,8 +128,3 @@ class TradfriBaseDevice(TradfriBaseClass):
             sw_version=info.firmware_version,
             via_device=(DOMAIN, self._gateway_id),
         )
-
-    def _refresh(self, device: Device) -> None:
-        """Refresh the device data."""
-        super()._refresh(device)
-        self._attr_available = device.reachable
