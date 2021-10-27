@@ -106,7 +106,7 @@ class AuroraSensor(AuroraDeviceEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(client, data)
         self.entity_description = entity_description
-        self.availableprev = True
+        self.available_prev = True
 
     def update(self):
         """Fetch new state data for the sensor.
@@ -114,7 +114,7 @@ class AuroraSensor(AuroraDeviceEntity, SensorEntity):
         This is the only method that should fetch new data for Home Assistant.
         """
         try:
-            self.availableprev = self._attr_available
+            self.available_prev = self._attr_available
             self.client.connect()
             if self.entity_description.key == "instantaneouspower":
                 # read ADC channel 3 (grid power output)
@@ -145,7 +145,7 @@ class AuroraSensor(AuroraDeviceEntity, SensorEntity):
             else:
                 raise error
         finally:
-            if self._attr_available != self.availableprev:
+            if self._attr_available != self.available_prev:
                 if self._attr_available:
                     _LOGGER.info("Communication with %s back online", self.name)
                 else:
