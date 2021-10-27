@@ -236,15 +236,7 @@ class CoverTiltDataTemplate(BaseDiscoverySchemaDataTemplate):
 
     def resolve_data(self, value: ZwaveValue) -> dict[str, Any]:
         """Resolve helper class data for a discovered value."""
-        node = value.node
-        value_id = f"{node.node_id}-{self.tilt_value.command_class}-{self.tilt_value.endpoint}-{self.tilt_value.property_}-{self.tilt_value.property_key}"
-
-        tilt_value_id = node.values.get(value_id)
-
-        if tilt_value_id:
-            return {"tilt_value": self._get_value_from_id(node, tilt_value_id)}
-        else:
-            return {"tilt_value": None}
+        return {"tilt_value": self._get_value_from_id(value.node, self.tilt_value)}
 
     def values_to_watch(self, resolved_data: dict[str, Any]) -> Iterable[ZwaveValue]:
         """Return list of all ZwaveValues resolved by helper that should be watched."""

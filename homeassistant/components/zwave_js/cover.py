@@ -82,6 +82,26 @@ def percent_to_zwave_position(value: int) -> int:
     return 0
 
 
+def percent_to_zwave_tilt(value: int) -> int:
+    """Convert position in 0-100 scale to 0-99 scale.
+
+    `value` -- (int) Position byte value from 0-100.
+    """
+    if value > 0:
+        return round((value / 100) * 99)
+    return 0
+
+
+def zwave_tilt_to_percent(value: int) -> int:
+    """Convert 0-99 scale to position in 0-100 scale.
+
+    `value` -- (int) Position byte value from 0-99.
+    """
+    if value > 0:
+        return round((value / 99) * 100)
+    return 0
+
+
 class ZWaveCover(ZWaveBaseEntity, CoverEntity):
     """Representation of a Z-Wave Cover device."""
 
@@ -180,7 +200,7 @@ class ZWaveTiltCover(ZWaveCover):
         None is unknown, 0 is closed, 100 is fully open.
         """
         value = self.data_template.current_tilt_value(self.info.platform_data)
-        return value.value if value else None
+        return zwave_tilt_to_percent(value.value) if value else None
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
@@ -188,7 +208,7 @@ class ZWaveTiltCover(ZWaveCover):
         if tilt_value:
             await self.info.node.async_set_value(
                 tilt_value,
-                percent_to_zwave_position(kwargs[ATTR_TILT_POSITION]),
+                percent_to_zwave_tilt(kwargs[ATTR_TILT_POSITION]),
             )
             await asyncio.sleep(2)
             await self.info.node.async_refresh_cc_values(tilt_value.command_class)

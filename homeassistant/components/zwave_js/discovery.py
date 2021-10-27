@@ -275,6 +275,13 @@ DISCOVERY_SCHEMAS = [
                 property_key="venetianBlindsTilt",
             )
         ),
+        required_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.MANUFACTURER_PROPRIETARY},
+                property={"fibaro"},
+                property_key={"venetianBlindsTilt"},
+            )
+        ],
     ),
     # Qubino flush shutter
     ZWaveDiscoverySchema(
