@@ -31,6 +31,7 @@
             "is_not_plugged_in": "{entity_name} on lahti \u00fchendatud",
             "is_not_powered": "{entity_name} ei ole voolu all",
             "is_not_present": "{entity_name} puudub",
+            "is_not_running": "{entity_name} ei t\u00f6\u00f6ta",
             "is_not_tampered": "{entity_name} ei tuvasta omavoli",
             "is_not_unsafe": "{entity_name} on turvaline",
             "is_occupied": "{entity_name} on h\u00f5ivatud",
@@ -41,6 +42,7 @@
             "is_powered": "{entity_name} on voolu all",
             "is_present": "{entity_name} on saadaval",
             "is_problem": "Olemil {entity_name} on probleem",
+            "is_running": "{entity_name} t\u00f6\u00f6tab",
             "is_smoke": "{entity_name} tuvastab suitsu",
             "is_sound": "{entity_name} tuvastab heli",
             "is_tampered": "{entity_name} tuvastab omavolilise muutmist",
@@ -81,6 +83,7 @@
             "not_plugged_in": "{entity_name} \u00fchendati vooluv\u00f5rgust v\u00e4lja",
             "not_powered": "{entity_name} pole toidet",
             "not_present": "{entity_name} puudub",
+            "not_running": "{entity_name} ei t\u00f6\u00f6ta enam",
             "not_unsafe": "{entity_name} muutus turvaliseks",
             "occupied": "{entity_name} h\u00f5ivati",
             "opened": "{entity_name} avanes",
@@ -88,6 +91,7 @@
             "powered": "{entity_name} l\u00fcltus voolu alla",
             "present": "{entity_name} on saadaval",
             "problem": "{entity_name} avastas probleemi",
+            "running": "{entity_name} alustas t\u00f6\u00f6d",
             "smoke": "{entity_name} tuvastas suitsu",
             "sound": "{entity_name} tuvastas heli",
             "turned_off": "{entity_name} l\u00fclitus v\u00e4lja",
@@ -96,6 +100,19 @@
             "update": "{entity_name} sai saadavaloleva uuenduse",
             "vibration": "{entity_name} registreeris vibratsiooni"
         }
+    },
+    "device_class": {
+        "cold": "jahutus",
+        "gas": "gaas",
+        "heat": "k\u00fcte",
+        "moisture": "niiskus",
+        "motion": "liikumine",
+        "occupancy": "h\u00f5ivatus",
+        "power": "v\u00f5imsus",
+        "problem": "probleem",
+        "smoke": "suits",
+        "sound": "heli",
+        "vibration": "vibratsioon"
     },
     "state": {
         "_": {
@@ -173,6 +190,10 @@
         "problem": {
             "off": "OK",
             "on": "Probleem"
+        },
+        "running": {
+            "off": "Ei t\u00f6\u00f6ta",
+            "on": "T\u00f6\u00f6tab"
         },
         "safety": {
             "off": "Ohutu",

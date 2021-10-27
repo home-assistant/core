@@ -9,6 +9,7 @@ from xknx.devices import BinarySensor as XknxBinarySensor
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
+    CONF_ENTITY_CATEGORY,
     CONF_NAME,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -64,6 +65,7 @@ class KNXBinarySensor(KnxEntity, BinarySensorEntity, RestoreEntity):
                 reset_after=config.get(BinarySensorSchema.CONF_RESET_AFTER),
             )
         )
+        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_force_update = self._device.ignore_internal_state
         self._attr_unique_id = str(self._device.remote_value.group_address_state)

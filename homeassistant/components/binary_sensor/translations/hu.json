@@ -31,6 +31,7 @@
             "is_not_plugged_in": "{entity_name} nincs csatlakoztatva",
             "is_not_powered": "{entity_name} nincs fesz\u00fcts\u00e9g alatt",
             "is_not_present": "{entity_name} nincs jelen",
+            "is_not_running": "{entity_name} nem fut",
             "is_not_tampered": "{entity_name} nem \u00e9szlel manipul\u00e1l\u00e1st",
             "is_not_unsafe": "{entity_name} biztons\u00e1gos",
             "is_occupied": "{entity_name} foglalt",
@@ -41,6 +42,7 @@
             "is_powered": "{entity_name} fesz\u00fclts\u00e9g alatt van",
             "is_present": "{entity_name} jelen van",
             "is_problem": "{entity_name} probl\u00e9m\u00e1t \u00e9szlel",
+            "is_running": "{entity_name} fut",
             "is_smoke": "{entity_name} f\u00fcst\u00f6t \u00e9rz\u00e9kel",
             "is_sound": "{entity_name} hangot \u00e9rz\u00e9kel",
             "is_tampered": "{entity_name} manipul\u00e1l\u00e1st \u00e9szlel",
@@ -81,6 +83,7 @@
             "not_plugged_in": "{entity_name} m\u00e1r nincs csatlakoztatva",
             "not_powered": "{entity_name} m\u00e1r nincs fesz\u00fcts\u00e9g alatt",
             "not_present": "{entity_name} m\u00e1r nincs jelen",
+            "not_running": "{entity_name} m\u00e1r nem fut",
             "not_unsafe": "{entity_name} biztons\u00e1gos lett",
             "occupied": "{entity_name} foglalt lett",
             "opened": "{entity_name} ki lett nyitva",
@@ -88,6 +91,7 @@
             "powered": "{entity_name} m\u00e1r fesz\u00fclts\u00e9g alatt van",
             "present": "{entity_name} m\u00e1r jelen van",
             "problem": "{entity_name} probl\u00e9m\u00e1t \u00e9szlel",
+            "running": "{entity_name} elindult",
             "smoke": "{entity_name} f\u00fcst\u00f6t \u00e9rz\u00e9kel",
             "sound": "{entity_name} hangot \u00e9rz\u00e9kel",
             "turned_off": "{entity_name} ki lett kapcsolva",
@@ -173,6 +177,10 @@
         "problem": {
             "off": "OK",
             "on": "Probl\u00e9ma"
+        },
+        "running": {
+            "off": "Nem fut",
+            "on": "Fut"
         },
         "safety": {
             "off": "Biztons\u00e1gos",

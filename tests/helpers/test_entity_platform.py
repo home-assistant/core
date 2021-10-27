@@ -967,6 +967,50 @@ async def test_device_info_invalid_url(hass, caplog):
     )
 
 
+async def test_device_info_homeassistant_url(hass, caplog):
+    """Test device info with homeassistant URL."""
+    registry = dr.async_get(hass)
+    registry.async_get_or_create(
+        config_entry_id="123",
+        connections=set(),
+        identifiers={("mqtt", "via-id")},
+        manufacturer="manufacturer",
+        model="via",
+    )
+
+    async def async_setup_entry(hass, config_entry, async_add_entities):
+        """Mock setup entry method."""
+        async_add_entities(
+            [
+                # Valid device info, with homeassistant url
+                MockEntity(
+                    unique_id="qwer",
+                    device_info={
+                        "identifiers": {("mqtt", "1234")},
+                        "configuration_url": "homeassistant://config/mqtt",
+                    },
+                ),
+            ]
+        )
+        return True
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 1
+
+    device = registry.async_get_device({("mqtt", "1234")})
+    assert device is not None
+    assert device.identifiers == {("mqtt", "1234")}
+    assert device.configuration_url == "homeassistant://config/mqtt"
+
+
 async def test_entity_disabled_by_integration(hass):
     """Test entity disabled by integration."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))

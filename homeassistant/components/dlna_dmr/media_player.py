@@ -7,8 +7,9 @@ from datetime import datetime, timedelta
 import functools
 from typing import Any, Callable, TypeVar, cast
 
-from async_upnp_client import UpnpError, UpnpService, UpnpStateVariable
+from async_upnp_client import UpnpService, UpnpStateVariable
 from async_upnp_client.const import NotificationSubType
+from async_upnp_client.exceptions import UpnpError, UpnpResponseError
 from async_upnp_client.profiles.dlna import DmrDevice, TransportState
 from async_upnp_client.utils import async_get_local_ip
 import voluptuous as vol
@@ -347,6 +348,10 @@ class DlnaDmrEntity(MediaPlayerEntity):
             try:
                 self._device.on_event = self._on_event
                 await self._device.async_subscribe_services(auto_resubscribe=True)
+            except UpnpResponseError as err:
+                # Device rejected subscription request. This is OK, variables
+                # will be polled instead.
+                _LOGGER.debug("Device rejected subscription: %r", err)
             except UpnpError as err:
                 # Don't leave the device half-constructed
                 self._device.on_event = None

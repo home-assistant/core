@@ -138,7 +138,7 @@ homeassistant/components/ecovacs/* @OverloadUT
 homeassistant/components/edl21/* @mtdcr
 homeassistant/components/efergy/* @tkdrob
 homeassistant/components/egardia/* @jeroenterheerdt
-homeassistant/components/eight_sleep/* @mezz64
+homeassistant/components/eight_sleep/* @mezz64 @raman325
 homeassistant/components/elgato/* @frenck
 homeassistant/components/elkm1/* @gwww @bdraco
 homeassistant/components/elv/* @majuss
@@ -227,7 +227,6 @@ homeassistant/components/homematic/* @pvizeli @danielperna84
 homeassistant/components/honeywell/* @rdfurman
 homeassistant/components/http/* @home-assistant/core
 homeassistant/components/huawei_lte/* @scop @fphammerle
-homeassistant/components/huawei_router/* @abmantis
 homeassistant/components/hue/* @balloob @frenck
 homeassistant/components/huisbaasje/* @dennisschroer
 homeassistant/components/humidifier/* @home-assistant/core @Shulyaka
@@ -563,6 +562,7 @@ homeassistant/components/utility_meter/* @dgomes
 homeassistant/components/vallox/* @andre-richter
 homeassistant/components/velbus/* @Cereal2nd @brefra
 homeassistant/components/velux/* @Julius2342
+homeassistant/components/venstar/* @garbled1
 homeassistant/components/vera/* @pavoni
 homeassistant/components/verisure/* @frenck
 homeassistant/components/versasense/* @flamm3blemuff1n

@@ -66,6 +66,7 @@ def mock_all(aioclient_mock, request):
                 "addons": [
                     {
                         "name": "test",
+                        "state": "started",
                         "slug": "test",
                         "installed": True,
                         "update_available": False,
@@ -76,6 +77,7 @@ def mock_all(aioclient_mock, request):
                     },
                     {
                         "name": "test2",
+                        "state": "stopped",
                         "slug": "test2",
                         "installed": True,
                         "update_available": False,
@@ -101,22 +103,6 @@ def mock_all(aioclient_mock, request):
                 "network_tx": 82374138,
                 "blk_read": 46010945536,
                 "blk_write": 15051526144,
-            },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/test2/stats",
-        json={
-            "result": "ok",
-            "data": {
-                "cpu_percent": 0.8,
-                "memory_usage": 51941376,
-                "memory_limit": 3977146368,
-                "memory_percent": 1.31,
-                "network_rx": 31338284,
-                "network_tx": 15692900,
-                "blk_read": 740077568,
-                "blk_write": 6004736,
             },
         },
     )
@@ -149,9 +135,9 @@ async def test_sensors(hass, aioclient_mock):
         "sensor.test2_version": "3.1.0",
         "sensor.test2_newest_version": "3.2.0",
         "sensor.test_cpu_percent": "0.99",
-        "sensor.test2_cpu_percent": "0.8",
+        "sensor.test2_cpu_percent": "unavailable",
         "sensor.test_memory_percent": "4.59",
-        "sensor.test2_memory_percent": "1.31",
+        "sensor.test2_memory_percent": "unavailable",
     }
 
     """Check that entities are disabled by default."""

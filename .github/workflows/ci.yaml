@@ -682,7 +682,7 @@ jobs:
           # Ideally this should be part of our dependencies
           # However this plugin is fairly new and doesn't run correctly
           # on a non-GitHub environment.
-          pip install pytest-github-actions-annotate-failures
+          pip install pytest-github-actions-annotate-failures==0.1.3
       - name: Run pytest
         run: |
           . venv/bin/activate
