@@ -1,7 +1,7 @@
 """Support for Tractive binary sensors."""
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import Any
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY_CHARGING,
@@ -9,7 +9,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_BATTERY_CHARGING
+from homeassistant.const import ATTR_BATTERY_CHARGING, ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -24,7 +24,7 @@ from .const import (
 )
 from .entity import TractiveEntity
 
-TRACKERS_WITH_BUILTIN_BATTERY: Final = ("TRNJA4", "TRAXL1")
+TRACKERS_WITH_BUILTIN_BATTERY = ("TRNJA4", "TRAXL1")
 
 
 class TractiveBinarySensor(TractiveEntity, BinarySensorEntity):
@@ -73,10 +73,11 @@ class TractiveBinarySensor(TractiveEntity, BinarySensorEntity):
         )
 
 
-SENSOR_TYPE: Final = BinarySensorEntityDescription(
+SENSOR_TYPE = BinarySensorEntityDescription(
     key=ATTR_BATTERY_CHARGING,
     name="Battery Charging",
     device_class=DEVICE_CLASS_BATTERY_CHARGING,
+    entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
 )
 
 

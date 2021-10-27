@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     DEVICE_CLASS_BATTERY,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
     TIME_MINUTES,
 )
@@ -127,13 +128,14 @@ class TractiveActivitySensor(TractiveSensor):
         )
 
 
-SENSOR_TYPES: Final[tuple[TractiveSensorEntityDescription, ...]] = (
+SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
     TractiveSensorEntityDescription(
         key=ATTR_BATTERY_LEVEL,
         name="Battery Level",
         native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_BATTERY,
         entity_class=TractiveHardwareSensor,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_ACTIVE,

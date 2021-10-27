@@ -119,15 +119,9 @@ class AzureDevOpsDeviceEntity(AzureDevOpsEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this Azure DevOps instance."""
-        return {
-            "identifiers": {
-                (  # type: ignore
-                    DOMAIN,
-                    self._organization,
-                    self._project_name,
-                )
-            },
-            "manufacturer": self._organization,
-            "name": self._project_name,
-            "entry_type": "service",
-        }
+        return DeviceInfo(
+            entry_type="service",
+            identifiers={(DOMAIN, self._organization, self._project_name)},  # type: ignore
+            manufacturer=self._organization,
+            name=self._project_name,
+        )

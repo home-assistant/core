@@ -260,7 +260,6 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         assert self._host is not None
         assert self._port is not None
         cli = APIClient(
-            self.hass.loop,
             self._host,
             self._port,
             "",
@@ -292,7 +291,6 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         assert self._host is not None
         assert self._port is not None
         cli = APIClient(
-            self.hass.loop,
             self._host,
             self._port,
             self._password,

@@ -32,8 +32,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.color as color_util
 
-from .. import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, subscription
+from .. import subscription
 from ... import mqtt
+from ..const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
@@ -83,6 +84,8 @@ PLATFORM_SCHEMA_TEMPLATE = (
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 
+DISCOVERY_SCHEMA_TEMPLATE = PLATFORM_SCHEMA_TEMPLATE.extend({}, extra=vol.REMOVE_EXTRA)
+
 
 async def async_setup_entity_template(
     hass, config, async_add_entities, config_entry, discovery_data
@@ -116,7 +119,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
     @staticmethod
     def config_schema():
         """Return the config schema."""
-        return PLATFORM_SCHEMA_TEMPLATE
+        return DISCOVERY_SCHEMA_TEMPLATE
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""

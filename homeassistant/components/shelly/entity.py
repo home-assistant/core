@@ -166,6 +166,10 @@ async def async_setup_entry_rpc(
         key_instances = get_rpc_key_instances(wrapper.device.status, description.key)
 
         for key in key_instances:
+            # Filter non-existing sensors
+            if description.sub_key not in wrapper.device.status[key]:
+                continue
+
             # Filter and remove entities that according to settings should not create an entity
             if description.removal_condition and description.removal_condition(
                 wrapper.device.config, key
@@ -233,6 +237,7 @@ class BlockAttributeDescription:
     # Callable (settings, block), return true if entity should be removed
     removal_condition: Callable[[dict, Block], bool] | None = None
     extra_state_attributes: Callable[[Block], dict | None] | None = None
+    entity_category: str | None = None
 
 
 @dataclass
@@ -240,16 +245,18 @@ class RpcAttributeDescription:
     """Class to describe a RPC sensor."""
 
     key: str
+    sub_key: str
     name: str
     icon: str | None = None
     unit: str | None = None
-    value: Callable[[dict, Any], Any] | None = None
+    value: Callable[[Any, Any], Any] | None = None
     device_class: str | None = None
     state_class: str | None = None
     default_enabled: bool = True
     available: Callable[[dict], bool] | None = None
     removal_condition: Callable[[dict, str], bool] | None = None
-    extra_state_attributes: Callable[[dict], dict | None] | None = None
+    extra_state_attributes: Callable[[dict, dict], dict | None] | None = None
+    entity_category: str | None = None
 
 
 @dataclass
@@ -264,6 +271,7 @@ class RestAttributeDescription:
     state_class: str | None = None
     default_enabled: bool = True
     extra_state_attributes: Callable[[dict], dict | None] | None = None
+    entity_category: str | None = None
 
 
 class ShellyBlockEntity(entity.Entity):
@@ -274,6 +282,9 @@ class ShellyBlockEntity(entity.Entity):
         self.wrapper = wrapper
         self.block = block
         self._name = get_block_entity_name(wrapper.device, block)
+        self._attr_device_info = DeviceInfo(
+            connections={(device_registry.CONNECTION_NETWORK_MAC, wrapper.mac)}
+        )
 
     @property
     def name(self) -> str:
@@ -284,13 +295,6 @@ class ShellyBlockEntity(entity.Entity):
     def should_poll(self) -> bool:
         """If device should be polled."""
         return False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Device info."""
-        return {
-            "connections": {(device_registry.CONNECTION_NETWORK_MAC, self.wrapper.mac)}
-        }
 
     @property
     def available(self) -> bool:
@@ -340,9 +344,9 @@ class ShellyRpcEntity(entity.Entity):
         self.wrapper = wrapper
         self.key = key
         self._attr_should_poll = False
-        self._attr_device_info = {
-            "connections": {(device_registry.CONNECTION_NETWORK_MAC, wrapper.mac)}
-        }
+        self._attr_device_info = DeviceInfo(
+            connections={(device_registry.CONNECTION_NETWORK_MAC, wrapper.mac)}
+        )
         self._attr_unique_id = f"{wrapper.mac}-{key}"
         self._attr_name = get_rpc_entity_name(wrapper.device, key)
 
@@ -464,6 +468,11 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
 
         return self.description.extra_state_attributes(self.block)
 
+    @property
+    def entity_category(self) -> str | None:
+        """Return category of entity."""
+        return self.description.entity_category
+
 
 class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
     """Class to load info from REST."""
@@ -481,18 +490,14 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
         self.description = description
         self._name = get_block_entity_name(wrapper.device, None, self.description.name)
         self._last_value = None
+        self._attr_device_info = DeviceInfo(
+            connections={(device_registry.CONNECTION_NETWORK_MAC, wrapper.mac)}
+        )
 
     @property
     def name(self) -> str:
         """Name of sensor."""
         return self._name
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Device info."""
-        return {
-            "connections": {(device_registry.CONNECTION_NETWORK_MAC, self.wrapper.mac)}
-        }
 
     @property
     def entity_registry_enabled_default(self) -> bool:
@@ -536,6 +541,11 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
 
         return self.description.extra_state_attributes(self.wrapper.device.status)
 
+    @property
+    def entity_category(self) -> str | None:
+        """Return category of entity."""
+        return self.description.entity_category
+
 
 class ShellyRpcAttributeEntity(ShellyRpcEntity, entity.Entity):
     """Helper class to represent a rpc attribute."""
@@ -549,6 +559,7 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, entity.Entity):
     ) -> None:
         """Initialize sensor."""
         super().__init__(wrapper, key)
+        self.sub_key = description.sub_key
         self.attribute = attribute
         self.description = description
 
@@ -564,8 +575,11 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, entity.Entity):
         """Value of sensor."""
         if callable(self.description.value):
             self._last_value = self.description.value(
-                self.wrapper.device.status[self.key], self._last_value
+                self.wrapper.device.status[self.key][self.sub_key], self._last_value
             )
+        else:
+            self._last_value = self.wrapper.device.status[self.key][self.sub_key]
+
         return self._last_value
 
     @property
@@ -576,7 +590,9 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, entity.Entity):
         if not available or not self.description.available:
             return available
 
-        return self.description.available(self.wrapper.device.status[self.key])
+        return self.description.available(
+            self.wrapper.device.status[self.key][self.sub_key]
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -584,9 +600,17 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, entity.Entity):
         if self.description.extra_state_attributes is None:
             return None
 
+        assert self.wrapper.device.shelly
+
         return self.description.extra_state_attributes(
-            self.wrapper.device.status[self.key]
+            self.wrapper.device.status[self.key][self.sub_key],
+            self.wrapper.device.shelly,
         )
+
+    @property
+    def entity_category(self) -> str | None:
+        """Return category of entity."""
+        return self.description.entity_category
 
 
 class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEntity):

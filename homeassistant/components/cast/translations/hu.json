@@ -29,7 +29,7 @@
                     "ignore_cec": "A CEC figyelmen k\u00edv\u00fcl hagy\u00e1sa",
                     "uuid": "Enged\u00e9lyezett UUID-k"
                 },
-                "description": "Enged\u00e9lyezett UUID - vessz\u0151vel elv\u00e1lasztott lista a Cast-eszk\u00f6z\u00f6k UUID-j\u00e9b\u0151l, amelyeket hozz\u00e1 lehet adni Home Assistant-hoz. Csak akkor haszn\u00e1lja, ha nem akarja hozz\u00e1adni az \u00f6sszes rendelkez\u00e9sre \u00e1ll\u00f3 cast eszk\u00f6zt.\nCEC figyelmen k\u00edv\u00fcl hagy\u00e1sa - vessz\u0151vel elv\u00e1lasztott Chromecast-lista, amelynek figyelmen k\u00edv\u00fcl kell hagynia a CEC-adatokat az akt\u00edv bemenet meghat\u00e1roz\u00e1s\u00e1hoz. Ezt tov\u00e1bb\u00edtjuk a pychromecast.IGNORE_CEC c\u00edmre.",
+                "description": "Enged\u00e9lyezett UUID - vessz\u0151vel elv\u00e1lasztott lista a Cast-eszk\u00f6z\u00f6k UUID-j\u00e9b\u0151l, amelyeket hozz\u00e1 lehet adni Home Assistanthoz. Csak akkor haszn\u00e1lja, ha nem akarja hozz\u00e1adni az \u00f6sszes rendelkez\u00e9sre \u00e1ll\u00f3 cast eszk\u00f6zt.\nCEC figyelmen k\u00edv\u00fcl hagy\u00e1sa - vessz\u0151vel elv\u00e1lasztott Chromecast-lista, amelynek figyelmen k\u00edv\u00fcl kell hagynia a CEC-adatokat az akt\u00edv bemenet meghat\u00e1roz\u00e1s\u00e1hoz. Ezt tov\u00e1bb\u00edtjuk a pychromecast.IGNORE_CEC c\u00edmre.",
                 "title": "Speci\u00e1lis Google Cast-konfigur\u00e1ci\u00f3"
             },
             "basic_options": {

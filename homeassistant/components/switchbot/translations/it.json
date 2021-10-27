@@ -8,7 +8,9 @@
             "unknown": "Errore imprevisto"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi"
+            "cannot_connect": "Impossibile connettersi",
+            "one": "Vuoto",
+            "other": "Vuoti"
         },
         "flow_title": "{name}",
         "step": {

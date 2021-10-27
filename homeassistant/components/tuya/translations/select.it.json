@@ -1,0 +1,22 @@
+{
+    "state": {
+        "tuya__led_type": {
+            "halogen": "Alogena",
+            "incandescent": "Incandescenza",
+            "led": "LED"
+        },
+        "tuya__light_mode": {
+            "none": "Spento",
+            "pos": "Indica la posizione dell'interruttore",
+            "relay": "Indica lo stato di accensione/spegnimento dell'interruttore"
+        },
+        "tuya__relay_status": {
+            "last": "Ricorda l'ultimo stato",
+            "memory": "Ricorda l'ultimo stato",
+            "off": "Spento",
+            "on": "Acceso",
+            "power_off": "Spento",
+            "power_on": "Acceso"
+        }
+    }
+}

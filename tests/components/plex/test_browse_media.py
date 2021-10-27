@@ -1,4 +1,5 @@
 """Tests for Plex media browser."""
+from http import HTTPStatus
 from unittest.mock import patch
 
 from homeassistant.components.media_player.const import (
@@ -46,6 +47,18 @@ class MockPlexEpisode:
     type = "episode"
 
 
+class MockPlexArtist:
+    """Mock a plexapi Artist instance."""
+
+    ratingKey = 300
+    title = "Artist"
+    type = "artist"
+
+    def __iter__(self):
+        """Iterate over albums."""
+        yield MockPlexAlbum()
+
+
 class MockPlexAlbum:
     """Mock a plexapi Album instance."""
 
@@ -53,7 +66,7 @@ class MockPlexAlbum:
     parentTitle = "Artist"
     title = "Album"
     type = "album"
-    year = 2001
+    year = 2019
 
     def __iter__(self):
         """Iterate over tracks."""
@@ -290,11 +303,13 @@ async def test_browse_media(
     assert result[ATTR_MEDIA_CONTENT_TYPE] == "library"
     assert result["title"] == "Music"
 
-    # Browse into a Plex album
+    # Browse into a Plex artist
     msg_id += 1
-    mock_album = MockPlexAlbum()
+    mock_artist = MockPlexArtist()
+    mock_album = next(iter(MockPlexArtist()))
+    mock_track = next(iter(MockPlexAlbum()))
     with patch.object(
-        mock_plex_server, "fetch_item", return_value=mock_album
+        mock_plex_server, "fetch_item", return_value=mock_artist
     ) as mock_fetch:
         await websocket_client.send_json(
             {
@@ -315,16 +330,38 @@ async def test_browse_media(
     assert msg["success"]
     result = msg["result"]
     result_id = int(result[ATTR_MEDIA_CONTENT_ID])
+    assert result[ATTR_MEDIA_CONTENT_TYPE] == "artist"
+    assert result["title"] == mock_artist.title
+    assert result["children"][0]["title"] == f"{mock_album.title} ({mock_album.year})"
+
+    # Browse into a Plex album
+    msg_id += 1
+    await websocket_client.send_json(
+        {
+            "id": msg_id,
+            "type": "media_player/browse_media",
+            "entity_id": media_players[0],
+            ATTR_MEDIA_CONTENT_TYPE: result["children"][-1][ATTR_MEDIA_CONTENT_TYPE],
+            ATTR_MEDIA_CONTENT_ID: str(result["children"][-1][ATTR_MEDIA_CONTENT_ID]),
+        }
+    )
+    msg = await websocket_client.receive_json()
+
+    assert msg["success"]
+    result = msg["result"]
+    result_id = int(result[ATTR_MEDIA_CONTENT_ID])
     assert result[ATTR_MEDIA_CONTENT_TYPE] == "album"
     assert (
         result["title"]
-        == f"{mock_album.parentTitle} - {mock_album.title} ({mock_album.year})"
+        == f"{mock_artist.title} - {mock_album.title} ({mock_album.year})"
     )
+    assert result["children"][0]["title"] == f"{mock_track.index}. {mock_track.title}"
 
     # Browse into a non-existent TV season
     unknown_key = 99999999999999
     requests_mock.get(
-        f"{mock_plex_server.url_in_use}/library/metadata/{unknown_key}", status_code=404
+        f"{mock_plex_server.url_in_use}/library/metadata/{unknown_key}",
+        status_code=HTTPStatus.NOT_FOUND,
     )
 
     msg_id += 1

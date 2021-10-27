@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from functools import partial
+from http import HTTPStatus
 import logging
 
 from aiohttp import client_exceptions
@@ -11,7 +12,6 @@ import async_timeout
 import slugify as unicode_slug
 
 from homeassistant import core
-from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
@@ -148,7 +148,7 @@ class HueBridge:
                     # We only retry if it's a server error. So raise on all 4XX errors.
                     if (
                         isinstance(err, client_exceptions.ClientResponseError)
-                        and err.status < HTTP_INTERNAL_SERVER_ERROR
+                        and err.status < HTTPStatus.INTERNAL_SERVER_ERROR
                     ):
                         raise
 

@@ -14,12 +14,13 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.dt import utcnow
 from homeassistant.util.pressure import convert as convert_pressure
 
-from . import base_unique_id
+from . import base_unique_id, device_info
 from .const import (
     ATTRIBUTION,
     CONF_STATION,
@@ -117,3 +118,8 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return False
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return device_info(self._latitude, self._longitude)

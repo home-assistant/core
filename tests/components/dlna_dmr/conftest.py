@@ -5,7 +5,7 @@ from collections.abc import Iterable
 from socket import AddressFamily  # pylint: disable=no-name-in-module
 from unittest.mock import Mock, create_autospec, patch, seal
 
-from async_upnp_client import UpnpDevice, UpnpFactory
+from async_upnp_client import UpnpDevice, UpnpFactory, UpnpService
 import pytest
 
 from homeassistant.components.dlna_dmr.const import DOMAIN as DLNA_DOMAIN
@@ -49,23 +49,35 @@ def domain_data_mock(hass: HomeAssistant) -> Iterable[Mock]:
     upnp_device.parent_device = None
     upnp_device.root_device = upnp_device
     upnp_device.all_devices = [upnp_device]
+    upnp_device.services = {
+        "urn:schemas-upnp-org:service:AVTransport:1": create_autospec(
+            UpnpService,
+            instance=True,
+            service_type="urn:schemas-upnp-org:service:AVTransport:1",
+            service_id="urn:upnp-org:serviceId:AVTransport",
+        ),
+        "urn:schemas-upnp-org:service:ConnectionManager:1": create_autospec(
+            UpnpService,
+            instance=True,
+            service_type="urn:schemas-upnp-org:service:ConnectionManager:1",
+            service_id="urn:upnp-org:serviceId:ConnectionManager",
+        ),
+        "urn:schemas-upnp-org:service:RenderingControl:1": create_autospec(
+            UpnpService,
+            instance=True,
+            service_type="urn:schemas-upnp-org:service:RenderingControl:1",
+            service_id="urn:upnp-org:serviceId:RenderingControl",
+        ),
+    }
     seal(upnp_device)
     domain_data.upnp_factory.async_create_device.return_value = upnp_device
-
-    domain_data.unmigrated_config = {}
 
     with patch.dict(hass.data, {DLNA_DOMAIN: domain_data}):
         yield domain_data
 
-    # Make sure the event notifiers are released
-    assert (
-        domain_data.async_get_event_notifier.await_count
-        == domain_data.async_release_event_notifier.await_count
-    )
-
 
 @pytest.fixture
-def config_entry_mock() -> Iterable[MockConfigEntry]:
+def config_entry_mock() -> MockConfigEntry:
     """Mock a config entry for this platform."""
     mock_entry = MockConfigEntry(
         unique_id=MOCK_DEVICE_UDN,
@@ -78,7 +90,7 @@ def config_entry_mock() -> Iterable[MockConfigEntry]:
         title=MOCK_DEVICE_NAME,
         options={},
     )
-    yield mock_entry
+    return mock_entry
 
 
 @pytest.fixture
@@ -100,23 +112,6 @@ def dmr_device_mock(domain_data_mock: Mock) -> Iterable[Mock]:
 
         yield device
 
-        # Make sure the device is disconnected
-        assert (
-            device.async_subscribe_services.await_count
-            == device.async_unsubscribe_services.await_count
-        )
-
-        assert device.on_event is None
-
-
-@pytest.fixture(name="skip_notifications", autouse=True)
-def skip_notifications_fixture() -> Iterable[None]:
-    """Skip notification calls."""
-    with patch("homeassistant.components.persistent_notification.async_create"), patch(
-        "homeassistant.components.persistent_notification.async_dismiss"
-    ):
-        yield
-
 
 @pytest.fixture(autouse=True)
 def ssdp_scanner_mock() -> Iterable[Mock]:
@@ -125,9 +120,6 @@ def ssdp_scanner_mock() -> Iterable[Mock]:
         reg_callback = mock_scanner.return_value.async_register_callback
         reg_callback.return_value = Mock(return_value=None)
         yield mock_scanner.return_value
-        assert (
-            reg_callback.call_count == reg_callback.return_value.call_count
-        ), "Not all callbacks unregistered"
 
 
 @pytest.fixture(autouse=True)
@@ -139,3 +131,8 @@ def async_get_local_ip_mock() -> Iterable[Mock]:
     ) as func:
         func.return_value = AddressFamily.AF_INET, LOCAL_IP
         yield func
+
+
+@pytest.fixture(autouse=True)
+def dlna_dmr_mock_get_source_ip(mock_get_source_ip):
+    """Mock network util's async_get_source_ip."""

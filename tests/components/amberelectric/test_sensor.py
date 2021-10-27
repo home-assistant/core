@@ -108,9 +108,9 @@ async def test_general_price_sensor(hass: HomeAssistant, setup_general: Mock) ->
     attributes = price.attributes
     assert attributes["duration"] == 30
     assert attributes["date"] == "2021-09-21"
-    assert attributes["per_kwh"] == 8
+    assert attributes["per_kwh"] == 0.08
     assert attributes["nem_date"] == "2021-09-21T08:30:00+10:00"
-    assert attributes["spot_per_kwh"] == 1
+    assert attributes["spot_per_kwh"] == 0.01
     assert attributes["start_time"] == "2021-09-21T08:00:00+10:00"
     assert attributes["end_time"] == "2021-09-21T08:30:00+10:00"
     assert attributes["renewables"] == 51
@@ -132,8 +132,8 @@ async def test_general_price_sensor(hass: HomeAssistant, setup_general: Mock) ->
     price = hass.states.get("sensor.mock_title_general_price")
     assert price
     attributes = price.attributes
-    assert attributes.get("range_min") == 7.8
-    assert attributes.get("range_max") == 12.4
+    assert attributes.get("range_min") == 0.08
+    assert attributes.get("range_max") == 0.12
 
 
 async def test_general_and_controlled_load_price_sensor(
@@ -141,16 +141,15 @@ async def test_general_and_controlled_load_price_sensor(
 ) -> None:
     """Test the Controlled Price sensor."""
     assert len(hass.states.async_all()) == 6
-    print(hass.states)
     price = hass.states.get("sensor.mock_title_controlled_load_price")
     assert price
     assert price.state == "0.08"
     attributes = price.attributes
     assert attributes["duration"] == 30
     assert attributes["date"] == "2021-09-21"
-    assert attributes["per_kwh"] == 8
+    assert attributes["per_kwh"] == 0.08
     assert attributes["nem_date"] == "2021-09-21T08:30:00+10:00"
-    assert attributes["spot_per_kwh"] == 1
+    assert attributes["spot_per_kwh"] == 0.01
     assert attributes["start_time"] == "2021-09-21T08:00:00+10:00"
     assert attributes["end_time"] == "2021-09-21T08:30:00+10:00"
     assert attributes["renewables"] == 51
@@ -172,9 +171,9 @@ async def test_general_and_feed_in_price_sensor(
     attributes = price.attributes
     assert attributes["duration"] == 30
     assert attributes["date"] == "2021-09-21"
-    assert attributes["per_kwh"] == -8
+    assert attributes["per_kwh"] == -0.08
     assert attributes["nem_date"] == "2021-09-21T08:30:00+10:00"
-    assert attributes["spot_per_kwh"] == 1
+    assert attributes["spot_per_kwh"] == 0.01
     assert attributes["start_time"] == "2021-09-21T08:00:00+10:00"
     assert attributes["end_time"] == "2021-09-21T08:30:00+10:00"
     assert attributes["renewables"] == 51
@@ -199,9 +198,9 @@ async def test_general_forecast_sensor(
     first_forecast = attributes["forecasts"][0]
     assert first_forecast["duration"] == 30
     assert first_forecast["date"] == "2021-09-21"
-    assert first_forecast["per_kwh"] == 9
+    assert first_forecast["per_kwh"] == 0.09
     assert first_forecast["nem_date"] == "2021-09-21T09:00:00+10:00"
-    assert first_forecast["spot_per_kwh"] == 1
+    assert first_forecast["spot_per_kwh"] == 0.01
     assert first_forecast["start_time"] == "2021-09-21T08:30:00+10:00"
     assert first_forecast["end_time"] == "2021-09-21T09:00:00+10:00"
     assert first_forecast["renewables"] == 50
@@ -222,8 +221,8 @@ async def test_general_forecast_sensor(
     assert price
     attributes = price.attributes
     first_forecast = attributes["forecasts"][0]
-    assert first_forecast.get("range_min") == 7.8
-    assert first_forecast.get("range_max") == 12.4
+    assert first_forecast.get("range_min") == 0.08
+    assert first_forecast.get("range_max") == 0.12
 
 
 async def test_controlled_load_forecast_sensor(
@@ -241,9 +240,9 @@ async def test_controlled_load_forecast_sensor(
     first_forecast = attributes["forecasts"][0]
     assert first_forecast["duration"] == 30
     assert first_forecast["date"] == "2021-09-21"
-    assert first_forecast["per_kwh"] == 9
+    assert first_forecast["per_kwh"] == 0.09
     assert first_forecast["nem_date"] == "2021-09-21T09:00:00+10:00"
-    assert first_forecast["spot_per_kwh"] == 1
+    assert first_forecast["spot_per_kwh"] == 0.01
     assert first_forecast["start_time"] == "2021-09-21T08:30:00+10:00"
     assert first_forecast["end_time"] == "2021-09-21T09:00:00+10:00"
     assert first_forecast["renewables"] == 50
@@ -265,9 +264,9 @@ async def test_feed_in_forecast_sensor(
     first_forecast = attributes["forecasts"][0]
     assert first_forecast["duration"] == 30
     assert first_forecast["date"] == "2021-09-21"
-    assert first_forecast["per_kwh"] == -9
+    assert first_forecast["per_kwh"] == -0.09
     assert first_forecast["nem_date"] == "2021-09-21T09:00:00+10:00"
-    assert first_forecast["spot_per_kwh"] == 1
+    assert first_forecast["spot_per_kwh"] == 0.01
     assert first_forecast["start_time"] == "2021-09-21T08:30:00+10:00"
     assert first_forecast["end_time"] == "2021-09-21T09:00:00+10:00"
     assert first_forecast["renewables"] == 50

@@ -22,14 +22,13 @@ from homeassistant.components.smartthings.const import (
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
 
 async def test_migration_creates_new_flow(hass, smartthings_mock, config_entry):
     """Test migration deletes app and creates new flow."""
-    assert await async_setup_component(hass, "persistent_notification", {})
+
     config_entry.version = 1
     config_entry.add_to_hass(hass)
 
@@ -55,11 +54,11 @@ async def test_unrecoverable_api_errors_create_new_flow(
     403 (forbidden/not found): Occurs when the app or installed app could
         not be retrieved/found (likely deleted?)
     """
-    assert await async_setup_component(hass, "persistent_notification", {})
+
     config_entry.add_to_hass(hass)
     request_info = Mock(real_url="http://example.com")
     smartthings_mock.app.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=401
+        request_info=request_info, history=None, status=HTTPStatus.UNAUTHORIZED
     )
 
     # Assert setup returns false

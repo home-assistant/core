@@ -3,7 +3,7 @@
         "abort": {
             "all_configured": "M\u00e1r minden Philips Hue bridge konfigur\u00e1lt",
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "already_in_progress": "A konfigur\u00e1l\u00e1s m\u00e1r folyamatban van.",
+            "already_in_progress": "A konfigur\u00e1l\u00e1s m\u00e1r folyamatban van",
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "discover_timeout": "Nem tal\u00e1lhat\u00f3 a Hue bridge",
             "no_bridges": "Nem tal\u00e1lhat\u00f3 Philips Hue bridget",
@@ -22,7 +22,7 @@
                 "title": "V\u00e1lasszon Hue bridge-t"
             },
             "link": {
-                "description": "Nyomja meg a gombot a bridge-en a Philips Hue Home Assistant-ben val\u00f3 regisztr\u00e1l\u00e1s\u00e1hoz.\n\n![Location of button on bridge](/static/images/config_philips_hue.jpg)",
+                "description": "Nyomja meg a gombot a bridge-en a Philips Hue Home Assistantban val\u00f3 regisztr\u00e1l\u00e1s\u00e1hoz.\n\n![Gomb helye](/static/images/config_philips_hue.jpg)",
                 "title": "Kapcsol\u00f3d\u00e1s a hubhoz"
             },
             "manual": {

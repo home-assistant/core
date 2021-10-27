@@ -420,9 +420,8 @@ async def handle_webhook(
     event_type = data[ATTR_EVENT_TYPE]
     device_registry = dr.async_get(hass)
     device_id = data[ATTR_DEVICE_ID]
-    device = device_registry.async_get(device_id)
 
-    if not device:
+    if not (device := device_registry.async_get(device_id)):
         return Response(
             text=f"Device not found: {device_id}",
             status=HTTPStatus.BAD_REQUEST,
@@ -478,4 +477,4 @@ class MotionEyeEntity(CoordinatorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        return {"identifiers": {self._device_identifier}}
+        return DeviceInfo(identifiers={self._device_identifier})

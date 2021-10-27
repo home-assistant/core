@@ -83,7 +83,6 @@ class TahomaLock(TahomaDevice, LockEntity):
         attr = {
             ATTR_BATTERY_LEVEL: self._battery_level,
         }
-        super_attr = super().extra_state_attributes
-        if super_attr is not None:
+        if (super_attr := super().extra_state_attributes) is not None:
             attr.update(super_attr)
         return attr

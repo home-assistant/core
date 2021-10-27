@@ -54,8 +54,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            serial_number = info.get("system_id")
-            if serial_number is None:
+            if (serial_number := info.get("system_id")) is None:
                 errors["base"] = "no_musiccast_device"
 
         if not errors:

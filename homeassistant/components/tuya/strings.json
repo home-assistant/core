@@ -1,29 +1,20 @@
 {
   "config": {
-    "flow_title": "Tuya configuration",
     "step": {
-      "user":{
-        "title":"Tuya Integration",
-        "data":{
-          "tuya_project_type": "Tuya cloud project type"
-        }
-      },
-      "login": {
-        "title": "Tuya",
-        "description": "Enter your Tuya credential",
+      "user": {
+        "description": "Enter your Tuya credentials",
         "data": {
-          "endpoint": "Availability Zone",
-          "access_id": "Access ID",
-          "access_secret": "Access Secret",
-          "tuya_app_type": "Mobile App",
-          "country_code": "Country Code",
+          "country_code": "Country",
+          "access_id": "Tuya IoT Access ID",
+          "access_secret": "Tuya IoT Access Secret",
           "username": "Account",
-          "password": "Password"
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
     "error": {
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "login_error": "Login error ({code}): {msg}"
     }
   }
 }
