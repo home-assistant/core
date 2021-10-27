@@ -178,9 +178,9 @@ class LcnEntity(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        domain_config = (self.config[CONF_DOMAIN], self.config[CONF_RESOURCE])
-
-        return generate_unique_id(self.entry_id, self.address, domain_config)
+        return generate_unique_id(
+            self.entry_id, self.address, self.config[CONF_RESOURCE]
+        )
 
     @property
     def device_info(self) -> DeviceInfo | None:
