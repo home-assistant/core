@@ -197,6 +197,7 @@ class AdGuardHomeDeviceEntity(AdGuardHomeEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this AdGuard Home instance."""
         return DeviceInfo(
+            configuration_url=f"https://{self.adguard.host}:{self.adguard.port}/",
             entry_type="service",
             identifiers={
                 (DOMAIN, self.adguard.host, self.adguard.port, self.adguard.base_path)  # type: ignore
