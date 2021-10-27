@@ -69,7 +69,7 @@ async def async_reconnect_client(hass, data) -> None:
     for controller in hass.data[UNIFI_DOMAIN].values():
         if (
             not controller.available
-            or (client := controller.api.clients[mac]) is None
+            or (client := controller.api.clients.get(mac)) is None
             or client.is_wired
         ):
             continue
