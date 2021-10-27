@@ -317,7 +317,7 @@ class AppleTVManager:
         self._dispatch_send(SIGNAL_CONNECTED, self.atv)
         self._address_updated(str(conf.address))
 
-        await self._async_setup_device_registry()
+        self._async_setup_device_registry()
 
         self._connection_attempts = 0
         if self._connection_was_lost:
@@ -327,7 +327,8 @@ class AppleTVManager:
             )
             self._connection_was_lost = False
 
-    async def _async_setup_device_registry(self):
+    @callback
+    def _async_setup_device_registry(self):
         attrs = {
             ATTR_IDENTIFIERS: {(DOMAIN, self.config_entry.unique_id)},
             ATTR_MANUFACTURER: "Apple",
@@ -351,7 +352,7 @@ class AppleTVManager:
             if dev_info.mac:
                 attrs[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, dev_info.mac)}
 
-        device_registry = await dr.async_get_registry(self.hass)
+        device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id, **attrs
         )

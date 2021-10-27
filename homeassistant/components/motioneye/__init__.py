@@ -325,7 +325,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     current_cameras: set[tuple[str, str]] = set()
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
 
     @callback
     def _async_process_motioneye_cameras() -> None:
