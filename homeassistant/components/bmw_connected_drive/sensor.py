@@ -578,7 +578,7 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
                 self._attr_native_value = getattr(vehicle_all_trips, sensor_key)
 
         vehicle_state = self._vehicle.state
-        charging_state = vehicle_state.charging_status in [ChargingState.CHARGING]
+        charging_state = vehicle_state.charging_status in {ChargingState.CHARGING}
 
         if sensor_key == "charging_level_hv":
             self._attr_icon = icon_for_battery_level(
