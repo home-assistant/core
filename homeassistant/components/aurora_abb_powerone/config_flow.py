@@ -1,5 +1,8 @@
 """Config flow for Aurora ABB PowerOne integration."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from aurorapy.client import AuroraError, AuroraSerialClient
 import serial.tools.list_ports
@@ -7,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     ATTR_FIRMWARE,
@@ -22,7 +26,9 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def validate_and_connect(hass: core.HomeAssistant, data):
+def validate_and_connect(
+    hass: core.HomeAssistant, data: dict[str, Any]
+) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -50,7 +56,7 @@ def validate_and_connect(hass: core.HomeAssistant, data):
     return ret
 
 
-def scan_comports():
+def scan_comports() -> tuple[list[str] | None, str | None]:
     """Find and store available com ports for the GUI dropdown."""
     com_ports = serial.tools.list_ports.comports(include_links=True)
     com_ports_list = []
@@ -74,7 +80,7 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._com_ports_list = None
         self._default_com_port = None
 
-    async def async_step_import(self, config: dict):
+    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import a configuration from config.yaml."""
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason="already_setup")
@@ -86,7 +92,9 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=DEFAULT_INTEGRATION_TITLE, data=conf)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialised by the user."""
 
         errors = {}
