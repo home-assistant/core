@@ -29,7 +29,7 @@ async def async_setup_entry(
     switches = [dev for dev in devices if dev.has_socket_control]
     if switches:
         async_add_entities(
-            TradfriSwitch(hass, switch, api, gateway_id) for switch in switches
+            TradfriSwitch(switch, api, gateway_id) for switch in switches
         )
 
 
@@ -38,13 +38,12 @@ class TradfriSwitch(TradfriBaseDevice, SwitchEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         device: Command,
         api: Callable[[Command | list[Command]], Any],
         gateway_id: str,
     ) -> None:
         """Initialize a switch."""
-        super().__init__(hass, device, api, gateway_id)
+        super().__init__(device, api, gateway_id)
         self._attr_unique_id = f"{gateway_id}-{device.id}"
 
     def _refresh(self, device: Command, write_ha: bool = True) -> None:

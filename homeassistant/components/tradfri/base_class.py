@@ -19,7 +19,7 @@ from pytradfri.device.socket import Socket
 from pytradfri.device.socket_control import SocketControl
 from pytradfri.error import PytradfriError
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN
@@ -53,13 +53,11 @@ class TradfriBaseClass(Entity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         device: Device,
         api: Callable[[Command | list[Command]], Any],
         gateway_id: str,
     ) -> None:
         """Initialize a device."""
-        self.hass = hass
         self._api = handle_error(api)
         self._attr_name = device.name
         self._attr_available = device.reachable

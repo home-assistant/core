@@ -51,14 +51,10 @@ async def async_setup_entry(
 
     lights = [dev for dev in devices if dev.has_light_control]
     if lights:
-        async_add_entities(
-            TradfriLight(hass, light, api, gateway_id) for light in lights
-        )
+        async_add_entities(TradfriLight(light, api, gateway_id) for light in lights)
 
     if config_entry.data[CONF_IMPORT_GROUPS] and (groups := tradfri_data[GROUPS]):
-        async_add_entities(
-            TradfriGroup(hass, group, api, gateway_id) for group in groups
-        )
+        async_add_entities(TradfriGroup(group, api, gateway_id) for group in groups)
 
 
 class TradfriGroup(TradfriBaseClass, LightEntity):
@@ -68,13 +64,12 @@ class TradfriGroup(TradfriBaseClass, LightEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         device: Command,
         api: Callable[[Command | list[Command]], Any],
         gateway_id: str,
     ) -> None:
         """Initialize a Group."""
-        super().__init__(hass, device, api, gateway_id)
+        super().__init__(device, api, gateway_id)
 
         self._attr_unique_id = f"group-{gateway_id}-{device.id}"
         self._attr_should_poll = True
@@ -121,13 +116,12 @@ class TradfriLight(TradfriBaseDevice, LightEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         device: Command,
         api: Callable[[Command | list[Command]], Any],
         gateway_id: str,
     ) -> None:
         """Initialize a Light."""
-        super().__init__(hass, device, api, gateway_id)
+        super().__init__(device, api, gateway_id)
         self._attr_unique_id = f"light-{gateway_id}-{device.id}"
         self._hs_color = None
 

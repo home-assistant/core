@@ -34,8 +34,7 @@ async def async_setup_entry(
     purifiers = [dev for dev in devices if dev.has_air_purifier_control]
     if purifiers:
         async_add_entities(
-            TradfriAirPurifierFan(hass, purifier, api, gateway_id)
-            for purifier in purifiers
+            TradfriAirPurifierFan(purifier, api, gateway_id) for purifier in purifiers
         )
 
 
@@ -61,13 +60,12 @@ class TradfriAirPurifierFan(TradfriBaseDevice, FanEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         device: Command,
         api: Callable[[Command | list[Command]], Any],
         gateway_id: str,
     ) -> None:
         """Initialize a switch."""
-        super().__init__(hass, device, api, gateway_id)
+        super().__init__(device, api, gateway_id)
         self._attr_unique_id = f"{gateway_id}-{device.id}"
 
     @property

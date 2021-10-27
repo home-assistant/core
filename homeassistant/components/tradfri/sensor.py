@@ -37,9 +37,7 @@ async def async_setup_entry(
         and not dev.has_air_purifier_control
     )
     if sensors:
-        async_add_entities(
-            TradfriSensor(hass, sensor, api, gateway_id) for sensor in sensors
-        )
+        async_add_entities(TradfriSensor(sensor, api, gateway_id) for sensor in sensors)
 
 
 class TradfriSensor(TradfriBaseDevice, SensorEntity):
@@ -50,13 +48,12 @@ class TradfriSensor(TradfriBaseDevice, SensorEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         device: Command,
         api: Callable[[Command | list[Command]], Any],
         gateway_id: str,
     ) -> None:
         """Initialize the device."""
-        super().__init__(hass, device, api, gateway_id)
+        super().__init__(device, api, gateway_id)
         self._attr_unique_id = f"{gateway_id}-{device.id}"
 
     @property
