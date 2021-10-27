@@ -974,6 +974,13 @@ class _TrackTemplateResultInfo:
 
         track_templates = track_templates or self._track_templates
 
+        def _super_template_as_boolean(result: bool | str | TemplateError) -> bool:
+            """Return True if the result is truthy or a TemplateError."""
+            if isinstance(result, TemplateError):
+                return True
+
+            return result_as_boolean(result)
+
         # Update the super template first
         if super_template is not None:
             update = self._render_template_if_ready(super_template, now, event)
@@ -985,13 +992,16 @@ class _TrackTemplateResultInfo:
                 super_result = self._last_result.get(super_template.template)
 
             # If the super template did not render to True, don't update other templates
-            if super_result is not None and super_result is not True:
+            if (
+                super_result is not None
+                and _super_template_as_boolean(super_result) is not True
+            ):
                 block_updates = True
 
             if (
                 isinstance(update, TrackTemplateResult)
-                and update.last_result is not True
-                and update.result is True
+                and _super_template_as_boolean(update.last_result) is not True
+                and _super_template_as_boolean(update.result) is True
             ):
                 # Super template changed from not True to True, force re-render
                 # of all templates in the group

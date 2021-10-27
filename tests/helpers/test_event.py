@@ -37,7 +37,7 @@ from homeassistant.helpers.event import (
     async_track_utc_time_change,
     track_point_in_utc_time,
 )
-from homeassistant.helpers.template import Template
+from homeassistant.helpers.template import Template, result_as_boolean
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -1166,7 +1166,20 @@ async def test_track_template_result_super_template(hass):
     assert len(wildercard_runs_availability) == 6
 
 
-async def test_track_template_result_super_template_2(hass):
+@pytest.mark.parametrize(
+    "availability_template",
+    [
+        "{{ states('sensor.test2') != 'unavailable' }}",
+        "{% if states('sensor.test2') != 'unavailable' -%} true {%- else -%} false {%- endif %}",
+        "{% if states('sensor.test2') != 'unavailable' -%} 1 {%- else -%} 0 {%- endif %}",
+        "{% if states('sensor.test2') != 'unavailable' -%} yes {%- else -%} no {%- endif %}",
+        "{% if states('sensor.test2') != 'unavailable' -%} on {%- else -%} off {%- endif %}",
+        "{% if states('sensor.test2') != 'unavailable' -%} enable {%- else -%} disable {%- endif %}",
+        # This will throw when sensor.test2 is not "unavailable"
+        "{% if states('sensor.test2') != 'unavailable' -%} {{'a' + 5}} {%- else -%} false {%- endif %}",
+    ],
+)
+async def test_track_template_result_super_template_2(hass, availability_template):
     """Test tracking template with super template listening to different entities."""
     specific_runs = []
     specific_runs_availability = []
@@ -1175,20 +1188,26 @@ async def test_track_template_result_super_template_2(hass):
     wildercard_runs = []
     wildercard_runs_availability = []
 
-    template_availability = Template(
-        "{{ states('sensor.test2') != 'unavailable' }}", hass
-    )
+    template_availability = Template(availability_template)
     template_condition = Template("{{states.sensor.test.state}}", hass)
     template_condition_var = Template(
         "{{(states.sensor.test.state|int) + test }}", hass
     )
+
+    def _super_template_as_boolean(result):
+        if isinstance(result, TemplateError):
+            return True
+
+        return result_as_boolean(result)
 
     def specific_run_callback(event, updates):
         for track_result in updates:
             if track_result.template is template_condition:
                 specific_runs.append(int(track_result.result))
             elif track_result.template is template_availability:
-                specific_runs_availability.append(track_result.result)
+                specific_runs_availability.append(
+                    _super_template_as_boolean(track_result.result)
+                )
 
     async_track_template_result(
         hass,
@@ -1208,7 +1227,9 @@ async def test_track_template_result_super_template_2(hass):
                     (int(track_result.last_result or 0), int(track_result.result))
                 )
             elif track_result.template is template_availability:
-                wildcard_runs_availability.append(track_result.result)
+                wildcard_runs_availability.append(
+                    _super_template_as_boolean(track_result.result)
+                )
 
     async_track_template_result(
         hass,
@@ -1227,7 +1248,9 @@ async def test_track_template_result_super_template_2(hass):
                     (int(track_result.last_result or 0), int(track_result.result))
                 )
             elif track_result.template is template_availability:
-                wildercard_runs_availability.append(track_result.result)
+                wildercard_runs_availability.append(
+                    _super_template_as_boolean(track_result.result)
+                )
 
     async_track_template_result(
         hass,
