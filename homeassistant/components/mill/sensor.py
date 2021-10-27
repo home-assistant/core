@@ -124,6 +124,7 @@ class MillSensor(CoordinatorEntity, SensorEntity):
 
         self._id = mill_device.device_id
         self.entity_description = entity_description
+        self._available = False
 
         self._attr_name = f"{mill_device.name} {entity_description.name}"
         self._attr_unique_id = f"{mill_device.device_id}_{entity_description.key}"
@@ -144,7 +145,12 @@ class MillSensor(CoordinatorEntity, SensorEntity):
         self._update_attr(self.coordinator.data[self._id])
         self.async_write_ha_state()
 
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self._available
+
     @callback
     def _update_attr(self, device):
-        self._attr_available = device.available
+        self._available = device.available
         self._attr_native_value = getattr(device, self.entity_description.key)
