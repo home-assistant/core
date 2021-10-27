@@ -345,8 +345,6 @@ async def test_import_already_existing(hass):
         },
     )
     entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TESTDATA
