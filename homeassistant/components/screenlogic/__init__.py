@@ -19,6 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -215,7 +216,7 @@ class ScreenlogicEntity(CoordinatorEntity):
         return self.gateway.name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device information for the controller."""
         controller_type = self.config_data["controller_type"]
         hardware_type = self.config_data["hardware_type"]
@@ -225,12 +226,12 @@ class ScreenlogicEntity(CoordinatorEntity):
             ]
         except KeyError:
             equipment_model = f"Unknown Model C:{controller_type} H:{hardware_type}"
-        return {
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self.mac)},
-            "name": self.gateway_name,
-            "manufacturer": "Pentair",
-            "model": equipment_model,
-        }
+        return DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, self.mac)},
+            manufacturer="Pentair",
+            model=equipment_model,
+            name=self.gateway_name,
+        )
 
 
 class ScreenLogicCircuitEntity(ScreenlogicEntity):
