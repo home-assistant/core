@@ -231,7 +231,7 @@ def create_coordinator_node_updates(
         def poll_api():
             """Call the api."""
             node_updates = call_api_node_updates(proxmox, node_name)
-            return vm_status
+            return node_updates
 
         node_updates = await hass.async_add_executor_job(poll_api)
 

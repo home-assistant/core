@@ -148,7 +148,7 @@ class ProxmoxNodeUpdateBinarySensor(ProxmoxEntity, BinarySensorEntity):
         return super().available and self.coordinator.data is not None
 
     @property
-    def extra_state_attributes(self) -> dict | None:
+    def extra_state_attributes(self):
         """Return the optional state attributes."""
 
         if self.coordinator.data is None:
