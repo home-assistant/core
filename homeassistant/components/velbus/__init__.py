@@ -10,7 +10,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import (
     CONF_INTERFACE,
@@ -178,16 +178,17 @@ class VelbusEntity(Entity):
     @property
     def device_info(self):
         """Return the device info."""
-        return {
-            "identifiers": {
+        # TODO: fix identifiers
+        return DeviceInfo(
+            identifiers={
                 (
                     DOMAIN,
                     self._channel.get_module_address(),
                     self._channel.get_module_serial(),
                 )
             },
-            "name": self._channel.get_full_name(),
-            "manufacturer": "Velleman",
-            "model": self._channel.get_module_type_name(),
-            "sw_version": self._channel.get_module_sw_version(),
-        }
+            manufacturer="Velleman",
+            model=self._channel.get_module_type_name(),
+            name=self._channel.get_full_name(),
+            sw_version=self._channel.get_module_sw_version(),
+        )
