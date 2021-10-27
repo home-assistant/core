@@ -62,7 +62,9 @@ class TasmotaEntity(Entity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
-        return {"connections": {(CONNECTION_NETWORK_MAC, self._tasmota_entity.mac)}}
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self._tasmota_entity.mac)}
+        )
 
     @property
     def name(self) -> str | None:
