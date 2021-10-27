@@ -857,7 +857,7 @@ def _resolve_state(
     return None
 
 
-def result_as_boolean(template_result: str | None) -> bool:
+def result_as_boolean(template_result: Any | None) -> bool:
     """Convert the template result to a boolean.
 
     True/not 0/'1'/'true'/'yes'/'on'/'enable' are considered truthy
