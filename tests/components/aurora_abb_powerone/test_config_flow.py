@@ -350,4 +350,4 @@ async def test_import_already_existing(hass):
         DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TESTDATA
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+    assert result["reason"] == "already_configured"
