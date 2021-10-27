@@ -111,13 +111,6 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     validate_and_connect, self.hass, user_input
                 )
                 info.update(user_input)
-                # Bomb out early if someone has already set up this device.
-                device_unique_id = info["serial_number"]
-                await self.async_set_unique_id(device_unique_id)
-                self._abort_if_unique_id_configured()
-
-                return self.async_create_entry(title=info["title"], data=info)
-
             except OSError as error:
                 if error.errno == 19:  # No such device.
                     errors["base"] = "invalid_serial_port"
@@ -134,6 +127,13 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         error,
                     )
                     errors["base"] = "cannot_connect"
+            else:
+                # Bomb out early if someone has already set up this device.
+                device_unique_id = info["serial_number"]
+                await self.async_set_unique_id(device_unique_id)
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(title=info["title"], data=info)
+
         # If no user input, must be first pass through the config.  Show  initial form.
         config_options = {
             vol.Required(CONF_PORT, default=self._default_com_port): vol.In(
