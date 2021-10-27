@@ -1,6 +1,7 @@
 """Set up the demo environment that mimics interaction with devices."""
 import asyncio
 import datetime
+from random import random
 
 from homeassistant import bootstrap, config_entries
 from homeassistant.components.recorder.statistics import (
@@ -155,13 +156,49 @@ async def async_setup(hass, config):
     return True
 
 
+async def _generate_mean_statistics(start, end, init_value, max_diff):
+    statistics = []
+    mean = init_value
+    now = start
+    while now < end:
+        mean = mean + random() * max_diff - max_diff / 2
+        statistics.append(
+            {
+                "start": now,
+                "mean": mean,
+                "min": mean - random() * max_diff,
+                "max": mean + random() * max_diff,
+            }
+        )
+        now = now + datetime.timedelta(hours=1)
+
+    return statistics
+
+
+async def _generate_sum_statistics(start, end, init_value, max_diff):
+    statistics = []
+    now = start
+    sum = init_value
+    while now < end:
+        sum = sum + random() * max_diff
+        statistics.append(
+            {
+                "start": now,
+                "sum": sum,
+            }
+        )
+        now = now + datetime.timedelta(hours=1)
+
+    return statistics
+
+
 async def _insert_statistics(hass):
     """Insert some fake statistics."""
     now = dt_util.now()
     yesterday = now - datetime.timedelta(days=1)
     yesterday_midnight = yesterday.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    # Import yesterday's temperatures
+    # Fake yesterday's temperatures
     metadata = {
         "source": DOMAIN,
         "statistic_id": f"{DOMAIN}:temperature_outdoor",
@@ -169,14 +206,12 @@ async def _insert_statistics(hass):
         "has_mean": True,
         "has_sum": False,
     }
-    statistics = []
-    start = yesterday_midnight
-    for _ in range(24):
-        statistics.append({"start": start, "min": 5, "mean": 10, "max": 15})
-        start = start + datetime.timedelta(hours=1)
+    statistics = _generate_mean_statistics(
+        yesterday_midnight, yesterday_midnight + datetime.timedelta(days=1), 15, 1
+    )
     async_add_external_statistics(hass, metadata, statistics)
 
-    # Yesterday's energy consumption
+    # Fake yesterday's energy consumption
     metadata = {
         "source": DOMAIN,
         "statistic_id": f"{DOMAIN}:energy_consumption",
@@ -184,8 +219,6 @@ async def _insert_statistics(hass):
         "has_mean": False,
         "has_sum": True,
     }
-    statistics = []
-    start = yesterday_midnight
     statistic_id = f"{DOMAIN}:energy_consumption"
     sum = 0
     last_stats = await hass.async_add_executor_job(
@@ -193,10 +226,9 @@ async def _insert_statistics(hass):
     )
     if "domain:energy_consumption" in last_stats:
         sum = last_stats["domain.electricity_total"]["sum"]
-    for _ in range(24):
-        sum = sum + 1
-        statistics.append({"start": start, "sum": sum})
-        start = start + datetime.timedelta(hours=1)
+    statistics = _generate_sum_statistics(
+        yesterday_midnight, yesterday_midnight + datetime.timedelta(days=1), sum, 1
+    )
     async_add_external_statistics(hass, metadata, statistics)
 
 
