@@ -10,7 +10,7 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
 )
-from homeassistant.components.mqtt.const import CONF_STATE_TOPIC
+from homeassistant.components.mqtt import CONF_STATE_TOPIC
 from homeassistant.components.mqtt.cover import (
     CONF_GET_POSITION_TEMPLATE,
     CONF_GET_POSITION_TOPIC,
@@ -2401,10 +2401,10 @@ async def test_discovery_removal_cover(hass, mqtt_mock, caplog):
 
 async def test_discovery_update_cover(hass, mqtt_mock, caplog):
     """Test update of discovered cover."""
-    data1 = '{ "name": "Beer", "command_topic": "test_topic" }'
-    data2 = '{ "name": "Milk", "command_topic": "test_topic" }'
+    config1 = {"name": "Beer", "command_topic": "test_topic"}
+    config2 = {"name": "Milk", "command_topic": "test_topic"}
     await help_test_discovery_update(
-        hass, mqtt_mock, caplog, cover.DOMAIN, data1, data2
+        hass, mqtt_mock, caplog, cover.DOMAIN, config1, config2
     )
 
 

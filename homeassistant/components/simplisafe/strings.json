@@ -1,24 +1,15 @@
 {
   "config": {
     "step": {
-      "mfa": {
-        "title": "SimpliSafe Multi-Factor Authentication",
-        "description": "Check your email for a link from SimpliSafe. After verifying the link, return here to complete the installation of the integration."
-      },
-      "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "Your access has expired or been revoked. Enter your password to re-link your account.",
+      "input_auth_code": {
+        "title": "Finish Authorization",
+        "description": "Input the authorization code from the SimpliSafe web app URL:",
         "data": {
-          "password": "[%key:common::config_flow::data::password%]"
+          "auth_code": "Authorization Code"
         }
       },
       "user": {
-        "title": "Fill in your information.",
-        "data": {
-          "username": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "code": "Code (used in Home Assistant UI)"
-        }
+        "description": "Starting in 2021, SimpliSafe has moved to a new authentication mechanism via its web app. Due to technical limitations, there is a manual step at the end of this process; please ensure that you read the [documentation](http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) before starting.\n\nWhen you are ready, click [here]({url}) to open the SimpliSafe web app and input your credentials. When the process is complete, return here and click Submit."
       }
     },
     "error": {
@@ -29,7 +20,8 @@
     },
     "abort": {
       "already_configured": "This SimpliSafe account is already in use.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_account": "The user credentials provided do not match this SimpliSafe account."
     }
   },
   "options": {

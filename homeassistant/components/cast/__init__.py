@@ -18,9 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass, config):
     """Set up the Cast component."""
-    conf = config.get(DOMAIN)
-
-    if conf is not None:
+    if (conf := config.get(DOMAIN)) is not None:
         media_player_config_validated = []
         media_player_config = conf.get("media_player", {})
         if not isinstance(media_player_config, list):

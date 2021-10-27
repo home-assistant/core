@@ -7,10 +7,14 @@ from dataclasses import dataclass
 import logging
 import os
 from types import MappingProxyType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pi1wire import InvalidCRCException, OneWireInterface, UnsupportResponseException
 
+from homeassistant.components.onewire.model import (
+    OWDirectDeviceDescription,
+    OWServerDeviceDescription,
+)
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
@@ -19,10 +23,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
     CONF_TYPE,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_HUMIDITY,
@@ -382,11 +382,14 @@ def get_entities(
     if conf_type == CONF_TYPE_OWSERVER:
         assert onewirehub.owproxy
         for device in onewirehub.devices:
-            family = device["family"]
-            device_type = device["type"]
-            device_id = os.path.split(os.path.split(device["path"])[0])[1]
+            if TYPE_CHECKING:
+                assert isinstance(device, OWServerDeviceDescription)
+            family = device.family
+            device_type = device.type
+            device_id = device.id
+            device_info = device.device_info
             device_sub_type = "std"
-            device_path = device["path"]
+            device_path = device.path
             if "EF" in family:
                 device_sub_type = "HobbyBoard"
                 family = device_type
@@ -401,12 +404,6 @@ def get_entities(
                     device_id,
                 )
                 continue
-            device_info: DeviceInfo = {
-                ATTR_IDENTIFIERS: {(DOMAIN, device_id)},
-                ATTR_MANUFACTURER: "Maxim Integrated",
-                ATTR_MODEL: device_type,
-                ATTR_NAME: device_id,
-            }
             for description in get_sensor_types(device_sub_type)[family]:
                 if description.key.startswith("moisture/"):
                     s_id = description.key.split(".")[1]
@@ -421,7 +418,7 @@ def get_entities(
                         description.native_unit_of_measurement = PERCENTAGE
                         description.name = f"Wetness {s_id}"
                 device_file = os.path.join(
-                    os.path.split(device["path"])[0], description.key
+                    os.path.split(device.path)[0], description.key
                 )
                 name = f"{device_names.get(device_id, device_id)} {description.name}"
                 entities.append(
@@ -439,9 +436,13 @@ def get_entities(
     elif conf_type == CONF_TYPE_SYSBUS:
         base_dir = config[CONF_MOUNT_DIR]
         _LOGGER.debug("Initializing using SysBus %s", base_dir)
-        for p1sensor in onewirehub.devices:
+        for device in onewirehub.devices:
+            if TYPE_CHECKING:
+                assert isinstance(device, OWDirectDeviceDescription)
+            p1sensor: OneWireInterface = device.interface
             family = p1sensor.mac_address[:2]
             device_id = f"{family}-{p1sensor.mac_address[2:]}"
+            device_info = device.device_info
             if family not in DEVICE_SUPPORT_SYSBUS:
                 _LOGGER.warning(
                     "Ignoring unknown family (%s) of sensor found for device: %s",
@@ -450,12 +451,6 @@ def get_entities(
                 )
                 continue
 
-            device_info = {
-                ATTR_IDENTIFIERS: {(DOMAIN, device_id)},
-                ATTR_MANUFACTURER: "Maxim Integrated",
-                ATTR_MODEL: family,
-                ATTR_NAME: device_id,
-            }
             description = SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION
             device_file = f"/sys/bus/w1/devices/{device_id}/w1_slave"
             name = f"{device_names.get(device_id, device_id)} {description.name}"

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from http import HTTPStatus
 
 from aiohttp import ClientError, ClientResponseError
 from async_timeout import timeout
@@ -9,13 +10,7 @@ import pymelcloud
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_TOKEN,
-    CONF_USERNAME,
-    HTTP_FORBIDDEN,
-    HTTP_UNAUTHORIZED,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 
 from .const import DOMAIN
 
@@ -48,8 +43,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             with timeout(10):
-                acquired_token = token
-                if acquired_token is None:
+                if (acquired_token := token) is None:
                     acquired_token = await pymelcloud.login(
                         username,
                         password,
@@ -60,7 +54,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     self.hass.helpers.aiohttp_client.async_get_clientsession(),
                 )
         except ClientResponseError as err:
-            if err.status in (HTTP_UNAUTHORIZED, HTTP_FORBIDDEN):
+            if err.status in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
                 return self.async_abort(reason="invalid_auth")
             return self.async_abort(reason="cannot_connect")
         except (asyncio.TimeoutError, ClientError):

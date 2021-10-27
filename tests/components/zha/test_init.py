@@ -89,7 +89,6 @@ async def test_migration_from_v1_wrong_baudrate(hass, config_entry_v1):
 )
 async def test_config_depreciation(hass, zha_config):
     """Test config option depreciation."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "homeassistant.components.zha.async_setup", return_value=True

@@ -20,7 +20,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
@@ -76,8 +76,7 @@ def setup(hass, config):
 
         kwargs = {"mid": ring_id}
 
-        ring_vol = call.data.get(ATTR_RINGTONE_VOL)
-        if ring_vol is not None:
+        if (ring_vol := call.data.get(ATTR_RINGTONE_VOL)) is not None:
             kwargs["vol"] = ring_vol
 
         gateway.write_to_hub(gateway.sid, **kwargs)
@@ -277,23 +276,23 @@ class XiaomiDevice(Entity):
         return self._device_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info of the Xiaomi Aqara device."""
         if self._is_gateway:
-            device_info = {
-                "identifiers": {(DOMAIN, self._device_id)},
-                "model": self._model,
-            }
+            device_info = DeviceInfo(
+                identifiers={(DOMAIN, self._device_id)},
+                model=self._model,
+            )
         else:
-            device_info = {
-                "connections": {(dr.CONNECTION_ZIGBEE, self._device_id)},
-                "identifiers": {(DOMAIN, self._device_id)},
-                "manufacturer": "Xiaomi Aqara",
-                "model": self._model,
-                "name": self._device_name,
-                "sw_version": self._protocol,
-                "via_device": (DOMAIN, self._gateway_id),
-            }
+            device_info = DeviceInfo(
+                connections={(dr.CONNECTION_ZIGBEE, self._device_id)},
+                identifiers={(DOMAIN, self._device_id)},
+                manufacturer="Xiaomi Aqara",
+                model=self._model,
+                name=self._device_name,
+                sw_version=self._protocol,
+                via_device=(DOMAIN, self._gateway_id),
+            )
 
         return device_info
 
@@ -379,8 +378,7 @@ def _add_gateway_to_schema(hass, schema):
         raise vol.Invalid(f"Unknown gateway sid {sid}")
 
     kwargs = {}
-    xiaomi_data = hass.data.get(DOMAIN)
-    if xiaomi_data is not None:
+    if (xiaomi_data := hass.data.get(DOMAIN)) is not None:
         gateways = list(xiaomi_data[GATEWAYS_KEY].values())
 
         # If the user has only 1 gateway, make it the default for services.

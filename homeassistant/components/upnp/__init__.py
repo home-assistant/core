@@ -21,6 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -198,6 +199,7 @@ class UpnpBinarySensorEntityDescription(BinarySensorEntityDescription):
     """A class that describes UPnP entities."""
 
     format: str = "s"
+    unique_id: str | None = None
 
 
 @dataclass
@@ -205,6 +207,7 @@ class UpnpSensorEntityDescription(SensorEntityDescription):
     """A class that describes a sensor UPnP entities."""
 
     format: str = "s"
+    unique_id: str | None = None
 
 
 class UpnpDataUpdateCoordinator(DataUpdateCoordinator):
@@ -250,17 +253,18 @@ class UpnpEntity(CoordinatorEntity):
         self._device = coordinator.device
         self.entity_description = entity_description
         self._attr_name = f"{coordinator.device.name} {entity_description.name}"
-        self._attr_unique_id = f"{coordinator.device.udn}_{entity_description.key}"
-        self._attr_device_info = {
-            "connections": {(dr.CONNECTION_UPNP, coordinator.device.udn)},
-            "name": coordinator.device.name,
-            "manufacturer": coordinator.device.manufacturer,
-            "model": coordinator.device.model_name,
-        }
+        self._attr_unique_id = f"{coordinator.device.udn}_{entity_description.unique_id or entity_description.key}"
+        self._attr_device_info = DeviceInfo(
+            connections={(dr.CONNECTION_UPNP, coordinator.device.udn)},
+            name=coordinator.device.name,
+            manufacturer=coordinator.device.manufacturer,
+            model=coordinator.device.model_name,
+            configuration_url=f"http://{coordinator.device.hostname}",
+        )
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and (
-            self.coordinator.data.get(self.entity_description.key) or False
+            self.coordinator.data.get(self.entity_description.key) is not None
         )

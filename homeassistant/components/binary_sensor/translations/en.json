@@ -31,6 +31,8 @@
             "is_not_plugged_in": "{entity_name} is unplugged",
             "is_not_powered": "{entity_name} is not powered",
             "is_not_present": "{entity_name} is not present",
+            "is_not_running": "{entity_name} is not running",
+            "is_not_tampered": "{entity_name} is not detecting tampering",
             "is_not_unsafe": "{entity_name} is safe",
             "is_occupied": "{entity_name} is occupied",
             "is_off": "{entity_name} is off",
@@ -40,8 +42,10 @@
             "is_powered": "{entity_name} is powered",
             "is_present": "{entity_name} is present",
             "is_problem": "{entity_name} is detecting problem",
+            "is_running": "{entity_name} is running",
             "is_smoke": "{entity_name} is detecting smoke",
             "is_sound": "{entity_name} is detecting sound",
+            "is_tampered": "{entity_name} is detecting tampering",
             "is_unsafe": "{entity_name} is unsafe",
             "is_update": "{entity_name} has an update available",
             "is_vibration": "{entity_name} is detecting vibration"
@@ -52,6 +56,8 @@
             "connected": "{entity_name} connected",
             "gas": "{entity_name} started detecting gas",
             "hot": "{entity_name} became hot",
+            "is_not_tampered": "{entity_name} stopped detecting tampering",
+            "is_tampered": "{entity_name} started detecting tampering",
             "light": "{entity_name} started detecting light",
             "locked": "{entity_name} locked",
             "moist": "{entity_name} became moist",
@@ -77,6 +83,7 @@
             "not_plugged_in": "{entity_name} unplugged",
             "not_powered": "{entity_name} not powered",
             "not_present": "{entity_name} not present",
+            "not_running": "{entity_name} is no longer running",
             "not_unsafe": "{entity_name} became safe",
             "occupied": "{entity_name} became occupied",
             "opened": "{entity_name} opened",
@@ -84,6 +91,7 @@
             "powered": "{entity_name} powered",
             "present": "{entity_name} present",
             "problem": "{entity_name} started detecting problem",
+            "running": "{entity_name} started running",
             "smoke": "{entity_name} started detecting smoke",
             "sound": "{entity_name} started detecting sound",
             "turned_off": "{entity_name} turned off",
@@ -92,6 +100,19 @@
             "update": "{entity_name} got an update available",
             "vibration": "{entity_name} started detecting vibration"
         }
+    },
+    "device_class": {
+        "cold": "cold",
+        "gas": "gas",
+        "heat": "heat",
+        "moisture": "moisture",
+        "motion": "motion",
+        "occupancy": "occupancy",
+        "power": "power",
+        "problem": "problem",
+        "smoke": "smoke",
+        "sound": "sound",
+        "vibration": "vibration"
     },
     "state": {
         "_": {
@@ -169,6 +190,10 @@
         "problem": {
             "off": "OK",
             "on": "Problem"
+        },
+        "running": {
+            "off": "Not running",
+            "on": "Running"
         },
         "safety": {
             "off": "Safe",

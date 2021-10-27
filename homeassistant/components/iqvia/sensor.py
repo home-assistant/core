@@ -18,7 +18,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import IQVIAEntity
 from .const import (
-    DATA_COORDINATOR,
     DOMAIN,
     TYPE_ALLERGY_FORECAST,
     TYPE_ALLERGY_INDEX,
@@ -117,7 +116,6 @@ INDEX_SENSOR_DESCRIPTIONS = (
         key=TYPE_ASTHMA_TOMORROW,
         name="Asthma Index: Tomorrow",
         icon="mdi:flower",
-        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_DISEASE_TODAY,
@@ -134,7 +132,7 @@ async def async_setup_entry(
     """Set up IQVIA sensors based on a config entry."""
     sensors: list[ForecastSensor | IndexSensor] = [
         ForecastSensor(
-            hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
+            hass.data[DOMAIN][entry.entry_id][
                 API_CATEGORY_MAPPING.get(description.key, description.key)
             ],
             entry,
@@ -145,7 +143,7 @@ async def async_setup_entry(
     sensors.extend(
         [
             IndexSensor(
-                hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
+                hass.data[DOMAIN][entry.entry_id][
                     API_CATEGORY_MAPPING.get(description.key, description.key)
                 ],
                 entry,
@@ -207,9 +205,9 @@ class ForecastSensor(IQVIAEntity, SensorEntity):
         )
 
         if self.entity_description.key == TYPE_ALLERGY_FORECAST:
-            outlook_coordinator = self.hass.data[DOMAIN][DATA_COORDINATOR][
-                self._entry.entry_id
-            ][TYPE_ALLERGY_OUTLOOK]
+            outlook_coordinator = self.hass.data[DOMAIN][self._entry.entry_id][
+                TYPE_ALLERGY_OUTLOOK
+            ]
 
             if not outlook_coordinator.last_update_success:
                 return

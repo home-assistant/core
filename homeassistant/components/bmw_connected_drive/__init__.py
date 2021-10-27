@@ -1,6 +1,7 @@
 """Reads vehicle status from BMW connected drive portal."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
 
 from bimmer_connected.account import ConnectedDriveAccount
@@ -21,7 +22,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry, discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
@@ -74,6 +75,7 @@ _SERVICE_MAP = {
     "light_flash": "trigger_remote_light_flash",
     "sound_horn": "trigger_remote_horn",
     "activate_air_conditioning": "trigger_remote_air_conditioning",
+    "deactivate_air_conditioning": "trigger_remote_air_conditioning_stop",
     "find_vehicle": "trigger_remote_vehicle_finder",
 }
 
@@ -281,7 +283,7 @@ class BMWConnectedDriveAccount:
         self.read_only = read_only
         self.account = ConnectedDriveAccount(username, password, region)
         self.name = name
-        self._update_listeners = []
+        self._update_listeners: list[Callable[[], None]] = []
 
         # Set observer position once for older cars to be in range for
         # GPS position (pre-7/2014, <2km) and get new data from API
@@ -310,7 +312,7 @@ class BMWConnectedDriveAccount:
             )
             _LOGGER.exception(exception)
 
-    def add_update_listener(self, listener):
+    def add_update_listener(self, listener: Callable[[], None]) -> None:
         """Add a listener for update notifications."""
         self._update_listeners.append(listener)
 
@@ -329,12 +331,12 @@ class BMWConnectedDriveBaseEntity(Entity):
             "vin": self._vehicle.vin,
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, vehicle.vin)},
-            "name": f'{vehicle.attributes.get("brand")} {vehicle.name}',
-            "model": vehicle.name,
-            "manufacturer": vehicle.attributes.get("brand"),
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, vehicle.vin)},
+            manufacturer=vehicle.attributes.get("brand"),
+            model=vehicle.name,
+            name=f'{vehicle.attributes.get("brand")} {vehicle.name}',
+        )
 
     def update_callback(self):
         """Schedule a state update."""

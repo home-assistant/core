@@ -5,15 +5,25 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service import async_extract_config_entry_ids
 
-from .const import DOMAIN, FRITZ_SERVICES, SERVICE_REBOOT, SERVICE_RECONNECT
+from .common import FritzBoxTools
+from .const import (
+    DOMAIN,
+    FRITZ_SERVICES,
+    SERVICE_CLEANUP,
+    SERVICE_REBOOT,
+    SERVICE_RECONNECT,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+SERVICE_LIST = [SERVICE_CLEANUP, SERVICE_REBOOT, SERVICE_RECONNECT]
 
 
 async def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for Fritz integration."""
 
-    for service in (SERVICE_REBOOT, SERVICE_RECONNECT):
+    for service in SERVICE_LIST:
         if hass.services.has_service(DOMAIN, service):
             return
 
@@ -29,12 +39,18 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                 f"Failed to call service '{service_call.service}'. Config entry for target not found"
             )
 
-        for entry in fritzbox_entry_ids:
+        for entry_id in fritzbox_entry_ids:
             _LOGGER.debug("Executing service %s", service_call.service)
-            fritz_tools = hass.data[DOMAIN][entry]
-            await fritz_tools.service_fritzbox(service_call.service)
+            fritz_tools: FritzBoxTools = hass.data[DOMAIN][entry_id]
+            if config_entry := hass.config_entries.async_get_entry(entry_id):
+                await fritz_tools.service_fritzbox(service_call, config_entry)
+            else:
+                _LOGGER.error(
+                    "Executing service %s failed, no config entry found",
+                    service_call.service,
+                )
 
-    for service in (SERVICE_REBOOT, SERVICE_RECONNECT):
+    for service in SERVICE_LIST:
         hass.services.async_register(DOMAIN, service, async_call_fritz_service)
 
 
@@ -59,5 +75,5 @@ async def async_unload_services(hass: HomeAssistant) -> None:
 
     hass.data[FRITZ_SERVICES] = False
 
-    hass.services.async_remove(DOMAIN, SERVICE_REBOOT)
-    hass.services.async_remove(DOMAIN, SERVICE_RECONNECT)
+    for service in SERVICE_LIST:
+        hass.services.async_remove(DOMAIN, service)

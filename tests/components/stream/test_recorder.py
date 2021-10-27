@@ -194,7 +194,7 @@ async def test_record_stream_audio(
     await async_setup_component(hass, "stream", {"stream": {}})
 
     # Generate source video with no audio
-    source = generate_h264_video(container_format="mov")
+    orig_source = generate_h264_video(container_format="mov")
 
     for a_codec, expected_audio_streams in (
         ("aac", 1),  # aac is a valid mp4 codec
@@ -202,9 +202,8 @@ async def test_record_stream_audio(
         ("empty", 0),  # audio stream with no packets
         (None, 0),  # no audio stream
     ):
-
         # Remux source video with new audio
-        source = remux_with_audio(source, "mov", a_codec)  # mov can store PCM
+        source = remux_with_audio(orig_source, "mov", a_codec)  # mov can store PCM
 
         record_worker_sync.reset()
         stream_worker_sync.pause()

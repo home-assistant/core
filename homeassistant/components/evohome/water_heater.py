@@ -60,11 +60,6 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         self._supported_features = SUPPORT_AWAY_MODE | SUPPORT_OPERATION_MODE
 
     @property
-    def state(self):
-        """Return the current state."""
-        return EVO_STATE_TO_HA[self._evo_device.stateStatus["state"]]
-
-    @property
     def current_operation(self) -> str:
         """Return the current operating mode (Auto, On, or Off)."""
         if self._evo_device.stateStatus["mode"] == EVO_FOLLOW:

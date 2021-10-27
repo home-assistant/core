@@ -9,7 +9,7 @@ import logging
 from bleak import BleakScanner
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
-from fjaraskupan import Device, State, device_filter
+from fjaraskupan import UUID_SERVICE, Device, State, device_filter
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -23,7 +23,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DISPATCH_DETECTION, DOMAIN
 
-PLATFORMS = ["binary_sensor", "fan", "light", "sensor"]
+PLATFORMS = ["binary_sensor", "fan", "light", "sensor", "number"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ class EntryState:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Fjäråskupan from a config entry."""
 
-    scanner = BleakScanner()
+    scanner = BleakScanner(filters={"UUIDs": [str(UUID_SERVICE)]})
 
     state = EntryState(scanner, {})
     hass.data.setdefault(DOMAIN, {})
@@ -57,19 +57,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def detection_callback(
         ble_device: BLEDevice, advertisement_data: AdvertisementData
     ) -> None:
-        if not device_filter(ble_device, advertisement_data):
-            return
+        if data := state.devices.get(ble_device.address):
+            _LOGGER.debug(
+                "Update: %s %s - %s", ble_device.name, ble_device, advertisement_data
+            )
 
-        _LOGGER.debug(
-            "Detection: %s %s - %s", ble_device.name, ble_device, advertisement_data
-        )
-
-        data = state.devices.get(ble_device.address)
-
-        if data:
             data.device.detection_callback(ble_device, advertisement_data)
             data.coordinator.async_set_updated_data(data.device.state)
         else:
+            if not device_filter(ble_device, advertisement_data):
+                return
+
+            _LOGGER.debug(
+                "Detected: %s %s - %s", ble_device.name, ble_device, advertisement_data
+            )
 
             device = Device(ble_device)
             device.detection_callback(ble_device, advertisement_data)
@@ -88,11 +89,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
             coordinator.async_set_updated_data(device.state)
 
-            device_info: DeviceInfo = {
-                "identifiers": {(DOMAIN, ble_device.address)},
-                "manufacturer": "Fjäråskupan",
-                "name": "Fjäråskupan",
-            }
+            device_info = DeviceInfo(
+                identifiers={(DOMAIN, ble_device.address)},
+                manufacturer="Fjäråskupan",
+                name="Fjäråskupan",
+            )
             device_state = DeviceState(device, coordinator, device_info)
             state.devices[ble_device.address] = device_state
             async_dispatcher_send(

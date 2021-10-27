@@ -28,7 +28,7 @@
                 "data": {
                     "access_id": "Tuya IoT kasutajatunnus",
                     "access_secret": "Tuya IoT salas\u00f5na",
-                    "country_code": "Konto riigikood (nt 1 USA v\u00f5i 372 Eesti)",
+                    "country_code": "Riik",
                     "password": "Salas\u00f5na",
                     "platform": "\u00c4pp kus konto registreeriti",
                     "region": "Piirkond",

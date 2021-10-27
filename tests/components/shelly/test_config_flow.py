@@ -1,12 +1,13 @@
 """Test the Shelly config flow."""
 import asyncio
+from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
 import aioshelly
 import pytest
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.shelly.const import DOMAIN
 
 from tests.common import MockConfigEntry
@@ -28,7 +29,7 @@ MOCK_CONFIG = {
 @pytest.mark.parametrize("gen", [1, 2])
 async def test_form(hass, gen):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -81,7 +82,7 @@ async def test_form(hass, gen):
 
 async def test_title_without_name(hass):
     """Test we set the title to the hostname when the device doesn't have a name."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -227,7 +228,7 @@ async def test_form_errors_test_connection(hass, error):
 
 async def test_form_already_configured(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0"}
     )
@@ -255,7 +256,7 @@ async def test_form_already_configured(hass):
 
 async def test_user_setup_ignored_device(hass):
     """Test user can successfully setup an ignored device."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain="shelly",
         unique_id="test-mac",
@@ -325,8 +326,14 @@ async def test_form_firmware_unsupported(hass):
 @pytest.mark.parametrize(
     "error",
     [
-        (aiohttp.ClientResponseError(Mock(), (), status=400), "cannot_connect"),
-        (aiohttp.ClientResponseError(Mock(), (), status=401), "invalid_auth"),
+        (
+            aiohttp.ClientResponseError(Mock(), (), status=HTTPStatus.BAD_REQUEST),
+            "cannot_connect",
+        ),
+        (
+            aiohttp.ClientResponseError(Mock(), (), status=HTTPStatus.UNAUTHORIZED),
+            "invalid_auth",
+        ),
         (asyncio.TimeoutError, "cannot_connect"),
         (ValueError, "unknown"),
     ],
@@ -361,7 +368,6 @@ async def test_form_auth_errors_test_connection(hass, error):
 
 async def test_zeroconf(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "aioshelly.common.get_info",
@@ -415,7 +421,6 @@ async def test_zeroconf(hass):
 
 async def test_zeroconf_sleeping_device(hass):
     """Test sleeping device configuration via zeroconf."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "aioshelly.common.get_info",
@@ -482,14 +487,16 @@ async def test_zeroconf_sleeping_device(hass):
 @pytest.mark.parametrize(
     "error",
     [
-        (aiohttp.ClientResponseError(Mock(), (), status=400), "cannot_connect"),
+        (
+            aiohttp.ClientResponseError(Mock(), (), status=HTTPStatus.BAD_REQUEST),
+            "cannot_connect",
+        ),
         (asyncio.TimeoutError, "cannot_connect"),
     ],
 )
 async def test_zeroconf_sleeping_device_error(hass, error):
     """Test sleeping device configuration via zeroconf with error."""
     exc = error
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "aioshelly.common.get_info",
@@ -514,7 +521,7 @@ async def test_zeroconf_sleeping_device_error(hass, error):
 
 async def test_zeroconf_already_configured(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0"}
     )
@@ -566,7 +573,6 @@ async def test_zeroconf_cannot_connect(hass):
 
 async def test_zeroconf_require_auth(hass):
     """Test zeroconf if auth is required."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "aioshelly.common.get_info",
