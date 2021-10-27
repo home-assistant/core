@@ -67,6 +67,8 @@ MESSAGE_TIMEOUT = 1.0
 MESSAGE_RETRIES = 8
 UNAVAILABLE_GRACE = 90
 
+FIX_MAC_FW = AwesomeVersion("3.70")
+
 SERVICE_LIFX_SET_STATE = "set_state"
 
 ATTR_INFRARED = "infrared"
@@ -460,7 +462,10 @@ class LIFXLight(LightEntity):
     def get_mac_addr(self):
         """Increment the last byte of the mac address by one for FW>3.70."""
         real_mac_addr = self.bulb.mac_addr
-        if AwesomeVersion(self.bulb.host_firmware_version) >= AwesomeVersion("3.70"):
+        if (
+            self.bulb.host_firmware_version
+            and AwesomeVersion(self.bulb.host_firmware_version) >= FIX_MAC_FW
+        ):
             octets = [int(octet, 16) for octet in self.bulb.mac_addr.split(":")]
             octets[5] = (octets[5] + 1) % 256
             real_mac_addr = ":".join(f"{octet:02x}" for octet in octets)
